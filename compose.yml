@@ -1,0 +1,23 @@
+services:
+  app:
+    image: node:25.2-slim
+    working_dir: /code
+    volumes:
+      - .:/code
+    tty: true
+    ports:
+      - 8080:3000
+      - 6006:6006
+
+  # Runs the Storybook test-runner (Playwright-powered) against a built,
+  # statically-served Storybook. Uses the official Playwright image so browsers
+  # are preinstalled; the tag matches the bundled playwright-core version.
+  # Reuses node_modules from the mounted volume (no install step).
+  #   docker compose run --rm storybook-runner
+  storybook-runner:
+    image: mcr.microsoft.com/playwright:v1.61.1-noble
+    working_dir: /code
+    volumes:
+      - .:/code
+    profiles: ['test']
+    command: sh -c "npm run build-storybook && npm run test-storybook:ci"
