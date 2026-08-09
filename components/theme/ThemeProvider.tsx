@@ -23,7 +23,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-const COOKIE_KEY = 'next-base-theme-mode'
+const COOKIE_KEY = 'vela-theme-mode'
 
 function writeCookie(value: ThemePreference) {
   document.cookie = `${COOKIE_KEY}=${value};path=/;max-age=31536000;SameSite=Lax`

@@ -1,92 +1,96 @@
-# next-base
+# Vela
 
-A general-purpose Next.js development base: an opinionated starting point with a
-shadcn/ui design system, a light/dark/system theme, a generic data-table, a
-provider-agnostic data-access seam, and a Storybook that both showcases and
-verifies every component.
-
-Clone it, point the data seam at your API or DB, and build screens by writing a
-repository function + columns — not by re-deriving infrastructure.
+録画システムのフロントエンド。現時点のリポジトリのスコープは **デザインシステム
+(トークン + コンポーネントライブラリ + Storybook)** で、画面の実装は入っていない。
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router, RSC), React 19, TypeScript (strict).
-- **Styling**: Tailwind CSS v4 (CSS-first `@theme`), shadcn/ui (`new-york` style,
-  `zinc` base color, CSS variables).
-- **Theme**: custom light/dark/system (cookie + middleware header + no-flash
-  inline script). No `next-themes`.
-- **Components**: shadcn/ui set, built on the unified `radix-ui` package + lucide
-  icons.
-- **Table**: `@tanstack/react-table` v8 via a generic `DataTable`.
-- **Forms**: react-hook-form + zod + `@hookform/resolvers` (shadcn `form`).
-- **Catalog & verification**: Storybook 10 (`@storybook/nextjs`, `addon-a11y`)
-  verified with `@storybook/test-runner` (Playwright-powered).
+- **Framework**: Next.js 16(App Router, RSC)、React 19、TypeScript(strict)
+- **Styling**: Tailwind CSS v4(CSS-first `@theme`)、shadcn/ui(`new-york`)
+- **Theme**: 独自の light / dark / system(cookie + middleware header + no-flash
+  inline script)。`next-themes` は使わない
+- **Components**: shadcn primitive(統合 `radix-ui` パッケージ)を土台に、Vela の
+  トークンと触感へ寄せたもの + `components/vela/` の固有コンポーネント
+- **Table**: `@tanstack/react-table` v8 の汎用 `DataTable`
+- **Catalog & verification**: Storybook 10(`@storybook/nextjs`, `addon-a11y`)、
+  `@storybook/test-runner`(Playwright)
 
 ## Architecture
 
-Layered, top to bottom:
-
 ```
-app/{module}/page.tsx                      Server Component: calls a repository, passes initial data
-components/page-component/{Module}*.tsx    Client: URL/list state, per-page persistence, refetch
-components/{feature}/*.tsx                  Client: ColumnDef[] -> DataTable; feature-specific UI
-components/common/DataTable.tsx            Generic table (sticky header, relative widths, fill&scroll)
-components/ui/*                            shadcn primitives
-repository/{module}Repository.ts           Typed functions; take a DataSource, return typed DTOs
-lib/data-source/                           The seam: DataSource interface + in-memory mock impl
-hooks/                                     useListUrlState, usePerPageLocalStorage
+app/                        App Router。globals.css がデザイントークンの実装
+components/ui/*             shadcn primitive(Vela の見た目に寄せてある)
+components/vela/*           Vela 固有のコンポーネント・独自 SVG アイコン
+components/theme/*          light/dark/system テーマ
+components/common/*         汎用 DataTable
+hooks/                      useListUrlState / usePerPageLocalStorage
+types/                      DataTable の型
+stories/{foundations,components,ui}/
 ```
 
-**Data-access seam**: repositories never talk to a transport directly — they
-take a `DataSource`. The default implementation is in-memory/mock. A real
-`http`/`db` implementation can drop in by changing only `lib/data-source` wiring,
-without touching repository signatures or UI.
+画面を作るときの層構造は `app/`(Server Component でデータ取得)→
+`page-component/` → `feature/` → `common/` → `repository/` → `client/`。
+`repository/` を唯一の型境界にし、URL を状態の source とする。
+useEffect でのデータ取得・初期値同期は禁止。
 
-**Naming / conventions**:
+**Naming / conventions**
 
-- Import alias: `@/*` maps to the repo root (`@/lib/utils`, `@/components/ui/...`).
-- Prettier: single quotes, no semicolons. Run `yarn prettier` after any
-  `shadcn add` (generated code uses double-quote/semi and will fail lint).
-- Components import from the unified `radix-ui` package, not per-primitive
-  packages.
+- import alias: `@/*` はリポジトリルート
+- Prettier: single quote / semicolon なし。`shadcn add` の後は必ず `yarn prettier`
+- primitive は統合 `radix-ui` パッケージから import する
+- コンポーネントを変更したら Story も同時に更新する
+
+## Design System
+
+正典は「小さなデジタル玩具」。実装上の不変条件:
+
+- **枠と影を与えるのは「押せるもの・浮いているもの」だけ**。ただの情報のまとまりは
+  `Surface` / `TintPanel`(線も影もなし)、押せるものは `Tile` / `Button`
+- **影はぼかさない**。`shadow-pop`(2px)→ hover `shadow-pop-lg`(3px)+1px 持ち上げ
+  → active `shadow-pop-none` + 1px 沈み。浮いているものは `shadow-pop-xl`(4px)
+- **主要ボタンは pill**。四角い塗りボタンを作らない
+- **塗りボタンは `bg-btn-fill` / `text-on-btn`**。`--accent` を直接 background に
+  しない(ダークは淡い青緑の塗り + 濃い文字に切り替わる)
+- **区画は線ではなく tint の色面で分ける**。文字は常に `text-ink`、彩度を上げない。
+  1 画面で使う tint は 3〜4 色まで
+- **アイコンは `components/vela/icons.tsx` に描く**。汎用アイコンセットで置き換え
+  ない。24x24 / stroke 1.6 / round cap / fill none
+- **常時ループするアニメーション禁止**(点滅・パルス・回転)。例外は `Spinner` のみ
+- **文言は変えない**。デザイン都合で用語をやわらかく言い換えない
+- 禁止: グラデーション背景 / blur 影 / 等幅フォントのブロック使用 / 高彩度の大面積
+  塗り / 純黒・純白の大面積 / 絵文字アイコン / 意味のない装飾図形
 
 ## CI Commands
 
-All commands run inside the Docker `app` service.
+すべて Docker の `app` サービス内で実行する。
 
 ```bash
-docker compose exec app yarn lint        # eslint + prettier:check
-docker compose exec app yarn typecheck   # tsc --noEmit
-docker compose exec app yarn build       # next build
+docker compose exec app yarn lint             # eslint + prettier:check
+docker compose exec app yarn typecheck        # tsc --noEmit
+docker compose exec app yarn build            # next build
+docker compose exec app yarn build-storybook  # 静的 Storybook
+task test:stories                             # build + test-runner(a11y 含む)
 ```
 
-Component verification (Playwright-powered, via the Storybook test-runner):
-
-```bash
-task test:stories                        # build-storybook + serve + test-storybook
-```
-
-GitHub Actions runs `lint` + `typecheck` on push/PR to `master`.
+GitHub Actions は push / PR(master)で lint + typecheck を実行する。
 
 ## Docker Config
 
-- Compose service: `app` (image `node:25.2-slim`, `working_dir: /code`, repo
-  mounted at `/code`).
-- Dev server published at **http://localhost:8080** (`8080 -> 3000`).
-- Run everything through the container, e.g. `docker compose exec app yarn dev`.
-- `task` shortcuts: `task up`, `task dev`, `task lint`, `task typecheck`,
-  `task test:stories`.
+- compose サービス: `app`(`node:25.2-slim`, `working_dir: /code`, リポジトリを
+  `/code` にマウント)
+- dev サーバ: `8080 -> 3000` / Storybook: `6006`
+- `task` ショートカット: `task up` `task dev` `task storybook` `task lint`
+  `task typecheck` `task test:stories`
 
 ## UI Hostname
 
-http://localhost:8080
+- 開発サーバ: http://localhost:8080
+- Storybook: http://localhost:6006
 
 ## Implementation Phases
 
-0. Walking skeleton — Docker/tsconfig pre-flight, Tailwind v4 + tokens, shadcn +
-   button, theme infra, Storybook + test-runner green (gate).
-1. Component breadth — form controls, data display, overlays + menus (each with
-   stories).
-2. Layer structure + generic DataTable + an example `/users` list page proving
-   the full stack end-to-end.
-3. Form (react-hook-form + zod) example + conventions doc.
+0. **デザインシステム(現在地)** — トークン、コンポーネントライブラリ、Storybook
+1. 画面 — サービス系(番組表 / ライブ / ライブラリ / 予約)は トップナビ、
+   管理系(チューナー / チャンネル / エンコード / 品質 / システム)は「設定」配下の
+   サイドナビ
+2. API 連携 — OpenAPI スキーマからクライアントを生成し、`repository/` に閉じる

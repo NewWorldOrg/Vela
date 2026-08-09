@@ -1,152 +1,111 @@
-# next-base
+# Vela
 
-A general-purpose [Next.js](https://nextjs.org) base: an opinionated starting
-point with a shadcn/ui design system, a light/dark/system theme, a generic data
-table, a provider-agnostic data-access seam, and a Storybook that both showcases
-and verifies every component.
+録画システムのフロントエンド。Next.js の App Router + Storybook で、デザイン
+システム(トークンとコンポーネント)を実装したリポジトリです。
 
-Clone it, point the data seam at your API or DB, and build screens by writing a
-repository function + columns — not by re-deriving infrastructure.
+現時点のスコープはデザインシステムまで。画面の実装はまだ入っていません。
 
-## Stack
+## デザインの方針
 
-- **Next.js 16** (App Router, RSC) + **React 19** + **TypeScript** (strict)
-- **Tailwind CSS v4** (CSS-first `@theme`) + **shadcn/ui** (`new-york`, `zinc`)
-- Custom **light/dark/system theme** (cookie + middleware + no-flash script; no
-  `next-themes`)
-- **@tanstack/react-table v8** via a generic `DataTable`
-- **react-hook-form + zod** for forms
-- **Storybook 10** + `@storybook/test-runner` (Playwright-powered) for the
-  catalog and verification
+UI 全体をひとつの「小さなデジタル玩具」として設計します。
 
-## Getting started
+- **触れる感触があること** — hover で 1px 持ち上がって影が伸び、押すと沈んで影が
+  消える。ぼかさない hard offset shadow だけを使う
+- **Card を乱用しない** — 枠と影を与えるのは「押せるもの・浮いているもの」だけ。
+  ただの情報のまとまりは、余白と背景サーフェスの差で階層を作る
+- **区画は線ではなく淡い色面(tint)で分ける** — 文字は常に墨、彩度は上げない
+- **独自 SVG アイコン** — 汎用アイコンセットは使わない。24x24 / stroke 1.6 /
+  round cap で、わずかに崩して手描きの気配を残す
+- **常時ループするアニメーションを作らない** — 動くのは「触れた時」と読み込み中の
+  スピナーだけ
+- ライト既定 + ダーク完備。shadcn/ui のアクセシブルな primitive と interaction は
+  使うが、その SaaS 的なビジュアルランゲージには寄せない
 
-Everything runs inside the Docker `app` service (Node, `working_dir: /code`).
+## 技術構成
+
+- **Next.js 16**(App Router, RSC)+ **React 19** + **TypeScript**(strict)
+- **Tailwind CSS v4**(CSS-first `@theme`)+ **shadcn/ui**(`new-york`)
+- 独自の **light / dark / system テーマ**(cookie + middleware + no-flash script。
+  `next-themes` は使わない)
+- **Storybook 10** + `@storybook/test-runner`(Playwright)+ `addon-a11y`
+
+## 開始する
+
+すべて Docker の `app` サービス(Node, `working_dir: /code`)の中で実行します。
 
 ```bash
-docker compose up -d                 # or: task up
-docker compose exec app yarn dev     # or: task dev
+docker compose up -d                      # task up
+docker compose exec app yarn install
+docker compose exec app yarn storybook    # task storybook — :6006
+docker compose exec app yarn dev          # task dev — :8080
 ```
 
-Open <http://localhost:8080>. The example list screen is at `/users`.
-
-### Common commands
+### よく使うコマンド
 
 ```bash
-docker compose exec app yarn lint        # eslint + prettier:check   (task lint)
-docker compose exec app yarn typecheck   # tsc --noEmit              (task typecheck)
-docker compose exec app yarn build       # next build
-docker compose exec app yarn storybook   # Storybook dev on :6006
-task test:stories                        # build + run the Storybook test-runner
+docker compose exec app yarn lint            # eslint + prettier:check  (task lint)
+docker compose exec app yarn typecheck       # tsc --noEmit             (task typecheck)
+docker compose exec app yarn build           # next build
+docker compose exec app yarn build-storybook # 静的 Storybook
+task test:stories                            # build + Storybook test-runner(a11y 含む)
 ```
 
-## Project structure
+## デザイントークン
+
+トークンは `app/globals.css` に Tailwind v4 のテーマ変数として実装しています。
+ライトは `:root`、ダークは `.dark` に同名で定義され、ユーティリティ側は
+テーマを意識しません。
+
+| 種別 | トークン | ユーティリティ例 |
+| --- | --- | --- |
+| 地・面 | `--bg` `--surface` `--surface-2` `--surface-3` | `bg-bg` `bg-surface` `bg-surface-2` |
+| 線 | `--line` `--line-strong` | `border-line` `border-line-strong` |
+| 墨 | `--ink` `--ink-2` `--ink-3` | `text-ink` `text-ink-2` `text-ink-3` |
+| 主役 | `--accent` `--accent-soft` `--accent-line` | `text-brand` `bg-brand-soft` `border-brand-line` |
+| 塗りボタン | `--btn-fill` `--on-btn` | `bg-btn-fill` `text-on-btn` |
+| パステルの面 | `--tint-lavender` ほか 6 色 | `bg-tint-lavender` … |
+| セマンティクス | `mint` / `lemon` / `coral` / `sky` と `-soft` `-line` | `text-mint` `bg-lemon-soft` |
+| 角丸 | `--r-s` 10 / `--r-m` 16 / `--r-l` 22 / pill | `rounded-md` `rounded-lg` `rounded-xl` `rounded-full` |
+| 影 | hard offset のみ | `shadow-pop` `shadow-pop-lg` `shadow-pop-xl` `shadow-pop-none` |
+| 触感 | `--ease` / `--dur` | `ease-toy` `duration-150` |
+
+書体は見出し・ブランドが **Zen Maru Gothic**(700 / `palt`)、本文と UI が
+**Zen Kaku Gothic New**、数値・型番・時刻が **M PLUS 1 Code**(`tabular-nums`)。
+`font-heading` / `font-body` / `font-code` と、`text-h1` … `text-micro` の
+サイズスケールで指定します。
+
+塗りボタンは `--accent` ではなく `--btn-fill` / `--on-btn` を使ってください。
+ライトは濃い青緑の塗り、ダークは淡い青緑の塗り+濃い文字に切り替わります。
+
+## ディレクトリ
 
 ```
-app/(app)/layout.tsx                      Wraps the app routes in the AppShell
-app/(app)/{module}/page.tsx               Server Component: calls a repository, passes initial data
-components/layout/{AppShell,SideNav}.tsx  Sidebar + header chrome; navConfig.tsx lists nav items
-components/page-component/{Module}*.tsx   Client: URL/list state, per-page persistence, refetch
-components/{feature}/*                     Client: ColumnDef[] → DataTable; feature UI
-components/common/DataTable.tsx           Generic table (sticky header, relative widths, fill&scroll)
-components/ui/*                            shadcn primitives
-repository/{module}Repository.ts          Typed functions; take a DataSource, return typed DTOs
-lib/data-source/                          The seam: DataSource interface + in-memory mock
-lib/dataSource.ts                         The app's DataSource instance (swap point)
-hooks/                                    useListUrlState, usePerPageLocalStorage
-types/dataTable.ts                        SortState, PaginationState, PageSize, column types
-stories/                                  One story per component (+ DataTable, AppShell, form)
+app/                     App Router。globals.css がトークンの実装
+components/ui/*          shadcn primitive(Vela の見た目に寄せてある)
+components/vela/*        Vela 固有のコンポーネントと独自アイコン
+components/theme/*       light/dark/system テーマの仕組み
+components/common/*      汎用 DataTable
+hooks/                   useListUrlState / usePerPageLocalStorage
+types/                   DataTable の型
+stories/foundations/*    トークンの見本(色・書体・面と影・アイコン)
+stories/components/*     Vela コンポーネントの story
+stories/ui/*             未改変の primitive の story
 ```
 
-The `@/*` import alias maps to the repo root (`@/components/ui/button`, …).
+`@/*` はリポジトリルートを指します(`@/components/ui/button` など)。
 
-## App shell
-
-Routes under `app/(app)/` render inside `AppShell` (collapsible sidebar +
-header + a fill main area). The example screens — `/dashboard`, `/users`,
-`/settings` — all live there; list pages fill the viewport and scroll
-internally. The header shows the page title, derived from the active item in
-`components/layout/navConfig.tsx` — edit that file to change the sidebar items,
-app name, and per-route titles. Public pages (e.g. the landing `/`) stay
-outside the group.
-
-Storybook leads with the composed screens (the `Pages/*` stories render the
-real Dashboard / Users / Settings views inside the shell); the raw `ui/*`
-primitives are grouped last.
-
-## Theme
-
-Three states — light / dark / system. A cookie (`next-base-theme-mode`) is read
-by `middleware.ts` into an `x-theme-mode` header so the root layout can render
-the right theme at SSR; a no-flash inline script handles the `system` case
-before paint. Drop `<ThemeToggle />` anywhere inside the `ThemeProvider`.
-
-Tokens are standard shadcn `zinc` plus `success` / `warning` / `info` and
-`table-header`, exposed as Tailwind utilities (`bg-success`, `text-warning`, …).
-
-## Adding a component
+## コンポーネントを足す
 
 ```bash
 docker compose exec app sh -c "npx shadcn@latest add <name>"
-docker compose exec app yarn prettier   # generated code is double-quote/semi; reformat to repo style
+docker compose exec app yarn prettier   # 生成物は double-quote/semi なので整形する
 ```
 
-Then add a story under `stories/` (`title: 'UI/<Name>'`). For interaction or
-a11y assertions, use a `play` function with helpers from `storybook/test`. Run
-`task test:stories` to verify in a real browser.
+生成された primitive は shadcn 既定の見た目のままなので、Vela のトークンと触感に
+寄せてから使ってください。追加したら必ず `stories/` に story を書き、バリアントと
+状態(hover / disabled / エラー / 空)を並べます。
 
-## Adding a list screen
+## 検証
 
-The example `/users` screen shows the full flow. To add your own (e.g. `posts`):
-
-1. **Repository** — `repository/postsRepository.ts`: a `Post` type plus
-   `listPosts(dataSource, query)` / `getPost(dataSource, id)` that delegate to
-   the `DataSource`.
-2. **Seed (mock)** — add the collection to `lib/dataSource.ts`:
-   `posts: { idField: 'id', records: postSeed }`.
-3. **Columns** — `components/posts/columns.tsx`: `ColumnDef<Post>[]` with
-   `meta` (`minWidthPx`, `sticky: 'left'`, `sortingField`, `truncate`) and a
-   `ColumnVisibilityOption[]`.
-4. **Table** — `components/posts/PostsListTable.tsx`: render `<DataTable>` with
-   those columns.
-5. **Page-component** — `components/page-component/PostsListPage.tsx`: wire
-   `useListUrlState` + `usePerPageLocalStorage`, refetch via the repository.
-6. **Route** — `app/posts/page.tsx`: a Server Component that reads `searchParams`,
-   fetches the first page, and renders the page-component.
-
-## Plugging in a real API or DB
-
-Repositories depend only on the `DataSource` interface
-(`list(collection, query)` / `find(collection, id)`), so the transport is a
-single swap point. Implement `DataSource` against your backend:
-
-```ts
-// lib/data-source/http.ts
-import type { DataSource } from '@/lib/data-source'
-
-export function createHttpDataSource(baseUrl: string): DataSource {
-  return {
-    async list(collection, query) {
-      const res = await fetch(`${baseUrl}/${collection}?` + toParams(query))
-      return res.json() // shape: { items, total, page, perPage, lastPage }
-    },
-    async find(collection, id) {
-      const res = await fetch(`${baseUrl}/${collection}/${id}`)
-      return res.ok ? res.json() : null
-    },
-  }
-}
-```
-
-Then change only `lib/dataSource.ts` to construct it. Repositories, columns,
-tables, and pages stay untouched.
-
-## Verification
-
-Component verification is the Storybook test-runner: it renders every story in a
-real browser (via Playwright) and runs each story's `play`/a11y checks. It runs
-in Docker against a built, statically-served Storybook:
-
-```bash
-task test:stories
-```
+`task test:stories` が実ブラウザで全 story を描画し、各 story の `play` と a11y
+チェックを走らせます。a11y は違反があれば失敗する設定です。

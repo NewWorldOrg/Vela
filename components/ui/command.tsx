@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { Command as CommandPrimitive } from 'cmdk'
-import { SearchIcon } from 'lucide-react'
+import { SearchIcon } from '@/components/vela/icons'
 
 import { cn } from '@/lib/utils'
 import {
@@ -133,7 +133,11 @@ function CommandSeparator({
   return (
     <CommandPrimitive.Separator
       data-slot="command-separator"
-      className={cn('-mx-1 h-px bg-border', className)}
+      // cmdk hard-codes role="separator", which is not an allowed child of the
+      // list's listbox role. The rule is purely visual, so hide it from the
+      // accessibility tree instead.
+      aria-hidden="true"
+      className={cn('-mx-1 h-px border-t border-dashed border-line', className)}
       {...props}
     />
   )

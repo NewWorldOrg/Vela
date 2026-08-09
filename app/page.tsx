@@ -1,23 +1,19 @@
-import Link from 'next/link'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
-import { Button } from '@/components/ui/button'
+import { Brand } from '@/components/vela/app-shell'
 
 export default function Home() {
   return (
     <main className="flex min-h-dvh flex-col">
-      <header className="flex items-center justify-end p-4">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-[14px] py-2">
+        <Brand />
         <ThemeToggle />
       </header>
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">next-base</h1>
-        <p className="max-w-prose text-muted-foreground">
-          A general-purpose Next.js base with a shadcn/ui design system, a
-          light/dark/system theme, a generic data table, and a Storybook that
-          showcases and verifies every component.
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+        <h1 className="heading text-h1">Vela</h1>
+        <p className="max-w-prose text-ui text-ink-2">
+          録画システムのフロントエンド。画面の実装はこれから、デザインシステムは
+          Storybook にあります。
         </p>
-        <Button asChild>
-          <Link href="/dashboard">Open the app</Link>
-        </Button>
       </div>
     </main>
   )

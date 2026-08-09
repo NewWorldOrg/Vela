@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const THEME_COOKIE = 'next-base-theme-mode'
+const THEME_COOKIE = 'vela-theme-mode'
 
 /**
  * Reads the theme-preference cookie and forwards it as the `x-theme-mode`

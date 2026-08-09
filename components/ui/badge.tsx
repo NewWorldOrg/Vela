@@ -4,20 +4,29 @@ import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
+/**
+ * The chip. Dot-plus-text is the base form for state and the chip is the
+ * supporting form, so chips stay quiet: a hairline, a soft colour surface and
+ * text. `kind*` variants label a category rather than a state, so their text
+ * stays ink-2 and only the surface colour changes.
+ */
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3',
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-full border px-[11px] py-[3px] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
-        secondary:
-          'bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
-        destructive:
-          'bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90',
-        outline:
-          'border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-        ghost: '[a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 [a&]:hover:underline',
+        default: 'border-line bg-surface text-ink-2',
+        secondary: 'border-line bg-surface-2 text-ink-2',
+        outline: 'border-line-strong bg-transparent text-ink-2',
+        ok: 'border-mint-line bg-mint-soft text-mint',
+        warn: 'border-lemon-line bg-lemon-soft text-lemon',
+        err: 'border-coral-line bg-coral-soft text-coral',
+        info: 'border-brand-line bg-brand-soft text-brand',
+        selected: 'border-brand-line bg-brand-soft font-bold text-brand',
+        recording: 'border-coral-line bg-coral-soft font-bold text-coral',
+        kindTv: 'border-line bg-tint-sky text-ink-2',
+        kindSegment: 'border-line bg-tint-sage text-ink-2',
+        kindData: 'border-line bg-surface-2 text-ink-2',
       },
     },
     defaultVariants: {

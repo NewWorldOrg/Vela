@@ -1,6 +1,6 @@
 'use client'
 
-import { SlidersHorizontal } from 'lucide-react'
+import { ColumnsIcon } from '@/components/vela/icons'
 import type { VisibilityState } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,7 +37,7 @@ export default function DataTableColumnVisibility({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm">
-          <SlidersHorizontal className="size-4" />
+          <ColumnsIcon className="size-4" />
           Columns
         </Button>
       </DropdownMenuTrigger>

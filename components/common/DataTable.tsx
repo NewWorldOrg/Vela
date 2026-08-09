@@ -10,12 +10,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsUpDown,
-  ChevronUp,
-} from 'lucide-react'
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  SortIcon,
+} from '@/components/vela/icons'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -75,7 +75,7 @@ export interface DataTableProps<TData> {
   emptyText?: string
 }
 
-const STORAGE_PREFIX = 'next-base-column-visibility-'
+const STORAGE_PREFIX = 'vela-column-visibility-'
 
 function readStoredVisibility(storageKey: string): VisibilityState | null {
   if (typeof window === 'undefined') return null
@@ -252,8 +252,8 @@ export default function DataTable<TData>({
                       : undefined
                   const stickyClass =
                     stickyDir === 'left'
-                      ? 'sticky top-0 z-30 bg-table-header'
-                      : 'sticky top-0 z-20 bg-table-header'
+                      ? 'sticky top-0 z-30 bg-surface-2'
+                      : 'sticky top-0 z-20 bg-surface-2'
 
                   return (
                     <TableHead
@@ -279,12 +279,12 @@ export default function DataTable<TData>({
                           )}
                           {isActive ? (
                             sortState?.sortDirection === 'asc' ? (
-                              <ChevronUp className="size-3.5" />
+                              <ChevronUpIcon className="size-3.5" />
                             ) : (
-                              <ChevronDown className="size-3.5" />
+                              <ChevronDownIcon className="size-3.5" />
                             )
                           ) : (
-                            <ChevronsUpDown className="size-3.5 text-muted-foreground" />
+                            <SortIcon className="size-3.5 text-muted-foreground" />
                           )}
                         </button>
                       ) : (
@@ -444,7 +444,7 @@ export default function DataTable<TData>({
                 disabled={pagination.currentPage <= 1}
                 onClick={() => onPageChange(pagination.currentPage - 1)}
               >
-                <ChevronLeft className="size-4" />
+                <ChevronLeftIcon className="size-4" />
               </Button>
               <span className="px-2 text-sm">
                 {pagination.currentPage} / {pagination.lastPage}
@@ -456,7 +456,7 @@ export default function DataTable<TData>({
                 disabled={pagination.currentPage >= pagination.lastPage}
                 onClick={() => onPageChange(pagination.currentPage + 1)}
               >
-                <ChevronRight className="size-4" />
+                <ChevronRightIcon className="size-4" />
               </Button>
             </div>
           </div>
