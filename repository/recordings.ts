@@ -97,7 +97,8 @@ export async function listRecordings(
 ): Promise<RecordingsResult> {
   const all = [...RECORDING_FIXTURES].sort(
     (a, b) =>
-      b.startedAt.localeCompare(a.startedAt) || b.id.localeCompare(a.id),
+      (b.startedAt ?? '').localeCompare(a.startedAt ?? '') ||
+      b.id.localeCompare(a.id, undefined, { numeric: true }),
   )
   const channels = [...new Set(all.map((r) => r.channel))]
   const years = [...new Set(all.map((r) => r.year))].sort((a, b) => b - a)
