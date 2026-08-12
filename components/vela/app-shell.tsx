@@ -51,10 +51,15 @@ export function Brand({ className, ...props }: ComponentProps<'div'>) {
   )
 }
 
-export function GlobalNav({ className, ...props }: ComponentProps<'nav'>) {
+export function GlobalNav({
+  className,
+  'aria-label': ariaLabel = 'メイン',
+  ...props
+}: ComponentProps<'nav'>) {
   return (
     <nav
       data-slot="global-nav"
+      aria-label={ariaLabel}
       className={cn('flex flex-1 gap-0.5', className)}
       {...props}
     />
@@ -108,7 +113,7 @@ export function SettingsLink({
       {...props}
     >
       <SettingsIcon />
-      {children}
+      {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : children}
     </Comp>
   )
 }
@@ -128,11 +133,13 @@ export function AdminSideNav({
   caption,
   className,
   children,
+  'aria-label': ariaLabel,
   ...props
 }: ComponentProps<'nav'> & { caption?: string }) {
   return (
     <nav
       data-slot="admin-side-nav"
+      aria-label={ariaLabel ?? caption}
       className={cn(
         'w-[152px] shrink-0 border-r border-dashed border-line px-[9px] py-3.5 max-[900px]:w-auto',
         className,
@@ -153,6 +160,7 @@ export function AdminSideNavItem({
   active,
   asChild,
   icon,
+  label,
   className,
   children,
   ...props
@@ -160,6 +168,7 @@ export function AdminSideNavItem({
   active?: boolean
   asChild?: boolean
   icon?: ReactNode
+  label: string
 }) {
   const Comp = asChild ? Slot.Root : 'a'
 
@@ -167,6 +176,7 @@ export function AdminSideNavItem({
     <Comp
       data-slot="admin-side-nav-item"
       aria-current={active ? 'page' : undefined}
+      aria-label={label}
       className={cn(
         'mb-px flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sub font-medium text-ink-2 no-underline outline-none',
         'transition-[background-color,color,transform] duration-150 ease-toy',
@@ -178,7 +188,8 @@ export function AdminSideNavItem({
       {...props}
     >
       {icon}
-      <span className="max-[900px]:hidden">{children}</span>
+      <span className="max-[900px]:hidden">{label}</span>
+      {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : null}
     </Comp>
   )
 }

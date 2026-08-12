@@ -1,7 +1,8 @@
 # Vela
 
-録画システムのフロントエンド。現時点のリポジトリのスコープは **デザインシステム
-(トークン + コンポーネントライブラリ + Storybook)** で、画面の実装は入っていない。
+録画システムのフロントエンド。デザインシステム(トークン + コンポーネントライブラリ +
+Storybook)と、アプリシェル + 主要ルートの骨格が入っている。画面の中身は順次実装する
+(認証系の /logged-out・設定 > 認証、予約結果台帳のルートは各ドメインで追加)。
 
 ## Tech Stack
 
@@ -19,6 +20,9 @@
 
 ```
 app/                        App Router。globals.css がデザイントークンの実装
+app/(app)/                  シェル付きのルート群。(app)/_shell/ がトップバー、
+                            (app)/settings/_shell/ が管理サイドナビ(いずれも Client)
+app/_components/            components/ に置くほど汎用でない、app/ 配下専用の部品
 components/ui/*             shadcn primitive(Vela の見た目に寄せてある)
 components/vela/*           Vela 固有のコンポーネント・独自 SVG アイコン
 components/theme/*          light/dark/system テーマ
@@ -72,7 +76,7 @@ docker compose exec app yarn build-storybook  # 静的 Storybook
 task test:stories                             # build + test-runner(a11y 含む)
 ```
 
-GitHub Actions は push / PR(master)で lint + typecheck を実行する。
+GitHub Actions は push / PR(master)で lint + typecheck + build を実行する。
 
 ## Docker Config
 
@@ -89,8 +93,8 @@ GitHub Actions は push / PR(master)で lint + typecheck を実行する。
 
 ## Implementation Phases
 
-0. **デザインシステム(現在地)** — トークン、コンポーネントライブラリ、Storybook
-1. 画面 — サービス系(番組表 / ライブ / ライブラリ / 予約)は トップナビ、
+0. デザインシステム — トークン、コンポーネントライブラリ、Storybook
+1. **画面(現在地)** — サービス系(番組表 / ライブ / ライブラリ / 予約)は トップナビ、
    管理系(チューナー / チャンネル / エンコード / 品質 / システム)は「設定」配下の
    サイドナビ
 2. API 連携 — OpenAPI スキーマからクライアントを生成し、`repository/` に閉じる
