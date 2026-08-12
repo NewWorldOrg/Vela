@@ -181,6 +181,16 @@ export function ThumbErrorIcon(props: IconProps) {
   )
 }
 
+export function SignInIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M14.6 3.4h4.2a1.6 1.6 0 0 1 1.6 1.6v14a1.6 1.6 0 0 1-1.6 1.6h-4.2" />
+      <path d="m9.6 7.2 4.9 4.8-4.9 4.9" />
+      <path d="M14.4 12H3.2" />
+    </Icon>
+  )
+}
+
 export function PlayIcon(props: IconProps) {
   return (
     <Icon {...props}>

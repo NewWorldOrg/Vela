@@ -22,6 +22,7 @@ const NAVIGATION: [string, ComponentType<IconProps>][] = [
   ['VelaMark', Icons.VelaMark],
   ['ProgramGuideIcon', Icons.ProgramGuideIcon],
   ['LiveIcon', Icons.LiveIcon],
+  ['SignInIcon', Icons.SignInIcon],
   ['PlayIcon', Icons.PlayIcon],
   ['OutcomeTruncatedIcon', Icons.OutcomeTruncatedIcon],
   ['OutcomeFailedIcon', Icons.OutcomeFailedIcon],
