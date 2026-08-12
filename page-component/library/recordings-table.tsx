@@ -109,11 +109,16 @@ export function RecordingsTable({ items }: { items: Recording[] }) {
                   </dd>
                   <dt className="text-ink-3">サイズ</dt>
                   <dd className="font-code text-ink-2">
-                    {formatBytes(deleting.sizeBytes)}({deleting.sizeObservedAt})
+                    {formatBytes(deleting.sizeBytes)}(
+                    {deleting.fileMissing
+                      ? '実ファイルなし'
+                      : deleting.sizeObservedAt}
+                    )
                   </dd>
                   <dt className="text-ink-3">結果と品質</dt>
                   <dd>
                     <OutcomeChip recording={deleting} />{' '}
+                    {deleting.fileMissing && <FileMissingChip />}{' '}
                     <QualityChip recording={deleting} withDetail={false} />
                   </dd>
                   <dt className="text-ink-3">ファイル</dt>
@@ -210,15 +215,14 @@ function RecordingRow({
         )}
       </Td>
       <Td className="font-code text-ui whitespace-nowrap">
-        {r.fileMissing
-          ? `台帳 ${formatBytes(r.sizeBytes)}`
-          : formatBytes(r.sizeBytes)}
+        {formatBytes(r.sizeBytes)}
         <small className={cn('block font-sans text-[10.5px]', subTone)}>
           {r.fileMissing ? '実ファイルなし' : r.sizeObservedAt}
         </small>
       </Td>
       <Td>
         <OutcomeChip recording={r} />
+        {r.fileMissing && <FileMissingChip />}
         {r.outcomeDetail && (
           <span className="mt-[3px] block text-[10.5px] leading-relaxed text-ink-3">
             {r.outcomeDetail}
@@ -280,15 +284,16 @@ function Td({ className, ...props }: React.ComponentProps<'td'>) {
   )
 }
 
+function FileMissingChip() {
+  return (
+    <Badge variant="err" className="mt-[3px] font-bold">
+      <ChipDot />
+      ファイル不在
+    </Badge>
+  )
+}
+
 function OutcomeChip({ recording: r }: { recording: Recording }) {
-  if (r.fileMissing) {
-    return (
-      <Badge variant="err" className="font-bold">
-        <ChipDot />
-        ファイル不在
-      </Badge>
-    )
-  }
   switch (r.outcome) {
     case 'recording':
       return (
