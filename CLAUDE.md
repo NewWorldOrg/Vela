@@ -27,7 +27,8 @@ components/ui/*             shadcn primitive(Vela の見た目に寄せてある
 components/vela/*           Vela 固有のコンポーネント・独自 SVG アイコン
 components/theme/*          light/dark/system テーマ
 components/common/*         汎用 DataTable
-page-component/{screen}/    画面本体(Client)。app/ の RSC から props で受ける
+page-component/{screen}/    画面本体。app/ の RSC から props で受け、Client 境界は必要な葉だけ
+feature/{domain}/           画面間で共有する機能部品(チップ・ダイアログ等)
 repository/                 データ取得と唯一の型境界(現状フィクスチャ)
 lib/                        cn・パス判定・表示整形などの純関数
 hooks/                      useListUrlState / usePerPageLocalStorage
