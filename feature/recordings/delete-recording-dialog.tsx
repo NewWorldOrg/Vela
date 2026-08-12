@@ -13,11 +13,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { TrashIcon, WarningIcon } from '@/components/vela/icons'
-import {
-  FileMissingChip,
-  OutcomeChip,
-  QualityChip,
-} from '@/feature/recordings/chips'
+import { FileMissingChip } from '@/feature/recordings/file-missing-chip'
+import { OutcomeChip } from '@/feature/recordings/outcome-chip'
+import { QualityChip } from '@/feature/recordings/quality-chip'
 
 export function DeleteRecordingDialog({
   recording,

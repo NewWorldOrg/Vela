@@ -3,7 +3,9 @@ import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
 
 function base(id: string) {
   const found = RECORDING_FIXTURES.find((r) => r.id === id)
-  if (!found) throw new Error(`fixture ${id} not found`)
+  if (!found) {
+    throw new Error(`fixture ${id} not found`)
+  }
   return found
 }
 

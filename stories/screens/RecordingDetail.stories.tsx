@@ -5,7 +5,9 @@ import { RecordingDetailView } from '@/page-component/recordings/recording-detai
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
-  if (!found) throw new Error(`fixture ${id} not found`)
+  if (!found) {
+    throw new Error(`fixture ${id} not found`)
+  }
   return found
 }
 

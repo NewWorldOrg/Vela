@@ -25,20 +25,28 @@ const STORAGE_KEY = STORAGE_PREFIX + GLOBAL_STORAGE_KEY
 const SAME_WINDOW_SYNC_EVENT = 'vela-per-page-changed'
 
 function isValidPerPage(parsed: number): parsed is PageSize {
-  if (!Number.isSafeInteger(parsed)) return false
+  if (!Number.isSafeInteger(parsed)) {
+    return false
+  }
   return (PAGE_SIZES as readonly number[]).includes(parsed)
 }
 
 function parsePerPage(raw: string | null): PageSize | null {
-  if (raw == null) return null
+  if (raw == null) {
+    return null
+  }
   // Accept only a canonical positive integer (reject '050', ' 20', '20.5', …).
-  if (!/^(0|[1-9]\d*)$/.test(raw)) return null
+  if (!/^(0|[1-9]\d*)$/.test(raw)) {
+    return null
+  }
   const parsed = Number(raw)
   return isValidPerPage(parsed) ? parsed : null
 }
 
 function readStoredPerPage(): PageSize | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') {
+    return null
+  }
   try {
     return parsePerPage(window.localStorage.getItem(STORAGE_KEY))
   } catch (error) {
@@ -48,7 +56,9 @@ function readStoredPerPage(): PageSize | null {
 }
 
 function writeStoredPerPage(value: PageSize) {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    return
+  }
   try {
     window.localStorage.setItem(STORAGE_KEY, String(value))
   } catch (error) {
@@ -111,7 +121,9 @@ export function usePerPageLocalStorage(
 
   function runMismatchCallback() {
     const cb = onInitialMismatchRef.current
-    if (!cb) return
+    if (!cb) {
+      return
+    }
     try {
       const result = cb()
       if (result instanceof Promise) {
@@ -139,9 +151,13 @@ export function usePerPageLocalStorage(
 
   // Receive per-page changes from other instances (same window) / tabs (storage).
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {
+      return
+    }
     function applyExternalChange(next: PageSize | null) {
-      if (next == null || next === perPageRef.current) return
+      if (next == null || next === perPageRef.current) {
+        return
+      }
       setPerPageState(next)
       runMismatchCallback()
     }
@@ -149,7 +165,9 @@ export function usePerPageLocalStorage(
       applyExternalChange((e as CustomEvent<PageSize>).detail)
     }
     function handleStorage(e: StorageEvent) {
-      if (e.key !== STORAGE_KEY) return
+      if (e.key !== STORAGE_KEY) {
+        return
+      }
       applyExternalChange(parsePerPage(e.newValue))
     }
     window.addEventListener(SAME_WINDOW_SYNC_EVENT, handleSameWindow)
@@ -163,9 +181,13 @@ export function usePerPageLocalStorage(
   // Fire onInitialMismatch once after mount when stored != default.
   const didRunRef = useRef(false)
   useEffect(() => {
-    if (didRunRef.current) return
+    if (didRunRef.current) {
+      return
+    }
     didRunRef.current = true
-    if (initial.mismatch) runMismatchCallback()
+    if (initial.mismatch) {
+      runMismatchCallback()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -78,10 +78,14 @@ export interface DataTableProps<TData> {
 const STORAGE_PREFIX = 'vela-column-visibility-'
 
 function readStoredVisibility(storageKey: string): VisibilityState | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') {
+    return null
+  }
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + storageKey)
-    if (!raw) return null
+    if (!raw) {
+      return null
+    }
     const parsed = JSON.parse(raw)
     if (
       typeof parsed === 'object' &&
@@ -113,11 +117,17 @@ function writeStoredVisibility(storageKey: string, state: VisibilityState) {
 function deriveDefaultVisibility(
   options?: ColumnVisibilityOption[],
 ): VisibilityState {
-  if (!options) return {}
+  if (!options) {
+    return {}
+  }
   const result: VisibilityState = {}
   for (const opt of options) {
-    if (opt.alwaysVisible) continue
-    if (opt.defaultVisible === false) result[opt.id] = false
+    if (opt.alwaysVisible) {
+      continue
+    }
+    if (opt.defaultVisible === false) {
+      result[opt.id] = false
+    }
   }
   return result
 }
@@ -149,11 +159,17 @@ export default function DataTable<TData>({
 
   const didHydrateRef = useRef(false)
   useEffect(() => {
-    if (didHydrateRef.current) return
+    if (didHydrateRef.current) {
+      return
+    }
     didHydrateRef.current = true
-    if (!storageKey) return
+    if (!storageKey) {
+      return
+    }
     const stored = readStoredVisibility(storageKey)
-    if (stored) setColumnVisibility({ ...defaultVisibility, ...stored })
+    if (stored) {
+      setColumnVisibility({ ...defaultVisibility, ...stored })
+    }
     // Hydrate once on mount (storageKey is expected to be a stable const).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -167,7 +183,9 @@ export default function DataTable<TData>({
       skipFirstWriteRef.current = false
       return
     }
-    if (storageKey) writeStoredVisibility(storageKey, columnVisibility)
+    if (storageKey) {
+      writeStoredVisibility(storageKey, columnVisibility)
+    }
   }, [columnVisibility, storageKey])
 
   const resetColumnVisibility = useCallback(() => {
@@ -188,8 +206,12 @@ export default function DataTable<TData>({
 
   const getRowKey = useCallback(
     (row: TData, index: number): string => {
-      if (!trackBy) return String(index)
-      if (typeof trackBy === 'function') return trackBy(row)
+      if (!trackBy) {
+        return String(index)
+      }
+      if (typeof trackBy === 'function') {
+        return trackBy(row)
+      }
       return String(row[trackBy])
     },
     [trackBy],
@@ -344,8 +366,9 @@ export default function DataTable<TData>({
                           if (
                             closestInteractive &&
                             !closestInteractive.isSameNode(e.currentTarget)
-                          )
+                          ) {
                             return
+                          }
                           onRowClick(row.original)
                         }
                       : undefined

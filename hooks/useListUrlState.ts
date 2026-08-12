@@ -28,8 +28,12 @@ interface UseListUrlStateResult {
 }
 
 function parsePage(raw: string | null): number {
-  if (raw == null) return 1
-  if (!/^[1-9]\d*$/.test(raw)) return 1
+  if (raw == null) {
+    return 1
+  }
+  if (!/^[1-9]\d*$/.test(raw)) {
+    return 1
+  }
   return Number(raw)
 }
 
@@ -73,7 +77,9 @@ export function useListUrlState(
     const result: Record<string, string> = {}
     for (const key of filterKeys) {
       const value = searchParams.get(key)
-      if (value != null && value !== '') result[key] = value
+      if (value != null && value !== '') {
+        result[key] = value
+      }
     }
     return result
     // filterKeys identity is unstable; key on its joined string instead.
@@ -95,8 +101,11 @@ export function useListUrlState(
   const onPageChange = useCallback(
     (next: number) => {
       buildAndNavigate((params) => {
-        if (next > 1) params.set(pageParam, String(next))
-        else params.delete(pageParam)
+        if (next > 1) {
+          params.set(pageParam, String(next))
+        } else {
+          params.delete(pageParam)
+        }
       }, pageChangePush)
     },
     [buildAndNavigate, pageParam, pageChangePush],
@@ -117,8 +126,11 @@ export function useListUrlState(
     (patch: Record<string, string | null>) => {
       buildAndNavigate((params) => {
         for (const [key, value] of Object.entries(patch)) {
-          if (value == null || value === '') params.delete(key)
-          else params.set(key, value)
+          if (value == null || value === '') {
+            params.delete(key)
+          } else {
+            params.set(key, value)
+          }
         }
         params.delete(pageParam)
       }, filterChangePush)

@@ -92,15 +92,21 @@ export async function searchPrograms(
         if (
           tokens.length &&
           !tokens.every((t) => fieldsText.some((f) => f.includes(t)))
-        )
+        ) {
           return false
+        }
         if (
           excludes.length &&
           excludes.some((t) => fieldsText.some((f) => f.includes(t)))
-        )
+        ) {
           return false
-        if (condition.genre && p.genre !== condition.genre) return false
-        if (condition.ch && p.channelId !== condition.ch) return false
+        }
+        if (condition.genre && p.genre !== condition.genre) {
+          return false
+        }
+        if (condition.ch && p.channelId !== condition.ch) {
+          return false
+        }
         return true
       }).map((p) => {
         const channel = CHANNELS.find((c) => c.id === p.channelId)
