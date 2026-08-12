@@ -1,13 +1,20 @@
 import type { Metadata } from 'next'
 
-import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+import { getGuide } from '@/repository/programs'
+import { GuideView } from '@/page-component/guide/guide-view'
 
 export const metadata: Metadata = { title: '番組表' }
 
-export default function Page() {
-  return (
-    <ScreenPlaceholder spot="antenna">
-      番組表の画面はこれから実装されます。
-    </ScreenPlaceholder>
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const guide = await getGuide(
+    typeof params.kind === 'string' ? params.kind : undefined,
+    typeof params.date === 'string' ? params.date : undefined,
   )
+
+  return <GuideView guide={guide} />
 }
