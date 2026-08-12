@@ -16,7 +16,7 @@ import { tactile } from '@/components/vela/tactile'
  */
 const buttonVariants = cva(
   cn(
-    "inline-flex shrink-0 items-center justify-center gap-[7px] rounded-full font-bold whitespace-nowrap outline-none disabled:pointer-events-none disabled:opacity-45 disabled:shadow-pop-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[15px]",
+    "inline-flex shrink-0 items-center justify-center gap-[7px] rounded-full font-bold whitespace-nowrap outline-none disabled:pointer-events-none disabled:border-dashed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-pop-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[15px]",
     '[&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:scale-[1.08] hover:[&_svg]:rotate-[-7deg]',
     tactile,
   ),
