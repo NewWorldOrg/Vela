@@ -7,11 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 import { CHANNEL_KINDS } from '@/repository/channels'
-import {
-  GUIDE_DAYS,
-  type GuideResult,
-  type Program,
-} from '@/repository/programs'
+import type { GuideResult, Program } from '@/repository/programs'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
@@ -47,9 +43,9 @@ export function GuideView({ guide }: { guide: GuideResult }) {
     [router, pathname, searchParams],
   )
 
-  const dayIndex = GUIDE_DAYS.findIndex((d) => d.date === guide.day.date)
-  const prev = GUIDE_DAYS[dayIndex - 1]
-  const next = GUIDE_DAYS[dayIndex + 1]
+  const dayIndex = guide.days.findIndex((d) => d.date === guide.day.date)
+  const prev = guide.days[dayIndex - 1]
+  const next = guide.days[dayIndex + 1]
 
   return (
     <main className="flex-1 px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">

@@ -1,5 +1,9 @@
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
-import { PROGRAM_FIXTURES } from '@/repository/programs.fixtures'
+import {
+  NOW_LABEL,
+  NOW_MIN,
+  PROGRAM_FIXTURES,
+} from '@/repository/programs.fixtures'
 
 export interface LiveChannelRow {
   id: string
@@ -39,15 +43,15 @@ export async function getLive(rawChannel?: string): Promise<LiveResult> {
 
   const onAirOf = (channelId: string) =>
     PROGRAM_FIXTURES.filter((p) => p.channelId === channelId).find(
-      (p) => p.startMin <= 124 && p.startMin + p.durationMin > 124,
+      (p) => p.startMin <= NOW_MIN && p.startMin + p.durationMin > NOW_MIN,
     )
   const nextOf = (channelId: string) =>
     PROGRAM_FIXTURES.filter(
-      (p) => p.channelId === channelId && p.startMin > 124,
+      (p) => p.channelId === channelId && p.startMin > NOW_MIN,
     ).sort((a, b) => a.startMin - b.startMin)[0]
 
   const current = onAirOf(channel.id)
-  const elapsed = current ? 124 - current.startMin : 0
+  const elapsed = current ? NOW_MIN - current.startMin : 0
   const rest = current ? current.durationMin - elapsed : 0
 
   return {
@@ -59,7 +63,7 @@ export async function getLive(rawChannel?: string): Promise<LiveResult> {
     progressPct: current
       ? Math.round((elapsed / current.durationMin) * 100)
       : 0,
-    nowLabel: '21:04',
+    nowLabel: NOW_LABEL,
     restLabel: `残り ${rest} 分`,
     description: current?.detail ?? current?.description,
     chips: [

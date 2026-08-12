@@ -7,6 +7,10 @@ export const PROGRAM_DAY: GuideDay = {
   isToday: true,
 }
 
+/** Where "now" sits in the guide window, as minutes from its start. */
+export const NOW_MIN = 124
+export const NOW_LABEL = '21:04'
+
 export const GUIDE_DAYS: GuideDay[] = [
   { date: '2026-08-07', label: '8/7(木)', isToday: false },
   PROGRAM_DAY,

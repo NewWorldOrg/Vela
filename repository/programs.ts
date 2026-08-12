@@ -2,6 +2,8 @@ import type { Channel, ChannelKind } from '@/repository/channels'
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import {
   GUIDE_DAYS,
+  NOW_LABEL,
+  NOW_MIN,
   PROGRAM_DAY,
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
@@ -45,6 +47,7 @@ export interface GuideDay {
 export interface GuideResult {
   kind: ChannelKind
   day: GuideDay
+  days: GuideDay[]
   windowStartHour: number
   windowHours: number
   nowMin?: number
@@ -53,8 +56,6 @@ export interface GuideResult {
   programs: Program[]
   coverageWarning?: { kind: string; body: string }
 }
-
-export { GUIDE_DAYS }
 
 export async function getGuide(
   rawKind: string | undefined,
@@ -76,10 +77,11 @@ export async function getGuide(
   return {
     kind,
     day,
+    days: GUIDE_DAYS,
     windowStartHour: 19,
     windowHours: 8,
-    nowMin: day.isToday ? 124 : undefined,
-    nowLabel: day.isToday ? '21:04' : undefined,
+    nowMin: day.isToday ? NOW_MIN : undefined,
+    nowLabel: day.isToday ? NOW_LABEL : undefined,
     channels,
     programs,
     coverageWarning:
