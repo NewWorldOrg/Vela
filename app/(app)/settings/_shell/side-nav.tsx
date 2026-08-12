@@ -8,6 +8,7 @@ import { AdminSideNav, AdminSideNavItem } from '@/components/vela/app-shell'
 import {
   ChannelIcon,
   EncodeIcon,
+  ListIcon,
   QualityIcon,
   SystemIcon,
   TunerIcon,
@@ -21,12 +22,19 @@ const ADMIN_NAV = [
   { href: '/settings/quality', label: '品質', icon: QualityIcon },
 ] as const
 
-export function SettingsSideNav() {
+const MIGRATION_NAV = {
+  href: '/settings/migration',
+  label: '移行記録',
+  icon: ListIcon,
+} as const
+
+export function SettingsSideNav({ hasMigration }: { hasMigration: boolean }) {
   const pathname = usePathname()
+  const items = hasMigration ? [...ADMIN_NAV, MIGRATION_NAV] : ADMIN_NAV
 
   return (
     <AdminSideNav caption="管理">
-      {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
+      {items.map(({ href, label, icon: Icon }) => (
         <AdminSideNavItem
           key={href}
           asChild
