@@ -127,3 +127,73 @@ export async function listRecordings(
   })
   return { items, total: all.length, channels, years, genres, filter }
 }
+export interface QualitySpot {
+  at: string
+  packets: string
+  positionPct: number
+}
+
+export interface SeekMarks {
+  playedPct: number
+  time: string
+  cmSpans?: { leftPct: number; widthPct: number }[]
+  chapterPcts?: number[]
+  dropPcts?: number[]
+}
+
+export interface RecordingDetail extends Recording {
+  channelNo?: string
+  genres?: string[]
+  avInfo?: string
+  synopsis?: string
+  outcomeBody?: string
+  outcomeAxis?: string
+  reconcile?: { size: string; range: string; sub: string }
+  interruptions?: { main: string; sub?: string }
+  tunerUnit?: { main: string; sub: string }
+  eoverflow?: string
+  scramble?: { main: string; sub?: string }
+  stopReason?: string
+  thumbnailState?: {
+    main: string
+    sub?: string
+    action?: '生成する' | '再生成'
+  }
+  qualityRatio?: string
+  qualityTotal?: string
+  qualitySpots?: QualitySpot[]
+  seek?: SeekMarks
+  encodePanel?: {
+    profile?: string
+    doneSub?: string
+    sourceSize?: string
+    outSize?: string
+    savings?: string
+    queueSub?: string
+    registeredAt?: string
+    progressPct?: number
+    progressSub?: string
+    attempts?: string
+  }
+  live?: {
+    elapsed: string
+    written: string
+    drops: string
+    rest: string
+    updatedAt: string
+    extension?: {
+      plannedEnd: string
+      currentEnd: string
+      delta: string
+      followedAt: string
+    }
+  }
+}
+
+export async function getRecording(
+  id: string,
+): Promise<RecordingDetail | undefined> {
+  const { RECORDING_DETAIL_FIXTURES } =
+    await import('@/repository/recordings.details.fixtures')
+  return RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
+}
