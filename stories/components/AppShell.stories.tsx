@@ -15,7 +15,6 @@ import {
   TopBar,
 } from '@/components/vela/app-shell'
 import { PageHeading } from '@/components/vela/section-heading'
-import { IconButton } from '@/components/vela/icon-button'
 import { TintPanel } from '@/components/vela/surface'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
@@ -54,9 +53,6 @@ function ServiceTopBar({ settingsActive }: { settingsActive?: boolean }) {
         ))}
       </GlobalNav>
       <div className="flex items-center gap-[7px]">
-        <IconButton aria-label="検索" variant="quiet" size="sm">
-          <SearchIcon />
-        </IconButton>
         <ThemeToggle />
         <SettingsLink href="#" active={settingsActive} />
       </div>
@@ -80,6 +76,54 @@ export const Service: Story = {
   ),
 }
 
+export const AsChildNav: Story = {
+  render: () => (
+    <div className="p-6">
+      <AppShell>
+        <TopBar>
+          <Brand />
+          <GlobalNav>
+            <GlobalNavItem asChild active>
+              <a href="#">番組表</a>
+            </GlobalNavItem>
+            <GlobalNavItem asChild>
+              <a href="#">ライブ</a>
+            </GlobalNavItem>
+          </GlobalNav>
+          <div className="flex items-center gap-[7px]">
+            <SettingsLink asChild>
+              <a href="#">設定</a>
+            </SettingsLink>
+          </div>
+        </TopBar>
+        <AdminBody>
+          <AdminSideNav caption="管理">
+            <AdminSideNavItem
+              asChild
+              label="チューナー"
+              icon={<TunerIcon />}
+              active
+            >
+              <a href="#" />
+            </AdminSideNavItem>
+            <AdminSideNavItem asChild label="チャンネル" icon={<ChannelIcon />}>
+              <a href="#" />
+            </AdminSideNavItem>
+          </AdminSideNav>
+          <AdminMain>
+            <Crumb>
+              設定 / <CrumbCurrent>チューナー</CrumbCurrent>
+            </Crumb>
+          </AdminMain>
+        </AdminBody>
+      </AppShell>
+      <p className="mt-[9px] text-note text-ink-3">
+        アプリ本体はこの形でルーティングのリンクを差し込む。
+      </p>
+    </div>
+  ),
+}
+
 export const Admin: Story = {
   render: () => (
     <div className="p-6">
@@ -87,21 +131,24 @@ export const Admin: Story = {
         <ServiceTopBar settingsActive />
         <AdminBody>
           <AdminSideNav caption="管理" aria-label="管理メニュー">
-            <AdminSideNavItem href="#" icon={<SystemIcon />}>
-              システム
-            </AdminSideNavItem>
-            <AdminSideNavItem href="#" icon={<TunerIcon />} active>
-              チューナー
-            </AdminSideNavItem>
-            <AdminSideNavItem href="#" icon={<ChannelIcon />}>
-              チャンネル
-            </AdminSideNavItem>
-            <AdminSideNavItem href="#" icon={<EncodeIcon />}>
-              エンコード
-            </AdminSideNavItem>
-            <AdminSideNavItem href="#" icon={<QualityIcon />}>
-              品質
-            </AdminSideNavItem>
+            <AdminSideNavItem href="#" icon={<SystemIcon />} label="システム" />
+            <AdminSideNavItem
+              href="#"
+              icon={<TunerIcon />}
+              label="チューナー"
+              active
+            />
+            <AdminSideNavItem
+              href="#"
+              icon={<ChannelIcon />}
+              label="チャンネル"
+            />
+            <AdminSideNavItem
+              href="#"
+              icon={<EncodeIcon />}
+              label="エンコード"
+            />
+            <AdminSideNavItem href="#" icon={<QualityIcon />} label="品質" />
           </AdminSideNav>
           <AdminMain>
             <Crumb>

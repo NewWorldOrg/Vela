@@ -3,7 +3,7 @@
 録画システムのフロントエンド。Next.js の App Router + Storybook で、デザイン
 システム(トークンとコンポーネント)を実装したリポジトリです。
 
-現時点のスコープはデザインシステムまで。画面の実装はまだ入っていません。
+デザインシステムに加えて、アプリシェルと主要ルートの骨格が入っています。画面の中身は順次実装します。
 
 ## デザインの方針
 
@@ -81,6 +81,8 @@ task test:stories                            # build + Storybook test-runner(a11
 
 ```
 app/                     App Router。globals.css がトークンの実装
+app/(app)/               シェル付きのルート群(_shell/ にトップバー、settings/_shell/ に管理サイドナビ)
+app/_components/         ルート横断の app 専用部品
 components/ui/*          shadcn primitive(Vela の見た目に寄せてある)
 components/vela/*        Vela 固有のコンポーネントと独自アイコン
 components/theme/*       light/dark/system テーマの仕組み

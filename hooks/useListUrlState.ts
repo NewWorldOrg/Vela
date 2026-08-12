@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
+import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { SortDirection, SortState } from '@/types/dataTable'
 
@@ -84,7 +85,7 @@ export function useListUrlState(
       const params = new URLSearchParams(searchParams.toString())
       mutate(params)
       const qs = params.toString()
-      const href = qs ? `${pathname}?${qs}` : pathname
+      const href = (qs ? `${pathname}?${qs}` : pathname) as Route
       const navigate = push ? router.push : router.replace
       navigate(href, { scroll: false })
     },
