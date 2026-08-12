@@ -1,13 +1,28 @@
 import type { Metadata } from 'next'
 
-import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+import { searchPrograms } from '@/repository/search'
+import { SearchView } from '@/page-component/search/search-view'
 
 export const metadata: Metadata = { title: '番組検索' }
 
-export default function Page() {
-  return (
-    <ScreenPlaceholder spot="antenna">
-      番組検索の画面はこれから実装されます。
-    </ScreenPlaceholder>
-  )
+function str(v: string | string[] | undefined) {
+  return typeof v === 'string' ? v : undefined
+}
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const result = await searchPrograms({
+    q: str(params.q),
+    exclude: str(params.exclude),
+    fields: str(params.fields),
+    genre: str(params.genre),
+    kind: str(params.kind),
+    ch: str(params.ch),
+  })
+
+  return <SearchView result={result} />
 }
