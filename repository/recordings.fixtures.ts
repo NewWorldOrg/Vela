@@ -157,7 +157,7 @@ export const RECORDING_FIXTURES: Recording[] = [
     recordedAtLabel: '2025/03/08(土) 23:00',
     recordedRange: '2025/03/08(土) 23:00 — 23:30',
     lengthSec: 30 * 60 + 4,
-    sizeBytes: 20.8 * 1024 ** 3,
+    sizeBytes: 3.6 * 1024 ** 3,
     sizeObservedAt: '観測 08/10 04:00',
     filePath: '/srv/recordings/0731.m2ts',
     fileMissing: true,
