@@ -125,6 +125,51 @@ export function ProgramGuideIcon(props: IconProps) {
   )
 }
 
+export function ThumbShotIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.4" />
+      <path d="m5.4 16.4 4.2-4.6 3 2.8 3-3.4 4.6 5.2" />
+      <circle cx="9" cy="9.4" r="1.3" />
+    </Icon>
+  )
+}
+
+export function ThumbPendingIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.4" />
+      <path d="M7.6 12h8.8" />
+    </Icon>
+  )
+}
+
+export function ThumbMissingIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.6 4.6 19.4 19.4" />
+      <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.4" />
+    </Icon>
+  )
+}
+
+export function ThumbErrorIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="2.4" />
+      <path d="M8 10.4h8M8 13.6h5" />
+    </Icon>
+  )
+}
+
+export function PlayIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 5.8 18.4 12 9 18.2Z" />
+    </Icon>
+  )
+}
+
 export function LiveIcon(props: IconProps) {
   return (
     <Icon {...props}>
