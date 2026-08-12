@@ -155,7 +155,7 @@ export const Admin: Story = {
               設定 / <CrumbCurrent>チューナー</CrumbCurrent>
             </Crumb>
             <PageHeading
-              description="接続されたチューナーデバイスの台帳と稼働状態"
+              description="接続されたチューナーデバイスの一覧と稼働状態"
               action={
                 <Button size="sm">
                   <SearchIcon />
