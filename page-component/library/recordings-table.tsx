@@ -233,7 +233,7 @@ function RecordingRow({
         <QualityChip recording={r} withDetail subTone={subTone} />
       </Td>
       <Td>
-        <EncodeChip recording={r} />
+        <EncodeChip recording={r} subTone={subTone} />
       </Td>
       <Td className="text-right whitespace-nowrap">
         <span
@@ -379,17 +379,23 @@ function QualityChip({
   )
 }
 
-function EncodeChip({ recording: r }: { recording: Recording }) {
+function EncodeChip({
+  recording: r,
+  subTone = 'text-ink-3',
+}: {
+  recording: Recording
+  subTone?: string
+}) {
   switch (r.encode.status) {
     case 'none':
       return (
-        <Badge variant="outline" className="border-line text-ink-3">
+        <Badge variant="outline" className={cn('border-line', subTone)}>
           未エンコード
         </Badge>
       )
     case 'waiting':
       return (
-        <Badge variant="outline" className="border-line text-ink-3">
+        <Badge variant="outline" className={cn('border-line', subTone)}>
           待機中
         </Badge>
       )
