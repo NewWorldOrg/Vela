@@ -1,0 +1,155 @@
+'use client'
+
+import { useCallback, useState } from 'react'
+import Link from 'next/link'
+import type { Route } from 'next'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+
+import { cn } from '@/lib/utils'
+import { CHANNEL_KINDS } from '@/repository/channels'
+import type { GuideResult, Program } from '@/repository/programs'
+import { Banner } from '@/components/vela/banner'
+import { EmptyState } from '@/components/vela/empty-state'
+import { IconButton } from '@/components/vela/icon-button'
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  SearchIcon,
+} from '@/components/vela/icons'
+import { GuideGrid } from '@/page-component/guide/guide-grid'
+import { ProgramPanel } from '@/page-component/guide/program-panel'
+
+export function GuideView({ guide }: { guide: GuideResult }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [selected, setSelected] = useState<Program | null>(null)
+
+  const patch = useCallback(
+    (next: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString())
+      for (const [k, v] of Object.entries(next)) {
+        if (v == null) {
+          params.delete(k)
+        } else {
+          params.set(k, v)
+        }
+      }
+      const qs = params.toString()
+      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+        scroll: false,
+      })
+    },
+    [router, pathname, searchParams],
+  )
+
+  const dayIndex = guide.days.findIndex((d) => d.date === guide.day.date)
+  const prev = guide.days[dayIndex - 1]
+  const next = guide.days[dayIndex + 1]
+
+  return (
+    <main className="flex-1 px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
+      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[18px] py-[9px] max-[700px]:px-3.5">
+        <div className="inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]">
+          {CHANNEL_KINDS.map((k) => (
+            <button
+              key={k.value}
+              type="button"
+              aria-pressed={k.value === guide.kind}
+              onClick={() =>
+                patch({ kind: k.value === 'terrestrial' ? null : k.value })
+              }
+              className={cn(
+                'cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 transition-[background-color,color] duration-150 hover:bg-surface hover:text-ink',
+                k.value === guide.kind && 'bg-brand-soft font-bold text-brand',
+              )}
+            >
+              {k.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <IconButton
+            aria-label="前の日"
+            size="sm"
+            disabled={!prev}
+            onClick={() => prev && patch({ date: prev.date })}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <span className="min-w-[7em] text-center font-code text-ui font-medium">
+            {guide.day.label}
+          </span>
+          <IconButton
+            aria-label="次の日"
+            size="sm"
+            disabled={!next}
+            onClick={() => next && patch({ date: next.date })}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+          {!guide.day.isToday && (
+            <button
+              type="button"
+              onClick={() => patch({ date: null })}
+              className="cursor-pointer rounded-full border border-line-strong bg-surface px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
+            >
+              今日
+            </button>
+          )}
+        </div>
+
+        <Link
+          href="/search"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
+        >
+          <SearchIcon className="size-[15px]" />
+          番組を検索
+        </Link>
+      </div>
+
+      {guide.coverageWarning && (
+        <Banner tone="warn" className="mb-3">
+          {guide.coverageWarning.body}
+          <Link
+            href="/settings/channels"
+            className="ml-auto pl-3.5 font-bold whitespace-nowrap underline-offset-[3px] hover:underline"
+          >
+            チャンネル設定へ
+          </Link>
+        </Banner>
+      )}
+
+      {guide.programs.length === 0 ? (
+        <EmptyState spot="antenna" title="この日の番組情報がありません">
+          {guide.day.label}{' '}
+          の番組情報がまだ取れていません。取得できた日から順に並びます。
+        </EmptyState>
+      ) : (
+        <div className="flex items-start gap-3.5 max-[1200px]:flex-col">
+          <div className="min-w-0 flex-1">
+            <GuideGrid
+              channels={guide.channels}
+              programs={guide.programs}
+              windowStartHour={guide.windowStartHour}
+              windowHours={guide.windowHours}
+              nowMin={guide.nowMin}
+              nowLabel={guide.nowLabel}
+              selectedId={selected?.id}
+              onSelect={setSelected}
+            />
+          </div>
+          {selected && (
+            <ProgramPanel
+              program={selected}
+              channel={guide.channels.find((c) => c.id === selected.channelId)}
+              dayLabel={guide.day.label}
+              onClose={() => setSelected(null)}
+            />
+          )}
+        </div>
+      )}
+    </main>
+  )
+}

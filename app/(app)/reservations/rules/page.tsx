@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
 
-import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+import { listRules } from '@/repository/reservations'
+import { RulesView } from '@/page-component/reservations/rules-view'
 
 export const metadata: Metadata = { title: 'ルール' }
 
-export default function Page() {
-  return (
-    <ScreenPlaceholder spot="star">
-      ルール一覧・編集の画面はこれから実装されます。
-    </ScreenPlaceholder>
-  )
+export default async function Page() {
+  const rules = await listRules()
+
+  return <RulesView rules={rules} />
 }

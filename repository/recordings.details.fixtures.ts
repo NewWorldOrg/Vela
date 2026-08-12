@@ -3,7 +3,9 @@ import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
 
 function base(id: string) {
   const found = RECORDING_FIXTURES.find((r) => r.id === id)
-  if (!found) throw new Error(`fixture ${id} not found`)
+  if (!found) {
+    throw new Error(`fixture ${id} not found`)
+  }
   return found
 }
 
@@ -15,7 +17,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     avInfo: '1080i · ステレオ · 字幕あり',
     tunerUnit: {
       main: 'adapter0/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260810-2315-181',
+      sub: '地上 · セッション rec-20260810-2315-181',
     },
     eoverflow: '0 件',
     live: {
@@ -53,7 +55,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     },
     tunerUnit: {
       main: 'adapter1/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260809-2300-131',
+      sub: '地上 · セッション rec-20260809-2300-131',
     },
     eoverflow: '0 件',
     scramble: {
@@ -89,7 +91,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter3/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260809-0105-141',
+      sub: '地上 · セッション rec-20260809-0105-141',
     },
     eoverflow: '0 件',
     scramble: { main: '0 パケット' },
@@ -121,7 +123,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter0/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260808-1230-151',
+      sub: '地上 · セッション rec-20260808-1230-151',
     },
     eoverflow: '0 件',
     scramble: { main: '0 パケット' },
@@ -172,7 +174,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     },
     tunerUnit: {
       main: 'adapter1/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260804-2300-131',
+      sub: '地上 · セッション rec-20260804-2300-131',
     },
     eoverflow: '0 件',
     scramble: { main: '0 パケット' },
@@ -199,7 +201,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter2/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260802-0015-161',
+      sub: '地上 · セッション rec-20260802-0015-161',
     },
     eoverflow: '0 件',
     scramble: {
@@ -254,7 +256,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter1/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260725-2100-131',
+      sub: '地上 · セッション rec-20260725-2100-131',
     },
     eoverflow: '2 件',
     scramble: { main: '0 パケット' },

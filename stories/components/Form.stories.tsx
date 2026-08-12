@@ -157,8 +157,8 @@ export const Selects: Story = {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="auto">自動(空きから割り当て)</SelectItem>
-                <SelectItem value="pt3-1">PT3(地上・1)</SelectItem>
-                <SelectItem value="pt3-2">PT3(地上・2)</SelectItem>
+                <SelectItem value="adapter0">adapter0(地上)</SelectItem>
+                <SelectItem value="adapter1">adapter1(地上)</SelectItem>
               </SelectContent>
             </Select>
             <FieldHint>録画が競合したときの割り当て順です。</FieldHint>

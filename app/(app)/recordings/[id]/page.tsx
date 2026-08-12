@@ -21,7 +21,9 @@ export default async function Page({
 }) {
   const { id } = await params
   const detail = await getRecording(id)
-  if (!detail) notFound()
+  if (!detail) {
+    notFound()
+  }
 
   return <RecordingDetailView detail={detail} />
 }

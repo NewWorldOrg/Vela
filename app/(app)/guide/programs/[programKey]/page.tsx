@@ -1,13 +1,35 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 
-import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+import { getProgram } from '@/repository/programs'
+import { ProgramDetailView } from '@/page-component/guide/program-detail-view'
 
-export const metadata: Metadata = { title: '番組詳細' }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ programKey: string }>
+}): Promise<Metadata> {
+  const { programKey } = await params
+  const detail = await getProgram(programKey)
+  return { title: detail ? detail.program.title : 'ページが見つかりません' }
+}
 
-export default function Page() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ programKey: string }>
+}) {
+  const { programKey } = await params
+  const detail = await getProgram(programKey)
+  if (!detail) {
+    notFound()
+  }
+
   return (
-    <ScreenPlaceholder spot="antenna">
-      番組詳細の画面はこれから実装されます。
-    </ScreenPlaceholder>
+    <ProgramDetailView
+      program={detail.program}
+      channel={detail.channel}
+      dayLabel={detail.day.label}
+    />
   )
 }

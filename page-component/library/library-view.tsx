@@ -11,56 +11,12 @@ import type {
 } from '@/repository/recordings'
 import { RECORDING_STATE_FILTERS } from '@/repository/recordings'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
 import { LibraryIcon, ListIcon, SearchIcon } from '@/components/vela/icons'
+import { ChannelChip } from '@/page-component/library/channel-chip'
+import { LibraryFilterSelect } from '@/page-component/library/library-filter-select'
 import { RecordingsTable } from '@/page-component/library/recordings-table'
-
-const ALL = '__all__'
-
-function FilterSelect({
-  prefix,
-  value,
-  options,
-  onChange,
-}: {
-  prefix: string
-  value?: string
-  options: { value: string; label: string }[]
-  onChange: (next: string | null) => void
-}) {
-  const current = value
-    ? (options.find((o) => o.value === value)?.label ?? value)
-    : 'すべて'
-
-  return (
-    <Select
-      value={value ?? ALL}
-      onValueChange={(next) => onChange(next === ALL ? null : next)}
-    >
-      <SelectTrigger
-        size="sm"
-        className="w-fit rounded-full shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg"
-      >
-        {prefix}: {current}
-      </SelectTrigger>
-      <SelectContent position="popper">
-        <SelectItem value={ALL}>{prefix}: すべて</SelectItem>
-        {options.map((o) => (
-          <SelectItem key={o.value} value={o.value}>
-            {o.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  )
-}
 
 export function LibraryView({
   result,
@@ -76,8 +32,11 @@ export function LibraryView({
     (patch: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString())
       for (const [key, value] of Object.entries(patch)) {
-        if (value == null || value === '') params.delete(key)
-        else params.set(key, value)
+        if (value == null || value === '') {
+          params.delete(key)
+        } else {
+          params.set(key, value)
+        }
       }
       const qs = params.toString()
       router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
@@ -122,19 +81,19 @@ export function LibraryView({
               className="h-[33px] rounded-full pl-[34px]"
             />
           </form>
-          <FilterSelect
+          <LibraryFilterSelect
             prefix="期間"
             value={filter.year}
             options={years.map((y) => ({ value: String(y), label: `${y} 年` }))}
             onChange={(next) => onFiltersChange({ year: next })}
           />
-          <FilterSelect
+          <LibraryFilterSelect
             prefix="ジャンル"
             value={filter.genre}
             options={genres.map((g) => ({ value: g, label: g }))}
             onChange={(next) => onFiltersChange({ genre: next })}
           />
-          <FilterSelect
+          <LibraryFilterSelect
             prefix="状態"
             value={filter.state}
             options={RECORDING_STATE_FILTERS.map((f) => ({
@@ -262,30 +221,5 @@ export function LibraryView({
         </EmptyState>
       )}
     </main>
-  )
-}
-
-function ChannelChip({
-  label,
-  on,
-  onClick,
-}: {
-  label: string
-  on: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
-      className={
-        on
-          ? 'rounded-full border border-brand-line bg-brand-soft px-[13px] py-1 text-sub font-bold whitespace-nowrap text-brand shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none'
-          : 'rounded-full border border-line-strong bg-surface px-[13px] py-1 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none'
-      }
-    >
-      {label}
-    </button>
   )
 }

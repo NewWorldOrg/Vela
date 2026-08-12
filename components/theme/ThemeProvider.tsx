@@ -58,7 +58,9 @@ export function ThemeProvider({
 
   // useEffect exception: browser API (window.matchMedia) + listener cleanup.
   useEffect(() => {
-    if (preference !== 'system') return
+    if (preference !== 'system') {
+      return
+    }
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const apply = (matches: boolean) => {

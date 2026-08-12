@@ -5,6 +5,11 @@ const config = [
   { ignores: ['.next/**', 'storybook-static/**', 'test-results/**'] },
   ...coreWebVitals,
   {
+    rules: {
+      curly: ['error', 'all'],
+    },
+  },
+  {
     files: ['app/layout.tsx'],
     rules: {
       // The rule guards against a font link in a single page. The root layout

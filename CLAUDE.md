@@ -2,7 +2,7 @@
 
 録画システムのフロントエンド。デザインシステム(トークン + コンポーネントライブラリ +
 Storybook)と、アプリシェル + 主要ルートの骨格が入っている。画面の中身は順次実装する
-(認証系の /logged-out・設定 > 認証、予約結果台帳のルートは各ドメインで追加)。
+(認証系の /logged-out・設定 > 認証、予約結果のルートは各ドメインで追加)。
 
 ## Tech Stack
 
@@ -33,7 +33,7 @@ repository/                 データ取得と唯一の型境界(現状フィク
 lib/                        cn・パス判定・表示整形などの純関数
 hooks/                      useListUrlState / usePerPageLocalStorage
 types/                      DataTable の型
-stories/{foundations,components,ui}/
+stories/{foundations,components,screens,common,theme}/
 ```
 
 画面を作るときの層構造は `app/`(Server Component でデータ取得)→

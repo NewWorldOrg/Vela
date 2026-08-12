@@ -121,11 +121,21 @@ export async function listRecordings(
     ? normalize(filter.q).split(/\s+/).filter(Boolean)
     : []
   const items = all.filter((r) => {
-    if (tokens.length > 0 && !matchesQuery(r, tokens)) return false
-    if (filter.year && String(r.year) !== filter.year) return false
-    if (filter.genre && r.genre !== filter.genre) return false
-    if (filter.state && !matchesState(r, filter.state)) return false
-    if (filter.ch && r.channel !== filter.ch) return false
+    if (tokens.length > 0 && !matchesQuery(r, tokens)) {
+      return false
+    }
+    if (filter.year && String(r.year) !== filter.year) {
+      return false
+    }
+    if (filter.genre && r.genre !== filter.genre) {
+      return false
+    }
+    if (filter.state && !matchesState(r, filter.state)) {
+      return false
+    }
+    if (filter.ch && r.channel !== filter.ch) {
+      return false
+    }
     return true
   })
   return { items, total: all.length, channels, years, genres, filter }

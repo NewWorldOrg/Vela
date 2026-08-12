@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
+import { isPlayableSource } from '@/lib/recordings'
 import { formatBytes } from '@/lib/format'
 import type { RecordingDetail } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
@@ -18,19 +19,20 @@ import {
   ThumbMissingIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { FileMissingChip, QualityChip } from '@/feature/recordings/chips'
+import { FileMissingChip } from '@/feature/recordings/file-missing-chip'
+import { QualityChip } from '@/feature/recordings/quality-chip'
 import {
   PLAYER_BUTTON,
   PLAYER_PALETTE,
 } from '@/feature/recordings/player-palette'
 import { Player } from '@/page-component/recordings/player'
+import { DetailKeyRow } from '@/page-component/recordings/detail-key-row'
+import { DetailRow } from '@/page-component/recordings/detail-row'
+import { DetailStat } from '@/page-component/recordings/detail-stat'
+import { EncodePanelBody } from '@/page-component/recordings/encode-panel-body'
+import { EncodeStatusChip } from '@/page-component/recordings/encode-status-chip'
+import { OutcomeMark } from '@/page-component/recordings/outcome-mark'
 import { RecordingActions } from '@/page-component/recordings/recording-actions'
-
-const OUTCOME_MARK = {
-  complete: SuccessIcon,
-  truncated: OutcomeTruncatedIcon,
-  failed: OutcomeFailedIcon,
-} as const
 
 const OUTCOME_STYLE = {
   complete: 'bg-tint-sage',
@@ -101,10 +103,10 @@ export function RecordingDetailView({
               秒周期で録画の記録へ書いています。値が動いていること自体が、計測が生きている証拠です。
             </p>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2.5">
-              <Stat k="経過" v={d.live.elapsed} />
-              <Stat k="書き込み済み" v={d.live.written} />
-              <Stat k="進行中のドロップ" v={d.live.drops} />
-              <Stat k="残り" v={d.live.rest} />
+              <DetailStat label="経過" value={d.live.elapsed} />
+              <DetailStat label="書き込み済み" value={d.live.written} />
+              <DetailStat label="進行中のドロップ" value={d.live.drops} />
+              <DetailStat label="残り" value={d.live.rest} />
             </div>
             <p className="mt-2.5 text-note text-ink-3">
               最終更新 <span className="font-code">{d.live.updatedAt}</span> ·
@@ -122,13 +124,19 @@ export function RecordingDetailView({
               <p className="mb-2.5 text-sub leading-relaxed text-ink-2">
                 終了予定が後ろへ動きました。追従は後方のみで、前方へ短縮された場合は追従しません。
               </p>
-              <KRow k="当初の終了予定" main={d.live.extension.plannedEnd} />
-              <KRow
-                k="現在の終了予定"
+              <DetailKeyRow
+                label="当初の終了予定"
+                main={d.live.extension.plannedEnd}
+              />
+              <DetailKeyRow
+                label="現在の終了予定"
                 main={d.live.extension.currentEnd}
                 sub={d.live.extension.delta}
               />
-              <KRow k="最終追従" main={d.live.extension.followedAt} />
+              <DetailKeyRow
+                label="最終追従"
+                main={d.live.extension.followedAt}
+              />
               <p className="mt-2.5 text-note leading-relaxed text-ink-3">
                 録画中は録画の記録が唯一の原簿です。ファイル名からは進行中と完成を判別しません。
               </p>
@@ -191,19 +199,19 @@ export function RecordingDetailView({
             {d.title}
           </h1>
           <div className="border-t border-dashed border-line">
-            <MRow k="チャンネル">
+            <DetailRow label="チャンネル">
               {d.channel}
               {d.channelNo && (
                 <small className="ml-[9px] font-code text-[11.5px] text-ink-3">
                   {d.channelNo}
                 </small>
               )}
-            </MRow>
-            <MRow k="録画日時">
+            </DetailRow>
+            <DetailRow label="録画日時">
               <span className="font-code">{d.recordedRange}</span>
-            </MRow>
+            </DetailRow>
             {d.genres && (
-              <MRow k="ジャンル">
+              <DetailRow label="ジャンル">
                 {d.genres.map((g) => (
                   <span
                     key={g}
@@ -212,9 +220,9 @@ export function RecordingDetailView({
                     {g}
                   </span>
                 ))}
-              </MRow>
+              </DetailRow>
             )}
-            {d.avInfo && <MRow k="映像 / 音声">{d.avInfo}</MRow>}
+            {d.avInfo && <DetailRow label="映像 / 音声">{d.avInfo}</DetailRow>}
           </div>
           {d.synopsis && (
             <p className="my-3.5 max-w-[560px] text-[13px] leading-[1.9] text-ink-2">
@@ -255,35 +263,39 @@ export function RecordingDetailView({
             </span>
           </div>
           {d.reconcile && (
-            <KRow
-              k="突き合わせ"
+            <DetailKeyRow
+              label="突き合わせ"
               main={`${formatBytes(d.sizeBytes)} / 期待レンジ ${d.reconcile.range}`}
               sub={d.reconcile.sub}
             />
           )}
           {d.interruptions && (
-            <KRow
-              k="中断と再開"
+            <DetailKeyRow
+              label="中断と再開"
               main={d.interruptions.main}
               sub={d.interruptions.sub}
             />
           )}
           {d.tunerUnit && (
-            <KRow
-              k="チューナー個体"
+            <DetailKeyRow
+              label="チューナー個体"
               main={d.tunerUnit.main}
               sub={d.tunerUnit.sub}
             />
           )}
-          {d.eoverflow && <KRow k="dvr EOVERFLOW" main={d.eoverflow} />}
+          {d.eoverflow && (
+            <DetailKeyRow label="dvr EOVERFLOW" main={d.eoverflow} />
+          )}
           {d.scramble && (
-            <KRow
-              k="スクランブル残存"
+            <DetailKeyRow
+              label="スクランブル残存"
               main={d.scramble.main}
               sub={d.scramble.sub}
             />
           )}
-          {d.stopReason && <KRow k="停止理由" main={d.stopReason} plain />}
+          {d.stopReason && (
+            <DetailKeyRow label="停止理由" main={d.stopReason} plain />
+          )}
           {d.thumbnailState && (
             <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[9px] text-ui last:border-b-0">
               <span className="w-[132px] shrink-0 text-note text-ink-3 max-[900px]:w-[110px] max-[700px]:w-full">
@@ -328,15 +340,15 @@ export function RecordingDetailView({
               )}
             </div>
             <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-[11px]">
-              <Stat
-                k="ドロップ合計"
-                v={d.quality.measured ? (d.qualityTotal ?? '—') : '未計測'}
+              <DetailStat
+                label="ドロップ合計"
+                value={d.quality.measured ? (d.qualityTotal ?? '—') : '未計測'}
                 unit={d.quality.measured ? 'パケット' : undefined}
                 wordy={!d.quality.measured}
               />
-              <Stat
-                k="総パケット比"
-                v={d.quality.measured ? (d.qualityRatio ?? '—') : '未計測'}
+              <DetailStat
+                label="総パケット比"
+                value={d.quality.measured ? (d.qualityRatio ?? '—') : '未計測'}
                 unit={d.quality.measured ? '%' : undefined}
                 wordy={!d.quality.measured}
               />
@@ -395,10 +407,10 @@ export function RecordingDetailView({
                 <EncodeIcon className="size-4 shrink-0 text-brand" />
                 エンコード
               </h2>
-              <EncodeHeadChip detail={d} />
+              <EncodeStatusChip detail={d} />
             </div>
-            <EncodeBody detail={d} />
-            {playableSource(d) && (
+            <EncodePanelBody detail={d} />
+            {isPlayableSource(d) && (
               <p className="mt-3 text-note leading-relaxed text-ink-3">
                 エンコード状態は「軽く見られるか(シークが安いか)」の軸です。未エンコードでも失敗でも、オンザフライで再生できます。結果(録れたか)・品質(壊れていないか)とは独立しています。
               </p>
@@ -408,231 +420,4 @@ export function RecordingDetailView({
       </div>
     </main>
   )
-}
-
-function playableSource(d: RecordingDetail) {
-  return (
-    !d.fileMissing && (d.outcome === 'complete' || d.outcome === 'truncated')
-  )
-}
-
-function OutcomeMark({
-  outcome,
-}: {
-  outcome: 'complete' | 'truncated' | 'failed'
-}) {
-  const Mark = OUTCOME_MARK[outcome]
-  return <Mark className="size-[26px] shrink-0 text-ink" />
-}
-
-function Stat({
-  k,
-  v,
-  unit,
-  wordy,
-}: {
-  k: string
-  v: string
-  unit?: string
-  wordy?: boolean
-}) {
-  return (
-    <div className="min-w-0 rounded-lg bg-surface-2 px-3.5 py-[11px]">
-      <span className="mb-0.5 block text-[11px] font-medium text-ink-3">
-        {k}
-      </span>
-      <span
-        className={cn(
-          'leading-snug break-all',
-          wordy
-            ? 'text-[15px] font-bold'
-            : 'font-code text-[19px] font-medium tabular-nums',
-        )}
-      >
-        {v}
-        {unit && (
-          <small className="ml-1 font-sans text-[11px] font-normal text-ink-3">
-            {unit}
-          </small>
-        )}
-      </span>
-    </div>
-  )
-}
-
-function MRow({ k, children }: { k: string; children: React.ReactNode }) {
-  return (
-    <div className="flex gap-3.5 border-b border-dashed border-line py-2.5 text-[13px] last:border-b-0">
-      <span className="w-24 shrink-0 pt-px text-sub text-ink-3">{k}</span>
-      <span className="min-w-0">{children}</span>
-    </div>
-  )
-}
-
-function KRow({
-  k,
-  main,
-  sub,
-  plain,
-}: {
-  k: string
-  main: string
-  sub?: string
-  plain?: boolean
-}) {
-  return (
-    <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[9px] text-ui last:border-b-0">
-      <span className="w-[132px] shrink-0 text-note text-ink-3 max-[900px]:w-[110px] max-[700px]:w-full">
-        {k}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className={cn(!plain && 'font-code text-[13px]')}>{main}</span>
-        {sub && (
-          <small className="block text-[11px] leading-[1.7] text-ink-3">
-            {sub}
-          </small>
-        )}
-      </span>
-    </div>
-  )
-}
-
-function EncodeHeadChip({ detail: d }: { detail: RecordingDetail }) {
-  const map = {
-    none: (
-      <Badge variant="mute" className="font-bold">
-        <ChipDot />
-        未エンコード
-      </Badge>
-    ),
-    waiting: (
-      <Badge variant="info" className="font-bold">
-        <ChipDot />
-        待機中
-      </Badge>
-    ),
-    running: (
-      <Badge variant="info" className="font-bold">
-        <ChipDot />
-        実行中
-      </Badge>
-    ),
-    done: (
-      <Badge variant="ok" className="font-bold">
-        <ChipDot />
-        完了
-      </Badge>
-    ),
-    failed: (
-      <Badge variant="err" className="font-bold">
-        <ChipDot />
-        失敗
-      </Badge>
-    ),
-  } as const
-  return map[d.encode.status]
-}
-
-function EncodeBody({ detail: d }: { detail: RecordingDetail }) {
-  const p = d.encodePanel
-  switch (d.encode.status) {
-    case 'done':
-      return (
-        <>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="min-w-[120px] flex-1 rounded-lg bg-surface-2 px-3.5 py-[11px]">
-              <span className="mb-0.5 block text-[11px] text-ink-3">元 TS</span>
-              <span className="font-code text-[16px] font-medium tabular-nums">
-                {p?.sourceSize}
-              </span>
-            </div>
-            <span className="shrink-0 text-[14px] text-ink-3">→</span>
-            <div className="min-w-[120px] flex-1 rounded-lg bg-surface-2 px-3.5 py-[11px]">
-              <span className="mb-0.5 block text-[11px] text-ink-3">H.264</span>
-              <span className="font-code text-[16px] font-medium tabular-nums">
-                {p?.outSize}
-              </span>
-              <small className="ml-[7px] font-code text-[11px] font-medium text-mint">
-                {p?.savings}
-              </small>
-            </div>
-          </div>
-          <p className="mt-3 font-code text-[11.5px] leading-relaxed text-ink-3">
-            {p?.doneSub}
-          </p>
-        </>
-      )
-    case 'running':
-      return (
-        <>
-          {p?.profile && <KRow k="プロファイル" main={p.profile} plain />}
-          <ProgressBar
-            value={p?.progressPct ?? 0}
-            aria-label="エンコードの進捗"
-            className="mt-3 h-[9px]"
-          />
-          <p className="mt-3 font-code text-[11.5px] leading-relaxed text-ink-3">
-            {p?.progressSub}
-          </p>
-          <div className="mt-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled
-              title="エンコード操作はこれから実装されます"
-            >
-              キャンセル
-            </Button>
-          </div>
-        </>
-      )
-    case 'waiting':
-      return (
-        <>
-          <p className="mb-2.5 text-sub leading-relaxed text-ink-2">
-            {p?.queueSub}
-          </p>
-          {p?.profile && <KRow k="プロファイル" main={p.profile} plain />}
-          {p?.registeredAt && <KRow k="登録" main={p.registeredAt} />}
-          <div className="mt-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled
-              title="エンコード操作はこれから実装されます"
-            >
-              キャンセル
-            </Button>
-          </div>
-        </>
-      )
-    case 'failed':
-      return (
-        <>
-          {d.encode.reason && <KRow k="分類" main={d.encode.reason} />}
-          {p?.attempts && <KRow k="試行" main={p.attempts} />}
-          <div className="mt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled
-              title="エンコード操作はこれから実装されます"
-            >
-              再実行
-            </Button>
-          </div>
-          <p className="mt-3 text-note leading-relaxed text-ink-3">
-            エンコードの失敗は録画の結果を書き換えません。録画は成功のまま、成果物だけが無い状態です。
-          </p>
-        </>
-      )
-    case 'none':
-      return (
-        <p className="text-sub leading-relaxed text-ink-2">
-          {playableSource(d)
-            ? '成果物はまだありません。オンザフライで再生できますが、シークのたびにトランスコーダを立て直します。'
-            : '成果物はありません。'}
-        </p>
-      )
-  }
 }

@@ -51,7 +51,7 @@ export const Page: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <PageHeading
-        description="接続されたチューナーデバイスの台帳と稼働状態"
+        description="接続されたチューナーデバイスの一覧と稼働状態"
         action={
           <Button size="sm">
             <PlusIcon />

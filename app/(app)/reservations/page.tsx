@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
 
-import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+import { listReservations } from '@/repository/reservations'
+import { ReservationsView } from '@/page-component/reservations/reservations-view'
 
 export const metadata: Metadata = { title: '予約' }
 
-export default function Page() {
-  return (
-    <ScreenPlaceholder spot="star">
-      予約一覧の画面はこれから実装されます。
-    </ScreenPlaceholder>
-  )
+export default async function Page() {
+  const reservations = await listReservations()
+
+  return <ReservationsView reservations={reservations} />
 }

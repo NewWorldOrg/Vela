@@ -87,7 +87,7 @@ export const Scale: Story = {
               </em>
             </div>
             <div className="text-[14px] font-medium">
-              受信状況の切り分けは、まずチューナーの台帳から確認します。
+              受信状況の切り分けは、まずチューナーの一覧から確認します。
             </div>
           </TintPanel>
           <TintPanel tint="sky">
