@@ -279,7 +279,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     genres: ['ドキュメンタリー'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:04。録画の記録は 20.8 GB、実ファイルはありません。',
+      '期待ウィンドウ 30分に対し、書けた尺 30:04。録画の記録は 3.6 GB、実ファイルはありません。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     eoverflow: '—',

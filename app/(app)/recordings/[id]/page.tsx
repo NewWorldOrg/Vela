@@ -11,7 +11,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params
   const detail = await getRecording(id)
-  return { title: detail ? detail.title : '録画詳細' }
+  return { title: detail ? detail.title : 'ページが見つかりません' }
 }
 
 export default async function Page({
