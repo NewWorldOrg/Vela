@@ -8,7 +8,7 @@ import {
 
 /**
  * Nothing here yet: one small drawing, one line, one way forward. The panel is
- * a tint surface — no border, no shadow.
+ * a surface with a dashed hairline — no shadow.
  */
 export function EmptyState({
   spot = 'antenna',

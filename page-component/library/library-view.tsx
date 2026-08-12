@@ -50,7 +50,7 @@ function FilterSelect({
       >
         {prefix}: {current}
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent position="popper">
         <SelectItem value={ALL}>{prefix}: すべて</SelectItem>
         {options.map((o) => (
           <SelectItem key={o.value} value={o.value}>
