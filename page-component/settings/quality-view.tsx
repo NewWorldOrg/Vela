@@ -1,19 +1,22 @@
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
-import type {
-  QualityLevel,
-  QualityResult,
-  QualityTunerCell,
-} from '@/repository/quality'
+import type { QualityLevel, QualityResult } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Banner } from '@/components/vela/banner'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import {
   ChevronRightIcon,
-  CloseIcon,
   MarkDoubleCircle,
   MarkDots,
   MarkPill,
@@ -21,8 +24,31 @@ import {
   MarkSplit,
 } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
-import { ChipDot } from '@/components/vela/status'
 import { Surface } from '@/components/vela/surface'
+import {
+  QUALITY_LEVEL_LABEL,
+  QualityChip,
+} from '@/page-component/settings/quality-chip'
+import { QualityHealthCell } from '@/page-component/settings/quality-health-cell'
+
+const HEALTH_COLUMNS = [
+  'チューナー',
+  '状態',
+  'ドロップ率',
+  'lock 率',
+  'CNR',
+  'post-Viterbi ビット誤り率',
+]
+
+const BAR_TONE: Record<QualityLevel, string> = {
+  good: 'bg-mint',
+  warn: 'bg-lemon',
+  bad: 'bg-coral',
+  unmeasured: 'bg-transparent',
+  nodata: 'bg-transparent',
+  unsupported: 'bg-transparent',
+  unreachable: 'bg-transparent',
+}
 
 export function QualityView({ result }: { result: QualityResult }) {
   return (
@@ -198,7 +224,7 @@ export function QualityView({ result }: { result: QualityResult }) {
                     </b>
                   )}
                   <QualityChip level={channel.level}>
-                    {LEVEL_LABEL[channel.level]}
+                    {QUALITY_LEVEL_LABEL[channel.level]}
                   </QualityChip>
                 </span>
               </div>
@@ -244,60 +270,42 @@ export function QualityView({ result }: { result: QualityResult }) {
           取得できるのは lock 状態 / CNR / post-Viterbi ビット誤り率の
           3つ。値の隣は取得時刻で、同一値が続くことは安定を意味しない
         </p>
-        <div className="-mx-1 overflow-x-auto px-1 pb-1">
-          <table className="w-full min-w-[900px] border-separate border-spacing-0">
-            <thead>
-              <tr>
-                {[
-                  'チューナー',
-                  '状態',
-                  'ドロップ率',
-                  'lock 率',
-                  'CNR',
-                  'post-Viterbi ビット誤り率',
-                ].map((head) => (
-                  <th
-                    key={head}
-                    className="bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
-                  >
-                    {head}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {result.tuners.map((tuner) => (
-                <tr key={tuner.id}>
-                  <Td>
-                    <b className="block text-[13px] font-bold">
-                      {tuner.device}
-                    </b>
-                    <span className="text-note text-ink-3">
-                      {tuner.hardware}
-                    </span>
-                  </Td>
-                  <Td>
-                    <span className="flex flex-wrap items-center gap-1.5">
-                      <QualityChip level={tuner.state.level}>
-                        {tuner.state.label}
-                      </QualityChip>
-                      {tuner.state.recap && (
-                        <Badge variant="mute">{tuner.state.recap}</Badge>
-                      )}
-                    </span>
-                    <span className="mt-1 block text-note text-ink-3">
-                      {tuner.state.sub}
-                    </span>
-                  </Td>
-                  <HealthCell cell={tuner.drop} />
-                  <HealthCell cell={tuner.lock} />
-                  <HealthCell cell={tuner.cnr} />
-                  <HealthCell cell={tuner.ber} />
-                </tr>
+        <Table className="min-w-[900px]" containerClassName="pb-1">
+          <TableHeader>
+            <TableRow>
+              {HEALTH_COLUMNS.map((column) => (
+                <TableHead key={column}>{column}</TableHead>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {result.tuners.map((tuner) => (
+              <TableRow key={tuner.id}>
+                <TableCell className="align-top">
+                  <b className="block text-[13px] font-bold">{tuner.device}</b>
+                  <span className="text-note text-ink-3">{tuner.hardware}</span>
+                </TableCell>
+                <TableCell className="align-top whitespace-normal">
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <QualityChip level={tuner.state.level}>
+                      {tuner.state.label}
+                    </QualityChip>
+                    {tuner.state.recap && (
+                      <Badge variant="mute">{tuner.state.recap}</Badge>
+                    )}
+                  </span>
+                  <span className="mt-1 block text-note text-ink-3">
+                    {tuner.state.sub}
+                  </span>
+                </TableCell>
+                <QualityHealthCell cell={tuner.drop} />
+                <QualityHealthCell cell={tuner.lock} />
+                <QualityHealthCell cell={tuner.cnr} />
+                <QualityHealthCell cell={tuner.ber} />
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
           <p className="min-w-0 flex-1 text-note text-ink-3">
             lock 状態と CNR
@@ -343,7 +351,7 @@ export function QualityView({ result }: { result: QualityResult }) {
                     {recording.pct}
                   </b>
                   <QualityChip level={recording.level}>
-                    {LEVEL_LABEL[recording.level]}
+                    {QUALITY_LEVEL_LABEL[recording.level]}
                   </QualityChip>
                 </span>
               </div>
@@ -413,134 +421,5 @@ export function QualityView({ result }: { result: QualityResult }) {
         </Surface>
       </div>
     </>
-  )
-}
-
-const LEVEL_LABEL: Record<QualityLevel, string> = {
-  good: '良好',
-  warn: '警告水準',
-  bad: '視聴不可の恐れ',
-  unmeasured: '未計測',
-  nodata: '対象なし',
-  unsupported: '非対応',
-  unreachable: '取得できず',
-}
-
-const BAR_TONE: Record<QualityLevel, string> = {
-  good: 'bg-mint',
-  warn: 'bg-lemon',
-  bad: 'bg-coral',
-  unmeasured: 'bg-transparent',
-  nodata: 'bg-transparent',
-  unsupported: 'bg-transparent',
-  unreachable: 'bg-transparent',
-}
-
-function QualityChip({
-  level,
-  children,
-}: {
-  level: QualityLevel
-  children: React.ReactNode
-}) {
-  if (level === 'good' || level === 'warn' || level === 'bad') {
-    const variant = level === 'good' ? 'ok' : level === 'warn' ? 'warn' : 'err'
-    return (
-      <Badge variant={variant} className="font-bold">
-        <ChipDot />
-        {children}
-      </Badge>
-    )
-  }
-
-  if (level === 'nodata') {
-    return (
-      <Badge variant="mute">
-        <span
-          aria-hidden="true"
-          className="size-1.5 rounded-full border border-ink-3"
-        />
-        {children}
-      </Badge>
-    )
-  }
-
-  if (level === 'unsupported') {
-    return (
-      <Badge variant="mute">
-        <span aria-hidden="true" className="h-3 w-px rotate-[30deg] bg-ink-3" />
-        {children}
-      </Badge>
-    )
-  }
-
-  if (level === 'unreachable') {
-    return (
-      <Badge variant="outline">
-        <CloseIcon />
-        {children}
-      </Badge>
-    )
-  }
-
-  return <Badge variant="mute">{children}</Badge>
-}
-
-function HealthCell({ cell }: { cell: QualityTunerCell }) {
-  return (
-    <Td className="align-top">
-      {cell.value !== undefined && (
-        <span className="block font-code text-ui font-medium tabular-nums">
-          {cell.value}
-          {cell.unit && (
-            <em className="ml-0.5 font-sans text-note not-italic text-ink-3">
-              {cell.unit}
-            </em>
-          )}
-        </span>
-      )}
-      {cell.layers && (
-        <span className="block space-y-0.5">
-          {cell.layers.map((layer) => (
-            <span key={layer.layer} className="block font-code text-note">
-              <i className="mr-1.5 text-ink-3 not-italic">{layer.layer}</i>
-              {layer.value}
-            </span>
-          ))}
-        </span>
-      )}
-      {cell.level && cell.value === undefined && !cell.layers && (
-        <QualityChip level={cell.level}>{LEVEL_LABEL[cell.level]}</QualityChip>
-      )}
-      {cell.level && (cell.value !== undefined || cell.layers) && (
-        <span className="mt-1 block">
-          <QualityChip level={cell.level}>
-            {LEVEL_LABEL[cell.level]}
-          </QualityChip>
-        </span>
-      )}
-      {cell.sub && (
-        <span
-          className={cn(
-            'mt-1 block font-code text-note text-ink-3',
-            cell.stale && 'text-lemon',
-          )}
-        >
-          {cell.sub}
-        </span>
-      )}
-    </Td>
-  )
-}
-
-function Td({ className, ...props }: React.ComponentProps<'td'>) {
-  return (
-    <td
-      className={cn(
-        'border-b border-dashed border-line px-3.5 py-3 align-middle text-[13px]',
-        className,
-      )}
-      {...props}
-    />
   )
 }

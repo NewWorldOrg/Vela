@@ -11,48 +11,10 @@ import {
   PLAYER_BUTTON,
   PLAYER_PALETTE,
 } from '@/feature/recordings/player-palette'
+import { PlayerSegmentedControl } from '@/feature/recordings/player-segmented-control'
 import { PlayIcon, QualityIcon } from '@/components/vela/icons'
 
 const NOT_YET = '再生はこれから実装されます'
-
-function Seg({
-  label,
-  options,
-  value,
-  onChange,
-  numeric,
-}: {
-  label: string
-  options: string[]
-  value: string
-  onChange: (next: string) => void
-  numeric?: boolean
-}) {
-  return (
-    <div
-      role="group"
-      aria-label={label}
-      className="inline-flex gap-0.5 rounded-full border border-white/20 p-0.5"
-    >
-      {options.map((o) => (
-        <button
-          key={o}
-          type="button"
-          aria-pressed={o === value}
-          onClick={() => onChange(o)}
-          className={cn(
-            'cursor-pointer rounded-full border-none bg-transparent px-[11px] py-[3px] text-[11.5px] font-medium whitespace-nowrap text-(--pl-ink-2) transition-[background-color,color] duration-150 hover:text-(--pl-ink) focus-visible:shadow-ring focus-visible:outline-none',
-            numeric && 'font-code',
-            o === value &&
-              'bg-[rgba(150,187,180,.24)] font-bold text-[#C0D8D3]',
-          )}
-        >
-          {o}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 export function LiveView({ live }: { live: LiveResult }) {
   const router = useRouter()
@@ -130,7 +92,7 @@ export function LiveView({ live }: { live: LiveResult }) {
           <div className="flex flex-wrap items-center gap-3.5 px-6 pt-3 pb-4 max-[700px]:px-4">
             <div className="inline-flex flex-wrap items-center gap-2">
               <span className="text-[11px] text-(--pl-ink-3)">画質</span>
-              <Seg
+              <PlayerSegmentedControl
                 label="画質"
                 options={LIVE_QUALITIES}
                 value={quality}
@@ -140,7 +102,7 @@ export function LiveView({ live }: { live: LiveResult }) {
             </div>
             <div className="inline-flex flex-wrap items-center gap-2">
               <span className="text-[11px] text-(--pl-ink-3)">音声</span>
-              <Seg
+              <PlayerSegmentedControl
                 label="音声"
                 options={['主音声', '副音声']}
                 value={audio}

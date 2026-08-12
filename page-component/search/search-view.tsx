@@ -15,13 +15,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '@/components/ui/select'
 import { EmptyState } from '@/components/vela/empty-state'
+import { ConditionSelect } from '@/page-component/search/condition-select'
 import {
   ChevronLeftIcon,
   CloseIcon,
@@ -52,8 +47,11 @@ export function SearchView({ result }: { result: SearchResult }) {
     (next: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString())
       for (const [k, v] of Object.entries(next)) {
-        if (v == null || v === '') params.delete(k)
-        else params.set(k, v)
+        if (v == null || v === '') {
+          params.delete(k)
+        } else {
+          params.set(k, v)
+        }
       }
       const qs = params.toString()
       router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
@@ -349,43 +347,5 @@ export function SearchView({ result }: { result: SearchResult }) {
         </>
       )}
     </main>
-  )
-}
-
-function ConditionSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value?: string
-  options: { value: string; label: string }[]
-  onChange: (next: string | null) => void
-}) {
-  const current = value
-    ? options.find((o) => o.value === value)?.label
-    : undefined
-
-  return (
-    <Select
-      value={value ?? '__none__'}
-      onValueChange={(v) => onChange(v === '__none__' ? null : v)}
-    >
-      <SelectTrigger
-        size="sm"
-        className="w-fit rounded-full shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg"
-      >
-        {current ?? label}
-      </SelectTrigger>
-      <SelectContent position="popper">
-        <SelectItem value="__none__">{label}</SelectItem>
-        {options.map((o) => (
-          <SelectItem key={o.value} value={o.value}>
-            {o.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   )
 }

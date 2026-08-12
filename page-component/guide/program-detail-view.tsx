@@ -5,6 +5,7 @@ import type { Program } from '@/repository/programs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronLeftIcon, PlusIcon, SuccessIcon } from '@/components/vela/icons'
+import { ProgramDetailRow } from '@/page-component/guide/program-detail-row'
 
 export function ProgramDetailView({
   program,
@@ -32,24 +33,24 @@ export function ProgramDetailView({
             {program.title}
           </h1>
           <div className="mt-3.5 border-t border-dashed border-line">
-            <Row k="チャンネル">
+            <ProgramDetailRow label="チャンネル">
               {channel?.name}
               <small className="ml-[9px] font-code text-[11.5px] text-ink-3">
                 {channel?.no}
               </small>
-            </Row>
-            <Row k="放送日時">
+            </ProgramDetailRow>
+            <ProgramDetailRow label="放送日時">
               <span className="font-code">
                 {dayLabel} {program.startLabel}–
                 {program.endUndecided ? '終了未定' : program.endLabel}
               </span>
-            </Row>
-            <Row k="ジャンル">
+            </ProgramDetailRow>
+            <ProgramDetailRow label="ジャンル">
               <span className="mr-1.5 inline-block rounded-full border border-line bg-surface px-[11px] py-0.5 text-note font-medium text-ink-2">
                 {program.genreLabel}
               </span>
               {program.subtitled && <Badge variant="info">字幕あり</Badge>}
-            </Row>
+            </ProgramDetailRow>
           </div>
           {(program.detail || program.description) && (
             <p className="my-3.5 max-w-[560px] text-[13px] leading-[1.9] text-ink-2">
@@ -122,14 +123,5 @@ export function ProgramDetailView({
         </section>
       </div>
     </main>
-  )
-}
-
-function Row({ k, children }: { k: string; children: React.ReactNode }) {
-  return (
-    <div className="flex gap-3.5 border-b border-dashed border-line py-2.5 text-[13px] last:border-b-0">
-      <span className="w-24 shrink-0 pt-px text-sub text-ink-3">{k}</span>
-      <span className="min-w-0">{children}</span>
-    </div>
   )
 }

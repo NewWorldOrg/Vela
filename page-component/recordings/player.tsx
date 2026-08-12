@@ -10,6 +10,7 @@ import {
   PLAYER_BUTTON,
   PLAYER_PALETTE,
 } from '@/feature/recordings/player-palette'
+import { PlayerSegmentedControl } from '@/feature/recordings/player-segmented-control'
 
 const PTOG = PLAYER_BUTTON
 const PTOG_ON =
@@ -17,45 +18,6 @@ const PTOG_ON =
 const CBTN =
   'flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-white/5 text-(--pl-ink-2) transition-[translate,background-color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-0 disabled:hover:bg-white/5 [&_svg]:size-4 [&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:-rotate-6 hover:[&_svg]:scale-110'
 const NOT_YET = '再生はこれから実装されます'
-
-function PSeg({
-  label,
-  options,
-  value,
-  onChange,
-  numeric,
-}: {
-  label: string
-  options: string[]
-  value: string
-  onChange: (next: string) => void
-  numeric?: boolean
-}) {
-  return (
-    <div
-      role="group"
-      aria-label={label}
-      className="inline-flex gap-0.5 rounded-full border border-white/20 p-0.5"
-    >
-      {options.map((o) => (
-        <button
-          key={o}
-          type="button"
-          aria-pressed={o === value}
-          onClick={() => onChange(o)}
-          className={cn(
-            'cursor-pointer rounded-full border-none bg-transparent px-[11px] py-[3px] text-[11.5px] font-medium whitespace-nowrap text-(--pl-ink-2) transition-[background-color,color] duration-150 hover:text-(--pl-ink) focus-visible:shadow-ring focus-visible:outline-none',
-            numeric && 'font-code',
-            o === value &&
-              'bg-[rgba(150,187,180,.24)] font-bold text-[#C0D8D3]',
-          )}
-        >
-          {o}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 export function Player({ detail: d }: { detail: RecordingDetail }) {
   const encoded = d.encode.status === 'done'
@@ -153,7 +115,7 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
             <span className="text-[11px] whitespace-nowrap text-(--pl-ink-3)">
               音声
             </span>
-            <PSeg
+            <PlayerSegmentedControl
               label="音声"
               options={['主音声', '副音声']}
               value={audio}
@@ -164,7 +126,7 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
             <span className="text-[11px] whitespace-nowrap text-(--pl-ink-3)">
               速度
             </span>
-            <PSeg
+            <PlayerSegmentedControl
               label="速度"
               options={['0.5', '1.0', '1.25', '1.5', '2.0']}
               value={speed}
@@ -222,7 +184,7 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
           <div className="flex flex-wrap items-center gap-[9px]">
             <span className="text-[11px] text-(--pl-ink-3)">再生ソース</span>
             {encoded ? (
-              <PSeg
+              <PlayerSegmentedControl
                 label="再生ソース"
                 options={[
                   `H.264 ${d.encodePanel?.outSize ?? ''}`.trim(),
@@ -291,7 +253,7 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
         {onTheFly && (
           <div className="mt-3 flex flex-wrap items-center gap-[9px] border-t border-dashed border-white/15 pt-3">
             <span className="text-[11px] text-(--pl-ink-3)">画質</span>
-            <PSeg
+            <PlayerSegmentedControl
               label="画質"
               options={['1080p 6.0 Mbps', '720p 3.0 Mbps', '480p 1.5 Mbps']}
               value={otfQuality}

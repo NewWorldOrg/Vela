@@ -3,6 +3,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Banner } from '@/components/vela/banner'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { Field, FieldHint, FieldLabel } from '@/components/vela/field'
@@ -17,6 +25,16 @@ import {
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { ProgressBar } from '@/components/vela/progress'
 import { Surface, TintMetric, TintPanel } from '@/components/vela/surface'
+import { AutoEncodeRow } from '@/page-component/settings/auto-encode-row'
+
+const PROFILE_COLUMNS = [
+  '名称',
+  'コーデック',
+  '解像度',
+  '品質(CRF)',
+  'インタレース解除',
+  '成果物',
+]
 
 export function EncodeView({ result }: { result: EncodeResult }) {
   const { running, editing } = result
@@ -142,48 +160,32 @@ export function EncodeView({ result }: { result: EncodeResult }) {
             プロファイルを追加
           </Button>
         </div>
-        <div className="-mx-1 overflow-x-auto px-1 pb-1">
-          <table className="w-full min-w-[720px] border-separate border-spacing-0">
-            <thead>
-              <tr>
-                {[
-                  '名称',
-                  'コーデック',
-                  '解像度',
-                  '品質(CRF)',
-                  'インタレース解除',
-                  '成果物',
-                ].map((head) => (
-                  <th
-                    key={head}
-                    className="bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
-                  >
-                    {head}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {result.profiles.map((profile) => (
-                <tr key={profile.id}>
-                  <Td>
-                    <b className="block text-[13px] font-bold">
-                      {profile.name}
-                    </b>
-                    <span className="text-note text-ink-3">{profile.note}</span>
-                  </Td>
-                  <Td className="font-code whitespace-nowrap">
-                    {profile.codec}
-                  </Td>
-                  <Td className="whitespace-nowrap">{profile.resolution}</Td>
-                  <Td className="font-code tabular-nums">{profile.crf}</Td>
-                  <Td className="whitespace-nowrap">{profile.deinterlace}</Td>
-                  <Td className="font-code">{profile.output}</Td>
-                </tr>
+        <Table className="min-w-[720px]" containerClassName="pb-1">
+          <TableHeader>
+            <TableRow>
+              {PROFILE_COLUMNS.map((column) => (
+                <TableHead key={column}>{column}</TableHead>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {result.profiles.map((profile) => (
+              <TableRow key={profile.id}>
+                <TableCell>
+                  <b className="block text-[13px] font-bold">{profile.name}</b>
+                  <span className="text-note text-ink-3">{profile.note}</span>
+                </TableCell>
+                <TableCell className="font-code">{profile.codec}</TableCell>
+                <TableCell>{profile.resolution}</TableCell>
+                <TableCell className="font-code tabular-nums">
+                  {profile.crf}
+                </TableCell>
+                <TableCell>{profile.deinterlace}</TableCell>
+                <TableCell className="font-code">{profile.output}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </section>
 
       <section className="mt-5">
@@ -285,7 +287,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
           録画の完了を検知して、エンコードジョブを登録します
         </p>
         <Surface className="space-y-3.5">
-          <AutoRow label="録画終了後に自動エンコード">
+          <AutoEncodeRow label="録画終了後に自動エンコード">
             <span className="flex items-center gap-2.5">
               <Switch
                 id="auto-encode"
@@ -299,20 +301,20 @@ export function EncodeView({ result }: { result: EncodeResult }) {
             <FieldHint>
               オフにすると、録画詳細から 1 件ずつ手で登録することになります
             </FieldHint>
-          </AutoRow>
-          <AutoRow label="対象">
+          </AutoEncodeRow>
+          <AutoEncodeRow label="対象">
             <p className="text-ui text-ink-2">{result.autoEncode.target}</p>
             <FieldHint>
               失敗した録画にはジョブを作りません。尻切れは対象にし、尻切れであることを画面で明示します
             </FieldHint>
-          </AutoRow>
-          <AutoRow label="使用コア数の上限">
+          </AutoEncodeRow>
+          <AutoEncodeRow label="使用コア数の上限">
             <p className="text-ui text-ink-2">{result.autoEncode.coreLimit}</p>
             <FieldHint>
               エンコードはライブ視聴に譲ります。視聴中は使用コアを抑えます
             </FieldHint>
-          </AutoRow>
-          <AutoRow label="同時実行">
+          </AutoEncodeRow>
+          <AutoEncodeRow label="同時実行">
             <p className="text-ui text-ink-2">
               <span className="font-code tabular-nums">
                 {result.autoEncode.concurrency}
@@ -322,33 +324,9 @@ export function EncodeView({ result }: { result: EncodeResult }) {
             <FieldHint>
               到着間隔よりも短く終わるため、並べても待ち時間は縮みません
             </FieldHint>
-          </AutoRow>
+          </AutoEncodeRow>
         </Surface>
       </section>
     </>
-  )
-}
-
-function AutoRow({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="grid gap-1.5 min-[760px]:grid-cols-[210px_1fr] min-[760px]:gap-4">
-      <span className="heading text-ui text-ink">{label}</span>
-      <div className="space-y-1.5">{children}</div>
-    </div>
-  )
-}
-
-function Td({ className, ...props }: React.ComponentProps<'td'>) {
-  return (
-    <td
-      className={`border-b border-dashed border-line px-3.5 py-3 align-middle text-[13px] ${className ?? ''}`}
-      {...props}
-    />
   )
 }
