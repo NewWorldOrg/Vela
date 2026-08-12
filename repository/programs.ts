@@ -49,9 +49,15 @@ export interface GuideResult {
   coverageWarning?: { kind: string; body: string }
 }
 
+const PROGRAM_DAY: GuideDay = {
+  date: '2026-08-08',
+  label: '8/8(金)',
+  isToday: true,
+}
+
 export const GUIDE_DAYS: GuideDay[] = [
   { date: '2026-08-07', label: '8/7(木)', isToday: false },
-  { date: '2026-08-08', label: '8/8(金)', isToday: true },
+  PROGRAM_DAY,
   { date: '2026-08-09', label: '8/9(土)', isToday: false },
 ]
 
@@ -67,7 +73,10 @@ export async function getGuide(
     GUIDE_DAYS[0]
 
   const channels = CHANNELS.filter((c) => c.kind === kind)
-  const programs = kind === 'terrestrial' ? PROGRAM_FIXTURES : []
+  const programs =
+    kind === 'terrestrial' && day.date === PROGRAM_DAY.date
+      ? PROGRAM_FIXTURES
+      : []
 
   return {
     kind,
@@ -88,6 +97,15 @@ export async function getGuide(
   }
 }
 
-export async function getProgram(id: string): Promise<Program | undefined> {
-  return PROGRAM_FIXTURES.find((p) => p.id === id)
+export interface ProgramDetail {
+  program: Program
+  day: GuideDay
+}
+
+export async function getProgram(
+  id: string,
+): Promise<ProgramDetail | undefined> {
+  const program = PROGRAM_FIXTURES.find((p) => p.id === id)
+
+  return program ? { program, day: PROGRAM_DAY } : undefined
 }

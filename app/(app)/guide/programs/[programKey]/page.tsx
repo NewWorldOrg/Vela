@@ -10,8 +10,8 @@ export async function generateMetadata({
   params: Promise<{ programKey: string }>
 }): Promise<Metadata> {
   const { programKey } = await params
-  const program = await getProgram(programKey)
-  return { title: program ? program.title : 'ページが見つかりません' }
+  const detail = await getProgram(programKey)
+  return { title: detail ? detail.program.title : 'ページが見つかりません' }
 }
 
 export default async function Page({
@@ -20,8 +20,12 @@ export default async function Page({
   params: Promise<{ programKey: string }>
 }) {
   const { programKey } = await params
-  const program = await getProgram(programKey)
-  if (!program) notFound()
+  const detail = await getProgram(programKey)
+  if (!detail) {
+    notFound()
+  }
 
-  return <ProgramDetailView program={program} dayLabel="8/8(金)" />
+  return (
+    <ProgramDetailView program={detail.program} dayLabel={detail.day.label} />
+  )
 }

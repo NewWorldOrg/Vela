@@ -13,6 +13,7 @@ import {
   type Program,
 } from '@/repository/programs'
 import { Banner } from '@/components/vela/banner'
+import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
 import {
   ChevronLeftIcon,
@@ -32,8 +33,11 @@ export function GuideView({ guide }: { guide: GuideResult }) {
     (next: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString())
       for (const [k, v] of Object.entries(next)) {
-        if (v == null) params.delete(k)
-        else params.set(k, v)
+        if (v == null) {
+          params.delete(k)
+        } else {
+          params.set(k, v)
+        }
       }
       const qs = params.toString()
       router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
@@ -121,28 +125,35 @@ export function GuideView({ guide }: { guide: GuideResult }) {
         </Banner>
       )}
 
-      <div className="flex items-start gap-3.5 max-[1200px]:flex-col">
-        <div className="min-w-0 flex-1">
-          <GuideGrid
-            channels={guide.channels}
-            programs={guide.programs}
-            windowStartHour={guide.windowStartHour}
-            windowHours={guide.windowHours}
-            nowMin={guide.nowMin}
-            nowLabel={guide.nowLabel}
-            selectedId={selected?.id}
-            onSelect={setSelected}
-          />
+      {guide.programs.length === 0 ? (
+        <EmptyState spot="antenna" title="この日の番組情報がありません">
+          {guide.day.label}{' '}
+          の番組情報がまだ取れていません。取得できた日から順に並びます。
+        </EmptyState>
+      ) : (
+        <div className="flex items-start gap-3.5 max-[1200px]:flex-col">
+          <div className="min-w-0 flex-1">
+            <GuideGrid
+              channels={guide.channels}
+              programs={guide.programs}
+              windowStartHour={guide.windowStartHour}
+              windowHours={guide.windowHours}
+              nowMin={guide.nowMin}
+              nowLabel={guide.nowLabel}
+              selectedId={selected?.id}
+              onSelect={setSelected}
+            />
+          </div>
+          {selected && (
+            <ProgramPanel
+              program={selected}
+              channel={guide.channels.find((c) => c.id === selected.channelId)}
+              dayLabel={guide.day.label}
+              onClose={() => setSelected(null)}
+            />
+          )}
         </div>
-        {selected && (
-          <ProgramPanel
-            program={selected}
-            channel={guide.channels.find((c) => c.id === selected.channelId)}
-            dayLabel={guide.day.label}
-            onClose={() => setSelected(null)}
-          />
-        )}
-      </div>
+      )}
     </main>
   )
 }
