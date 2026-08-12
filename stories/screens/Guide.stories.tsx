@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { CHANNELS } from '@/repository/channels'
+import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import { GUIDE_DAYS } from '@/repository/programs'
 import { PROGRAM_FIXTURES } from '@/repository/programs.fixtures'
 import { GuideView } from '@/page-component/guide/guide-view'
@@ -12,7 +12,7 @@ const base = {
   windowHours: 8,
   nowMin: 124,
   nowLabel: '21:04',
-  channels: CHANNELS,
+  channels: CHANNEL_FIXTURES,
   programs: PROGRAM_FIXTURES,
 }
 

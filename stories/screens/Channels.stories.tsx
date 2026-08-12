@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { CHANNEL_SCAN } from '@/repository/tuners'
+import { CHANNEL_SCAN } from '@/repository/tuners.fixtures'
 import { ChannelsView } from '@/page-component/settings/channels-view'
 
 const meta = {

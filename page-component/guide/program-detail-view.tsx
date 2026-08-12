@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { CHANNELS } from '@/repository/channels'
+import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,13 +9,13 @@ import { ProgramDetailRow } from '@/page-component/guide/program-detail-row'
 
 export function ProgramDetailView({
   program,
+  channel,
   dayLabel,
 }: {
   program: Program
+  channel?: Channel
   dayLabel: string
 }) {
-  const channel = CHANNELS.find((c) => c.id === program.channelId)
-
   return (
     <main className="flex-1 px-3.5 pt-[18px] pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-3 flex items-center">

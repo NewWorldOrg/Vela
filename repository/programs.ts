@@ -1,5 +1,10 @@
-import { CHANNELS, type ChannelKind } from '@/repository/channels'
-import { PROGRAM_FIXTURES } from '@/repository/programs.fixtures'
+import type { Channel, ChannelKind } from '@/repository/channels'
+import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
+import {
+  GUIDE_DAYS,
+  PROGRAM_DAY,
+  PROGRAM_FIXTURES,
+} from '@/repository/programs.fixtures'
 
 export type Genre =
   | 'news'
@@ -44,22 +49,12 @@ export interface GuideResult {
   windowHours: number
   nowMin?: number
   nowLabel?: string
-  channels: typeof CHANNELS
+  channels: Channel[]
   programs: Program[]
   coverageWarning?: { kind: string; body: string }
 }
 
-const PROGRAM_DAY: GuideDay = {
-  date: '2026-08-08',
-  label: '8/8(金)',
-  isToday: true,
-}
-
-export const GUIDE_DAYS: GuideDay[] = [
-  { date: '2026-08-07', label: '8/7(木)', isToday: false },
-  PROGRAM_DAY,
-  { date: '2026-08-09', label: '8/9(土)', isToday: false },
-]
+export { GUIDE_DAYS }
 
 export async function getGuide(
   rawKind: string | undefined,
@@ -72,7 +67,7 @@ export async function getGuide(
     GUIDE_DAYS.find((d) => d.isToday) ??
     GUIDE_DAYS[0]
 
-  const channels = CHANNELS.filter((c) => c.kind === kind)
+  const channels = CHANNEL_FIXTURES.filter((c) => c.kind === kind)
   const programs =
     kind === 'terrestrial' && day.date === PROGRAM_DAY.date
       ? PROGRAM_FIXTURES
@@ -100,12 +95,20 @@ export async function getGuide(
 export interface ProgramDetail {
   program: Program
   day: GuideDay
+  channel?: Channel
 }
 
 export async function getProgram(
   id: string,
 ): Promise<ProgramDetail | undefined> {
   const program = PROGRAM_FIXTURES.find((p) => p.id === id)
+  if (!program) {
+    return undefined
+  }
 
-  return program ? { program, day: PROGRAM_DAY } : undefined
+  return {
+    program,
+    day: PROGRAM_DAY,
+    channel: CHANNEL_FIXTURES.find((c) => c.id === program.channelId),
+  }
 }

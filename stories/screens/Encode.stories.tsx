@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { ENCODE } from '@/repository/encode'
+import { ENCODE } from '@/repository/encode.fixtures'
 import { EncodeView } from '@/page-component/settings/encode-view'
 
 const meta = {

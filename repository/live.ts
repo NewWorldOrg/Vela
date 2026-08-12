@@ -1,4 +1,4 @@
-import { CHANNELS } from '@/repository/channels'
+import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import { PROGRAM_FIXTURES } from '@/repository/programs.fixtures'
 
 export interface LiveChannelRow {
@@ -34,8 +34,8 @@ export const LIVE_QUALITIES = [
 
 export async function getLive(rawChannel?: string): Promise<LiveResult> {
   const channel =
-    CHANNELS.find((c) => c.id === rawChannel && !c.sub) ??
-    CHANNELS.find((c) => !c.sub)!
+    CHANNEL_FIXTURES.find((c) => c.id === rawChannel && !c.sub) ??
+    CHANNEL_FIXTURES.find((c) => !c.sub)!
 
   const onAirOf = (channelId: string) =>
     PROGRAM_FIXTURES.filter((p) => p.channelId === channelId).find(
@@ -70,7 +70,7 @@ export async function getLive(rawChannel?: string): Promise<LiveResult> {
     ],
     latencySec: 1.8,
     drops: 18,
-    rows: CHANNELS.filter((c) => !c.sub).map((c) => {
+    rows: CHANNEL_FIXTURES.filter((c) => !c.sub).map((c) => {
       const now = onAirOf(c.id)
       const next = nextOf(c.id)
       return {

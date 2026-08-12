@@ -26,6 +26,10 @@ export default async function Page({
   }
 
   return (
-    <ProgramDetailView program={detail.program} dayLabel={detail.day.label} />
+    <ProgramDetailView
+      program={detail.program}
+      channel={detail.channel}
+      dayLabel={detail.day.label}
+    />
   )
 }

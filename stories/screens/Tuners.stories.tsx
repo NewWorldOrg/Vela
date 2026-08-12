@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { TUNERS } from '@/repository/tuners'
+import { TUNERS } from '@/repository/tuners.fixtures'
 import { TunersView } from '@/page-component/settings/tuners-view'
 
 const meta = {

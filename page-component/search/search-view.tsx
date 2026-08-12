@@ -6,7 +6,7 @@ import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
-import { CHANNELS, CHANNEL_KINDS } from '@/repository/channels'
+import { CHANNEL_KINDS } from '@/repository/channels'
 import {
   SEARCH_FIELD_OPTIONS,
   fieldLabel,
@@ -82,7 +82,7 @@ export function SearchView({ result }: { result: SearchResult }) {
     {
       key: 'ch',
       label: 'チャンネル',
-      value: CHANNELS.find((c) => c.id === condition.ch)?.name,
+      value: result.channelName,
     },
   ]
   const urlLine = `/search${searchParams.toString() ? `?${searchParams}` : ''}`
@@ -208,7 +208,7 @@ export function SearchView({ result }: { result: SearchResult }) {
           <ConditionSelect
             label="チャンネルを選ぶ"
             value={condition.ch}
-            options={CHANNELS.map((c) => ({ value: c.id, label: c.name }))}
+            options={result.channels}
             onChange={(v) => patch({ ch: v })}
           />
           <ConditionSelect

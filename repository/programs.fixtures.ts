@@ -1,3 +1,18 @@
+import type { GuideDay } from '@/repository/programs'
+
+/** The fixtures all sit on one day of the guide window. */
+export const PROGRAM_DAY: GuideDay = {
+  date: '2026-08-08',
+  label: '8/8(金)',
+  isToday: true,
+}
+
+export const GUIDE_DAYS: GuideDay[] = [
+  { date: '2026-08-07', label: '8/7(木)', isToday: false },
+  PROGRAM_DAY,
+  { date: '2026-08-09', label: '8/9(土)', isToday: false },
+]
+
 import type { Program } from '@/repository/programs'
 
 export const PROGRAM_FIXTURES: Program[] = [

@@ -103,7 +103,8 @@ export const Rows: Story = {
             <StatusText tone="warn">CNR 低下</StatusText>
             <span className="flex min-w-0 items-center gap-[7px]">
               <span className="truncate">
-                <span className="font-code tabular-nums">BS01/TS0</span> 中央 BS1
+                <span className="font-code tabular-nums">BS01/TS0</span> 中央
+                BS1
               </span>
               <Badge variant="kindData">BS</Badge>
             </span>

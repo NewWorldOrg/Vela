@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { QUALITY } from '@/repository/quality'
+import { QUALITY } from '@/repository/quality.fixtures'
 import { QualityView } from '@/page-component/settings/quality-view'
 
 const meta = {

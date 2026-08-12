@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { RULES } from '@/repository/reservations'
+import { RULES } from '@/repository/reservations.fixtures'
 import { RulesView } from '@/page-component/reservations/rules-view'
 
 const meta = {

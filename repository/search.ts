@@ -1,4 +1,4 @@
-import { CHANNELS } from '@/repository/channels'
+import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import { PROGRAM_FIXTURES } from '@/repository/programs.fixtures'
 import type { Program } from '@/repository/programs'
 
@@ -22,6 +22,8 @@ export interface SearchResult {
   hasCondition: boolean
   hits: SearchHit[]
   genres: { value: string; label: string }[]
+  channels: { value: string; label: string }[]
+  channelName?: string
 }
 
 const FIELD_LABEL: Record<string, string> = {
@@ -62,7 +64,10 @@ export async function searchPrograms(
         ? raw.genre
         : undefined,
     kind: raw.kind === 'bs' || raw.kind === 'cs110' ? raw.kind : undefined,
-    ch: raw.ch && CHANNELS.some((c) => c.id === raw.ch) ? raw.ch : undefined,
+    ch:
+      raw.ch && CHANNEL_FIXTURES.some((c) => c.id === raw.ch)
+        ? raw.ch
+        : undefined,
   }
   const hasCondition = Object.values(condition).some(Boolean)
 
@@ -109,7 +114,7 @@ export async function searchPrograms(
         }
         return true
       }).map((p) => {
-        const channel = CHANNELS.find((c) => c.id === p.channelId)
+        const channel = CHANNEL_FIXTURES.find((c) => c.id === p.channelId)
         return {
           ...p,
           channelName: channel?.name ?? '',
@@ -119,5 +124,12 @@ export async function searchPrograms(
       })
     : []
 
-  return { condition, hasCondition, hits, genres }
+  return {
+    condition,
+    hasCondition,
+    hits,
+    genres,
+    channels: CHANNEL_FIXTURES.map((c) => ({ value: c.id, label: c.name })),
+    channelName: CHANNEL_FIXTURES.find((c) => c.id === condition.ch)?.name,
+  }
 }

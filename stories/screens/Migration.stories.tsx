@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { MIGRATION } from '@/repository/migration'
+import { MIGRATION } from '@/repository/migration.fixtures'
 import { MigrationView } from '@/page-component/settings/migration-view'
 
 const meta = {
