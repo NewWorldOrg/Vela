@@ -7,19 +7,7 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { formatBytes, formatLength } from '@/lib/format'
 import type { Recording } from '@/repository/recordings'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { ChipDot } from '@/components/vela/status'
 import {
   ChevronRightIcon,
   PlayIcon,
@@ -28,8 +16,14 @@ import {
   ThumbPendingIcon,
   ThumbShotIcon,
   TrashIcon,
-  WarningIcon,
 } from '@/components/vela/icons'
+import {
+  EncodeChip,
+  FileMissingChip,
+  OutcomeChip,
+  QualityChip,
+} from '@/feature/recordings/chips'
+import { DeleteRecordingDialog } from '@/feature/recordings/delete-recording-dialog'
 
 const HEADERS = [
   '番組',
@@ -89,61 +83,10 @@ export function RecordingsTable({ items }: { items: Recording[] }) {
         </table>
       </div>
 
-      <AlertDialog
-        open={deleting !== null}
+      <DeleteRecordingDialog
+        recording={deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>この録画を削除します</AlertDialogTitle>
-            {deleting && (
-              <AlertDialogDescription asChild>
-                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-ui">
-                  <dt className="text-ink-3">番組</dt>
-                  <dd className="font-bold text-ink">{deleting.title}</dd>
-                  <dt className="text-ink-3">チャンネル</dt>
-                  <dd className="text-ink-2">{deleting.channel}</dd>
-                  <dt className="text-ink-3">録画日時</dt>
-                  <dd className="font-code text-ink-2">
-                    {deleting.recordedRange}
-                  </dd>
-                  <dt className="text-ink-3">サイズ</dt>
-                  <dd className="font-code text-ink-2">
-                    {formatBytes(deleting.sizeBytes)}(
-                    {deleting.fileMissing
-                      ? '実ファイルなし'
-                      : deleting.sizeObservedAt}
-                    )
-                  </dd>
-                  <dt className="text-ink-3">結果と品質</dt>
-                  <dd>
-                    <OutcomeChip recording={deleting} />{' '}
-                    {deleting.fileMissing && <FileMissingChip />}{' '}
-                    <QualityChip recording={deleting} withDetail={false} />
-                  </dd>
-                  <dt className="text-ink-3">ファイル</dt>
-                  <dd className="font-code text-ink-2">{deleting.filePath}</dd>
-                </dl>
-              </AlertDialogDescription>
-            )}
-          </AlertDialogHeader>
-          <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
-            <WarningIcon className="size-4 shrink-0" />
-            録画ファイルも削除されます。元に戻せません。
-          </p>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled
-              title="削除はこれから実装されます"
-            >
-              <TrashIcon />
-              削除する
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
     </>
   )
 }
@@ -282,152 +225,6 @@ function Td({ className, ...props }: React.ComponentProps<'td'>) {
       {...props}
     />
   )
-}
-
-function FileMissingChip() {
-  return (
-    <Badge variant="err" className="mt-[3px] font-bold">
-      <ChipDot />
-      ファイル不在
-    </Badge>
-  )
-}
-
-function OutcomeChip({ recording: r }: { recording: Recording }) {
-  switch (r.outcome) {
-    case 'recording':
-      return (
-        <Badge variant="info" className="font-bold">
-          <ChipDot />
-          録画中
-        </Badge>
-      )
-    case 'complete':
-      return (
-        <Badge variant="ok" className="font-bold">
-          <ChipDot />
-          完全
-        </Badge>
-      )
-    case 'truncated':
-      return (
-        <Badge variant="warn" className="font-bold">
-          <ChipDot />
-          尻切れ
-        </Badge>
-      )
-    case 'failed':
-      return (
-        <Badge variant="err" className="font-bold">
-          <ChipDot />
-          失敗
-        </Badge>
-      )
-  }
-}
-
-function QualityChip({
-  recording: r,
-  withDetail,
-  subTone = 'text-ink-3',
-}: {
-  recording: Recording
-  withDetail?: boolean
-  subTone?: string
-}) {
-  if (!r.quality.measured) {
-    return (
-      <>
-        <Badge variant="outline">未計測</Badge>
-        {withDetail && r.quality.detail && (
-          <span
-            className={cn(
-              'mt-[3px] block text-[10.5px] leading-relaxed',
-              subTone,
-            )}
-          >
-            {r.quality.detail}
-          </span>
-        )}
-      </>
-    )
-  }
-  const variant =
-    r.quality.level === 'good'
-      ? 'ok'
-      : r.quality.level === 'warn'
-        ? 'warn'
-        : 'err'
-  const label =
-    r.quality.level === 'good'
-      ? '良好'
-      : r.quality.level === 'warn'
-        ? '警告水準'
-        : '視聴不可の恐れ'
-  return (
-    <>
-      <Badge variant={variant} className="font-bold">
-        <ChipDot />
-        {label}
-      </Badge>
-      {withDetail && r.quality.detail && (
-        <span className="mt-[3px] block font-code text-[10.5px] leading-relaxed text-ink-3">
-          {r.quality.detail}
-        </span>
-      )}
-    </>
-  )
-}
-
-function EncodeChip({
-  recording: r,
-  subTone = 'text-ink-3',
-}: {
-  recording: Recording
-  subTone?: string
-}) {
-  switch (r.encode.status) {
-    case 'none':
-      return (
-        <Badge variant="outline" className={cn('border-line', subTone)}>
-          未エンコード
-        </Badge>
-      )
-    case 'waiting':
-      return (
-        <Badge variant="outline" className={cn('border-line', subTone)}>
-          待機中
-        </Badge>
-      )
-    case 'running':
-      return (
-        <Badge variant="info" className="font-bold">
-          <ChipDot />
-          実行中 <span className="font-code">{r.encode.progress}%</span>
-        </Badge>
-      )
-    case 'done':
-      return (
-        <Badge variant="ok" className="font-bold">
-          <ChipDot />
-          完了
-        </Badge>
-      )
-    case 'failed':
-      return (
-        <>
-          <Badge variant="err" className="font-bold">
-            <ChipDot />
-            失敗
-          </Badge>
-          {r.encode.reason && (
-            <span className="mt-[3px] block text-[10.5px] leading-relaxed text-ink-3">
-              {r.encode.reason}
-            </span>
-          )}
-        </>
-      )
-  }
 }
 
 function Thumb({

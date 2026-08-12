@@ -23,6 +23,8 @@ const NAVIGATION: [string, ComponentType<IconProps>][] = [
   ['ProgramGuideIcon', Icons.ProgramGuideIcon],
   ['LiveIcon', Icons.LiveIcon],
   ['PlayIcon', Icons.PlayIcon],
+  ['OutcomeTruncatedIcon', Icons.OutcomeTruncatedIcon],
+  ['OutcomeFailedIcon', Icons.OutcomeFailedIcon],
   ['ThumbShotIcon', Icons.ThumbShotIcon],
   ['ThumbPendingIcon', Icons.ThumbPendingIcon],
   ['ThumbMissingIcon', Icons.ThumbMissingIcon],

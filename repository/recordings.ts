@@ -1,4 +1,7 @@
+import { cache } from 'react'
+
 import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
+import { RECORDING_DETAIL_FIXTURES } from '@/repository/recordings.details.fixtures'
 
 export type RecordingOutcome = 'recording' | 'complete' | 'truncated' | 'failed'
 export type QualityLevel = 'good' | 'warn' | 'danger'
@@ -127,3 +130,66 @@ export async function listRecordings(
   })
   return { items, total: all.length, channels, years, genres, filter }
 }
+export interface QualitySpot {
+  at: string
+  packets: string
+}
+
+export interface SeekMarks {
+  playedPct: number
+  time: string
+  cmSpans?: { leftPct: number; widthPct: number }[]
+  chapterPcts?: number[]
+  dropPcts?: number[]
+}
+
+export interface RecordingDetail extends Recording {
+  channelNo?: string
+  genres?: string[]
+  avInfo?: string
+  synopsis?: string
+  outcomeBody?: string
+  outcomeAxis?: string
+  reconcile?: { range: string; sub: string }
+  interruptions?: { main: string; sub?: string }
+  tunerUnit?: { main: string; sub: string }
+  eoverflow?: string
+  scramble?: { main: string; sub?: string }
+  stopReason?: string
+  failureReason?: { title: string; body: string }
+  thumbnailState?: { main: string; sub?: string; canGenerate?: boolean }
+  qualityRatio?: string
+  qualityTotal?: string
+  qualitySpots?: QualitySpot[]
+  seek?: SeekMarks
+  encodePanel?: {
+    profile?: string
+    doneSub?: string
+    sourceSize?: string
+    outSize?: string
+    savings?: string
+    queueSub?: string
+    registeredAt?: string
+    progressPct?: number
+    progressSub?: string
+    attempts?: string
+  }
+  live?: {
+    elapsed: string
+    written: string
+    drops: string
+    rest: string
+    updatedAt: string
+    extension?: {
+      plannedEnd: string
+      currentEnd: string
+      delta: string
+      followedAt: string
+    }
+  }
+}
+
+export const getRecording = cache(
+  async (id: string): Promise<RecordingDetail | undefined> =>
+    RECORDING_DETAIL_FIXTURES.find((r) => r.id === id),
+)
