@@ -9,16 +9,12 @@ import { DeleteRecordingDialog } from '@/feature/recordings/delete-recording-dia
 
 export function RecordingActions({ recording }: { recording: Recording }) {
   const [deleting, setDeleting] = useState<Recording | null>(null)
-  const playable =
-    recording.outcome !== 'failed' &&
-    recording.outcome !== 'recording' &&
-    !recording.fileMissing
   const deletable = recording.outcome !== 'recording'
 
   return (
     <>
       <div className="flex flex-wrap items-center gap-[9px]">
-        <Button disabled={!playable}>
+        <Button disabled title="再生はこれから実装されます">
           <PlayIcon />
           再生
         </Button>
@@ -33,7 +29,7 @@ export function RecordingActions({ recording }: { recording: Recording }) {
           variant="destructive"
           className="ml-auto"
           disabled={!deletable}
-          title={deletable ? '削除' : '録画中は削除できません'}
+          title={deletable ? undefined : '録画中は削除できません'}
           onClick={() => setDeleting(recording)}
         >
           <TrashIcon />

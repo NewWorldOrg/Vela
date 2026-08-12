@@ -189,10 +189,7 @@ export interface RecordingDetail extends Recording {
   }
 }
 
-export async function getRecording(
-  id: string,
-): Promise<RecordingDetail | undefined> {
-  const { RECORDING_DETAIL_FIXTURES } =
-    await import('@/repository/recordings.details.fixtures')
-  return RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
-}
+export const getRecording = cache(
+  async (id: string): Promise<RecordingDetail | undefined> =>
+    RECORDING_DETAIL_FIXTURES.find((r) => r.id === id),
+)
