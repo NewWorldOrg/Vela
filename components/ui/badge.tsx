@@ -18,6 +18,7 @@ const badgeVariants = cva(
         default: 'border-line bg-surface text-ink-2',
         secondary: 'border-line bg-surface-2 text-ink-2',
         outline: 'border-line-strong bg-transparent text-ink-2',
+        mute: 'border-dashed border-line bg-surface-2 text-ink-3',
         ok: 'border-mint-line bg-mint-soft text-mint',
         warn: 'border-lemon-line bg-lemon-soft text-lemon',
         err: 'border-coral-line bg-coral-soft text-coral',

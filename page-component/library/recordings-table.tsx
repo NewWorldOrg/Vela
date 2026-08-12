@@ -22,8 +22,8 @@ import {
   FileMissingChip,
   OutcomeChip,
   QualityChip,
-} from '@/page-component/recordings/chips'
-import { DeleteRecordingDialog } from '@/page-component/recordings/delete-recording-dialog'
+} from '@/feature/recordings/chips'
+import { DeleteRecordingDialog } from '@/feature/recordings/delete-recording-dialog'
 
 const HEADERS = [
   '番組',

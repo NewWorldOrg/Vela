@@ -1,4 +1,7 @@
+import { cache } from 'react'
+
 import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
+import { RECORDING_DETAIL_FIXTURES } from '@/repository/recordings.details.fixtures'
 
 export type RecordingOutcome = 'recording' | 'complete' | 'truncated' | 'failed'
 export type QualityLevel = 'good' | 'warn' | 'danger'
@@ -130,7 +133,6 @@ export async function listRecordings(
 export interface QualitySpot {
   at: string
   packets: string
-  positionPct: number
 }
 
 export interface SeekMarks {
@@ -148,17 +150,14 @@ export interface RecordingDetail extends Recording {
   synopsis?: string
   outcomeBody?: string
   outcomeAxis?: string
-  reconcile?: { size: string; range: string; sub: string }
+  reconcile?: { range: string; sub: string }
   interruptions?: { main: string; sub?: string }
   tunerUnit?: { main: string; sub: string }
   eoverflow?: string
   scramble?: { main: string; sub?: string }
   stopReason?: string
-  thumbnailState?: {
-    main: string
-    sub?: string
-    action?: '生成する' | '再生成'
-  }
+  failureReason?: { title: string; body: string }
+  thumbnailState?: { main: string; sub?: string; canGenerate?: boolean }
   qualityRatio?: string
   qualityTotal?: string
   qualitySpots?: QualitySpot[]

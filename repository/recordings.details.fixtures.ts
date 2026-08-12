@@ -10,7 +10,7 @@ function base(id: string) {
 export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   {
     ...base('1291'),
-    channelNo: '051',
+    channelNo: '121',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
     live: {
@@ -26,20 +26,19 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
         followedAt: '23:41:52',
       },
     },
-    thumbnailState: { main: '未生成', sub: '録画の完了後に作られます' },
+    thumbnailState: { main: '未生成', sub: 'まだ作られていません' },
   },
   {
     ...base('1274'),
-    channelNo: '041',
+    channelNo: '131',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
     synopsis:
-      '旬の野菜だけで組み立てる、日曜の仕込みと保存のコツ。保存瓶の煮沸から常備菜の段取りまで、台所の一週間を整える30分。',
+      '保存瓶の煮沸から常備菜の段取りまで、台所の一週間を整える30分。今週は夏野菜の作り置き特集。',
     outcomeBody:
       '期待ウィンドウ 30分に対し、書けた尺 30:04・実ファイル 3.4 GB。突き合わせの内訳は「録画の記録」にあります。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      size: '3.4 GB',
       range: '3.2–3.7 GB',
       sub: '書けた尺 30:04 / 実効ウィンドウ 30:04 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
@@ -72,14 +71,13 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   },
   {
     ...base('1270'),
-    channelNo: '091',
+    channelNo: '141',
     genres: ['アニメ'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
       '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.3 GB。突き合わせの内訳は「録画の記録」にあります。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      size: '3.3 GB',
       range: '3.2–3.7 GB',
       sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
@@ -103,16 +101,15 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   },
   {
     ...base('1266'),
-    channelNo: '011',
+    channelNo: '151',
     genres: ['スポーツ'],
     avInfo: '1080i · ステレオ · 字幕あり',
     synopsis:
-      '全国から勝ち上がった代表校が知力で競う夏の風物詩。準決勝は近似値クイズと早押しの二本立て。',
+      '各都市の代表チームが知力で競う夏の恒例戦。準決勝は近似値クイズと早押しの二本立て。',
     outcomeBody:
       '期待ウィンドウ 4時間13分に対し、書けた尺 4:12:38・実ファイル 29.6 GB。リレー放送 3 セグメントの1本目です。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      size: '29.6 GB',
       range: '28.4–32.6 GB',
       sub: '書けた尺 4:12:38 / 実効ウィンドウ 4:13:00 · 被覆率 99.8%(判定の許容差は暫定値)',
     },
@@ -125,11 +122,11 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     scramble: { main: '0 パケット' },
     stopReason: '自分の abort(終了時刻に到達)',
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
-    qualityTotal: '1,284',
-    qualityRatio: '0.0009',
+    qualityTotal: '38,412',
+    qualityRatio: '0.023',
     qualitySpots: [
-      { at: '13:12 付近', packets: '980 パケット', positionPct: 17 },
-      { at: '15:44 付近', packets: '224 パケット', positionPct: 74 },
+      { at: '13:12 付近', packets: '36,980 パケット' },
+      { at: '15:44 付近', packets: '1,432 パケット' },
     ],
     seek: {
       playedPct: 23,
@@ -154,14 +151,13 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   },
   {
     ...base('1247'),
-    channelNo: '041',
+    channelNo: '131',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
       '被覆率 67.0% · 実ファイル 4.2 GB(期待レンジ 5.9–6.8 GB)· 書けた尺 36:12 / 実効ウィンドウ 54:00 · 中断 3 回 / 再開 2 回',
     outcomeAxis: '末尾 18 分が欠けています',
     reconcile: {
-      size: '4.2 GB',
       range: '5.9–6.8 GB',
       sub: '書けた尺 36:12 / 実効ウィンドウ 54:00 · 被覆率 67.0%(判定の許容差は暫定値)',
     },
@@ -189,7 +185,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   },
   {
     ...base('1239'),
-    channelNo: '071',
+    channelNo: '161',
     genres: ['バラエティ'],
     avInfo: '—',
     outcomeBody:
@@ -206,18 +202,21 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       sub: 'サイズが正しいのに再生できない場合はここを見ます',
     },
     stopReason: '自分の abort(スクランブル解除失敗)',
+    failureReason: {
+      title: 'スクランブル解除失敗',
+      body: '閾値を超えた残存パケットを検出しました。サイズが正しいのに全編再生できない場合の唯一の手がかりです。',
+    },
     thumbnailState: { main: 'failed のため作らなかった' },
   },
   {
     ...base('0412'),
-    channelNo: '061',
+    channelNo: '171',
     genres: ['ドキュメンタリー'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
       '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.5 GB。移行で取り込んだ録画のため、品質は未計測です。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      size: '3.5 GB',
       range: '3.2–3.7 GB',
       sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
@@ -235,7 +234,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   },
   {
     ...base('1198'),
-    channelNo: '041',
+    channelNo: '131',
     genres: ['映画', '邦画'],
     avInfo: '1080i · ステレオ · 字幕あり',
     synopsis:
@@ -244,7 +243,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '期待ウィンドウ 2時間6分に対し、書けた尺 2:06:14・実ファイル 13.8 GB。突き合わせの内訳は「録画の記録」にあります。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      size: '13.8 GB',
       range: '13.1–15.1 GB',
       sub: '書けた尺 2:06:14 / 実効ウィンドウ 2:06:14 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
@@ -259,24 +257,24 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     thumbnailState: {
       main: '生成失敗',
       sub: 'サムネイルが無いことは録画の失敗ではありません',
-      action: '再生成',
+      canGenerate: true,
     },
-    qualityTotal: '48,210',
+    qualityTotal: '178,530',
     qualityRatio: '0.243',
     qualitySpots: [
-      { at: '21:41 付近', packets: '46,780 パケット', positionPct: 33 },
-      { at: '21:58 付近', packets: '1,430 パケット', positionPct: 46 },
+      { at: '21:41 付近', packets: '171,204 パケット' },
+      { at: '21:58 付近', packets: '7,326 パケット' },
     ],
     seek: { playedPct: 0, time: '0:00:00 / 2:06:14', dropPcts: [33, 46] },
     encodePanel: { profile: '録画再生用(H.264)', attempts: '2 回 / 上限 3 回' },
   },
   {
     ...base('0731'),
-    channelNo: '041',
+    channelNo: '131',
     genres: ['ドキュメンタリー'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
-      '録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。',
+      '期待ウィンドウ 30分に対し、書けた尺 30:04。実ファイルがありません。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     eoverflow: '—',

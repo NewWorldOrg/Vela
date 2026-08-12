@@ -17,7 +17,7 @@ import {
   FileMissingChip,
   OutcomeChip,
   QualityChip,
-} from '@/page-component/recordings/chips'
+} from '@/feature/recordings/chips'
 
 export function DeleteRecordingDialog({
   recording,

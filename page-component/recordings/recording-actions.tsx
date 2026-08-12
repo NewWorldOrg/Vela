@@ -5,7 +5,7 @@ import { useState } from 'react'
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { PlayIcon, TrashIcon } from '@/components/vela/icons'
-import { DeleteRecordingDialog } from '@/page-component/recordings/delete-recording-dialog'
+import { DeleteRecordingDialog } from '@/feature/recordings/delete-recording-dialog'
 
 export function RecordingActions({ recording }: { recording: Recording }) {
   const [deleting, setDeleting] = useState<Recording | null>(null)
