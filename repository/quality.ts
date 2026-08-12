@@ -1,0 +1,406 @@
+import type { Route } from 'next'
+
+export type QualityLevel =
+  | 'good'
+  | 'warn'
+  | 'bad'
+  | 'unmeasured'
+  | 'nodata'
+  | 'unsupported'
+  | 'unreachable'
+
+export interface QualityStat {
+  key: string
+  label: string
+  value?: string
+  unit?: string
+  level?: QualityLevel
+  levelLabel?: string
+  aside?: string
+  link?: { href: Route; label: string }
+  foot: string
+}
+
+export interface QualityThreshold {
+  label: string
+  value: string
+  basis: string
+}
+
+export interface QualityChannel {
+  name: string
+  no: string
+  dropRate?: string
+  /** 0–100. The bar tops out at the "unwatchable" threshold. */
+  barPct?: number
+  level: QualityLevel
+  note: string
+}
+
+export interface QualityTunerLayer {
+  layer: string
+  value: string
+}
+
+export interface QualityTunerCell {
+  value?: string
+  unit?: string
+  layers?: QualityTunerLayer[]
+  level?: QualityLevel
+  sub?: string
+  stale?: boolean
+}
+
+export interface QualityTuner {
+  id: string
+  device: string
+  hardware: string
+  state: { level: QualityLevel; label: string; recap?: string; sub: string }
+  drop: QualityTunerCell
+  lock: QualityTunerCell
+  cnr: QualityTunerCell
+  ber: QualityTunerCell
+}
+
+export interface QualityProblemRecording {
+  id: string
+  title: string
+  where: string
+  drops: string
+  pct: string
+  level: Extract<QualityLevel, 'warn' | 'bad'>
+}
+
+export interface QualityAnomaly {
+  id: string
+  title: string
+  level: QualityLevel
+  levelLabel: string
+  recap?: string
+  body: string
+  meta: string
+  acknowledged?: boolean
+}
+
+export interface QualityResult {
+  windowLabel: string
+  windowOptions: string[]
+  supplyOutage?: { title: string; body: string }
+  stats: QualityStat[]
+  thresholds: QualityThreshold[]
+  thresholdNote: string
+  legend: { level: QualityLevel; label: string; body: string }[]
+  channels: QualityChannel[]
+  satelliteMeasured: boolean
+  tuners: QualityTuner[]
+  problemRecordings: QualityProblemRecording[]
+  anomalies: QualityAnomaly[]
+  ownedCount: number
+  recapCount: number
+}
+
+export const QUALITY: QualityResult = {
+  windowLabel: '24 時間',
+  windowOptions: ['24 時間', '7 日', '30 日'],
+  supplyOutage: {
+    title: '計測の供給が途絶しています',
+    body: 'adapter0 の信号品質サンプルが 09:24 以降 1 件も入っていません。この期間は「取得できず」として数え、良好にも未計測にも混ぜません。',
+  },
+  stats: [
+    {
+      key: 'drop',
+      label: '直近 24 時間のドロップ率',
+      value: '0.021',
+      unit: '%',
+      level: 'warn',
+      levelLabel: '警告水準',
+      aside: '閾値は暫定',
+      foot: '録画 11 本を計測 / 未計測 3 本',
+    },
+    {
+      key: 'problem',
+      label: '問題のある録画',
+      value: '2',
+      unit: '件',
+      level: 'bad',
+      levelLabel: '視聴不可の恐れ 1',
+      link: { href: '/library', label: 'ライブラリで絞り込む' },
+      foot: '警告水準以上の録画。未計測は含めない',
+    },
+    {
+      key: 'scramble',
+      label: 'スクランブル残存率',
+      level: 'unmeasured',
+      levelLabel: '未計測',
+      aside: '録画 14 本 / うち未計測 14 本',
+      foot: '0% として数えない。分母から外している',
+    },
+    {
+      key: 'health',
+      label: 'チューナーヘルス',
+      value: '2 / 4',
+      unit: '健全',
+      level: 'unreachable',
+      levelLabel: '取得できず 1',
+      link: { href: '/settings/tuners', label: 'チューナーへ' },
+      foot: 'adapter2 は種別不一致(再掲)',
+    },
+  ],
+  thresholds: [
+    {
+      label: '警告水準',
+      value: '0.02%',
+      basis: '根拠 = 計測済み録画 11 本 / 信号品質サンプル 4,320 件',
+    },
+    {
+      label: '視聴不可の恐れ',
+      value: '0.1%',
+      basis: '根拠 = 計測済み録画 11 本 / 信号品質サンプル 4,320 件',
+    },
+    {
+      label: '供給途絶の判定',
+      value: '10 分',
+      basis: '根拠 = 信号品質サンプル 4,320 件',
+    },
+  ],
+  thresholdNote:
+    '根拠となる実測がまだ少なく、この数値の妥当性は確認できていません。',
+  legend: [
+    { level: 'good', label: '良好', body: '計測が行われ、閾値内' },
+    {
+      level: 'warn',
+      label: '警告水準',
+      body: '計測が行われ、警告水準を超過',
+    },
+    {
+      level: 'bad',
+      label: '視聴不可の恐れ',
+      body: '計測が行われ、視聴不可の恐れの水準を超過',
+    },
+    {
+      level: 'unmeasured',
+      label: '未計測',
+      body: '対象はあるが計測されていない。分母から外し、別に数える',
+    },
+    {
+      level: 'nodata',
+      label: '対象なし',
+      body: '期間内に該当する録画・セッションがない',
+    },
+    {
+      level: 'unsupported',
+      label: '非対応',
+      body: 'チューナーがその統計を持たない',
+    },
+    {
+      level: 'unreachable',
+      label: '取得できず',
+      body: '到達できない / 供給が途絶している',
+    },
+  ],
+  channels: [
+    {
+      name: 'みなと総合1',
+      no: '151',
+      dropRate: '0.152%',
+      barPct: 100,
+      level: 'bad',
+      note: '録画 2 本を計測',
+    },
+    {
+      name: '中央テレビ1',
+      no: '131',
+      dropRate: '0.031%',
+      barPct: 31,
+      level: 'warn',
+      note: '録画 1 本を計測',
+    },
+    {
+      name: 'みなと教育1',
+      no: '191',
+      dropRate: '0.002%',
+      barPct: 2,
+      level: 'good',
+      note: '録画 3 本を計測',
+    },
+    {
+      name: '東都テレビ1',
+      no: '161',
+      dropRate: '0.003%',
+      barPct: 3,
+      level: 'good',
+      note: '録画 2 本を計測',
+    },
+    {
+      name: '湾岸放送1',
+      no: '171',
+      dropRate: '0.002%',
+      barPct: 2,
+      level: 'good',
+      note: '録画 2 本を計測',
+    },
+    {
+      name: '第一テレビ1',
+      no: '181',
+      dropRate: '0.006%',
+      barPct: 6,
+      level: 'good',
+      note: '録画 1 本を計測',
+    },
+    {
+      name: 'シティ MX1',
+      no: '141',
+      level: 'unmeasured',
+      note: '録画 3 本 / うち未計測 3 本',
+    },
+    {
+      name: 'みなと総合2',
+      no: '152',
+      level: 'nodata',
+      note: '録画 0 本',
+    },
+  ],
+  satelliteMeasured: false,
+  tuners: [
+    {
+      id: 'adapter1',
+      device: 'adapter1',
+      hardware: '地上波 · 録画 9 本',
+      state: { level: 'good', label: '健全', sub: '割り当て可能' },
+      drop: { value: '0.002', unit: '%', level: 'good' },
+      lock: { value: '100', unit: '%', sub: '09:41:02 取得' },
+      cnr: { value: '33.304', unit: 'dB', sub: '09:41:02 · いま測った値' },
+      ber: {
+        layers: [
+          { layer: 'layer0', value: '2.4e-06' },
+          { layer: 'layer1', value: '0.0e+00' },
+        ],
+        sub: '09:41:02 取得',
+      },
+    },
+    {
+      id: 'adapter3',
+      device: 'adapter3',
+      hardware: '地上波 · 録画 4 本',
+      state: { level: 'good', label: '健全', sub: '割り当て可能' },
+      drop: { value: '0.001', unit: '%', level: 'good' },
+      lock: { value: '100', unit: '%', sub: '09:36:10 取得', stale: true },
+      cnr: {
+        value: '31.882',
+        unit: 'dB',
+        sub: '09:36:10 · 最後に測れた値(5 分前)',
+        stale: true,
+      },
+      ber: {
+        layers: [
+          { layer: 'layer0', value: '1.1e-05' },
+          { layer: 'layer1', value: '0.0e+00' },
+        ],
+        sub: '09:36:10 · 最後に測れた値',
+        stale: true,
+      },
+    },
+    {
+      id: 'adapter0',
+      device: 'adapter0',
+      hardware: '衛星 · 録画 0 本',
+      state: {
+        level: 'unreachable',
+        label: '取得できず',
+        recap: '再掲 · チューナー',
+        sub: '分類 ①lock しない · 15 時間継続',
+      },
+      drop: { level: 'nodata', sub: '録画 0 本' },
+      lock: { value: '0', unit: '%', sub: '09:41:02 取得 · LOCK せず' },
+      cnr: {
+        level: 'unreachable',
+        sub: 'lock していないため値として扱わない',
+      },
+      ber: { level: 'unreachable', sub: '09:24 以降サンプルなし' },
+    },
+    {
+      id: 'adapter2',
+      device: 'adapter2',
+      hardware: '割当停止中',
+      state: {
+        level: 'warn',
+        label: '種別不一致',
+        recap: '再掲 · チューナー',
+        sub: '設定は地上波 / 検出は衛星',
+      },
+      drop: { level: 'nodata', sub: '録画 0 本' },
+      lock: { level: 'unmeasured', sub: '割当停止中でサンプルなし' },
+      cnr: { level: 'unmeasured', sub: '割当停止中でサンプルなし' },
+      ber: { level: 'unsupported', sub: 'この個体は統計を返さない' },
+    },
+  ],
+  problemRecordings: [
+    {
+      id: 'rec-1',
+      title: 'みなと ニュース7',
+      where: 'みなと総合1 · 08/09 21:00–22:00',
+      drops: 'ドロップ 3,842',
+      pct: '0.152%',
+      level: 'bad',
+    },
+    {
+      id: 'rec-2',
+      title: '夕方いちばん',
+      where: '中央テレビ1 · 08/10 08:15–09:55',
+      drops: 'ドロップ 812',
+      pct: '0.031%',
+      level: 'warn',
+    },
+  ],
+  ownedCount: 2,
+  recapCount: 2,
+  anomalies: [
+    {
+      id: 'an-1',
+      title: 'ドロップ率が視聴不可の恐れを超過',
+      level: 'bad',
+      levelLabel: '視聴不可の恐れ',
+      body: 'みなと総合1 · 観測 0.152% / 適用閾値 0.1%(暫定)',
+      meta: '08/09 21:00 発生 · 継続中',
+    },
+    {
+      id: 'an-2',
+      title: '信号品質の供給途絶',
+      level: 'unreachable',
+      levelLabel: '取得できず',
+      body: 'adapter0 · 09:24 以降サンプル 0 件 / 適用閾値 10 分(暫定)',
+      meta: '08/10 09:34 発生 · 継続中',
+    },
+    {
+      id: 'an-3',
+      title: 'lock しない',
+      level: 'nodata',
+      levelLabel: '再掲 · チューナー',
+      recap: '再掲 · チューナー',
+      body: 'adapter0 · BS / CS · 分類 ①lock しない · 15 時間継続',
+      meta: '08/09 18:41 発生 · チューナーが所有',
+    },
+    {
+      id: 'an-4',
+      title: '種別不一致',
+      level: 'nodata',
+      levelLabel: '再掲 · チューナー',
+      recap: '再掲 · チューナー',
+      body: 'adapter2 · 分類 ④期待 TSID / サービス不一致 · 設定は地上波 / 検出は衛星',
+      meta: '08/08 02:10 発生 · チューナーが所有',
+    },
+    {
+      id: 'an-5',
+      title: 'ドロップ率が警告水準を超過',
+      level: 'warn',
+      levelLabel: '警告水準',
+      body: '第一テレビ1 · 観測 0.024% / 適用閾値 0.02%(暫定)',
+      meta: '08/09 22:04 確認済み · 削除されていない',
+      acknowledged: true,
+    },
+  ],
+}
+
+export async function getQuality(): Promise<QualityResult> {
+  return QUALITY
+}
