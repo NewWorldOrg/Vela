@@ -1,13 +1,27 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 
-import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+import { getRecording } from '@/repository/recordings'
+import { RecordingDetailView } from '@/page-component/recordings/recording-detail-view'
 
-export const metadata: Metadata = { title: '録画詳細' }
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const detail = await getRecording(id)
+  return { title: detail ? detail.title : '録画詳細' }
+}
 
-export default function Page() {
-  return (
-    <ScreenPlaceholder spot="tape">
-      録画詳細・再生の画面はこれから実装されます。
-    </ScreenPlaceholder>
-  )
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const detail = await getRecording(id)
+  if (!detail) notFound()
+
+  return <RecordingDetailView detail={detail} />
 }
