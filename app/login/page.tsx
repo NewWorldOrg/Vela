@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 
-import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+import { LoginView } from '@/page-component/login/login-view'
 
-export const metadata: Metadata = { title: 'ログイン' }
+export const metadata: Metadata = { title: 'サインイン' }
 
-export default function Page() {
-  return (
-    <div className="dot-grid flex min-h-dvh flex-col bg-bg">
-      <ScreenPlaceholder spot="star">
-        ログインの画面はこれから実装されます。
-      </ScreenPlaceholder>
-    </div>
-  )
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+
+  return <LoginView failed={params.error !== undefined} />
 }
