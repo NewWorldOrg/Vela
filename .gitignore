@@ -54,3 +54,6 @@ Thumbs.db
 # storybook
 /storybook-static/
 /test-results/
+
+# Claude Code
+CLAUDE.local.md

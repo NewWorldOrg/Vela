@@ -1,0 +1,4 @@
+# Everything in this repository is built and linted inside a Linux container,
+# so the working tree must use LF regardless of the checkout host's
+# core.autocrlf setting — otherwise prettier --check fails on every file.
+* text=auto eol=lf

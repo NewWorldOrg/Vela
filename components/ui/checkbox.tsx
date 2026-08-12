@@ -1,10 +1,10 @@
 'use client'
 
 import * as React from 'react'
-import { CheckIcon } from 'lucide-react'
 import { Checkbox as CheckboxPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
+import { CheckIcon } from '@/components/vela/icons'
 
 function Checkbox({
   className,
@@ -14,16 +14,21 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'peer size-4 shrink-0 rounded-[4px] border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-[state=checked]:bg-primary',
+        'peer inline-flex size-[18px] shrink-0 items-center justify-center rounded-[6px] border border-line-strong bg-surface outline-none',
+        'transition-[background-color,border-color,transform,box-shadow] duration-150 ease-toy',
+        'enabled:hover:-translate-x-px enabled:hover:-translate-y-px',
+        'data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-on-brand',
+        'focus-visible:shadow-ring aria-invalid:border-coral',
+        'disabled:cursor-not-allowed disabled:opacity-45',
         className,
       )}
       {...props}
     >
       <CheckboxPrimitive.Indicator
         data-slot="checkbox-indicator"
-        className="grid place-content-center text-current transition-none"
+        className="grid place-content-center text-current"
       >
-        <CheckIcon className="size-3.5" />
+        <CheckIcon className="size-[11px]" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

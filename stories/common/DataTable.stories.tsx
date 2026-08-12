@@ -125,7 +125,7 @@ export const Default: Story = {
     await expect(container.scrollWidth).toBeGreaterThan(container.clientWidth)
 
     // Column-visibility toggle hides the column and persists to localStorage.
-    localStorage.removeItem('next-base-column-visibility-datatable-demo')
+    localStorage.removeItem('vela-column-visibility-datatable-demo')
     await userEvent.click(canvas.getByRole('button', { name: 'Columns' }))
     const emailToggle = await within(document.body).findByRole(
       'menuitemcheckbox',
@@ -138,8 +138,15 @@ export const Default: Story = {
     // The visibility write happens in an effect, so poll for it.
     await waitFor(() =>
       expect(
-        localStorage.getItem('next-base-column-visibility-datatable-demo'),
+        localStorage.getItem('vela-column-visibility-datatable-demo'),
       ).toContain('email'),
+    )
+
+    // Leave the menu closed: an open Radix overlay marks the story root
+    // aria-hidden while its focusable content is still in the DOM.
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(canvasElement.closest('[aria-hidden="true"]')).toBeNull(),
     )
   },
 }

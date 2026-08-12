@@ -31,10 +31,10 @@ function WithTheme({
 
 const preview: Preview = {
   parameters: {
-    // Surface the composed screens and layout first; raw primitives last.
+    // Tokens first, then the Vela components, then the untouched primitives.
     options: {
       storySort: {
-        order: ['Pages', 'Layout', 'Common', 'Forms', 'Theme', 'UI'],
+        order: ['Foundations', 'Components', 'UI'],
       },
     },
     controls: {
@@ -47,8 +47,8 @@ const preview: Preview = {
       appDirectory: true,
     },
     a11y: {
-      // Surface a11y violations in the UI/CI without failing the run yet.
-      test: 'todo',
+      // Every story must be clean: the test-runner fails on any violation.
+      test: 'error',
     },
   },
   globalTypes: {

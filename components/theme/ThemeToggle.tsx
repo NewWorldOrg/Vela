@@ -1,6 +1,6 @@
 'use client'
 
-import { Laptop, Moon, Sun, Check, type LucideIcon } from 'lucide-react'
+import type { ComponentType } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -14,6 +14,13 @@ import {
   useTheme,
   type ThemePreference,
 } from '@/components/theme/ThemeProvider'
+import {
+  CheckIcon,
+  DisplayIcon,
+  MoonIcon,
+  SunIcon,
+  type IconProps,
+} from '@/components/vela/icons'
 
 interface ThemeToggleProps {
   /** Extra classes for the trigger button (color tweaks). */
@@ -24,10 +31,14 @@ interface ThemeToggleProps {
   size?: React.ComponentProps<typeof Button>['size']
 }
 
-const OPTIONS: { value: ThemePreference; label: string; Icon: LucideIcon }[] = [
-  { value: 'light', label: 'Light', Icon: Sun },
-  { value: 'dark', label: 'Dark', Icon: Moon },
-  { value: 'system', label: 'System', Icon: Laptop },
+const OPTIONS: {
+  value: ThemePreference
+  label: string
+  Icon: ComponentType<IconProps>
+}[] = [
+  { value: 'light', label: 'Light', Icon: SunIcon },
+  { value: 'dark', label: 'Dark', Icon: MoonIcon },
+  { value: 'system', label: 'System', Icon: DisplayIcon },
 ]
 
 const MODE_LABELS: Record<ThemePreference, string> = {
@@ -52,7 +63,11 @@ export function ThemeToggle({
   // The trigger icon follows `preference` (Laptop when `system` is selected).
   // Using `mode` would show Sun/Moon even for `system`, hiding the selection.
   const TriggerIcon =
-    preference === 'light' ? Sun : preference === 'dark' ? Moon : Laptop
+    preference === 'light'
+      ? SunIcon
+      : preference === 'dark'
+        ? MoonIcon
+        : DisplayIcon
 
   return (
     <DropdownMenu>
@@ -85,7 +100,7 @@ export function ThemeToggle({
                 <Icon className="size-4" />
                 {label}
               </span>
-              {selected && <Check className="size-4" aria-hidden="true" />}
+              {selected && <CheckIcon className="size-3.5" />}
             </DropdownMenuItem>
           )
         })}

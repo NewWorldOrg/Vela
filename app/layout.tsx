@@ -7,10 +7,10 @@ import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | next-base',
-    default: 'next-base',
+    template: '%s | Vela',
+    default: 'Vela',
   },
-  description: 'A general-purpose Next.js development base.',
+  description: '録画システムのフロントエンド',
 }
 
 export default async function RootLayout({
@@ -27,10 +27,22 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang="ja"
       className={explicitMode === 'dark' ? 'dark' : undefined}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=M+PLUS+1+Code:wght@400;500&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body suppressHydrationWarning>
         {explicitMode === null && (
           // Injects a constant no-flash init script (no user input, no XSS risk).

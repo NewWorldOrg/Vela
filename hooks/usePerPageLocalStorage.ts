@@ -19,10 +19,10 @@ import { PAGE_SIZES, type PageSize } from '@/types/dataTable'
  * hydration mismatch. This hook is for the post-mount refetch trigger.
  */
 
-export const STORAGE_PREFIX = 'next-base-per-page-'
+export const STORAGE_PREFIX = 'vela-per-page-'
 export const GLOBAL_STORAGE_KEY = 'global'
 const STORAGE_KEY = STORAGE_PREFIX + GLOBAL_STORAGE_KEY
-const SAME_WINDOW_SYNC_EVENT = 'next-base-per-page-changed'
+const SAME_WINDOW_SYNC_EVENT = 'vela-per-page-changed'
 
 function isValidPerPage(parsed: number): parsed is PageSize {
   if (!Number.isSafeInteger(parsed)) return false

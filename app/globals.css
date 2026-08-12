@@ -11,7 +11,7 @@
     box-sizing: border-box;
     padding: 0;
     margin: 0;
-    border-color: var(--color-border);
+    border-color: var(--line);
   }
 
   html,
@@ -20,8 +20,13 @@
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    line-height: 1.8;
+    background-color: var(--bg);
+    color: var(--ink);
+    background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
 
   input[type='number'] {
@@ -35,106 +40,232 @@
     appearance: none;
   }
 
-  /*
-   * shadcn/ui "new-york" / zinc base color (Tailwind v4 CSS variables).
-   * Extended with success / warning / info and table-header tokens.
-   * --ring is set to the primary color so focus rings keep a >= 3:1 contrast
-   * ratio (WCAG 2.4.11) instead of the low-contrast neutral default.
-   */
+  /* Shape, motion and type are theme-independent. */
+  :root {
+    --r-s: 10px;
+    --r-m: 16px;
+    --r-l: 22px;
+    --r-pill: 999px;
+    --ease: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --dur: 150ms;
+  }
+
   :root {
     color-scheme: light;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.141 0.005 285.823);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.141 0.005 285.823);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.141 0.005 285.823);
-    --primary: oklch(0.21 0.006 285.885);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.967 0.001 286.375);
-    --secondary-foreground: oklch(0.21 0.006 285.885);
-    --muted: oklch(0.967 0.001 286.375);
-    --muted-foreground: oklch(0.552 0.016 285.938);
-    --accent: oklch(0.967 0.001 286.375);
-    --accent-foreground: oklch(0.21 0.006 285.885);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(0.92 0.004 286.32);
-    --input: oklch(0.92 0.004 286.32);
-    --ring: oklch(0.21 0.006 285.885);
-    --radius: 0.625rem;
-    --success: oklch(0.448 0.119 151.328);
-    --success-foreground: oklch(1 0 0);
-    --warning: oklch(0.769 0.188 70.08);
-    --warning-foreground: oklch(0.344 0.065 58.147);
-    --info: oklch(0.541 0.1 222.717);
-    --info-foreground: oklch(1 0 0);
-    --table-header: oklch(0.985 0.002 247.858);
-    --table-header-foreground: oklch(0.208 0.042 265.755);
+    --bg: #f7f4ed;
+    --dot: rgba(72, 60, 46, 0.05);
+    --surface: #fffdf8;
+    --surface-2: #f1ece2;
+    --surface-3: #e7e0d3;
+    --line: #e7e0d4;
+    --line-strong: #cec4b3;
+    --ink: #2e2a38;
+    /* The ink scale is shifted one step darker than the design source: at the
+       11px used for notes and table headers, the original --ink-3 lands at
+       2.6:1 on --surface, which the a11y gate rejects. Keeping three steps and
+       WCAG AA means ink-3 takes the old ink-2 value and ink-2 moves down. */
+    --ink-2: #514b60;
+    --ink-3: #6e6780;
+    --accent: #3f6461;
+    --accent-hover: #35534f;
+    --on-accent: #fbf7ef;
+    --btn-fill: #3f6461;
+    --btn-fill-hover: #35534f;
+    --on-btn: #fbf7ef;
+    --accent-soft: #e4eeeb;
+    --accent-line: #c2d6d1;
+    --tint-lavender: #efebfb;
+    --tint-salmon: #fbede7;
+    --tint-butter: #fbf3de;
+    --tint-sage: #eaf3ec;
+    --tint-sky: #e9f1f9;
+    --tint-blush: #faedf2;
+    --mint: #24795a;
+    --mint-soft: #e7f4ee;
+    --mint-line: #c4e4d5;
+    --lemon: #906517;
+    --lemon-soft: #fbf2dd;
+    --lemon-line: #eddcaf;
+    --coral: #ab4e47;
+    --coral-soft: #fbece8;
+    --coral-line: #f2d1ca;
+    --on-coral: #ffffff;
+    --sky: #356fa5;
+    --sky-soft: #e9f1f9;
+    --sky-line: #c9deef;
+    --pop: rgba(72, 60, 46, 0.22);
+    --scrim: rgba(0, 0, 0, 0.32);
+    --ring: 0 0 0 3px rgba(63, 100, 97, 0.2);
   }
 
   .dark {
     color-scheme: dark;
-    --background: oklch(0.141 0.005 285.823);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.21 0.006 285.885);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.21 0.006 285.885);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.92 0.004 286.32);
-    --primary-foreground: oklch(0.21 0.006 285.885);
-    --secondary: oklch(0.274 0.006 286.033);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.274 0.006 286.033);
-    --muted-foreground: oklch(0.705 0.015 286.067);
-    --accent: oklch(0.274 0.006 286.033);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.92 0.004 286.32);
-    --success: oklch(0.596 0.145 151.328);
-    --success-foreground: oklch(0.145 0.03 151.328);
-    --warning: oklch(0.82 0.14 70.08);
-    --warning-foreground: oklch(0.2 0.04 70.08);
-    --info: oklch(0.646 0.116 222.717);
-    --info-foreground: oklch(0.145 0.03 222.717);
-    --table-header: oklch(0.22 0.015 249.2);
-    --table-header-foreground: oklch(0.85 0.02 249.2);
+    --bg: #141317;
+    --dot: rgba(236, 234, 240, 0.07);
+    --surface: #1c1b1f;
+    --surface-2: #252428;
+    --surface-3: #302e34;
+    --line: #39383c;
+    --line-strong: #57565b;
+    --ink: #eceaf0;
+    --ink-2: #a8a4b0;
+    /* Lightened from the design source for the same reason as the light theme:
+       the original value reads 4.2:1 on --surface-2, where table and list
+       headers sit. */
+    --ink-3: #908c99;
+    --accent: #96bbb4;
+    --accent-hover: #a6c9c2;
+    --on-accent: #1a181e;
+    --accent-soft: #23312e;
+    --accent-line: #3a4f4b;
+    --btn-fill: #96bbb4;
+    --btn-fill-hover: #a6c9c2;
+    --on-btn: #1a181e;
+    --tint-lavender: #322d3e;
+    --tint-salmon: #3d2e2b;
+    --tint-butter: #3a3224;
+    --tint-sage: #2a3730;
+    --tint-sky: #28333f;
+    --tint-blush: #3b2d35;
+    --mint: #86d2ac;
+    --mint-soft: #23342a;
+    --mint-line: #34503f;
+    --lemon: #e5ba6c;
+    --lemon-soft: #3a2f1b;
+    --lemon-line: #55452a;
+    --coral: #ec9a93;
+    --coral-soft: #3f2926;
+    --coral-line: #5c3b37;
+    --on-coral: #331312;
+    --sky: #8fc0ea;
+    --sky-soft: #26313a;
+    --sky-line: #3a4b5c;
+    --pop: rgba(0, 0, 0, 0.5);
+    --scrim: rgba(0, 0, 0, 0.5);
+    --ring: 0 0 0 3px rgba(150, 187, 180, 0.28);
   }
 }
 
+/* Headings = Zen Maru Gothic, body/UI = Zen Kaku Gothic New,
+   numbers / model names / times = M PLUS 1 Code with tabular-nums. */
+@theme {
+  --font-heading: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
+  --font-body:
+    'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  --font-code: 'M PLUS 1 Code', ui-monospace, 'SFMono-Regular', monospace;
+  --font-sans:
+    'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  --font-mono: 'M PLUS 1 Code', ui-monospace, 'SFMono-Regular', monospace;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-  --color-table-header: var(--table-header);
-  --color-table-header-foreground: var(--table-header-foreground);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --text-h1: 22px;
+  --text-h1--line-height: 1.45;
+  --text-h2: 18px;
+  --text-h2--line-height: 1.45;
+  --text-h3: 16px;
+  --text-h3--line-height: 1.5;
+  --text-title: 14px;
+  --text-title--line-height: 1.55;
+  --text-body: 13.5px;
+  --text-body--line-height: 1.8;
+  --text-ui: 12.5px;
+  --text-ui--line-height: 1.7;
+  --text-sub: 12px;
+  --text-sub--line-height: 1.75;
+  --text-note: 11.5px;
+  --text-note--line-height: 1.75;
+  --text-cap: 11px;
+  --text-cap--line-height: 1.7;
+  --text-micro: 10.5px;
+  --text-micro--line-height: 1.6;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-brand: var(--accent);
+  --color-brand-hover: var(--accent-hover);
+  --color-on-brand: var(--on-accent);
+  --color-brand-soft: var(--accent-soft);
+  --color-brand-line: var(--accent-line);
+  --color-btn-fill: var(--btn-fill);
+  --color-btn-fill-hover: var(--btn-fill-hover);
+  --color-on-btn: var(--on-btn);
+  --color-tint-lavender: var(--tint-lavender);
+  --color-tint-salmon: var(--tint-salmon);
+  --color-tint-butter: var(--tint-butter);
+  --color-tint-sage: var(--tint-sage);
+  --color-tint-sky: var(--tint-sky);
+  --color-tint-blush: var(--tint-blush);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-mint-line: var(--mint-line);
+  --color-lemon: var(--lemon);
+  --color-lemon-soft: var(--lemon-soft);
+  --color-lemon-line: var(--lemon-line);
+  --color-coral: var(--coral);
+  --color-coral-soft: var(--coral-soft);
+  --color-coral-line: var(--coral-line);
+  --color-on-coral: var(--on-coral);
+  --color-sky: var(--sky);
+  --color-sky-soft: var(--sky-soft);
+  --color-sky-line: var(--sky-line);
+  --color-scrim: var(--scrim);
+
+  /* shadcn/ui primitives read these names; they are aliases of Vela tokens so
+     untouched primitives inherit the palette. */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--btn-fill);
+  --color-primary-foreground: var(--on-btn);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--ink-2);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--coral);
+  --color-destructive-foreground: var(--on-coral);
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--accent);
+
+  --radius-sm: 8px;
+  --radius-md: var(--r-s);
+  --radius-lg: var(--r-m);
+  --radius-xl: var(--r-l);
+
+  --shadow-pop: 2px 2px 0 var(--pop);
+  --shadow-pop-lg: 3px 3px 0 var(--pop);
+  --shadow-pop-xl: 4px 4px 0 var(--pop);
+  --shadow-pop-none: 0 0 0 var(--pop);
+  --shadow-panel: -4px 4px 0 var(--pop);
+  --shadow-sheet: 0 -4px 0 var(--pop);
+  --shadow-ring: var(--ring);
+  --shadow-pop-ring: 2px 2px 0 var(--pop), var(--ring);
+
+  --ease-toy: var(--ease);
+}
+
+/* The graph-paper dot grid behind pages and panes. */
+@utility dot-grid {
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Headings are Zen Maru Gothic 700 with palt; hierarchy comes from size only. */
+@utility heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-feature-settings: 'palt';
 }
