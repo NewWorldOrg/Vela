@@ -199,14 +199,14 @@ export function EncodeView({ result }: { result: EncodeResult }) {
           <div className="grid gap-4 min-[760px]:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="profile-name">名称</FieldLabel>
-              <Input id="profile-name" defaultValue={editing.name} readOnly />
+              <Input id="profile-name" defaultValue={editing.name} disabled />
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-resolution">解像度</FieldLabel>
               <Input
                 id="profile-resolution"
                 defaultValue={editing.resolution}
-                readOnly
+                disabled
               />
               <FieldHint>
                 放送波は 1440×1080 と 1920×1080 が混在します
@@ -214,7 +214,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-codec">コーデック</FieldLabel>
-              <Input id="profile-codec" defaultValue={editing.codec} readOnly />
+              <Input id="profile-codec" defaultValue={editing.codec} disabled />
               <FieldHint>
                 H.265 は同じ画質でファイルが小さくなりますが、
                 <b>ブラウザによっては再生できません</b>
@@ -228,7 +228,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 id="profile-crf"
                 className="font-code tabular-nums"
                 defaultValue={editing.crf}
-                readOnly
+                disabled
               />
               <div className="flex justify-between font-code text-note text-ink-3">
                 <span>18 · 高品質</span>
@@ -246,7 +246,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
               <Input
                 id="profile-deinterlace"
                 defaultValue={editing.deinterlace}
-                readOnly
+                disabled
               />
               <FieldHint>ソースがプログレッシブのときは何もしません</FieldHint>
             </Field>
