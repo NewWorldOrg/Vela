@@ -63,6 +63,7 @@ export const Chips: Story = {
         <Badge variant="err">受信不可</Badge>
         <Badge variant="ok">受信可</Badge>
         <Badge>ワンセグ</Badge>
+        <Badge variant="mute">未計測</Badge>
       </div>
       <p className="mt-[9px] text-note text-ink-3">
         ドットを伴うのは録画中のみ。同系色のチップは文言で区別し、色数を増やさない。

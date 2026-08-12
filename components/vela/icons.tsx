@@ -125,6 +125,25 @@ export function ProgramGuideIcon(props: IconProps) {
   )
 }
 
+export function OutcomeTruncatedIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.2 12h6.4" />
+      <path d="M13.4 12h1.2M17.4 12h2.4" />
+      <path d="M12 4.6v2.2M12 17.2v2.2" />
+    </Icon>
+  )
+}
+
+export function OutcomeFailedIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="8.4" />
+      <path d="M9.2 9.2 14.8 14.8M14.8 9.2 9.2 14.8" />
+    </Icon>
+  )
+}
+
 export function ThumbShotIcon(props: IconProps) {
   return (
     <Icon {...props}>
