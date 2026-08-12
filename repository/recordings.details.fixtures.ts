@@ -10,9 +10,14 @@ function base(id: string) {
 export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   {
     ...base('1291'),
-    channelNo: '121',
+    channelNo: '181',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
+    tunerUnit: {
+      main: 'adapter0/frontend0',
+      sub: 'PT3 · 地上 · セッション rec-20260810-2315-181',
+    },
+    eoverflow: '0 件',
     live: {
       elapsed: '0:42:18',
       written: '2.1 GB',
@@ -48,7 +53,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     },
     tunerUnit: {
       main: 'adapter1/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260809-2300-041',
+      sub: 'PT3 · 地上 · セッション rec-20260809-2300-131',
     },
     eoverflow: '0 件',
     scramble: {
@@ -84,7 +89,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter3/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260809-0105-091',
+      sub: 'PT3 · 地上 · セッション rec-20260809-0105-141',
     },
     eoverflow: '0 件',
     scramble: { main: '0 パケット' },
@@ -116,7 +121,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter0/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260808-1230-011',
+      sub: 'PT3 · 地上 · セッション rec-20260808-1230-151',
     },
     eoverflow: '0 件',
     scramble: { main: '0 パケット' },
@@ -167,7 +172,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     },
     tunerUnit: {
       main: 'adapter1/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260804-2300-041',
+      sub: 'PT3 · 地上 · セッション rec-20260804-2300-131',
     },
     eoverflow: '0 件',
     scramble: { main: '0 パケット' },
@@ -194,7 +199,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter2/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260802-0015-071',
+      sub: 'PT3 · 地上 · セッション rec-20260802-0015-161',
     },
     eoverflow: '0 件',
     scramble: {
@@ -249,7 +254,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter1/frontend0',
-      sub: 'PT3 · 地上 · セッション rec-20260725-2100-041',
+      sub: 'PT3 · 地上 · セッション rec-20260725-2100-131',
     },
     eoverflow: '2 件',
     scramble: { main: '0 パケット' },
@@ -260,7 +265,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       canGenerate: true,
     },
     qualityTotal: '178,530',
-    qualityRatio: '0.243',
+    qualityRatio: '0.227',
     qualitySpots: [
       { at: '21:41 付近', packets: '171,204 パケット' },
       { at: '21:58 付近', packets: '7,326 パケット' },
@@ -274,7 +279,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     genres: ['ドキュメンタリー'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:04。実ファイルがありません。',
+      '期待ウィンドウ 30分に対し、書けた尺 30:04。録画の記録は 20.8 GB、実ファイルはありません。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     eoverflow: '—',

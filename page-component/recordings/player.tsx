@@ -244,31 +244,8 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
               </span>
             )}
           </div>
-          {onTheFly && (
-            <div className="flex flex-wrap items-center gap-[9px]">
-              <span className="text-[11px] text-(--pl-ink-3)">画質</span>
-              <PSeg
-                label="画質"
-                options={['1080p 6.0 Mbps', '720p 3.0 Mbps', '480p 1.5 Mbps']}
-                value={otfQuality}
-                onChange={setOtfQuality}
-                numeric
-              />
-              <span className="text-[11px] text-(--pl-ink-3)">
-                オンザフライ再生のときだけ選べます
-              </span>
-            </div>
-          )}
           <p className="min-w-[220px] flex-1 text-[11.5px] leading-relaxed text-(--pl-ink-3)">
-            {onTheFly ? (
-              <>
-                <b className="font-bold text-(--pl-ink-2)">
-                  未エンコードの録画を再生しています。
-                </b>
-                シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。エンコード済みの成果物があれば
-                Range 直配信になり、同じシークバーでも体感が桁違いになります。
-              </>
-            ) : (
+            {!onTheFly ? (
               <>
                 <b className="font-bold text-(--pl-ink-2)">
                   エンコード済みを再生しています。
@@ -276,6 +253,29 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
                 Range 直配信のため、シークはバイト範囲の要求だけで済みます。元
                 TS
                 を選ぶとオンザフライになり、シークのたびにトランスコーダを立て直します。
+              </>
+            ) : encoded ? (
+              <>
+                <b className="font-bold text-(--pl-ink-2)">
+                  元 TS を再生しています。
+                </b>
+                シークのたびにトランスコーダを立て直します。H.264 を選ぶと Range
+                直配信になります。
+              </>
+            ) : d.encode.status === 'failed' ? (
+              <>
+                <b className="font-bold text-(--pl-ink-2)">
+                  エンコードは失敗したため、元 TS をオンザフライで再生します。
+                </b>
+                シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。
+              </>
+            ) : (
+              <>
+                <b className="font-bold text-(--pl-ink-2)">
+                  未エンコードの録画を再生しています。
+                </b>
+                シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。エンコード済みの成果物があれば
+                Range 直配信になり、同じシークバーでも体感が桁違いになります。
               </>
             )}
           </p>
@@ -288,6 +288,21 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
             </button>
           </div>
         </div>
+        {onTheFly && (
+          <div className="mt-3 flex flex-wrap items-center gap-[9px] border-t border-dashed border-white/15 pt-3">
+            <span className="text-[11px] text-(--pl-ink-3)">画質</span>
+            <PSeg
+              label="画質"
+              options={['1080p 6.0 Mbps', '720p 3.0 Mbps', '480p 1.5 Mbps']}
+              value={otfQuality}
+              onChange={setOtfQuality}
+              numeric
+            />
+            <span className="text-[11px] text-(--pl-ink-3)">
+              オンザフライ再生のときだけ選べます
+            </span>
+          </div>
+        )}
       </div>
     </section>
   )

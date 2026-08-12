@@ -77,7 +77,7 @@ export function RecordingDetailView({
             {d.outcomeBody}
           </p>
           {d.outcomeAxis && (
-            <span className="text-note whitespace-nowrap text-ink-3">
+            <span className="text-note whitespace-nowrap text-ink-2">
               {d.outcomeAxis}
             </span>
           )}
@@ -93,7 +93,7 @@ export function RecordingDetailView({
                 録画中
               </Badge>
               <span className="text-[11px] text-ink-3">
-                録画の記録の状態(ファイル名では判別しない)
+                録画の記録が原簿(ファイル名では判別しない)
               </span>
             </div>
             <p className="mb-2.5 text-sub leading-relaxed text-ink-2">
@@ -130,7 +130,7 @@ export function RecordingDetailView({
               />
               <KRow k="最終追従" main={d.live.extension.followedAt} />
               <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-                録画中は録画テーブルの状態が唯一の原簿です。ファイル名からは進行中と完成を判別しません。
+                録画中は録画の記録が唯一の原簿です。ファイル名からは進行中と完成を判別しません。
               </p>
             </section>
           )}
@@ -160,7 +160,21 @@ export function RecordingDetailView({
             </button>
           </div>
         </section>
-      ) : d.outcome !== 'failed' && d.outcome !== 'recording' ? (
+      ) : d.outcome === 'failed' ? (
+        <section
+          style={PLAYER_PALETTE}
+          className="mx-[30px] rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[22px] text-center max-[1060px]:mx-5 max-[700px]:mx-3.5"
+        >
+          <OutcomeFailedIcon className="mx-auto mb-2 size-[34px] text-(--pl-ink-2)" />
+          <b className="heading block text-[14.5px] text-(--pl-ink)">
+            再生できません
+          </b>
+          <p className="mt-[5px] text-sub leading-relaxed text-(--pl-ink-2)">
+            実ファイルが 0 B
+            のため、再生できるものがありません。理由は「失敗の理由」にあります。
+          </p>
+        </section>
+      ) : d.outcome !== 'recording' ? (
         <Player key={d.id} detail={d} />
       ) : null}
 
@@ -237,7 +251,7 @@ export function RecordingDetailView({
             <QualityIcon className="size-3.5 text-brand" />
             録画の記録
             <span className="font-normal tracking-normal">
-              録画テーブルが唯一の原簿。ファイル名からは判別しない
+              録画の記録が唯一の原簿。ファイル名からは判別しない
             </span>
           </div>
           {d.reconcile && (
@@ -327,14 +341,19 @@ export function RecordingDetailView({
                 wordy={!d.quality.measured}
               />
             </div>
-            <p className="text-note leading-relaxed text-ink-3">
-              判定は <b className="font-code font-medium text-ink-2">0.02%</b>{' '}
-              超で警告水準 /{' '}
-              <b className="font-code font-medium text-ink-2">0.1%</b>{' '}
-              超で視聴不可の恐れ(いずれも暫定値)。計測していない録画は「未計測」で、良好とは別の状態です。
-            </p>
-            {!d.quality.measured && (
-              <p className="mt-2.5 text-note leading-relaxed text-ink-3">
+            {d.quality.measured ? (
+              <p className="text-note leading-relaxed text-ink-3">
+                判定は <b className="font-code font-medium text-ink-2">0.02%</b>{' '}
+                超で警告水準 /{' '}
+                <b className="font-code font-medium text-ink-2">0.1%</b>{' '}
+                超で視聴不可の恐れ(いずれも暫定値)。計測していない録画は「未計測」で、良好とは別の状態です。
+              </p>
+            ) : d.outcome === 'recording' ? (
+              <p className="text-note leading-relaxed text-ink-3">
+                {d.quality.detail}
+              </p>
+            ) : (
+              <p className="text-note leading-relaxed text-ink-3">
                 計測が無かった録画です。良好とは別の状態として扱い、集計にも混ぜません。
               </p>
             )}
@@ -379,13 +398,21 @@ export function RecordingDetailView({
               <EncodeHeadChip detail={d} />
             </div>
             <EncodeBody detail={d} />
-            <p className="mt-3 text-note leading-relaxed text-ink-3">
-              エンコード状態は「軽く見られるか(シークが安いか)」の軸です。未エンコードでも失敗でも、オンザフライで再生できます。結果(録れたか)・品質(壊れていないか)とは独立しています。
-            </p>
+            {playableSource(d) && (
+              <p className="mt-3 text-note leading-relaxed text-ink-3">
+                エンコード状態は「軽く見られるか(シークが安いか)」の軸です。未エンコードでも失敗でも、オンザフライで再生できます。結果(録れたか)・品質(壊れていないか)とは独立しています。
+              </p>
+            )}
           </section>
         </div>
       </div>
     </main>
+  )
+}
+
+function playableSource(d: RecordingDetail) {
+  return (
+    !d.fileMissing && (d.outcome === 'complete' || d.outcome === 'truncated')
   )
 }
 
@@ -602,7 +629,9 @@ function EncodeBody({ detail: d }: { detail: RecordingDetail }) {
     case 'none':
       return (
         <p className="text-sub leading-relaxed text-ink-2">
-          成果物はまだありません。オンザフライで再生できますが、シークのたびにトランスコーダを立て直します。
+          {playableSource(d)
+            ? '成果物はまだありません。オンザフライで再生できますが、シークのたびにトランスコーダを立て直します。'
+            : '成果物はありません。'}
         </p>
       )
   }
