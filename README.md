@@ -87,7 +87,8 @@ components/ui/*          shadcn primitive(Vela の見た目に寄せてある)
 components/vela/*        Vela 固有のコンポーネントと独自アイコン
 components/theme/*       light/dark/system テーマの仕組み
 components/common/*      汎用 DataTable
-page-component/          画面本体(Client)
+page-component/          画面本体(Client 境界は必要な葉だけ)
+feature/                 画面間で共有する機能部品
 repository/              データ取得と型境界
 lib/                     cn・表示整形などの純関数
 hooks/                   useListUrlState / usePerPageLocalStorage
