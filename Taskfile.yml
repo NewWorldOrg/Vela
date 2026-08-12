@@ -1,0 +1,29 @@
+version: '3'
+
+tasks:
+  docker_build:
+    cmd: docker compose build
+  up:
+    cmd: docker compose up -d
+  down:
+    cmd: docker compose down
+  stop:
+    cmd: docker compose stop
+  bash:
+    cmd: docker compose exec app /bin/bash
+  yarn:
+    cmd: docker compose exec app yarn
+  dev:
+    cmd: docker compose exec app yarn dev
+  storybook:
+    cmd: docker compose exec app yarn storybook
+  lint:
+    cmd: docker compose exec app yarn lint
+  typecheck:
+    cmd: docker compose exec app yarn typecheck
+  prettier-check:
+    cmd: docker compose exec app yarn prettier:check
+  prettier:
+    cmd: docker compose exec app yarn prettier
+  test:stories:
+    cmd: docker compose run --rm storybook-runner
