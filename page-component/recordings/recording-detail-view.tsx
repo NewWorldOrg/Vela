@@ -1,21 +1,36 @@
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
+import { formatBytes } from '@/lib/format'
 import type { RecordingDetail } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ProgressBar } from '@/components/vela/progress'
 import { ChipDot } from '@/components/vela/status'
 import {
   ChevronLeftIcon,
-  ListIcon,
-  QualityIcon,
   EncodeIcon,
+  ListIcon,
+  OutcomeFailedIcon,
+  OutcomeTruncatedIcon,
+  QualityIcon,
+  SuccessIcon,
   ThumbMissingIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { QualityChip } from '@/page-component/recordings/chips'
+import { FileMissingChip, QualityChip } from '@/feature/recordings/chips'
+import {
+  PLAYER_BUTTON,
+  PLAYER_PALETTE,
+} from '@/feature/recordings/player-palette'
 import { Player } from '@/page-component/recordings/player'
 import { RecordingActions } from '@/page-component/recordings/recording-actions'
+
+const OUTCOME_MARK = {
+  complete: SuccessIcon,
+  truncated: OutcomeTruncatedIcon,
+  failed: OutcomeFailedIcon,
+} as const
 
 const OUTCOME_STYLE = {
   complete: 'bg-tint-sage',
@@ -53,15 +68,11 @@ export function RecordingDetailView({
             OUTCOME_STYLE[d.outcome],
           )}
         >
+          <OutcomeMark outcome={d.outcome} />
           <h2 className="heading text-[15px] whitespace-nowrap">
             {OUTCOME_LABEL[d.outcome]}
           </h2>
-          {d.fileMissing && (
-            <Badge variant="err" className="font-bold">
-              <ChipDot />
-              ファイル不在
-            </Badge>
-          )}
+          {d.fileMissing && <FileMissingChip className="mt-0" />}
           <p className="min-w-[200px] flex-1 text-ui leading-relaxed text-ink-2">
             {d.outcomeBody}
           </p>
@@ -77,10 +88,10 @@ export function RecordingDetailView({
         <div className="mx-[30px] mb-3.5 grid grid-cols-2 gap-4 max-[1060px]:mx-5 max-[900px]:grid-cols-1 max-[700px]:mx-3.5">
           <section className="rounded-xl bg-surface px-[19px] py-[17px]">
             <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-[7px] rounded-full border border-coral-line bg-coral-soft py-[3px] pr-[11px] pl-[9px] text-note font-bold text-coral">
+              <Badge variant="recording" className="gap-[7px] pl-[9px]">
                 <ListIcon className="size-[13px]" />
                 録画中
-              </span>
+              </Badge>
               <span className="text-[11px] text-ink-3">
                 録画の記録の状態(ファイル名では判別しない)
               </span>
@@ -118,33 +129,39 @@ export function RecordingDetailView({
                 sub={d.live.extension.delta}
               />
               <KRow k="最終追従" main={d.live.extension.followedAt} />
+              <p className="mt-2.5 text-note leading-relaxed text-ink-3">
+                録画中は録画テーブルの状態が唯一の原簿です。ファイル名からは進行中と完成を判別しません。
+              </p>
             </section>
           )}
         </div>
       )}
 
       {d.fileMissing ? (
-        <section className="mx-[30px] rounded-lg border border-line-strong bg-[#151418] px-5 py-[22px] text-center max-[1060px]:mx-5 max-[700px]:mx-3.5">
-          <ThumbMissingIcon className="mx-auto mb-2 size-[34px] text-[#B3ABBF]" />
-          <b className="heading block text-[14.5px] text-[#EFEAF2]">
+        <section
+          style={PLAYER_PALETTE}
+          className="mx-[30px] rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[22px] text-center max-[1060px]:mx-5 max-[700px]:mx-3.5"
+        >
+          <ThumbMissingIcon className="mx-auto mb-2 size-[34px] text-(--pl-ink-2)" />
+          <b className="heading block text-[14.5px] text-(--pl-ink)">
             ファイルが見つかりません
           </b>
-          <p className="mt-[5px] text-sub leading-relaxed text-[#B3ABBF]">
+          <p className="mt-[5px] text-sub leading-relaxed text-(--pl-ink-2)">
             録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。
           </p>
           <div className="mt-3 flex justify-center">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               disabled
               title="整合性チェックの画面はこれから実装されます"
+              className={PLAYER_BUTTON}
             >
               整合性チェックの結果へ
-            </Button>
+            </button>
           </div>
         </section>
       ) : d.outcome !== 'failed' && d.outcome !== 'recording' ? (
-        <Player detail={d} />
+        <Player key={d.id} detail={d} />
       ) : null}
 
       <div className="grid grid-cols-[1.35fr_1fr] items-start gap-[18px] px-[30px] pt-[22px] pb-[34px] *:min-w-0 max-[1060px]:grid-cols-1 max-[1060px]:px-5 max-[700px]:px-3.5">
@@ -194,14 +211,11 @@ export function RecordingDetailView({
             <RecordingActions recording={d} />
           </div>
 
-          {d.outcome === 'failed' && d.scramble && (
+          {d.failureReason && (
             <>
               <div className="mt-[22px] mb-[7px] flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3">
                 <WarningIcon className="size-3.5 text-brand" />
                 失敗の理由
-                <span className="font-normal tracking-normal">
-                  単一文字列に潰さない
-                </span>
               </div>
               <div className="flex flex-wrap items-start gap-[13px] rounded-lg bg-surface-2 px-[15px] py-3">
                 <span className="flex size-8 flex-none items-center justify-center rounded-md bg-surface text-ink-2">
@@ -209,10 +223,10 @@ export function RecordingDetailView({
                 </span>
                 <div className="min-w-[170px] flex-1">
                   <b className="heading block text-[13.5px]">
-                    スクランブル解除失敗
+                    {d.failureReason.title}
                   </b>
                   <p className="mt-0.5 text-sub leading-relaxed text-ink-2">
-                    閾値を超えた残存パケットを検出しました。サイズが正しいのに全編再生できない場合の唯一の手がかりです。
+                    {d.failureReason.body}
                   </p>
                 </div>
               </div>
@@ -229,7 +243,7 @@ export function RecordingDetailView({
           {d.reconcile && (
             <KRow
               k="突き合わせ"
-              main={`${d.reconcile.size} / 期待レンジ ${d.reconcile.range}`}
+              main={`${formatBytes(d.sizeBytes)} / 期待レンジ ${d.reconcile.range}`}
               sub={d.reconcile.sub}
             />
           )}
@@ -269,14 +283,14 @@ export function RecordingDetailView({
                   </small>
                 )}
               </span>
-              {d.thumbnailState.action && (
+              {d.thumbnailState.canGenerate && (
                 <Button
                   variant="outline"
                   size="sm"
                   disabled
                   title="サムネイル生成はこれから実装されます"
                 >
-                  {d.thumbnailState.action}
+                  {d.thumbnailState.main === '未生成' ? '生成する' : '再生成'}
                 </Button>
               )}
             </div>
@@ -290,18 +304,25 @@ export function RecordingDetailView({
                 <QualityIcon className="size-4 shrink-0 text-brand" />
                 受信品質
               </h2>
-              <QualityChip recording={d} withDetail={false} />
+              {d.quality.measured ? (
+                <QualityChip recording={d} withDetail={false} />
+              ) : (
+                <Badge variant="mute" className="font-bold">
+                  <ChipDot />
+                  未計測
+                </Badge>
+              )}
             </div>
             <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-[11px]">
               <Stat
                 k="ドロップ合計"
-                v={d.quality.measured ? (d.qualityTotal ?? '') : '未計測'}
+                v={d.quality.measured ? (d.qualityTotal ?? '—') : '未計測'}
                 unit={d.quality.measured ? 'パケット' : undefined}
                 wordy={!d.quality.measured}
               />
               <Stat
                 k="総パケット比"
-                v={d.quality.measured ? (d.qualityRatio ?? '') : '未計測'}
+                v={d.quality.measured ? (d.qualityRatio ?? '—') : '未計測'}
                 unit={d.quality.measured ? '%' : undefined}
                 wordy={!d.quality.measured}
               />
@@ -312,6 +333,11 @@ export function RecordingDetailView({
               <b className="font-code font-medium text-ink-2">0.1%</b>{' '}
               超で視聴不可の恐れ(いずれも暫定値)。計測していない録画は「未計測」で、良好とは別の状態です。
             </p>
+            {!d.quality.measured && (
+              <p className="mt-2.5 text-note leading-relaxed text-ink-3">
+                計測が無かった録画です。良好とは別の状態として扱い、集計にも混ぜません。
+              </p>
+            )}
             {d.qualitySpots && d.qualitySpots.length > 0 && (
               <>
                 <div className="mt-3.5 mb-1 flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3">
@@ -331,7 +357,7 @@ export function RecordingDetailView({
                       type="button"
                       disabled
                       title="この時間帯の再生はこれから実装されます"
-                      className="ml-auto cursor-pointer text-sub font-bold whitespace-nowrap text-brand disabled:cursor-not-allowed disabled:text-ink-3"
+                      className="ml-auto text-sub font-bold whitespace-nowrap text-brand disabled:cursor-not-allowed disabled:text-ink-3"
                     >
                       この時間帯を再生
                     </button>
@@ -361,6 +387,15 @@ export function RecordingDetailView({
       </div>
     </main>
   )
+}
+
+function OutcomeMark({
+  outcome,
+}: {
+  outcome: 'complete' | 'truncated' | 'failed'
+}) {
+  const Mark = OUTCOME_MARK[outcome]
+  return <Mark className="size-[26px] shrink-0 text-ink" />
 }
 
 function Stat({
@@ -438,7 +473,8 @@ function KRow({
 function EncodeHeadChip({ detail: d }: { detail: RecordingDetail }) {
   const map = {
     none: (
-      <Badge variant="outline" className="border-line text-ink-3">
+      <Badge variant="mute" className="font-bold">
+        <ChipDot />
         未エンコード
       </Badge>
     ),
@@ -503,15 +539,24 @@ function EncodeBody({ detail: d }: { detail: RecordingDetail }) {
       return (
         <>
           {p?.profile && <KRow k="プロファイル" main={p.profile} plain />}
-          <div className="mt-3 h-[9px] overflow-hidden rounded-full bg-surface-3">
-            <i
-              className="block h-full rounded-full bg-brand"
-              style={{ width: `${p?.progressPct ?? 0}%` }}
-            />
-          </div>
+          <ProgressBar
+            value={p?.progressPct ?? 0}
+            aria-label="エンコードの進捗"
+            className="mt-3 h-[9px]"
+          />
           <p className="mt-3 font-code text-[11.5px] leading-relaxed text-ink-3">
             {p?.progressSub}
           </p>
+          <div className="mt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              title="エンコード操作はこれから実装されます"
+            >
+              キャンセル
+            </Button>
+          </div>
         </>
       )
     case 'waiting':
@@ -522,6 +567,16 @@ function EncodeBody({ detail: d }: { detail: RecordingDetail }) {
           </p>
           {p?.profile && <KRow k="プロファイル" main={p.profile} plain />}
           {p?.registeredAt && <KRow k="登録" main={p.registeredAt} />}
+          <div className="mt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              title="エンコード操作はこれから実装されます"
+            >
+              キャンセル
+            </Button>
+          </div>
         </>
       )
     case 'failed':
@@ -529,6 +584,16 @@ function EncodeBody({ detail: d }: { detail: RecordingDetail }) {
         <>
           {d.encode.reason && <KRow k="分類" main={d.encode.reason} />}
           {p?.attempts && <KRow k="試行" main={p.attempts} />}
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              title="エンコード操作はこれから実装されます"
+            >
+              再実行
+            </Button>
+          </div>
           <p className="mt-3 text-note leading-relaxed text-ink-3">
             エンコードの失敗は録画の結果を書き換えません。録画は成功のまま、成果物だけが無い状態です。
           </p>

@@ -81,7 +81,7 @@ export const RECORDING_FIXTURES: Recording[] = [
     quality: {
       measured: true,
       level: 'warn',
-      detail: 'ドロップ 1,284 · 5 か所',
+      detail: 'ドロップ 38,412 · 2 か所',
     },
     encode: { status: 'done' },
     thumbnail: 'shot',
@@ -185,7 +185,7 @@ export const RECORDING_FIXTURES: Recording[] = [
     quality: {
       measured: true,
       level: 'danger',
-      detail: 'ドロップ 48,210 · 21:41 に集中',
+      detail: 'ドロップ 178,530 · 21:41 に集中',
     },
     encode: { status: 'failed', reason: 'ffmpeg_exit_nonzero' },
     thumbnail: 'error',
