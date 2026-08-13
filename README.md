@@ -1,117 +1,68 @@
 # Vela
 
-録画システムのフロントエンド。Next.js の App Router + Storybook で、デザイン
-システム(トークンとコンポーネント)を実装したリポジトリです。
+テレビ録画システムの画面です。番組表を見て、録りたいものを予約して、録れたものを
+探して見る。その一連をブラウザから行います。
 
-デザインシステムに加えて、アプリシェルと主要ルートの骨格が入っています。画面の中身は順次実装します。
+録画そのものを行う裏側は別のリポジトリにあり、Vela はその API を読んで描くだけです。
 
-## デザインの方針
+## 何が見られるか
 
-UI 全体をひとつの「小さなデジタル玩具」として設計します。
+| 画面 | できること |
+| --- | --- |
+| 番組表 | 8時間ぶんの帯を局ごとに並べ、押すと番組の詳細と予約が開く |
+| 番組検索 | キーワード・除外語・ジャンル・チャンネルを積んで絞る。その条件はそのまま自動録画ルールにできる |
+| ライブ | 放送中のチャンネルを見る。遅延とドロップを画面に出す |
+| ライブラリ | 録れたものを新しい順に。壊れている録画を状態で絞り込める |
+| 録画詳細 | 再生と、録れたかどうかの内訳。尻切れ・失敗・ファイル不在をそれぞれ別の事実として出す |
+| 予約 | 予約の一覧と、チューナーが足りないときの競合の中身 |
+| ルール | 自動録画の条件と、いまの番組表で何件に当たるか |
+| 設定 | チューナー、チャンネル、エンコード、品質、移行の記録 |
+
+**壊れた録画を「壊れている」と分かる形で出す**ことを重視しています。録画が
+完全だったのか、尻切れだったのか、そもそも失敗したのか、ドロップがどれだけ出たのか
+は別々の事実として扱い、ひとつの「成功」に丸めません。
+
+## いまの状態
+
+画面はすべて実装済みで、表示するデータは固定値です。API はまだ繋がっていません。
+裏側の OpenAPI から生成したクライアントを `repository/` に閉じ込める形で接続します。
+
+## 動かす
+
+すべて Docker の `app` サービスの中で実行します。
+
+```bash
+docker compose up -d
+docker compose exec app yarn install
+docker compose exec app yarn dev          # 画面   ホストの 8080 番
+docker compose exec app yarn storybook    # 部品   ホストの 6006 番
+```
+
+`task up` / `task dev` / `task storybook` でも同じことができます。
+
+## 見た目について
+
+UI 全体をひとつの「小さなデジタル玩具」として作っています。
 
 - **触れる感触があること** — hover で 1px 持ち上がって影が伸び、押すと沈んで影が
-  消える。ぼかさない hard offset shadow だけを使う
-- **Card を乱用しない** — 枠と影を与えるのは「押せるもの・浮いているもの」だけ。
-  ただの情報のまとまりは、余白と背景サーフェスの差で階層を作る
-- **区画は線ではなく淡い色面(tint)で分ける** — 文字は常に墨、彩度は上げない
-- **独自 SVG アイコン** — 汎用アイコンセットは使わない。24x24 / stroke 1.6 /
-  round cap で、わずかに崩して手描きの気配を残す
-- **常時ループするアニメーションを作らない** — 動くのは「触れた時」と読み込み中の
-  スピナーだけ
-- ライト既定 + ダーク完備。shadcn/ui のアクセシブルな primitive と interaction は
-  使うが、その SaaS 的なビジュアルランゲージには寄せない
+  消える。影はぼかさない
+- **枠と影は押せるものだけに与える** — ただの情報のまとまりは余白と背景の差で分ける
+- **区画は線ではなく淡い色面で分ける** — 文字は常に墨、彩度は上げない
+- **アイコンは自分で描く** — 24x24 / stroke 1.6 / round cap、わずかに崩す
+- **常時ループする動きを作らない** — 動くのは触れたときと読み込み中だけ
+- ライト・ダークとも完備。shadcn/ui のアクセシブルな挙動は使うが、その SaaS 的な
+  見た目には寄せない
 
-## 技術構成
+トークンと部品の実物は Storybook で見られます。色・書体・面と影・アイコンが
+`Foundations` に、部品が `Components` に、画面が `Screens` に並んでいます。
 
-- **Next.js 16**(App Router, RSC)+ **React 19** + **TypeScript**(strict)
-- **Tailwind CSS v4**(CSS-first `@theme`)+ **shadcn/ui**(`new-york`)
-- 独自の **light / dark / system テーマ**(cookie + middleware + no-flash script。
-  `next-themes` は使わない)
-- **Storybook 10** + `@storybook/test-runner`(Playwright)+ `addon-a11y`
+## 変更するとき
 
-## 開始する
+- 画面は `page-component/{画面}/`、画面をまたぐ部品は `feature/{ドメイン}/`
+- データ取得は `app/` の Server Component で行い、props で下へ渡す。
+  `useEffect` での取得と初期値同期はしない
+- 一覧の絞り込みやページはすべて URL に持たせる。URL を渡せば同じ画面が再現できる
+- 部品を変えたら Storybook の story も同じコミットで直す
+- 検証は `task test:stories`。実ブラウザで全 story を描画し、a11y 違反があれば落ちる
 
-すべて Docker の `app` サービス(Node, `working_dir: /code`)の中で実行します。
-
-```bash
-docker compose up -d                      # task up
-docker compose exec app yarn install
-docker compose exec app yarn storybook    # task storybook — :6006
-docker compose exec app yarn dev          # task dev — :8080
-```
-
-### よく使うコマンド
-
-```bash
-docker compose exec app yarn lint            # eslint + prettier:check  (task lint)
-docker compose exec app yarn typecheck       # tsc --noEmit             (task typecheck)
-docker compose exec app yarn build           # next build
-docker compose exec app yarn build-storybook # 静的 Storybook
-task test:stories                            # build + Storybook test-runner(a11y 含む)
-```
-
-## デザイントークン
-
-トークンは `app/globals.css` に Tailwind v4 のテーマ変数として実装しています。
-ライトは `:root`、ダークは `.dark` に同名で定義され、ユーティリティ側は
-テーマを意識しません。
-
-| 種別 | トークン | ユーティリティ例 |
-| --- | --- | --- |
-| 地・面 | `--bg` `--surface` `--surface-2` `--surface-3` | `bg-bg` `bg-surface` `bg-surface-2` |
-| 線 | `--line` `--line-strong` | `border-line` `border-line-strong` |
-| 墨 | `--ink` `--ink-2` `--ink-3` | `text-ink` `text-ink-2` `text-ink-3` |
-| 主役 | `--accent` `--accent-soft` `--accent-line` | `text-brand` `bg-brand-soft` `border-brand-line` |
-| 塗りボタン | `--btn-fill` `--on-btn` | `bg-btn-fill` `text-on-btn` |
-| パステルの面 | `--tint-lavender` ほか 6 色 | `bg-tint-lavender` … |
-| セマンティクス | `mint` / `lemon` / `coral` / `sky` と `-soft` `-line` | `text-mint` `bg-lemon-soft` |
-| 角丸 | `--r-s` 10 / `--r-m` 16 / `--r-l` 22 / pill | `rounded-md` `rounded-lg` `rounded-xl` `rounded-full` |
-| 影 | hard offset のみ | `shadow-pop` `shadow-pop-lg` `shadow-pop-xl` `shadow-pop-none` |
-| 触感 | `--ease` / `--dur` | `ease-toy` `duration-150` |
-
-書体は見出し・ブランドが **Zen Maru Gothic**(700 / `palt`)、本文と UI が
-**Zen Kaku Gothic New**、数値・型番・時刻が **M PLUS 1 Code**(`tabular-nums`)。
-`font-heading` / `font-body` / `font-code` と、`text-h1` … `text-micro` の
-サイズスケールで指定します。
-
-塗りボタンは `--accent` ではなく `--btn-fill` / `--on-btn` を使ってください。
-ライトは濃い青緑の塗り、ダークは淡い青緑の塗り+濃い文字に切り替わります。
-
-## ディレクトリ
-
-```
-app/                     App Router。globals.css がトークンの実装
-app/(app)/               シェル付きのルート群(_shell/ にトップバー、settings/_shell/ に管理サイドナビ)
-app/_components/         ルート横断の app 専用部品
-components/ui/*          shadcn primitive(Vela の見た目に寄せてある)
-components/vela/*        Vela 固有のコンポーネントと独自アイコン
-components/theme/*       light/dark/system テーマの仕組み
-components/common/*      汎用 DataTable
-page-component/          画面本体(Client 境界は必要な葉だけ)
-feature/                 画面間で共有する機能部品
-repository/              データ取得と型境界
-lib/                     cn・表示整形などの純関数
-hooks/                   useListUrlState / usePerPageLocalStorage
-types/                   DataTable の型
-stories/foundations/*    トークンの見本(色・書体・面と影・アイコン)
-stories/components/*     Vela コンポーネントの story
-stories/ui/*             未改変の primitive の story
-```
-
-`@/*` はリポジトリルートを指します(`@/components/ui/button` など)。
-
-## コンポーネントを足す
-
-```bash
-docker compose exec app sh -c "npx shadcn@latest add <name>"
-docker compose exec app yarn prettier   # 生成物は double-quote/semi なので整形する
-```
-
-生成された primitive は shadcn 既定の見た目のままなので、Vela のトークンと触感に
-寄せてから使ってください。追加したら必ず `stories/` に story を書き、バリアントと
-状態(hover / disabled / エラー / 空)を並べます。
-
-## 検証
-
-`task test:stories` が実ブラウザで全 story を描画し、各 story の `play` と a11y
-チェックを走らせます。a11y は違反があれば失敗する設定です。
+規約の詳細は `CLAUDE.md` にあります。
