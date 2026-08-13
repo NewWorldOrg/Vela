@@ -1,104 +1,114 @@
 # Vela
 
-録画システムのフロントエンド。デザインシステム(トークン + コンポーネントライブラリ +
-Storybook)と、アプリシェル + 主要ルートの骨格が入っている。画面の中身は順次実装する
-(認証系の /logged-out・設定 > 認証、予約結果のルートは各ドメインで追加)。
+Frontend of a self-hosted recording system for Japanese digital broadcasting. It
+holds the design system (tokens, component library, Storybook) and the app shell
+with every route in place. Screens are filled in one domain at a time; the routes
+for `/logged-out`, settings > authentication and the reservation outcome ledger
+arrive with the domains that own them.
 
 ## Tech Stack
 
-- **Framework**: Next.js 16(App Router, RSC)、React 19、TypeScript(strict)
-- **Styling**: Tailwind CSS v4(CSS-first `@theme`)、shadcn/ui(`new-york`)
-- **Theme**: 独自の light / dark / system(cookie + middleware header + no-flash
-  inline script)。`next-themes` は使わない
-- **Components**: shadcn primitive(統合 `radix-ui` パッケージ)を土台に、Vela の
-  トークンと触感へ寄せたもの + `components/vela/` の固有コンポーネント
-- **Table**: `@tanstack/react-table` v8 の汎用 `DataTable`
-- **Catalog & verification**: Storybook 10(`@storybook/nextjs`, `addon-a11y`)、
-  `@storybook/test-runner`(Playwright)
+- **Framework**: Next.js 16 (App Router, RSC), React 19, TypeScript (strict)
+- **Styling**: Tailwind CSS v4 (CSS-first `@theme`), shadcn/ui (`new-york`)
+- **Theme**: a light / dark / system implementation of its own — cookie, a
+  middleware header and a no-flash inline script. `next-themes` is not used
+- **Components**: shadcn primitives (the unified `radix-ui` package) pulled
+  towards Vela's tokens and feel, plus the components in `components/vela/`
+- **Table**: a general `DataTable` over `@tanstack/react-table` v8
+- **Catalog and verification**: Storybook 10 (`@storybook/nextjs`, `addon-a11y`)
+  and `@storybook/test-runner` (Playwright)
 
 ## Architecture
 
 ```
-app/                        App Router。globals.css がデザイントークンの実装
-app/(app)/                  シェル付きのルート群。(app)/_shell/ がトップバー、
-                            (app)/settings/_shell/ が管理サイドナビ(いずれも Client)
-app/_components/            components/ に置くほど汎用でない、app/ 配下専用の部品
-components/ui/*             shadcn primitive(Vela の見た目に寄せてある)
-components/vela/*           Vela 固有のコンポーネント・独自 SVG アイコン
-components/theme/*          light/dark/system テーマ
-components/common/*         汎用 DataTable
-page-component/{screen}/    画面本体。app/ の RSC から props で受け、Client 境界は必要な葉だけ
-feature/{domain}/           画面間で共有する機能部品(チップ・ダイアログ等)
-repository/                 データ取得と唯一の型境界(現状フィクスチャ)
-lib/                        cn・パス判定・表示整形などの純関数
+app/                        App Router. globals.css is where the design tokens live
+app/(app)/                  Routes inside the shell. (app)/_shell/ is the top bar and
+                            (app)/settings/_shell/ the admin side nav, both Client
+app/_components/            Parts used only under app/, too specific for components/
+components/ui/*             shadcn primitives, dressed in Vela's look
+components/vela/*           Vela's own components and hand-drawn SVG icons
+components/theme/*          light / dark / system
+components/common/*         the general DataTable
+page-component/{screen}/    A screen. Data arrives as props from the RSC in app/;
+                            the Client boundary is pushed to the leaves that need it
+feature/{domain}/           Parts shared across screens (chips, dialogs)
+repository/                 Data access, and the only type boundary (fixtures for now)
+lib/                        Pure functions: cn, path matching, display formatting
 hooks/                      useListUrlState / usePerPageLocalStorage
-types/                      DataTable の型
+types/                      DataTable types
 stories/{foundations,components,screens,common,theme}/
 ```
 
-画面を作るときの層構造は `app/`(Server Component でデータ取得)→
-`page-component/` → `feature/` → `common/` → `repository/` → `client/`。
-`repository/` を唯一の型境界にし、URL を状態の source とする。
-useEffect でのデータ取得・初期値同期は禁止。
+A screen is layered `app/` (a Server Component fetches) → `page-component/` →
+`feature/` → `common/` → `repository/` → `client/`. `repository/` is the only type
+boundary, and the URL is the source of state. Fetching data or syncing initial
+values in a `useEffect` is not allowed.
 
-**Naming / conventions**
+**Naming and conventions**
 
-- import alias: `@/*` はリポジトリルート
-- Prettier: single quote / semicolon なし。`shadcn add` の後は必ず `yarn prettier`
-- primitive は統合 `radix-ui` パッケージから import する
-- コンポーネントを変更したら Story も同時に更新する
+- Import alias: `@/*` is the repository root
+- Prettier: single quotes, no semicolons. Always run `yarn prettier` after
+  `shadcn add`
+- Import primitives from the unified `radix-ui` package
+- A change to a component comes with the change to its story
 
 ## Design System
 
-正典は「小さなデジタル玩具」。実装上の不変条件:
+The canon is "a small digital toy". What that means in the code:
 
-- **枠と影を与えるのは「押せるもの・浮いているもの」だけ**。ただの情報のまとまりは
-  `Surface` / `TintPanel`(線も影もなし)、押せるものは `Tile` / `Button`
-- **影はぼかさない**。`shadow-pop`(2px)→ hover `shadow-pop-lg`(3px)+1px 持ち上げ
-  → active `shadow-pop-none` + 1px 沈み。浮いているものは `shadow-pop-xl`(4px)
-- **主要ボタンは pill**。四角い塗りボタンを作らない
-- **塗りボタンは `bg-btn-fill` / `text-on-btn`**。`--accent` を直接 background に
-  しない(ダークは淡い青緑の塗り + 濃い文字に切り替わる)
-- **区画は線ではなく tint の色面で分ける**。文字は常に `text-ink`、彩度を上げない。
-  1 画面で使う tint は 3〜4 色まで
-- **アイコンは `components/vela/icons.tsx` に描く**。汎用アイコンセットで置き換え
-  ない。24x24 / stroke 1.6 / round cap / fill none
-- **常時ループするアニメーション禁止**(点滅・パルス・回転)。例外は `Spinner` のみ
-- **文言は変えない**。デザイン都合で用語をやわらかく言い換えない
-- 禁止: グラデーション背景 / blur 影 / 等幅フォントのブロック使用 / 高彩度の大面積
-  塗り / 純黒・純白の大面積 / 絵文字アイコン / 意味のない装飾図形
+- **A border and a shadow mean it can be pressed, or it is floating.** A plain
+  grouping of information is a `Surface` or a `TintPanel`, with neither; the
+  things you press are `Tile` and `Button`
+- **Shadows are never blurred.** `shadow-pop` (2px) → hover `shadow-pop-lg` (3px)
+  and a 1px lift → active `shadow-pop-none` and a 1px sink. Floating things get
+  `shadow-pop-xl` (4px)
+- **The primary button is a pill.** There are no square filled buttons
+- **A filled button is `bg-btn-fill` / `text-on-btn`.** Never `--accent` as a
+  background: dark mode switches to a pale teal fill with dark text
+- **Sections are separated by a tint, not by a rule.** Text stays `text-ink` and
+  saturation stays down. Three or four tints per screen at most
+- **Icons are drawn in `components/vela/icons.tsx`.** They are not replaced with a
+  general icon set. 24x24, stroke 1.6, round caps, no fill
+- **No animation that loops forever** — no blinking, pulsing or spinning. The one
+  exception is `Spinner`
+- **The wording does not change.** Terms are not softened to suit a design
+- Not allowed: gradient backgrounds, blurred shadows, monospace for blocks of
+  text, large areas of saturated colour, large areas of pure black or white,
+  emoji as icons, decoration that means nothing
 
 ## CI Commands
 
-すべて Docker の `app` サービス内で実行する。
+Everything runs inside the `app` service.
 
 ```bash
 docker compose exec app yarn lint             # eslint + prettier:check
 docker compose exec app yarn typecheck        # tsc --noEmit
 docker compose exec app yarn build            # next build
-docker compose exec app yarn build-storybook  # 静的 Storybook
-task test:stories                             # build + test-runner(a11y 含む)
+docker compose exec app yarn build-storybook  # a static Storybook
+task test:stories                             # build + test-runner, a11y included
 ```
 
-GitHub Actions は push / PR(master)で lint + typecheck + build を実行する。
+GitHub Actions runs lint, typecheck and build on push and pull request to
+`master`.
 
 ## Docker Config
 
-- compose サービス: `app`(`node:25.2-slim`, `working_dir: /code`, リポジトリを
-  `/code` にマウント)
-- dev サーバ: `8080 -> 3000` / Storybook: `6006`
-- `task` ショートカット: `task up` `task dev` `task storybook` `task lint`
-  `task typecheck` `task test:stories`
+- compose service: `app` (`node:25.2-slim`, `working_dir: /code`, the repository
+  mounted at `/code`)
+- dev server: `8080 -> 3000`. Storybook: `6006`
+- `task` shortcuts: `task up`, `task dev`, `task storybook`, `task lint`,
+  `task typecheck`, `task test:stories`
 
 ## UI Hostname
 
-- 開発サーバ: http://localhost:8080
-- Storybook: http://localhost:6006
+- Dev server: port 8080 on the host
+- Storybook: port 6006 on the host
 
 ## Implementation Phases
 
-0. デザインシステム — トークン、コンポーネントライブラリ、Storybook
-1. **画面(現在地)** — サービス系(番組表 / ライブ / ライブラリ / 予約)は トップナビ、
-   管理系(チューナー / チャンネル / エンコード / 品質 / システム)は「設定」配下の
-   サイドナビ
-2. API 連携 — OpenAPI スキーマからクライアントを生成し、`repository/` に閉じる
+0. Design system — tokens, component library, Storybook
+1. **Screens (here now)** — the viewing side (guide, live, library, reservations)
+   sits in the top nav; the admin side (tuners, channels, encoding, quality,
+   system) sits in the side nav under settings
+2. API — generate a client from the OpenAPI document and keep it inside
+   `repository/`
