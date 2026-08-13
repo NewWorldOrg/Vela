@@ -33,6 +33,11 @@ page-component/{screen}/    A screen. Data arrives as props from the RSC in app/
                             the Client boundary is pushed to the leaves that need it
 feature/{domain}/           Parts shared across screens (chips, dialogs)
 repository/                 Data access, and the only type boundary (fixtures for now)
+repository/client/          The client generated from the OpenAPI document. Nothing
+                            outside repository/ may import it — eslint enforces it
+openapi/                    The consumed contract: a copy of the API repository's
+                            OpenAPI document at a pinned commit. See openapi/README.md
+scripts/                    openapi-sync (refresh the copy), health-check (a live probe)
 lib/                        Pure functions: cn, path matching, display formatting
 hooks/                      useListUrlState / usePerPageLocalStorage
 types/                      DataTable types
@@ -85,11 +90,12 @@ docker compose exec app yarn lint             # eslint + prettier:check
 docker compose exec app yarn typecheck        # tsc --noEmit
 docker compose exec app yarn build            # next build
 docker compose exec app yarn build-storybook  # a static Storybook
+docker compose exec app yarn openapi:verify   # regenerate the client, fail on a diff
 task test:stories                             # build + test-runner, a11y included
 ```
 
-GitHub Actions runs lint, typecheck and build on push and pull request to
-`master`.
+GitHub Actions runs lint, typecheck, the OpenAPI regeneration check and build on
+push and pull request to `master`.
 
 ## Docker Config
 
