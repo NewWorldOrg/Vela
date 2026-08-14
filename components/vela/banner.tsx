@@ -1,9 +1,24 @@
-import type { ComponentProps, ReactNode } from 'react'
+import type { ComponentProps } from 'react'
+import type { Route } from 'next'
+import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { DangerIcon, InfoIcon, WarningIcon } from '@/components/vela/icons'
 
 export type BannerTone = 'info' | 'warn' | 'danger'
+
+export interface BannerAction {
+  label: string
+  /** Without one the label is a button that carries no destination. */
+  href?: Route
+}
+
+/** Two at most. A pair sits at the right edge in source order. */
+export type BannerActions =
+  readonly [BannerAction] | readonly [BannerAction, BannerAction]
+
+const ACTION_CLASS =
+  'font-bold whitespace-nowrap text-inherit underline underline-offset-[3px]'
 
 const TONE_CLASS: Record<BannerTone, string> = {
   info: 'bg-sky-soft text-sky',
@@ -17,21 +32,38 @@ const TONE_ICON = {
   danger: DangerIcon,
 }
 
+function BannerActionLabel({ action }: { action: BannerAction }) {
+  return action.href ? (
+    <Link href={action.href} className={ACTION_CLASS}>
+      {action.label}
+    </Link>
+  ) : (
+    <button type="button" className={ACTION_CLASS}>
+      {action.label}
+    </button>
+  )
+}
+
 /**
  * The banner at the top of a page. One at a time: when several things happen
  * at once, keep the most severe and reduce the rest to a count. No border and
  * no blinking — the soft colour surface plus an icon carries it.
+ *
+ * An action is a bold, permanently underlined text link in the band's own
+ * colour — never a button shape, since a colour surface carries neither border
+ * nor shadow. There is no unavailable state: an action that cannot be taken is
+ * left out and the body says why.
  */
 export function Banner({
   tone = 'info',
-  action,
+  actions,
   progress,
   className,
   children,
   ...props
 }: ComponentProps<'div'> & {
   tone?: BannerTone
-  action?: ReactNode
+  actions?: BannerActions
   /** 0–100. Renders the static progress track under the message. */
   progress?: number
 }) {
@@ -61,9 +93,11 @@ export function Banner({
           </div>
         )}
       </div>
-      {action && (
-        <div className="ml-auto shrink-0 pl-[14px] text-ui font-bold">
-          {action}
+      {actions && (
+        <div className="ml-auto flex shrink-0 gap-[14px] pl-[14px] text-ui">
+          {actions.map((action) => (
+            <BannerActionLabel key={action.label} action={action} />
+          ))}
         </div>
       )}
     </div>

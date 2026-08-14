@@ -40,23 +40,12 @@ export const Tones: Story = {
           チャンネルスキャンを実行中です
           <span className="font-code tabular-nums">(34 / 50ch)</span>
         </Banner>
-        <Banner
-          tone="warn"
-          action={
-            <a href="#" className="underline-offset-[3px] hover:underline">
-              変更内容を確認
-            </a>
-          }
-        >
+        <Banner tone="warn" actions={[{ label: '変更内容を確認' }]}>
           保存済み・未反映の変更があります。反映には driver の再起動が必要です。
         </Banner>
         <Banner
           tone="danger"
-          action={
-            <a href="#" className="underline-offset-[3px] hover:underline">
-              切り分けを見る
-            </a>
-          }
+          actions={[{ label: '切り分けを見る', href: '/settings/quality' }]}
         >
           BS のサービスが 0 件です
           <span className="font-code tabular-nums">(連続 26 時間)</span>。
@@ -65,6 +54,39 @@ export const Tones: Story = {
       <p className="mt-[9px] text-note text-ink-3">
         ページ先頭のバナーは1枚まで。重要でも点滅・グローは使わず、色+アイコンで静的に
         示す。進行中の表示も点滅させず、割合の数値と静的なバーで伝える。
+      </p>
+    </div>
+  ),
+}
+
+export const Actions: Story = {
+  render: () => (
+    <div className="mx-auto max-w-[620px] p-6">
+      <SectionHeading mark={MarkPanel}>バナーの導線</SectionHeading>
+      <div className="flex flex-col gap-[9px]">
+        <Banner
+          tone="warn"
+          actions={[{ label: '変更内容を確認' }, { label: 'driver を再起動' }]}
+        >
+          保存済み・未反映の変更があります。反映には driver
+          の再起動が必要です。進行中のセッションはありません。driver
+          に終了を要求すると、停止後に自動で起動し直されます。
+        </Banner>
+        <Banner
+          tone="danger"
+          actions={[{ label: 'チューナーへ', href: '/settings/tuners' }]}
+        >
+          <b className="block">計測の供給が途絶しています</b>
+          adapter0 の信号品質サンプルが 09:24 以降 1 件も入っていません。
+        </Banner>
+        <Banner tone="info">
+          再起動のあいだ、チューナーの状態は読み取れません。
+          <b>進行中の録画はありません。</b>
+        </Banner>
+      </div>
+      <p className="mt-[9px] text-note text-ink-3">
+        導線は帯の色のままの太字+下線のテキストリンク。枠も影も付けない(色面は押せない
+        面のため)。1枚に2本まで、右端に並ぶ。押せない導線は出さず、理由を本文に書く。
       </p>
     </div>
   ),
