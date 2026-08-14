@@ -40,6 +40,14 @@ docker compose exec app yarn storybook    # 部品   ホストの 6006 番
 
 `task up` / `task dev` / `task storybook` でも同じことができます。
 
+API の場所は `CARINA_API_BASE_URL` で決まります。compose の既定はホストの 8081 番で、
+別の場所で動かしているときは環境変数で上書きします。繋がっているかどうかは
+設定 > システムの画面が出します。
+
+開発サーバを `localhost` と `127.0.0.1` 以外のホスト名で開くときは、そのホスト名を
+`DEV_ALLOWED_ORIGINS` に足します。足さないと Next がチャンクと HMR の接続を弾き、
+画面が組み上がりません。
+
 ## 見た目について
 
 UI 全体をひとつの「小さなデジタル玩具」として作っています。
