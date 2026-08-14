@@ -33,11 +33,12 @@ page-component/{screen}/    A screen. Data arrives as props from the RSC in app/
                             the Client boundary is pushed to the leaves that need it
 feature/{domain}/           Parts shared across screens (chips, dialogs)
 repository/                 Data access, and the only type boundary (fixtures for now)
-repository/client/          The client generated from the OpenAPI document. Nothing
-                            outside repository/ may import it — eslint enforces it
-openapi/                    The consumed contract: a copy of the API repository's
-                            OpenAPI document at a pinned commit. See openapi/README.md
-scripts/                    openapi-sync (refresh the copy), health-check (a live probe)
+repository/client/          carina.json is the OpenAPI document, fetched from the
+                            running API, and schema.ts the client generated from it.
+                            Both are committed. Nothing outside repository/ may
+                            import the client — eslint enforces it
+scripts/                    codegen-verify (the client matches the document),
+                            health-check (a live probe)
 lib/                        Pure functions: cn, path matching, display formatting
 hooks/                      useListUrlState / usePerPageLocalStorage
 types/                      DataTable types
@@ -90,12 +91,21 @@ docker compose exec app yarn lint             # eslint + prettier:check
 docker compose exec app yarn typecheck        # tsc --noEmit
 docker compose exec app yarn build            # next build
 docker compose exec app yarn build-storybook  # a static Storybook
-docker compose exec app yarn openapi:verify   # regenerate the client, fail on a diff
+docker compose exec app yarn codegen:fetch    # refetch the document, regenerate the client
+docker compose exec app yarn codegen:verify   # regenerate the client, fail on a diff
 task test:stories                             # build + test-runner, a11y included
 ```
 
-GitHub Actions runs lint, typecheck, the OpenAPI regeneration check and build on
-push and pull request to `master`.
+GitHub Actions runs lint, typecheck, the codegen check and build on push and pull
+request to `master`.
+
+`codegen:fetch` overwrites `repository/client/carina.json` with what the running API
+at `CARINA_API_BASE_URL` serves and regenerates the client from it, so `git diff`
+after a fetch is how the contract moving becomes visible. Both files are committed:
+`codegen:verify` regenerates the client from the committed document into a scratch
+file and fails on any difference, which needs nothing running and so belongs in CI.
+Nothing notices on its own that the contract moved — refetching is a deliberate act,
+which is survivable because contract changes upstream are additive only.
 
 ## Docker Config
 
@@ -122,5 +132,5 @@ push and pull request to `master`.
 1. **Screens (here now)** — the viewing side (guide, live, library, reservations)
    sits in the top nav; the admin side (tuners, channels, encoding, quality,
    system) sits in the side nav under settings
-2. API — generate a client from the OpenAPI document and keep it inside
+2. API — generate a client from the document the API serves and keep it inside
    `repository/`
