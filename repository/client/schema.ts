@@ -4,6 +4,214 @@
  */
 
 export interface paths {
+  '/api/tuners/detected': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getDetectedTuners']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tuners': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getTuners']
+    put: operations['putTuners']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tuners/{deviceId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['patchTuner']
+    trace?: never
+  }
+  '/api/services/{networkId}-{serviceId}/candidate-channels': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['addCandidateChannel']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/services/{networkId}-{serviceId}/candidate-channels/{candidateChannelId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['deleteCandidateChannel']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/services/{networkId}-{serviceId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getService']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/services': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listServices']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/services/{networkId}-{serviceId}/selected-channel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['putSelectedChannel']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tuners/scan/{scanId}/apply': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['applyScan']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tuners/scan/{scanId}/cancel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['cancelScan']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tuners/scan/{scanId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getScan']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tuners/scan-runs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listScanRuns']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tuners/scan': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['startScan']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/health': {
     parameters: {
       query?: never
@@ -40,11 +248,122 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    AddCandidateChannelRequest: {
+      tuning?: null | components['schemas']['TuningParametersRequest']
+    }
+    BaseResponderOfBroadcastServiceResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['BroadcastServiceResponder']
+    }
+    BaseResponderOfDetectedTunersResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['DetectedTunersResponder']
+    }
     BaseResponderOfDriverStatusResponder: {
       status: boolean
       message: string
       data: null | components['schemas']['DriverStatusResponder']
     }
+    BaseResponderOfIReadOnlyListOfBroadcastServiceResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['BroadcastServiceResponder'][]
+    }
+    BaseResponderOfIReadOnlyListOfScanRunResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ScanRunResponder'][]
+    }
+    BaseResponderOfScanApplicationResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ScanApplicationResponder']
+    }
+    BaseResponderOfScanProgressResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ScanProgressResponder']
+    }
+    BaseResponderOfScanRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ScanRefusedResponder']
+    }
+    BaseResponderOfScanStartedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ScanStartedResponder']
+    }
+    BaseResponderOfTunerLedgerResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['TunerLedgerResponder']
+    }
+    BaseResponderOfTunerObservationResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['TunerObservationResponder']
+    }
+    BroadcastServiceResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      name: string
+      category: components['schemas']['ServiceCategory']
+      reservableByDefault: boolean
+      /** Format: date-time */
+      discoveredAt: string
+      /** Format: date-time */
+      lastSeenAt: string
+      /** Format: int32 */
+      candidateCount: number | string
+      selectedChannel: null | components['schemas']['ScanTargetResponder']
+      candidates: components['schemas']['CandidateChannelResponder'][]
+    }
+    CandidateChannelResponder: {
+      /** Format: uuid */
+      id: string
+      target: components['schemas']['ScanTargetResponder']
+      isSelected: boolean
+      selection: null | components['schemas']['CandidateSelectionResponder']
+      lastMeasurement: null | components['schemas']['ScanMeasurementResponder']
+      needsRevalidation: boolean
+      rotationState: components['schemas']['RotationState']
+      /** Format: int32 */
+      consecutiveFailures: number | string
+      /** Format: date-time */
+      nextAttemptAt: null | string
+      /** Format: date-time */
+      needsAttentionSince: null | string
+      /** Format: date-time */
+      discoveredAt: string
+      /** Format: date-time */
+      lastSeenAt: string
+    }
+    CandidateSelectionResponder: {
+      source: components['schemas']['SelectionSource']
+      /** Format: date-time */
+      selectedAt: string
+      measurement: null | components['schemas']['ScanMeasurementResponder']
+    }
+    DetectedDeviceResponder: {
+      deviceId: string
+      detection: components['schemas']['DeviceDetection']
+      kinds: components['schemas']['TunerKind'][]
+      detail: null | string
+    }
+    DetectedTunersResponder: {
+      devices: components['schemas']['DetectedDeviceResponder'][]
+      added: string[]
+      missing: string[]
+      mismatched: components['schemas']['TunerKindMismatchResponder'][]
+    }
+    /** @enum {string} */
+    DeviceDetection:
+      'unspecified' | 'detected' | 'busy' | 'permissionDenied' | 'unreadable'
     /** @enum {string} */
     DriverConnection: 'notConnected' | 'connected' | 'draining'
     DriverHelloResponder: {
@@ -67,6 +386,203 @@ export interface components {
     HealthResponder: {
       status: string
     }
+    RotationDepartureResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      target: components['schemas']['ScanTargetResponder']
+      /** Format: int32 */
+      consecutiveFailures: number | string
+      /** Format: date-time */
+      since: string
+    }
+    /** @enum {string} */
+    RotationState: 'active' | 'backingOff' | 'needsAttention'
+    ScanApplicationResponder: {
+      systems: components['schemas']['TuneSystem'][]
+      /** Format: int32 */
+      servicesAdded: number | string
+      /** Format: int32 */
+      servicesUpdated: number | string
+      /** Format: int32 */
+      servicesRemoved: number | string
+      /** Format: int32 */
+      channelsAdded: number | string
+      /** Format: int32 */
+      channelsRemoved: number | string
+    }
+    /** @enum {string} */
+    ScanAttemptOutcome:
+      | 'succeeded'
+      | 'noLock'
+      | 'lockedWithoutData'
+      | 'incompleteTables'
+      | 'unexpectedStream'
+    ScanAttemptResponder: {
+      target: components['schemas']['ScanTargetResponder']
+      outcome: components['schemas']['ScanAttemptOutcome']
+      detail: null | string
+      /** Format: int32 */
+      observedTransportStreamId: null | number | string
+      measurement: null | components['schemas']['ScanMeasurementResponder']
+      /** Format: date-time */
+      startedAt: string
+      /** Format: date-time */
+      finishedAt: string
+    }
+    /** @enum {string} */
+    ScanChangeKind: 'added' | 'updated' | 'missing'
+    ScanChannelChangeResponder: {
+      kind: components['schemas']['ScanChangeKind']
+      target: components['schemas']['ScanTargetResponder']
+      /** Format: int32 */
+      transportStreamId: null | number | string
+      measurement: null | components['schemas']['ScanMeasurementResponder']
+    }
+    ScanDifferenceResponder: {
+      added: components['schemas']['ScanServiceChangeResponder'][]
+      updated: components['schemas']['ScanServiceChangeResponder'][]
+      missing: components['schemas']['ScanServiceChangeResponder'][]
+      leftRotation: components['schemas']['RotationDepartureResponder'][]
+    }
+    ScanMeasurementResponder: {
+      /** Format: date-time */
+      measuredAt: string
+      locked: boolean
+      /** Format: int32 */
+      cnrMilliDecibels: null | number | string
+      /** Format: int64 */
+      postViterbiErrorBits: null | number | string
+      /** Format: int64 */
+      postViterbiTotalBits: null | number | string
+    }
+    ScanProgressResponder: {
+      run: components['schemas']['ScanRunResponder']
+      /** Format: int32 */
+      attempted: number | string
+      /** Format: int32 */
+      succeeded: number | string
+      /** Format: int32 */
+      failed: number | string
+      attempts: components['schemas']['ScanAttemptResponder'][]
+      difference: null | components['schemas']['ScanDifferenceResponder']
+    }
+    ScanRefusedResponder: {
+      /** Format: uuid */
+      runningScanId: null | string
+    }
+    ScanRunResponder: {
+      /** Format: uuid */
+      scanId: string
+      state: components['schemas']['ScanRunState']
+      driverInstanceId: null | string
+      /** Format: date-time */
+      startedAt: string
+      /** Format: date-time */
+      finishedAt: null | string
+      reason: null | string
+    }
+    /** @enum {string} */
+    ScanRunState:
+      'running' | 'completed' | 'failed' | 'cancelled' | 'interrupted'
+    ScanServiceChangeResponder: {
+      kind: components['schemas']['ScanChangeKind']
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      name: string
+      category: components['schemas']['ServiceCategory']
+      channels: components['schemas']['ScanChannelChangeResponder'][]
+    }
+    ScanStartedResponder: {
+      /** Format: uuid */
+      scanId: string
+    }
+    ScanTargetResponder: {
+      system: components['schemas']['TuneSystem']
+      /** Format: int32 */
+      physicalChannel: number | string
+      /** Format: int32 */
+      transportStreamId: null | number | string
+    }
+    SelectedChannelRequest: {
+      /** Format: uuid */
+      candidateChannelId?: null | string
+    }
+    /** @enum {string} */
+    SelectionSource: 'manual' | 'autoSwitch'
+    /** @enum {string} */
+    ServiceCategory:
+      'television' | 'radio' | 'data' | 'oneSeg' | 'temporary' | 'other'
+    /** @enum {string} */
+    SessionPurpose: 'unspecified' | 'recording' | 'live' | 'survey' | 'scan'
+    StartScanRequest: {
+      systems?: null | components['schemas']['TuneSystem'][]
+      channels?: null | components['schemas']['TuningParametersRequest'][]
+    }
+    ToggleTunerRequest: {
+      disabled?: null | boolean
+    }
+    /** @enum {string} */
+    TuneSystem: 'unspecified' | 'isdbT' | 'isdbSBs' | 'isdbSCs110'
+    TunerEntryRequest: {
+      deviceId?: null | string
+      disabled?: boolean
+      lnbPower?: boolean
+    }
+    TunerEntryResponder: {
+      deviceId: string
+      disabled: boolean
+      lnbPower: boolean
+    }
+    /** @enum {string} */
+    TunerHealthLevel: 'unspecified' | 'healthy' | 'degraded' | 'faulted'
+    /** @enum {string} */
+    TunerKind: 'unspecified' | 'terrestrial' | 'satellite'
+    TunerKindMismatchResponder: {
+      deviceId: string
+      observed: components['schemas']['TunerKind']
+      detected: components['schemas']['TunerKind'][]
+    }
+    TunerLedgerRequest: {
+      tuners?: null | components['schemas']['TunerEntryRequest'][]
+    }
+    TunerLedgerResponder: {
+      desired: components['schemas']['TunerEntryResponder'][]
+      savedHash: null | string
+      loadedHash: null | string
+      drifted: boolean
+      observed: null | components['schemas']['TunerObservationResponder'][]
+      /** Format: date-time */
+      observedAt: null | string
+      observationFailure: null | string
+    }
+    TunerObservationResponder: {
+      deviceId: string
+      kind: components['schemas']['TunerKind']
+      state: components['schemas']['TunerState']
+      detail: null | string
+      health: components['schemas']['TunerHealthLevel']
+      disablePending: boolean
+      lnbPowered: boolean
+      healthDetail: null | string
+      /** Format: date-time */
+      healthChangedAt: null | string
+      sessionId: null | string
+      sessionPurpose: components['schemas']['SessionPurpose']
+    }
+    /** @enum {string} */
+    TunerState:
+      'unspecified' | 'idle' | 'busy' | 'disabled' | 'faulted' | 'draining'
+    TuningParametersRequest: {
+      system?: components['schemas']['TuneSystem']
+      /** Format: int32 */
+      physicalChannel?: null | number | string
+      /** Format: int32 */
+      transportStreamId?: null | number | string
+    }
   }
   responses: never
   parameters: never
@@ -76,6 +592,700 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  getDetectedTuners: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDetectedTunersResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Implemented */
+      501: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDetectedTunersResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDetectedTunersResponder']
+        }
+      }
+    }
+  }
+  getTuners: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Implemented */
+      501: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+    }
+  }
+  putTuners: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TunerLedgerRequest']
+        'text/json': components['schemas']['TunerLedgerRequest']
+        'application/*+json': components['schemas']['TunerLedgerRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Implemented */
+      501: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+    }
+  }
+  patchTuner: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        deviceId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ToggleTunerRequest']
+        'text/json': components['schemas']['ToggleTunerRequest']
+        'application/*+json': components['schemas']['ToggleTunerRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerObservationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerObservationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerObservationResponder']
+        }
+      }
+      /** @description Not Implemented */
+      501: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerObservationResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerObservationResponder']
+        }
+      }
+    }
+  }
+  addCandidateChannel: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['AddCandidateChannelRequest']
+        'text/json': null | components['schemas']['AddCandidateChannelRequest']
+        'application/*+json':
+          null | components['schemas']['AddCandidateChannelRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+    }
+  }
+  deleteCandidateChannel: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+        candidateChannelId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+    }
+  }
+  getService: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+    }
+  }
+  listServices: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  putSelectedChannel: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['SelectedChannelRequest']
+        'text/json': null | components['schemas']['SelectedChannelRequest']
+        'application/*+json':
+          null | components['schemas']['SelectedChannelRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+    }
+  }
+  applyScan: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        scanId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanApplicationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanApplicationResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanApplicationResponder']
+        }
+      }
+    }
+  }
+  cancelScan: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        scanId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
+    }
+  }
+  getScan: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        scanId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
+    }
+  }
+  listScanRuns: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfScanRunResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  startScan: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['StartScanRequest']
+        'text/json': null | components['schemas']['StartScanRequest']
+        'application/*+json': null | components['schemas']['StartScanRequest']
+      }
+    }
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanRefusedResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
+        }
+      }
+    }
+  }
   getHealth: {
     parameters: {
       query?: never
