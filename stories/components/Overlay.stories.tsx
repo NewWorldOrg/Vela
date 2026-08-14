@@ -1,5 +1,9 @@
+import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
+import type { Recording } from '@/repository/recordings'
+import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
+import { DeleteRecordingDialog } from '@/feature/recordings/delete-recording-dialog'
 import {
   Dialog,
   DialogClose,
@@ -23,7 +27,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
-import { MarkPanel, MarkSplit, WarningIcon } from '@/components/vela/icons'
+import {
+  MarkPanel,
+  MarkSplit,
+  TrashIcon,
+  WarningIcon,
+} from '@/components/vela/icons'
 
 const meta = {
   title: 'Components/Overlay',
@@ -74,6 +83,34 @@ export const ConfirmDialog: Story = {
       </Surface>
     </div>
   ),
+}
+
+export const DeleteRecording: Story = {
+  render: function DeleteRecordingStory() {
+    const [target, setTarget] = useState<Recording | null>(null)
+
+    return (
+      <div className="mx-auto max-w-[620px] p-6">
+        <SectionHeading mark={TrashIcon}>録画の削除確認</SectionHeading>
+        <Surface>
+          <Button
+            variant="destructive"
+            onClick={() => setTarget(RECORDING_FIXTURES[1])}
+          >
+            <TrashIcon />
+            削除
+          </Button>
+          <DeleteRecordingDialog
+            recording={target}
+            onOpenChange={(open) => !open && setTarget(null)}
+          />
+          <p className="mt-[11px] text-cap text-ink-3">
+            取り返しのつかない操作は、消える対象を全て見せてから確認する。番組名だけでなくファイルのパスとサイズまで出す。
+          </p>
+        </Surface>
+      </div>
+    )
+  },
 }
 
 export const SidePanel: Story = {

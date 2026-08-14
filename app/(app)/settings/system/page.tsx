@@ -1,21 +1,13 @@
 import type { Metadata } from 'next'
 
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
-import { PageHeading } from '@/components/vela/section-heading'
-import { EmptyState } from '@/components/vela/empty-state'
+import { getSystemStatus } from '@/repository/system'
+import { SystemView } from '@/page-component/settings/system-view'
 
 export const metadata: Metadata = { title: 'システム' }
+export const dynamic = 'force-dynamic'
 
-export default function Page() {
-  return (
-    <>
-      <Crumb>
-        設定 / <CrumbCurrent>システム</CrumbCurrent>
-      </Crumb>
-      <PageHeading>システム</PageHeading>
-      <EmptyState spot="tuner" className="mt-3.5">
-        システムの画面はこれから実装されます。
-      </EmptyState>
-    </>
-  )
+export default async function Page() {
+  const status = await getSystemStatus()
+
+  return <SystemView status={status} />
 }

@@ -1,14 +1,8 @@
-'use client'
-
-import { useState } from 'react'
-
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { PlayIcon, TrashIcon } from '@/components/vela/icons'
-import { DeleteRecordingDialog } from '@/feature/recordings/delete-recording-dialog'
 
 export function RecordingActions({ recording }: { recording: Recording }) {
-  const [deleting, setDeleting] = useState<Recording | null>(null)
   const deletable = recording.outcome !== 'recording'
 
   return (
@@ -28,9 +22,10 @@ export function RecordingActions({ recording }: { recording: Recording }) {
         <Button
           variant="destructive"
           className="ml-auto"
-          disabled={!deletable}
-          title={deletable ? undefined : '録画中は削除できません'}
-          onClick={() => setDeleting(recording)}
+          disabled
+          title={
+            deletable ? '削除はこれから実装されます' : '録画中は削除できません'
+          }
         >
           <TrashIcon />
           削除
@@ -41,10 +36,6 @@ export function RecordingActions({ recording }: { recording: Recording }) {
         TS
         は削除されません。削除は録画ごと、ライブラリからの明示操作でのみ行われます。
       </p>
-      <DeleteRecordingDialog
-        recording={deleting}
-        onOpenChange={(open) => !open && setDeleting(null)}
-      />
     </>
   )
 }

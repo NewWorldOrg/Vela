@@ -102,6 +102,12 @@ push and pull request to `master`.
 - compose service: `app` (`node:25.2-slim`, `working_dir: /code`, the repository
   mounted at `/code`)
 - dev server: `8080 -> 3000`. Storybook: `6006`
+- `CARINA_API_BASE_URL` is where `repository/` reads the API. It has no default in
+  the code — an unset base URL fails instead of addressing the wrong process — so
+  compose supplies one and reaches the host through `host.docker.internal`
+- `DEV_ALLOWED_ORIGINS` feeds `allowedDevOrigins`. It takes host names without a
+  port; without the host the browser uses, the dev server refuses the chunks and
+  the HMR socket
 - `task` shortcuts: `task up`, `task dev`, `task storybook`, `task lint`,
   `task typecheck`, `task test:stories`
 

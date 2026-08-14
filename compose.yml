@@ -8,6 +8,11 @@ services:
     ports:
       - 8080:3000
       - 6006:6006
+    environment:
+      CARINA_API_BASE_URL: ${CARINA_API_BASE_URL:-http://host.docker.internal:8081}
+      DEV_ALLOWED_ORIGINS: ${DEV_ALLOWED_ORIGINS:-localhost,127.0.0.1}
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   # Runs the Storybook test-runner (Playwright-powered) against a built,
   # statically-served Storybook. Uses the official Playwright image so browsers
