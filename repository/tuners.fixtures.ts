@@ -10,8 +10,11 @@ export const TUNERS: TunerResult = {
     },
     {
       tone: 'warn',
-      body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。',
-      actions: [{ label: '変更内容を確認' }],
+      body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。録画が 1 件進行中のため、まだ再起動できません。みなと総合1 27ch の終了予定は 21:15 です。',
+      actions: [
+        { label: '変更内容を確認' },
+        { label: 'driver を再起動', control: 'button', disabled: true },
+      ],
     },
   ],
   thresholdHours: 24,
@@ -21,7 +24,8 @@ export const TUNERS: TunerResult = {
       device: 'adapter0',
       hardware: '4ch チューナーカード / frontend0',
       kind: '地上波',
-      enabled: true,
+      enabled: false,
+      draining: true,
       session: { label: '録画', service: 'みなと総合1 27ch' },
       state: 'ok',
       stateLabel: '正常',

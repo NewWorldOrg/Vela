@@ -74,8 +74,27 @@ export const Actions: Story = {
           1台のチューナーが利用できません。adapter2 —
           設定の種別(地上波)と検出結果(衛星)が一致しません。
         </Banner>
-        <Banner tone="warn" actions={[{ label: '変更内容を確認' }]}>
-          保存済み・未反映の変更があります。反映には driver の再起動が必要です。
+        <Banner
+          tone="warn"
+          actions={[
+            { label: '変更内容を確認' },
+            { label: 'driver を再起動', control: 'button' },
+          ]}
+        >
+          保存済み・未反映の変更があります。反映には driver
+          の再起動が必要です。進行中のセッションはありません。driver
+          に終了を要求すると、停止後に自動で起動し直されます。
+        </Banner>
+        <Banner
+          tone="warn"
+          actions={[
+            { label: '変更内容を確認' },
+            { label: 'driver を再起動', control: 'button', disabled: true },
+          ]}
+        >
+          保存済み・未反映の変更があります。反映には driver
+          の再起動が必要です。録画が 1 件進行中のため、まだ再起動できません。
+          みなと総合1 27ch の終了予定は 21:15 です。
         </Banner>
         <Banner tone="info">
           再起動のあいだ、チューナーの状態は読み取れません。
@@ -83,10 +102,12 @@ export const Actions: Story = {
         </Banner>
       </div>
       <p className="mt-[9px] text-note text-ink-3">
-        導線は帯の色のままの太字+下線のテキストリンク。枠も影も付けない(色面は押せない
-        面のため)。1枚に2本まで、右端に並ぶ。帯に載せるのは見に行く導線だけ。状態を
-        変える操作は帯に置かず、行き先の画面で Button
-        として出す。押せない導線は出さず、理由を本文に書く。
+        見に行く導線は帯の色のままの太字+下線のテキストリンク。状態を変える操作は
+        Button
+        のまま帯に載る(1枚に1個まで。色面の規則は帯に掛かるのであって、導線
+        スロットのコントロールには掛からない)。押せないあいだも Button
+        は消さず、帯の soft / line
+        トークンで無効にし、理由といつ押せるようになるかを本文で言う。
       </p>
     </div>
   ),

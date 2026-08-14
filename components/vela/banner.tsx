@@ -1,17 +1,35 @@
-import type { ComponentProps } from 'react'
+'use client'
+
+import { useId, type ComponentProps } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { DangerIcon, InfoIcon, WarningIcon } from '@/components/vela/icons'
 
 export type BannerTone = 'info' | 'warn' | 'danger'
 
-export interface BannerAction {
+/** A navigation. Renders as a bold, permanently underlined text link. */
+export interface BannerLinkAction {
   label: string
   /** Without one the label is a button that carries no destination. */
   href?: Route
 }
+
+/**
+ * A state-changing operation. Renders as a real Button — the colour-surface
+ * rule applies to the band, not to a control in its action slot. While
+ * unavailable it stays visible, disabled in the band's own colours, and the
+ * body carries the reason and when it becomes available.
+ */
+export interface BannerButtonAction {
+  label: string
+  control: 'button'
+  disabled?: boolean
+}
+
+export type BannerAction = BannerLinkAction | BannerButtonAction
 
 /** Two at most. A pair sits at the right edge in source order. */
 export type BannerActions =
@@ -19,6 +37,22 @@ export type BannerActions =
 
 const ACTION_CLASS =
   'font-bold whitespace-nowrap text-inherit underline underline-offset-[3px]'
+
+/**
+ * Disabled on a band is the same button switched off, drawn from the band's
+ * own palette — fill = the band's soft token, border = its line token, text =
+ * its state colour, no shadow, no motion. Never the default grey disabled
+ * look, which reads as a foreign object on a tint.
+ */
+const DISABLED_ON_BAND: Record<BannerTone, string> = {
+  info: 'border-sky-line bg-sky-soft text-sky hover:border-sky-line hover:bg-sky-soft',
+  warn: 'border-lemon-line bg-lemon-soft text-lemon hover:border-lemon-line hover:bg-lemon-soft',
+  danger:
+    'border-coral-line bg-coral-soft text-coral hover:border-coral-line hover:bg-coral-soft',
+}
+
+const DISABLED_MOTION =
+  'cursor-not-allowed shadow-pop-none hover:shadow-pop-none active:shadow-pop-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0'
 
 const TONE_CLASS: Record<BannerTone, string> = {
   info: 'bg-sky-soft text-sky',
@@ -32,7 +66,30 @@ const TONE_ICON = {
   danger: DangerIcon,
 }
 
-function BannerActionLabel({ action }: { action: BannerAction }) {
+function BannerActionControl({
+  action,
+  tone,
+  bodyId,
+}: {
+  action: BannerAction
+  tone: BannerTone
+  bodyId: string
+}) {
+  if ('control' in action) {
+    return (
+      <Button
+        size="sm"
+        aria-disabled={action.disabled || undefined}
+        aria-describedby={action.disabled ? bodyId : undefined}
+        className={cn(
+          action.disabled && [DISABLED_ON_BAND[tone], DISABLED_MOTION],
+        )}
+      >
+        {action.label}
+      </Button>
+    )
+  }
+
   return action.href ? (
     <Link href={action.href} className={ACTION_CLASS}>
       {action.label}
@@ -49,10 +106,10 @@ function BannerActionLabel({ action }: { action: BannerAction }) {
  * at once, keep the most severe and reduce the rest to a count. No border and
  * no blinking — the soft colour surface plus an icon carries it.
  *
- * An action is a bold, permanently underlined text link in the band's own
- * colour — never a button shape, since a colour surface carries neither border
- * nor shadow. There is no unavailable state: an action that cannot be taken is
- * left out and the body says why.
+ * A navigation action is a bold, permanently underlined text link in the
+ * band's own colour. A state-changing action is a real Button, at most one per
+ * banner; while unavailable it stays visible, disabled in the band's colours,
+ * with the reason in the body.
  */
 export function Banner({
   tone = 'info',
@@ -68,6 +125,7 @@ export function Banner({
   progress?: number
 }) {
   const ToneIcon = TONE_ICON[tone]
+  const bodyId = useId()
 
   return (
     <div
@@ -82,7 +140,7 @@ export function Banner({
       {...props}
     >
       <ToneIcon className="mt-[3px] size-[17px]" />
-      <div className="min-w-0 flex-1">
+      <div id={bodyId} className="min-w-0 flex-1">
         {children}
         {progress !== undefined && (
           <div className="mt-[9px] h-1 overflow-hidden rounded-full bg-surface">
@@ -94,9 +152,14 @@ export function Banner({
         )}
       </div>
       {actions && (
-        <div className="ml-auto flex shrink-0 gap-[14px] pl-[14px] text-ui">
+        <div className="ml-auto flex shrink-0 items-center gap-[14px] self-center pl-[14px] text-ui">
           {actions.map((action) => (
-            <BannerActionLabel key={action.label} action={action} />
+            <BannerActionControl
+              key={action.label}
+              action={action}
+              tone={tone}
+              bodyId={bodyId}
+            />
           ))}
         </div>
       )}

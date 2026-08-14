@@ -9,17 +9,36 @@ export interface TunerRow {
   kind: '地上波' | '衛星'
   enabled: boolean
   session?: { label: string; service: string }
+  /**
+   * A disable was accepted while a session still holds the tuner: the switch
+   * shows off, and the row says the stop happens once the session releases it.
+   */
+  draining?: boolean
   state: 'ok' | 'faulted' | 'idle'
   stateLabel: string
   lastService: string
   lnb?: boolean
 }
 
-export interface NoticeAction {
+/** A navigation the notice offers. */
+export interface NoticeLinkAction {
   label: string
   /** Absent while the action has no page of its own to send you to. */
   href?: Route
 }
+
+/**
+ * A state-changing operation the notice offers. At most one per notice. While
+ * unavailable it is still offered, disabled, and the notice body carries the
+ * reason and when it becomes available.
+ */
+export interface NoticeButtonAction {
+  label: string
+  control: 'button'
+  disabled?: boolean
+}
+
+export type NoticeAction = NoticeLinkAction | NoticeButtonAction
 
 /** Two at most, in the order they are offered. */
 export type NoticeActions =
