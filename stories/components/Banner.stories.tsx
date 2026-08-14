@@ -65,19 +65,17 @@ export const Actions: Story = {
       <SectionHeading mark={MarkPanel}>バナーの導線</SectionHeading>
       <div className="flex flex-col gap-[9px]">
         <Banner
-          tone="warn"
-          actions={[{ label: '変更内容を確認' }, { label: 'driver を再起動' }]}
-        >
-          保存済み・未反映の変更があります。反映には driver
-          の再起動が必要です。進行中のセッションはありません。driver
-          に終了を要求すると、停止後に自動で起動し直されます。
-        </Banner>
-        <Banner
           tone="danger"
-          actions={[{ label: 'チューナーへ', href: '/settings/tuners' }]}
+          actions={[
+            { label: '該当行へ', href: '/settings/tuners' },
+            { label: '品質ダッシュボードへ', href: '/settings/quality' },
+          ]}
         >
-          <b className="block">計測の供給が途絶しています</b>
-          adapter0 の信号品質サンプルが 09:24 以降 1 件も入っていません。
+          1台のチューナーが利用できません。adapter2 —
+          設定の種別(地上波)と検出結果(衛星)が一致しません。
+        </Banner>
+        <Banner tone="warn" actions={[{ label: '変更内容を確認' }]}>
+          保存済み・未反映の変更があります。反映には driver の再起動が必要です。
         </Banner>
         <Banner tone="info">
           再起動のあいだ、チューナーの状態は読み取れません。
@@ -86,7 +84,9 @@ export const Actions: Story = {
       </div>
       <p className="mt-[9px] text-note text-ink-3">
         導線は帯の色のままの太字+下線のテキストリンク。枠も影も付けない(色面は押せない
-        面のため)。1枚に2本まで、右端に並ぶ。押せない導線は出さず、理由を本文に書く。
+        面のため)。1枚に2本まで、右端に並ぶ。帯に載せるのは見に行く導線だけ。状態を
+        変える操作は帯に置かず、行き先の画面で Button
+        として出す。押せない導線は出さず、理由を本文に書く。
       </p>
     </div>
   ),

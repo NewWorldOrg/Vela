@@ -10,8 +10,8 @@ export const TUNERS: TunerResult = {
     },
     {
       tone: 'warn',
-      body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。録画が 1 件進行中です。いま要求すると、みなと総合1 27ch の録画が終わってから再起動します(終了予定 21:15)。',
-      actions: [{ label: '変更内容を確認' }, { label: 'driver を再起動' }],
+      body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。',
+      actions: [{ label: '変更内容を確認' }],
     },
   ],
   thresholdHours: 24,
