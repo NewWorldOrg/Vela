@@ -40,23 +40,12 @@ export const Tones: Story = {
           チャンネルスキャンを実行中です
           <span className="font-code tabular-nums">(34 / 50ch)</span>
         </Banner>
-        <Banner
-          tone="warn"
-          action={
-            <a href="#" className="underline-offset-[3px] hover:underline">
-              変更内容を確認
-            </a>
-          }
-        >
+        <Banner tone="warn" actions={[{ label: '変更内容を確認' }]}>
           保存済み・未反映の変更があります。反映には driver の再起動が必要です。
         </Banner>
         <Banner
           tone="danger"
-          action={
-            <a href="#" className="underline-offset-[3px] hover:underline">
-              切り分けを見る
-            </a>
-          }
+          actions={[{ label: '切り分けを見る', href: '/settings/quality' }]}
         >
           BS のサービスが 0 件です
           <span className="font-code tabular-nums">(連続 26 時間)</span>。
@@ -65,6 +54,60 @@ export const Tones: Story = {
       <p className="mt-[9px] text-note text-ink-3">
         ページ先頭のバナーは1枚まで。重要でも点滅・グローは使わず、色+アイコンで静的に
         示す。進行中の表示も点滅させず、割合の数値と静的なバーで伝える。
+      </p>
+    </div>
+  ),
+}
+
+export const Actions: Story = {
+  render: () => (
+    <div className="mx-auto max-w-[620px] p-6">
+      <SectionHeading mark={MarkPanel}>バナーの導線</SectionHeading>
+      <div className="flex flex-col gap-[9px]">
+        <Banner
+          tone="danger"
+          actions={[
+            { label: '該当行へ', href: '/settings/tuners' },
+            { label: '品質ダッシュボードへ', href: '/settings/quality' },
+          ]}
+        >
+          1台のチューナーが利用できません。adapter2 —
+          設定の種別(地上波)と検出結果(衛星)が一致しません。
+        </Banner>
+        <Banner
+          tone="warn"
+          actions={[
+            { label: '変更内容を確認' },
+            { label: 'driver を再起動', control: 'button' },
+          ]}
+        >
+          保存済み・未反映の変更があります。反映には driver
+          の再起動が必要です。進行中のセッションはありません。driver
+          に終了を要求すると、停止後に自動で起動し直されます。
+        </Banner>
+        <Banner
+          tone="warn"
+          actions={[
+            { label: '変更内容を確認' },
+            { label: 'driver を再起動', control: 'button', disabled: true },
+          ]}
+        >
+          保存済み・未反映の変更があります。反映には driver
+          の再起動が必要です。録画が 1 件進行中のため、まだ再起動できません。
+          みなと総合1 27ch の終了予定は 21:15 です。
+        </Banner>
+        <Banner tone="info">
+          再起動のあいだ、チューナーの状態は読み取れません。
+          <b>進行中の録画はありません。</b>
+        </Banner>
+      </div>
+      <p className="mt-[9px] text-note text-ink-3">
+        見に行く導線は帯の色のままの太字+下線のテキストリンク。状態を変える操作は
+        Button
+        のまま帯に載る(1枚に1個まで。色面の規則は帯に掛かるのであって、導線
+        スロットのコントロールには掛からない)。押せないあいだも Button
+        は消さず、帯の soft / line
+        トークンで無効にし、理由といつ押せるようになるかを本文で言う。
       </p>
     </div>
   ),

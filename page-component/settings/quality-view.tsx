@@ -82,14 +82,7 @@ export function QualityView({ result }: { result: QualityResult }) {
         <Banner
           tone="danger"
           className="mt-3.5"
-          action={
-            <Link
-              href="/settings/tuners"
-              className="underline-offset-[3px] hover:underline"
-            >
-              チューナーへ
-            </Link>
-          }
+          actions={[{ label: 'チューナーへ', href: '/settings/tuners' }]}
         >
           <b className="block">{result.supplyOutage.title}</b>
           {result.supplyOutage.body}

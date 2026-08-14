@@ -46,7 +46,7 @@ export function PageHeading({
   children,
   ...props
 }: ComponentProps<'div'> & {
-  description?: string
+  description?: React.ReactNode
   action?: React.ReactNode
 }) {
   return (

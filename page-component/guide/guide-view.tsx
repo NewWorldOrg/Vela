@@ -110,14 +110,12 @@ export function GuideView({ guide }: { guide: GuideResult }) {
       </div>
 
       {guide.coverageWarning && (
-        <Banner tone="warn" className="mb-3">
+        <Banner
+          tone="warn"
+          className="mb-3"
+          actions={[{ label: 'チャンネル設定へ', href: '/settings/channels' }]}
+        >
           {guide.coverageWarning.body}
-          <Link
-            href="/settings/channels"
-            className="ml-auto pl-3.5 font-bold whitespace-nowrap underline-offset-[3px] hover:underline"
-          >
-            チャンネル設定へ
-          </Link>
         </Banner>
       )}
 

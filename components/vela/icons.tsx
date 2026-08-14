@@ -468,6 +468,44 @@ export function MarkPill(props: IconProps) {
   )
 }
 
+export function MarkAxis(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.6 12h5M14.4 12h5" />
+      <circle cx="12" cy="12" r="2.4" />
+      <path d="M12 4.6v3M12 16.4v3" />
+    </Icon>
+  )
+}
+
+export function ClockIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="8.4" />
+      <path d="M12 7.6V12l3 2" />
+    </Icon>
+  )
+}
+
+export function TunerTerrestrialIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="9" width="16" height="10" rx="2" />
+      <path d="m8.5 9 3.5-4.5L15.5 9" />
+    </Icon>
+  )
+}
+
+export function TunerSatelliteIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.5 19.5a11 11 0 0 1 11-11" />
+      <path d="M4.5 19.5a6 6 0 0 1 6-6" />
+      <circle cx="5.4" cy="18.6" r="1.3" />
+    </Icon>
+  )
+}
+
 export function MarkRuler(props: IconProps) {
   return (
     <Icon {...props}>
