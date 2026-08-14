@@ -11,6 +11,10 @@ export function formatBytes(bytes: number) {
   return `${Math.ceil(bytes / 1024)} KB`
 }
 
+export function formatInstant(iso: string) {
+  return iso.replace('T', ' ').replace(/\.\d+(?=[Z+-]|$)/, '')
+}
+
 export function formatLength(sec: number) {
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
