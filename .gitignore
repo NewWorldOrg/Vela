@@ -51,9 +51,6 @@ Session.vim
 ehthumbs.db
 Thumbs.db
 
-# the OpenAPI document, fetched from a running API
-/repository/client/carina.json
-
 # storybook
 /storybook-static/
 /test-results/

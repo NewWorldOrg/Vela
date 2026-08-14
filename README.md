@@ -29,8 +29,12 @@
 形で接続します。生成はコンテナの中で行います。
 
 ```bash
-docker compose exec app yarn codegen:fetch   # 文書を取り直して型を作り直す
+docker compose exec app yarn codegen:fetch    # 文書を取り直して型を作り直す
+docker compose exec app yarn codegen:verify   # 文書と型が食い違っていないか見る
 ```
+
+取ってきた文書も生成した型も両方コミットします。文書の差分が、裏側の契約が
+どう動いたかそのものです。
 
 ## 動かす
 

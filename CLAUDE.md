@@ -33,10 +33,12 @@ page-component/{screen}/    A screen. Data arrives as props from the RSC in app/
                             the Client boundary is pushed to the leaves that need it
 feature/{domain}/           Parts shared across screens (chips, dialogs)
 repository/                 Data access, and the only type boundary (fixtures for now)
-repository/client/          The client generated from the OpenAPI document. Nothing
-                            outside repository/ may import it — eslint enforces it.
-                            carina.json is the fetched document and is not committed
-scripts/                    health-check (a live probe)
+repository/client/          carina.json is the OpenAPI document, fetched from the
+                            running API, and schema.ts the client generated from it.
+                            Both are committed. Nothing outside repository/ may
+                            import the client — eslint enforces it
+scripts/                    codegen-verify (the client matches the document),
+                            health-check (a live probe)
 lib/                        Pure functions: cn, path matching, display formatting
 hooks/                      useListUrlState / usePerPageLocalStorage
 types/                      DataTable types
@@ -90,18 +92,20 @@ docker compose exec app yarn typecheck        # tsc --noEmit
 docker compose exec app yarn build            # next build
 docker compose exec app yarn build-storybook  # a static Storybook
 docker compose exec app yarn codegen:fetch    # refetch the document, regenerate the client
+docker compose exec app yarn codegen:verify   # regenerate the client, fail on a diff
 task test:stories                             # build + test-runner, a11y included
 ```
 
-GitHub Actions runs lint, typecheck and build on push and pull request to
-`master`.
+GitHub Actions runs lint, typecheck, the codegen check and build on push and pull
+request to `master`.
 
-The generated client is committed; the document it came from is not. `codegen:fetch`
-takes the document from the running API at `CARINA_API_BASE_URL` and `codegen`
-regenerates `repository/client/schema.ts` from it, so a contract change arrives as a
-reviewable diff of the client. Nothing here notices on its own that the contract
-moved — refetching is a deliberate act, which is survivable because contract changes
-upstream are additive only.
+`codegen:fetch` overwrites `repository/client/carina.json` with what the running API
+at `CARINA_API_BASE_URL` serves and regenerates the client from it, so `git diff`
+after a fetch is how the contract moving becomes visible. Both files are committed:
+`codegen:verify` regenerates the client from the committed document into a scratch
+file and fails on any difference, which needs nothing running and so belongs in CI.
+Nothing notices on its own that the contract moved — refetching is a deliberate act,
+which is survivable because contract changes upstream are additive only.
 
 ## Docker Config
 
