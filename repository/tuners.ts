@@ -1,3 +1,5 @@
+import type { Route } from 'next'
+
 import { CHANNEL_SCAN, TUNERS } from '@/repository/tuners.fixtures'
 
 export interface TunerRow {
@@ -13,9 +15,25 @@ export interface TunerRow {
   lnb?: boolean
 }
 
+export interface NoticeAction {
+  label: string
+  /** Absent while the action has no page of its own to send you to. */
+  href?: Route
+}
+
+/** Two at most, in the order they are offered. */
+export type NoticeActions =
+  readonly [NoticeAction] | readonly [NoticeAction, NoticeAction]
+
+export interface TunerNotice {
+  tone: 'danger' | 'warn'
+  body: string
+  actions?: NoticeActions
+}
+
 export interface TunerResult {
   instanceId: string
-  notices: { tone: 'danger' | 'warn'; body: string; action: string }[]
+  notices: TunerNotice[]
   thresholdHours: number
   rows: TunerRow[]
 }
@@ -37,7 +55,7 @@ export interface ServiceRow {
 }
 
 export interface ChannelsResult {
-  warning?: { body: string; action: string }
+  warning?: { body: string; actions?: NoticeActions }
   lastScan: string
   groups: {
     kind: string

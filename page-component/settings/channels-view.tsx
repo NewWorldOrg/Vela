@@ -48,11 +48,12 @@ export function ChannelsView({ result }: { result: ChannelsResult }) {
       </PageHeading>
 
       {result.warning && (
-        <Banner tone="danger" className="mt-3.5">
+        <Banner
+          tone="danger"
+          className="mt-3.5"
+          actions={result.warning.actions}
+        >
           {result.warning.body}
-          <span className="ml-auto pl-3.5 font-bold whitespace-nowrap opacity-70">
-            {result.warning.action}
-          </span>
         </Banner>
       )}
 

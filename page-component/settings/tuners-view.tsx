@@ -59,11 +59,8 @@ export function TunersView({ result }: { result: TunerResult }) {
 
       <div className="mt-3.5 space-y-2">
         {result.notices.map((notice) => (
-          <Banner key={notice.body} tone={notice.tone}>
+          <Banner key={notice.body} tone={notice.tone} actions={notice.actions}>
             {notice.body}
-            <span className="ml-auto pl-3.5 font-bold whitespace-nowrap opacity-70">
-              {notice.action}
-            </span>
           </Banner>
         ))}
       </div>
@@ -94,7 +91,7 @@ export function TunersView({ result }: { result: TunerResult }) {
         </TableHeader>
         <TableBody>
           {result.rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} id={row.id}>
               <TableCell>
                 <span className="flex items-center gap-2.5">
                   <TunerIcon className="size-4 text-ink-3" />

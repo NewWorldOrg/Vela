@@ -6,12 +6,12 @@ export const TUNERS: TunerResult = {
     {
       tone: 'danger',
       body: '1台のチューナーが利用できません。adapter2 — 設定の種別(地上波)と検出結果(衛星)が一致しません。',
-      action: '該当行へ',
+      actions: [{ label: '該当行へ', href: '#adapter2' }],
     },
     {
       tone: 'warn',
       body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。',
-      action: '変更内容を確認',
+      actions: [{ label: '変更内容を確認' }],
     },
   ],
   thresholdHours: 24,
@@ -65,7 +65,7 @@ export const TUNERS: TunerResult = {
 export const CHANNEL_SCAN: ChannelsResult = {
   warning: {
     body: 'BS のサービスが 0 件です(連続 26 時間)。有効な候補チャンネルを持つサービスがひとつも確認できていません。',
-    action: '切り分けを見る',
+    actions: [{ label: '切り分けを見る', href: '/settings/quality' }],
   },
   lastScan: '前回: 地上波 50ch / 6分32秒 · 08/05 03:00',
   groups: [
