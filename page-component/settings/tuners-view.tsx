@@ -1,6 +1,7 @@
 import type { TunerResult } from '@/repository/tuners'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -104,8 +105,20 @@ export function TunersView({ result }: { result: TunerResult }) {
               <TableCell>
                 <Badge>{row.kind}</Badge>
               </TableCell>
-              <TableCell className="text-ink-2">
-                {row.enabled ? '有効' : '無効'}
+              <TableCell>
+                <Switch
+                  size="sm"
+                  checked={row.enabled && !row.draining}
+                  aria-label={`${row.device} を有効にする`}
+                  title="有効/無効の切り替えはこれから実装されます"
+                />
+                {row.draining && (
+                  <span className="mt-1 block text-[11px] leading-[1.5] text-lemon">
+                    無効化を受付済み
+                    <br />
+                    解放後に停止します
+                  </span>
+                )}
               </TableCell>
               <TableCell>
                 {row.session ? (
