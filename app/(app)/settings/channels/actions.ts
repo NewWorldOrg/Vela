@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import type { ScanSystem, StartScanResult } from '@/repository/services'
+import type { StartScanResult, WriteResult } from '@/repository/services'
+import type { ScanSystem } from '@/repository/scan-systems'
 import {
   applyScan,
   cancelScan,
@@ -21,25 +22,33 @@ export async function beginScan(
   return result
 }
 
-export async function stopScan(scanId: string) {
-  await cancelScan(scanId)
+export async function stopScan(scanId: string): Promise<WriteResult> {
+  const result = await cancelScan(scanId)
 
   revalidatePath('/settings/channels')
+
+  return result
 }
 
-export async function commitScan(scanId: string) {
-  await applyScan(scanId)
+export async function commitScan(scanId: string): Promise<WriteResult> {
+  const result = await applyScan(scanId)
 
   revalidatePath('/settings/channels')
 
-  redirect('/settings/channels')
+  if (result.state === 'ok') {
+    redirect('/settings/channels')
+  }
+
+  return result
 }
 
 export async function selectChannel(
   serviceKey: string,
   candidateChannelId: string,
-) {
-  await selectCandidateChannel(serviceKey, candidateChannelId)
+): Promise<WriteResult> {
+  const result = await selectCandidateChannel(serviceKey, candidateChannelId)
 
   revalidatePath('/settings/channels')
+
+  return result
 }

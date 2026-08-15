@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 
 import { getScanProposal } from '@/repository/services'
 import { ScanProposalView } from '@/page-component/settings/scan-proposal-view'
@@ -12,7 +13,11 @@ export default async function Page({
   params: Promise<{ scanId: string }>
 }) {
   const { scanId } = await params
-  const proposal = await getScanProposal(scanId)
+  const result = await getScanProposal(scanId)
 
-  return <ScanProposalView proposal={proposal} onApply={commitScan} />
+  if (result.state === 'missing') {
+    notFound()
+  }
+
+  return <ScanProposalView result={result} onApply={commitScan} />
 }
