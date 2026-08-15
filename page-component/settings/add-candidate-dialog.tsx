@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 
 import type { CandidateTuning, WriteResult } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
-import { SCAN_SYSTEMS } from '@/repository/scan-systems'
+import { SCAN_SYSTEMS, SYSTEM_LABEL } from '@/repository/scan-systems'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -26,14 +26,35 @@ import {
 import { SegmentedControl } from '@/components/vela/segmented-control'
 
 /**
- * What each system will take. The API refuses anything outside these, so the
- * form says the same thing rather than sending a press that cannot land.
+ * What each system will take. The API refuses anything outside these with its
+ * own English prose, so the form holds the same rule and says why in Japanese.
  */
-const CHANNEL_RANGE: Record<ScanSystem, { hint: string; ts: boolean }> = {
-  isdbT: { hint: '13 〜 62', ts: false },
-  isdbSBs: { hint: '1 〜 23 の奇数(7 と 17 を除く)', ts: true },
-  isdbSCs110: { hint: '2 〜 24 の偶数', ts: false },
+const CHANNEL_RANGE: Record<
+  ScanSystem,
+  { hint: string; ts: boolean; accepts: (channel: number) => boolean }
+> = {
+  isdbT: {
+    hint: '13 〜 62',
+    ts: false,
+    accepts: (channel) => channel >= 13 && channel <= 62,
+  },
+  isdbSBs: {
+    hint: '1 〜 23 の奇数(7 と 17 を除く)',
+    ts: true,
+    accepts: (channel) =>
+      channel >= 1 &&
+      channel <= 23 &&
+      channel % 2 === 1 &&
+      ![7, 17].includes(channel),
+  },
+  isdbSCs110: {
+    hint: '2 〜 24 の偶数',
+    ts: false,
+    accepts: (channel) => channel >= 2 && channel <= 24 && channel % 2 === 0,
+  },
 }
+
+const TSID_MAX = 65535
 
 function toNumber(value: string): number | undefined {
   const trimmed = value.trim()
@@ -87,10 +108,24 @@ export function AddCandidateDialog({
       return
     }
 
+    if (!CHANNEL_RANGE[system].accepts(physicalChannel)) {
+      setProblem(
+        `${SYSTEM_LABEL[system]}の物理チャンネルは ${CHANNEL_RANGE[system].hint} です。`,
+      )
+
+      return
+    }
+
     const transportStreamId = needsStream ? toNumber(stream) : undefined
 
     if (needsStream && transportStreamId === undefined) {
       setProblem('BS はスロット内の TSID を半角数字で入力してください。')
+
+      return
+    }
+
+    if (transportStreamId !== undefined && transportStreamId > TSID_MAX) {
+      setProblem(`TSID は 0 〜 ${TSID_MAX} です。`)
 
       return
     }
