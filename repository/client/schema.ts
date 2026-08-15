@@ -244,6 +244,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/driver/restart': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['restartDriver']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -260,6 +276,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['DetectedTunersResponder']
+    }
+    BaseResponderOfDriverRestartResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['DriverRestartResponder']
     }
     BaseResponderOfDriverStatusResponder: {
       status: boolean
@@ -372,6 +393,13 @@ export interface components {
       instanceId: null | string
       capabilities: string[]
       draining: boolean
+    }
+    DriverRestartResponder: {
+      instanceId: null | string
+      /** Format: date-time */
+      acceptedAt: string
+      /** Format: int32 */
+      budgetSeconds: number | string
     }
     DriverStatusResponder: {
       connection: components['schemas']['DriverConnection']
@@ -572,6 +600,11 @@ export interface components {
       healthChangedAt: null | string
       sessionId: null | string
       sessionPurpose: components['schemas']['SessionPurpose']
+      /** Format: date-time */
+      sessionStartedAt: null | string
+      /** Format: date-time */
+      sessionEndsAt: null | string
+      sessionTuning: null | components['schemas']['ScanTargetResponder']
     }
     /** @enum {string} */
     TunerState:
@@ -1338,6 +1371,78 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfDriverStatusResponder']
+        }
+      }
+    }
+  }
+  restartDriver: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
+        }
+      }
+      /** @description Not Implemented */
+      501: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
         }
       }
     }
