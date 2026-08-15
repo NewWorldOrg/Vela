@@ -113,14 +113,14 @@ export const CHANNELS: ChannelsResult = {
       label: '地上波',
       services: SERVICES.slice(0, 3),
       stat: '3 サービス(TV 2 · ワンセグ 1)',
-      neverScanned: false,
+      walk: 'walked',
     },
     {
       system: 'isdbSBs',
       label: 'BS',
       services: [],
       stat: '0 サービス',
-      neverScanned: false,
+      walk: 'walked',
       diagnosis: {
         scannedAt: '08/14 19:00',
         attempted: 10,
@@ -139,7 +139,7 @@ export const CHANNELS: ChannelsResult = {
       label: 'CS110',
       services: [],
       stat: '0 サービス',
-      neverScanned: true,
+      walk: 'never',
     },
   ],
   history: [
@@ -172,10 +172,11 @@ export const SCAN_RUNNING: ScanRunProgress = {
   attempted: 4,
   succeeded: 1,
   failed: 3,
-  systems: '地上波',
+  systems: ['isdbT'],
   elapsed: '1分36秒',
   attempts: [
     {
+      id: 'attempt-4',
       channel: '56ch',
       failure: MISMATCH,
       streamMismatch: '期待 TSID 32741 / 受信 TSID 32738',
@@ -184,6 +185,7 @@ export const SCAN_RUNNING: ScanRunProgress = {
       at: '08/15 03:37',
     },
     {
+      id: 'attempt-3',
       channel: '55ch',
       failure: INCOMPLETE,
       measurement: { value: '21.8 dB', percent: 55, tone: 'warn' },
@@ -191,6 +193,7 @@ export const SCAN_RUNNING: ScanRunProgress = {
       at: '08/15 03:36',
     },
     {
+      id: 'attempt-2',
       channel: '54ch',
       failure: NO_DATA,
       measurement: { value: '24.6 dB', percent: 62, tone: 'warn' },
@@ -198,6 +201,7 @@ export const SCAN_RUNNING: ScanRunProgress = {
       at: '08/15 03:36',
     },
     {
+      id: 'attempt-1',
       channel: '53ch',
       took: '7秒',
       measurement: { value: '31.2 dB', percent: 78, tone: 'ok' },
@@ -271,12 +275,14 @@ export const SCAN_PROPOSAL: ScanProposal = {
   ],
   failures: [
     {
+      id: 'failure-1',
       channel: '54ch',
       failure: NO_LOCK,
       took: '5秒',
       at: '08/15 03:36',
     },
     {
+      id: 'failure-2',
       channel: '55ch',
       failure: INCOMPLETE,
       measurement: { value: '21.8 dB', percent: 55, tone: 'warn' },

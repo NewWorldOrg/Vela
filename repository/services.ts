@@ -1,5 +1,7 @@
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
+import type { ScanSystem } from '@/repository/scan-systems'
+import { SCAN_SYSTEMS } from '@/repository/scan-systems'
 import { formatMonth, formatSpan, formatStamp } from '@/lib/format'
 
 type BroadcastServiceResponder =
@@ -17,28 +19,13 @@ type ScanServiceChangeResponder =
   components['schemas']['ScanServiceChangeResponder']
 type ScanTargetResponder = components['schemas']['ScanTargetResponder']
 type ServiceCategory = components['schemas']['ServiceCategory']
-type TuneSystem = components['schemas']['TuneSystem']
 
-/** The three systems a scan can walk. `unspecified` never reaches a screen. */
-export type ScanSystem = Exclude<TuneSystem, 'unspecified'>
-
-export const SCAN_SYSTEMS: { value: ScanSystem; label: string }[] = [
-  { value: 'isdbT', label: '地上波' },
-  { value: 'isdbSBs', label: 'BS' },
-  { value: 'isdbSCs110', label: 'CS110' },
-]
-
-const SYSTEM_LABEL: Record<ScanSystem, string> = {
-  isdbT: '地上波',
-  isdbSBs: 'BS',
-  isdbSCs110: 'CS110',
-}
-
+/** Also the order the breakdown beside a group heading is listed in. */
 const CATEGORY_LABEL: Record<ServiceCategory, string> = {
   television: 'TV',
-  radio: 'ラジオ',
-  data: 'データ',
   oneSeg: 'ワンセグ',
+  data: 'データ',
+  radio: 'ラジオ',
   temporary: '臨時',
   other: 'その他',
 }
@@ -145,6 +132,13 @@ export interface ZeroDiagnosis {
   verdict?: string
 }
 
+/**
+ * Whether any scan has walked this system. `unknown` is a read that failed:
+ * the screen says the history could not be read rather than that nothing was
+ * ever scanned.
+ */
+export type SystemWalk = 'walked' | 'never' | 'unknown'
+
 export interface ServiceGroup {
   system: ScanSystem
   label: string
@@ -152,11 +146,12 @@ export interface ServiceGroup {
   stat: string
   /** Present only while the group holds no service at all. */
   diagnosis?: ZeroDiagnosis
-  /** No scan has ever walked this system. */
-  neverScanned: boolean
+  walk: SystemWalk
 }
 
 export interface ScanAttemptRow {
+  /** Unique within the run: attempts carry no identifier of their own. */
+  id: string
   channel: string
   /** Absent on a successful attempt. */
   failure?: FailureClass
@@ -195,11 +190,20 @@ export interface ScanRunProgress {
   failed: number
   /** Newest first. */
   attempts: ScanAttemptRow[]
-  /** The systems the run has touched so far, e.g. `地上波`. */
-  systems: string
+  /** The systems the run has touched so far. Empty until the first attempt. */
+  systems: ScanSystem[]
   /** Since the run started, as of this read. */
   elapsed: string
 }
+
+/**
+ * A run the ledger says is walking. Its detail is a second read, so it can
+ * fail on its own: the run is still stated as running, because a run that
+ * cannot be read is not a run that ended.
+ */
+export type RunningScan =
+  | { state: 'read'; progress: ScanRunProgress }
+  | { state: 'unreadable'; run: ScanRun; message: string }
 
 export interface ProposalChannel {
   kind: 'added' | 'updated' | 'missing'
@@ -244,7 +248,7 @@ export interface ChannelsResult {
    */
   unattributed: ServiceRow[]
   /** The run that is walking right now, if one is. */
-  running?: ScanRunProgress
+  running?: RunningScan
   /** A finished run whose difference has not been applied yet. */
   proposal?: ScanProposal
   /** Newest first, the running one included. */
@@ -265,6 +269,26 @@ export type StartScanResult =
   | { state: 'started'; scanId: string }
   | { state: 'refused'; scanId?: string; message: string }
   | { state: 'rejected'; message: string }
+
+/**
+ * A write the screen offers. Refusals are the ordinary outcome here — the
+ * page re-reads itself every few seconds while a scan walks, so what is on
+ * screen can already have ended by the time the press lands.
+ */
+export type WriteResult =
+  | { state: 'ok' }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
+
+/** The result of one scan, as its own page reads it. */
+export type ScanProposalScreenResult =
+  | { state: 'ok'; proposal: ScanProposal }
+  | { state: 'unauthenticated' }
+  /** The run exists but holds no difference: still walking, or applied. */
+  | { state: 'gone' }
+  | { state: 'unavailable'; message: string }
+  /** No run of that id was ever started here. */
+  | { state: 'missing' }
 
 function toInt(value: number | string): number {
   return typeof value === 'number' ? value : Number(value)
@@ -374,15 +398,13 @@ function systemOf(service: BroadcastServiceResponder): ScanSystem | undefined {
     : target.system
 }
 
-function toStat(services: ServiceRow[]): string {
-  const by = (category: string) =>
-    services.filter((service) => service.category === category).length
-  const parts = [
-    ['TV', by('TV')],
-    ['ワンセグ', by('ワンセグ')],
-    ['データ', by('データ')],
-    ['ラジオ', by('ラジオ')],
-  ].filter(([, count]) => (count as number) > 0)
+function toStat(services: BroadcastServiceResponder[]): string {
+  const parts = Object.entries(CATEGORY_LABEL)
+    .map(([category, label]) => [
+      label,
+      services.filter((service) => service.category === category).length,
+    ])
+    .filter(([, count]) => (count as number) > 0)
 
   if (parts.length === 0) {
     return '0 サービス'
@@ -415,11 +437,15 @@ function toRun(run: ScanRunResponder): ScanRun {
   }
 }
 
-function toAttempt(attempt: ScanAttemptResponder): ScanAttemptRow {
+function toAttempt(
+  attempt: ScanAttemptResponder,
+  index: number,
+): ScanAttemptRow {
   const observed = attempt.observedTransportStreamId
   const expected = attempt.target.transportStreamId
 
   return {
+    id: `${index}`,
     channel: toChannel(attempt.target),
     failure:
       attempt.outcome === 'succeeded'
@@ -442,22 +468,24 @@ function toAttempt(attempt: ScanAttemptResponder): ScanAttemptRow {
   }
 }
 
-function toProgress(progress: ScanProgressResponder): ScanRunProgress {
-  const systems = [
+function walkedSystems(progress: ScanProgressResponder): ScanSystem[] {
+  return [
     ...new Set(
       progress.attempts
         .map((attempt) => attempt.target.system)
         .filter((system): system is ScanSystem => system !== 'unspecified'),
     ),
   ]
+}
 
+function toProgress(progress: ScanProgressResponder): ScanRunProgress {
   return {
     run: toRun(progress.run),
     attempted: toInt(progress.attempted),
     succeeded: toInt(progress.succeeded),
     failed: toInt(progress.failed),
     attempts: progress.attempts.map(toAttempt).reverse(),
-    systems: systems.map((system) => SYSTEM_LABEL[system]).join(' · '),
+    systems: walkedSystems(progress),
     elapsed: formatSpan(
       (Date.now() - new Date(progress.run.startedAt).getTime()) / 1000,
     ),
@@ -549,14 +577,105 @@ function toDiagnosis(
   }
 }
 
-async function getProgress(
-  scanId: string,
-): Promise<ScanProgressResponder | undefined> {
-  const { data } = await carinaClient().GET('/api/tuners/scan/{scanId}', {
-    params: { path: { scanId } },
-  })
+/** One scan read on its own. Every way it can fail is a state of its own. */
+type ProgressRead =
+  | { state: 'ok'; progress: ScanProgressResponder }
+  | { state: 'unauthenticated' }
+  | { state: 'missing' }
+  | { state: 'unavailable'; message: string }
 
-  return data?.data ?? undefined
+async function getProgress(scanId: string): Promise<ProgressRead> {
+  const { data, error, response } = await carinaClient().GET(
+    '/api/tuners/scan/{scanId}',
+    { params: { path: { scanId } } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.status === 404) {
+    return { state: 'missing' }
+  }
+
+  const body = data ?? error
+  const progress = body?.data
+
+  if (progress === undefined || progress === null) {
+    return {
+      state: 'unavailable',
+      message:
+        body?.message ??
+        `スキャンの状況を読み取れませんでした(${response.status})。`,
+    }
+  }
+
+  return { state: 'ok', progress }
+}
+
+/**
+ * How far back the history is read for the state of each system. The API
+ * answers with the most recent runs only, and a system's last walk is
+ * normally the newest run or the one before it.
+ */
+const HISTORY_DEPTH = 8
+
+interface ReadRun {
+  run: ScanRunResponder
+  read: ProgressRead
+}
+
+function walkOf(system: ScanSystem, history: ReadRun[]): SystemWalk {
+  const walked = history.some(
+    ({ read }) =>
+      read.state === 'ok' &&
+      read.progress.attempts.some(
+        (attempt) => attempt.target.system === system,
+      ),
+  )
+
+  if (walked) {
+    return 'walked'
+  }
+
+  return history.every(({ read }) => read.state === 'ok') ? 'never' : 'unknown'
+}
+
+/** The newest finished run that walked the system: the one to diagnose from. */
+function lastWalkOf(
+  system: ScanSystem,
+  history: ReadRun[],
+): ScanProgressResponder | undefined {
+  for (const { run, read } of history) {
+    if (
+      run.state !== 'running' &&
+      read.state === 'ok' &&
+      read.progress.attempts.some((attempt) => attempt.target.system === system)
+    ) {
+      return read.progress
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * The difference the API still holds. It is dropped once applied, and a later
+ * run that proposed nothing does not take the place of an earlier one that
+ * did, so the outstanding decision is the newest run still holding one.
+ */
+function outstandingProposal(history: ReadRun[]): ScanProposal | undefined {
+  for (const { run, read } of history) {
+    if (
+      run.state === 'completed' &&
+      read.state === 'ok' &&
+      read.progress.difference !== null
+    ) {
+      return toProposal(read.progress, read.progress.difference)
+    }
+  }
+
+  return undefined
 }
 
 export async function getChannels(): Promise<ChannelsScreenResult> {
@@ -581,16 +700,31 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
     return { state: 'unavailable', message: serviceBody.message }
   }
 
-  const runBody = runs.data?.data ?? []
-  const runningRun = runBody.find((run) => run.state === 'running')
-  const lastFinished = runBody.find((run) => run.state !== 'running')
+  const runBody = runs.data ?? runs.error
 
-  const [runningProgress, finishedProgress] = await Promise.all([
-    runningRun && getProgress(runningRun.scanId),
-    lastFinished && getProgress(lastFinished.scanId),
-  ])
+  if (runBody === undefined) {
+    throw new Error(
+      `GET /api/tuners/scan-runs answered ${runs.response.status}`,
+    )
+  }
 
-  const grouped = new Map<ScanSystem, ServiceRow[]>()
+  if (runBody.data === null) {
+    return { state: 'unavailable', message: runBody.message }
+  }
+
+  const runList = runBody.data
+  const history = await Promise.all(
+    runList.slice(0, HISTORY_DEPTH).map(async (run) => ({
+      run,
+      read: await getProgress(run.scanId),
+    })),
+  )
+
+  if (history.some(({ read }) => read.state === 'unauthenticated')) {
+    return { state: 'unauthenticated' }
+  }
+
+  const grouped = new Map<ScanSystem, BroadcastServiceResponder[]>()
   const unattributed: ServiceRow[] = []
 
   for (const service of serviceBody.data) {
@@ -601,14 +735,8 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
       continue
     }
 
-    grouped.set(system, [...(grouped.get(system) ?? []), toService(service)])
+    grouped.set(system, [...(grouped.get(system) ?? []), service])
   }
-
-  const walked = new Set(
-    (finishedProgress?.attempts ?? [])
-      .map((attempt) => attempt.target.system)
-      .filter((system): system is ScanSystem => system !== 'unspecified'),
-  )
 
   const groups = SCAN_SYSTEMS.map(({ value, label }) => {
     const services = grouped.get(value) ?? []
@@ -616,41 +744,59 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
     return {
       system: value,
       label,
-      services,
+      services: services.map(toService),
       stat: toStat(services),
       diagnosis:
         services.length === 0
-          ? toDiagnosis(value, finishedProgress)
+          ? toDiagnosis(value, lastWalkOf(value, history))
           : undefined,
-      neverScanned: services.length === 0 && !walked.has(value),
+      walk: walkOf(value, history),
     }
   })
 
-  const proposal =
-    finishedProgress && finishedProgress.difference !== null
-      ? toProposal(finishedProgress, finishedProgress.difference)
-      : undefined
+  const running = history.find(({ run }) => run.state === 'running')
 
   return {
     state: 'ok',
     result: {
       groups,
       unattributed,
-      running: runningProgress && toProgress(runningProgress),
-      proposal,
-      history: runBody.map(toRun),
+      running: running && toRunning(running),
+      proposal: outstandingProposal(history),
+      history: runList.map(toRun),
     },
+  }
+}
+
+function toRunning({ run, read }: ReadRun): RunningScan {
+  if (read.state === 'ok') {
+    return { state: 'read', progress: toProgress(read.progress) }
+  }
+
+  return {
+    state: 'unreadable',
+    run: toRun(run),
+    message:
+      read.state === 'unavailable'
+        ? read.message
+        : 'スキャンの状況を API が答えられませんでした。',
   }
 }
 
 export async function getScanProposal(
   scanId: string,
-): Promise<ScanProposal | undefined> {
-  const progress = await getProgress(scanId)
+): Promise<ScanProposalScreenResult> {
+  const read = await getProgress(scanId)
 
-  return progress && progress.difference !== null
-    ? toProposal(progress, progress.difference)
-    : undefined
+  if (read.state !== 'ok') {
+    return read
+  }
+
+  const { progress } = read
+
+  return progress.difference === null
+    ? { state: 'gone' }
+    : { state: 'ok', proposal: toProposal(progress, progress.difference) }
 }
 
 function refusedRunId(body: unknown): string | undefined {
@@ -704,36 +850,67 @@ export async function startScan(
   return { state: 'started', scanId }
 }
 
-export async function cancelScan(scanId: string): Promise<void> {
+/**
+ * The API answers in its own English operator prose, so what a refusal means
+ * is said here instead. Anything the screen has no reading for keeps the
+ * status beside it — it is the one thing that says where to look.
+ */
+function toWriteResult(
+  response: Response,
+  refusals: Partial<Record<number, string>>,
+  fallback: string,
+): WriteResult {
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  const refusal = refusals[response.status]
+
+  if (refusal !== undefined) {
+    return { state: 'rejected', message: refusal }
+  }
+
+  return response.ok
+    ? { state: 'ok' }
+    : { state: 'rejected', message: `${fallback}(${response.status})` }
+}
+
+export async function cancelScan(scanId: string): Promise<WriteResult> {
   const { response } = await carinaClient().POST(
     '/api/tuners/scan/{scanId}/cancel',
     { params: { path: { scanId } } },
   )
 
-  if (!response.ok) {
-    throw new Error(
-      `POST /api/tuners/scan/${scanId}/cancel answered ${response.status}`,
-    )
-  }
+  const ended =
+    'このスキャンはすでに終わっているため、キャンセルできませんでした。最新の状態を読み直しました。'
+
+  return toWriteResult(
+    response,
+    { 404: ended, 409: ended },
+    'スキャンをキャンセルできませんでした。',
+  )
 }
 
-export async function applyScan(scanId: string): Promise<void> {
+export async function applyScan(scanId: string): Promise<WriteResult> {
   const { response } = await carinaClient().POST(
     '/api/tuners/scan/{scanId}/apply',
     { params: { path: { scanId } } },
   )
 
-  if (!response.ok) {
-    throw new Error(
-      `POST /api/tuners/scan/${scanId}/apply answered ${response.status}`,
-    )
-  }
+  return toWriteResult(
+    response,
+    {
+      404: 'このスキャンは残っていないため、保存できませんでした。',
+      409: 'このスキャンの差分はもう保持されていないため、保存できませんでした。定義は変わっていません。スキャンし直してください。',
+    },
+    'スキャンの結果を保存できませんでした。',
+  )
 }
 
 export async function selectCandidateChannel(
   key: string,
   candidateChannelId: string | null,
-): Promise<void> {
+): Promise<WriteResult> {
   const [networkId, serviceId] = key.split('-').map(Number)
 
   const { response } = await carinaClient().PUT(
@@ -744,9 +921,12 @@ export async function selectCandidateChannel(
     },
   )
 
-  if (!response.ok) {
-    throw new Error(
-      `PUT /api/services/${key}/selected-channel answered ${response.status}`,
-    )
-  }
+  return toWriteResult(
+    response,
+    {
+      404: 'このサービスか候補チャンネルが見つからないため、切り替えられませんでした。',
+      409: 'この候補チャンネルは選局先にできないため、切り替えられませんでした。',
+    },
+    '選局先を切り替えられませんでした。',
+  )
 }
