@@ -196,7 +196,7 @@ export function ScanRunPanel({
             <p className="text-ui text-ink-2">
               {running.state === 'read'
                 ? '走査した物理chから順に結果が並びます。定義の書き換えはまだ起きていません'
-                : `スキャンは走ったままです。状況の読み直しを続けています。${running.message}`}
+                : 'スキャンは走ったままです。状況の読み直しを続けています'}
             </p>
           </div>
           <Button
