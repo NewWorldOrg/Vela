@@ -17,12 +17,15 @@ export function SegmentedControl({
   options,
   value,
   onValueChange,
+  disabled,
   className,
   ...props
 }: Omit<ComponentProps<'div'>, 'onChange' | 'children'> & {
   options: SegmentedOption[]
   value: string
   onValueChange?: (value: string) => void
+  /** Fades the whole strip and takes it out of the tab order. */
+  disabled?: boolean
   'aria-label': string
 }) {
   return (
@@ -31,6 +34,7 @@ export function SegmentedControl({
       role="group"
       className={cn(
         'inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]',
+        disabled && 'opacity-55',
         className,
       )}
       {...props}
@@ -42,6 +46,7 @@ export function SegmentedControl({
             key={option.value}
             type="button"
             aria-pressed={selected}
+            disabled={disabled}
             onClick={() => onValueChange?.(option.value)}
             className={cn(
               'rounded-full border border-transparent px-[14px] py-[5px] text-sub font-medium whitespace-nowrap text-ink-2 outline-none',

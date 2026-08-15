@@ -122,16 +122,15 @@ export function ScanRunPanel({
           <span className="text-ui font-medium whitespace-nowrap text-ink-2">
             スキャン範囲
           </span>
-          <div className="pointer-events-none opacity-55">
-            <SegmentedControl
-              aria-label="スキャン範囲"
-              options={SCAN_SYSTEMS.map(({ value, label }) => ({
-                value,
-                label,
-              }))}
-              value="isdbT"
-            />
-          </div>
+          <SegmentedControl
+            aria-label="スキャン範囲"
+            disabled
+            options={SCAN_SYSTEMS.map(({ value, label }) => ({
+              value,
+              label,
+            }))}
+            value="isdbT"
+          />
           <span className="text-note text-ink-3">
             スキャン中は変更できません
           </span>

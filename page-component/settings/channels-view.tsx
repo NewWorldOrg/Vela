@@ -35,15 +35,20 @@ import { ScanBar } from '@/page-component/settings/scan-bar'
 import { ScanRunPanel } from '@/page-component/settings/scan-run-panel'
 import { ZeroDiagnosisPanel } from '@/page-component/settings/zero-diagnosis'
 
-const SERVICE_COLUMNS = [
-  '',
-  'サービス',
-  '区分',
-  '現在の物理ch',
-  '候補',
-  '有効',
-  '最終確認',
-  '',
+/**
+ * The first and last headings carry no visible text in the design — the caret
+ * and the attention chip speak for themselves — so they are named for screen
+ * readers only.
+ */
+const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
+  { label: '候補チャンネルの開閉', hidden: true },
+  { label: 'サービス' },
+  { label: '区分' },
+  { label: '現在の物理ch' },
+  { label: '候補' },
+  { label: '有効' },
+  { label: '最終確認' },
+  { label: '状態', hidden: true },
 ]
 
 function CategoryBadge({ service }: { service: ServiceRow }) {
@@ -76,8 +81,14 @@ function ServiceTable({
     <Table className="min-w-[860px]" containerClassName="pb-1">
       <TableHeader>
         <TableRow>
-          {SERVICE_COLUMNS.map((column, index) => (
-            <TableHead key={column || index}>{column}</TableHead>
+          {SERVICE_COLUMNS.map((column) => (
+            <TableHead key={column.label}>
+              {column.hidden ? (
+                <span className="sr-only">{column.label}</span>
+              ) : (
+                column.label
+              )}
+            </TableHead>
           ))}
         </TableRow>
       </TableHeader>
@@ -86,7 +97,10 @@ function ServiceTable({
           const expanded = open === service.key
 
           return [
-            <TableRow key={service.key}>
+            <TableRow
+              key={service.key}
+              className="has-aria-expanded:bg-transparent"
+            >
               <TableCell className="w-6">
                 <Link
                   href={
