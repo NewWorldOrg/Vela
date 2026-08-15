@@ -2159,7 +2159,8 @@
       "SelectionSource": {
         "enum": [
           "manual",
-          "autoSwitch"
+          "autoSwitch",
+          "scan"
         ],
         "type": "string"
       },

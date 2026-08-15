@@ -512,7 +512,7 @@ export interface components {
       candidateChannelId?: null | string
     }
     /** @enum {string} */
-    SelectionSource: 'manual' | 'autoSwitch'
+    SelectionSource: 'manual' | 'autoSwitch' | 'scan'
     /** @enum {string} */
     ServiceCategory:
       'television' | 'radio' | 'data' | 'oneSeg' | 'temporary' | 'other'
