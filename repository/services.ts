@@ -907,6 +907,76 @@ export async function applyScan(scanId: string): Promise<WriteResult> {
   )
 }
 
+/**
+ * What a manually added candidate names. A BS slot carries several streams so
+ * it names the one it wants; the other two systems filter no stream, and
+ * naming one there is refused.
+ */
+export interface CandidateTuning {
+  system: ScanSystem
+  physicalChannel: number
+  transportStreamId?: number
+}
+
+export async function addCandidateChannel(
+  key: string,
+  tuning: CandidateTuning,
+): Promise<WriteResult> {
+  const [networkId, serviceId] = key.split('-').map(Number)
+
+  const { response } = await carinaClient().POST(
+    '/api/services/{networkId}-{serviceId}/candidate-channels',
+    {
+      params: { path: { networkId, serviceId } },
+      body: {
+        tuning: {
+          system: tuning.system,
+          physicalChannel: tuning.physicalChannel,
+          transportStreamId: tuning.transportStreamId ?? null,
+        },
+      },
+    },
+  )
+
+  return toWriteResult(
+    response,
+    {
+      400: '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。',
+      404: 'このサービスが見つからないため、追加できませんでした。',
+      409: 'この物理チャンネルはすでに候補として登録されています。',
+      422: 'この物理チャンネルを受信できるチューナーがないため、追加できませんでした。対応する種別のチューナーが有効か確かめてください。',
+      503: 'driver に接続できないため、受信できるか確かめられませんでした。追加していません。',
+    },
+    '候補チャンネルを追加できませんでした。',
+  )
+}
+
+/**
+ * The API removes the candidate whether or not it is the selected one, and a
+ * service left with no candidate selected has no way to be tuned. The screen
+ * says so before the press rather than after.
+ */
+export async function deleteCandidateChannel(
+  key: string,
+  candidateChannelId: string,
+): Promise<WriteResult> {
+  const [networkId, serviceId] = key.split('-').map(Number)
+
+  const { response } = await carinaClient().DELETE(
+    '/api/services/{networkId}-{serviceId}/candidate-channels/{candidateChannelId}',
+    { params: { path: { networkId, serviceId, candidateChannelId } } },
+  )
+
+  return toWriteResult(
+    response,
+    {
+      404: 'この候補チャンネルは残っていないため、削除できませんでした。',
+      409: 'この候補チャンネルは別のサービスのものです。削除していません。',
+    },
+    '候補チャンネルを削除できませんでした。',
+  )
+}
+
 export async function selectCandidateChannel(
   key: string,
   candidateChannelId: string | null,

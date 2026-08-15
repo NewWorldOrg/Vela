@@ -21,7 +21,13 @@ const meta = {
   title: 'Screens/設定・チャンネル',
   component: ChannelsView,
   parameters: { layout: 'fullscreen' },
-  args: { onStart: refuse, onCancel: accept, onSelect: accept },
+  args: {
+    onStart: refuse,
+    onCancel: accept,
+    onSelect: accept,
+    onAdd: accept,
+    onDelete: accept,
+  },
 } satisfies Meta<typeof ChannelsView>
 
 export default meta

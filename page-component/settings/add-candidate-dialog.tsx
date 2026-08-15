@@ -1,0 +1,198 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+
+import type { CandidateTuning, WriteResult } from '@/repository/services'
+import type { ScanSystem } from '@/repository/scan-systems'
+import { SCAN_SYSTEMS } from '@/repository/scan-systems'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { InlineAlert } from '@/components/vela/banner'
+import {
+  Field,
+  FieldError,
+  FieldHint,
+  FieldLabel,
+  RequiredMark,
+} from '@/components/vela/field'
+import { SegmentedControl } from '@/components/vela/segmented-control'
+
+/**
+ * What each system will take. The API refuses anything outside these, so the
+ * form says the same thing rather than sending a press that cannot land.
+ */
+const CHANNEL_RANGE: Record<ScanSystem, { hint: string; ts: boolean }> = {
+  isdbT: { hint: '13 〜 62', ts: false },
+  isdbSBs: { hint: '1 〜 23 の奇数(7 と 17 を除く)', ts: true },
+  isdbSCs110: { hint: '2 〜 24 の偶数', ts: false },
+}
+
+function toNumber(value: string): number | undefined {
+  const trimmed = value.trim()
+
+  return trimmed !== '' && /^\d+$/.test(trimmed) ? Number(trimmed) : undefined
+}
+
+/**
+ * A candidate added by hand. A BS slot carries several streams so it names the
+ * one it wants; the other two filter no stream and naming one is refused.
+ */
+export function AddCandidateDialog({
+  serviceKey,
+  serviceName,
+  open,
+  onOpenChange,
+  onAdd,
+}: {
+  serviceKey: string
+  serviceName: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onAdd: (serviceKey: string, tuning: CandidateTuning) => Promise<WriteResult>
+}) {
+  const [system, setSystem] = useState<ScanSystem>('isdbT')
+  const [channel, setChannel] = useState('')
+  const [stream, setStream] = useState('')
+  const [problem, setProblem] = useState<string>()
+  const [refusal, setRefusal] = useState<string>()
+  const [pending, startTransition] = useTransition()
+
+  const needsStream = CHANNEL_RANGE[system].ts
+
+  const close = (next: boolean) => {
+    if (!next) {
+      setChannel('')
+      setStream('')
+      setProblem(undefined)
+      setRefusal(undefined)
+    }
+
+    onOpenChange(next)
+  }
+
+  const submit = () => {
+    const physicalChannel = toNumber(channel)
+
+    if (physicalChannel === undefined) {
+      setProblem('物理チャンネルを半角数字で入力してください。')
+
+      return
+    }
+
+    const transportStreamId = needsStream ? toNumber(stream) : undefined
+
+    if (needsStream && transportStreamId === undefined) {
+      setProblem('BS はスロット内の TSID を半角数字で入力してください。')
+
+      return
+    }
+
+    setProblem(undefined)
+    setRefusal(undefined)
+
+    startTransition(async () => {
+      const result = await onAdd(serviceKey, {
+        system,
+        physicalChannel,
+        transportStreamId,
+      })
+
+      if (result.state === 'ok') {
+        close(false)
+
+        return
+      }
+
+      setRefusal(
+        result.state === 'unauthenticated'
+          ? 'サインインが切れているため、追加できませんでした。サインインしてから開き直してください。'
+          : result.message,
+      )
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>候補チャンネルを手動追加</DialogTitle>
+          <DialogDescription>
+            {serviceName}{' '}
+            に候補チャンネルを追加します。追加した候補は次回の巡回で受信を確かめます。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4">
+          <Field>
+            <FieldLabel>
+              方式
+              <RequiredMark />
+            </FieldLabel>
+            <SegmentedControl
+              aria-label="方式"
+              options={SCAN_SYSTEMS}
+              value={system}
+              onValueChange={(next) => setSystem(next as ScanSystem)}
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="candidate-channel">
+              物理チャンネル
+              <RequiredMark />
+            </FieldLabel>
+            <Input
+              id="candidate-channel"
+              inputMode="numeric"
+              value={channel}
+              onChange={(event) => setChannel(event.target.value)}
+            />
+            <FieldHint>{CHANNEL_RANGE[system].hint}</FieldHint>
+          </Field>
+
+          {needsStream && (
+            <Field>
+              <FieldLabel htmlFor="candidate-stream">
+                TSID
+                <RequiredMark />
+              </FieldLabel>
+              <Input
+                id="candidate-stream"
+                inputMode="numeric"
+                value={stream}
+                onChange={(event) => setStream(event.target.value)}
+              />
+              <FieldHint>
+                BS スロットは複数のストリームを載せるため、どれかを指定します(0
+                〜 65535)
+              </FieldHint>
+            </Field>
+          )}
+
+          {problem && <FieldError>{problem}</FieldError>}
+
+          <span aria-live="polite">
+            {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+          </span>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => close(false)}>
+            キャンセル
+          </Button>
+          <Button disabled={pending} onClick={submit}>
+            追加する
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
