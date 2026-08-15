@@ -11,11 +11,9 @@ import { Button } from '@/components/ui/button'
  */
 export function ApplyScanButton({
   scanId,
-  disabled,
   onApply,
 }: {
   scanId: string
-  disabled?: boolean
   onApply: (scanId: string) => Promise<void>
 }) {
   const [pending, startTransition] = useTransition()
@@ -23,8 +21,7 @@ export function ApplyScanButton({
   return (
     <Button
       size="sm"
-      disabled={pending || disabled}
-      title={disabled ? '保存する変更がありません' : undefined}
+      disabled={pending}
       onClick={() =>
         startTransition(async () => {
           await onApply(scanId)

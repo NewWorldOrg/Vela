@@ -224,11 +224,7 @@ export function ScanProposalView({
       <Button variant="ghost" size="sm" asChild>
         <Link href={'/settings/channels' as Route}>破棄</Link>
       </Button>
-      <ApplyScanButton
-        scanId={proposal.run.id}
-        disabled={proposal.empty}
-        onApply={onApply}
-      />
+      <ApplyScanButton scanId={proposal.run.id} onApply={onApply} />
     </div>
   )
 

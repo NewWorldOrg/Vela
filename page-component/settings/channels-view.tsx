@@ -28,7 +28,6 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   MarkDots,
-  SearchIcon,
 } from '@/components/vela/icons'
 import { CandidateList } from '@/page-component/settings/candidate-list'
 import { ScanBar } from '@/page-component/settings/scan-bar'
@@ -346,6 +345,11 @@ export function ChannelsView({
     (group) => group.diagnosis !== undefined && group.services.length === 0,
   )
   const lastFinished = channels.history.find((run) => run.state !== 'running')
+  // Nothing has ever been walked: one way in, not three empty groups.
+  const neverScanned =
+    channels.history.length === 0 &&
+    channels.unattributed.length === 0 &&
+    channels.groups.every((group) => group.services.length === 0)
 
   return (
     <>
@@ -395,14 +399,25 @@ export function ChannelsView({
         />
       )}
 
-      {channels.groups.map((group) => (
-        <ServiceGroupSection
-          key={group.system}
-          group={group}
-          open={open}
-          onSelect={onSelect}
-        />
-      ))}
+      {neverScanned ? (
+        <EmptyState
+          spot="antenna"
+          titleLevel={2}
+          title="まだスキャンしていません"
+          className="mt-9"
+        >
+          チューナーの種別ごとに総当たりで選局し、受信できたサービスを一覧にします。結果は差分として提示され、確認してから適用します。
+        </EmptyState>
+      ) : (
+        channels.groups.map((group) => (
+          <ServiceGroupSection
+            key={group.system}
+            group={group}
+            open={open}
+            onSelect={onSelect}
+          />
+        ))
+      )}
 
       {channels.unattributed.length > 0 && (
         <section className="mt-9">
@@ -421,25 +436,6 @@ export function ChannelsView({
           />
         </section>
       )}
-
-      {channels.groups.every((group) => group.services.length === 0) &&
-        channels.unattributed.length === 0 &&
-        channels.history.length === 0 && (
-          <EmptyState
-            spot="antenna"
-            titleLevel={2}
-            title="まだスキャンしていません"
-            className="mt-9"
-            action={
-              <Button disabled title="スキャンはスキャン範囲から開始します">
-                <SearchIcon />
-                スキャン開始
-              </Button>
-            }
-          >
-            チューナーの種別ごとに総当たりで選局し、受信できたサービスを一覧にします。結果は差分として提示され、確認してから適用します。
-          </EmptyState>
-        )}
 
       <ScanHistory history={channels.history} />
     </>
