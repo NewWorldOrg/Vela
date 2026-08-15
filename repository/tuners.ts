@@ -1,5 +1,6 @@
 import type { Route } from 'next'
 
+import { formatStamp } from '@/lib/format'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 
@@ -84,6 +85,23 @@ export interface TunerNotice {
   tone: 'danger' | 'warn'
   body: string
   actions?: NoticeActions
+  /**
+   * Set on the notice that offers the restart. The ledger is only a pre-check:
+   * the driver decides, so a press can still be refused.
+   */
+  restart?: DriverRestartOffer
+}
+
+/** What the ledger says stands between the saved changes and a restart. */
+export interface DriverRestartOffer {
+  /** Recordings holding a tuner right now. Above zero the restart waits. */
+  recordings: number
+  /**
+   * When the last of those recordings ends, spelled for the screen. An instant
+   * reads in the zone of whoever formats it, so it is formatted here and not
+   * again in the browser.
+   */
+  until?: string
 }
 
 /** How the API says the driver link stands. `unknown` = it would not say. */
@@ -115,6 +133,29 @@ export type TunerToggleResult =
   | { state: 'unauthenticated' }
   | { state: 'unavailable'; message: string }
 
+/**
+ * What the driver answered to a restart. `recording` is its own refusal and
+ * not a failure: the ledger pre-check can read clear while a recording starts
+ * a moment later, and only the driver knows.
+ */
+export type DriverRestartResult =
+  /**
+   * `budgetSeconds` is the hard stop the driver named, held to the window this
+   * screen is willing to wait, so what it says and what it does agree.
+   */
+  | { state: 'accepted'; instanceId?: string; budgetSeconds: number }
+  /** `until` is spelled for the screen, in the zone the API side runs in. */
+  | { state: 'recording'; recordings?: number; until?: string }
+  | { state: 'unauthenticated' }
+  | { state: 'disconnected' }
+  | { state: 'unsupported' }
+  | { state: 'mismatched' }
+  | { state: 'refused'; status: number }
+
+/** Whether the driver came back inside the budget it was given. */
+export type DriverReturnResult =
+  { state: 'returned'; instanceId?: string } | { state: 'waiting' }
+
 const KIND_LABEL: Partial<Record<TunerKind, '地上波' | '衛星'>> = {
   terrestrial: '地上波',
   satellite: '衛星',
@@ -129,6 +170,12 @@ const SESSION_LABEL: Record<SessionPurpose, string> = {
 }
 
 const THRESHOLD_HOURS = 24
+
+const READ_BACK_INTERVAL_MS = 1000
+
+const MIN_BUDGET_SECONDS = 10
+
+const MAX_BUDGET_SECONDS = 60
 
 export async function getTuners(): Promise<TunerScreenResult> {
   const client = carinaClient()
@@ -183,6 +230,103 @@ export async function setTunerDisabled(
   return body.status
     ? { state: 'ok' }
     : { state: 'unavailable', message: body.message }
+}
+
+export async function restartDriver(): Promise<DriverRestartResult> {
+  const { data, error, response } = await carinaClient().POST(
+    '/api/driver/restart',
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  const accepted = data?.data
+
+  if (response.status === 202 && accepted) {
+    return {
+      state: 'accepted',
+      instanceId: accepted.instanceId ?? undefined,
+      budgetSeconds: toBudget(Number(accepted.budgetSeconds)),
+    }
+  }
+
+  switch (response.status) {
+    case 409:
+      return { state: 'recording', ...toHolding(error?.message) }
+    case 503:
+      return { state: 'disconnected' }
+    case 501:
+      return { state: 'unsupported' }
+    case 502:
+      return { state: 'mismatched' }
+    default:
+      return { state: 'refused', status: response.status }
+  }
+}
+
+/**
+ * Reads back the driver until it answers as a different instance from the one
+ * that went away, giving up after the budget the driver named. A restart is
+ * only done once the replacement is up, so this is what the screen waits on
+ * rather than the acceptance.
+ */
+export async function waitForDriverInstance(
+  previousInstanceId: string | undefined,
+  budgetSeconds: number,
+): Promise<DriverReturnResult> {
+  const client = carinaClient()
+  const deadline = Date.now() + toBudget(budgetSeconds) * 1000
+
+  do {
+    await sleep(READ_BACK_INTERVAL_MS)
+
+    const { data } = await client.GET('/api/driver/status')
+    const driver = toDriver(data)
+
+    if (
+      driver.connection === 'connected' &&
+      driver.instanceId !== undefined &&
+      driver.instanceId !== previousInstanceId
+    ) {
+      return { state: 'returned', instanceId: driver.instanceId }
+    }
+  } while (Date.now() < deadline)
+
+  return { state: 'waiting' }
+}
+
+/**
+ * The refusal is operator prose in the driver's own language, and the counts
+ * and the time inside it are the only place the screen can learn what holds
+ * the driver. They are read out of it here; the prose itself is not shown.
+ */
+function toHolding(message: string | undefined): {
+  recordings?: number
+  until?: string
+} {
+  const recordings = message?.match(/(\d+) recording/)
+  const until = message?.match(
+    /ends at (\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:\d{2}))/,
+  )
+
+  return {
+    recordings: recordings ? Number(recordings[1]) : undefined,
+    until: until ? formatStamp(until[1]) : undefined,
+  }
+}
+
+/**
+ * A budget outside this range is not one this screen waits on: it would either
+ * stop reading before the driver could plausibly be back, or hold the wait open
+ * long past the point where saying so is more use than waiting.
+ */
+function toBudget(seconds: number) {
+  return Math.min(Math.max(seconds, MIN_BUDGET_SECONDS), MAX_BUDGET_SECONDS)
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function toDriver(envelope: DriverStatusEnvelope | undefined): DriverState {
@@ -242,18 +386,23 @@ function toNotices(ledger: TunerLedgerResponder): TunerNotice[] {
 }
 
 function toDriftNotice(observed: TunerObservationResponder[]): TunerNotice {
-  const recording = observed.filter(
+  const recordings = observed.filter(
     (entry) => entry.sessionId !== null && entry.sessionPurpose === 'recording',
-  ).length
+  )
 
-  const body = recording
-    ? `保存済み・未反映の変更があります。反映には driver の再起動が必要です。録画が ${recording} 件進行中のため、まだ再起動できません。`
-    : '保存済み・未反映の変更があります。反映には driver の再起動が必要です。進行中のセッションはありませんが、この画面からは再起動を要求できません。'
+  const last = recordings
+    .map((entry) => entry.sessionEndsAt)
+    .filter((at) => at !== null)
+    .sort()
+    .at(-1)
 
   return {
     tone: 'warn',
-    body,
-    actions: [{ label: 'driver を再起動', control: 'button', disabled: true }],
+    body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。',
+    restart: {
+      recordings: recordings.length,
+      until: last === undefined ? undefined : formatStamp(last),
+    },
   }
 }
 

@@ -1,5 +1,7 @@
 import type {
   DriverLink,
+  DriverRestartResult,
+  DriverReturnResult,
   TunerRow,
   TunerScreenResult,
   TunerToggleResult,
@@ -28,6 +30,7 @@ import {
 } from '@/components/vela/icons'
 import { TunerStateChip } from '@/page-component/settings/tuner-state-chip'
 import { TunerEnableSwitch } from '@/page-component/settings/tuner-enable-switch'
+import { DriverRestartBanner } from '@/page-component/settings/driver-restart-banner'
 
 const COLUMNS = [
   'デバイス',
@@ -59,9 +62,16 @@ function DeviceIcon({ row }: { row: TunerRow }) {
 export function TunersView({
   result,
   onToggle,
+  onRestart,
+  onReturn,
 }: {
   result: TunerScreenResult
   onToggle: (deviceId: string, enabled: boolean) => Promise<TunerToggleResult>
+  onRestart: () => Promise<DriverRestartResult>
+  onReturn: (
+    previousInstanceId: string | undefined,
+    budgetSeconds: number,
+  ) => Promise<DriverReturnResult>
 }) {
   if (result.state !== 'ok') {
     return (
@@ -138,11 +148,23 @@ export function TunersView({
       </PageHeading>
 
       <div className="mt-3.5 space-y-2">
-        {tuners.notices.map((notice) => (
-          <Banner key={notice.body} tone={notice.tone} actions={notice.actions}>
-            {notice.body}
-          </Banner>
-        ))}
+        {tuners.notices
+          .filter((notice) => notice.restart === undefined)
+          .map((notice) => (
+            <Banner
+              key={notice.body}
+              tone={notice.tone}
+              actions={notice.actions}
+            >
+              {notice.body}
+            </Banner>
+          ))}
+        <DriverRestartBanner
+          notice={tuners.notices.find((notice) => notice.restart !== undefined)}
+          instanceId={tuners.instanceId}
+          onRestart={onRestart}
+          onReturn={onReturn}
+        />
       </div>
 
       <p className="mx-0.5 mt-[22px] mb-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2">

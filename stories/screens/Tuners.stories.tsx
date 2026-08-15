@@ -7,7 +7,11 @@ const meta = {
   title: 'Screens/設定・チューナー',
   component: TunersView,
   parameters: { layout: 'fullscreen' },
-  args: { onToggle: async () => ({ state: 'ok' }) },
+  args: {
+    onToggle: async () => ({ state: 'ok' }),
+    onRestart: async () => ({ state: 'disconnected' }),
+    onReturn: async () => ({ state: 'waiting' }),
+  },
 } satisfies Meta<typeof TunersView>
 
 export default meta

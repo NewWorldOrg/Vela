@@ -11,10 +11,8 @@ export const TUNERS: TunerResult = {
     },
     {
       tone: 'warn',
-      body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。録画が 1 件進行中のため、まだ再起動できません。みなと総合1 27ch の終了予定は 21:15 です。',
-      actions: [
-        { label: 'driver を再起動', control: 'button', disabled: true },
-      ],
+      body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。',
+      restart: { recordings: 1, until: '08/07 21:15' },
     },
   ],
   thresholdHours: 24,
