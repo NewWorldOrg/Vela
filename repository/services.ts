@@ -697,7 +697,10 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
   }
 
   if (serviceBody.data === null) {
-    return { state: 'unavailable', message: serviceBody.message }
+    return {
+      state: 'unavailable',
+      message: `API は ${services.response.status} を返しました。`,
+    }
   }
 
   const runBody = runs.data ?? runs.error
@@ -709,7 +712,10 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
   }
 
   if (runBody.data === null) {
-    return { state: 'unavailable', message: runBody.message }
+    return {
+      state: 'unavailable',
+      message: `API は ${runs.response.status} を返しました。`,
+    }
   }
 
   const runList = runBody.data
