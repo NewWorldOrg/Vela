@@ -81,6 +81,14 @@ function BannerActionControl({
         size="sm"
         aria-disabled={action.disabled || undefined}
         aria-describedby={action.disabled ? bodyId : undefined}
+        onClick={
+          action.disabled
+            ? (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+              }
+            : undefined
+        }
         className={cn(
           action.disabled && [DISABLED_ON_BAND[tone], DISABLED_MOTION],
         )}

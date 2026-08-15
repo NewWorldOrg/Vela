@@ -1,6 +1,7 @@
 import type { ChannelsResult, TunerResult } from '@/repository/tuners'
 
 export const TUNERS: TunerResult = {
+  connection: 'connected',
   instanceId: 'b7f2c9',
   notices: [
     {
@@ -12,7 +13,6 @@ export const TUNERS: TunerResult = {
       tone: 'warn',
       body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。録画が 1 件進行中のため、まだ再起動できません。みなと総合1 27ch の終了予定は 21:15 です。',
       actions: [
-        { label: '変更内容を確認' },
         { label: 'driver を再起動', control: 'button', disabled: true },
       ],
     },
@@ -65,7 +65,6 @@ export const TUNERS: TunerResult = {
       device: 'adapter2',
       hardware: 'PT3 / frontend0',
       kind: '地上波',
-      kindUnsure: true,
       enabled: true,
       idleLabel: '割当停止中',
       state: 'faulted',

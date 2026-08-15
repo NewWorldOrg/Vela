@@ -11,6 +11,916 @@
     }
   ],
   "paths": {
+    "/api/tuners/detected": {
+      "get": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "getDetectedTuners",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDetectedTunersResponder"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDetectedTunersResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDetectedTunersResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/tuners": {
+      "get": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "getTuners",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "putTuners",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TunerLedgerRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TunerLedgerRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TunerLedgerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/tuners/{deviceId}": {
+      "patch": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "patchTuner",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleTunerRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleTunerRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleTunerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerObservationResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerObservationResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerObservationResponder"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerObservationResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerObservationResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/services/{networkId}-{serviceId}/candidate-channels": {
+      "post": {
+        "tags": [
+          "services"
+        ],
+        "operationId": "addCandidateChannel",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddCandidateChannelRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddCandidateChannelRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddCandidateChannelRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/services/{networkId}-{serviceId}/candidate-channels/{candidateChannelId}": {
+      "delete": {
+        "tags": [
+          "services"
+        ],
+        "operationId": "deleteCandidateChannel",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "candidateChannelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/services/{networkId}-{serviceId}": {
+      "get": {
+        "tags": [
+          "services"
+        ],
+        "operationId": "getService",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/services": {
+      "get": {
+        "tags": [
+          "services"
+        ],
+        "operationId": "listServices",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/services/{networkId}-{serviceId}/selected-channel": {
+      "put": {
+        "tags": [
+          "services"
+        ],
+        "operationId": "putSelectedChannel",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SelectedChannelRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SelectedChannelRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SelectedChannelRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/tuners/scan/{scanId}/apply": {
+      "post": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "applyScan",
+        "parameters": [
+          {
+            "name": "scanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanApplicationResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanApplicationResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanApplicationResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/tuners/scan/{scanId}/cancel": {
+      "post": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "cancelScan",
+        "parameters": [
+          {
+            "name": "scanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/tuners/scan/{scanId}": {
+      "get": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "getScan",
+        "parameters": [
+          {
+            "name": "scanId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/tuners/scan-runs": {
+      "get": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "listScanRuns",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfScanRunResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/tuners/scan": {
+      "post": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "startScan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartScanRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartScanRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartScanRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanStartedResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanStartedResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanRefusedResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanStartedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "tags": [
@@ -67,6 +977,73 @@
   },
   "components": {
     "schemas": {
+      "AddCandidateChannelRequest": {
+        "type": "object",
+        "properties": {
+          "tuning": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TuningParametersRequest"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfBroadcastServiceResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BroadcastServiceResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfDetectedTunersResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DetectedTunersResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfDriverStatusResponder": {
         "required": [
           "status",
@@ -92,6 +1069,472 @@
             ]
           }
         }
+      },
+      "BaseResponderOfIReadOnlyListOfBroadcastServiceResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/BroadcastServiceResponder"
+            }
+          }
+        }
+      },
+      "BaseResponderOfIReadOnlyListOfScanRunResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ScanRunResponder"
+            }
+          }
+        }
+      },
+      "BaseResponderOfScanApplicationResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanApplicationResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfScanProgressResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanProgressResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfScanRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfScanStartedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanStartedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfTunerLedgerResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TunerLedgerResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfTunerObservationResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TunerObservationResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BroadcastServiceResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "name",
+          "category",
+          "reservableByDefault",
+          "discoveredAt",
+          "lastSeenAt",
+          "candidateCount",
+          "selectedChannel",
+          "candidates"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ServiceCategory"
+          },
+          "reservableByDefault": {
+            "type": "boolean"
+          },
+          "discoveredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "candidateCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "selectedChannel": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanTargetResponder"
+              }
+            ]
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CandidateChannelResponder"
+            }
+          }
+        }
+      },
+      "CandidateChannelResponder": {
+        "required": [
+          "id",
+          "target",
+          "isSelected",
+          "selection",
+          "lastMeasurement",
+          "needsRevalidation",
+          "rotationState",
+          "consecutiveFailures",
+          "nextAttemptAt",
+          "needsAttentionSince",
+          "discoveredAt",
+          "lastSeenAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ScanTargetResponder"
+          },
+          "isSelected": {
+            "type": "boolean"
+          },
+          "selection": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CandidateSelectionResponder"
+              }
+            ]
+          },
+          "lastMeasurement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanMeasurementResponder"
+              }
+            ]
+          },
+          "needsRevalidation": {
+            "type": "boolean"
+          },
+          "rotationState": {
+            "$ref": "#/components/schemas/RotationState"
+          },
+          "consecutiveFailures": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nextAttemptAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "needsAttentionSince": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "discoveredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CandidateSelectionResponder": {
+        "required": [
+          "source",
+          "selectedAt",
+          "measurement"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/SelectionSource"
+          },
+          "selectedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "measurement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanMeasurementResponder"
+              }
+            ]
+          }
+        }
+      },
+      "DetectedDeviceResponder": {
+        "required": [
+          "deviceId",
+          "detection",
+          "kinds",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "detection": {
+            "$ref": "#/components/schemas/DeviceDetection"
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TunerKind"
+            }
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DetectedTunersResponder": {
+        "required": [
+          "devices",
+          "added",
+          "missing",
+          "mismatched"
+        ],
+        "type": "object",
+        "properties": {
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DetectedDeviceResponder"
+            }
+          },
+          "added": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mismatched": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TunerKindMismatchResponder"
+            }
+          }
+        }
+      },
+      "DeviceDetection": {
+        "enum": [
+          "unspecified",
+          "detected",
+          "busy",
+          "permissionDenied",
+          "unreadable"
+        ],
+        "type": "string"
       },
       "DriverConnection": {
         "enum": [
@@ -192,10 +1635,855 @@
             "type": "string"
           }
         }
+      },
+      "RotationDepartureResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "target",
+          "consecutiveFailures",
+          "since"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ScanTargetResponder"
+          },
+          "consecutiveFailures": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RotationState": {
+        "enum": [
+          "active",
+          "backingOff",
+          "needsAttention"
+        ],
+        "type": "string"
+      },
+      "ScanApplicationResponder": {
+        "required": [
+          "systems",
+          "servicesAdded",
+          "servicesUpdated",
+          "servicesRemoved",
+          "channelsAdded",
+          "channelsRemoved"
+        ],
+        "type": "object",
+        "properties": {
+          "systems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TuneSystem"
+            }
+          },
+          "servicesAdded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "servicesUpdated": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "servicesRemoved": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "channelsAdded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "channelsRemoved": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ScanAttemptOutcome": {
+        "enum": [
+          "succeeded",
+          "noLock",
+          "lockedWithoutData",
+          "incompleteTables",
+          "unexpectedStream"
+        ],
+        "type": "string"
+      },
+      "ScanAttemptResponder": {
+        "required": [
+          "target",
+          "outcome",
+          "detail",
+          "observedTransportStreamId",
+          "measurement",
+          "startedAt",
+          "finishedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "target": {
+            "$ref": "#/components/schemas/ScanTargetResponder"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ScanAttemptOutcome"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "observedTransportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "measurement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanMeasurementResponder"
+              }
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ScanChangeKind": {
+        "enum": [
+          "added",
+          "updated",
+          "missing"
+        ],
+        "type": "string"
+      },
+      "ScanChannelChangeResponder": {
+        "required": [
+          "kind",
+          "target",
+          "transportStreamId",
+          "measurement"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ScanChangeKind"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ScanTargetResponder"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "measurement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanMeasurementResponder"
+              }
+            ]
+          }
+        }
+      },
+      "ScanDifferenceResponder": {
+        "required": [
+          "added",
+          "updated",
+          "missing",
+          "leftRotation"
+        ],
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScanServiceChangeResponder"
+            }
+          },
+          "updated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScanServiceChangeResponder"
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScanServiceChangeResponder"
+            }
+          },
+          "leftRotation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RotationDepartureResponder"
+            }
+          }
+        }
+      },
+      "ScanMeasurementResponder": {
+        "required": [
+          "measuredAt",
+          "locked",
+          "cnrMilliDecibels",
+          "postViterbiErrorBits",
+          "postViterbiTotalBits"
+        ],
+        "type": "object",
+        "properties": {
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "cnrMilliDecibels": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "postViterbiErrorBits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "postViterbiTotalBits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "ScanProgressResponder": {
+        "required": [
+          "run",
+          "attempted",
+          "succeeded",
+          "failed",
+          "attempts",
+          "difference"
+        ],
+        "type": "object",
+        "properties": {
+          "run": {
+            "$ref": "#/components/schemas/ScanRunResponder"
+          },
+          "attempted": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "succeeded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "failed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "attempts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScanAttemptResponder"
+            }
+          },
+          "difference": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanDifferenceResponder"
+              }
+            ]
+          }
+        }
+      },
+      "ScanRefusedResponder": {
+        "required": [
+          "runningScanId"
+        ],
+        "type": "object",
+        "properties": {
+          "runningScanId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ScanRunResponder": {
+        "required": [
+          "scanId",
+          "state",
+          "driverInstanceId",
+          "startedAt",
+          "finishedAt",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "scanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ScanRunState"
+          },
+          "driverInstanceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ScanRunState": {
+        "enum": [
+          "running",
+          "completed",
+          "failed",
+          "cancelled",
+          "interrupted"
+        ],
+        "type": "string"
+      },
+      "ScanServiceChangeResponder": {
+        "required": [
+          "kind",
+          "networkId",
+          "serviceId",
+          "name",
+          "category",
+          "channels"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ScanChangeKind"
+          },
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ServiceCategory"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScanChannelChangeResponder"
+            }
+          }
+        }
+      },
+      "ScanStartedResponder": {
+        "required": [
+          "scanId"
+        ],
+        "type": "object",
+        "properties": {
+          "scanId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ScanTargetResponder": {
+        "required": [
+          "system",
+          "physicalChannel",
+          "transportStreamId"
+        ],
+        "type": "object",
+        "properties": {
+          "system": {
+            "$ref": "#/components/schemas/TuneSystem"
+          },
+          "physicalChannel": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "SelectedChannelRequest": {
+        "type": "object",
+        "properties": {
+          "candidateChannelId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SelectionSource": {
+        "enum": [
+          "manual",
+          "autoSwitch",
+          "scan"
+        ],
+        "type": "string"
+      },
+      "ServiceCategory": {
+        "enum": [
+          "television",
+          "radio",
+          "data",
+          "oneSeg",
+          "temporary",
+          "other"
+        ],
+        "type": "string"
+      },
+      "SessionPurpose": {
+        "enum": [
+          "unspecified",
+          "recording",
+          "live",
+          "survey",
+          "scan"
+        ],
+        "type": "string"
+      },
+      "StartScanRequest": {
+        "type": "object",
+        "properties": {
+          "systems": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TuneSystem"
+            }
+          },
+          "channels": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TuningParametersRequest"
+            }
+          }
+        }
+      },
+      "ToggleTunerRequest": {
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "TuneSystem": {
+        "enum": [
+          "unspecified",
+          "isdbT",
+          "isdbSBs",
+          "isdbSCs110"
+        ],
+        "type": "string"
+      },
+      "TunerEntryRequest": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "lnbPower": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TunerEntryResponder": {
+        "required": [
+          "deviceId",
+          "disabled",
+          "lnbPower"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "lnbPower": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TunerHealthLevel": {
+        "enum": [
+          "unspecified",
+          "healthy",
+          "degraded",
+          "faulted"
+        ],
+        "type": "string"
+      },
+      "TunerKind": {
+        "enum": [
+          "unspecified",
+          "terrestrial",
+          "satellite"
+        ],
+        "type": "string"
+      },
+      "TunerKindMismatchResponder": {
+        "required": [
+          "deviceId",
+          "observed",
+          "detected"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "observed": {
+            "$ref": "#/components/schemas/TunerKind"
+          },
+          "detected": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TunerKind"
+            }
+          }
+        }
+      },
+      "TunerLedgerRequest": {
+        "type": "object",
+        "properties": {
+          "tuners": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TunerEntryRequest"
+            }
+          }
+        }
+      },
+      "TunerLedgerResponder": {
+        "required": [
+          "desired",
+          "savedHash",
+          "loadedHash",
+          "drifted",
+          "observed",
+          "observedAt",
+          "observationFailure"
+        ],
+        "type": "object",
+        "properties": {
+          "desired": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TunerEntryResponder"
+            }
+          },
+          "savedHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loadedHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "drifted": {
+            "type": "boolean"
+          },
+          "observed": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TunerObservationResponder"
+            }
+          },
+          "observedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "observationFailure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TunerObservationResponder": {
+        "required": [
+          "deviceId",
+          "kind",
+          "state",
+          "detail",
+          "health",
+          "disablePending",
+          "lnbPowered",
+          "healthDetail",
+          "healthChangedAt",
+          "sessionId",
+          "sessionPurpose"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TunerKind"
+          },
+          "state": {
+            "$ref": "#/components/schemas/TunerState"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "health": {
+            "$ref": "#/components/schemas/TunerHealthLevel"
+          },
+          "disablePending": {
+            "type": "boolean"
+          },
+          "lnbPowered": {
+            "type": "boolean"
+          },
+          "healthDetail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "healthChangedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "sessionId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sessionPurpose": {
+            "$ref": "#/components/schemas/SessionPurpose"
+          }
+        }
+      },
+      "TunerState": {
+        "enum": [
+          "unspecified",
+          "idle",
+          "busy",
+          "disabled",
+          "faulted",
+          "draining"
+        ],
+        "type": "string"
+      },
+      "TuningParametersRequest": {
+        "type": "object",
+        "properties": {
+          "system": {
+            "$ref": "#/components/schemas/TuneSystem"
+          },
+          "physicalChannel": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       }
     }
   },
   "tags": [
+    {
+      "name": "tuners"
+    },
+    {
+      "name": "services"
+    },
     {
       "name": "health"
     },
