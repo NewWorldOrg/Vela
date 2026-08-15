@@ -8,6 +8,8 @@ type TunerLedgerResponder = components['schemas']['TunerLedgerResponder']
 type TunerObservationResponder =
   components['schemas']['TunerObservationResponder']
 type TunerEntryResponder = components['schemas']['TunerEntryResponder']
+type DriverStatusEnvelope =
+  components['schemas']['BaseResponderOfDriverStatusResponder']
 type SessionPurpose = components['schemas']['SessionPurpose']
 type TunerKind = components['schemas']['TunerKind']
 
@@ -29,8 +31,6 @@ export interface TunerRow {
   hardware?: string
   /** Unset while the driver holds no observation to say which it is. */
   kind?: '地上波' | '衛星'
-  /** The detected kind disagrees: the chip reads "<kind> ?" in the error colour. */
-  kindUnsure?: boolean
   enabled: boolean
   session?: TunerSession
   /** Shown in the session column when nothing holds the tuner. */
@@ -87,9 +87,16 @@ export interface TunerNotice {
   actions?: NoticeActions
 }
 
-export interface TunerResult {
+/** How the API says the driver link stands. `unknown` = it would not say. */
+export type DriverLink = 'connected' | 'draining' | 'disconnected' | 'unknown'
+
+interface DriverState {
+  connection: DriverLink
   /** Unset while the driver is not connected and reports no instance. */
   instanceId?: string
+}
+
+export interface TunerResult extends DriverState {
   notices: TunerNotice[]
   thresholdHours: number
   rows: TunerRow[]
@@ -97,14 +104,16 @@ export interface TunerResult {
   detectionDiff: DetectionDiffRow[]
 }
 
-/**
- * The app is only reachable through the proxy, so a 401 means the proxy was
- * bypassed rather than that the screen has a signed-out state of its own.
- */
 export type TunerScreenResult =
   | { state: 'ok'; result: TunerResult }
   | { state: 'unauthenticated' }
   /** The API answered but the driver would not give up the ledger. */
+  | { state: 'unavailable'; message: string }
+
+/** The outcome of a write, so the row can say what happened. */
+export type TunerToggleResult =
+  | { state: 'ok' }
+  | { state: 'unauthenticated' }
   | { state: 'unavailable'; message: string }
 
 const KIND_LABEL: Partial<Record<TunerKind, '地上波' | '衛星'>> = {
@@ -112,17 +121,14 @@ const KIND_LABEL: Partial<Record<TunerKind, '地上波' | '衛星'>> = {
   satellite: '衛星',
 }
 
-const SESSION_LABEL: Partial<Record<SessionPurpose, string>> = {
+const SESSION_LABEL: Record<SessionPurpose, string> = {
+  unspecified: '用途不明',
   recording: '録画',
   survey: 'EPG 収集',
   live: 'ライブ',
   scan: 'スキャン',
 }
 
-/**
- * The threshold is the channel domain's to serve; until it does the screen
- * states the rule it is written against.
- */
 const THRESHOLD_HOURS = 24
 
 export async function getTuners(): Promise<TunerScreenResult> {
@@ -143,32 +149,67 @@ export async function getTuners(): Promise<TunerScreenResult> {
     throw new Error(`GET /api/tuners answered ${ledger.response.status}`)
   }
 
-  if (body.data === null) {
+  if (body.data === null || !body.status) {
     return { state: 'unavailable', message: body.message }
   }
 
-  const instanceId = driver.data?.data?.hello?.instanceId ?? undefined
-
-  return { state: 'ok', result: toResult(body.data, instanceId) }
+  return {
+    state: 'ok',
+    result: toResult(body.data, toDriver(driver.data)),
+  }
 }
 
 export async function setTunerDisabled(
   deviceId: string,
   disabled: boolean,
-): Promise<void> {
-  const { response } = await carinaClient().PATCH('/api/tuners/{deviceId}', {
-    params: { path: { deviceId } },
-    body: { disabled },
-  })
+): Promise<TunerToggleResult> {
+  const { data, error, response } = await carinaClient().PATCH(
+    '/api/tuners/{deviceId}',
+    { params: { path: { deviceId } }, body: { disabled } },
+  )
 
-  if (!response.ok) {
-    throw new Error(`PATCH /api/tuners/${deviceId} answered ${response.status}`)
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  const body = data ?? error
+
+  if (body === undefined) {
+    return {
+      state: 'unavailable',
+      message: `API は ${response.status} を返しました。`,
+    }
+  }
+
+  return body.status
+    ? { state: 'ok' }
+    : { state: 'unavailable', message: body.message }
+}
+
+function toDriver(envelope: DriverStatusEnvelope | undefined): DriverState {
+  const status = envelope?.status === true ? envelope.data : null
+
+  if (status === null) {
+    return { connection: 'unknown' }
+  }
+
+  const instanceId = status.hello?.instanceId ?? undefined
+
+  switch (status.connection) {
+    case 'notConnected':
+      return { connection: 'disconnected' }
+    case 'draining':
+      return { connection: 'draining', instanceId }
+    case 'connected':
+      return status.hello?.draining
+        ? { connection: 'draining', instanceId }
+        : { connection: 'connected', instanceId }
   }
 }
 
 function toResult(
   ledger: TunerLedgerResponder,
-  instanceId: string | undefined,
+  driver: DriverState,
 ): TunerResult {
   const observed = new Map(
     (ledger.observed ?? []).map((entry) => [entry.deviceId, entry]),
@@ -179,7 +220,7 @@ function toResult(
   )
 
   return {
-    instanceId,
+    ...driver,
     notices: toNotices(ledger),
     thresholdHours: THRESHOLD_HOURS,
     rows,
@@ -206,23 +247,14 @@ function toDriftNotice(observed: TunerObservationResponder[]): TunerNotice {
     (entry) => entry.sessionId !== null && entry.sessionPurpose === 'recording',
   ).length
 
-  // The restart itself has no endpoint yet, so the action carries no handler.
-  // Whether it may be pressed is real: a recording in progress blocks it.
   const body = recording
     ? `保存済み・未反映の変更があります。反映には driver の再起動が必要です。録画が ${recording} 件進行中のため、まだ再起動できません。`
-    : '保存済み・未反映の変更があります。反映には driver の再起動が必要です。進行中のセッションはありません。driver に終了を要求すると、停止後に自動で起動し直されます。'
+    : '保存済み・未反映の変更があります。反映には driver の再起動が必要です。進行中のセッションはありませんが、この画面からは再起動を要求できません。'
 
   return {
     tone: 'warn',
     body,
-    actions: [
-      { label: '変更内容を確認' },
-      {
-        label: 'driver を再起動',
-        control: 'button',
-        disabled: recording > 0,
-      },
-    ],
+    actions: [{ label: 'driver を再起動', control: 'button', disabled: true }],
   }
 }
 
@@ -261,16 +293,8 @@ function toSession(
     return undefined
   }
 
-  const label = SESSION_LABEL[observation.sessionPurpose]
-
-  if (label === undefined) {
-    return undefined
-  }
-
-  // The tuning the session holds is not on the ledger, so the channel the
-  // design puts beside the chip has nothing to read from.
   return {
-    label,
+    label: SESSION_LABEL[observation.sessionPurpose],
     tone: observation.sessionPurpose === 'recording' ? 'recording' : 'epg',
   }
 }

@@ -1,4 +1,10 @@
-import type { TunerRow, TunerScreenResult } from '@/repository/tuners'
+import type {
+  DriverLink,
+  TunerRow,
+  TunerScreenResult,
+  TunerToggleResult,
+} from '@/repository/tuners'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,12 +39,15 @@ const COLUMNS = [
   'LNB 給電',
 ]
 
+const DRIVER_LABEL: Record<DriverLink, string> = {
+  connected: 'driver 接続中',
+  draining: 'driver 終了処理中',
+  disconnected: 'driver 未接続',
+  unknown: 'driver の接続状態は取得できていません',
+}
+
 function DeviceIcon({ row }: { row: TunerRow }) {
-  // A mismatched row wears the detected side's picture, not the configured one.
-  const Icon =
-    row.kind === '衛星' || row.kindUnsure
-      ? TunerSatelliteIcon
-      : TunerTerrestrialIcon
+  const Icon = row.kind === '衛星' ? TunerSatelliteIcon : TunerTerrestrialIcon
 
   return (
     <span className="flex size-[30px] shrink-0 items-center justify-center rounded-md border border-line bg-surface-2">
@@ -52,7 +61,7 @@ export function TunersView({
   onToggle,
 }: {
   result: TunerScreenResult
-  onToggle: (deviceId: string, enabled: boolean) => Promise<void>
+  onToggle: (deviceId: string, enabled: boolean) => Promise<TunerToggleResult>
 }) {
   if (result.state !== 'ok') {
     return (
@@ -68,7 +77,7 @@ export function TunersView({
             title="サインインしないと見られません"
           >
             driver
-            の状態はサインインしたユーザーだけに見せています。サインインはこれから実装されます。
+            の状態はサインインしたユーザーだけに見せています。サインインしてから開き直してください。
           </EmptyState>
         ) : (
           <EmptyState
@@ -84,6 +93,7 @@ export function TunersView({
   }
 
   const { result: tuners } = result
+  const hasDiff = tuners.detectionDiff.length > 0
 
   return (
     <>
@@ -93,7 +103,8 @@ export function TunersView({
       <PageHeading
         description={
           <>
-            接続されたチューナーデバイスの一覧と稼働状態。driver 接続中
+            接続されたチューナーデバイスの一覧と稼働状態。
+            {DRIVER_LABEL[tuners.connection]}
             {tuners.instanceId && (
               <>
                 (<span className="font-code">instance {tuners.instanceId}</span>
@@ -180,8 +191,6 @@ export function TunersView({
               <TableCell>
                 {row.kind === undefined ? (
                   <span className="text-ink-3">—</span>
-                ) : row.kindUnsure ? (
-                  <Badge variant="err">{row.kind} ?</Badge>
                 ) : (
                   <Badge>{row.kind}</Badge>
                 )}
@@ -257,77 +266,92 @@ export function TunersView({
         </TableBody>
       </Table>
 
-      <section className="mt-9">
-        <SectionHeading mark={MarkAxis}>
-          デバイス検出 — 差分の確認
-        </SectionHeading>
-        <p className="-mt-1.5 mb-3.5 text-note text-ink-2">
-          「デバイスを検出」実行後、保存前に必ず差分を確認する。空になる保存はできない。
-        </p>
-        <div className="grid items-start gap-[18px] min-[1020px]:grid-cols-[1.15fr_1fr]">
-          <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
-            <div className="px-[19px] pt-[17px]">
-              <h3 className="heading text-[14.5px]">検出結果の差分</h3>
-              <p className="mt-px text-sub text-ink-2">
-                保存すると一覧が更新されます
-              </p>
-            </div>
-            <div className="px-[19px] py-[13px]">
-              {tuners.detectionDiff.map((diff) => (
-                <div
-                  key={diff.device}
-                  className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0"
-                >
-                  <Badge
-                    variant={diff.kind === 'add' ? 'ok' : 'err'}
-                    className="font-bold"
-                  >
-                    {diff.tag}
-                  </Badge>
-                  <span className="font-code text-[12px]">{diff.device}</span>
-                  <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-3">
-                    {diff.note}
-                  </small>
-                </div>
-              ))}
-            </div>
-            <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
-              反映には driver の再起動が必要です(保存後にバナーで通知)。
-            </p>
-            <div className="flex justify-end gap-[9px] px-[19px] pt-[15px] pb-[17px]">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled
-                title="デバイス検出はこれから実装されます"
-              >
-                キャンセル
-              </Button>
-              <Button
-                size="sm"
-                disabled
-                title="デバイス検出はこれから実装されます"
-              >
-                この内容で保存
-              </Button>
-            </div>
-          </div>
-
-          <EmptyState
-            spot="tuner"
-            title="チューナーが未設定です"
-            className="border-none bg-tint-lavender"
-            action={
-              <Button disabled title="デバイス検出はこれから実装されます">
-                <SearchIcon />
-                デバイスを検出
-              </Button>
-            }
+      {(hasDiff || tuners.rows.length === 0) && (
+        <section className="mt-9">
+          <SectionHeading mark={MarkAxis}>
+            デバイス検出 — 差分の確認
+          </SectionHeading>
+          <p className="-mt-1.5 mb-3.5 text-note text-ink-2">
+            「デバイスを検出」実行後、保存前に必ず差分を確認する。空になる保存はできない。
+          </p>
+          <div
+            className={cn(
+              'grid items-start gap-[18px]',
+              hasDiff &&
+                tuners.rows.length === 0 &&
+                'min-[1020px]:grid-cols-[1.15fr_1fr]',
+            )}
           >
-            接続済みのデバイスを検出して一覧を作成します。設定ファイルを手で編集する必要はありません。
-          </EmptyState>
-        </div>
-      </section>
+            {hasDiff && (
+              <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
+                <div className="px-[19px] pt-[17px]">
+                  <h3 className="heading text-[14.5px]">検出結果の差分</h3>
+                  <p className="mt-px text-sub text-ink-2">
+                    保存すると一覧が更新されます
+                  </p>
+                </div>
+                <div className="px-[19px] py-[13px]">
+                  {tuners.detectionDiff.map((diff) => (
+                    <div
+                      key={diff.device}
+                      className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0"
+                    >
+                      <Badge
+                        variant={diff.kind === 'add' ? 'ok' : 'err'}
+                        className="font-bold"
+                      >
+                        {diff.tag}
+                      </Badge>
+                      <span className="font-code text-[12px]">
+                        {diff.device}
+                      </span>
+                      <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-3">
+                        {diff.note}
+                      </small>
+                    </div>
+                  ))}
+                </div>
+                <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
+                  反映には driver の再起動が必要です(保存後にバナーで通知)。
+                </p>
+                <div className="flex justify-end gap-[9px] px-[19px] pt-[15px] pb-[17px]">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled
+                    title="デバイス検出はこれから実装されます"
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled
+                    title="デバイス検出はこれから実装されます"
+                  >
+                    この内容で保存
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {tuners.rows.length === 0 && (
+              <EmptyState
+                spot="tuner"
+                title="チューナーが未設定です"
+                className="border-none bg-tint-lavender"
+                action={
+                  <Button disabled title="デバイス検出はこれから実装されます">
+                    <SearchIcon />
+                    デバイスを検出
+                  </Button>
+                }
+              >
+                接続済みのデバイスを検出して一覧を作成します。設定ファイルを手で編集する必要はありません。
+              </EmptyState>
+            )}
+          </div>
+        </section>
+      )}
     </>
   )
 }
