@@ -15,6 +15,24 @@ export function formatInstant(iso: string) {
   return iso.replace('T', ' ').replace(/\.\d+(?=[Z+-]|$)/, '')
 }
 
+/**
+ * `MM/DD HH:mm` in the zone the process runs in — a self-hosted deployment
+ * sets `TZ` once and every screen follows it, so no zone is named here.
+ */
+export function formatStamp(iso: string) {
+  const at = new Date(iso)
+  const pad = (value: number) => String(value).padStart(2, '0')
+
+  return `${pad(at.getMonth() + 1)}/${pad(at.getDate())} ${pad(at.getHours())}:${pad(at.getMinutes())}`
+}
+
+/** `YYYY/MM` — for a date old enough that the day of it says nothing. */
+export function formatMonth(iso: string) {
+  const at = new Date(iso)
+
+  return `${at.getFullYear()}/${String(at.getMonth() + 1).padStart(2, '0')}`
+}
+
 export function formatLength(sec: number) {
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
@@ -22,4 +40,12 @@ export function formatLength(sec: number) {
   const mm = String(m).padStart(2, '0')
   const ss = String(s).padStart(2, '0')
   return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`
+}
+
+/** `6分32秒`, the way an elapsed span is spelled on the admin screens. */
+export function formatSpan(sec: number) {
+  const m = Math.floor(sec / 60)
+  const s = Math.round(sec % 60)
+
+  return m > 0 ? `${m}分${s}秒` : `${s}秒`
 }

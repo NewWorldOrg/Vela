@@ -2,7 +2,6 @@ import type { Route } from 'next'
 
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
-import { CHANNEL_SCAN } from '@/repository/tuners.fixtures'
 
 type TunerLedgerResponder = components['schemas']['TunerLedgerResponder']
 type TunerObservationResponder =
@@ -342,30 +341,4 @@ function toState(
   }
 
   return { state: 'ok', stateLabel: '正常' }
-}
-
-export interface ServiceRow {
-  id: string
-  name: string
-  sid: string
-  kind: 'TV' | 'ワンセグ' | 'データ'
-  currentCh: string
-  candidates: number
-  needsCheck: number
-  enabled: boolean
-  lastSeen: string
-}
-
-export interface ChannelsResult {
-  warning?: { body: string; actions?: NoticeActions }
-  lastScan: string
-  groups: {
-    kind: string
-    stat: string
-    services: ServiceRow[]
-  }[]
-}
-
-export async function getChannelScan(): Promise<ChannelsResult> {
-  return CHANNEL_SCAN
 }
