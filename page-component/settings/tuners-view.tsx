@@ -54,17 +54,31 @@ export function TunersView({
   result: TunerScreenResult
   onToggle: (deviceId: string, enabled: boolean) => Promise<void>
 }) {
-  if (result.state === 'unauthenticated') {
+  if (result.state !== 'ok') {
     return (
       <>
         <Crumb>
           設定 / <CrumbCurrent>チューナー</CrumbCurrent>
         </Crumb>
         <PageHeading>チューナー</PageHeading>
-        <EmptyState spot="tuner" title="サインインしないと見られません">
-          driver
-          の状態はサインインしたユーザーだけに見せています。サインインはこれから実装されます。
-        </EmptyState>
+        {result.state === 'unauthenticated' ? (
+          <EmptyState
+            spot="tuner"
+            titleLevel={2}
+            title="サインインしないと見られません"
+          >
+            driver
+            の状態はサインインしたユーザーだけに見せています。サインインはこれから実装されます。
+          </EmptyState>
+        ) : (
+          <EmptyState
+            spot="tuner"
+            titleLevel={2}
+            title="状態を取得できませんでした"
+          >
+            API は driver の状態を答えられませんでした。{result.message}
+          </EmptyState>
+        )}
       </>
     )
   }

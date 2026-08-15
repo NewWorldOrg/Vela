@@ -102,7 +102,10 @@ export interface TunerResult {
  * bypassed rather than that the screen has a signed-out state of its own.
  */
 export type TunerScreenResult =
-  { state: 'ok'; result: TunerResult } | { state: 'unauthenticated' }
+  | { state: 'ok'; result: TunerResult }
+  | { state: 'unauthenticated' }
+  /** The API answered but the driver would not give up the ledger. */
+  | { state: 'unavailable'; message: string }
 
 const KIND_LABEL: Partial<Record<TunerKind, '地上波' | '衛星'>> = {
   terrestrial: '地上波',
@@ -134,17 +137,19 @@ export async function getTuners(): Promise<TunerScreenResult> {
     return { state: 'unauthenticated' }
   }
 
-  if (ledger.data === undefined) {
+  const body = ledger.data ?? ledger.error
+
+  if (body === undefined) {
     throw new Error(`GET /api/tuners answered ${ledger.response.status}`)
   }
 
-  if (ledger.data.data === null) {
-    throw new Error(`GET /api/tuners refused: ${ledger.data.message}`)
+  if (body.data === null) {
+    return { state: 'unavailable', message: body.message }
   }
 
   const instanceId = driver.data?.data?.hello?.instanceId ?? undefined
 
-  return { state: 'ok', result: toResult(ledger.data.data, instanceId) }
+  return { state: 'ok', result: toResult(body.data, instanceId) }
 }
 
 export async function setTunerDisabled(

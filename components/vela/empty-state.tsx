@@ -13,6 +13,7 @@ import {
 export function EmptyState({
   spot = 'antenna',
   title,
+  titleLevel = 3,
   action,
   className,
   children,
@@ -20,8 +21,15 @@ export function EmptyState({
 }: ComponentProps<'div'> & {
   spot?: SpotName
   title?: string
+  /**
+   * The heading rank, for pages where the panel is not nested under a section
+   * of its own. The look does not change with it.
+   */
+  titleLevel?: 2 | 3
   action?: ReactNode
 }) {
+  const Title = titleLevel === 2 ? 'h2' : 'h3'
+
   return (
     <div
       data-slot="empty-state"
@@ -32,7 +40,7 @@ export function EmptyState({
       {...props}
     >
       <SpotIllustration name={spot} className="mx-auto size-[78px]" />
-      {title && <h3 className="heading mt-2.5 text-h3">{title}</h3>}
+      {title && <Title className="heading mt-2.5 text-h3">{title}</Title>}
       <p className="mx-auto mt-[9px] mb-[13px] max-w-[520px] text-ui text-ink-2">
         {children}
       </p>
