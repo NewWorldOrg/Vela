@@ -1,10 +1,16 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
-import type { ScanAttemptRow, ScanRunProgress } from '@/repository/services'
-import { SCAN_SYSTEMS } from '@/repository/services'
+import type {
+  RunningScan,
+  ScanAttemptRow,
+  ScanRunProgress,
+  WriteResult,
+} from '@/repository/services'
+import { SCAN_SYSTEMS, SYSTEM_LABEL } from '@/repository/scan-systems'
+import { InlineAlert } from '@/components/vela/banner'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -76,7 +82,7 @@ export function ScanAttemptsTable({
       </TableHeader>
       <TableBody>
         {attempts.map((attempt) => (
-          <TableRow key={`${attempt.channel}-${attempt.at}`}>
+          <TableRow key={attempt.id}>
             <TableCell className="font-code text-[13.5px] font-medium tabular-nums whitespace-nowrap">
               {attempt.channel}
             </TableCell>
@@ -99,21 +105,60 @@ export function ScanAttemptsTable({
   )
 }
 
+function ScanCounts({ progress }: { progress: ScanRunProgress }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-[18px] gap-y-1.5 text-sub text-ink-3">
+      <span>
+        走査済み{' '}
+        <b className="font-code text-ui font-medium tabular-nums text-ink">
+          {progress.attempted}
+        </b>{' '}
+        物理ch
+      </span>
+      <span>
+        サービス取得{' '}
+        <b className="font-code text-ui font-medium tabular-nums text-ink">
+          {progress.succeeded}
+        </b>
+      </span>
+      <span>
+        失敗{' '}
+        <b className="font-code text-ui font-medium tabular-nums text-ink">
+          {progress.failed}
+        </b>
+      </span>
+      <span>
+        経過{' '}
+        <b className="font-code text-ui font-medium tabular-nums text-ink">
+          {progress.elapsed}
+        </b>
+      </span>
+    </div>
+  )
+}
+
 /**
  * A run in flight: what it has walked so far, and the way to stop it. The
  * definitions on the page below are untouched until the result is applied, so
  * the panel says so rather than showing a list that is about to move.
+ *
+ * The detail is a read of its own and can fail while the run keeps walking.
+ * The panel then states that much and keeps re-reading, so the run stays on
+ * screen and stays cancellable instead of disappearing.
  */
 export function ScanRunPanel({
-  progress,
+  running,
   onCancel,
 }: {
-  progress: ScanRunProgress
-  onCancel: (scanId: string) => Promise<void>
+  running: RunningScan
+  onCancel: (scanId: string) => Promise<WriteResult>
 }) {
   const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
+  const progress = running.state === 'read' ? running.progress : undefined
+  const run = running.state === 'read' ? running.progress.run : running.run
 
-  useScanTicker(progress.run.state === 'running')
+  useScanTicker(run.state === 'running')
 
   return (
     <>
@@ -125,11 +170,10 @@ export function ScanRunPanel({
           <SegmentedControl
             aria-label="スキャン範囲"
             disabled
-            options={SCAN_SYSTEMS.map(({ value, label }) => ({
-              value,
-              label,
-            }))}
-            value="isdbT"
+            options={SCAN_SYSTEMS}
+            value={
+              progress?.systems.length === 1 ? progress.systems[0] : undefined
+            }
           />
           <span className="text-note text-ink-3">
             スキャン中は変更できません
@@ -140,10 +184,19 @@ export function ScanRunPanel({
           <Spinner className="mt-[3px] size-[18px] text-brand" />
           <div className="min-w-0 flex-1">
             <h2 className="heading text-ui leading-[1.5]">
-              スキャン中 — {progress.systems || '走査開始を待っています'}
+              スキャン中 —{' '}
+              {progress === undefined
+                ? '状況を読み取れていません'
+                : progress.systems.length === 0
+                  ? '走査開始を待っています'
+                  : progress.systems
+                      .map((system) => SYSTEM_LABEL[system])
+                      .join(' · ')}
             </h2>
             <p className="text-ui text-ink-2">
-              走査した物理chから順に結果が並びます。定義の書き換えはまだ起きていません
+              {running.state === 'read'
+                ? '走査した物理chから順に結果が並びます。定義の書き換えはまだ起きていません'
+                : `スキャンは走ったままです。状況の読み直しを続けています。${running.message}`}
             </p>
           </div>
           <Button
@@ -152,7 +205,17 @@ export function ScanRunPanel({
             disabled={pending}
             onClick={() =>
               startTransition(async () => {
-                await onCancel(progress.run.id)
+                setRefusal(undefined)
+
+                const result = await onCancel(run.id)
+
+                setRefusal(
+                  result.state === 'unauthenticated'
+                    ? 'サインインが切れているため、キャンセルできませんでした。サインインしてから開き直してください。'
+                    : result.state === 'rejected'
+                      ? result.message
+                      : undefined,
+                )
               })
             }
           >
@@ -160,33 +223,7 @@ export function ScanRunPanel({
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-baseline gap-x-[18px] gap-y-1.5 text-sub text-ink-3">
-          <span>
-            走査済み{' '}
-            <b className="font-code text-ui font-medium tabular-nums text-ink">
-              {progress.attempted}
-            </b>{' '}
-            物理ch
-          </span>
-          <span>
-            サービス取得{' '}
-            <b className="font-code text-ui font-medium tabular-nums text-ink">
-              {progress.succeeded}
-            </b>
-          </span>
-          <span>
-            失敗{' '}
-            <b className="font-code text-ui font-medium tabular-nums text-ink">
-              {progress.failed}
-            </b>
-          </span>
-          <span>
-            経過{' '}
-            <b className="font-code text-ui font-medium tabular-nums text-ink">
-              {progress.elapsed}
-            </b>
-          </span>
-        </div>
+        {progress && <ScanCounts progress={progress} />}
 
         <p className="mt-[11px] border-t border-dashed border-line pt-[11px] text-note leading-[1.7] text-ink-2">
           キャンセルした場合も既存の定義は変わりません。録画・ライブ・EPG
@@ -194,7 +231,15 @@ export function ScanRunPanel({
         </p>
       </div>
 
-      {progress.attempts.length > 0 && (
+      <span aria-live="polite">
+        {refusal && (
+          <InlineAlert tone="warn" className="mt-2">
+            {refusal}
+          </InlineAlert>
+        )}
+      </span>
+
+      {progress && progress.attempts.length > 0 && (
         <section className="mt-[22px]">
           <SectionHeading mark={MarkAxis}>走査結果(順次)</SectionHeading>
           <FailureLegend />

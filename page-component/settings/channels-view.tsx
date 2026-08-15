@@ -4,14 +4,14 @@ import Link from 'next/link'
 import type {
   ChannelsScreenResult,
   ScanRun,
-  ScanSystem,
   ServiceGroup,
   ServiceRow,
   StartScanResult,
+  WriteResult,
 } from '@/repository/services'
+import type { ScanSystem } from '@/repository/scan-systems'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -74,7 +74,10 @@ function ServiceTable({
 }: {
   services: ServiceRow[]
   open?: string
-  onSelect: (serviceKey: string, candidateChannelId: string) => Promise<void>
+  onSelect: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
 }) {
   return (
     <Table className="min-w-[860px]" containerClassName="pb-1">
@@ -150,13 +153,15 @@ function ServiceTable({
                 )}
               </TableCell>
               <TableCell>
-                <Switch
-                  size="sm"
-                  checked={service.enabled}
-                  disabled
-                  aria-label={`${service.name} を有効にする`}
-                  title="有効の切替はこれから実装されます"
-                />
+                <span
+                  className={
+                    service.enabled
+                      ? 'text-ui font-medium text-ink'
+                      : 'text-ui text-ink-3'
+                  }
+                >
+                  {service.enabled ? '有効' : '無効'}
+                </span>
               </TableCell>
               <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
                 {service.lastSeen}
@@ -197,13 +202,16 @@ function ServiceGroupSection({
 }: {
   group: ServiceGroup
   open?: string
-  onSelect: (serviceKey: string, candidateChannelId: string) => Promise<void>
+  onSelect: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
 }) {
   return (
     <section id={`system-${group.system}`} className="mt-9">
       <GroupHeading
         title={group.label}
-        stat={group.neverScanned ? '未スキャン' : group.stat}
+        stat={group.walk === 'never' ? '未スキャン' : group.stat}
       />
 
       {group.services.length === 0 ? (
@@ -211,8 +219,11 @@ function ServiceGroupSection({
           <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
         ) : (
           <EmptyState spot="antenna" className="mx-auto max-w-[520px]">
-            {group.label}
-            はまだスキャンされていません。総当たりで選局し、受信できたサービスを一覧にします。
+            {group.walk === 'never'
+              ? `${group.label}はまだスキャンされていません。総当たりで選局し、受信できたサービスを一覧にします。`
+              : group.walk === 'unknown'
+                ? `${group.label}のサービスは 0 件です。直近のスキャンを読み取れなかったため、走査済みかどうかは分かりません。`
+                : `${group.label}のサービスは 0 件です。直近のスキャンでは受信できたサービスがありませんでした。`}
           </EmptyState>
         )
       ) : (
@@ -290,8 +301,11 @@ export function ChannelsView({
   /** The service whose candidates are unfolded, from the URL. */
   open?: string
   onStart: (systems: ScanSystem[]) => Promise<StartScanResult>
-  onCancel: (scanId: string) => Promise<void>
-  onSelect: (serviceKey: string, candidateChannelId: string) => Promise<void>
+  onCancel: (scanId: string) => Promise<WriteResult>
+  onSelect: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
 }) {
   const heading = (
     <>
@@ -333,7 +347,7 @@ export function ChannelsView({
             title="一覧を取得できませんでした"
             className="mt-4"
           >
-            API はサービスの一覧を答えられませんでした。{result.message}
+            API はこの画面に必要な一覧を答えられませんでした。{result.message}
           </EmptyState>
         )}
       </>
@@ -387,7 +401,7 @@ export function ChannelsView({
       )}
 
       {channels.running ? (
-        <ScanRunPanel progress={channels.running} onCancel={onCancel} />
+        <ScanRunPanel running={channels.running} onCancel={onCancel} />
       ) : (
         <ScanBar
           lastScan={

@@ -22,7 +22,8 @@ export function SegmentedControl({
   ...props
 }: Omit<ComponentProps<'div'>, 'onChange' | 'children'> & {
   options: SegmentedOption[]
-  value: string
+  /** Unset selects nothing: the strip states no option rather than a wrong one. */
+  value?: string
   onValueChange?: (value: string) => void
   /** Fades the whole strip and takes it out of the tab order. */
   disabled?: boolean

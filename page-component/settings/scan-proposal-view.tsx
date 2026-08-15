@@ -5,6 +5,8 @@ import type {
   ProposalService,
   RotationDeparture,
   ScanProposal,
+  ScanProposalScreenResult,
+  WriteResult,
 } from '@/repository/services'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,7 +14,7 @@ import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/section-heading'
 import { InfoIcon, SearchIcon } from '@/components/vela/icons'
-import { ApplyScanButton } from '@/page-component/settings/apply-scan-button'
+import { ApplyScanAction } from '@/page-component/settings/apply-scan-button'
 import { ScanAttemptsTable } from '@/page-component/settings/scan-run-panel'
 import { FailureLegend } from '@/page-component/settings/failure-mark'
 
@@ -182,11 +184,12 @@ function GroupHeading({ title, stat }: { title: string; stat: string }) {
  * so the page reads as one decision rather than a list of edits.
  */
 export function ScanProposalView({
-  proposal,
+  result,
   onApply,
 }: {
-  proposal?: ScanProposal
-  onApply: (scanId: string) => Promise<void>
+  /** A run the API has never heard of is a 404, handled by the route. */
+  result: Exclude<ScanProposalScreenResult, { state: 'missing' }>
+  onApply: (scanId: string) => Promise<WriteResult>
 }) {
   const crumb = (
     <Crumb>
@@ -195,7 +198,7 @@ export function ScanProposalView({
     </Crumb>
   )
 
-  if (proposal === undefined) {
+  if (result.state !== 'ok') {
     return (
       <>
         {crumb}
@@ -205,7 +208,13 @@ export function ScanProposalView({
         <EmptyState
           spot="antenna"
           titleLevel={2}
-          title="このスキャンの結果はもう残っていません"
+          title={
+            result.state === 'unauthenticated'
+              ? 'サインインしないと見られません'
+              : result.state === 'unavailable'
+                ? 'スキャンの結果を取得できませんでした'
+                : 'このスキャンの結果はもう残っていません'
+          }
           className="mt-4"
           action={
             <Button asChild>
@@ -213,19 +222,20 @@ export function ScanProposalView({
             </Button>
           }
         >
-          走査が終わっていないか、結果がすでに適用されています。
+          {result.state === 'unauthenticated'
+            ? 'スキャンの結果はサインインしたユーザーだけに見せています。サインインはこれから実装されます。'
+            : result.state === 'unavailable'
+              ? `API はこのスキャンの結果を答えられませんでした。${result.message}`
+              : '走査が終わっていないか、結果がすでに適用されています。'}
         </EmptyState>
       </>
     )
   }
 
+  const { proposal } = result
+
   const applyAction = (
-    <div className="flex flex-wrap items-center gap-[9px]">
-      <Button variant="ghost" size="sm" asChild>
-        <Link href={'/settings/channels' as Route}>破棄</Link>
-      </Button>
-      <ApplyScanButton scanId={proposal.run.id} onApply={onApply} />
-    </div>
+    <ApplyScanAction scanId={proposal.run.id} onApply={onApply} />
   )
 
   return (

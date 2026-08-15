@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react'
 
-import type { ScanSystem, StartScanResult } from '@/repository/services'
-import { SCAN_SYSTEMS } from '@/repository/services'
+import type { StartScanResult } from '@/repository/services'
+import type { ScanSystem } from '@/repository/scan-systems'
+import { SCAN_SYSTEMS } from '@/repository/scan-systems'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 import { SearchIcon } from '@/components/vela/icons'
@@ -35,7 +36,7 @@ export function ScanBar({
         </span>
         <SegmentedControl
           aria-label="スキャン範囲"
-          options={SCAN_SYSTEMS.map(({ value, label }) => ({ value, label }))}
+          options={SCAN_SYSTEMS}
           value={system}
           onValueChange={(next) => setSystem(next as ScanSystem)}
         />

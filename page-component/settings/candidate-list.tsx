@@ -1,12 +1,12 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
-import type { CandidateRow } from '@/repository/services'
+import type { CandidateRow, WriteResult } from '@/repository/services'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { InlineAlert } from '@/components/vela/banner'
 import { ProgressBar } from '@/components/vela/progress'
-import { PlusIcon } from '@/components/vela/icons'
 
 function CandidateMeter({ candidate }: { candidate: CandidateRow }) {
   if (candidate.measurement === undefined) {
@@ -44,9 +44,13 @@ export function CandidateList({
 }: {
   serviceKey: string
   candidates: CandidateRow[]
-  onSelect: (serviceKey: string, candidateChannelId: string) => Promise<void>
+  onSelect: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
 }) {
   const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
 
   return (
     <>
@@ -87,7 +91,17 @@ export function CandidateList({
                 disabled={pending}
                 onClick={() =>
                   startTransition(async () => {
-                    await onSelect(serviceKey, candidate.id)
+                    setRefusal(undefined)
+
+                    const result = await onSelect(serviceKey, candidate.id)
+
+                    setRefusal(
+                      result.state === 'unauthenticated'
+                        ? 'サインインが切れているため、切り替えられませんでした。サインインしてから開き直してください。'
+                        : result.state === 'rejected'
+                          ? result.message
+                          : undefined,
+                    )
                   })
                 }
               >
@@ -97,15 +111,9 @@ export function CandidateList({
           )}
         </div>
       ))}
-      <Button
-        variant="ghost"
-        size="xs"
-        disabled
-        title="候補チャンネルの手動追加はこれから実装されます"
-      >
-        <PlusIcon />
-        候補チャンネルを手動追加
-      </Button>
+      <span aria-live="polite">
+        {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+      </span>
     </>
   )
 }
