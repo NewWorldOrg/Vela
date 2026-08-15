@@ -80,6 +80,21 @@ export const Segmented: Story = {
               { value: 'phys', label: '物理ch指定' },
             ]}
           />
+          <p className="mt-3 text-note text-ink-3">
+            変更を受け付けない間は disabled。全体を淡くし、タブ移動からも外す。
+          </p>
+          <SegmentedControl
+            aria-label="チューナー種別で絞り込み(変更不可)"
+            disabled
+            value={value}
+            options={[
+              { value: 'all', label: 'すべて' },
+              { value: 'gr', label: 'GR' },
+              { value: 'bs', label: 'BS' },
+              { value: 'cs', label: 'CS110' },
+              { value: 'phys', label: '物理ch指定' },
+            ]}
+          />
         </Surface>
       </div>
     )
