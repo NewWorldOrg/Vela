@@ -1,7 +1,6 @@
-import type { TunerResult, TunerRow } from '@/repository/tuners'
+import type { TunerRow, TunerScreenResult } from '@/repository/tuners'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -22,6 +21,7 @@ import {
   TunerTerrestrialIcon,
 } from '@/components/vela/icons'
 import { TunerStateChip } from '@/page-component/settings/tuner-state-chip'
+import { TunerEnableSwitch } from '@/page-component/settings/tuner-enable-switch'
 
 const COLUMNS = [
   'デバイス',
@@ -47,7 +47,30 @@ function DeviceIcon({ row }: { row: TunerRow }) {
   )
 }
 
-export function TunersView({ result }: { result: TunerResult }) {
+export function TunersView({
+  result,
+  onToggle,
+}: {
+  result: TunerScreenResult
+  onToggle: (deviceId: string, enabled: boolean) => Promise<void>
+}) {
+  if (result.state === 'unauthenticated') {
+    return (
+      <>
+        <Crumb>
+          設定 / <CrumbCurrent>チューナー</CrumbCurrent>
+        </Crumb>
+        <PageHeading>チューナー</PageHeading>
+        <EmptyState spot="tuner" title="サインインしないと見られません">
+          driver
+          の状態はサインインしたユーザーだけに見せています。サインインはこれから実装されます。
+        </EmptyState>
+      </>
+    )
+  }
+
+  const { result: tuners } = result
+
   return (
     <>
       <Crumb>
@@ -56,8 +79,13 @@ export function TunersView({ result }: { result: TunerResult }) {
       <PageHeading
         description={
           <>
-            接続されたチューナーデバイスの一覧と稼働状態。driver 接続中(
-            <span className="font-code">instance {result.instanceId}</span>)
+            接続されたチューナーデバイスの一覧と稼働状態。driver 接続中
+            {tuners.instanceId && (
+              <>
+                (<span className="font-code">instance {tuners.instanceId}</span>
+                )
+              </>
+            )}
           </>
         }
         action={
@@ -85,7 +113,7 @@ export function TunersView({ result }: { result: TunerResult }) {
       </PageHeading>
 
       <div className="mt-3.5 space-y-2">
-        {result.notices.map((notice) => (
+        {tuners.notices.map((notice) => (
           <Banner key={notice.body} tone={notice.tone} actions={notice.actions}>
             {notice.body}
           </Banner>
@@ -96,7 +124,7 @@ export function TunersView({ result }: { result: TunerResult }) {
         <ClockIcon className="size-[15px] text-brand" />
         健全性のしきい値: 種別単位でサービス取得が連続{' '}
         <b className="font-code font-medium text-ink">
-          {result.thresholdHours} 時間
+          {tuners.thresholdHours} 時間
         </b>{' '}
         0 件になると警告
         <Button
@@ -118,7 +146,7 @@ export function TunersView({ result }: { result: TunerResult }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {result.rows.map((row) => (
+          {tuners.rows.map((row) => (
             <TableRow key={row.id} id={row.id}>
               <TableCell>
                 <span className="flex items-center gap-2.5">
@@ -127,23 +155,28 @@ export function TunersView({ result }: { result: TunerResult }) {
                     <b className="block font-code text-[13px] leading-[1.4] font-medium">
                       {row.device}
                     </b>
-                    <span className="text-note text-ink-3">{row.hardware}</span>
+                    {row.hardware && (
+                      <span className="text-note text-ink-3">
+                        {row.hardware}
+                      </span>
+                    )}
                   </span>
                 </span>
               </TableCell>
               <TableCell>
-                {row.kindUnsure ? (
+                {row.kind === undefined ? (
+                  <span className="text-ink-3">—</span>
+                ) : row.kindUnsure ? (
                   <Badge variant="err">{row.kind} ?</Badge>
                 ) : (
                   <Badge>{row.kind}</Badge>
                 )}
               </TableCell>
               <TableCell>
-                <Switch
-                  size="sm"
+                <TunerEnableSwitch
+                  deviceId={row.device}
                   checked={row.enabled && !row.draining}
-                  aria-label={`${row.device} を有効にする`}
-                  title="有効/無効の切り替えはこれから実装されます"
+                  onToggle={onToggle}
                 />
                 {row.draining && (
                   <span className="mt-1 block text-[11px] leading-[1.5] text-lemon">
@@ -226,7 +259,7 @@ export function TunersView({ result }: { result: TunerResult }) {
               </p>
             </div>
             <div className="px-[19px] py-[13px]">
-              {result.detectionDiff.map((diff) => (
+              {tuners.detectionDiff.map((diff) => (
                 <div
                   key={diff.device}
                   className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0"
