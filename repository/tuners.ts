@@ -235,55 +235,53 @@ export async function getDetectedTuners(): Promise<DetectionScreenResult> {
   }
 
   if (body.data === null || !body.status) {
-    return { state: 'unavailable', message: body.message }
+    return {
+      state: 'unavailable',
+      message: `API は ${response.status} を返しました。`,
+    }
   }
 
   return { state: 'ok', detection: toDetection(body.data) }
 }
 
 /**
- * The detected set becomes the ledger. What each device is already set to is
- * kept, so a save that only adds a device does not quietly re-enable one that
- * was turned off.
+ * Writes the set the card showed, not a fresh detection: what was reviewed is
+ * what gets saved. A device that has gone since is no longer detected, and the
+ * API refuses a ledger naming one, which is how a stale review is caught.
+ *
+ * Each device keeps the switch the screen shows for it. That is the driver's
+ * observation, not the saved document — a toggle never reaches the document,
+ * so reading `disabled` from there would re-enable a tuner just turned off.
  */
-export async function saveDetectedTuners(): Promise<TunerWriteResult> {
+export async function saveDetectedTuners(
+  devices: string[],
+): Promise<TunerWriteResult> {
   const client = carinaClient()
+  const ledger = await client.GET('/api/tuners')
 
-  const [ledger, detected] = await Promise.all([
-    client.GET('/api/tuners'),
-    client.GET('/api/tuners/detected'),
-  ])
-
-  if (ledger.response.status === 401 || detected.response.status === 401) {
+  if (ledger.response.status === 401) {
     return { state: 'unauthenticated' }
   }
 
   const ledgerBody = ledger.data ?? ledger.error
-  const detectedBody = detected.data ?? detected.error
 
   if (ledgerBody?.data == null) {
     return {
       state: 'rejected',
-      message:
-        `保存前の一覧を読み取れなかったため、保存していません。${ledgerBody?.message ?? ''}`.trim(),
-    }
-  }
-
-  if (detectedBody?.data == null) {
-    return {
-      state: 'rejected',
-      message:
-        `検出結果を読み取れなかったため、保存していません。${detectedBody?.message ?? ''}`.trim(),
+      message: `保存前の一覧を読み取れなかったため、保存していません(${ledger.response.status})。`,
     }
   }
 
   const kept = new Map(
     ledgerBody.data.desired.map((entry) => [entry.deviceId, entry]),
   )
-  const tuners = detectedBody.data.devices.map((device) => ({
-    deviceId: device.deviceId,
-    disabled: kept.get(device.deviceId)?.disabled ?? false,
-    lnbPower: kept.get(device.deviceId)?.lnbPower ?? false,
+  const observed = new Map(
+    (ledgerBody.data.observed ?? []).map((entry) => [entry.deviceId, entry]),
+  )
+  const tuners = devices.map((deviceId) => ({
+    deviceId,
+    disabled: isDisabled(kept.get(deviceId), observed.get(deviceId)),
+    lnbPower: kept.get(deviceId)?.lnbPower ?? false,
   }))
 
   // The API refuses an empty ledger, and emptying it is not what this card is
@@ -314,9 +312,36 @@ export async function saveDetectedTuners(): Promise<TunerWriteResult> {
   }
 }
 
+/**
+ * A device named here is one the API no longer detects, so the review the card
+ * showed has gone stale between reading it and pressing save.
+ */
+const STALE_DETECTION =
+  '確認した検出結果が古くなっています。接続が変わったため保存していません。もう一度検出してください。'
+
+/**
+ * The switch the row shows, read back. `toRow` reads it the same way: while the
+ * driver observes the tuner its answer wins, and a disable it has accepted but
+ * not finished still reads as off.
+ */
+function isDisabled(
+  entry: TunerEntryResponder | undefined,
+  observation: TunerObservationResponder | undefined,
+): boolean {
+  if (observation === undefined) {
+    return entry?.disabled ?? false
+  }
+
+  return (
+    observation.state === 'disabled' ||
+    observation.state === 'draining' ||
+    observation.disablePending
+  )
+}
+
 /** The API answers in its own English, so what a refusal means is said here. */
 const DETECTION_REFUSAL: Partial<Record<number, string>> = {
-  400: '検出結果をそのままでは保存できませんでした。検出し直してください。',
+  400: STALE_DETECTION,
   501: 'driver がデバイス検出に対応していないため、保存できませんでした。',
   503: 'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
 }

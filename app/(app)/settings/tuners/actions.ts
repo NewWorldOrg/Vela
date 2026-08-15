@@ -19,8 +19,10 @@ export async function toggleTuner(
   return result
 }
 
-export async function saveDetection(): Promise<TunerWriteResult> {
-  const result = await saveDetectedTuners()
+export async function saveDetection(
+  devices: string[],
+): Promise<TunerWriteResult> {
+  const result = await saveDetectedTuners(devices)
 
   revalidatePath('/settings/tuners')
 

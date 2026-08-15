@@ -11,9 +11,12 @@ import { InlineAlert } from '@/components/vela/banner'
  * the ledger is unchanged when one lands, so the card stays as it was.
  */
 export function DetectionSave({
+  devices,
   onSave,
 }: {
-  onSave: () => Promise<TunerWriteResult>
+  /** The detected set the card showed, saved as reviewed. */
+  devices: string[]
+  onSave: (devices: string[]) => Promise<TunerWriteResult>
 }) {
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
@@ -27,7 +30,7 @@ export function DetectionSave({
           startTransition(async () => {
             setRefusal(undefined)
 
-            const result = await onSave()
+            const result = await onSave(devices)
 
             setRefusal(
               result.state === 'unauthenticated'

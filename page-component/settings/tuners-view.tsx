@@ -73,9 +73,12 @@ function DeviceIcon({ row }: { row: TunerRow }) {
 }
 
 function DetectionCard({
+  lede,
   children,
   footer,
 }: {
+  /** Only stated where a save is actually offered. */
+  lede?: string
   children: React.ReactNode
   footer: React.ReactNode
 }) {
@@ -83,9 +86,7 @@ function DetectionCard({
     <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
       <div className="px-[19px] pt-[17px]">
         <h3 className="heading text-[14.5px]">検出結果の差分</h3>
-        <p className="mt-px text-sub text-ink-2">
-          保存すると一覧が更新されます
-        </p>
+        {lede && <p className="mt-px text-sub text-ink-2">{lede}</p>}
       </div>
       {children}
       <div className="flex flex-wrap items-start justify-end gap-[9px] px-[19px] pt-[15px] pb-[17px]">
@@ -112,7 +113,7 @@ function DetectionPanel({
   onSave,
 }: {
   detection: DetectionScreenResult
-  onSave: () => Promise<TunerWriteResult>
+  onSave: (devices: string[]) => Promise<TunerWriteResult>
 }) {
   if (detection.state !== 'ok') {
     return (
@@ -128,7 +129,7 @@ function DetectionPanel({
     )
   }
 
-  const { rows } = detection.detection
+  const { rows, detected } = detection.detection
 
   if (rows.length === 0) {
     return (
@@ -140,12 +141,15 @@ function DetectionPanel({
     )
   }
 
+  const removes = rows.some((row) => row.kind === 'del')
+
   return (
     <DetectionCard
+      lede="保存すると一覧が更新されます"
       footer={
         <>
           <CancelDetection />
-          <DetectionSave onSave={onSave} />
+          <DetectionSave devices={detected} onSave={onSave} />
         </>
       }
     >
@@ -166,6 +170,8 @@ function DetectionPanel({
         ))}
       </div>
       <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
+        {removes &&
+          '「消失」のデバイスは一覧から削除され、有効・LNB 給電の設定も失われます。'}
         反映には driver の再起動が必要です(保存後にバナーで通知)。
       </p>
     </DetectionCard>
@@ -181,7 +187,7 @@ export function TunersView({
   result: TunerScreenResult
   detection?: DetectionScreenResult
   onToggle: (deviceId: string, enabled: boolean) => Promise<TunerToggleResult>
-  onSaveDetection: () => Promise<TunerWriteResult>
+  onSaveDetection: (devices: string[]) => Promise<TunerWriteResult>
 }) {
   if (result.state !== 'ok') {
     return (
