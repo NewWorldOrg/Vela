@@ -1,9 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
-import type { TunerToggleResult } from '@/repository/tuners'
-import { setTunerDisabled } from '@/repository/tuners'
+import type { TunerToggleResult, TunerWriteResult } from '@/repository/tuners'
+import { saveDetectedTuners, setTunerDisabled } from '@/repository/tuners'
 
 export async function toggleTuner(
   deviceId: string,
@@ -13,6 +14,18 @@ export async function toggleTuner(
 
   if (result.state === 'ok') {
     revalidatePath('/settings/tuners')
+  }
+
+  return result
+}
+
+export async function saveDetection(): Promise<TunerWriteResult> {
+  const result = await saveDetectedTuners()
+
+  revalidatePath('/settings/tuners')
+
+  if (result.state === 'ok') {
+    redirect('/settings/tuners')
   }
 
   return result
