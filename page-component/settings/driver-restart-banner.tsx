@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useCallback, useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 import type {
   DriverRestartResult,
-  DriverReturnResult,
+  RestartWindow,
   TunerNotice,
 } from '@/repository/tuners'
 import type { BannerActions, BannerTone } from '@/components/vela/banner'
@@ -15,22 +15,50 @@ const RESTART = 'driver を再起動'
 
 const REREAD = '状態を読み直す'
 
+const TICK_MS = 2000
+
 type Refusal = Exclude<DriverRestartResult, { state: 'accepted' }>
 
 type Phase =
   | { name: 'idle' }
   | { name: 'asking' }
-  | { name: 'restarting'; budgetSeconds: number }
-  | { name: 'returned'; instanceId?: string }
-  | { name: 'waiting'; budgetSeconds: number }
+  | { name: 'accepted'; deadline: number; budgetSeconds: number }
   | { name: 'unreachable' }
   | { name: 'refused'; refusal: Refusal }
+
+type Press = 'restart' | 'dismiss' | 'reread'
 
 interface Face {
   tone: BannerTone
   body: string
   /** Absent leaves the band with nothing to press. */
-  action?: { label: string; disabled: boolean }
+  action?: { label: string; press: Press; disabled?: boolean; href?: '/login' }
+}
+
+/**
+ * Re-reads the page while an accepted restart is being watched, and closes
+ * the watch at the deadline. It fetches nothing itself.
+ */
+function useReturnTicker(deadline: number | undefined, onDeadline: () => void) {
+  const router = useRouter()
+
+  useEffect(() => {
+    if (deadline === undefined) {
+      return
+    }
+
+    const timer = setInterval(() => {
+      if (Date.now() >= deadline) {
+        onDeadline()
+
+        return
+      }
+
+      router.refresh()
+    }, TICK_MS)
+
+    return () => clearInterval(timer)
+  }, [deadline, router, onDeadline])
 }
 
 function until(at: string | undefined) {
@@ -44,41 +72,37 @@ function holding(recordings: number | undefined, at: string | undefined) {
 }
 
 function refusalFace(refusal: Refusal): Face {
-  const stopped = {
-    tone: 'danger' as const,
-    action: { label: RESTART, disabled: true },
-  }
-
   switch (refusal.state) {
     case 'recording':
       return {
         tone: 'warn',
-        body: `driver は再起動を断りました。${holding(refusal.recordings, refusal.until)}録画が終わってからもう一度要求してください。`,
-        action: { label: RESTART, disabled: false },
+        body: `driver は再起動を断りました。${holding(refusal.recordings, refusal.until)}それまでは再起動できません。`,
+        action: { label: RESTART, press: 'restart', disabled: true },
       }
     case 'unauthenticated':
       return {
-        ...stopped,
-        body: 'サインインが切れているため、再起動を要求できませんでした。サインインしてから開き直してください。',
+        tone: 'danger',
+        body: 'サインインが切れているため、再起動を要求できませんでした。',
+        action: { label: 'サインインへ', press: 'restart', href: '/login' },
       }
     case 'disconnected':
       return {
-        ...stopped,
+        tone: 'danger',
         body: 'driver が接続されていないため、再起動を要求できませんでした。',
       }
     case 'unsupported':
       return {
-        ...stopped,
+        tone: 'danger',
         body: 'この driver は再起動の要求に対応していません。driver を更新してください。',
       }
     case 'mismatched':
       return {
-        ...stopped,
+        tone: 'danger',
         body: 'driver は再起動に対応していると名乗りましたが、要求には応答しません。driver と API のビルドが揃っていません。',
       }
     case 'refused':
       return {
-        ...stopped,
+        tone: 'danger',
         body: `再起動を要求できませんでした。API は ${refusal.status} を返しました。`,
       }
   }
@@ -87,57 +111,103 @@ function refusalFace(refusal: Refusal): Face {
 function idleFace(notice: TunerNotice): Face {
   const offer = notice.restart
 
-  if (offer === undefined || offer.recordings === 0) {
+  if (offer?.recordings === undefined) {
+    return {
+      tone: notice.tone,
+      body: `${notice.body}driver の観測が取得できていないため、進行中の録画の有無を確かめられません。`,
+      action: { label: RESTART, press: 'restart', disabled: true },
+    }
+  }
+
+  if (offer.recordings === 0) {
     return {
       tone: notice.tone,
       body: `${notice.body}進行中の録画はありません。`,
-      action: { label: RESTART, disabled: false },
+      action: { label: RESTART, press: 'restart' },
     }
   }
 
   return {
     tone: notice.tone,
     body: `${notice.body}${holding(offer.recordings, offer.until)}それまでは再起動できません。`,
-    action: { label: RESTART, disabled: true },
+    action: { label: RESTART, press: 'restart', disabled: true },
   }
 }
 
-function toFace(phase: Phase, notice: TunerNotice | undefined): Face | null {
-  switch (phase.name) {
-    case 'idle':
-      return notice === undefined ? null : idleFace(notice)
-    case 'asking':
-      return {
-        tone: 'info',
-        body: 'driver に再起動を要求しています。',
-        action: { label: RESTART, disabled: true },
-      }
+function windowFace(judged: RestartWindow): Face {
+  switch (judged.state) {
     case 'restarting':
       return {
         tone: 'info',
-        body: `再起動を受け付けました。driver が入れ替わるのを最大 ${phase.budgetSeconds} 秒待っています。下の一覧は再起動前の状態です。`,
-        action: { label: RESTART, disabled: true },
+        body: `再起動を受け付けました。driver が入れ替わるのを最大 ${judged.budgetSeconds} 秒待っています。下の一覧は再起動前の状態です。`,
+        action: { label: RESTART, press: 'restart', disabled: true },
       }
     case 'returned':
       return {
         tone: 'info',
-        body: `driver が再起動しました${phase.instanceId ? `(instance ${phase.instanceId})` : ''}。保存済みの設定はこの driver に読み込まれています。`,
+        body: `driver が再起動しました(instance ${judged.instanceId})。保存済みの設定はこの driver に読み込まれています。`,
       }
-    case 'waiting':
+    case 'unverifiable':
       return {
         tone: 'warn',
-        body: `再起動を受け付けてから ${phase.budgetSeconds} 秒待ちましたが、driver はまだ戻っていません。下の一覧は再起動前の状態です。`,
-        action: { label: REREAD, disabled: false },
+        body: '再起動を受け付けましたが、入れ替わりを確かめる手掛かりがありません。driver の稼働はこの画面の表示で確認してください。',
+        action: { label: REREAD, press: 'dismiss' },
+      }
+    case 'overdue':
+      return {
+        tone: 'warn',
+        body: `再起動を受け付けてから ${judged.budgetSeconds} 秒待ちましたが、driver はまだ戻っていません。下の一覧は再起動前の状態です。`,
+        action: { label: REREAD, press: 'dismiss' },
+      }
+  }
+}
+
+function toFace(
+  phase: Phase,
+  overdue: boolean,
+  restartWindow: RestartWindow | undefined,
+  notice: TunerNotice | undefined,
+): Face | null {
+  switch (phase.name) {
+    case 'asking':
+      return {
+        tone: 'info',
+        body: 'driver に再起動を要求しています。',
+        action: { label: RESTART, press: 'restart', disabled: true },
       }
     case 'unreachable':
       return {
         tone: 'danger',
         body: 'この画面から API に届きませんでした。driver が再起動したかどうかは、状態を読み直して確かめてください。',
-        action: { label: REREAD, disabled: false },
+        action: { label: REREAD, press: 'reread' },
       }
     case 'refused':
       return refusalFace(phase.refusal)
+    case 'accepted':
+    case 'idle':
+      break
   }
+
+  if (restartWindow !== undefined) {
+    return restartWindow.state === 'restarting' && overdue
+      ? windowFace({
+          state: 'overdue',
+          budgetSeconds: restartWindow.budgetSeconds,
+        })
+      : windowFace(restartWindow)
+  }
+
+  if (phase.name === 'accepted') {
+    return overdue
+      ? windowFace({ state: 'overdue', budgetSeconds: phase.budgetSeconds })
+      : windowFace({
+          state: 'restarting',
+          deadline: phase.deadline,
+          budgetSeconds: phase.budgetSeconds,
+        })
+  }
+
+  return notice === undefined ? null : idleFace(notice)
 }
 
 /**
@@ -145,89 +215,100 @@ function toFace(phase: Phase, notice: TunerNotice | undefined): Face | null {
  * offered, the driver decides whether the press is honoured, and the band says
  * which of the two turned it down.
  *
- * A restart takes the driver away and brings a different instance back, so the
- * press is followed by a read-back: until it lands the band says the list below
- * is the state from before, and never that the restart is done.
+ * An accepted restart is a window, not a spinner: the acceptance is recorded
+ * server-side, each re-read judges the window against the driver answering
+ * now, and this component only keeps the page re-reading until the deadline
+ * the driver named. Until a *different* instance answers, the band says the
+ * list below is the state from before — and never claims failure while the
+ * driver may simply be on its way back.
  */
 export function DriverRestartBanner({
   notice,
-  instanceId,
+  restartWindow,
   onRestart,
-  onReturn,
+  onDismiss,
 }: {
   /** Absent while nothing is waiting on a restart. */
   notice?: TunerNotice
-  /** The instance the restart takes away. */
-  instanceId?: string
+  /** The accepted restart being watched, judged server-side. */
+  restartWindow?: RestartWindow
   onRestart: () => Promise<DriverRestartResult>
-  onReturn: (
-    previousInstanceId: string | undefined,
-    budgetSeconds: number,
-  ) => Promise<DriverReturnResult>
+  onDismiss: () => Promise<void>
 }) {
   const router = useRouter()
   const [phase, setPhase] = useState<Phase>({ name: 'idle' })
+  const [overdue, setOverdue] = useState(false)
   const [, startTransition] = useTransition()
 
-  const face = toFace(phase, notice)
+  const deadline =
+    restartWindow?.state === 'restarting'
+      ? restartWindow.deadline
+      : restartWindow === undefined && phase.name === 'accepted'
+        ? phase.deadline
+        : undefined
+
+  const markOverdue = useCallback(() => setOverdue(true), [])
+
+  useReturnTicker(overdue ? undefined : deadline, markOverdue)
+
+  const face = toFace(phase, overdue, restartWindow, notice)
 
   if (face === null) {
     return null
   }
 
-  const reread = () => {
-    setPhase({ name: 'idle' })
-    router.refresh()
-  }
+  const presses: Record<Press, () => void> = {
+    restart: () => {
+      setPhase({ name: 'asking' })
+      setOverdue(false)
 
-  const ask = () => {
-    setPhase({ name: 'asking' })
+      startTransition(async () => {
+        try {
+          const asked = await onRestart()
 
-    startTransition(async () => {
-      let budgetSeconds = 0
+          if (asked.state !== 'accepted') {
+            setPhase({ name: 'refused', refusal: asked })
 
-      try {
-        const asked = await onRestart()
+            return
+          }
 
-        if (asked.state !== 'accepted') {
-          setPhase({ name: 'refused', refusal: asked })
-
-          return
+          setPhase({
+            name: 'accepted',
+            deadline: Date.now() + asked.budgetSeconds * 1000,
+            budgetSeconds: asked.budgetSeconds,
+          })
+        } catch {
+          // An ask that got no answer is not a failed restart: the driver may
+          // have accepted and gone away, so the band says only that the
+          // answer did not arrive.
+          setPhase({ name: 'unreachable' })
         }
+      })
+    },
+    dismiss: () => {
+      setPhase({ name: 'idle' })
+      setOverdue(false)
 
-        budgetSeconds = asked.budgetSeconds
-
-        setPhase({ name: 'restarting', budgetSeconds })
-
-        const back = await onReturn(
-          asked.instanceId ?? instanceId,
-          budgetSeconds,
-        )
-
-        setPhase(
-          back.state === 'returned'
-            ? { name: 'returned', instanceId: back.instanceId }
-            : { name: 'waiting', budgetSeconds },
-        )
-      } catch {
-        // A restart that was accepted and then lost its read-back is not a
-        // failed restart: the driver may well be on its way back, so the band
-        // says only that the answer did not arrive.
-        setPhase(
-          budgetSeconds === 0
-            ? { name: 'unreachable' }
-            : { name: 'waiting', budgetSeconds },
-        )
-      }
-    })
+      startTransition(async () => {
+        await onDismiss()
+      })
+    },
+    reread: () => {
+      setPhase({ name: 'idle' })
+      setOverdue(false)
+      router.refresh()
+    },
   }
 
   const actions: BannerActions | undefined = face.action && [
-    {
-      ...face.action,
-      control: 'button',
-      onClick: face.action.label === REREAD ? reread : ask,
-    },
+    face.action.href !== undefined
+      ? { label: face.action.label, href: face.action.href }
+      : {
+          label: face.action.label,
+          control: 'button',
+          disabled: face.action.disabled,
+          onClick: presses[face.action.press],
+        },
   ]
 
   return (

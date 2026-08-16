@@ -1,11 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { userEvent, waitFor, within } from 'storybook/test'
 
-import type {
-  DriverRestartResult,
-  DriverReturnResult,
-  TunerNotice,
-} from '@/repository/tuners'
+import type { DriverRestartResult, TunerNotice } from '@/repository/tuners'
 import { DriverRestartBanner } from '@/page-component/settings/driver-restart-banner'
 
 const NOTICE: TunerNotice = {
@@ -19,12 +15,9 @@ const HOLDING: TunerNotice = {
   restart: { recordings: 2, until: '08/07 21:15' },
 }
 
-const RETURNED: DriverReturnResult = {
-  state: 'returned',
-  instanceId: '70c03633c76c48d9',
-}
+const UNOBSERVED: TunerNotice = { ...NOTICE, restart: {} }
 
-/** Presses the button and waits for the band to answer. */
+/** Presses the restart button and waits for the band to answer. */
 function press(text: string) {
   return async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement)
@@ -46,13 +39,12 @@ const meta = {
   parameters: { layout: 'padded' },
   args: {
     notice: NOTICE,
-    instanceId: '0021b0276a1c48ae',
     onRestart: answering({
       state: 'accepted',
       instanceId: '0021b0276a1c48ae',
       budgetSeconds: 30,
     }),
-    onReturn: async (): Promise<DriverReturnResult> => RETURNED,
+    onDismiss: async () => {},
   },
 } satisfies Meta<typeof DriverRestartBanner>
 
@@ -65,18 +57,36 @@ export const 録画中で押せない: Story = {
   args: { notice: HOLDING },
 }
 
+export const 観測できず押せない: Story = {
+  args: { notice: UNOBSERVED },
+}
+
 export const 受け付けた: Story = {
-  args: { onReturn: () => new Promise<DriverReturnResult>(() => {}) },
   play: press('再起動を受け付けました'),
 }
 
+export const 入れ替わりを待っている: Story = {
+  args: {
+    restartWindow: {
+      state: 'restarting',
+      deadline: Date.now() + 60 * 60 * 1000,
+      budgetSeconds: 30,
+    },
+  },
+}
+
 export const 入れ替わった: Story = {
-  play: press('driver が再起動しました'),
+  args: {
+    restartWindow: { state: 'returned', instanceId: '70c03633c76c48d9' },
+  },
 }
 
 export const 戻ってこない: Story = {
-  args: { onReturn: async () => ({ state: 'waiting' }) },
-  play: press('まだ戻っていません'),
+  args: { restartWindow: { state: 'overdue', budgetSeconds: 30 } },
+}
+
+export const 確かめられない: Story = {
+  args: { restartWindow: { state: 'unverifiable' } },
 }
 
 export const 録画中で断られた: Story = {
