@@ -82,7 +82,10 @@ export function AddCandidateDialog({
   const [system, setSystem] = useState<ScanSystem>('isdbT')
   const [channel, setChannel] = useState('')
   const [stream, setStream] = useState('')
-  const [problem, setProblem] = useState<string>()
+  const [problem, setProblem] = useState<{
+    field: 'channel' | 'stream'
+    text: string
+  }>()
   const [refusal, setRefusal] = useState<string>()
   const [pending, startTransition] = useTransition()
 
@@ -103,15 +106,19 @@ export function AddCandidateDialog({
     const physicalChannel = toNumber(channel)
 
     if (physicalChannel === undefined) {
-      setProblem('物理チャンネルを半角数字で入力してください。')
+      setProblem({
+        field: 'channel',
+        text: '物理チャンネルを半角数字で入力してください。',
+      })
 
       return
     }
 
     if (!CHANNEL_RANGE[system].accepts(physicalChannel)) {
-      setProblem(
-        `${SYSTEM_LABEL[system]}の物理チャンネルは ${CHANNEL_RANGE[system].hint} です。`,
-      )
+      setProblem({
+        field: 'channel',
+        text: `${SYSTEM_LABEL[system]}の物理チャンネルは ${CHANNEL_RANGE[system].hint} です。`,
+      })
 
       return
     }
@@ -119,13 +126,16 @@ export function AddCandidateDialog({
     const transportStreamId = needsStream ? toNumber(stream) : undefined
 
     if (needsStream && transportStreamId === undefined) {
-      setProblem('BS はスロット内の TSID を半角数字で入力してください。')
+      setProblem({
+        field: 'stream',
+        text: 'BS はスロット内の TSID を半角数字で入力してください。',
+      })
 
       return
     }
 
     if (transportStreamId !== undefined && transportStreamId > TSID_MAX) {
-      setProblem(`TSID は 0 〜 ${TSID_MAX} です。`)
+      setProblem({ field: 'stream', text: `TSID は 0 〜 ${TSID_MAX} です。` })
 
       return
     }
@@ -175,7 +185,10 @@ export function AddCandidateDialog({
               aria-label="方式"
               options={SCAN_SYSTEMS}
               value={system}
-              onValueChange={(next) => setSystem(next as ScanSystem)}
+              onValueChange={(next) => {
+                setSystem(next as ScanSystem)
+                setProblem(undefined)
+              }}
             />
           </Field>
 
@@ -188,9 +201,22 @@ export function AddCandidateDialog({
               id="candidate-channel"
               inputMode="numeric"
               value={channel}
+              aria-invalid={problem?.field === 'channel' || undefined}
+              aria-describedby={
+                problem?.field === 'channel'
+                  ? 'candidate-channel-error'
+                  : undefined
+              }
               onChange={(event) => setChannel(event.target.value)}
             />
             <FieldHint>{CHANNEL_RANGE[system].hint}</FieldHint>
+            <span aria-live="polite">
+              {problem?.field === 'channel' && (
+                <FieldError id="candidate-channel-error">
+                  {problem.text}
+                </FieldError>
+              )}
+            </span>
           </Field>
 
           {needsStream && (
@@ -203,16 +229,27 @@ export function AddCandidateDialog({
                 id="candidate-stream"
                 inputMode="numeric"
                 value={stream}
+                aria-invalid={problem?.field === 'stream' || undefined}
+                aria-describedby={
+                  problem?.field === 'stream'
+                    ? 'candidate-stream-error'
+                    : undefined
+                }
                 onChange={(event) => setStream(event.target.value)}
               />
               <FieldHint>
                 BS スロットは複数のストリームを載せるため、どれかを指定します(0
                 〜 65535)
               </FieldHint>
+              <span aria-live="polite">
+                {problem?.field === 'stream' && (
+                  <FieldError id="candidate-stream-error">
+                    {problem.text}
+                  </FieldError>
+                )}
+              </span>
             </Field>
           )}
-
-          {problem && <FieldError>{problem}</FieldError>}
 
           <span aria-live="polite">
             {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
