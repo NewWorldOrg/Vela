@@ -141,15 +141,34 @@ function DetectionPanel({
     )
   }
 
+  const { changes } = detection.detection
   const removes = rows.some((row) => row.kind === 'del')
+  const mismatches = rows.some((row) => row.kind === 'kind')
+
+  // The ledger holds no kind, so a difference the save cannot act on — kind
+  // mismatches, or devices that cannot be saved — offers no save. A mismatch
+  // is between the live observation and a fresh probe; the restart takes the
+  // observation again, and that is the remedy stated.
+  const notes = changes
+    ? [
+        removes &&
+          '「消失」のデバイスは一覧から削除され、有効・LNB 給電の設定も失われます。',
+        mismatches && '「種別相違」は保存では変わりません。',
+        '反映には driver の再起動が必要です(保存後にバナーで通知)。',
+      ]
+    : [
+        mismatches &&
+          '種別の食い違いは一覧の保存では直りません。driver の再起動で観測が取り直されます。',
+        !mismatches && '保存できる変更がないため、保存はありません。',
+      ]
 
   return (
     <DetectionCard
-      lede="保存すると一覧が更新されます"
+      lede={changes ? '保存すると一覧が更新されます' : undefined}
       footer={
         <>
           <CancelDetection />
-          <DetectionSave devices={detected} onSave={onSave} />
+          {changes && <DetectionSave devices={detected} onSave={onSave} />}
         </>
       }
     >
@@ -170,9 +189,7 @@ function DetectionPanel({
         ))}
       </div>
       <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
-        {removes &&
-          '「消失」のデバイスは一覧から削除され、有効・LNB 給電の設定も失われます。'}
-        反映には driver の再起動が必要です(保存後にバナーで通知)。
+        {notes.filter(Boolean).join('')}
       </p>
     </DetectionCard>
   )

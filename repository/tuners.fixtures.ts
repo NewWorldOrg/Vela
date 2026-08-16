@@ -77,6 +77,7 @@ export const TUNERS: TunerResult = {
 
 export const DETECTION: DetectionResult = {
   detected: ['adapter0', 'adapter1', 'adapter4'],
+  changes: true,
   rows: [
     {
       kind: 'add',
@@ -85,11 +86,31 @@ export const DETECTION: DetectionResult = {
       note: '地上波として検出されました',
     },
     {
+      kind: 'add',
+      tag: '新規',
+      device: 'adapter5',
+      note: 'アクセス権がないため保存されません',
+    },
+    {
       kind: 'del',
       tag: '消失',
       device: 'adapter2',
       note: '接続が確認できません',
     },
+    {
+      kind: 'kind',
+      tag: '種別相違',
+      device: 'adapter1',
+      note: '一覧は 衛星 / 検出は 地上波',
+    },
+  ],
+}
+
+/** Only the observation disagrees: nothing a save could write differently. */
+export const DETECTION_MISMATCH_ONLY: DetectionResult = {
+  detected: ['adapter0', 'adapter1', 'adapter2', 'adapter3'],
+  changes: false,
+  rows: [
     {
       kind: 'kind',
       tag: '種別相違',

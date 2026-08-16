@@ -62,8 +62,17 @@ export interface DetectionDiffRow {
 
 export interface DetectionResult {
   rows: DetectionDiffRow[]
-  /** The devices the driver answers with: what a save would write. */
+  /**
+   * The devices a save writes: the detected set, less any new device whose
+   * kind could not be probed — the driver refuses a ledger that names one.
+   */
   detected: string[]
+  /**
+   * Whether saving would change the ledger at all. The ledger holds no kind,
+   * so a difference made only of kind mismatches — or of devices that cannot
+   * be saved — writes it back byte-identical, and no save is offered.
+   */
+  changes: boolean
 }
 
 /** A detection asked for on its own, so every way it can fail is its own state. */
@@ -294,35 +303,62 @@ export async function saveDetectedTuners(
     }
   }
 
-  const { response } = await client.PUT('/api/tuners', { body: { tuners } })
+  const saved = await client.PUT('/api/tuners', { body: { tuners } })
 
-  if (response.status === 401) {
+  if (saved.response.status === 401) {
     return { state: 'unauthenticated' }
   }
 
-  if (response.ok) {
+  if (saved.response.ok) {
     return { state: 'ok' }
   }
 
   return {
     state: 'rejected',
-    message:
-      DETECTION_REFUSAL[response.status] ??
-      `検出結果を保存できませんでした(${response.status})。`,
+    message: toSaveRefusal(saved.response, saved.data ?? saved.error),
   }
 }
 
 /**
- * A device named here is one the API no longer detects, so the review the card
- * showed has gone stale between reading it and pressing save.
+ * The API folds most driver refusals onto one status, so the status alone
+ * cannot say what went wrong — a stale review, an unwritable ledger file and a
+ * kind the driver cannot pin down all answer 400. The refusal body carries a
+ * discriminating prefix before its first colon, and that is what is read; the
+ * prose after it stays off the screen.
  */
-const STALE_DETECTION =
-  '確認した検出結果が古くなっています。接続が変わったため保存していません。もう一度検出してください。'
+function toSaveRefusal(
+  response: Response,
+  body: { message: string } | undefined,
+): string {
+  const prefix = body?.message.split(':', 1)[0]?.trim()
+  const known = prefix !== undefined ? REFUSAL_BY_PREFIX[prefix] : undefined
+
+  return (
+    known ??
+    DETECTION_REFUSAL[response.status] ??
+    `検出結果を保存できませんでした(${response.status})。`
+  )
+}
+
+const REFUSAL_BY_PREFIX: Partial<Record<string, string>> = {
+  /** The review went stale: a device it named is no longer detected. */
+  unknownDevice:
+    '確認した検出結果が古くなっています。接続が変わったため保存していません。もう一度検出してください。',
+  /**
+   * A device stopped answering what it receives between the review and the
+   * save. Detecting again shows it as unreadable and leaves it out.
+   */
+  undeterminedKind:
+    '種別を判定できないデバイスが含まれるため、保存できませんでした。デバイスの状態を確かめてから検出し直してください。',
+  ledgerUnwritable:
+    'driver が一覧を書き込めないため、保存できませんでした。driver 側の保存先に問題があります。',
+}
 
 /**
- * The switch the row shows, read back. `toRow` reads it the same way: while the
- * driver observes the tuner its answer wins, and a disable it has accepted but
- * not finished still reads as off.
+ * The switch as the screen renders it, read back: off while the observation
+ * says disabled, and off while a disable the driver has accepted is still
+ * draining. `toRow` keeps those apart — `enabled` plus a `draining` flag — and
+ * the switch shows their combination; the save writes that combination.
  */
 function isDisabled(
   entry: TunerEntryResponder | undefined,
@@ -341,7 +377,6 @@ function isDisabled(
 
 /** The API answers in its own English, so what a refusal means is said here. */
 const DETECTION_REFUSAL: Partial<Record<number, string>> = {
-  400: STALE_DETECTION,
   501: 'driver がデバイス検出に対応していないため、保存できませんでした。',
   503: 'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
 }
@@ -360,19 +395,44 @@ const DETECTION_NOTE: Record<DeviceDetection, string> = {
   unreadable: '読み取れませんでした',
 }
 
+/** Why a new device is left out of the save: its kind could not be probed. */
+const UNSAVABLE_NOTE: Record<DeviceDetection, string> = {
+  unspecified: '状態を答えないため保存されません',
+  detected: '種別を判定できないため保存されません',
+  busy: '他の処理が使用中のため保存されません',
+  permissionDenied: 'アクセス権がないため保存されません',
+  unreadable: '読み取れないため保存されません',
+}
+
 function toDetection(detected: DetectedTunersResponder): DetectionResult {
   const devices = new Map(
     detected.devices.map((device) => [device.deviceId, device]),
   )
 
+  // A new device whose kind the driver could not probe cannot be saved: the
+  // driver refuses the whole ledger rather than guess what it tunes. It is
+  // still shown, but left out of the set a save writes, and its row says so.
+  const unsavable = new Set(
+    detected.added.filter(
+      (deviceId) => (devices.get(deviceId)?.kinds.length ?? 0) === 0,
+    ),
+  )
+
   return {
-    detected: detected.devices.map((device) => device.deviceId),
+    detected: detected.devices
+      .map((device) => device.deviceId)
+      .filter((deviceId) => !unsavable.has(deviceId)),
+    changes:
+      detected.missing.length > 0 ||
+      detected.added.some((deviceId) => !unsavable.has(deviceId)),
     rows: [
       ...detected.added.map((deviceId) => ({
         kind: 'add' as const,
         tag: '新規',
         device: deviceId,
-        note: toAddedNote(devices.get(deviceId)),
+        note: unsavable.has(deviceId)
+          ? UNSAVABLE_NOTE[devices.get(deviceId)?.detection ?? 'unspecified']
+          : toAddedNote(devices.get(deviceId)),
       })),
       ...detected.missing.map((deviceId) => ({
         kind: 'del' as const,
@@ -399,7 +459,7 @@ function toAddedNote(device: DetectedDeviceResponder | undefined): string {
 
   const kinds = device.kinds.map((kind) => KIND_TEXT[kind]).join('・')
 
-  return device.detection === 'detected' && kinds !== ''
+  return kinds !== ''
     ? `${kinds}として検出されました`
     : DETECTION_NOTE[device.detection]
 }

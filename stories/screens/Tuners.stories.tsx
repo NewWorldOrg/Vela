@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { DETECTION, TUNERS } from '@/repository/tuners.fixtures'
+import {
+  DETECTION,
+  DETECTION_MISMATCH_ONLY,
+  TUNERS,
+} from '@/repository/tuners.fixtures'
 import { TunersView } from '@/page-component/settings/tuners-view'
 
 const meta = {
@@ -43,7 +47,17 @@ export const 検出_差分あり: Story = {
 export const 検出_差分なし: Story = {
   args: {
     result: { state: 'ok', result: TUNERS },
-    detection: { state: 'ok', detection: { detected: [], rows: [] } },
+    detection: {
+      state: 'ok',
+      detection: { detected: [], rows: [], changes: false },
+    },
+  },
+}
+
+export const 検出_種別相違のみ: Story = {
+  args: {
+    result: { state: 'ok', result: TUNERS },
+    detection: { state: 'ok', detection: DETECTION_MISMATCH_ONLY },
   },
 }
 
