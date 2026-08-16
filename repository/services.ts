@@ -604,9 +604,7 @@ async function getProgress(scanId: string): Promise<ProgressRead> {
   if (progress === undefined || progress === null) {
     return {
       state: 'unavailable',
-      message:
-        body?.message ??
-        `スキャンの状況を読み取れませんでした(${response.status})。`,
+      message: `スキャンの状況を読み取れませんでした(${response.status})。`,
     }
   }
 

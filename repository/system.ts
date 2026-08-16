@@ -89,7 +89,10 @@ async function readDriverStatus(
     }
 
     if (body.data === null) {
-      return { state: 'unavailable', message: body.message }
+      return {
+        state: 'unavailable',
+        message: `API は ${response.status} を返しました。`,
+      }
     }
 
     return { state: 'ok', status: toDriverStatus(body.data) }
