@@ -347,7 +347,7 @@ export function ChannelsView({
             title="一覧を取得できませんでした"
             className="mt-4"
           >
-            API はこの画面に必要な一覧を答えられませんでした。{result.message}
+            API はこの画面に必要な一覧を答えられませんでした。
           </EmptyState>
         )}
       </>

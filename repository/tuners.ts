@@ -196,7 +196,10 @@ export async function getTuners(): Promise<TunerScreenResult> {
   }
 
   if (body.data === null || !body.status) {
-    return { state: 'unavailable', message: body.message }
+    return {
+      state: 'unavailable',
+      message: `API は ${ledger.response.status} を返しました。`,
+    }
   }
 
   return {
@@ -229,7 +232,10 @@ export async function setTunerDisabled(
 
   return body.status
     ? { state: 'ok' }
-    : { state: 'unavailable', message: body.message }
+    : {
+        state: 'unavailable',
+        message: `API は ${response.status} を返しました。`,
+      }
 }
 
 export async function restartDriver(): Promise<DriverRestartResult> {
