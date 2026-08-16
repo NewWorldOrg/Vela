@@ -4,6 +4,8 @@ import Link from 'next/link'
 import type {
   DetectionScreenResult,
   DriverLink,
+  DriverRestartResult,
+  RestartWindow,
   TunerRow,
   TunerScreenResult,
   TunerToggleResult,
@@ -34,6 +36,7 @@ import {
 } from '@/components/vela/icons'
 import { TunerStateChip } from '@/page-component/settings/tuner-state-chip'
 import { TunerEnableSwitch } from '@/page-component/settings/tuner-enable-switch'
+import { DriverRestartBanner } from '@/page-component/settings/driver-restart-banner'
 import { DetectionSave } from '@/page-component/settings/detection-save'
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route
@@ -198,21 +201,41 @@ function DetectionPanel({
 export function TunersView({
   result,
   detection,
+  restartWindow,
   onToggle,
+  onRestart,
+  onDismiss,
   onSaveDetection,
 }: {
   result: TunerScreenResult
   detection?: DetectionScreenResult
+  restartWindow?: RestartWindow
   onToggle: (deviceId: string, enabled: boolean) => Promise<TunerToggleResult>
+  onRestart: () => Promise<DriverRestartResult>
+  onDismiss: () => Promise<void>
   onSaveDetection: (devices: string[]) => Promise<TunerWriteResult>
 }) {
   if (result.state !== 'ok') {
+    // While an accepted restart is in its window the driver is away on
+    // purpose, so an unreadable list is expected — the window banner keeps
+    // re-reading and the screen must not call it a failure.
+    const restarting = result.state === 'unavailable' && restartWindow
+
     return (
       <>
         <Crumb>
           設定 / <CrumbCurrent>チューナー</CrumbCurrent>
         </Crumb>
         <PageHeading>チューナー</PageHeading>
+        {restarting && (
+          <div className="mt-3.5">
+            <DriverRestartBanner
+              restartWindow={restartWindow}
+              onRestart={onRestart}
+              onDismiss={onDismiss}
+            />
+          </div>
+        )}
         {result.state === 'unauthenticated' ? (
           <EmptyState
             spot="tuner"
@@ -221,6 +244,14 @@ export function TunersView({
           >
             driver
             の状態はサインインしたユーザーだけに見せています。サインインしてから開き直してください。
+          </EmptyState>
+        ) : restarting ? (
+          <EmptyState
+            spot="tuner"
+            titleLevel={2}
+            title="driver の入れ替わりを待っています"
+          >
+            再起動中は一覧を読めません。driver が戻ると自動で表示に戻ります。
           </EmptyState>
         ) : (
           <EmptyState
@@ -279,11 +310,23 @@ export function TunersView({
       </PageHeading>
 
       <div className="mt-3.5 space-y-2">
-        {tuners.notices.map((notice) => (
-          <Banner key={notice.body} tone={notice.tone} actions={notice.actions}>
-            {notice.body}
-          </Banner>
-        ))}
+        {tuners.notices
+          .filter((notice) => notice.restart === undefined)
+          .map((notice) => (
+            <Banner
+              key={notice.body}
+              tone={notice.tone}
+              actions={notice.actions}
+            >
+              {notice.body}
+            </Banner>
+          ))}
+        <DriverRestartBanner
+          notice={tuners.notices.find((notice) => notice.restart !== undefined)}
+          restartWindow={restartWindow}
+          onRestart={onRestart}
+          onDismiss={onDismiss}
+        />
       </div>
 
       <p className="mx-0.5 mt-[22px] mb-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2">

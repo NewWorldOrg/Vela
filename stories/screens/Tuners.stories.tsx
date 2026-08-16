@@ -13,6 +13,8 @@ const meta = {
   parameters: { layout: 'fullscreen' },
   args: {
     onToggle: async () => ({ state: 'ok' }),
+    onRestart: async () => ({ state: 'disconnected' }),
+    onDismiss: async () => {},
     onSaveDetection: async () => ({ state: 'ok' }),
   },
 } satisfies Meta<typeof TunersView>
@@ -104,6 +106,20 @@ export const driver状態不明: Story = {
 
 export const サインインしていない: Story = {
   args: { result: { state: 'unauthenticated' } },
+}
+
+export const 再起動中で読めない: Story = {
+  args: {
+    result: {
+      state: 'unavailable',
+      message: 'API は 503 を返しました。',
+    },
+    restartWindow: {
+      state: 'restarting',
+      deadline: Date.now() + 60 * 60 * 1000,
+      budgetSeconds: 30,
+    },
+  },
 }
 
 export const 状態を取得できない: Story = {

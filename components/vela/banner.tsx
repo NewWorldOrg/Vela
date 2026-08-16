@@ -27,6 +27,7 @@ export interface BannerButtonAction {
   label: string
   control: 'button'
   disabled?: boolean
+  onClick?: () => void
 }
 
 export type BannerAction = BannerLinkAction | BannerButtonAction
@@ -87,7 +88,7 @@ function BannerActionControl({
                 event.preventDefault()
                 event.stopPropagation()
               }
-            : undefined
+            : action.onClick
         }
         className={cn(
           action.disabled && [DISABLED_ON_BAND[tone], DISABLED_MOTION],

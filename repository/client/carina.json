@@ -973,6 +973,79 @@
           }
         }
       }
+    },
+    "/api/driver/restart": {
+      "post": {
+        "tags": [
+          "driver"
+        ],
+        "operationId": "restartDriver",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverRestartResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverRestartResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverRestartResponder"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverRestartResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverRestartResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverRestartResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1039,6 +1112,32 @@
               },
               {
                 "$ref": "#/components/schemas/DetectedTunersResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfDriverRestartResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DriverRestartResponder"
               }
             ]
           }
@@ -1575,6 +1674,34 @@
           },
           "draining": {
             "type": "boolean"
+          }
+        }
+      },
+      "DriverRestartResponder": {
+        "required": [
+          "instanceId",
+          "acceptedAt",
+          "budgetSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "budgetSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -2386,7 +2513,10 @@
           "healthDetail",
           "healthChangedAt",
           "sessionId",
-          "sessionPurpose"
+          "sessionPurpose",
+          "sessionStartedAt",
+          "sessionEndsAt",
+          "sessionTuning"
         ],
         "type": "object",
         "properties": {
@@ -2435,6 +2565,30 @@
           },
           "sessionPurpose": {
             "$ref": "#/components/schemas/SessionPurpose"
+          },
+          "sessionStartedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "sessionEndsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "sessionTuning": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanTargetResponder"
+              }
+            ]
           }
         }
       },
