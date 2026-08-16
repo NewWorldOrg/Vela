@@ -1,4 +1,4 @@
-import type { TunerResult } from '@/repository/tuners'
+import type { DetectionResult, TunerResult } from '@/repository/tuners'
 
 export const TUNERS: TunerResult = {
   connection: 'connected',
@@ -73,18 +73,49 @@ export const TUNERS: TunerResult = {
       lnb: 'オフ(既定)',
     },
   ],
-  detectionDiff: [
+}
+
+export const DETECTION: DetectionResult = {
+  detected: ['adapter0', 'adapter1', 'adapter4'],
+  changes: true,
+  rows: [
     {
       kind: 'add',
       tag: '新規',
-      device: 'adapter4 — PX-W3U4(地上波)',
-      note: '保存後に有効化できます',
+      device: 'adapter4',
+      note: '地上波として検出されました',
+    },
+    {
+      kind: 'add',
+      tag: '新規',
+      device: 'adapter5',
+      note: 'アクセス権がないため保存されません',
     },
     {
       kind: 'del',
       tag: '消失',
-      device: 'adapter2 — PT3(衛星)',
-      note: '一覧からは削除されず「消失」表示になります',
+      device: 'adapter2',
+      note: '接続が確認できません',
+    },
+    {
+      kind: 'kind',
+      tag: '種別相違',
+      device: 'adapter1',
+      note: '一覧は 衛星 / 検出は 地上波',
+    },
+  ],
+}
+
+/** Only the observation disagrees: nothing a save could write differently. */
+export const DETECTION_MISMATCH_ONLY: DetectionResult = {
+  detected: ['adapter0', 'adapter1', 'adapter2', 'adapter3'],
+  changes: false,
+  rows: [
+    {
+      kind: 'kind',
+      tag: '種別相違',
+      device: 'adapter1',
+      note: '一覧は 衛星 / 検出は 地上波',
     },
   ],
 }
