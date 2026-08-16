@@ -2,14 +2,17 @@
 
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 import type {
   DriverRestartResult,
   TunerToggleResult,
+  TunerWriteResult,
 } from '@/repository/tuners'
 import {
   RESTART_TICKET_COOKIE,
   restartDriver,
+  saveDetectedTuners,
   serializeRestartTicket,
   setTunerDisabled,
 } from '@/repository/tuners'
@@ -65,4 +68,18 @@ export async function dismissRestartWindow(): Promise<void> {
   store.set(RESTART_TICKET_COOKIE, '', { path: TUNERS, maxAge: 0 })
 
   revalidatePath(TUNERS)
+}
+
+export async function saveDetection(
+  devices: string[],
+): Promise<TunerWriteResult> {
+  const result = await saveDetectedTuners(devices)
+
+  revalidatePath(TUNERS)
+
+  if (result.state === 'ok') {
+    redirect(TUNERS)
+  }
+
+  return result
 }

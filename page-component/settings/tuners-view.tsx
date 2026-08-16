@@ -1,14 +1,20 @@
+import type { Route } from 'next'
+import Link from 'next/link'
+
 import type {
+  DetectionScreenResult,
   DriverLink,
   DriverRestartResult,
   RestartWindow,
   TunerRow,
   TunerScreenResult,
   TunerToggleResult,
+  TunerWriteResult,
 } from '@/repository/tuners'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { InlineAlert } from '@/components/vela/banner'
 import {
   Table,
   TableBody,
@@ -31,6 +37,16 @@ import {
 import { TunerStateChip } from '@/page-component/settings/tuner-state-chip'
 import { TunerEnableSwitch } from '@/page-component/settings/tuner-enable-switch'
 import { DriverRestartBanner } from '@/page-component/settings/driver-restart-banner'
+import { DetectionSave } from '@/page-component/settings/detection-save'
+
+const DETECT_HREF = '/settings/tuners?detect=1' as Route
+const TUNERS_HREF = '/settings/tuners' as Route
+
+const DIFF_VARIANT = {
+  add: 'ok',
+  del: 'err',
+  kind: 'warn',
+} as const
 
 const COLUMNS = [
   'デバイス',
@@ -59,18 +75,145 @@ function DeviceIcon({ row }: { row: TunerRow }) {
   )
 }
 
+function DetectionCard({
+  lede,
+  children,
+  footer,
+}: {
+  /** Only stated where a save is actually offered. */
+  lede?: string
+  children: React.ReactNode
+  footer: React.ReactNode
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
+      <div className="px-[19px] pt-[17px]">
+        <h3 className="heading text-[14.5px]">検出結果の差分</h3>
+        {lede && <p className="mt-px text-sub text-ink-2">{lede}</p>}
+      </div>
+      {children}
+      <div className="flex flex-wrap items-start justify-end gap-[9px] px-[19px] pt-[15px] pb-[17px]">
+        {footer}
+      </div>
+    </div>
+  )
+}
+
+function CancelDetection() {
+  return (
+    <Button variant="ghost" size="sm" asChild>
+      <Link href={TUNERS_HREF}>キャンセル</Link>
+    </Button>
+  )
+}
+
+/**
+ * What the driver receives, against what the ledger keeps. The comparison is
+ * only made when it is asked for, so the card is absent until then.
+ */
+function DetectionPanel({
+  detection,
+  onSave,
+}: {
+  detection: DetectionScreenResult
+  onSave: (devices: string[]) => Promise<TunerWriteResult>
+}) {
+  if (detection.state !== 'ok') {
+    return (
+      <DetectionCard footer={<CancelDetection />}>
+        <div className="px-[19px] py-[13px]">
+          <InlineAlert tone="warn">
+            {detection.state === 'unauthenticated'
+              ? 'サインインが切れているため、デバイスを検出できませんでした。サインインしてから開き直してください。'
+              : `デバイスを検出できませんでした。${detection.message}`}
+          </InlineAlert>
+        </div>
+      </DetectionCard>
+    )
+  }
+
+  const { rows, detected } = detection.detection
+
+  if (rows.length === 0) {
+    return (
+      <DetectionCard footer={<CancelDetection />}>
+        <p className="px-[19px] py-[13px] text-ui text-ink-2">
+          検出したデバイスは一覧と一致しています。変更はありません。
+        </p>
+      </DetectionCard>
+    )
+  }
+
+  const { changes } = detection.detection
+  const removes = rows.some((row) => row.kind === 'del')
+  const mismatches = rows.some((row) => row.kind === 'kind')
+
+  // The ledger holds no kind, so a difference the save cannot act on — kind
+  // mismatches, or devices that cannot be saved — offers no save. A mismatch
+  // is between the live observation and a fresh probe; the restart takes the
+  // observation again, and that is the remedy stated.
+  const notes = changes
+    ? [
+        removes &&
+          '「消失」のデバイスは一覧から削除され、有効・LNB 給電の設定も失われます。',
+        mismatches && '「種別相違」は保存では変わりません。',
+        '反映には driver の再起動が必要です(保存後にバナーで通知)。',
+      ]
+    : [
+        mismatches &&
+          '種別の食い違いは一覧の保存では直りません。driver の再起動で観測が取り直されます。',
+        !mismatches && '保存できる変更がないため、保存はありません。',
+      ]
+
+  return (
+    <DetectionCard
+      lede={changes ? '保存すると一覧が更新されます' : undefined}
+      footer={
+        <>
+          <CancelDetection />
+          {changes && <DetectionSave devices={detected} onSave={onSave} />}
+        </>
+      }
+    >
+      <div className="px-[19px] py-[13px]">
+        {rows.map((diff) => (
+          <div
+            key={`${diff.kind}-${diff.device}`}
+            className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0"
+          >
+            <Badge variant={DIFF_VARIANT[diff.kind]} className="font-bold">
+              {diff.tag}
+            </Badge>
+            <span className="font-code text-[12px]">{diff.device}</span>
+            <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-3">
+              {diff.note}
+            </small>
+          </div>
+        ))}
+      </div>
+      <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
+        {notes.filter(Boolean).join('')}
+      </p>
+    </DetectionCard>
+  )
+}
+
 export function TunersView({
   result,
+  detection,
   restartWindow,
   onToggle,
   onRestart,
   onDismiss,
+  onSaveDetection,
 }: {
   result: TunerScreenResult
+  detection?: DetectionScreenResult
   restartWindow?: RestartWindow
   onToggle: (deviceId: string, enabled: boolean) => Promise<TunerToggleResult>
   onRestart: () => Promise<DriverRestartResult>
   onDismiss: () => Promise<void>
+  onSaveDetection: (devices: string[]) => Promise<TunerWriteResult>
 }) {
   if (result.state !== 'ok') {
     // While an accepted restart is in its window the driver is away on
@@ -124,7 +267,7 @@ export function TunersView({
   }
 
   const { result: tuners } = result
-  const hasDiff = tuners.detectionDiff.length > 0
+  const empty = tuners.rows.length === 0
 
   return (
     <>
@@ -154,13 +297,11 @@ export function TunersView({
             >
               スキャン履歴
             </Button>
-            <Button
-              size="sm"
-              disabled
-              title="デバイス検出はこれから実装されます"
-            >
-              <SearchIcon />
-              デバイスを検出
+            <Button size="sm" asChild>
+              <Link href={DETECT_HREF}>
+                <SearchIcon />
+                デバイスを検出
+              </Link>
             </Button>
           </div>
         }
@@ -309,7 +450,7 @@ export function TunersView({
         </TableBody>
       </Table>
 
-      {(hasDiff || tuners.rows.length === 0) && (
+      {(detection !== undefined || empty) && (
         <section className="mt-9">
           <SectionHeading mark={MarkAxis}>
             デバイス検出 — 差分の確認
@@ -320,72 +461,26 @@ export function TunersView({
           <div
             className={cn(
               'grid items-start gap-[18px]',
-              hasDiff &&
-                tuners.rows.length === 0 &&
+              detection !== undefined &&
+                empty &&
                 'min-[1020px]:grid-cols-[1.15fr_1fr]',
             )}
           >
-            {hasDiff && (
-              <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
-                <div className="px-[19px] pt-[17px]">
-                  <h3 className="heading text-[14.5px]">検出結果の差分</h3>
-                  <p className="mt-px text-sub text-ink-2">
-                    保存すると一覧が更新されます
-                  </p>
-                </div>
-                <div className="px-[19px] py-[13px]">
-                  {tuners.detectionDiff.map((diff) => (
-                    <div
-                      key={diff.device}
-                      className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0"
-                    >
-                      <Badge
-                        variant={diff.kind === 'add' ? 'ok' : 'err'}
-                        className="font-bold"
-                      >
-                        {diff.tag}
-                      </Badge>
-                      <span className="font-code text-[12px]">
-                        {diff.device}
-                      </span>
-                      <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-3">
-                        {diff.note}
-                      </small>
-                    </div>
-                  ))}
-                </div>
-                <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
-                  反映には driver の再起動が必要です(保存後にバナーで通知)。
-                </p>
-                <div className="flex justify-end gap-[9px] px-[19px] pt-[15px] pb-[17px]">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled
-                    title="デバイス検出はこれから実装されます"
-                  >
-                    キャンセル
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled
-                    title="デバイス検出はこれから実装されます"
-                  >
-                    この内容で保存
-                  </Button>
-                </div>
-              </div>
+            {detection !== undefined && (
+              <DetectionPanel detection={detection} onSave={onSaveDetection} />
             )}
 
-            {tuners.rows.length === 0 && (
+            {empty && (
               <EmptyState
                 spot="tuner"
                 title="チューナーが未設定です"
                 className="border-none bg-tint-lavender"
                 action={
-                  <Button disabled title="デバイス検出はこれから実装されます">
-                    <SearchIcon />
-                    デバイスを検出
+                  <Button asChild>
+                    <Link href={DETECT_HREF}>
+                      <SearchIcon />
+                      デバイスを検出
+                    </Link>
                   </Button>
                 }
               >

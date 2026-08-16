@@ -2,6 +2,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import type {
+  CandidateTuning,
   ChannelsScreenResult,
   ScanRun,
   ServiceGroup,
@@ -50,6 +51,19 @@ const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
   { label: '状態', hidden: true },
 ]
 
+/** The writes a candidate row offers, carried down to every service table. */
+interface CandidateActions {
+  onSelect: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
+  onAdd: (serviceKey: string, tuning: CandidateTuning) => Promise<WriteResult>
+  onDelete: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
+}
+
 function CategoryBadge({ service }: { service: ServiceRow }) {
   return (
     <Badge variant={service.minorCategory ? 'kindData' : 'kindTv'}>
@@ -70,14 +84,11 @@ function GroupHeading({ title, stat }: { title: string; stat: string }) {
 function ServiceTable({
   services,
   open,
-  onSelect,
+  actions,
 }: {
   services: ServiceRow[]
   open?: string
-  onSelect: (
-    serviceKey: string,
-    candidateChannelId: string,
-  ) => Promise<WriteResult>
+  actions: CandidateActions
 }) {
   return (
     <Table className="min-w-[860px]" containerClassName="pb-1">
@@ -182,8 +193,9 @@ function ServiceTable({
                 >
                   <CandidateList
                     serviceKey={service.key}
+                    serviceName={service.name}
                     candidates={service.candidates}
-                    onSelect={onSelect}
+                    {...actions}
                   />
                 </TableCell>
               </TableRow>
@@ -198,14 +210,11 @@ function ServiceTable({
 function ServiceGroupSection({
   group,
   open,
-  onSelect,
+  actions,
 }: {
   group: ServiceGroup
   open?: string
-  onSelect: (
-    serviceKey: string,
-    candidateChannelId: string,
-  ) => Promise<WriteResult>
+  actions: CandidateActions
 }) {
   return (
     <section id={`system-${group.system}`} className="mt-9">
@@ -227,11 +236,7 @@ function ServiceGroupSection({
           </EmptyState>
         )
       ) : (
-        <ServiceTable
-          services={group.services}
-          open={open}
-          onSelect={onSelect}
-        />
+        <ServiceTable services={group.services} open={open} actions={actions} />
       )}
     </section>
   )
@@ -296,17 +301,17 @@ export function ChannelsView({
   onStart,
   onCancel,
   onSelect,
+  onAdd,
+  onDelete,
 }: {
   result: ChannelsScreenResult
   /** The service whose candidates are unfolded, from the URL. */
   open?: string
   onStart: (systems: ScanSystem[]) => Promise<StartScanResult>
   onCancel: (scanId: string) => Promise<WriteResult>
-  onSelect: (
-    serviceKey: string,
-    candidateChannelId: string,
-  ) => Promise<WriteResult>
-}) {
+} & CandidateActions) {
+  const actions = { onSelect, onAdd, onDelete }
+
   const heading = (
     <>
       <Crumb>
@@ -428,7 +433,7 @@ export function ChannelsView({
             key={group.system}
             group={group}
             open={open}
-            onSelect={onSelect}
+            actions={actions}
           />
         ))
       )}
@@ -446,7 +451,7 @@ export function ChannelsView({
           <ServiceTable
             services={channels.unattributed}
             open={open}
-            onSelect={onSelect}
+            actions={actions}
           />
         </section>
       )}

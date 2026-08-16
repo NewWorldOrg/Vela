@@ -2,7 +2,13 @@ import type { Metadata } from 'next'
 
 import { getChannels } from '@/repository/services'
 import { ChannelsView } from '@/page-component/settings/channels-view'
-import { beginScan, selectChannel, stopScan } from './actions'
+import {
+  addCandidate,
+  beginScan,
+  removeCandidate,
+  selectChannel,
+  stopScan,
+} from './actions'
 
 export const metadata: Metadata = { title: 'チャンネル' }
 
@@ -20,6 +26,8 @@ export default async function Page({
       onStart={beginScan}
       onCancel={stopScan}
       onSelect={selectChannel}
+      onAdd={addCandidate}
+      onDelete={removeCandidate}
     />
   )
 }

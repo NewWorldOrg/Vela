@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { TUNERS } from '@/repository/tuners.fixtures'
+import {
+  DETECTION,
+  DETECTION_MISMATCH_ONLY,
+  TUNERS,
+} from '@/repository/tuners.fixtures'
 import { TunersView } from '@/page-component/settings/tuners-view'
 
 const meta = {
@@ -11,6 +15,7 @@ const meta = {
     onToggle: async () => ({ state: 'ok' }),
     onRestart: async () => ({ state: 'disconnected' }),
     onDismiss: async () => {},
+    onSaveDetection: async () => ({ state: 'ok' }),
   },
 } satisfies Meta<typeof TunersView>
 
@@ -34,16 +39,50 @@ export const 異常なし: Story = {
   },
 }
 
-export const 差分なし: Story = {
-  args: { result: { state: 'ok', result: { ...TUNERS, detectionDiff: [] } } },
+export const 検出_差分あり: Story = {
+  args: {
+    result: { state: 'ok', result: TUNERS },
+    detection: { state: 'ok', detection: DETECTION },
+  },
+}
+
+export const 検出_差分なし: Story = {
+  args: {
+    result: { state: 'ok', result: TUNERS },
+    detection: {
+      state: 'ok',
+      detection: { detected: [], rows: [], changes: false },
+    },
+  },
+}
+
+export const 検出_種別相違のみ: Story = {
+  args: {
+    result: { state: 'ok', result: TUNERS },
+    detection: { state: 'ok', detection: DETECTION_MISMATCH_ONLY },
+  },
+}
+
+export const 検出できない: Story = {
+  args: {
+    result: { state: 'ok', result: TUNERS },
+    detection: {
+      state: 'unavailable',
+      message: 'driver に接続できませんでした。',
+    },
+  },
 }
 
 export const 未設定: Story = {
   args: {
-    result: {
-      state: 'ok',
-      result: { ...TUNERS, notices: [], rows: [], detectionDiff: [] },
-    },
+    result: { state: 'ok', result: { ...TUNERS, notices: [], rows: [] } },
+  },
+}
+
+export const 未設定から検出: Story = {
+  args: {
+    result: { state: 'ok', result: { ...TUNERS, notices: [], rows: [] } },
+    detection: { state: 'ok', detection: DETECTION },
   },
 }
 
@@ -51,12 +90,7 @@ export const driver未接続: Story = {
   args: {
     result: {
       state: 'ok',
-      result: {
-        ...TUNERS,
-        connection: 'disconnected',
-        instanceId: undefined,
-        detectionDiff: [],
-      },
+      result: { ...TUNERS, connection: 'disconnected', instanceId: undefined },
     },
   },
 }
@@ -65,12 +99,7 @@ export const driver状態不明: Story = {
   args: {
     result: {
       state: 'ok',
-      result: {
-        ...TUNERS,
-        connection: 'unknown',
-        instanceId: undefined,
-        detectionDiff: [],
-      },
+      result: { ...TUNERS, connection: 'unknown', instanceId: undefined },
     },
   },
 }
