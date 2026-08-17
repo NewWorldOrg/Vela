@@ -8,7 +8,13 @@ const accept = async (): Promise<WriteResult> => ({ state: 'ok' })
 const refuse = async (): Promise<WriteResult> => ({
   state: 'rejected',
   message:
-    'このスキャンの差分はもう保持されていないため、保存できませんでした。定義は変わっていません。スキャンし直してください。',
+    'このスキャンの差分はもう保持されていないため、保存できませんでした。別の保存が先に完了した可能性があります。チャンネル一覧を確かめ、反映されていなければスキャンし直してください。',
+})
+
+const wait = async (): Promise<WriteResult> => ({
+  state: 'rejected',
+  message:
+    'このスキャンの差分は別の保存が処理しています。この操作では何も書き換えていません。少し待ってから状態を読み直してください。',
 })
 
 const meta = {
@@ -43,6 +49,10 @@ export const 変更なし: Story = {
 
 export const 保存できなかったとき: Story = {
   args: { result: { state: 'ok', proposal: SCAN_PROPOSAL }, onApply: refuse },
+}
+
+export const 別の保存が処理しているとき: Story = {
+  args: { result: { state: 'ok', proposal: SCAN_PROPOSAL }, onApply: wait },
 }
 
 export const 結果が残っていない: Story = {
