@@ -24,11 +24,17 @@ import { PlusIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
 import { ProgressBar } from '@/components/vela/progress'
 import { AddCandidateDialog } from '@/page-component/settings/add-candidate-dialog'
 
+const RECEPTION_WITHOUT_FIGURE: Record<CandidateRow['reception'], string> = {
+  locked: '受信できています(このチューナーから品質の数値は取れません)',
+  unlocked: '同調しないため測定できていません',
+  unread: 'まだ測定していません',
+}
+
 function CandidateMeter({ candidate }: { candidate: CandidateRow }) {
   if (candidate.measurement === undefined) {
     return (
       <span className="w-[280px] max-w-full text-sub text-ink-3">
-        同調しないため測定できていません
+        {RECEPTION_WITHOUT_FIGURE[candidate.reception]}
       </span>
     )
   }
