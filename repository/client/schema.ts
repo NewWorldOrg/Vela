@@ -650,6 +650,15 @@ export interface operations {
         }
         content?: never
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDetectedTunersResponder']
+        }
+      }
       /** @description Not Implemented */
       501: {
         headers: {
@@ -694,6 +703,15 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
       }
       /** @description Not Implemented */
       501: {
@@ -754,6 +772,15 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
       }
       /** @description Not Implemented */
       501: {
@@ -819,6 +846,15 @@ export interface operations {
       }
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerObservationResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
         headers: {
           [name: string]: unknown
         }
@@ -918,6 +954,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
         }
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
       /** @description Service Unavailable */
       503: {
         headers: {
@@ -976,6 +1021,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
         }
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
     }
   }
   getService: {
@@ -1015,6 +1069,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
         }
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
     }
   }
   listServices: {
@@ -1041,6 +1104,15 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfBroadcastServiceResponder']
+        }
       }
     }
   }
@@ -1091,6 +1163,15 @@ export interface operations {
       }
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
         headers: {
           [name: string]: unknown
         }
@@ -1154,6 +1235,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfScanApplicationResponder']
         }
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanApplicationResponder']
+        }
+      }
     }
   }
   cancelScan: {
@@ -1201,6 +1291,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
         }
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
     }
   }
   getScan: {
@@ -1239,6 +1338,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
         }
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
     }
   }
   listScanRuns: {
@@ -1265,6 +1373,15 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfScanRunResponder']
+        }
       }
     }
   }
@@ -1317,6 +1434,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfScanRefusedResponder']
         }
       }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
+        }
+      }
       /** @description Service Unavailable */
       503: {
         headers: {
@@ -1339,6 +1465,15 @@ export interface operations {
     responses: {
       /** @description OK */
       200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HealthResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
         headers: {
           [name: string]: unknown
         }
@@ -1372,6 +1507,15 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverStatusResponder']
+        }
       }
       /** @description Service Unavailable */
       503: {
@@ -1420,6 +1564,15 @@ export interface operations {
       }
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
         headers: {
           [name: string]: unknown
         }

@@ -50,6 +50,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDetectedTunersResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -93,6 +103,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
           }
         }
       },
@@ -164,6 +184,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -257,6 +287,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerObservationResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -392,6 +432,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -466,6 +516,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -521,6 +581,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -544,6 +614,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfBroadcastServiceResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -649,6 +729,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -713,6 +803,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanApplicationResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -767,6 +867,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -811,6 +921,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -834,6 +954,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfScanRunResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -927,6 +1057,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanStartedResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -940,6 +1080,16 @@
         "responses": {
           "200": {
             "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponder"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
             "content": {
               "application/json": {
                 "schema": {
@@ -980,6 +1130,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverStatusResponder"
+                }
+              }
+            }
           }
         }
       }
@@ -1053,6 +1213,16 @@
           },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDriverRestartResponder"
+                }
+              }
+            }
           }
         }
       }
