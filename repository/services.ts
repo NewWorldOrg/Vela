@@ -905,7 +905,10 @@ export async function applyScan(scanId: string): Promise<WriteResult> {
     response,
     {
       404: 'このスキャンは残っていないため、保存できませんでした。',
-      409: 'このスキャンの差分はもう保持されていないため、保存できませんでした。定義は変わっていません。スキャンし直してください。',
+      // 409 is waited out and 410 needs a fresh scan, so the two never share a
+      // sentence: telling someone to scan again costs minutes of tuner time.
+      409: 'このスキャンの差分はいま保存しているところです。定義は変わっていません。少し待ってからもう一度お試しください。',
+      410: 'このスキャンの差分はもう保持されていないため、保存できませんでした。定義は変わっていません。スキャンし直してください。',
     },
     'スキャンの結果を保存できませんでした。',
   )

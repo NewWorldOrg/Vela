@@ -701,6 +701,16 @@
               }
             }
           },
+          "410": {
+            "description": "Gone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanApplicationResponder"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
           }
