@@ -87,8 +87,14 @@ export interface CandidateRow {
   id: string
   channel: string
   selected: boolean
-  /** Absent when the last attempt never locked, so nothing was measurable. */
+  /** Absent when the tuner gave no carrier-to-noise figure for the last attempt. */
   measurement?: Measurement
+  /**
+   * What the last attempt observed, apart from any figure: a tuner can hold a
+   * lock and still report no carrier-to-noise, and saying it never tuned in
+   * would be untrue.
+   */
+  reception: 'locked' | 'unlocked' | 'unread'
   /**
    * Set once the candidate has fallen out of normal rotation. `dropped` means
    * it is no longer tried at all until someone looks at it.
@@ -337,10 +343,21 @@ function toCandidate(candidate: CandidateChannelResponder): CandidateRow {
     channel: toChannel(candidate.target),
     selected: candidate.isSelected,
     measurement: toMeasurement(candidate.lastMeasurement),
+    reception: toReception(candidate.lastMeasurement),
     rotation: toRotation(candidate, failures),
     discovered: formatMonth(candidate.discoveredAt),
     lastSeen: formatStamp(candidate.lastSeenAt),
   }
+}
+
+function toReception(
+  measurement: ScanMeasurementResponder | null,
+): CandidateRow['reception'] {
+  if (measurement === null) {
+    return 'unread'
+  }
+
+  return measurement.locked ? 'locked' : 'unlocked'
 }
 
 function toRotation(
@@ -905,10 +922,6 @@ export async function applyScan(scanId: string): Promise<WriteResult> {
     response,
     {
       404: 'このスキャンは残っていないため、保存できませんでした。',
-      // Neither sentence claims the definitions are untouched. A save that is in
-      // flight is writing them now, and one that has finished is why this scan's
-      // difference is no longer held — so both send the reader to look before
-      // spending the minutes a fresh scan costs.
       409: 'このスキャンの差分は別の保存が処理しています。この操作では何も書き換えていません。少し待ってから状態を読み直してください。',
       410: 'このスキャンの差分はもう保持されていないため、保存できませんでした。別の保存が先に完了した可能性があります。チャンネル一覧を確かめ、反映されていなければスキャンし直してください。',
     },

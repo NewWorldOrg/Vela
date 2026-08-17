@@ -25,6 +25,7 @@ const SERVICES: ServiceRow[] = [
         id: 'candidate-53',
         channel: '53ch',
         selected: true,
+        reception: 'locked',
         measurement: { value: '31.2 dB', percent: 78, tone: 'ok' },
         discovered: '2025/07',
         lastSeen: '08/15 03:20',
@@ -33,6 +34,7 @@ const SERVICES: ServiceRow[] = [
         id: 'candidate-55',
         channel: '55ch',
         selected: false,
+        reception: 'unlocked',
         rotation: {
           dropped: true,
           label: '要確認 · 連続失敗 12 回',
@@ -59,6 +61,7 @@ const SERVICES: ServiceRow[] = [
         id: 'candidate-53-oneseg',
         channel: '53ch',
         selected: true,
+        reception: 'locked',
         measurement: { value: '31.2 dB', percent: 78, tone: 'ok' },
         discovered: '2025/07',
         lastSeen: '08/15 03:20',
@@ -80,6 +83,7 @@ const SERVICES: ServiceRow[] = [
         id: 'candidate-57',
         channel: '57ch',
         selected: false,
+        reception: 'locked',
         measurement: { value: '18.4 dB', percent: 46, tone: 'warn' },
         rotation: {
           dropped: false,
