@@ -1,0 +1,261 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+
+import type {
+  CandidateRow,
+  CandidateTuning,
+  WriteResult,
+} from '@/repository/services'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { InlineAlert } from '@/components/vela/banner'
+import { PlusIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
+import { ProgressBar } from '@/components/vela/progress'
+import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
+
+const RECEPTION_WITHOUT_FIGURE: Record<CandidateRow['reception'], string> = {
+  locked: '受信できています(このチューナーから品質の数値は取れません)',
+  unlocked: '同調しないため測定できていません',
+  unread: 'まだ測定していません',
+}
+
+function CandidateMeter({ candidate }: { candidate: CandidateRow }) {
+  if (candidate.measurement === undefined) {
+    return (
+      <span className="w-[280px] max-w-full text-sub text-ink-3">
+        {RECEPTION_WITHOUT_FIGURE[candidate.reception]}
+      </span>
+    )
+  }
+
+  return (
+    <span className="flex max-w-[280px] flex-1 items-center gap-[9px]">
+      <ProgressBar
+        value={candidate.measurement.percent}
+        tone={candidate.measurement.tone}
+        label={`${candidate.channel} ${candidate.measurement.value}`}
+        className="h-1.5 flex-1"
+      />
+      <span className="w-16 text-right font-code text-sub tabular-nums text-ink-2">
+        {candidate.measurement.value}
+      </span>
+    </span>
+  )
+}
+
+/**
+ * The API removes a candidate whether or not it is the selected one, and a
+ * service with nothing selected has no way to be tuned. That is said before
+ * the press, not discovered after it.
+ */
+function DeleteCandidateDialog({
+  candidate,
+  onOpenChange,
+  onConfirm,
+  pending,
+}: {
+  candidate: CandidateRow | null
+  onOpenChange: (open: boolean) => void
+  onConfirm: () => void
+  pending: boolean
+}) {
+  return (
+    <AlertDialog open={candidate !== null} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>この候補チャンネルを削除します</AlertDialogTitle>
+          <AlertDialogDescription>
+            {candidate?.channel}{' '}
+            を候補から外します。巡回の対象ではなくなります。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {candidate?.selected && (
+          <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
+            <WarningIcon className="size-4 shrink-0" />
+            現在の選局先です。削除するとこのサービスの選局先がなくなります。
+          </p>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel>キャンセル</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructiveFill"
+            disabled={pending}
+            onClick={(event) => {
+              event.preventDefault()
+              onConfirm()
+            }}
+          >
+            <TrashIcon />
+            削除する
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+/**
+ * The candidates behind one service. Which one is selected is stated on the
+ * row itself, and every other row carries the switch to it — so moving the
+ * selection is a decision made in one place, not a side effect of a scan.
+ */
+export function CandidateList({
+  serviceKey,
+  serviceName,
+  candidates,
+  onSelect,
+  onAdd,
+  onDelete,
+}: {
+  serviceKey: string
+  serviceName: string
+  candidates: CandidateRow[]
+  onSelect: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
+  onAdd: (serviceKey: string, tuning: CandidateTuning) => Promise<WriteResult>
+  onDelete: (
+    serviceKey: string,
+    candidateChannelId: string,
+  ) => Promise<WriteResult>
+}) {
+  const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
+  const [adding, setAdding] = useState(false)
+  const [removing, setRemoving] = useState<CandidateRow | null>(null)
+
+  const toRefusal = (result: WriteResult, verb: string) =>
+    result.state === 'unauthenticated'
+      ? `サインインが切れているため、${verb}できませんでした。サインインしてから開き直してください。`
+      : result.state === 'rejected'
+        ? result.message
+        : undefined
+
+  return (
+    <>
+      <p className="mb-[9px] text-cap font-bold text-ink-3">
+        候補チャンネル — 実測順(受信可 → 品質)。切替は次回の選局から有効
+      </p>
+      {candidates.map((candidate) => (
+        <div
+          key={candidate.id}
+          className={
+            candidate.selected
+              ? 'mb-1.5 flex flex-wrap items-center gap-4 rounded-lg border border-brand-line bg-brand-soft px-3.5 py-2.5'
+              : 'mb-1.5 flex flex-wrap items-center gap-4 rounded-lg border border-transparent bg-surface px-3.5 py-2.5'
+          }
+        >
+          <span className="w-[52px] font-code text-[13.5px] font-medium tabular-nums">
+            {candidate.channel}
+          </span>
+          <CandidateMeter candidate={candidate} />
+          {candidate.rotation && (
+            <Badge variant="warn" className="font-bold">
+              {candidate.rotation.label}
+            </Badge>
+          )}
+          <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-3">
+            発見 {candidate.discovered} · 評価 {candidate.lastSeen}
+            {candidate.rotation && ` · ${candidate.rotation.note}`}
+          </span>
+          <span className="ml-auto flex items-center gap-2">
+            {candidate.selected ? (
+              <span className="rounded-full border border-brand-line bg-surface px-[11px] py-[3px] text-note font-bold whitespace-nowrap text-brand">
+                ● 選択中
+              </span>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pending}
+                onClick={() =>
+                  startTransition(async () => {
+                    setRefusal(undefined)
+                    setRefusal(
+                      toRefusal(
+                        await onSelect(serviceKey, candidate.id),
+                        '切替',
+                      ),
+                    )
+                  })
+                }
+              >
+                これに切替
+              </Button>
+            )}
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={pending}
+              aria-label={`${candidate.channel} を候補から削除`}
+              onClick={() => {
+                setRefusal(undefined)
+                setRemoving(candidate)
+              }}
+            >
+              <TrashIcon />
+            </Button>
+          </span>
+        </div>
+      ))}
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-1.5"
+        disabled={pending}
+        onClick={() => {
+          setRefusal(undefined)
+          setAdding(true)
+        }}
+      >
+        <PlusIcon />
+        候補チャンネルを手動追加
+      </Button>
+
+      <AddCandidateDialog
+        serviceKey={serviceKey}
+        serviceName={serviceName}
+        open={adding}
+        onOpenChange={setAdding}
+        onAdd={onAdd}
+      />
+
+      <DeleteCandidateDialog
+        candidate={removing}
+        pending={pending}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        onConfirm={() => {
+          const target = removing
+
+          if (target === null) {
+            return
+          }
+
+          startTransition(async () => {
+            const result = await onDelete(serviceKey, target.id)
+
+            setRemoving(null)
+            setRefusal(toRefusal(result, '削除'))
+          })
+        }}
+      />
+
+      <span aria-live="polite">
+        {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+      </span>
+    </>
+  )
+}

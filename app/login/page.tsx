@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { LoginView } from '@/page-component/login/login-view'
+import { LoginView } from '@/components/login/login-page'
 
 export const metadata: Metadata = { title: 'サインイン' }
 

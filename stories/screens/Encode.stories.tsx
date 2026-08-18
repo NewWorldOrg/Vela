@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { ENCODE } from '@/repository/encode.fixtures'
-import { EncodeView } from '@/page-component/settings/encode-view'
+import { EncodeView } from '@/components/encode/encode-page'
 
 const meta = {
   title: 'Screens/設定・エンコード',

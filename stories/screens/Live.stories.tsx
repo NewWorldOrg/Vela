@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
-import { LiveView } from '@/page-component/live/live-view'
+import { LiveView } from '@/components/live/live-page'
 
 const rows = CHANNEL_FIXTURES.filter((c) => !c.sub).map((c, i) => ({
   id: c.id,

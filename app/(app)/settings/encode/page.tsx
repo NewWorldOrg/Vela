@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getEncode } from '@/repository/encode'
-import { EncodeView } from '@/page-component/settings/encode-view'
+import { EncodeView } from '@/components/encode/encode-page'
 
 export const metadata: Metadata = { title: 'エンコード' }
 

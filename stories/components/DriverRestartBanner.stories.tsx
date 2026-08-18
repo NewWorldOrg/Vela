@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { userEvent, waitFor, within } from 'storybook/test'
 
 import type { DriverRestartResult, TunerNotice } from '@/repository/tuners'
-import { DriverRestartBanner } from '@/page-component/settings/driver-restart-banner'
+import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 
 const NOTICE: TunerNotice = {
   tone: 'warn',

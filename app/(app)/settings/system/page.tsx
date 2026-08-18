@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getSystemStatus } from '@/repository/system'
-import { SystemView } from '@/page-component/settings/system-view'
+import { SystemView } from '@/components/system/system-page'
 
 export const metadata: Metadata = { title: 'システム' }
 export const dynamic = 'force-dynamic'

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getMigration } from '@/repository/migration'
-import { MigrationView } from '@/page-component/settings/migration-view'
+import { MigrationView } from '@/components/migration/migration-page'
 
 export const metadata: Metadata = { title: '移行記録' }
 

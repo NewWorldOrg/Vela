@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { PROGRAM_FIXTURES } from '@/repository/programs.fixtures'
-import { ProgramDetailView } from '@/page-component/guide/program-detail-view'
+import { ProgramDetailView } from '@/components/guide/program-detail-page'
 
 const meta = {
   title: 'Screens/番組詳細',

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { getRecording } from '@/repository/recordings'
-import { RecordingDetailView } from '@/page-component/recordings/recording-detail-view'
+import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 
 export async function generateMetadata({
   params,

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getGuide } from '@/repository/programs'
-import { GuideView } from '@/page-component/guide/guide-view'
+import { GuideView } from '@/components/guide/guide-page'
 
 export const metadata: Metadata = { title: '番組表' }
 

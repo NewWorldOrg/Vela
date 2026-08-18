@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { searchPrograms } from '@/repository/search'
-import { SearchView } from '@/page-component/search/search-view'
+import { SearchView } from '@/components/search/search-page'
 
 export const metadata: Metadata = { title: '番組検索' }
 

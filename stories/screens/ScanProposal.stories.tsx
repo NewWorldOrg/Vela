@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import type { WriteResult } from '@/repository/services'
 import { SCAN_PROPOSAL } from '@/repository/services.fixtures'
-import { ScanProposalView } from '@/page-component/settings/scan-proposal-view'
+import { ScanProposalView } from '@/components/scan/scan-proposal-page'
 
 const accept = async (): Promise<WriteResult> => ({ state: 'ok' })
 const refuse = async (): Promise<WriteResult> => ({

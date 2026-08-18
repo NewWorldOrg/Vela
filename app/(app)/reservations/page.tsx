@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { listReservations } from '@/repository/reservations'
-import { ReservationsView } from '@/page-component/reservations/reservations-view'
+import { ReservationsView } from '@/components/reservations/reservations-page'
 
 export const metadata: Metadata = { title: '予約' }
 
