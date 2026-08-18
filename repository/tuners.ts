@@ -220,6 +220,7 @@ const SESSION_LABEL: Record<SessionPurpose, string> = {
   unspecified: '用途不明',
   recording: '録画',
   survey: 'EPG 収集',
+  surveyNow: 'EPG 収集（前倒し）',
   live: 'ライブ',
   scan: 'スキャン',
 }

@@ -1101,6 +1101,502 @@
         }
       }
     },
+    "/api/epg/collect-now": {
+      "post": {
+        "tags": [
+          "epg"
+        ],
+        "operationId": "collectNow",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CollectNowRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CollectNowRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBoostStartedResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBoostStartedResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBoostRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBoostStartedResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/epg/archive/forget-service": {
+      "post": {
+        "tags": [
+          "epg"
+        ],
+        "operationId": "forgetArchivedService",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ForgetArchivedServiceRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ForgetArchivedServiceRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfArchiveForgottenResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfArchiveForgottenResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfArchiveForgottenResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/epg/collection-status": {
+      "get": {
+        "tags": [
+          "epg"
+        ],
+        "operationId": "getCollectionStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCollectionStatusResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCollectionStatusResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/programs/{id}": {
+      "get": {
+        "tags": [
+          "programs"
+        ],
+        "operationId": "getProgramme",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfProgrammeResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfProgrammeResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfProgrammeResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfProgrammeResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/programs": {
+      "get": {
+        "tags": [
+          "programs"
+        ],
+        "operationId": "getProgrammeGuide",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TuneSystem"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfGuideResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfGuideResponder"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfGuideResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/epg/rebuild": {
+      "post": {
+        "tags": [
+          "epg"
+        ],
+        "operationId": "rebuildEpg",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RebuildEpgRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RebuildEpgRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEpgRebuiltResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEpgRebuiltResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEpgRebuiltResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/programs/search": {
+      "get": {
+        "tags": [
+          "programs"
+        ],
+        "operationId": "searchProgrammes",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ProgrammeSort"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfProgrammeSearchResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfProgrammeSearchResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfProgrammeSearchResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/driver/status": {
       "get": {
         "tags": [
@@ -1245,6 +1741,100 @@
           }
         }
       },
+      "ArchiveForgottenResponder": {
+        "required": [
+          "forgotten"
+        ],
+        "type": "object",
+        "properties": {
+          "forgotten": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "BaseResponderOfArchiveForgottenResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ArchiveForgottenResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfBoostRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BoostRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfBoostStartedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BoostStartedResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfBroadcastServiceResponder": {
         "required": [
           "status",
@@ -1266,6 +1856,32 @@
               },
               {
                 "$ref": "#/components/schemas/BroadcastServiceResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfCollectionStatusResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CollectionStatusResponder"
               }
             ]
           }
@@ -1349,6 +1965,58 @@
           }
         }
       },
+      "BaseResponderOfEpgRebuiltResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EpgRebuiltResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfGuideResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GuideResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfIReadOnlyListOfBroadcastServiceResponder": {
         "required": [
           "status",
@@ -1396,6 +2064,58 @@
             "items": {
               "$ref": "#/components/schemas/ScanRunResponder"
             }
+          }
+        }
+      },
+      "BaseResponderOfProgrammeResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProgrammeResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfProgrammeSearchResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProgrammeSearchResponder"
+              }
+            ]
           }
         }
       },
@@ -1552,6 +2272,62 @@
                 "$ref": "#/components/schemas/TunerObservationResponder"
               }
             ]
+          }
+        }
+      },
+      "BoostRefusal": {
+        "enum": [
+          "none",
+          "oneIsAlreadyRunning",
+          "tooSoonAfterTheLastOne"
+        ],
+        "type": "string"
+      },
+      "BoostRefusedResponder": {
+        "required": [
+          "refusal",
+          "runningBoostId",
+          "notBefore"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/BoostRefusal"
+          },
+          "runningBoostId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notBefore": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "BoostStartedResponder": {
+        "required": [
+          "boostId",
+          "streams"
+        ],
+        "type": "object",
+        "properties": {
+          "boostId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "streams": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -1738,6 +2514,59 @@
                 "$ref": "#/components/schemas/ScanMeasurementResponder"
               }
             ]
+          }
+        }
+      },
+      "CollectNowRequest": {
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CollectionStatusResponder": {
+        "required": [
+          "streams",
+          "rescans"
+        ],
+        "type": "object",
+        "properties": {
+          "streams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamCollectionStatusResponder"
+            }
+          },
+          "rescans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RescanNoticeResponder"
+            }
           }
         }
       },
@@ -1932,6 +2761,109 @@
           }
         }
       },
+      "EpgRebuiltResponder": {
+        "required": [
+          "discarded",
+          "generation"
+        ],
+        "type": "object",
+        "properties": {
+          "discarded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "generation": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ForgetArchivedServiceRequest": {
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "confirm": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "meansIt": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GuideResponder": {
+        "required": [
+          "services",
+          "programmes"
+        ],
+        "type": "object",
+        "properties": {
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuideServiceResponder"
+            }
+          },
+          "programmes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProgrammeResponder"
+            }
+          }
+        }
+      },
+      "GuideServiceResponder": {
+        "required": [
+          "networkId",
+          "serviceId"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "HealthResponder": {
         "required": [
           "status"
@@ -1942,6 +2874,329 @@
             "type": "string"
           }
         }
+      },
+      "ProgrammeGenreResponder": {
+        "required": [
+          "kind",
+          "sort"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sort": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProgrammeItemResponder": {
+        "required": [
+          "heading",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "ProgrammeResponder": {
+        "required": [
+          "id",
+          "networkId",
+          "serviceId",
+          "eventId",
+          "startsAt",
+          "endsAt",
+          "name",
+          "summary",
+          "isShadow",
+          "hasSubtitles",
+          "source",
+          "revision",
+          "isArchived",
+          "genres",
+          "items",
+          "related"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "eventId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "isShadow": {
+            "type": "boolean"
+          },
+          "hasSubtitles": {
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ProgrammeSource"
+          },
+          "revision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "isArchived": {
+            "type": "boolean"
+          },
+          "genres": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProgrammeGenreResponder"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProgrammeItemResponder"
+            }
+          },
+          "related": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelatedProgrammeResponder"
+            }
+          }
+        }
+      },
+      "ProgrammeSearchResponder": {
+        "required": [
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProgrammeResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProgrammeSort": {
+        "enum": [
+          "startsAt",
+          "name"
+        ],
+        "type": "string"
+      },
+      "ProgrammeSource": {
+        "enum": [
+          "presentFollowing",
+          "scheduleBasic",
+          "scheduleExtended"
+        ],
+        "type": "string"
+      },
+      "RebuildEpgRequest": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "meansIt": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RelatedProgrammeResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "eventId",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "eventId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RelationKind"
+          }
+        }
+      },
+      "RelationKind": {
+        "enum": [
+          "shared",
+          "relayed",
+          "moved"
+        ],
+        "type": "string"
+      },
+      "RescanNoticeResponder": {
+        "required": [
+          "networkId",
+          "transportStreamId",
+          "reason",
+          "serviceIds",
+          "noticedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/RescanReason"
+          },
+          "serviceIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "noticedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RescanReason": {
+        "enum": [
+          "servicesAppeared",
+          "servicesVanished"
+        ],
+        "type": "string"
       },
       "RotationDepartureResponder": {
         "required": [
@@ -2488,7 +3743,8 @@
           "recording",
           "live",
           "survey",
-          "scan"
+          "scan",
+          "surveyNow"
         ],
         "type": "string"
       },
@@ -2511,6 +3767,101 @@
             ],
             "items": {
               "$ref": "#/components/schemas/TuningParametersRequest"
+            }
+          }
+        }
+      },
+      "StreamCollectionOutcome": {
+        "enum": [
+          "neverVisited",
+          "complete",
+          "basicOnly",
+          "incomplete",
+          "interrupted",
+          "noLock",
+          "noBytes"
+        ],
+        "type": "string"
+      },
+      "StreamCollectionStatusResponder": {
+        "required": [
+          "networkId",
+          "transportStreamId",
+          "outcome",
+          "lastAttemptedAt",
+          "lastCompletedAt",
+          "consecutiveIncomplete",
+          "lastDurationMilliseconds",
+          "notBefore",
+          "serviceIds"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/StreamCollectionOutcome"
+          },
+          "lastAttemptedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastCompletedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "consecutiveIncomplete": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastDurationMilliseconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notBefore": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "serviceIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
             }
           }
         }
@@ -2820,6 +4171,12 @@
     },
     {
       "name": "health"
+    },
+    {
+      "name": "epg"
+    },
+    {
+      "name": "programs"
     },
     {
       "name": "driver"

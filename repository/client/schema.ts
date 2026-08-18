@@ -228,6 +228,118 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/epg/collect-now': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['collectNow']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/epg/archive/forget-service': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['forgetArchivedService']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/epg/collection-status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getCollectionStatus']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/programs/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getProgramme']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/programs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getProgrammeGuide']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/epg/rebuild': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['rebuildEpg']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/programs/search': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['searchProgrammes']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/driver/status': {
     parameters: {
       query?: never
@@ -267,10 +379,34 @@ export interface components {
     AddCandidateChannelRequest: {
       tuning?: null | components['schemas']['TuningParametersRequest']
     }
+    ArchiveForgottenResponder: {
+      /** Format: int32 */
+      forgotten: number | string
+    }
+    BaseResponderOfArchiveForgottenResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ArchiveForgottenResponder']
+    }
+    BaseResponderOfBoostRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['BoostRefusedResponder']
+    }
+    BaseResponderOfBoostStartedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['BoostStartedResponder']
+    }
     BaseResponderOfBroadcastServiceResponder: {
       status: boolean
       message: string
       data: null | components['schemas']['BroadcastServiceResponder']
+    }
+    BaseResponderOfCollectionStatusResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['CollectionStatusResponder']
     }
     BaseResponderOfDetectedTunersResponder: {
       status: boolean
@@ -287,6 +423,16 @@ export interface components {
       message: string
       data: null | components['schemas']['DriverStatusResponder']
     }
+    BaseResponderOfEpgRebuiltResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EpgRebuiltResponder']
+    }
+    BaseResponderOfGuideResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['GuideResponder']
+    }
     BaseResponderOfIReadOnlyListOfBroadcastServiceResponder: {
       status: boolean
       message: string
@@ -296,6 +442,16 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['ScanRunResponder'][]
+    }
+    BaseResponderOfProgrammeResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ProgrammeResponder']
+    }
+    BaseResponderOfProgrammeSearchResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ProgrammeSearchResponder']
     }
     BaseResponderOfScanApplicationResponder: {
       status: boolean
@@ -326,6 +482,21 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['TunerObservationResponder']
+    }
+    /** @enum {string} */
+    BoostRefusal: 'none' | 'oneIsAlreadyRunning' | 'tooSoonAfterTheLastOne'
+    BoostRefusedResponder: {
+      refusal: components['schemas']['BoostRefusal']
+      /** Format: uuid */
+      runningBoostId: null | string
+      /** Format: date-time */
+      notBefore: null | string
+    }
+    BoostStartedResponder: {
+      /** Format: uuid */
+      boostId: string
+      /** Format: int32 */
+      streams: number | string
     }
     BroadcastServiceResponder: {
       /** Format: int32 */
@@ -370,6 +541,18 @@ export interface components {
       selectedAt: string
       measurement: null | components['schemas']['ScanMeasurementResponder']
     }
+    CollectNowRequest: {
+      /** Format: int32 */
+      networkId?: null | number | string
+      /** Format: int32 */
+      transportStreamId?: null | number | string
+      /** Format: int32 */
+      serviceId?: null | number | string
+    }
+    CollectionStatusResponder: {
+      streams: components['schemas']['StreamCollectionStatusResponder'][]
+      rescans: components['schemas']['RescanNoticeResponder'][]
+    }
     DetectedDeviceResponder: {
       deviceId: string
       detection: components['schemas']['DeviceDetection']
@@ -411,9 +594,109 @@ export interface components {
       /** Format: date-time */
       observedAt: string
     }
+    EpgRebuiltResponder: {
+      /** Format: int32 */
+      discarded: number | string
+      /** Format: int32 */
+      generation: number | string
+    }
+    ForgetArchivedServiceRequest: {
+      /** Format: int32 */
+      networkId?: null | number | string
+      /** Format: int32 */
+      serviceId?: null | number | string
+      confirm?: null | string
+      meansIt?: boolean
+    }
+    GuideResponder: {
+      services: components['schemas']['GuideServiceResponder'][]
+      programmes: components['schemas']['ProgrammeResponder'][]
+    }
+    GuideServiceResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+    }
     HealthResponder: {
       status: string
     }
+    ProgrammeGenreResponder: {
+      /** Format: int32 */
+      kind: number | string
+      /** Format: int32 */
+      sort: number | string
+    }
+    ProgrammeItemResponder: {
+      heading: string
+      text: string
+    }
+    ProgrammeResponder: {
+      id: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      /** Format: date-time */
+      startsAt: string
+      /** Format: date-time */
+      endsAt: null | string
+      name: string
+      summary: string
+      isShadow: boolean
+      hasSubtitles: boolean
+      source: components['schemas']['ProgrammeSource']
+      /** Format: int64 */
+      revision: number | string
+      isArchived: boolean
+      genres: components['schemas']['ProgrammeGenreResponder'][]
+      items: components['schemas']['ProgrammeItemResponder'][]
+      related: components['schemas']['RelatedProgrammeResponder'][]
+    }
+    ProgrammeSearchResponder: {
+      items: components['schemas']['ProgrammeResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    /** @enum {string} */
+    ProgrammeSort: 'startsAt' | 'name'
+    /** @enum {string} */
+    ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
+    RebuildEpgRequest: {
+      confirm?: null | string
+      meansIt?: boolean
+    }
+    RelatedProgrammeResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      kind: components['schemas']['RelationKind']
+    }
+    /** @enum {string} */
+    RelationKind: 'shared' | 'relayed' | 'moved'
+    RescanNoticeResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      transportStreamId: number | string
+      reason: components['schemas']['RescanReason']
+      serviceIds: (number | string)[]
+      /** Format: date-time */
+      noticedAt: string
+    }
+    /** @enum {string} */
+    RescanReason: 'servicesAppeared' | 'servicesVanished'
     RotationDepartureResponder: {
       /** Format: int32 */
       networkId: number | string
@@ -545,10 +828,38 @@ export interface components {
     ServiceCategory:
       'television' | 'radio' | 'data' | 'oneSeg' | 'temporary' | 'other'
     /** @enum {string} */
-    SessionPurpose: 'unspecified' | 'recording' | 'live' | 'survey' | 'scan'
+    SessionPurpose:
+      'unspecified' | 'recording' | 'live' | 'survey' | 'scan' | 'surveyNow'
     StartScanRequest: {
       systems?: null | components['schemas']['TuneSystem'][]
       channels?: null | components['schemas']['TuningParametersRequest'][]
+    }
+    /** @enum {string} */
+    StreamCollectionOutcome:
+      | 'neverVisited'
+      | 'complete'
+      | 'basicOnly'
+      | 'incomplete'
+      | 'interrupted'
+      | 'noLock'
+      | 'noBytes'
+    StreamCollectionStatusResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      transportStreamId: number | string
+      outcome: components['schemas']['StreamCollectionOutcome']
+      /** Format: date-time */
+      lastAttemptedAt: null | string
+      /** Format: date-time */
+      lastCompletedAt: null | string
+      /** Format: int32 */
+      consecutiveIncomplete: number | string
+      /** Format: int32 */
+      lastDurationMilliseconds: number | string
+      /** Format: date-time */
+      notBefore: null | string
+      serviceIds: (number | string)[]
     }
     ToggleTunerRequest: {
       disabled?: null | boolean
@@ -1479,6 +1790,368 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HealthResponder']
+        }
+      }
+    }
+  }
+  collectNow: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['CollectNowRequest']
+        'application/*+json': null | components['schemas']['CollectNowRequest']
+      }
+    }
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBoostStartedResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBoostStartedResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBoostRefusedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBoostStartedResponder']
+        }
+      }
+    }
+  }
+  forgetArchivedService: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ForgetArchivedServiceRequest']
+        'application/*+json':
+          null | components['schemas']['ForgetArchivedServiceRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfArchiveForgottenResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfArchiveForgottenResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfArchiveForgottenResponder']
+        }
+      }
+    }
+  }
+  getCollectionStatus: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCollectionStatusResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCollectionStatusResponder']
+        }
+      }
+    }
+  }
+  getProgramme: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfProgrammeResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfProgrammeResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfProgrammeResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfProgrammeResponder']
+        }
+      }
+    }
+  }
+  getProgrammeGuide: {
+    parameters: {
+      query?: {
+        type?: components['schemas']['TuneSystem']
+        from?: string
+        to?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfGuideResponder']
+        }
+      }
+      /** @description Not Modified */
+      304: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfGuideResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfGuideResponder']
+        }
+      }
+    }
+  }
+  rebuildEpg: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['RebuildEpgRequest']
+        'application/*+json': null | components['schemas']['RebuildEpgRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEpgRebuiltResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEpgRebuiltResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEpgRebuiltResponder']
+        }
+      }
+    }
+  }
+  searchProgrammes: {
+    parameters: {
+      query?: {
+        keyword?: string
+        from?: string
+        to?: string
+        sort?: components['schemas']['ProgrammeSort']
+        descending?: boolean
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfProgrammeSearchResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfProgrammeSearchResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfProgrammeSearchResponder']
         }
       }
     }
