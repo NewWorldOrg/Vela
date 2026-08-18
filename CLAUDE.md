@@ -29,9 +29,10 @@ components/ui/*             shadcn primitives, dressed in Vela's look
 components/vela/*           Vela's own components and hand-drawn SVG icons
 components/theme/*          light / dark / system
 components/common/*         the general DataTable
-page-component/{screen}/    A screen. Data arrives as props from the RSC in app/;
-                            the Client boundary is pushed to the leaves that need it
-feature/{domain}/           Parts shared across screens (chips, dialogs)
+components/{domain}/         A domain: its screens and the parts they are made of.
+                            A screen is `{name}-page.tsx`; data arrives as props from
+                            the RSC in app/ and the Client boundary is pushed to the
+                            leaves that need it
 repository/                 Data access, and the only type boundary (fixtures for now)
 repository/client/          carina.json is the OpenAPI document, fetched from the
                             running API, and schema.ts the client generated from it.
@@ -45,8 +46,8 @@ types/                      DataTable types
 stories/{foundations,components,screens,common,theme}/
 ```
 
-A screen is layered `app/` (a Server Component fetches) → `page-component/` →
-`feature/` → `common/` → `repository/` → `client/`. `repository/` is the only type
+A screen is layered `app/` (a Server Component fetches) → `components/{domain}/` →
+`components/common/` → `repository/` → `client/`. `repository/` is the only type
 boundary, and the URL is the source of state. Fetching data or syncing initial
 values in a `useEffect` is not allowed.
 
