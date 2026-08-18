@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import { PROGRAM_FIXTURES } from '@/repository/programs.fixtures'
-import { SearchView } from '@/page-component/search/search-view'
+import { SearchView } from '@/components/search/search-page'
 
 const genres = [
   ...new Map(

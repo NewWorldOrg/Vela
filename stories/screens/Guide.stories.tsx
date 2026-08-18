@@ -7,7 +7,7 @@ import {
   NOW_MIN,
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
-import { GuideView } from '@/page-component/guide/guide-view'
+import { GuideView } from '@/components/guide/guide-page'
 
 const base = {
   kind: 'terrestrial' as const,

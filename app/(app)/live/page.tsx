@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getLive } from '@/repository/live'
-import { LiveView } from '@/page-component/live/live-view'
+import { LiveView } from '@/components/live/live-page'
 
 export const metadata: Metadata = { title: 'ライブ' }
 

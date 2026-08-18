@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import type { WriteResult } from '@/repository/services'
 import { CHANNELS, SCAN_RUNNING } from '@/repository/services.fixtures'
-import { ChannelsView } from '@/page-component/settings/channels-view'
+import { ChannelsView } from '@/components/channels/channels-page'
 
 const accept = async (): Promise<WriteResult> => ({ state: 'ok' })
 const refuseWrite = async (): Promise<WriteResult> => ({

@@ -8,7 +8,7 @@ import {
   parseRestartTicket,
   toRestartWindow,
 } from '@/repository/tuners'
-import { TunersView } from '@/page-component/settings/tuners-view'
+import { TunersView } from '@/components/tuners/tuners-page'
 import {
   askDriverToRestart,
   dismissRestartWindow,

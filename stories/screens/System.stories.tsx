@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { SYSTEM_STATUS } from '@/repository/system.fixtures'
-import { SystemView } from '@/page-component/settings/system-view'
+import { SystemView } from '@/components/system/system-page'
 
 const meta = {
   title: 'Screens/設定・システム',

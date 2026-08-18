@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { LoginView } from '@/page-component/login/login-view'
+import { LoginView } from '@/components/login/login-page'
 
 const meta = {
   title: 'Screens/ログイン',

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { RESERVATIONS } from '@/repository/reservations.fixtures'
-import { ReservationsView } from '@/page-component/reservations/reservations-view'
+import { ReservationsView } from '@/components/reservations/reservations-page'
 
 const meta = {
   title: 'Screens/予約',

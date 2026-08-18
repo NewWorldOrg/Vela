@@ -5,7 +5,7 @@ import {
   DETECTION_MISMATCH_ONLY,
   TUNERS,
 } from '@/repository/tuners.fixtures'
-import { TunersView } from '@/page-component/settings/tuners-view'
+import { TunersView } from '@/components/tuners/tuners-page'
 
 const meta = {
   title: 'Screens/設定・チューナー',

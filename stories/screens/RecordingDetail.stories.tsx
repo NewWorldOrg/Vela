@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { RECORDING_DETAIL_FIXTURES } from '@/repository/recordings.details.fixtures'
-import { RecordingDetailView } from '@/page-component/recordings/recording-detail-view'
+import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { listRecordings, type RecordingsFilter } from '@/repository/recordings'
-import { LibraryView } from '@/page-component/library/library-view'
+import { LibraryView } from '@/components/library/library-page'
 
 export const metadata: Metadata = { title: 'ライブラリ' }
 

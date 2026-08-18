@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getQuality } from '@/repository/quality'
-import { QualityView } from '@/page-component/settings/quality-view'
+import { QualityView } from '@/components/quality/quality-page'
 
 export const metadata: Metadata = { title: '品質' }
 

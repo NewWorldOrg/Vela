@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { QUALITY } from '@/repository/quality.fixtures'
-import { QualityView } from '@/page-component/settings/quality-view'
+import { QualityView } from '@/components/quality/quality-page'
 
 const meta = {
   title: 'Screens/設定・品質',

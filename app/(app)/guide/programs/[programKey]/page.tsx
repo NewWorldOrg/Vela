@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { getProgram } from '@/repository/programs'
-import { ProgramDetailView } from '@/page-component/guide/program-detail-view'
+import { ProgramDetailView } from '@/components/guide/program-detail-page'
 
 export async function generateMetadata({
   params,

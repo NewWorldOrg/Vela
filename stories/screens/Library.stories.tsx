@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
-import { LibraryView } from '@/page-component/library/library-view'
+import { LibraryView } from '@/components/library/library-page'
 
 const all = [...RECORDING_FIXTURES].sort(
   (a, b) =>
