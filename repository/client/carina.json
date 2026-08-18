@@ -2337,6 +2337,7 @@
           "serviceId",
           "name",
           "category",
+          "remoteControlKeyId",
           "reservableByDefault",
           "discoveredAt",
           "lastSeenAt",
@@ -2367,6 +2368,15 @@
           },
           "category": {
             "$ref": "#/components/schemas/ServiceCategory"
+          },
+          "remoteControlKeyId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "reservableByDefault": {
             "type": "boolean"
