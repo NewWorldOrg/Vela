@@ -51,6 +51,13 @@ A screen is layered `app/` (a Server Component fetches) → `components/{domain}
 boundary, and the URL is the source of state. Fetching data or syncing initial
 values in a `useEffect` is not allowed.
 
+The client carries the browser's session, which it reads with `next/headers`, so
+every module that calls the API is server-only. A Client Component may take
+**types** from `repository/` but never a value out of one of those modules — the
+build stops with the import trace that got it there, and nothing before `next
+build` catches it. Constants a screen needs live in a module that does not reach
+the API: `channels`, `events`, `scan-systems`, `scan-failures`, `search-options`.
+
 **Naming and conventions**
 
 - Import alias: `@/*` is the repository root

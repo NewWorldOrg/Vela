@@ -9,20 +9,13 @@ import {
   genreDisplayOf,
   windowStartOf,
 } from '@/repository/programs'
-
-export type SearchSort = 'start_at.asc' | 'start_at.desc' | 'name.asc'
-
-export const SEARCH_SORT_OPTIONS: { value: SearchSort; label: string }[] = [
-  { value: 'start_at.asc', label: '放送日時が早い順' },
-  { value: 'start_at.desc', label: '放送日時が遅い順' },
-  { value: 'name.asc', label: '番組名順' },
-]
-
-export const SEARCH_PER_PAGE_OPTIONS = [20, 50, 100]
-
-export const SEARCH_DEFAULT_SORT: SearchSort = 'start_at.asc'
-
-export const SEARCH_DEFAULT_PER_PAGE = 20
+import {
+  SEARCH_DEFAULT_PER_PAGE,
+  SEARCH_DEFAULT_SORT,
+  SEARCH_PER_PAGE_OPTIONS,
+  SEARCH_SORT_OPTIONS,
+  type SearchSort,
+} from '@/repository/search-options'
 
 export interface RawSearchCondition {
   q?: string

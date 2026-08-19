@@ -1,5 +1,13 @@
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
+import type { FailureClass } from '@/repository/scan-failures'
+import {
+  FAILURE_CLASSES,
+  INCOMPLETE_TABLES,
+  LOCKED_WITHOUT_DATA,
+  NO_LOCK,
+  UNEXPECTED_STREAM,
+} from '@/repository/scan-failures'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { SCAN_SYSTEMS } from '@/repository/scan-systems'
 import { formatMonth, formatSpan, formatStamp } from '@/lib/format'
@@ -30,50 +38,16 @@ const CATEGORY_LABEL: Record<ServiceCategory, string> = {
   other: 'その他',
 }
 
-/**
- * The point of the domain: a scan that gets nowhere is four different
- * problems, and which one it is says where to go looking. The numbers are
- * the operator's shorthand and are shown beside every one of them.
- */
-export interface FailureClass {
-  /** 1–4, the order the four are always listed in. */
-  no: 1 | 2 | 3 | 4
-  label: string
-  note: string
-}
-
+/** Which of the four a stopped attempt turned out to be. */
 const FAILURE_CLASS: Record<
   Exclude<ScanAttemptOutcome, 'succeeded'>,
   FailureClass
 > = {
-  noLock: {
-    no: 1,
-    label: '信号を掴めない',
-    note: 'チューナーが同調できない',
-  },
-  lockedWithoutData: {
-    no: 2,
-    label: 'データが来ない',
-    note: '同調したが受信データなし',
-  },
-  incompleteTables: {
-    no: 3,
-    label: '情報が揃わない',
-    note: 'データはあるが番組情報が不完全',
-  },
-  unexpectedStream: {
-    no: 4,
-    label: '内容が食い違う',
-    note: '期待と異なる局(再編の可能性)',
-  },
+  noLock: NO_LOCK,
+  lockedWithoutData: LOCKED_WITHOUT_DATA,
+  incompleteTables: INCOMPLETE_TABLES,
+  unexpectedStream: UNEXPECTED_STREAM,
 }
-
-export const FAILURE_CLASSES: FailureClass[] = [
-  FAILURE_CLASS.noLock,
-  FAILURE_CLASS.lockedWithoutData,
-  FAILURE_CLASS.incompleteTables,
-  FAILURE_CLASS.unexpectedStream,
-]
 
 export interface Measurement {
   /** The value with its unit, e.g. `31.2 dB`. */

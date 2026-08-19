@@ -6,6 +6,14 @@ import type { paths } from '@/repository/client/schema'
 import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
 
 /**
+ * Reading `next/headers` makes this module server-only, and everything that
+ * calls the API with it: a Client Component may take types from `repository/`
+ * but never a value out of a module that reaches here, or the build stops with
+ * the import trace that got it there. Shared constants a screen needs live in
+ * a module of their own — `scan-systems`, `scan-failures`, `search-options`.
+ */
+
+/**
  * Over https the API names the session cookie with the `__Host-` prefix, which
  * a plain-http deployment cannot use; there it sends the bare name.
  */
