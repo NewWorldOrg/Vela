@@ -117,7 +117,7 @@ const GENRE_OTHER: { slug: Genre; label: string } = {
 
 const UNDECIDED_DURATION_MIN = 30
 
-interface GuideChannel extends Channel {
+export interface GuideChannel extends Channel {
   networkId: number
   serviceId: number
   sortKey: [number, number, number]
@@ -223,7 +223,7 @@ export async function getProgram(
   }
 }
 
-async function fetchServiceChannels(): Promise<GuideChannel[]> {
+export async function fetchServiceChannels(): Promise<GuideChannel[]> {
   const { data, error } = await carinaClient().GET('/api/services')
 
   if (error || !data?.data) {
@@ -334,9 +334,7 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
     return null
   }
 
-  const genreKind = programme.genres[0]?.kind
-  const genre =
-    (genreKind != null ? GENRES[genreKind] : undefined) ?? GENRE_OTHER
+  const genre = genreDisplayOf(programme)
 
   return {
     id: programme.id,
@@ -372,7 +370,16 @@ function guideDays(): GuideDay[] {
   return days
 }
 
-function calendarDateOf(at: Date): string {
+export function genreDisplayOf(programme: Programme): {
+  slug: Genre
+  label: string
+} {
+  const genreKind = programme.genres[0]?.kind
+
+  return (genreKind != null ? GENRES[genreKind] : undefined) ?? GENRE_OTHER
+}
+
+export function calendarDateOf(at: Date): string {
   return new Date(at.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10)
 }
 
@@ -385,7 +392,7 @@ function dayOf(at: Date): GuideDay {
   return { date, label: dayLabel(date), isToday: false }
 }
 
-function windowStartOf(date: string): Date {
+export function windowStartOf(date: string): Date {
   return new Date(
     new Date(`${date}T00:00:00Z`).getTime() +
       DAY_STARTS_AT_HOUR * 60 * 60 * 1000 -
@@ -403,7 +410,7 @@ function shiftDate(date: string, days: number): string {
 
 const WEEKDAY = ['日', '月', '火', '水', '木', '金', '土']
 
-function dayLabel(date: string): string {
+export function dayLabel(date: string): string {
   const at = new Date(`${date}T00:00:00Z`)
 
   return `${at.getUTCMonth() + 1}/${at.getUTCDate()}(${WEEKDAY[at.getUTCDay()]})`
@@ -434,7 +441,7 @@ function durationLabelOf(programme: Programme): string | undefined {
   return rest === 0 ? `${hours}時間` : `${hours}時間${rest}分`
 }
 
-function clockLabel(at: Date): string {
+export function clockLabel(at: Date): string {
   const jst = new Date(at.getTime() + JST_OFFSET_MS)
 
   return `${String(jst.getUTCHours()).padStart(2, '0')}:${String(jst.getUTCMinutes()).padStart(2, '0')}`

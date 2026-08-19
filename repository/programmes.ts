@@ -105,28 +105,38 @@ export async function fetchProgramme(id: string): Promise<Programme | null> {
   return toProgramme(data.data)
 }
 
+export type ProgrammeSearch =
+  { state: 'ok'; page: ProgrammePage } | { state: 'refused' }
+
 export async function searchProgrammes(
   query: SearchQuery,
-): Promise<ProgrammePage> {
-  const { data, error } = await carinaClient().GET('/api/programs/search', {
-    params: {
-      query: {
-        keyword: query.keyword,
-        from: query.from?.toISOString(),
-        to: query.to?.toISOString(),
-        sort: query.sort,
-        descending: query.descending,
-        page: query.page,
-        perPage: query.perPage,
+): Promise<ProgrammeSearch> {
+  const { data, error, response } = await carinaClient().GET(
+    '/api/programs/search',
+    {
+      params: {
+        query: {
+          keyword: query.keyword,
+          from: query.from?.toISOString(),
+          to: query.to?.toISOString(),
+          sort: query.sort,
+          descending: query.descending,
+          page: query.page,
+          perPage: query.perPage,
+        },
       },
     },
-  })
+  )
+
+  if (response.status === 400) {
+    return { state: 'refused' }
+  }
 
   if (error || !data?.data) {
     throw new Error(data?.message || '番組を探せませんでした')
   }
 
-  return toPage(data.data)
+  return { state: 'ok', page: toPage(data.data) }
 }
 
 export function toInt(value: number | string): number {
