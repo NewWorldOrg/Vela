@@ -1,4 +1,7 @@
-import { carinaClient } from '@/repository/client/carina'
+import {
+  carinaClient,
+  revalidatingCarinaClient,
+} from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 
 type GuideResponder = components['schemas']['GuideResponder']
@@ -72,15 +75,18 @@ export interface SearchQuery {
 }
 
 export async function fetchGuide(query: GuideQuery): Promise<Guide> {
-  const { data, error } = await carinaClient().GET('/api/programs', {
-    params: {
-      query: {
-        type: query.type,
-        from: query.from.toISOString(),
-        to: query.to.toISOString(),
+  const { data, error } = await revalidatingCarinaClient().GET(
+    '/api/programs',
+    {
+      params: {
+        query: {
+          type: query.type,
+          from: query.from.toISOString(),
+          to: query.to.toISOString(),
+        },
       },
     },
-  })
+  )
 
   if (error || !data?.data) {
     throw new Error(data?.message || '番組表を読めませんでした')
