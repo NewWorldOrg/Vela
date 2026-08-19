@@ -50,10 +50,6 @@ export const 番組情報が不足: Story = {
       kind: 'bs',
       channels: [],
       programs: [],
-      coverageWarning: {
-        kind: 'BS',
-        body: 'BS の番組情報が不足しています(カバレッジ 0 日)。チャンネル設定を確認してください。',
-      },
     },
   },
 }
