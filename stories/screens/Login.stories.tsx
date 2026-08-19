@@ -12,9 +12,9 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const 通常: Story = {
-  args: { failed: false },
+  args: { returnPath: '/', identityProviderFailed: false },
 }
 
-export const サインイン失敗: Story = {
-  args: { failed: true },
+export const IDプロバイダに到達できない: Story = {
+  args: { returnPath: '/guide', identityProviderFailed: true },
 }
