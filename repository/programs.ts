@@ -118,7 +118,6 @@ const GENRE_OTHER: { slug: Genre; label: string } = {
 const UNDECIDED_DURATION_MIN = 30
 
 interface GuideChannel extends Channel {
-  system?: TuneSystem
   networkId: number
   serviceId: number
   sortKey: [number, number, number]
@@ -240,7 +239,9 @@ async function fetchServiceChannels(): Promise<GuideChannel[]> {
         service.remoteControlKeyId == null
           ? undefined
           : toInt(service.remoteControlKeyId)
-      const system = service.selectedChannel?.system
+      const target = service.selectedChannel ?? service.candidates[0]?.target
+      const system =
+        !target || target.system === 'unspecified' ? undefined : target.system
       const kind =
         (system && KIND_OF_SYSTEM[system]) ?? kindOfNetwork(networkId)
 
@@ -249,7 +250,6 @@ async function fetchServiceChannels(): Promise<GuideChannel[]> {
         no: remoteKey == null ? undefined : String(remoteKey),
         name: service.name ?? '',
         kind,
-        system,
         networkId,
         serviceId,
         sortKey:
@@ -266,7 +266,7 @@ async function fetchServiceChannels(): Promise<GuideChannel[]> {
 
 async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
   const rows = (await fetchServiceChannels()).filter(
-    (channel) => channel.system === SYSTEM_OF_KIND[kind],
+    (channel) => channel.kind === kind,
   )
 
   rows.sort(
