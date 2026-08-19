@@ -24,6 +24,7 @@ export default async function Page({
 
   return (
     <>
+      <GuideLive />
       <GuideView
         guide={{
           ...guide,
@@ -33,7 +34,6 @@ export default async function Page({
         onCollectNow={boostCollection}
         onRebuild={discardAndRebuildEpg}
       />
-      <GuideLive />
     </>
   )
 }
