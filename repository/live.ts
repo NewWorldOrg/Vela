@@ -56,7 +56,7 @@ export async function getLive(rawChannel?: string): Promise<LiveResult> {
 
   return {
     channelId: channel.id,
-    channelNo: channel.no,
+    channelNo: channel.no ?? '',
     channelName: channel.name,
     title: current?.title ?? '番組情報がありません',
     timeLabel: current ? `${current.startLabel} – ${current.endLabel}` : '—',
@@ -79,7 +79,7 @@ export async function getLive(rawChannel?: string): Promise<LiveResult> {
       const next = nextOf(c.id)
       return {
         id: c.id,
-        no: c.no,
+        no: c.no ?? '',
         name: c.name,
         now: now?.title ?? '番組情報がありません',
         next: next ? `次 ${next.startLabel} ${next.title}` : '次の番組は未取得',

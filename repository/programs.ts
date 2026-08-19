@@ -200,16 +200,19 @@ async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
 
       return {
         id: `${networkId}-${serviceId}`,
-        no: String(remoteKey ?? serviceId),
+        no: remoteKey == null ? undefined : String(remoteKey),
         name: service.name ?? '',
         kind,
         networkId,
         serviceId,
-        sortKey: [remoteKey ?? 99, networkId, serviceId] as [
-          number,
-          number,
-          number,
-        ],
+        sortKey:
+          kind === 'terrestrial'
+            ? ([remoteKey ?? serviceId, networkId, serviceId] as [
+                number,
+                number,
+                number,
+              ])
+            : ([serviceId, networkId, serviceId] as [number, number, number]),
       }
     })
 
