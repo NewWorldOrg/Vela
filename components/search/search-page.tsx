@@ -6,19 +6,28 @@ import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
-import { CHANNEL_KINDS } from '@/repository/channels'
 import {
-  SEARCH_FIELD_OPTIONS,
-  fieldLabel,
+  SEARCH_DEFAULT_PER_PAGE,
+  SEARCH_DEFAULT_SORT,
+  SEARCH_PER_PAGE_OPTIONS,
+  SEARCH_SORT_OPTIONS,
+  type SearchHits,
   type SearchResult,
 } from '@/repository/search'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select'
 import { EmptyState } from '@/components/vela/empty-state'
-import { ConditionSelect } from '@/components/search/condition-select'
+import { IconButton } from '@/components/vela/icon-button'
 import {
   ChevronLeftIcon,
+  ChevronRightIcon,
   CloseIcon,
   ListIcon,
   PlusIcon,
@@ -38,14 +47,33 @@ const GENRE_CLASS: Record<string, string> = {
   other: 'bg-genre-other border-genre-other-line',
 }
 
+function pageNumbers(current: number, last: number): (number | 'gap')[] {
+  const wanted = [1, current - 1, current, current + 1, last]
+  const items: (number | 'gap')[] = []
+  let previous = 0
+
+  for (let n = 1; n <= last; n++) {
+    if (!wanted.includes(n)) {
+      continue
+    }
+    if (n - previous > 1) {
+      items.push('gap')
+    }
+    items.push(n)
+    previous = n
+  }
+
+  return items
+}
+
 export function SearchView({ result }: { result: SearchResult }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { condition, hasCondition, hits, genres } = result
+  const { condition, periodLabel, outcome } = result
 
   const patch = useCallback(
-    (next: Record<string, string | null>) => {
+    (next: Record<string, string | null>, push = false) => {
       const params = new URLSearchParams(searchParams.toString())
       for (const [k, v] of Object.entries(next)) {
         if (v == null || v === '') {
@@ -54,39 +82,48 @@ export function SearchView({ result }: { result: SearchResult }) {
           params.set(k, v)
         }
       }
+      if (!('page' in next)) {
+        params.delete('page')
+      }
       const qs = params.toString()
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      const href = (qs ? `${pathname}?${qs}` : pathname) as Route
+      const navigate = push ? router.push : router.replace
+      navigate(href, { scroll: false })
     },
     [router, pathname, searchParams],
   )
 
-  const chips = [
-    { key: 'q', label: 'キーワード', value: condition.q },
-    { key: 'exclude', label: '除外キーワード', value: condition.exclude },
+  const clearAll = useCallback(
+    () =>
+      patch({
+        q: null,
+        from: null,
+        to: null,
+        sort: null,
+        per_page: null,
+      }),
+    [patch],
+  )
+
+  const hasCondition = Boolean(condition.q || condition.from || condition.to)
+  const found = outcome.state === 'searched' ? outcome.found : undefined
+  const noHit = found !== undefined && found.hits.length === 0
+  const urlLine = `/search${searchParams.toString() ? `?${searchParams}` : ''}`
+
+  const chips: {
+    key: string
+    label: string
+    value?: string
+    clear: Record<string, string | null>
+  }[] = [
+    { key: 'q', label: 'キーワード', value: condition.q, clear: { q: null } },
     {
-      key: 'fields',
-      label: '対象フィールド',
-      value: fieldLabel(condition.fields),
-    },
-    {
-      key: 'genre',
-      label: 'ジャンル',
-      value: genres.find((g) => g.value === condition.genre)?.label,
-    },
-    {
-      key: 'kind',
-      label: '種別',
-      value: CHANNEL_KINDS.find((k) => k.value === condition.kind)?.label,
-    },
-    {
-      key: 'ch',
-      label: 'チャンネル',
-      value: result.channelName,
+      key: 'period',
+      label: '期間',
+      value: periodLabel,
+      clear: { from: null, to: null },
     },
   ]
-  const urlLine = `/search${searchParams.toString() ? `?${searchParams}` : ''}`
 
   return (
     <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
@@ -94,7 +131,7 @@ export function SearchView({ result }: { result: SearchResult }) {
         <div className="min-w-0 flex-1">
           <h1 className="heading text-[20px]">番組検索</h1>
           <p className="mt-0.5 text-sub text-ink-2">
-            条件を組み立ててから検索します。条件はそのまま自動録画ルールにできます
+            検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。
           </p>
         </div>
         <Button variant="ghost" size="sm" asChild>
@@ -114,16 +151,7 @@ export function SearchView({ result }: { result: SearchResult }) {
           {hasCondition && (
             <button
               type="button"
-              onClick={() =>
-                patch({
-                  q: null,
-                  exclude: null,
-                  fields: null,
-                  genre: null,
-                  kind: null,
-                  ch: null,
-                })
-              }
+              onClick={clearAll}
               className="ml-auto cursor-pointer text-sub font-bold text-brand underline-offset-[3px] hover:underline"
             >
               条件をすべて消す
@@ -154,7 +182,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                 <button
                   type="button"
                   aria-label={`${c.label}の条件を消す`}
-                  onClick={() => patch({ [c.key]: null })}
+                  onClick={() => patch(c.clear)}
                   className="flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-3 transition-colors duration-150 hover:bg-surface-2 hover:text-ink [&_svg]:size-3"
                 >
                   <CloseIcon />
@@ -191,33 +219,23 @@ export function SearchView({ result }: { result: SearchResult }) {
               className="h-[33px] rounded-full"
             />
           </form>
-          <ConditionSelect
-            label="ジャンルを選ぶ"
-            value={condition.genre}
-            options={genres}
-            onChange={(v) => patch({ genre: v })}
-          />
-          <ConditionSelect
-            label="種別を選ぶ"
-            value={condition.kind}
-            options={CHANNEL_KINDS.map((k) => ({
-              value: k.value,
-              label: k.label,
-            }))}
-            onChange={(v) => patch({ kind: v })}
-          />
-          <ConditionSelect
-            label="チャンネルを選ぶ"
-            value={condition.ch}
-            options={result.channels}
-            onChange={(v) => patch({ ch: v })}
-          />
-          <ConditionSelect
-            label="対象フィールドを選ぶ"
-            value={condition.fields}
-            options={SEARCH_FIELD_OPTIONS}
-            onChange={(v) => patch({ fields: v })}
-          />
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="date"
+              aria-label="期間の開始日"
+              value={condition.from ?? ''}
+              onChange={(e) => patch({ from: e.target.value || null })}
+              className="h-[33px] w-[150px] rounded-full"
+            />
+            <span className="text-sub text-ink-3">〜</span>
+            <Input
+              type="date"
+              aria-label="期間の終了日"
+              value={condition.to ?? ''}
+              onChange={(e) => patch({ to: e.target.value || null })}
+              className="h-[33px] w-[150px] rounded-full"
+            />
+          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md bg-tint-sage px-3.5 py-3">
@@ -226,7 +244,9 @@ export function SearchView({ result }: { result: SearchResult }) {
               いまの検索条件は、そのまま自動録画ルールの条件になります。
             </b>
             <span className="text-note text-ink-2">
-              キーワード・除外キーワード・対象フィールド・ジャンル・チャンネルがルールへ引き継がれます。
+              {noHit
+                ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
+                : 'キーワードがルールへ引き継がれます。'}
             </span>
           </div>
           <Button size="sm" disabled title="ルール作成はこれから実装されます">
@@ -236,7 +256,7 @@ export function SearchView({ result }: { result: SearchResult }) {
         </div>
       </section>
 
-      {!hasCondition ? (
+      {outcome.state === 'idle' ? (
         <EmptyState
           spot="antenna"
           title="まだ検索していません"
@@ -244,109 +264,256 @@ export function SearchView({ result }: { result: SearchResult }) {
         >
           条件を組み立てて検索してください。検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。
         </EmptyState>
-      ) : hits.length === 0 ? (
+      ) : outcome.state === 'refused' ? (
         <EmptyState
           spot="antenna"
-          title="条件に合う番組がありません"
+          title="この条件では検索できません"
           className="mx-auto mt-10 max-w-[560px]"
-          action={
-            <Button
-              size="sm"
-              onClick={() =>
-                patch({
-                  q: null,
-                  exclude: null,
-                  fields: null,
-                  genre: null,
-                  kind: null,
-                  ch: null,
-                })
-              }
-            >
-              条件をすべて消す
-            </Button>
-          }
         >
-          全角と半角、囲み文字の違いは自動でそろえてから照合します。条件を減らすと見つかることがあります。
+          {outcome.message}
         </EmptyState>
       ) : (
-        <>
-          <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-            <h2 className="heading flex items-center gap-1.5 text-[15px]">
-              <ListIcon className="size-4 text-brand" />
-              検索結果
-            </h2>
-            <span className="text-sub text-ink-2">
-              全 <b className="font-code font-medium text-ink">{hits.length}</b>{' '}
-              件
-            </span>
-          </div>
-          <div className="-mx-1 overflow-x-auto px-1 pb-1">
-            <table className="w-full min-w-[760px] border-separate border-spacing-0">
-              <thead>
-                <tr>
-                  {['チャンネル', '放送日時', '番組', 'ジャンル'].map((h) => (
-                    <th
-                      key={h}
-                      className="bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
+        found && (
+          <>
+            <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
+              <h2 className="heading flex items-center gap-1.5 text-[15px]">
+                <ListIcon className="size-4 text-brand" />
+                検索結果
+              </h2>
+              <span className="text-sub text-ink-2">
+                全{' '}
+                <b className="font-code font-medium text-ink">{found.total}</b>{' '}
+                件
+                {found.hits.length > 0 && (
+                  <>
+                    {' '}
+                    /{' '}
+                    <b className="font-code font-medium text-ink">
+                      {found.rangeFrom}
+                    </b>
+                    –
+                    <b className="font-code font-medium text-ink">
+                      {found.rangeTo}
+                    </b>{' '}
+                    件目
+                  </>
+                )}
+              </span>
+              {found.hits.length > 0 && (
+                <div className="ml-auto flex flex-wrap items-center gap-2 max-[1060px]:ml-0 max-[1060px]:w-full">
+                  <Select
+                    value={condition.sort}
+                    onValueChange={(v) =>
+                      patch({ sort: v === SEARCH_DEFAULT_SORT ? null : v })
+                    }
+                  >
+                    <SelectTrigger
+                      size="sm"
+                      aria-label="並び替え"
+                      className="w-fit rounded-full"
                     >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {hits.map((p) => (
-                  <tr key={p.id} className="group">
-                    <td className="border-b border-dashed border-line px-3.5 py-3 align-top text-ui whitespace-nowrap">
-                      {p.channelName}
-                      <small className="ml-1.5 font-code text-[10.5px] text-ink-3">
-                        {p.channelNo}
-                      </small>
-                    </td>
-                    <td className="border-b border-dashed border-line px-3.5 py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
-                      <b className="mr-1.5 font-medium text-ink">
-                        {p.dayLabel}
-                      </b>
-                      {p.startLabel}–{p.endUndecided ? '終了未定' : p.endLabel}
-                    </td>
-                    <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
-                      <span className="flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/guide/programs/${p.id}`}
-                          className="text-[13px] font-bold text-ink underline-offset-[3px] hover:underline"
-                        >
-                          {p.title}
-                        </Link>
-                        {p.booked && (
-                          <Badge variant="ok" className="font-bold">
-                            予約済み
-                          </Badge>
+                      {
+                        SEARCH_SORT_OPTIONS.find(
+                          (o) => o.value === condition.sort,
+                        )?.label
+                      }
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {SEARCH_SORT_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={String(condition.perPage)}
+                    onValueChange={(v) =>
+                      patch({
+                        per_page:
+                          v === String(SEARCH_DEFAULT_PER_PAGE) ? null : v,
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      size="sm"
+                      aria-label="表示件数"
+                      className="w-fit rounded-full"
+                    >
+                      {condition.perPage} 件ずつ
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {SEARCH_PER_PAGE_OPTIONS.map((count) => (
+                        <SelectItem key={count} value={String(count)}>
+                          {count} 件ずつ
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {found.hits.length === 0 ? (
+              <EmptyState
+                spot="antenna"
+                title="該当する番組がありません"
+                className="mx-auto mt-6 max-w-[560px]"
+                action={
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button size="sm" variant="outline" onClick={clearAll}>
+                      条件をすべて消す
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href="/guide">番組表へ戻る</Link>
+                    </Button>
+                  </div>
+                }
+              >
+                検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。キーワード・期間を見直してください。
+              </EmptyState>
+            ) : (
+              <>
+                <div className="-mx-1 overflow-x-auto px-1 pb-1">
+                  <table className="w-full min-w-[760px] border-separate border-spacing-0">
+                    <thead>
+                      <tr>
+                        {['チャンネル', '放送日時', '番組', 'ジャンル'].map(
+                          (h) => (
+                            <th
+                              key={h}
+                              className="bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
+                            >
+                              {h}
+                            </th>
+                          ),
                         )}
-                      </span>
-                      {p.description && (
-                        <p className="mt-px text-note text-ink-3">
-                          {p.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
-                      <span
-                        className={cn(
-                          'inline-block rounded-full border px-[11px] py-0.5 text-note font-medium text-ink-2',
-                          GENRE_CLASS[p.genre],
-                        )}
-                      >
-                        {p.genreLabel}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {found.hits.map((p) => (
+                        <tr key={p.id} className="group">
+                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top text-ui whitespace-nowrap">
+                            {p.channelName}
+                            {p.channelNo && (
+                              <small className="ml-1.5 font-code text-[10.5px] text-ink-3">
+                                {p.channelNo}
+                              </small>
+                            )}
+                          </td>
+                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
+                            <b className="mr-1.5 font-medium text-ink">
+                              {p.dayLabel}
+                            </b>
+                            {p.startLabel}–
+                            {p.endUndecided ? '終了未定' : p.endLabel}
+                          </td>
+                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
+                            <span className="flex flex-wrap items-center gap-2">
+                              <Link
+                                href={`/guide/programs/${p.id}`}
+                                className="text-[13px] font-bold text-ink underline-offset-[3px] hover:underline"
+                              >
+                                {p.title}
+                              </Link>
+                              {p.booked && (
+                                <Badge variant="ok" className="font-bold">
+                                  予約済み
+                                </Badge>
+                              )}
+                            </span>
+                            {p.description && (
+                              <p className="mt-px text-note text-ink-3">
+                                {p.description}
+                              </p>
+                            )}
+                          </td>
+                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
+                            <span
+                              className={cn(
+                                'inline-block rounded-full border px-[11px] py-0.5 text-note font-medium text-ink-2',
+                                GENRE_CLASS[p.genre],
+                              )}
+                            >
+                              {p.genreLabel}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pager found={found} onPage={(n) => goPage(patch, n)} />
+              </>
+            )}
+          </>
+        )
       )}
     </main>
+  )
+}
+
+function goPage(
+  patch: (next: Record<string, string | null>, push?: boolean) => void,
+  page: number,
+) {
+  patch({ page: page > 1 ? String(page) : null }, true)
+}
+
+function Pager({
+  found,
+  onPage,
+}: {
+  found: SearchHits
+  onPage: (page: number) => void
+}) {
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-line pt-3.5">
+      <span className="mr-auto pr-3 text-sub text-ink-2">
+        全 <b className="font-code font-medium text-ink">{found.total}</b> 件 /{' '}
+        <b className="font-code font-medium text-ink">{found.lastPage}</b>{' '}
+        ページ中 <b className="font-code font-medium text-ink">{found.page}</b>{' '}
+        ページ目
+      </span>
+      <IconButton
+        size="sm"
+        aria-label="前のページ"
+        disabled={found.page <= 1}
+        onClick={() => onPage(found.page - 1)}
+      >
+        <ChevronLeftIcon />
+      </IconButton>
+      {pageNumbers(found.page, found.lastPage).map((item, index) =>
+        item === 'gap' ? (
+          <span key={`gap-${index}`} className="px-0.5 font-code text-ink-3">
+            …
+          </span>
+        ) : (
+          <button
+            key={item}
+            type="button"
+            aria-label={`${item} ページ目`}
+            aria-current={item === found.page ? 'page' : undefined}
+            onClick={() => onPage(item)}
+            className={cn(
+              'flex h-[29px] min-w-[29px] cursor-pointer items-center justify-center rounded-full border px-2.5 font-code text-sub shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none',
+              item === found.page
+                ? 'border-btn-fill bg-btn-fill text-on-btn'
+                : 'border-line-strong bg-surface text-ink-2 hover:text-ink',
+            )}
+          >
+            {item}
+          </button>
+        ),
+      )}
+      <IconButton
+        size="sm"
+        aria-label="次のページ"
+        disabled={found.page >= found.lastPage}
+        onClick={() => onPage(found.page + 1)}
+      >
+        <ChevronRightIcon />
+      </IconButton>
+    </div>
   )
 }

@@ -17,11 +17,11 @@ export default async function Page({
   const params = await searchParams
   const result = await searchPrograms({
     q: str(params.q),
-    exclude: str(params.exclude),
-    fields: str(params.fields),
-    genre: str(params.genre),
-    kind: str(params.kind),
-    ch: str(params.ch),
+    from: str(params.from),
+    to: str(params.to),
+    sort: str(params.sort),
+    perPage: str(params.per_page),
+    page: str(params.page),
   })
 
   return <SearchView result={result} />
