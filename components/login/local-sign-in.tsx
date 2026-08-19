@@ -8,7 +8,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InlineAlert } from '@/components/vela/banner'
 import { Field, FieldLabel } from '@/components/vela/field'
-import { ChevronDownIcon, ChevronUpIcon } from '@/components/vela/icons'
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  SignInIcon,
+} from '@/components/vela/icons'
+
+export type LocalSignInPlacement = 'lead' | 'expanded' | 'collapsed'
 
 export type SignInNotice =
   | { kind: 'refused' }
@@ -42,12 +48,12 @@ export function SignInNoticeAlert({ notice }: { notice: SignInNotice }) {
 
 export function LocalSignIn({
   returnPath,
-  defaultOpen,
+  placement,
 }: {
   returnPath: string
-  defaultOpen: boolean
+  placement: LocalSignInPlacement
 }) {
-  const [open, setOpen] = useState<boolean>(defaultOpen)
+  const [open, setOpen] = useState<boolean>(placement === 'expanded')
   const [busy, setBusy] = useState<boolean>(false)
   const [notice, setNotice] = useState<SignInNotice | null>(null)
   const panelId: string = useId()
@@ -77,6 +83,54 @@ export function LocalSignIn({
     setNotice(noticeOf(result))
   }
 
+  const lead: boolean = placement === 'lead'
+
+  const form = (
+    <form onSubmit={submit} className="flex flex-col gap-3">
+      <Field>
+        <FieldLabel htmlFor={usernameId}>ユーザー名</FieldLabel>
+        <Input
+          id={usernameId}
+          name="username"
+          autoComplete="username"
+          required
+          disabled={busy}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={passwordId}>パスワード</FieldLabel>
+        <Input
+          id={passwordId}
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          disabled={busy}
+        />
+      </Field>
+      {notice && <SignInNoticeAlert notice={notice} />}
+      {lead ? (
+        <Button
+          type="submit"
+          size="lg"
+          className="mt-0.5 w-full gap-[9px] text-[13.5px]"
+          disabled={busy}
+        >
+          <SignInIcon className="size-4" />
+          {busy ? 'サインインしています' : 'サインイン'}
+        </Button>
+      ) : (
+        <Button type="submit" variant="outline" disabled={busy}>
+          {busy ? 'サインインしています' : 'サインイン'}
+        </Button>
+      )}
+    </form>
+  )
+
+  if (lead) {
+    return <div className="text-left">{form}</div>
+  }
+
   return (
     <div className="mt-[18px] border-t border-dashed border-line-strong pt-[18px]">
       <div className="flex justify-center">
@@ -98,33 +152,7 @@ export function LocalSignIn({
             ID
             プロバイダを通せない外部プレイヤーのために残しているアカウントです
           </p>
-          <form onSubmit={submit} className="flex flex-col gap-3">
-            <Field>
-              <FieldLabel htmlFor={usernameId}>ユーザー名</FieldLabel>
-              <Input
-                id={usernameId}
-                name="username"
-                autoComplete="username"
-                required
-                disabled={busy}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor={passwordId}>パスワード</FieldLabel>
-              <Input
-                id={passwordId}
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                disabled={busy}
-              />
-            </Field>
-            {notice && <SignInNoticeAlert notice={notice} />}
-            <Button type="submit" variant="outline" disabled={busy}>
-              {busy ? 'サインインしています' : 'サインイン'}
-            </Button>
-          </form>
+          {form}
         </div>
       )}
     </div>

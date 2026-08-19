@@ -14,6 +14,8 @@ export const SIGNED_OUT_METHOD_KEY = 'method'
 
 const OIDC_START_PATH = '/api/auth/oidc/start'
 
+const SIGN_IN_OPTIONS_ENDPOINT = '/api/auth/sign-in-options'
+
 const LOGIN_ENDPOINT = '/api/auth/login'
 
 const LOGOUT_ENDPOINT = '/api/auth/logout'
@@ -27,11 +29,47 @@ export interface Credentials {
   password: string
 }
 
+export interface IdentityProviderSignIn {
+  providerName: string | null
+  reachable: boolean
+}
+
+export type SignInOptions =
+  | { state: 'local-only' }
+  | ({ state: 'identity-provider' } & IdentityProviderSignIn)
+
 export type SignInResult =
   | { state: 'signed-in' }
   | { state: 'refused' }
   | { state: 'rate-limited'; retryAfterSeconds: number }
   | { state: 'unavailable' }
+
+const LOCAL_ONLY: SignInOptions = { state: 'local-only' }
+
+export async function getSignInOptions(): Promise<SignInOptions> {
+  const baseUrl: string | undefined = process.env.CARINA_API_BASE_URL
+
+  if (!baseUrl) {
+    return LOCAL_ONLY
+  }
+
+  try {
+    const response: Response = await fetch(
+      new URL(SIGN_IN_OPTIONS_ENDPOINT, baseUrl),
+      { headers: { accept: 'application/json' }, cache: 'no-store' },
+    )
+
+    if (!response.ok) {
+      return LOCAL_ONLY
+    }
+
+    const body: unknown = await response.json()
+
+    return offeredBy(body)
+  } catch {
+    return LOCAL_ONLY
+  }
+}
 
 export async function signIn(credentials: Credentials): Promise<SignInResult> {
   let response: Response
@@ -97,6 +135,31 @@ export function returnPathWithin(target: string | undefined): string {
 
 export function signedOutMethod(value: string | undefined): AuthMethod {
   return value === 'oidc' ? 'oidc' : 'local'
+}
+
+function offeredBy(body: unknown): SignInOptions {
+  const data: unknown = fieldOf(body, 'data')
+
+  if (fieldOf(data, 'identityProvider') !== true) {
+    return LOCAL_ONLY
+  }
+
+  const providerName: unknown = fieldOf(data, 'providerName')
+
+  return {
+    state: 'identity-provider',
+    providerName:
+      typeof providerName === 'string' && providerName.length > 0
+        ? providerName
+        : null,
+    reachable: fieldOf(data, 'reach') === 'reachable',
+  }
+}
+
+function fieldOf(source: unknown, name: string): unknown {
+  return typeof source === 'object' && source !== null && name in source
+    ? Reflect.get(source, name)
+    : undefined
 }
 
 function carriesAControlCharacter(target: string): boolean {
