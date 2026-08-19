@@ -55,7 +55,7 @@ export function ProgramPanel({
           {channel?.name}
         </p>
         <p className="mt-0.5 font-code text-[13.5px] font-medium tabular-nums">
-          {dayLabel} {program.startLabel}–
+          {program.dateLabel ?? dayLabel} {program.startLabel}–
           {program.endUndecided ? '終了未定' : program.endLabel}
         </p>
         <div className="mt-[11px] flex flex-wrap gap-1.5">
@@ -77,8 +77,9 @@ export function ProgramPanel({
                 チューナー確保済み
               </div>
               <p className="mt-1 text-sub leading-relaxed text-ink-2">
-                <b>地上波</b>のチューナーを 1 本、{dayLabel}{' '}
-                {program.startLabel} の 10 秒前から確保しました。
+                <b>地上波</b>のチューナーを 1 本、
+                {program.dateLabel ?? dayLabel} {program.startLabel} の 10
+                秒前から確保しました。
               </p>
               <div className="mt-2.5 flex flex-wrap gap-2">
                 <Button

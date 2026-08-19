@@ -72,7 +72,7 @@ export function ProgramDetailView({ detail }: { detail: ProgramDetail }) {
             {program.title}
           </h1>
           <p className="mt-[9px] font-code text-[13.5px] tabular-nums">
-            {day.label} {program.startLabel} –{' '}
+            {program.dateLabel ?? day.label} {program.startLabel} –{' '}
             {program.endUndecided ? '終了未定' : program.endLabel}
             {durationLabel && (
               <span className="ml-[9px] text-sub text-ink-3">

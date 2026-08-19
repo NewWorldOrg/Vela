@@ -28,6 +28,7 @@ export interface Program {
   /** 番組表の窓の開始からの分 */
   startMin: number
   durationMin: number
+  dateLabel?: string
   startLabel: string
   endLabel: string
   subtitled?: boolean
@@ -346,6 +347,7 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
     genreLabel: genre.label,
     startMin: Math.floor((shownFrom - windowStart.getTime()) / 60_000),
     durationMin: Math.ceil((shownTo - shownFrom) / 60_000),
+    dateLabel: dayLabel(calendarDateOf(startsAt)),
     startLabel: clockLabel(startsAt),
     endLabel: endsAt ? clockLabel(endsAt) : '未定',
     subtitled: programme.hasSubtitles || undefined,
@@ -368,6 +370,10 @@ function guideDays(): GuideDay[] {
   }
 
   return days
+}
+
+function calendarDateOf(at: Date): string {
+  return new Date(at.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10)
 }
 
 function dayOf(at: Date): GuideDay {
