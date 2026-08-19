@@ -25,6 +25,12 @@ export function GuideView({ guide }: { guide: GuideResult }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
+  const [panelOpen, setPanelOpen] = useState(false)
+
+  const select = useCallback((program: Program) => {
+    setSelected(program)
+    setPanelOpen(true)
+  }, [])
 
   const patch = useCallback(
     (next: Record<string, string | null>) => {
@@ -138,28 +144,36 @@ export function GuideView({ guide }: { guide: GuideResult }) {
           の番組情報がまだ取れていません。取得できた日から順に並びます。
         </EmptyState>
       ) : (
-        <div className="flex items-start gap-3.5 max-[1200px]:flex-col">
-          <div className="min-w-0 flex-1">
-            <GuideGrid
-              channels={guide.channels}
-              programs={guide.programs}
-              windowStartHour={guide.windowStartHour}
-              windowHours={guide.windowHours}
-              nowMin={guide.nowMin}
-              nowLabel={guide.nowLabel}
-              selectedId={selected?.id}
-              onSelect={setSelected}
-            />
-          </div>
+        <>
+          <GuideGrid
+            channels={guide.channels}
+            programs={guide.programs}
+            windowStartHour={guide.windowStartHour}
+            windowHours={guide.windowHours}
+            nowMin={guide.nowMin}
+            nowLabel={guide.nowLabel}
+            selectedId={panelOpen ? selected?.id : undefined}
+            onSelect={select}
+          />
           {selected && (
             <ProgramPanel
               program={selected}
               channel={guide.channels.find((c) => c.id === selected.channelId)}
               dayLabel={guide.day.label}
-              onClose={() => setSelected(null)}
+              open={panelOpen}
+              onClose={() => setPanelOpen(false)}
             />
           )}
-        </div>
+          {selected && !panelOpen && (
+            <button
+              type="button"
+              onClick={() => setPanelOpen(true)}
+              className="fixed right-[18px] bottom-[18px] z-30 cursor-pointer rounded-full border border-line-strong bg-surface px-[17px] py-2 text-ui font-bold whitespace-nowrap text-ink shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none max-[900px]:right-3 max-[900px]:bottom-3"
+            >
+              番組詳細を開く
+            </button>
+          )}
+        </>
       )}
     </main>
   )
