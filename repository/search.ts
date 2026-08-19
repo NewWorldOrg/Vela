@@ -87,11 +87,25 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 const PAGE_PATTERN = /^[1-9]\d*$/
 
+function calendarDate(value: string | undefined): string | undefined {
+  if (!value || !DATE_PATTERN.test(value)) {
+    return undefined
+  }
+
+  const at = new Date(`${value}T00:00:00Z`)
+
+  if (Number.isNaN(at.getTime()) || at.toISOString().slice(0, 10) !== value) {
+    return undefined
+  }
+
+  return value
+}
+
 function parseCondition(raw: RawSearchCondition): SearchCondition {
   return {
     q: raw.q?.trim() || undefined,
-    from: raw.from && DATE_PATTERN.test(raw.from) ? raw.from : undefined,
-    to: raw.to && DATE_PATTERN.test(raw.to) ? raw.to : undefined,
+    from: calendarDate(raw.from),
+    to: calendarDate(raw.to),
     sort:
       SEARCH_SORT_OPTIONS.find((option) => option.value === raw.sort)?.value ??
       SEARCH_DEFAULT_SORT,
