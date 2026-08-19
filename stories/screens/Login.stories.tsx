@@ -43,7 +43,7 @@ export const OIDC未設定: Story = {
   },
 }
 
-export const IDプロバイダに到達できない: Story = {
+export const IDプロバイダに接続できない: Story = {
   args: {
     returnPath: '/guide',
     options: {

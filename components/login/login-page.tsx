@@ -45,10 +45,10 @@ export function LoginView({
             tone="danger"
             className="mb-4 gap-[9px] px-3.5 py-[11px] text-left"
           >
-            サインインに失敗しました。もう一度お試しください
+            サインインに失敗しました。もう一度お試しください。
             <span className="mt-1 block">
-              ID
-              プロバイダに到達できないときは、ローカルアカウントでサインインできます
+              組織の ID
+              プロバイダに接続できないときは、ローカルアカウントでサインインできます。
             </span>
           </Banner>
         ) : (
@@ -57,8 +57,8 @@ export function LoginView({
               tone="warn"
               className="mb-4 gap-[9px] px-3.5 py-[11px] text-left"
             >
-              ID
-              プロバイダに到達できません。ローカルアカウントでサインインできます
+              組織の ID
+              プロバイダに接続できません。ローカルアカウントでサインインできます。
             </Banner>
           )
         )}

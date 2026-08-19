@@ -18,11 +18,11 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 一律の失敗: Story = {
+export const サインインに失敗したとき: Story = {
   args: { notice: { kind: 'refused' } },
 }
 
-export const レート制限中: Story = {
+export const 試行が多すぎるとき: Story = {
   args: {
     notice: {
       kind: 'rate-limited',
@@ -31,6 +31,6 @@ export const レート制限中: Story = {
   },
 }
 
-export const 受け付けに接続できない: Story = {
+export const 要求が届かないとき: Story = {
   args: { notice: { kind: 'unavailable' } },
 }

@@ -24,24 +24,24 @@ export type SignInNotice =
 export function SignInNoticeAlert({ notice }: { notice: SignInNotice }) {
   if (notice.kind === 'rate-limited') {
     return (
-      <InlineAlert tone="warn">
-        試行が多すぎます。{formatClock(notice.retryAt)}{' '}
-        以降にもう一度お試しください
+      <InlineAlert tone="warn" className="text-balance">
+        サインインの試行が多すぎます。{formatClock(notice.retryAt)}{' '}
+        以降にもう一度お試しください。
       </InlineAlert>
     )
   }
 
   if (notice.kind === 'unavailable') {
     return (
-      <InlineAlert tone="warn">
-        サインインを受け付ける口に接続できませんでした。時間をおいてもう一度お試しください
+      <InlineAlert tone="warn" className="text-balance">
+        サインインの要求が届きませんでした。時間をおいてもう一度お試しください。
       </InlineAlert>
     )
   }
 
   return (
-    <InlineAlert tone="danger">
-      サインインに失敗しました。もう一度お試しください
+    <InlineAlert tone="danger" className="text-balance">
+      サインインに失敗しました。もう一度お試しください。
     </InlineAlert>
   )
 }
@@ -149,8 +149,8 @@ export function LocalSignIn({
       {open && (
         <div id={panelId} className="mt-3.5 text-left">
           <p className="mb-3 text-note leading-[1.7] text-ink-3">
-            ID
-            プロバイダを通せない外部プレイヤーのために残しているアカウントです
+            組織の ID
+            プロバイダを使えない外部プレイヤーのために残しているアカウントです
           </p>
           {form}
         </div>
