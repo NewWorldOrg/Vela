@@ -52,7 +52,7 @@ export interface GuideResult {
   nowLabel?: string
   channels: Channel[]
   programs: Program[]
-  coverageWarning?: { kind: string; body: string }
+  coverageWarning?: { emphasis: string; body: string }
 }
 
 export interface ProgramItem {
@@ -447,7 +447,7 @@ export function clockLabel(at: Date): string {
   return `${String(jst.getUTCHours()).padStart(2, '0')}:${String(jst.getUTCMinutes()).padStart(2, '0')}`
 }
 
-function kindOfNetwork(networkId: number): ChannelKind {
+export function kindOfNetwork(networkId: number): ChannelKind {
   if (networkId === 4) {
     return 'bs'
   }
