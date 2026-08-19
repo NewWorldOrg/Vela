@@ -16,6 +16,7 @@ export type Genre =
   | 'movie'
   | 'anime'
   | 'doc'
+  | 'other'
 
 export interface Program {
   id: string
@@ -78,31 +79,24 @@ const SYSTEM_OF_KIND: Record<ChannelKind, TuneSystem> = {
   cs110: 'isdbSCs110',
 }
 
-const GENRE_LABEL: Record<number, string> = {
-  0: 'ニュース／報道',
-  1: 'スポーツ',
-  2: '情報／ワイドショー',
-  3: 'ドラマ',
-  4: '音楽',
-  5: 'バラエティ',
-  6: '映画',
-  7: 'アニメ／特撮',
-  8: 'ドキュメンタリー／教養',
-  9: '劇場／公演',
-  10: '趣味／教育',
-  11: '福祉',
+const GENRES: Record<number, { slug: Genre; label: string }> = {
+  0: { slug: 'news', label: 'ニュース/報道' },
+  1: { slug: 'sports', label: 'スポーツ' },
+  2: { slug: 'info', label: '情報/ワイドショー' },
+  3: { slug: 'drama', label: 'ドラマ' },
+  4: { slug: 'music', label: '音楽' },
+  5: { slug: 'variety', label: 'バラエティ' },
+  6: { slug: 'movie', label: '映画' },
+  7: { slug: 'anime', label: 'アニメ/特撮' },
+  8: { slug: 'doc', label: 'ドキュメンタリー/教養' },
+  9: { slug: 'other', label: '劇場/公演' },
+  10: { slug: 'other', label: '趣味/教育' },
+  11: { slug: 'other', label: '福祉' },
 }
 
-const GENRE_SLUG: Record<number, Genre> = {
-  0: 'news',
-  1: 'sports',
-  2: 'info',
-  3: 'drama',
-  4: 'music',
-  5: 'variety',
-  6: 'movie',
-  7: 'anime',
-  8: 'doc',
+const GENRE_OTHER: { slug: Genre; label: string } = {
+  slug: 'other',
+  label: 'その他',
 }
 
 interface GuideChannel extends Channel {
@@ -282,6 +276,8 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
   }
 
   const genreKind = programme.genres[0]?.kind
+  const genre =
+    (genreKind != null ? GENRES[genreKind] : undefined) ?? GENRE_OTHER
 
   return {
     id: programme.id,
@@ -296,8 +292,8 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
             )
             .join('\n\n')
         : undefined,
-    genre: (genreKind != null && GENRE_SLUG[genreKind]) || 'info',
-    genreLabel: (genreKind != null && GENRE_LABEL[genreKind]) || 'その他',
+    genre: genre.slug,
+    genreLabel: genre.label,
     startMin: Math.floor((shownFrom - windowStart.getTime()) / 60_000),
     durationMin: Math.ceil((shownTo - shownFrom) / 60_000),
     startLabel: clockLabel(startsAt),
