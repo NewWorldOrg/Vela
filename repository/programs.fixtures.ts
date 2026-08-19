@@ -19,6 +19,7 @@ export const GUIDE_DAYS: GuideDay[] = [
 
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import type { Program, ProgramDetail } from '@/repository/programs'
+import { withRelatedSettled } from '@/repository/programs'
 
 export const PROGRAM_FIXTURES: Program[] = [
   {
@@ -555,7 +556,7 @@ export const PROGRAM_FIXTURES: Program[] = [
 ]
 
 export const PROGRAM_DETAIL_FIXTURES: Record<
-  'standard' | 'relayed' | 'undecided' | 'minimal' | 'multiline',
+  'standard' | 'relayed' | 'simulcast' | 'undecided' | 'minimal' | 'multiline',
   ProgramDetail
 > = {
   standard: {
@@ -611,16 +612,68 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
         text: '準決勝屈指の接戦が予想される一戦。前の試合で全問正答を記録した常連校と、無敗で勝ち上がった初出場校が激突する。',
       },
     ],
-    related: [
-      {
-        key: '33221-1531-40622',
-        kind: 'relayed',
-        channelNo: '191',
-        channelName: 'みなと教育1',
-      },
-      { key: '33251-1541-40623', kind: 'shared' },
-    ],
+    related: withRelatedSettled(
+      [
+        {
+          key: '33221-1531-40622',
+          kind: 'relayed',
+          channelLabel: '191 みなと教育1',
+        },
+        { key: '33251-1541-40623', kind: 'shared' },
+      ],
+      CHANNEL_FIXTURES[0],
+    ),
     durationLabel: '2時間',
+  },
+  simulcast: {
+    program: {
+      id: '33221-1521-40641',
+      channelId: 'ch-151',
+      title: 'みなと ニュース7🈑',
+      description:
+        '列島の記録的暑さと各地の備えを 30 分でまとめてお伝えします。',
+      genre: 'news',
+      genreLabel: 'ニュース/報道',
+      startMin: 0,
+      durationMin: 30,
+      startLabel: '19:00',
+      endLabel: '19:30',
+      subtitled: true,
+    },
+    day: PROGRAM_DAY,
+    channel: CHANNEL_FIXTURES[0],
+    items: [
+      {
+        heading: '出演者',
+        text: '【キャスター】小坂 玲\n【気象キャスター】木戸 真幸',
+      },
+    ],
+    related: withRelatedSettled(
+      [
+        {
+          key: '33221-1522-40641',
+          kind: 'shared',
+          channelLabel: '151 みなと総合1',
+        },
+        {
+          key: '33221-1523-40641',
+          kind: 'shared',
+          channelLabel: '151 みなと総合1',
+        },
+        {
+          key: '33251-1541-40641',
+          kind: 'shared',
+          channelLabel: '181 第一テレビ1',
+        },
+        {
+          key: '33251-1542-40641',
+          kind: 'shared',
+          channelLabel: '181 第一テレビ1',
+        },
+      ],
+      CHANNEL_FIXTURES[0],
+    ),
+    durationLabel: '30分',
   },
   undecided: {
     program: {

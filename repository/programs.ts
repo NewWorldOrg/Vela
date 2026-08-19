@@ -65,8 +65,7 @@ export type RelationKind = 'shared' | 'relayed' | 'moved'
 export interface RelatedProgram {
   key: string
   kind: RelationKind
-  channelNo?: string
-  channelName?: string
+  channelLabel?: string
 }
 
 export interface ProgramDetail {
@@ -198,29 +197,71 @@ export async function getProgram(
   }
 
   const channels = await fetchServiceChannels()
-  const channelOf = (networkId: number, serviceId: number) =>
+  const channelOf = (
+    networkId: number,
+    serviceId: number,
+  ): GuideChannel | undefined =>
     channels.find(
       (channel) =>
         channel.networkId === networkId && channel.serviceId === serviceId,
     )
+  const channel = channelOf(programme.networkId, programme.serviceId)
 
   return {
     program,
     day,
-    channel: channelOf(programme.networkId, programme.serviceId),
+    channel,
     items: programme.items,
-    related: programme.related.map((related) => {
-      const channel = channelOf(related.networkId, related.serviceId)
-
-      return {
+    related: withRelatedSettled(
+      programme.related.map((related) => ({
         key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
         kind: related.kind,
-        channelNo: channel?.no,
-        channelName: channel?.name || undefined,
-      }
-    }),
+        channelLabel: channelLabelOf(
+          channelOf(related.networkId, related.serviceId),
+        ),
+      })),
+      channel,
+    ),
     durationLabel: durationLabelOf(programme),
   }
+}
+
+function channelLabelOf(channel: Channel | undefined): string | undefined {
+  if (!channel?.name) {
+    return undefined
+  }
+
+  return [channel.no, channel.name].filter(Boolean).join(' ')
+}
+
+export function withRelatedSettled(
+  related: RelatedProgram[],
+  channel: Channel | undefined,
+): RelatedProgram[] {
+  const currentLabel = channelLabelOf(channel)
+  const settled: RelatedProgram[] = []
+  const seen = new Set<string>()
+
+  for (const item of related) {
+    if (
+      item.kind === 'shared' &&
+      currentLabel !== undefined &&
+      item.channelLabel === currentLabel
+    ) {
+      continue
+    }
+
+    const identity = `${item.kind}:${item.channelLabel ?? ''}`
+
+    if (seen.has(identity)) {
+      continue
+    }
+
+    seen.add(identity)
+    settled.push(item)
+  }
+
+  return settled
 }
 
 export async function fetchServiceChannels(): Promise<GuideChannel[]> {

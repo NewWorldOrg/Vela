@@ -20,6 +20,10 @@ export const リレーあり: Story = {
   args: { detail: PROGRAM_DETAIL_FIXTURES.relayed },
 }
 
+export const 同時放送の重複: Story = {
+  args: { detail: PROGRAM_DETAIL_FIXTURES.simulcast },
+}
+
 export const 終了未定: Story = {
   args: { detail: PROGRAM_DETAIL_FIXTURES.undecided },
 }
