@@ -26,11 +26,11 @@ const buttonVariants = cva(
         default:
           'border border-btn-fill bg-btn-fill text-on-btn shadow-pop hover:border-btn-fill-hover hover:bg-btn-fill-hover hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         outline:
-          'border border-line-strong bg-surface text-ink shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+          'border border-edge bg-surface text-ink shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         secondary:
-          'border border-line bg-surface-2 text-ink shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+          'border border-edge bg-surface-2 text-ink shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         ghost:
-          'border border-line bg-transparent font-medium text-ink-2 hover:translate-x-0 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
+          'border border-edge bg-transparent font-medium text-ink-2 hover:translate-x-0 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         destructive:
           'border border-coral-line bg-coral-soft text-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         destructiveFill:

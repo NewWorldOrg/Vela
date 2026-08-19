@@ -11,13 +11,13 @@ const iconButtonVariants = cva(
       variant: {
         /** Pressable and lifted — used for pagers and toolbar actions. */
         pop: cn(
-          'border border-line-strong bg-surface text-ink-2 shadow-pop',
+          'border border-edge bg-surface text-ink-2 shadow-pop',
           'hover:text-ink hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
           tactile,
         ),
         /** Flat — used inside bars and panel headers; tilts instead of lifting. */
         quiet:
-          'border border-line bg-transparent text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:bg-surface-2 hover:text-ink hover:-rotate-6 focus-visible:shadow-ring',
+          'border border-edge bg-transparent text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:bg-surface-2 hover:text-ink hover:-rotate-6 focus-visible:shadow-ring',
       },
       size: {
         sm: "size-[27px] [&_svg:not([class*='size-'])]:size-[13px]",
