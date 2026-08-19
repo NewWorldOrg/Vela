@@ -4,7 +4,7 @@ export default function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="dot-grid flex min-h-dvh flex-col bg-bg">
+    <div className="dot-grid flex h-dvh flex-col overflow-hidden bg-bg">
       <AppTopBar />
       {children}
     </div>

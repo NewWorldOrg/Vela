@@ -52,7 +52,7 @@ export function RecordingDetailView({
   detail: RecordingDetail
 }) {
   return (
-    <main className="flex-1 pb-16">
+    <main className="min-h-0 flex-1 overflow-y-auto pb-16">
       <div className="flex items-center px-[30px] pt-[18px] pb-3 max-[1060px]:px-5 max-[700px]:px-3.5">
         <Link
           href="/library"

@@ -9,7 +9,7 @@ export default async function SettingsLayout({
   const migration = await getMigration()
 
   return (
-    <AdminBody className="flex-1">
+    <AdminBody className="min-h-0 flex-1">
       <SettingsSideNav hasMigration={migration !== null} />
       <AdminMain>{children}</AdminMain>
     </AdminBody>

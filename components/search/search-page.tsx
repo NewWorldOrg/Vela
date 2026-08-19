@@ -89,7 +89,7 @@ export function SearchView({ result }: { result: SearchResult }) {
   const urlLine = `/search${searchParams.toString() ? `?${searchParams}` : ''}`
 
   return (
-    <main className="flex-1 px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-4 flex flex-wrap items-start gap-3.5">
         <div className="min-w-0 flex-1">
           <h1 className="heading text-[20px]">番組検索</h1>

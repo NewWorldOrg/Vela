@@ -9,7 +9,7 @@ import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 
 export function RulesView({ rules }: { rules: Rule[] }) {
   return (
-    <main className="flex-1 px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <ReservationTabs
         current="rules"
         action={

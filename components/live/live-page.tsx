@@ -37,7 +37,7 @@ export function LiveView({ live }: { live: LiveResult }) {
   )
 
   return (
-    <main className="flex flex-1 items-start gap-3.5 px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1060px]:flex-col">
+    <main className="flex min-h-0 flex-1 items-start gap-3.5 overflow-y-auto px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1060px]:flex-col">
       <div className="min-w-0 flex-1">
         <section
           style={PLAYER_PALETTE}

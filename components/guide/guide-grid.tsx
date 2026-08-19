@@ -31,10 +31,10 @@ export function GuideGrid({
   )
 
   return (
-    <div className="overflow-x-auto">
+    <div className="min-h-0 flex-1 overflow-auto rounded-lg">
       <div className="min-w-[1000px] rounded-lg bg-surface">
         <div className="sticky top-0 z-10 flex rounded-t-lg border-b border-line bg-surface">
-          <div className="flex-[0_0_46px] border-r border-dashed border-line" />
+          <div className="sticky left-0 z-[1] flex-[0_0_46px] rounded-tl-lg border-r border-dashed border-line bg-surface" />
           {channels.map((c) => (
             <div
               key={c.id}
@@ -63,7 +63,7 @@ export function GuideGrid({
           className="relative flex rounded-b-lg"
           style={{ height: `${windowHours * HOUR_PX}px` }}
         >
-          <div className="flex-[0_0_46px] border-r border-dashed border-line">
+          <div className="sticky left-0 z-[4] flex-[0_0_46px] rounded-bl-lg border-r border-dashed border-line bg-surface">
             {hours.map((h) => (
               <div
                 key={h}

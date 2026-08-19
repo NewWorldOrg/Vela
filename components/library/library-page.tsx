@@ -51,7 +51,7 @@ export function LibraryView({
   )
 
   return (
-    <main className="flex-1 px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
         <h1 className="heading flex items-center gap-2 text-[20px]">
           <LibraryIcon className="size-[18px] text-brand" />
