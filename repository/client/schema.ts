@@ -505,6 +505,8 @@ export interface components {
       serviceId: number | string
       name: string
       category: components['schemas']['ServiceCategory']
+      /** Format: int32 */
+      remoteControlKeyId: null | number | string
       reservableByDefault: boolean
       /** Format: date-time */
       discoveredAt: string

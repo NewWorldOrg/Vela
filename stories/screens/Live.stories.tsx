@@ -5,7 +5,7 @@ import { LiveView } from '@/components/live/live-page'
 
 const rows = CHANNEL_FIXTURES.filter((c) => !c.sub).map((c, i) => ({
   id: c.id,
-  no: c.no,
+  no: c.no ?? '',
   name: c.name,
   now: ['ニュースの視点9', 'クラシックの時間', '夜ふかしラジオ倶楽部'][i % 3],
   next: '次 22:00 土曜ドラマ「灯台のある町」',

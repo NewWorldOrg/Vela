@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { CHANNEL_KINDS } from '@/repository/channels'
 import type { GuideResult, Program } from '@/repository/programs'
+import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
@@ -119,7 +120,19 @@ export function GuideView({ guide }: { guide: GuideResult }) {
         </Banner>
       )}
 
-      {guide.programs.length === 0 ? (
+      {guide.channels.length === 0 ? (
+        <EmptyState
+          spot="antenna"
+          title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ 0 日)`}
+          action={
+            <Button variant="default" size="sm" asChild>
+              <Link href="/settings/channels">チャンネル設定へ</Link>
+            </Button>
+          }
+        >
+          チャンネル設定を確認してください。
+        </EmptyState>
+      ) : guide.programs.length === 0 ? (
         <EmptyState spot="antenna" title="この日の番組情報がありません">
           {guide.day.label}{' '}
           の番組情報がまだ取れていません。取得できた日から順に並びます。

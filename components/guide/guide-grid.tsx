@@ -44,14 +44,16 @@ export function GuideGrid({
                   'flex-[0_0_78px] text-[11px] leading-tight whitespace-normal',
               )}
             >
-              <span
-                className={cn(
-                  'mr-[5px] font-code text-[10.5px] font-normal text-ink-3',
-                  c.sub && 'mr-0 block',
-                )}
-              >
-                {c.no}
-              </span>
+              {c.no && (
+                <span
+                  className={cn(
+                    'mr-[5px] font-code text-[10.5px] font-normal text-ink-3',
+                    c.sub && 'mr-0 block',
+                  )}
+                >
+                  {c.no}
+                </span>
+              )}
               {c.name}
             </div>
           ))}
@@ -102,6 +104,7 @@ export function GuideGrid({
                     program={p}
                     past={
                       nowMin !== undefined &&
+                      !p.endUndecided &&
                       p.startMin + p.durationMin <= nowMin
                     }
                     selected={p.id === selectedId}

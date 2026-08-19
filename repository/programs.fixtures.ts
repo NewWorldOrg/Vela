@@ -407,9 +407,9 @@ export const PROGRAM_FIXTURES: Program[] = [
     genre: 'sports',
     genreLabel: 'スポーツ',
     startMin: 270,
-    durationMin: 90,
+    durationMin: 30,
     startLabel: '23:30',
-    endLabel: '01:00',
+    endLabel: '未定',
     endUndecided: true,
   },
   {

@@ -54,6 +54,11 @@ export function ProgramCell({
             </span>
             {p.title}
           </span>
+          {p.endUndecided && (
+            <span className="mt-px block text-[10.8px] leading-normal text-ink-2">
+              終了未定
+            </span>
+          )}
           {size === 'md' && p.description && (
             <span className="mt-px block text-[10.8px] leading-normal text-ink-2">
               {p.description}

@@ -13,4 +13,5 @@ export const GENRE_CLASS: Record<Program['genre'], string> = {
   movie: 'bg-genre-movie border-genre-movie-line',
   anime: 'bg-genre-anime border-genre-anime-line',
   doc: 'bg-genre-doc border-genre-doc-line',
+  other: 'bg-genre-other border-genre-other-line',
 }

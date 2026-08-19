@@ -2,7 +2,7 @@ export type ChannelKind = 'terrestrial' | 'bs' | 'cs110'
 
 export interface Channel {
   id: string
-  no: string
+  no: string | undefined
   name: string
   kind: ChannelKind
   sub?: boolean

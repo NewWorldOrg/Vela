@@ -98,6 +98,8 @@
     --genre-anime-line: #e9cfe3;
     --genre-doc: #ecf1ea;
     --genre-doc-line: #d3e0d0;
+    --genre-other: var(--surface-2);
+    --genre-other-line: var(--line);
     --mint: #24795a;
     --mint-soft: #e7f4ee;
     --mint-line: #c4e4d5;
@@ -163,6 +165,8 @@
     --genre-anime-line: #4a3454;
     --genre-doc: #232f27;
     --genre-doc-line: #33453a;
+    --genre-other: var(--surface-2);
+    --genre-other-line: var(--line);
     --mint: #86d2ac;
     --mint-soft: #23342a;
     --mint-line: #34503f;
@@ -257,6 +261,8 @@
   --color-genre-anime-line: var(--genre-anime-line);
   --color-genre-doc: var(--genre-doc);
   --color-genre-doc-line: var(--genre-doc-line);
+  --color-genre-other: var(--genre-other);
+  --color-genre-other-line: var(--genre-other-line);
   --color-mint: var(--mint);
   --color-mint-soft: var(--mint-soft);
   --color-mint-line: var(--mint-line);
