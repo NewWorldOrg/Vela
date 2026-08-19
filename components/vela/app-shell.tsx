@@ -198,7 +198,10 @@ export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
   return (
     <main
       data-slot="admin-main"
-      className={cn('min-w-0 flex-1 px-[18px] pt-4 pb-5', className)}
+      className={cn(
+        'min-w-0 flex-1 overflow-y-auto px-[18px] pt-4 pb-5',
+        className,
+      )}
       {...props}
     />
   )

@@ -181,3 +181,43 @@ export const Admin: Story = {
     </div>
   ),
 }
+
+export const Frame: Story = {
+  render: () => (
+    <div className="dot-grid flex h-dvh flex-col overflow-hidden bg-bg">
+      <ServiceTopBar settingsActive />
+      <AdminBody className="min-h-0 flex-1">
+        <AdminSideNav caption="管理" aria-label="管理メニュー">
+          <AdminSideNavItem href="#" icon={<SystemIcon />} label="システム" />
+          <AdminSideNavItem
+            href="#"
+            icon={<TunerIcon />}
+            label="チューナー"
+            active
+          />
+          <AdminSideNavItem
+            href="#"
+            icon={<ChannelIcon />}
+            label="チャンネル"
+          />
+          <AdminSideNavItem href="#" icon={<EncodeIcon />} label="エンコード" />
+          <AdminSideNavItem href="#" icon={<QualityIcon />} label="品質" />
+        </AdminSideNav>
+        <AdminMain>
+          <Crumb>
+            設定 / <CrumbCurrent>チューナー</CrumbCurrent>
+          </Crumb>
+          <PageHeading description="トップバーとサイドナビは画面に残り、スクロールするのはこの面だけ">
+            チューナー
+          </PageHeading>
+          <TintPanel
+            tint="lavender"
+            className="mt-3.5 flex h-[1600px] items-start justify-center pt-7 text-sub text-ink-2"
+          >
+            背の高いコンテンツ
+          </TintPanel>
+        </AdminMain>
+      </AdminBody>
+    </div>
+  ),
+}

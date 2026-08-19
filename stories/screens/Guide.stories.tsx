@@ -25,6 +25,13 @@ const meta = {
   title: 'Screens/番組表',
   component: GuideView,
   parameters: { layout: 'fullscreen' },
+  decorators: [
+    (Story) => (
+      <div className="dot-grid flex h-dvh flex-col overflow-hidden bg-bg">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof GuideView>
 
 export default meta
