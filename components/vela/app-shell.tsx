@@ -107,7 +107,7 @@ export function SettingsLink({
         'flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[5px] text-sub font-medium text-ink-2 no-underline outline-none',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
-        active && 'border-brand-line bg-brand-soft font-bold text-brand',
+        active && 'border-brand bg-brand-soft font-bold text-brand',
         className,
       )}
       {...props}

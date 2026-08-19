@@ -53,8 +53,7 @@ export function SegmentedControl({
               'rounded-full border border-transparent px-[14px] py-[5px] text-sub font-medium whitespace-nowrap text-ink-2 outline-none',
               'transition-[background-color,color,transform] duration-150 ease-toy',
               'hover:text-ink active:translate-x-px active:translate-y-px focus-visible:shadow-ring',
-              selected &&
-                'border-brand-line bg-brand-soft font-bold text-brand',
+              selected && 'border-brand bg-brand-soft font-bold text-brand',
             )}
           >
             {option.label}

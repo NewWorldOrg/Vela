@@ -59,6 +59,7 @@
     --surface-3: #e7e0d3;
     --line: #e7e0d4;
     --line-strong: #cec4b3;
+    --edge: var(--ink-3);
     --ink: #2e2a38;
     /* The ink scale is shifted one step darker than the design source: at the
        11px used for notes and table headers, the original --ink-3 lands at
@@ -127,6 +128,7 @@
     --surface-3: #302e34;
     --line: #39383c;
     --line-strong: #57565b;
+    --edge: var(--ink-3);
     --ink: #eceaf0;
     --ink-2: #a8a4b0;
     /* Lightened from the design source for the same reason as the light theme:
@@ -226,6 +228,7 @@
   --color-surface-3: var(--surface-3);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-edge: var(--edge);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);

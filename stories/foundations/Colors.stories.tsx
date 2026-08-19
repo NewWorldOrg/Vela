@@ -88,6 +88,12 @@ export const Palette: Story = {
             light="CEC4B3"
             dark="57565B"
           />
+          <Swatch
+            swatch="bg-edge"
+            name="輪郭(押)"
+            light="6E6780"
+            dark="908C99"
+          />
         </SwatchRow>
         <p className="mt-[9px] text-note text-ink-3">
           温かみのある生成り色を地に、純白・無彩色のグレーには逃げない。ダークは黒では
