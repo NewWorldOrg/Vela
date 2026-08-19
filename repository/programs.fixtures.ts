@@ -17,7 +17,8 @@ export const GUIDE_DAYS: GuideDay[] = [
   { date: '2026-08-09', label: '8/9(土)', isToday: false },
 ]
 
-import type { Program } from '@/repository/programs'
+import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
+import type { Program, ProgramDetail } from '@/repository/programs'
 
 export const PROGRAM_FIXTURES: Program[] = [
   {
@@ -60,9 +61,6 @@ export const PROGRAM_FIXTURES: Program[] = [
     channelId: 'ch-151',
     title: 'ニュースの視点9',
     description: '電力需給対策のポイントを担当記者が解説',
-    detail:
-      '政府がまとめた電力需給対策のポイントを担当記者が詳しく解説。乱高下する為替が家計と中小企業に与える影響を取材。港町の美術館で始まった夜間開館の試みから、文化と観光の新しい関係を考える。',
-    cast: ['司会 田無 千秋', '解説 秋川 みのり'],
     genre: 'news',
     genreLabel: 'ニュース/報道',
     startMin: 120,
@@ -320,8 +318,6 @@ export const PROGRAM_FIXTURES: Program[] = [
     channelId: 'ch-181',
     title: '金曜シネマ「星の渡り鳥」',
     description: '岬の観測小屋を舞台にしたひと夏の物語',
-    detail:
-      '渡り鳥の観測小屋を営む青年と、星の写真を撮りに来た旅人。ひと夏の岬を舞台に、去る者と残る者のすれ違いを描く劇場公開作をテレビ初放送。',
     genre: 'movie',
     genreLabel: '映画',
     startMin: 180,
@@ -557,3 +553,115 @@ export const PROGRAM_FIXTURES: Program[] = [
     endLabel: '03:00',
   },
 ]
+
+export const PROGRAM_DETAIL_FIXTURES: Record<
+  'standard' | 'relayed' | 'undecided' | 'minimal',
+  ProgramDetail
+> = {
+  standard: {
+    program: {
+      id: '33221-1521-40613',
+      channelId: 'ch-151',
+      title: '第58回 全都選抜クイズ選手権 決勝🈑',
+      description:
+        '海浜公園アリーナから決勝の模様を生中継。全 128 校の頂点をかけて、早押しと近似値クイズの二本立てで争う。',
+      genre: 'variety',
+      genreLabel: 'バラエティ',
+      startMin: 120,
+      durationMin: 145,
+      startLabel: '21:00',
+      endLabel: '23:25',
+      subtitled: true,
+    },
+    day: PROGRAM_DAY,
+    channel: CHANNEL_FIXTURES[0],
+    items: [
+      {
+        heading: '番組内容',
+        text: '【解説】川田 このみ\n【アナウンサー】津島 陽\n決勝は 3 回戦制。第 1 回戦は各校 2 名による早押し、第 2 回戦は近似値、最終回戦は代表 1 名の一騎打ちで勝敗を決める。',
+      },
+      {
+        heading: '出演者',
+        text: '【司会】田無 千秋\n【ゲスト】前回優勝校のみなさん',
+      },
+    ],
+    related: [],
+    durationLabel: '2時間25分',
+  },
+  relayed: {
+    program: {
+      id: '33221-1521-40621',
+      channelId: 'ch-151',
+      title: '第58回 全都選抜クイズ選手権 準決勝 第二試合🈑',
+      description:
+        '海浜公園アリーナから準決勝の第二試合を中継。試合の展開によっては放送時間を延長してお伝えします。',
+      genre: 'variety',
+      genreLabel: 'バラエティ',
+      startMin: 0,
+      durationMin: 120,
+      startLabel: '19:00',
+      endLabel: '21:00',
+      subtitled: true,
+    },
+    day: PROGRAM_DAY,
+    channel: CHANNEL_FIXTURES[0],
+    items: [
+      {
+        heading: '番組内容',
+        text: '準決勝屈指の接戦が予想される一戦。前の試合で全問正答を記録した常連校と、無敗で勝ち上がった初出場校が激突する。',
+      },
+    ],
+    related: [
+      {
+        key: '33221-1531-40622',
+        kind: 'relayed',
+        channelNo: '191',
+        channelName: 'みなと教育1',
+      },
+      { key: '33251-1541-40623', kind: 'shared' },
+    ],
+    durationLabel: '2時間',
+  },
+  undecided: {
+    program: {
+      id: '33241-1561-40711',
+      channelId: 'ch-171',
+      title: 'プロ野球「湾岸マリンズ×東都スターズ」',
+      description: '本拠地スタジアムから第 18 回戦を実況生中継。',
+      genre: 'sports',
+      genreLabel: 'スポーツ',
+      startMin: 270,
+      durationMin: 30,
+      startLabel: '23:30',
+      endLabel: '未定',
+      endUndecided: true,
+    },
+    day: PROGRAM_DAY,
+    channel: CHANNEL_FIXTURES[5],
+    items: [
+      {
+        heading: '出演者',
+        text: '【実況】三崎 高志\n【解説】元監督 浜口 剛',
+      },
+    ],
+    related: [],
+  },
+  minimal: {
+    program: {
+      id: '33261-1571-40801',
+      channelId: 'ch-141',
+      title: '夜のショッピング',
+      genre: 'info',
+      genreLabel: '情報/ワイドショー',
+      startMin: 360,
+      durationMin: 60,
+      startLabel: '01:00',
+      endLabel: '02:00',
+    },
+    day: PROGRAM_DAY,
+    channel: CHANNEL_FIXTURES[7],
+    items: [],
+    related: [],
+    durationLabel: '1時間',
+  },
+}

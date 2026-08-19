@@ -86,7 +86,7 @@ export async function searchPrograms(
           ? p.title
           : f === 'description'
             ? (p.description ?? '')
-            : (p.detail ?? ''),
+            : '',
       )
       .filter(Boolean)
       .map(normalize)

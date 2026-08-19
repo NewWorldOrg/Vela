@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 
+import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import { Badge } from '@/components/ui/badge'
@@ -13,17 +14,28 @@ export function ProgramPanel({
   program,
   channel,
   dayLabel,
+  open,
   onClose,
 }: {
   program: Program
   channel?: Channel
   dayLabel: string
+  open: boolean
   onClose: () => void
 }) {
   return (
-    <aside className="w-[332px] shrink-0 self-start rounded-lg border border-line-strong bg-surface shadow-pop-xl max-[1200px]:w-full">
-      <div className="flex items-start gap-2.5 border-b border-line px-[18px] py-3.5">
-        <h2 className="heading min-w-0 flex-1 text-[15px] leading-snug">
+    <aside
+      aria-hidden={!open}
+      inert={!open}
+      className={cn(
+        'fixed top-[60px] right-[18px] bottom-[18px] z-40 flex w-[400px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl transition-transform duration-200 ease-toy',
+        'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-3 max-[900px]:left-3 max-[900px]:max-h-[56vh] max-[900px]:w-auto',
+        !open &&
+          'translate-x-[calc(100%+30px)] max-[900px]:translate-x-0 max-[900px]:translate-y-[calc(100%+30px)]',
+      )}
+    >
+      <div className="flex items-start gap-2.5 px-5 pt-[18px]">
+        <h2 className="heading min-w-0 flex-1 text-[16px] leading-normal">
           {program.title}
         </h2>
         <IconButton
@@ -35,29 +47,24 @@ export function ProgramPanel({
           <CloseIcon />
         </IconButton>
       </div>
-      <div className="px-[18px] py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-2.5 pb-5">
         <p className="text-ui text-ink-2">
-          <b className="mr-1.5 font-code font-medium text-ink-3">
+          <b className="mr-[7px] font-code font-medium text-ink">
             {channel?.no}
           </b>
           {channel?.name}
         </p>
-        <p className="mt-0.5 font-code text-ui text-ink-2">
-          {dayLabel} {program.startLabel}–
+        <p className="mt-0.5 font-code text-[13.5px] font-medium tabular-nums">
+          {program.dateLabel ?? dayLabel} {program.startLabel}–
           {program.endUndecided ? '終了未定' : program.endLabel}
         </p>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <div className="mt-[11px] flex flex-wrap gap-1.5">
           <Badge>{program.genreLabel}</Badge>
           {program.subtitled && <Badge variant="info">字幕あり</Badge>}
         </div>
-        {(program.detail || program.description) && (
-          <p className="mt-3 text-ui leading-relaxed text-ink-2">
-            {program.detail ?? program.description}
-          </p>
-        )}
-        {program.cast && (
-          <p className="mt-2 text-note leading-relaxed text-ink-3">
-            {program.cast.join(' / ')}
+        {program.description && (
+          <p className="mt-[13px] text-ui leading-[1.9] text-ink-2">
+            {program.description}
           </p>
         )}
         <hr className="my-4 border-t border-dashed border-line" />
@@ -70,8 +77,9 @@ export function ProgramPanel({
                 チューナー確保済み
               </div>
               <p className="mt-1 text-sub leading-relaxed text-ink-2">
-                <b>地上波</b>のチューナーを 1 本、{dayLabel}{' '}
-                {program.startLabel} の 10 秒前から確保しました。
+                <b>地上波</b>のチューナーを 1 本、
+                {program.dateLabel ?? dayLabel} {program.startLabel} の 10
+                秒前から確保しました。
               </p>
               <div className="mt-2.5 flex flex-wrap gap-2">
                 <Button

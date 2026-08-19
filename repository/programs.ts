@@ -23,13 +23,12 @@ export interface Program {
   channelId: string
   title: string
   description?: string
-  detail?: string
-  cast?: string[]
   genre: Genre
   genreLabel: string
   /** 番組表の窓の開始からの分 */
   startMin: number
   durationMin: number
+  dateLabel?: string
   startLabel: string
   endLabel: string
   subtitled?: boolean
@@ -56,10 +55,27 @@ export interface GuideResult {
   coverageWarning?: { kind: string; body: string }
 }
 
+export interface ProgramItem {
+  heading: string
+  text: string
+}
+
+export type RelationKind = 'shared' | 'relayed' | 'moved'
+
+export interface RelatedProgram {
+  key: string
+  kind: RelationKind
+  channelNo?: string
+  channelName?: string
+}
+
 export interface ProgramDetail {
   program: Program
   day: GuideDay
   channel?: Channel
+  items: ProgramItem[]
+  related: RelatedProgram[]
+  durationLabel?: string
 }
 
 /** 放送日は 4:00 で切り替わる。 */
@@ -105,6 +121,12 @@ interface GuideChannel extends Channel {
   networkId: number
   serviceId: number
   sortKey: [number, number, number]
+}
+
+const KIND_OF_SYSTEM: Partial<Record<TuneSystem, ChannelKind>> = {
+  isdbT: 'terrestrial',
+  isdbSBs: 'bs',
+  isdbSCs110: 'cs110',
 }
 
 export async function getGuide(
@@ -175,27 +197,41 @@ export async function getProgram(
     return undefined
   }
 
-  const channels = await fetchGuideChannels(kindOfNetwork(programme.networkId))
+  const channels = await fetchServiceChannels()
+  const channelOf = (networkId: number, serviceId: number) =>
+    channels.find(
+      (channel) =>
+        channel.networkId === networkId && channel.serviceId === serviceId,
+    )
 
   return {
     program,
     day,
-    channel: channels.find((channel) => channel.id === program.channelId),
+    channel: channelOf(programme.networkId, programme.serviceId),
+    items: programme.items,
+    related: programme.related.map((related) => {
+      const channel = channelOf(related.networkId, related.serviceId)
+
+      return {
+        key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
+        kind: related.kind,
+        channelNo: channel?.no,
+        channelName: channel?.name || undefined,
+      }
+    }),
+    durationLabel: durationLabelOf(programme),
   }
 }
 
-async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
+async function fetchServiceChannels(): Promise<GuideChannel[]> {
   const { data, error } = await carinaClient().GET('/api/services')
 
   if (error || !data?.data) {
     throw new Error(data?.message || 'チャンネルを読めませんでした')
   }
 
-  const rows = data.data
+  return data.data
     .filter((service) => service.category === 'television')
-    .filter(
-      (service) => service.selectedChannel?.system === SYSTEM_OF_KIND[kind],
-    )
     .map((service) => {
       const networkId = toInt(service.networkId)
       const serviceId = toInt(service.serviceId)
@@ -203,6 +239,11 @@ async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
         service.remoteControlKeyId == null
           ? undefined
           : toInt(service.remoteControlKeyId)
+      const target = service.selectedChannel ?? service.candidates[0]?.target
+      const system =
+        !target || target.system === 'unspecified' ? undefined : target.system
+      const kind =
+        (system && KIND_OF_SYSTEM[system]) ?? kindOfNetwork(networkId)
 
       return {
         id: `${networkId}-${serviceId}`,
@@ -221,6 +262,12 @@ async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
             : ([serviceId, networkId, serviceId] as [number, number, number]),
       }
     })
+}
+
+async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
+  const rows = (await fetchServiceChannels()).filter(
+    (channel) => channel.kind === kind,
+  )
 
   rows.sort(
     (a, b) =>
@@ -296,18 +343,11 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
     channelId: `${programme.networkId}-${programme.serviceId}`,
     title: programme.name,
     description: programme.summary || undefined,
-    detail:
-      programme.items.length > 0
-        ? programme.items
-            .map((item) =>
-              item.heading ? `${item.heading}\n${item.text}` : item.text,
-            )
-            .join('\n\n')
-        : undefined,
     genre: genre.slug,
     genreLabel: genre.label,
     startMin: Math.floor((shownFrom - windowStart.getTime()) / 60_000),
     durationMin: Math.ceil((shownTo - shownFrom) / 60_000),
+    dateLabel: dayLabel(calendarDateOf(startsAt)),
     startLabel: clockLabel(startsAt),
     endLabel: endsAt ? clockLabel(endsAt) : '未定',
     subtitled: programme.hasSubtitles || undefined,
@@ -330,6 +370,10 @@ function guideDays(): GuideDay[] {
   }
 
   return days
+}
+
+function calendarDateOf(at: Date): string {
+  return new Date(at.getTime() + JST_OFFSET_MS).toISOString().slice(0, 10)
 }
 
 function dayOf(at: Date): GuideDay {
@@ -363,6 +407,31 @@ function dayLabel(date: string): string {
   const at = new Date(`${date}T00:00:00Z`)
 
   return `${at.getUTCMonth() + 1}/${at.getUTCDate()}(${WEEKDAY[at.getUTCDay()]})`
+}
+
+function durationLabelOf(programme: Programme): string | undefined {
+  if (!programme.endsAt) {
+    return undefined
+  }
+
+  const minutes = Math.round(
+    (new Date(programme.endsAt).getTime() -
+      new Date(programme.startsAt).getTime()) /
+      60_000,
+  )
+
+  if (minutes <= 0) {
+    return undefined
+  }
+
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+
+  if (hours === 0) {
+    return `${rest}分`
+  }
+
+  return rest === 0 ? `${hours}時間` : `${hours}時間${rest}分`
 }
 
 function clockLabel(at: Date): string {
