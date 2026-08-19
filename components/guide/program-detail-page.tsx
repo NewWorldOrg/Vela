@@ -158,14 +158,13 @@ export function ProgramDetailView({ detail }: { detail: ProgramDetail }) {
 
 function RelatedNotice({ related }: { related: RelatedProgram }) {
   const wording = RELATION_WORDING[related.kind]
-  const channelLabel = related.channelName
-    ? [related.channelNo, related.channelName].filter(Boolean).join(' ')
-    : undefined
 
   return (
     <div className="mb-[22px] flex items-start gap-[11px] rounded-lg bg-sky-soft px-4 py-[13px] text-ui leading-[1.75] text-sky max-[700px]:flex-wrap">
       <RelayIcon className="mt-[3px] size-[17px]" />
-      <p className="min-w-0 flex-1 font-bold">{wording.lead(channelLabel)}</p>
+      <p className="min-w-0 flex-1 font-bold">
+        {wording.lead(related.channelLabel)}
+      </p>
       <Link
         href={`/guide/programs/${related.key}`}
         className="ml-auto pl-[13px] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
