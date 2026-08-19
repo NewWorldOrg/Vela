@@ -169,7 +169,7 @@ export function LiveView({ live }: { live: LiveResult }) {
             </span>
           </div>
           {live.description && (
-            <p className="mt-3 text-ui leading-relaxed text-ink-2">
+            <p className="mt-3 text-ui leading-relaxed whitespace-pre-wrap text-ink-2">
               {live.description}
             </p>
           )}

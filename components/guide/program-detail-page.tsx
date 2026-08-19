@@ -93,7 +93,7 @@ export function ProgramDetailView({ detail }: { detail: ProgramDetail }) {
 
           <div className="mt-5 border-t border-dashed border-line pt-5">
             {program.description && (
-              <p className="mb-5 text-[13.5px] leading-[1.95]">
+              <p className="mb-5 text-[13.5px] leading-[1.95] whitespace-pre-wrap">
                 {program.description}
               </p>
             )}
@@ -190,7 +190,7 @@ function ExtendedSection({ item }: { item: ProgramItem }) {
           <span className="h-px flex-1 border-t border-dashed border-line" />
         </h2>
       )}
-      <p className="text-[13px] leading-[1.95] whitespace-pre-line text-ink-2">
+      <p className="text-[13px] leading-[1.95] whitespace-pre-wrap text-ink-2">
         {item.text}
       </p>
     </section>
