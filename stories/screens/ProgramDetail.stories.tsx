@@ -27,3 +27,7 @@ export const 終了未定: Story = {
 export const 情報最小: Story = {
   args: { detail: PROGRAM_DETAIL_FIXTURES.minimal },
 }
+
+export const 改行を含む本文: Story = {
+  args: { detail: PROGRAM_DETAIL_FIXTURES.multiline },
+}

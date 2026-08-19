@@ -555,7 +555,7 @@ export const PROGRAM_FIXTURES: Program[] = [
 ]
 
 export const PROGRAM_DETAIL_FIXTURES: Record<
-  'standard' | 'relayed' | 'undecided' | 'minimal',
+  'standard' | 'relayed' | 'undecided' | 'minimal' | 'multiline',
   ProgramDetail
 > = {
   standard: {
@@ -645,6 +645,36 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       },
     ],
     related: [],
+  },
+  multiline: {
+    program: {
+      id: '33221-1521-40615',
+      channelId: 'ch-151',
+      title: '入り江のアトリエ 夏の三日間🈑',
+      description:
+        '入り江の小さな工房を三日にわたってたずねる。\n初日は道具の手入れ、二日目は窯入れ、最終日は仕上げまでを追う。\n\n※天候により内容を変更する場合があります。',
+      genre: 'doc',
+      genreLabel: 'ドキュメンタリー/教養',
+      startMin: 0,
+      durationMin: 75,
+      startLabel: '19:00',
+      endLabel: '20:15',
+      subtitled: true,
+    },
+    day: PROGRAM_DAY,
+    channel: CHANNEL_FIXTURES[0],
+    items: [
+      {
+        heading: '番組内容',
+        text: '一日目  道具の手入れ\n二日目  窯入れと火の番\n三日目  仕上げと搬出\n\n工房の主が四十年つづけてきた手順を、季節の道具とともにたどる。',
+      },
+      {
+        heading: '出演者',
+        text: '【語り】  相原 みどり\n【出演】  柏木 泉',
+      },
+    ],
+    related: [],
+    durationLabel: '1時間15分',
   },
   minimal: {
     program: {

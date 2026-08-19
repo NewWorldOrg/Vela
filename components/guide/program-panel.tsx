@@ -63,7 +63,7 @@ export function ProgramPanel({
           {program.subtitled && <Badge variant="info">字幕あり</Badge>}
         </div>
         {program.description && (
-          <p className="mt-[13px] text-ui leading-[1.9] text-ink-2">
+          <p className="mt-[13px] text-ui leading-[1.9] whitespace-pre-wrap text-ink-2">
             {program.description}
           </p>
         )}
