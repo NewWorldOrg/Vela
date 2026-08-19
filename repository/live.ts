@@ -65,7 +65,7 @@ export async function getLive(rawChannel?: string): Promise<LiveResult> {
       : 0,
     nowLabel: NOW_LABEL,
     restLabel: `残り ${rest} 分`,
-    description: current?.detail ?? current?.description,
+    description: current?.description,
     chips: [
       ...(current?.subtitled ? ['字幕あり'] : []),
       ...(current ? [current.genreLabel] : []),
