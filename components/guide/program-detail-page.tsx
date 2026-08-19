@@ -1,127 +1,198 @@
 import Link from 'next/link'
 
-import type { Channel } from '@/repository/channels'
-import type { Program } from '@/repository/programs'
+import type {
+  ProgramDetail,
+  ProgramItem,
+  RelatedProgram,
+  RelationKind,
+} from '@/repository/programs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ChevronLeftIcon, PlusIcon, SuccessIcon } from '@/components/vela/icons'
-import { ProgramDetailRow } from '@/components/guide/program-detail-row'
+import {
+  ChevronLeftIcon,
+  InfoIcon,
+  ListIcon,
+  PersonIcon,
+  RecordIcon,
+  RelayIcon,
+} from '@/components/vela/icons'
 
-export function ProgramDetailView({
-  program,
-  channel,
-  dayLabel,
-}: {
-  program: Program
-  channel?: Channel
-  dayLabel: string
-}) {
+const RELATION_WORDING: Record<
+  RelationKind,
+  { lead: (channel?: string) => string; link: string }
+> = {
+  relayed: {
+    lead: (channel) =>
+      channel
+        ? `放送は ${channel} で継続されます。`
+        : '放送は別のチャンネルで継続されます。',
+    link: '継続先を見る',
+  },
+  moved: {
+    lead: (channel) =>
+      channel
+        ? `放送枠が ${channel} に移動しています。`
+        : '放送枠が移動しています。',
+    link: '移動先を見る',
+  },
+  shared: {
+    lead: (channel) =>
+      channel
+        ? `${channel} でも同時に放送されます。`
+        : '別のチャンネルでも同時に放送されます。',
+    link: '同時放送を見る',
+  },
+}
+
+export function ProgramDetailView({ detail }: { detail: ProgramDetail }) {
+  const { program, channel, day, items, related, durationLabel } = detail
+
   return (
-    <main className="flex-1 px-3.5 pt-[18px] pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
-      <div className="mb-3 flex items-center">
-        <Button variant="ghost" size="sm" asChild>
+    <main className="flex-1 pb-16">
+      <div className="mx-auto max-w-[780px] px-6 pt-[22px] max-[700px]:px-3.5">
+        <Button variant="ghost" size="sm" className="mb-3.5" asChild>
           <Link href="/guide">
             <ChevronLeftIcon />
             番組表へ
           </Link>
         </Button>
-      </div>
 
-      <div className="grid grid-cols-[1.35fr_1fr] items-start gap-[18px] *:min-w-0 max-[1060px]:grid-cols-1">
-        <section className="rounded-xl bg-surface px-[22px] py-5">
-          <h1 className="heading text-[20px] leading-normal">
+        <section className="rounded-xl bg-surface px-[30px] pt-[26px] pb-[22px] max-[700px]:px-[18px] max-[700px]:pt-[22px]">
+          <div className="mb-[9px] flex items-center gap-2.5">
+            {channel?.no && (
+              <span className="rounded-md border border-line bg-surface-2 px-2 py-px font-code text-[11px] font-medium text-ink-2">
+                {channel.no}
+              </span>
+            )}
+            {channel?.name && (
+              <span className="text-ui text-ink-2">{channel.name}</span>
+            )}
+          </div>
+          <h1 className="heading text-[23px] leading-normal">
             {program.title}
           </h1>
-          <div className="mt-3.5 border-t border-dashed border-line">
-            <ProgramDetailRow label="チャンネル">
-              {channel?.name}
-              <small className="ml-[9px] font-code text-[11.5px] text-ink-3">
-                {channel?.no}
-              </small>
-            </ProgramDetailRow>
-            <ProgramDetailRow label="放送日時">
-              <span className="font-code">
-                {dayLabel} {program.startLabel}–
-                {program.endUndecided ? '終了未定' : program.endLabel}
+          <p className="mt-[9px] font-code text-[13.5px] tabular-nums">
+            {day.label} {program.startLabel} –{' '}
+            {program.endUndecided ? '終了未定' : program.endLabel}
+            {durationLabel && (
+              <span className="ml-[9px] text-sub text-ink-3">
+                {durationLabel}
               </span>
-            </ProgramDetailRow>
-            <ProgramDetailRow label="ジャンル">
-              <span className="mr-1.5 inline-block rounded-full border border-line bg-surface px-[11px] py-0.5 text-note font-medium text-ink-2">
-                {program.genreLabel}
-              </span>
-              {program.subtitled && <Badge variant="info">字幕あり</Badge>}
-            </ProgramDetailRow>
+            )}
+          </p>
+          <div className="mt-[13px] flex flex-wrap gap-[7px]">
+            <Badge variant="info" className="font-bold">
+              {program.genreLabel}
+            </Badge>
+            {program.subtitled && (
+              <Badge variant="ok" className="font-bold">
+                字幕あり
+              </Badge>
+            )}
           </div>
-          {(program.detail || program.description) && (
-            <p className="my-3.5 max-w-[560px] text-[13px] leading-[1.9] text-ink-2">
-              {program.detail ?? program.description}
-            </p>
-          )}
-          {program.cast && (
-            <p className="text-note leading-relaxed text-ink-3">
-              {program.cast.join(' / ')}
-            </p>
-          )}
+
+          <div className="mt-5 border-t border-dashed border-line pt-5">
+            {program.description && (
+              <p className="mb-5 text-[13.5px] leading-[1.95]">
+                {program.description}
+              </p>
+            )}
+            {related.map((item) => (
+              <RelatedNotice key={`${item.kind}-${item.key}`} related={item} />
+            ))}
+            {items.map((item, index) => (
+              <ExtendedSection key={index} item={item} />
+            ))}
+            <dl className="grid grid-cols-3 gap-5 border-t border-dashed border-line pt-4 max-[700px]:grid-cols-2 max-[480px]:grid-cols-1">
+              <div>
+                <dt className="text-cap font-bold tracking-[.04em] text-ink-3">
+                  字幕
+                </dt>
+                <dd className="mt-0.5 text-[13.5px] font-medium">
+                  {program.subtitled ? 'あり' : 'なし'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="mt-[22px] flex items-center gap-3 border-t border-dashed border-line pt-[17px] max-[700px]:flex-wrap max-[700px]:gap-y-2.5">
+            <div className="flex flex-wrap gap-[9px]">
+              <Button disabled title="録画予約はこれから実装されます">
+                <RecordIcon />
+                録画予約
+              </Button>
+              <Button
+                variant="ghost"
+                disabled
+                title="シリーズ予約はこれから実装されます"
+              >
+                <ListIcon />
+                シリーズで予約
+              </Button>
+            </div>
+            <Button variant="link" size="sm" className="ml-auto" asChild>
+              <Link href={`/search?q=${encodeURIComponent(program.title)}`}>
+                この番組名で検索
+              </Link>
+            </Button>
+          </div>
+          <div className="flex items-start gap-[9px] px-[30px] pt-[11px] text-note leading-[1.75] text-ink-3 max-[700px]:px-0">
+            <InfoIcon className="mt-[3px] size-[15px]" />
+            <span>
+              予約した時点でチューナーを確保します。
+              {program.endUndecided &&
+                'この番組は終了時刻が延びる可能性があるため、延長に追従して録画します。'}
+            </span>
+          </div>
         </section>
 
-        <section className="rounded-xl bg-surface px-[22px] py-5">
-          <h2 className="heading mb-3.5 text-[15px]">録画予約</h2>
-          {program.booked ? (
-            <>
-              <div className="rounded-lg bg-mint-soft px-3.5 py-3">
-                <div className="flex items-center gap-1.5 text-ui font-bold text-mint">
-                  <SuccessIcon className="size-4" />
-                  チューナー確保済み
-                </div>
-                <p className="mt-1 text-sub leading-relaxed text-ink-2">
-                  <b>地上波</b>のチューナーを 1 本、{dayLabel}{' '}
-                  {program.startLabel} の 10 秒前から確保しました。
-                </p>
-              </div>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled
-                  title="予約の編集はこれから実装されます"
-                >
-                  予約を編集
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled
-                  title="予約の取り消しはこれから実装されます"
-                >
-                  予約を取り消す
-                </Button>
-              </div>
-              <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-                録画の 10 秒前から開始し、終了 30 秒後まで延長に追従します。
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="flex flex-wrap gap-2">
-                <Button disabled title="録画予約はこれから実装されます">
-                  <PlusIcon />
-                  録画予約
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled
-                  title="シリーズ予約はこれから実装されます"
-                >
-                  シリーズで予約
-                </Button>
-              </div>
-              <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-                予約した時点でチューナーを確保します。空きがない場合はこの場で競合として提示します。
-              </p>
-            </>
-          )}
-        </section>
+        <p className="mt-3.5 px-1.5 text-note leading-[1.8] text-ink-3">
+          この画面は固有 URL{' '}
+          <span className="font-code">/guide/programs/{program.id}</span>{' '}
+          で単体で開けます。番組の識別子は(ネットワーク・サービス・イベント)の組で、開始時刻を併記して同一性を判定します。
+        </p>
       </div>
     </main>
+  )
+}
+
+function RelatedNotice({ related }: { related: RelatedProgram }) {
+  const wording = RELATION_WORDING[related.kind]
+  const channelLabel = related.channelName
+    ? [related.channelNo, related.channelName].filter(Boolean).join(' ')
+    : undefined
+
+  return (
+    <div className="mb-[22px] flex items-start gap-[11px] rounded-lg bg-sky-soft px-4 py-[13px] text-ui leading-[1.75] text-sky max-[700px]:flex-wrap">
+      <RelayIcon className="mt-[3px] size-[17px]" />
+      <p className="min-w-0 flex-1 font-bold">{wording.lead(channelLabel)}</p>
+      <Link
+        href={`/guide/programs/${related.key}`}
+        className="ml-auto pl-[13px] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
+      >
+        {wording.link}
+      </Link>
+    </div>
+  )
+}
+
+function ExtendedSection({ item }: { item: ProgramItem }) {
+  const HeadingIcon = /出演|司会|ゲスト|キャスト/.test(item.heading)
+    ? PersonIcon
+    : ListIcon
+
+  return (
+    <section className="mb-5">
+      {item.heading && (
+        <h2 className="heading mb-[7px] flex items-center gap-[7px] text-[13px]">
+          <HeadingIcon className="size-[15px] text-brand" />
+          {item.heading}
+          <span className="h-px flex-1 border-t border-dashed border-line" />
+        </h2>
+      )}
+      <p className="text-[13px] leading-[1.95] whitespace-pre-line text-ink-2">
+        {item.text}
+      </p>
+    </section>
   )
 }

@@ -531,3 +531,32 @@ export function MarkSplit(props: IconProps) {
     </Icon>
   )
 }
+
+export function RecordIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="8.3" />
+      <circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none" />
+    </Icon>
+  )
+}
+
+export function RelayIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.2 12h12.2" />
+      <path d="m12.4 7.2 4.6 4.8-4.6 4.8" />
+      <path d="M20.2 5.4v13.4" />
+    </Icon>
+  )
+}
+
+export function PersonIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="9.6" cy="8.4" r="3.2" />
+      <path d="M4 19.4c.6-3.2 2.9-4.9 5.7-4.9s5 1.7 5.6 4.9" />
+      <path d="M16.4 6.4a3 3 0 0 1 .2 5.6" />
+    </Icon>
+  )
+}

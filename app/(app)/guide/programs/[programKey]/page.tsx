@@ -25,11 +25,5 @@ export default async function Page({
     notFound()
   }
 
-  return (
-    <ProgramDetailView
-      program={detail.program}
-      channel={detail.channel}
-      dayLabel={detail.day.label}
-    />
-  )
+  return <ProgramDetailView detail={detail} />
 }
