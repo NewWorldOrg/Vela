@@ -22,6 +22,7 @@ const badgeVariants = cva(
         ok: 'border-mint-line bg-mint-soft text-mint',
         warn: 'border-lemon-line bg-lemon-soft text-lemon',
         err: 'border-coral-line bg-coral-soft text-coral',
+        sky: 'border-sky-line bg-sky-soft text-sky',
         info: 'border-brand-line bg-brand-soft text-brand',
         selected: 'border-brand-line bg-brand-soft font-bold text-brand',
         recording: 'border-coral-line bg-coral-soft font-bold text-coral',

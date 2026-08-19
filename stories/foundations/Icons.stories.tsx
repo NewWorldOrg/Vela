@@ -55,6 +55,9 @@ const ACTIONS: [string, ComponentType<IconProps>][] = [
   ['WarningIcon', Icons.WarningIcon],
   ['DangerIcon', Icons.DangerIcon],
   ['SignalIcon', Icons.SignalIcon],
+  ['AntennaIcon', Icons.AntennaIcon],
+  ['CollectIcon', Icons.CollectIcon],
+  ['RebuildIcon', Icons.RebuildIcon],
 ]
 
 const MARKS: [string, ComponentType<IconProps>][] = [

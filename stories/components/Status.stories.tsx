@@ -62,6 +62,7 @@ export const Chips: Story = {
         <Badge variant="warn">要確認</Badge>
         <Badge variant="err">受信不可</Badge>
         <Badge variant="ok">受信可</Badge>
+        <Badge variant="sky">BasicOnly</Badge>
         <Badge>ワンセグ</Badge>
         <Badge variant="mute">未計測</Badge>
       </div>
