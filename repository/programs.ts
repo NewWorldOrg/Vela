@@ -2,7 +2,7 @@ import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { Channel, ChannelKind } from '@/repository/channels'
 import type { Programme } from '@/repository/programmes'
-import { fetchGuide, fetchProgramme } from '@/repository/programmes'
+import { fetchGuide, fetchProgramme, toInt } from '@/repository/programmes'
 
 type TuneSystem = components['schemas']['TuneSystem']
 
@@ -99,6 +99,8 @@ const GENRE_OTHER: { slug: Genre; label: string } = {
   label: 'その他',
 }
 
+const UNDECIDED_DURATION_MIN = 30
+
 interface GuideChannel extends Channel {
   networkId: number
   serviceId: number
@@ -183,9 +185,13 @@ export async function getProgram(
 }
 
 async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
-  const { data } = await carinaClient().GET('/api/services')
+  const { data, error } = await carinaClient().GET('/api/services')
 
-  const rows = (data?.data ?? [])
+  if (error || !data?.data) {
+    throw new Error(data?.message || 'チャンネルを読めませんでした')
+  }
+
+  const rows = data.data
     .filter((service) => service.category === 'television')
     .filter(
       (service) => service.selectedChannel?.system === SYSTEM_OF_KIND[kind],
@@ -272,7 +278,10 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
   const windowEnd = windowStart.getTime() + WINDOW_HOURS * 60 * 60 * 1000
 
   const shownFrom = Math.max(startsAt.getTime(), windowStart.getTime())
-  const shownTo = Math.min(endsAt?.getTime() ?? windowEnd, windowEnd)
+  const shownTo = Math.min(
+    endsAt?.getTime() ?? shownFrom + UNDECIDED_DURATION_MIN * 60_000,
+    windowEnd,
+  )
 
   if (shownTo <= shownFrom) {
     return null
@@ -372,8 +381,4 @@ function kindOfNetwork(networkId: number): ChannelKind {
   }
 
   return 'terrestrial'
-}
-
-function toInt(value: number | string): number {
-  return typeof value === 'number' ? value : Number(value)
 }

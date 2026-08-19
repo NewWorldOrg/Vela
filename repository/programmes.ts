@@ -43,13 +43,7 @@ export interface Programme {
   related: RelatedProgramme[]
 }
 
-export interface GuideService {
-  networkId: number
-  serviceId: number
-}
-
 export interface Guide {
-  services: GuideService[]
   programmes: Programme[]
 }
 
@@ -100,7 +94,7 @@ export async function fetchProgramme(id: string): Promise<Programme | null> {
     params: { path: { id } },
   })
 
-  if (response.status === 404) {
+  if (response.status === 404 || response.status === 400) {
     return null
   }
 
@@ -135,16 +129,12 @@ export async function searchProgrammes(
   return toPage(data.data)
 }
 
-function toInt(value: number | string): number {
+export function toInt(value: number | string): number {
   return typeof value === 'number' ? value : Number(value)
 }
 
 function toGuide(guide: GuideResponder): Guide {
   return {
-    services: (guide.services ?? []).map((service) => ({
-      networkId: toInt(service.networkId),
-      serviceId: toInt(service.serviceId),
-    })),
     programmes: (guide.programmes ?? []).map(toProgramme),
   }
 }

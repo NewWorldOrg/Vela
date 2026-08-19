@@ -104,6 +104,7 @@ export function GuideGrid({
                     program={p}
                     past={
                       nowMin !== undefined &&
+                      !p.endUndecided &&
                       p.startMin + p.durationMin <= nowMin
                     }
                     selected={p.id === selectedId}
