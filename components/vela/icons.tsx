@@ -560,3 +560,33 @@ export function PersonIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function AntennaIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 14.5V20" />
+      <path d="M12 14.5 5.6 6.2" />
+      <path d="M12 14.5 18.4 6.2" />
+      <circle cx="12" cy="15.6" r="1.4" />
+    </Icon>
+  )
+}
+
+export function CollectIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4.6v9.2" />
+      <path d="m7.8 9.6 4.2 4.2 4.2-4.2" />
+      <path d="M5 19.4h14" />
+    </Icon>
+  )
+}
+
+export function RebuildIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5.4 12a6.6 6.6 0 1 0 2.1-4.8" />
+      <path d="M5.2 5.6v3.2h3.2" />
+    </Icon>
+  )
+}

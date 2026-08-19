@@ -13,8 +13,9 @@ export type BannerTone = 'info' | 'warn' | 'danger'
 /** A navigation. Renders as a bold, permanently underlined text link. */
 export interface BannerLinkAction {
   label: string
-  /** Without one the label is a button that carries no destination. */
+  /** Without one the label is a button, and `onClick` carries it instead. */
   href?: Route
+  onClick?: () => void
 }
 
 /**
@@ -104,7 +105,11 @@ function BannerActionControl({
       {action.label}
     </Link>
   ) : (
-    <button type="button" className={ACTION_CLASS}>
+    <button
+      type="button"
+      onClick={action.onClick}
+      className={cn(ACTION_CLASS, 'cursor-pointer')}
+    >
       {action.label}
     </button>
   )

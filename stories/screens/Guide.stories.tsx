@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
+import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
 import {
   GUIDE_DAYS,
   NOW_LABEL,
@@ -25,6 +26,11 @@ const meta = {
   title: 'Screens/番組表',
   component: GuideView,
   parameters: { layout: 'fullscreen' },
+  args: {
+    collection: COLLECTION_FIXTURES,
+    onCollectNow: async () => ({ state: 'started' as const, streams: 7 }),
+    onRebuild: async () => ({ state: 'ok' as const, discarded: 3521 }),
+  },
   decorators: [
     (Story) => (
       <div className="dot-grid flex h-dvh flex-col overflow-hidden bg-bg">
@@ -38,6 +44,18 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const 通常: Story = { args: { guide: base } }
+
+export const 健全性バナー: Story = {
+  args: {
+    guide: {
+      ...base,
+      coverageWarning: {
+        emphasis: '湾岸放送1 の番組情報が不足しています。',
+        body: 'EPG の収集が連続して揃っていません。',
+      },
+    },
+  },
+}
 
 export const 別の日: Story = {
   args: {

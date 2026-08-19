@@ -7,25 +7,44 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 import { CHANNEL_KINDS } from '@/repository/channels'
+import type {
+  CollectNowResult,
+  CollectScope,
+  CollectionStatus,
+  RebuildResult,
+} from '@/repository/collection'
 import type { GuideResult, Program } from '@/repository/programs'
 import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
 import {
+  AntennaIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   SearchIcon,
 } from '@/components/vela/icons'
+import { CollectionDrawer } from '@/components/guide/collection-drawer'
 import { GuideGrid } from '@/components/guide/guide-grid'
 import { ProgramPanel } from '@/components/guide/program-panel'
 
-export function GuideView({ guide }: { guide: GuideResult }) {
+export function GuideView({
+  guide,
+  collection,
+  onCollectNow,
+  onRebuild,
+}: {
+  guide: GuideResult
+  collection: CollectionStatus
+  onCollectNow: (scope: CollectScope) => Promise<CollectNowResult>
+  onRebuild: () => Promise<RebuildResult>
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [collectionOpen, setCollectionOpen] = useState(false)
 
   const select = useCallback((program: Program) => {
     setSelected(program)
@@ -107,9 +126,17 @@ export function GuideView({ guide }: { guide: GuideResult }) {
           )}
         </div>
 
+        <button
+          type="button"
+          onClick={() => setCollectionOpen(true)}
+          className="ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
+        >
+          <AntennaIcon className="size-[15px]" />
+          収集状態
+        </button>
         <Link
           href="/search"
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
+          className="inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
         >
           <SearchIcon className="size-[15px]" />
           番組を検索
@@ -120,8 +147,14 @@ export function GuideView({ guide }: { guide: GuideResult }) {
         <Banner
           tone="warn"
           className="mb-3"
-          actions={[{ label: 'チャンネル設定へ', href: '/settings/channels' }]}
+          actions={[
+            {
+              label: '収集状態を見る',
+              onClick: () => setCollectionOpen(true),
+            },
+          ]}
         >
+          <b className="font-bold">{guide.coverageWarning.emphasis}</b>
           {guide.coverageWarning.body}
         </Banner>
       )}
@@ -175,6 +208,14 @@ export function GuideView({ guide }: { guide: GuideResult }) {
           )}
         </>
       )}
+
+      <CollectionDrawer
+        status={collection}
+        open={collectionOpen}
+        onClose={() => setCollectionOpen(false)}
+        onCollectNow={onCollectNow}
+        onRebuild={onRebuild}
+      />
     </main>
   )
 }
