@@ -128,6 +128,7 @@ export function GuideView({
 
         <button
           type="button"
+          data-opens="collection"
           onClick={() => setCollectionOpen(true)}
           className="ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
         >
@@ -147,6 +148,7 @@ export function GuideView({
         <Banner
           tone="warn"
           className="mb-3"
+          data-opens="collection"
           actions={[
             {
               label: '収集状態を見る',

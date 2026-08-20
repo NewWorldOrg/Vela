@@ -3,6 +3,7 @@
 import { useEffect, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 
+import { useDismissable } from '@/hooks/useDismissable'
 import { streamLabel } from '@/lib/collection'
 import { cn } from '@/lib/utils'
 import type {
@@ -332,6 +333,11 @@ export function CollectionDrawer({
   const [discarded, setDiscarded] = useState<number>()
   const [cooldownUntil, setCooldownUntil] = useState<number>()
   const guardId = useId()
+  const drawer = useDismissable<HTMLDivElement>({
+    open,
+    onDismiss: onClose,
+    opener: 'collection',
+  })
 
   useEffect(() => {
     if (cooldownUntil === undefined) {
@@ -392,13 +398,15 @@ export function CollectionDrawer({
 
   return (
     <>
-      <aside
+      <div
+        ref={drawer}
+        tabIndex={-1}
         role="dialog"
         aria-label="収集状態"
         aria-hidden={!open}
         inert={!open}
         className={cn(
-          'fixed top-[60px] right-[18px] bottom-[18px] z-[45] flex w-[500px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl transition-transform duration-200 ease-toy',
+          'fixed top-[60px] right-[18px] bottom-[18px] z-[45] flex w-[500px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy',
           'max-[1060px]:w-[440px]',
           'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-3 max-[900px]:left-3 max-[900px]:max-h-[70vh] max-[900px]:w-auto',
           !open &&
@@ -596,7 +604,7 @@ export function CollectionDrawer({
             )}
           </span>
         </div>
-      </aside>
+      </div>
 
       <RebuildEpgDialog
         open={rebuildOpen}

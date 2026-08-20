@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { CollectNowResult, RebuildResult } from '@/repository/collection'
 import {
@@ -21,7 +21,7 @@ const meta = {
   args: {
     status: COLLECTION_FIXTURES,
     open: true,
-    onClose: () => {},
+    onClose: fn(),
     onCollectNow: answering({ state: 'started', streams: 7 }),
     onRebuild: async () => rebuilt,
   },
@@ -79,4 +79,40 @@ export const 全破棄の確認: Story = {
       onDiscarded={() => {}}
     />
   ),
+}
+
+/** The drawer takes focus once it is open, which is also when it starts listening. */
+const showed = (canvasElement: HTMLElement) =>
+  waitFor(() =>
+    expect(canvasElement.querySelector('[role="dialog"]')).toHaveFocus(),
+  )
+
+export const 範囲外を押すと閉じる: Story = {
+  play: async ({ args, canvasElement }) => {
+    await showed(canvasElement)
+    await userEvent.click(document.body)
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled())
+  },
+}
+
+export const Escで閉じる: Story = {
+  play: async ({ args, canvasElement }) => {
+    await showed(canvasElement)
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled())
+  },
+}
+
+export const 確認の上のEscは確認だけを閉じる: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showed(canvasElement)
+    await userEvent.click(canvas.getByRole('button', { name: /全破棄/ }))
+    await screen.findByRole('alertdialog')
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    await expect(args.onClose).not.toHaveBeenCalled()
+  },
 }
