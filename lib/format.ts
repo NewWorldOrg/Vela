@@ -16,37 +16,72 @@ export function formatInstant(iso: string) {
 }
 
 /**
- * `MM/DD HH:mm` in the zone the process runs in — a self-hosted deployment
- * sets `TZ` once and every screen follows it, so no zone is named here.
+ * The zone every stamp below is spelled in. Broadcasting runs on Japan
+ * Standard Time, so that is what a screen means by a date and an hour — never
+ * the zone of whichever machine happens to render it. Naming it here is what
+ * keeps a server and a browser on the same answer, and what keeps a container
+ * without `TZ` from quietly serving times nine hours out.
  */
-export function formatStamp(iso: string) {
-  const at = new Date(iso)
-  const pad = (value: number) => String(value).padStart(2, '0')
+const DISPLAY_ZONE = 'Asia/Tokyo'
 
-  return `${pad(at.getMonth() + 1)}/${pad(at.getDate())} ${pad(at.getHours())}:${pad(at.getMinutes())}`
+const CALENDAR = new Intl.DateTimeFormat('en-US', {
+  timeZone: DISPLAY_ZONE,
+  hourCycle: 'h23',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+interface Stamp {
+  year: string
+  month: string
+  day: string
+  hour: string
+  minute: string
+}
+
+function stampOf(at: string | number): Stamp {
+  const parts = CALENDAR.formatToParts(new Date(at))
+  const read = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? ''
+
+  return {
+    year: read('year'),
+    month: read('month'),
+    day: read('day'),
+    hour: read('hour'),
+    minute: read('minute'),
+  }
+}
+
+/** `MM/DD HH:mm`. */
+export function formatStamp(iso: string) {
+  const at = stampOf(iso)
+
+  return `${at.month}/${at.day} ${at.hour}:${at.minute}`
 }
 
 /** `YYYY/MM/DD HH:mm` — the stamp an admin screen spells out in full. */
 export function formatDateTime(iso: string) {
-  const at = new Date(iso)
-  const pad = (value: number) => String(value).padStart(2, '0')
+  const at = stampOf(iso)
 
-  return `${at.getFullYear()}/${pad(at.getMonth() + 1)}/${pad(at.getDate())} ${pad(at.getHours())}:${pad(at.getMinutes())}`
+  return `${at.year}/${at.month}/${at.day} ${at.hour}:${at.minute}`
 }
 
 /** `HH:mm` — a moment close enough that the day of it says nothing. */
 export function formatClock(at: number) {
-  const moment = new Date(at)
-  const pad = (value: number) => String(value).padStart(2, '0')
+  const moment = stampOf(at)
 
-  return `${pad(moment.getHours())}:${pad(moment.getMinutes())}`
+  return `${moment.hour}:${moment.minute}`
 }
 
 /** `YYYY/MM` — for a date old enough that the day of it says nothing. */
 export function formatMonth(iso: string) {
-  const at = new Date(iso)
+  const at = stampOf(iso)
 
-  return `${at.getFullYear()}/${String(at.getMonth() + 1).padStart(2, '0')}`
+  return `${at.year}/${at.month}`
 }
 
 export function formatLength(sec: number) {

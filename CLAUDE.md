@@ -97,6 +97,7 @@ Everything runs inside the `app` service.
 ```bash
 docker compose exec app yarn lint             # eslint + prettier:check
 docker compose exec app yarn typecheck        # tsc --noEmit
+docker compose exec app yarn test             # node --test over lib/*.test.ts
 docker compose exec app yarn build            # next build
 docker compose exec app yarn build-storybook  # a static Storybook
 docker compose exec app yarn codegen:fetch    # refetch the document, regenerate the client
@@ -104,8 +105,13 @@ docker compose exec app yarn codegen:verify   # regenerate the client, fail on a
 task test:stories                             # build + test-runner, a11y included
 ```
 
-GitHub Actions runs lint, typecheck, the codegen check and build on push and pull
-request to `master`.
+GitHub Actions runs lint, typecheck, the unit tests, the codegen check and build
+on push and pull request to `master`.
+
+`yarn test` is Node's own runner over the TypeScript sources, so there is no test
+framework to install. A date on screen is spelled in `Asia/Tokyo`, named in
+`lib/format.ts` rather than taken from `TZ`, and `lib/format.test.ts` starts a
+process in a wrong zone to hold that.
 
 `codegen:fetch` overwrites `repository/client/carina.json` with what the running API
 at `CARINA_API_BASE_URL` serves and regenerates the client from it, so `git diff`

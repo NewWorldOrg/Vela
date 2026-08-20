@@ -21,6 +21,8 @@ tasks:
     cmd: docker compose exec app yarn lint
   typecheck:
     cmd: docker compose exec app yarn typecheck
+  test:
+    cmd: docker compose exec app yarn test
   prettier-check:
     cmd: docker compose exec app yarn prettier:check
   prettier:
