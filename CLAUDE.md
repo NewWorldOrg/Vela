@@ -17,7 +17,7 @@ This file is for changing it, and does not repeat what is there.
 - **Components**: shadcn primitives from the unified `radix-ui` package, pulled
   towards Vela's tokens and feel, plus the components in `components/vela/`
 - **Table**: one general `DataTable` over `@tanstack/react-table` v8
-- **Forms**: `react-hook-form` with `zod` through `@hookform/resolvers`
+- **Forms**: the shadcn `Form` primitive over `react-hook-form`
 - **Catalog and verification**: Storybook 10 (`@storybook/nextjs`, `addon-a11y`)
   and `@storybook/test-runner`, which drives a real browser
 
