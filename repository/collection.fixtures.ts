@@ -66,10 +66,9 @@ function statusOf(streams: StreamVisitRow[]): CollectionStatus {
 
 function row(
   fixture: Partial<StreamVisitRow> &
-    Pick<
-      StreamVisitRow,
-      'transportStreamId' | 'name' | 'channelLabel' | 'outcome'
-    >,
+    Pick<StreamVisitRow, 'name' | 'channelLabel' | 'outcome'> & {
+      transportStreamId: number
+    },
 ): StreamVisitRow {
   return {
     key: `${fixture.transportStreamId}-${fixture.transportStreamId}`,

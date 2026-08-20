@@ -1,3 +1,4 @@
+import { streamLabel } from '@/lib/collection'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -17,11 +18,15 @@ type TuneSystem = components['schemas']['TuneSystem']
 
 export type StreamOutcome = components['schemas']['StreamCollectionOutcome']
 
+/** Sorts a stream the collector has not reached yet behind the ones it has. */
+const UNREACHED = Number.MAX_SAFE_INTEGER
+
 /** One transport stream as the visit ledger holds it, spelled for the screen. */
 export interface StreamVisitRow {
   key: string
   networkId: number
-  transportStreamId: number
+  /** A stream the collector has not reached yet carries no identifier. */
+  transportStreamId?: number
   kind: ChannelKind
   /** The lead service's name; a stream the service list no longer names has none. */
   name?: string
@@ -142,7 +147,7 @@ export function coverageWarningOf(
     return undefined
   }
 
-  const names = named.map((row) => row.name ?? `TS ${row.transportStreamId}`)
+  const names = named.map((row) => row.name ?? streamLabel(row))
   const shown = names.slice(0, 2).join('・')
   const rest = names.length - 2
 
@@ -253,7 +258,7 @@ function toCollectionStatus(
       (a, b) =>
         KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) ||
         a.networkId - b.networkId ||
-        a.transportStreamId - b.transportStreamId,
+        (a.transportStreamId ?? UNREACHED) - (b.transportStreamId ?? UNREACHED),
     )
 
   const kindCounts = KIND_ORDER.flatMap((kind) => {
@@ -278,12 +283,18 @@ function toCollectionStatus(
     kindCounts,
     troubledCount: rows.filter((row) => row.outcome === 'incomplete').length,
     zeroServiceKinds,
-    streamTargets: rows.map((row) => ({
-      value: row.key,
-      label: `TS ${row.transportStreamId}${row.channelLabel ? `(${row.channelLabel})` : ''}${row.name ?? ''}`,
-      networkId: row.networkId,
-      transportStreamId: row.transportStreamId,
-    })),
+    streamTargets: rows.flatMap((row) =>
+      row.transportStreamId === undefined
+        ? []
+        : [
+            {
+              value: row.key,
+              label: `TS ${row.transportStreamId}${row.channelLabel ? `(${row.channelLabel})` : ''}${row.name ?? ''}`,
+              networkId: row.networkId,
+              transportStreamId: row.transportStreamId,
+            },
+          ],
+    ),
     serviceTargets: onAir
       .filter((service) => service.television)
       .map((service) => ({
@@ -301,7 +312,11 @@ function toRow(
   now: Date,
 ): StreamVisitRow {
   const networkId = toInt(stream.networkId)
-  const transportStreamId = toInt(stream.transportStreamId)
+  const transportStreamId =
+    stream.transportStreamId === null
+      ? undefined
+      : toInt(stream.transportStreamId)
+  const tunedLabel = channelLabelOf(stream.tuning)
   const serviceIds = stream.serviceIds.map(toInt)
   const carried = services
     .filter(
@@ -320,12 +335,12 @@ function toRow(
   const duration = toInt(stream.lastDurationMilliseconds)
 
   return {
-    key: `${networkId}-${transportStreamId}`,
+    key: `${networkId}-${transportStreamId ?? `${stream.tuning.system}${toInt(stream.tuning.physicalChannel)}`}`,
     networkId,
     transportStreamId,
     kind: lead?.kind ?? kindOfNetwork(networkId),
     name: lead?.name || undefined,
-    channelLabel: lead?.channelLabel,
+    channelLabel: lead?.channelLabel ?? tunedLabel,
     serviceCount: serviceIds.length,
     outcome: stream.outcome,
     lastCompletedLabel: completedAt ? timeLabel(completedAt, now) : undefined,
@@ -365,7 +380,10 @@ const KIND_OF_SYSTEM: Partial<Record<TuneSystem, ChannelKind>> = {
   isdbSCs110: 'cs110',
 }
 
-function channelLabelOf(target: TargetResponder): string | undefined {
+function channelLabelOf(target: {
+  system: TuneSystem
+  physicalChannel: TargetResponder['physicalChannel']
+}): string | undefined {
   const channel = toInt(target.physicalChannel)
 
   if (target.system === 'isdbT') {
