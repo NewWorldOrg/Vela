@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 
+import { useDismissable } from '@/hooks/useDismissable'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
@@ -23,12 +24,20 @@ export function ProgramPanel({
   open: boolean
   onClose: () => void
 }) {
+  const panel = useDismissable<HTMLElement>({
+    open,
+    onDismiss: onClose,
+    opener: 'program-panel',
+  })
+
   return (
     <aside
+      ref={panel}
+      tabIndex={-1}
       aria-hidden={!open}
       inert={!open}
       className={cn(
-        'fixed top-[60px] right-[18px] bottom-[18px] z-40 flex w-[400px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl transition-transform duration-200 ease-toy',
+        'fixed top-[60px] right-[18px] bottom-[18px] z-40 flex w-[400px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy',
         'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-3 max-[900px]:left-3 max-[900px]:max-h-[56vh] max-[900px]:w-auto',
         !open &&
           'translate-x-[calc(100%+30px)] max-[900px]:translate-x-0 max-[900px]:translate-y-[calc(100%+30px)]',

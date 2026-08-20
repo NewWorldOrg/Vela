@@ -21,6 +21,7 @@ export function ProgramCell({
   return (
     <button
       type="button"
+      data-opens="program-panel"
       aria-pressed={selected}
       onClick={() => onSelect(p)}
       style={{

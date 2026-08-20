@@ -1,8 +1,13 @@
+import { useState, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { WriteResult } from '@/repository/services'
 import { CHANNELS, SCAN_RUNNING } from '@/repository/services.fixtures'
+import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { ChannelsView } from '@/components/channels/channels-page'
+
+type ChannelsViewProps = ComponentProps<typeof ChannelsView>
 
 const accept = async (): Promise<WriteResult> => ({ state: 'ok' })
 const refuseWrite = async (): Promise<WriteResult> => ({
@@ -97,5 +102,53 @@ export const 未スキャン: Story = {
 export const 取得できないとき: Story = {
   args: {
     result: { state: 'unavailable', message: 'driver に接続できません' },
+  },
+}
+
+const [service] = CHANNELS.groups[0].services
+
+/** Carries the open state so a dismissal shows up as the dialog going away. */
+function AddCandidate({ onAdd }: Pick<ChannelsViewProps, 'onAdd'>) {
+  const [open, setOpen] = useState(true)
+
+  return (
+    <AddCandidateDialog
+      serviceKey={service.key}
+      serviceName={service.name}
+      open={open}
+      onOpenChange={setOpen}
+      onAdd={onAdd}
+    />
+  )
+}
+
+export const 候補の手動追加: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  render: (args) => <AddCandidate onAdd={args.onAdd} />,
+}
+
+export const 手動追加は範囲外を押しても閉じない: Story = {
+  ...候補の手動追加,
+  play: async () => {
+    const dialog = await screen.findByRole('dialog')
+    const channel = within(dialog).getByLabelText(/物理チャンネル/)
+
+    await userEvent.type(channel, '21')
+    await userEvent.click(
+      dialog.ownerDocument.querySelector('[data-slot="dialog-overlay"]')!,
+    )
+
+    await expect(screen.getByRole('dialog')).toBeVisible()
+    await expect(channel).toHaveValue('21')
+  },
+}
+
+export const 手動追加はEscで閉じる: Story = {
+  ...候補の手動追加,
+  play: async () => {
+    await screen.findByRole('dialog')
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   },
 }
