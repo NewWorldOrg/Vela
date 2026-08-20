@@ -159,6 +159,7 @@ export function LibraryView({
         <EmptyState
           spot="tape"
           title="条件に合う録画がありません"
+          titleLevel={2}
           className="mx-auto mt-10 max-w-[560px]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
@@ -204,6 +205,7 @@ export function LibraryView({
         <EmptyState
           spot="antenna"
           title="まだ録画がありません"
+          titleLevel={2}
           className="mx-auto mt-10 max-w-[560px]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">

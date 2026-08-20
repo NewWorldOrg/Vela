@@ -140,9 +140,7 @@ export function QualityView({ result }: { result: QualityResult }) {
 
       <div className="mt-3.5 grid gap-2.5 min-[900px]:grid-cols-2">
         <Surface>
-          <SectionHeading mark={MarkPill} level={3}>
-            適用中の閾値
-          </SectionHeading>
+          <SectionHeading mark={MarkPill}>適用中の閾値</SectionHeading>
           <p className="-mt-2 mb-3 text-note text-ink-2">
             いずれも初期値のまま。実測が溜まるまでは暫定として扱う。
           </p>
@@ -174,9 +172,7 @@ export function QualityView({ result }: { result: QualityResult }) {
         </Surface>
 
         <Surface>
-          <SectionHeading mark={MarkDoubleCircle} level={3}>
-            状態の見分け
-          </SectionHeading>
+          <SectionHeading mark={MarkDoubleCircle}>状態の見分け</SectionHeading>
           <p className="-mt-2 mb-3 text-note text-ink-2">
             状態は独立して数える。潰すとどれかが良好に化ける。
           </p>
@@ -317,9 +313,7 @@ export function QualityView({ result }: { result: QualityResult }) {
 
       <div className="mt-5 grid gap-2.5 min-[900px]:grid-cols-2">
         <Surface>
-          <SectionHeading mark={MarkDots} level={3}>
-            問題のある録画
-          </SectionHeading>
+          <SectionHeading mark={MarkDots}>問題のある録画</SectionHeading>
           <p className="-mt-2 mb-3 text-note text-ink-2">
             直近 24 時間 · 警告水準以上のドロップが出た録画。
           </p>
@@ -366,9 +360,7 @@ export function QualityView({ result }: { result: QualityResult }) {
         </Surface>
 
         <Surface>
-          <SectionHeading mark={MarkDoubleCircle} level={3}>
-            異常一覧
-          </SectionHeading>
+          <SectionHeading mark={MarkDoubleCircle}>異常一覧</SectionHeading>
           <div className="-mt-2 mb-3 flex flex-wrap items-center gap-2.5">
             <p className="min-w-0 flex-1 text-note text-ink-2">
               再掲は自ドメイン所有の件数と合算しない。
