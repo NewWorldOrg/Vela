@@ -105,6 +105,7 @@ const SERVICES: ServiceRow[] = [
     category: 'TV',
     minorCategory: false,
     currentChannel: '57ch',
+    betterChannel: '59ch',
     enabled: true,
     candidateCount: 2,
     needsAttentionCount: 0,

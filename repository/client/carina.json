@@ -2910,6 +2910,7 @@
           "lastSeenAt",
           "candidateCount",
           "selectedChannel",
+          "betterChannel",
           "candidates"
         ],
         "type": "object",
@@ -2965,6 +2966,16 @@
             "format": "int32"
           },
           "selectedChannel": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanTargetResponder"
+              }
+            ]
+          },
+          "betterChannel": {
             "oneOf": [
               {
                 "type": "null"
