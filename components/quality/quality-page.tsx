@@ -129,9 +129,11 @@ export function QualityView({ result }: { result: QualityResult }) {
                 </Link>
               )}
             </span>
-            <span className="mt-2 block border-t border-dashed border-line pt-2 text-note text-ink-3">
-              {stat.foot}
-            </span>
+            {stat.foot && (
+              <span className="mt-2 block border-t border-dashed border-line pt-2 text-note text-ink-3">
+                {stat.foot}
+              </span>
+            )}
           </Surface>
         ))}
       </div>

@@ -20,7 +20,7 @@ export interface QualityStat {
   levelLabel?: string
   aside?: string
   link?: { href: Route; label: string }
-  foot: string
+  foot?: string
 }
 
 export interface QualityThreshold {

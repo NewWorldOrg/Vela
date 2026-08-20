@@ -25,9 +25,7 @@ export function LoggedOutView({ method }: { method: AuthMethod }) {
         <div className="mx-auto mb-[18px] w-14 border-t border-dashed border-line-strong" />
         <div className="mb-4 flex items-start gap-[9px] rounded-lg bg-mint-soft px-3.5 py-[11px] text-left text-sub text-mint">
           <SuccessIcon className="mt-[3px] size-4" />
-          <span className="text-balance">
-            ほかの端末のセッションはそのまま残っています
-          </span>
+          <span className="text-balance">ほかの端末はログインしたままです</span>
         </div>
         <Button size="lg" className="w-full gap-[9px] text-[13.5px]" asChild>
           <Link href="/login">
