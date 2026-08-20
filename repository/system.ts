@@ -1,3 +1,5 @@
+import { unstable_rethrow } from 'next/navigation'
+
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 
@@ -67,7 +69,9 @@ async function readHealth(client: CarinaClient): Promise<ApiHealthResult> {
     }
 
     return { state: 'ok', status: data.status }
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error)
+
     return { state: 'unreachable' }
   }
 }
@@ -96,7 +100,9 @@ async function readDriverStatus(
     }
 
     return { state: 'ok', status: toDriverStatus(body.data) }
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error)
+
     return { state: 'unreachable' }
   }
 }

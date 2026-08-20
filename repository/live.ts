@@ -30,12 +30,6 @@ export interface LiveResult {
   rows: LiveChannelRow[]
 }
 
-export const LIVE_QUALITIES = [
-  '1080p 6.0 Mbps',
-  '720p 3.0 Mbps',
-  '480p 1.5 Mbps',
-]
-
 export async function getLive(rawChannel?: string): Promise<LiveResult> {
   const channel =
     CHANNEL_FIXTURES.find((c) => c.id === rawChannel && !c.sub) ??

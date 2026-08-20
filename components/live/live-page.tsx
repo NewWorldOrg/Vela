@@ -5,7 +5,7 @@ import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
-import { LIVE_QUALITIES, type LiveResult } from '@/repository/live'
+import type { LiveResult } from '@/repository/live'
 import { Badge } from '@/components/ui/badge'
 import {
   PLAYER_BUTTON,
@@ -15,6 +15,9 @@ import { PlayerSegmentedControl } from '@/components/recordings/player-segmented
 import { PlayIcon, QualityIcon } from '@/components/vela/icons'
 
 const NOT_YET = '再生はこれから実装されます'
+
+/** What the player offers to switch between, until the stream says otherwise. */
+const LIVE_QUALITIES = ['1080p 6.0 Mbps', '720p 3.0 Mbps', '480p 1.5 Mbps']
 
 export function LiveView({ live }: { live: LiveResult }) {
   const router = useRouter()

@@ -26,6 +26,14 @@ export function formatStamp(iso: string) {
   return `${pad(at.getMonth() + 1)}/${pad(at.getDate())} ${pad(at.getHours())}:${pad(at.getMinutes())}`
 }
 
+/** `HH:mm` — a moment close enough that the day of it says nothing. */
+export function formatClock(at: number) {
+  const moment = new Date(at)
+  const pad = (value: number) => String(value).padStart(2, '0')
+
+  return `${pad(moment.getHours())}:${pad(moment.getMinutes())}`
+}
+
 /** `YYYY/MM` — for a date old enough that the day of it says nothing. */
 export function formatMonth(iso: string) {
   const at = new Date(iso)

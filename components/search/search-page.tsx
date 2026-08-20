@@ -6,14 +6,13 @@ import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
+import type { SearchHits, SearchResult } from '@/repository/search'
 import {
   SEARCH_DEFAULT_PER_PAGE,
   SEARCH_DEFAULT_SORT,
   SEARCH_PER_PAGE_OPTIONS,
   SEARCH_SORT_OPTIONS,
-  type SearchHits,
-  type SearchResult,
-} from '@/repository/search'
+} from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

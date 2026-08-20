@@ -4,9 +4,12 @@ import type {
   ScanRunProgress,
   ServiceRow,
 } from '@/repository/services'
-import { FAILURE_CLASSES } from '@/repository/services'
-
-const [NO_LOCK, NO_DATA, INCOMPLETE, MISMATCH] = FAILURE_CLASSES
+import {
+  INCOMPLETE_TABLES as INCOMPLETE,
+  LOCKED_WITHOUT_DATA as NO_DATA,
+  NO_LOCK,
+  UNEXPECTED_STREAM as MISMATCH,
+} from '@/repository/scan-failures'
 
 const SERVICES: ServiceRow[] = [
   {

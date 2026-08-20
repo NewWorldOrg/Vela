@@ -12,9 +12,57 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const 通常: Story = {
-  args: { failed: false },
+  args: {
+    returnPath: '/',
+    options: {
+      state: 'identity-provider',
+      providerName: null,
+      reachable: true,
+    },
+    identityProviderFailed: false,
+  },
 }
 
-export const サインイン失敗: Story = {
-  args: { failed: true },
+export const IDプロバイダの表示名があるとき: Story = {
+  args: {
+    returnPath: '/',
+    options: {
+      state: 'identity-provider',
+      providerName: 'id.example.test',
+      reachable: true,
+    },
+    identityProviderFailed: false,
+  },
+}
+
+export const OIDC未設定: Story = {
+  args: {
+    returnPath: '/',
+    options: { state: 'local-only' },
+    identityProviderFailed: false,
+  },
+}
+
+export const IDプロバイダに接続できない: Story = {
+  args: {
+    returnPath: '/guide',
+    options: {
+      state: 'identity-provider',
+      providerName: 'id.example.test',
+      reachable: false,
+    },
+    identityProviderFailed: false,
+  },
+}
+
+export const サインインに失敗したあと: Story = {
+  args: {
+    returnPath: '/guide',
+    options: {
+      state: 'identity-provider',
+      providerName: null,
+      reachable: true,
+    },
+    identityProviderFailed: true,
+  },
 }

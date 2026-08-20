@@ -1,8 +1,29 @@
+import type { Route } from 'next'
+import { cookies, headers } from 'next/headers'
+import { redirect, unstable_rethrow } from 'next/navigation'
 import createClient from 'openapi-fetch'
 import type { paths } from '@/repository/client/schema'
+import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
+
+/**
+ * Reading `next/headers` makes this module server-only, and everything that
+ * calls the API with it: a Client Component may take types from `repository/`
+ * but never a value out of a module that reaches here, or the build stops with
+ * the import trace that got it there. Shared constants a screen needs live in
+ * a module of their own — `scan-systems`, `scan-failures`, `search-options`.
+ */
+
+/**
+ * Over https the API names the session cookie with the `__Host-` prefix, which
+ * a plain-http deployment cannot use; there it sends the bare name.
+ */
+const SESSION_COOKIE_NAMES = ['__Host-carina_session', 'carina_session']
 
 export function carinaClient() {
-  return createClient<paths>({ baseUrl: requiredBaseUrl() })
+  return createClient<paths>({
+    baseUrl: requiredBaseUrl(),
+    fetch: (request) => carrying(request, fetch),
+  })
 }
 
 /**
@@ -13,8 +34,78 @@ export function carinaClient() {
 export function revalidatingCarinaClient() {
   return createClient<paths>({
     baseUrl: requiredBaseUrl(),
-    fetch: revalidatingFetch,
+    fetch: (request) => carrying(request, revalidatingFetch),
   })
+}
+
+interface Asking {
+  /** The `Cookie` header to send on, when the browser holds a session. */
+  session?: string
+  /** The page this call belongs to, and the way back to it. */
+  page?: string
+}
+
+/**
+ * Every call to the API goes through here. The browser's session is carried
+ * on — a Server Component fetches from Node, which keeps no cookie jar of its
+ * own — and the request is pinned to `no-store`, so an answer given to one
+ * session is never held for another.
+ *
+ * A refused session ends at the login screen holding the page as the way back,
+ * rather than as a screen that failed to read. An action posts to the page it
+ * was taken on, so a refusal mid-action lands in the same place.
+ */
+async function carrying(
+  request: Request,
+  send: (request: Request) => Promise<Response>,
+): Promise<Response> {
+  const { session, page } = await asked()
+  const sent = new Request(request, { cache: 'no-store' })
+
+  if (session) {
+    sent.headers.set('cookie', session)
+  }
+
+  const response = await send(sent)
+
+  if (response.status === 401) {
+    redirect(loginHref(page) as Route)
+  }
+
+  return response
+}
+
+/**
+ * What the browser sent in. Outside a request — the health probe script runs
+ * there — nothing was sent, and nothing is carried on.
+ */
+async function asked(): Promise<Asking> {
+  try {
+    const [jar, sent] = await Promise.all([cookies(), headers()])
+
+    return {
+      session: sessionIn(jar),
+      page: sent.get(RENDERED_PAGE_HEADER) ?? undefined,
+    }
+  } catch (error) {
+    unstable_rethrow(error)
+
+    return {}
+  }
+}
+
+function sessionIn(
+  jar: Awaited<ReturnType<typeof cookies>>,
+): string | undefined {
+  for (const name of SESSION_COOKIE_NAMES) {
+    const value = jar.get(name)?.value
+
+    if (value) {
+      return `${name}=${value}`
+    }
+  }
+
+  return undefined
 }
 
 function requiredBaseUrl(): string {

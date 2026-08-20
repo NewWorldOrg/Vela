@@ -1,6 +1,6 @@
-import type { FailureClass } from '@/repository/services'
+import type { FailureClass } from '@/repository/scan-failures'
 import { cn } from '@/lib/utils'
-import { FAILURE_CLASSES } from '@/repository/services'
+import { FAILURE_CLASSES } from '@/repository/scan-failures'
 
 /**
  * The four ways a scan stops, each with a colour of its own. Collapsing them

@@ -1,9 +1,31 @@
+import {
+  oidcStartHref,
+  type IdentityProviderSignIn,
+  type SignInOptions,
+} from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { SignInIcon, VelaMark } from '@/components/vela/icons'
+import {
+  LocalSignIn,
+  type LocalSignInPlacement,
+} from '@/components/login/local-sign-in'
 
-export function LoginView({ failed }: { failed: boolean }) {
+export function LoginView({
+  returnPath,
+  options,
+  identityProviderFailed,
+}: {
+  returnPath: string
+  options: SignInOptions
+  identityProviderFailed: boolean
+}) {
+  const identityProvider: IdentityProviderSignIn | null =
+    options.state === 'identity-provider' ? options : null
+  const outOfReach: boolean =
+    identityProvider !== null && !identityProvider.reachable
+
   return (
     <div className="dot-grid relative flex min-h-dvh flex-col items-center justify-center bg-bg px-6 pt-[60px] pb-[60px] max-[480px]:px-4 max-[480px]:pt-14 max-[480px]:pb-10">
       <div className="absolute top-[18px] right-[22px]">
@@ -18,27 +40,66 @@ export function LoginView({ failed }: { failed: boolean }) {
           サインインして続行してください
         </p>
         <div className="mx-auto mb-[18px] w-14 border-t border-dashed border-line-strong" />
-        {failed && (
+        {identityProviderFailed ? (
           <Banner
             tone="danger"
             className="mb-4 gap-[9px] px-3.5 py-[11px] text-left"
           >
-            サインインに失敗しました。もう一度お試しください
+            サインインに失敗しました。もう一度お試しください。
+            <span className="mt-1 block">
+              組織の ID
+              プロバイダに接続できないときは、ローカルアカウントでサインインできます。
+            </span>
           </Banner>
+        ) : (
+          outOfReach && (
+            <Banner
+              tone="warn"
+              className="mb-4 gap-[9px] px-3.5 py-[11px] text-left"
+            >
+              組織の ID
+              プロバイダに接続できません。ローカルアカウントでサインインできます。
+            </Banner>
+          )
         )}
-        <Button
-          size="lg"
-          className="w-full gap-[9px] text-[13.5px]"
-          disabled
-          title="サインインはこれから実装されます"
-        >
-          <SignInIcon className="size-4" />
-          SSO でサインイン
-        </Button>
-        <p className="mt-[15px] text-note leading-[1.7] text-ink-3">
-          認証は組織の ID プロバイダで行われます
-        </p>
+        {identityProvider && (
+          <>
+            <Button
+              size="lg"
+              className="w-full gap-[9px] text-[13.5px]"
+              asChild
+            >
+              <a href={oidcStartHref(returnPath)}>
+                <SignInIcon className="size-4" />
+                {identityProvider.providerName === null
+                  ? 'SSO でサインイン'
+                  : `${identityProvider.providerName} でサインイン`}
+              </a>
+            </Button>
+            <p className="mt-[15px] text-note leading-[1.7] text-ink-3">
+              認証は組織の ID プロバイダで行われます
+            </p>
+          </>
+        )}
+        <LocalSignIn
+          returnPath={returnPath}
+          placement={placementOf(
+            identityProvider !== null,
+            identityProviderFailed || outOfReach,
+          )}
+        />
       </main>
     </div>
   )
+}
+
+function placementOf(
+  identityProvider: boolean,
+  fallenBack: boolean,
+): LocalSignInPlacement {
+  if (!identityProvider) {
+    return 'lead'
+  }
+
+  return fallenBack ? 'expanded' : 'collapsed'
 }
