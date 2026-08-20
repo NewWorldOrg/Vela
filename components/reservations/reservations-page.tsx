@@ -16,7 +16,15 @@ import { PlusIcon } from '@/components/vela/icons'
 import { ReservationRow } from '@/components/reservations/reservation-row'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 
-const COLUMNS = ['', '番組', 'チャンネル', '放送日時', '由来', '状態', '']
+const COLUMNS: { label: string; hidden?: boolean }[] = [
+  { label: '競合の詳細の開閉', hidden: true },
+  { label: '番組' },
+  { label: 'チャンネル' },
+  { label: '放送日時' },
+  { label: '由来' },
+  { label: '状態' },
+  { label: '操作', hidden: true },
+]
 
 export function ReservationsView({
   reservations,
@@ -46,9 +54,13 @@ export function ReservationsView({
       <Table className="min-w-[900px]" containerClassName="pb-1">
         <TableHeader>
           <TableRow>
-            {COLUMNS.map((column, index) => (
-              <TableHead key={index} className="first:w-8">
-                {column}
+            {COLUMNS.map((column) => (
+              <TableHead key={column.label} className="first:w-8">
+                {column.hidden ? (
+                  <span className="sr-only">{column.label}</span>
+                ) : (
+                  column.label
+                )}
               </TableHead>
             ))}
           </TableRow>

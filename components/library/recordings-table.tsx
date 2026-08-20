@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation'
 import type { Recording } from '@/repository/recordings'
 import { RecordingRow } from '@/components/library/recording-row'
 
-const HEADERS = [
-  '番組',
-  'チャンネル',
-  '録画日時',
-  '長さ',
-  'サイズ',
-  '結果',
-  '品質',
-  'エンコード',
-  '',
-  '',
+const HEADERS: { label: string; hidden?: boolean }[] = [
+  { label: '番組' },
+  { label: 'チャンネル' },
+  { label: '録画日時' },
+  { label: '長さ' },
+  { label: 'サイズ' },
+  { label: '結果' },
+  { label: '品質' },
+  { label: 'エンコード' },
+  { label: '操作', hidden: true },
+  { label: '録画詳細へ', hidden: true },
 ]
 
 export function RecordingsTable({ items }: { items: Recording[] }) {
@@ -38,12 +38,16 @@ export function RecordingsTable({ items }: { items: Recording[] }) {
         </colgroup>
         <thead>
           <tr>
-            {HEADERS.map((h, i) => (
+            {HEADERS.map((header) => (
               <th
-                key={i}
+                key={header.label}
                 className="bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
               >
-                {h}
+                {header.hidden ? (
+                  <span className="sr-only">{header.label}</span>
+                ) : (
+                  header.label
+                )}
               </th>
             ))}
           </tr>
