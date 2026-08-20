@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { InlineAlert } from '@/components/vela/banner'
 import { Field, FieldHint, FieldLabel } from '@/components/vela/field'
-import { KeyIcon } from '@/components/vela/icons'
+import { KeyIcon, SuccessIcon } from '@/components/vela/icons'
 import { RedirectUri } from '@/components/authentication/redirect-uri'
 
 /**
@@ -32,6 +32,7 @@ export function OidcSettings({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
+  const [saved, setSaved] = useState(false)
   const [discoveryUrl, setDiscoveryUrl] = useState(config.discoveryUrl)
   const [clientId, setClientId] = useState(config.clientId)
   const [clientSecret, setClientSecret] = useState('')
@@ -56,12 +57,14 @@ export function OidcSettings({
       })
 
       if (result.state === 'refused') {
+        setSaved(false)
         setRefusal(result.message)
 
         return
       }
 
       setClientSecret('')
+      setSaved(true)
       router.refresh()
     })
 
@@ -174,6 +177,15 @@ export function OidcSettings({
           <InlineAlert tone="danger">
             保存できませんでした。{refusal}
           </InlineAlert>
+        )}
+        {saved && (
+          <span className="flex items-start gap-[9px] rounded-md bg-mint-soft px-3 py-2 text-sub text-mint">
+            <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
+            <span>
+              保存しました。discovery
+              に到達できることを確かめたうえで書き込んでいます
+            </span>
+          </span>
         )}
       </span>
 
