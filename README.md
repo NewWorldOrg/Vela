@@ -2,9 +2,8 @@
 
 地上デジタル放送向けの録画システムのフロントエンドです。
 
-番組表の閲覧、予約、録画済み番組の検索と再生をブラウザから行います。録画そのものは
-バックエンドの [Carina](https://github.com/NewWorldOrg/Carina) が担当し、その
-OpenAPI 文書から生成したクライアントで接続します。
+番組表の閲覧、予約、録画済み番組の検索と再生をブラウザから行います。
+録画そのものはバックエンドの [Carina](https://github.com/NewWorldOrg/Carina) が担当し、その OpenAPI 文書から生成したクライアントで接続します。
 
 ## 必要なもの
 
@@ -34,14 +33,12 @@ docker compose exec app yarn dev
 | `CARINA_API_BASE_URL` | バックエンドの接続先。既定値はなく、未設定なら起動時に失敗します |
 | `DEV_ALLOWED_ORIGINS` | 開発サーバが受け付けるホスト名。`localhost` 以外で開く場合に指定 |
 
-`DEV_ALLOWED_ORIGINS` に無いホスト名でアクセスすると、開発サーバがチャンクと HMR の
-接続を拒否します。
+`DEV_ALLOWED_ORIGINS` に無いホスト名でアクセスすると、開発サーバがチャンクと HMR の接続を拒否します。
 
 ## API クライアント
 
-バックエンドが返す OpenAPI 文書(`carina.json`)と、そこから生成した型
-(`schema.ts`)を `repository/client/` に置き、どちらもコミットします。文書の差分が
-そのままバックエンドの契約変更の記録になります。
+バックエンドが返す OpenAPI 文書(`carina.json`)と、そこから生成した型(`schema.ts`)を `repository/client/` に置き、どちらもコミットします。
+文書の差分がそのままバックエンドの契約変更の記録になります。
 
 ```bash
 docker compose exec app yarn codegen:fetch    # 文書を取得し直して型を再生成
