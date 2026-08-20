@@ -1,82 +1,60 @@
 # Vela
 
-テレビ録画システムの画面。番組表を見て、録りたいものを予約して、録れたものを
-探して見る。その一連をブラウザから行います。
+Web frontend for a self-hosted TV recording system.
 
-録画そのものを行う裏側は別のリポジトリで、Vela はその API を読んで描くだけです。
+Vela renders the programme guide, reservations and the recording library in the
+browser. Recording itself is done by a separate backend, which Vela reaches through
+a client generated from its OpenAPI document.
 
-## 何が見られるか
+## Requirements
 
-| 画面 | できること |
-| --- | --- |
-| 番組表 | 1放送日ぶんの帯を局ごとに並べ、押すと番組の詳細と予約が開く |
-| 番組検索 | キーワードと期間で絞る。条件は URL に載り、そのまま自動録画ルールにできる |
-| ライブ | 放送中のチャンネルを見る。遅延とドロップを画面に出す |
-| ライブラリ | 録れたものを新しい順に。壊れている録画を状態で絞り込める |
-| 録画詳細 | 再生と、録れたかどうかの内訳 |
-| 予約 | 予約の一覧と、チューナーが足りないときの競合の中身 |
-| ルール | 自動録画の条件と、いまの番組表で何件に当たるか |
-| 設定 | チューナー、チャンネル、認証、エンコード、品質、移行の記録 |
+- Docker
+- A running backend to point `CARINA_API_BASE_URL` at
 
-**壊れた録画を「壊れている」と分かる形で出す**ことを重視しています。完全だったのか、
-尻切れだったのか、そもそも失敗したのか、ドロップがどれだけ出たのかは別々の事実として
-扱い、ひとつの「成功」に丸めません。
-
-## 裏側との繋ぎ
-
-表示するデータは、動いている裏側が出す OpenAPI から生成したクライアントで取ります。
-生成物は `repository/` に閉じ込め、画面が裏側の型を直接触ることはありません。
-
-```bash
-docker compose exec app yarn codegen:fetch    # 文書を取り直して型を作り直す
-docker compose exec app yarn codegen:verify   # 文書と型が食い違っていないか見る
-```
-
-取ってきた文書も生成した型も両方コミットします。文書の差分が、裏側の契約が
-どう動いたかそのものです。
-
-## 動かす
-
-すべて Docker の `app` サービスの中で実行します。
+## Getting started
 
 ```bash
 task up
-task dev          # 画面   ホストの 8080 番
-task storybook    # 部品   ホストの 6006 番
+task dev          # http://localhost:8080
+task storybook    # http://localhost:6006
 ```
 
-API の場所は `CARINA_API_BASE_URL` で決まります。繋がっているかどうかは
-設定 > システムの画面が出します。
+Without Task:
 
-開発サーバを `localhost` と `127.0.0.1` 以外のホスト名で開くときは、そのホスト名を
-`DEV_ALLOWED_ORIGINS` に足します。足さないと Next がチャンクと HMR の接続を弾き、
-画面が組み上がりません。
+```bash
+docker compose up -d
+docker compose exec app yarn install
+docker compose exec app yarn dev
+```
 
-## 見た目
+## Configuration
 
-UI 全体をひとつの「小さなデジタル玩具」として作っています。
+| Variable | Description |
+| --- | --- |
+| `CARINA_API_BASE_URL` | Backend base URL. Required; there is no default |
+| `DEV_ALLOWED_ORIGINS` | Host names the dev server accepts besides `localhost` |
 
-- **触れる感触があること** — hover で 1px 持ち上がって影が伸び、押すと沈んで影が
-  消える。影はぼかさない
-- **枠と影は押せるものだけに与える** — ただの情報のまとまりは余白と背景の差で分ける
-- **区画は線ではなく淡い色面で分ける** — 文字は常に墨、彩度は上げない
-- **アイコンは自分で描く** — 24x24 / stroke 1.6 / round cap、わずかに崩す
-- **常時ループする動きを作らない** — 動くのは触れたときと読み込み中だけ
-- ライト・ダークとも完備。shadcn/ui のアクセシブルな挙動は使うが、その SaaS 的な
-  見た目には寄せない
+The dev server refuses its chunks and the HMR socket for any host name not listed
+in `DEV_ALLOWED_ORIGINS`.
 
-トークンと部品の実物は Storybook にあります。
+## API client
 
-## 変更するとき
+`repository/client/` holds the OpenAPI document and the client generated from it.
+Both are committed.
 
-- 画面は `components/{ドメイン}/`、その中の `{名前}-page.tsx` が画面そのもの
-- データ取得は `app/` の Server Component で行い、props で下へ渡す。
-  `useEffect` での取得と初期値同期はしない
-- 一覧の絞り込みやページはすべて URL に持たせる。URL を渡せば同じ画面が再現できる
-- API を呼ぶモジュールはブラウザのセッションを読むためサーバ専用。Client
-  Component が値を取り込むとビルドが止まる。画面が使う定数は API に触れない
-  モジュールへ置く
-- 部品を変えたら Storybook の story も同じコミットで直す
-- 検証は `task test:stories`。実ブラウザで全 story を描画し、a11y 違反があれば落ちる
+```bash
+docker compose exec app yarn codegen:fetch    # refetch and regenerate
+docker compose exec app yarn codegen:verify   # fail on a diff
+```
 
-規約の詳細は `CLAUDE.md` にあります。
+Importing the generated client from outside `repository/` is blocked by eslint.
+
+## Development
+
+```bash
+task lint
+task typecheck
+task test:stories    # renders every story in a real browser, fails on a11y violations
+```
+
+Conventions and the design system are documented in `CLAUDE.md`.
