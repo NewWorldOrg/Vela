@@ -6,6 +6,7 @@ import type {
   RelatedProgram,
   RelationKind,
 } from '@/repository/programs'
+import { mainTitleOf } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -131,7 +132,9 @@ export function ProgramDetailView({ detail }: { detail: ProgramDetail }) {
               </Button>
             </div>
             <Button variant="link" size="sm" className="ml-auto" asChild>
-              <Link href={`/search?q=${encodeURIComponent(program.title)}`}>
+              <Link
+                href={`/search?q=${encodeURIComponent(mainTitleOf(program.title))}`}
+              >
                 この番組名で検索
               </Link>
             </Button>
