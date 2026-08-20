@@ -39,12 +39,13 @@ docker compose exec app yarn dev
 
 ## API クライアント
 
-`repository/client/` に OpenAPI 文書と、そこから生成したクライアントを置きます。
-どちらもコミットします。
+バックエンドが返す OpenAPI 文書(`carina.json`)と、そこから生成した型
+(`schema.ts`)を `repository/client/` に置き、どちらもコミットします。文書の差分が
+そのままバックエンドの契約変更の記録になります。
 
 ```bash
-docker compose exec app yarn codegen:fetch    # 文書を再取得して再生成
-docker compose exec app yarn codegen:verify   # 文書と生成物の差分を検出
+docker compose exec app yarn codegen:fetch    # 文書を取得し直して型を再生成
+docker compose exec app yarn codegen:verify   # コミット済みの文書と型が一致するか検証
 ```
 
 `repository/` の外から生成クライアントを import することは eslint で禁止しています。
