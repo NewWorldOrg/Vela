@@ -76,7 +76,7 @@ export function OidcSettings({
         </span>
         <p className="mt-px mb-2.5 text-note text-ink-2">
           ID
-          プロバイダ側へホスト名ごとに先に登録します。登録がないと、認証が終わったあとで初めて失敗します
+          プロバイダ側へホスト名ごとに先に登録します。登録がないと、認証が終わったあとで初めて失敗します。
         </p>
         <RedirectUri value={config.redirectUri} />
       </div>
@@ -104,7 +104,8 @@ export function OidcSettings({
           />
           <FieldHint>
             保存の前に到達を確かめます。discovery URL と client ID
-            を両方空にして保存すると、ID プロバイダの設定そのものを取り消します
+            を両方空にして保存すると、ID
+            プロバイダの設定そのものを取り消します。
           </FieldHint>
         </Field>
 
@@ -136,8 +137,8 @@ export function OidcSettings({
           <FieldHint>
             書き込み専用です。保存したあとは読み出せないため、空のままなら
             {config.secretHeld
-              ? 'いま保持しているものを使い続けます'
-              : '保存できません'}
+              ? 'いま保持しているものを使い続けます。'
+              : '保存できません。'}
           </FieldHint>
         </Field>
 
@@ -152,7 +153,7 @@ export function OidcSettings({
           />
           <FieldHint>
             1 行に 1 つ。グループクレームで絞り込みます。クレームが大きすぎて
-            `_claim_names` に退避された要求は、既定では拒否します
+            `_claim_names` に退避された要求は、既定では拒否します。
           </FieldHint>
         </Field>
 
@@ -167,7 +168,7 @@ export function OidcSettings({
           />
           <FieldHint>
             1 行に 1 つ。groups クレームが出ない ID プロバイダでは、`hd`
-            クレームのドメインで絞り込みます
+            クレームのドメインで絞り込みます。
           </FieldHint>
         </Field>
       </div>
@@ -183,7 +184,7 @@ export function OidcSettings({
             <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
             <span>
               保存しました。discovery
-              に到達できることを確かめたうえで書き込んでいます
+              に到達できることを確かめたうえで書き込んでいます。
             </span>
           </span>
         )}

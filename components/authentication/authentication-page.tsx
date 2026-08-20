@@ -86,7 +86,7 @@ export function AuthenticationView({
       <section className="mt-[26px]">
         <SectionHeading mark={KeyIcon}>ID プロバイダ(OIDC)</SectionHeading>
         <p className="mb-3.5 text-sub text-ink-2">
-          任意です。設定しなければローカルアカウントだけで運用します
+          任意です。設定しなければローカルアカウントだけで運用します。
         </p>
         <OidcSettings config={oidc} onSave={onSaveOidc} />
       </section>
@@ -94,7 +94,8 @@ export function AuthenticationView({
       <section className="mt-[26px]">
         <SectionHeading mark={MarkDevices}>セッション</SectionHeading>
         <p className="mb-3.5 text-sub text-ink-2">
-          いまサインインしている端末の一覧。端末表示名は User-Agent から作ります
+          いまサインインしている端末の一覧。端末表示名は User-Agent
+          から作ります。
         </p>
 
         {notice?.kind === 'revoked' && (

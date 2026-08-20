@@ -26,7 +26,7 @@ export function ZeroDiagnosisPanel({
           </h3>
           <p className="mt-px text-sub text-ink-2">
             直近スキャン({diagnosis.scannedAt} · {diagnosis.attempted}{' '}
-            件走査)の失敗内訳 — どの段階で止まっているかで原因を絞り込めます
+            件走査)の失敗内訳 — どの段階で止まっているかで原因を絞り込めます。
           </p>
         </div>
       </div>

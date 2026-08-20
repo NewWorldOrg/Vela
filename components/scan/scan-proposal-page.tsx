@@ -202,7 +202,7 @@ export function ScanProposalView({
     return (
       <>
         {crumb}
-        <PageHeading description="この内容で保存するまで、既存の定義は一切変わりません">
+        <PageHeading description="この内容で保存するまで、既存の定義は一切変わりません。">
           スキャン結果の確認
         </PageHeading>
         <EmptyState
@@ -241,7 +241,7 @@ export function ScanProposalView({
   return (
     <>
       {crumb}
-      <PageHeading description="この内容で保存するまで、既存の定義は一切変わりません">
+      <PageHeading description="この内容で保存するまで、既存の定義は一切変わりません。">
         スキャン結果の確認
       </PageHeading>
 

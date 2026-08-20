@@ -51,7 +51,7 @@ export function SystemView({ status }: { status: SystemStatus }) {
       <Crumb>
         設定 / <CrumbCurrent>システム</CrumbCurrent>
       </Crumb>
-      <PageHeading description="アプリと driver の接続状態">
+      <PageHeading description="アプリと driver の接続状態。">
         システム
       </PageHeading>
 
