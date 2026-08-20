@@ -83,7 +83,7 @@ export function OidcSettings({
 
       {config.admitsEveryone && (
         <InlineAlert tone="warn">
-          <b className="font-bold">
+          <b className="block font-bold">
             絞り込みが設定されていないため、テナントで認証できる全員が通ります。
           </b>
           許可グループか許可ドメインのどちらかを入れて絞り込んでください。

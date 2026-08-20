@@ -61,7 +61,7 @@ export function AuthenticationView({
 
       {oidc.reach === 'outOfReach' && (
         <Banner tone="danger" className="mt-3.5">
-          <b className="font-bold">
+          <b className="block font-bold">
             ID プロバイダの discovery 文書を読めていないため、OIDC
             でのサインインは通りません。
           </b>
@@ -76,7 +76,9 @@ export function AuthenticationView({
       >
         <InfoIcon className="mt-[3px] size-[17px] shrink-0 text-sky" />
         <div>
-          <b className="font-bold">セッションは端末ごとに記録しています。</b>
+          <b className="block font-bold">
+            セッションは端末ごとに記録しています。
+          </b>
           だから、いま使っている端末を残したまま、ほかの端末だけをログアウトさせられます。
         </div>
       </TintPanel>
@@ -97,7 +99,7 @@ export function AuthenticationView({
 
         {notice?.kind === 'revoked' && (
           <Banner tone="success" className="mb-3.5">
-            <b className="font-bold">
+            <b className="block font-bold">
               {notice.device} のセッションを失効させました。
             </b>
             この端末は次のリクエストから API / SSE / TS で 401
@@ -107,7 +109,7 @@ export function AuthenticationView({
         )}
         {notice?.kind === 'password' && (
           <Banner tone="success" className="mb-3.5">
-            <b className="font-bold">パスワードを変更しました。</b>
+            <b className="block font-bold">パスワードを変更しました。</b>
             ほかの端末のセッション {notice.sessionsEnded}{' '}
             件を失効させました。いまの端末はそのまま使えます。
           </Banner>
@@ -118,7 +120,7 @@ export function AuthenticationView({
           className="mb-3.5 flex flex-wrap items-start gap-3 text-ui leading-[1.75]"
         >
           <div className="min-w-[220px] flex-1">
-            <b className="font-bold">
+            <b className="block font-bold">
               まとめてログアウトさせたいときは、パスワードを変更します。
             </b>
             ローカルアカウントのパスワードを変えると、いま使っている端末以外がログアウトされます。
@@ -154,7 +156,7 @@ export function AuthenticationView({
           <p className="flex items-start gap-2.5">
             <ClockIcon className="mt-[3px] size-3.5 shrink-0 text-ink-3" />
             <span>
-              <b className="font-bold text-ink">
+              <b className="block font-bold text-ink">
                 有効期限は絶対期限とアイドル期限で決まり、いずれも設定値です。
               </b>
               期限を過ぎたセッションはこの一覧から消えます。

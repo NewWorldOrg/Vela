@@ -137,7 +137,7 @@ export function RebuildEpgDialog({
         <div className="flex items-start gap-2.5 rounded-xl bg-coral-soft px-3.5 py-[11px] text-ui leading-[1.7] text-coral">
           <WarningIcon className="mt-[3px] size-[17px] shrink-0" />
           <div>
-            <b className="font-bold">
+            <b className="block font-bold">
               集め直しが 1
               周を終えるまで、番組表と検索は不完全な内容になります。
             </b>

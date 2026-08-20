@@ -54,7 +54,7 @@ export const Tones: Story = {
           <span className="font-code tabular-nums">(連続 26 時間)</span>。
         </Banner>
         <Banner tone="success">
-          <b className="font-bold">
+          <b className="block font-bold">
             Safari / iPadOS 18 のセッションを失効させました。
           </b>
           この端末は次のリクエストから 401 になります。

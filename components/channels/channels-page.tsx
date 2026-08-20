@@ -385,7 +385,9 @@ export function ChannelsView({
             },
           ]}
         >
-          <b className="font-bold">{zero.label} のサービスが 0 件です。</b>
+          <b className="block font-bold">
+            {zero.label} のサービスが 0 件です。
+          </b>
           有効な候補チャンネルを持つサービスがひとつも確認できていません。
         </Banner>
       )}
