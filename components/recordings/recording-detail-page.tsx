@@ -95,12 +95,12 @@ export function RecordingDetailView({
                 録画中
               </Badge>
               <span className="text-[11px] text-ink-3">
-                録画の記録が原簿(ファイル名では判別しない)
+                台帳の状態(ファイル名では判別しない)
               </span>
             </div>
             <p className="mb-2.5 text-sub leading-relaxed text-ink-2">
               進行中の値は driver の通知を 30
-              秒周期で録画の記録へ書いています。値が動いていること自体が、計測が生きている証拠です。
+              秒周期で台帳へ書いています。値が動いていること自体が、計測が生きている証拠です。
             </p>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2.5">
               <DetailStat label="経過" value={d.live.elapsed} />
@@ -138,7 +138,7 @@ export function RecordingDetailView({
                 main={d.live.extension.followedAt}
               />
               <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-                録画中は録画の記録が唯一の原簿です。ファイル名からは進行中と完成を判別しません。
+                録画中は台帳の状態が唯一の原簿です。ファイル名からは進行中と完成を判別しません。
               </p>
             </section>
           )}
@@ -155,7 +155,7 @@ export function RecordingDetailView({
             ファイルが見つかりません
           </b>
           <p className="mt-[5px] text-sub leading-relaxed text-(--pl-ink-2)">
-            録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。
+            台帳に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。
           </p>
           <div className="mt-3 flex justify-center">
             <button
@@ -259,7 +259,7 @@ export function RecordingDetailView({
             <QualityIcon className="size-3.5 text-brand" />
             録画の記録
             <span className="font-normal tracking-normal">
-              録画の記録が唯一の原簿。ファイル名からは判別しない
+              台帳が唯一の原簿。ファイル名からは判別しない
             </span>
           </div>
           {d.reconcile && (
@@ -366,7 +366,7 @@ export function RecordingDetailView({
               </p>
             ) : (
               <p className="text-note leading-relaxed text-ink-3">
-                計測が無かった録画です。良好とは別の状態として扱い、集計にも混ざりません。
+                計測が無かった録画です。良好とは別の状態として扱い、集計にも混ぜません。
               </p>
             )}
             {d.qualitySpots && d.qualitySpots.length > 0 && (

@@ -245,7 +245,7 @@ export function SearchView({ result }: { result: SearchResult }) {
             <span className="text-note text-ink-2">
               {noHit
                 ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
-                : 'キーワードがルールへ引き継がれます。'}
+                : 'キーワードが引き継がれます。期間は引き継ぎません。'}
             </span>
           </div>
           <Button size="sm" disabled title="ルール作成はこれから実装されます">
@@ -261,7 +261,10 @@ export function SearchView({ result }: { result: SearchResult }) {
           title="まだ検索していません"
           className="mx-auto mt-10 max-w-[560px]"
         >
-          条件を組み立てて検索してください。検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。
+          条件を決めて「検索」を押すと、8
+          日先までの番組表から該当する番組を探します。
+          <br />
+          いま該当がなくても、条件をルールにしておけば放送されたときに自動で予約します。
         </EmptyState>
       ) : outcome.state === 'refused' ? (
         <EmptyState

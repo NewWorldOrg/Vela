@@ -35,7 +35,7 @@ export const MIGRATION: MigrationResult = {
       taken: '51',
       notTaken: '8',
       unclassified: '0',
-      note: '移行元の行 53 + 孤児 6',
+      note: '台帳行 53 + 孤児 6',
     },
     {
       name: 'ルール',
@@ -72,7 +72,7 @@ export const MIGRATION: MigrationResult = {
     },
   ],
   populationsNote:
-    '録画ファイルの母集団は video_file の 53 件と、移行元の行と結びつかないファイル 6 件の合計です。チャンネル定義は定義そのものを移行せず、「取り込んだ」は再スキャン結果と名前対応が付いたことを指します。',
+    '録画ファイルの母集団は video_file の 53 件と、台帳行と結びつかないファイル 6 件の合計です。チャンネル定義は定義そのものを移行せず、「取り込んだ」は再スキャン結果と名前対応が付いたことを指します。',
   unclassified: '0',
   unclassifiedNote:
     '移行元に存在したすべての行・すべてのファイルが、新システム側の在り処か、移行しなかった理由のどちらかを持っています。どちらでもないものはありません。',
@@ -81,7 +81,7 @@ export const MIGRATION: MigrationResult = {
       name: '実0バイト',
       count: '2',
       unit: '件',
-      body: '移行元に行はあるが、実ファイルの大きさが 0 バイト',
+      body: '台帳に行はあるが、実ファイルの大きさが 0 バイト',
       rows: [
         {
           id: 'nt-1',
@@ -118,7 +118,7 @@ export const MIGRATION: MigrationResult = {
       name: '孤児',
       count: '6',
       unit: '件',
-      body: '出力ディレクトリにあるが、移行元の行と結びつかない',
+      body: '出力ディレクトリにあるが、台帳行と結びつかない',
       rows: [
         {
           id: 'nt-4',
@@ -142,7 +142,7 @@ export const MIGRATION: MigrationResult = {
           id: 'nt-7',
           file: '2026-01-24_21-00-00.m2ts',
           population: '録画ファイル',
-          fact: '727,013,296 B。中身はあるが、対応する行が存在しない',
+          fact: '727,013,296 B。中身はあるが、対応する台帳行が存在しない',
         },
         {
           id: 'nt-8',
