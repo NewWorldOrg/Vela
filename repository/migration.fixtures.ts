@@ -35,7 +35,7 @@ export const MIGRATION: MigrationResult = {
       taken: '51',
       notTaken: '8',
       unclassified: '0',
-      note: '移行元の行 53 + 孤児 6',
+      note: '台帳行 53 + 孤児 6',
     },
     {
       name: 'ルール',
