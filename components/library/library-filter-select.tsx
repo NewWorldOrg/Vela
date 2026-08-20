@@ -31,6 +31,7 @@ export function LibraryFilterSelect({
     >
       <SelectTrigger
         size="sm"
+        aria-label={prefix}
         className="w-fit rounded-full shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg"
       >
         {prefix}: {current}

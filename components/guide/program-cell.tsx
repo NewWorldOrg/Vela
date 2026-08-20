@@ -2,7 +2,11 @@
 
 import { cn } from '@/lib/utils'
 import type { Program } from '@/repository/programs'
-import { GENRE_CLASS, HOUR_PX } from '@/components/guide/guide-metrics'
+import {
+  GENRE_CLASS,
+  GENRE_CLASS_PAST,
+  HOUR_PX,
+} from '@/components/guide/guide-metrics'
 
 export function ProgramCell({
   program: p,
@@ -30,16 +34,20 @@ export function ProgramCell({
       }}
       className={cn(
         'absolute right-px left-px z-[1] overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
-        GENRE_CLASS[p.genre],
+        past ? GENRE_CLASS_PAST[p.genre] : GENRE_CLASS[p.genre],
         size === 'md' && 'px-[7px] py-1',
         size === 's' && 'px-[7px] py-0.5',
         size === 'xs' && 'flex items-center px-1.5 py-0',
-        past && 'opacity-[.52]',
         selected && 'z-[3] border-brand shadow-pop',
       )}
     >
       {size === 'xs' ? (
-        <span className="overflow-hidden text-[10px] leading-tight font-medium text-ellipsis whitespace-nowrap">
+        <span
+          className={cn(
+            'overflow-hidden text-[10px] leading-tight font-medium text-ellipsis whitespace-nowrap',
+            past && 'text-ink-2',
+          )}
+        >
           {p.title}
         </span>
       ) : (
@@ -48,6 +56,7 @@ export function ProgramCell({
             className={cn(
               'block leading-snug font-bold text-ink [font-feature-settings:"palt"]',
               size === 'md' ? 'text-sub' : 'text-[11px]',
+              past && 'text-ink-2',
             )}
           >
             <span className="mr-[5px] font-code text-[10.5px] font-medium text-ink-3 tabular-nums">

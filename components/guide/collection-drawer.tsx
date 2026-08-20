@@ -453,7 +453,11 @@ export function CollectionDrawer({
                   range === 'stream' ? setStreamKey : setServiceKey
                 }
               >
-                <SelectTrigger size="sm" className="min-w-0 max-w-full">
+                <SelectTrigger
+                  size="sm"
+                  aria-label="対象"
+                  className="min-w-0 max-w-full"
+                >
                   <SelectValue placeholder="対象を選ぶ" />
                 </SelectTrigger>
                 <SelectContent position="popper">
