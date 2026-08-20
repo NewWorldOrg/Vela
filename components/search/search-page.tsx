@@ -245,7 +245,7 @@ export function SearchView({ result }: { result: SearchResult }) {
             <span className="text-note text-ink-2">
               {noHit
                 ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
-                : 'キーワード・除外キーワード・対象フィールド・ジャンル・チャンネルが引き継がれます。期間は引き継ぎません。'}
+                : 'キーワードが引き継がれます。期間は引き継ぎません。'}
             </span>
           </div>
           <Button size="sm" disabled title="ルール作成はこれから実装されます">
@@ -372,7 +372,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                   </div>
                 }
               >
-                検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。キーワード・除外キーワード・期間を見直してください。
+                検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。キーワード・期間を見直してください。
               </EmptyState>
             ) : (
               <>
