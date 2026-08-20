@@ -57,7 +57,7 @@ export function QualityView({ result }: { result: QualityResult }) {
         設定 / <CrumbCurrent>品質</CrumbCurrent>
       </Crumb>
       <PageHeading
-        description="録画品質の常時計測。ドロップの発生状況とチューナーの健全性"
+        description="録画品質の常時計測。ドロップの発生状況とチューナーの健全性。"
         action={
           <div className="inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]">
             {result.windowOptions.map((option) => (
@@ -129,9 +129,11 @@ export function QualityView({ result }: { result: QualityResult }) {
                 </Link>
               )}
             </span>
-            <span className="mt-2 block border-t border-dashed border-line pt-2 text-note text-ink-3">
-              {stat.foot}
-            </span>
+            {stat.foot && (
+              <span className="mt-2 block border-t border-dashed border-line pt-2 text-note text-ink-3">
+                {stat.foot}
+              </span>
+            )}
           </Surface>
         ))}
       </div>
@@ -142,7 +144,7 @@ export function QualityView({ result }: { result: QualityResult }) {
             適用中の閾値
           </SectionHeading>
           <p className="-mt-2 mb-3 text-note text-ink-2">
-            いずれも初期値のまま。実測が溜まるまでは暫定として扱う
+            いずれも初期値のまま。実測が溜まるまでは暫定として扱う。
           </p>
           <div className="space-y-2">
             {result.thresholds.map((threshold) => (
@@ -176,7 +178,7 @@ export function QualityView({ result }: { result: QualityResult }) {
             状態の見分け
           </SectionHeading>
           <p className="-mt-2 mb-3 text-note text-ink-2">
-            状態は独立して数える。潰すとどれかが良好に化ける
+            状態は独立して数える。潰すとどれかが良好に化ける。
           </p>
           <dl className="space-y-2">
             {result.legend.map((entry) => (
@@ -200,7 +202,7 @@ export function QualityView({ result }: { result: QualityResult }) {
         <SectionHeading mark={MarkDots}>チャンネル別ドロップ率</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
           直近 24 時間の録画の実測。バーは 0.1%(視聴不可の恐れ)を上限に表示し、
-          破線は 0.02%(警告水準)。いずれも暫定
+          破線は 0.02%(警告水準)。いずれも暫定。
         </p>
         <Surface className="space-y-3">
           {result.channels.map((channel) => (
@@ -247,7 +249,7 @@ export function QualityView({ result }: { result: QualityResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkSlashes}>BS / CS のドロップ率</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          同じ期間・同じ閾値で判定する
+          同じ期間・同じ閾値で判定する。
         </p>
         {result.satelliteMeasured ? null : (
           <EmptyState spot="antenna" title="対象なし">
@@ -261,7 +263,7 @@ export function QualityView({ result }: { result: QualityResult }) {
         <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
           取得できるのは lock 状態 / CNR / post-Viterbi ビット誤り率の
-          3つ。値の隣は取得時刻で、同一値が続くことは安定を意味しない
+          3つ。値の隣は取得時刻で、同一値が続くことは安定を意味しない。
         </p>
         <Table className="min-w-[900px]" containerClassName="pb-1">
           <TableHeader>
@@ -319,7 +321,7 @@ export function QualityView({ result }: { result: QualityResult }) {
             問題のある録画
           </SectionHeading>
           <p className="-mt-2 mb-3 text-note text-ink-2">
-            直近 24 時間 · 警告水準以上のドロップが出た録画
+            直近 24 時間 · 警告水準以上のドロップが出た録画。
           </p>
           <div className="space-y-2">
             {result.problemRecordings.map((recording) => (
@@ -369,7 +371,7 @@ export function QualityView({ result }: { result: QualityResult }) {
           </SectionHeading>
           <div className="-mt-2 mb-3 flex flex-wrap items-center gap-2.5">
             <p className="min-w-0 flex-1 text-note text-ink-2">
-              再掲は自ドメイン所有の件数と合算しない
+              再掲は自ドメイン所有の件数と合算しない。
             </p>
             <QualityChip level="bad">所有 {result.ownedCount} 件</QualityChip>
             <Badge variant="mute">再掲 {result.recapCount} 件</Badge>

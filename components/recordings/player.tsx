@@ -209,7 +209,7 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
           <p className="min-w-[220px] flex-1 text-[11.5px] leading-relaxed text-(--pl-ink-3)">
             {!onTheFly ? (
               <>
-                <b className="font-bold text-(--pl-ink-2)">
+                <b className="block font-bold text-(--pl-ink-2)">
                   エンコード済みを再生しています。
                 </b>
                 Range 直配信のため、シークはバイト範囲の要求だけで済みます。元
@@ -218,7 +218,7 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
               </>
             ) : encoded ? (
               <>
-                <b className="font-bold text-(--pl-ink-2)">
+                <b className="block font-bold text-(--pl-ink-2)">
                   元 TS を再生しています。
                 </b>
                 シークのたびにトランスコーダを立て直します。H.264 を選ぶと Range
@@ -226,14 +226,14 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
               </>
             ) : d.encode.status === 'failed' ? (
               <>
-                <b className="font-bold text-(--pl-ink-2)">
+                <b className="block font-bold text-(--pl-ink-2)">
                   エンコードは失敗したため、元 TS をオンザフライで再生します。
                 </b>
                 シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。
               </>
             ) : (
               <>
-                <b className="font-bold text-(--pl-ink-2)">
+                <b className="block font-bold text-(--pl-ink-2)">
                   未エンコードの録画を再生しています。
                 </b>
                 シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。エンコード済みの成果物があれば

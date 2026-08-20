@@ -5,7 +5,7 @@ export const QUALITY: QualityResult = {
   windowOptions: ['24 時間', '7 日', '30 日'],
   supplyOutage: {
     title: '計測の供給が途絶しています',
-    body: 'adapter0 の信号品質サンプルが 09:24 以降 1 件も入っていません。この期間は「取得できず」として数え、良好にも未計測にも混ぜません。',
+    body: 'adapter0 の信号品質サンプルが 09:24 以降 1 件も入っていません。',
   },
   stats: [
     {
@@ -34,7 +34,6 @@ export const QUALITY: QualityResult = {
       level: 'unmeasured',
       levelLabel: '未計測',
       aside: '録画 14 本 / うち未計測 14 本',
-      foot: '0% として数えない。分母から外している',
     },
     {
       key: 'health',

@@ -258,7 +258,7 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
   const body =
     outcome.state === 'running' ? (
       <span>
-        <b className="font-bold">
+        <b className="block font-bold">
           実行中のブーストが 1 本あります(同時に 1 本まで)。
         </b>
         いま押しても受け付けられません(
@@ -267,7 +267,9 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
       </span>
     ) : outcome.state === 'cooldown' ? (
       <span>
-        <b className="font-bold">前回のブーストから間隔が空いていません。</b>
+        <b className="block font-bold">
+          前回のブーストから間隔が空いていません。
+        </b>
         {outcome.notBeforeLabel ? (
           <>
             <span className="font-code tabular-nums">
@@ -281,7 +283,9 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
       </span>
     ) : outcome.state === 'missing' ? (
       <span>
-        <b className="font-bold">指定した対象は巡回の対象にありません。</b>
+        <b className="block font-bold">
+          指定した対象は巡回の対象にありません。
+        </b>
         対象を選び直してください。
       </span>
     ) : outcome.state === 'unauthenticated' ? (

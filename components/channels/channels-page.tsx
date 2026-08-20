@@ -318,7 +318,7 @@ export function ChannelsView({
         設定 / <CrumbCurrent>チャンネル</CrumbCurrent>
       </Crumb>
       <PageHeading
-        description="受信できるサービスと候補チャンネル。スキャンの結果は確認してから適用します"
+        description="受信できるサービスと候補チャンネル。スキャンの結果は確認してから適用します。"
         action={
           <Button variant="ghost" size="sm" asChild>
             <Link href={'/settings/channels#scan-history' as Route}>
@@ -385,7 +385,9 @@ export function ChannelsView({
             },
           ]}
         >
-          <b className="font-bold">{zero.label} のサービスが 0 件です。</b>
+          <b className="block font-bold">
+            {zero.label} のサービスが 0 件です。
+          </b>
           有効な候補チャンネルを持つサービスがひとつも確認できていません。
         </Banner>
       )}

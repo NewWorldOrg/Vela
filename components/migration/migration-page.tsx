@@ -10,7 +10,7 @@ export function MigrationView({ result }: { result: MigrationResult | null }) {
       <Crumb>
         設定 / <CrumbCurrent>移行記録</CrumbCurrent>
       </Crumb>
-      <PageHeading description="移行で何が運ばれ、何が運ばれなかったかを、いつでも言えるようにするための記録です。処理は一度きりですが、記録は恒久に残ります">
+      <PageHeading description="移行で何が運ばれ、何が運ばれなかったかを、いつでも言えるようにするための記録です。処理は一度きりですが、記録は恒久に残ります。">
         移行記録
       </PageHeading>
 
@@ -18,7 +18,7 @@ export function MigrationView({ result }: { result: MigrationResult | null }) {
         <EmptyState
           spot="tape"
           title="移行の記録がありません"
-          className="mt-3.5"
+          className="mt-3.5 [word-break:auto-phrase]"
         >
           移行はまだ一度も実行されていません。実行するとここに記録が残り、管理メニューにも「移行記録」が現れます。
         </EmptyState>

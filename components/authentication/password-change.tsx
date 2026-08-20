@@ -118,7 +118,7 @@ export function ChangePassword({
                 onChange={(event) => setNewPassword(event.target.value)}
               />
               <FieldHint>
-                外部プレイヤーにも同じアカウントを設定しているときは、変更後に入れ直してください
+                外部プレイヤーにも同じアカウントを設定しているときは、変更後に入れ直してください。
               </FieldHint>
             </Field>
           </div>

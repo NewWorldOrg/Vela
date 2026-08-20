@@ -58,7 +58,7 @@ export function LibraryView({
           録画ライブラリ
         </h1>
         <p className="text-sub text-ink-2">
-          録ったものを新しい順に並べます。行を押すと録画詳細へ移動します
+          録ったものを新しい順に並べます。行を押すと録画詳細へ移動します。
         </p>
       </div>
 

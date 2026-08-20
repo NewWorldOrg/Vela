@@ -111,7 +111,7 @@ export function SessionEndedBanner({ returnPath }: { returnPath: string }) {
       tone="danger"
       actions={[{ label: 'ログイン', href: loginHref(returnPath) as Route }]}
     >
-      <b className="font-bold">セッションが切れました。</b>
+      <b className="block font-bold">セッションが切れました。</b>
       接続を閉じました。再接続は繰り返しません。ログインし直すと、番組表の自動更新に戻れます。
     </Banner>
   )

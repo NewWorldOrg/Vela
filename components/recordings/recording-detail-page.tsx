@@ -366,7 +366,7 @@ export function RecordingDetailView({
               </p>
             ) : (
               <p className="text-note leading-relaxed text-ink-3">
-                計測が無かった録画です。良好とは別の状態として扱い、集計にも混ぜません。
+                計測が無かった録画です。良好とは別の状態として扱い、集計にも混ざりません。
               </p>
             )}
             {d.qualitySpots && d.qualitySpots.length > 0 && (

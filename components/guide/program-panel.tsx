@@ -76,7 +76,7 @@ export function ProgramPanel({
                 <SuccessIcon className="size-4" />
                 チューナー確保済み
               </div>
-              <p className="mt-1 text-sub leading-relaxed text-ink-2">
+              <p className="mt-1 text-sub leading-relaxed text-ink-2 [word-break:auto-phrase]">
                 <b>地上波</b>のチューナーを 1 本、
                 {program.dateLabel ?? dayLabel} {program.startLabel} の 10
                 秒前から確保しました。

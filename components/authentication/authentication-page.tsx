@@ -55,13 +55,13 @@ export function AuthenticationView({
       <Crumb>
         設定 / <CrumbCurrent>認証</CrumbCurrent>
       </Crumb>
-      <PageHeading description="app が認証判断の単一所有者です。ローカルアカウントは常設で、OIDC は任意で追加します。ここではサインイン中のセッションを扱います。">
+      <PageHeading description="サインインの方法とセッションを管理します。ローカルアカウントは常に使えて、OIDC は必要なときに追加します。">
         認証
       </PageHeading>
 
       {oidc.reach === 'outOfReach' && (
         <Banner tone="danger" className="mt-3.5">
-          <b className="font-bold">
+          <b className="block font-bold">
             ID プロバイダの discovery 文書を読めていないため、OIDC
             でのサインインは通りません。
           </b>
@@ -76,16 +76,17 @@ export function AuthenticationView({
       >
         <InfoIcon className="mt-[3px] size-[17px] shrink-0 text-sky" />
         <div>
-          <b className="font-bold">セッションの実体はサーバ側の行です。</b>
-          Cookie が運ぶのは不透明な ID
-          だけで、行を持っているからこそ「この端末だけ切る」ができます。
+          <b className="block font-bold">
+            セッションは端末ごとに記録しています。
+          </b>
+          だから、いま使っている端末を残したまま、ほかの端末だけをログアウトさせられます。
         </div>
       </TintPanel>
 
       <section className="mt-[26px]">
         <SectionHeading mark={KeyIcon}>ID プロバイダ(OIDC)</SectionHeading>
         <p className="mb-3.5 text-sub text-ink-2">
-          任意です。設定しなければローカルアカウントだけで運用します
+          任意です。設定しなければローカルアカウントだけで運用します。
         </p>
         <OidcSettings config={oidc} onSave={onSaveOidc} />
       </section>
@@ -93,12 +94,13 @@ export function AuthenticationView({
       <section className="mt-[26px]">
         <SectionHeading mark={MarkDevices}>セッション</SectionHeading>
         <p className="mb-3.5 text-sub text-ink-2">
-          いまサインインしている端末の一覧。端末表示名は User-Agent から作ります
+          いまサインインしている端末の一覧。端末表示名は User-Agent
+          から作ります。
         </p>
 
         {notice?.kind === 'revoked' && (
           <Banner tone="success" className="mb-3.5">
-            <b className="font-bold">
+            <b className="block font-bold">
               {notice.device} のセッションを失効させました。
             </b>
             この端末は次のリクエストから API / SSE / TS で 401
@@ -108,7 +110,7 @@ export function AuthenticationView({
         )}
         {notice?.kind === 'password' && (
           <Banner tone="success" className="mb-3.5">
-            <b className="font-bold">パスワードを変更しました。</b>
+            <b className="block font-bold">パスワードを変更しました。</b>
             ほかの端末のセッション {notice.sessionsEnded}{' '}
             件を失効させました。いまの端末はそのまま使えます。
           </Banner>
@@ -119,10 +121,10 @@ export function AuthenticationView({
           className="mb-3.5 flex flex-wrap items-start gap-3 text-ui leading-[1.75]"
         >
           <div className="min-w-[220px] flex-1">
-            <b className="font-bold">
-              まとめて失効させる操作はここにありません。
+            <b className="block font-bold">
+              まとめてログアウトさせたいときは、パスワードを変更します。
             </b>
-            ローカルアカウントのパスワードを変更すると、自分の現在のセッション以外が全て失効します。
+            ローカルアカウントのパスワードを変えると、いま使っている端末以外がログアウトされます。
           </div>
           <div className="ml-auto self-center">
             <ChangePassword
@@ -155,7 +157,7 @@ export function AuthenticationView({
           <p className="flex items-start gap-2.5">
             <ClockIcon className="mt-[3px] size-3.5 shrink-0 text-ink-3" />
             <span>
-              <b className="font-bold text-ink">
+              <b className="block font-bold text-ink">
                 有効期限は絶対期限とアイドル期限で決まり、いずれも設定値です。
               </b>
               期限を過ぎたセッションはこの一覧から消えます。

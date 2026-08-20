@@ -30,8 +30,8 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
 
   return (
     <>
-      <Banner className="mt-3.5">
-        <b>この画面は読み取り専用です。</b>
+      <Banner className="mt-3.5 [word-break:auto-phrase]">
+        <b className="block">この画面は読み取り専用です。</b>
         移行の実行は CLI
         で行います。移行できなかった件数は、品質画面やライブラリの不整合件数には合算されません。
       </Banner>
@@ -39,7 +39,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkDots}>実行情報</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          いつ・どこから・どの区分で実行したか
+          いつ・どこから・どの区分で実行したか。
         </p>
         <Surface>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -69,7 +69,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkPanel}>母集団サマリ</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          移行元に存在したすべての行・すべてのファイルを、5つの母集団に分けて数えています
+          移行元に存在したすべての行・すべてのファイルを、5つの母集団に分けて数えています。
         </p>
         <div className="space-y-2.5">
           {result.populations.map((population) => (
@@ -147,7 +147,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           取り込まなかったものの明細
         </SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          理由分類ごとに並べています。理由を単一の文字列に潰すことはせず、打ち切りもしません
+          理由分類ごとに並べています。理由を単一の文字列に潰すことはせず、打ち切りもしません。
         </p>
         <Table className="min-w-[860px]" containerClassName="pb-1">
           <TableHeader>
