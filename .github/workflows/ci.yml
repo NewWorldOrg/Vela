@@ -61,3 +61,27 @@ jobs:
           cache: 'yarn'
       - run: yarn install --frozen-lockfile
       - run: yarn build
+
+  stories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '25'
+          cache: 'yarn'
+      - run: yarn install --frozen-lockfile
+      - run: yarn playwright install --with-deps chromium
+      - run: yarn build-storybook
+      - name: Every story renders in a real browser and carries no accessibility violation
+        run: |
+          set -o pipefail
+          yarn test-storybook:ci 2>&1 | tee stories.log
+      - name: The run covered stories, rather than passing by covering none
+        run: |
+          total="$(sed 's/\x1b\[[0-9;]*m//g' stories.log | sed -n 's/.*Tests:.*[, ]\([0-9]\{1,\}\) total.*/\1/p' | tail -1)"
+          if [ -z "${total}" ] || [ "${total}" -lt 1 ]; then
+            echo "the run reported ${total:-no} tests: the runner is wrapped in concurrently, which reports the exit code of whichever half finishes first, so a server that dies before the tests start would leave this job green having verified nothing" >&2
+            exit 1
+          fi
+          echo "${total} story tests ran."
