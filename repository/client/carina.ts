@@ -60,7 +60,9 @@ async function carrying(
   send: (request: Request) => Promise<Response>,
 ): Promise<Response> {
   const { session, page } = await asked()
-  const sent = new Request(request, { cache: 'no-store' })
+  const sent = changesState(request.method)
+    ? statingItsOrigin(request)
+    : new Request(request, { cache: 'no-store' })
 
   if (session) {
     sent.headers.set('cookie', session)
@@ -73,6 +75,37 @@ async function carrying(
   }
 
   return response
+}
+
+const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS', 'TRACE']
+
+const NOTHING_TO_SAY = '{}'
+
+function changesState(method: string): boolean {
+  return !SAFE_METHODS.includes(method.toUpperCase())
+}
+
+/**
+ * The API answers a request that changes state only when it names the API's
+ * own origin and carries `application/json` — the two halves of its CSRF rule
+ * a browser cannot forge. Node sends neither on its own, so both are put on
+ * here, and a call with nothing to say carries an empty object rather than no
+ * body at all.
+ */
+function statingItsOrigin(request: Request): Request {
+  const carriesBody = request.headers.has('content-type')
+  const sent = new Request(request, {
+    cache: 'no-store',
+    ...(carriesBody ? {} : { body: NOTHING_TO_SAY }),
+  })
+
+  sent.headers.set('origin', new URL(request.url).origin)
+
+  if (!carriesBody) {
+    sent.headers.set('content-type', 'application/json')
+  }
+
+  return sent
 }
 
 /**

@@ -12,7 +12,10 @@ const meta = {
   component: Banner,
   parameters: { layout: 'fullscreen' },
   argTypes: {
-    tone: { control: 'inline-radio', options: ['info', 'warn', 'danger'] },
+    tone: {
+      control: 'inline-radio',
+      options: ['info', 'warn', 'danger', 'success'],
+    },
   },
 } satisfies Meta<typeof Banner>
 
@@ -49,6 +52,12 @@ export const Tones: Story = {
         >
           BS のサービスが 0 件です
           <span className="font-code tabular-nums">(連続 26 時間)</span>。
+        </Banner>
+        <Banner tone="success">
+          <b className="font-bold">
+            Safari / iPadOS 18 のセッションを失効させました。
+          </b>
+          この端末は次のリクエストから 401 になります。
         </Banner>
       </div>
       <p className="mt-[9px] text-note text-ink-3">

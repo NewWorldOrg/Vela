@@ -3,6 +3,7 @@
 import { useEffect, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 
+import { streamLabel } from '@/lib/collection'
 import { cn } from '@/lib/utils'
 import type {
   CollectNowResult,
@@ -80,7 +81,7 @@ function StreamName({ row }: { row: StreamVisitRow }) {
   return (
     <>
       <span className="font-code text-[12px] font-medium whitespace-nowrap text-ink-2 tabular-nums">
-        TS {row.transportStreamId}
+        {streamLabel(row)}
         {row.channelLabel ? `(${row.channelLabel})` : ''}
       </span>
       <span className="min-w-0 flex-1 text-sub font-bold">
@@ -222,7 +223,7 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
       <b className="block text-sub font-bold">
         最終訪問 —{' '}
         <span className="font-code font-medium tabular-nums">
-          TS {latest.transportStreamId}
+          {streamLabel(latest)}
           {latest.channelLabel ? `(${latest.channelLabel})` : ''}
         </span>
         {latest.name}

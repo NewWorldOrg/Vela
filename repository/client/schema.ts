@@ -372,6 +372,134 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/auth/password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['changePassword']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/sessions/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['deleteSession']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/me': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getMe']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/oidc-config': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getOidcConfig']
+    put: operations['putOidcConfig']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/sessions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getSessions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/sign-in-options': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getSignInOptions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/login': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['logIn']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/logout': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['logOut']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -383,6 +511,8 @@ export interface components {
       /** Format: int32 */
       forgotten: number | string
     }
+    /** @enum {string} */
+    AuthMethod: 'local' | 'oidc'
     BaseResponderOfArchiveForgottenResponder: {
       status: boolean
       message: string
@@ -443,6 +573,26 @@ export interface components {
       message: string
       data: null | components['schemas']['ScanRunResponder'][]
     }
+    BaseResponderOfIReadOnlyListOfSessionResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['SessionResponder'][]
+    }
+    BaseResponderOfMeResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['MeResponder']
+    }
+    BaseResponderOfOidcConfigResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['OidcConfigResponder']
+    }
+    BaseResponderOfPasswordChangedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['PasswordChangedResponder']
+    }
     BaseResponderOfProgrammeResponder: {
       status: boolean
       message: string
@@ -473,6 +623,11 @@ export interface components {
       message: string
       data: null | components['schemas']['ScanStartedResponder']
     }
+    BaseResponderOfSignInOptionsResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['SignInOptionsResponder']
+    }
     BaseResponderOfTunerLedgerResponder: {
       status: boolean
       message: string
@@ -482,6 +637,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['TunerObservationResponder']
+    }
+    BaseResponderOfstring: {
+      status: boolean
+      message: string
+      data: null | string
     }
     /** @enum {string} */
     BoostRefusal: 'none' | 'oneIsAlreadyRunning' | 'tooSoonAfterTheLastOne'
@@ -543,6 +703,10 @@ export interface components {
       selectedAt: string
       measurement: null | components['schemas']['ScanMeasurementResponder']
     }
+    ChangePasswordRequest: {
+      currentPassword?: null | string
+      newPassword?: null | string
+    }
     CollectNowRequest: {
       /** Format: int32 */
       networkId?: null | number | string
@@ -552,6 +716,8 @@ export interface components {
       serviceId?: null | number | string
     }
     CollectionStatusResponder: {
+      /** Format: int32 */
+      wantedCoverageHours: number | string
       streams: components['schemas']['StreamCollectionStatusResponder'][]
       rescans: components['schemas']['RescanNoticeResponder'][]
     }
@@ -622,6 +788,39 @@ export interface components {
     }
     HealthResponder: {
       status: string
+      degraded: string[]
+    }
+    LoginRequest: {
+      username?: null | string
+      password?: null | string
+    }
+    MeResponder: {
+      subject: string
+      method: components['schemas']['AuthMethod']
+    }
+    OidcConfigRequest: {
+      discoveryUrl?: null | string
+      clientId?: null | string
+      clientSecret?: null | string
+      allowedGroups?: null | string[]
+      allowedHostedDomains?: null | string[]
+    }
+    OidcConfigResponder: {
+      configured: boolean
+      discoveryUrl: null | string
+      clientId: null | string
+      secretHeld: boolean
+      allowedGroups: string[]
+      allowedHostedDomains: string[]
+      admitsEveryone: boolean
+      reach: components['schemas']['OidcReach']
+      redirectUri: string
+    }
+    /** @enum {string} */
+    OidcReach: 'notConfigured' | 'reachable' | 'outOfReach'
+    PasswordChangedResponder: {
+      /** Format: int32 */
+      sessionsEnded: number | string
     }
     ProgrammeGenreResponder: {
       /** Format: int32 */
@@ -829,9 +1028,31 @@ export interface components {
     /** @enum {string} */
     ServiceCategory:
       'television' | 'radio' | 'data' | 'oneSeg' | 'temporary' | 'other'
+    ServiceCoverageResponder: {
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: date-time */
+      coveredUntil: null | string
+      meetsWantedCoverage: boolean
+    }
     /** @enum {string} */
     SessionPurpose:
       'unspecified' | 'recording' | 'live' | 'survey' | 'scan' | 'surveyNow'
+    SessionResponder: {
+      id: string
+      method: components['schemas']['AuthMethod']
+      /** Format: date-time */
+      createdAt: string
+      /** Format: date-time */
+      lastUsedAt: string
+      deviceLabel: string
+      current: boolean
+    }
+    SignInOptionsResponder: {
+      identityProvider: boolean
+      providerName: null | string
+      reach: components['schemas']['OidcReach']
+    }
     StartScanRequest: {
       systems?: null | components['schemas']['TuneSystem'][]
       channels?: null | components['schemas']['TuningParametersRequest'][]
@@ -849,7 +1070,9 @@ export interface components {
       /** Format: int32 */
       networkId: number | string
       /** Format: int32 */
-      transportStreamId: number | string
+      transportStreamId: null | number | string
+      tuning: components['schemas']['StreamTuningResponder']
+      rotation: components['schemas']['StreamRotationResponder']
       outcome: components['schemas']['StreamCollectionOutcome']
       /** Format: date-time */
       lastAttemptedAt: null | string
@@ -862,6 +1085,24 @@ export interface components {
       /** Format: date-time */
       notBefore: null | string
       serviceIds: (number | string)[]
+      coverage: components['schemas']['ServiceCoverageResponder'][]
+      tally: components['schemas']['VisitTallyResponder'][]
+    }
+    StreamRotationResponder: {
+      state: components['schemas']['RotationState']
+      /** Format: int32 */
+      consecutiveFailures: number | string
+      /** Format: date-time */
+      nextAttemptAt: null | string
+      /** Format: date-time */
+      needsAttentionSince: null | string
+    }
+    StreamTuningResponder: {
+      system: components['schemas']['TuneSystem']
+      /** Format: int32 */
+      physicalChannel: number | string
+      /** Format: int32 */
+      transportStreamId: null | number | string
     }
     ToggleTunerRequest: {
       disabled?: null | boolean
@@ -928,6 +1169,24 @@ export interface components {
       physicalChannel?: null | number | string
       /** Format: int32 */
       transportStreamId?: null | number | string
+    }
+    VisitTallyResponder: {
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      tableId: number | string
+      /** Format: int32 */
+      lastTableId: number | string
+      /** Format: int32 */
+      segmentsDeclared: number | string
+      /** Format: int32 */
+      segmentsHeard: number | string
+      /** Format: int32 */
+      sectionsDeclared: number | string
+      /** Format: int32 */
+      sectionsHeard: number | string
+      /** Format: int32 */
+      versionChanges: number | string
     }
   }
   responses: never
@@ -2281,6 +2540,367 @@ export interface operations {
         content: {
           'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
         }
+      }
+    }
+  }
+  changePassword: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ChangePasswordRequest']
+        'application/*+json':
+          null | components['schemas']['ChangePasswordRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPasswordChangedResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPasswordChangedResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPasswordChangedResponder']
+        }
+      }
+    }
+  }
+  deleteSession: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfstring']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfstring']
+        }
+      }
+    }
+  }
+  getMe: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMeResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMeResponder']
+        }
+      }
+    }
+  }
+  getOidcConfig: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfOidcConfigResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfOidcConfigResponder']
+        }
+      }
+    }
+  }
+  putOidcConfig: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['OidcConfigRequest']
+        'application/*+json': null | components['schemas']['OidcConfigRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfOidcConfigResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfOidcConfigResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfOidcConfigResponder']
+        }
+      }
+    }
+  }
+  getSessions: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfSessionResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfSessionResponder']
+        }
+      }
+    }
+  }
+  getSignInOptions: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSignInOptionsResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSignInOptionsResponder']
+        }
+      }
+    }
+  }
+  logIn: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['LoginRequest']
+        'application/*+json': null | components['schemas']['LoginRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMeResponder']
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMeResponder']
+        }
+      }
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMeResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMeResponder']
+        }
+      }
+    }
+  }
+  logOut: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

@@ -37,6 +37,11 @@ const NAVIGATION: [string, ComponentType<IconProps>][] = [
   ['EncodeIcon', Icons.EncodeIcon],
   ['QualityIcon', Icons.QualityIcon],
   ['SystemIcon', Icons.SystemIcon],
+  ['KeyIcon', Icons.KeyIcon],
+  ['DeviceDesktopIcon', Icons.DeviceDesktopIcon],
+  ['DeviceTabletIcon', Icons.DeviceTabletIcon],
+  ['DevicePhoneIcon', Icons.DevicePhoneIcon],
+  ['DevicePlayerIcon', Icons.DevicePlayerIcon],
 ]
 
 const ACTIONS: [string, ComponentType<IconProps>][] = [
@@ -58,6 +63,8 @@ const ACTIONS: [string, ComponentType<IconProps>][] = [
   ['AntennaIcon', Icons.AntennaIcon],
   ['CollectIcon', Icons.CollectIcon],
   ['RebuildIcon', Icons.RebuildIcon],
+  ['LockIcon', Icons.LockIcon],
+  ['CopyIcon', Icons.CopyIcon],
 ]
 
 const MARKS: [string, ComponentType<IconProps>][] = [
@@ -71,6 +78,7 @@ const MARKS: [string, ComponentType<IconProps>][] = [
   ['MarkRuler', Icons.MarkRuler],
   ['MarkType', Icons.MarkType],
   ['MarkSplit', Icons.MarkSplit],
+  ['MarkDevices', Icons.MarkDevices],
 ]
 
 function IconGrid({ items }: { items: [string, ComponentType<IconProps>][] }) {
@@ -88,7 +96,7 @@ function IconGrid({ items }: { items: [string, ComponentType<IconProps>][] }) {
   )
 }
 
-const SPOTS: SpotName[] = ['antenna', 'tuner', 'tape', 'star']
+const SPOTS: SpotName[] = ['antenna', 'tuner', 'tape', 'star', 'device']
 
 export const IconSet: Story = {
   render: () => (

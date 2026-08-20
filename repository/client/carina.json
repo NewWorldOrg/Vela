@@ -1722,6 +1722,415 @@
           }
         }
       }
+    },
+    "/api/auth/password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ChangePasswordRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ChangePasswordRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPasswordChangedResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPasswordChangedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPasswordChangedResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "deleteSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfstring"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfstring"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMeResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMeResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oidc-config": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "getOidcConfig",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfOidcConfigResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfOidcConfigResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "putOidcConfig",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/OidcConfigRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/OidcConfigRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfOidcConfigResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfOidcConfigResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfOidcConfigResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sessions": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "getSessions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfSessionResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfSessionResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-in-options": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "getSignInOptions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSignInOptionsResponder"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSignInOptionsResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "logIn",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LoginRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LoginRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMeResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMeResponder"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMeResponder"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMeResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "logOut",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1756,6 +2165,13 @@
             "format": "int32"
           }
         }
+      },
+      "AuthMethod": {
+        "enum": [
+          "local",
+          "oidc"
+        ],
+        "type": "string"
       },
       "BaseResponderOfArchiveForgottenResponder": {
         "required": [
@@ -2067,6 +2483,109 @@
           }
         }
       },
+      "BaseResponderOfIReadOnlyListOfSessionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SessionResponder"
+            }
+          }
+        }
+      },
+      "BaseResponderOfMeResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MeResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfOidcConfigResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OidcConfigResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfPasswordChangedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PasswordChangedResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfProgrammeResponder": {
         "required": [
           "status",
@@ -2223,6 +2742,32 @@
           }
         }
       },
+      "BaseResponderOfSignInOptionsResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SignInOptionsResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfTunerLedgerResponder": {
         "required": [
           "status",
@@ -2271,6 +2816,28 @@
               {
                 "$ref": "#/components/schemas/TunerObservationResponder"
               }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfstring": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "string"
             ]
           }
         }
@@ -2527,6 +3094,23 @@
           }
         }
       },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "newPassword": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CollectNowRequest": {
         "type": "object",
         "properties": {
@@ -2561,11 +3145,20 @@
       },
       "CollectionStatusResponder": {
         "required": [
+          "wantedCoverageHours",
           "streams",
           "rescans"
         ],
         "type": "object",
         "properties": {
+          "wantedCoverageHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "streams": {
             "type": "array",
             "items": {
@@ -2876,12 +3469,171 @@
       },
       "HealthResponder": {
         "required": [
-          "status"
+          "status",
+          "degraded"
         ],
         "type": "object",
         "properties": {
           "status": {
             "type": "string"
+          },
+          "degraded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MeResponder": {
+        "required": [
+          "subject",
+          "method"
+        ],
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "method": {
+            "$ref": "#/components/schemas/AuthMethod"
+          }
+        }
+      },
+      "OidcConfigRequest": {
+        "type": "object",
+        "properties": {
+          "discoveryUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "clientId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "clientSecret": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allowedGroups": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedHostedDomains": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "OidcConfigResponder": {
+        "required": [
+          "configured",
+          "discoveryUrl",
+          "clientId",
+          "secretHeld",
+          "allowedGroups",
+          "allowedHostedDomains",
+          "admitsEveryone",
+          "reach",
+          "redirectUri"
+        ],
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "discoveryUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "clientId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "secretHeld": {
+            "type": "boolean"
+          },
+          "allowedGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedHostedDomains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "admitsEveryone": {
+            "type": "boolean"
+          },
+          "reach": {
+            "$ref": "#/components/schemas/OidcReach"
+          },
+          "redirectUri": {
+            "type": "string"
+          }
+        }
+      },
+      "OidcReach": {
+        "enum": [
+          "notConfigured",
+          "reachable",
+          "outOfReach"
+        ],
+        "type": "string"
+      },
+      "PasswordChangedResponder": {
+        "required": [
+          "sessionsEnded"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionsEnded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3747,6 +4499,34 @@
         ],
         "type": "string"
       },
+      "ServiceCoverageResponder": {
+        "required": [
+          "serviceId",
+          "coveredUntil",
+          "meetsWantedCoverage"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "coveredUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "meetsWantedCoverage": {
+            "type": "boolean"
+          }
+        }
+      },
       "SessionPurpose": {
         "enum": [
           "unspecified",
@@ -3757,6 +4537,61 @@
           "surveyNow"
         ],
         "type": "string"
+      },
+      "SessionResponder": {
+        "required": [
+          "id",
+          "method",
+          "createdAt",
+          "lastUsedAt",
+          "deviceLabel",
+          "current"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "method": {
+            "$ref": "#/components/schemas/AuthMethod"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deviceLabel": {
+            "type": "string"
+          },
+          "current": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SignInOptionsResponder": {
+        "required": [
+          "identityProvider",
+          "providerName",
+          "reach"
+        ],
+        "type": "object",
+        "properties": {
+          "identityProvider": {
+            "type": "boolean"
+          },
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reach": {
+            "$ref": "#/components/schemas/OidcReach"
+          }
+        }
       },
       "StartScanRequest": {
         "type": "object",
@@ -3797,13 +4632,17 @@
         "required": [
           "networkId",
           "transportStreamId",
+          "tuning",
+          "rotation",
           "outcome",
           "lastAttemptedAt",
           "lastCompletedAt",
           "consecutiveIncomplete",
           "lastDurationMilliseconds",
           "notBefore",
-          "serviceIds"
+          "serviceIds",
+          "coverage",
+          "tally"
         ],
         "type": "object",
         "properties": {
@@ -3818,10 +4657,17 @@
           "transportStreamId": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "null",
               "integer",
               "string"
             ],
             "format": "int32"
+          },
+          "tuning": {
+            "$ref": "#/components/schemas/StreamTuningResponder"
+          },
+          "rotation": {
+            "$ref": "#/components/schemas/StreamRotationResponder"
           },
           "outcome": {
             "$ref": "#/components/schemas/StreamCollectionOutcome"
@@ -3873,6 +4719,84 @@
               ],
               "format": "int32"
             }
+          },
+          "coverage": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceCoverageResponder"
+            }
+          },
+          "tally": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VisitTallyResponder"
+            }
+          }
+        }
+      },
+      "StreamRotationResponder": {
+        "required": [
+          "state",
+          "consecutiveFailures",
+          "nextAttemptAt",
+          "needsAttentionSince"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/RotationState"
+          },
+          "consecutiveFailures": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nextAttemptAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "needsAttentionSince": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "StreamTuningResponder": {
+        "required": [
+          "system",
+          "physicalChannel",
+          "transportStreamId"
+        ],
+        "type": "object",
+        "properties": {
+          "system": {
+            "$ref": "#/components/schemas/TuneSystem"
+          },
+          "physicalChannel": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -4169,6 +5093,85 @@
             "format": "int32"
           }
         }
+      },
+      "VisitTallyResponder": {
+        "required": [
+          "serviceId",
+          "tableId",
+          "lastTableId",
+          "segmentsDeclared",
+          "segmentsHeard",
+          "sectionsDeclared",
+          "sectionsHeard",
+          "versionChanges"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tableId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastTableId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "segmentsDeclared": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "segmentsHeard": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sectionsDeclared": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sectionsHeard": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "versionChanges": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       }
     }
   },
@@ -4190,6 +5193,9 @@
     },
     {
       "name": "driver"
+    },
+    {
+      "name": "auth"
     }
   ]
 }
