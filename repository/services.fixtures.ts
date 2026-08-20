@@ -99,6 +99,38 @@ const SERVICES: ServiceRow[] = [
     ],
   },
   {
+    key: '50001-1041',
+    name: '中央テレビ2',
+    sid: 'sid 1041',
+    category: 'TV',
+    minorCategory: false,
+    currentChannel: '57ch',
+    enabled: true,
+    candidateCount: 2,
+    needsAttentionCount: 0,
+    lastSeen: '08/15 03:20',
+    candidates: [
+      {
+        id: 'candidate-59',
+        channel: '59ch',
+        selected: false,
+        reception: 'locked',
+        measurement: { value: '29.8 dB', percent: 75, tone: 'ok' },
+        discovered: '2025/07',
+        lastSeen: '08/15 03:20',
+      },
+      {
+        id: 'candidate-57-central',
+        channel: '57ch',
+        selected: true,
+        reception: 'locked',
+        measurement: { value: '18.4 dB', percent: 46, tone: 'warn' },
+        discovered: '2024/02',
+        lastSeen: '08/15 03:20',
+      },
+    ],
+  },
+  {
     key: '50001-1072',
     name: '湾岸放送1',
     sid: 'sid 1072',
@@ -113,13 +145,13 @@ const SERVICES: ServiceRow[] = [
 ]
 
 export const CHANNELS: ChannelsResult = {
-  unattributed: [SERVICES[3]],
+  unattributed: [SERVICES[4]],
   groups: [
     {
       system: 'isdbT',
       label: '地上波',
-      services: SERVICES.slice(0, 3),
-      stat: '3 サービス(TV 2 · ワンセグ 1)',
+      services: SERVICES.slice(0, 4),
+      stat: '4 サービス(TV 3 · ワンセグ 1)',
       walk: 'walked',
     },
     {

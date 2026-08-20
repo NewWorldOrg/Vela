@@ -43,7 +43,57 @@ export const 通常: Story = {
 }
 
 export const 候補を開いた状態: Story = {
-  args: { result: { state: 'ok', result: CHANNELS }, open: '50001-1024' },
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'みなと総合1 の候補チャンネル' }),
+    )
+
+    await expect(canvas.getByText('● 選択中')).toBeVisible()
+  },
+}
+
+/**
+ * Unfolding a service reads nothing back from the server: the candidates were
+ * already in the payload the list was drawn from.
+ */
+export const 候補の開閉は取得を伴わない: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const caret = canvas.getByRole('button', {
+      name: 'みなと総合1 の候補チャンネル',
+    })
+
+    await userEvent.click(caret)
+    await expect(caret).toHaveAttribute('aria-expanded', 'true')
+
+    await userEvent.click(caret)
+    await expect(caret).toHaveAttribute('aria-expanded', 'false')
+    await expect(canvas.queryByText('● 選択中')).toBeNull()
+  },
+}
+
+/** One service unfolds at a time, as it did when the URL carried it. */
+export const 開くのは一度にひとつ: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const first = canvas.getByRole('button', {
+      name: 'みなと総合1 の候補チャンネル',
+    })
+    const second = canvas.getByRole('button', {
+      name: '中央テレビ2 の候補チャンネル',
+    })
+
+    await userEvent.click(first)
+    await userEvent.click(second)
+
+    await expect(first).toHaveAttribute('aria-expanded', 'false')
+    await expect(second).toHaveAttribute('aria-expanded', 'true')
+  },
 }
 
 export const スキャン中: Story = {

@@ -2,11 +2,9 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import type {
-  CandidateTuning,
   ChannelsScreenResult,
   ScanRun,
   ServiceGroup,
-  ServiceRow,
   StartScanResult,
   WriteResult,
 } from '@/repository/services'
@@ -25,52 +23,15 @@ import { Banner } from '@/components/vela/banner'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { MarkDots } from '@/components/vela/icons'
+import type { CandidateActions } from '@/components/channels/service-table'
 import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  MarkDots,
-} from '@/components/vela/icons'
-import { CandidateList } from '@/components/channels/candidate-list'
+  ServiceTable,
+  UnfoldingServices,
+} from '@/components/channels/service-table'
 import { ScanBar } from '@/components/channels/scan-bar'
 import { ScanRunPanel } from '@/components/scan/scan-run-panel'
 import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis'
-
-/**
- * The first and last headings carry no visible text in the design — the caret
- * and the attention chip speak for themselves — so they are named for screen
- * readers only.
- */
-const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: '候補チャンネルの開閉', hidden: true },
-  { label: 'サービス' },
-  { label: '区分' },
-  { label: '現在の物理ch' },
-  { label: '候補' },
-  { label: '有効' },
-  { label: '最終確認' },
-  { label: '状態', hidden: true },
-]
-
-/** The writes a candidate row offers, carried down to every service table. */
-interface CandidateActions {
-  onSelect: (
-    serviceKey: string,
-    candidateChannelId: string,
-  ) => Promise<WriteResult>
-  onAdd: (serviceKey: string, tuning: CandidateTuning) => Promise<WriteResult>
-  onDelete: (
-    serviceKey: string,
-    candidateChannelId: string,
-  ) => Promise<WriteResult>
-}
-
-function CategoryBadge({ service }: { service: ServiceRow }) {
-  return (
-    <Badge variant={service.minorCategory ? 'kindData' : 'kindTv'}>
-      {service.category}
-    </Badge>
-  )
-}
 
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
@@ -81,139 +42,11 @@ function GroupHeading({ title, stat }: { title: string; stat: string }) {
   )
 }
 
-function ServiceTable({
-  services,
-  open,
-  actions,
-}: {
-  services: ServiceRow[]
-  open?: string
-  actions: CandidateActions
-}) {
-  return (
-    <Table className="min-w-[860px]" containerClassName="pb-1">
-      <TableHeader>
-        <TableRow>
-          {SERVICE_COLUMNS.map((column) => (
-            <TableHead key={column.label}>
-              {column.hidden ? (
-                <span className="sr-only">{column.label}</span>
-              ) : (
-                column.label
-              )}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {services.map((service) => {
-          const expanded = open === service.key
-
-          return [
-            <TableRow
-              key={service.key}
-              className="has-aria-expanded:bg-transparent"
-            >
-              <TableCell className="w-6">
-                <Link
-                  href={
-                    (expanded
-                      ? '/settings/channels'
-                      : `/settings/channels?open=${service.key}`) as Route
-                  }
-                  scroll={false}
-                  aria-label={`${service.name} の候補チャンネル`}
-                  aria-expanded={expanded}
-                  className="inline-flex text-ink-3 hover:text-ink"
-                >
-                  {expanded ? (
-                    <ChevronDownIcon className="size-3.5" />
-                  ) : (
-                    <ChevronRightIcon className="size-3.5" />
-                  )}
-                </Link>
-              </TableCell>
-              <TableCell>
-                <b className="text-[13px] font-bold">{service.name}</b>
-                <span className="ml-2 font-code text-cap text-ink-3">
-                  {service.sid}
-                </span>
-              </TableCell>
-              <TableCell>
-                <CategoryBadge service={service} />
-              </TableCell>
-              <TableCell>
-                {service.currentChannel === undefined ? (
-                  <span className="text-ui font-bold text-lemon">
-                    選局先なし
-                  </span>
-                ) : (
-                  <span className="font-code font-medium tabular-nums">
-                    {service.currentChannel}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>
-                <span className="font-code tabular-nums text-ink-2">
-                  {service.candidateCount}
-                </span>
-                {service.needsAttentionCount > 0 && (
-                  <span className="ml-1.5 text-sub text-lemon">
-                    (要確認 {service.needsAttentionCount})
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>
-                <span
-                  className={
-                    service.enabled
-                      ? 'text-ui font-medium text-ink'
-                      : 'text-ui text-ink-3'
-                  }
-                >
-                  {service.enabled ? '有効' : '無効'}
-                </span>
-              </TableCell>
-              <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
-                {service.lastSeen}
-              </TableCell>
-              <TableCell>
-                {service.currentChannel === undefined && (
-                  <Badge variant="warn" className="font-bold">
-                    要対応
-                  </Badge>
-                )}
-              </TableCell>
-            </TableRow>,
-            expanded && (
-              <TableRow key={`${service.key}-candidates`}>
-                <TableCell
-                  colSpan={SERVICE_COLUMNS.length}
-                  className="bg-surface-2 py-3.5 pr-[18px] pl-10"
-                >
-                  <CandidateList
-                    serviceKey={service.key}
-                    serviceName={service.name}
-                    candidates={service.candidates}
-                    {...actions}
-                  />
-                </TableCell>
-              </TableRow>
-            ),
-          ]
-        })}
-      </TableBody>
-    </Table>
-  )
-}
-
 function ServiceGroupSection({
   group,
-  open,
   actions,
 }: {
   group: ServiceGroup
-  open?: string
   actions: CandidateActions
 }) {
   return (
@@ -236,7 +69,7 @@ function ServiceGroupSection({
           </EmptyState>
         )
       ) : (
-        <ServiceTable services={group.services} open={open} actions={actions} />
+        <ServiceTable services={group.services} actions={actions} />
       )}
     </section>
   )
@@ -297,7 +130,6 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
 
 export function ChannelsView({
   result,
-  open,
   onStart,
   onCancel,
   onSelect,
@@ -305,8 +137,6 @@ export function ChannelsView({
   onDelete,
 }: {
   result: ChannelsScreenResult
-  /** The service whose candidates are unfolded, from the URL. */
-  open?: string
   onStart: (systems: ScanSystem[]) => Promise<StartScanResult>
   onCancel: (scanId: string) => Promise<WriteResult>
 } & CandidateActions) {
@@ -420,46 +250,43 @@ export function ChannelsView({
         />
       )}
 
-      {neverScanned ? (
-        <EmptyState
-          spot="antenna"
-          titleLevel={2}
-          title="まだスキャンしていません"
-          className="mt-9"
-        >
-          チューナーの種別ごとに総当たりで選局し、受信できたサービスを一覧にします。
-          <br />
-          結果は差分として提示され、確認してから適用します。地上波 50ch で 6
-          分程度かかります。
-        </EmptyState>
-      ) : (
-        channels.groups.map((group) => (
-          <ServiceGroupSection
-            key={group.system}
-            group={group}
-            open={open}
-            actions={actions}
-          />
-        ))
-      )}
+      <UnfoldingServices>
+        {neverScanned ? (
+          <EmptyState
+            spot="antenna"
+            titleLevel={2}
+            title="まだスキャンしていません"
+            className="mt-9"
+          >
+            チューナーの種別ごとに総当たりで選局し、受信できたサービスを一覧にします。
+            <br />
+            結果は差分として提示され、確認してから適用します。地上波 50ch で 6
+            分程度かかります。
+          </EmptyState>
+        ) : (
+          channels.groups.map((group) => (
+            <ServiceGroupSection
+              key={group.system}
+              group={group}
+              actions={actions}
+            />
+          ))
+        )}
 
-      {channels.unattributed.length > 0 && (
-        <section className="mt-9">
-          <GroupHeading
-            title="種別を特定できないサービス"
-            stat={`${channels.unattributed.length} サービス`}
-          />
-          <p className="mb-2 px-0.5 text-note leading-[1.7] text-ink-2">
-            候補チャンネルが 1
-            件も残っていないため、どの種別で受信していたのかが分かりません。定義は残っています。
-          </p>
-          <ServiceTable
-            services={channels.unattributed}
-            open={open}
-            actions={actions}
-          />
-        </section>
-      )}
+        {channels.unattributed.length > 0 && (
+          <section className="mt-9">
+            <GroupHeading
+              title="種別を特定できないサービス"
+              stat={`${channels.unattributed.length} サービス`}
+            />
+            <p className="mb-2 px-0.5 text-note leading-[1.7] text-ink-2">
+              候補チャンネルが 1
+              件も残っていないため、どの種別で受信していたのかが分かりません。定義は残っています。
+            </p>
+            <ServiceTable services={channels.unattributed} actions={actions} />
+          </section>
+        )}
+      </UnfoldingServices>
 
       <ScanHistory history={channels.history} />
     </>

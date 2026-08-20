@@ -12,17 +12,12 @@ import {
 
 export const metadata: Metadata = { title: 'チャンネル' }
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ open?: string }>
-}) {
-  const [result, { open }] = await Promise.all([getChannels(), searchParams])
+export default async function Page() {
+  const result = await getChannels()
 
   return (
     <ChannelsView
       result={result}
-      open={open}
       onStart={beginScan}
       onCancel={stopScan}
       onSelect={selectChannel}
