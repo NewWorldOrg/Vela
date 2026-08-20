@@ -382,7 +382,8 @@ export function QualityView({ result }: { result: QualityResult }) {
                 key={anomaly.id}
                 className={cn(
                   'flex flex-wrap items-start gap-x-2.5 gap-y-1.5 border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0',
-                  anomaly.acknowledged && 'opacity-60',
+                  anomaly.acknowledged &&
+                    '-mx-2.5 rounded-md bg-surface-2 px-2.5 py-2 last:pb-2',
                 )}
               >
                 <div className="min-w-0 flex-1">
