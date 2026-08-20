@@ -26,7 +26,7 @@ export const 試行が多すぎるとき: Story = {
   args: {
     notice: {
       kind: 'rate-limited',
-      retryAt: new Date(2026, 0, 1, 9, 12).getTime(),
+      retryAt: Date.parse('2026-01-01T09:12:00+09:00'),
     },
   },
 }
