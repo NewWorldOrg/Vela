@@ -129,7 +129,7 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
       label: '更新',
       value: proposal.updated.length,
       unit: 'サービス',
-      note: '候補ch・区分が変わりました',
+      note: '名称・候補ch・区分が変わりました',
       tint: 'bg-tint-sky',
     },
     {
@@ -312,7 +312,7 @@ export function ScanProposalView({
               />
               <ProposalRows
                 services={proposal.missing}
-                description="今回の走査で見つからなかったサービスです。一時的な受信不良・中継局の停波・アンテナ工事でも消失として出ます。"
+                description="今回の走査で見つからなかったサービスです。一時的な受信不良・中継局の停波・アンテナ工事でも消失として出るため、黙って削除はしません。"
               />
             </section>
           )}

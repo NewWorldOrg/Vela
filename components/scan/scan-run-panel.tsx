@@ -223,8 +223,8 @@ export function ScanRunPanel({
         {progress && <ScanCounts progress={progress} />}
 
         <p className="mt-[11px] border-t border-dashed border-line pt-[11px] text-note leading-[1.7] text-ink-2">
-          キャンセルした場合も既存の定義は変わりません。録画・ライブ・EPG
-          収集が優先され、必要になればスキャンは中断されます。
+          録画・ライブ・EPG
+          収集が優先され、必要になれば中断されます。キャンセルした場合も既存の定義は変わりません。
         </p>
       </div>
 
