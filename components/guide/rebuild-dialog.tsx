@@ -69,7 +69,7 @@ export function RebuildEpgDialog({
             <RebuildIcon className="size-[19px] text-coral" />
             EPG 全破棄 → 再構築
           </AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription className="[word-break:auto-phrase]">
             番組表のデータを<b className="text-ink">全て破棄</b>
             し、世代(epoch)を前進させてから、全 TS を 1 周して集め直します。
           </AlertDialogDescription>

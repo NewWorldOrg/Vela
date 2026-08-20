@@ -48,7 +48,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
         エンコード
       </PageHeading>
 
-      <Banner className="mt-3.5">
+      <Banner className="mt-3.5 [word-break:auto-phrase]">
         <b className="block">元 TS は削除されません。</b>
         削除は録画ごと、ライブラリからの明示操作でのみ行われます。エンコードの成果物は再生用の派生物で、作り直せます。
       </Banner>

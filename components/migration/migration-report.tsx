@@ -30,7 +30,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
 
   return (
     <>
-      <Banner className="mt-3.5">
+      <Banner className="mt-3.5 [word-break:auto-phrase]">
         <b className="block">この画面は読み取り専用です。</b>
         移行の実行は CLI
         で行います。移行できなかった件数は、品質画面やライブラリの不整合件数には合算されません。
