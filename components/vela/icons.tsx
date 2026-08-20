@@ -590,3 +590,79 @@ export function RebuildIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function KeyIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="8.7" cy="9.3" r="3.5" />
+      <path d="m11.1 11.7 8 8.1" />
+      <path d="m16.4 16.9 1.9-1.9M18.6 19.2l1.8-2" />
+    </Icon>
+  )
+}
+
+export function LockIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4.4" y="10.4" width="15.2" height="9" rx="2.2" />
+      <path d="M8 10.4V7.8a4 4 0 0 1 8-.1v2.7" />
+      <path d="M12 14v2" />
+    </Icon>
+  )
+}
+
+export function CopyIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="8.4" y="8.4" width="11.2" height="11.2" rx="2.2" />
+      <path d="M15.6 5.6a2.2 2.2 0 0 0-2.2-2.2H6.6a2.2 2.2 0 0 0-2.2 2.2v6.8a2.2 2.2 0 0 0 2.2 2.2" />
+    </Icon>
+  )
+}
+
+export function DeviceDesktopIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="5" width="18" height="12" rx="2.2" />
+      <path d="M8.4 20.4h7.2M12 17v3.4" />
+    </Icon>
+  )
+}
+
+export function DeviceTabletIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="5.6" y="2.8" width="12.8" height="18.4" rx="2.4" />
+      <path d="M10.6 18.6h2.9" />
+    </Icon>
+  )
+}
+
+export function DevicePhoneIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="7.2" y="2.6" width="9.6" height="18.8" rx="2.4" />
+      <path d="M10.8 18.4h2.4" />
+    </Icon>
+  )
+}
+
+export function DevicePlayerIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9.4 3.4h5.2l4.8 15.4a1.8 1.8 0 0 1-1.7 2.4H6.3a1.8 1.8 0 0 1-1.7-2.4Z" />
+      <path d="M7.4 13.6h9.3" />
+    </Icon>
+  )
+}
+
+export function MarkDevices(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="2.8" y="5.2" width="12.4" height="9.2" rx="2" />
+      <path d="M6.4 17.6h5.4M9.1 14.4v3.2" />
+      <rect x="16.6" y="10.4" width="5.2" height="9.4" rx="1.8" />
+      <path d="M18.5 17.8h1.6" />
+    </Icon>
+  )
+}

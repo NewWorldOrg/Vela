@@ -6,9 +6,14 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { DangerIcon, InfoIcon, WarningIcon } from '@/components/vela/icons'
+import {
+  DangerIcon,
+  InfoIcon,
+  SuccessIcon,
+  WarningIcon,
+} from '@/components/vela/icons'
 
-export type BannerTone = 'info' | 'warn' | 'danger'
+export type BannerTone = 'info' | 'warn' | 'danger' | 'success'
 
 /** A navigation. Renders as a bold, permanently underlined text link. */
 export interface BannerLinkAction {
@@ -51,6 +56,8 @@ const DISABLED_ON_BAND: Record<BannerTone, string> = {
   warn: 'border-lemon-line bg-lemon-soft text-lemon hover:border-lemon-line hover:bg-lemon-soft',
   danger:
     'border-coral-line bg-coral-soft text-coral hover:border-coral-line hover:bg-coral-soft',
+  success:
+    'border-mint-line bg-mint-soft text-mint hover:border-mint-line hover:bg-mint-soft',
 }
 
 const DISABLED_MOTION =
@@ -60,12 +67,14 @@ const TONE_CLASS: Record<BannerTone, string> = {
   info: 'bg-sky-soft text-sky',
   warn: 'bg-lemon-soft text-lemon',
   danger: 'bg-coral-soft text-coral',
+  success: 'bg-mint-soft text-mint',
 }
 
 const TONE_ICON = {
   info: InfoIcon,
   warn: WarningIcon,
   danger: DangerIcon,
+  success: SuccessIcon,
 }
 
 function BannerActionControl({
@@ -190,7 +199,7 @@ export function InlineAlert({
   className,
   children,
   ...props
-}: ComponentProps<'div'> & { tone?: Exclude<BannerTone, 'info'> }) {
+}: ComponentProps<'div'> & { tone?: Exclude<BannerTone, 'info' | 'success'> }) {
   const ToneIcon = TONE_ICON[tone]
 
   return (
