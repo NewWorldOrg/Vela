@@ -92,6 +92,12 @@ export interface ServiceRow {
    */
   currentChannel?: string
   /**
+   * The channel the measurements favour, named only when it is not the one
+   * selected. Nothing switches to it: the list says so and the operator
+   * decides.
+   */
+  betterChannel?: string
+  /**
    * Whether the service counts as a reservation target by default. The list
    * calls it 有効; nothing writes it yet.
    */
@@ -373,6 +379,10 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
       service.selectedChannel === null
         ? undefined
         : toChannel(service.selectedChannel),
+    betterChannel:
+      service.betterChannel === null
+        ? undefined
+        : toChannel(service.betterChannel),
     enabled: service.reservableByDefault,
     candidateCount: toInt(service.candidateCount),
     needsAttentionCount: candidates.filter((c) => c.rotation?.dropped).length,

@@ -190,10 +190,16 @@ export function ServiceTable({
                 {service.lastSeen}
               </TableCell>
               <TableCell>
-                {service.currentChannel === undefined && (
+                {service.currentChannel === undefined ? (
                   <Badge variant="warn" className="font-bold">
                     要対応
                   </Badge>
+                ) : (
+                  service.betterChannel !== undefined && (
+                    <Badge variant="sky" className="font-bold">
+                      実測上位の候補 {service.betterChannel}
+                    </Badge>
+                  )
                 )}
               </TableCell>
             </TableRow>,

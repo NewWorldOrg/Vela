@@ -675,6 +675,7 @@ export interface components {
       /** Format: int32 */
       candidateCount: number | string
       selectedChannel: null | components['schemas']['ScanTargetResponder']
+      betterChannel: null | components['schemas']['ScanTargetResponder']
       candidates: components['schemas']['CandidateChannelResponder'][]
     }
     CandidateChannelResponder: {
