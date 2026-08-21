@@ -10,7 +10,7 @@
     "prettier": "prettier --write --ignore-path .gitignore --ignore-path .prettierignore './**/*.{js,jsx,ts,tsx,json,css}'",
     "prettier:check": "prettier --check --ignore-path .gitignore --ignore-path .prettierignore './**/*.{js,jsx,ts,tsx,json,css}'",
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"lib/**/*.test.ts\"",
+    "test": "node --test \"lib/**/*.test.ts\" \"repository/**/*.test.ts\"",
     "codegen": "openapi-typescript repository/client/carina.json -o repository/client/schema.ts && prettier --write repository/client/schema.ts",
     "codegen:verify": "node scripts/codegen-verify.mjs",
     "codegen:fetch": "node --input-type=module -e \"const base = process.env.CARINA_API_BASE_URL; if (!base) { throw new Error('CARINA_API_BASE_URL is not set') } const response = await fetch(new URL('/openapi/v1.json', base)); if (!response.ok) { throw new Error(response.status + ' from ' + base) } const { writeFile } = await import('node:fs/promises'); await writeFile('repository/client/carina.json', await response.text())\" && yarn codegen",

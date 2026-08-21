@@ -401,11 +401,15 @@ export function TunersView({
                       {row.session.label}
                     </Badge>
                     <span className="text-ui">
-                      {row.session.service}
                       {row.session.code && (
-                        <span className="font-code">
-                          {row.session.service ? ' ' : ''}
-                          {row.session.code}
+                        <span className="font-code">{row.session.code}</span>
+                      )}
+                      {row.session.endsAt && (
+                        <span className="block text-note text-ink-3">
+                          終了予定{' '}
+                          <span className="font-code tabular-nums">
+                            {row.session.endsAt}
+                          </span>
                         </span>
                       )}
                     </span>

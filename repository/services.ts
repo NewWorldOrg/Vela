@@ -10,6 +10,8 @@ import {
 } from '@/repository/scan-failures'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { SCAN_SYSTEMS } from '@/repository/scan-systems'
+import type { Measurement, Reception } from '@/repository/tuning'
+import { channelLabel, measurementOf, receptionOf } from '@/repository/tuning'
 import { formatMonth, formatSpan, formatStamp } from '@/lib/format'
 
 type BroadcastServiceResponder =
@@ -49,13 +51,7 @@ const FAILURE_CLASS: Record<
   unexpectedStream: UNEXPECTED_STREAM,
 }
 
-export interface Measurement {
-  /** The value with its unit, e.g. `31.2 dB`. */
-  value: string
-  /** 0–100, CNR over a 0–40 dB scale. */
-  percent: number
-  tone: 'ok' | 'warn' | 'err'
-}
+export type { Measurement, Reception } from '@/repository/tuning'
 
 export interface CandidateRow {
   id: string
@@ -68,7 +64,13 @@ export interface CandidateRow {
    * lock and still report no carrier-to-noise, and saying it never tuned in
    * would be untrue.
    */
-  reception: 'locked' | 'unlocked' | 'unread'
+  reception: Reception
+  /**
+   * The tuner ledger has been saved since this candidate last received
+   * anything, so what is known about it was measured under a configuration
+   * that no longer holds and has to be proven again.
+   */
+  needsRevalidation: boolean
   /**
    * Set once the candidate has fallen out of normal rotation. `dropped` means
    * it is no longer tried at all until someone looks at it.
@@ -280,64 +282,20 @@ function toInt(value: number | string): number {
   return typeof value === 'number' ? value : Number(value)
 }
 
-function toChannel(target: ScanTargetResponder): string {
-  const channel = toInt(target.physicalChannel)
-
-  if (target.system === 'isdbSBs') {
-    const stream = target.transportStreamId
-    return stream === null
-      ? `BS${channel}`
-      : `BS${channel} / TS ${toInt(stream)}`
-  }
-
-  if (target.system === 'isdbSCs110') {
-    return `ND${channel}`
-  }
-
-  return `${channel}ch`
-}
-
-function toMeasurement(
-  measurement: ScanMeasurementResponder | null,
-): Measurement | undefined {
-  if (measurement === null || measurement.cnrMilliDecibels === null) {
-    return undefined
-  }
-
-  const cnr = toInt(measurement.cnrMilliDecibels) / 1000
-
-  return {
-    value: `${cnr.toFixed(1)} dB`,
-    // The signal meter maps 0–40 dB onto its width; the number is spelled out
-    // beside the bar either way.
-    percent: Math.min(100, Math.max(0, (cnr / 40) * 100)),
-    tone: cnr >= 25 ? 'ok' : cnr >= 15 ? 'warn' : 'err',
-  }
-}
-
 function toCandidate(candidate: CandidateChannelResponder): CandidateRow {
   const failures = toInt(candidate.consecutiveFailures)
 
   return {
     id: candidate.id,
-    channel: toChannel(candidate.target),
+    channel: channelLabel(candidate.target),
     selected: candidate.isSelected,
-    measurement: toMeasurement(candidate.lastMeasurement),
-    reception: toReception(candidate.lastMeasurement),
+    measurement: measurementOf(candidate.lastMeasurement),
+    reception: receptionOf(candidate.lastMeasurement),
+    needsRevalidation: candidate.needsRevalidation,
     rotation: toRotation(candidate, failures),
     discovered: formatMonth(candidate.discoveredAt),
     lastSeen: formatStamp(candidate.lastSeenAt),
   }
-}
-
-function toReception(
-  measurement: ScanMeasurementResponder | null,
-): CandidateRow['reception'] {
-  if (measurement === null) {
-    return 'unread'
-  }
-
-  return measurement.locked ? 'locked' : 'unlocked'
 }
 
 function toRotation(
@@ -378,11 +336,11 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
     currentChannel:
       service.selectedChannel === null
         ? undefined
-        : toChannel(service.selectedChannel),
+        : channelLabel(service.selectedChannel),
     betterChannel:
       service.betterChannel === null
         ? undefined
-        : toChannel(service.betterChannel),
+        : channelLabel(service.betterChannel),
     enabled: service.reservableByDefault,
     candidateCount: toInt(service.candidateCount),
     needsAttentionCount: candidates.filter((c) => c.rotation?.dropped).length,
@@ -447,7 +405,7 @@ function toAttempt(
 
   return {
     id: `${index}`,
-    channel: toChannel(attempt.target),
+    channel: channelLabel(attempt.target),
     failure:
       attempt.outcome === 'succeeded'
         ? undefined
@@ -459,7 +417,7 @@ function toAttempt(
       attempt.outcome === 'unexpectedStream' && observed !== null
         ? `期待 TSID ${expected === null ? '—' : toInt(expected)} / 受信 TSID ${toInt(observed)}`
         : undefined,
-    measurement: toMeasurement(attempt.measurement),
+    measurement: measurementOf(attempt.measurement),
     took: formatSpan(
       (new Date(attempt.finishedAt).getTime() -
         new Date(attempt.startedAt).getTime()) /
@@ -503,8 +461,8 @@ function toProposalService(
     category: CATEGORY_LABEL[change.category],
     channels: change.channels.map((channel) => ({
       kind: channel.kind,
-      channel: toChannel(channel.target),
-      measurement: toMeasurement(channel.measurement),
+      channel: channelLabel(channel.target),
+      measurement: measurementOf(channel.measurement),
     })),
   }
 }
@@ -518,7 +476,7 @@ function toProposal(
   const missing = difference.missing.map(toProposalService)
   const leftRotation = difference.leftRotation.map((departure) => ({
     key: `${toInt(departure.networkId)}-${toInt(departure.serviceId)}`,
-    channel: toChannel(departure.target),
+    channel: channelLabel(departure.target),
     consecutiveFailures: toInt(departure.consecutiveFailures),
     since: formatStamp(departure.since),
   }))

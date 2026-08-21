@@ -60,6 +60,7 @@ export const Chips: Story = {
         </Badge>
         <Badge variant="warn">drain 中</Badge>
         <Badge variant="warn">要確認</Badge>
+        <Badge variant="warn">要再検証</Badge>
         <Badge variant="err">受信不可</Badge>
         <Badge variant="ok">受信可</Badge>
         <Badge variant="sky">BasicOnly</Badge>

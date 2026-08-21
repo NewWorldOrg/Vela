@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, within } from 'storybook/test'
 
 import {
   DETECTION,
@@ -24,6 +25,23 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = {
   args: { result: { state: 'ok', result: TUNERS } },
+}
+
+/**
+ * The purpose alone does not say what a tuner is doing: two recordings look
+ * the same until the tuning parameters are on the row. A recording carries an
+ * end of its own, so it is named; nothing else does, and nothing else claims
+ * one.
+ */
+export const 進行中のセッションが物理選局値で分かる: Story = {
+  args: { result: { state: 'ok', result: TUNERS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('57ch')).toBeVisible()
+    await expect(canvas.getByText('53ch')).toBeVisible()
+    await expect(canvas.getByText('08/07 21:15')).toBeVisible()
+  },
 }
 
 export const 異常なし: Story = {
