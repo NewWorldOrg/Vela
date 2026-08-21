@@ -78,6 +78,60 @@ export const 通常: Story = {
   },
 }
 
+/**
+ * What tells a programme that has ended from one still to come, held against
+ * the paint the browser resolved rather than against a class name.
+ *
+ * Three things are asked of it. Every ended cell is drawn on the same face, so
+ * the elapsed part of the grid reads as one thing rather than as ten weakened
+ * tints. That face is not a tint any cell is given while it is still to come.
+ * And a cell keeps the hairline of its genre either way, so what is given up
+ * in order to say a programme has ended is not what says what it is.
+ */
+export const 放送済み: Story = {
+  args: { guide: base },
+  play: async ({ canvasElement }) => {
+    const cells = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]',
+      ),
+    )
+
+    const ended: { genre: string; cell: HTMLElement }[] = []
+    const ahead: { genre: string; cell: HTMLElement }[] = []
+    for (const [index, program] of IN_GRID_ORDER.entries()) {
+      const over =
+        !program.endUndecided &&
+        program.startMin + program.durationMin <= NOW_MIN
+      const into = over ? ended : ahead
+      into.push({ genre: program.genre, cell: cells[index] })
+    }
+
+    await expect(ended.length).toBeGreaterThan(0)
+    await expect(ahead.length).toBeGreaterThan(0)
+
+    const face = getComputedStyle(ended[0].cell).backgroundColor
+    for (const { cell } of ended) {
+      await expect(getComputedStyle(cell).backgroundColor).toBe(face)
+      await expect(getComputedStyle(cell).borderTopStyle).toBe('dashed')
+    }
+
+    for (const { cell } of ahead) {
+      await expect(getComputedStyle(cell).backgroundColor).not.toBe(face)
+      await expect(getComputedStyle(cell).borderTopStyle).toBe('solid')
+    }
+
+    for (const { genre, cell } of ended) {
+      const live = ahead.find((it) => it.genre === genre)
+      if (live) {
+        await expect(getComputedStyle(cell).borderTopColor).toBe(
+          getComputedStyle(live.cell).borderTopColor,
+        )
+      }
+    }
+  },
+}
+
 export const 健全性バナー: Story = {
   args: {
     guide: {
