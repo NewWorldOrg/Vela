@@ -144,9 +144,11 @@ framework to install. `task test:stories` runs the Storybook test-runner in a
 Playwright image against a statically served build, which is where every story is
 rendered in a real browser and checked for a11y violations.
 
-GitHub Actions runs lint, typecheck, the unit tests, the codegen check and the
-build, on push and pull request to `master`. Note that the story run is not among
-them: it is the one gate that has to be run deliberately.
+GitHub Actions runs lint, typecheck, the unit tests, the codegen check, the
+build and the story run, on push and pull request to `master`. The story job
+counts the tests it ran and fails on zero, because the runner sits beside the
+server it is testing and would otherwise report the exit code of whichever half
+finished first.
 
 `Taskfile.yml` is the place for a repeatable operation. Add a task rather than
 passing a longer command around by hand.
