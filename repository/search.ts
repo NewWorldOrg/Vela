@@ -1,4 +1,10 @@
-import type { Programme } from '@/repository/programmes'
+import { genreKindsOf, readSearchCondition } from '@/lib/search-condition'
+import type {
+  RawSearchCondition,
+  SearchCondition,
+} from '@/lib/search-condition'
+import type { ChannelKind } from '@/repository/channels'
+import type { Programme, SearchQuery } from '@/repository/programmes'
 import { searchProgrammes } from '@/repository/programmes'
 import type { Genre, GuideChannel } from '@/repository/programs'
 import {
@@ -9,32 +15,8 @@ import {
   genreDisplayOf,
   windowStartOf,
 } from '@/repository/programs'
-import {
-  SEARCH_DEFAULT_PER_PAGE,
-  SEARCH_DEFAULT_SORT,
-  SEARCH_PER_PAGE_OPTIONS,
-  SEARCH_SORT_OPTIONS,
-  type SearchSort,
-} from '@/repository/search-options'
 
-export interface RawSearchCondition {
-  q?: string
-  from?: string
-  to?: string
-  sort?: string
-  perPage?: string
-  page?: string
-}
-
-export interface SearchCondition {
-  q?: string
-  /** 放送日(JST 4:00 区切り)。`YYYY-MM-DD` */
-  from?: string
-  to?: string
-  sort: SearchSort
-  perPage: number
-  page: number
-}
+export type { RawSearchCondition, SearchCondition }
 
 export interface SearchHit {
   id: string
@@ -70,43 +52,18 @@ export type SearchOutcome =
 export interface SearchResult {
   condition: SearchCondition
   periodLabel?: string
+  /** 種別で絞ったあとの、チャンネル条件に出せるチャンネル */
+  channels: GuideChannel[]
   outcome: SearchOutcome
 }
 
 const GUARD_MESSAGE =
   'キーワードは2文字以上で指定してください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。'
 
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-
-const PAGE_PATTERN = /^[1-9]\d*$/
-
-function calendarDate(value: string | undefined): string | undefined {
-  if (!value || !DATE_PATTERN.test(value)) {
-    return undefined
-  }
-
-  const at = new Date(`${value}T00:00:00Z`)
-
-  if (Number.isNaN(at.getTime()) || at.toISOString().slice(0, 10) !== value) {
-    return undefined
-  }
-
-  return value
-}
-
-function parseCondition(raw: RawSearchCondition): SearchCondition {
-  return {
-    q: raw.q?.trim() || undefined,
-    from: calendarDate(raw.from),
-    to: calendarDate(raw.to),
-    sort:
-      SEARCH_SORT_OPTIONS.find((option) => option.value === raw.sort)?.value ??
-      SEARCH_DEFAULT_SORT,
-    perPage:
-      SEARCH_PER_PAGE_OPTIONS.find((count) => String(count) === raw.perPage) ??
-      SEARCH_DEFAULT_PER_PAGE,
-    page: raw.page && PAGE_PATTERN.test(raw.page) ? Number(raw.page) : 1,
-  }
+const SYSTEM_OF_KIND: Record<ChannelKind, SearchQuery['system']> = {
+  terrestrial: 'isdbT',
+  bs: 'isdbSBs',
+  cs110: 'isdbSCs110',
 }
 
 function periodLabelOf(condition: SearchCondition): string | undefined {
@@ -155,30 +112,38 @@ function toHit(programme: Programme, channels: GuideChannel[]): SearchHit {
 export async function searchPrograms(
   raw: RawSearchCondition,
 ): Promise<SearchResult> {
-  const condition = parseCondition(raw)
+  const condition = readSearchCondition(raw)
   const periodLabel = periodLabelOf(condition)
+  const carried = await fetchServiceChannels()
+  const channels = [...carried]
+    .filter((channel) => !condition.kind || channel.kind === condition.kind)
+    .sort((left, right) => compareChannels(left, right))
 
   if (!condition.q) {
-    return { condition, periodLabel, outcome: { state: 'idle' } }
+    return { condition, periodLabel, channels, outcome: { state: 'idle' } }
   }
 
-  const [search, channels] = await Promise.all([
-    searchProgrammes({
-      keyword: condition.q,
-      from: condition.from ? windowStartOf(condition.from) : undefined,
-      to: condition.to ? dayEndOf(condition.to) : undefined,
-      sort: condition.sort === 'name.asc' ? 'name' : 'startsAt',
-      descending: condition.sort === 'start_at.desc' ? true : undefined,
-      page: condition.page,
-      perPage: condition.perPage,
-    }),
-    fetchServiceChannels(),
-  ])
+  const search = await searchProgrammes({
+    keyword: condition.q,
+    exclude: condition.exclude,
+    fields:
+      condition.fields === 'title,description' ? undefined : [condition.fields],
+    genres: genreKindsOf(condition.genres),
+    system: condition.kind ? SYSTEM_OF_KIND[condition.kind] : undefined,
+    channels: condition.channels,
+    from: condition.from ? windowStartOf(condition.from) : undefined,
+    to: condition.to ? dayEndOf(condition.to) : undefined,
+    sort: condition.sort === 'name.asc' ? 'name' : 'startsAt',
+    descending: condition.sort === 'start_at.desc' ? true : undefined,
+    page: condition.page,
+    perPage: condition.perPage,
+  })
 
   if (search.state === 'refused') {
     return {
       condition,
       periodLabel,
+      channels,
       outcome: { state: 'refused', message: GUARD_MESSAGE },
     }
   }
@@ -188,10 +153,11 @@ export async function searchPrograms(
   return {
     condition,
     periodLabel,
+    channels,
     outcome: {
       state: 'searched',
       found: {
-        hits: page.items.map((programme) => toHit(programme, channels)),
+        hits: page.items.map((programme) => toHit(programme, carried)),
         total: page.total,
         page: page.currentPage,
         lastPage: page.lastPage,
@@ -202,4 +168,16 @@ export async function searchPrograms(
       },
     },
   }
+}
+
+function compareChannels(left: GuideChannel, right: GuideChannel): number {
+  for (let index = 0; index < left.sortKey.length; index++) {
+    const gap = left.sortKey[index] - right.sortKey[index]
+
+    if (gap !== 0) {
+      return gap
+    }
+  }
+
+  return 0
 }

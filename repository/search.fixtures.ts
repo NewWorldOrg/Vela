@@ -1,3 +1,4 @@
+import type { GuideChannel } from '@/repository/programs'
 import type { SearchHit } from '@/repository/search'
 
 export const SEARCH_HIT_FIXTURES: SearchHit[] = [
@@ -264,3 +265,25 @@ export const SEARCH_HIT_FIXTURES: SearchHit[] = [
     genreLabel: 'ドキュメンタリー/教養',
   },
 ]
+
+export const SEARCH_CHANNEL_FIXTURES: GuideChannel[] = [
+  { no: '131', name: '中央テレビ1', networkId: 131 },
+  { no: '141', name: 'シティ MX1', networkId: 141 },
+  { no: '151', name: 'みなと総合1', networkId: 151 },
+  { no: '161', name: '東都テレビ1', networkId: 161 },
+  { no: '171', name: '湾岸放送1', networkId: 171 },
+  { no: '181', name: '第一テレビ1', networkId: 181 },
+  { no: '191', name: 'みなと教育1', networkId: 191 },
+].map((carried, index) => ({
+  id: `${carried.networkId}-${1310 + index}`,
+  no: carried.no,
+  name: carried.name,
+  kind: 'terrestrial' as const,
+  networkId: carried.networkId,
+  serviceId: 1310 + index,
+  sortKey: [Number(carried.no), carried.networkId, 1310 + index] as [
+    number,
+    number,
+    number,
+  ],
+}))

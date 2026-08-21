@@ -1,10 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import type { SearchCondition } from '@/repository/search'
-import { SEARCH_HIT_FIXTURES } from '@/repository/search.fixtures'
+import {
+  SEARCH_CHANNEL_FIXTURES,
+  SEARCH_HIT_FIXTURES,
+} from '@/repository/search.fixtures'
 import { SearchView } from '@/components/search/search-page'
 
 const emptyCondition: SearchCondition = {
+  fields: 'title,description',
+  genres: [],
+  channels: [],
   sort: 'start_at.asc',
   perPage: 20,
   page: 1,
@@ -16,6 +22,22 @@ const condition: SearchCondition = {
   from: '2026-08-09',
   to: '2026-08-15',
 }
+
+const everyCondition: SearchCondition = {
+  ...condition,
+  q: '夏 絶景',
+  exclude: '再放送',
+  fields: 'title',
+  genres: ['documentary', 'movie'],
+  kind: 'terrestrial',
+  channels: [
+    SEARCH_CHANNEL_FIXTURES[0].id,
+    SEARCH_CHANNEL_FIXTURES[1].id,
+    SEARCH_CHANNEL_FIXTURES[2].id,
+  ],
+}
+
+const channels = SEARCH_CHANNEL_FIXTURES
 
 const periodLabel = '8/9(土) 〜 8/15(金)'
 
@@ -30,7 +52,33 @@ type Story = StoryObj<typeof meta>
 
 export const 入力前: Story = {
   args: {
-    result: { condition: emptyCondition, outcome: { state: 'idle' } },
+    result: {
+      condition: emptyCondition,
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+}
+
+export const 条件をすべて指定: Story = {
+  args: {
+    result: {
+      condition: everyCondition,
+      periodLabel,
+      channels,
+      outcome: {
+        state: 'searched',
+        found: {
+          hits: SEARCH_HIT_FIXTURES.slice(0, 6),
+          total: 6,
+          page: 1,
+          lastPage: 1,
+          perPage: 20,
+          rangeFrom: 1,
+          rangeTo: 6,
+        },
+      },
+    },
   },
 }
 
@@ -39,6 +87,7 @@ export const 検索結果: Story = {
     result: {
       condition,
       periodLabel,
+      channels,
       outcome: {
         state: 'searched',
         found: {
@@ -60,6 +109,7 @@ export const ページ送り: Story = {
     result: {
       condition: { ...condition, page: 3 },
       periodLabel,
+      channels,
       outcome: {
         state: 'searched',
         found: {
@@ -79,7 +129,8 @@ export const ページ送り: Story = {
 export const 該当なし: Story = {
   args: {
     result: {
-      condition: { ...emptyCondition, q: '見つからない語' },
+      condition: { ...emptyCondition, q: '見つからない語', exclude: '再放送' },
+      channels,
       outcome: {
         state: 'searched',
         found: {
@@ -100,6 +151,7 @@ export const 条件不備: Story = {
   args: {
     result: {
       condition: { ...emptyCondition, q: 'あ' },
+      channels,
       outcome: {
         state: 'refused',
         message:

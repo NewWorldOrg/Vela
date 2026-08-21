@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useCallback } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
@@ -10,8 +11,13 @@ import type { SearchHits, SearchResult } from '@/repository/search'
 import {
   SEARCH_DEFAULT_PER_PAGE,
   SEARCH_DEFAULT_SORT,
+  SEARCH_FIELD_OPTIONS,
+  SEARCH_GENRE_OPTIONS,
+  SEARCH_KIND_OPTIONS,
   SEARCH_PER_PAGE_OPTIONS,
+  SEARCH_QUERY_KEYS,
   SEARCH_SORT_OPTIONS,
+  genreLabelOf,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -69,15 +75,18 @@ export function SearchView({ result }: { result: SearchResult }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { condition, periodLabel, outcome } = result
+  const { condition, periodLabel, channels, outcome } = result
 
   const patch = useCallback(
-    (next: Record<string, string | null>, push = false) => {
+    (next: Record<string, string | string[] | null>, push = false) => {
       const params = new URLSearchParams(searchParams.toString())
       for (const [k, v] of Object.entries(next)) {
-        if (v == null || v === '') {
-          params.delete(k)
-        } else {
+        params.delete(k)
+        if (Array.isArray(v)) {
+          for (const one of v) {
+            params.append(k, one)
+          }
+        } else if (v != null && v !== '') {
           params.set(k, v)
         }
       }
@@ -94,28 +103,99 @@ export function SearchView({ result }: { result: SearchResult }) {
 
   const clearAll = useCallback(
     () =>
-      patch({
-        q: null,
-        from: null,
-        to: null,
-        sort: null,
-        per_page: null,
-      }),
+      patch(Object.fromEntries(SEARCH_QUERY_KEYS.map((key) => [key, null]))),
     [patch],
   )
 
-  const hasCondition = Boolean(condition.q || condition.from || condition.to)
+  const fieldsAsked = SEARCH_FIELD_OPTIONS.some(
+    (option) => option.value === searchParams.get('fields'),
+  )
+  const hasCondition = Boolean(
+    condition.q ||
+    condition.exclude ||
+    fieldsAsked ||
+    condition.genres.length ||
+    condition.kind ||
+    condition.channels.length ||
+    condition.from ||
+    condition.to,
+  )
   const found = outcome.state === 'searched' ? outcome.found : undefined
   const noHit = found !== undefined && found.hits.length === 0
   const urlLine = `/search${searchParams.toString() ? `?${searchParams}` : ''}`
+  const namedChannels = condition.channels.map(
+    (id) => channels.find((channel) => channel.id === id)?.name || id,
+  )
+  const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
+    (option) => !condition.genres.includes(option.value),
+  )
+  const unusedChannels = channels.filter(
+    (channel) => !condition.channels.includes(channel.id),
+  )
 
   const chips: {
     key: string
     label: string
-    value?: string
-    clear: Record<string, string | null>
+    value?: ReactNode
+    spoken?: string
+    clear: Record<string, string | string[] | null>
   }[] = [
     { key: 'q', label: 'キーワード', value: condition.q, clear: { q: null } },
+    {
+      key: 'exclude',
+      label: '除外キーワード',
+      value: condition.exclude,
+      clear: { exclude: null },
+    },
+    {
+      key: 'fields',
+      label: '対象フィールド',
+      value: fieldsAsked
+        ? SEARCH_FIELD_OPTIONS.find(
+            (option) => option.value === condition.fields,
+          )?.label
+        : undefined,
+      clear: { fields: null },
+    },
+    ...(condition.genres.length === 0
+      ? [{ key: 'genre', label: 'ジャンル', clear: { genre: null } }]
+      : condition.genres.map((genre) => ({
+          key: `genre-${genre}`,
+          label: 'ジャンル',
+          value: genreLabelOf(genre),
+          spoken: genreLabelOf(genre),
+          clear: {
+            genre: condition.genres.filter((one) => one !== genre),
+          },
+        }))),
+    {
+      key: 'type',
+      label: '種別',
+      value: SEARCH_KIND_OPTIONS.find(
+        (option) => option.value === condition.kind,
+      )?.label,
+      clear: { type: null, channel: null },
+    },
+    {
+      key: 'channel',
+      label: 'チャンネル',
+      value:
+        namedChannels.length === 0 ? undefined : (
+          <>
+            {namedChannels[0]}
+            {namedChannels.length > 1 && (
+              <>
+                {' '}
+                ほか{' '}
+                <em className="font-code font-medium not-italic">
+                  {namedChannels.length - 1}
+                </em>
+              </>
+            )}
+          </>
+        ),
+      clear: { channel: null },
+    },
     {
       key: 'period',
       label: '期間',
@@ -180,7 +260,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                 <span className="font-medium">{c.value}</span>
                 <button
                   type="button"
-                  aria-label={`${c.label}の条件を消す`}
+                  aria-label={`${c.spoken ?? c.label}の条件を消す`}
                   onClick={() => patch(c.clear)}
                   className="flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-3 transition-colors duration-150 hover:bg-surface-2 hover:text-ink [&_svg]:size-3"
                 >
@@ -213,11 +293,120 @@ export function SearchView({ result }: { result: SearchResult }) {
             <Input
               key={condition.q ?? ''}
               name="q"
+              aria-label="キーワードを追加"
               defaultValue={condition.q ?? ''}
               placeholder="キーワードを追加"
               className="h-[33px] rounded-full"
             />
           </form>
+          <form
+            className="min-w-[180px] flex-[0_1_240px]"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const value = new FormData(e.currentTarget).get('exclude')
+              patch({ exclude: typeof value === 'string' ? value : null })
+            }}
+          >
+            <Input
+              key={condition.exclude ?? ''}
+              name="exclude"
+              aria-label="除外キーワードを追加"
+              defaultValue={condition.exclude ?? ''}
+              placeholder="除外キーワードを追加"
+              className="h-[33px] rounded-full"
+            />
+          </form>
+          <Select
+            value={condition.fields}
+            onValueChange={(v) => patch({ fields: v })}
+          >
+            <SelectTrigger
+              size="sm"
+              aria-label="対象フィールド"
+              className="w-fit rounded-full"
+            >
+              {
+                SEARCH_FIELD_OPTIONS.find(
+                  (option) => option.value === condition.fields,
+                )?.label
+              }
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {SEARCH_FIELD_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {unusedGenres.length > 0 && (
+            <Select
+              value=""
+              onValueChange={(v) => patch({ genre: [...condition.genres, v] })}
+            >
+              <SelectTrigger
+                size="sm"
+                aria-label="ジャンル"
+                className="w-fit rounded-full text-ink-3"
+              >
+                ジャンルを選ぶ
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {unusedGenres.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Select
+            value={condition.kind ?? ''}
+            onValueChange={(v) => patch({ type: v, channel: null })}
+          >
+            <SelectTrigger
+              size="sm"
+              aria-label="種別"
+              className={cn(
+                'w-fit rounded-full',
+                condition.kind ? undefined : 'text-ink-3',
+              )}
+            >
+              {SEARCH_KIND_OPTIONS.find(
+                (option) => option.value === condition.kind,
+              )?.label ?? '種別を選ぶ'}
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {SEARCH_KIND_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {unusedChannels.length > 0 && (
+            <Select
+              value=""
+              onValueChange={(v) =>
+                patch({ channel: [...condition.channels, v].join(',') })
+              }
+            >
+              <SelectTrigger
+                size="sm"
+                aria-label="チャンネル"
+                className="w-fit rounded-full text-ink-3"
+              >
+                チャンネルを選ぶ
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {unusedChannels.map((channel) => (
+                  <SelectItem key={channel.id} value={channel.id}>
+                    {channel.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <div className="flex items-center gap-1.5">
             <Input
               type="date"
@@ -245,7 +434,7 @@ export function SearchView({ result }: { result: SearchResult }) {
             <span className="text-note text-ink-2">
               {noHit
                 ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
-                : 'キーワードがルールへ引き継がれます。'}
+                : 'キーワード・除外キーワード・対象フィールド・ジャンル・チャンネルがルールへ引き継がれます。'}
             </span>
           </div>
           <Button size="sm" disabled title="ルール作成はこれから実装されます">
@@ -369,7 +558,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                   </div>
                 }
               >
-                検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。キーワード・期間を見直してください。
+                検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。キーワード・除外キーワード・期間を見直してください。
               </EmptyState>
             ) : (
               <>

@@ -1506,6 +1506,55 @@
             }
           },
           {
+            "name": "exclude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ProgrammeField"
+              }
+            }
+          },
+          {
+            "name": "genre",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TuneSystem"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
             "name": "from",
             "in": "query",
             "schema": {
@@ -3579,7 +3628,8 @@
           "allowedHostedDomains",
           "admitsEveryone",
           "reach",
-          "redirectUri"
+          "redirectUri",
+          "redirectUriGuessed"
         ],
         "type": "object",
         "properties": {
@@ -3621,6 +3671,9 @@
           },
           "redirectUri": {
             "type": "string"
+          },
+          "redirectUriGuessed": {
+            "type": "boolean"
           }
         }
       },
@@ -3647,6 +3700,13 @@
             "format": "int32"
           }
         }
+      },
+      "ProgrammeField": {
+        "enum": [
+          "title",
+          "description"
+        ],
+        "type": "string"
       },
       "ProgrammeGenreResponder": {
         "required": [

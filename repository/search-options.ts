@@ -1,18 +1,25 @@
 /**
- * What the search screen may ask for. The screen offers these and the reader
- * accepts nothing else, so they sit apart from the reading itself: a Client
- * Component may hold them, and nothing that reaches the API comes with them.
+ * What the search screen may ask for. The vocabulary and the reading of an
+ * address both live in `lib/search-condition`, which reaches nothing at all;
+ * this is the name the screen has always imported them under.
  */
-export type SearchSort = 'start_at.asc' | 'start_at.desc' | 'name.asc'
+export {
+  SEARCH_DEFAULT_FIELDS,
+  SEARCH_DEFAULT_PER_PAGE,
+  SEARCH_DEFAULT_SORT,
+  SEARCH_FIELD_OPTIONS,
+  SEARCH_GENRE_OPTIONS,
+  SEARCH_KIND_OPTIONS,
+  SEARCH_PER_PAGE_OPTIONS,
+  SEARCH_QUERY_KEYS,
+  SEARCH_SORT_OPTIONS,
+  genreLabelOf,
+} from '@/lib/search-condition'
 
-export const SEARCH_SORT_OPTIONS: { value: SearchSort; label: string }[] = [
-  { value: 'start_at.asc', label: '放送日時が早い順' },
-  { value: 'start_at.desc', label: '放送日時が遅い順' },
-  { value: 'name.asc', label: '番組名順' },
-]
-
-export const SEARCH_PER_PAGE_OPTIONS = [20, 50, 100]
-
-export const SEARCH_DEFAULT_SORT: SearchSort = 'start_at.asc'
-
-export const SEARCH_DEFAULT_PER_PAGE = 20
+export type {
+  SearchCondition,
+  SearchField,
+  SearchGenre,
+  SearchKind,
+  SearchSort,
+} from '@/lib/search-condition'
