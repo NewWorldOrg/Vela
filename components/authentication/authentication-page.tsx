@@ -55,7 +55,7 @@ export function AuthenticationView({
       <Crumb>
         設定 / <CrumbCurrent>認証</CrumbCurrent>
       </Crumb>
-      <PageHeading description="app が認証判断の単一所有者です。ローカルアカウントは常設で、OIDC は任意で追加します。ここではサインイン中のセッションを扱います。">
+      <PageHeading description="サインインの方法とセッションを管理します。ローカルアカウントは常に使えて、OIDC は必要なときに追加します。">
         認証
       </PageHeading>
 
@@ -77,10 +77,9 @@ export function AuthenticationView({
         <InfoIcon className="mt-[3px] size-[17px] shrink-0 text-sky" />
         <div>
           <b className="block font-bold">
-            セッションの実体はサーバ側の行です。
+            セッションは端末ごとに記録しています。
           </b>
-          Cookie が運ぶのは不透明な ID
-          だけで、行を持っているからこそ「この端末だけ切る」ができます。
+          だから、いま使っている端末を残したまま、ほかの端末だけをログアウトさせられます。
         </div>
       </TintPanel>
 
@@ -123,9 +122,9 @@ export function AuthenticationView({
         >
           <div className="min-w-[220px] flex-1">
             <b className="block font-bold">
-              まとめて失効させる操作はここにありません。
+              まとめてログアウトさせたいときは、パスワードを変更します。
             </b>
-            ローカルアカウントのパスワードを変更すると、自分の現在のセッション以外が全て失効します。
+            ローカルアカウントのパスワードを変えると、いま使っている端末以外がログアウトされます。
           </div>
           <div className="ml-auto self-center">
             <ChangePassword
