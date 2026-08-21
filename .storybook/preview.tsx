@@ -7,6 +7,18 @@ import {
 } from '../components/theme/ThemeProvider'
 
 /**
+ * A theme asked for on the preview's own query string, which outranks the
+ * toolbar global. The test-runner renders every story inside a single page
+ * load, so it never reaches the toolbar; asking on the one URL it does load is
+ * how a whole run is held to one theme. Read once, at module scope, because
+ * that URL does not change for the life of the run.
+ */
+const REQUESTED_THEME =
+  typeof location === 'undefined'
+    ? null
+    : new URLSearchParams(location.search).get('theme')
+
+/**
  * Applies the `dark` class to the preview document based on the Storybook
  * toolbar `theme` global, then wraps the story in the app's ThemeProvider so
  * theme-aware components (e.g. ThemeToggle) have their context.
@@ -69,7 +81,7 @@ const preview: Preview = {
   decorators: [
     (Story, context) => {
       const theme: ThemePreference =
-        context.globals.theme === 'dark' ? 'dark' : 'light'
+        (REQUESTED_THEME ?? context.globals.theme) === 'dark' ? 'dark' : 'light'
       return (
         <WithTheme theme={theme}>
           <Story />
