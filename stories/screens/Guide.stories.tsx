@@ -2,9 +2,14 @@ import { useState } from 'react'
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
-import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
+import { COLUMN_MIN_PX, gridMinWidthOf } from '@/lib/guide'
+import {
+  AERIAL_CHANNEL_FIXTURES,
+  CHANNEL_FIXTURES,
+} from '@/repository/channels.fixtures'
 import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
 import {
+  AERIAL_PROGRAM_FIXTURES,
   GUIDE_DAYS,
   NOW_LABEL,
   NOW_MIN,
@@ -262,6 +267,154 @@ export const 読み直しても動かない: Story = {
       partOf(canvasElement, '[data-now-line]').offsetTop,
     ).toBeCloseTo(was + (A_WHILE_MIN / 60) * HOUR_PX, 0)
     await expect(scroller.scrollTop).toBeCloseTo(moved, 0)
+  },
+}
+
+/**
+ * A window of a fixed size, so that what is asked of the column widths is
+ * asked of the same layout wherever the story is run. 1400 is the width the
+ * screens are drawn at, and the width the guide has to stay readable at.
+ */
+const aScreenWide: Decorator = (Story) => (
+  <div className="flex h-[720px] w-[1400px] flex-col overflow-hidden">
+    <Story />
+  </div>
+)
+
+/** The four services of a line-up small enough to leave room to spare. */
+const FEW_SERVICES = CHANNEL_FIXTURES.filter((channel) => !channel.sub).slice(
+  0,
+  4,
+)
+
+function widthOf(part: HTMLElement): number {
+  return part.getBoundingClientRect().width
+}
+
+/**
+ * Few enough channels for the screen they are read on: the columns share the
+ * width that is there and the grid does not run off the side. The floor a
+ * column is given is a floor and not a width — a guide of four services is not
+ * drawn as four narrow columns with the rest of the screen left empty.
+ */
+export const 列が余れば分け合う: Story = {
+  args: {
+    guide: {
+      ...base,
+      channels: FEW_SERVICES,
+      programs: PROGRAM_FIXTURES.filter((program) =>
+        FEW_SERVICES.some((channel) => channel.id === program.channelId),
+      ),
+    },
+  },
+  decorators: [aScreenWide],
+  play: async ({ canvasElement }) => {
+    const scroller = partOf(canvasElement, '[data-guide-scroll]')
+    const columns = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+    )
+
+    await expect(columns).toHaveLength(FEW_SERVICES.length)
+    await expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth)
+
+    for (const column of columns) {
+      await expect(widthOf(column)).toBeGreaterThan(COLUMN_MIN_PX)
+      await expect(widthOf(column)).toBeCloseTo(widthOf(columns[0]), 0)
+    }
+
+    const last = columns[columns.length - 1].getBoundingClientRect()
+    await expect(last.right).toBeCloseTo(
+      scroller.getBoundingClientRect().right,
+      0,
+    )
+  },
+}
+
+/**
+ * The line-up an aerial really hands over, on the same screen. There is no
+ * width in which 27 columns are all readable at once, so they stop sharing:
+ * each is drawn at the floor and the grid runs off the side, where the reader
+ * can send it sideways.
+ *
+ * Sideways is inside the grid. The page does not move — the top bar, the day
+ * and the buttons stay where they were — and neither do the two things that
+ * say where you are looking: the hour gutter stays against the left edge, and
+ * the channel a column belongs to stays at the top of it however far along it
+ * is. The vertical position the guide opens at is unaffected by any of it.
+ */
+export const 列が多ければ横に流れる: Story = {
+  args: {
+    guide: {
+      ...day,
+      channels: AERIAL_CHANNEL_FIXTURES,
+      programs: AERIAL_PROGRAM_FIXTURES.map((program) => ({
+        ...program,
+        startMin: program.startMin + EVENING_MIN,
+      })),
+    },
+  },
+  decorators: [aScreenWide],
+  play: async ({ canvasElement }) => {
+    const scroller = partOf(canvasElement, '[data-guide-scroll]')
+    const columns = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+    )
+    const headings = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
+    )
+
+    await expect(columns).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
+    await expect(headings).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
+
+    for (const [index, channel] of AERIAL_CHANNEL_FIXTURES.entries()) {
+      if (!channel.sub) {
+        await expect(widthOf(columns[index])).toBeGreaterThanOrEqual(
+          COLUMN_MIN_PX,
+        )
+      }
+      await expect(widthOf(headings[index])).toBeCloseTo(
+        widthOf(columns[index]),
+        0,
+      )
+    }
+
+    await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth)
+    await expect(scroller.scrollWidth).toBeCloseTo(
+      gridMinWidthOf(AERIAL_CHANNEL_FIXTURES),
+      0,
+    )
+
+    const page = partOf(canvasElement, 'main')
+    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
+
+    const opened = scroller.scrollTop
+    await expect(opened).toBeGreaterThan(0)
+
+    scroller.scrollLeft = scroller.scrollWidth
+
+    const grid = scroller.getBoundingClientRect()
+    const end = columns.length - 1
+
+    await expect(scroller.scrollLeft).toBeGreaterThan(0)
+    await expect(scroller.scrollTop).toBe(opened)
+
+    for (const gutter of canvasElement.querySelectorAll<HTMLElement>(
+      '[data-guide-gutter]',
+    )) {
+      await expect(gutter.getBoundingClientRect().left).toBeCloseTo(
+        grid.left,
+        0,
+      )
+    }
+
+    await expect(headings[end].getBoundingClientRect().left).toBeCloseTo(
+      columns[end].getBoundingClientRect().left,
+      0,
+    )
+    await expect(headings[end].getBoundingClientRect().top).toBeCloseTo(
+      grid.top,
+      0,
+    )
   },
 }
 

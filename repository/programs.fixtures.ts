@@ -17,7 +17,10 @@ export const GUIDE_DAYS: GuideDay[] = [
   { date: '2026-08-09', label: '8/9(土)', isToday: false },
 ]
 
-import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
+import {
+  AERIAL_CHANNEL_FIXTURES,
+  CHANNEL_FIXTURES,
+} from '@/repository/channels.fixtures'
 import type { Program, ProgramDetail } from '@/repository/programs'
 import { withRelatedSettled } from '@/repository/programs'
 
@@ -619,6 +622,29 @@ export const PROGRAM_FIXTURES: Program[] = [
     endLabel: '03:00',
   },
 ]
+
+/**
+ * A programme in every column of the full line-up, so that a grid drawn at
+ * that scale is asked to hold something readable rather than nineteen empty
+ * columns. The eight services the programmes above were written for are dealt
+ * round the rest of it — main services onto main services and the split one
+ * onto the split ones, so that a narrow column gets what a narrow column gets.
+ */
+export const AERIAL_PROGRAM_FIXTURES: Program[] =
+  AERIAL_CHANNEL_FIXTURES.flatMap((channel, index) => {
+    const sources = CHANNEL_FIXTURES.filter(
+      (source) => Boolean(source.sub) === Boolean(channel.sub),
+    )
+    const source = sources[index % sources.length]
+
+    return PROGRAM_FIXTURES.filter(
+      (program) => program.channelId === source.id,
+    ).map((program) => ({
+      ...program,
+      id: `${program.id}-${channel.id}`,
+      channelId: channel.id,
+    }))
+  })
 
 export const PROGRAM_DETAIL_FIXTURES: Record<
   'standard' | 'relayed' | 'simulcast' | 'undecided' | 'minimal' | 'multiline',
