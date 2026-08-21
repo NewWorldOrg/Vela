@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import {
   broadcastDateOf,
+  gridMinWidthOf,
   nowMinOf,
   openingScrollTopOf,
   windowStartOf,
@@ -77,4 +78,43 @@ test('the first half hour of a day opens at the top, not above it', () => {
 
 test('a minute past the lead opens a minute in', () => {
   assert.equal(openingScrollTopOf(31, HOUR_PX), HOUR_PX / 60)
+})
+
+/**
+ * A line-up of so many services and so many of them split, written as the
+ * shape the grid reads rather than as channels, because the width is the only
+ * thing being asked about.
+ */
+function lineUp(services: number, split = 0): { sub?: boolean }[] {
+  return [
+    ...Array.from({ length: services }, () => ({})),
+    ...Array.from({ length: split }, () => ({ sub: true })),
+  ]
+}
+
+/**
+ * What one aerial really hands over: 27 television services, once the
+ * one-segment, temporary and data services that never take a column are left
+ * out. The number is here because it is the case the width rule exists for.
+ */
+const TELEVISION_SERVICES = 27
+
+test('a channel is given a column a programme name fits in', () => {
+  assert.equal(gridMinWidthOf(lineUp(1)), 46 + 200)
+  assert.equal(gridMinWidthOf(lineUp(4)), 46 + 4 * 200)
+})
+
+test('a split service is counted at the narrower column it is drawn in', () => {
+  assert.equal(gridMinWidthOf(lineUp(7, 1)), 46 + 7 * 200 + 78)
+})
+
+test('a whole aerial is wider than the screen it is read on', () => {
+  const width = gridMinWidthOf(lineUp(TELEVISION_SERVICES))
+
+  assert.equal(width, 46 + TELEVISION_SERVICES * 200)
+  assert.ok(width > 1400)
+})
+
+test('a grid with no channels is the hour gutter and nothing else', () => {
+  assert.equal(gridMinWidthOf([]), 46)
 })

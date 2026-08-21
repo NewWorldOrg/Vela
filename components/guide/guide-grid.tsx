@@ -2,12 +2,35 @@
 
 import { useCallback, useRef } from 'react'
 
-import { openingScrollTopOf } from '@/lib/guide'
+import {
+  GUTTER_PX,
+  SUB_COLUMN_PX,
+  gridMinWidthOf,
+  openingScrollTopOf,
+} from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { ProgramCell } from '@/components/guide/program-cell'
+
+/** The hour gutter is the one column of the grid that is not a channel. */
+const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
+
+/**
+ * A channel takes an equal share of the grid, and a service that has split
+ * takes the narrow column it was drawn with instead.
+ *
+ * The share has no floor of its own, and does not need one: the grid is laid
+ * out on a width of at least a column apiece, so the smallest share it can
+ * ever be asked to divide is the floor itself. Saying it a second time here,
+ * as a flex basis the column may grow from but not shrink below, would be the
+ * same arithmetic written twice — and the copy that was never reached is the
+ * copy that gets edited to something else.
+ */
+function columnFlexOf(channel: Channel): string {
+  return channel.sub ? `0 0 ${SUB_COLUMN_PX}px` : '1 1 0'
+}
 
 export function GuideGrid({
   channels,
@@ -61,16 +84,24 @@ export function GuideGrid({
       data-guide-scroll
       className="min-h-0 flex-1 overflow-auto rounded-lg"
     >
-      <div className="min-w-[1000px] rounded-lg bg-surface">
+      <div
+        className="rounded-lg bg-surface"
+        style={{ minWidth: `${gridMinWidthOf(channels)}px` }}
+      >
         <div className="sticky top-0 z-10 flex rounded-t-lg border-b border-line bg-surface">
-          <div className="sticky left-0 z-[1] flex-[0_0_46px] rounded-tl-lg border-r border-dashed border-line bg-surface" />
+          <div
+            data-guide-gutter
+            style={{ flex: GUTTER_FLEX }}
+            className="sticky left-0 z-[1] rounded-tl-lg border-r border-dashed border-line bg-surface"
+          />
           {channels.map((c) => (
             <div
               key={c.id}
+              data-guide-heading
+              style={{ flex: columnFlexOf(c) }}
               className={cn(
-                'flex-1 border-l border-line px-1.5 py-2 text-center text-sub font-bold whitespace-nowrap first-of-type:border-l-0',
-                c.sub &&
-                  'flex-[0_0_78px] text-[11px] leading-tight whitespace-normal',
+                'min-w-0 overflow-hidden border-l border-line px-1.5 py-2 text-center text-sub font-bold text-ellipsis whitespace-nowrap first-of-type:border-l-0',
+                c.sub && 'text-[11px] leading-tight whitespace-normal',
               )}
             >
               {c.no && (
@@ -92,7 +123,11 @@ export function GuideGrid({
           className="relative flex rounded-b-lg"
           style={{ height: `${windowHours * HOUR_PX}px` }}
         >
-          <div className="sticky left-0 z-[4] flex-[0_0_46px] rounded-bl-lg border-r border-dashed border-line bg-surface">
+          <div
+            data-guide-gutter
+            style={{ flex: GUTTER_FLEX }}
+            className="sticky left-0 z-[4] rounded-bl-lg border-r border-dashed border-line bg-surface"
+          >
             {hours.map((h) => (
               <div
                 key={h}
@@ -105,7 +140,8 @@ export function GuideGrid({
           </div>
 
           <div
-            className="pointer-events-none absolute top-0 right-0 bottom-0 left-[46px] z-0"
+            className="pointer-events-none absolute top-0 right-0 bottom-0 z-0"
+            style={{ left: `${GUTTER_PX}px` }}
             aria-hidden="true"
           >
             {hours.map((h, i) => (
@@ -120,9 +156,11 @@ export function GuideGrid({
           {channels.map((c) => (
             <div
               key={c.id}
+              data-guide-column
+              style={{ flex: columnFlexOf(c) }}
               className={cn(
-                'relative min-w-0 flex-1 border-l border-dashed border-line first-of-type:border-l-0',
-                c.sub && 'flex-[0_0_78px] bg-surface-2',
+                'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
+                c.sub && 'bg-surface-2',
               )}
             >
               {programs

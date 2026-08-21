@@ -72,3 +72,38 @@ export function openingScrollTopOf(
 
   return Math.max(0, ((nowMin - OPENING_LEAD_MIN) / 60) * hourPx)
 }
+
+/** The hour gutter down the left of the grid, which is not a channel. */
+export const GUTTER_PX = 46
+
+/**
+ * The narrowest a channel column is ever drawn.
+ *
+ * Columns share whatever width there is, and sharing alone has no floor: one
+ * aerial hands over 27 television services, and 27 of them across a 1400px
+ * screen leaves 50px a column, which holds no programme name. So the sharing
+ * stops here and the grid runs off the side instead — it is the reader who
+ * decides how many columns to look at, by scrolling, rather than the count
+ * deciding that none of them can be read.
+ */
+export const COLUMN_MIN_PX = 200
+
+/**
+ * A column for a service that has split, which carries a programme of its own
+ * only for the hours of the split and is drawn narrow on purpose. It is not a
+ * column the sharing ever squeezed, so the floor above is not what it is for.
+ */
+export const SUB_COLUMN_PX = 78
+
+/**
+ * The narrowest the grid can be drawn: the gutter, plus a column apiece. Given
+ * as a minimum rather than as the width, so that a handful of channels still
+ * spread across the screen they are read on and only a line-up too wide to fit
+ * turns into a sideways scroll.
+ */
+export function gridMinWidthOf(channels: readonly { sub?: boolean }[]): number {
+  return channels.reduce(
+    (width, channel) => width + (channel.sub ? SUB_COLUMN_PX : COLUMN_MIN_PX),
+    GUTTER_PX,
+  )
+}
