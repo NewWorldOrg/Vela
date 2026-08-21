@@ -130,11 +130,24 @@
     --line-strong: #57565b;
     --edge: var(--ink-3);
     --ink: #eceaf0;
-    --ink-2: #a8a4b0;
-    /* Lightened from the design source for the same reason as the light theme:
-       the original value reads 4.2:1 on --surface-2, where table and list
-       headers sit. */
-    --ink-3: #908c99;
+    /* The two lower ink steps are lightened together, one step, keeping the
+       distance between them.
+
+       They were set against the ground. But in this theme every tint and every
+       soft fill sits *above* the ground, and light text on a lighter background
+       is text with less to work with, not more: --ink-3 reads 5.22:1 on
+       --surface and only 3.79:1 on --tint-sage, the lightest surface there is.
+       So the ground is the wrong thing to have measured against, and the step
+       is set against that lightest surface instead — 4.56:1 there, and more
+       everywhere else.
+
+       --ink-2 has no such trouble of its own; it moves so that the three steps
+       stay three steps. Left where it was, the gap to --ink-3 closes to 1.13:1
+       and the scale reads as two. It now sits 1.35:1 from --ink-3, which is
+       where it was, and 1.69:1 from --ink, which is where the light theme's
+       first gap already is. */
+    --ink-2: #b8b5bf;
+    --ink-3: #9e9ba6;
     --accent: #96bbb4;
     --accent-hover: #a6c9c2;
     --on-accent: #1a181e;

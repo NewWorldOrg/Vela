@@ -73,15 +73,26 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn playwright install --with-deps chromium
       - run: yarn build-storybook
-      - name: Every story renders in a real browser and carries no accessibility violation
+      # Both themes, off the one build, in the one job. A theme costs about the
+      # length of the run and the build costs about twice that, so splitting
+      # them into jobs would buy back well under a minute of waiting in return
+      # for building Storybook twice and paying for a second rounded-up job.
+      - name: Every story renders in a real browser and carries no accessibility violation, in either theme
         run: |
           set -o pipefail
-          yarn test-storybook:ci 2>&1 | tee stories.log
-      - name: The run covered stories, rather than passing by covering none
+          status=0
+          for theme in light dark; do
+            STORYBOOK_THEME="${theme}" yarn test-storybook:ci 2>&1 | tee "stories-${theme}.log" || status=1
+          done
+          exit "${status}"
+      - name: Each run covered stories, rather than passing by covering none
+        if: ${{ !cancelled() }}
         run: |
-          total="$(sed 's/\x1b\[[0-9;]*m//g' stories.log | sed -n 's/.*Tests:.*[, ]\([0-9]\{1,\}\) total.*/\1/p' | tail -1)"
-          if [ -z "${total}" ] || [ "${total}" -lt 1 ]; then
-            echo "the run reported ${total:-no} tests: the runner is wrapped in concurrently, which reports the exit code of whichever half finishes first, so a server that dies before the tests start would leave this job green having verified nothing" >&2
-            exit 1
-          fi
-          echo "${total} story tests ran."
+          for theme in light dark; do
+            total="$(sed 's/\x1b\[[0-9;]*m//g' "stories-${theme}.log" | sed -n 's/.*Tests:.*[, ]\([0-9]\{1,\}\) total.*/\1/p' | tail -1)"
+            if [ -z "${total}" ] || [ "${total}" -lt 1 ]; then
+              echo "the ${theme} run reported ${total:-no} tests: the runner is wrapped in concurrently, which reports the exit code of whichever half finishes first, so a server that dies before the tests start would leave this job green having verified nothing" >&2
+              exit 1
+            fi
+            echo "${theme}: ${total} story tests ran."
+          done
