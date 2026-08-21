@@ -60,6 +60,31 @@ export const 入力前: Story = {
   },
 }
 
+export const キーワードなしで検索: Story = {
+  args: {
+    result: {
+      condition: {
+        ...emptyCondition,
+        genres: ['documentary'],
+        kind: 'terrestrial',
+      },
+      channels,
+      outcome: {
+        state: 'searched',
+        found: {
+          hits: SEARCH_HIT_FIXTURES.slice(0, 4),
+          total: 4,
+          page: 1,
+          lastPage: 1,
+          perPage: 20,
+          rangeFrom: 1,
+          rangeTo: 4,
+        },
+      },
+    },
+  },
+}
+
 export const 条件をすべて指定: Story = {
   args: {
     result: {
@@ -155,7 +180,7 @@ export const 条件不備: Story = {
       outcome: {
         state: 'refused',
         message:
-          'キーワードは2文字以上で指定してください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。',
+          'キーワード・除外キーワードは、指定する場合は2文字以上にしてください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。',
       },
     },
   },

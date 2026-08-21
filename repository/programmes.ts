@@ -66,7 +66,7 @@ export interface GuideQuery {
 }
 
 export interface SearchQuery {
-  keyword: string
+  keyword?: string
   exclude?: string
   fields?: ProgrammeField[]
   genres?: number[]

@@ -205,6 +205,26 @@ export function readSearchCondition(raw: RawSearchCondition): SearchCondition {
   }
 }
 
+/**
+ * Whether the address asks for anything the store can narrow by.
+ *
+ * The fields to look in are not such a thing: they only choose where a keyword
+ * and an excluded keyword are looked for, so on their own they leave every
+ * programme in. Neither are the sort and the paging, which only arrange what
+ * came back.
+ */
+export function narrowsAnything(condition: SearchCondition): boolean {
+  return Boolean(
+    condition.q ||
+    condition.exclude ||
+    condition.genres.length ||
+    condition.kind ||
+    condition.channels.length ||
+    condition.from ||
+    condition.to,
+  )
+}
+
 export function genreLabelOf(genre: SearchGenre): string {
   return (
     SEARCH_GENRE_OPTIONS.find((option) => option.value === genre)?.label ??
