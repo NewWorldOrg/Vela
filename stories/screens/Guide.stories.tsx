@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect } from 'storybook/test'
 
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
@@ -43,7 +44,39 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = { args: { guide: base } }
+/**
+ * The order the grid lays cells out in: a column per channel, and inside a
+ * column the programmes in the order they were given. Knowing it lets each cell
+ * be held against the programme it was drawn from rather than against whichever
+ * cell happens to contain a matching run of text.
+ */
+const IN_GRID_ORDER = CHANNEL_FIXTURES.flatMap((channel) =>
+  PROGRAM_FIXTURES.filter((program) => program.channelId === channel.id),
+)
+
+export const 通常: Story = {
+  args: { guide: base },
+  /**
+   * A cell says what its genre is in words, not only in the colour it is
+   * filled with. Every cell in the grid, including the ten-minute one in the
+   * narrowest column, where words are the first thing a cell runs out of room
+   * for.
+   */
+  play: async ({ canvasElement }) => {
+    const cells = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]',
+      ),
+    )
+
+    await expect(cells).toHaveLength(IN_GRID_ORDER.length)
+
+    for (const [index, program] of IN_GRID_ORDER.entries()) {
+      await expect(cells[index]).toHaveTextContent(program.title)
+      await expect(cells[index]).toHaveTextContent(program.genreLabel)
+    }
+  },
+}
 
 export const 健全性バナー: Story = {
   args: {

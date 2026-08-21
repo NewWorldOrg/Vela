@@ -146,8 +146,24 @@ export const PROGRAM_FIXTURES: Program[] = [
     genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
     startMin: 240,
-    durationMin: 240,
+    durationMin: 230,
     startLabel: '23:00',
+    endLabel: '02:50',
+  },
+  /**
+   * The narrowest column the guide draws and the shortest cell it draws, in one
+   * programme, carrying the longest genre name there is. Whatever a cell has to
+   * give up when it runs out of room, it gives up here first.
+   */
+  {
+    id: 'p047',
+    channelId: 'ch-152',
+    title: '五分間の科学',
+    genre: 'doc',
+    genreLabel: 'ドキュメンタリー/教養',
+    startMin: 470,
+    durationMin: 10,
+    startLabel: '02:50',
     endLabel: '03:00',
   },
   {
@@ -408,6 +424,55 @@ export const PROGRAM_FIXTURES: Program[] = [
     startLabel: '23:30',
     endLabel: '未定',
     endUndecided: true,
+  },
+  /**
+   * A run of short programmes, the kind that fills the turn of the night. They
+   * are what the smallest cell in the guide actually looks like: 10 to 20
+   * minutes, so a tenth to a third of the height an hour is given.
+   */
+  {
+    id: 'p048',
+    channelId: 'ch-171',
+    title: '深夜の気象情報',
+    genre: 'info',
+    genreLabel: '情報/ワイドショー',
+    startMin: 300,
+    durationMin: 10,
+    startLabel: '00:00',
+    endLabel: '00:10',
+  },
+  {
+    id: 'p049',
+    channelId: 'ch-171',
+    title: 'ミニ紀行 灯台のある町',
+    genre: 'doc',
+    genreLabel: 'ドキュメンタリー/教養',
+    startMin: 310,
+    durationMin: 15,
+    startLabel: '00:10',
+    endLabel: '00:25',
+  },
+  {
+    id: 'p050',
+    channelId: 'ch-171',
+    title: '深夜スポーツ',
+    genre: 'sports',
+    genreLabel: 'スポーツ',
+    startMin: 325,
+    durationMin: 20,
+    startLabel: '00:25',
+    endLabel: '00:45',
+  },
+  {
+    id: 'p051',
+    channelId: 'ch-171',
+    title: 'ショートアニメ さかなの街',
+    genre: 'anime',
+    genreLabel: 'アニメ/特撮',
+    startMin: 345,
+    durationMin: 15,
+    startLabel: '00:45',
+    endLabel: '01:00',
   },
   {
     id: 'p034',

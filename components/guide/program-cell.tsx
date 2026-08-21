@@ -8,6 +8,24 @@ import {
   HOUR_PX,
 } from '@/components/guide/guide-metrics'
 
+/**
+ * The genre in words, so that the colour of a cell is never the only thing
+ * saying what kind of programme it holds.
+ *
+ * It runs on at the end of the title rather than taking a line or a corner of
+ * its own: a cell is as tall as its programme is long, so a line reserved for
+ * the genre would be a line taken from the ten-minute cells that have none to
+ * give. Running on also settles what happens when the words do not fit — the
+ * genre is last, so the genre is what the cell stops drawing, and the name of
+ * the programme keeps the room it had.
+ *
+ * A dotted rule divides it from the title. `--line-strong` is the decorative
+ * step, which is what a divider is; the ink step is `--ink-3`, the same one the
+ * start time is set in, because the genre is the same kind of aside.
+ */
+const GENRE_LABEL =
+  'ml-[5px] border-l border-dotted border-line-strong pl-[5px] font-medium text-ink-3'
+
 export function ProgramCell({
   program: p,
   past,
@@ -49,6 +67,7 @@ export function ProgramCell({
           )}
         >
           {p.title}
+          <span className={cn(GENRE_LABEL, 'text-[10px]')}>{p.genreLabel}</span>
         </span>
       ) : (
         <>
@@ -63,6 +82,9 @@ export function ProgramCell({
               {p.startLabel.slice(3)}
             </span>
             {p.title}
+            <span className={cn(GENRE_LABEL, 'text-micro')}>
+              {p.genreLabel}
+            </span>
           </span>
           {p.endUndecided && (
             <span className="mt-px block text-[10.8px] leading-normal text-ink-2">
