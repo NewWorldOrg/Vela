@@ -110,7 +110,101 @@ export const 候補の開閉は取得を伴わない: Story = {
 
     await userEvent.click(caret)
     await expect(caret).toHaveAttribute('aria-expanded', 'false')
-    await expect(canvas.queryByText('● 選択中')).toBeNull()
+    await waitFor(() => expect(canvas.queryByText('● 選択中')).toBeNull())
+  },
+}
+
+/**
+ * The candidates grow out of the table instead of arriving whole: the row
+ * carries a height to interpolate, over the shared duration and the
+ * overshooting easing, and the caret turns rather than being swapped for
+ * another one.
+ */
+export const 開閉は遷移で伸び縮みする: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const caret = canvas.getByRole('button', {
+      name: 'みなと総合1 の候補チャンネル',
+    })
+
+    await userEvent.click(caret)
+
+    const unfold = canvasElement.querySelector('[data-slot="unfold"]')
+    await expect(unfold).not.toBeNull()
+
+    const fold = getComputedStyle(unfold!)
+    await expect(fold.transitionProperty).toBe('grid-template-rows')
+    await expect(fold.transitionDuration).toBe('0.15s')
+    await expect(fold.transitionTimingFunction).toBe(
+      'cubic-bezier(0.34, 1.4, 0.64, 1)',
+    )
+
+    // Read live: the caret may still be on its way round.
+    const turn = getComputedStyle(caret.querySelector('svg')!)
+    await expect(turn.transitionProperty).toContain('rotate')
+    await expect(turn.transitionDuration).toBe('0.15s')
+    await waitFor(() => expect(turn.rotate).toBe('90deg'))
+  },
+}
+
+/**
+ * Closing folds the row shut and only then takes it out of the table, with the
+ * candidates out of reach while it runs. A row taken out of the table on the
+ * press would end no transition, and the wait below would never come back.
+ */
+export const 閉じるときは縮んでから消える: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const caret = canvas.getByRole('button', {
+      name: 'みなと総合1 の候補チャンネル',
+    })
+
+    await userEvent.click(caret)
+    const unfold = canvasElement.querySelector('[data-slot="unfold"]')!
+    await Promise.all(unfold.getAnimations().map((running) => running.finished))
+
+    const folded = new Promise<string>((resolve) =>
+      unfold.addEventListener(
+        'transitionend',
+        (event) => resolve((event as TransitionEvent).propertyName),
+        { once: true },
+      ),
+    )
+
+    await userEvent.click(caret)
+    await expect(folded).resolves.toBe('grid-template-rows')
+    await expect(unfold).toHaveAttribute('inert')
+    await waitFor(() => expect(canvas.queryByText('● 選択中')).toBeNull())
+  },
+}
+
+/**
+ * Pressed twice inside one frame, the row is opened and shut before it has a
+ * height, so nothing folds and no fold ends. It still has to leave the table:
+ * pressed without awaiting, because awaiting is what gives it the frame.
+ */
+export const 開いてすぐ閉じても行は残らない: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const caret = canvas.getByRole('button', {
+      name: 'みなと総合1 の候補チャンネル',
+    })
+
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => {
+        caret.click()
+        caret.click()
+        resolve()
+      }),
+    )
+
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-slot="unfold"]')).toBeNull(),
+    )
+    await expect(caret).toHaveAttribute('aria-expanded', 'false')
   },
 }
 
