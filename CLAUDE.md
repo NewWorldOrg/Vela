@@ -17,7 +17,11 @@ This file is for changing it, and does not repeat what is there.
 - **Components**: shadcn primitives from the unified `radix-ui` package, pulled
   towards Vela's tokens and feel, plus the components in `components/vela/`
 - **Table**: one general `DataTable` over `@tanstack/react-table` v8
-- **Forms**: the shadcn `Form` primitive over `react-hook-form`
+- **Forms**: the parts in `components/vela/field.tsx` — `Field`, `FieldLabel`,
+  `RequiredMark`, `FieldHint`, `FieldError`, `OptionGroup` — laid over the
+  controls in `components/ui/`, with the submit handled by the screen.
+  `components/ui/form.tsx`, `react-hook-form`, `zod` and `@hookform/resolvers`
+  are installed and imported by nothing
 - **Catalog and verification**: Storybook 10 (`@storybook/nextjs`, `addon-a11y`)
   and `@storybook/test-runner`, which drives a real browser
 
@@ -47,7 +51,7 @@ scripts/                    codegen-verify (the client matches the document),
                             health-check (a live probe)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
-hooks/                      useListUrlState / usePerPageLocalStorage
+hooks/                      useListUrlState / usePerPageLocalStorage / useDismissable
 types/                      DataTable types
 stories/{foundations,components,screens,common,theme}/
 ```
