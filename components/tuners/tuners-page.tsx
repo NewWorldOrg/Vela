@@ -40,6 +40,7 @@ import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route
+const SCAN_HISTORY_HREF = '/settings/channels#scan-history' as Route
 const TUNERS_HREF = '/settings/tuners' as Route
 
 const DIFF_VARIANT = {
@@ -289,13 +290,8 @@ export function TunersView({
         }
         action={
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled
-              title="スキャン履歴はこれから実装されます"
-            >
-              スキャン履歴
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={SCAN_HISTORY_HREF}>スキャン履歴</Link>
             </Button>
             <Button size="sm" asChild>
               <Link href={DETECT_HREF}>
