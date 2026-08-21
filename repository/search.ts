@@ -1,3 +1,4 @@
+import { windowStartOf } from '@/lib/guide'
 import {
   genreKindsOf,
   narrowsAnything,
@@ -17,7 +18,6 @@ import {
   dayLabel,
   fetchServiceChannels,
   genreDisplayOf,
-  windowStartOf,
 } from '@/repository/programs'
 
 export type { RawSearchCondition, SearchCondition }

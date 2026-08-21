@@ -1,5 +1,8 @@
 'use client'
 
+import { useCallback, useRef } from 'react'
+
+import { openingScrollTopOf } from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
@@ -29,9 +32,35 @@ export function GuideGrid({
     { length: windowHours },
     (_, i) => windowStartHour + i,
   )
+  const openingTop = useRef(openingScrollTopOf(nowMin, HOUR_PX))
+  const opened = useRef(false)
+
+  /**
+   * The grid is put where it opens as its node is attached, which is before
+   * the browser has painted anything, and once. A re-read of the page — the
+   * live signal arrives, the panel opens, the reader pages to another day —
+   * hands the same node new contents rather than a new node, so the position
+   * survives it, and a reader who has scrolled since keeps where they were.
+   *
+   * It is the ref rather than an effect that carries this: nothing here is
+   * state to be kept in step with a prop, and the one thing being read is
+   * where the reader is, which only the node knows.
+   */
+  const openAtNow = useCallback((node: HTMLDivElement | null) => {
+    if (!node || opened.current) {
+      return
+    }
+
+    opened.current = true
+    node.scrollTop = openingTop.current
+  }, [])
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto rounded-lg">
+    <div
+      ref={openAtNow}
+      data-guide-scroll
+      className="min-h-0 flex-1 overflow-auto rounded-lg"
+    >
       <div className="min-w-[1000px] rounded-lg bg-surface">
         <div className="sticky top-0 z-10 flex rounded-t-lg border-b border-line bg-surface">
           <div className="sticky left-0 z-[1] flex-[0_0_46px] rounded-tl-lg border-r border-dashed border-line bg-surface" />
@@ -116,6 +145,7 @@ export function GuideGrid({
 
           {nowMin !== undefined && (
             <div
+              data-now-line
               className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 bg-brand"
               style={{ top: `${(nowMin / 60) * HOUR_PX}px` }}
             >

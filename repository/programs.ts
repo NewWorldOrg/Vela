@@ -1,3 +1,11 @@
+import {
+  DAY_STARTS_AT_HOUR,
+  JST_OFFSET_MS,
+  WINDOW_HOURS,
+  broadcastDateOf,
+  nowMinOf,
+  windowStartOf,
+} from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { Channel, ChannelKind } from '@/repository/channels'
@@ -77,13 +85,6 @@ export interface ProgramDetail {
   durationLabel?: string
 }
 
-/** 放送日は 4:00 で切り替わる。 */
-const DAY_STARTS_AT_HOUR = 4
-
-const WINDOW_HOURS = 24
-
-const JST_OFFSET_MS = 9 * 60 * 60 * 1000
-
 const PAST_DAYS = 7
 
 const FUTURE_DAYS = 7
@@ -159,8 +160,8 @@ export async function getGuide(
     .filter((program): program is Program => program !== null)
   const shown = withSubChannelsSettled(channels, programs)
 
-  const now = Date.now()
-  const inWindow = now >= windowStart.getTime() && now < windowEnd.getTime()
+  const now = new Date()
+  const nowMin = nowMinOf(now, windowStart)
 
   return {
     kind,
@@ -168,10 +169,8 @@ export async function getGuide(
     days,
     windowStartHour: DAY_STARTS_AT_HOUR,
     windowHours: WINDOW_HOURS,
-    nowMin: inWindow
-      ? Math.floor((now - windowStart.getTime()) / 60_000)
-      : undefined,
-    nowLabel: inWindow ? clockLabel(new Date(now)) : undefined,
+    nowMin,
+    nowLabel: nowMin === undefined ? undefined : clockLabel(now),
     channels: shown,
     programs: programs.filter((program) =>
       shown.some((channel) => channel.id === program.channelId),
@@ -425,20 +424,9 @@ export function calendarDateOf(at: Date): string {
 }
 
 function dayOf(at: Date): GuideDay {
-  const jst = new Date(
-    at.getTime() + JST_OFFSET_MS - DAY_STARTS_AT_HOUR * 60 * 60 * 1000,
-  )
-  const date = jst.toISOString().slice(0, 10)
+  const date = broadcastDateOf(at)
 
   return { date, label: dayLabel(date), isToday: false }
-}
-
-export function windowStartOf(date: string): Date {
-  return new Date(
-    new Date(`${date}T00:00:00Z`).getTime() +
-      DAY_STARTS_AT_HOUR * 60 * 60 * 1000 -
-      JST_OFFSET_MS,
-  )
 }
 
 function shiftDate(date: string, days: number): string {
