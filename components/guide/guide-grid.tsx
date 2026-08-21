@@ -2,12 +2,7 @@
 
 import { useCallback, useRef } from 'react'
 
-import {
-  GUTTER_PX,
-  SUB_COLUMN_PX,
-  gridMinWidthOf,
-  openingScrollTopOf,
-} from '@/lib/guide'
+import { GUTTER_PX, gridMinWidthOf, openingScrollTopOf } from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
@@ -18,8 +13,8 @@ import { ProgramCell } from '@/components/guide/program-cell'
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
 
 /**
- * A channel takes an equal share of the grid, and a service that has split
- * takes the narrow column it was drawn with instead.
+ * Every channel takes an equal share of the grid, a service that has split
+ * among them.
  *
  * The share has no floor of its own, and does not need one: the grid is laid
  * out on a width of at least a column apiece, so the smallest share it can
@@ -28,9 +23,7 @@ const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
  * same arithmetic written twice — and the copy that was never reached is the
  * copy that gets edited to something else.
  */
-function columnFlexOf(channel: Channel): string {
-  return channel.sub ? `0 0 ${SUB_COLUMN_PX}px` : '1 1 0'
-}
+const COLUMN_FLEX = '1 1 0'
 
 export function GuideGrid({
   channels,
@@ -86,7 +79,7 @@ export function GuideGrid({
     >
       <div
         className="rounded-lg bg-surface"
-        style={{ minWidth: `${gridMinWidthOf(channels)}px` }}
+        style={{ minWidth: `${gridMinWidthOf(channels.length)}px` }}
       >
         <div className="sticky top-0 z-10 flex rounded-t-lg border-b border-line bg-surface">
           <div
@@ -98,19 +91,11 @@ export function GuideGrid({
             <div
               key={c.id}
               data-guide-heading
-              style={{ flex: columnFlexOf(c) }}
-              className={cn(
-                'min-w-0 overflow-hidden border-l border-line px-1.5 py-2 text-center text-sub font-bold text-ellipsis whitespace-nowrap first-of-type:border-l-0',
-                c.sub && 'text-[11px] leading-tight whitespace-normal',
-              )}
+              style={{ flex: COLUMN_FLEX }}
+              className="min-w-0 overflow-hidden border-l border-line px-1.5 py-2 text-center text-sub font-bold text-ellipsis whitespace-nowrap first-of-type:border-l-0"
             >
               {c.no && (
-                <span
-                  className={cn(
-                    'mr-[5px] font-code text-[10.5px] font-normal text-ink-3',
-                    c.sub && 'mr-0 block',
-                  )}
-                >
+                <span className="mr-[5px] font-code text-[10.5px] font-normal text-ink-3">
                   {c.no}
                 </span>
               )}
@@ -157,7 +142,7 @@ export function GuideGrid({
             <div
               key={c.id}
               data-guide-column
-              style={{ flex: columnFlexOf(c) }}
+              style={{ flex: COLUMN_FLEX }}
               className={cn(
                 'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
                 c.sub && 'bg-surface-2',
