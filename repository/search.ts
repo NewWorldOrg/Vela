@@ -1,4 +1,8 @@
-import { genreKindsOf, readSearchCondition } from '@/lib/search-condition'
+import {
+  genreKindsOf,
+  narrowsAnything,
+  readSearchCondition,
+} from '@/lib/search-condition'
 import type {
   RawSearchCondition,
   SearchCondition,
@@ -58,7 +62,7 @@ export interface SearchResult {
 }
 
 const GUARD_MESSAGE =
-  'キーワードは2文字以上で指定してください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。'
+  'キーワード・除外キーワードは、指定する場合は2文字以上にしてください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。'
 
 const SYSTEM_OF_KIND: Record<ChannelKind, SearchQuery['system']> = {
   terrestrial: 'isdbT',
@@ -119,7 +123,7 @@ export async function searchPrograms(
     .filter((channel) => !condition.kind || channel.kind === condition.kind)
     .sort((left, right) => compareChannels(left, right))
 
-  if (!condition.q) {
+  if (!narrowsAnything(condition)) {
     return { condition, periodLabel, channels, outcome: { state: 'idle' } }
   }
 

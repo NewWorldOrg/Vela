@@ -7,6 +7,7 @@ import {
   SEARCH_DEFAULT_SORT,
   SEARCH_MOST_CHANNELS,
   SEARCH_QUERY_KEYS,
+  narrowsAnything,
   readSearchCondition,
 } from './search-condition.ts'
 
@@ -189,6 +190,72 @@ test('every condition comes back from the address it was written to', () => {
     perPage: 50,
     page: 2,
   })
+})
+
+test('an address that asks for nothing narrows nothing', () => {
+  assert.equal(narrowsAnything(readSearchCondition({})), false)
+})
+
+test('a keyword on its own narrows', () => {
+  assert.equal(narrowsAnything(readSearchCondition({ q: '絶景' })), true)
+})
+
+test('an excluded keyword on its own narrows', () => {
+  assert.equal(
+    narrowsAnything(readSearchCondition({ exclude: '再放送' })),
+    true,
+  )
+})
+
+test('a genre on its own narrows', () => {
+  assert.equal(narrowsAnything(readSearchCondition({ genre: 'movie' })), true)
+})
+
+test('a broadcast type on its own narrows', () => {
+  assert.equal(narrowsAnything(readSearchCondition({ type: 'bs' })), true)
+})
+
+test('a channel on its own narrows', () => {
+  assert.equal(
+    narrowsAnything(readSearchCondition({ channel: '4-1024' })),
+    true,
+  )
+})
+
+test('either end of a period on its own narrows', () => {
+  assert.equal(
+    narrowsAnything(readSearchCondition({ from: '2026-08-09' })),
+    true,
+  )
+  assert.equal(narrowsAnything(readSearchCondition({ to: '2026-08-15' })), true)
+})
+
+test('the fields to look in narrow nothing without a word to look for', () => {
+  assert.equal(narrowsAnything(readSearchCondition({ fields: 'title' })), false)
+})
+
+test('the sort and the paging narrow nothing', () => {
+  assert.equal(
+    narrowsAnything(
+      readSearchCondition({ sort: 'name.asc', per_page: '100', page: '3' }),
+    ),
+    false,
+  )
+})
+
+test('a condition the address spelled wrongly narrows nothing', () => {
+  assert.equal(
+    narrowsAnything(
+      readSearchCondition({
+        genre: 'wireless',
+        type: 'GR',
+        channel: 'not-a-channel',
+        from: 'tomorrow',
+        q: '   ',
+      }),
+    ),
+    false,
+  )
 })
 
 test('the keys the screen clears cover every key it reads', () => {
