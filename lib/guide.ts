@@ -107,6 +107,6 @@ export const COLUMN_MIN_PX = 200
  * the channels because there is nothing about a channel left that could widen
  * or narrow the column it is given.
  */
-export function gridMinWidthOf(channels: number): number {
-  return GUTTER_PX + channels * COLUMN_MIN_PX
+export function gridMinWidthOf(columns: number): number {
+  return GUTTER_PX + columns * COLUMN_MIN_PX
 }
