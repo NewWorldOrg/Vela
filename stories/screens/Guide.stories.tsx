@@ -330,11 +330,83 @@ export const 列が余れば分け合う: Story = {
   },
 }
 
+/** Four services of a line-up, one of which has split. */
+const SERVICES_ONE_OF_THEM_SPLIT = CHANNEL_FIXTURES.slice(0, 4)
+
+/**
+ * A service that has split is a service, and its column is a column. It shares
+ * the width the others do, its name is set the same size on the same one line
+ * with the number in front of it, and the programmes it carries are read the
+ * way any other column's are.
+ *
+ * It was drawn narrow once, on the reading that a split is an hour borrowed
+ * from the service it split from. It is not: a split service runs a schedule
+ * of its own all day, and a column too narrow for a name breaks that schedule
+ * down the page a character at a time. The hours it carries nothing are blank
+ * hours, which is not a reason to take the width away from the hours it does.
+ */
+export const 副チャンネルも同じ列: Story = {
+  args: {
+    guide: {
+      ...base,
+      channels: SERVICES_ONE_OF_THEM_SPLIT,
+      programs: PROGRAM_FIXTURES.filter((program) =>
+        SERVICES_ONE_OF_THEM_SPLIT.some(
+          (channel) => channel.id === program.channelId,
+        ),
+      ),
+    },
+  },
+  decorators: [aScreenWide],
+  play: async ({ canvasElement }) => {
+    const split = SERVICES_ONE_OF_THEM_SPLIT.findIndex((channel) => channel.sub)
+    await expect(split).toBeGreaterThan(-1)
+
+    const columns = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+    )
+    const headings = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
+    )
+    const whole = split === 0 ? 1 : 0
+
+    await expect(columns).toHaveLength(SERVICES_ONE_OF_THEM_SPLIT.length)
+    await expect(headings).toHaveLength(SERVICES_ONE_OF_THEM_SPLIT.length)
+    await expect(widthOf(columns[split])).toBeGreaterThan(COLUMN_MIN_PX)
+
+    for (const index of SERVICES_ONE_OF_THEM_SPLIT.keys()) {
+      await expect(widthOf(columns[index])).toBeCloseTo(
+        widthOf(columns[split]),
+        0,
+      )
+      await expect(widthOf(headings[index])).toBeCloseTo(
+        widthOf(headings[split]),
+        0,
+      )
+    }
+
+    const set = getComputedStyle(headings[split])
+    const like = getComputedStyle(headings[whole])
+
+    await expect(set.fontSize).toBe(like.fontSize)
+    await expect(set.whiteSpace).toBe(like.whiteSpace)
+    await expect(set.lineHeight).toBe(like.lineHeight)
+
+    const no = getComputedStyle(partOf(headings[split], 'span'))
+    const noLike = getComputedStyle(partOf(headings[whole], 'span'))
+
+    await expect(no.display).toBe(noLike.display)
+    await expect(no.marginRight).toBe(noLike.marginRight)
+  },
+}
+
 /**
  * The line-up an aerial really hands over, on the same screen. There is no
  * width in which 27 columns are all readable at once, so they stop sharing:
  * each is drawn at the floor and the grid runs off the side, where the reader
- * can send it sideways.
+ * can send it sideways. Every one of the 27 is at the floor, the services that
+ * have split included, so the total is the count times the floor and nothing
+ * else — which is what the line-up is held against here.
  *
  * Sideways is inside the grid. The page does not move — the top bar, the day
  * and the buttons stay where they were — and neither do the two things that
@@ -366,12 +438,12 @@ export const 列が多ければ横に流れる: Story = {
     await expect(columns).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
     await expect(headings).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
 
-    for (const [index, channel] of AERIAL_CHANNEL_FIXTURES.entries()) {
-      if (!channel.sub) {
-        await expect(widthOf(columns[index])).toBeGreaterThanOrEqual(
-          COLUMN_MIN_PX,
-        )
-      }
+    await expect(
+      AERIAL_CHANNEL_FIXTURES.filter((channel) => channel.sub).length,
+    ).toBeGreaterThan(0)
+
+    for (const index of AERIAL_CHANNEL_FIXTURES.keys()) {
+      await expect(widthOf(columns[index])).toBeCloseTo(COLUMN_MIN_PX, 0)
       await expect(widthOf(headings[index])).toBeCloseTo(
         widthOf(columns[index]),
         0,
@@ -380,7 +452,7 @@ export const 列が多ければ横に流れる: Story = {
 
     await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth)
     await expect(scroller.scrollWidth).toBeCloseTo(
-      gridMinWidthOf(AERIAL_CHANNEL_FIXTURES),
+      gridMinWidthOf(AERIAL_CHANNEL_FIXTURES.length),
       0,
     )
 

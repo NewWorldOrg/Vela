@@ -85,25 +85,28 @@ export const GUTTER_PX = 46
  * stops here and the grid runs off the side instead — it is the reader who
  * decides how many columns to look at, by scrolling, rather than the count
  * deciding that none of them can be read.
+ *
+ * A service that has split is not an exception to it. Its column was drawn at
+ * 78px on the reading that a split is an hour borrowed from the service it
+ * split from, and that is not what a split is: such a service runs a schedule
+ * of its own, hundreds of programmes over a day, and a column that narrow
+ * breaks their names down the page a character at a time. The hours it carries
+ * nothing are blank hours, which is not a reason to take the width away from
+ * the hours it does. Width says how much there is to read, and that is only
+ * worth saying when there really is less of it.
  */
 export const COLUMN_MIN_PX = 200
-
-/**
- * A column for a service that has split, which carries a programme of its own
- * only for the hours of the split and is drawn narrow on purpose. It is not a
- * column the sharing ever squeezed, so the floor above is not what it is for.
- */
-export const SUB_COLUMN_PX = 78
 
 /**
  * The narrowest the grid can be drawn: the gutter, plus a column apiece. Given
  * as a minimum rather than as the width, so that a handful of channels still
  * spread across the screen they are read on and only a line-up too wide to fit
  * turns into a sideways scroll.
+ *
+ * How many columns there are is the whole of it. It takes the count and not
+ * the channels because there is nothing about a channel left that could widen
+ * or narrow the column it is given.
  */
-export function gridMinWidthOf(channels: readonly { sub?: boolean }[]): number {
-  return channels.reduce(
-    (width, channel) => width + (channel.sub ? SUB_COLUMN_PX : COLUMN_MIN_PX),
-    GUTTER_PX,
-  )
+export function gridMinWidthOf(columns: number): number {
+  return GUTTER_PX + columns * COLUMN_MIN_PX
 }
