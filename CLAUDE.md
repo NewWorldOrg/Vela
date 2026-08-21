@@ -61,6 +61,17 @@ A screen is layered `app/` (a Server Component fetches) → `components/{domain}
 source of state. Fetching data or syncing initial values in a `useEffect` is not
 allowed.
 
+What the URL holds is the state a second person opening the link would need, and
+that a reload has to bring back: filters, paging, sort, the search conditions. A
+disclosure — which row of a list is unfolded — is not that, and putting it there
+buys a server round trip for content the page was already drawn with. It is held
+in client state instead.
+
+The design system lives outside this repository and is not mirrored here. Where a
+screen's wording or shape is in question, the answer is there, not in whatever
+copy is at hand: a stale copy has already been used once to undo wording the
+design side had deliberately changed.
+
 Stories live under `stories/`, never beside the component. A change to a
 component comes with the change to its story.
 
