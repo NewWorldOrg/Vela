@@ -10,6 +10,7 @@ type ProgrammeSearchResponder =
   components['schemas']['ProgrammeSearchResponder']
 type ProgrammeSort = components['schemas']['ProgrammeSort']
 type TuneSystem = components['schemas']['TuneSystem']
+type ProgrammeField = components['schemas']['ProgrammeField']
 
 export interface ProgrammeGenre {
   kind: number
@@ -66,6 +67,11 @@ export interface GuideQuery {
 
 export interface SearchQuery {
   keyword: string
+  exclude?: string
+  fields?: ProgrammeField[]
+  genres?: number[]
+  system?: TuneSystem
+  channels?: string[]
   from?: Date
   to?: Date
   sort?: ProgrammeSort
@@ -123,6 +129,11 @@ export async function searchProgrammes(
       params: {
         query: {
           keyword: query.keyword,
+          exclude: query.exclude,
+          fields: query.fields?.length ? query.fields : undefined,
+          genre: query.genres?.length ? query.genres : undefined,
+          type: query.system,
+          channel: query.channels?.length ? query.channels : undefined,
           from: query.from?.toISOString(),
           to: query.to?.toISOString(),
           sort: query.sort,

@@ -17,10 +17,15 @@ export default async function Page({
   const params = await searchParams
   const result = await searchPrograms({
     q: str(params.q),
+    exclude: str(params.exclude),
+    fields: str(params.fields),
+    genre: params.genre,
+    type: str(params.type),
+    channel: str(params.channel),
     from: str(params.from),
     to: str(params.to),
     sort: str(params.sort),
-    perPage: str(params.per_page),
+    per_page: str(params.per_page),
     page: str(params.page),
   })
 

@@ -816,6 +816,7 @@ export interface components {
       admitsEveryone: boolean
       reach: components['schemas']['OidcReach']
       redirectUri: string
+      redirectUriGuessed: boolean
     }
     /** @enum {string} */
     OidcReach: 'notConfigured' | 'reachable' | 'outOfReach'
@@ -823,6 +824,8 @@ export interface components {
       /** Format: int32 */
       sessionsEnded: number | string
     }
+    /** @enum {string} */
+    ProgrammeField: 'title' | 'description'
     ProgrammeGenreResponder: {
       /** Format: int32 */
       kind: number | string
@@ -2369,6 +2372,11 @@ export interface operations {
     parameters: {
       query?: {
         keyword?: string
+        exclude?: string
+        fields?: components['schemas']['ProgrammeField'][]
+        genre?: (number | string)[]
+        type?: components['schemas']['TuneSystem']
+        channel?: string[]
         from?: string
         to?: string
         sort?: components['schemas']['ProgrammeSort']
