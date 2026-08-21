@@ -99,7 +99,7 @@ function DriverSection({ result }: { result: DriverStatusResult }) {
     return (
       <EmptyState spot="tuner" title="サインインしないと見られません">
         driver
-        の状態はサインインしたユーザーだけに見せています。サインインはこれから実装されます。
+        の状態はサインインしたユーザーだけに見せています。サインインしてから開き直してください。
       </EmptyState>
     )
   }

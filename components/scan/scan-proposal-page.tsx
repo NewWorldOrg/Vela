@@ -223,7 +223,7 @@ export function ScanProposalView({
           }
         >
           {result.state === 'unauthenticated'
-            ? 'スキャンの結果はサインインしたユーザーだけに見せています。サインインはこれから実装されます。'
+            ? 'スキャンの結果はサインインしたユーザーだけに見せています。サインインしてから開き直してください。'
             : result.state === 'unavailable'
               ? `API はこのスキャンの結果を答えられませんでした。${result.message}`
               : '走査が終わっていないか、結果がすでに適用されています。'}

@@ -149,6 +149,10 @@ export const 未スキャン: Story = {
   },
 }
 
+export const サインインしていないとき: Story = {
+  args: { result: { state: 'unauthenticated' } },
+}
+
 export const 取得できないとき: Story = {
   args: {
     result: { state: 'unavailable', message: 'driver に接続できません' },
