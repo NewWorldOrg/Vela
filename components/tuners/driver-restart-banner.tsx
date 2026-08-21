@@ -67,8 +67,8 @@ function until(at: string | undefined) {
 
 function holding(recordings: number | undefined, at: string | undefined) {
   return recordings === undefined
-    ? `録画が進行中のため、まだ再起動できません。${until(at)}`
-    : `録画が ${recordings} 件進行中のため、まだ再起動できません。${until(at)}`
+    ? `録画が進行中です。${until(at)}`
+    : `録画が ${recordings} 件進行中です。${until(at)}`
 }
 
 function refusalFace(refusal: Refusal): Face {
@@ -76,7 +76,7 @@ function refusalFace(refusal: Refusal): Face {
     case 'recording':
       return {
         tone: 'warn',
-        body: `driver は再起動を断りました。${holding(refusal.recordings, refusal.until)}`,
+        body: `driver は再起動を断りました。${holding(refusal.recordings, refusal.until)}それまでは再起動できません。`,
         action: { label: RESTART, press: 'restart', disabled: true },
       }
     case 'unauthenticated':
@@ -122,14 +122,14 @@ function idleFace(notice: TunerNotice): Face {
   if (offer.recordings === 0) {
     return {
       tone: notice.tone,
-      body: `${notice.body}進行中のセッションはありません。driver に終了を要求すると、停止後に自動で起動し直されます。`,
+      body: `${notice.body}進行中の録画はありません。`,
       action: { label: RESTART, press: 'restart' },
     }
   }
 
   return {
     tone: notice.tone,
-    body: `${notice.body}${holding(offer.recordings, offer.until)}`,
+    body: `${notice.body}${holding(offer.recordings, offer.until)}それまでは再起動できません。`,
     action: { label: RESTART, press: 'restart', disabled: true },
   }
 }
@@ -145,7 +145,7 @@ function windowFace(judged: RestartWindow): Face {
     case 'returned':
       return {
         tone: 'info',
-        body: `driver が起動し直しました(instance ${judged.instanceId})。保存済みの内容が読み込まれています。`,
+        body: `driver が再起動しました(instance ${judged.instanceId})。保存済みの設定はこの driver に読み込まれています。`,
       }
     case 'unverifiable':
       return {
@@ -156,7 +156,7 @@ function windowFace(judged: RestartWindow): Face {
     case 'overdue':
       return {
         tone: 'warn',
-        body: `driver が起動し直していません。終了を要求してから ${judged.budgetSeconds} 秒たっても接続が戻っていません。下の一覧は再起動前の状態です。`,
+        body: `再起動を受け付けてから ${judged.budgetSeconds} 秒待ちましたが、driver はまだ戻っていません。下の一覧は再起動前の状態です。`,
         action: { label: REREAD, press: 'dismiss' },
       }
   }
