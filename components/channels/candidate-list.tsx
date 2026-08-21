@@ -24,8 +24,25 @@ import { PlusIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
 import { ProgressBar } from '@/components/vela/progress'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 
+/**
+ * The three the requirements name — locked, not locked, never measured — said
+ * as the chip the design system carries for them. The state is on every row,
+ * whether or not a figure came with it: a candidate that answered with a
+ * carrier-to-noise reading it had no lock for would otherwise show a meter and
+ * nothing to say the frontend never locked.
+ */
+const RECEPTION_BADGE: Record<
+  CandidateRow['reception'],
+  { variant: 'ok' | 'err' | 'mute'; label: string }
+> = {
+  locked: { variant: 'ok', label: '受信可' },
+  unlocked: { variant: 'err', label: '受信不可' },
+  unread: { variant: 'mute', label: '未計測' },
+}
+
+/** The chip says which state it is; this says what that meant for the figure. */
 const RECEPTION_WITHOUT_FIGURE: Record<CandidateRow['reception'], string> = {
-  locked: '受信できています(このチューナーから品質の数値は取れません)',
+  locked: '品質の数値はこのチューナーから取れません',
   unlocked: '同調しないため測定できていません',
   unread: 'まだ測定していません',
 }
@@ -161,6 +178,14 @@ export function CandidateList({
             {candidate.channel}
           </span>
           <CandidateMeter candidate={candidate} />
+          <Badge variant={RECEPTION_BADGE[candidate.reception].variant}>
+            {RECEPTION_BADGE[candidate.reception].label}
+          </Badge>
+          {candidate.needsRevalidation && (
+            <Badge variant="warn" className="font-bold">
+              要再検証
+            </Badge>
+          )}
           {candidate.rotation && (
             <Badge variant="warn" className="font-bold">
               {candidate.rotation.label}
@@ -168,6 +193,8 @@ export function CandidateList({
           )}
           <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-3">
             発見 {candidate.discovered} · 評価 {candidate.lastSeen}
+            {candidate.needsRevalidation &&
+              ' · チューナー構成が変わったため測り直しが必要です'}
             {candidate.rotation && ` · ${candidate.rotation.note}`}
           </span>
           <span className="ml-auto flex items-center gap-2">

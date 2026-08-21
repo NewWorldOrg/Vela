@@ -3,6 +3,7 @@ import type { Route } from 'next'
 import { formatStamp } from '@/lib/format'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
+import { promisedEndOf, tuningLabelOf } from '@/repository/tuning'
 
 type TunerLedgerResponder = components['schemas']['TunerLedgerResponder']
 type TunerObservationResponder =
@@ -16,12 +17,23 @@ type DeviceDetection = components['schemas']['DeviceDetection']
 type DetectedTunersResponder = components['schemas']['DetectedTunersResponder']
 type DetectedDeviceResponder = components['schemas']['DetectedDeviceResponder']
 
+/**
+ * What holds a tuner: the purpose, and the tuning parameters the driver was
+ * handed. No service or programme name — naming what is on a channel needs the
+ * programme guide, and that domain does not exist yet. The physical values are
+ * the layer this screen is about, so they stay even once names can be resolved.
+ */
 export interface TunerSession {
   label: string
   tone: 'recording' | 'epg'
-  /** The service name. The channel or TS part goes in `code`, set in code face. */
-  service?: string
+  /** The tuning parameters, set in code face. */
   code?: string
+  /**
+   * Only named for a recording, which carries an end of its own. Every other
+   * purpose gets the driver's own upper bound, which is a cutoff rather than a
+   * plan, and promising it as one would be a promise nobody made.
+   */
+  endsAt?: string
 }
 
 export interface TunerRow {
@@ -783,9 +795,16 @@ function toSession(
     return undefined
   }
 
+  const endsAt = promisedEndOf(
+    observation.sessionPurpose,
+    observation.sessionEndsAt,
+  )
+
   return {
     label: SESSION_LABEL[observation.sessionPurpose],
     tone: observation.sessionPurpose === 'recording' ? 'recording' : 'epg',
+    code: tuningLabelOf(observation.sessionTuning),
+    endsAt: endsAt === undefined ? undefined : formatStamp(endsAt),
   }
 }
 

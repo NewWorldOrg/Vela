@@ -56,6 +56,44 @@ export const 候補を開いた状態: Story = {
 }
 
 /**
+ * Every candidate states how it was last received, whether or not a figure
+ * came with it. A frontend that never locked answers the carrier-to-noise
+ * query anyway, so without the chip a row could carry a meter and nothing to
+ * say that nothing was ever locked onto.
+ */
+export const 候補の受信状態: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'みなと総合1 の候補チャンネル' }),
+    )
+
+    await expect(canvas.getByText('受信可')).toBeVisible()
+    await expect(canvas.getByText('受信不可')).toBeVisible()
+  },
+}
+
+/**
+ * Saving the tuner ledger marks every candidate as measured under a
+ * configuration that no longer holds. The mark clears on the next successful
+ * tune, so a candidate still carrying it is one nothing has reached since.
+ */
+export const 構成変更後に測り直しを待つ候補: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'みなと総合2 の候補チャンネル' }),
+    )
+
+    await expect(canvas.getByText('要再検証')).toBeVisible()
+  },
+}
+
+/**
  * Unfolding a service reads nothing back from the server: the candidates were
  * already in the payload the list was drawn from.
  */
