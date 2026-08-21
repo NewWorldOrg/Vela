@@ -14,10 +14,12 @@ import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
  */
 
 /**
- * Over https the API names the session cookie with the `__Host-` prefix, which
- * a plain-http deployment cannot use; there it sends the bare name.
+ * The API names the session cookie the same way whichever scheme it was reached
+ * over, so there is one name to look for. What the `__Host-` prefix would have
+ * the browser enforce, the cookie carries as attributes: `Secure` where the
+ * scheme allows it, `Path=/`, and no `Domain`.
  */
-const SESSION_COOKIE_NAMES = ['__Host-carina_session', 'carina_session']
+const SESSION_COOKIE_NAME = 'carina_session'
 
 export function carinaClient() {
   return createClient<paths>({
@@ -130,15 +132,9 @@ async function asked(): Promise<Asking> {
 function sessionIn(
   jar: Awaited<ReturnType<typeof cookies>>,
 ): string | undefined {
-  for (const name of SESSION_COOKIE_NAMES) {
-    const value = jar.get(name)?.value
+  const value = jar.get(SESSION_COOKIE_NAME)?.value
 
-    if (value) {
-      return `${name}=${value}`
-    }
-  }
-
-  return undefined
+  return value ? `${SESSION_COOKIE_NAME}=${value}` : undefined
 }
 
 function requiredBaseUrl(): string {
