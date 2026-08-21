@@ -158,7 +158,7 @@ export function AuthenticationView({
             <ClockIcon className="mt-[3px] size-3.5 shrink-0 text-ink-3" />
             <span>
               <b className="block font-bold text-ink">
-                有効期限は絶対期限とアイドル期限で決まり、いずれも設定値です。
+                有効期限は絶対期限とアイドル期限で決まります。
               </b>
               期限を過ぎたセッションはこの一覧から消えます。
             </span>
@@ -166,7 +166,7 @@ export function AuthenticationView({
           <p className="flex items-start gap-2.5">
             <ListIcon className="mt-[3px] size-3.5 shrink-0 text-ink-3" />
             <span>
-              最終利用の記録は書き込みが集中しないよう間引いています(閾値は設定値)。表示には数分の粗さが含まれます。
+              最終利用の記録は書き込みが集中しないよう間引いています。表示には数分の粗さが含まれます。
             </span>
           </p>
         </div>
