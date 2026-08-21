@@ -14,7 +14,8 @@ import { Banner } from '@/components/vela/banner'
 
 const DEBOUNCE_MS = 200
 
-const RECONNECT_MS = 10_000
+/** Exported so a story holds the retry to the same clock the screen uses. */
+export const RECONNECT_MS = 10_000
 
 /**
  * Re-reads the page when the event hub signals that programmes or the
@@ -105,7 +106,7 @@ export function GuideLive() {
  * What is left of the guide once the hub refuses the session: the page on
  * screen is the last one that arrived, and the way back is a fresh sign-in.
  */
-export function SessionEndedBanner({ returnPath }: { returnPath: string }) {
+function SessionEndedBanner({ returnPath }: { returnPath: string }) {
   return (
     <Banner
       tone="danger"
