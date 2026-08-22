@@ -33,6 +33,17 @@ interface MissedTarget {
   box: string
 }
 
+/** What the probe found. */
+interface Findings {
+  /** Controls a press cannot reach 44px of. */
+  missed: MissedTarget[]
+  /** Controls whose middle a neighbour's own area has taken. */
+  taken: string[]
+}
+
+/** Names the bait of the proof apart from anything a story draws. */
+const BAIT = 'a control the probe has to catch'
+
 /**
  * Runs in the page and answers which controls a finger cannot land on.
  *
@@ -42,10 +53,16 @@ interface MissedTarget {
  * actually does — including the invisible area `tap-target` lays down, and
  * including a neighbour whose own area reaches over and takes the press.
  *
+ * A control below the fold is scrolled into sight and measured there rather
+ * than passed over: a screen is taller than the window it is read in, and
+ * everything under the first screenful would otherwise never be asked about.
+ * Every scroller is put back where it stood, because the next story is rendered
+ * into this same page and one of them asserts that the guide does not move.
+ *
  * Self-contained: it is serialised into the browser, and can close over
  * nothing here.
  */
-function measureTapTargets(): MissedTarget[] {
+function measureTapTargets(): Findings {
   const TAP = 44
   const SELECTOR =
     'button, a[href], [role="button"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], select, summary'
@@ -91,7 +108,46 @@ function measureTapTargets(): MissedTarget[] {
       Math.min(centre, TAP / 2) + Math.min(extent - 1 - centre, TAP / 2) + 1,
     )
 
+  const drawn = (box: DOMRect) => box.width > 0 && box.height > 0
+  const inSight = (box: DOMRect) =>
+    box.left >= 0 && box.top >= 0 && box.right <= width && box.bottom <= height
+
+  /**
+   * Where every scroller stood before anything was brought into sight, kept so
+   * they can be put back once the measuring is done.
+   */
+  const standing = new Map<Element, [number, number]>()
+  const remember = (node: Element) => {
+    // The chain ends at the document element, which is what a window scroll
+    // moves, so the page's own position is remembered along with the panes'.
+    for (let up: Element | null = node; up; up = up.parentElement) {
+      if (!standing.has(up)) {
+        standing.set(up, [up.scrollLeft, up.scrollTop])
+      }
+    }
+  }
+
+  /**
+   * Turns the areas off for one reading, which is how a neighbour's area is
+   * told apart from a dialog: without the areas, only the dialog is still there.
+   */
+  const areasOff = document.createElement('style')
+  areasOff.textContent = '.tap-target::after{display:none !important}'
+  const withoutAreas = (read: () => boolean) => {
+    document.head.append(areasOff)
+    try {
+      return read()
+    } finally {
+      areasOff.remove()
+    }
+  }
+
   const missed: MissedTarget[] = []
+  const taken: string[] = []
+  const named = (control: Element) =>
+    control.getAttribute('aria-label') ||
+    (control.textContent ?? '').trim().slice(0, 30) ||
+    control.tagName.toLowerCase()
 
   for (const control of document.querySelectorAll(SELECTOR)) {
     // Declared where it applies: a programme cell is as tall as the programme
@@ -100,23 +156,35 @@ function measureTapTargets(): MissedTarget[] {
       continue
     }
 
-    const box = control.getBoundingClientRect()
-    const onScreen =
-      box.width > 0 &&
-      box.height > 0 &&
-      box.left >= 0 &&
-      box.top >= 0 &&
-      box.right <= width &&
-      box.bottom <= height
-    if (!onScreen) {
+    let box = control.getBoundingClientRect()
+    if (drawn(box) && !inSight(box)) {
+      remember(control)
+      control.scrollIntoView({
+        block: 'center',
+        inline: 'center',
+        behavior: 'instant',
+      })
+      box = control.getBoundingClientRect()
+    }
+    // Drawn nowhere, or held out of sight by something other than the scroll —
+    // a drawer that is shut, the preview's own furniture.
+    if (!drawn(box) || !inSight(box)) {
       continue
     }
 
     const cx = Math.round(box.left + box.width / 2)
     const cy = Math.round(box.top + box.height / 2)
 
-    // Something is over it — a dialog, a drawer. Not this story's question.
     if (worked(document.elementFromPoint(cx, cy)) !== control) {
+      // Something is over it. A dialog or a drawer is not this story's
+      // question; a neighbour's own area is the whole of the question.
+      if (
+        withoutAreas(
+          () => worked(document.elementFromPoint(cx, cy)) === control,
+        )
+      ) {
+        taken.push(named(control))
+      }
       continue
     }
 
@@ -144,10 +212,7 @@ function measureTapTargets(): MissedTarget[] {
     // A pixel of slack: the probe walks whole pixels over fractional boxes.
     if (hitWidth < needWidth - 1 || hitHeight < needHeight - 1) {
       missed.push({
-        name:
-          control.getAttribute('aria-label') ||
-          (control.textContent ?? '').trim().slice(0, 30) ||
-          control.tagName.toLowerCase(),
+        name: named(control),
         hit: `${hitWidth}x${hitHeight}`,
         need: `${needWidth}x${needHeight}`,
         box: `${Math.round(box.width)}x${Math.round(box.height)}`,
@@ -155,7 +220,48 @@ function measureTapTargets(): MissedTarget[] {
     }
   }
 
-  return missed
+  for (const [node, [left, top]] of standing) {
+    node.scrollLeft = left
+    node.scrollTop = top
+  }
+
+  return { missed, taken }
+}
+
+/**
+ * Proves the probe still catches a control that is too small, before a run is
+ * allowed to pass on it.
+ *
+ * A probe that finds nothing to look at — a selector edited into one that
+ * matches no control, a page that never rendered — answers exactly what a page
+ * whose every control is big enough answers: no misses. Nothing later in the
+ * run can tell those two apart, so a control that is deliberately 12px is put
+ * on the page first and the probe is made to name it.
+ */
+async function proveTheProbeCanFail(page: Page) {
+  await page.evaluate((bait) => {
+    const small = document.createElement('button')
+    small.type = 'button'
+    small.setAttribute('aria-label', bait)
+    small.style.cssText =
+      'position:fixed;left:50%;top:50%;width:12px;height:12px;padding:0;border:0'
+    document.body.append(small)
+  }, BAIT)
+
+  const { missed } = await page.evaluate(measureTapTargets)
+
+  await page.evaluate(
+    (bait) => document.querySelector(`[aria-label="${bait}"]`)?.remove(),
+    BAIT,
+  )
+
+  if (!missed.some((m) => m.name === BAIT)) {
+    throw new Error(
+      'The 44px probe passed a control drawn 12px square, so it can no longer ' +
+        'fail and nothing it says about a story means anything. Fix the probe ' +
+        'in .storybook/test-runner.ts before trusting a green run.',
+    )
+  }
 }
 
 /**
@@ -192,6 +298,8 @@ const config: TestRunnerConfig = {
     await page.goto(href, { waitUntil: 'load' })
 
     opened = page.viewportSize()
+
+    await proveTheProbeCanFail(page)
   },
 
   async preVisit(page: Page, context) {
@@ -205,16 +313,22 @@ const config: TestRunnerConfig = {
   },
 
   async postVisit(page: Page, context) {
-    const missed = await page.evaluate(measureTapTargets)
+    const { missed, taken } = await page.evaluate(measureTapTargets)
 
-    if (missed.length > 0) {
-      const lines = missed.map(
-        (m) =>
-          `  ${m.name} — the press reaches ${m.hit}, and has to reach ${m.need} (drawn ${m.box})`,
-      )
+    if (missed.length + taken.length > 0) {
+      const lines = [
+        ...missed.map(
+          (m) =>
+            `  ${m.name} — the press reaches ${m.hit}, and has to reach ${m.need} (drawn ${m.box})`,
+        ),
+        ...taken.map(
+          (name) =>
+            `  ${name} — a neighbour's area answers a press on its middle`,
+        ),
+      ]
 
       throw new Error(
-        `${context.id}: ${missed.length} control(s) are smaller to the finger than 44px.\n` +
+        `${context.id}: ${lines.length} control(s) are smaller to the finger than 44px.\n` +
           `${lines.join('\n')}\n` +
           'Lay `tap-target` on the control, or space it further from its neighbour if the two areas collide.',
       )
