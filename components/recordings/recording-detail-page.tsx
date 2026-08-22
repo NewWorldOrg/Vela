@@ -378,7 +378,7 @@ export function RecordingDetailView({
                 {d.qualitySpots.map((spot) => (
                   <div
                     key={spot.at}
-                    className="flex flex-wrap items-center gap-3 border-b border-dashed border-line px-0.5 py-2.5 text-ui last:border-b-0"
+                    className="flex flex-wrap items-center gap-3 border-b border-dashed border-line px-0.5 py-3 text-ui last:border-b-0"
                   >
                     <span className="w-[6.6em] font-code font-medium">
                       {spot.at}
@@ -388,7 +388,7 @@ export function RecordingDetailView({
                       type="button"
                       disabled
                       title="この時間帯の再生はこれから実装されます"
-                      className="ml-auto text-sub font-bold whitespace-nowrap text-brand disabled:cursor-not-allowed disabled:text-ink-3"
+                      className="tap-target ml-auto text-sub font-bold whitespace-nowrap text-brand disabled:cursor-not-allowed disabled:text-ink-3"
                     >
                       この時間帯を再生
                     </button>

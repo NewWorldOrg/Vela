@@ -121,7 +121,9 @@ export function LibraryView({
           <span className="text-cap font-bold tracking-[0.04em] text-ink-3">
             チャンネル
           </span>
-          <div className="flex min-w-0 flex-wrap gap-1.5">
+          {/* Every chip is wider than 44px, so only the wrapped rows have to be
+              held apart: 31px tall plus 13px is a 44px pitch. */}
+          <div className="flex min-w-0 flex-wrap gap-x-1.5 gap-y-[13px]">
             <ChannelChip
               label="すべて"
               on={!filter.ch}
