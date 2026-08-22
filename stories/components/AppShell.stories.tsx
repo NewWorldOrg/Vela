@@ -182,8 +182,8 @@ export const Admin: Story = {
   ),
 }
 
-export const Frame: Story = {
-  render: () => (
+function AdminFrame() {
+  return (
     <div className="dot-grid flex h-dvh flex-col overflow-hidden bg-bg">
       <ServiceTopBar settingsActive />
       <AdminBody className="min-h-0 flex-1">
@@ -219,5 +219,20 @@ export const Frame: Story = {
         </AdminMain>
       </AdminBody>
     </div>
-  ),
+  )
+}
+
+export const Frame: Story = {
+  render: () => <AdminFrame />,
+}
+
+/**
+ * The same frame at the width an iPad is held at, where the side nav drops its
+ * labels. A row is 7px shorter without them, so the gap that keeps one row's
+ * 44px area out of the next one's is a different number, and only a story at
+ * this width ever meets that shape.
+ */
+export const IconOnlyFrame: Story = {
+  render: () => <AdminFrame />,
+  parameters: { screen: { width: 768, height: 1024 } },
 }

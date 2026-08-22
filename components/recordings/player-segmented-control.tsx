@@ -20,7 +20,7 @@ export function PlayerSegmentedControl({
     <div
       role="group"
       aria-label={label}
-      className="inline-flex gap-0.5 rounded-full border border-white/20 p-0.5"
+      className="inline-flex gap-1 rounded-full border border-white/20 p-0.5"
     >
       {options.map((option) => (
         <button
@@ -29,7 +29,7 @@ export function PlayerSegmentedControl({
           aria-pressed={option === value}
           onClick={() => onChange(option)}
           className={cn(
-            'cursor-pointer rounded-full border-none bg-transparent px-[11px] py-[3px] text-[11.5px] font-medium whitespace-nowrap text-(--pl-ink-2) transition-[background-color,color] duration-150 hover:text-(--pl-ink) focus-visible:shadow-ring focus-visible:outline-none',
+            'tap-target cursor-pointer rounded-full border-none bg-transparent px-[11px] py-[3px] text-[11.5px] font-medium whitespace-nowrap text-(--pl-ink-2) transition-[background-color,color] duration-150 hover:text-(--pl-ink) focus-visible:shadow-ring focus-visible:outline-none',
             numeric && 'font-code',
             option === value &&
               'bg-[rgba(150,187,180,.24)] font-bold text-[#C0D8D3]',

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { tactile } from '@/components/vela/tactile'
 
 const iconButtonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center rounded-full outline-none disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-[15px]",
+  "tap-target inline-flex shrink-0 items-center justify-center rounded-full outline-none disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-[15px]",
   {
     variants: {
       variant: {

@@ -574,7 +574,7 @@ export function CollectionDrawer({
                 件」の再掲です。{' '}
                 <Link
                   href="/settings/tuners"
-                  className="font-bold whitespace-nowrap underline underline-offset-[3px]"
+                  className="tap-target font-bold whitespace-nowrap underline underline-offset-[3px]"
                 >
                   チューナーへ
                 </Link>

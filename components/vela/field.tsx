@@ -83,7 +83,7 @@ export function OptionGroup({
       role="group"
       aria-label={title}
       className={cn(
-        'flex flex-col items-start gap-[11px] rounded-lg px-[15px] py-[13px]',
+        'flex flex-col items-start gap-[26px] rounded-lg px-[15px] py-[13px]',
         className,
       )}
       {...props}

@@ -170,7 +170,7 @@ function RelatedNotice({ related }: { related: RelatedProgram }) {
       </p>
       <Link
         href={`/guide/programs/${related.key}`}
-        className="ml-auto pl-[13px] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
+        className="tap-target ml-auto pl-[13px] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
       >
         {wording.link}
       </Link>

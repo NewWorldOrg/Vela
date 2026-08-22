@@ -226,7 +226,7 @@ export const Toggles: Story = {
         </OptionGroup>
 
         <OptionGroup title="TS の扱い" className="bg-tint-butter">
-          <RadioGroup defaultValue="keep" className="gap-[11px]">
+          <RadioGroup defaultValue="keep">
             <div className="flex items-center gap-[9px]">
               <RadioGroupItem value="keep" id="ts-keep" />
               <Label htmlFor="ts-keep">すべての録画で TS を保持</Label>

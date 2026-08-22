@@ -231,7 +231,7 @@ export function SearchView({ result }: { result: SearchResult }) {
             <button
               type="button"
               onClick={clearAll}
-              className="ml-auto cursor-pointer text-sub font-bold text-brand underline-offset-[3px] hover:underline"
+              className="tap-target ml-auto cursor-pointer text-sub font-bold text-brand underline-offset-[3px] hover:underline"
             >
               条件をすべて消す
             </button>
@@ -262,7 +262,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                   type="button"
                   aria-label={`${c.spoken ?? c.label}の条件を消す`}
                   onClick={() => patch(c.clear)}
-                  className="flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-3 transition-colors duration-150 hover:bg-surface-2 hover:text-ink [&_svg]:size-3"
+                  className="tap-target flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-3 transition-colors duration-150 hover:bg-surface-2 hover:text-ink [&_svg]:size-3"
                 >
                   <CloseIcon />
                 </button>
@@ -600,7 +600,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                             <span className="flex flex-wrap items-center gap-2">
                               <Link
                                 href={`/guide/programs/${p.id}`}
-                                className="text-[13px] font-bold text-ink underline-offset-[3px] hover:underline"
+                                className="tap-target text-[13px] font-bold text-ink underline-offset-[3px] hover:underline"
                               >
                                 {p.title}
                               </Link>
@@ -656,7 +656,7 @@ function Pager({
   onPage: (page: number) => void
 }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-line pt-3.5">
+    <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-dashed border-line pt-3.5">
       <span className="mr-auto pr-3 text-sub text-ink-2">
         全 <b className="font-code font-medium text-ink">{found.total}</b> 件 /{' '}
         <b className="font-code font-medium text-ink">{found.lastPage}</b>{' '}
@@ -684,7 +684,7 @@ function Pager({
             aria-current={item === found.page ? 'page' : undefined}
             onClick={() => onPage(item)}
             className={cn(
-              'flex h-[29px] min-w-[29px] cursor-pointer items-center justify-center rounded-full border px-2.5 font-code text-sub shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none',
+              'tap-target flex h-[29px] min-w-[29px] cursor-pointer items-center justify-center rounded-full border px-2.5 font-code text-sub shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none',
               item === found.page
                 ? 'border-btn-fill bg-btn-fill text-on-btn'
                 : 'border-line-strong bg-surface text-ink-2 hover:text-ink',

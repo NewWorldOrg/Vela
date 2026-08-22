@@ -22,7 +22,7 @@ export function ReservationTabs({
           href={t.href}
           aria-current={t.key === current ? 'page' : undefined}
           className={cn(
-            'rounded-full px-3.5 py-1.5 text-ui font-medium text-ink-2 no-underline transition-[background-color,color] duration-150 hover:bg-surface-2 hover:text-ink',
+            'tap-target rounded-full px-3.5 py-1.5 text-ui font-medium text-ink-2 no-underline transition-[background-color,color] duration-150 hover:bg-surface-2 hover:text-ink',
             t.key === current && 'bg-brand-soft font-bold text-brand',
           )}
         >

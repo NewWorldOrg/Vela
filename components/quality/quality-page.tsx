@@ -123,7 +123,7 @@ export function QualityView({ result }: { result: QualityResult }) {
               {stat.link && (
                 <Link
                   href={stat.link.href}
-                  className="text-note font-bold text-brand underline-offset-[3px] hover:underline"
+                  className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
                 >
                   {stat.link.label}
                 </Link>
@@ -304,7 +304,7 @@ export function QualityView({ result }: { result: QualityResult }) {
           </p>
           <Link
             href="/settings/tuners"
-            className="text-note font-bold text-brand underline-offset-[3px] hover:underline"
+            className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
           >
             チューナー画面で対処
           </Link>
@@ -352,7 +352,7 @@ export function QualityView({ result }: { result: QualityResult }) {
             </p>
             <Link
               href="/library"
-              className="text-note font-bold text-brand underline-offset-[3px] hover:underline"
+              className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
             >
               ライブラリで絞り込む
             </Link>

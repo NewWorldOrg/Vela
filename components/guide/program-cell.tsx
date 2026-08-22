@@ -44,6 +44,7 @@ export function ProgramCell({
     <button
       type="button"
       data-opens="program-panel"
+      data-tap-exempt="a cell is as tall as the programme is long"
       aria-pressed={selected}
       onClick={() => onSelect(p)}
       style={{

@@ -43,7 +43,7 @@ export type BannerActions =
   readonly [BannerAction] | readonly [BannerAction, BannerAction]
 
 const ACTION_CLASS =
-  'font-bold whitespace-nowrap text-inherit underline underline-offset-[3px]'
+  'tap-target font-bold whitespace-nowrap text-inherit underline underline-offset-[3px]'
 
 /**
  * Disabled on a band is the same button switched off, drawn from the band's

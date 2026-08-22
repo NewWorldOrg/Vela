@@ -76,7 +76,7 @@ export function GuideView({
   return (
     <main className="flex min-h-0 flex-1 flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[18px] py-[9px] max-[700px]:px-3.5">
-        <div className="inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]">
+        <div className="inline-flex gap-1 rounded-full bg-surface-2 p-[3px]">
           {CHANNEL_KINDS.map((k) => (
             <button
               key={k.value}
@@ -86,7 +86,7 @@ export function GuideView({
                 patch({ kind: k.value === 'terrestrial' ? null : k.value })
               }
               className={cn(
-                'cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 transition-[background-color,color] duration-150 hover:bg-surface hover:text-ink',
+                'tap-target cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 transition-[background-color,color] duration-150 hover:bg-surface hover:text-ink',
                 k.value === guide.kind && 'bg-brand-soft font-bold text-brand',
               )}
             >
@@ -119,7 +119,7 @@ export function GuideView({
             <button
               type="button"
               onClick={() => patch({ date: null })}
-              className="cursor-pointer rounded-full border border-edge bg-surface px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
+              className="tap-target cursor-pointer rounded-full border border-edge bg-surface px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
             >
               今日
             </button>
@@ -130,14 +130,14 @@ export function GuideView({
           type="button"
           data-opens="collection"
           onClick={() => setCollectionOpen(true)}
-          className="ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
+          className="tap-target ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
         >
           <AntennaIcon className="size-[15px]" />
           収集状態
         </button>
         <Link
           href="/search"
-          className="inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
+          className="tap-target inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
         >
           <SearchIcon className="size-[15px]" />
           番組を検索
@@ -203,7 +203,7 @@ export function GuideView({
             <button
               type="button"
               onClick={() => setPanelOpen(true)}
-              className="fixed right-[18px] bottom-[18px] z-30 cursor-pointer rounded-full border border-edge bg-surface px-[17px] py-2 text-ui font-bold whitespace-nowrap text-ink shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none max-[900px]:right-3 max-[900px]:bottom-3"
+              className="tap-target fixed right-[18px] bottom-[18px] z-30 cursor-pointer rounded-full border border-edge bg-surface px-[17px] py-2 text-ui font-bold whitespace-nowrap text-ink shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none max-[900px]:right-3 max-[900px]:bottom-3"
             >
               番組詳細を開く
             </button>

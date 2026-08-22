@@ -88,7 +88,7 @@ export const Rows: Story = {
               aria-expanded={open}
               aria-controls="tuner-2-candidates"
               onClick={() => setOpen((prev) => !prev)}
-              className="inline-flex size-[18px] items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring"
+              className="tap-target inline-flex size-[18px] items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring"
             >
               <ChevronRightIcon
                 className={`size-3.5 transition-transform duration-150 ease-toy ${
@@ -130,7 +130,7 @@ export const Rows: Story = {
                   </span>
                   <a
                     href="#"
-                    className="ml-auto text-sub font-bold whitespace-nowrap text-brand underline-offset-[3px] hover:underline"
+                    className="tap-target ml-auto text-sub font-bold whitespace-nowrap text-brand underline-offset-[3px] hover:underline"
                   >
                     再スキャン
                   </a>

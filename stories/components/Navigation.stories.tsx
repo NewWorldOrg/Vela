@@ -121,7 +121,7 @@ export const IconButtons: Story = {
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading mark={MarkPill}>アイコンボタン</SectionHeading>
       <Surface>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4">
           <IconButton aria-label="検索">
             <SearchIcon />
           </IconButton>

@@ -41,7 +41,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-surface px-[13px] text-[13px] whitespace-nowrap text-ink outline-none transition-[border-color,box-shadow,background-color] duration-150 ease-out enabled:hover:border-ink-3 focus-visible:border-brand focus-visible:shadow-ring disabled:cursor-not-allowed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 aria-invalid:border-coral aria-invalid:bg-coral-soft data-[placeholder]:text-ink-3 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-ink-3",
+        "tap-target flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-surface px-[13px] text-[13px] whitespace-nowrap text-ink outline-none transition-[border-color,box-shadow,background-color] duration-150 ease-out enabled:hover:border-ink-3 focus-visible:border-brand focus-visible:shadow-ring disabled:cursor-not-allowed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 aria-invalid:border-coral aria-invalid:bg-coral-soft data-[placeholder]:text-ink-3 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-ink-3",
         className,
       )}
       {...props}
@@ -65,6 +65,7 @@ function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
+        data-tap-exempt="the rows sit against one another"
         className={cn(
           'relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg border border-line-strong bg-surface text-ink shadow-pop-xl data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           position === 'popper' &&
