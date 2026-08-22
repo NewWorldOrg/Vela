@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { registerHooks } from 'node:module'
 import { beforeEach, test } from 'node:test'
 
+import { RENDERED_PAGE_HEADER, loginHref } from '../auth.ts'
+
 /**
  * What the browser sent in, for the length of one call. The stood-in
  * `next/headers` reads it, so a test says which session is asking by setting
@@ -37,7 +39,9 @@ const STOOD_IN = new Map<string, string>([
          : undefined,
      })
      export const headers = async () => ({
-       get: (name) => name === 'x-vela-page' ? (asking().page ?? null) : null,
+       get: (name) => name === '${RENDERED_PAGE_HEADER}'
+         ? (asking().page ?? null)
+         : null,
      })`,
   ],
   [
@@ -77,7 +81,14 @@ registerHooks({
   },
 })
 
-;(globalThis as { velaAsked?: Asked }).velaAsked = asked
+/**
+ * Who is asking, for the stood-in `next/headers` to read. Nobody is what the
+ * health probe script is: it runs outside a request, where Next has nothing to
+ * hand over and saying so is the only honest answer.
+ */
+function asking(who: Asked | undefined): void {
+  ;(globalThis as { velaAsked?: Asked }).velaAsked = who
+}
 
 process.env.CARINA_API_BASE_URL = 'http://carina.test'
 
@@ -112,6 +123,7 @@ beforeEach(() => {
   sent = []
   asked.cookies = { [SESSION_COOKIE]: 'the-session-that-asked' }
   asked.page = undefined
+  asking(asked)
   apiAnswering()
 })
 
@@ -196,5 +208,39 @@ test('a request from no session carries none', async () => {
 
   await carinaClient().GET('/api/health')
 
+  assert.equal(sent[0].headers.get('cookie'), null)
+})
+
+/**
+ * The other half of carrying a session: one the API no longer knows ends at
+ * the login screen holding the page it was refused on, rather than as a screen
+ * that failed to read. Without this the refusal is a rejected promise reaching
+ * a Server Component, which is a 500 where a sign-in belongs.
+ */
+test('a session the API refuses is sent to sign in again, holding the page', async () => {
+  asked.page = '/guide?date=2026-08-08'
+
+  apiAnswering(body({ error: 'no session' }, { status: 401 }))
+
+  await assert.rejects(
+    () => carinaClient().GET('/api/health'),
+    (error: Error & { where?: string }) =>
+      error.where === loginHref('/guide?date=2026-08-08'),
+  )
+})
+
+/**
+ * A call from outside a request — the health probe script is one — has no
+ * session to carry and no page to be sent back to, and still goes out. Next
+ * signals that by throwing out of `cookies()`, which is not a refusal and must
+ * not be read as one.
+ */
+test('a call from outside a request carries no session and still goes out', async () => {
+  asking(undefined)
+
+  await carinaClient().GET('/api/health')
+
+  assert.equal(sent.length, 1)
+  assert.equal(sent[0].cache, 'no-store')
   assert.equal(sent[0].headers.get('cookie'), null)
 })
