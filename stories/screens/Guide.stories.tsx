@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, within } from 'storybook/test'
+import { getRouter } from '@storybook/nextjs/navigation.mock'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import { COLUMN_MIN_PX, gridMinWidthOf } from '@/lib/guide'
 import {
@@ -8,6 +9,7 @@ import {
   CHANNEL_FIXTURES,
 } from '@/repository/channels.fixtures'
 import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
+import type { Program } from '@/repository/programs'
 import {
   AERIAL_PROGRAM_FIXTURES,
   GUIDE_DAYS,
@@ -33,7 +35,10 @@ const base = {
 const meta = {
   title: 'Screens/番組表',
   component: GuideView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    nextjs: { appDirectory: true, navigation: { pathname: '/guide' } },
+  },
   args: {
     collection: COLLECTION_FIXTURES,
     onCollectNow: async () => ({ state: 'started' as const, streams: 7 }),
@@ -400,6 +405,16 @@ export const 副チャンネルも同じ列: Story = {
   },
 }
 
+/** A whole day of the line-up an aerial really hands over: 27 services. */
+const aerial = {
+  ...day,
+  channels: AERIAL_CHANNEL_FIXTURES,
+  programs: AERIAL_PROGRAM_FIXTURES.map((program) => ({
+    ...program,
+    startMin: program.startMin + EVENING_MIN,
+  })),
+}
+
 /**
  * The line-up an aerial really hands over, on the same screen. There is no
  * width in which 27 columns are all readable at once, so they stop sharing:
@@ -408,23 +423,12 @@ export const 副チャンネルも同じ列: Story = {
  * have split included, so the total is the count times the floor and nothing
  * else — which is what the line-up is held against here.
  *
- * Sideways is inside the grid. The page does not move — the top bar, the day
- * and the buttons stay where they were — and neither do the two things that
- * say where you are looking: the hour gutter stays against the left edge, and
- * the channel a column belongs to stays at the top of it however far along it
- * is. The vertical position the guide opens at is unaffected by any of it.
+ * That the sideways is inside the grid, and that nothing else moves with it,
+ * is asked of every width it has to hold at — here and at the two an iPad is
+ * read at — so it is asked in one place.
  */
 export const 列が多ければ横に流れる: Story = {
-  args: {
-    guide: {
-      ...day,
-      channels: AERIAL_CHANNEL_FIXTURES,
-      programs: AERIAL_PROGRAM_FIXTURES.map((program) => ({
-        ...program,
-        startMin: program.startMin + EVENING_MIN,
-      })),
-    },
-  },
+  args: { guide: aerial },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
@@ -435,7 +439,6 @@ export const 列が多ければ横に流れる: Story = {
       canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
     )
 
-    await expect(columns).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
     await expect(headings).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
 
     await expect(
@@ -450,43 +453,12 @@ export const 列が多ければ横に流れる: Story = {
       )
     }
 
-    await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth)
     await expect(scroller.scrollWidth).toBeCloseTo(
       gridMinWidthOf(AERIAL_CHANNEL_FIXTURES.length),
       0,
     )
 
-    const page = partOf(canvasElement, 'main')
-    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
-
-    const opened = scroller.scrollTop
-    await expect(opened).toBeGreaterThan(0)
-
-    scroller.scrollLeft = scroller.scrollWidth
-
-    const grid = scroller.getBoundingClientRect()
-    const end = columns.length - 1
-
-    await expect(scroller.scrollLeft).toBeGreaterThan(0)
-    await expect(scroller.scrollTop).toBe(opened)
-
-    for (const gutter of canvasElement.querySelectorAll<HTMLElement>(
-      '[data-guide-gutter]',
-    )) {
-      await expect(gutter.getBoundingClientRect().left).toBeCloseTo(
-        grid.left,
-        0,
-      )
-    }
-
-    await expect(headings[end].getBoundingClientRect().left).toBeCloseTo(
-      columns[end].getBoundingClientRect().left,
-      0,
-    )
-    await expect(headings[end].getBoundingClientRect().top).toBeCloseTo(
-      grid.top,
-      0,
-    )
+    await sidewaysInsideTheGrid(canvasElement)
   },
 }
 
@@ -504,7 +476,13 @@ export const 健全性バナー: Story = {
 
 /**
  * A day the present is not in. There is no line to open half an hour above, so
- * the guide opens where the broadcast day does.
+ * the guide opens where the broadcast day does — and the way back to today is
+ * offered, which is a thing only a day that is not today has to offer. It asks
+ * for the guide with no day on it rather than for today by date: today is
+ * whichever day it is when the address is opened, not the one it was when the
+ * button was drawn.
+ *
+ * It is the last day the guide holds, so there is no day after it to page to.
  */
 export const 別の日: Story = {
   args: {
@@ -517,10 +495,19 @@ export const 別の日: Story = {
   },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
+    const router = getRouter()
 
     await expect(canvasElement.querySelector('[data-now-line]')).toBeNull()
     await expect(scroller.scrollTop).toBe(0)
+    await expect(canvas.getByRole('button', { name: '次の日' })).toBeDisabled()
+
+    await userEvent.click(canvas.getByRole('button', { name: '今日' }))
+
+    await expect(router.replace).toHaveBeenCalledWith('/guide', {
+      scroll: false,
+    })
   },
 }
 
@@ -532,5 +519,203 @@ export const 番組情報が不足: Story = {
       channels: [],
       programs: [],
     },
+  },
+}
+
+/**
+ * The first cell the grid is showing whole, and the programme it was drawn
+ * from. A cell half off the edge is no use for pressing: the browser brings
+ * what it focuses into view, and a scroll the browser did would be read here
+ * as a scroll the guide did.
+ */
+function onScreenIn(
+  canvasElement: HTMLElement,
+  scroller: HTMLElement,
+): { cell: HTMLElement; program: Program } {
+  const view = scroller.getBoundingClientRect()
+  const cells = Array.from(
+    canvasElement.querySelectorAll<HTMLElement>('[data-opens="program-panel"]'),
+  )
+  const index = cells.findIndex((cell) => {
+    const at = cell.getBoundingClientRect()
+
+    return (
+      at.height > 0 &&
+      at.top >= view.top &&
+      at.bottom <= view.bottom &&
+      at.left >= view.left &&
+      at.right <= view.right
+    )
+  })
+
+  if (index < 0) {
+    throw new Error('the guide is showing no programme whole')
+  }
+
+  return { cell: cells[index], program: IN_GRID_ORDER[index] }
+}
+
+/** The panel, once it is open rather than merely rendered closed. */
+async function openedPanel(canvasElement: HTMLElement): Promise<HTMLElement> {
+  return waitFor(() => {
+    const panel = partOf(canvasElement, 'aside')
+
+    if (panel.getAttribute('aria-hidden') !== 'false') {
+      throw new Error('the panel is not open')
+    }
+
+    return panel
+  })
+}
+
+/**
+ * Reading a programme does not cost the place in the guide it was read from.
+ * The panel is a layer over the grid, not a page in front of it, so the hour
+ * the reader had scrolled to is still the hour on screen behind it — an hour
+ * they scrolled to themselves, away from where the guide opened, because a
+ * grid put back where it opens would be indistinguishable from one left alone
+ * if the two were the same place.
+ *
+ * The panel is also where the programme's own address is: `/guide/programs/`
+ * and the identifier of the programme that was pressed, so what is opened
+ * standalone is that programme rather than whatever the grid was showing.
+ */
+export const 番組を開いても場所は動かない: Story = {
+  args: { guide: day },
+  decorators: [shorterThanADay],
+  play: async ({ canvasElement }) => {
+    const scroller = partOf(canvasElement, '[data-guide-scroll]')
+
+    await expect(scroller.scrollTop).toBeGreaterThan(HOUR_PX)
+
+    scroller.scrollTop -= HOUR_PX
+
+    const wasAt = scroller.scrollTop
+    const wasAcross = scroller.scrollLeft
+    const { cell, program } = onScreenIn(canvasElement, scroller)
+
+    await userEvent.click(cell)
+
+    const panel = within(await openedPanel(canvasElement))
+
+    await expect(scroller.scrollTop).toBe(wasAt)
+    await expect(scroller.scrollLeft).toBe(wasAcross)
+    await expect(
+      panel.getByRole('heading', { name: program.title }),
+    ).toBeVisible()
+    await expect(
+      panel.getByRole('link', { name: '番組詳細を開く' }),
+    ).toHaveAttribute('href', `/guide/programs/${program.id}`)
+  },
+}
+
+/**
+ * Paging the guide a day at a time. The day is state a second reader opening
+ * the link has to arrive at, so what a pager press does is ask for an address
+ * — and the ends of the window are ends: there is no day before the first one
+ * the guide holds to page back to.
+ */
+export const 日を送る: Story = {
+  args: { guide: base },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await expect(canvas.queryByRole('button', { name: '今日' })).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: '次の日' }))
+
+    await expect(router.replace).toHaveBeenCalledWith(
+      `/guide?date=${GUIDE_DAYS[2].date}`,
+      { scroll: false },
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '前の日' }))
+
+    await expect(router.replace).toHaveBeenCalledWith(
+      `/guide?date=${GUIDE_DAYS[0].date}`,
+      { scroll: false },
+    )
+  },
+}
+
+/**
+ * The two sizes an iPad is read at, portrait and landscape. The browser itself
+ * is put at them rather than a box inside it: what the screen does at a width
+ * is decided by media queries against the viewport, so a 768px box in a
+ * desktop-wide window lays out as the desktop and would answer for the iPad
+ * without ever having been one. `.storybook/test-runner.ts` moves the viewport
+ * for a story that asks.
+ */
+const AN_IPAD = { width: 768, height: 1024 }
+
+const AN_IPAD_TURNED = { width: 1024, height: 768 }
+
+/**
+ * What a width too narrow for the line-up does to the screen. The grid runs
+ * off its own right edge and is sent sideways from inside; the page does not
+ * move, so the toolbar, the day and the buttons stay where they were. The two
+ * things that say where you are looking stay too — the hour gutter against
+ * the left edge and the channel at the top of its column — and how far down
+ * the day the reader is is not touched by how far along it they are.
+ */
+async function sidewaysInsideTheGrid(
+  canvasElement: HTMLElement,
+): Promise<void> {
+  const scroller = partOf(canvasElement, '[data-guide-scroll]')
+  const page = partOf(canvasElement, 'main')
+  const columns = Array.from(
+    canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+  )
+  const headings = Array.from(
+    canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
+  )
+
+  await expect(columns).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
+  await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth)
+  await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
+
+  const down = scroller.scrollTop
+
+  await expect(down).toBeGreaterThan(0)
+
+  scroller.scrollLeft = scroller.scrollWidth
+
+  await expect(scroller.scrollLeft).toBeGreaterThan(0)
+  await expect(scroller.scrollTop).toBe(down)
+  await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
+
+  const grid = scroller.getBoundingClientRect()
+  const end = columns.length - 1
+
+  for (const gutter of canvasElement.querySelectorAll<HTMLElement>(
+    '[data-guide-gutter]',
+  )) {
+    await expect(gutter.getBoundingClientRect().left).toBeCloseTo(grid.left, 0)
+  }
+
+  await expect(headings[end].getBoundingClientRect().left).toBeCloseTo(
+    columns[end].getBoundingClientRect().left,
+    0,
+  )
+  await expect(headings[end].getBoundingClientRect().top).toBeCloseTo(
+    grid.top,
+    0,
+  )
+}
+
+export const iPadの幅: Story = {
+  args: { guide: aerial },
+  parameters: { screen: AN_IPAD },
+  play: async ({ canvasElement }) => {
+    await sidewaysInsideTheGrid(canvasElement)
+  },
+}
+
+export const iPadを横にした幅: Story = {
+  args: { guide: aerial },
+  parameters: { screen: AN_IPAD_TURNED },
+  play: async ({ canvasElement }) => {
+    await sidewaysInsideTheGrid(canvasElement)
   },
 }
