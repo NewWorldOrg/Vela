@@ -2,7 +2,12 @@
 
 import { useCallback, useRef } from 'react'
 
-import { GUTTER_PX, gridMinWidthOf, openingScrollTopOf } from '@/lib/guide'
+import {
+  GUTTER_PX,
+  gridMinWidthOf,
+  openingScrollTopOf,
+  unscheduledSpansOf,
+} from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
@@ -24,6 +29,20 @@ const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
  * copy that gets edited to something else.
  */
 const COLUMN_FLEX = '1 1 0'
+
+/**
+ * The shortest band that can say what it is: four full-width glyphs set down
+ * the page at the micro step, each carrying its letter-spacing after it.
+ *
+ * A run shorter than its own name drops the name and is left to the dashed
+ * rules at its ends, the way a cell too short for its description drops that.
+ * The label is centred in a band that clips, so what it would otherwise lose
+ * is a slice off both ends at once — half a 編 above and half a し below,
+ * which reads as a fault in the drawing rather than as a run too short to
+ * name. Half an hour between two of a split service's own programmes is an
+ * ordinary gap, and it is under this.
+ */
+const UNSCHEDULED_LABEL_PX = 52
 
 export function GuideGrid({
   channels,
@@ -138,19 +157,43 @@ export function GuideGrid({
             ))}
           </div>
 
-          {channels.map((c) => (
-            <div
-              key={c.id}
-              data-guide-column
-              style={{ flex: COLUMN_FLEX }}
-              className={cn(
-                'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
-                c.sub && 'bg-surface-2',
-              )}
-            >
-              {programs
-                .filter((p) => p.channelId === c.id)
-                .map((p) => (
+          {channels.map((c) => {
+            const carried = programs.filter((p) => p.channelId === c.id)
+
+            return (
+              <div
+                key={c.id}
+                data-guide-column
+                style={{ flex: COLUMN_FLEX }}
+                className={cn(
+                  'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
+                  c.sub && 'bg-surface-2',
+                )}
+              >
+                {c.sub &&
+                  unscheduledSpansOf(carried, windowHours * 60).map((span) => {
+                    const height = (span.durationMin / 60) * HOUR_PX
+
+                    return (
+                      <div
+                        key={span.startMin}
+                        data-guide-unscheduled
+                        style={{
+                          top: `${(span.startMin / 60) * HOUR_PX}px`,
+                          height: `${height}px`,
+                        }}
+                        className="absolute right-0 left-0 flex items-center justify-center overflow-hidden border-y border-dashed border-line"
+                      >
+                        {height >= UNSCHEDULED_LABEL_PX && (
+                          <span className="text-micro tracking-[0.2em] text-ink-3 [writing-mode:vertical-rl]">
+                            編成なし
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                {carried.map((p) => (
                   <ProgramCell
                     key={p.id}
                     program={p}
@@ -163,8 +206,9 @@ export function GuideGrid({
                     onSelect={onSelect}
                   />
                 ))}
-            </div>
-          ))}
+              </div>
+            )
+          })}
 
           {nowMin !== undefined && (
             <div

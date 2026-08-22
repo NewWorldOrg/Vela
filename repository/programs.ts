@@ -1,9 +1,11 @@
+import type { GuideRelationKind } from '@/lib/guide'
 import {
   DAY_STARTS_AT_HOUR,
   JST_OFFSET_MS,
   WINDOW_HOURS,
   broadcastDateOf,
   nowMinOf,
+  splitServicesSettled,
   windowStartOf,
 } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
@@ -68,7 +70,7 @@ export interface ProgramItem {
   text: string
 }
 
-export type RelationKind = 'shared' | 'relayed' | 'moved'
+export type RelationKind = GuideRelationKind
 
 export interface RelatedProgram {
   key: string
@@ -154,11 +156,10 @@ export async function getGuide(
     }),
   ])
 
-  const programs = guide.programmes
-    .filter((programme) => !programme.isShadow)
-    .map((programme) => toProgram(programme, windowStart))
-    .filter((program): program is Program => program !== null)
-  const shown = withSubChannelsSettled(channels, programs)
+  const settled = splitServicesSettled(
+    channels,
+    guide.programmes.filter((programme) => !programme.isShadow),
+  )
 
   const now = new Date()
   const nowMin = nowMinOf(now, windowStart)
@@ -171,10 +172,12 @@ export async function getGuide(
     windowHours: WINDOW_HOURS,
     nowMin,
     nowLabel: nowMin === undefined ? undefined : clockLabel(now),
-    channels: shown,
-    programs: programs.filter((program) =>
-      shown.some((channel) => channel.id === program.channelId),
+    channels: settled.services.map(({ service, sub }) =>
+      sub ? { ...service, sub } : { ...service },
     ),
+    programs: settled.broadcasts
+      .map((programme) => toProgram(programme, windowStart))
+      .filter((program): program is Program => program !== null),
   }
 }
 
@@ -317,46 +320,6 @@ async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
   )
 
   return rows
-}
-
-/**
- * 同じネットワークの2本目以降はサブチャンネル。主と別の番組を流している
- * 時間帯がある日だけ列を出す。
- */
-function withSubChannelsSettled(
-  channels: GuideChannel[],
-  programs: Program[],
-): Channel[] {
-  const primaries = new Map<number, GuideChannel>()
-  const shown: Channel[] = []
-
-  for (const channel of channels) {
-    const primary = primaries.get(channel.networkId)
-
-    if (!primary) {
-      primaries.set(channel.networkId, channel)
-      shown.push({ ...channel })
-
-      continue
-    }
-
-    const primarySlots = new Set(
-      programs
-        .filter((program) => program.channelId === primary.id)
-        .map((program) => `${program.startMin}:${program.title}`),
-    )
-    const differs = programs.some(
-      (program) =>
-        program.channelId === channel.id &&
-        !primarySlots.has(`${program.startMin}:${program.title}`),
-    )
-
-    if (differs) {
-      shown.push({ ...channel, sub: true })
-    }
-  }
-
-  return shown
 }
 
 function toProgram(programme: Programme, windowStart: Date): Program | null {

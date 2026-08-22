@@ -1,3 +1,4 @@
+import type { GuideRelationKind } from '@/lib/guide'
 import {
   carinaClient,
   revalidatingCarinaClient,
@@ -26,7 +27,7 @@ export interface RelatedProgramme {
   networkId: number
   serviceId: number
   eventId: number
-  kind: 'shared' | 'relayed' | 'moved'
+  kind: GuideRelationKind
 }
 
 export interface Programme {

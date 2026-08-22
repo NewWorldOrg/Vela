@@ -73,6 +73,185 @@ export function openingScrollTopOf(
   return Math.max(0, ((nowMin - OPENING_LEAD_MIN) / 60) * hourPx)
 }
 
+/** A service of a network, which is what a column of the grid stands for. */
+export interface GuideService {
+  networkId: number
+  serviceId: number
+}
+
+/**
+ * What one broadcast says about another it names.
+ *
+ * The three words are the broadcaster's own, and the whole of the reading
+ * below turns on telling a share from the other two, so they are spelled out
+ * as the three they are rather than as a string. The same three are written
+ * one casing up where they are stored, and a column settled against `Shared`
+ * would settle against nothing at all and say so in no way a compiler could.
+ */
+export type GuideRelationKind = 'shared' | 'relayed' | 'moved'
+
+/** Another broadcast a broadcast says something about. */
+export interface GuideRelation extends GuideService {
+  kind: GuideRelationKind
+}
+
+/**
+ * Whether a broadcast is the one another service is carrying at that hour.
+ *
+ * A service splits into two or three for the hours it has two or three things
+ * to show, and carries the one thing on all of them for the rest of the day.
+ * The broadcaster says which it is doing: every event it sends on a column it
+ * has split into names, under a share, the service the same programme is going
+ * out on. That is the only reliable word for it — the name is not. Most shared
+ * hours arrive with no name at all, and the ones that do arrive named carry
+ * the same name as the whole service, so a column read by name alone repeats
+ * whatever the service beside it is showing.
+ *
+ * A relay and a move name another service too and mean the opposite: the same
+ * programme at another hour or from another transmitter, which is a different
+ * cell and not this one.
+ */
+export function sharesWith(
+  broadcast: { related: readonly GuideRelation[] },
+  service: GuideService,
+): boolean {
+  return broadcast.related.some(
+    (relation) =>
+      relation.kind === 'shared' &&
+      relation.networkId === service.networkId &&
+      relation.serviceId === service.serviceId,
+  )
+}
+
+/**
+ * Which services the grid draws a column for, and which broadcasts go in them.
+ *
+ * The lowest numbered service of a network is the service. Any above it is a
+ * column that service splits into for the hours it has a second thing to show,
+ * and such a column carries only what is its own: an hour it is sharing the
+ * whole service's broadcast is not a second programme, and drawn as one it
+ * fills the column with a copy of the one beside it.
+ *
+ * A day it has nothing of its own at any hour takes no column. A column is put
+ * out for the hours a split is on air, and a day with no such hour has none to
+ * put out; a column that said nothing from four in the morning to four again
+ * would still take a column's width off a grid that already runs off the side.
+ */
+export function splitServicesSettled<
+  S extends GuideService,
+  B extends GuideService & { related: readonly GuideRelation[] },
+>(
+  services: readonly S[],
+  broadcasts: readonly B[],
+): { services: { service: S; sub: boolean }[]; broadcasts: B[] } {
+  const wholes = wholeServicesOf(services)
+  const drawn: { service: S; sub: boolean }[] = []
+  const carried: B[] = []
+
+  for (const service of services) {
+    const on = broadcasts.filter(
+      (broadcast) =>
+        broadcast.networkId === service.networkId &&
+        broadcast.serviceId === service.serviceId,
+    )
+    const whole = wholes.get(service.networkId)
+
+    if (!whole || whole.serviceId === service.serviceId) {
+      drawn.push({ service, sub: false })
+      carried.push(...on)
+
+      continue
+    }
+
+    const own = on.filter((broadcast) => !sharesWith(broadcast, whole))
+
+    if (own.length === 0) {
+      continue
+    }
+
+    drawn.push({ service, sub: true })
+    carried.push(...own)
+  }
+
+  return { services: drawn, broadcasts: carried }
+}
+
+/**
+ * The service each network split from, which is the lowest numbered it hands
+ * over.
+ *
+ * It is read off the network rather than off the order the columns arrived in.
+ * That order is a presentation — the line-up is sorted by remote control key,
+ * which a service does not always send — and a key that has not arrived yet
+ * puts a column at the number it would sort under instead, which can be ahead
+ * of the service it split from. Settled against whichever column came first,
+ * the whole service would be the one read as a split, and since every one of
+ * its broadcasts names the split under a share, every one of them would be
+ * dropped and its column would leave the guide. A service number is allocated
+ * before the ones that split off it and is sent either way, so it answers the
+ * question the sort order was never being asked.
+ */
+function wholeServicesOf<S extends GuideService>(
+  services: readonly S[],
+): Map<number, S> {
+  const wholes = new Map<number, S>()
+
+  for (const service of services) {
+    const whole = wholes.get(service.networkId)
+
+    if (!whole || service.serviceId < whole.serviceId) {
+      wholes.set(service.networkId, service)
+    }
+  }
+
+  return wholes
+}
+
+/** A run of the guide window, in minutes from the top of it. */
+export interface GuideSpan {
+  startMin: number
+  durationMin: number
+}
+
+/**
+ * The runs of the window a column carries nothing of its own, given the
+ * programmes it does carry.
+ *
+ * It is the complement and not a second reading of the schedule: whatever a
+ * column has no cell for is an hour it is not being programmed, and saying so
+ * twice — once by drawing the cells, once by listing the gaps — is two answers
+ * that can disagree.
+ */
+export function unscheduledSpansOf(
+  carried: readonly GuideSpan[],
+  windowMin: number,
+): GuideSpan[] {
+  const taken = carried
+    .map((span) => ({
+      from: Math.max(0, span.startMin),
+      to: Math.min(windowMin, span.startMin + span.durationMin),
+    }))
+    .filter((span) => span.to > span.from)
+    .sort((a, b) => a.from - b.from)
+
+  const spans: GuideSpan[] = []
+  let open = 0
+
+  for (const span of taken) {
+    if (span.from > open) {
+      spans.push({ startMin: open, durationMin: span.from - open })
+    }
+
+    open = Math.max(open, span.to)
+  }
+
+  if (open < windowMin) {
+    spans.push({ startMin: open, durationMin: windowMin - open })
+  }
+
+  return spans
+}
+
 /** The hour gutter down the left of the grid, which is not a channel. */
 export const GUTTER_PX = 46
 
