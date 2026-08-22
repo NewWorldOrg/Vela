@@ -250,7 +250,7 @@ export const 読み直しても動かない: Story = {
         <button
           type="button"
           onClick={() => setReads(reads + 1)}
-          className="fixed top-1 left-1 z-50 rounded-full border border-edge bg-surface px-3 py-1 text-sub"
+          className="tap-target fixed bottom-1 left-1 z-50 rounded-full border border-edge bg-surface px-3 py-1 text-sub"
         >
           読み直す
         </button>

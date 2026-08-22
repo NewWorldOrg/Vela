@@ -38,7 +38,7 @@ export function ReservationRow({
               aria-expanded={expanded}
               aria-label="競合の詳細"
               onClick={onToggle}
-              className="flex size-6 cursor-pointer items-center justify-center rounded-full text-coral transition-colors duration-150 hover:bg-coral-soft [&_svg]:size-3.5"
+              className="tap-target flex size-6 cursor-pointer items-center justify-center rounded-full text-coral transition-colors duration-150 hover:bg-coral-soft [&_svg]:size-3.5"
             >
               {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
             </button>

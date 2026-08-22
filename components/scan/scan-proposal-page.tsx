@@ -193,8 +193,11 @@ export function ScanProposalView({
 }) {
   const crumb = (
     <Crumb>
-      設定 / <Link href={'/settings/channels' as Route}>チャンネル</Link> /{' '}
-      <CrumbCurrent>スキャン結果</CrumbCurrent>
+      設定 /{' '}
+      <Link className="tap-target" href={'/settings/channels' as Route}>
+        チャンネル
+      </Link>{' '}
+      / <CrumbCurrent>スキャン結果</CrumbCurrent>
     </Crumb>
   )
 

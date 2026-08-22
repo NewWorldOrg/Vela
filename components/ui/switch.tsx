@@ -21,7 +21,7 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
-        'peer group/switch inline-flex shrink-0 items-center rounded-full border border-line-strong bg-surface-3 p-0.5 outline-none',
+        'tap-target peer group/switch inline-flex shrink-0 items-center rounded-full border border-line-strong bg-surface-3 p-0.5 outline-none',
         'transition-[background-color,border-color,box-shadow] duration-150 ease-out',
         'data-[size=default]:h-6 data-[size=default]:w-[42px] data-[size=sm]:h-5 data-[size=sm]:w-[34px]',
         'data-[state=checked]:border-brand data-[state=checked]:bg-brand',

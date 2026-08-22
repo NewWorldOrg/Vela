@@ -112,7 +112,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                 {population.link ? (
                   <Link
                     href={population.link.href}
-                    className="ml-auto text-note font-bold text-brand underline-offset-[3px] hover:underline"
+                    className="tap-target ml-auto text-note font-bold text-brand underline-offset-[3px] hover:underline"
                   >
                     {population.link.label}
                   </Link>
@@ -195,7 +195,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                     {row.link ? (
                       <Link
                         href={row.link.href}
-                        className="font-bold text-brand underline-offset-[3px] hover:underline"
+                        className="tap-target font-bold text-brand underline-offset-[3px] hover:underline"
                       >
                         {row.link.label}
                       </Link>

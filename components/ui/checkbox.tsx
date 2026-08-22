@@ -14,7 +14,7 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'peer inline-flex size-[18px] shrink-0 items-center justify-center rounded-[6px] border border-line-strong bg-surface outline-none',
+        'tap-target peer inline-flex size-[18px] shrink-0 items-center justify-center rounded-[6px] border border-line-strong bg-surface outline-none',
         'transition-[background-color,border-color,transform,box-shadow] duration-150 ease-toy',
         'enabled:hover:-translate-x-px enabled:hover:-translate-y-px',
         'data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-on-brand',

@@ -79,7 +79,7 @@ export function GlobalNavItem({
       data-slot="global-nav-item"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'rounded-full px-[11px] py-[5px] text-sub font-medium text-ink-2 no-underline outline-none',
+        'tap-target rounded-full px-[11px] py-[5px] text-sub font-medium text-ink-2 no-underline outline-none',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         active && 'bg-brand-soft font-bold text-brand',
@@ -104,7 +104,7 @@ export function SettingsLink({
       data-slot="settings-link"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[5px] text-sub font-medium text-ink-2 no-underline outline-none',
+        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[5px] text-sub font-medium text-ink-2 no-underline outline-none',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         active && 'border-brand bg-brand-soft font-bold text-brand',
@@ -178,7 +178,7 @@ export function AdminSideNavItem({
       aria-current={active ? 'page' : undefined}
       aria-label={label}
       className={cn(
-        'mb-px flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sub font-medium text-ink-2 no-underline outline-none',
+        'tap-target mb-[11px] flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sub font-medium text-ink-2 no-underline outline-none',
         'transition-[background-color,color,transform] duration-150 ease-toy',
         'hover:translate-x-0.5 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         '[&_svg]:size-3.5 [&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:-rotate-6 hover:[&_svg]:scale-110',

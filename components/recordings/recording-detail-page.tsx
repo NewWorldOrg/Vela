@@ -56,7 +56,7 @@ export function RecordingDetailView({
       <div className="flex items-center px-[30px] pt-[18px] pb-3 max-[1060px]:px-5 max-[700px]:px-3.5">
         <Link
           href="/library"
-          className="inline-flex items-center gap-[7px] rounded-full border border-edge py-[5px] pr-[13px] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
+          className="tap-target inline-flex items-center gap-[7px] rounded-full border border-edge py-[5px] pr-[13px] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
         >
           <ChevronLeftIcon className="size-[15px]" />
           ライブラリへ
