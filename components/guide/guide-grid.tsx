@@ -2,7 +2,12 @@
 
 import { useCallback, useRef } from 'react'
 
-import { GUTTER_PX, gridMinWidthOf, openingScrollTopOf } from '@/lib/guide'
+import {
+  GUTTER_PX,
+  gridMinWidthOf,
+  openingScrollTopOf,
+  unscheduledSpansOf,
+} from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
@@ -138,19 +143,37 @@ export function GuideGrid({
             ))}
           </div>
 
-          {channels.map((c) => (
-            <div
-              key={c.id}
-              data-guide-column
-              style={{ flex: COLUMN_FLEX }}
-              className={cn(
-                'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
-                c.sub && 'bg-surface-2',
-              )}
-            >
-              {programs
-                .filter((p) => p.channelId === c.id)
-                .map((p) => (
+          {channels.map((c) => {
+            const carried = programs.filter((p) => p.channelId === c.id)
+
+            return (
+              <div
+                key={c.id}
+                data-guide-column
+                style={{ flex: COLUMN_FLEX }}
+                className={cn(
+                  'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
+                  c.sub && 'bg-surface-2',
+                )}
+              >
+                {c.sub &&
+                  unscheduledSpansOf(carried, windowHours * 60).map((span) => (
+                    <div
+                      key={span.startMin}
+                      data-guide-unscheduled
+                      style={{
+                        top: `${(span.startMin / 60) * HOUR_PX}px`,
+                        height: `${(span.durationMin / 60) * HOUR_PX}px`,
+                      }}
+                      className="absolute right-0 left-0 flex items-center justify-center overflow-hidden border-y border-dashed border-line"
+                    >
+                      <span className="text-micro tracking-[0.2em] text-ink-3 [writing-mode:vertical-rl]">
+                        編成なし
+                      </span>
+                    </div>
+                  ))}
+
+                {carried.map((p) => (
                   <ProgramCell
                     key={p.id}
                     program={p}
@@ -163,8 +186,9 @@ export function GuideGrid({
                     onSelect={onSelect}
                   />
                 ))}
-            </div>
-          ))}
+              </div>
+            )
+          })}
 
           {nowMin !== undefined && (
             <div

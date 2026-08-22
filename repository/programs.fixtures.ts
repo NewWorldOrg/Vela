@@ -120,6 +120,13 @@ export const PROGRAM_FIXTURES: Program[] = [
     startLabel: '01:00',
     endLabel: '03:00',
   },
+  /**
+   * What a service that has split really carries: its own programmes for the
+   * hours it has a second thing to show, and nothing at all in between. The
+   * hours in between are not empty listings — they are the hours it is showing
+   * what the whole service is showing, which the guide already has a column
+   * for.
+   */
   {
     id: 'p009',
     channelId: 'ch-152',
@@ -137,10 +144,10 @@ export const PROGRAM_FIXTURES: Program[] = [
     title: 'データ気象台',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
-    startMin: 120,
-    durationMin: 120,
-    startLabel: '21:00',
-    endLabel: '23:00',
+    startMin: 210,
+    durationMin: 60,
+    startLabel: '22:30',
+    endLabel: '23:30',
   },
   {
     id: 'p011',
@@ -148,9 +155,9 @@ export const PROGRAM_FIXTURES: Program[] = [
     title: '自然のしくみ 再放送',
     genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
-    startMin: 240,
-    durationMin: 230,
-    startLabel: '23:00',
+    startMin: 420,
+    durationMin: 50,
+    startLabel: '02:00',
     endLabel: '02:50',
   },
   /**
