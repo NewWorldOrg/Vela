@@ -1,3 +1,4 @@
+import type { GuideRelationKind } from '@/lib/guide'
 import {
   DAY_STARTS_AT_HOUR,
   JST_OFFSET_MS,
@@ -69,7 +70,7 @@ export interface ProgramItem {
   text: string
 }
 
-export type RelationKind = 'shared' | 'relayed' | 'moved'
+export type RelationKind = GuideRelationKind
 
 export interface RelatedProgram {
   key: string

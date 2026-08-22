@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import type { GuideRelationKind } from './guide.ts'
 import {
   broadcastDateOf,
   gridMinWidthOf,
@@ -107,8 +108,8 @@ test('a grid with no channels is the hour gutter and nothing else', () => {
 })
 
 /**
- * One network: the service it hands over first, and the two columns that
- * service splits into, in the order they arrive.
+ * One network: the service the rest of it split from, which is its lowest
+ * number, and the two columns that service splits into above it.
  */
 const WHOLE = { networkId: 41000, serviceId: 5100 }
 const SPLIT = { networkId: 41000, serviceId: 5101 }
@@ -118,7 +119,11 @@ const SPLIT_AGAIN = { networkId: 41000, serviceId: 5102 }
 const ELSEWHERE = { networkId: 41001, serviceId: 6200 }
 
 const broadcast = (
-  ...related: { kind: string; networkId: number; serviceId: number }[]
+  ...related: {
+    kind: GuideRelationKind
+    networkId: number
+    serviceId: number
+  }[]
 ) => ({ related })
 
 test('a broadcast the service it split from is also carrying is shared', () => {
@@ -176,10 +181,14 @@ test('one share among several is a share', () => {
 const carrying = (
   service: { networkId: number; serviceId: number },
   name: string,
-  ...related: { kind: string; networkId: number; serviceId: number }[]
+  ...related: {
+    kind: GuideRelationKind
+    networkId: number
+    serviceId: number
+  }[]
 ) => ({ ...service, name, related })
 
-test('the first service of a network takes a column and keeps all of it', () => {
+test('the service of a network takes a column and keeps all of it', () => {
   const own = carrying(WHOLE, 'the evening news')
   const settled = splitServicesSettled([WHOLE], [own])
 
@@ -250,12 +259,40 @@ test('a service with nothing listed at all takes no column either', () => {
 })
 
 /**
- * A third column is settled against the service the network handed over first,
- * not against the second: what the second is showing is its own business, and
- * two splits showing the same thing are two things neither of them shares with
- * the whole service.
+ * The order the columns arrive in is how they are drawn and nothing more. They
+ * are sorted for reading, by a remote control key a service does not always
+ * send, and a key that has not arrived yet can put a split ahead of the
+ * service it split from.
+ *
+ * Read as the whole service, that split would take the real one for a split of
+ * its own — and since the whole service names it under a share on every hour
+ * it hands over, every one of those hours would be dropped and the column that
+ * carries the network's whole schedule would leave the guide. So the service
+ * is the lowest numbered either way, and the order only says where to draw it.
  */
-test('a third service is settled against the first, not the second', () => {
+test('the whole service is the lowest numbered, in whatever order it arrives', () => {
+  const all = carrying(WHOLE, 'the evening news', { kind: 'shared', ...SPLIT })
+  const shared = carrying(SPLIT, 'the evening news', {
+    kind: 'shared',
+    ...WHOLE,
+  })
+  const own = carrying(SPLIT, 'the second half')
+  const settled = splitServicesSettled([SPLIT, WHOLE], [all, shared, own])
+
+  assert.deepEqual(settled.services, [
+    { service: SPLIT, sub: true },
+    { service: WHOLE, sub: false },
+  ])
+  assert.deepEqual(settled.broadcasts, [own, all])
+})
+
+/**
+ * A third column is settled against the service the rest of the network split
+ * from, not against the second: what the second is showing is its own
+ * business, and two splits showing the same thing are two things neither of
+ * them shares with the whole service.
+ */
+test('a third service is settled against the whole, not the second', () => {
   const one = carrying(SPLIT, 'the second half')
   const two = carrying(SPLIT_AGAIN, 'the second half')
   const settled = splitServicesSettled(

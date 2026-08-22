@@ -79,9 +79,20 @@ export interface GuideService {
   serviceId: number
 }
 
+/**
+ * What one broadcast says about another it names.
+ *
+ * The three words are the broadcaster's own, and the whole of the reading
+ * below turns on telling a share from the other two, so they are spelled out
+ * as the three they are rather than as a string. The same three are written
+ * one casing up where they are stored, and a column settled against `Shared`
+ * would settle against nothing at all and say so in no way a compiler could.
+ */
+export type GuideRelationKind = 'shared' | 'relayed' | 'moved'
+
 /** Another broadcast a broadcast says something about. */
 export interface GuideRelation extends GuideService {
-  kind: string
+  kind: GuideRelationKind
 }
 
 /**
@@ -115,7 +126,7 @@ export function sharesWith(
 /**
  * Which services the grid draws a column for, and which broadcasts go in them.
  *
- * The first service a network hands over is the service. Any after it is a
+ * The lowest numbered service of a network is the service. Any above it is a
  * column that service splits into for the hours it has a second thing to show,
  * and such a column carries only what is its own: an hour it is sharing the
  * whole service's broadcast is not a second programme, and drawn as one it
@@ -133,7 +144,7 @@ export function splitServicesSettled<
   services: readonly S[],
   broadcasts: readonly B[],
 ): { services: { service: S; sub: boolean }[]; broadcasts: B[] } {
-  const wholes = new Map<number, S>()
+  const wholes = wholeServicesOf(services)
   const drawn: { service: S; sub: boolean }[] = []
   const carried: B[] = []
 
@@ -145,8 +156,7 @@ export function splitServicesSettled<
     )
     const whole = wholes.get(service.networkId)
 
-    if (!whole) {
-      wholes.set(service.networkId, service)
+    if (!whole || whole.serviceId === service.serviceId) {
       drawn.push({ service, sub: false })
       carried.push(...on)
 
@@ -164,6 +174,37 @@ export function splitServicesSettled<
   }
 
   return { services: drawn, broadcasts: carried }
+}
+
+/**
+ * The service each network split from, which is the lowest numbered it hands
+ * over.
+ *
+ * It is read off the network rather than off the order the columns arrived in.
+ * That order is a presentation — the line-up is sorted by remote control key,
+ * which a service does not always send — and a key that has not arrived yet
+ * puts a column at the number it would sort under instead, which can be ahead
+ * of the service it split from. Settled against whichever column came first,
+ * the whole service would be the one read as a split, and since every one of
+ * its broadcasts names the split under a share, every one of them would be
+ * dropped and its column would leave the guide. A service number is allocated
+ * before the ones that split off it and is sent either way, so it answers the
+ * question the sort order was never being asked.
+ */
+function wholeServicesOf<S extends GuideService>(
+  services: readonly S[],
+): Map<number, S> {
+  const wholes = new Map<number, S>()
+
+  for (const service of services) {
+    const whole = wholes.get(service.networkId)
+
+    if (!whole || service.serviceId < whole.serviceId) {
+      wholes.set(service.networkId, service)
+    }
+  }
+
+  return wholes
 }
 
 /** A run of the guide window, in minutes from the top of it. */
