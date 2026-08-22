@@ -525,6 +525,82 @@ export const 副チャンネルは別番組の時間帯だけ: Story = {
 }
 
 /**
+ * A split service back on the whole service's programme for half an hour
+ * between two of its own, which is an ordinary way for one to run.
+ *
+ * The band is 48px and its name, set down the page, is longer than that. Given
+ * the name anyway it would lose a slice off each end at once — the label is
+ * centred and the band clips — and half a 編 above a half a し reads as a
+ * fault in the drawing. So a run too short to be named is left to the dashed
+ * rules at its ends, the way a cell too short for its description is left to
+ * its title.
+ */
+const A_SHORT_RETURN = [
+  {
+    id: 'q001',
+    channelId: 'ch-152',
+    title: '夕方の実況',
+    genre: 'sports' as const,
+    genreLabel: 'スポーツ',
+    startMin: 0,
+    durationMin: 60,
+    startLabel: '19:00',
+    endLabel: '20:00',
+  },
+  {
+    id: 'q002',
+    channelId: 'ch-152',
+    title: '第二試合',
+    genre: 'sports' as const,
+    genreLabel: 'スポーツ',
+    startMin: 90,
+    durationMin: 60,
+    startLabel: '20:30',
+    endLabel: '21:30',
+  },
+  {
+    id: 'q003',
+    channelId: 'ch-152',
+    title: '深夜の再放送',
+    genre: 'doc' as const,
+    genreLabel: 'ドキュメンタリー/教養',
+    startMin: 240,
+    durationMin: 240,
+    startLabel: '23:00',
+    endLabel: '03:00',
+  },
+]
+
+export const 編成なしの短い帯は名前を落とす: Story = {
+  args: {
+    guide: {
+      ...base,
+      channels: SERVICES_ONE_OF_THEM_SPLIT,
+      programs: A_SHORT_RETURN,
+    },
+  },
+  decorators: [aScreenWide],
+  play: async ({ canvasElement }) => {
+    const split = SERVICES_ONE_OF_THEM_SPLIT.findIndex((channel) => channel.sub)
+    const columns = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+    )
+    const bands = Array.from(
+      columns[split].querySelectorAll<HTMLElement>('[data-guide-unscheduled]'),
+    )
+
+    await expect(bands).toHaveLength(2)
+
+    const [brief, long] = bands
+
+    await expect(brief.offsetHeight).toBeCloseTo(HOUR_PX / 2, 0)
+    await expect(brief.querySelector('span')).toBeNull()
+    await expect(long.offsetHeight).toBeCloseTo(HOUR_PX * 1.5, 0)
+    await expect(long).toHaveTextContent('編成なし')
+  },
+}
+
+/**
  * The line-up an aerial really hands over, on the same screen. There is no
  * width in which 27 columns are all readable at once, so they stop sharing:
  * each is drawn at the floor and the grid runs off the side, where the reader

@@ -30,6 +30,20 @@ const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
  */
 const COLUMN_FLEX = '1 1 0'
 
+/**
+ * The shortest band that can say what it is: four full-width glyphs set down
+ * the page at the micro step, each carrying its letter-spacing after it.
+ *
+ * A run shorter than its own name drops the name and is left to the dashed
+ * rules at its ends, the way a cell too short for its description drops that.
+ * The label is centred in a band that clips, so what it would otherwise lose
+ * is a slice off both ends at once — half a 編 above and half a し below,
+ * which reads as a fault in the drawing rather than as a run too short to
+ * name. Half an hour between two of a split service's own programmes is an
+ * ordinary gap, and it is under this.
+ */
+const UNSCHEDULED_LABEL_PX = 52
+
 export function GuideGrid({
   channels,
   programs,
@@ -157,21 +171,27 @@ export function GuideGrid({
                 )}
               >
                 {c.sub &&
-                  unscheduledSpansOf(carried, windowHours * 60).map((span) => (
-                    <div
-                      key={span.startMin}
-                      data-guide-unscheduled
-                      style={{
-                        top: `${(span.startMin / 60) * HOUR_PX}px`,
-                        height: `${(span.durationMin / 60) * HOUR_PX}px`,
-                      }}
-                      className="absolute right-0 left-0 flex items-center justify-center overflow-hidden border-y border-dashed border-line"
-                    >
-                      <span className="text-micro tracking-[0.2em] text-ink-3 [writing-mode:vertical-rl]">
-                        編成なし
-                      </span>
-                    </div>
-                  ))}
+                  unscheduledSpansOf(carried, windowHours * 60).map((span) => {
+                    const height = (span.durationMin / 60) * HOUR_PX
+
+                    return (
+                      <div
+                        key={span.startMin}
+                        data-guide-unscheduled
+                        style={{
+                          top: `${(span.startMin / 60) * HOUR_PX}px`,
+                          height: `${height}px`,
+                        }}
+                        className="absolute right-0 left-0 flex items-center justify-center overflow-hidden border-y border-dashed border-line"
+                      >
+                        {height >= UNSCHEDULED_LABEL_PX && (
+                          <span className="text-micro tracking-[0.2em] text-ink-3 [writing-mode:vertical-rl]">
+                            編成なし
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
 
                 {carried.map((p) => (
                   <ProgramCell
