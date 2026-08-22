@@ -9,6 +9,7 @@ import {
   CHANNEL_FIXTURES,
 } from '@/repository/channels.fixtures'
 import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
+import type { Program } from '@/repository/programs'
 import {
   AERIAL_PROGRAM_FIXTURES,
   GUIDE_DAYS,
@@ -404,6 +405,16 @@ export const 副チャンネルも同じ列: Story = {
   },
 }
 
+/** A whole day of the line-up an aerial really hands over: 27 services. */
+const aerial = {
+  ...day,
+  channels: AERIAL_CHANNEL_FIXTURES,
+  programs: AERIAL_PROGRAM_FIXTURES.map((program) => ({
+    ...program,
+    startMin: program.startMin + EVENING_MIN,
+  })),
+}
+
 /**
  * The line-up an aerial really hands over, on the same screen. There is no
  * width in which 27 columns are all readable at once, so they stop sharing:
@@ -412,23 +423,12 @@ export const 副チャンネルも同じ列: Story = {
  * have split included, so the total is the count times the floor and nothing
  * else — which is what the line-up is held against here.
  *
- * Sideways is inside the grid. The page does not move — the top bar, the day
- * and the buttons stay where they were — and neither do the two things that
- * say where you are looking: the hour gutter stays against the left edge, and
- * the channel a column belongs to stays at the top of it however far along it
- * is. The vertical position the guide opens at is unaffected by any of it.
+ * That the sideways is inside the grid, and that nothing else moves with it,
+ * is asked of every width it has to hold at — here and at the two an iPad is
+ * read at — so it is asked in one place.
  */
 export const 列が多ければ横に流れる: Story = {
-  args: {
-    guide: {
-      ...day,
-      channels: AERIAL_CHANNEL_FIXTURES,
-      programs: AERIAL_PROGRAM_FIXTURES.map((program) => ({
-        ...program,
-        startMin: program.startMin + EVENING_MIN,
-      })),
-    },
-  },
+  args: { guide: aerial },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
@@ -439,7 +439,6 @@ export const 列が多ければ横に流れる: Story = {
       canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
     )
 
-    await expect(columns).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
     await expect(headings).toHaveLength(AERIAL_CHANNEL_FIXTURES.length)
 
     await expect(
@@ -454,43 +453,12 @@ export const 列が多ければ横に流れる: Story = {
       )
     }
 
-    await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth)
     await expect(scroller.scrollWidth).toBeCloseTo(
       gridMinWidthOf(AERIAL_CHANNEL_FIXTURES.length),
       0,
     )
 
-    const page = partOf(canvasElement, 'main')
-    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
-
-    const opened = scroller.scrollTop
-    await expect(opened).toBeGreaterThan(0)
-
-    scroller.scrollLeft = scroller.scrollWidth
-
-    const grid = scroller.getBoundingClientRect()
-    const end = columns.length - 1
-
-    await expect(scroller.scrollLeft).toBeGreaterThan(0)
-    await expect(scroller.scrollTop).toBe(opened)
-
-    for (const gutter of canvasElement.querySelectorAll<HTMLElement>(
-      '[data-guide-gutter]',
-    )) {
-      await expect(gutter.getBoundingClientRect().left).toBeCloseTo(
-        grid.left,
-        0,
-      )
-    }
-
-    await expect(headings[end].getBoundingClientRect().left).toBeCloseTo(
-      columns[end].getBoundingClientRect().left,
-      0,
-    )
-    await expect(headings[end].getBoundingClientRect().top).toBeCloseTo(
-      grid.top,
-      0,
-    )
+    await sidewaysInsideTheGrid(canvasElement)
   },
 }
 
@@ -560,7 +528,10 @@ export const 番組情報が不足: Story = {
  * what it focuses into view, and a scroll the browser did would be read here
  * as a scroll the guide did.
  */
-function onScreenIn(canvasElement: HTMLElement, scroller: HTMLElement) {
+function onScreenIn(
+  canvasElement: HTMLElement,
+  scroller: HTMLElement,
+): { cell: HTMLElement; program: Program } {
   const view = scroller.getBoundingClientRect()
   const cells = Array.from(
     canvasElement.querySelectorAll<HTMLElement>('[data-opens="program-panel"]'),
@@ -669,30 +640,16 @@ export const 日を送る: Story = {
 }
 
 /**
- * The two widths an iPad is read at, portrait and landscape. Neither holds a
- * line-up of 27 services, which is the point: what has to give is the grid,
- * sideways and under the reader's own finger, and not the page around it.
+ * The two sizes an iPad is read at, portrait and landscape. The browser itself
+ * is put at them rather than a box inside it: what the screen does at a width
+ * is decided by media queries against the viewport, so a 768px box in a
+ * desktop-wide window lays out as the desktop and would answer for the iPad
+ * without ever having been one. `.storybook/test-runner.ts` moves the viewport
+ * for a story that asks.
  */
-const anIpadWide: Decorator = (Story) => (
-  <div className="flex h-[720px] w-[768px] flex-col overflow-hidden">
-    <Story />
-  </div>
-)
+const AN_IPAD = { width: 768, height: 1024 }
 
-const anIpadTurned: Decorator = (Story) => (
-  <div className="flex h-[720px] w-[1024px] flex-col overflow-hidden">
-    <Story />
-  </div>
-)
-
-const aerial = {
-  ...day,
-  channels: AERIAL_CHANNEL_FIXTURES,
-  programs: AERIAL_PROGRAM_FIXTURES.map((program) => ({
-    ...program,
-    startMin: program.startMin + EVENING_MIN,
-  })),
-}
+const AN_IPAD_TURNED = { width: 1024, height: 768 }
 
 /**
  * What a width too narrow for the line-up does to the screen. The grid runs
@@ -702,7 +659,9 @@ const aerial = {
  * the left edge and the channel at the top of its column — and how far down
  * the day the reader is is not touched by how far along it they are.
  */
-async function sidewaysInsideTheGrid(canvasElement: HTMLElement) {
+async function sidewaysInsideTheGrid(
+  canvasElement: HTMLElement,
+): Promise<void> {
   const scroller = partOf(canvasElement, '[data-guide-scroll]')
   const page = partOf(canvasElement, 'main')
   const columns = Array.from(
@@ -747,7 +706,7 @@ async function sidewaysInsideTheGrid(canvasElement: HTMLElement) {
 
 export const iPadの幅: Story = {
   args: { guide: aerial },
-  decorators: [anIpadWide],
+  parameters: { screen: AN_IPAD },
   play: async ({ canvasElement }) => {
     await sidewaysInsideTheGrid(canvasElement)
   },
@@ -755,7 +714,7 @@ export const iPadの幅: Story = {
 
 export const iPadを横にした幅: Story = {
   args: { guide: aerial },
-  decorators: [anIpadTurned],
+  parameters: { screen: AN_IPAD_TURNED },
   play: async ({ canvasElement }) => {
     await sidewaysInsideTheGrid(canvasElement)
   },
