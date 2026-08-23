@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, userEvent, within } from 'storybook/test'
 
 import type { Recording } from '@/repository/recordings'
 import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
@@ -24,6 +25,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
@@ -183,4 +200,100 @@ export const BottomSheet: Story = {
       </Surface>
     </div>
   ),
+}
+
+/**
+ * Radix marks everything outside an open list or menu `aria-hidden` while the
+ * trigger under it stays focusable. That is the right thing for it to do and is
+ * exactly what `aria-hidden-focus` is for, but it is a fact about a page being
+ * held open on purpose, not about the rows. So the a11y context is narrowed to
+ * the layer these two stories are about, and the rest of the page — checked by
+ * every other story, closed — is left out of it.
+ */
+const ONLY_THE_OPEN_LAYER = (slot: string) => ({
+  a11y: { context: { include: `[data-slot="${slot}"]` } },
+})
+
+/**
+ * A list left open, because the run measures the page as the story leaves it.
+ *
+ * The rows of an open list went unmeasured for as long as they did partly
+ * because they were waived and partly because no story ever ended with a list
+ * on the screen: the one story that opened a menu closed it again before the
+ * probe looked. Lifting the waiver alone would have changed nothing. This is
+ * the story that puts the rows in front of the probe.
+ */
+export const OpenList: Story = {
+  parameters: ONLY_THE_OPEN_LAYER('select-content'),
+  render: () => (
+    <div className="mx-auto max-w-[620px] p-6">
+      <SectionHeading mark={MarkSplit}>開いた選択肢</SectionHeading>
+      <Surface>
+        <Select defaultValue="ts">
+          <SelectTrigger aria-label="録画の画質" className="w-[240px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ts">そのまま(TS)</SelectItem>
+            <SelectItem value="h265">高画質(H.265)</SelectItem>
+            <SelectItem value="h264">標準(H.264)</SelectItem>
+            <SelectItem value="audio">音声のみ</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="mt-[11px] text-cap text-ink-3">
+          選択肢は隣と隙間なく並ぶので、当たり判定ではなく行の高さそのものが
+          44px。密度は落ちるが、隣の行が押されるよりはよい。
+        </p>
+      </Surface>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole('combobox', { name: '録画の画質' }))
+
+    const rows = await within(document.body).findAllByRole('option')
+    await expect(rows).toHaveLength(4)
+
+    // Left open on purpose: postVisit measures what is on the page.
+  },
+}
+
+/** A menu left open, for the same reason and measured the same way. */
+export const OpenMenu: Story = {
+  parameters: ONLY_THE_OPEN_LAYER('dropdown-menu-content'),
+  render: () => (
+    <div className="mx-auto max-w-[620px] p-6">
+      <SectionHeading mark={MarkPanel}>開いたメニュー</SectionHeading>
+      <Surface>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">表示する列</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>表示する列</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem checked>放送局</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem checked>
+              録画日時
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem>容量</DropdownMenuCheckboxItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>並びを既定に戻す</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <p className="mt-[11px] text-cap text-ink-3">
+          メニューの行も同じ 44px。見出しと最初の行の間は、行どうしより
+          狭くしない。
+        </p>
+      </Surface>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole('button', { name: '表示する列' }))
+
+    const menu = await within(document.body).findByRole('menu')
+    await expect(menu).toBeVisible()
+
+    // Left open on purpose: postVisit measures what is on the page.
+  },
 }
