@@ -45,6 +45,38 @@ interface Findings {
 const BAIT = 'a control the probe has to catch'
 
 /**
+ * Every kind of control the probe is answerable for, as the bait of the proof
+ * draws it. One entry per clause of SELECTOR, so a clause dropped from there
+ * stops being caught here.
+ *
+ * The two kinds a screen cannot press its way to — a menu row and a list row —
+ * are on this list for the same reason as the rest: they sit against one
+ * another, they used to be waived, and a waiver that comes back has to break
+ * something.
+ */
+const KINDS: { kind: string; tag: string; attrs?: Record<string, string> }[] = [
+  { kind: 'button', tag: 'button' },
+  { kind: 'link', tag: 'a', attrs: { href: '#' } },
+  { kind: 'pressable', tag: 'div', attrs: { role: 'button' } },
+  { kind: 'tab', tag: 'div', attrs: { role: 'tab' } },
+  { kind: 'switch', tag: 'div', attrs: { role: 'switch' } },
+  { kind: 'checkbox', tag: 'div', attrs: { role: 'checkbox' } },
+  { kind: 'radio', tag: 'div', attrs: { role: 'radio' } },
+  { kind: 'menu row', tag: 'div', attrs: { role: 'menuitem' } },
+  {
+    kind: 'menu row that ticks',
+    tag: 'div',
+    attrs: { role: 'menuitemcheckbox' },
+  },
+  { kind: 'menu row that marks', tag: 'div', attrs: { role: 'menuitemradio' } },
+  { kind: 'list row', tag: 'div', attrs: { role: 'option' } },
+  { kind: 'field', tag: 'input' },
+  { kind: 'long field', tag: 'textarea' },
+  { kind: 'native list', tag: 'select' },
+  { kind: 'disclosure', tag: 'summary' },
+]
+
+/**
  * Runs in the page and answers which controls a finger cannot land on.
  *
  * It does not read the stylesheet. It asks the browser what would answer a
@@ -64,8 +96,16 @@ const BAIT = 'a control the probe has to catch'
  */
 function measureTapTargets(): Findings {
   const TAP = 44
+  // The rows of an open menu or list are in here, and are not waived: they sit
+  // against one another, so they are grown to 44px rather than given an area
+  // that would reach into the row above and the row below. A field is in here
+  // too, and is reached through the label that wraps it — a replaced element
+  // draws no area of its own, which is a reason to wrap it, not to skip it.
   const SELECTOR =
-    'button, a[href], [role="button"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], select, summary'
+    'button, a[href], [role="button"], [role="tab"], [role="switch"], ' +
+    '[role="checkbox"], [role="radio"], [role="menuitem"], ' +
+    '[role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], ' +
+    'input:not([type="hidden"]), textarea, select, summary'
 
   /**
    * The control a press at a point would work. A label counts as its own
@@ -230,36 +270,62 @@ function measureTapTargets(): Findings {
 
 /**
  * Proves the probe still catches a control that is too small, before a run is
- * allowed to pass on it.
+ * allowed to pass on it — and catches one of every kind it is answerable for.
  *
  * A probe that finds nothing to look at — a selector edited into one that
  * matches no control, a page that never rendered — answers exactly what a page
  * whose every control is big enough answers: no misses. Nothing later in the
- * run can tell those two apart, so a control that is deliberately 12px is put
- * on the page first and the probe is made to name it.
+ * run can tell those two apart, so a control of each kind is put on the page
+ * deliberately 12px square and the probe is made to name every one of them.
+ *
+ * One bait per kind rather than one bait in total, because the way this gate
+ * was got round before was not turning it off: it was leaving a kind of control
+ * outside the selector, where a green run says nothing about it. Losing a kind
+ * now costs a red run at the first story.
+ *
+ * The baits are laid in a row 40px apart so none of them stands over another,
+ * which would make the probe skip it as covered rather than name it as small.
  */
 async function proveTheProbeCanFail(page: Page) {
-  await page.evaluate((bait) => {
-    const small = document.createElement('button')
-    small.type = 'button'
-    small.setAttribute('aria-label', bait)
-    small.style.cssText =
-      'position:fixed;left:50%;top:50%;width:12px;height:12px;padding:0;border:0'
-    document.body.append(small)
-  }, BAIT)
+  const named = (kind: string) => `${BAIT}: ${kind}`
+
+  await page.evaluate(
+    ({ bait, kinds }) => {
+      const row = document.createElement('div')
+      row.id = 'tap-probe-bait'
+      row.style.cssText =
+        'position:fixed;left:20px;top:50%;display:flex;gap:28px;z-index:2147483647'
+
+      for (const { kind, tag, attrs } of kinds) {
+        const small = document.createElement(tag)
+        small.setAttribute('aria-label', `${bait}: ${kind}`)
+        for (const [name, value] of Object.entries(attrs ?? {})) {
+          small.setAttribute(name, value)
+        }
+        small.style.cssText =
+          'width:12px;height:12px;min-width:0;min-height:0;padding:0;margin:0;border:0;appearance:none;flex:none'
+        row.append(small)
+      }
+
+      document.body.append(row)
+    },
+    { bait: BAIT, kinds: KINDS },
+  )
 
   const { missed } = await page.evaluate(measureTapTargets)
 
-  await page.evaluate(
-    (bait) => document.querySelector(`[aria-label="${bait}"]`)?.remove(),
-    BAIT,
-  )
+  await page.evaluate(() => document.getElementById('tap-probe-bait')?.remove())
 
-  if (!missed.some((m) => m.name === BAIT)) {
+  const uncaught = KINDS.filter(
+    ({ kind }) => !missed.some((m) => m.name === named(kind)),
+  ).map(({ kind }) => kind)
+
+  if (uncaught.length > 0) {
     throw new Error(
-      'The 44px probe passed a control drawn 12px square, so it can no longer ' +
-        'fail and nothing it says about a story means anything. Fix the probe ' +
-        'in .storybook/test-runner.ts before trusting a green run.',
+      `The 44px probe passed ${uncaught.length} control(s) drawn 12px square — ` +
+        `${uncaught.join(', ')} — so it can no longer fail on them and nothing ` +
+        'it says about a story covers them. Fix SELECTOR in ' +
+        '.storybook/test-runner.ts before trusting a green run.',
     )
   }
 }
@@ -330,7 +396,11 @@ const config: TestRunnerConfig = {
       throw new Error(
         `${context.id}: ${lines.length} control(s) are smaller to the finger than 44px.\n` +
           `${lines.join('\n')}\n` +
-          'Lay `tap-target` on the control, or space it further from its neighbour if the two areas collide.',
+          'Lay `tap-target` on a control with room around it, and space it ' +
+          'further from its neighbour if the two areas collide. A row that ' +
+          'sits against its neighbours grows to 44px tall instead, an area ' +
+          'there taking only the presses meant for them; a field is wrapped ' +
+          'in a `<label class="tap-area">`, which a press moves focus through.',
       )
     }
   },
