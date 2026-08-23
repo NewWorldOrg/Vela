@@ -413,7 +413,8 @@ export function SearchView({ result }: { result: SearchResult }) {
               aria-label="期間の開始日"
               value={condition.from ?? ''}
               onChange={(e) => patch({ from: e.target.value || null })}
-              className="h-[33px] w-[150px] rounded-full"
+              areaClassName="w-[150px]"
+              className="h-[33px] rounded-full"
             />
             <span className="text-sub text-ink-3">〜</span>
             <Input
@@ -421,7 +422,8 @@ export function SearchView({ result }: { result: SearchResult }) {
               aria-label="期間の終了日"
               value={condition.to ?? ''}
               onChange={(e) => patch({ to: e.target.value || null })}
-              className="h-[33px] w-[150px] rounded-full"
+              areaClassName="w-[150px]"
+              className="h-[33px] rounded-full"
             />
           </div>
         </div>

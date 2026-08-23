@@ -379,3 +379,25 @@
     z-index: 1;
   }
 }
+
+/*
+ * The same 44px for a replaced element — `<input>`, `<select>`, `<textarea>` —
+ * which draws no pseudo-element of its own. The wrapping `<label>` carries the
+ * area instead, and a press on it moves focus into the field.
+ *
+ * `tap-target` would be wrong here even if it worked: an area laid over a text
+ * field answers the press instead of the field, and a field you cannot click
+ * into at the character, or drag a selection across, is worse than a small one.
+ * So the area is the label's own box, grown by padding rather than by anything
+ * drawn on top, leaving the field itself the topmost thing over its own pixels.
+ *
+ * 6px a side takes the shortest field Vela draws (33px) past 44px. An equal
+ * negative margin hands that padding back to the layout, so the area grows and
+ * nothing around it moves. `relative` keeps it above the in-flow boxes it now
+ * reaches over — a hint or an error line, neither of which answers a press.
+ */
+@utility tap-area {
+  position: relative;
+  padding-block: 6px;
+  margin-block: -6px;
+}
