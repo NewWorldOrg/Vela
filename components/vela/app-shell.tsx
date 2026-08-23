@@ -146,8 +146,15 @@ export function AdminSideNav({
       )}
       {...props}
     >
+      {/*
+        The gap under the caption matches the 11px between the rows below it.
+        Widening the rows' gaps to keep their areas apart left the caption at
+        7px, nearer to the first row than the rows are to each other, and a
+        heading that sits closer to what follows than that follows itself reads
+        as one of the rows rather than as the head of them.
+      */}
       {caption && (
-        <div className="mb-[7px] px-2.5 font-code text-[9.5px] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
+        <div className="mb-[11px] px-2.5 font-code text-[9.5px] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
           {caption}
         </div>
       )}
