@@ -33,12 +33,21 @@ interface MissedTarget {
   box: string
 }
 
+/** A press area that reaches past the thing it is the area for. */
+interface OversizeArea {
+  name: string
+  area: number
+  drawn: number
+}
+
 /** What the probe found. */
 interface Findings {
   /** Controls a press cannot reach 44px of. */
   missed: MissedTarget[]
   /** Controls whose middle a neighbour's own area has taken. */
   taken: string[]
+  /** Fields whose wrapping label answers presses beside them, not on them. */
+  overreached: OversizeArea[]
 }
 
 /** Names the bait of the proof apart from anything a story draws. */
@@ -55,6 +64,7 @@ const BAIT = 'a control the probe has to catch'
  * something.
  */
 const KINDS: { kind: string; tag: string; attrs?: Record<string, string> }[] = [
+  { kind: 'row of a list', tag: 'div', attrs: { 'data-pressable-row': '' } },
   { kind: 'button', tag: 'button' },
   { kind: 'link', tag: 'a', attrs: { href: '#' } },
   { kind: 'pressable', tag: 'div', attrs: { role: 'button' } },
@@ -101,10 +111,16 @@ function measureTapTargets(): Findings {
   // that would reach into the row above and the row below. A field is in here
   // too, and is reached through the label that wraps it — a replaced element
   // draws no area of its own, which is a reason to wrap it, not to skip it.
+  //
+  // A row of a table is pressed as a whole and still has to be a row to a
+  // screen reader, so it says so with `data-pressable-row` rather than with a
+  // role. The role would put it in here for free and take the table apart to
+  // do it; SPEC asks for the row's height, not for it to stop being a row.
   const SELECTOR =
     'button, a[href], [role="button"], [role="tab"], [role="switch"], ' +
     '[role="checkbox"], [role="radio"], [role="menuitem"], ' +
     '[role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], ' +
+    '[data-pressable-row], ' +
     'input:not([type="hidden"]), textarea, select, summary'
 
   /**
@@ -260,12 +276,42 @@ function measureTapTargets(): Findings {
     }
   }
 
+  /**
+   * The other way a wrapping label goes wrong. It is the box the layout sees,
+   * so a width left on the field instead of on the label leaves the label at
+   * the width of whatever holds it, answering presses on the empty space
+   * beside a field the finger never went near. Too small is the failure this
+   * probe was built for; this is the failure it invites, and it is invisible —
+   * nothing is drawn where the presses are being taken.
+   *
+   * Height is not asked about: 6px a side is what the area is made of.
+   */
+  const overreached: OversizeArea[] = []
+  for (const area of document.querySelectorAll('[data-slot="input-area"]')) {
+    const field = area.querySelector('input, textarea, select')
+    if (!field) {
+      continue
+    }
+
+    const a = area.getBoundingClientRect()
+    const f = field.getBoundingClientRect()
+    if (!drawn(a) || !drawn(f) || a.width - f.width <= 1) {
+      continue
+    }
+
+    overreached.push({
+      name: named(field),
+      area: Math.round(a.width),
+      drawn: Math.round(f.width),
+    })
+  }
+
   for (const [node, [left, top]] of standing) {
     node.scrollLeft = left
     node.scrollTop = top
   }
 
-  return { missed, taken }
+  return { missed, taken, overreached }
 }
 
 /**
@@ -308,13 +354,33 @@ async function proveTheProbeCanFail(page: Page) {
       }
 
       document.body.append(row)
+
+      // The other bait, for the other way a wrapping label goes wrong: an area
+      // reaching well past the field it wraps. Drawn large rather than small,
+      // so it cannot be caught by the size check and only the reach check can
+      // name it.
+      const wide = document.createElement('label')
+      wide.id = 'tap-probe-wide-bait'
+      wide.dataset.slot = 'input-area'
+      wide.style.cssText =
+        'position:fixed;left:20px;top:20px;display:block;width:300px;z-index:2147483647'
+
+      const inside = document.createElement('input')
+      inside.setAttribute('aria-label', `${bait}: an area beside a field`)
+      inside.style.cssText = 'width:60px;height:48px;margin:0;padding:0'
+      wide.append(inside)
+
+      document.body.append(wide)
     },
     { bait: BAIT, kinds: KINDS },
   )
 
-  const { missed } = await page.evaluate(measureTapTargets)
+  const { missed, overreached } = await page.evaluate(measureTapTargets)
 
-  await page.evaluate(() => document.getElementById('tap-probe-bait')?.remove())
+  await page.evaluate(() => {
+    document.getElementById('tap-probe-bait')?.remove()
+    document.getElementById('tap-probe-wide-bait')?.remove()
+  })
 
   const uncaught = KINDS.filter(
     ({ kind }) => !missed.some((m) => m.name === named(kind)),
@@ -325,6 +391,15 @@ async function proveTheProbeCanFail(page: Page) {
       `The 44px probe passed ${uncaught.length} control(s) drawn 12px square — ` +
         `${uncaught.join(', ')} — so it can no longer fail on them and nothing ` +
         'it says about a story covers them. Fix SELECTOR in ' +
+        '.storybook/test-runner.ts before trusting a green run.',
+    )
+  }
+
+  if (!overreached.some((o) => o.name === named('an area beside a field'))) {
+    throw new Error(
+      'The 44px probe passed a press area 300px wide over a field drawn 60px, ' +
+        'so it can no longer say when the label around a field answers ' +
+        'presses on the empty space beside it. Fix the reach check in ' +
         '.storybook/test-runner.ts before trusting a green run.',
     )
   }
@@ -379,9 +454,10 @@ const config: TestRunnerConfig = {
   },
 
   async postVisit(page: Page, context) {
-    const { missed, taken } = await page.evaluate(measureTapTargets)
+    const { missed, taken, overreached } =
+      await page.evaluate(measureTapTargets)
 
-    if (missed.length + taken.length > 0) {
+    if (missed.length + taken.length + overreached.length > 0) {
       const lines = [
         ...missed.map(
           (m) =>
@@ -391,16 +467,22 @@ const config: TestRunnerConfig = {
           (name) =>
             `  ${name} — a neighbour's area answers a press on its middle`,
         ),
+        ...overreached.map(
+          (o) =>
+            `  ${o.name} — the press area is ${o.area} wide over a field drawn ${o.drawn}`,
+        ),
       ]
 
       throw new Error(
-        `${context.id}: ${lines.length} control(s) are smaller to the finger than 44px.\n` +
+        `${context.id}: ${lines.length} control(s) do not answer a press where they should.\n` +
           `${lines.join('\n')}\n` +
           'Lay `tap-target` on a control with room around it, and space it ' +
           'further from its neighbour if the two areas collide. A row that ' +
           'sits against its neighbours grows to 44px tall instead, an area ' +
           'there taking only the presses meant for them; a field is wrapped ' +
-          'in a `<label class="tap-area">`, which a press moves focus through.',
+          'in a `<label class="tap-area">`, which a press moves focus through, ' +
+          'and the width goes on that label — `areaClassName` — so the area ' +
+          'is the field and not the space beside it.',
       )
     }
   },
