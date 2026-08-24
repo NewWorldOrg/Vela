@@ -34,9 +34,9 @@ export const SEARCH_SORT_OPTIONS: { value: SearchSort; label: string }[] = [
 ]
 
 export const SEARCH_FIELD_OPTIONS: { value: SearchField; label: string }[] = [
-  { value: 'title,description', label: '番組名・概要' },
-  { value: 'title', label: '番組名' },
-  { value: 'description', label: '概要' },
+  { value: 'title,description', label: '番組名と概要' },
+  { value: 'title', label: '番組名だけ' },
+  { value: 'description', label: '概要だけ' },
 ]
 
 /** 大分類。値は URL に載る綴り、kind は放送規格の番号。 */
@@ -182,6 +182,37 @@ function channels(asked: string | undefined): string[] {
   return kept.slice(0, SEARCH_MOST_CHANNELS)
 }
 
+/**
+ * The shape `searchParams` arrives in, named as the keys this module reads.
+ *
+ * A key that was asked for more than once arrives as a list, and only `genre`
+ * is allowed to repeat; everything else takes the single value or nothing, so a
+ * repeated `q` is not quietly read as its first spelling.
+ */
+export function rawSearchConditionOf(
+  asked: Record<string, string | string[] | undefined>,
+): RawSearchCondition {
+  const one = (key: string): string | undefined => {
+    const value = asked[key]
+
+    return typeof value === 'string' ? value : undefined
+  }
+
+  return {
+    q: one('q'),
+    exclude: one('exclude'),
+    fields: one('fields'),
+    genre: asked.genre,
+    type: one('type'),
+    channel: one('channel'),
+    from: one('from'),
+    to: one('to'),
+    sort: one('sort'),
+    per_page: one('per_page'),
+    page: one('page'),
+  }
+}
+
 export function readSearchCondition(raw: RawSearchCondition): SearchCondition {
   return {
     q: words(raw.q),
@@ -203,6 +234,82 @@ export function readSearchCondition(raw: RawSearchCondition): SearchCondition {
       SEARCH_DEFAULT_PER_PAGE,
     page: raw.page && PAGE_PATTERN.test(raw.page) ? Number(raw.page) : 1,
   }
+}
+
+/** A condition that asks for nothing, spelled by the reader itself. */
+export const EMPTY_SEARCH_CONDITION: SearchCondition = readSearchCondition({})
+
+/**
+ * The address a condition is written to — the inverse of reading one.
+ *
+ * The screen has no state but this: every control writes the whole condition
+ * back out and the next render reads it in again, so a condition that does not
+ * survive the trip is a condition the screen cannot hold. What a reader would
+ * have supplied anyway is left out, which is why an untouched screen has a bare
+ * address and why the count of conditions can be taken from the condition
+ * rather than from the address.
+ */
+export function searchQueryOf(condition: SearchCondition): string {
+  const params = new URLSearchParams()
+
+  if (condition.q) {
+    params.set('q', condition.q)
+  }
+
+  if (condition.exclude) {
+    params.set('exclude', condition.exclude)
+  }
+
+  if (condition.fields !== SEARCH_DEFAULT_FIELDS) {
+    params.set('fields', condition.fields)
+  }
+
+  for (const genre of condition.genres) {
+    params.append('genre', genre)
+  }
+
+  if (condition.kind) {
+    params.set('type', condition.kind)
+  }
+
+  if (condition.channels.length > 0) {
+    params.set('channel', condition.channels.join(','))
+  }
+
+  if (condition.from) {
+    params.set('from', condition.from)
+  }
+
+  if (condition.to) {
+    params.set('to', condition.to)
+  }
+
+  if (condition.sort !== SEARCH_DEFAULT_SORT) {
+    params.set('sort', condition.sort)
+  }
+
+  if (condition.perPage !== SEARCH_DEFAULT_PER_PAGE) {
+    params.set('per_page', String(condition.perPage))
+  }
+
+  if (condition.page > 1) {
+    params.set('page', String(condition.page))
+  }
+
+  return params.toString()
+}
+
+/** The condition an address holds, read the way a request would deliver it. */
+export function searchConditionOfQuery(query: string): SearchCondition {
+  const params = new URLSearchParams(query)
+  const asked: Record<string, string | string[]> = {}
+
+  for (const key of new Set(params.keys())) {
+    const all = params.getAll(key)
+    asked[key] = all.length > 1 ? all : all[0]
+  }
+
+  return readSearchCondition(rawSearchConditionOf(asked))
 }
 
 /**

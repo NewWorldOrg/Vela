@@ -611,6 +611,25 @@ export function LockIcon(props: IconProps) {
   )
 }
 
+export function FilterIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.4 8.2h9.1M17.9 8.2h1.8M4.4 16h3.2M11.7 16h8" />
+      <circle cx="15.6" cy="8.2" r="2.1" />
+      <circle cx="9.5" cy="16" r="2.1" />
+    </Icon>
+  )
+}
+
+export function LinkIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9.6 14.4a3.6 3.6 0 0 0 5.1 0l2.8-2.8a3.6 3.6 0 0 0-5.1-5.1l-1 1" />
+      <path d="M14.4 9.6a3.6 3.6 0 0 0-5.1 0l-2.8 2.8a3.6 3.6 0 0 0 5.1 5.1l1-1" />
+    </Icon>
+  )
+}
+
 export function CopyIcon(props: IconProps) {
   return (
     <Icon {...props}>

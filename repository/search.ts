@@ -55,7 +55,6 @@ export type SearchOutcome =
 
 export interface SearchResult {
   condition: SearchCondition
-  periodLabel?: string
   /** 種別で絞ったあとの、チャンネル条件に出せるチャンネル */
   channels: GuideChannel[]
   outcome: SearchOutcome
@@ -68,22 +67,6 @@ const SYSTEM_OF_KIND: Record<ChannelKind, SearchQuery['system']> = {
   terrestrial: 'isdbT',
   bs: 'isdbSBs',
   cs110: 'isdbSCs110',
-}
-
-function periodLabelOf(condition: SearchCondition): string | undefined {
-  if (condition.from && condition.to) {
-    return `${dayLabel(condition.from)} 〜 ${dayLabel(condition.to)}`
-  }
-
-  if (condition.from) {
-    return `${dayLabel(condition.from)} 〜`
-  }
-
-  if (condition.to) {
-    return `〜 ${dayLabel(condition.to)}`
-  }
-
-  return undefined
 }
 
 function dayEndOf(date: string): Date {
@@ -117,14 +100,13 @@ export async function searchPrograms(
   raw: RawSearchCondition,
 ): Promise<SearchResult> {
   const condition = readSearchCondition(raw)
-  const periodLabel = periodLabelOf(condition)
   const carried = await fetchServiceChannels()
   const channels = [...carried]
     .filter((channel) => !condition.kind || channel.kind === condition.kind)
     .sort((left, right) => compareChannels(left, right))
 
   if (!narrowsAnything(condition)) {
-    return { condition, periodLabel, channels, outcome: { state: 'idle' } }
+    return { condition, channels, outcome: { state: 'idle' } }
   }
 
   const search = await searchProgrammes({
@@ -146,7 +128,6 @@ export async function searchPrograms(
   if (search.state === 'refused') {
     return {
       condition,
-      periodLabel,
       channels,
       outcome: { state: 'refused', message: GUARD_MESSAGE },
     }
@@ -156,7 +137,6 @@ export async function searchPrograms(
 
   return {
     condition,
-    periodLabel,
     channels,
     outcome: {
       state: 'searched',
