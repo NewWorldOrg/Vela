@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  EMPTY_SEARCH_CONDITION,
   SEARCH_DEFAULT_FIELDS,
   SEARCH_DEFAULT_PER_PAGE,
   SEARCH_DEFAULT_SORT,
@@ -9,7 +10,10 @@ import {
   SEARCH_QUERY_KEYS,
   narrowsAnything,
   readSearchCondition,
+  searchConditionOfQuery,
+  searchQueryOf,
 } from './search-condition.ts'
+import type { SearchCondition } from './search-condition.ts'
 
 test('an empty address asks for nothing but the defaults', () => {
   const condition = readSearchCondition({})
@@ -279,4 +283,134 @@ test('the keys the screen clears cover every key it reads', () => {
       `${key} is read but never cleared`,
     )
   }
+})
+
+/**
+ * Every condition the screen can hold at once. The round trip is only worth
+ * anything if nothing here is left at its default: a key that is written but
+ * never read back, or read back but never written, only shows up when both
+ * sides of it were asked for.
+ */
+const everyCondition: SearchCondition = {
+  q: '夏 絶景',
+  exclude: '再放送',
+  fields: 'title',
+  genres: ['news', 'documentary'],
+  kind: 'terrestrial',
+  channels: ['32736-1024', '32737-1032'],
+  from: '2026-08-21',
+  to: '2026-08-27',
+  sort: 'name.asc',
+  perPage: 50,
+  page: 3,
+}
+
+test('an address written from a condition reads back as that condition', () => {
+  assert.deepEqual(
+    searchConditionOfQuery(searchQueryOf(everyCondition)),
+    everyCondition,
+  )
+})
+
+test('a fully asked condition writes every key the screen owns, and no other', () => {
+  const written = new URLSearchParams(searchQueryOf(everyCondition))
+
+  assert.deepEqual(
+    [...new Set(written.keys())].sort(),
+    [...SEARCH_QUERY_KEYS].sort(),
+  )
+})
+
+test('a condition that asks for nothing writes a bare address', () => {
+  assert.equal(searchQueryOf(EMPTY_SEARCH_CONDITION), '')
+  assert.deepEqual(searchConditionOfQuery(''), EMPTY_SEARCH_CONDITION)
+})
+
+test('what a reader would have supplied anyway is left out', () => {
+  const written = new URLSearchParams(
+    searchQueryOf({
+      ...EMPTY_SEARCH_CONDITION,
+      q: '観測所',
+      fields: SEARCH_DEFAULT_FIELDS,
+      sort: SEARCH_DEFAULT_SORT,
+      perPage: SEARCH_DEFAULT_PER_PAGE,
+      page: 1,
+    }),
+  )
+
+  assert.deepEqual([...written.keys()], ['q'])
+})
+
+test('a second genre joins the first rather than replacing it', () => {
+  const first = searchConditionOfQuery(
+    searchQueryOf({ ...EMPTY_SEARCH_CONDITION, genres: ['news'] }),
+  )
+
+  assert.deepEqual(first.genres, ['news'])
+
+  const second = searchConditionOfQuery(
+    searchQueryOf({ ...first, genres: [...first.genres, 'documentary'] }),
+  )
+
+  assert.deepEqual(second.genres, ['news', 'documentary'])
+
+  const third = searchConditionOfQuery(
+    searchQueryOf({ ...second, genres: [...second.genres, 'movie'] }),
+  )
+
+  assert.deepEqual(third.genres, ['news', 'documentary', 'movie'])
+})
+
+test('picking a genre leaves every other condition where it was', () => {
+  const after = searchConditionOfQuery(
+    searchQueryOf({
+      ...everyCondition,
+      genres: [...everyCondition.genres, 'movie'],
+    }),
+  )
+
+  assert.deepEqual(after, {
+    ...everyCondition,
+    genres: ['news', 'documentary', 'movie'],
+    page: 3,
+  })
+})
+
+test('a second channel joins the first rather than replacing it', () => {
+  const first = searchConditionOfQuery(
+    searchQueryOf({ ...EMPTY_SEARCH_CONDITION, channels: ['32736-1024'] }),
+  )
+
+  assert.deepEqual(first.channels, ['32736-1024'])
+
+  const second = searchConditionOfQuery(
+    searchQueryOf({ ...first, channels: [...first.channels, '32737-1032'] }),
+  )
+
+  assert.deepEqual(second.channels, ['32736-1024', '32737-1032'])
+})
+
+test('a condition with no keyword still asks for something', () => {
+  const condition = searchConditionOfQuery(
+    searchQueryOf({
+      ...EMPTY_SEARCH_CONDITION,
+      genres: ['documentary'],
+      kind: 'terrestrial',
+    }),
+  )
+
+  assert.equal(condition.q, undefined)
+  assert.equal(narrowsAnything(condition), true)
+})
+
+test('a condition of nothing at all is the only one turned away', () => {
+  assert.equal(narrowsAnything(EMPTY_SEARCH_CONDITION), false)
+  assert.equal(
+    narrowsAnything(
+      searchConditionOfQuery(
+        searchQueryOf({ ...EMPTY_SEARCH_CONDITION, fields: 'title' }),
+      ),
+    ),
+    false,
+  )
 })

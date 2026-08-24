@@ -1,23 +1,30 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 import type { SearchHits, SearchResult } from '@/repository/search'
 import {
-  SEARCH_DEFAULT_PER_PAGE,
-  SEARCH_DEFAULT_SORT,
+  EMPTY_SEARCH_CONDITION,
   SEARCH_FIELD_OPTIONS,
   SEARCH_GENRE_OPTIONS,
   SEARCH_KIND_OPTIONS,
+  SEARCH_MOST_CHANNELS,
   SEARCH_PER_PAGE_OPTIONS,
-  SEARCH_QUERY_KEYS,
   SEARCH_SORT_OPTIONS,
   genreLabelOf,
+  searchQueryOf,
+} from '@/repository/search-options'
+import type {
+  SearchCondition,
+  SearchField,
+  SearchGenre,
+  SearchKind,
+  SearchSort,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -34,10 +41,20 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CloseIcon,
+  FilterIcon,
+  LinkIcon,
   ListIcon,
   PlusIcon,
   SearchIcon,
 } from '@/components/vela/icons'
+
+/**
+ * The 種別 row's neutral choice. Every other row says "not asked for" by being
+ * empty, but a list has to have something selected to say it, and a Radix item
+ * cannot carry an empty value. It is spelled here so it never reaches the
+ * address: the writer is handed `undefined`, not this.
+ */
+const EVERY_KIND = 'all'
 
 const GENRE_CLASS: Record<string, string> = {
   news: 'bg-genre-news border-genre-news-line',
@@ -74,58 +91,75 @@ function pageNumbers(current: number, last: number): (number | 'gap')[] {
 export function SearchView({ result }: { result: SearchResult }) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const { condition, periodLabel, channels, outcome } = result
+  const [copied, setCopied] = useState<{ href: string; ok: boolean } | null>(
+    null,
+  )
+  const form = useRef<HTMLFormElement>(null)
+  const { condition, channels, outcome } = result
 
-  const patch = useCallback(
-    (next: Record<string, string | string[] | null>, push = false) => {
-      const params = new URLSearchParams(searchParams.toString())
-      for (const [k, v] of Object.entries(next)) {
-        params.delete(k)
-        if (Array.isArray(v)) {
-          for (const one of v) {
-            params.append(k, one)
-          }
-        } else if (v != null && v !== '') {
-          params.set(k, v)
-        }
-      }
-      if (!('page' in next)) {
-        params.delete('page')
-      }
-      const qs = params.toString()
-      const href = (qs ? `${pathname}?${qs}` : pathname) as Route
+  const go = useCallback(
+    (next: SearchCondition, push = false) => {
+      const written = searchQueryOf(next)
+      const href = (written ? `${pathname}?${written}` : pathname) as Route
       const navigate = push ? router.push : router.replace
       navigate(href, { scroll: false })
     },
-    [router, pathname, searchParams],
+    [router, pathname],
   )
 
-  const clearAll = useCallback(
-    () =>
-      patch(Object.fromEntries(SEARCH_QUERY_KEYS.map((key) => [key, null]))),
-    [patch],
+  /**
+   * What the two text fields hold at this moment, which is not yet in the
+   * address: they are confirmed with Enter or 検索 rather than on every letter,
+   * so between one of those and the next the field is ahead of the condition.
+   *
+   * Every other control writes the whole condition, and so has to write these
+   * too. Leaving them out would send the reader a condition they can see they
+   * did not ask for — the keyword still in the field, and gone from the address
+   * underneath it — which is the two-places-for-one-condition this screen was
+   * rebuilt to stop.
+   */
+  const typed = useCallback((): Partial<SearchCondition> => {
+    if (!form.current) {
+      return {}
+    }
+
+    const written = new FormData(form.current)
+
+    return {
+      q: wordsOf(written.get('q')),
+      exclude: wordsOf(written.get('exclude')),
+    }
+  }, [])
+
+  /**
+   * The whole condition, with one part of it answered differently — and back to
+   * the first page, because a narrower condition has fewer pages than the one
+   * the reader is standing on.
+   */
+  const ask = useCallback(
+    (part: Partial<SearchCondition>) =>
+      go({ ...condition, ...typed(), ...part, page: 1 }),
+    [go, condition, typed],
   )
 
-  const fieldsAsked = SEARCH_FIELD_OPTIONS.some(
-    (option) => option.value === searchParams.get('fields'),
-  )
-  const hasCondition = Boolean(
-    condition.q ||
-    condition.exclude ||
-    fieldsAsked ||
-    condition.genres.length ||
-    condition.kind ||
-    condition.channels.length ||
-    condition.from ||
-    condition.to,
-  )
+  /**
+   * The conditions that narrow, which is what `narrowsAnything` counts and so
+   * what the reader is told about. 探す場所 is not among them: it only says
+   * where a keyword is looked for, so counting it would promise a search that
+   * the store then turns away as asking for nothing.
+   */
+  const askedCount: number = [
+    Boolean(condition.q),
+    Boolean(condition.exclude),
+    condition.genres.length > 0,
+    Boolean(condition.kind),
+    condition.channels.length > 0,
+    Boolean(condition.from || condition.to),
+  ].filter((asked) => asked).length
   const found = outcome.state === 'searched' ? outcome.found : undefined
   const noHit = found !== undefined && found.hits.length === 0
-  const urlLine = `/search${searchParams.toString() ? `?${searchParams}` : ''}`
-  const namedChannels = condition.channels.map(
-    (id) => channels.find((channel) => channel.id === id)?.name || id,
-  )
+  const written: string = searchQueryOf(condition)
+  const href: string = written ? `${pathname}?${written}` : pathname
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !condition.genres.includes(option.value),
   )
@@ -133,76 +167,9 @@ export function SearchView({ result }: { result: SearchResult }) {
     (channel) => !condition.channels.includes(channel.id),
   )
 
-  const chips: {
-    key: string
-    label: string
-    value?: ReactNode
-    spoken?: string
-    clear: Record<string, string | string[] | null>
-  }[] = [
-    { key: 'q', label: 'キーワード', value: condition.q, clear: { q: null } },
-    {
-      key: 'exclude',
-      label: '除外キーワード',
-      value: condition.exclude,
-      clear: { exclude: null },
-    },
-    {
-      key: 'fields',
-      label: '対象フィールド',
-      value: fieldsAsked
-        ? SEARCH_FIELD_OPTIONS.find(
-            (option) => option.value === condition.fields,
-          )?.label
-        : undefined,
-      clear: { fields: null },
-    },
-    ...(condition.genres.length === 0
-      ? [{ key: 'genre', label: 'ジャンル', clear: { genre: null } }]
-      : condition.genres.map((genre) => ({
-          key: `genre-${genre}`,
-          label: 'ジャンル',
-          value: genreLabelOf(genre),
-          spoken: genreLabelOf(genre),
-          clear: {
-            genre: condition.genres.filter((one) => one !== genre),
-          },
-        }))),
-    {
-      key: 'type',
-      label: '種別',
-      value: SEARCH_KIND_OPTIONS.find(
-        (option) => option.value === condition.kind,
-      )?.label,
-      clear: { type: null, channel: null },
-    },
-    {
-      key: 'channel',
-      label: 'チャンネル',
-      value:
-        namedChannels.length === 0 ? undefined : (
-          <>
-            {namedChannels[0]}
-            {namedChannels.length > 1 && (
-              <>
-                {' '}
-                ほか{' '}
-                <em className="font-code font-medium not-italic">
-                  {namedChannels.length - 1}
-                </em>
-              </>
-            )}
-          </>
-        ),
-      clear: { channel: null },
-    },
-    {
-      key: 'period',
-      label: '期間',
-      value: periodLabel,
-      clear: { from: null, to: null },
-    },
-  ]
+  /** A channel chosen under one 種別 keeps its spelling if the list narrows. */
+  const channelNameOf = (id: string): string =>
+    channels.find((channel) => channel.id === id)?.name || id
 
   return (
     <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
@@ -222,197 +189,220 @@ export function SearchView({ result }: { result: SearchResult }) {
       </div>
 
       <section className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
-        <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <h2 className="heading flex items-center gap-1.5 text-[15px]">
-            <SearchIcon className="size-4 text-brand" />
+            <FilterIcon className="size-4 text-brand" />
             検索条件
           </h2>
-          {hasCondition && (
+          {written !== '' && (
             <button
               type="button"
-              onClick={clearAll}
-              className="tap-target ml-auto cursor-pointer text-sub font-bold text-brand underline-offset-[3px] hover:underline"
+              onClick={() => go(EMPTY_SEARCH_CONDITION)}
+              className="tap-target ml-auto cursor-pointer text-note text-ink-3 underline underline-offset-[3px] hover:text-ink-2"
             >
               条件をすべて消す
             </button>
           )}
         </div>
 
-        <p className="flex items-center gap-2 rounded-md bg-surface-2 px-3 py-2 font-code text-[11.5px] break-all text-ink-2">
-          <ListIcon className="size-3.5 shrink-0 text-ink-3" />
-          {urlLine}
-        </p>
-        <p className="mt-1.5 text-note text-ink-3">
-          この URL
-          がそのまま検索条件です。共有・読み込み直しで同じ結果に戻ります。
-        </p>
-
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {chips.map((c) =>
-            c.value ? (
-              <span
-                key={c.key}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface py-1 pr-1.5 pl-3 text-sub"
-              >
-                <span className="text-note font-bold text-ink-3">
-                  {c.label}
-                </span>
-                <span className="font-medium">{c.value}</span>
-                <button
-                  type="button"
-                  aria-label={`${c.spoken ?? c.label}の条件を消す`}
-                  onClick={() => patch(c.clear)}
-                  className="tap-target flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-3 transition-colors duration-150 hover:bg-surface-2 hover:text-ink [&_svg]:size-3"
-                >
-                  <CloseIcon />
-                </button>
-              </span>
-            ) : (
-              <span
-                key={c.key}
-                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-line bg-surface-2 px-3 py-1 text-sub text-ink-3"
-              >
-                <span className="text-note font-bold">{c.label}</span>未指定
-              </span>
-            ),
-          )}
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
-          <span className="text-cap font-bold tracking-[0.04em] text-ink-3">
-            条件を追加
-          </span>
-          <form
-            className="min-w-[180px] flex-[0_1_240px]"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const value = new FormData(e.currentTarget).get('q')
-              patch({ q: typeof value === 'string' ? value : null })
-            }}
-          >
+        <form
+          ref={form}
+          className="mt-2.5"
+          onSubmit={(event) => {
+            event.preventDefault()
+            ask({})
+          }}
+        >
+          {/*
+            Keyed on the address rather than on the value: the field is
+            uncontrolled between confirmations, so the only way an address the
+            reader did not type — 条件をすべて消す, or the back button — reaches
+            it is by being drawn again. Keying on the value alone left a field
+            that was never confirmed sitting there through a clear.
+          */}
+          <ConditionRow label="キーワード">
             <Input
-              key={condition.q ?? ''}
+              key={`q ${written}`}
               name="q"
-              aria-label="キーワードを追加"
+              aria-label="キーワード"
               defaultValue={condition.q ?? ''}
-              placeholder="キーワードを追加"
+              areaClassName="w-[300px] max-w-full"
               className="h-[33px] rounded-full"
             />
-          </form>
-          <form
-            className="min-w-[180px] flex-[0_1_240px]"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const value = new FormData(e.currentTarget).get('exclude')
-              patch({ exclude: typeof value === 'string' ? value : null })
-            }}
-          >
+            <Hint>空白で区切ると、すべてを含む番組を探します</Hint>
+          </ConditionRow>
+
+          <ConditionRow label="除外">
             <Input
-              key={condition.exclude ?? ''}
+              key={`exclude ${written}`}
               name="exclude"
-              aria-label="除外キーワードを追加"
+              aria-label="除外"
               defaultValue={condition.exclude ?? ''}
-              placeholder="除外キーワードを追加"
+              areaClassName="w-[300px] max-w-full"
               className="h-[33px] rounded-full"
             />
-          </form>
-          <Select
-            value={condition.fields}
-            onValueChange={(v) => patch({ fields: v })}
-          >
-            <SelectTrigger
-              size="sm"
-              aria-label="対象フィールド"
-              className="w-fit rounded-full"
-            >
-              {
-                SEARCH_FIELD_OPTIONS.find(
-                  (option) => option.value === condition.fields,
-                )?.label
-              }
-            </SelectTrigger>
-            <SelectContent position="popper">
-              {SEARCH_FIELD_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {unusedGenres.length > 0 && (
+            <Hint>この語を含む番組を結果から外します</Hint>
+          </ConditionRow>
+
+          <ConditionRow label="探す場所">
             <Select
-              value=""
-              onValueChange={(v) => patch({ genre: [...condition.genres, v] })}
+              value={condition.fields}
+              onValueChange={(value) => ask({ fields: value as SearchField })}
             >
               <SelectTrigger
                 size="sm"
-                aria-label="ジャンル"
-                className="w-fit rounded-full text-ink-3"
+                aria-label="探す場所"
+                className="w-fit rounded-full"
               >
-                ジャンルを選ぶ
+                {
+                  SEARCH_FIELD_OPTIONS.find(
+                    (option) => option.value === condition.fields,
+                  )?.label
+                }
               </SelectTrigger>
               <SelectContent position="popper">
-                {unusedGenres.map((option) => (
+                {SEARCH_FIELD_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
-          <Select
-            value={condition.kind ?? ''}
-            onValueChange={(v) => patch({ type: v, channel: null })}
-          >
-            <SelectTrigger
-              size="sm"
-              aria-label="種別"
-              className={cn(
-                'w-fit rounded-full',
-                condition.kind ? undefined : 'text-ink-3',
-              )}
-            >
-              {SEARCH_KIND_OPTIONS.find(
-                (option) => option.value === condition.kind,
-              )?.label ?? '種別を選ぶ'}
-            </SelectTrigger>
-            <SelectContent position="popper">
-              {SEARCH_KIND_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {unusedChannels.length > 0 && (
+          </ConditionRow>
+
+          <ConditionRow label="ジャンル">
+            {condition.genres.map((genre) => (
+              <Pick
+                key={genre}
+                label={genreLabelOf(genre)}
+                spoken={`ジャンル ${genreLabelOf(genre)} を外す`}
+                onRemove={() =>
+                  ask({
+                    genres: condition.genres.filter((one) => one !== genre),
+                  })
+                }
+              />
+            ))}
+            {unusedGenres.length > 0 && (
+              <Select
+                value=""
+                onValueChange={(value) =>
+                  ask({ genres: [...condition.genres, value as SearchGenre] })
+                }
+              >
+                <SelectTrigger
+                  size="sm"
+                  aria-label="ジャンルを足す"
+                  className="w-fit rounded-full text-ink-3"
+                >
+                  ＋ ジャンルを足す
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {unusedGenres.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </ConditionRow>
+
+          <ConditionRow label="種別">
             <Select
-              value=""
-              onValueChange={(v) =>
-                patch({ channel: [...condition.channels, v].join(',') })
+              value={condition.kind ?? EVERY_KIND}
+              onValueChange={(value) =>
+                ask({
+                  kind:
+                    value === EVERY_KIND ? undefined : (value as SearchKind),
+                  channels: [],
+                })
               }
             >
               <SelectTrigger
                 size="sm"
-                aria-label="チャンネル"
-                className="w-fit rounded-full text-ink-3"
+                aria-label="種別"
+                className="w-fit rounded-full"
               >
-                チャンネルを選ぶ
+                {SEARCH_KIND_OPTIONS.find(
+                  (option) => option.value === condition.kind,
+                )?.label ?? 'すべて'}
               </SelectTrigger>
               <SelectContent position="popper">
-                {unusedChannels.map((channel) => (
-                  <SelectItem key={channel.id} value={channel.id}>
-                    {channel.name}
+                <SelectItem value={EVERY_KIND}>すべて</SelectItem>
+                {SEARCH_KIND_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          )}
-          <div className="flex items-center gap-1.5">
+          </ConditionRow>
+
+          <ConditionRow label="チャンネル">
+            {condition.channels.map((id) => (
+              <Pick
+                key={id}
+                label={channelNameOf(id)}
+                spoken={`チャンネル ${channelNameOf(id)} を外す`}
+                onRemove={() =>
+                  ask({
+                    channels: condition.channels.filter((one) => one !== id),
+                  })
+                }
+              />
+            ))}
+            {/*
+              The reader keeps the first `SEARCH_MOST_CHANNELS` and drops the
+              rest, so a screen that went on offering them would write an
+              address it could not read back: the extra channel would be in the
+              URL, gone from the condition that came back, and the chip for it
+              would vanish with nothing said. Stop offering at the ceiling and
+              say why instead.
+            */}
+            {unusedChannels.length > 0 &&
+              condition.channels.length < SEARCH_MOST_CHANNELS && (
+                <Select
+                  value=""
+                  onValueChange={(value) =>
+                    ask({ channels: [...condition.channels, value] })
+                  }
+                >
+                  <SelectTrigger
+                    size="sm"
+                    aria-label="チャンネルを足す"
+                    className="w-fit rounded-full text-ink-3"
+                  >
+                    ＋ チャンネルを足す
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    {unusedChannels.map((channel) => (
+                      <SelectItem key={channel.id} value={channel.id}>
+                        {channel.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            {condition.channels.length === 0 && (
+              <Hint>指定しなければ、すべてのチャンネルから探します</Hint>
+            )}
+            {condition.channels.length >= SEARCH_MOST_CHANNELS && (
+              <Hint>
+                チャンネルは {SEARCH_MOST_CHANNELS}{' '}
+                局まで指定できます。足すには、どれかを外してください
+              </Hint>
+            )}
+          </ConditionRow>
+
+          <ConditionRow label="期間">
             <Input
               type="date"
               aria-label="期間の開始日"
               value={condition.from ?? ''}
-              onChange={(e) => patch({ from: e.target.value || null })}
+              onChange={(event) =>
+                ask({ from: event.target.value || undefined })
+              }
               areaClassName="w-[150px]"
               className="h-[33px] rounded-full"
             />
@@ -421,22 +411,75 @@ export function SearchView({ result }: { result: SearchResult }) {
               type="date"
               aria-label="期間の終了日"
               value={condition.to ?? ''}
-              onChange={(e) => patch({ to: e.target.value || null })}
+              onChange={(event) => ask({ to: event.target.value || undefined })}
               areaClassName="w-[150px]"
               className="h-[33px] rounded-full"
             />
+            <Hint>空のままなら、放送予定のすべてが対象です</Hint>
+          </ConditionRow>
+
+          <div className="mt-3.5 flex flex-wrap items-center gap-3">
+            <Button type="submit">
+              <SearchIcon />
+              検索
+            </Button>
+            {askedCount > 0 && (
+              <span className="text-note text-ink-3">
+                {askedCount} 件の条件を指定しています
+              </span>
+            )}
           </div>
+        </form>
+
+        <div className="mt-3 flex min-w-0 items-center gap-2.5 border-t border-dashed border-line pt-3">
+          <LinkIcon className="size-3.5 shrink-0 text-ink-3" />
+          <code className="min-w-0 truncate font-code text-note text-ink-3">
+            {decodeURIComponent(href)}
+          </code>
+          {/*
+            The clipboard is not there to be written to unless the page came
+            over a trusted origin, and a recording server on a house network is
+            reached by name over plain http as often as not. Saying so is the
+            point: the address is on the line to the left either way, and a
+            button that quietly did nothing would send the reader away thinking
+            they had the URL.
+          */}
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(
+                  `${window.location.origin}${href}`,
+                )
+                setCopied({ href, ok: true })
+              } catch {
+                setCopied({ href, ok: false })
+              }
+            }}
+            className={cn(
+              'tap-target ml-auto shrink-0 cursor-pointer text-note font-bold underline underline-offset-[3px]',
+              copied?.href === href && !copied.ok
+                ? 'text-coral'
+                : 'text-ink-2 hover:text-ink',
+            )}
+          >
+            {copied?.href !== href
+              ? 'この条件の URL をコピー'
+              : copied.ok
+                ? 'コピーしました'
+                : 'コピーできません。左の URL を選んで写してください'}
+          </button>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md bg-tint-sage px-3.5 py-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md bg-brand-soft px-3.5 py-3">
           <div className="min-w-[220px] flex-1">
-            <b className="block text-ui font-bold">
+            <b className="block text-ui font-bold text-brand">
               いまの検索条件は、そのまま自動録画ルールの条件になります。
             </b>
-            <span className="text-note text-ink-2">
+            <span className="block text-note text-ink-2">
               {noHit
                 ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
-                : 'キーワード・除外キーワード・対象フィールド・ジャンル・チャンネルがルールへ引き継がれます。'}
+                : 'キーワード・除外キーワード・対象フィールド・ジャンル・チャンネルが引き継がれます。期間は引き継ぎません。'}
             </span>
           </div>
           <Button size="sm" disabled title="ルール作成はこれから実装されます">
@@ -493,8 +536,8 @@ export function SearchView({ result }: { result: SearchResult }) {
                 <div className="ml-auto flex flex-wrap items-center gap-2 max-[1060px]:ml-0 max-[1060px]:w-full">
                   <Select
                     value={condition.sort}
-                    onValueChange={(v) =>
-                      patch({ sort: v === SEARCH_DEFAULT_SORT ? null : v })
+                    onValueChange={(value) =>
+                      ask({ sort: value as SearchSort })
                     }
                   >
                     <SelectTrigger
@@ -518,12 +561,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                   </Select>
                   <Select
                     value={String(condition.perPage)}
-                    onValueChange={(v) =>
-                      patch({
-                        per_page:
-                          v === String(SEARCH_DEFAULT_PER_PAGE) ? null : v,
-                      })
-                    }
+                    onValueChange={(value) => ask({ perPage: Number(value) })}
                   >
                     <SelectTrigger
                       size="sm"
@@ -551,7 +589,11 @@ export function SearchView({ result }: { result: SearchResult }) {
                 className="mx-auto mt-6 max-w-[560px]"
                 action={
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button size="sm" variant="outline" onClick={clearAll}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => go(EMPTY_SEARCH_CONDITION)}
+                    >
                       条件をすべて消す
                     </Button>
                     <Button size="sm" variant="outline" asChild>
@@ -633,7 +675,12 @@ export function SearchView({ result }: { result: SearchResult }) {
                     </tbody>
                   </table>
                 </div>
-                <Pager found={found} onPage={(n) => goPage(patch, n)} />
+                <Pager
+                  found={found}
+                  onPage={(page) =>
+                    go({ ...condition, ...typed(), page }, true)
+                  }
+                />
               </>
             )}
           </>
@@ -643,11 +690,76 @@ export function SearchView({ result }: { result: SearchResult }) {
   )
 }
 
-function goPage(
-  patch: (next: Record<string, string | null>, push?: boolean) => void,
-  page: number,
-) {
-  patch({ page: page > 1 ? String(page) : null }, true)
+function wordsOf(value: FormDataEntryValue | null): string | undefined {
+  return typeof value === 'string' ? value.trim() || undefined : undefined
+}
+
+/**
+ * One condition, one line: what it is on the left, what it is set to on the
+ * right. The field is the condition — there is no second copy of it to keep in
+ * step, and nothing to confirm before it counts.
+ *
+ * Narrow enough and the heading sits above its row instead of beside it, which
+ * is the only way a 300px field and a 92px heading both fit.
+ */
+function ConditionRow({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 border-b border-dashed border-line py-[9px] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5">
+      <span className="text-note font-bold text-ink-3 min-[701px]:w-[92px] min-[701px]:shrink-0 min-[701px]:pt-2">
+        {label}
+      </span>
+      {/*
+        Chips are 26px tall and each carries a 44px press area, so on one line
+        they have room and on two they take each other's presses: half of the
+        26 + gap between two lines is all either of them gets. 18px of gap is
+        what makes that half 22, and 22 + 22 the 44 the gate asks for. Only the
+        space between wrapped lines changes; a row that fits on one line is
+        drawn exactly as before.
+      */}
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-[18px]">
+        {children}
+      </span>
+    </div>
+  )
+}
+
+function Hint({ children }: { children: ReactNode }) {
+  return <span className="text-note text-ink-3">{children}</span>
+}
+
+/**
+ * One answer to a condition that takes several. It sits beside the list it was
+ * chosen from rather than in a row of its own, so choosing another one leaves
+ * every earlier answer where it was.
+ */
+function Pick({
+  label,
+  spoken,
+  onRemove,
+}: {
+  label: string
+  spoken: string
+  onRemove: () => void
+}) {
+  return (
+    <span className="inline-flex items-center gap-[7px] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
+      {label}
+      <button
+        type="button"
+        aria-label={spoken}
+        onClick={onRemove}
+        className="tap-target flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
+      >
+        <CloseIcon />
+      </button>
+    </span>
+  )
 }
 
 function Pager({
