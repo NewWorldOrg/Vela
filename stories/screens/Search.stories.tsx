@@ -334,3 +334,110 @@ export const キーワードを足して検索: Story = {
     })
   },
 }
+
+/**
+ * A keyword that has been typed but not yet confirmed still goes with the next
+ * choice. The two text fields are confirmed with Enter or 検索 and everything
+ * else takes effect at once, so between one confirmation and the next the field
+ * is ahead of the address — and a control that wrote the address without it
+ * left the keyword sitting in a field that no longer meant anything.
+ */
+export const 入力中のキーワードは次の選択に連れて行かれる: Story = {
+  args: {
+    result: {
+      condition: emptyCondition,
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: 'キーワード' }),
+      '夏 絶景',
+    )
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: '除外' }),
+      '再放送',
+    )
+
+    await choose('ジャンルを足す', '映画')
+
+    await waitFor(async () => {
+      await expect(router.replace).toHaveBeenLastCalledWith(
+        '/search?q=%E5%A4%8F+%E7%B5%B6%E6%99%AF&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=movie',
+        { scroll: false },
+      )
+    })
+  },
+}
+
+/**
+ * 条件をすべて消す empties the fields as well as the address. The fields are
+ * uncontrolled between confirmations, so a keyword that was typed and never
+ * confirmed used to survive the clear and be shown against a bare address.
+ */
+export const 条件をすべて消すと入力欄も空になる: Story = {
+  args: {
+    result: {
+      condition: { ...emptyCondition, genres: ['news'] },
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  render: (args) => <Live {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: 'キーワード' }),
+      '夏 絶景',
+    )
+    await userEvent.click(
+      canvas.getByRole('button', { name: '条件をすべて消す' }),
+    )
+
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('textbox', { name: 'キーワード' }),
+      ).toHaveValue('')
+    })
+
+    await expect(
+      canvas.queryByRole('button', { name: /ジャンル .+ を外す/ }),
+    ).toBeNull()
+  },
+}
+
+/**
+ * 探す場所 says where a keyword is looked for and narrows nothing on its own,
+ * so it is not counted as a condition the reader has specified — counting it
+ * promised a search that the screen then turned away as asking for nothing.
+ * The way back is still offered, because the address is no longer bare.
+ */
+export const 探す場所だけでは条件に数えない: Story = {
+  args: {
+    result: {
+      condition: emptyCondition,
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  render: (args) => <Live {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await choose('探す場所', '番組名だけ')
+
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('button', { name: '条件をすべて消す' }),
+      ).toBeVisible()
+    })
+
+    await expect(canvas.queryByText(/件の条件を指定しています/)).toBeNull()
+    await expect(canvas.getByText('まだ検索していません')).toBeVisible()
+  },
+}

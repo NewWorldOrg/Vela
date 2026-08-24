@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils'
 import type { SearchHits, SearchResult } from '@/repository/search'
 import {
   EMPTY_SEARCH_CONDITION,
-  SEARCH_DEFAULT_FIELDS,
   SEARCH_FIELD_OPTIONS,
   SEARCH_GENRE_OPTIONS,
   SEARCH_KIND_OPTIONS,
@@ -91,7 +90,10 @@ function pageNumbers(current: number, last: number): (number | 'gap')[] {
 export function SearchView({ result }: { result: SearchResult }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [copiedHref, setCopiedHref] = useState<string | null>(null)
+  const [copied, setCopied] = useState<{ href: string; ok: boolean } | null>(
+    null,
+  )
+  const form = useRef<HTMLFormElement>(null)
   const { condition, channels, outcome } = result
 
   const go = useCallback(
@@ -105,19 +107,49 @@ export function SearchView({ result }: { result: SearchResult }) {
   )
 
   /**
+   * What the two text fields hold at this moment, which is not yet in the
+   * address: they are confirmed with Enter or 検索 rather than on every letter,
+   * so between one of those and the next the field is ahead of the condition.
+   *
+   * Every other control writes the whole condition, and so has to write these
+   * too. Leaving them out would send the reader a condition they can see they
+   * did not ask for — the keyword still in the field, and gone from the address
+   * underneath it — which is the two-places-for-one-condition this screen was
+   * rebuilt to stop.
+   */
+  const typed = useCallback((): Partial<SearchCondition> => {
+    if (!form.current) {
+      return {}
+    }
+
+    const written = new FormData(form.current)
+
+    return {
+      q: wordsOf(written.get('q')),
+      exclude: wordsOf(written.get('exclude')),
+    }
+  }, [])
+
+  /**
    * The whole condition, with one part of it answered differently — and back to
    * the first page, because a narrower condition has fewer pages than the one
    * the reader is standing on.
    */
   const ask = useCallback(
-    (part: Partial<SearchCondition>) => go({ ...condition, ...part, page: 1 }),
-    [go, condition],
+    (part: Partial<SearchCondition>) =>
+      go({ ...condition, ...typed(), ...part, page: 1 }),
+    [go, condition, typed],
   )
 
+  /**
+   * The conditions that narrow, which is what `narrowsAnything` counts and so
+   * what the reader is told about. 探す場所 is not among them: it only says
+   * where a keyword is looked for, so counting it would promise a search that
+   * the store then turns away as asking for nothing.
+   */
   const askedCount: number = [
     Boolean(condition.q),
     Boolean(condition.exclude),
-    condition.fields !== SEARCH_DEFAULT_FIELDS,
     condition.genres.length > 0,
     Boolean(condition.kind),
     condition.channels.length > 0,
@@ -161,7 +193,7 @@ export function SearchView({ result }: { result: SearchResult }) {
             <FilterIcon className="size-4 text-brand" />
             検索条件
           </h2>
-          {askedCount > 0 && (
+          {written !== '' && (
             <button
               type="button"
               onClick={() => go(EMPTY_SEARCH_CONDITION)}
@@ -173,19 +205,23 @@ export function SearchView({ result }: { result: SearchResult }) {
         </div>
 
         <form
+          ref={form}
           className="mt-2.5"
           onSubmit={(event) => {
             event.preventDefault()
-            const written = new FormData(event.currentTarget)
-            ask({
-              q: wordsOf(written.get('q')),
-              exclude: wordsOf(written.get('exclude')),
-            })
+            ask({})
           }}
         >
+          {/*
+            Keyed on the address rather than on the value: the field is
+            uncontrolled between confirmations, so the only way an address the
+            reader did not type — 条件をすべて消す, or the back button — reaches
+            it is by being drawn again. Keying on the value alone left a field
+            that was never confirmed sitting there through a clear.
+          */}
           <ConditionRow label="キーワード">
             <Input
-              key={condition.q ?? ''}
+              key={`q ${written}`}
               name="q"
               aria-label="キーワード"
               defaultValue={condition.q ?? ''}
@@ -197,7 +233,7 @@ export function SearchView({ result }: { result: SearchResult }) {
 
           <ConditionRow label="除外">
             <Input
-              key={condition.exclude ?? ''}
+              key={`exclude ${written}`}
               name="exclude"
               aria-label="除外"
               defaultValue={condition.exclude ?? ''}
@@ -384,17 +420,38 @@ export function SearchView({ result }: { result: SearchResult }) {
           <code className="min-w-0 truncate font-code text-note text-ink-3">
             {decodeURIComponent(href)}
           </code>
+          {/*
+            The clipboard is not there to be written to unless the page came
+            over a trusted origin, and a recording server on a house network is
+            reached by name over plain http as often as not. Saying so is the
+            point: the address is on the line to the left either way, and a
+            button that quietly did nothing would send the reader away thinking
+            they had the URL.
+          */}
           <button
             type="button"
             onClick={async () => {
-              await navigator.clipboard.writeText(
-                `${window.location.origin}${href}`,
-              )
-              setCopiedHref(href)
+              try {
+                await navigator.clipboard.writeText(
+                  `${window.location.origin}${href}`,
+                )
+                setCopied({ href, ok: true })
+              } catch {
+                setCopied({ href, ok: false })
+              }
             }}
-            className="tap-target ml-auto shrink-0 cursor-pointer text-note font-bold text-ink-2 underline underline-offset-[3px] hover:text-ink"
+            className={cn(
+              'tap-target ml-auto shrink-0 cursor-pointer text-note font-bold underline underline-offset-[3px]',
+              copied?.href === href && !copied.ok
+                ? 'text-coral'
+                : 'text-ink-2 hover:text-ink',
+            )}
           >
-            {copiedHref === href ? 'コピーしました' : 'この条件の URL をコピー'}
+            {copied?.href !== href
+              ? 'この条件の URL をコピー'
+              : copied.ok
+                ? 'コピーしました'
+                : 'コピーできません。左の URL を選んで写してください'}
           </button>
         </div>
 
@@ -604,7 +661,9 @@ export function SearchView({ result }: { result: SearchResult }) {
                 </div>
                 <Pager
                   found={found}
-                  onPage={(page) => go({ ...condition, page }, true)}
+                  onPage={(page) =>
+                    go({ ...condition, ...typed(), page }, true)
+                  }
                 />
               </>
             )}
