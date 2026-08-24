@@ -13,6 +13,7 @@ import {
   SEARCH_FIELD_OPTIONS,
   SEARCH_GENRE_OPTIONS,
   SEARCH_KIND_OPTIONS,
+  SEARCH_MOST_CHANNELS,
   SEARCH_PER_PAGE_OPTIONS,
   SEARCH_SORT_OPTIONS,
   genreLabelOf,
@@ -351,31 +352,46 @@ export function SearchView({ result }: { result: SearchResult }) {
                 }
               />
             ))}
-            {unusedChannels.length > 0 && (
-              <Select
-                value=""
-                onValueChange={(value) =>
-                  ask({ channels: [...condition.channels, value] })
-                }
-              >
-                <SelectTrigger
-                  size="sm"
-                  aria-label="チャンネルを足す"
-                  className="w-fit rounded-full text-ink-3"
+            {/*
+              The reader keeps the first `SEARCH_MOST_CHANNELS` and drops the
+              rest, so a screen that went on offering them would write an
+              address it could not read back: the extra channel would be in the
+              URL, gone from the condition that came back, and the chip for it
+              would vanish with nothing said. Stop offering at the ceiling and
+              say why instead.
+            */}
+            {unusedChannels.length > 0 &&
+              condition.channels.length < SEARCH_MOST_CHANNELS && (
+                <Select
+                  value=""
+                  onValueChange={(value) =>
+                    ask({ channels: [...condition.channels, value] })
+                  }
                 >
-                  ＋ チャンネルを足す
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  {unusedChannels.map((channel) => (
-                    <SelectItem key={channel.id} value={channel.id}>
-                      {channel.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+                  <SelectTrigger
+                    size="sm"
+                    aria-label="チャンネルを足す"
+                    className="w-fit rounded-full text-ink-3"
+                  >
+                    ＋ チャンネルを足す
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    {unusedChannels.map((channel) => (
+                      <SelectItem key={channel.id} value={channel.id}>
+                        {channel.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             {condition.channels.length === 0 && (
               <Hint>指定しなければ、すべてのチャンネルから探します</Hint>
+            )}
+            {condition.channels.length >= SEARCH_MOST_CHANNELS && (
+              <Hint>
+                チャンネルは {SEARCH_MOST_CHANNELS}{' '}
+                局まで指定できます。足すには、どれかを外してください
+              </Hint>
             )}
           </ConditionRow>
 

@@ -4,7 +4,11 @@ import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { SearchCondition, SearchResult } from '@/repository/search'
-import { searchConditionOfQuery } from '@/repository/search-options'
+import type { GuideChannel } from '@/repository/programs'
+import {
+  SEARCH_MOST_CHANNELS,
+  searchConditionOfQuery,
+} from '@/repository/search-options'
 import {
   SEARCH_CHANNEL_FIXTURES,
   SEARCH_HIT_FIXTURES,
@@ -42,6 +46,23 @@ const everyCondition: SearchCondition = {
 }
 
 const channels = SEARCH_CHANNEL_FIXTURES
+
+/**
+ * More channels than the store will take, so the ceiling can be stood on. A
+ * full scan of terrestrial, BS and CS110 reaches this in real houses.
+ */
+const manyChannels: GuideChannel[] = Array.from(
+  { length: SEARCH_MOST_CHANNELS + 4 },
+  (_, index) => ({
+    id: `4-${1000 + index}`,
+    no: String(100 + index),
+    name: `チャンネル${index + 1}`,
+    kind: 'bs' as const,
+    networkId: 4,
+    serviceId: 1000 + index,
+    sortKey: [1, 0, index] as [number, number, number],
+  }),
+)
 
 /**
  * The part the server plays. The screen keeps no condition of its own: it
@@ -439,5 +460,40 @@ export const 探す場所だけでは条件に数えない: Story = {
 
     await expect(canvas.queryByText(/件の条件を指定しています/)).toBeNull()
     await expect(canvas.getByText('まだ検索していません')).toBeVisible()
+  },
+}
+
+/**
+ * At the ceiling the store accepts, the screen stops offering more. Going on
+ * offering them would write an address the reader then drops the tail of, so
+ * the chip for the extra channel would appear and vanish with nothing said.
+ */
+export const チャンネルは上限で足せなくなる: Story = {
+  args: {
+    result: {
+      condition: {
+        ...emptyCondition,
+        channels: manyChannels
+          .slice(0, SEARCH_MOST_CHANNELS)
+          .map((channel) => channel.id),
+      },
+      channels: manyChannels,
+      outcome: { state: 'idle' },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByRole('combobox', { name: 'チャンネルを足す' }),
+    ).toBeNull()
+
+    await expect(
+      canvas.getByText(/局まで指定できます。足すには、どれかを外してください/),
+    ).toBeVisible()
+
+    await expect(
+      canvas.getAllByRole('button', { name: /^チャンネル .+ を外す$/ }),
+    ).toHaveLength(SEARCH_MOST_CHANNELS)
   },
 }
