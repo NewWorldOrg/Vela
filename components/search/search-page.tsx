@@ -714,7 +714,15 @@ function ConditionRow({
       <span className="text-note font-bold text-ink-3 min-[701px]:w-[92px] min-[701px]:shrink-0 min-[701px]:pt-2">
         {label}
       </span>
-      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      {/*
+        Chips are 26px tall and each carries a 44px press area, so on one line
+        they have room and on two they take each other's presses: half of the
+        26 + gap between two lines is all either of them gets. 18px of gap is
+        what makes that half 22, and 22 + 22 the 44 the gate asks for. Only the
+        space between wrapped lines changes; a row that fits on one line is
+        drawn exactly as before.
+      */}
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-[18px]">
         {children}
       </span>
     </div>
