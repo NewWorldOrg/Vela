@@ -176,6 +176,27 @@ async function choose(list: string, option: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: option }))
 }
 
+/**
+ * The promise the screen used to make in three places, which the store stopped
+ * keeping: a period with its start filled in now reaches programmes that have
+ * already been broadcast, and only a period left open is the future alone.
+ *
+ * Held as one string and asked about in every state that could carry it, so
+ * that putting it back anywhere is a red run rather than a sentence nobody
+ * reads again. Each state is also asked what it does say — an absence with
+ * nothing beside it is an absence a screen that drew nothing would pass too.
+ */
+const NO_LONGER_KEPT = '放送が終了した番組は結果に出ません'
+
+function saysNothingItCannotKeep(
+  canvas: ReturnType<typeof within>,
+): Promise<void> {
+  return expect(
+    canvas.queryAllByText(new RegExp(NO_LONGER_KEPT)),
+    '放送済みの番組は出ないという約束が画面に戻っている',
+  ).toHaveLength(0)
+}
+
 /** A date field takes a date, not a run of letters. */
 function fillDate(field: HTMLElement, date: string): void {
   fireEvent.change(field, { target: { value: date } })
@@ -200,6 +221,25 @@ export const 入力前: Story = {
       channels,
       outcome: { state: 'idle' },
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText(
+        '条件を組み立ててから検索します。条件はそのまま自動録画ルールにできます。',
+      ),
+    ).toBeVisible()
+    await expect(
+      canvas.getByText(
+        '条件を決めて「検索」を押すと、8 日先までの番組表から該当する番組を探します。',
+      ),
+    ).toBeVisible()
+    /** Where the screen does say it, and says it of the case it is true of. */
+    await expect(
+      canvas.getByText('空のままなら、放送予定のすべてが対象です'),
+    ).toBeVisible()
+    await saysNothingItCannotKeep(canvas)
   },
 }
 
@@ -268,6 +308,9 @@ export const 検索結果: Story = {
       },
     },
   },
+  play: async ({ canvasElement }) => {
+    await saysNothingItCannotKeep(within(canvasElement))
+  },
 }
 
 export const ページ送り: Story = {
@@ -310,6 +353,16 @@ export const 該当なし: Story = {
       },
     },
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText(
+        '該当する番組がありませんでした。キーワード・除外キーワード・期間を見直してください。開始日を空にすると、これから放送される番組だけを探します。',
+      ),
+    ).toBeVisible()
+    await saysNothingItCannotKeep(canvas)
+  },
 }
 
 export const 条件不備: Story = {
@@ -323,6 +376,12 @@ export const 条件不備: Story = {
           'キーワード・除外キーワードは、指定する場合は2文字以上にしてください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。',
       },
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText(/2文字以上にしてください/)).toBeVisible()
+    await saysNothingItCannotKeep(canvas)
   },
 }
 

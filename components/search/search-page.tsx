@@ -220,7 +220,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
         <div className="min-w-0 flex-1">
           <h1 className="heading text-[20px]">番組検索</h1>
           <p className="mt-0.5 text-sub text-ink-2">
-            検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。
+            条件を組み立ててから検索します。条件はそのまま自動録画ルールにできます。
           </p>
         </div>
         <Button variant="ghost" size="sm" asChild>
@@ -550,7 +550,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
           title="まだ検索していません"
           className="mx-auto mt-10 max-w-[560px]"
         >
-          条件を組み立てて検索してください。検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。
+          条件を決めて「検索」を押すと、8
+          日先までの番組表から該当する番組を探します。
         </EmptyState>
       ) : outcome.state === 'refused' ? (
         <EmptyState
@@ -655,7 +656,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   </div>
                 }
               >
-                検索の対象は放送予定の番組です。放送が終了した番組は結果に出ません。キーワード・除外キーワード・期間を見直してください。
+                該当する番組がありませんでした。キーワード・除外キーワード・期間を見直してください。開始日を空にすると、これから放送される番組だけを探します。
               </EmptyState>
             ) : (
               <>
