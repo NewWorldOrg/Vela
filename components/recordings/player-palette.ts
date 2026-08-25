@@ -1,5 +1,8 @@
 import type { CSSProperties } from 'react'
 
+import { cn } from '@/lib/utils'
+import { pressable, still } from '@/components/vela/tactile'
+
 export const PLAYER_PALETTE = {
   '--pl-bg': '#151418',
   '--pl-video': '#0F0E12',
@@ -11,5 +14,8 @@ export const PLAYER_PALETTE = {
   '--pl-coral': '#E08A85',
 } as CSSProperties
 
-export const PLAYER_BUTTON =
-  'tap-target cursor-pointer rounded-full border border-white/25 bg-white/5 px-[13px] py-[5px] text-[11.5px] font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-0 disabled:hover:bg-white/5'
+export const PLAYER_BUTTON = cn(
+  'tap-target rounded-full border border-white/25 bg-white/5 px-[13px] py-[5px] text-[11.5px] font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px disabled:opacity-40 disabled:hover:bg-white/5 disabled:hover:text-(--pl-ink-2)',
+  pressable,
+  still,
+)

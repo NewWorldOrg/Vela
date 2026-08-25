@@ -5,6 +5,16 @@ import { Surface } from '@/components/vela/surface'
 import { Spinner } from '@/components/vela/progress'
 import { PlusIcon, TrashIcon } from '@/components/vela/icons'
 
+/**
+ * A button that is busy keeps its own colours, so it says it is off with
+ * `aria-disabled` rather than with the attribute — and then has to refuse the
+ * press itself. The banner's held actions are the same shape.
+ */
+function hold(event: React.MouseEvent) {
+  event.preventDefault()
+  event.stopPropagation()
+}
+
 const meta = {
   title: 'Components/Button',
   component: Button,
@@ -159,11 +169,23 @@ export const States: Story = {
           ローディング
         </span>
         <span className="flex flex-wrap items-center gap-[9px]">
-          <Button variant="default" aria-busy="true">
+          <Button
+            variant="default"
+            aria-busy="true"
+            aria-disabled
+            onClick={hold}
+            className="hover:border-btn-fill hover:bg-btn-fill hover:shadow-pop"
+          >
             <Spinner className="size-[13px]" />
             保存しています
           </Button>
-          <Button variant="outline" aria-busy="true">
+          <Button
+            variant="outline"
+            aria-busy="true"
+            aria-disabled
+            onClick={hold}
+            className="hover:shadow-pop"
+          >
             <Spinner className="size-[13px]" />
             保存しています
           </Button>

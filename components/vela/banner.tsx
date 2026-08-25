@@ -6,6 +6,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { still } from '@/components/vela/tactile'
 import {
   DangerIcon,
   InfoIcon,
@@ -60,8 +61,18 @@ const DISABLED_ON_BAND: Record<BannerTone, string> = {
     'border-mint-line bg-mint-soft text-mint hover:border-mint-line hover:bg-mint-soft',
 }
 
-const DISABLED_MOTION =
-  'cursor-not-allowed shadow-pop-none hover:shadow-pop-none active:shadow-pop-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0'
+/**
+ * A button on a tint does not float, and does not move. The colours above and
+ * the shadow here are written as plain `hover:` so that tailwind-merge puts
+ * them in place of the variant's own rather than beside them — a more specific
+ * rule would also outrank `focus-visible:` and take the focus ring away the
+ * moment a pointer arrived. The movement is `still`, shared with every other
+ * switched-off control.
+ */
+const DISABLED_MOTION = cn(
+  still,
+  'shadow-pop-none hover:shadow-pop-none active:shadow-pop-none',
+)
 
 const TONE_CLASS: Record<BannerTone, string> = {
   info: 'bg-sky-soft text-sky',
