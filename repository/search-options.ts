@@ -16,8 +16,12 @@ export {
   SEARCH_QUERY_KEYS,
   SEARCH_SORT_OPTIONS,
   genreLabelOf,
+  narrowsAnything,
   searchConditionOfQuery,
   searchQueryOf,
+  searchTermsOf,
+  searchTermsQueryOf,
+  searchViewingOf,
 } from '@/lib/search-condition'
 
 export type {
@@ -26,4 +30,6 @@ export type {
   SearchGenre,
   SearchKind,
   SearchSort,
+  SearchTerms,
+  SearchViewing,
 } from '@/lib/search-condition'
