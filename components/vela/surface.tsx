@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { tactile } from '@/components/vela/tactile'
+import { pressable, still, tactile } from '@/components/vela/tactile'
 
 /**
  * A plain grouping of information. No border, no shadow — only the surface
@@ -90,8 +90,10 @@ export function Tile({ className, ...props }: ComponentProps<'button'>) {
       className={cn(
         'min-w-[150px] flex-1 rounded-lg border border-line bg-surface px-[15px] py-[13px] text-left shadow-pop outline-none',
         'hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        'disabled:pointer-events-none disabled:opacity-45 disabled:shadow-pop-none',
+        'disabled:opacity-45 disabled:shadow-pop-none disabled:hover:shadow-pop-none',
         tactile,
+        pressable,
+        still,
         className,
       )}
       {...props}

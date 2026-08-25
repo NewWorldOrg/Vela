@@ -237,7 +237,9 @@ export const OpenList: Story = {
             <SelectItem value="ts">そのまま(TS)</SelectItem>
             <SelectItem value="h265">高画質(H.265)</SelectItem>
             <SelectItem value="h264">標準(H.264)</SelectItem>
-            <SelectItem value="audio">音声のみ</SelectItem>
+            <SelectItem value="audio" disabled>
+              音声のみ
+            </SelectItem>
           </SelectContent>
         </Select>
         <p className="mt-[11px] text-cap text-ink-3">
@@ -249,10 +251,23 @@ export const OpenList: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    await userEvent.click(canvas.getByRole('combobox', { name: '録画の画質' }))
+    const opener = canvas.getByRole('combobox', { name: '録画の画質' })
+    await userEvent.click(opener)
 
     const rows = await within(document.body).findAllByRole('option')
     await expect(rows).toHaveLength(4)
+
+    // A row that is off keeps taking pointer events, because that is the only
+    // way it can say `not-allowed` under the pointer. What refuses the press is
+    // the list itself, and this is the assertion that says so: the row is
+    // pressed, and nothing is chosen.
+    const off = rows.find((row) => row.hasAttribute('data-disabled'))
+    await expect(off).toBeTruthy()
+    await userEvent.click(off as HTMLElement)
+    await expect(opener).toHaveTextContent('そのまま(TS)')
+    await expect(
+      await within(document.body).findByRole('listbox'),
+    ).toBeVisible()
 
     // Left open on purpose: postVisit measures what is on the page.
   },
@@ -275,7 +290,7 @@ export const OpenMenu: Story = {
             <DropdownMenuCheckboxItem checked>
               録画日時
             </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem>容量</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem disabled>容量</DropdownMenuCheckboxItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>並びを既定に戻す</DropdownMenuItem>
           </DropdownMenuContent>
@@ -293,6 +308,17 @@ export const OpenMenu: Story = {
 
     const menu = await within(document.body).findByRole('menu')
     await expect(menu).toBeVisible()
+
+    // The same as the list: the row that is off is pressed, and the menu is
+    // still there afterwards because the menu, not `pointer-events`, is what
+    // refuses it.
+    const off = within(menu)
+      .getAllByRole('menuitemcheckbox')
+      .find((row) => row.hasAttribute('data-disabled'))
+    await expect(off).toBeTruthy()
+    await userEvent.click(off as HTMLElement)
+    await expect(menu).toBeVisible()
+    await expect(off).toHaveAttribute('aria-checked', 'false')
 
     // Left open on purpose: postVisit measures what is on the page.
   },

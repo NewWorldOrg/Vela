@@ -11,12 +11,16 @@ import {
   PLAYER_PALETTE,
 } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
+import { pressable, still } from '@/components/vela/tactile'
 
 const PTOG = PLAYER_BUTTON
 const PTOG_ON =
   'bg-[rgba(150,187,180,.22)] border-[rgba(150,187,180,.55)] text-[#C0D8D3]'
-const CBTN =
-  'tap-target flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-white/5 text-(--pl-ink-2) transition-[translate,background-color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-0 disabled:hover:bg-white/5 [&_svg]:size-4 [&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:-rotate-6 hover:[&_svg]:scale-110'
+const CBTN = cn(
+  'tap-target flex size-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/5 text-(--pl-ink-2) transition-[translate,background-color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px disabled:opacity-40 disabled:hover:bg-white/5 disabled:hover:text-(--pl-ink-2) [&_svg]:size-4 [&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:-rotate-6 hover:[&_svg]:scale-110',
+  pressable,
+  still,
+)
 const NOT_YET = '再生はこれから実装されます'
 
 export function Player({ detail: d }: { detail: RecordingDetail }) {

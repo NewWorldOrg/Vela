@@ -52,7 +52,7 @@ export function ProgramCell({
         height: `${height}px`,
       }}
       className={cn(
-        'absolute right-px left-px z-[1] overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
+        'absolute right-px left-px z-[1] cursor-pointer overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
         past ? GENRE_CLASS_PAST[p.genre] : GENRE_CLASS[p.genre],
         size === 'md' && 'px-[7px] py-1',
         size === 's' && 'px-[7px] py-0.5',

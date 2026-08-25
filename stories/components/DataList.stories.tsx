@@ -88,7 +88,7 @@ export const Rows: Story = {
               aria-expanded={open}
               aria-controls="tuner-2-candidates"
               onClick={() => setOpen((prev) => !prev)}
-              className="tap-target inline-flex size-[18px] items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring"
+              className="tap-target inline-flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring"
             >
               <ChevronRightIcon
                 className={`size-3.5 transition-transform duration-150 ease-toy ${

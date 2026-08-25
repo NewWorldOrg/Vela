@@ -405,6 +405,7 @@ export function CollectionDrawer({
         aria-label="収集状態"
         aria-hidden={!open}
         inert={!open}
+        data-cursor-shut={!open ? 'the drawer is shut' : undefined}
         className={cn(
           'fixed top-[60px] right-[18px] bottom-[18px] z-[45] flex w-[500px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy',
           'max-[1060px]:w-[440px]',
