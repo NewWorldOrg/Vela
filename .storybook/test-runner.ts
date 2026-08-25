@@ -405,6 +405,238 @@ async function proveTheProbeCanFail(page: Page) {
   }
 }
 
+/** A control whose pointer says the wrong thing about it. */
+interface WrongCursor {
+  name: string
+  /** What a pointer over its middle actually shows. */
+  is: string
+  /** What it has to show. */
+  want: string
+  /** Whether it was live or switched off when it was read. */
+  state: string
+}
+
+/** What the cursor probe found, and what proves it was looking. */
+interface CursorFindings {
+  /** Controls whose pointer is wrong. */
+  wrong: WrongCursor[]
+  /** Bait the waiver took out — empty means the waiver stopped working. */
+  waived: string[]
+  /** Controls read, bait included. */
+  scanned: number
+}
+
+/** Names the bait of the cursor proof apart from anything a story draws. */
+const CURSOR_BAIT = 'a control whose pointer has to be caught'
+
+/**
+ * Every kind of control the cursor probe is answerable for, as the bait draws
+ * it. One entry per clause of CURSOR_SELECTOR, so a clause dropped from there
+ * stops being caught here and the first story turns red.
+ *
+ * Text fields are deliberately absent from both: a pointer over a field says
+ * `text` and a field is not pressed. A native `select` is absent for the same
+ * reason — the browser draws its own list and its own pointer.
+ */
+const CURSOR_KINDS: {
+  kind: string
+  tag: string
+  attrs?: Record<string, string>
+}[] = [
+  { kind: 'row of a list', tag: 'div', attrs: { 'data-pressable-row': '' } },
+  { kind: 'button', tag: 'button' },
+  { kind: 'link', tag: 'a', attrs: { href: '#' } },
+  { kind: 'pressable', tag: 'div', attrs: { role: 'button' } },
+  { kind: 'list opener', tag: 'div', attrs: { role: 'combobox' } },
+  { kind: 'tab', tag: 'div', attrs: { role: 'tab' } },
+  { kind: 'switch', tag: 'div', attrs: { role: 'switch' } },
+  { kind: 'checkbox', tag: 'div', attrs: { role: 'checkbox' } },
+  { kind: 'radio', tag: 'div', attrs: { role: 'radio' } },
+  { kind: 'menu row', tag: 'div', attrs: { role: 'menuitem' } },
+  {
+    kind: 'menu row that ticks',
+    tag: 'div',
+    attrs: { role: 'menuitemcheckbox' },
+  },
+  { kind: 'menu row that marks', tag: 'div', attrs: { role: 'menuitemradio' } },
+  { kind: 'list row', tag: 'div', attrs: { role: 'option' } },
+  { kind: 'disclosure', tag: 'summary' },
+]
+
+/** The bait for the other half of the rule, and for the waiver. */
+const CURSOR_OFF = 'switched off'
+const CURSOR_WAIVED = 'waived'
+
+/**
+ * Runs in the page and answers which controls say the wrong thing about
+ * themselves under the pointer.
+ *
+ * Tailwind v4's preflight sets `button { cursor: default }`, so the one visible
+ * sign that a thing can be pressed is not something a control has — it is
+ * something a control has to say. A link says it on its own and nothing else
+ * does, which is how a whole app of silent buttons read as one screen's
+ * problem.
+ *
+ * It reads the pointer that would actually be shown rather than the line in the
+ * stylesheet. A control taken out of the pointer events lets the pointer
+ * through to whatever is behind it and shows that cursor instead of its own, so
+ * `cursor-not-allowed` written beside `pointer-events: none` is a line that
+ * never reaches a screen, and is reported as the `default` a reader would
+ * actually see.
+ *
+ * Controls behind an open list, menu or dialog are left out. Radix marks the
+ * page behind such a layer `aria-hidden`, and a control nobody can reach says
+ * nothing about whether pressable things look pressable.
+ *
+ * Self-contained: it is serialised into the browser, and can close over nothing
+ * here.
+ */
+function measureCursors(bait: string): CursorFindings {
+  // One clause per entry of CURSOR_KINDS. A field is not here: see the comment
+  // on that list.
+  const SELECTOR =
+    'button, a[href], [role="button"], [role="combobox"], [role="tab"], ' +
+    '[role="switch"], [role="checkbox"], [role="radio"], [role="menuitem"], ' +
+    '[role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], ' +
+    '[data-pressable-row], summary'
+
+  /** Switched off, however this control happens to say so. */
+  const off = (control: Element) =>
+    (control as HTMLButtonElement).disabled === true ||
+    control.getAttribute('aria-disabled') === 'true' ||
+    (control.hasAttribute('data-disabled') &&
+      control.getAttribute('data-disabled') !== 'false')
+
+  /**
+   * The pointer a reader sees over the middle of a control. Not the control's
+   * own `cursor` when it is out of the pointer events: the pointer goes through
+   * it and takes the cursor of the nearest thing that is still there to answer.
+   */
+  const showing = (control: Element): string => {
+    for (let up: Element | null = control; up; up = up.parentElement) {
+      const style = getComputedStyle(up)
+      if (style.pointerEvents !== 'none') {
+        return style.cursor
+      }
+    }
+    return 'auto'
+  }
+
+  const named = (control: Element) =>
+    control.getAttribute('aria-label') ||
+    (control.textContent ?? '').trim().slice(0, 30) ||
+    control.tagName.toLowerCase()
+
+  const wrong: WrongCursor[] = []
+  const waived: string[] = []
+  let scanned = 0
+
+  for (const control of document.querySelectorAll(SELECTOR)) {
+    const box = control.getBoundingClientRect()
+    if (box.width <= 0 || box.height <= 0) {
+      continue
+    }
+    if (getComputedStyle(control).visibility === 'hidden') {
+      continue
+    }
+    // Behind an open layer, or otherwise taken off the page for a reader.
+    if (control.closest('[aria-hidden="true"], [inert]')) {
+      continue
+    }
+
+    const name = named(control)
+
+    if (control.closest('[data-cursor-exempt]')) {
+      if (name.startsWith(bait)) {
+        waived.push(name)
+      }
+      continue
+    }
+
+    scanned++
+
+    const switchedOff = off(control)
+    const want = switchedOff ? 'not-allowed' : 'pointer'
+    const is = showing(control)
+
+    if (is !== want) {
+      wrong.push({
+        name,
+        is,
+        want,
+        state: switchedOff ? 'switched off' : 'live',
+      })
+    }
+  }
+
+  return { wrong, waived, scanned }
+}
+
+/**
+ * Lays one control of every kind the probe is answerable for, each told to show
+ * `default`, plus one switched off and one waived.
+ *
+ * A probe that finds nothing to look at answers exactly what a page whose every
+ * control is right answers, and nothing later in the run can tell those two
+ * apart. So the bait goes down before every story rather than once at the
+ * start: each story's reading comes with the proof that the thing doing the
+ * reading was working at that moment, on that page.
+ *
+ * The waived one is there for the other half of it. A waiver nobody exercises
+ * rots into a list of names the probe never looks at, and the day it stops
+ * being honoured every waived control silently rejoins the run. This one has to
+ * come back out on the waived list, or the run is red.
+ */
+function layCursorBait({
+  bait,
+  kinds,
+  off,
+  waived,
+}: {
+  bait: string
+  kinds: { kind: string; tag: string; attrs?: Record<string, string> }[]
+  off: string
+  waived: string
+}) {
+  const row = document.createElement('div')
+  row.id = 'cursor-probe-bait'
+  row.style.cssText =
+    'position:fixed;left:20px;top:0;display:flex;gap:8px;z-index:2147483646'
+
+  const lay = (
+    kind: string,
+    tag: string,
+    attrs: Record<string, string> = {},
+  ) => {
+    const control = document.createElement(tag)
+    control.setAttribute('aria-label', `${bait}: ${kind}`)
+    for (const [name, value] of Object.entries(attrs)) {
+      control.setAttribute(name, value)
+    }
+    control.style.cssText =
+      'width:12px;height:12px;min-width:0;min-height:0;padding:0;margin:0;border:0;appearance:none;flex:none;cursor:default'
+    return control
+  }
+
+  for (const { kind, tag, attrs } of kinds) {
+    row.append(lay(kind, tag, attrs))
+  }
+
+  row.append(lay(off, 'button', { disabled: '' }))
+
+  const behindTheWaiver = document.createElement('div')
+  behindTheWaiver.dataset.cursorExempt = 'the bait that proves the waiver works'
+  behindTheWaiver.append(lay(waived, 'button'))
+  row.append(behindTheWaiver)
+
+  document.body.append(row)
+}
+
+/** Takes the bait back off the page. */
+function clearCursorBait() {
+  document.getElementById('cursor-probe-bait')?.remove()
+}
+
 /**
  * Carries the theme a run is held to into the preview.
  *
@@ -483,6 +715,67 @@ const config: TestRunnerConfig = {
           'in a `<label class="tap-area">`, which a press moves focus through, ' +
           'and the width goes on that label — `areaClassName` — so the area ' +
           'is the field and not the space beside it.',
+      )
+    }
+    await page.evaluate(layCursorBait, {
+      bait: CURSOR_BAIT,
+      kinds: CURSOR_KINDS,
+      off: CURSOR_OFF,
+      waived: CURSOR_WAIVED,
+    })
+    const cursors = await page.evaluate(measureCursors, CURSOR_BAIT)
+    await page.evaluate(clearCursorBait)
+
+    const asBait = (kind: string) => `${CURSOR_BAIT}: ${kind}`
+    const caught = new Set(cursors.wrong.map((one) => one.name))
+    const uncaught = [
+      ...CURSOR_KINDS.map(({ kind }) => kind),
+      CURSOR_OFF,
+    ].filter((kind) => !caught.has(asBait(kind)))
+
+    if (uncaught.length > 0) {
+      throw new Error(
+        `${context.id}: the cursor probe passed ${uncaught.length} bait ` +
+          'control(s) told to show `default` — ' +
+          `${uncaught.join(', ')} — so it can no longer fail on them and ` +
+          'nothing it says about this story covers them. Fix SELECTOR in ' +
+          'measureCursors, in .storybook/test-runner.ts, before trusting a ' +
+          'green run.',
+      )
+    }
+
+    if (!cursors.waived.includes(asBait(CURSOR_WAIVED))) {
+      throw new Error(
+        `${context.id}: the cursor probe no longer honours ` +
+          '`data-cursor-exempt`, so every waived control has silently ' +
+          'rejoined the run. Fix measureCursors in ' +
+          '.storybook/test-runner.ts, or take the waiver out of ' +
+          '.storybook/cursor-exempt.test.ts as well.',
+      )
+    }
+
+    const wrong = cursors.wrong.filter(
+      (one) => !one.name.startsWith(CURSOR_BAIT),
+    )
+
+    if (wrong.length > 0) {
+      throw new Error(
+        `${context.id}: ${wrong.length} of ${cursors.scanned} control(s) say ` +
+          'the wrong thing under the pointer.\n' +
+          wrong
+            .map(
+              (one) =>
+                `  ${one.name} (${one.state}) — the pointer shows \`${one.is}\`, ` +
+                `and has to show \`${one.want}\``,
+            )
+            .join('\n') +
+          '\nTailwind v4 draws a button with `cursor: default`, so a pressable ' +
+          'control has to say `cursor-pointer` itself — `pressable` in ' +
+          'components/vela/tactile.ts is the pair to reach for, with `still` ' +
+          'beside it wherever hover moves something. A switched-off control ' +
+          'says `not-allowed`, which it cannot do while it is also out of the ' +
+          'pointer events: drop `pointer-events-none` rather than write a ' +
+          'cursor no screen will ever show.',
       )
     }
   },

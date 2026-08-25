@@ -159,19 +159,11 @@ export const States: Story = {
           ローディング
         </span>
         <span className="flex flex-wrap items-center gap-[9px]">
-          <Button
-            variant="default"
-            aria-busy="true"
-            className="pointer-events-none"
-          >
+          <Button variant="default" aria-busy="true">
             <Spinner className="size-[13px]" />
             保存しています
           </Button>
-          <Button
-            variant="outline"
-            aria-busy="true"
-            className="pointer-events-none"
-          >
+          <Button variant="outline" aria-busy="true">
             <Spinner className="size-[13px]" />
             保存しています
           </Button>
