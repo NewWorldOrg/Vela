@@ -48,7 +48,8 @@ repository/                 Data access, and the only type boundary
 repository/client/          The OpenAPI document, the client generated from it, and
                             the module that carries the session
 scripts/                    codegen-verify (the client matches the document),
-                            health-check (a live probe)
+                            health-check (a live probe), test-alias (`@/` for
+                            the unit tests, which read no tsconfig)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
 hooks/                      useListUrlState / usePerPageLocalStorage / useDismissable
@@ -155,7 +156,10 @@ task test:stories                             # build + test-runner, a11y includ
 ```
 
 `yarn test` is Node's own runner over the TypeScript sources, so there is no test
-framework to install. `task test:stories` runs the Storybook test-runner in a
+framework to install. A module under `repository/` is tested by standing in for
+`repository/client/carina` with `mock.module` and letting everything between it
+and the screen run for real; `scripts/test-alias.mjs` is what makes `@/` resolve
+outside the bundler. `task test:stories` runs the Storybook test-runner in a
 Playwright image against a statically served build, which is where every story is
 rendered in a real browser and checked for a11y violations.
 
