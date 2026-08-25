@@ -36,6 +36,7 @@ export function ProgramPanel({
       tabIndex={-1}
       aria-hidden={!open}
       inert={!open}
+      data-cursor-shut={!open ? 'the panel is shut' : undefined}
       className={cn(
         'fixed top-[66px] right-[18px] bottom-[18px] z-40 flex w-[400px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy',
         'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-3 max-[900px]:left-3 max-[900px]:max-h-[56vh] max-[900px]:w-auto',

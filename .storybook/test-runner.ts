@@ -425,11 +425,22 @@ interface OffControl {
   y: number
 }
 
+/** One reading of a switched-off control: where the pointer was, and how it
+ * was drawn. */
+interface OffLook {
+  /** Whether the pointer was actually on it when this was read. */
+  hovered: boolean
+  /** One entry per axis the reading is answerable for. */
+  look: Record<string, string>
+}
+
 /** A switched-off control that answered the pointer by changing. */
 interface Stirred {
   name: string
-  was: string
-  now: string
+  /** Every axis of the look that came out different, axis by axis. */
+  moved: { axis: string; was: string; now: string }[]
+  /** Axes the reading covered at all, whether they moved or not. */
+  axes: string[]
 }
 
 /** What the cursor probe found, and what proves it was looking. */
@@ -439,18 +450,20 @@ interface CursorFindings {
   /** Bait the waiver took out — empty means the waiver stopped working. */
   waived: string[]
   /**
-   * Clauses of the selector that no bait answers for. A clause with no bait is
-   * a kind of control the probe reads and nothing proves it can fail on.
+   * Clauses of the probe's selector that no bait answers for. A clause with no
+   * bait is a kind of control the probe reads and nothing proves it can fail on.
    */
   unbaited: string[]
-  /** Controls the story itself drew and the probe read. Bait is not counted. */
+  /** Clauses a kind declares that the probe's selector does not contain. */
+  unread: string[]
+  /** Kinds whose bait does not match the clause they declare. */
+  misdeclared: string[]
+  /** Controls the story drew that the probe read. */
   scanned: number
-  /**
-   * Controls the story itself drew at all, before anything was skipped. A page
-   * that drew controls and had none of them read is a page the probe was
-   * walked past, not a page with nothing to say.
-   */
+  /** Controls the story drew at all, however they were hidden afterwards. */
   drawn: number
+  /** The ones it drew and did not read, with no open layer to explain them. */
+  lost: string[]
   /** Switched-off controls, to be read again with the pointer on them. */
   off: OffControl[]
 }
@@ -462,11 +475,11 @@ const CURSOR_BAIT = 'a control whose pointer has to be caught'
  * Every kind of control the cursor probe is answerable for, as the bait draws
  * it, paired with the clause of the selector that reads it.
  *
- * The two are kept as one list and checked in both directions. A clause lost
- * from the selector leaves a bait nothing catches; a kind lost from the list
- * leaves a clause no bait answers for. Either way the first story is red —
- * which it was not when the two were written out separately and only the first
- * direction was checked.
+ * The two are kept together and checked three ways against the page itself: a
+ * clause the probe reads with no bait answering for it, a clause a kind claims
+ * that the probe does not read, and a bait that does not match the clause its
+ * own entry declares. Nothing here is a note — get any of it wrong and the
+ * first story is red.
  *
  * Text fields are deliberately absent from both: a pointer over a field says
  * `text` and a field is not pressed. A native `select` is absent for the same
@@ -551,16 +564,36 @@ const CURSOR_KINDS: {
  * reason the probe walks past `pointer-events: none` instead of reading the
  * control's own `cursor`: it says `not-allowed` in the stylesheet and shows the
  * page's own pointer on the screen, so a probe that read the stylesheet would
- * pass it. That walk found the one real instance of this, and fixing it would
- * have left the walk untravelled by anything — this bait is what keeps it
- * measured. `CURSOR_STIRS` is a switched-off control that changes when the
+ * pass it. `CURSOR_STIRS` is a switched-off control that changes when the
  * pointer arrives, which is what `still` and the `disabled:hover:` colours
- * exist to prevent and what nothing was checking.
+ * exist to prevent.
  */
 const CURSOR_OFF = 'switched off'
 const CURSOR_UNREACHABLE = 'switched off and out of the pointer events'
 const CURSOR_STIRS = 'switched off and stirred by the pointer'
 const CURSOR_WAIVED = 'waived'
+
+/**
+ * What the stirring bait does to itself, and to its icon, when a pointer
+ * arrives — one declaration per axis the reading is answerable for.
+ *
+ * This is the other half of a pair, and the two halves are written apart on
+ * purpose. `readOffLooks` decides what is read; this decides what moves. The
+ * run demands that the two agree exactly: an axis read here and not stirred
+ * there is an axis nothing proves the reading can see, and an axis stirred here
+ * and not read there is a way for a control to change with nobody watching.
+ * They were one list once, and dropping three lines from the reading took the
+ * whole of `still` out of the run without a word.
+ *
+ * The delay is the second half of it, and it is there to be overruled. A
+ * transition would make every reading one of a control mid-change; the run
+ * already switches them all off, and this asks for one so long that if it is
+ * ever granted the run says so instead of quietly measuring nothing.
+ */
+const CURSOR_STIR_DELAY_MS = 10000
+const CURSOR_STIR_SELF =
+  'background-color:rgb(1,2,3);border-color:rgb(4,5,6);border-style:dotted;color:rgb(7,8,9);box-shadow:5px 5px 0 0 rgb(1,2,3);text-decoration-line:underline;opacity:0.5;translate:3px 3px;rotate:5deg;scale:1.2'
+const CURSOR_STIR_ICON = 'rotate:5deg;scale:1.2;translate:2px 2px'
 
 /**
  * Runs in the page and answers which controls say the wrong thing about
@@ -579,14 +612,22 @@ const CURSOR_WAIVED = 'waived'
  * never reaches a screen, and is reported as the `default` a reader would
  * actually see.
  *
- * Controls behind an open list, menu or dialog are left out. Radix marks the
- * page behind such a layer `aria-hidden`, and a control nobody can reach says
- * nothing about whether pressable things look pressable.
+ * What it did not read, it says. Everything the story drew is counted before
+ * any of the skipping, and a control skipped with no open layer on the page to
+ * explain it is reported by name — hiding the page from the probe is otherwise
+ * indistinguishable from a page with nothing to hide, and `inert`,
+ * `visibility: hidden` and a box parked off the side of the window all do it.
  *
  * Self-contained: it is serialised into the browser, and can close over nothing
  * here.
  */
-function measureCursors(bait: string): CursorFindings {
+function measureCursors({
+  bait,
+  kinds,
+}: {
+  bait: string
+  kinds: { kind: string; clause: string }[]
+}): CursorFindings {
   const clauses = [
     'button',
     'a[href]',
@@ -632,8 +673,29 @@ function measureCursors(bait: string): CursorFindings {
     (control.textContent ?? '').trim().slice(0, 30) ||
     control.tagName.toLowerCase()
 
+  /**
+   * Whether something is open over the page. Radix marks everything behind an
+   * open list, menu or dialog `aria-hidden`, and those controls are genuinely
+   * out of reach — which is the one reason the probe accepts for not having
+   * read something the story drew.
+   */
+  const layerOpen = [
+    ...document.querySelectorAll(
+      '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]',
+    ),
+  ].some((layer) => {
+    const box = layer.getBoundingClientRect()
+    if (box.width <= 0 || box.height <= 0) {
+      return false
+    }
+    // A shut drawer keeps its role and its box. What tells it from an open one
+    // is that it has taken itself out of reach along with the page behind it.
+    return !layer.closest('[aria-hidden="true"], [inert]')
+  })
+
   const wrong: WrongCursor[] = []
   const waived: string[] = []
+  const lost: string[] = []
   const offs: OffControl[] = []
   let scanned = 0
   let drawn = 0
@@ -641,44 +703,48 @@ function measureCursors(bait: string): CursorFindings {
 
   for (const control of document.querySelectorAll(SELECTOR)) {
     const box = control.getBoundingClientRect()
+    // Drawn nowhere at all — a subtree that is `display: none`, or a control
+    // with no box of its own. Nothing was laid out, so there is nothing a
+    // reader could have pointed at and nothing to account for.
     if (box.width <= 0 || box.height <= 0) {
-      continue
-    }
-    if (getComputedStyle(control).visibility === 'hidden') {
       continue
     }
 
     const name = named(control)
+    const isBait = name.startsWith(bait)
 
-    // Counted before every skip below it, so that a page whose controls were
-    // all taken out of the walk can be told from a page that drew none. A
-    // control off the edge of the window is not counted: a shut drawer is
-    // drawn, and is not a control anyone was going to reach.
-    if (
-      !name.startsWith(bait) &&
-      box.right > 0 &&
-      box.bottom > 0 &&
-      box.left < window.innerWidth &&
-      box.top < window.innerHeight
-    ) {
+    // Counted before every skip below, and without asking whether it can be
+    // seen: `visibility: hidden` is another way to take a page away from the
+    // probe, and it leaves the box behind. Where the box sits is not asked at
+    // all — a control below the fold is read like any other, so parking the
+    // page off the side of the window hides nothing.
+    if (!isBait) {
       drawn++
     }
 
-    // Behind an open layer, or otherwise taken off the page for a reader.
-    if (control.closest('[aria-hidden="true"], [inert]')) {
-      continue
-    }
-
-    if (control.closest('[data-cursor-exempt]')) {
-      if (name.startsWith(bait)) {
-        waived.push(name)
+    if (
+      getComputedStyle(control).visibility === 'hidden' ||
+      control.closest('[aria-hidden="true"], [inert]')
+    ) {
+      // Out of reach, and there are only two reasons that is not the probe
+      // being walked past: something is open over the page, or the control is
+      // in a drawer the screen has shut and said so.
+      if (!isBait && !layerOpen && !control.closest('[data-cursor-shut]')) {
+        lost.push(name)
       }
       continue
     }
 
-    // Counted apart from the bait, which the probe lays itself: a story whose
-    // controls have all been taken out of the walk has to be able to say so.
-    if (!name.startsWith(bait)) {
+    if (control.closest('[data-cursor-exempt]')) {
+      if (isBait) {
+        waived.push(name)
+      } else {
+        lost.push(name)
+      }
+      continue
+    }
+
+    if (!isBait) {
       scanned++
     }
 
@@ -695,28 +761,63 @@ function measureCursors(bait: string): CursorFindings {
       })
     }
 
-    if (switchedOff) {
-      const x = Math.round(box.left + box.width / 2)
-      const y = Math.round(box.top + box.height / 2)
-      if (x >= 0 && y >= 0 && x < window.innerWidth && y < window.innerHeight) {
-        mark++
-        control.setAttribute('data-cursor-off', String(mark))
-        offs.push({ mark, name, x, y })
-      }
+    // Only the ones a pointer can reach where the page stands are marked for
+    // the second reading. A cursor is the same wherever a control sits, so
+    // everything is read for that; but hover has to be done to a control, and
+    // scrolling one into view would move a page that one story asserts does
+    // not move. What is below the fold here is on screen in another story.
+    if (
+      switchedOff &&
+      box.right > 0 &&
+      box.bottom > 0 &&
+      box.left < window.innerWidth &&
+      box.top < window.innerHeight
+    ) {
+      mark++
+      control.setAttribute('data-cursor-off', String(mark))
+      offs.push({
+        mark,
+        name,
+        x: Math.round(box.left + box.width / 2),
+        y: Math.round(box.top + box.height / 2),
+      })
     }
   }
 
   const baits = document.getElementById('cursor-probe-bait')
+  const declared = kinds.map(({ clause }) => clause)
   const unbaited = clauses.filter(
     (clause) => !baits || baits.querySelectorAll(clause).length === 0,
   )
+  const unread = declared.filter((clause) => !clauses.includes(clause))
+  const misdeclared = kinds
+    .filter(({ kind, clause }) => {
+      const drawnBait = baits?.querySelector(`[aria-label="${bait}: ${kind}"]`)
+      return !drawnBait || !drawnBait.matches(clause)
+    })
+    .map(({ kind, clause }) => `${kind} (${clause})`)
 
-  return { wrong, waived, unbaited, scanned, drawn, off: offs }
+  return {
+    wrong,
+    waived,
+    unbaited,
+    unread,
+    misdeclared,
+    scanned,
+    drawn,
+    lost: lost.slice(0, 12),
+    off: offs,
+  }
 }
 
 /**
- * How every switched-off control on the page is drawn, one line each, to be
+ * How every switched-off control on the page is drawn, axis by axis, to be
  * compared against itself with the pointer somewhere else and then on it.
+ *
+ * One line per axis on purpose, so that dropping an axis is a thing a person
+ * can do and the run can catch: the bait stirs every one of them, and a run
+ * where an axis has stopped being read is a run where the bait stirred
+ * something nobody saw.
  *
  * Movement is spelled the same however the browser happens to phrase it:
  * `translate: none` at rest and `translate: 0px` under `translate-0` are the
@@ -725,7 +826,11 @@ function measureCursors(bait: string): CursorFindings {
  *
  * Self-contained: serialised into the browser, closing over nothing here.
  */
-function readOffLooks(): Record<string, string> {
+function readOffLooks(): Record<string, OffLook> {
+  // `:hover` is part of the reading. Playwright's pointer move is answered once
+  // the page has processed it, so by the time this runs the state is settled —
+  // and if that ever stops being true, the bait comes back unmoved and says so
+  // rather than every reading quietly becoming one taken too early.
   const settled = (value: string, neutral: number) => {
     if (value === 'none' || value === '') {
       return String(neutral)
@@ -736,34 +841,35 @@ function readOffLooks(): Record<string, string> {
       : value
   }
 
-  const looks: Record<string, string> = {}
+  const looks: Record<string, OffLook> = {}
 
   for (const control of document.querySelectorAll('[data-cursor-off]')) {
     const style = getComputedStyle(control)
-    const parts = [
-      style.backgroundColor,
-      style.borderColor,
-      style.borderStyle,
-      style.color,
-      style.boxShadow,
-      style.textDecorationLine,
-      style.opacity,
-      settled(style.translate, 0),
-      settled(style.rotate, 0),
-      settled(style.scale, 1),
-    ]
+    const look: Record<string, string> = {}
+
+    look['self:background-color'] = style.backgroundColor
+    look['self:border-color'] = style.borderColor
+    look['self:border-style'] = style.borderStyle
+    look['self:color'] = style.color
+    look['self:box-shadow'] = style.boxShadow
+    look['self:text-decoration-line'] = style.textDecorationLine
+    look['self:opacity'] = style.opacity
+    look['self:translate'] = settled(style.translate, 0)
+    look['self:rotate'] = settled(style.rotate, 0)
+    look['self:scale'] = settled(style.scale, 1)
 
     const icon = control.querySelector('svg')
     if (icon) {
       const drawn = getComputedStyle(icon)
-      parts.push(
-        settled(drawn.rotate, 0),
-        settled(drawn.scale, 1),
-        settled(drawn.translate, 0),
-      )
+      look['icon:rotate'] = settled(drawn.rotate, 0)
+      look['icon:scale'] = settled(drawn.scale, 1)
+      look['icon:translate'] = settled(drawn.translate, 0)
     }
 
-    looks[control.getAttribute('data-cursor-off') ?? ''] = parts.join(' | ')
+    looks[control.getAttribute('data-cursor-off') ?? ''] = {
+      hovered: control.matches(':hover'),
+      look,
+    }
   }
 
   return looks
@@ -791,6 +897,9 @@ function layCursorBait({
   unreachable,
   stirs,
   waived,
+  stirSelf,
+  stirIcon,
+  stirDelay,
 }: {
   bait: string
   kinds: { kind: string; tag: string; attrs?: Record<string, string> }[]
@@ -798,6 +907,9 @@ function layCursorBait({
   unreachable: string
   stirs: string
   waived: string
+  stirSelf: string
+  stirIcon: string
+  stirDelay: number
 }) {
   const row = document.createElement('div')
   row.id = 'cursor-probe-bait'
@@ -842,14 +954,35 @@ function layCursorBait({
     ),
   )
 
-  // Switched off and drawn differently the moment the pointer arrives.
+  // Switched off, and drawn differently on every axis the reading covers the
+  // moment the pointer arrives — after a delay, so that reading too early is a
+  // red run rather than a coin toss.
   const stirred = lay(stirs, 'button', { disabled: '', 'data-stirs': '' })
+  stirred.append(
+    document.createElementNS('http://www.w3.org/2000/svg', 'svg') as never,
+  )
   row.append(stirred)
+
+  // The bait carries its size and its blank look as inline style, which no
+  // stylesheet rule can outrank — without this the two axes those inline
+  // declarations touch would sit still and read as axes the probe cannot see.
+  const insisted = (declarations: string) =>
+    declarations
+      .split(';')
+      .map((one) => `${one} !important`)
+      .join(';')
 
   const rule = document.createElement('style')
   rule.id = 'cursor-probe-bait-rule'
+  // The delay is a canary, not a mechanism. The run already switches every
+  // transition off with `!important`, so this one is overruled and the bait
+  // answers the pointer at once; if that ever stops being true the bait would
+  // take ten seconds to answer, and `stirsAtOnce` below stops the run rather
+  // than let every reading be taken of a control mid-change.
   rule.textContent =
-    '#cursor-probe-bait [data-stirs]:hover{background:rgb(1,2,3) !important}'
+    `#cursor-probe-bait [data-stirs],#cursor-probe-bait [data-stirs] svg{transition:all 1ms linear ${stirDelay}ms}` +
+    `#cursor-probe-bait [data-stirs]:hover{${insisted(stirSelf)}}` +
+    `#cursor-probe-bait [data-stirs]:hover svg{${insisted(stirIcon)}}`
   document.head.append(rule)
 
   const behindTheWaiver = document.createElement('div')
@@ -956,25 +1089,73 @@ const config: TestRunnerConfig = {
       unreachable: CURSOR_UNREACHABLE,
       stirs: CURSOR_STIRS,
       waived: CURSOR_WAIVED,
+      stirSelf: CURSOR_STIR_SELF,
+      stirIcon: CURSOR_STIR_ICON,
+      stirDelay: CURSOR_STIR_DELAY_MS,
     })
 
     /**
      * Reads the page twice over for every switched-off control: once with the
      * pointer away from all of them, once with it on the one being read. What
      * `:hover` does to a control is not something the page can be asked — it
-     * has to be done to it.
+     * has to be done to it. Nothing eases into it while that is happening:
+     * `layCursorBait` switches every transition on the page off, so both
+     * readings are of a settled state and neither is a race.
      */
     const read = async () => {
-      const found = await page.evaluate(measureCursors, CURSOR_BAIT)
+      // The bait asked for a ten-second transition. If it got one, every
+      // reading below would be of a control on its way somewhere rather than
+      // of either state, and the whole hover check would be measuring nothing.
+      const eased = await page.evaluate(() => {
+        const control = document.querySelector(
+          '#cursor-probe-bait [data-stirs]',
+        )
+        if (!control) {
+          return 'the stirring bait is not on the page'
+        }
+        const style = getComputedStyle(control)
+        return style.transitionDuration === '0s' &&
+          style.transitionDelay === '0s'
+          ? ''
+          : `${style.transitionDuration} / ${style.transitionDelay}`
+      })
+
+      if (eased !== '') {
+        throw new Error(
+          `${context.id}: the run is no longer switching transitions off — ` +
+            `the bait's is ${eased}. Every reading of a switched-off control ` +
+            'would be taken while it was still on its way, so the check that ' +
+            'they hold still would pass on controls that do not. Switch them ' +
+            'off before reading, in .storybook/test-runner.ts.',
+        )
+      }
+
+      const found = await page.evaluate(measureCursors, {
+        bait: CURSOR_BAIT,
+        kinds: CURSOR_KINDS,
+      })
       const atRest = await page.evaluate(readOffLooks)
       const stirred: Stirred[] = []
 
       for (const one of found.off) {
         await page.mouse.move(one.x, one.y)
+
         const now = (await page.evaluate(readOffLooks))[String(one.mark)]
         const was = atRest[String(one.mark)]
-        if (now !== undefined && was !== undefined && now !== was) {
-          stirred.push({ name: one.name, was, now })
+        // Read only what the pointer actually reached. A control with
+        // something over it never takes the hover, and comparing it with
+        // itself would say "held still" about a control nobody pointed at.
+        if (!now || !was || !now.hovered) {
+          continue
+        }
+
+        const axes = Object.keys(was.look)
+        const moved = axes
+          .filter((axis) => was.look[axis] !== now.look[axis])
+          .map((axis) => ({ axis, was: was.look[axis], now: now.look[axis] }))
+
+        if (moved.length > 0) {
+          stirred.push({ name: one.name, moved, axes })
         }
       }
 
@@ -1017,6 +1198,24 @@ const config: TestRunnerConfig = {
       )
     }
 
+    if (cursors.unread.length > 0) {
+      throw new Error(
+        `${context.id}: ${cursors.unread.length} clause(s) named by ` +
+          `CURSOR_KINDS — ${cursors.unread.join(', ')} — are not in the ` +
+          'probe’s selector, so a bait is laid for a kind of control the ' +
+          'probe never looks at. Fix the clauses in .storybook/test-runner.ts.',
+      )
+    }
+
+    if (cursors.misdeclared.length > 0) {
+      throw new Error(
+        `${context.id}: ${cursors.misdeclared.length} bait control(s) — ` +
+          `${cursors.misdeclared.join(', ')} — do not match the clause their ` +
+          'own entry in CURSOR_KINDS declares, so the pairing of a kind to ' +
+          'the clause that reads it is not what it says it is.',
+      )
+    }
+
     if (!cursors.waived.includes(asBait(CURSOR_WAIVED))) {
       throw new Error(
         `${context.id}: the cursor probe no longer honours ` +
@@ -1027,25 +1226,48 @@ const config: TestRunnerConfig = {
       )
     }
 
-    if (!stirred.some((one) => one.name === asBait(CURSOR_STIRS))) {
+    const stirredBait = stirred.find((one) => one.name === asBait(CURSOR_STIRS))
+    const wanted = [
+      ...CURSOR_STIR_SELF.split(';').map((one) => `self:${one.split(':')[0]}`),
+      ...CURSOR_STIR_ICON.split(';').map((one) => `icon:${one.split(':')[0]}`),
+    ]
+    const unseen = stirredBait
+      ? wanted.filter((axis) => !stirredBait.moved.some((m) => m.axis === axis))
+      : wanted
+    const unstirred = stirredBait
+      ? stirredBait.axes.filter((axis) => !wanted.includes(axis))
+      : []
+
+    if (unseen.length > 0) {
       throw new Error(
         `${context.id}: the pointer was put on a switched-off control drawn ` +
-          'to change colour under it, and the probe said it had not changed. ' +
-          'It can no longer tell whether a control that is off stays where it ' +
-          'is when a reader points at it. Fix readOffLooks in ' +
+          `to change on every axis, and ${unseen.length} of them came back ` +
+          `unchanged — ${unseen.join(', ')}. Either readOffLooks no longer ` +
+          'reads that axis, or it cannot see it move, so nothing this run ' +
+          'says about a control staying still covers it. Fix readOffLooks in ' +
           '.storybook/test-runner.ts.',
       )
     }
 
-    if (cursors.drawn > 0 && cursors.scanned < 1) {
+    if (unstirred.length > 0) {
+      throw new Error(
+        `${context.id}: readOffLooks reads ${unstirred.length} axis/axes — ` +
+          `${unstirred.join(', ')} — that the stirring bait never moves, so ` +
+          'nothing proves the reading can see them change. Add the ' +
+          'declaration to CURSOR_STIR_SELF or CURSOR_STIR_ICON in ' +
+          '.storybook/test-runner.ts.',
+      )
+    }
+
+    if (cursors.lost.length > 0) {
       throw new Error(
         `${context.id}: the story drew ${cursors.drawn} pressable control(s) ` +
-          'and the probe read none of them — only its own bait, which it lays ' +
-          'itself and which would keep every check above this one green. ' +
-          'Something has taken the whole page out of the walk: `inert`, ' +
-          '`aria-hidden` with no open layer under it, or a waiver. A story ' +
-          'that genuinely draws nothing pressable is not this, and is not ' +
-          'reported: it draws none and reads none.',
+          `and the probe read ${cursors.scanned} of them. ` +
+          `${cursors.lost.join(', ')} — and any others — were drawn and not ` +
+          'read, with nothing open over the page and no shut drawer to put ' +
+          'them out of reach. `inert`, `aria-hidden`, `visibility: hidden` ' +
+          'and a waiver all do this, and a probe that reads one control out ' +
+          'of forty is as blind as one that reads none.',
       )
     }
 
@@ -1083,7 +1305,10 @@ const config: TestRunnerConfig = {
           moved
             .map(
               (one) =>
-                `  ${one.name}\n    away: ${one.was}\n    on it: ${one.now}`,
+                `  ${one.name}\n` +
+                one.moved
+                  .map((axis) => `    ${axis.axis}: ${axis.was} -> ${axis.now}`)
+                  .join('\n'),
             )
             .join('\n') +
           '\nA control that is off keeps taking pointer events so that it can ' +

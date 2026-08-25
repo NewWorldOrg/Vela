@@ -37,6 +37,20 @@ const KEEPS_DEFAULT = [
 ]
 
 /**
+ * `data-cursor-shut` is the third way out, and the narrow one. A drawer the
+ * screen has shut is `inert` and `aria-hidden` and its controls are genuinely
+ * out of reach, which is indistinguishable from a page someone has taken away
+ * from the probe — so the screen says which it is, and the probe reads every
+ * control the story drew that is not behind an open layer or one of these.
+ *
+ * Two drawers have it, and the mark goes on only while they are shut.
+ */
+const SHUT = [
+  "components/guide/collection-drawer.tsx | data-cursor-shut={!open ? 'the drawer is shut' : undefined}",
+  "components/guide/program-panel.tsx | data-cursor-shut={!open ? 'the panel is shut' : undefined}",
+]
+
+/**
  * Files that only name the mark — the probe that honours the attribute, and
  * this test. Named rather than skipped by directory, so that a waiver written
  * into a decorator or a preview is still caught.
@@ -46,6 +60,10 @@ const NAMES_EXEMPT = new Set([
   '.storybook/cursor-exempt.test.ts',
 ])
 const NAMES_DEFAULT = new Set(['.storybook/cursor-exempt.test.ts'])
+const NAMES_SHUT = new Set([
+  '.storybook/test-runner.ts',
+  '.storybook/cursor-exempt.test.ts',
+])
 
 /** Build output and dependencies, which are not this repository's own source. */
 const NOT_SOURCE = new Set([
@@ -135,5 +153,15 @@ test('nothing tells the pointer to stay a plain arrow but the two SPEC names', a
     'Something that can be pressed was told to keep the plain arrow. That is ' +
       "shadcn's default for the rows of a list and a menu, and it is the " +
       'reason the rows here read as unpressable for as long as they did.',
+  )
+})
+
+test('only a drawer the screen has shut is out of the probe’s reach', async () => {
+  assert.deepEqual(
+    await linesCarrying('data-cursor-shut', NAMES_SHUT),
+    [...SHUT].sort(),
+    'Something was marked as a shut drawer, which takes its controls out of ' +
+      'the probe without a word. Only a drawer that is `inert` while it is ' +
+      'closed may carry it, and only while it is closed.',
   )
 })
