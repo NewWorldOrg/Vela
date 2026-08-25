@@ -13,9 +13,15 @@
  */
 import { existsSync } from 'node:fs'
 import { registerHooks } from 'node:module'
-import { pathToFileURL } from 'node:url'
+import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
-const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '')
+/**
+ * Taken back off the URL rather than read off it: a URL path spells a space as
+ * `%20`, and a checkout under such a name would leave every candidate below
+ * unfindable and `@/` resolving to nothing at all.
+ */
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 registerHooks({
   resolve(specifier, context, next) {
