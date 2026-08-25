@@ -265,6 +265,9 @@ export const OpenList: Story = {
     await expect(off).toBeTruthy()
     await userEvent.click(off as HTMLElement)
     await expect(opener).toHaveTextContent('そのまま(TS)')
+    await expect(
+      await within(document.body).findByRole('listbox'),
+    ).toBeVisible()
 
     // Left open on purpose: postVisit measures what is on the page.
   },
@@ -315,6 +318,7 @@ export const OpenMenu: Story = {
     await expect(off).toBeTruthy()
     await userEvent.click(off as HTMLElement)
     await expect(menu).toBeVisible()
+    await expect(off).toHaveAttribute('aria-checked', 'false')
 
     // Left open on purpose: postVisit measures what is on the page.
   },
