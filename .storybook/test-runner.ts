@@ -416,14 +416,43 @@ interface WrongCursor {
   state: string
 }
 
+/** A switched-off control, and where to put the pointer to see it again. */
+interface OffControl {
+  /** The mark the probe left on it, so the same control can be read twice. */
+  mark: number
+  name: string
+  x: number
+  y: number
+}
+
+/** A switched-off control that answered the pointer by changing. */
+interface Stirred {
+  name: string
+  was: string
+  now: string
+}
+
 /** What the cursor probe found, and what proves it was looking. */
 interface CursorFindings {
   /** Controls whose pointer is wrong. */
   wrong: WrongCursor[]
   /** Bait the waiver took out — empty means the waiver stopped working. */
   waived: string[]
-  /** Controls read, bait included. */
+  /**
+   * Clauses of the selector that no bait answers for. A clause with no bait is
+   * a kind of control the probe reads and nothing proves it can fail on.
+   */
+  unbaited: string[]
+  /** Controls the story itself drew and the probe read. Bait is not counted. */
   scanned: number
+  /**
+   * Controls the story itself drew at all, before anything was skipped. A page
+   * that drew controls and had none of them read is a page the probe was
+   * walked past, not a page with nothing to say.
+   */
+  drawn: number
+  /** Switched-off controls, to be read again with the pointer on them. */
+  off: OffControl[]
 }
 
 /** Names the bait of the cursor proof apart from anything a story draws. */
@@ -431,8 +460,13 @@ const CURSOR_BAIT = 'a control whose pointer has to be caught'
 
 /**
  * Every kind of control the cursor probe is answerable for, as the bait draws
- * it. One entry per clause of CURSOR_SELECTOR, so a clause dropped from there
- * stops being caught here and the first story turns red.
+ * it, paired with the clause of the selector that reads it.
+ *
+ * The two are kept as one list and checked in both directions. A clause lost
+ * from the selector leaves a bait nothing catches; a kind lost from the list
+ * leaves a clause no bait answers for. Either way the first story is red —
+ * which it was not when the two were written out separately and only the first
+ * direction was checked.
  *
  * Text fields are deliberately absent from both: a pointer over a field says
  * `text` and a field is not pressed. A native `select` is absent for the same
@@ -440,31 +474,92 @@ const CURSOR_BAIT = 'a control whose pointer has to be caught'
  */
 const CURSOR_KINDS: {
   kind: string
+  clause: string
   tag: string
   attrs?: Record<string, string>
 }[] = [
-  { kind: 'row of a list', tag: 'div', attrs: { 'data-pressable-row': '' } },
-  { kind: 'button', tag: 'button' },
-  { kind: 'link', tag: 'a', attrs: { href: '#' } },
-  { kind: 'pressable', tag: 'div', attrs: { role: 'button' } },
-  { kind: 'list opener', tag: 'div', attrs: { role: 'combobox' } },
-  { kind: 'tab', tag: 'div', attrs: { role: 'tab' } },
-  { kind: 'switch', tag: 'div', attrs: { role: 'switch' } },
-  { kind: 'checkbox', tag: 'div', attrs: { role: 'checkbox' } },
-  { kind: 'radio', tag: 'div', attrs: { role: 'radio' } },
-  { kind: 'menu row', tag: 'div', attrs: { role: 'menuitem' } },
+  {
+    kind: 'row of a list',
+    clause: '[data-pressable-row]',
+    tag: 'div',
+    attrs: { 'data-pressable-row': '' },
+  },
+  { kind: 'button', clause: 'button', tag: 'button' },
+  { kind: 'link', clause: 'a[href]', tag: 'a', attrs: { href: '#' } },
+  {
+    kind: 'pressable',
+    clause: '[role="button"]',
+    tag: 'div',
+    attrs: { role: 'button' },
+  },
+  {
+    kind: 'list opener',
+    clause: '[role="combobox"]',
+    tag: 'div',
+    attrs: { role: 'combobox' },
+  },
+  { kind: 'tab', clause: '[role="tab"]', tag: 'div', attrs: { role: 'tab' } },
+  {
+    kind: 'switch',
+    clause: '[role="switch"]',
+    tag: 'div',
+    attrs: { role: 'switch' },
+  },
+  {
+    kind: 'checkbox',
+    clause: '[role="checkbox"]',
+    tag: 'div',
+    attrs: { role: 'checkbox' },
+  },
+  {
+    kind: 'radio',
+    clause: '[role="radio"]',
+    tag: 'div',
+    attrs: { role: 'radio' },
+  },
+  {
+    kind: 'menu row',
+    clause: '[role="menuitem"]',
+    tag: 'div',
+    attrs: { role: 'menuitem' },
+  },
   {
     kind: 'menu row that ticks',
+    clause: '[role="menuitemcheckbox"]',
     tag: 'div',
     attrs: { role: 'menuitemcheckbox' },
   },
-  { kind: 'menu row that marks', tag: 'div', attrs: { role: 'menuitemradio' } },
-  { kind: 'list row', tag: 'div', attrs: { role: 'option' } },
-  { kind: 'disclosure', tag: 'summary' },
+  {
+    kind: 'menu row that marks',
+    clause: '[role="menuitemradio"]',
+    tag: 'div',
+    attrs: { role: 'menuitemradio' },
+  },
+  {
+    kind: 'list row',
+    clause: '[role="option"]',
+    tag: 'div',
+    attrs: { role: 'option' },
+  },
+  { kind: 'disclosure', clause: 'summary', tag: 'summary' },
 ]
 
-/** The bait for the other half of the rule, and for the waiver. */
+/**
+ * The bait for everything the probe says beyond "this kind is read".
+ *
+ * `CURSOR_OFF` is the other half of the rule. `CURSOR_UNREACHABLE` is the whole
+ * reason the probe walks past `pointer-events: none` instead of reading the
+ * control's own `cursor`: it says `not-allowed` in the stylesheet and shows the
+ * page's own pointer on the screen, so a probe that read the stylesheet would
+ * pass it. That walk found the one real instance of this, and fixing it would
+ * have left the walk untravelled by anything — this bait is what keeps it
+ * measured. `CURSOR_STIRS` is a switched-off control that changes when the
+ * pointer arrives, which is what `still` and the `disabled:hover:` colours
+ * exist to prevent and what nothing was checking.
+ */
 const CURSOR_OFF = 'switched off'
+const CURSOR_UNREACHABLE = 'switched off and out of the pointer events'
+const CURSOR_STIRS = 'switched off and stirred by the pointer'
 const CURSOR_WAIVED = 'waived'
 
 /**
@@ -492,13 +587,23 @@ const CURSOR_WAIVED = 'waived'
  * here.
  */
 function measureCursors(bait: string): CursorFindings {
-  // One clause per entry of CURSOR_KINDS. A field is not here: see the comment
-  // on that list.
-  const SELECTOR =
-    'button, a[href], [role="button"], [role="combobox"], [role="tab"], ' +
-    '[role="switch"], [role="checkbox"], [role="radio"], [role="menuitem"], ' +
-    '[role="menuitemcheckbox"], [role="menuitemradio"], [role="option"], ' +
-    '[data-pressable-row], summary'
+  const clauses = [
+    'button',
+    'a[href]',
+    '[role="button"]',
+    '[role="combobox"]',
+    '[role="tab"]',
+    '[role="switch"]',
+    '[role="checkbox"]',
+    '[role="radio"]',
+    '[role="menuitem"]',
+    '[role="menuitemcheckbox"]',
+    '[role="menuitemradio"]',
+    '[role="option"]',
+    '[data-pressable-row]',
+    'summary',
+  ]
+  const SELECTOR = clauses.join(', ')
 
   /** Switched off, however this control happens to say so. */
   const off = (control: Element) =>
@@ -529,7 +634,10 @@ function measureCursors(bait: string): CursorFindings {
 
   const wrong: WrongCursor[] = []
   const waived: string[] = []
+  const offs: OffControl[] = []
   let scanned = 0
+  let drawn = 0
+  let mark = 0
 
   for (const control of document.querySelectorAll(SELECTOR)) {
     const box = control.getBoundingClientRect()
@@ -539,12 +647,27 @@ function measureCursors(bait: string): CursorFindings {
     if (getComputedStyle(control).visibility === 'hidden') {
       continue
     }
+
+    const name = named(control)
+
+    // Counted before every skip below it, so that a page whose controls were
+    // all taken out of the walk can be told from a page that drew none. A
+    // control off the edge of the window is not counted: a shut drawer is
+    // drawn, and is not a control anyone was going to reach.
+    if (
+      !name.startsWith(bait) &&
+      box.right > 0 &&
+      box.bottom > 0 &&
+      box.left < window.innerWidth &&
+      box.top < window.innerHeight
+    ) {
+      drawn++
+    }
+
     // Behind an open layer, or otherwise taken off the page for a reader.
     if (control.closest('[aria-hidden="true"], [inert]')) {
       continue
     }
-
-    const name = named(control)
 
     if (control.closest('[data-cursor-exempt]')) {
       if (name.startsWith(bait)) {
@@ -553,7 +676,11 @@ function measureCursors(bait: string): CursorFindings {
       continue
     }
 
-    scanned++
+    // Counted apart from the bait, which the probe lays itself: a story whose
+    // controls have all been taken out of the walk has to be able to say so.
+    if (!name.startsWith(bait)) {
+      scanned++
+    }
 
     const switchedOff = off(control)
     const want = switchedOff ? 'not-allowed' : 'pointer'
@@ -567,14 +694,84 @@ function measureCursors(bait: string): CursorFindings {
         state: switchedOff ? 'switched off' : 'live',
       })
     }
+
+    if (switchedOff) {
+      const x = Math.round(box.left + box.width / 2)
+      const y = Math.round(box.top + box.height / 2)
+      if (x >= 0 && y >= 0 && x < window.innerWidth && y < window.innerHeight) {
+        mark++
+        control.setAttribute('data-cursor-off', String(mark))
+        offs.push({ mark, name, x, y })
+      }
+    }
   }
 
-  return { wrong, waived, scanned }
+  const baits = document.getElementById('cursor-probe-bait')
+  const unbaited = clauses.filter(
+    (clause) => !baits || baits.querySelectorAll(clause).length === 0,
+  )
+
+  return { wrong, waived, unbaited, scanned, drawn, off: offs }
+}
+
+/**
+ * How every switched-off control on the page is drawn, one line each, to be
+ * compared against itself with the pointer somewhere else and then on it.
+ *
+ * Movement is spelled the same however the browser happens to phrase it:
+ * `translate: none` at rest and `translate: 0px` under `translate-0` are the
+ * same nothing, and a check that could not say so would report every frozen
+ * control as having moved.
+ *
+ * Self-contained: serialised into the browser, closing over nothing here.
+ */
+function readOffLooks(): Record<string, string> {
+  const settled = (value: string, neutral: number) => {
+    if (value === 'none' || value === '') {
+      return String(neutral)
+    }
+    const numbers = value.match(/-?\d*\.?\d+/g)
+    return numbers && numbers.every((one) => Number(one) === neutral)
+      ? String(neutral)
+      : value
+  }
+
+  const looks: Record<string, string> = {}
+
+  for (const control of document.querySelectorAll('[data-cursor-off]')) {
+    const style = getComputedStyle(control)
+    const parts = [
+      style.backgroundColor,
+      style.borderColor,
+      style.borderStyle,
+      style.color,
+      style.boxShadow,
+      style.textDecorationLine,
+      style.opacity,
+      settled(style.translate, 0),
+      settled(style.rotate, 0),
+      settled(style.scale, 1),
+    ]
+
+    const icon = control.querySelector('svg')
+    if (icon) {
+      const drawn = getComputedStyle(icon)
+      parts.push(
+        settled(drawn.rotate, 0),
+        settled(drawn.scale, 1),
+        settled(drawn.translate, 0),
+      )
+    }
+
+    looks[control.getAttribute('data-cursor-off') ?? ''] = parts.join(' | ')
+  }
+
+  return looks
 }
 
 /**
  * Lays one control of every kind the probe is answerable for, each told to show
- * `default`, plus one switched off and one waived.
+ * `default`, plus the four that stand for what the probe says beyond that.
  *
  * A probe that finds nothing to look at answers exactly what a page whose every
  * control is right answers, and nothing later in the run can tell those two
@@ -591,22 +788,31 @@ function layCursorBait({
   bait,
   kinds,
   off,
+  unreachable,
+  stirs,
   waived,
 }: {
   bait: string
   kinds: { kind: string; tag: string; attrs?: Record<string, string> }[]
   off: string
+  unreachable: string
+  stirs: string
   waived: string
 }) {
   const row = document.createElement('div')
   row.id = 'cursor-probe-bait'
+  // `pointer-events` is spelled out because an open dialog takes the whole body
+  // out of them, and bait a pointer cannot reach is bait that never stirs — the
+  // check that the probe can see a control move would have gone quiet on every
+  // story with something open, which is where it is needed most.
   row.style.cssText =
-    'position:fixed;left:20px;top:0;display:flex;gap:8px;z-index:2147483646'
+    'position:fixed;left:20px;top:0;display:flex;gap:8px;z-index:2147483646;pointer-events:auto'
 
   const lay = (
     kind: string,
     tag: string,
     attrs: Record<string, string> = {},
+    extra = '',
   ) => {
     const control = document.createElement(tag)
     control.setAttribute('aria-label', `${bait}: ${kind}`)
@@ -614,7 +820,8 @@ function layCursorBait({
       control.setAttribute(name, value)
     }
     control.style.cssText =
-      'width:12px;height:12px;min-width:0;min-height:0;padding:0;margin:0;border:0;appearance:none;flex:none;cursor:default'
+      'width:12px;height:12px;min-width:0;min-height:0;padding:0;margin:0;border:0;appearance:none;flex:none;cursor:default;background:transparent;pointer-events:auto' +
+      extra
     return control
   }
 
@@ -624,6 +831,27 @@ function layCursorBait({
 
   row.append(lay(off, 'button', { disabled: '' }))
 
+  // Says `not-allowed` and shows the page's pointer, because nothing can reach
+  // it. Caught only by a probe that walks past `pointer-events: none`.
+  row.append(
+    lay(
+      unreachable,
+      'button',
+      { disabled: '' },
+      ';pointer-events:none;cursor:not-allowed',
+    ),
+  )
+
+  // Switched off and drawn differently the moment the pointer arrives.
+  const stirred = lay(stirs, 'button', { disabled: '', 'data-stirs': '' })
+  row.append(stirred)
+
+  const rule = document.createElement('style')
+  rule.id = 'cursor-probe-bait-rule'
+  rule.textContent =
+    '#cursor-probe-bait [data-stirs]:hover{background:rgb(1,2,3) !important}'
+  document.head.append(rule)
+
   const behindTheWaiver = document.createElement('div')
   behindTheWaiver.dataset.cursorExempt = 'the bait that proves the waiver works'
   behindTheWaiver.append(lay(waived, 'button'))
@@ -632,9 +860,13 @@ function layCursorBait({
   document.body.append(row)
 }
 
-/** Takes the bait back off the page. */
+/** Takes the bait, and the marks the probe left, back off the page. */
 function clearCursorBait() {
   document.getElementById('cursor-probe-bait')?.remove()
+  document.getElementById('cursor-probe-bait-rule')?.remove()
+  for (const marked of document.querySelectorAll('[data-cursor-off]')) {
+    marked.removeAttribute('data-cursor-off')
+  }
 }
 
 /**
@@ -721,26 +953,67 @@ const config: TestRunnerConfig = {
       bait: CURSOR_BAIT,
       kinds: CURSOR_KINDS,
       off: CURSOR_OFF,
+      unreachable: CURSOR_UNREACHABLE,
+      stirs: CURSOR_STIRS,
       waived: CURSOR_WAIVED,
     })
-    const cursors = await page.evaluate(measureCursors, CURSOR_BAIT)
-    await page.evaluate(clearCursorBait)
+
+    /**
+     * Reads the page twice over for every switched-off control: once with the
+     * pointer away from all of them, once with it on the one being read. What
+     * `:hover` does to a control is not something the page can be asked — it
+     * has to be done to it.
+     */
+    const read = async () => {
+      const found = await page.evaluate(measureCursors, CURSOR_BAIT)
+      const atRest = await page.evaluate(readOffLooks)
+      const stirred: Stirred[] = []
+
+      for (const one of found.off) {
+        await page.mouse.move(one.x, one.y)
+        const now = (await page.evaluate(readOffLooks))[String(one.mark)]
+        const was = atRest[String(one.mark)]
+        if (now !== undefined && was !== undefined && now !== was) {
+          stirred.push({ name: one.name, was, now })
+        }
+      }
+
+      return { found, stirred }
+    }
+
+    // The runner renders every story into this one page, so bait left behind by
+    // a throw would fail every story after it, for a reason that is not theirs.
+    const { found: cursors, stirred } = await read().finally(async () => {
+      await page.mouse.move(0, 0)
+      await page.evaluate(clearCursorBait)
+    })
 
     const asBait = (kind: string) => `${CURSOR_BAIT}: ${kind}`
     const caught = new Set(cursors.wrong.map((one) => one.name))
     const uncaught = [
       ...CURSOR_KINDS.map(({ kind }) => kind),
       CURSOR_OFF,
+      CURSOR_UNREACHABLE,
     ].filter((kind) => !caught.has(asBait(kind)))
 
     if (uncaught.length > 0) {
       throw new Error(
         `${context.id}: the cursor probe passed ${uncaught.length} bait ` +
-          'control(s) told to show `default` — ' +
+          'control(s) it has to catch — ' +
           `${uncaught.join(', ')} — so it can no longer fail on them and ` +
-          'nothing it says about this story covers them. Fix SELECTOR in ' +
-          'measureCursors, in .storybook/test-runner.ts, before trusting a ' +
-          'green run.',
+          'nothing it says about this story covers them. Fix the clauses or ' +
+          'the walk past `pointer-events: none` in measureCursors, in ' +
+          '.storybook/test-runner.ts, before trusting a green run.',
+      )
+    }
+
+    if (cursors.unbaited.length > 0) {
+      throw new Error(
+        `${context.id}: ${cursors.unbaited.length} clause(s) of the cursor ` +
+          `probe — ${cursors.unbaited.join(', ')} — have no bait answering ` +
+          'for them, so the probe reads that kind of control and nothing ' +
+          'proves it can fail on one. Put the kind back into CURSOR_KINDS in ' +
+          '.storybook/test-runner.ts.',
       )
     }
 
@@ -751,6 +1024,28 @@ const config: TestRunnerConfig = {
           'rejoined the run. Fix measureCursors in ' +
           '.storybook/test-runner.ts, or take the waiver out of ' +
           '.storybook/cursor-exempt.test.ts as well.',
+      )
+    }
+
+    if (!stirred.some((one) => one.name === asBait(CURSOR_STIRS))) {
+      throw new Error(
+        `${context.id}: the pointer was put on a switched-off control drawn ` +
+          'to change colour under it, and the probe said it had not changed. ' +
+          'It can no longer tell whether a control that is off stays where it ' +
+          'is when a reader points at it. Fix readOffLooks in ' +
+          '.storybook/test-runner.ts.',
+      )
+    }
+
+    if (cursors.drawn > 0 && cursors.scanned < 1) {
+      throw new Error(
+        `${context.id}: the story drew ${cursors.drawn} pressable control(s) ` +
+          'and the probe read none of them — only its own bait, which it lays ' +
+          'itself and which would keep every check above this one green. ' +
+          'Something has taken the whole page out of the walk: `inert`, ' +
+          '`aria-hidden` with no open layer under it, or a waiver. A story ' +
+          'that genuinely draws nothing pressable is not this, and is not ' +
+          'reported: it draws none and reads none.',
       )
     }
 
@@ -776,6 +1071,26 @@ const config: TestRunnerConfig = {
           'says `not-allowed`, which it cannot do while it is also out of the ' +
           'pointer events: drop `pointer-events-none` rather than write a ' +
           'cursor no screen will ever show.',
+      )
+    }
+
+    const moved = stirred.filter((one) => !one.name.startsWith(CURSOR_BAIT))
+
+    if (moved.length > 0) {
+      throw new Error(
+        `${context.id}: ${moved.length} switched-off control(s) answer the ` +
+          'pointer by changing.\n' +
+          moved
+            .map(
+              (one) =>
+                `  ${one.name}\n    away: ${one.was}\n    on it: ${one.now}`,
+            )
+            .join('\n') +
+          '\nA control that is off keeps taking pointer events so that it can ' +
+          'say `not-allowed`, which puts it back in reach of every `hover:` ' +
+          'rule it has. Lay `still` from components/vela/tactile.ts on it for ' +
+          'the movement, and freeze whatever colour, border or shadow the ' +
+          'hover changes with a `disabled:hover:` of its own.',
       )
     }
   },
