@@ -356,9 +356,11 @@ export const 該当なし: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    /** Said once, at the top; what follows is what to do about it. */
+    await expect(canvas.getByText('該当する番組がありません')).toBeVisible()
     await expect(
       canvas.getByText(
-        '該当する番組がありませんでした。キーワード・除外キーワード・期間を見直してください。開始日を空にすると、これから放送される番組だけを探します。',
+        'キーワード・除外キーワード・期間を見直してください。開始日を空にすると、これから放送される番組だけを探します。',
       ),
     ).toBeVisible()
     await saysNothingItCannotKeep(canvas)
