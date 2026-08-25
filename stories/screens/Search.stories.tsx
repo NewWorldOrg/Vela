@@ -309,7 +309,23 @@ export const 検索結果: Story = {
     },
   },
   play: async ({ canvasElement }) => {
-    await saysNothingItCannotKeep(within(canvasElement))
+    const canvas = within(canvasElement)
+
+    /*
+      What this state says, before what it does not. An absence is a claim any
+      screen that drew nothing at all would satisfy, and the result is the one
+      part of this screen that is drawn only here.
+    */
+    await expect(
+      canvas.getByRole('heading', { name: '検索結果' }),
+    ).toBeVisible()
+    await expect(canvas.getAllByRole('row')).toHaveLength(
+      SEARCH_HIT_FIXTURES.length + 1,
+    )
+    await expect(
+      canvas.getByRole('link', { name: SEARCH_HIT_FIXTURES[0].title }),
+    ).toBeVisible()
+    await saysNothingItCannotKeep(canvas)
   },
 }
 
