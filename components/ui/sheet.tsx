@@ -75,7 +75,7 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="tap-target absolute top-[9px] right-2.5 inline-flex size-[27px] cursor-pointer items-center justify-center rounded-full border border-edge text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:-rotate-6 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring focus-visible:outline-hidden disabled:cursor-not-allowed disabled:hover:rotate-0 disabled:hover:bg-transparent disabled:hover:text-ink-2">
+          <SheetPrimitive.Close className="tap-target absolute top-[9px] right-2.5 inline-flex size-[27px] cursor-pointer items-center justify-center rounded-full border border-edge text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:-rotate-6 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring focus-visible:outline-hidden">
             <CloseIcon className="size-[13px]" />
             <span className="sr-only">閉じる</span>
           </SheetPrimitive.Close>
