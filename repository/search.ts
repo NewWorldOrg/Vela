@@ -55,7 +55,14 @@ export type SearchOutcome =
 
 export interface SearchResult {
   condition: SearchCondition
-  /** 種別で絞ったあとの、チャンネル条件に出せるチャンネル */
+  /**
+   * チャンネル条件に出せるチャンネルの全部。
+   *
+   * Not narrowed to the broadcast type the address asks for: the type is a
+   * condition the reader assembles before asking, so widening it back has to
+   * offer the channels the narrower type left out, and a list that had already
+   * been cut down could not.
+   */
   channels: GuideChannel[]
   outcome: SearchOutcome
 }
@@ -101,9 +108,9 @@ export async function searchPrograms(
 ): Promise<SearchResult> {
   const condition = readSearchCondition(raw)
   const carried = await fetchServiceChannels()
-  const channels = [...carried]
-    .filter((channel) => !condition.kind || channel.kind === condition.kind)
-    .sort((left, right) => compareChannels(left, right))
+  const channels = [...carried].sort((left, right) =>
+    compareChannels(left, right),
+  )
 
   if (!narrowsAnything(condition)) {
     return { condition, channels, outcome: { state: 'idle' } }

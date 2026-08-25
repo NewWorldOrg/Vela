@@ -106,7 +106,13 @@ export interface RawSearchCondition {
   page?: string
 }
 
-export interface SearchCondition {
+/**
+ * 検索条件 — what the reader is asking the store to look for.
+ *
+ * These are assembled in the fields and confirmed in one go, so a condition
+ * half typed is not a condition anybody asked for.
+ */
+export interface SearchTerms {
   q?: string
   exclude?: string
   fields: SearchField
@@ -117,10 +123,22 @@ export interface SearchCondition {
   /** 放送日(JST 4:00 区切り)。`YYYY-MM-DD` */
   from?: string
   to?: string
+}
+
+/**
+ * 結果の見せ方 — how what was already asked for is arranged.
+ *
+ * Nothing here changes which programmes come back, so there is nothing to
+ * assemble and nothing to confirm: each of them takes effect where it is
+ * chosen.
+ */
+export interface SearchViewing {
   sort: SearchSort
   perPage: number
   page: number
 }
+
+export interface SearchCondition extends SearchTerms, SearchViewing {}
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
@@ -239,62 +257,105 @@ export function readSearchCondition(raw: RawSearchCondition): SearchCondition {
 /** A condition that asks for nothing, spelled by the reader itself. */
 export const EMPTY_SEARCH_CONDITION: SearchCondition = readSearchCondition({})
 
+/** 条件の側だけを取り出す。 */
+export function searchTermsOf(condition: SearchCondition): SearchTerms {
+  return {
+    q: condition.q,
+    exclude: condition.exclude,
+    fields: condition.fields,
+    genres: condition.genres,
+    kind: condition.kind,
+    channels: condition.channels,
+    from: condition.from,
+    to: condition.to,
+  }
+}
+
+/** 見せ方の側だけを取り出す。 */
+export function searchViewingOf(condition: SearchCondition): SearchViewing {
+  return {
+    sort: condition.sort,
+    perPage: condition.perPage,
+    page: condition.page,
+  }
+}
+
+function writeTerms(params: URLSearchParams, terms: SearchTerms): void {
+  if (terms.q) {
+    params.set('q', terms.q)
+  }
+
+  if (terms.exclude) {
+    params.set('exclude', terms.exclude)
+  }
+
+  if (terms.fields !== SEARCH_DEFAULT_FIELDS) {
+    params.set('fields', terms.fields)
+  }
+
+  for (const genre of terms.genres) {
+    params.append('genre', genre)
+  }
+
+  if (terms.kind) {
+    params.set('type', terms.kind)
+  }
+
+  if (terms.channels.length > 0) {
+    params.set('channel', terms.channels.join(','))
+  }
+
+  if (terms.from) {
+    params.set('from', terms.from)
+  }
+
+  if (terms.to) {
+    params.set('to', terms.to)
+  }
+}
+
+function writeViewing(params: URLSearchParams, viewing: SearchViewing): void {
+  if (viewing.sort !== SEARCH_DEFAULT_SORT) {
+    params.set('sort', viewing.sort)
+  }
+
+  if (viewing.perPage !== SEARCH_DEFAULT_PER_PAGE) {
+    params.set('per_page', String(viewing.perPage))
+  }
+
+  if (viewing.page > 1) {
+    params.set('page', String(viewing.page))
+  }
+}
+
+/**
+ * The address the conditions alone are written to.
+ *
+ * This is what the screen compares one set of conditions with another by: two
+ * addresses that differ only in how the result is arranged hold the same
+ * question, and the fields the reader is filling in are left where they are.
+ */
+export function searchTermsQueryOf(terms: SearchTerms): string {
+  const params = new URLSearchParams()
+
+  writeTerms(params, terms)
+
+  return params.toString()
+}
+
 /**
  * The address a condition is written to — the inverse of reading one.
  *
- * The screen has no state but this: every control writes the whole condition
- * back out and the next render reads it in again, so a condition that does not
- * survive the trip is a condition the screen cannot hold. What a reader would
- * have supplied anyway is left out, which is why an untouched screen has a bare
- * address and why the count of conditions can be taken from the condition
- * rather than from the address.
+ * A condition that does not survive the trip is a condition the screen cannot
+ * hold. What a reader would have supplied anyway is left out, which is why an
+ * untouched screen has a bare address and why the count of conditions can be
+ * taken from the condition rather than from the address.
  */
 export function searchQueryOf(condition: SearchCondition): string {
   const params = new URLSearchParams()
 
-  if (condition.q) {
-    params.set('q', condition.q)
-  }
-
-  if (condition.exclude) {
-    params.set('exclude', condition.exclude)
-  }
-
-  if (condition.fields !== SEARCH_DEFAULT_FIELDS) {
-    params.set('fields', condition.fields)
-  }
-
-  for (const genre of condition.genres) {
-    params.append('genre', genre)
-  }
-
-  if (condition.kind) {
-    params.set('type', condition.kind)
-  }
-
-  if (condition.channels.length > 0) {
-    params.set('channel', condition.channels.join(','))
-  }
-
-  if (condition.from) {
-    params.set('from', condition.from)
-  }
-
-  if (condition.to) {
-    params.set('to', condition.to)
-  }
-
-  if (condition.sort !== SEARCH_DEFAULT_SORT) {
-    params.set('sort', condition.sort)
-  }
-
-  if (condition.perPage !== SEARCH_DEFAULT_PER_PAGE) {
-    params.set('per_page', String(condition.perPage))
-  }
-
-  if (condition.page > 1) {
-    params.set('page', String(condition.page))
-  }
+  writeTerms(params, condition)
+  writeViewing(params, condition)
 
   return params.toString()
 }
@@ -320,15 +381,15 @@ export function searchConditionOfQuery(query: string): SearchCondition {
  * programme in. Neither are the sort and the paging, which only arrange what
  * came back.
  */
-export function narrowsAnything(condition: SearchCondition): boolean {
+export function narrowsAnything(terms: SearchTerms): boolean {
   return Boolean(
-    condition.q ||
-    condition.exclude ||
-    condition.genres.length ||
-    condition.kind ||
-    condition.channels.length ||
-    condition.from ||
-    condition.to,
+    terms.q ||
+    terms.exclude ||
+    terms.genres.length ||
+    terms.kind ||
+    terms.channels.length ||
+    terms.from ||
+    terms.to,
   )
 }
 

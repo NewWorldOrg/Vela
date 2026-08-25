@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
@@ -18,6 +18,9 @@ import {
   SEARCH_SORT_OPTIONS,
   genreLabelOf,
   searchQueryOf,
+  searchTermsOf,
+  searchTermsQueryOf,
+  searchViewingOf,
 } from '@/repository/search-options'
 import type {
   SearchCondition,
@@ -25,6 +28,8 @@ import type {
   SearchGenre,
   SearchKind,
   SearchSort,
+  SearchTerms,
+  SearchViewing,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -88,14 +93,39 @@ function pageNumbers(current: number, last: number): (number | 'gap')[] {
   return items
 }
 
+/**
+ * The screen, begun again from nothing whenever the conditions in the address
+ * change.
+ *
+ * That is how the fields come to hold what the address asks for without a
+ * `useEffect` watching it: the key is the conditions the address carries, so an
+ * address the reader did not type into the fields — a link opened cold, the
+ * back button, 条件をすべて消す — arrives as a new screen whose fields start at
+ * what it says. An address that differs only in how the result is arranged is
+ * the same key, and leaves a half-written condition exactly where it was.
+ */
 export function SearchView({ result }: { result: SearchResult }) {
+  return (
+    <SearchScreen key={searchTermsQueryOf(result.condition)} result={result} />
+  )
+}
+
+function SearchScreen({ result }: { result: SearchResult }) {
   const router = useRouter()
   const pathname = usePathname()
   const [copied, setCopied] = useState<{ href: string; ok: boolean } | null>(
     null,
   )
-  const form = useRef<HTMLFormElement>(null)
   const { condition, channels, outcome } = result
+
+  /**
+   * The conditions as the fields hold them, which is not what was asked for
+   * until 検索 is pressed. Started from the address, and started again from it
+   * every time the address answers a different question.
+   */
+  const [draft, setDraft] = useState<SearchDraft>(() =>
+    draftOf(searchTermsOf(condition)),
+  )
 
   const go = useCallback(
     (next: SearchCondition, push = false) => {
@@ -107,40 +137,46 @@ export function SearchView({ result }: { result: SearchResult }) {
     [router, pathname],
   )
 
+  /** Answers one condition differently. Nothing is asked for, and nothing moves. */
+  const amend = (part: Partial<SearchDraft>): void =>
+    setDraft((previous) => ({ ...previous, ...part }))
+
   /**
-   * What the two text fields hold at this moment, which is not yet in the
-   * address: they are confirmed with Enter or 検索 rather than on every letter,
-   * so between one of those and the next the field is ahead of the condition.
+   * Arranges what was already asked for. The conditions come from the address
+   * rather than from the fields, so a keyword still being typed is not
+   * confirmed by a reader who only meant to sort the rows they have.
+   */
+  const show = (part: Partial<SearchViewing>, push = false): void =>
+    go({ ...condition, ...part }, push)
+
+  /**
+   * Empties the fields as well as the address. Emptying the address is usually
+   * enough — the screen begins again on a key that has changed — but a reader
+   * who typed into an address that was already bare would change no key, and
+   * would watch the button do nothing to the field under their hands.
+   */
+  const clear = (): void => {
+    setDraft(draftOf(searchTermsOf(EMPTY_SEARCH_CONDITION)))
+    go(EMPTY_SEARCH_CONDITION)
+  }
+
+  const terms: SearchTerms = termsOf(draft)
+
+  /**
+   * The address 検索 would write: the conditions in the fields, arranged the way
+   * the reader is already reading, from the first page — a condition just
+   * assembled has fewer pages than the one they were standing on.
    *
-   * Every other control writes the whole condition, and so has to write these
-   * too. Leaving them out would send the reader a condition they can see they
-   * did not ask for — the keyword still in the field, and gone from the address
-   * underneath it — which is the two-places-for-one-condition this screen was
-   * rebuilt to stop.
+   * It is what the line under the fields shows and what the copy button copies,
+   * so what pressing 検索 does is legible before it is pressed. Asking leaves an
+   * entry behind, because a question the reader put is somewhere they have been
+   * and the back button is how they get to it.
    */
-  const typed = useCallback((): Partial<SearchCondition> => {
-    if (!form.current) {
-      return {}
-    }
-
-    const written = new FormData(form.current)
-
-    return {
-      q: wordsOf(written.get('q')),
-      exclude: wordsOf(written.get('exclude')),
-    }
-  }, [])
-
-  /**
-   * The whole condition, with one part of it answered differently — and back to
-   * the first page, because a narrower condition has fewer pages than the one
-   * the reader is standing on.
-   */
-  const ask = useCallback(
-    (part: Partial<SearchCondition>) =>
-      go({ ...condition, ...typed(), ...part, page: 1 }),
-    [go, condition, typed],
-  )
+  const asking: SearchCondition = {
+    ...terms,
+    ...searchViewingOf(condition),
+    page: 1,
+  }
 
   /**
    * The conditions that narrow, which is what `narrowsAnything` counts and so
@@ -149,22 +185,29 @@ export function SearchView({ result }: { result: SearchResult }) {
    * the store then turns away as asking for nothing.
    */
   const askedCount: number = [
-    Boolean(condition.q),
-    Boolean(condition.exclude),
-    condition.genres.length > 0,
-    Boolean(condition.kind),
-    condition.channels.length > 0,
-    Boolean(condition.from || condition.to),
+    Boolean(terms.q),
+    Boolean(terms.exclude),
+    terms.genres.length > 0,
+    Boolean(terms.kind),
+    terms.channels.length > 0,
+    Boolean(terms.from || terms.to),
   ].filter((asked) => asked).length
   const found = outcome.state === 'searched' ? outcome.found : undefined
   const noHit = found !== undefined && found.hits.length === 0
-  const written: string = searchQueryOf(condition)
+  const written: string = searchQueryOf(asking)
   const href: string = written ? `${pathname}?${written}` : pathname
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
-    (option) => !condition.genres.includes(option.value),
+    (option) => !draft.genres.includes(option.value),
   )
+  /**
+   * The channels the 種別 in the fields leaves standing. Narrowed here rather
+   * than by the store, which only ever hears the 種別 that was asked for: a
+   * reader widening it back would otherwise be offered the narrower list.
+   */
   const unusedChannels = channels.filter(
-    (channel) => !condition.channels.includes(channel.id),
+    (channel) =>
+      (!draft.kind || channel.kind === draft.kind) &&
+      !draft.channels.includes(channel.id),
   )
 
   /** A channel chosen under one 種別 keeps its spelling if the list narrows. */
@@ -197,7 +240,7 @@ export function SearchView({ result }: { result: SearchResult }) {
           {written !== '' && (
             <button
               type="button"
-              onClick={() => go(EMPTY_SEARCH_CONDITION)}
+              onClick={clear}
               className="tap-target ml-auto cursor-pointer text-note text-ink-3 underline underline-offset-[3px] hover:text-ink-2"
             >
               条件をすべて消す
@@ -205,27 +248,24 @@ export function SearchView({ result }: { result: SearchResult }) {
           )}
         </div>
 
+        {/*
+          Every condition is answered in here and asked for by submitting, which
+          is the 検索 button and — because the browser submits a form of its own
+          accord from a field the reader presses Enter in — Enter in any of the
+          fields.
+        */}
         <form
-          ref={form}
           className="mt-2.5"
           onSubmit={(event) => {
             event.preventDefault()
-            ask({})
+            go(asking, true)
           }}
         >
-          {/*
-            Keyed on the address rather than on the value: the field is
-            uncontrolled between confirmations, so the only way an address the
-            reader did not type — 条件をすべて消す, or the back button — reaches
-            it is by being drawn again. Keying on the value alone left a field
-            that was never confirmed sitting there through a clear.
-          */}
           <ConditionRow label="キーワード">
             <Input
-              key={`q ${written}`}
-              name="q"
               aria-label="キーワード"
-              defaultValue={condition.q ?? ''}
+              value={draft.q}
+              onChange={(event) => amend({ q: event.target.value })}
               areaClassName="w-[300px] max-w-full"
               className="h-[33px] rounded-full"
             />
@@ -234,10 +274,9 @@ export function SearchView({ result }: { result: SearchResult }) {
 
           <ConditionRow label="除外">
             <Input
-              key={`exclude ${written}`}
-              name="exclude"
               aria-label="除外"
-              defaultValue={condition.exclude ?? ''}
+              value={draft.exclude}
+              onChange={(event) => amend({ exclude: event.target.value })}
               areaClassName="w-[300px] max-w-full"
               className="h-[33px] rounded-full"
             />
@@ -246,8 +285,8 @@ export function SearchView({ result }: { result: SearchResult }) {
 
           <ConditionRow label="探す場所">
             <Select
-              value={condition.fields}
-              onValueChange={(value) => ask({ fields: value as SearchField })}
+              value={draft.fields}
+              onValueChange={(value) => amend({ fields: value as SearchField })}
             >
               <SelectTrigger
                 size="sm"
@@ -256,7 +295,7 @@ export function SearchView({ result }: { result: SearchResult }) {
               >
                 {
                   SEARCH_FIELD_OPTIONS.find(
-                    (option) => option.value === condition.fields,
+                    (option) => option.value === draft.fields,
                   )?.label
                 }
               </SelectTrigger>
@@ -271,14 +310,14 @@ export function SearchView({ result }: { result: SearchResult }) {
           </ConditionRow>
 
           <ConditionRow label="ジャンル">
-            {condition.genres.map((genre) => (
+            {draft.genres.map((genre) => (
               <Pick
                 key={genre}
                 label={genreLabelOf(genre)}
                 spoken={`ジャンル ${genreLabelOf(genre)} を外す`}
                 onRemove={() =>
-                  ask({
-                    genres: condition.genres.filter((one) => one !== genre),
+                  amend({
+                    genres: draft.genres.filter((one) => one !== genre),
                   })
                 }
               />
@@ -287,7 +326,7 @@ export function SearchView({ result }: { result: SearchResult }) {
               <Select
                 value=""
                 onValueChange={(value) =>
-                  ask({ genres: [...condition.genres, value as SearchGenre] })
+                  amend({ genres: [...draft.genres, value as SearchGenre] })
                 }
               >
                 <SelectTrigger
@@ -310,9 +349,9 @@ export function SearchView({ result }: { result: SearchResult }) {
 
           <ConditionRow label="種別">
             <Select
-              value={condition.kind ?? EVERY_KIND}
+              value={draft.kind ?? EVERY_KIND}
               onValueChange={(value) =>
-                ask({
+                amend({
                   kind:
                     value === EVERY_KIND ? undefined : (value as SearchKind),
                   channels: [],
@@ -325,7 +364,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                 className="w-fit rounded-full"
               >
                 {SEARCH_KIND_OPTIONS.find(
-                  (option) => option.value === condition.kind,
+                  (option) => option.value === draft.kind,
                 )?.label ?? 'すべて'}
               </SelectTrigger>
               <SelectContent position="popper">
@@ -340,14 +379,14 @@ export function SearchView({ result }: { result: SearchResult }) {
           </ConditionRow>
 
           <ConditionRow label="チャンネル">
-            {condition.channels.map((id) => (
+            {draft.channels.map((id) => (
               <Pick
                 key={id}
                 label={channelNameOf(id)}
                 spoken={`チャンネル ${channelNameOf(id)} を外す`}
                 onRemove={() =>
-                  ask({
-                    channels: condition.channels.filter((one) => one !== id),
+                  amend({
+                    channels: draft.channels.filter((one) => one !== id),
                   })
                 }
               />
@@ -361,11 +400,11 @@ export function SearchView({ result }: { result: SearchResult }) {
               say why instead.
             */}
             {unusedChannels.length > 0 &&
-              condition.channels.length < SEARCH_MOST_CHANNELS && (
+              draft.channels.length < SEARCH_MOST_CHANNELS && (
                 <Select
                   value=""
                   onValueChange={(value) =>
-                    ask({ channels: [...condition.channels, value] })
+                    amend({ channels: [...draft.channels, value] })
                   }
                 >
                   <SelectTrigger
@@ -384,10 +423,10 @@ export function SearchView({ result }: { result: SearchResult }) {
                   </SelectContent>
                 </Select>
               )}
-            {condition.channels.length === 0 && (
+            {draft.channels.length === 0 && (
               <Hint>指定しなければ、すべてのチャンネルから探します</Hint>
             )}
-            {condition.channels.length >= SEARCH_MOST_CHANNELS && (
+            {draft.channels.length >= SEARCH_MOST_CHANNELS && (
               <Hint>
                 チャンネルは {SEARCH_MOST_CHANNELS}{' '}
                 局まで指定できます。足すには、どれかを外してください
@@ -399,9 +438,9 @@ export function SearchView({ result }: { result: SearchResult }) {
             <Input
               type="date"
               aria-label="期間の開始日"
-              value={condition.from ?? ''}
+              value={draft.from ?? ''}
               onChange={(event) =>
-                ask({ from: event.target.value || undefined })
+                amend({ from: event.target.value || undefined })
               }
               areaClassName="w-[150px]"
               className="h-[33px] rounded-full"
@@ -410,8 +449,10 @@ export function SearchView({ result }: { result: SearchResult }) {
             <Input
               type="date"
               aria-label="期間の終了日"
-              value={condition.to ?? ''}
-              onChange={(event) => ask({ to: event.target.value || undefined })}
+              value={draft.to ?? ''}
+              onChange={(event) =>
+                amend({ to: event.target.value || undefined })
+              }
               areaClassName="w-[150px]"
               className="h-[33px] rounded-full"
             />
@@ -537,7 +578,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                   <Select
                     value={condition.sort}
                     onValueChange={(value) =>
-                      ask({ sort: value as SearchSort })
+                      show({ sort: value as SearchSort, page: 1 })
                     }
                   >
                     <SelectTrigger
@@ -561,7 +602,9 @@ export function SearchView({ result }: { result: SearchResult }) {
                   </Select>
                   <Select
                     value={String(condition.perPage)}
-                    onValueChange={(value) => ask({ perPage: Number(value) })}
+                    onValueChange={(value) =>
+                      show({ perPage: Number(value), page: 1 })
+                    }
                   >
                     <SelectTrigger
                       size="sm"
@@ -589,11 +632,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                 className="mx-auto mt-6 max-w-[560px]"
                 action={
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => go(EMPTY_SEARCH_CONDITION)}
-                    >
+                    <Button size="sm" variant="outline" onClick={clear}>
                       条件をすべて消す
                     </Button>
                     <Button size="sm" variant="outline" asChild>
@@ -675,12 +714,7 @@ export function SearchView({ result }: { result: SearchResult }) {
                     </tbody>
                   </table>
                 </div>
-                <Pager
-                  found={found}
-                  onPage={(page) =>
-                    go({ ...condition, ...typed(), page }, true)
-                  }
-                />
+                <Pager found={found} onPage={(page) => show({ page }, true)} />
               </>
             )}
           </>
@@ -690,14 +724,34 @@ export function SearchView({ result }: { result: SearchResult }) {
   )
 }
 
-function wordsOf(value: FormDataEntryValue | null): string | undefined {
-  return typeof value === 'string' ? value.trim() || undefined : undefined
+/**
+ * The conditions as the fields hold them.
+ *
+ * The two text fields keep what was typed, the spaces around it included: a
+ * value trimmed as it is typed is a value that cannot be typed a space into,
+ * and the words either side of one are the whole point of the field.
+ */
+interface SearchDraft extends Omit<SearchTerms, 'q' | 'exclude'> {
+  q: string
+  exclude: string
+}
+
+function draftOf(terms: SearchTerms): SearchDraft {
+  return { ...terms, q: terms.q ?? '', exclude: terms.exclude ?? '' }
+}
+
+function termsOf(draft: SearchDraft): SearchTerms {
+  return {
+    ...draft,
+    q: draft.q.trim() || undefined,
+    exclude: draft.exclude.trim() || undefined,
+  }
 }
 
 /**
  * One condition, one line: what it is on the left, what it is set to on the
- * right. The field is the condition — there is no second copy of it to keep in
- * step, and nothing to confirm before it counts.
+ * right. What the row holds is the answer being assembled; it counts once 検索
+ * has been pressed on it.
  *
  * Narrow enough and the heading sits above its row instead of beside it, which
  * is the only way a 300px field and a 92px heading both fit.

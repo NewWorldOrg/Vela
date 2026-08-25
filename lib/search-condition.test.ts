@@ -12,6 +12,9 @@ import {
   readSearchCondition,
   searchConditionOfQuery,
   searchQueryOf,
+  searchTermsOf,
+  searchTermsQueryOf,
+  searchViewingOf,
 } from './search-condition.ts'
 import type { SearchCondition } from './search-condition.ts'
 
@@ -413,4 +416,91 @@ test('a condition of nothing at all is the only one turned away', () => {
     ),
     false,
   )
+})
+
+/**
+ * The two halves of a condition. What the reader is asking for is assembled
+ * and confirmed in one go; how the answer is arranged takes effect where it is
+ * chosen. Nothing may fall between the two, and nothing may be in both — a key
+ * left out of the split is a key the screen would stop being able to hold, and
+ * a key in both is a way of showing the answer that would confirm a question
+ * nobody put.
+ */
+test('every part of a condition is either asked for or a way of showing it', () => {
+  const asked = Object.keys(searchTermsOf(everyCondition))
+  const shown = Object.keys(searchViewingOf(everyCondition))
+
+  assert.deepEqual(
+    [...asked, ...shown].sort(),
+    Object.keys(everyCondition).sort(),
+  )
+  assert.deepEqual(
+    asked.filter((key) => shown.includes(key)),
+    [],
+  )
+})
+
+test('the two halves put back together are the condition they came from', () => {
+  assert.deepEqual(
+    { ...searchTermsOf(everyCondition), ...searchViewingOf(everyCondition) },
+    everyCondition,
+  )
+})
+
+test('the address of the conditions alone leaves out how the answer is shown', () => {
+  const written = new URLSearchParams(searchTermsQueryOf(everyCondition))
+
+  assert.deepEqual(
+    [...new Set(written.keys())].sort(),
+    ['q', 'exclude', 'fields', 'genre', 'type', 'channel', 'from', 'to'].sort(),
+  )
+})
+
+test('the conditions alone are spelled the way the whole condition spells them', () => {
+  const whole = new URLSearchParams(searchQueryOf(everyCondition))
+  const terms = new URLSearchParams(searchTermsQueryOf(everyCondition))
+
+  for (const key of new Set(terms.keys())) {
+    assert.deepEqual(terms.getAll(key), whole.getAll(key), key)
+  }
+})
+
+test('two conditions arranged differently ask the same question', () => {
+  const arrangedAnotherWay: SearchCondition = {
+    ...everyCondition,
+    sort: 'start_at.desc',
+    perPage: 100,
+    page: 7,
+  }
+
+  assert.equal(
+    searchTermsQueryOf(arrangedAnotherWay),
+    searchTermsQueryOf(everyCondition),
+  )
+})
+
+test('each condition on its own reaches the address of the conditions', () => {
+  const alone: [Partial<SearchCondition>, string][] = [
+    [{ q: '観測所' }, 'q'],
+    [{ exclude: '再放送' }, 'exclude'],
+    [{ fields: 'title' }, 'fields'],
+    [{ genres: ['movie'] }, 'genre'],
+    [{ kind: 'bs' }, 'type'],
+    [{ channels: ['4-1024'] }, 'channel'],
+    [{ from: '2026-08-21' }, 'from'],
+    [{ to: '2026-08-27' }, 'to'],
+  ]
+
+  for (const [asked, key] of alone) {
+    const one: SearchCondition = { ...EMPTY_SEARCH_CONDITION, ...asked }
+
+    assert.deepEqual(
+      [...new URLSearchParams(searchTermsQueryOf(one)).keys()],
+      [key],
+    )
+  }
+})
+
+test('a condition asking for nothing has a bare address of its own', () => {
+  assert.equal(searchTermsQueryOf(EMPTY_SEARCH_CONDITION), '')
 })
