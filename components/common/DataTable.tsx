@@ -286,7 +286,7 @@ export default function DataTable<TData>({
                       {header.isPlaceholder ? null : isSortable ? (
                         <button
                           type="button"
-                          className="tap-target flex items-center gap-1 hover:text-foreground"
+                          className="tap-target flex cursor-pointer items-center gap-1 hover:text-foreground"
                           onClick={() => {
                             const newDirection =
                               isActive && sortState?.sortDirection === 'asc'
