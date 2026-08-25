@@ -471,15 +471,20 @@ export const 条件は押すまで走らず押すとまとめて走る: Story = 
 
     await stillNothingAskedFor('drawing the screen')
 
+    /*
+      Typed with the space a reader leaves either side of a word, and none of
+      that space asked for: the words between the spaces are the condition, the
+      spaces are not, and the address 検索 writes says so.
+    */
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'キーワード' }),
-      '夏 絶景',
+      ' 夏 絶景 ',
     )
     await stillNothingAskedFor('キーワード')
 
     await userEvent.type(
       canvas.getByRole('textbox', { name: '除外' }),
-      '再放送',
+      ' 再放送 ',
     )
     await stillNothingAskedFor('除外')
 
@@ -817,6 +822,118 @@ export const 戻ると前の条件が欄に戻る: Story = {
       await expect(
         canvas.getByRole('textbox', { name: 'キーワード' }),
       ).toHaveValue('夏 絶景')
+    })
+  },
+}
+
+/**
+ * 条件をすべて消す empties the fields even when the address it is emptying was
+ * already bare — which is where a reader stands who typed into a screen they
+ * have not searched from yet, and which a screen redrawn on the address alone
+ * cannot answer, because the address does not change.
+ */
+export const 住所が空でも条件をすべて消すと欄が空になる: Story = {
+  args: {
+    result: {
+      condition: emptyCondition,
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  render: (args) => <Live {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: 'キーワード' }),
+      '夏 絶景',
+    )
+    await choose('ジャンルを足す', '映画')
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '条件をすべて消す' }),
+    )
+
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('textbox', { name: 'キーワード' }),
+      ).toHaveValue('')
+    })
+    await expect(
+      canvas.queryByRole('button', { name: /ジャンル .+ を外す/ }),
+    ).toBeNull()
+  },
+}
+
+/**
+ * A question put again, and a result arranged again, both start at the first
+ * page: fewer rows fit under the new answer than the reader has already walked
+ * past, and the page they were standing on may no longer be there. The pager is
+ * the one control that means a page, and it still gets the one it asks for.
+ */
+export const 頼み直すと最初のページから: Story = {
+  args: {
+    result: {
+      condition: { ...condition, page: 3 },
+      channels,
+      outcome: {
+        state: 'searched',
+        found: {
+          hits: SEARCH_HIT_FIXTURES,
+          total: 67,
+          page: 3,
+          lastPage: 4,
+          perPage: 20,
+          rangeFrom: 41,
+          rangeTo: 60,
+        },
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+    const asked =
+      '/search?q=%E8%A6%B3%E6%B8%AC%E6%89%80&from=2026-08-09&to=2026-08-15'
+
+    await choose('並び替え', '番組名順')
+
+    await waitFor(async () => {
+      await expect(router.replace).toHaveBeenLastCalledWith(
+        `${asked}&sort=name.asc`,
+        { scroll: false },
+      )
+    })
+
+    await choose('表示件数', '50 件ずつ')
+
+    await waitFor(async () => {
+      await expect(router.replace).toHaveBeenLastCalledWith(
+        `${asked}&per_page=50`,
+        { scroll: false },
+      )
+    })
+
+    await userEvent.type(
+      canvas.getByRole('textbox', { name: 'キーワード' }),
+      'の夏',
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '検索' }))
+
+    await waitFor(async () => {
+      await expect(router.push).toHaveBeenLastCalledWith(
+        '/search?q=%E8%A6%B3%E6%B8%AC%E6%89%80%E3%81%AE%E5%A4%8F' +
+          '&from=2026-08-09&to=2026-08-15',
+        { scroll: false },
+      )
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: '4 ページ目' }))
+
+    await waitFor(async () => {
+      await expect(router.push).toHaveBeenLastCalledWith(`${asked}&page=4`, {
+        scroll: false,
+      })
     })
   },
 }
