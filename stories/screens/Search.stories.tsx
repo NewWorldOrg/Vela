@@ -1080,6 +1080,22 @@ export const 頼み直すと最初のページから: Story = {
       '/search?q=%E8%A6%B3%E6%B8%AC%E6%89%80%E3%81%AE%E5%A4%8F' +
       '&from=2026-08-09&to=2026-08-15'
 
+    /*
+      Each of the three has to be taken from a page the reader is actually
+      standing on, so the pager walks back out to one between them. Taken in a
+      row instead, the first would put them on the first page and the two after
+      it would have no page to leave — which is how the second and third of
+      these came to be measuring nothing at all.
+    */
+    const walkOut = async (to: string): Promise<void> => {
+      await userEvent.click(canvas.getByRole('button', { name: '4 ページ目' }))
+      await waitFor(async () => {
+        await expect(router.push).toHaveBeenLastCalledWith(to, {
+          scroll: false,
+        })
+      })
+    }
+
     /** Standing on the third page, and arranging it does not keep them there. */
     await choose('並び替え', '番組名順')
 
@@ -1089,6 +1105,8 @@ export const 頼み直すと最初のページから: Story = {
         { scroll: false },
       )
     })
+
+    await walkOut(`${asked}&sort=name.asc&page=4`)
 
     /** The order just chosen is still theirs while they choose the helping. */
     await choose('表示件数', '50 件ずつ')
@@ -1100,6 +1118,8 @@ export const 頼み直すと最初のページから: Story = {
       )
     })
 
+    await walkOut(`${asked}&sort=name.asc&per_page=50&page=4`)
+
     /** And a question put again is answered the way they had arranged it. */
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'キーワード' }),
@@ -1110,15 +1130,6 @@ export const 頼み直すと最初のページから: Story = {
     await waitFor(async () => {
       await expect(router.push).toHaveBeenLastCalledWith(
         `${asking}&sort=name.asc&per_page=50`,
-        { scroll: false },
-      )
-    })
-
-    await userEvent.click(canvas.getByRole('button', { name: '4 ページ目' }))
-
-    await waitFor(async () => {
-      await expect(router.push).toHaveBeenLastCalledWith(
-        `${asking}&sort=name.asc&per_page=50&page=4`,
         { scroll: false },
       )
     })
