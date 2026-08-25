@@ -256,6 +256,20 @@ function SearchScreen({ result }: { result: SearchResult }) {
         */}
         <form
           className="mt-2.5"
+          /*
+            The Enter that settles a conversion is not the Enter that asks.
+            Typing Japanese ends every word with one, and WebKit — which is
+            every browser on the iPad — lets that keypress go on to submit the
+            form, so a reader picking the characters of their first word would
+            have the half of it they had settled asked for and the rest left in
+            the field. Chromium and Gecko hold it back themselves; taking the
+            default off the keypress is what holds it back everywhere.
+          */
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && event.nativeEvent.isComposing) {
+              event.preventDefault()
+            }
+          }}
           onSubmit={(event) => {
             event.preventDefault()
             go(asking, true)

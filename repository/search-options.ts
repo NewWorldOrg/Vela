@@ -16,6 +16,7 @@ export {
   SEARCH_QUERY_KEYS,
   SEARCH_SORT_OPTIONS,
   genreLabelOf,
+  narrowsAnything,
   searchConditionOfQuery,
   searchQueryOf,
   searchTermsOf,
