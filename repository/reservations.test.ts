@@ -186,6 +186,7 @@ mock.module('@/repository/client/carina', {
 const {
   cancelReservation,
   createReservation,
+  listBookings,
   listReservations,
   restoreReservation,
   reviseReservation,
@@ -587,4 +588,68 @@ test('a revision refused because the recording has started says which', async ()
     result.state === 'rejected' ? result.message : '',
     /録画中か、すでに終わっている/,
   )
+})
+
+/**
+ * A programme is booked only while a reservation is holding a seat for it. A
+ * cancelled or already settled one leaves the programme free to ask for again,
+ * and the panel that reads this offers the seat rather than the way out of it.
+ */
+test('only a reservation still holding a seat books its programme', async () => {
+  const held = ['scheduled']
+  const settled = [
+    'cancelled',
+    'missed',
+    'conflict',
+    'recording',
+    'complete',
+    'truncated',
+    'failed',
+  ]
+
+  for (const state of [...held, ...settled]) {
+    standing([reservation({ standing: state })])
+
+    const bookings = await listBookings()
+
+    assert.equal(
+      bookings.has('131-1310-40001'),
+      held.includes(state),
+      `standing ${state}`,
+    )
+  }
+})
+
+test('a booking carries what the edit form has to fill itself with', async () => {
+  standing([
+    reservation({
+      id: 'c3',
+      priority: 12,
+      window: window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z', {
+        marginBeforeSeconds: 10,
+        marginAfterSeconds: 30,
+      }),
+    }),
+  ])
+
+  const booking = (await listBookings()).get('131-1310-40001')
+
+  assert.deepEqual(booking, {
+    id: 'c3',
+    priority: 12,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
+  })
+})
+
+test('a programme asked for twice is booked by the one that holds the seat', async () => {
+  standing([
+    reservation({ id: 'gone', standing: 'cancelled', priority: 1 }),
+    reservation({ id: 'held', standing: 'scheduled', priority: 20 }),
+  ])
+
+  const booking = (await listBookings()).get('131-1310-40001')
+
+  assert.equal(booking?.id, 'held')
+  assert.equal(booking?.priority, 20)
 })

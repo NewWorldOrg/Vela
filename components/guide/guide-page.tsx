@@ -14,7 +14,10 @@ import type {
   RebuildResult,
 } from '@/repository/collection'
 import type { GuideResult, Program } from '@/repository/programs'
-import type { ReservationWrite } from '@/repository/reservations'
+import type {
+  ReservationRevision,
+  ReservationWrite,
+} from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
@@ -35,17 +38,32 @@ export function GuideView({
   onCollectNow,
   onRebuild,
   onReserve,
+  onCancel,
+  onRevise,
 }: {
   guide: GuideResult
   collection: CollectionStatus
   onCollectNow: (scope: CollectScope) => Promise<CollectNowResult>
   onRebuild: () => Promise<RebuildResult>
   onReserve: (programmeId: string) => Promise<ReservationWrite>
+  onCancel: (id: string) => Promise<ReservationWrite>
+  onRevise: (
+    id: string,
+    revision: ReservationRevision,
+  ) => Promise<ReservationWrite>
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
+  /**
+   * The panel shows the programme as the guide now has it, not as it was when
+   * it was picked: a reservation taken or dropped from inside the panel
+   * changes the row it was opened from.
+   */
+  const shown = selected
+    ? (guide.programs.find((one) => one.id === selected.id) ?? selected)
+    : null
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
 
@@ -193,14 +211,16 @@ export function GuideView({
             selectedId={panelOpen ? selected?.id : undefined}
             onSelect={select}
           />
-          {selected && (
+          {shown && (
             <ProgramPanel
-              program={selected}
-              channel={guide.channels.find((c) => c.id === selected.channelId)}
+              program={shown}
+              channel={guide.channels.find((c) => c.id === shown.channelId)}
               dayLabel={guide.day.label}
               open={panelOpen}
               onClose={() => setPanelOpen(false)}
               onReserve={onReserve}
+              onCancel={onCancel}
+              onRevise={onRevise}
             />
           )}
           {selected && !panelOpen && (

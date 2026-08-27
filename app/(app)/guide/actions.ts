@@ -8,8 +8,15 @@ import type {
   RebuildResult,
 } from '@/repository/collection'
 import { collectNow, rebuildEpg } from '@/repository/collection'
-import type { ReservationWrite } from '@/repository/reservations'
-import { createReservation } from '@/repository/reservations'
+import type {
+  ReservationRevision,
+  ReservationWrite,
+} from '@/repository/reservations'
+import {
+  cancelReservation,
+  createReservation,
+  reviseReservation,
+} from '@/repository/reservations'
 
 export async function boostCollection(
   scope: CollectScope,
@@ -38,6 +45,29 @@ export async function reserveProgramme(
     revalidatePath('/guide')
     revalidatePath('/reservations')
   }
+
+  return result
+}
+
+export async function dropProgrammeReservation(
+  id: string,
+): Promise<ReservationWrite> {
+  const result = await cancelReservation(id)
+
+  revalidatePath('/guide')
+  revalidatePath('/reservations')
+
+  return result
+}
+
+export async function reviseProgrammeReservation(
+  id: string,
+  revision: ReservationRevision,
+): Promise<ReservationWrite> {
+  const result = await reviseReservation(id, revision)
+
+  revalidatePath('/guide')
+  revalidatePath('/reservations')
 
   return result
 }

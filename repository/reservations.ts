@@ -9,7 +9,7 @@ import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
 import { fetchProgramme, toInt } from '@/repository/programmes'
-import type { GuideChannel } from '@/repository/programs'
+import type { GuideChannel, ProgramBooking } from '@/repository/programs'
 import { fetchServiceChannels, kindOfNetwork } from '@/repository/programs'
 import { RULES } from '@/repository/rules.fixtures'
 
@@ -110,6 +110,31 @@ export async function listReservations(): Promise<Reservation[]> {
   ])
 
   return carried.map((one) => toReservation(one, carried, known))
+}
+
+/**
+ * The programmes a seat is being held for, by programme. Only a reservation
+ * that holds one is here: a cancelled or already settled one leaves the
+ * programme free to be asked for again.
+ */
+export async function listBookings(): Promise<Map<string, ProgramBooking>> {
+  const carried = await fetchEveryReservation()
+  const bookings = new Map<string, ProgramBooking>()
+
+  for (const one of carried) {
+    if (one.standing !== 'scheduled') {
+      continue
+    }
+
+    bookings.set(one.programme.id, {
+      id: one.id,
+      priority: toInt(one.priority),
+      marginBeforeSeconds: toInt(one.window.marginBeforeSeconds),
+      marginAfterSeconds: toInt(one.window.marginAfterSeconds),
+    })
+  }
+
+  return bookings
 }
 
 export async function listRules(): Promise<Rule[]> {

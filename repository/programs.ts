@@ -28,6 +28,18 @@ export type Genre =
   | 'doc'
   | 'other'
 
+/**
+ * The reservation standing behind a programme, when one holds a seat for it.
+ * It is handed in rather than read here: the module that reads reservations
+ * reads this one, and the guide would close the circle by reaching back.
+ */
+export interface ProgramBooking {
+  id: string
+  priority: number
+  marginBeforeSeconds: number
+  marginAfterSeconds: number
+}
+
 export interface Program {
   id: string
   channelId: string
@@ -43,6 +55,7 @@ export interface Program {
   endLabel: string
   subtitled?: boolean
   booked?: boolean
+  booking?: ProgramBooking
   endUndecided?: boolean
 }
 
@@ -134,6 +147,7 @@ const KIND_OF_SYSTEM: Partial<Record<TuneSystem, ChannelKind>> = {
 export async function getGuide(
   rawKind: string | undefined,
   rawDate: string | undefined,
+  bookings: ReadonlyMap<string, ProgramBooking> = new Map(),
 ): Promise<GuideResult> {
   const kind: ChannelKind =
     rawKind === 'bs' || rawKind === 'cs110' ? rawKind : 'terrestrial'
@@ -177,7 +191,8 @@ export async function getGuide(
     ),
     programs: settled.broadcasts
       .map((programme) => toProgram(programme, windowStart))
-      .filter((program): program is Program => program !== null),
+      .filter((program): program is Program => program !== null)
+      .map((program) => booked(program, bookings.get(program.id))),
   }
 }
 
@@ -354,6 +369,13 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
     subtitled: programme.hasSubtitles || undefined,
     endUndecided: endsAt ? undefined : true,
   }
+}
+
+function booked(
+  program: Program,
+  booking: ProgramBooking | undefined,
+): Program {
+  return booking ? { ...program, booked: true, booking } : program
 }
 
 function guideDays(): GuideDay[] {
