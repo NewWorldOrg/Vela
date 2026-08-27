@@ -13,7 +13,7 @@ import {
 import { ProgramPanel } from '@/components/guide/program-panel'
 
 const idle = PROGRAM_FIXTURES.find((p) => p.subtitled && p.description)!
-const booked = PROGRAM_FIXTURES.find((p) => p.booked)!
+const booked = PROGRAM_FIXTURES.find((p) => p.booking)!
 const multiline = PROGRAM_DETAIL_FIXTURES.multiline.program
 
 const channelOf = (channelId: string) =>
@@ -28,6 +28,8 @@ const meta = {
     open: true,
     onClose: fn(),
     onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+    onCancel: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+    onRevise: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
   },
 } satisfies Meta<typeof ProgramPanel>
 

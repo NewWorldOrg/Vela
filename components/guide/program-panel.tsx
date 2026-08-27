@@ -1,17 +1,26 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useTransition } from 'react'
 
 import { useDismissable } from '@/hooks/useDismissable'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
-import type { ReservationWrite } from '@/repository/reservations'
+import type {
+  ReservationRevision,
+  ReservationWrite,
+} from '@/repository/reservations'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { IconButton } from '@/components/vela/icon-button'
 import { CloseIcon, PlusIcon, SuccessIcon } from '@/components/vela/icons'
+import { InlineAlert } from '@/components/vela/banner'
+import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ReserveButton } from '@/components/guide/reserve-button'
+
+const SIGNED_OUT =
+  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
 
 export function ProgramPanel({
   program,
@@ -20,6 +29,8 @@ export function ProgramPanel({
   open,
   onClose,
   onReserve,
+  onCancel,
+  onRevise,
 }: {
   program: Program
   channel?: Channel
@@ -27,12 +38,41 @@ export function ProgramPanel({
   open: boolean
   onClose: () => void
   onReserve: (programmeId: string) => Promise<ReservationWrite>
+  onCancel: (id: string) => Promise<ReservationWrite>
+  onRevise: (
+    id: string,
+    revision: ReservationRevision,
+  ) => Promise<ReservationWrite>
 }) {
   const panel = useDismissable<HTMLElement>({
     open,
     onDismiss: onClose,
     opener: 'program-panel',
   })
+  const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
+  const [editing, setEditing] = useState(false)
+  const booking = program.booking
+
+  const drop = () => {
+    if (!booking) {
+      return
+    }
+
+    startTransition(async () => {
+      setRefusal(undefined)
+
+      const result = await onCancel(booking.id)
+
+      setRefusal(
+        result.state === 'unauthenticated'
+          ? SIGNED_OUT
+          : result.state === 'rejected'
+            ? result.message
+            : undefined,
+      )
+    })
+  }
 
   return (
     <aside
@@ -83,7 +123,7 @@ export function ProgramPanel({
         )}
         <hr className="my-4 border-t border-dashed border-line" />
 
-        {program.booked ? (
+        {booking ? (
           <>
             <div className="rounded-lg bg-mint-soft px-3.5 py-3">
               <div className="flex items-center gap-1.5 text-ui font-bold text-mint">
@@ -99,20 +139,34 @@ export function ProgramPanel({
                 <Button
                   variant="ghost"
                   size="sm"
-                  disabled
-                  title="予約の編集はこれから実装されます"
+                  onClick={() => setEditing(true)}
                 >
                   予約を編集
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
-                  disabled
-                  title="予約の取り消しはこれから実装されます"
+                  disabled={pending}
+                  onClick={drop}
                 >
                   予約を取り消す
                 </Button>
+                {refusal && (
+                  <span aria-live="polite" className="basis-full">
+                    <InlineAlert tone="warn">{refusal}</InlineAlert>
+                  </span>
+                )}
               </div>
+              {/* Mounted only while it is open, so each opening reads the
+                  reservation as it stands. */}
+              {editing && (
+                <EditReservationDialog
+                  booking={{ ...booking, title: program.title }}
+                  open
+                  onOpenChange={setEditing}
+                  onRevise={onRevise}
+                />
+              )}
             </div>
             <p className="mt-2.5 text-note leading-relaxed text-ink-3">
               録画の 10 秒前から開始し、終了 30 秒後まで延長に追従します。

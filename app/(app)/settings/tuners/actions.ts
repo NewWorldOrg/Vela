@@ -14,6 +14,7 @@ import {
   restartDriver,
   saveDetectedTuners,
   serializeRestartTicket,
+  setHoursOfSilence,
   setTunerDisabled,
 } from '@/repository/tuners'
 
@@ -79,6 +80,18 @@ export async function saveDetection(
 
   if (result.state === 'ok') {
     redirect(TUNERS)
+  }
+
+  return result
+}
+
+export async function saveHealthThreshold(
+  hours: number,
+): Promise<TunerWriteResult> {
+  const result = await setHoursOfSilence(hours)
+
+  if (result.state === 'ok') {
+    revalidatePath(TUNERS)
   }
 
   return result

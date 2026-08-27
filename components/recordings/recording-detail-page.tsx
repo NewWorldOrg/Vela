@@ -2,9 +2,8 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { isPlayableSource } from '@/lib/recordings'
-import type { RecordingDetail } from '@/repository/recordings'
+import type { RecordingDetail, ThumbnailWrite } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChipDot } from '@/components/vela/status'
 import {
@@ -32,6 +31,7 @@ import { EncodePanelBody } from '@/components/recordings/encode-panel-body'
 import { EncodeStatusChip } from '@/components/recordings/encode-status-chip'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import { RecordingActions } from '@/components/recordings/recording-actions'
+import { ThumbnailButton } from '@/components/recordings/thumbnail-button'
 
 const OUTCOME_STYLE = {
   complete: 'bg-tint-sage',
@@ -47,8 +47,10 @@ const OUTCOME_LABEL = {
 
 export function RecordingDetailView({
   detail: d,
+  onRemakeThumbnail,
 }: {
   detail: RecordingDetail
+  onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
 }) {
   return (
     <main className="min-h-0 flex-1 overflow-y-auto pb-16">
@@ -157,14 +159,9 @@ export function RecordingDetailView({
             録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。
           </p>
           <div className="mt-3 flex justify-center">
-            <button
-              type="button"
-              disabled
-              title="整合性チェックの画面はこれから実装されます"
-              className={PLAYER_BUTTON}
-            >
+            <Link href="/library/integrity" className={PLAYER_BUTTON}>
               整合性チェックの結果へ
-            </button>
+            </Link>
           </div>
         </section>
       ) : d.outcome === 'failed' ? (
@@ -309,14 +306,13 @@ export function RecordingDetailView({
                 )}
               </span>
               {d.thumbnailState.canGenerate && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  title="サムネイル生成はこれから実装されます"
-                >
-                  {d.thumbnailState.main === '未生成' ? '生成する' : '再生成'}
-                </Button>
+                <ThumbnailButton
+                  id={d.id}
+                  label={
+                    d.thumbnailState.main === '未生成' ? '生成する' : '再生成'
+                  }
+                  onRemake={onRemakeThumbnail}
+                />
               )}
             </div>
           )}

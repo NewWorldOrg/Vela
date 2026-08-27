@@ -17,6 +17,7 @@ const meta = {
     onRestart: async () => ({ state: 'disconnected' }),
     onDismiss: async () => {},
     onSaveDetection: async () => ({ state: 'ok' }),
+    onSaveThreshold: async () => ({ state: 'ok' }),
   },
 } satisfies Meta<typeof TunersView>
 

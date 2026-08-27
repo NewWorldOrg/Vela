@@ -2,10 +2,14 @@
 
 import { revalidatePath } from 'next/cache'
 
-import type { ReservationWrite } from '@/repository/reservations'
+import type {
+  ReservationRevision,
+  ReservationWrite,
+} from '@/repository/reservations'
 import {
   cancelReservation,
   restoreReservation,
+  reviseReservation,
   setReservationPriority,
 } from '@/repository/reservations'
 
@@ -34,6 +38,17 @@ export async function raiseReservationPriority(
   priority: number,
 ): Promise<ReservationWrite> {
   const result = await setReservationPriority(id, priority)
+
+  revalidatePath(RESERVATIONS)
+
+  return result
+}
+
+export async function reviseReservationDetails(
+  id: string,
+  revision: ReservationRevision,
+): Promise<ReservationWrite> {
+  const result = await reviseReservation(id, revision)
 
   revalidatePath(RESERVATIONS)
 

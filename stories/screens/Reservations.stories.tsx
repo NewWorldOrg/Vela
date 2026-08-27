@@ -14,7 +14,12 @@ const meta = {
   component: ReservationsView,
   parameters: { layout: 'fullscreen' },
   args: {
-    actions: { onCancel: accept, onRestore: accept, onRaise: accept },
+    actions: {
+      onCancel: accept,
+      onRestore: accept,
+      onRaise: accept,
+      onRevise: accept,
+    },
   },
 } satisfies Meta<typeof ReservationsView>
 

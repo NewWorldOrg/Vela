@@ -45,6 +45,8 @@ const meta = {
     onCollectNow: async () => ({ state: 'started' as const, streams: 7 }),
     onRebuild: async () => ({ state: 'ok' as const, discarded: 3521 }),
     onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+    onCancel: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+    onRevise: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
   },
   decorators: [
     (Story) => (

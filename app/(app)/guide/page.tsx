@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
 
 import { getGuide } from '@/repository/programs'
+import { listBookings } from '@/repository/reservations'
 import { coverageWarningOf, getCollectionStatus } from '@/repository/collection'
 import { GuideLive } from '@/components/guide/guide-live'
 import { GuideView } from '@/components/guide/guide-page'
 import {
   boostCollection,
   discardAndRebuildEpg,
+  dropProgrammeReservation,
   reserveProgramme,
+  reviseProgrammeReservation,
 } from './actions'
 
 export const metadata: Metadata = { title: '番組表' }
@@ -18,10 +21,12 @@ export default async function Page({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const params = await searchParams
+  const bookings = await listBookings()
   const [guide, collection] = await Promise.all([
     getGuide(
       typeof params.kind === 'string' ? params.kind : undefined,
       typeof params.date === 'string' ? params.date : undefined,
+      bookings,
     ),
     getCollectionStatus(),
   ])
@@ -38,6 +43,8 @@ export default async function Page({
         onCollectNow={boostCollection}
         onRebuild={discardAndRebuildEpg}
         onReserve={reserveProgramme}
+        onCancel={dropProgrammeReservation}
+        onRevise={reviseProgrammeReservation}
       />
     </>
   )

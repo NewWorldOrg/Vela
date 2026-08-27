@@ -21,7 +21,16 @@ const store: {
   pages: unknown[]
   detail: unknown
   detailStatus: number
-} = { services: [], pages: [], detail: undefined, detailStatus: 200 }
+  remake: unknown
+  remakeStatus: number
+} = {
+  services: [],
+  pages: [],
+  detail: undefined,
+  detailStatus: 200,
+  remake: { remake: 'drawn', thumbnail: { state: 'ready' } },
+  remakeStatus: 200,
+}
 
 const service = (
   networkId: number,
@@ -143,6 +152,23 @@ mock.module('@/repository/client/carina', {
           response: { status: 200 },
         }
       },
+      POST: async (
+        path: string,
+        init?: { params?: { path?: { id: string } } },
+      ) => {
+        asked.push({ path, query: { id: init?.params?.path?.id ?? '' } })
+
+        return {
+          data:
+            store.remakeStatus === 200
+              ? { status: true, message: '', data: store.remake }
+              : undefined,
+          response: {
+            status: store.remakeStatus,
+            ok: store.remakeStatus < 400,
+          },
+        }
+      },
     }),
     revalidatingCarinaClient: () => {
       throw new Error('the library does not revalidate')
@@ -150,8 +176,14 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getRecording, listRecordings, recordedAtLabelOf, spanLabel, spotsOf } =
-  await import('./recordings.ts')
+const {
+  getRecording,
+  listRecordings,
+  recordedAtLabelOf,
+  remakeThumbnail,
+  spanLabel,
+  spotsOf,
+} = await import('./recordings.ts')
 
 function standing(items: unknown[] = [recording()]): void {
   asked.length = 0
@@ -579,4 +611,67 @@ test('a recording is placed in the day Tokyo was in, not the day UTC was', () =>
 test('a span is spelled in hours once there is an hour to spell', () => {
   assert.equal(spanLabel(1_800_000), '30分')
   assert.equal(spanLabel(6_843_000), '1時間54分')
+})
+
+/**
+ * A picture is asked for of one recording, and the three answers a finished
+ * pass gives are carried through as they are — none of them is a refusal.
+ */
+test('a picture asked for names the recording it is asked about', async () => {
+  asked.length = 0
+  store.remakeStatus = 200
+  store.remake = { remake: 'drawn', thumbnail: { state: 'ready' } }
+
+  const result = await remakeThumbnail('7e7a14cf')
+
+  assert.deepEqual(result, { state: 'ok', remake: 'drawn' })
+  assert.deepEqual(asked.at(-1), {
+    path: '/api/recordings/{id}/thumbnail',
+    query: { id: '7e7a14cf' },
+  })
+})
+
+test('a pass that drew nothing is still an answer, not a refusal', async () => {
+  for (const remake of ['skipped', 'failed'] as const) {
+    store.remakeStatus = 200
+    store.remake = { remake, thumbnail: { state: remake } }
+
+    assert.deepEqual(await remakeThumbnail('7e7a14cf'), {
+      state: 'ok',
+      remake,
+    })
+  }
+})
+
+test('a recording still being written is refused in its own words', async () => {
+  store.remakeStatus = 409
+
+  const result = await remakeThumbnail('7e7a14cf')
+
+  assert.equal(result.state, 'rejected')
+  assert.match(result.state === 'rejected' ? result.message : '', /書き込み中/)
+})
+
+test('each refusal the endpoint can give is told apart from the others', async () => {
+  const said = new Set<string>()
+
+  for (const status of [400, 404, 409, 503]) {
+    store.remakeStatus = status
+
+    const result = await remakeThumbnail('7e7a14cf')
+
+    assert.equal(result.state, 'rejected')
+    said.add(result.state === 'rejected' ? result.message : '')
+  }
+
+  assert.equal(said.size, 4)
+})
+
+test('a status the endpoint does not name falls back to saying which it was', async () => {
+  store.remakeStatus = 500
+
+  const result = await remakeThumbnail('7e7a14cf')
+
+  assert.equal(result.state, 'rejected')
+  assert.match(result.state === 'rejected' ? result.message : '', /\(500\)/)
 })
