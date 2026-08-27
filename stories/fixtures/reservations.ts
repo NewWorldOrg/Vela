@@ -15,6 +15,8 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: true,
     receptionUnavailable: false,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
   },
   {
     id: 'r-302',
@@ -30,6 +32,8 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: false,
     receptionUnavailable: false,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
     stateNote: '延長時は終了に自動で追従します',
   },
   {
@@ -47,6 +51,8 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: true,
     receptionUnavailable: false,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
     conflict: {
       headline: '同時刻に地上波チューナー 2 本が録画予定です',
       body: '08/08(金) 22:00 の開始時点で空きがなく、この予約にはチューナーを割り当てられません。',
@@ -79,6 +85,8 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: true,
     receptionUnavailable: false,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
   },
 ]
 
@@ -95,6 +103,8 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: true,
     receptionUnavailable: false,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
   },
   {
     id: 'r-306',
@@ -108,6 +118,8 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: true,
     receptionUnavailable: true,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
   },
   {
     id: 'r-307',
@@ -121,6 +133,8 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: true,
     receptionUnavailable: false,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
   },
   {
     id: 'r-308',
@@ -134,5 +148,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     endAtConfirmed: true,
     receptionUnavailable: false,
     priority: 10,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
   },
 ]

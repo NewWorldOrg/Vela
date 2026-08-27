@@ -188,6 +188,7 @@ const {
   createReservation,
   listReservations,
   restoreReservation,
+  reviseReservation,
   setReservationPriority,
 } = await import('./reservations.ts')
 
@@ -505,4 +506,85 @@ test('a status with no reading of its own keeps the number beside it', async () 
     state: 'rejected',
     message: '予約を復元できませんでした。(500)',
   })
+})
+
+test('the window a reservation was made with is carried onto the row', async () => {
+  const one = await only({
+    window: window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z', {
+      marginBeforeSeconds: 10,
+      marginAfterSeconds: 30,
+    }),
+  })
+
+  assert.equal(one.marginBeforeSeconds, 10)
+  assert.equal(one.marginAfterSeconds, 30)
+})
+
+test('a margin the API spells as a string still reads as a number', async () => {
+  const one = await only({
+    window: window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z', {
+      marginBeforeSeconds: '45',
+      marginAfterSeconds: '90',
+    }),
+  })
+
+  assert.equal(one.marginBeforeSeconds, 45)
+  assert.equal(one.marginAfterSeconds, 90)
+})
+
+test('a revision carries only what it was asked to change', async () => {
+  standing()
+
+  const result = await reviseReservation('b2', { marginAfterSeconds: 30 })
+
+  assert.deepEqual(result, { state: 'ok', verdict: 'secured' })
+  assert.equal(sent.at(-1)?.method, 'PATCH')
+  assert.equal(sent.at(-1)?.path, '/api/reservations/{id}')
+  assert.equal(sent.at(-1)?.id, 'b2')
+  assert.deepEqual(sent.at(-1)?.body, { marginAfterSeconds: 30 })
+})
+
+test('a revision may name all three at once', async () => {
+  standing()
+
+  await reviseReservation('b2', {
+    priority: 12,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
+  })
+
+  assert.deepEqual(sent.at(-1)?.body, {
+    priority: 12,
+    marginBeforeSeconds: 10,
+    marginAfterSeconds: 30,
+  })
+})
+
+test('each refusal a revision can meet is told apart from the others', async () => {
+  const said = new Set<string>()
+
+  for (const status of [400, 404, 409, 503]) {
+    standing()
+    store.writeStatus = status
+
+    const result = await reviseReservation('b2', { priority: 12 })
+
+    assert.equal(result.state, 'rejected')
+    said.add(result.state === 'rejected' ? result.message : '')
+  }
+
+  assert.equal(said.size, 4)
+})
+
+test('a revision refused because the recording has started says which', async () => {
+  standing()
+  store.writeStatus = 409
+
+  const result = await reviseReservation('b2', { priority: 12 })
+
+  assert.equal(result.state, 'rejected')
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /録画中か、すでに終わっている/,
+  )
 })

@@ -56,6 +56,8 @@ export interface Reservation {
   endAtConfirmed: boolean
   receptionUnavailable: boolean
   priority: number
+  marginBeforeSeconds: number
+  marginAfterSeconds: number
   stateNote?: string
   conflict?: ReservationConflict
 }
@@ -70,6 +72,16 @@ export interface Rule {
   target: string
   enabled: boolean
   matchCount: number
+}
+
+/**
+ * What a revision asks to change. A field left out is left as it stands, and
+ * the API refuses a revision that names nothing.
+ */
+export interface ReservationRevision {
+  priority?: number
+  marginBeforeSeconds?: number
+  marginAfterSeconds?: number
 }
 
 export type ReservationWrite =
@@ -192,6 +204,28 @@ export async function setReservationPriority(
   )
 }
 
+export async function reviseReservation(
+  id: string,
+  revision: ReservationRevision,
+): Promise<ReservationWrite> {
+  const { data, response } = await carinaClient().PATCH(
+    '/api/reservations/{id}',
+    { params: { path: { id } }, body: revision },
+  )
+
+  return toWrite(
+    response,
+    data?.data?.verdict ?? undefined,
+    {
+      400: '入力された値がこの予約に使える範囲を外れているため、変えられませんでした。',
+      404: 'この予約は残っていないため、変えられませんでした。',
+      409: 'この予約はいま録画中か、すでに終わっているため、変えられませんでした。最新の状態を読み直してください。',
+      503: 'チューナーの空きを数えられないため、変えられませんでした。時間をおいてからお試しください。',
+    },
+    '予約を変えられませんでした。',
+  )
+}
+
 function toWrite(
   response: Response,
   verdict: AllocationVerdict | undefined,
@@ -266,6 +300,8 @@ export function toReservation(
     endAtConfirmed,
     receptionUnavailable: r.reception.unavailable,
     priority: toInt(r.priority),
+    marginBeforeSeconds: toInt(r.window.marginBeforeSeconds),
+    marginAfterSeconds: toInt(r.window.marginAfterSeconds),
     stateNote: endAtConfirmed ? undefined : FOLLOWS_THE_END,
     conflict: conflictOf(r, all, known),
   }

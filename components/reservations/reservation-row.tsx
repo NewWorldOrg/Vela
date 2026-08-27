@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
 import { cn } from '@/lib/utils'
-import type { Reservation, ReservationWrite } from '@/repository/reservations'
+import type {
+  Reservation,
+  ReservationRevision,
+  ReservationWrite,
+} from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { InlineAlert } from '@/components/vela/banner'
@@ -14,12 +18,17 @@ import {
   ListIcon,
   WarningIcon,
 } from '@/components/vela/icons'
+import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 
 export interface ReservationActions {
   onCancel: (id: string) => Promise<ReservationWrite>
   onRestore: (id: string) => Promise<ReservationWrite>
   onRaise: (id: string, priority: number) => Promise<ReservationWrite>
+  onRevise: (
+    id: string,
+    revision: ReservationRevision,
+  ) => Promise<ReservationWrite>
 }
 
 const SIGNED_OUT =
@@ -41,6 +50,7 @@ export function ReservationRow({
   const restorable = reservation.standing === 'cancelled'
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
+  const [editing, setEditing] = useState(false)
 
   const run = (write: () => Promise<ReservationWrite>) => {
     startTransition(async () => {
@@ -132,11 +142,27 @@ export function ReservationRow({
               <Button
                 variant="outline"
                 size="sm"
-                disabled
-                title="予約の編集はこれから実装されます"
+                onClick={() => setEditing(true)}
               >
                 編集
               </Button>
+              {/* Mounted only while it is open, so each opening reads the
+                  reservation as it stands rather than as it stood when the
+                  row was first drawn. */}
+              {editing && (
+                <EditReservationDialog
+                  booking={{
+                    id: reservation.id,
+                    title: reservation.title,
+                    priority: reservation.priority,
+                    marginBeforeSeconds: reservation.marginBeforeSeconds,
+                    marginAfterSeconds: reservation.marginAfterSeconds,
+                  }}
+                  open
+                  onOpenChange={setEditing}
+                  onRevise={actions.onRevise}
+                />
+              )}
               {cancellable && (
                 <Button
                   variant="destructive"
