@@ -44,6 +44,7 @@ const THE_SUITE = [
   'lib/guide.test.ts',
   'lib/search-condition.test.ts',
   'repository/client/carina.test.ts',
+  'repository/integrity.test.ts',
   'repository/recordings.test.ts',
   'repository/reservations.test.ts',
   'repository/search.test.ts',
