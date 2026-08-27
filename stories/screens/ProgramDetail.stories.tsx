@@ -2,12 +2,16 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
 import { PROGRAM_DETAIL_FIXTURES } from '@/repository/programs.fixtures'
+import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 
 const meta = {
   title: 'Screens/番組詳細',
   component: ProgramDetailView,
   parameters: { layout: 'fullscreen' },
+  args: {
+    onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+  },
 } satisfies Meta<typeof ProgramDetailView>
 
 export default meta

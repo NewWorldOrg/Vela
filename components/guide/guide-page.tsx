@@ -14,6 +14,7 @@ import type {
   RebuildResult,
 } from '@/repository/collection'
 import type { GuideResult, Program } from '@/repository/programs'
+import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
@@ -33,11 +34,13 @@ export function GuideView({
   collection,
   onCollectNow,
   onRebuild,
+  onReserve,
 }: {
   guide: GuideResult
   collection: CollectionStatus
   onCollectNow: (scope: CollectScope) => Promise<CollectNowResult>
   onRebuild: () => Promise<RebuildResult>
+  onReserve: (programmeId: string) => Promise<ReservationWrite>
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -197,6 +200,7 @@ export function GuideView({
               dayLabel={guide.day.label}
               open={panelOpen}
               onClose={() => setPanelOpen(false)}
+              onReserve={onReserve}
             />
           )}
           {selected && !panelOpen && (

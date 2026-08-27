@@ -4,7 +4,11 @@ import { getGuide } from '@/repository/programs'
 import { coverageWarningOf, getCollectionStatus } from '@/repository/collection'
 import { GuideLive } from '@/components/guide/guide-live'
 import { GuideView } from '@/components/guide/guide-page'
-import { boostCollection, discardAndRebuildEpg } from './actions'
+import {
+  boostCollection,
+  discardAndRebuildEpg,
+  reserveProgramme,
+} from './actions'
 
 export const metadata: Metadata = { title: '番組表' }
 
@@ -33,6 +37,7 @@ export default async function Page({
         collection={collection}
         onCollectNow={boostCollection}
         onRebuild={discardAndRebuildEpg}
+        onReserve={reserveProgramme}
       />
     </>
   )

@@ -6,6 +6,7 @@ import type {
   RelatedProgram,
   RelationKind,
 } from '@/repository/programs'
+import type { ReservationWrite } from '@/repository/reservations'
 import { mainTitleOf } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ import {
   RecordIcon,
   RelayIcon,
 } from '@/components/vela/icons'
+import { ReserveButton } from '@/components/guide/reserve-button'
 
 const RELATION_WORDING: Record<
   RelationKind,
@@ -45,7 +47,13 @@ const RELATION_WORDING: Record<
   },
 }
 
-export function ProgramDetailView({ detail }: { detail: ProgramDetail }) {
+export function ProgramDetailView({
+  detail,
+  onReserve,
+}: {
+  detail: ProgramDetail
+  onReserve: (programmeId: string) => Promise<ReservationWrite>
+}) {
   const { program, channel, day, items, related, durationLabel } = detail
 
   return (
@@ -118,10 +126,10 @@ export function ProgramDetailView({ detail }: { detail: ProgramDetail }) {
 
           <div className="mt-[22px] flex items-center gap-3 border-t border-dashed border-line pt-[17px] max-[700px]:flex-wrap max-[700px]:gap-y-2.5">
             <div className="flex flex-wrap gap-[9px]">
-              <Button disabled title="録画予約はこれから実装されます">
+              <ReserveButton programmeId={program.id} onReserve={onReserve}>
                 <RecordIcon />
                 録画予約
-              </Button>
+              </ReserveButton>
               <Button
                 variant="ghost"
                 disabled

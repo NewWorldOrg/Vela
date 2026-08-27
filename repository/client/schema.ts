@@ -260,6 +260,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/reservations/{id}/cancel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['cancelReservation']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/reservations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listReservations']
+    put?: never
+    post: operations['createReservation']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/reservations/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getReservation']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['reviseReservation']
+    trace?: never
+  }
+  '/api/reservations/{id}/restore': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['restoreReservation']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings/{id}': {
     parameters: {
       query?: never
@@ -651,6 +715,8 @@ export interface components {
     AddCandidateChannelRequest: {
       tuning?: null | components['schemas']['TuningParametersRequest']
     }
+    /** @enum {null|string} */
+    AllocationVerdict: 'secured' | 'contended' | 'pinned' | 'unreachable' | null
     ArchiveForgottenResponder: {
       /** Format: int32 */
       forgotten: number | string
@@ -777,6 +843,21 @@ export interface components {
       message: string
       data: null | components['schemas']['RecordingStopResponder']
     }
+    BaseResponderOfReservationListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationListResponder']
+    }
+    BaseResponderOfReservationResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationResponder']
+    }
+    BaseResponderOfReservationSettlementResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationSettlementResponder']
+    }
     BaseResponderOfScanApplicationResponder: {
       status: boolean
       message: string
@@ -852,6 +933,9 @@ export interface components {
       /** Format: int32 */
       streams: number | string
     }
+    /** @enum {string} */
+    BroadcastGroupRole:
+      'standalone' | 'movementPrimary' | 'movementSuppressed' | 'relaySegment'
     BroadcastServiceResponder: {
       /** Format: int32 */
       networkId: number | string
@@ -916,6 +1000,17 @@ export interface components {
       streams: components['schemas']['StreamCollectionStatusResponder'][]
       rescans: components['schemas']['RescanNoticeResponder'][]
     }
+    CreateReservationRequest: {
+      programme?: null | string
+      /** Format: date-time */
+      programmeStartsAt?: null | string
+      /** Format: int32 */
+      priority?: null | number | string
+      /** Format: int32 */
+      marginBeforeSeconds?: null | number | string
+      /** Format: int32 */
+      marginAfterSeconds?: null | number | string
+    }
     DetectedDeviceResponder: {
       deviceId: string
       detection: components['schemas']['DeviceDetection']
@@ -940,6 +1035,8 @@ export interface components {
       | 'noRoomLeft'
       | 'shortOfTheEstimate'
       | null
+    /** @enum {string} */
+    DivergedField: 'name' | 'startAt' | 'endAt' | 'service'
     /** @enum {string} */
     DriverConnection: 'notConnected' | 'connected' | 'draining'
     DriverHelloResponder: {
@@ -1167,6 +1264,10 @@ export interface components {
       confirm?: null | string
       meansIt?: boolean
     }
+    RecordingBroadcastGroupResponder: {
+      key: null | string
+      role: components['schemas']['BroadcastGroupRole']
+    }
     RecordingDetailResponder: {
       recording: components['schemas']['RecordingResponder']
       reconciliation: components['schemas']['RecordingReconciliationResponder']
@@ -1247,6 +1348,8 @@ export interface components {
       startsAt: string
       name: string
       summary: string
+      extended: string
+      genres: components['schemas']['ProgrammeGenreResponder'][]
       /** Format: date-time */
       capturedAt: string
     }
@@ -1289,6 +1392,7 @@ export interface components {
       tunerDeviceId: null | string
       drops: components['schemas']['RecordingDropsResponder']
       thumbnail: components['schemas']['RecordingThumbnailResponder']
+      broadcastGroup: components['schemas']['RecordingBroadcastGroupResponder']
     }
     /** @enum {string} */
     RecordingSort: 'startedAt' | 'programmeStartsAt'
@@ -1338,6 +1442,124 @@ export interface components {
     }
     /** @enum {string} */
     RescanReason: 'servicesAppeared' | 'servicesVanished'
+    ReservationBroadcastGroupResponder: {
+      key: null | string
+      role: components['schemas']['BroadcastGroupRole']
+    }
+    ReservationDivergedFieldResponder: {
+      field: components['schemas']['DivergedField']
+      before: null | string
+      after: null | string
+      /** Format: date-time */
+      detectedAt: string
+    }
+    ReservationDivergenceResponder: {
+      diverged: boolean
+      detail: components['schemas']['ReservationDivergedFieldResponder'][]
+      programmeMissing: boolean
+      /** Format: date-time */
+      acknowledgedAt: null | string
+    }
+    ReservationListResponder: {
+      items: components['schemas']['ReservationResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    /** @enum {string} */
+    ReservationOrigin: 'byHand' | 'byRule'
+    ReservationProgrammeResponder: {
+      id: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      /** Format: date-time */
+      startsAt: string
+      name: string
+      summary: string
+      extended: string
+      genres: components['schemas']['ProgrammeGenreResponder'][]
+      /** Format: date-time */
+      capturedAt: string
+    }
+    ReservationReceptionResponder: {
+      unavailable: boolean
+      /** Format: date-time */
+      since: null | string
+    }
+    ReservationResponder: {
+      /** Format: uuid */
+      id: string
+      programme: components['schemas']['ReservationProgrammeResponder']
+      origin: components['schemas']['ReservationOrigin']
+      /** Format: uuid */
+      ruleId: null | string
+      /** Format: int32 */
+      priority: number | string
+      window: components['schemas']['ReservationWindowResponder']
+      state: components['schemas']['ReservationState']
+      standing: components['schemas']['ReservationStanding']
+      /** Format: date-time */
+      startedAt: null | string
+      recordingOutcome: null | components['schemas']['RecordingOutcome']
+      reception: components['schemas']['ReservationReceptionResponder']
+      epg: components['schemas']['ReservationDivergenceResponder']
+      broadcastGroup: components['schemas']['ReservationBroadcastGroupResponder']
+      /** Format: date-time */
+      createdAt: string
+    }
+    ReservationSettlementResponder: {
+      reservation: components['schemas']['ReservationResponder']
+      verdict: null | components['schemas']['AllocationVerdict']
+      instead: components['schemas']['ReservationResponder'][]
+      /** Format: int32 */
+      seatsLeftOut: number | string
+    }
+    /** @enum {string} */
+    ReservationSort: 'startAt' | 'priority'
+    /** @enum {string} */
+    ReservationStanding:
+      | 'scheduled'
+      | 'conflict'
+      | 'cancelled'
+      | 'missed'
+      | 'recording'
+      | 'complete'
+      | 'truncated'
+      | 'failed'
+    /** @enum {string} */
+    ReservationState: 'scheduled' | 'conflict' | 'cancelled' | 'missed'
+    ReservationWindowResponder: {
+      /** Format: date-time */
+      startAt: string
+      /** Format: date-time */
+      endAt: string
+      endAtConfirmed: boolean
+      /** Format: int32 */
+      marginBeforeSeconds: number | string
+      /** Format: int32 */
+      marginAfterSeconds: number | string
+      /** Format: date-time */
+      effectiveStartAt: string
+      /** Format: date-time */
+      effectiveEndAt: string
+    }
+    ReviseReservationRequest: {
+      /** Format: int32 */
+      priority?: null | number | string
+      /** Format: int32 */
+      marginBeforeSeconds?: null | number | string
+      /** Format: int32 */
+      marginAfterSeconds?: null | number | string
+    }
     RotationDepartureResponder: {
       /** Format: int32 */
       networkId: number | string
@@ -2684,6 +2906,428 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
+        }
+      }
+    }
+  }
+  cancelReservation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+    }
+  }
+  listReservations: {
+    parameters: {
+      query?: {
+        standing?: components['schemas']['ReservationStanding'][]
+        origin?: components['schemas']['ReservationOrigin']
+        channel?: string[]
+        keyword?: string
+        from?: string
+        to?: string
+        sort?: components['schemas']['ReservationSort']
+        descending?: boolean
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationListResponder']
+        }
+      }
+    }
+  }
+  createReservation: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreateReservationRequest']
+        'text/json': null | components['schemas']['CreateReservationRequest']
+        'application/*+json':
+          null | components['schemas']['CreateReservationRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+    }
+  }
+  getReservation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationResponder']
+        }
+      }
+    }
+  }
+  reviseReservation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ReviseReservationRequest']
+        'text/json': null | components['schemas']['ReviseReservationRequest']
+        'application/*+json':
+          null | components['schemas']['ReviseReservationRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+    }
+  }
+  restoreReservation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
         }
       }
     }

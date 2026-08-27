@@ -10,6 +10,7 @@ import {
 } from '@/repository/channels.fixtures'
 import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
 import type { Program } from '@/repository/programs'
+import type { ReservationWrite } from '@/repository/reservations'
 import {
   AERIAL_PROGRAM_FIXTURES,
   GUIDE_DAYS,
@@ -43,6 +44,7 @@ const meta = {
     collection: COLLECTION_FIXTURES,
     onCollectNow: async () => ({ state: 'started' as const, streams: 7 }),
     onRebuild: async () => ({ state: 'ok' as const, discarded: 3521 }),
+    onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
   },
   decorators: [
     (Story) => (

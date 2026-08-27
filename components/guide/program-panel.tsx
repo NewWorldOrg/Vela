@@ -6,10 +6,12 @@ import { useDismissable } from '@/hooks/useDismissable'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
+import type { ReservationWrite } from '@/repository/reservations'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { IconButton } from '@/components/vela/icon-button'
 import { CloseIcon, PlusIcon, SuccessIcon } from '@/components/vela/icons'
+import { ReserveButton } from '@/components/guide/reserve-button'
 
 export function ProgramPanel({
   program,
@@ -17,12 +19,14 @@ export function ProgramPanel({
   dayLabel,
   open,
   onClose,
+  onReserve,
 }: {
   program: Program
   channel?: Channel
   dayLabel: string
   open: boolean
   onClose: () => void
+  onReserve: (programmeId: string) => Promise<ReservationWrite>
 }) {
   const panel = useDismissable<HTMLElement>({
     open,
@@ -117,10 +121,10 @@ export function ProgramPanel({
         ) : (
           <>
             <div className="flex flex-wrap gap-2">
-              <Button disabled title="録画予約はこれから実装されます">
+              <ReserveButton programmeId={program.id} onReserve={onReserve}>
                 <PlusIcon />
                 録画予約
-              </Button>
+              </ReserveButton>
               <Button
                 variant="ghost"
                 disabled

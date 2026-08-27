@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table'
 import { Banner } from '@/components/vela/banner'
 import { PlusIcon } from '@/components/vela/icons'
+import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { ReservationRow } from '@/components/reservations/reservation-row'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 
@@ -28,11 +29,13 @@ const COLUMNS: { label: string; hidden?: boolean }[] = [
 
 export function ReservationsView({
   reservations,
+  actions,
 }: {
   reservations: Reservation[]
+  actions: ReservationActions
 }) {
   const [expanded, setExpanded] = useState<string | null>(
-    reservations.find((r) => r.state === 'conflict')?.id ?? null,
+    reservations.find((r) => r.standing === 'conflict')?.id ?? null,
   )
 
   return (
@@ -70,6 +73,7 @@ export function ReservationsView({
             <ReservationRow
               key={reservation.id}
               reservation={reservation}
+              actions={actions}
               expanded={expanded === reservation.id}
               onToggle={() =>
                 setExpanded((prev) =>
