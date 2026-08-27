@@ -1,10 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
+import {
+  CANDIDATE_UNLOCKED_TERM,
+  END_UNDECIDED_TERM,
+  RECORDING_OUTCOME_TERMS,
+  RESERVATION_RECEPTION_TERM,
+  RESERVATION_STANDING_TERMS,
+  type StateTerm,
+} from '@/lib/state-terms'
 import { Badge } from '@/components/ui/badge'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { ChipDot, StatusDot, StatusText } from '@/components/vela/status'
 import { MarkDots, MarkPill, SignalIcon } from '@/components/vela/icons'
+import { TermTip } from '@/components/vela/term-tip'
 
 const meta = {
   title: 'Components/Status',
@@ -121,3 +131,56 @@ export const InUse: Story = {
     </div>
   ),
 }
+
+export const 状態バッジの説明: Story = {
+  render: () => (
+    <div className="mx-auto max-w-[620px] p-6">
+      <SectionHeading mark={MarkPill}>吹き出しの付く語</SectionHeading>
+      <p className="mb-3 text-note leading-[1.7] text-ink-3">
+        ここでの意味が普段の読みより狭い語にだけ付ける。自明な語には付けない。
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {TIPPED.map(([key, term]) => (
+          <TermTip key={key} term={term}>
+            <Badge variant="outline">{term.label}</Badge>
+          </TermTip>
+        ))}
+      </div>
+
+      <SectionHeading mark={MarkDots} className="mt-7">
+        付けない語
+      </SectionHeading>
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="ok">受信可</Badge>
+        <Badge variant="mute">未計測</Badge>
+        <Badge variant="outline">未エンコード</Badge>
+        <Badge variant="ok">良好</Badge>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [, term] = TIPPED[0]
+
+    await userEvent.hover(canvas.getByText(term.label))
+    await waitFor(async () => {
+      await expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        term.explanation,
+      )
+    })
+
+    await userEvent.unhover(canvas.getByText(term.label))
+    await waitFor(() =>
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(),
+    )
+  },
+}
+
+/** 受信可 and 未計測 read as themselves, so neither is here. */
+const TIPPED: [string, StateTerm][] = [
+  ...Object.entries(RESERVATION_STANDING_TERMS),
+  ['終了未定', END_UNDECIDED_TERM],
+  ['受信不可(予約)', RESERVATION_RECEPTION_TERM],
+  ['受信不可(候補ch)', CANDIDATE_UNLOCKED_TERM],
+  ['完全', RECORDING_OUTCOME_TERMS.complete],
+]

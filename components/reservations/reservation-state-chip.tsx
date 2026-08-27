@@ -2,36 +2,40 @@ import type {
   Reservation,
   ReservationStanding,
 } from '@/repository/reservations'
+import {
+  END_UNDECIDED_TERM,
+  RESERVATION_RECEPTION_TERM,
+  RESERVATION_STANDING_TERMS,
+} from '@/lib/state-terms'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
+import { TermTip } from '@/components/vela/term-tip'
 
 /**
  * The standing is one chip. Whether the end is settled and whether the service
  * can be received are neither states nor each other's alternatives, so they are
  * marks beside it rather than entries in the same list.
+ *
+ * The words themselves live in `lib/state-terms` beside what they mean, which
+ * is what lets the requirements' vocabulary be held to by a test rather than by
+ * whoever reads this file next.
  */
 const STANDING: Record<
   ReservationStanding,
   {
     variant: 'ok' | 'err' | 'warn' | 'mute' | 'recording'
-    label: string
     dot?: boolean
     bold?: boolean
   }
 > = {
-  scheduled: {
-    variant: 'ok',
-    label: 'チューナー確保済み',
-    dot: true,
-    bold: true,
-  },
-  conflict: { variant: 'err', label: '競合', dot: true, bold: true },
-  recording: { variant: 'recording', label: '録画中', dot: true },
-  cancelled: { variant: 'mute', label: '取消済み' },
-  missed: { variant: 'err', label: '撮り逃し' },
-  complete: { variant: 'ok', label: '完了' },
-  truncated: { variant: 'warn', label: '尻切れ' },
-  failed: { variant: 'err', label: '失敗' },
+  scheduled: { variant: 'ok', dot: true, bold: true },
+  conflict: { variant: 'err', dot: true, bold: true },
+  recording: { variant: 'recording', dot: true },
+  cancelled: { variant: 'mute' },
+  missed: { variant: 'err' },
+  complete: { variant: 'ok' },
+  truncated: { variant: 'warn' },
+  failed: { variant: 'err' },
 }
 
 export function ReservationStateChip({
@@ -40,19 +44,28 @@ export function ReservationStateChip({
   reservation: Reservation
 }) {
   const chip = STANDING[reservation.standing]
+  const term = RESERVATION_STANDING_TERMS[reservation.standing]
 
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
-      <Badge
-        variant={chip.variant}
-        className={chip.bold ? 'font-bold' : undefined}
-      >
-        {chip.dot && <ChipDot />}
-        {chip.label}
-      </Badge>
-      {!reservation.endAtConfirmed && <Badge variant="warn">終了未定</Badge>}
+      <TermTip term={term}>
+        <Badge
+          variant={chip.variant}
+          className={chip.bold ? 'font-bold' : undefined}
+        >
+          {chip.dot && <ChipDot />}
+          {term.label}
+        </Badge>
+      </TermTip>
+      {!reservation.endAtConfirmed && (
+        <TermTip term={END_UNDECIDED_TERM}>
+          <Badge variant="warn">{END_UNDECIDED_TERM.label}</Badge>
+        </TermTip>
+      )}
       {reservation.receptionUnavailable && (
-        <Badge variant="err">受信不可</Badge>
+        <TermTip term={RESERVATION_RECEPTION_TERM}>
+          <Badge variant="err">{RESERVATION_RECEPTION_TERM.label}</Badge>
+        </TermTip>
       )}
     </span>
   )

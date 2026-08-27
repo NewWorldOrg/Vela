@@ -7,6 +7,7 @@ import type {
   CandidateTuning,
   WriteResult,
 } from '@/repository/services'
+import { CANDIDATE_UNLOCKED_TERM } from '@/lib/state-terms'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +24,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import { PlusIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
 import { ProgressBar } from '@/components/vela/progress'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
+import { TermTip } from '@/components/vela/term-tip'
 
 /**
  * The three the requirements name — locked, not locked, never measured — said
@@ -36,7 +38,7 @@ const RECEPTION_BADGE: Record<
   { variant: 'ok' | 'err' | 'mute'; label: string }
 > = {
   locked: { variant: 'ok', label: '受信可' },
-  unlocked: { variant: 'err', label: '受信不可' },
+  unlocked: { variant: 'err', label: CANDIDATE_UNLOCKED_TERM.label },
   unread: { variant: 'mute', label: '未計測' },
 }
 
@@ -45,6 +47,30 @@ const RECEPTION_WITHOUT_FIGURE: Record<CandidateRow['reception'], string> = {
   locked: '品質の数値はこのチューナーから取れません',
   unlocked: '同調しないため測定できていません',
   unread: 'まだ測定していません',
+}
+
+/**
+ * 受信不可 is the one of the three that says less than it looks like it says:
+ * it is this candidate failing to lock, not the service being off the air, and
+ * the same word on the reservation screen means something else again. The
+ * other two read as themselves and carry nothing.
+ */
+function ReceptionBadge({
+  reception,
+}: {
+  reception: CandidateRow['reception']
+}) {
+  const badge = (
+    <Badge variant={RECEPTION_BADGE[reception].variant}>
+      {RECEPTION_BADGE[reception].label}
+    </Badge>
+  )
+
+  if (reception !== 'unlocked') {
+    return badge
+  }
+
+  return <TermTip term={CANDIDATE_UNLOCKED_TERM}>{badge}</TermTip>
 }
 
 function CandidateMeter({ candidate }: { candidate: CandidateRow }) {
@@ -178,9 +204,7 @@ export function CandidateList({
             {candidate.channel}
           </span>
           <CandidateMeter candidate={candidate} />
-          <Badge variant={RECEPTION_BADGE[candidate.reception].variant}>
-            {RECEPTION_BADGE[candidate.reception].label}
-          </Badge>
+          <ReceptionBadge reception={candidate.reception} />
           {candidate.needsRevalidation && (
             <Badge variant="warn" className="font-bold">
               要再検証
