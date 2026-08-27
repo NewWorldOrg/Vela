@@ -20,6 +20,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/tuners/health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getTunerHealth']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/tuners': {
     parameters: {
       query?: never
@@ -50,6 +66,22 @@ export interface paths {
     options?: never
     head?: never
     patch: operations['patchTuner']
+    trace?: never
+  }
+  '/api/tuners/health/settings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['putTunerHealthSettings']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/services/{networkId}-{serviceId}/candidate-channels': {
@@ -206,6 +238,70 @@ export interface paths {
     get?: never
     put?: never
     post: operations['startScan']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/recordings/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getRecording']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/recordings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listRecordings']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/recordings/{id}/thumbnail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remakeThumbnail']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/recordings/{id}/stop': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['stopRecording']
     delete?: never
     options?: never
     head?: never
@@ -603,6 +699,21 @@ export interface components {
       message: string
       data: null | components['schemas']['ProgrammeSearchResponder']
     }
+    BaseResponderOfRecordingDetailResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RecordingDetailResponder']
+    }
+    BaseResponderOfRecordingListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RecordingListResponder']
+    }
+    BaseResponderOfRecordingStopResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RecordingStopResponder']
+    }
     BaseResponderOfScanApplicationResponder: {
       status: boolean
       message: string
@@ -623,10 +734,25 @@ export interface components {
       message: string
       data: null | components['schemas']['ScanStartedResponder']
     }
+    BaseResponderOfServiceReachSettingsResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ServiceReachSettingsResponder']
+    }
     BaseResponderOfSignInOptionsResponder: {
       status: boolean
       message: string
       data: null | components['schemas']['SignInOptionsResponder']
+    }
+    BaseResponderOfThumbnailRemakeResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ThumbnailRemakeResponder']
+    }
+    BaseResponderOfTunerHealthResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['TunerHealthResponder']
     }
     BaseResponderOfTunerLedgerResponder: {
       status: boolean
@@ -763,6 +889,16 @@ export interface components {
       /** Format: date-time */
       observedAt: string
     }
+    DropBucketResponder: {
+      /** Format: int32 */
+      second: number | string
+      /** Format: int64 */
+      continuity: number | string
+      /** Format: int64 */
+      scrambled: number | string
+    }
+    /** @enum {null|string} */
+    DropReading: 'dropped' | 'clean' | 'unmeasured' | null
     EpgRebuiltResponder: {
       /** Format: int32 */
       discarded: number | string
@@ -824,6 +960,14 @@ export interface components {
       /** Format: int32 */
       sessionsEnded: number | string
     }
+    PcrReanchorResponder: {
+      /** Format: int32 */
+      second: number | string
+      /** Format: int64 */
+      before: number | string
+      /** Format: int64 */
+      after: number | string
+    }
     /** @enum {string} */
     ProgrammeField: 'title' | 'description'
     ProgrammeGenreResponder: {
@@ -878,6 +1022,154 @@ export interface components {
     RebuildEpgRequest: {
       confirm?: null | string
       meansIt?: boolean
+    }
+    RecordingDetailResponder: {
+      recording: components['schemas']['RecordingResponder']
+      reconciliation: components['schemas']['RecordingReconciliationResponder']
+      interruptions: components['schemas']['RecordingInterruptionResponder'][]
+      positions: components['schemas']['RecordingPositionsResponder']
+    }
+    RecordingDropsResponder: {
+      ccMeasured: boolean
+      /** Format: int64 */
+      ccDroppedPackets: null | number | string
+      /** Format: int64 */
+      ccTotalPackets: null | number | string
+      /** Format: int64 */
+      scrambledPackets: null | number | string
+      /** Format: int64 */
+      eovfCount: number | string
+      /** Format: date-time */
+      measuredUpdatedAt: null | string
+    }
+    /** @enum {string} */
+    RecordingFault:
+      | 'tuneFailed'
+      | 'refusedByDiskPrecheck'
+      | 'diskExhausted'
+      | 'driverLost'
+      | 'drainGraceExpired'
+      | 'stoppedByHand'
+      | 'tunerContended'
+      | 'scramblingUnresolved'
+      | 'shortOfTheWindow'
+      | 'nothingLanded'
+      | 'sizeUnobserved'
+      | 'stoppedUnasked'
+      | 'lighterThanTheStream'
+      | 'heavierThanTheStream'
+    RecordingFaultResponder: {
+      fault: components['schemas']['RecordingFault']
+      tuneFailure: null | components['schemas']['TuneFailureKind']
+      note: string
+      /** Format: date-time */
+      noticedAt: string
+    }
+    RecordingInterruptionResponder: {
+      fault: components['schemas']['RecordingFault']
+      /** Format: date-time */
+      occurredAt: string
+      /** Format: date-time */
+      resumedAt: null | string
+    }
+    RecordingListResponder: {
+      items: components['schemas']['RecordingResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    /** @enum {null|string} */
+    RecordingOutcome: 'complete' | 'truncated' | 'failed' | null
+    RecordingPositionsResponder: {
+      located: boolean
+      /** Format: int64 */
+      anchorPcr: null | number | string
+      buckets: components['schemas']['DropBucketResponder'][]
+      reanchors: components['schemas']['PcrReanchorResponder'][]
+    }
+    RecordingProgrammeResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      /** Format: date-time */
+      startsAt: string
+      name: string
+      summary: string
+      /** Format: date-time */
+      capturedAt: string
+    }
+    RecordingReconciliationResponder: {
+      sizeObserved: boolean
+      /** Format: int64 */
+      fileSizeBytes: null | number | string
+      /** Format: date-time */
+      observedAt: null | string
+      /** Format: int64 */
+      writtenDurationMs: number | string
+      expectedWindow: components['schemas']['RecordingWindowResponder']
+      /** Format: double */
+      coverage: number | string
+      stoppedUnasked: boolean
+    }
+    RecordingResponder: {
+      id: string
+      /** Format: uuid */
+      reservationId: null | string
+      programme: components['schemas']['RecordingProgrammeResponder']
+      standing: components['schemas']['RecordingStanding']
+      outcome: null | components['schemas']['RecordingOutcome']
+      outcomeDetail: components['schemas']['RecordingFaultResponder'][]
+      /** Format: date-time */
+      startedAt: string
+      /** Format: date-time */
+      stoppedAt: null | string
+      /** Format: date-time */
+      abortedAt: null | string
+      expectedWindow: components['schemas']['RecordingWindowResponder']
+      /** Format: int64 */
+      writtenDurationMs: number | string
+      /** Format: int32 */
+      resumeCount: number | string
+      /** Format: int64 */
+      fileSizeBytes: null | number | string
+      outputRoot: string
+      fileName: string
+      tunerDeviceId: null | string
+      drops: components['schemas']['RecordingDropsResponder']
+      thumbnail: components['schemas']['RecordingThumbnailResponder']
+    }
+    /** @enum {string} */
+    RecordingSort: 'startedAt' | 'programmeStartsAt'
+    /** @enum {string} */
+    RecordingStanding: 'inFlight' | 'ended'
+    RecordingStopResponder: {
+      stopWasAsked: boolean
+      stillWriting: boolean
+      reason: string
+      /** Format: date-time */
+      askedAt: string
+      recording: components['schemas']['RecordingDetailResponder']
+    }
+    RecordingThumbnailResponder: {
+      state: components['schemas']['ThumbnailState']
+      fault: null | components['schemas']['ThumbnailFault']
+      showsAnUnfinishedRecording: boolean
+    }
+    RecordingWindowResponder: {
+      /** Format: date-time */
+      start: string
+      /** Format: date-time */
+      end: string
+      /** Format: int64 */
+      durationMs: number | string
     }
     RelatedProgrammeResponder: {
       /** Format: int32 */
@@ -1040,6 +1332,17 @@ export interface components {
       meetsWantedCoverage: boolean
     }
     /** @enum {string} */
+    ServiceReachLevel:
+      'unmeasured' | 'reaching' | 'silent' | 'missing' | 'undetermined'
+    ServiceReachSettingsRequest: {
+      /** Format: int32 */
+      hoursOfSilence?: null | number | string
+    }
+    ServiceReachSettingsResponder: {
+      /** Format: int32 */
+      hoursOfSilence: number | string
+    }
+    /** @enum {string} */
     SessionPurpose:
       'unspecified' | 'recording' | 'live' | 'survey' | 'scan' | 'surveyNow'
     SessionResponder: {
@@ -1060,6 +1363,9 @@ export interface components {
     StartScanRequest: {
       systems?: null | components['schemas']['TuneSystem'][]
       channels?: null | components['schemas']['TuningParametersRequest'][]
+    }
+    StopRecordingRequest: {
+      reason?: null | string
     }
     /** @enum {string} */
     StreamCollectionOutcome:
@@ -1108,9 +1414,42 @@ export interface components {
       /** Format: int32 */
       transportStreamId: null | number | string
     }
+    SystemReachResponder: {
+      system: components['schemas']['TuneSystem']
+      level: components['schemas']['ServiceReachLevel']
+      /** Format: int32 */
+      services: number | string
+      /** Format: date-time */
+      lastSeenAt: null | string
+    }
+    /** @enum {null|string} */
+    ThumbnailFault:
+      | 'programmeMissing'
+      | 'sourceOutOfReach'
+      | 'refused'
+      | 'timedOut'
+      | 'nothingWasWritten'
+      | null
+    /** @enum {string} */
+    ThumbnailRemake:
+      | 'nothingToAskAbout'
+      | 'nowhereToPutThem'
+      | 'outOfReach'
+      | 'drawn'
+      | 'skipped'
+      | 'failed'
+    ThumbnailRemakeResponder: {
+      remake: components['schemas']['ThumbnailRemake']
+      thumbnail: components['schemas']['RecordingThumbnailResponder']
+    }
+    /** @enum {string} */
+    ThumbnailState: 'pending' | 'ready' | 'failed' | 'skipped'
     ToggleTunerRequest: {
       disabled?: null | boolean
     }
+    /** @enum {null|string} */
+    TuneFailureKind:
+      'noLock' | 'noData' | 'incompletePsi' | 'streamMismatch' | null
     /** @enum {string} */
     TuneSystem: 'unspecified' | 'isdbT' | 'isdbSBs' | 'isdbSCs110'
     TunerEntryRequest: {
@@ -1122,9 +1461,16 @@ export interface components {
       deviceId: string
       disabled: boolean
       lnbPower: boolean
+      kind: components['schemas']['TunerKind']
     }
     /** @enum {string} */
     TunerHealthLevel: 'unspecified' | 'healthy' | 'degraded' | 'faulted'
+    TunerHealthResponder: {
+      systems: components['schemas']['SystemReachResponder'][]
+      /** Format: int32 */
+      hoursOfSilence: number | string
+      undetermined: string[]
+    }
     /** @enum {string} */
     TunerKind: 'unspecified' | 'terrestrial' | 'satellite'
     TunerKindMismatchResponder: {
@@ -1251,6 +1597,51 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfDetectedTunersResponder']
+        }
+      }
+    }
+  }
+  getTunerHealth: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerHealthResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerHealthResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerHealthResponder']
         }
       }
     }
@@ -1454,6 +1845,57 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfTunerObservationResponder']
+        }
+      }
+    }
+  }
+  putTunerHealthSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ServiceReachSettingsRequest']
+        'text/json': components['schemas']['ServiceReachSettingsRequest']
+        'application/*+json': components['schemas']['ServiceReachSettingsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfServiceReachSettingsResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfServiceReachSettingsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfServiceReachSettingsResponder']
         }
       }
     }
@@ -2026,6 +2468,282 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
+        }
+      }
+    }
+  }
+  getRecording: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDetailResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDetailResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDetailResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDetailResponder']
+        }
+      }
+    }
+  }
+  listRecordings: {
+    parameters: {
+      query?: {
+        standing?: components['schemas']['RecordingStanding']
+        outcome?: components['schemas']['RecordingOutcome'][]
+        drops?: components['schemas']['DropReading']
+        channel?: string[]
+        from?: string
+        to?: string
+        sort?: components['schemas']['RecordingSort']
+        descending?: boolean
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingListResponder']
+        }
+      }
+    }
+  }
+  remakeThumbnail: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeResponder']
+        }
+      }
+    }
+  }
+  stopRecording: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['StopRecordingRequest']
+        'text/json': null | components['schemas']['StopRecordingRequest']
+        'application/*+json':
+          null | components['schemas']['StopRecordingRequest']
+      }
+    }
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
         }
       }
     }

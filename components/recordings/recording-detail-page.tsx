@@ -2,7 +2,6 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { isPlayableSource } from '@/lib/recordings'
-import { formatBytes } from '@/lib/format'
 import type { RecordingDetail } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -265,7 +264,7 @@ export function RecordingDetailView({
           {d.reconcile && (
             <DetailKeyRow
               label="突き合わせ"
-              main={`${formatBytes(d.sizeBytes)} / 期待レンジ ${d.reconcile.range}`}
+              main={d.reconcile.main}
               sub={d.reconcile.sub}
             />
           )}

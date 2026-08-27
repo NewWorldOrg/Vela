@@ -5,7 +5,12 @@ import { ProgressBar } from '@/components/vela/progress'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 
 export function EncodePanelBody({ detail: d }: { detail: RecordingDetail }) {
+  if (!d.encode) {
+    return null
+  }
+
   const p = d.encodePanel
+
   switch (d.encode.status) {
     case 'done':
       return (

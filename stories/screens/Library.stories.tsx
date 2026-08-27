@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
+import { RECORDING_FIXTURES } from '@/stories/fixtures/recordings'
 import { LibraryView } from '@/components/library/library-page'
 
 const all = [...RECORDING_FIXTURES].sort(
@@ -14,7 +14,7 @@ const result = {
   total: all.length,
   channels: [...new Set(all.map((r) => r.channel))],
   years: [...new Set(all.map((r) => r.year))].sort((a, b) => b - a),
-  genres: [...new Set(all.map((r) => r.genre))],
+  genres: [...new Set(all.map((r) => r.genre).filter((g) => g !== undefined))],
   filter: {},
 }
 

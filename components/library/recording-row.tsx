@@ -94,7 +94,11 @@ export function RecordingRow({
         )}
       </td>
       <td className={cn(CELL, 'font-code text-ui whitespace-nowrap')}>
-        {formatBytes(r.sizeBytes)}
+        {r.sizeBytes == null ? (
+          <span className="text-ink-3">—</span>
+        ) : (
+          formatBytes(r.sizeBytes)
+        )}
         <small className={cn('block font-sans text-[10.5px]', subTone)}>
           {r.fileMissing ? '実ファイルなし' : r.sizeObservedAt}
         </small>

@@ -24,7 +24,7 @@ const CBTN = cn(
 const NOT_YET = '再生はこれから実装されます'
 
 export function Player({ detail: d }: { detail: RecordingDetail }) {
-  const encoded = d.encode.status === 'done'
+  const encoded = d.encode?.status === 'done'
   const [subtitles, setSubtitles] = useState(true)
   const [audio, setAudio] = useState('主音声')
   const [speed, setSpeed] = useState('1.0')
@@ -34,7 +34,8 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
   const [otfQuality, setOtfQuality] = useState('720p 3.0 Mbps')
   const seek = d.seek
   const onTheFly = !encoded || source === 'ts'
-  const tsLabel = `元 TS ${formatBytes(d.sizeBytes)}`
+  const tsLabel =
+    d.sizeBytes == null ? '元 TS' : `元 TS ${formatBytes(d.sizeBytes)}`
 
   return (
     <section
@@ -228,7 +229,7 @@ export function Player({ detail: d }: { detail: RecordingDetail }) {
                 シークのたびにトランスコーダを立て直します。H.264 を選ぶと Range
                 直配信になります。
               </>
-            ) : d.encode.status === 'failed' ? (
+            ) : d.encode?.status === 'failed' ? (
               <>
                 <b className="block font-bold text-(--pl-ink-2)">
                   エンコードは失敗したため、元 TS をオンザフライで再生します。

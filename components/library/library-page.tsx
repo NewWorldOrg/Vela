@@ -9,7 +9,7 @@ import type {
   RecordingsFilter,
   RecordingsResult,
 } from '@/repository/recordings'
-import { RECORDING_STATE_FILTERS } from '@/repository/recordings'
+import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'

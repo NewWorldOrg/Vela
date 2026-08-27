@@ -10,6 +10,10 @@ export function EncodeChip({
   recording: Recording
   subTone?: string
 }) {
+  if (!r.encode) {
+    return null
+  }
+
   switch (r.encode.status) {
     case 'none':
       return (

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
 import type { Recording } from '@/repository/recordings'
-import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
+import { RECORDING_FIXTURES } from '@/stories/fixtures/recordings'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import {
   Dialog,
