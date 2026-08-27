@@ -407,6 +407,59 @@
         }
       }
     },
+    "/api/storage": {
+      "get": {
+        "tags": [
+          "storage"
+        ],
+        "operationId": "getStorage",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/services/{networkId}-{serviceId}/candidate-channels": {
       "post": {
         "tags": [
@@ -1240,6 +1293,75 @@
         }
       }
     },
+    "/api/recordings/integrity": {
+      "get": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "getRecordingIntegrity",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recordings": {
       "get": {
         "tags": [
@@ -1449,6 +1571,49 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/integrity/run": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "runRecordingIntegrityCheck",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegritySweepResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegritySweepRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegritySweepResponder"
                 }
               }
             }
@@ -3075,6 +3240,84 @@
           }
         }
       },
+      "BaseResponderOfIntegrityListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfIntegritySweepRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegritySweepRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfIntegritySweepResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegritySweepResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfMeResponder": {
         "required": [
           "status",
@@ -3434,6 +3677,32 @@
               },
               {
                 "$ref": "#/components/schemas/SignInOptionsResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfStorageResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StorageResponder"
               }
             ]
           }
@@ -3981,6 +4250,21 @@
         ],
         "type": "string"
       },
+      "DiskShortfall": {
+        "enum": [
+          "rootsUnknown",
+          "rootUndeclared",
+          "rootUnmeasured",
+          "rootNotWritable",
+          "noRoomLeft",
+          "shortOfTheEstimate",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
       "DriverConnection": {
         "enum": [
           "notConnected",
@@ -4262,6 +4546,265 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "IntegrityCheckResponder": {
+        "required": [
+          "id",
+          "startedAt",
+          "finishedAt",
+          "rootsWalked",
+          "rootsOutOfReach",
+          "filesRead",
+          "ledgerRowsRead",
+          "ledgerRowsJudged",
+          "ledgerRowsStillWriting",
+          "ledgerRowsInRootsOutOfReach"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rootsWalked": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rootsOutOfReach": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "filesRead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsRead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsJudged": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsStillWriting": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsInRootsOutOfReach": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "IntegrityFault": {
+        "enum": [
+          "sizeDisagrees",
+          "noLedgerRow",
+          "fileMissing",
+          "fileEmpty",
+          "emptyThoughComplete"
+        ],
+        "type": "string"
+      },
+      "IntegrityFindingResponder": {
+        "required": [
+          "id",
+          "fault",
+          "outputRoot",
+          "path",
+          "recordingId",
+          "ledgerSize",
+          "observedSize",
+          "noticedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fault": {
+            "$ref": "#/components/schemas/IntegrityFault"
+          },
+          "outputRoot": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "recordingId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ledgerSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "observedSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "noticedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IntegrityListResponder": {
+        "required": [
+          "check",
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "check": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityCheckResponder"
+              }
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrityFindingResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "IntegritySweepRefusedResponder": {
+        "required": [
+          "refusal",
+          "runningCheckId",
+          "notBefore"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/SweepRefusal"
+          },
+          "runningCheckId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notBefore": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "IntegritySweepResponder": {
+        "required": [
+          "check",
+          "findings"
+        ],
+        "type": "object",
+        "properties": {
+          "check": {
+            "$ref": "#/components/schemas/IntegrityCheckResponder"
+          },
+          "findings": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -6069,6 +6612,82 @@
           }
         }
       },
+      "StorageResponder": {
+        "required": [
+          "roots"
+        ],
+        "type": "object",
+        "properties": {
+          "roots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageRootResponder"
+            }
+          }
+        }
+      },
+      "StorageRootResponder": {
+        "required": [
+          "name",
+          "freeBytes",
+          "totalBytes",
+          "writable",
+          "committedBytes",
+          "recordingsInFlight",
+          "shortfall"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "freeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "totalBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "writable": {
+            "type": "boolean"
+          },
+          "committedBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "recordingsInFlight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "shortfall": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DiskShortfall"
+              }
+            ]
+          }
+        }
+      },
       "StreamCollectionOutcome": {
         "enum": [
           "neverVisited",
@@ -6252,6 +6871,14 @@
             "format": "int32"
           }
         }
+      },
+      "SweepRefusal": {
+        "enum": [
+          "none",
+          "oneIsAlreadyRunning",
+          "tooSoonAfterTheLastOne"
+        ],
+        "type": "string"
       },
       "SystemReachResponder": {
         "required": [
@@ -6759,6 +7386,9 @@
   "tags": [
     {
       "name": "tuners"
+    },
+    {
+      "name": "storage"
     },
     {
       "name": "services"

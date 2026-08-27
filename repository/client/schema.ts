@@ -84,6 +84,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/storage': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getStorage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/services/{networkId}-{serviceId}/candidate-channels': {
     parameters: {
       query?: never
@@ -260,6 +276,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/recordings/integrity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getRecordingIntegrity']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings': {
     parameters: {
       query?: never
@@ -286,6 +318,22 @@ export interface paths {
     get?: never
     put?: never
     post: operations['remakeThumbnail']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/recordings/integrity/run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['runRecordingIntegrityCheck']
     delete?: never
     options?: never
     head?: never
@@ -674,6 +722,21 @@ export interface components {
       message: string
       data: null | components['schemas']['SessionResponder'][]
     }
+    BaseResponderOfIntegrityListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['IntegrityListResponder']
+    }
+    BaseResponderOfIntegritySweepRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['IntegritySweepRefusedResponder']
+    }
+    BaseResponderOfIntegritySweepResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['IntegritySweepResponder']
+    }
     BaseResponderOfMeResponder: {
       status: boolean
       message: string
@@ -743,6 +806,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['SignInOptionsResponder']
+    }
+    BaseResponderOfStorageResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['StorageResponder']
     }
     BaseResponderOfThumbnailRemakeResponder: {
       status: boolean
@@ -863,6 +931,15 @@ export interface components {
     /** @enum {string} */
     DeviceDetection:
       'unspecified' | 'detected' | 'busy' | 'permissionDenied' | 'unreadable'
+    /** @enum {null|string} */
+    DiskShortfall:
+      | 'rootsUnknown'
+      | 'rootUndeclared'
+      | 'rootUnmeasured'
+      | 'rootNotWritable'
+      | 'noRoomLeft'
+      | 'shortOfTheEstimate'
+      | null
     /** @enum {string} */
     DriverConnection: 'notConnected' | 'connected' | 'draining'
     DriverHelloResponder: {
@@ -926,6 +1003,73 @@ export interface components {
     HealthResponder: {
       status: string
       degraded: string[]
+    }
+    IntegrityCheckResponder: {
+      /** Format: uuid */
+      id: string
+      /** Format: date-time */
+      startedAt: string
+      /** Format: date-time */
+      finishedAt: string
+      /** Format: int32 */
+      rootsWalked: number | string
+      /** Format: int32 */
+      rootsOutOfReach: number | string
+      /** Format: int32 */
+      filesRead: number | string
+      /** Format: int32 */
+      ledgerRowsRead: number | string
+      /** Format: int32 */
+      ledgerRowsJudged: number | string
+      /** Format: int32 */
+      ledgerRowsStillWriting: number | string
+      /** Format: int32 */
+      ledgerRowsInRootsOutOfReach: number | string
+    }
+    /** @enum {string} */
+    IntegrityFault:
+      | 'sizeDisagrees'
+      | 'noLedgerRow'
+      | 'fileMissing'
+      | 'fileEmpty'
+      | 'emptyThoughComplete'
+    IntegrityFindingResponder: {
+      /** Format: uuid */
+      id: string
+      fault: components['schemas']['IntegrityFault']
+      outputRoot: string
+      path: string
+      recordingId: null | string
+      /** Format: int64 */
+      ledgerSize: null | number | string
+      /** Format: int64 */
+      observedSize: null | number | string
+      /** Format: date-time */
+      noticedAt: string
+    }
+    IntegrityListResponder: {
+      check: null | components['schemas']['IntegrityCheckResponder']
+      items: components['schemas']['IntegrityFindingResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    IntegritySweepRefusedResponder: {
+      refusal: components['schemas']['SweepRefusal']
+      /** Format: uuid */
+      runningCheckId: null | string
+      /** Format: date-time */
+      notBefore: null | string
+    }
+    IntegritySweepResponder: {
+      check: components['schemas']['IntegrityCheckResponder']
+      /** Format: int32 */
+      findings: number | string
     }
     LoginRequest: {
       username?: null | string
@@ -1367,6 +1511,22 @@ export interface components {
     StopRecordingRequest: {
       reason?: null | string
     }
+    StorageResponder: {
+      roots: components['schemas']['StorageRootResponder'][]
+    }
+    StorageRootResponder: {
+      name: string
+      /** Format: int64 */
+      freeBytes: number | string
+      /** Format: int64 */
+      totalBytes: number | string
+      writable: boolean
+      /** Format: int64 */
+      committedBytes: number | string
+      /** Format: int32 */
+      recordingsInFlight: number | string
+      shortfall: null | components['schemas']['DiskShortfall']
+    }
     /** @enum {string} */
     StreamCollectionOutcome:
       | 'neverVisited'
@@ -1414,6 +1574,8 @@ export interface components {
       /** Format: int32 */
       transportStreamId: null | number | string
     }
+    /** @enum {string} */
+    SweepRefusal: 'none' | 'oneIsAlreadyRunning' | 'tooSoonAfterTheLastOne'
     SystemReachResponder: {
       system: components['schemas']['TuneSystem']
       level: components['schemas']['ServiceReachLevel']
@@ -1896,6 +2058,60 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfServiceReachSettingsResponder']
+        }
+      }
+    }
+  }
+  getStorage: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfStorageResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfStorageResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfStorageResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfStorageResponder']
         }
       }
     }
@@ -2528,6 +2744,54 @@ export interface operations {
       }
     }
   }
+  getRecordingIntegrity: {
+    parameters: {
+      query?: {
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityListResponder']
+        }
+      }
+    }
+  }
   listRecordings: {
     parameters: {
       query?: {
@@ -2654,6 +2918,51 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfThumbnailRemakeResponder']
+        }
+      }
+    }
+  }
+  runRecordingIntegrityCheck: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegritySweepResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegritySweepRefusedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegritySweepResponder']
         }
       }
     }
