@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
+import { expect, screen, userEvent, within } from 'storybook/test'
 
 import {
   CANDIDATE_UNLOCKED_TERM,
@@ -163,16 +163,13 @@ export const 状態バッジの説明: Story = {
     const [, term] = TIPPED[0]
 
     await userEvent.hover(canvas.getByText(term.label))
-    await waitFor(async () => {
-      await expect(await screen.findByRole('tooltip')).toHaveTextContent(
-        term.explanation,
-      )
-    })
-
-    await userEvent.unhover(canvas.getByText(term.label))
-    await waitFor(() =>
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument(),
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      term.explanation,
     )
+
+    await expect(
+      canvas.getByText('受信可').closest('[data-slot="term-tip"]'),
+    ).toBeNull()
   },
 }
 
