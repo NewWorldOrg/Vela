@@ -42,7 +42,10 @@ export function DeleteRecordingDialog({
                 </dd>
                 <dt className="text-ink-3">サイズ</dt>
                 <dd className="font-code text-ink-2">
-                  {formatBytes(recording.sizeBytes)}(
+                  {recording.sizeBytes == null
+                    ? '—'
+                    : formatBytes(recording.sizeBytes)}
+                  (
                   {recording.fileMissing
                     ? '実ファイルなし'
                     : recording.sizeObservedAt}

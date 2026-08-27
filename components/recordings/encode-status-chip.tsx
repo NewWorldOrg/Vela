@@ -3,6 +3,10 @@ import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 
 export function EncodeStatusChip({ detail: d }: { detail: RecordingDetail }) {
+  if (!d.encode) {
+    return null
+  }
+
   const map = {
     none: (
       <Badge variant="mute" className="font-bold">

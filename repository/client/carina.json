@@ -64,6 +64,49 @@
         }
       }
     },
+    "/api/tuners/health": {
+      "get": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "getTunerHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerHealthResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerHealthResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerHealthResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tuners": {
       "get": {
         "tags": [
@@ -294,6 +337,122 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfTunerObservationResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tuners/health/settings": {
+      "put": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "putTunerHealthSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceReachSettingsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceReachSettingsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceReachSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfServiceReachSettingsResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfServiceReachSettingsResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfServiceReachSettingsResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/storage": {
+      "get": {
+        "tags": [
+          "storage"
+        ],
+        "operationId": "getStorage",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfStorageResponder"
                 }
               }
             }
@@ -1064,6 +1223,530 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfScanStartedResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/{id}": {
+      "get": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "getRecording",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDetailResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDetailResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDetailResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDetailResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/integrity": {
+      "get": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "getRecordingIntegrity",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings": {
+      "get": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "listRecordings",
+        "parameters": [
+          {
+            "name": "standing",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RecordingStanding"
+            }
+          },
+          {
+            "name": "outcome",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RecordingOutcome"
+              }
+            }
+          },
+          {
+            "name": "drops",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DropReading"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RecordingSort"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/{id}/thumbnail": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "remakeThumbnail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/integrity/run": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "runRecordingIntegrityCheck",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegritySweepResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegritySweepRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegritySweepResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/{id}/stop": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "stopRecording",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StopRecordingRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StopRecordingRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StopRecordingRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
                 }
               }
             }
@@ -2557,6 +3240,84 @@
           }
         }
       },
+      "BaseResponderOfIntegrityListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfIntegritySweepRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegritySweepRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfIntegritySweepResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegritySweepResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfMeResponder": {
         "required": [
           "status",
@@ -2687,6 +3448,84 @@
           }
         }
       },
+      "BaseResponderOfRecordingDetailResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingDetailResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRecordingListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRecordingStopResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingStopResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfScanApplicationResponder": {
         "required": [
           "status",
@@ -2791,6 +3630,32 @@
           }
         }
       },
+      "BaseResponderOfServiceReachSettingsResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ServiceReachSettingsResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfSignInOptionsResponder": {
         "required": [
           "status",
@@ -2812,6 +3677,84 @@
               },
               {
                 "$ref": "#/components/schemas/SignInOptionsResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfStorageResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StorageResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfThumbnailRemakeResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ThumbnailRemakeResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfTunerHealthResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TunerHealthResponder"
               }
             ]
           }
@@ -3307,6 +4250,21 @@
         ],
         "type": "string"
       },
+      "DiskShortfall": {
+        "enum": [
+          "rootsUnknown",
+          "rootUndeclared",
+          "rootUnmeasured",
+          "rootNotWritable",
+          "noRoomLeft",
+          "shortOfTheEstimate",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
       "DriverConnection": {
         "enum": [
           "notConnected",
@@ -3423,6 +4381,52 @@
             "format": "date-time"
           }
         }
+      },
+      "DropBucketResponder": {
+        "required": [
+          "second",
+          "continuity",
+          "scrambled"
+        ],
+        "type": "object",
+        "properties": {
+          "second": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "continuity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "scrambled": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "DropReading": {
+        "enum": [
+          "dropped",
+          "clean",
+          "unmeasured",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
       },
       "EpgRebuiltResponder": {
         "required": [
@@ -3542,6 +4546,265 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "IntegrityCheckResponder": {
+        "required": [
+          "id",
+          "startedAt",
+          "finishedAt",
+          "rootsWalked",
+          "rootsOutOfReach",
+          "filesRead",
+          "ledgerRowsRead",
+          "ledgerRowsJudged",
+          "ledgerRowsStillWriting",
+          "ledgerRowsInRootsOutOfReach"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rootsWalked": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rootsOutOfReach": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "filesRead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsRead": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsJudged": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsStillWriting": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ledgerRowsInRootsOutOfReach": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "IntegrityFault": {
+        "enum": [
+          "sizeDisagrees",
+          "noLedgerRow",
+          "fileMissing",
+          "fileEmpty",
+          "emptyThoughComplete"
+        ],
+        "type": "string"
+      },
+      "IntegrityFindingResponder": {
+        "required": [
+          "id",
+          "fault",
+          "outputRoot",
+          "path",
+          "recordingId",
+          "ledgerSize",
+          "observedSize",
+          "noticedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fault": {
+            "$ref": "#/components/schemas/IntegrityFault"
+          },
+          "outputRoot": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "recordingId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ledgerSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "observedSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "noticedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IntegrityListResponder": {
+        "required": [
+          "check",
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "check": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityCheckResponder"
+              }
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrityFindingResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "IntegritySweepRefusedResponder": {
+        "required": [
+          "refusal",
+          "runningCheckId",
+          "notBefore"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/SweepRefusal"
+          },
+          "runningCheckId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notBefore": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "IntegritySweepResponder": {
+        "required": [
+          "check",
+          "findings"
+        ],
+        "type": "object",
+        "properties": {
+          "check": {
+            "$ref": "#/components/schemas/IntegrityCheckResponder"
+          },
+          "findings": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3698,6 +4961,40 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "PcrReanchorResponder": {
+        "required": [
+          "second",
+          "before",
+          "after"
+        ],
+        "type": "object",
+        "properties": {
+          "second": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "before": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "after": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         }
       },
@@ -3929,6 +5226,583 @@
           },
           "meansIt": {
             "type": "boolean"
+          }
+        }
+      },
+      "RecordingDetailResponder": {
+        "required": [
+          "recording",
+          "reconciliation",
+          "interruptions",
+          "positions"
+        ],
+        "type": "object",
+        "properties": {
+          "recording": {
+            "$ref": "#/components/schemas/RecordingResponder"
+          },
+          "reconciliation": {
+            "$ref": "#/components/schemas/RecordingReconciliationResponder"
+          },
+          "interruptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingInterruptionResponder"
+            }
+          },
+          "positions": {
+            "$ref": "#/components/schemas/RecordingPositionsResponder"
+          }
+        }
+      },
+      "RecordingDropsResponder": {
+        "required": [
+          "ccMeasured",
+          "ccDroppedPackets",
+          "ccTotalPackets",
+          "scrambledPackets",
+          "eovfCount",
+          "measuredUpdatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "ccMeasured": {
+            "type": "boolean"
+          },
+          "ccDroppedPackets": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "ccTotalPackets": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "scrambledPackets": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "eovfCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "measuredUpdatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordingFault": {
+        "enum": [
+          "tuneFailed",
+          "refusedByDiskPrecheck",
+          "diskExhausted",
+          "driverLost",
+          "drainGraceExpired",
+          "stoppedByHand",
+          "tunerContended",
+          "scramblingUnresolved",
+          "shortOfTheWindow",
+          "nothingLanded",
+          "sizeUnobserved",
+          "stoppedUnasked",
+          "lighterThanTheStream",
+          "heavierThanTheStream"
+        ],
+        "type": "string"
+      },
+      "RecordingFaultResponder": {
+        "required": [
+          "fault",
+          "tuneFailure",
+          "note",
+          "noticedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "fault": {
+            "$ref": "#/components/schemas/RecordingFault"
+          },
+          "tuneFailure": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TuneFailureKind"
+              }
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "noticedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordingInterruptionResponder": {
+        "required": [
+          "fault",
+          "occurredAt",
+          "resumedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "fault": {
+            "$ref": "#/components/schemas/RecordingFault"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resumedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordingListResponder": {
+        "required": [
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RecordingOutcome": {
+        "enum": [
+          "complete",
+          "truncated",
+          "failed",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "RecordingPositionsResponder": {
+        "required": [
+          "located",
+          "anchorPcr",
+          "buckets",
+          "reanchors"
+        ],
+        "type": "object",
+        "properties": {
+          "located": {
+            "type": "boolean"
+          },
+          "anchorPcr": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DropBucketResponder"
+            }
+          },
+          "reanchors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PcrReanchorResponder"
+            }
+          }
+        }
+      },
+      "RecordingProgrammeResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "eventId",
+          "startsAt",
+          "name",
+          "summary",
+          "capturedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "eventId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordingReconciliationResponder": {
+        "required": [
+          "sizeObserved",
+          "fileSizeBytes",
+          "observedAt",
+          "writtenDurationMs",
+          "expectedWindow",
+          "coverage",
+          "stoppedUnasked"
+        ],
+        "type": "object",
+        "properties": {
+          "sizeObserved": {
+            "type": "boolean"
+          },
+          "fileSizeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "observedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "writtenDurationMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "expectedWindow": {
+            "$ref": "#/components/schemas/RecordingWindowResponder"
+          },
+          "coverage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "stoppedUnasked": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RecordingResponder": {
+        "required": [
+          "id",
+          "reservationId",
+          "programme",
+          "standing",
+          "outcome",
+          "outcomeDetail",
+          "startedAt",
+          "stoppedAt",
+          "abortedAt",
+          "expectedWindow",
+          "writtenDurationMs",
+          "resumeCount",
+          "fileSizeBytes",
+          "outputRoot",
+          "fileName",
+          "tunerDeviceId",
+          "drops",
+          "thumbnail"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reservationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "programme": {
+            "$ref": "#/components/schemas/RecordingProgrammeResponder"
+          },
+          "standing": {
+            "$ref": "#/components/schemas/RecordingStanding"
+          },
+          "outcome": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingOutcome"
+              }
+            ]
+          },
+          "outcomeDetail": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingFaultResponder"
+            }
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stoppedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "abortedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expectedWindow": {
+            "$ref": "#/components/schemas/RecordingWindowResponder"
+          },
+          "writtenDurationMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "resumeCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fileSizeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "outputRoot": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "tunerDeviceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "drops": {
+            "$ref": "#/components/schemas/RecordingDropsResponder"
+          },
+          "thumbnail": {
+            "$ref": "#/components/schemas/RecordingThumbnailResponder"
+          }
+        }
+      },
+      "RecordingSort": {
+        "enum": [
+          "startedAt",
+          "programmeStartsAt"
+        ],
+        "type": "string"
+      },
+      "RecordingStanding": {
+        "enum": [
+          "inFlight",
+          "ended"
+        ],
+        "type": "string"
+      },
+      "RecordingStopResponder": {
+        "required": [
+          "stopWasAsked",
+          "stillWriting",
+          "reason",
+          "askedAt",
+          "recording"
+        ],
+        "type": "object",
+        "properties": {
+          "stopWasAsked": {
+            "type": "boolean"
+          },
+          "stillWriting": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "askedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recording": {
+            "$ref": "#/components/schemas/RecordingDetailResponder"
+          }
+        }
+      },
+      "RecordingThumbnailResponder": {
+        "required": [
+          "state",
+          "fault",
+          "showsAnUnfinishedRecording"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/ThumbnailState"
+          },
+          "fault": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ThumbnailFault"
+              }
+            ]
+          },
+          "showsAnUnfinishedRecording": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RecordingWindowResponder": {
+        "required": [
+          "start",
+          "end",
+          "durationMs"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         }
       },
@@ -4598,6 +6472,46 @@
           }
         }
       },
+      "ServiceReachLevel": {
+        "enum": [
+          "unmeasured",
+          "reaching",
+          "silent",
+          "missing",
+          "undetermined"
+        ],
+        "type": "string"
+      },
+      "ServiceReachSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "hoursOfSilence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ServiceReachSettingsResponder": {
+        "required": [
+          "hoursOfSilence"
+        ],
+        "type": "object",
+        "properties": {
+          "hoursOfSilence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "SessionPurpose": {
         "enum": [
           "unspecified",
@@ -4684,6 +6598,93 @@
             "items": {
               "$ref": "#/components/schemas/TuningParametersRequest"
             }
+          }
+        }
+      },
+      "StopRecordingRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "StorageResponder": {
+        "required": [
+          "roots"
+        ],
+        "type": "object",
+        "properties": {
+          "roots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageRootResponder"
+            }
+          }
+        }
+      },
+      "StorageRootResponder": {
+        "required": [
+          "name",
+          "freeBytes",
+          "totalBytes",
+          "writable",
+          "committedBytes",
+          "recordingsInFlight",
+          "shortfall"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "freeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "totalBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "writable": {
+            "type": "boolean"
+          },
+          "committedBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "recordingsInFlight": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "shortfall": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DiskShortfall"
+              }
+            ]
           }
         }
       },
@@ -4871,6 +6872,95 @@
           }
         }
       },
+      "SweepRefusal": {
+        "enum": [
+          "none",
+          "oneIsAlreadyRunning",
+          "tooSoonAfterTheLastOne"
+        ],
+        "type": "string"
+      },
+      "SystemReachResponder": {
+        "required": [
+          "system",
+          "level",
+          "services",
+          "lastSeenAt"
+        ],
+        "type": "object",
+        "properties": {
+          "system": {
+            "$ref": "#/components/schemas/TuneSystem"
+          },
+          "level": {
+            "$ref": "#/components/schemas/ServiceReachLevel"
+          },
+          "services": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastSeenAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ThumbnailFault": {
+        "enum": [
+          "programmeMissing",
+          "sourceOutOfReach",
+          "refused",
+          "timedOut",
+          "nothingWasWritten",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "ThumbnailRemake": {
+        "enum": [
+          "nothingToAskAbout",
+          "nowhereToPutThem",
+          "outOfReach",
+          "drawn",
+          "skipped",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "ThumbnailRemakeResponder": {
+        "required": [
+          "remake",
+          "thumbnail"
+        ],
+        "type": "object",
+        "properties": {
+          "remake": {
+            "$ref": "#/components/schemas/ThumbnailRemake"
+          },
+          "thumbnail": {
+            "$ref": "#/components/schemas/RecordingThumbnailResponder"
+          }
+        }
+      },
+      "ThumbnailState": {
+        "enum": [
+          "pending",
+          "ready",
+          "failed",
+          "skipped"
+        ],
+        "type": "string"
+      },
       "ToggleTunerRequest": {
         "type": "object",
         "properties": {
@@ -4881,6 +6971,19 @@
             ]
           }
         }
+      },
+      "TuneFailureKind": {
+        "enum": [
+          "noLock",
+          "noData",
+          "incompletePsi",
+          "streamMismatch",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
       },
       "TuneSystem": {
         "enum": [
@@ -4912,7 +7015,8 @@
         "required": [
           "deviceId",
           "disabled",
-          "lnbPower"
+          "lnbPower",
+          "kind"
         ],
         "type": "object",
         "properties": {
@@ -4924,6 +7028,9 @@
           },
           "lnbPower": {
             "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TunerKind"
           }
         }
       },
@@ -4935,6 +7042,36 @@
           "faulted"
         ],
         "type": "string"
+      },
+      "TunerHealthResponder": {
+        "required": [
+          "systems",
+          "hoursOfSilence",
+          "undetermined"
+        ],
+        "type": "object",
+        "properties": {
+          "systems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SystemReachResponder"
+            }
+          },
+          "hoursOfSilence": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "undetermined": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "TunerKind": {
         "enum": [
@@ -5251,7 +7388,13 @@
       "name": "tuners"
     },
     {
+      "name": "storage"
+    },
+    {
       "name": "services"
+    },
+    {
+      "name": "recordings"
     },
     {
       "name": "health"

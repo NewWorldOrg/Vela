@@ -36,14 +36,15 @@ const TOLD_TO_RUN = [
  * Naming them means an addition is a line here and a removal is a red run.
  */
 const THE_SUITE = [
-  '.storybook/every-test-runs.test.ts',
   '.storybook/cursor-exempt.test.ts',
+  '.storybook/every-test-runs.test.ts',
   '.storybook/tap-exempt.test.ts',
   'lib/dismiss.test.ts',
   'lib/format.test.ts',
   'lib/guide.test.ts',
   'lib/search-condition.test.ts',
   'repository/client/carina.test.ts',
+  'repository/recordings.test.ts',
   'repository/search.test.ts',
   'repository/tuning.test.ts',
 ]

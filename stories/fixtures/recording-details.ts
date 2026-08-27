@@ -1,5 +1,5 @@
 import type { RecordingDetail } from '@/repository/recordings'
-import { RECORDING_FIXTURES } from '@/repository/recordings.fixtures'
+import { RECORDING_FIXTURES } from '@/stories/fixtures/recordings'
 
 function base(id: string) {
   const found = RECORDING_FIXTURES.find((r) => r.id === id)
@@ -46,7 +46,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '期待ウィンドウ 30分に対し、書けた尺 30:04・実ファイル 3.4 GB。突き合わせの内訳は「録画の記録」にあります。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      range: '3.2–3.7 GB',
+      main: '3.4 GB / 期待レンジ 3.2–3.7 GB',
       sub: '書けた尺 30:04 / 実効ウィンドウ 30:04 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
     interruptions: {
@@ -85,7 +85,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.3 GB。突き合わせの内訳は「録画の記録」にあります。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      range: '3.2–3.7 GB',
+      main: '3.3 GB / 期待レンジ 3.2–3.7 GB',
       sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
@@ -117,7 +117,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '期待ウィンドウ 4時間13分に対し、書けた尺 4:12:38・実ファイル 29.6 GB。リレー放送 3 セグメントの1本目です。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      range: '28.4–32.6 GB',
+      main: '29.6 GB / 期待レンジ 28.4–32.6 GB',
       sub: '書けた尺 4:12:38 / 実効ウィンドウ 4:13:00 · 被覆率 99.8%(判定の許容差は暫定値)',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
@@ -165,7 +165,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '被覆率 67.0% · 実ファイル 4.2 GB(期待レンジ 5.9–6.8 GB)· 書けた尺 36:12 / 実効ウィンドウ 54:00 · 中断 3 回 / 再開 2 回',
     outcomeAxis: '末尾 18 分が欠けています',
     reconcile: {
-      range: '5.9–6.8 GB',
+      main: '4.2 GB / 期待レンジ 5.9–6.8 GB',
       sub: '書けた尺 36:12 / 実効ウィンドウ 54:00 · 被覆率 67.0%(判定の許容差は暫定値)',
     },
     interruptions: {
@@ -224,7 +224,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.5 GB。移行で取り込んだ録画のため、品質は未計測です。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      range: '3.2–3.7 GB',
+      main: '3.5 GB / 期待レンジ 3.2–3.7 GB',
       sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
@@ -250,7 +250,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '期待ウィンドウ 2時間6分に対し、書けた尺 2:06:14・実ファイル 13.8 GB。突き合わせの内訳は「録画の記録」にあります。',
     outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
-      range: '13.1–15.1 GB',
+      main: '13.8 GB / 期待レンジ 13.1–15.1 GB',
       sub: '書けた尺 2:06:14 / 実効ウィンドウ 2:06:14 · 被覆率 100.0%(判定の許容差は暫定値)',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
