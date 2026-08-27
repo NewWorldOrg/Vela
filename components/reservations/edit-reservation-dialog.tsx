@@ -161,7 +161,7 @@ export function EditReservationDialog({
           <DialogTitle>予約を編集</DialogTitle>
           <DialogDescription>
             {booking.title}{' '}
-            の優先度とマージンを変えます。放送日時とチャンネルは番組表が決めるため、ここでは変えません。
+            の優先度とマージンを変えます。放送日時とチャンネルは番組表が決めるため、ここでは変えられません。
           </DialogDescription>
         </DialogHeader>
 

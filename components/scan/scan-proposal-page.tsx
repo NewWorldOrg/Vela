@@ -122,7 +122,7 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
       label: '新規',
       value: proposal.added.length,
       unit: 'サービス',
-      note: '一覧に追加します',
+      note: '一覧に追加されます',
       tint: 'bg-tint-sage',
     },
     {
@@ -205,7 +205,7 @@ export function ScanProposalView({
     return (
       <>
         {crumb}
-        <PageHeading description="この内容で保存するまで、既存の定義は一切変わりません。">
+        <PageHeading description="この内容で保存するまで、既存の定義は変わりません。">
           スキャン結果の確認
         </PageHeading>
         <EmptyState
@@ -244,7 +244,7 @@ export function ScanProposalView({
   return (
     <>
       {crumb}
-      <PageHeading description="この内容で保存するまで、既存の定義は一切変わりません。">
+      <PageHeading description="この内容で保存するまで、既存の定義は変わりません。">
         スキャン結果の確認
       </PageHeading>
 
@@ -270,7 +270,7 @@ export function ScanProposalView({
 
       <p className="my-3 flex items-start gap-2 px-0.5 text-note leading-[1.7] text-ink-2">
         <InfoIcon className="mt-1 size-[15px] shrink-0 text-ink-3" />
-        この差分は提案です。「この内容で保存」を押すまで、サービスの定義も候補チャンネルも一切書き換わりません。保存は一度きりで、一部だけを選んで保存することはできません。
+        この差分は提案です。「この内容で保存」を押すまで、サービスの定義も候補チャンネルも書き換わりません。保存は一度きりで、一部だけを選んで保存することはできません。
       </p>
 
       <Summary proposal={proposal} />
@@ -289,7 +289,7 @@ export function ScanProposalView({
               />
               <ProposalRows
                 services={proposal.added}
-                description="今回の走査で初めて見つかったサービスです。保存すると一覧に追加します。"
+                description="今回の走査で初めて見つかったサービスです。保存すると一覧に追加されます。"
               />
             </section>
           )}
@@ -302,7 +302,7 @@ export function ScanProposalView({
               />
               <ProposalRows
                 services={proposal.updated}
-                description="既存サービスの変わった項目だけを書き換えます。nid+sid は変わらないため、予約と EPG は影響を受けません。"
+                description="既存サービスの変わった項目だけが書き換わります。nid+sid は変わらないため、予約と EPG は影響を受けません。"
               />
             </section>
           )}
@@ -361,7 +361,7 @@ export function ScanProposalView({
           <b className="font-code font-medium tabular-nums text-ink">
             {proposal.missing.length}
           </b>
-          。破棄を選ぶと既存の定義は一切変わりません。
+          。破棄を選ぶと既存の定義は変わりません。
         </p>
         {applyAction}
       </div>

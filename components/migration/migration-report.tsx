@@ -147,7 +147,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           取り込まなかったものの明細
         </SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          理由分類ごとに並べています。理由を単一の文字列に潰すことはせず、打ち切りもしません。
+          理由分類ごとに並べています。理由は単一の文字列に潰されず、打ち切りもされません。
         </p>
         <Table className="min-w-[860px]" containerClassName="pb-1">
           <TableHeader>
@@ -225,7 +225,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
         <SectionHeading mark={MarkSlashes}>やらなかったこと</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
           運ばなかったものも 1
-          行として記録します。記録に残さないと、後から機能欠落と区別できません
+          行として記録されます。記録が無いと、後から機能欠落と区別できません
         </p>
         <div className="space-y-2">
           {result.omissions.map((omission) => (

@@ -43,6 +43,7 @@ const THE_SUITE = [
   'lib/format.test.ts',
   'lib/guide.test.ts',
   'lib/search-condition.test.ts',
+  'lib/state-terms.test.ts',
   'repository/client/carina.test.ts',
   'repository/integrity.test.ts',
   'repository/recordings.test.ts',

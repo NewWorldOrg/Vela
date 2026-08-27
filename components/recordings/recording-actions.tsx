@@ -32,7 +32,7 @@ export function RecordingActions({ recording }: { recording: Recording }) {
         </Button>
       </div>
       <p className="mt-[9px] text-note leading-relaxed text-ink-3">
-        プロファイルは1つのため、「エンコード」を押すと選択させずそのまま待機列へ登録します。元
+        プロファイルは1つのため、「エンコード」を押すと、選択なしでそのまま待機列へ登録されます。元
         TS
         は削除されません。削除は録画ごと、ライブラリからの明示操作でのみ行われます。
       </p>

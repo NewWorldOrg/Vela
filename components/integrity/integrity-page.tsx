@@ -68,7 +68,7 @@ export function IntegrityView({
       </div>
 
       <Banner tone="info" className="mb-3.5">
-        動画ファイルは自動では消しません。「掃除しました」という自動の結果通知も出しません。
+        動画ファイルの自動削除と、その結果の通知は行いません。
       </Banner>
 
       {result.storageProblem && (
@@ -105,8 +105,8 @@ export function IntegrityView({
           {(check.rootsOutOfReach > 0 ||
             check.ledgerRowsInRootsOutOfReach > 0) && (
             <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-              手が届かなかったルートが {check.rootsOutOfReach}{' '}
-              件あり、そこにある 録画の記録 {check.ledgerRowsInRootsOutOfReach}{' '}
+              届かなかったルートが {check.rootsOutOfReach} 件あり、そこにある
+              録画の記録 {check.ledgerRowsInRootsOutOfReach}{' '}
               行は判定していません。届かないことと、無いことは別に数えます。
             </p>
           )}
@@ -184,7 +184,7 @@ export function IntegrityView({
           </Table>
           <p className="mt-3 px-1.5 text-note leading-relaxed text-ink-3">
             0
-            バイトは常に失敗として扱います。整合性チェックは見つけたものを並べるところまでで、ファイルには手を触れません。
+            バイトは常に失敗として扱います。整合性チェックは見つけたものを並べるところまでで、ファイルは変更されません。
           </p>
         </>
       )}

@@ -15,7 +15,7 @@ const DREW: Record<ThumbnailRemake, { tone: 'ok' | 'warn'; text: string }> = {
   drawn: { tone: 'ok', text: 'サムネイルを生成しました。' },
   skipped: {
     tone: 'warn',
-    text: 'この録画にはサムネイルを作りません。サムネイルが無いことは録画の失敗ではありません。',
+    text: 'この録画にサムネイルは生成されません。サムネイルが無いことは録画の失敗ではありません。',
   },
   failed: {
     tone: 'warn',
@@ -23,7 +23,7 @@ const DREW: Record<ThumbnailRemake, { tone: 'ok' | 'warn'; text: string }> = {
   },
   nothingToAskAbout: {
     tone: 'warn',
-    text: 'この録画にはサムネイルを作りません。',
+    text: 'この録画にサムネイルは生成されません。',
   },
   nowhereToPutThem: {
     tone: 'warn',
@@ -31,7 +31,7 @@ const DREW: Record<ThumbnailRemake, { tone: 'ok' | 'warn'; text: string }> = {
   },
   outOfReach: {
     tone: 'warn',
-    text: '録画ファイルに手が届かないため、生成できませんでした。',
+    text: '録画ファイルに到達できないため、生成できませんでした。',
   },
 }
 

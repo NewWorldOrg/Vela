@@ -254,8 +254,8 @@ export type ThumbnailWrite =
 const THUMBNAIL_REFUSAL: Partial<Record<number, string>> = {
   400: 'この録画の指定が正しくないため、サムネイルを生成できませんでした。',
   404: 'この録画は残っていないため、サムネイルを生成できませんでした。',
-  409: 'この録画はまだ書き込み中です。サムネイルは録画が終わってから作ります。',
-  503: '録画ファイルかサムネイルの保存先に手が届かないため、生成できませんでした。',
+  409: 'この録画はまだ書き込み中です。サムネイルは録画の完了後に生成されます。',
+  503: '録画ファイルかサムネイルの保存先に到達できないため、生成できませんでした。',
 }
 
 export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
@@ -503,8 +503,8 @@ const THUMBNAIL_ROWS: Record<
     canGenerate: true,
   },
   skipped: {
-    main: 'failed のため作らなかった',
-    sub: '失敗した録画にはサムネイルを作りません',
+    main: 'failed のため生成されず',
+    sub: '失敗した録画にサムネイルは生成されません',
   },
 }
 
@@ -518,11 +518,11 @@ const STOPS: Partial<Record<Fault, string>> = {
 const FAILURES: Partial<Record<Fault, { title: string; body: string }>> = {
   tuneFailed: {
     title: '選局失敗',
-    body: '4分類で残します。① lock しない ② lock したが dvr 無データ ③ PSI 不完全 ④ 期待 TSID / サービス不一致。',
+    body: '4分類で記録されます。① lock しない ② lock したが dvr 無データ ③ PSI 不完全 ④ 期待 TSID / サービス不一致。',
   },
   diskExhausted: {
     title: 'ENOSPC(書き込み中にディスクが尽きた)',
-    body: 'その時点までの実績を録画の記録に残して停止しました。リトライで切れ端を量産しません。',
+    body: 'その時点までの実績を録画の記録に残して停止しました。リトライで切れ端は作られません。',
   },
   refusedByDiskPrecheck: {
     title: 'ディスク不足で開始せず',

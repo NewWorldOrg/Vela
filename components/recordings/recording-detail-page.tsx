@@ -139,7 +139,7 @@ export function RecordingDetailView({
                 main={d.live.extension.followedAt}
               />
               <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-                録画中は録画の記録が唯一の原簿です。ファイル名からは進行中と完成を判別しません。
+                録画中は録画の記録が唯一の原簿です。進行中と完成の判別にファイル名は使われません。
               </p>
             </section>
           )}

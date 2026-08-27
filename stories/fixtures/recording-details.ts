@@ -186,7 +186,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     encodePanel: {
       profile: '録画再生用(H.264)',
       queueSub:
-        '待機列の 2 番目です。エンコードはライブ視聴に譲ります。視聴中は使用コアを抑えます。',
+        '待機列の 2 番目です。ライブ視聴がエンコードより優先されます。視聴中は使用コアが抑えられます。',
       registeredAt: '08/04(月) 23:40',
     },
   },
@@ -197,7 +197,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     avInfo: '—',
     outcomeBody:
       '実ファイル 0 B · 開始 00:15:04 / 終了 00:15:21 · 理由は「失敗の理由」に分類して残ります',
-    outcomeAxis: 'サムネイルは作りません',
+    outcomeAxis: 'サムネイルは生成されません',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter2/frontend0',
@@ -213,7 +213,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       title: 'スクランブル解除失敗',
       body: '閾値を超えた残存パケットを検出しました。サイズが正しいのに全編再生できない場合の唯一の手がかりです。',
     },
-    thumbnailState: { main: 'failed のため作らなかった' },
+    thumbnailState: { main: 'failed のため生成されず' },
   },
   {
     ...base('0412'),
@@ -235,7 +235,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     encodePanel: {
       profile: '録画再生用(H.264)',
       queueSub:
-        '待機列の 5 番目です。エンコードはライブ視聴に譲ります。視聴中は使用コアを抑えます。',
+        '待機列の 5 番目です。ライブ視聴がエンコードより優先されます。視聴中は使用コアが抑えられます。',
       registeredAt: '08/10(日) 04:05',
     },
   },
