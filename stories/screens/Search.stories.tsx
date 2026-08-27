@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
@@ -132,6 +133,10 @@ const BROWSER_BUTTON = {
   borderRadius: '4px',
 }
 
+function browserButton(shut: boolean): CSSProperties {
+  return { ...BROWSER_BUTTON, cursor: shut ? 'not-allowed' : 'pointer' }
+}
+
 function Visited({ result }: { result: SearchResult }) {
   const [entries, setEntries] = useState<SearchCondition[]>([result.condition])
   const [at, setAt] = useState<number>(0)
@@ -151,7 +156,7 @@ function Visited({ result }: { result: SearchResult }) {
       <div style={{ display: 'flex', gap: '12px', padding: '16px' }}>
         <button
           type="button"
-          style={BROWSER_BUTTON}
+          style={browserButton(at === 0)}
           disabled={at === 0}
           onClick={() => setAt((standing) => standing - 1)}
         >
@@ -159,7 +164,7 @@ function Visited({ result }: { result: SearchResult }) {
         </button>
         <button
           type="button"
-          style={BROWSER_BUTTON}
+          style={browserButton(at === entries.length - 1)}
           disabled={at === entries.length - 1}
           onClick={() => setAt((standing) => standing + 1)}
         >
