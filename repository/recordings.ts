@@ -240,6 +240,42 @@ export const getRecording = cache(
   },
 )
 
+export type ThumbnailRemake = components['schemas']['ThumbnailRemake']
+
+/**
+ * What asking for a picture came to. A 200 is not always a picture: the pass
+ * answers `skipped` for a recording it will not illustrate and `failed` for
+ * one it could not, and neither is a refusal of the request.
+ */
+export type ThumbnailWrite =
+  | { state: 'ok'; remake: ThumbnailRemake }
+  | { state: 'rejected'; message: string }
+
+const THUMBNAIL_REFUSAL: Partial<Record<number, string>> = {
+  400: 'この録画の指定が正しくないため、サムネイルを生成できませんでした。',
+  404: 'この録画は残っていないため、サムネイルを生成できませんでした。',
+  409: 'この録画はまだ書き込み中です。サムネイルは録画が終わってから作ります。',
+  503: '録画ファイルかサムネイルの保存先に手が届かないため、生成できませんでした。',
+}
+
+export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
+  const { data, response } = await carinaClient().POST(
+    '/api/recordings/{id}/thumbnail',
+    { params: { path: { id } } },
+  )
+
+  if (response.ok && data?.data) {
+    return { state: 'ok', remake: data.data.remake }
+  }
+
+  return {
+    state: 'rejected',
+    message:
+      THUMBNAIL_REFUSAL[response.status] ??
+      `サムネイルを生成できませんでした(${response.status})。`,
+  }
+}
+
 /**
  * The store answers a page at a time and caps the page at 200, while the
  * screen lists everything it is given and says so. Walking to the last page

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
+import type { ThumbnailWrite } from '@/repository/recordings'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 
@@ -11,10 +12,15 @@ function detail(id: string) {
   return found
 }
 
+async function remade(): Promise<ThumbnailWrite> {
+  return { state: 'ok', remake: 'drawn' }
+}
+
 const meta = {
   title: 'Screens/録画詳細',
   component: RecordingDetailView,
   parameters: { layout: 'fullscreen' },
+  args: { onRemakeThumbnail: remade },
 } satisfies Meta<typeof RecordingDetailView>
 
 export default meta

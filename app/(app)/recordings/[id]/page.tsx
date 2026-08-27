@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { getRecording } from '@/repository/recordings'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
+import { redrawThumbnail } from './actions'
 
 export async function generateMetadata({
   params,
@@ -25,5 +26,7 @@ export default async function Page({
     notFound()
   }
 
-  return <RecordingDetailView detail={detail} />
+  return (
+    <RecordingDetailView detail={detail} onRemakeThumbnail={redrawThumbnail} />
+  )
 }
