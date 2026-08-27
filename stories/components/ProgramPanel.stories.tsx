@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
+import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import {
   PROGRAM_DAY,
@@ -26,6 +27,7 @@ const meta = {
     dayLabel: PROGRAM_DAY.label,
     open: true,
     onClose: fn(),
+    onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
   },
 } satisfies Meta<typeof ProgramPanel>
 

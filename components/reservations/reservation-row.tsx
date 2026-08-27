@@ -1,9 +1,13 @@
+'use client'
+
 import Link from 'next/link'
+import { useState, useTransition } from 'react'
 
 import { cn } from '@/lib/utils'
-import type { Reservation } from '@/repository/reservations'
+import type { Reservation, ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
+import { InlineAlert } from '@/components/vela/banner'
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -12,16 +16,47 @@ import {
 } from '@/components/vela/icons'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 
+export interface ReservationActions {
+  onCancel: (id: string) => Promise<ReservationWrite>
+  onRestore: (id: string) => Promise<ReservationWrite>
+  onRaise: (id: string, priority: number) => Promise<ReservationWrite>
+}
+
+const SIGNED_OUT =
+  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+
 export function ReservationRow({
   reservation,
   expanded,
   onToggle,
+  actions,
 }: {
   reservation: Reservation
   expanded: boolean
   onToggle: () => void
+  actions: ReservationActions
 }) {
-  const conflict = reservation.state === 'conflict'
+  const conflict = reservation.standing === 'conflict'
+  const cancellable = conflict || reservation.standing === 'scheduled'
+  const restorable = reservation.standing === 'cancelled'
+  const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
+
+  const run = (write: () => Promise<ReservationWrite>) => {
+    startTransition(async () => {
+      setRefusal(undefined)
+
+      const result = await write()
+
+      setRefusal(
+        result.state === 'unauthenticated'
+          ? SIGNED_OUT
+          : result.state === 'rejected'
+            ? result.message
+            : undefined,
+      )
+    })
+  }
 
   return (
     <>
@@ -83,14 +118,37 @@ export function ReservationRow({
           )}
         </TableCell>
         <TableCell className="text-right align-top">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            title="予約の編集はこれから実装されます"
-          >
-            編集
-          </Button>
+          {restorable ? (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() => run(() => actions.onRestore(reservation.id))}
+            >
+              復元
+            </Button>
+          ) : (
+            <span className="inline-flex flex-wrap justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                title="予約の編集はこれから実装されます"
+              >
+                編集
+              </Button>
+              {cancellable && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => run(() => actions.onCancel(reservation.id))}
+                >
+                  取り消す
+                </Button>
+              )}
+            </span>
+          )}
         </TableCell>
       </TableRow>
       {conflict && expanded && reservation.conflict && (
@@ -127,16 +185,24 @@ export function ReservationRow({
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled
-                  title="優先度の変更はこれから実装されます"
+                  disabled={pending}
+                  onClick={() =>
+                    run(() =>
+                      actions.onRaise(
+                        reservation.id,
+                        reservation.conflict?.raiseTo ??
+                          reservation.priority + 1,
+                      ),
+                    )
+                  }
                 >
                   この予約の優先度を上げる
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
-                  disabled
-                  title="予約の取り消しはこれから実装されます"
+                  disabled={pending}
+                  onClick={() => run(() => actions.onCancel(reservation.id))}
                 >
                   この予約を取り消す
                 </Button>
@@ -147,6 +213,15 @@ export function ReservationRow({
                 </Button>
               </div>
             </div>
+          </TableCell>
+        </TableRow>
+      )}
+      {refusal && (
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={7} className="border-b-0 px-3.5 pb-3">
+            <span aria-live="polite">
+              <InlineAlert tone="warn">{refusal}</InlineAlert>
+            </span>
           </TableCell>
         </TableRow>
       )}

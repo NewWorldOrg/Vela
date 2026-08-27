@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { getProgram } from '@/repository/programs'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
+import { reserveProgramme } from '@/app/(app)/guide/actions'
 
 export async function generateMetadata({
   params,
@@ -25,5 +26,5 @@ export default async function Page({
     notFound()
   }
 
-  return <ProgramDetailView detail={detail} />
+  return <ProgramDetailView detail={detail} onReserve={reserveProgramme} />
 }

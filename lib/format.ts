@@ -100,3 +100,41 @@ export function formatSpan(sec: number) {
 
   return m > 0 ? `${m}分${s}秒` : `${s}秒`
 }
+
+const WEEKDAY = new Intl.DateTimeFormat('ja-JP', {
+  timeZone: DISPLAY_ZONE,
+  weekday: 'short',
+})
+
+/** `08/08(金) 21:10` — the moment a broadcast is announced for. */
+export function formatBroadcastStart(iso: string) {
+  const at = stampOf(iso)
+
+  return `${at.month}/${at.day}(${WEEKDAY.format(new Date(iso))}) ${at.hour}:${at.minute}`
+}
+
+/** `08/08(金) 21:10–22:40` — the span a broadcast covers. */
+export function formatBroadcastSpan(startIso: string, endIso: string) {
+  const to = stampOf(endIso)
+
+  return `${formatBroadcastStart(startIso)}–${to.hour}:${to.minute}`
+}
+
+/** `21:10–22:40` — the same span where the day has already been said. */
+export function formatClockSpan(startIso: string, endIso: string) {
+  const from = stampOf(startIso)
+  const to = stampOf(endIso)
+
+  return `${from.hour}:${from.minute}–${to.hour}:${to.minute}`
+}
+
+const ORIGIN_LABEL = { byHand: '手動', byRule: 'ルール' } as const
+
+export type OriginLabel = (typeof ORIGIN_LABEL)[keyof typeof ORIGIN_LABEL]
+
+/** Which side asked for a reservation, as the screens name it. */
+export function formatReservationOrigin(
+  origin: keyof typeof ORIGIN_LABEL,
+): OriginLabel {
+  return ORIGIN_LABEL[origin]
+}
