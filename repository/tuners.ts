@@ -597,7 +597,7 @@ function toSaveRefusal(
 const REFUSAL_BY_PREFIX: Partial<Record<string, string>> = {
   /** The review went stale: a device it named is no longer detected. */
   unknownDevice:
-    '確認した検出結果が古くなっています。接続が変わったため保存していません。もう一度検出してください。',
+    '確認した検出結果が古くなっています。接続が変わったため保存されていません。もう一度検出してください。',
   /**
    * A device stopped answering what it receives between the review and the
    * save. Detecting again shows it as unreadable and leaves it out.

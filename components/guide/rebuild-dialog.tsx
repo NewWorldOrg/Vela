@@ -108,7 +108,7 @@ export function RebuildEpgDialog({
               />
               <span>
                 <b className="font-bold text-ink">過去番組のアーカイブ</b> —
-                この操作では触れません
+                この操作では変更されません
               </span>
             </li>
             <li className="flex gap-2">
@@ -118,7 +118,7 @@ export function RebuildEpgDialog({
               />
               <span>
                 <b className="font-bold text-ink">予約とチャンネル定義</b> —
-                一切消えません
+                消えません
               </span>
             </li>
             <li className="flex gap-2">

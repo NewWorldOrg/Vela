@@ -140,8 +140,8 @@ export function LiveView({ live }: { live: LiveResult }) {
             <b className="font-bold text-(--pl-ink-2)">
               録画のドロップ率とは別の指標
             </b>
-            のため、品質画面には出しません。外部プレイヤー・AirPlay は使い捨ての
-            ticket(有効 <span className="font-code">30</span>{' '}
+            のため、品質画面には表示されません。外部プレイヤー・AirPlay
+            は使い捨ての ticket(有効 <span className="font-code">30</span>{' '}
             秒・1回で失効)で開きます。
           </p>
         </section>

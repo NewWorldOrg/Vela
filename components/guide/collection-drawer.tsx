@@ -264,7 +264,7 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
         </b>
         いま押しても受け付けられません(
         <span className="font-code tabular-nums">409</span>
-        )。空きチューナーが無いとき(予約の確保分は使いません)も同じように押せなくなります。
+        )。空きチューナーが無いとき(予約の確保分は使われません)も同じように押せなくなります。
       </span>
     ) : outcome.state === 'cooldown' ? (
       <span>
@@ -492,7 +492,7 @@ export function CollectionDrawer({
                 )。同時に <b className="font-code font-medium text-ink-2">
                   1
                 </b>{' '}
-                本まで、連打は受け付けません。
+                本まで、連打は受け付けられません。
               </p>
             )}
           </div>
@@ -541,7 +541,7 @@ export function CollectionDrawer({
             <b className="font-bold text-ink">BasicOnly</b>
             =基本のみ揃い、詳細は次回へ持ち越し /{' '}
             <b className="font-bold text-ink">Incomplete</b>
-            =揃わないまま打ち切り。時間で打ち切った収集を成功とは記録しません。
+            =揃わないまま打ち切り。時間で打ち切った収集は成功として記録されません。
           </p>
 
           {misbehaving && (
@@ -551,7 +551,7 @@ export function CollectionDrawer({
                 <div>
                   <b className="font-bold text-ink">収集不調</b> —
                   選局はできるのに EIT
-                  が揃わない状態。巡回間隔を延ばすだけで、受信可否の判定には使いません。
+                  が揃わない状態。巡回間隔を延ばすだけで、受信可否の判定には使われません。
                   <b className="font-bold text-ink">録画予約は弾かれません。</b>
                 </div>
               </div>
@@ -585,7 +585,7 @@ export function CollectionDrawer({
 
           <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-dashed border-line pt-[13px]">
             <p className="min-w-[170px] flex-1 text-note leading-[1.6] text-ink-3">
-              番組表のデータを全て破棄して集め直す破壊的操作です。確認を必ず通します。
+              番組表のデータを全て破棄して集め直す破壊的操作です。確認が必ず入ります。
             </p>
             <Button
               variant="destructive"

@@ -89,7 +89,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 録画詳細を開く
               </Button>
               <span className="text-note text-ink-3">
-                進捗が止まったままの状態は「実行中」と表示せず、停滞として検知します
+                進捗が止まったままの状態は「実行中」と表示されず、停滞として検知されます
               </span>
             </div>
           </Surface>
@@ -249,7 +249,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 disabled
               />
               <FieldHint>
-                ソースがプログレッシブのときは何もしません。
+                ソースがプログレッシブのときは適用されません。
               </FieldHint>
             </Field>
             <Field>
@@ -258,8 +258,8 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 音声は無変換で全トラック · 字幕は多重化しない
               </p>
               <FieldHint>
-                字幕は元 TS から作って別経路で送ります。成果物の尺は元 TS
-                と一致させます。
+                字幕は元 TS から生成され、別経路で送られます。成果物の尺は元 TS
+                と一致します。
               </FieldHint>
             </Field>
           </div>
@@ -286,7 +286,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkSplit}>自動実行</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          録画の完了を検知して、エンコードジョブを登録します。
+          録画の完了を検知して、エンコードジョブが登録されます。
         </p>
         <Surface className="space-y-3.5">
           <AutoEncodeRow label="録画終了後に自動エンコード">
@@ -307,13 +307,13 @@ export function EncodeView({ result }: { result: EncodeResult }) {
           <AutoEncodeRow label="対象">
             <p className="text-ui text-ink-2">{result.autoEncode.target}</p>
             <FieldHint>
-              失敗した録画にはジョブを作りません。尻切れは対象にし、尻切れであることを画面で明示します。
+              失敗した録画にジョブは作られません。尻切れは対象で、尻切れであることが画面に明示されます。
             </FieldHint>
           </AutoEncodeRow>
           <AutoEncodeRow label="使用コア数の上限">
             <p className="text-ui text-ink-2">{result.autoEncode.coreLimit}</p>
             <FieldHint>
-              エンコードはライブ視聴に譲ります。視聴中は使用コアを抑えます。
+              ライブ視聴がエンコードより優先されます。視聴中は使用コアが抑えられます。
             </FieldHint>
           </AutoEncodeRow>
           <AutoEncodeRow label="同時実行">
