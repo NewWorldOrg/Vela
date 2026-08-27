@@ -47,6 +47,7 @@ const THE_SUITE = [
   'repository/integrity.test.ts',
   'repository/recordings.test.ts',
   'repository/reservations.test.ts',
+  'repository/tuners.test.ts',
   'repository/search.test.ts',
   'repository/tuning.test.ts',
 ]

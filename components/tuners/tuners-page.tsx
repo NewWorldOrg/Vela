@@ -38,6 +38,7 @@ import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
+import { ThresholdControl } from '@/components/tuners/threshold-control'
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route
 const SCAN_HISTORY_HREF = '/settings/channels#scan-history' as Route
@@ -207,6 +208,7 @@ export function TunersView({
   onRestart,
   onDismiss,
   onSaveDetection,
+  onSaveThreshold,
 }: {
   result: TunerScreenResult
   detection?: DetectionScreenResult
@@ -215,6 +217,7 @@ export function TunersView({
   onRestart: () => Promise<DriverRestartResult>
   onDismiss: () => Promise<void>
   onSaveDetection: (devices: string[]) => Promise<TunerWriteResult>
+  onSaveThreshold: (hours: number) => Promise<TunerWriteResult>
 }) {
   if (result.state !== 'ok') {
     // While an accepted restart is in its window the driver is away on
@@ -332,14 +335,10 @@ export function TunersView({
           {tuners.thresholdHours} 時間
         </b>{' '}
         0 件になると警告
-        <Button
-          variant="ghost"
-          size="xs"
-          disabled
-          title="しきい値の変更はこれから実装されます"
-        >
-          変更
-        </Button>
+        <ThresholdControl
+          hours={tuners.thresholdHours}
+          onSave={onSaveThreshold}
+        />
       </p>
 
       <Table className="min-w-[1000px]" containerClassName="pb-1">

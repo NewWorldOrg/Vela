@@ -1,8 +1,10 @@
 import type { Route } from 'next'
 
 import { formatStamp } from '@/lib/format'
+import { SILENCE_RANGE } from '@/lib/tuners'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
+import { toInt } from '@/repository/programmes'
 import { promisedEndOf, tuningLabelOf } from '@/repository/tuning'
 
 type TunerLedgerResponder = components['schemas']['TunerLedgerResponder']
@@ -237,6 +239,11 @@ const SESSION_LABEL: Record<SessionPurpose, string> = {
   scan: 'スキャン',
 }
 
+/**
+ * What the screen says while the setting itself could not be read. It is the
+ * API's own default, so a screen that falls back to it says what an untouched
+ * install holds rather than a number of its own.
+ */
 const THRESHOLD_HOURS = 24
 
 const MIN_BUDGET_SECONDS = 10
@@ -246,9 +253,10 @@ const MAX_BUDGET_SECONDS = 60
 export async function getTuners(): Promise<TunerScreenResult> {
   const client = carinaClient()
 
-  const [ledger, driver] = await Promise.all([
+  const [ledger, driver, health] = await Promise.all([
     client.GET('/api/tuners'),
     client.GET('/api/driver/status'),
+    client.GET('/api/tuners/health'),
   ])
 
   if (ledger.response.status === 401 || driver.response.status === 401) {
@@ -268,10 +276,50 @@ export async function getTuners(): Promise<TunerScreenResult> {
     }
   }
 
+  const hours = health.data?.data?.hoursOfSilence
+
   return {
     state: 'ok',
-    result: toResult(body.data, toDriver(driver.data)),
+    result: toResult(
+      body.data,
+      toDriver(driver.data),
+      hours == null ? THRESHOLD_HOURS : toInt(hours),
+    ),
   }
+}
+
+/**
+ * The hours of silence a kind may go before the screen calls it a warning.
+ * The API refuses anything outside its own bounds, and the form holds the
+ * same rule so it can say why before it asks.
+ */
+export async function setHoursOfSilence(
+  hours: number,
+): Promise<TunerWriteResult> {
+  const { data, error, response } = await carinaClient().PUT(
+    '/api/tuners/health/settings',
+    { body: { hoursOfSilence: hours } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  const body = data ?? error
+
+  if (body === undefined) {
+    return {
+      state: 'rejected',
+      message: `しきい値を変えられませんでした(${response.status})。`,
+    }
+  }
+
+  return body.status
+    ? { state: 'ok' }
+    : {
+        state: 'rejected',
+        message: `しきい値は ${SILENCE_RANGE.least} 〜 ${SILENCE_RANGE.most} 時間です。`,
+      }
 }
 
 export async function setTunerDisabled(
@@ -694,6 +742,7 @@ function toDriver(envelope: DriverStatusEnvelope | undefined): DriverState {
 function toResult(
   ledger: TunerLedgerResponder,
   driver: DriverState,
+  thresholdHours: number,
 ): TunerResult {
   const observed = new Map(
     (ledger.observed ?? []).map((entry) => [entry.deviceId, entry]),
@@ -706,7 +755,7 @@ function toResult(
   return {
     ...driver,
     notices: toNotices(ledger),
-    thresholdHours: THRESHOLD_HOURS,
+    thresholdHours,
     rows,
   }
 }

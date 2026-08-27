@@ -13,6 +13,7 @@ import {
   askDriverToRestart,
   dismissRestartWindow,
   saveDetection,
+  saveHealthThreshold,
   toggleTuner,
 } from './actions'
 
@@ -46,6 +47,7 @@ export default async function Page({
       onRestart={askDriverToRestart}
       onDismiss={dismissRestartWindow}
       onSaveDetection={saveDetection}
+      onSaveThreshold={saveHealthThreshold}
     />
   )
 }
