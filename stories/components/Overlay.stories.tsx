@@ -59,7 +59,20 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/**
+ * Radix marks everything outside an open layer `aria-hidden` while the trigger
+ * under it stays focusable. That is the right thing for it to do and is exactly
+ * what `aria-hidden-focus` is for, but it is a fact about a page being held
+ * open on purpose, not about what is inside the layer. So the a11y context is
+ * narrowed to the layer the story is about, and the rest of the page — checked
+ * by every other story, closed — is left out of it.
+ */
+const ONLY_THE_OPEN_LAYER = (slot: string) => ({
+  a11y: { context: { include: `[data-slot="${slot}"]` } },
+})
+
 export const ConfirmDialog: Story = {
+  parameters: ONLY_THE_OPEN_LAYER('dialog-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading mark={WarningIcon}>確認モーダル(危険操作)</SectionHeading>
@@ -100,9 +113,19 @@ export const ConfirmDialog: Story = {
       </Surface>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'EPG を破棄して再取得' }),
+    )
+    await expect(await within(document.body).findByRole('dialog')).toBeVisible()
+
+    // Left open on purpose: postVisit measures what is on the page.
+  },
 }
 
 export const DeleteRecording: Story = {
+  parameters: ONLY_THE_OPEN_LAYER('alert-dialog-content'),
   render: function DeleteRecordingStory() {
     const [target, setTarget] = useState<Recording | null>(null)
 
@@ -127,6 +150,15 @@ export const DeleteRecording: Story = {
         </Surface>
       </div>
     )
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+    await expect(
+      await within(document.body).findByRole('alertdialog'),
+    ).toBeVisible()
+
+    // Left open on purpose: postVisit measures what is on the page.
   },
 }
 
@@ -201,18 +233,6 @@ export const BottomSheet: Story = {
     </div>
   ),
 }
-
-/**
- * Radix marks everything outside an open list or menu `aria-hidden` while the
- * trigger under it stays focusable. That is the right thing for it to do and is
- * exactly what `aria-hidden-focus` is for, but it is a fact about a page being
- * held open on purpose, not about the rows. So the a11y context is narrowed to
- * the layer these two stories are about, and the rest of the page — checked by
- * every other story, closed — is left out of it.
- */
-const ONLY_THE_OPEN_LAYER = (slot: string) => ({
-  a11y: { context: { include: `[data-slot="${slot}"]` } },
-})
 
 /**
  * A list left open, because the run measures the page as the story leaves it.
