@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
 import { cn } from '@/lib/utils'
+import { reservationAnchor } from '@/lib/reservations'
 import type {
   Reservation,
   ReservationRevision,
@@ -71,6 +72,7 @@ export function ReservationRow({
   return (
     <>
       <TableRow
+        id={reservationAnchor(reservation.id)}
         className={cn(
           conflict &&
             'bg-coral-soft/40 hover:bg-coral-soft/40 has-aria-expanded:bg-coral-soft/40',
@@ -128,53 +130,62 @@ export function ReservationRow({
           )}
         </TableCell>
         <TableCell className="text-right align-top">
-          {restorable ? (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pending}
-              onClick={() => run(() => actions.onRestore(reservation.id))}
-            >
-              復元
-            </Button>
-          ) : (
-            <span className="inline-flex flex-wrap justify-end gap-2">
+          <span className="inline-flex flex-wrap justify-end gap-2">
+            {reservation.recordingId && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/recordings/${reservation.recordingId}`}>
+                  この予約の録画
+                </Link>
+              </Button>
+            )}
+            {restorable ? (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setEditing(true)}
+                disabled={pending}
+                onClick={() => run(() => actions.onRestore(reservation.id))}
               >
-                編集
+                復元
               </Button>
-              {/* Mounted only while it is open, so each opening reads the
-                  reservation as it stands rather than as it stood when the
-                  row was first drawn. */}
-              {editing && (
-                <EditReservationDialog
-                  booking={{
-                    id: reservation.id,
-                    title: reservation.title,
-                    priority: reservation.priority,
-                    marginBeforeSeconds: reservation.marginBeforeSeconds,
-                    marginAfterSeconds: reservation.marginAfterSeconds,
-                  }}
-                  open
-                  onOpenChange={setEditing}
-                  onRevise={actions.onRevise}
-                />
-              )}
-              {cancellable && (
+            ) : (
+              <>
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
-                  disabled={pending}
-                  onClick={() => run(() => actions.onCancel(reservation.id))}
+                  onClick={() => setEditing(true)}
                 >
-                  取り消す
+                  編集
                 </Button>
-              )}
-            </span>
-          )}
+                {/* Mounted only while it is open, so each opening reads the
+                    reservation as it stands rather than as it stood when the
+                    row was first drawn. */}
+                {editing && (
+                  <EditReservationDialog
+                    booking={{
+                      id: reservation.id,
+                      title: reservation.title,
+                      priority: reservation.priority,
+                      marginBeforeSeconds: reservation.marginBeforeSeconds,
+                      marginAfterSeconds: reservation.marginAfterSeconds,
+                    }}
+                    open
+                    onOpenChange={setEditing}
+                    onRevise={actions.onRevise}
+                  />
+                )}
+                {cancellable && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={pending}
+                    onClick={() => run(() => actions.onCancel(reservation.id))}
+                  >
+                    取り消す
+                  </Button>
+                )}
+              </>
+            )}
+          </span>
         </TableCell>
       </TableRow>
       {conflict && expanded && reservation.conflict && (

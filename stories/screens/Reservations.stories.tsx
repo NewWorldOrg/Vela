@@ -24,6 +24,16 @@ const shown = (
   ...over,
 })
 
+function rowFor(cell: HTMLElement): HTMLElement {
+  const row = cell.closest('tr')
+
+  if (!row) {
+    throw new Error('the cell is not in a row')
+  }
+
+  return row
+}
+
 const meta = {
   title: 'Screens/予約',
   component: ReservationsView,
@@ -69,6 +79,40 @@ export const 終わった予約: Story = {
     result: shown(SETTLED_RESERVATION_FIXTURES, {
       filter: { cancelled: 'all' },
     }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Which recordings, in which order, and not merely that something can be
+    // pressed: a link pointing at the wrong recording passes every check that
+    // only presses it.
+    await expect(
+      canvas
+        .getAllByRole('link', { name: 'この予約の録画' })
+        .map((one) => one.getAttribute('href')),
+    ).toEqual(['/recordings/1247', '/recordings/1274'])
+
+    // The rows that came to no recording, each said by the state it is in
+    // rather than by the absence of a link — an absence a row that was never
+    // drawn would satisfy just as well.
+    for (const [title, state] of [
+      ['朝のニュース', '取消済み'],
+      ['山あいの町から', 'チューナー確保済み'],
+      ['午後のロードショー', '撮り逃し'],
+    ]) {
+      const row = rowFor(canvas.getByText(title))
+
+      await expect(within(row).getByText(state)).toBeInTheDocument()
+      await expect(
+        within(row).queryByRole('link', { name: 'この予約の録画' }),
+      ).toBeNull()
+    }
+
+    // The anchor the recording screen sends the reader back to. Spelled here
+    // rather than read off the row, so the two spellings have to agree.
+    await expect(
+      rowFor(canvas.getByText('週末キッチンの手帖')),
+    ).toHaveAttribute('id', 'reservation-r-309')
   },
 }
 

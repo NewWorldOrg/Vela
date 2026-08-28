@@ -179,6 +179,7 @@ mock.module('@/repository/client/carina', {
 const {
   getRecording,
   listRecordings,
+  listRecordingsByReservation,
   recordedAtLabelOf,
   remakeThumbnail,
   spanLabel,
@@ -202,6 +203,56 @@ const only = async (items?: unknown[]) => {
 
   return result.items[0]
 }
+
+test('a recording carries the reservation it was made for', async () => {
+  const one = await only([recording({ reservationId: 'res-1' })])
+
+  assert.equal(one.reservationId, 'res-1')
+})
+
+/**
+ * The store may hold a recording no reservation asked for, and the screen has
+ * to read that as nothing to link to rather than as a link to nowhere.
+ */
+test('a recording no reservation asked for carries none', async () => {
+  const one = await only([recording({ reservationId: null })])
+
+  assert.equal(one.reservationId, undefined)
+  assert.equal(one.id, 'a1')
+})
+
+test('the reservations each recording came from are keyed by reservation', async () => {
+  standing([
+    recording({ id: 'rec-1', reservationId: 'res-1' }),
+    recording({ id: 'rec-2', reservationId: 'res-2' }),
+  ])
+
+  const found = await listRecordingsByReservation()
+
+  assert.deepEqual(
+    [...found.entries()],
+    [
+      ['res-1', 'rec-1'],
+      ['res-2', 'rec-2'],
+    ],
+  )
+})
+
+/**
+ * Absent rather than held against nothing: the screen reads a reservation the
+ * map does not name as one that came to no recording, and an entry pointing at
+ * an empty string would draw a link to `/recordings/`.
+ */
+test('a recording no reservation asked for is left out of the keying', async () => {
+  standing([
+    recording({ id: 'rec-1', reservationId: null }),
+    recording({ id: 'rec-2', reservationId: 'res-2' }),
+  ])
+
+  const found = await listRecordingsByReservation()
+
+  assert.deepEqual([...found.entries()], [['res-2', 'rec-2']])
+})
 
 test('a recording is named by the channel the services call it', async () => {
   const one = await only()

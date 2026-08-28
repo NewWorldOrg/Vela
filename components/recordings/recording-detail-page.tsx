@@ -1,7 +1,10 @@
 import Link from 'next/link'
 
+import type { Route } from 'next'
+
 import { cn } from '@/lib/utils'
 import { isPlayableSource } from '@/lib/recordings'
+import { reservationHref } from '@/lib/reservations'
 import type { RecordingDetail, ThumbnailWrite } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
@@ -206,6 +209,16 @@ export function RecordingDetailView({
             <DetailRow label="録画日時">
               <span className="font-code">{d.recordedRange}</span>
             </DetailRow>
+            {d.reservationId && (
+              <DetailRow label="予約">
+                <Link
+                  href={reservationHref(d.reservationId) as Route}
+                  className="tap-target font-bold text-brand underline-offset-[3px] hover:underline"
+                >
+                  この録画の予約
+                </Link>
+              </DetailRow>
+            )}
             {d.genres && (
               <DetailRow label="ジャンル">
                 {d.genres.map((g) => (

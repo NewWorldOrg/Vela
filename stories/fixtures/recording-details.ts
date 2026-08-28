@@ -12,6 +12,7 @@ function base(id: string) {
 export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   {
     ...base('1291'),
+    reservationId: 'r-310',
     channelNo: '181',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
@@ -37,6 +38,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   },
   {
     ...base('1274'),
+    reservationId: 'r-309',
     channelNo: '131',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
@@ -158,6 +160,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   },
   {
     ...base('1247'),
+    reservationId: 'r-307',
     channelNo: '131',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
