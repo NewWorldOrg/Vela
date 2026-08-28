@@ -11,12 +11,19 @@ import {
 
 export const metadata: Metadata = { title: '予約' }
 
-export default async function Page() {
-  const reservations = await listReservations()
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const result = await listReservations({
+    cancelled: params.cancelled === 'all' ? 'all' : undefined,
+  })
 
   return (
     <ReservationsView
-      reservations={reservations}
+      result={result}
       actions={{
         onCancel: dropReservation,
         onRestore: bringBackReservation,
