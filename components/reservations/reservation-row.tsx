@@ -74,7 +74,6 @@ export function ReservationRow({
       <TableRow
         id={reservationAnchor(reservation.id)}
         className={cn(
-          'target:bg-brand-soft',
           conflict &&
             'bg-coral-soft/40 hover:bg-coral-soft/40 has-aria-expanded:bg-coral-soft/40',
         )}
