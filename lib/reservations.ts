@@ -1,4 +1,17 @@
 /**
+ * Where a reservation sits on its list, and the way in from elsewhere. Both
+ * are spelled here so a link and the row it names cannot drift apart and
+ * leave the reader at the top of a list to find the row themselves.
+ */
+export function reservationAnchor(id: string): string {
+  return `reservation-${id}`
+}
+
+export function reservationHref(id: string): string {
+  return `/reservations#${reservationAnchor(id)}`
+}
+
+/**
  * The bounds the API holds a revision to. They live outside `repository/` so
  * the form that has to say them can read them without reaching the API.
  */

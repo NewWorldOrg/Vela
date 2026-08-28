@@ -20,6 +20,7 @@ const sent: Sent[] = []
 const store: {
   services: unknown[]
   pages: unknown[]
+  recordings: unknown[]
   programme: unknown
   programmeStatus: number
   writeStatus: number
@@ -27,6 +28,7 @@ const store: {
 } = {
   services: [],
   pages: [],
+  recordings: [],
   programme: undefined,
   programmeStatus: 200,
   writeStatus: 200,
@@ -161,6 +163,13 @@ mock.module('@/repository/client/carina', {
           return { data: { data: store.services }, response: answered(200) }
         }
 
+        if (path === '/api/recordings') {
+          return {
+            data: { data: page(store.recordings) },
+            response: answered(200),
+          }
+        }
+
         if (path === '/api/programs/{id}') {
           return store.programmeStatus === 200
             ? { data: { data: store.programme }, response: answered(200) }
@@ -201,6 +210,7 @@ function standing(items: unknown[] = [reservation()]): void {
     service(133, 1330, 'みなと教育1'),
   ]
   store.pages = [page(items)]
+  store.recordings = []
   store.programme = {
     id: '131-1310-40001',
     networkId: 131,
@@ -236,6 +246,105 @@ const only = async (over: Over = {}) => {
 
   return rows[0]
 }
+
+/** The one shape of a recording this file reads: which reservation it was for. */
+const madeFor = (id: string, reservationId: string | null) => ({
+  id,
+  reservationId,
+  programme: {
+    networkId: 131,
+    serviceId: 1310,
+    eventId: 40001,
+    startsAt: '2026-08-08T12:10:00Z',
+    name: '週末キッチンの手帖',
+    summary: '',
+    extended: '',
+    genres: [],
+    capturedAt: '2026-08-08T10:00:00Z',
+  },
+  standing: 'ended',
+  outcome: 'complete',
+  outcomeDetail: [],
+  startedAt: '2026-08-08T12:10:00Z',
+  stoppedAt: '2026-08-08T13:40:00Z',
+  abortedAt: null,
+  expectedWindow: {
+    start: '2026-08-08T12:10:00Z',
+    end: '2026-08-08T13:40:00Z',
+    durationMs: 5_400_000,
+  },
+  writtenDurationMs: 5_400_000,
+  resumeCount: 0,
+  fileSizeBytes: 1,
+  outputRoot: 'primary',
+  fileName: `${id}.ts`,
+  tunerDeviceId: null,
+  drops: {
+    ccMeasured: false,
+    ccDroppedPackets: null,
+    ccTotalPackets: null,
+    scrambledPackets: null,
+    eovfCount: 0,
+    measuredUpdatedAt: null,
+  },
+  thumbnail: { state: 'ready', fault: null, showsAnUnfinishedRecording: false },
+  broadcastGroup: { key: null, role: 'standalone' },
+})
+
+test('a reservation names the recording it came to', async () => {
+  standing([reservation({ id: 'a1', standing: 'complete' })])
+  store.recordings = [madeFor('rec-1', 'a1')]
+
+  const rows = await listed()
+
+  assert.equal(rows[0].recordingId, 'rec-1')
+})
+
+/**
+ * The other half of the same claim. A reservation the broadcast is still ahead
+ * of came to no recording, and the row is still there saying which state it is
+ * in — an absence the screen would show identically if the row had been
+ * dropped altogether.
+ */
+test('a reservation that came to no recording still stands, naming none', async () => {
+  standing([reservation({ id: 'a1' })])
+  store.recordings = [madeFor('rec-1', 'other')]
+
+  const rows = await listed()
+
+  assert.equal(rows.length, 1)
+  assert.equal(rows[0].id, 'a1')
+  assert.equal(rows[0].standing, 'scheduled')
+  assert.equal(rows[0].recordingId, undefined)
+})
+
+test('a recording no reservation asked for reaches no reservation', async () => {
+  standing([reservation({ id: 'a1' })])
+  store.recordings = [madeFor('rec-1', null)]
+
+  const rows = await listed()
+
+  assert.equal(rows[0].recordingId, undefined)
+})
+
+/** Each reservation reads its own, rather than the first one the store held. */
+test('two reservations read the recordings that name them', async () => {
+  standing([
+    reservation({ id: 'a1', standing: 'complete' }),
+    onNetwork('a2', 132, '湾岸の朝', { standing: 'failed' }),
+  ])
+  store.recordings = [madeFor('rec-2', 'a2'), madeFor('rec-1', 'a1')]
+
+  const rows = await listed()
+
+  assert.deepEqual(
+    rows.map((one) => [one.id, one.recordingId]),
+    [
+      ['a1', 'rec-1'],
+      ['a2', 'rec-2'],
+    ],
+  )
+})
 
 test('a reservation is named by the channel the services call it', async () => {
   const one = await only()

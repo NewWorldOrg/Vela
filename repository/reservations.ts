@@ -9,6 +9,7 @@ import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
 import { fetchProgramme, toInt } from '@/repository/programmes'
+import { listRecordingsByReservation } from '@/repository/recordings'
 import type { GuideChannel, ProgramBooking } from '@/repository/programs'
 import { fetchServiceChannels, kindOfNetwork } from '@/repository/programs'
 import { RULES } from '@/repository/rules.fixtures'
@@ -60,6 +61,8 @@ export interface Reservation {
   marginAfterSeconds: number
   stateNote?: string
   conflict?: ReservationConflict
+  /** The recording this reservation came to, where it came to one. */
+  recordingId?: string
 }
 
 export interface Rule {
@@ -127,9 +130,10 @@ export async function listReservations(
   filter: ReservationsFilter = {},
   now: Date = new Date(),
 ): Promise<ReservationsResult> {
-  const [carried, known] = await Promise.all([
+  const [carried, known, recordings] = await Promise.all([
     fetchEveryReservation(),
     fetchServiceChannels(),
+    listRecordingsByReservation(),
   ])
   const kept =
     filter.cancelled === 'all'
@@ -137,7 +141,9 @@ export async function listReservations(
       : carried.items.filter((one) => !isSpentCancellation(one, now))
 
   return {
-    items: kept.map((one) => toReservation(one, carried.items, known)),
+    items: kept.map((one) =>
+      toReservation(one, carried.items, known, recordings),
+    ),
     total: carried.total,
     filter,
   }
@@ -355,6 +361,7 @@ export function toReservation(
   r: ReservationResponder,
   all: ReservationResponder[],
   known: GuideChannel[],
+  recordings: Map<string, string>,
 ): Reservation {
   const channel = channelOf(r, known)
   const endAtConfirmed = r.window.endAtConfirmed
@@ -377,6 +384,7 @@ export function toReservation(
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
     stateNote: endAtConfirmed ? undefined : FOLLOWS_THE_END,
     conflict: conflictOf(r, all, known),
+    recordingId: recordings.get(r.id),
   }
 }
 

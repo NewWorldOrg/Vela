@@ -36,6 +36,8 @@ export interface RecordingEncode {
 
 export interface Recording {
   id: string
+  /** The reservation this recording was made for, where it was made for one. */
+  reservationId?: string
   title: string
   note?: string
   description?: string
@@ -154,6 +156,26 @@ export async function listRecordings(
   })
   return { items, total: carried.total, channels, years, genres, filter }
 }
+/**
+ * The recording each reservation came to, by reservation. A reservation with
+ * no recording is absent rather than held with nothing against it, which is
+ * how the reservation screen tells the two apart.
+ */
+export async function listRecordingsByReservation(): Promise<
+  Map<string, string>
+> {
+  const carried = await fetchEveryRecording()
+  const byReservation = new Map<string, string>()
+
+  for (const one of carried.items) {
+    if (one.reservationId) {
+      byReservation.set(one.reservationId, one.id)
+    }
+  }
+
+  return byReservation
+}
+
 export interface QualitySpot {
   at: string
   packets: string
@@ -334,6 +356,7 @@ export function toRecording(
 
   return {
     id: r.id,
+    reservationId: r.reservationId ?? undefined,
     title: r.programme.name,
     description: r.programme.summary || undefined,
     channel: channel?.name || serviceKeyOf(r),

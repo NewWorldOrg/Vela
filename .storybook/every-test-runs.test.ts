@@ -42,6 +42,7 @@ const THE_SUITE = [
   'lib/dismiss.test.ts',
   'lib/format.test.ts',
   'lib/guide.test.ts',
+  'lib/reservations.test.ts',
   'lib/search-condition.test.ts',
   'lib/state-terms.test.ts',
   'repository/client/carina.test.ts',
