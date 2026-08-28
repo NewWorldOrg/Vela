@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, within } from 'storybook/test'
 
 import type {
   Reservation,
@@ -40,7 +41,20 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = { args: { result: shown(RESERVATION_FIXTURES) } }
+export const 通常: Story = {
+  args: { result: shown(RESERVATION_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Where it lands, not that it can be pressed. A reservation is made by
+    // picking a programme, so this goes to the guide and there is no second
+    // screen for picking one; a check that only pressed it would stay green
+    // through the day somebody points it somewhere else.
+    await expect(
+      canvas.getByRole('link', { name: '予約を追加' }),
+    ).toHaveAttribute('href', '/guide')
+  },
+}
 
 export const 競合なし: Story = {
   args: {

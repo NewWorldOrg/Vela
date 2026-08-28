@@ -314,6 +314,164 @@ function measureTapTargets(): Findings {
   return { missed, taken, overreached }
 }
 
+/** A dialog footer that does not put its buttons in the middle. */
+interface OffCentreFooter {
+  name: string
+  /** The space between the footer's leading content edge and the buttons. */
+  left: number
+  /** The space between the buttons and its trailing content edge. */
+  right: number
+  /** How much wider the buttons' span is than the buttons packed together. */
+  spread: number
+}
+
+/**
+ * Runs in the page and answers which dialog footers lay their buttons out
+ * anywhere but the middle.
+ *
+ * It reads boxes, not class names. `sm:justify-center` is one spelling of the
+ * rule and a spelling is not the rule: what SPEC asks for is where the buttons
+ * end up, so that is what is measured — the space on each side of them, and
+ * whether they are packed together or pushed apart. A probe that read the
+ * class would pass a footer centred by a different means and fail one centred
+ * by the same means under a renamed utility, which is backwards both ways.
+ *
+ * Only a footer laid out as a row is asked about. Narrow, the buttons stack and
+ * stretch the full width, and the two-column grid a small alert dialog uses
+ * does the same: there is no space on either side to be uneven, and nothing
+ * about the middle left to get wrong.
+ *
+ * Self-contained: it is serialised into the browser, and can close over
+ * nothing here.
+ */
+function measureDialogFooters(): OffCentreFooter[] {
+  const off: OffCentreFooter[] = []
+
+  for (const footer of document.querySelectorAll(
+    '[data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]',
+  )) {
+    const style = getComputedStyle(footer)
+    if (!style.display.includes('flex') || style.flexDirection !== 'row') {
+      continue
+    }
+
+    const box = footer.getBoundingClientRect()
+    if (box.width <= 0 || box.height <= 0) {
+      continue
+    }
+
+    const buttons = [...footer.children]
+      .map((child) => child.getBoundingClientRect())
+      .filter((child) => child.width > 0 && child.height > 0)
+    if (buttons.length === 0) {
+      continue
+    }
+
+    // The content box, so a footer with padding of its own is measured from
+    // where its contents may actually start rather than from its border.
+    const from =
+      box.left +
+      parseFloat(style.borderLeftWidth) +
+      parseFloat(style.paddingLeft)
+    const to =
+      box.right -
+      parseFloat(style.borderRightWidth) -
+      parseFloat(style.paddingRight)
+
+    const first = Math.min(...buttons.map((one) => one.left))
+    const last = Math.max(...buttons.map((one) => one.right))
+
+    // Together with the gaps each side: buttons pushed to the two ends leave
+    // the same space on the left as on the right and are not in the middle.
+    const packed =
+      buttons.reduce((total, one) => total + one.width, 0) +
+      (parseFloat(style.columnGap) || 0) * (buttons.length - 1)
+
+    const left = first - from
+    const right = to - last
+    const spread = last - first - packed
+
+    // A pixel of slack: the boxes are fractional.
+    if (Math.abs(left - right) > 1 || spread > 1) {
+      const content = footer.closest('[data-slot$="dialog-content"]')
+      const title = content?.querySelector('[data-slot$="dialog-title"]')
+
+      off.push({
+        name:
+          `${footer.getAttribute('data-slot')} ` +
+          `(${(title?.textContent ?? '').trim().slice(0, 30) || 'untitled'})`,
+        left: Math.round(left),
+        right: Math.round(right),
+        spread: Math.round(spread),
+      })
+    }
+  }
+
+  return off
+}
+
+/**
+ * Names the bait of the footer proof apart from anything a story draws.
+ *
+ * Short on purpose: a footer is named by its dialog's title and the title is
+ * cut to 30 characters, so a longer name here is one the proof can never find
+ * again — which is a red run at the first story, and was one.
+ */
+const FOOTER_BAIT = 'a footer to be caught'
+
+/**
+ * Proves the footer probe still catches buttons that are not in the middle.
+ *
+ * The same hole as everywhere else in this file: a page with no dialog on it
+ * answers exactly what a page whose every dialog is centred answers, and most
+ * stories draw no dialog at all. So a footer is laid down deliberately hard
+ * against its right edge — which is what these two components shipped for as
+ * long as they did, shadcn's own default — and the probe is made to name it.
+ */
+async function proveTheFooterProbeCanFail(page: Page) {
+  await page.evaluate((bait) => {
+    const content = document.createElement('div')
+    content.id = 'footer-probe-bait'
+    content.dataset.slot = 'dialog-content'
+    content.style.cssText =
+      'position:fixed;left:20px;bottom:20px;width:320px;z-index:2147483647'
+
+    const title = document.createElement('div')
+    title.dataset.slot = 'dialog-title'
+    title.textContent = bait
+    content.append(title)
+
+    const footer = document.createElement('div')
+    footer.dataset.slot = 'dialog-footer'
+    footer.style.cssText =
+      'display:flex;flex-direction:row;justify-content:flex-end;gap:9px'
+
+    for (const width of [80, 100]) {
+      const button = document.createElement('span')
+      button.style.cssText = `display:block;width:${width}px;height:28px;flex:none`
+      footer.append(button)
+    }
+
+    content.append(footer)
+    document.body.append(content)
+  }, FOOTER_BAIT)
+
+  const off = await page.evaluate(measureDialogFooters)
+
+  await page.evaluate(() => {
+    document.getElementById('footer-probe-bait')?.remove()
+  })
+
+  if (!off.some((one) => one.name.includes(FOOTER_BAIT))) {
+    throw new Error(
+      'The footer probe passed a dialog footer drawn with its buttons against ' +
+        'the right edge, so it can no longer say where a dialog puts them and ' +
+        'nothing a green run says about a dialog covers it. Fix ' +
+        'measureDialogFooters in .storybook/test-runner.ts.',
+    )
+  }
+}
+
 /**
  * Proves the probe still catches a control that is too small, before a run is
  * allowed to pass on it — and catches one of every kind it is answerable for.
@@ -1038,6 +1196,7 @@ const config: TestRunnerConfig = {
     opened = page.viewportSize()
 
     await proveTheProbeCanFail(page)
+    await proveTheFooterProbeCanFail(page)
   },
 
   async preVisit(page: Page, context) {
@@ -1082,6 +1241,29 @@ const config: TestRunnerConfig = {
           'is the field and not the space beside it.',
       )
     }
+    const offCentre = await page.evaluate(measureDialogFooters)
+
+    if (offCentre.length > 0) {
+      throw new Error(
+        `${context.id}: ${offCentre.length} dialog footer(s) put their ` +
+          'buttons somewhere other than the middle.\n' +
+          offCentre
+            .map(
+              (one) =>
+                `  ${one.name} — ${one.left}px of space to the left of them ` +
+                `and ${one.right}px to the right` +
+                (one.spread > 1
+                  ? `, and ${one.spread}px pushed between them`
+                  : ''),
+            )
+            .join('\n') +
+          "\nA dialog's buttons sit in the middle, and `DialogFooter` and " +
+          '`AlertDialogFooter` are the one place that is decided — a screen ' +
+          'does not write a `justify` of its own. See the ダイアログ section ' +
+          'of the design system.',
+      )
+    }
+
     await page.evaluate(layCursorBait, {
       bait: CURSOR_BAIT,
       kinds: CURSOR_KINDS,

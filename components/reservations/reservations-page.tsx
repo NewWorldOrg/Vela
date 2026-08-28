@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react'
 import type { Route } from 'next'
+import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import type { ReservationsResult } from '@/repository/reservations'
@@ -79,9 +80,11 @@ export function ReservationsView({
       <ReservationTabs
         current="reservations"
         action={
-          <Button size="sm" disabled title="予約の追加はこれから実装されます">
-            <PlusIcon />
-            予約を追加
+          <Button size="sm" asChild>
+            <Link href="/guide">
+              <PlusIcon />
+              予約を追加
+            </Link>
           </Button>
         }
       />
