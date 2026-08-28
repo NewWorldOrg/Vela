@@ -89,6 +89,26 @@ export type ReservationWrite =
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
+/**
+ * What the list is narrowed by. A cancelled reservation is what the screen has
+ * to answer "why is this not being recorded" with, so it stays while the
+ * broadcast is still ahead or under way and is left out once the broadcast has
+ * ended. `all` asks for those back; the record itself is never removed.
+ */
+export interface ReservationsFilter {
+  cancelled?: 'all'
+}
+
+/**
+ * `total` is every reservation the API holds, `items` the ones this filter
+ * keeps. Both are said on screen so neither number stands for the other.
+ */
+export interface ReservationsResult {
+  items: Reservation[]
+  total: number
+  filter: ReservationsFilter
+}
+
 const MOST_PER_PAGE = 200
 
 const FOLLOWS_THE_END = '延長時は終了に自動で追従します'
@@ -103,13 +123,36 @@ const KIND_LABEL: Record<ChannelKind, string> = {
 
 const HOLDS_A_SEAT: ReservationStanding[] = ['scheduled', 'recording']
 
-export async function listReservations(): Promise<Reservation[]> {
+export async function listReservations(
+  filter: ReservationsFilter = {},
+  now: Date = new Date(),
+): Promise<ReservationsResult> {
   const [carried, known] = await Promise.all([
     fetchEveryReservation(),
     fetchServiceChannels(),
   ])
+  const kept =
+    filter.cancelled === 'all'
+      ? carried.items
+      : carried.items.filter((one) => !isSpentCancellation(one, now))
 
-  return carried.map((one) => toReservation(one, carried, known))
+  return {
+    items: kept.map((one) => toReservation(one, carried.items, known)),
+    total: carried.total,
+    filter,
+  }
+}
+
+/**
+ * The broadcast is over at the end of its window, so the reservation has
+ * nothing left to explain about it. The margin the recording would have run on
+ * is not part of the broadcast and is not read here.
+ */
+function isSpentCancellation(one: ReservationResponder, now: Date): boolean {
+  return (
+    one.standing === 'cancelled' &&
+    new Date(one.window.endAt).getTime() <= now.getTime()
+  )
 }
 
 /**
@@ -121,7 +164,7 @@ export async function listBookings(): Promise<Map<string, ProgramBooking>> {
   const carried = await fetchEveryReservation()
   const bookings = new Map<string, ProgramBooking>()
 
-  for (const one of carried) {
+  for (const one of carried.items) {
     if (one.standing !== 'scheduled') {
       continue
     }
@@ -274,10 +317,14 @@ function toWrite(
   return { state: 'ok', verdict }
 }
 
-async function fetchEveryReservation(): Promise<ReservationResponder[]> {
+async function fetchEveryReservation(): Promise<{
+  items: ReservationResponder[]
+  total: number
+}> {
   const items: ReservationResponder[] = []
   let page = 1
   let lastPage = 1
+  let total = 0
 
   do {
     const { data, error } = await carinaClient().GET('/api/reservations', {
@@ -297,10 +344,11 @@ async function fetchEveryReservation(): Promise<ReservationResponder[]> {
 
     items.push(...data.data.items)
     lastPage = toInt(data.data.lastPage)
+    total = toInt(data.data.total)
     page += 1
   } while (page <= lastPage)
 
-  return items
+  return { items, total }
 }
 
 export function toReservation(

@@ -221,10 +221,16 @@ function standing(items: unknown[] = [reservation()]): void {
   store.settlement = settlementOf('secured')
 }
 
+/** Ahead of every window the fixtures are written for, so nothing has ended. */
+const BEFORE_THEM_ALL = new Date('2026-08-08T00:00:00Z')
+
+const listed = async (at: Date = BEFORE_THEM_ALL) =>
+  (await listReservations({}, at)).items
+
 const only = async (over: Over = {}) => {
   standing([reservation(over)])
 
-  const rows = await listReservations()
+  const rows = await listed()
 
   assert.equal(rows.length, 1)
 
@@ -241,7 +247,7 @@ test('a channel the services no longer name is still named', async () => {
   standing()
   store.services = []
 
-  const rows = await listReservations()
+  const rows = await listed()
 
   assert.equal(rows[0].channelName, '131-1310')
 })
@@ -343,7 +349,7 @@ const CONTENDED = [
 const contended = async () => {
   standing(CONTENDED)
 
-  const rows = await listReservations()
+  const rows = await listed()
   const one = rows.find((row) => row.id === 'b2')
 
   assert.ok(one?.conflict)
@@ -381,7 +387,7 @@ test('raising the priority asks for one above the highest counterpart', async ()
 test('a reservation holding its seat is offered no counterparts', async () => {
   standing(CONTENDED)
 
-  const rows = await listReservations()
+  const rows = await listed()
 
   assert.equal(rows.find((row) => row.id === 'a1')?.conflict, undefined)
 })
@@ -398,11 +404,201 @@ test('every page the store names is walked', async () => {
     }),
   ]
 
-  const rows = await listReservations()
+  const rows = await listed()
 
   assert.deepEqual(
     rows.map((row) => row.title),
     ['一枚目', '二枚目'],
+  )
+})
+
+/**
+ * One list holding both kinds of cancellation and the settled standings, so a
+ * run that leaves the whole list alone and a run that empties it are both
+ * visibly wrong.
+ */
+const CANCELLED_EARLY = onNetwork('x1', 141, '取り消した昼の番組', {
+  state: 'cancelled',
+  standing: 'cancelled',
+  window: window('2026-08-08T02:00:00Z', '2026-08-08T03:00:00Z'),
+})
+
+const MIXED = [
+  CANCELLED_EARLY,
+  onNetwork('x2', 142, '取り消した夜の番組', {
+    state: 'cancelled',
+    standing: 'cancelled',
+    window: window('2026-08-08T12:00:00Z', '2026-08-08T13:00:00Z'),
+  }),
+  onNetwork('x3', 143, '撮り逃した番組', {
+    state: 'missed',
+    standing: 'missed',
+    window: window('2026-08-08T01:00:00Z', '2026-08-08T02:00:00Z'),
+  }),
+  onNetwork('x4', 144, '録り終えた番組', {
+    standing: 'complete',
+    startedAt: '2026-08-08T01:00:00Z',
+    recordingOutcome: 'complete',
+    window: window('2026-08-08T01:00:00Z', '2026-08-08T02:00:00Z'),
+  }),
+  onNetwork('x5', 145, '録画に失敗した番組', {
+    standing: 'failed',
+    startedAt: '2026-08-08T01:00:00Z',
+    recordingOutcome: 'failed',
+    window: window('2026-08-08T01:00:00Z', '2026-08-08T02:00:00Z'),
+  }),
+  onNetwork('x6', 146, 'これから録る番組', {
+    window: window('2026-08-08T12:00:00Z', '2026-08-08T13:00:00Z'),
+  }),
+]
+
+const mixedAt = async (at: string, filter: { cancelled?: 'all' } = {}) => {
+  standing(MIXED)
+
+  return listReservations(filter, new Date(at))
+}
+
+const AFTER_THE_FIRST = '2026-08-08T06:00:00Z'
+
+test('a cancellation whose broadcast has ended is left out', async () => {
+  const { items } = await mixedAt(AFTER_THE_FIRST)
+
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['x2', 'x3', 'x4', 'x5', 'x6'],
+  )
+})
+
+test('the cancellation left out is listed when every one is asked for', async () => {
+  const { items } = await mixedAt(AFTER_THE_FIRST, { cancelled: 'all' })
+
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['x1', 'x2', 'x3', 'x4', 'x5', 'x6'],
+  )
+  assert.equal(
+    items.find((row) => row.id === 'x1')?.title,
+    '取り消した昼の番組',
+  )
+})
+
+test('a cancellation still ahead of its end is listed either way', async () => {
+  const held = await mixedAt(AFTER_THE_FIRST)
+  const every = await mixedAt(AFTER_THE_FIRST, { cancelled: 'all' })
+
+  for (const { items } of [held, every]) {
+    assert.equal(
+      items.find((row) => row.id === 'x2')?.title,
+      '取り消した夜の番組',
+    )
+  }
+})
+
+test('the settled standings stay once their broadcast has ended', async () => {
+  const { items } = await mixedAt('2026-08-09T00:00:00Z')
+
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['x3', 'x4', 'x5', 'x6'],
+  )
+})
+
+/** The end of the window, a second before it and a second after it. */
+test('a second before the end still holds the cancellation in the list', async () => {
+  const { items } = await mixedAt('2026-08-08T02:59:59Z')
+
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['x1', 'x2', 'x3', 'x4', 'x5', 'x6'],
+  )
+})
+
+test('the end of the broadcast is the moment the cancellation leaves', async () => {
+  const { items } = await mixedAt('2026-08-08T03:00:00Z')
+
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['x2', 'x3', 'x4', 'x5', 'x6'],
+  )
+})
+
+test('a second after the end leaves the cancellation out', async () => {
+  const { items } = await mixedAt('2026-08-08T03:00:01Z')
+
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['x2', 'x3', 'x4', 'x5', 'x6'],
+  )
+})
+
+test('the margin the recording would have run on does not hold it in', async () => {
+  standing([
+    onNetwork('x7', 147, '余白のついた取消', {
+      state: 'cancelled',
+      standing: 'cancelled',
+      window: window('2026-08-08T02:00:00Z', '2026-08-08T03:00:00Z', {
+        marginAfterSeconds: 600,
+        effectiveEndAt: '2026-08-08T03:10:00Z',
+      }),
+    }),
+  ])
+
+  const { items } = await listReservations({}, new Date('2026-08-08T03:05:00Z'))
+
+  assert.deepEqual(items, [])
+})
+
+test('the whole list is counted by the store, not by what is left in it', async () => {
+  standing(MIXED)
+  store.pages = [page(MIXED, { total: 41 })]
+
+  const result = await listReservations({}, new Date(AFTER_THE_FIRST))
+
+  assert.equal(result.total, 41)
+  assert.deepEqual(
+    result.items.map((row) => row.id),
+    ['x2', 'x3', 'x4', 'x5', 'x6'],
+  )
+})
+
+test('the filter it was asked for is handed back', async () => {
+  assert.deepEqual((await mixedAt(AFTER_THE_FIRST)).filter, {})
+  assert.deepEqual(
+    (await mixedAt(AFTER_THE_FIRST, { cancelled: 'all' })).filter,
+    {
+      cancelled: 'all',
+    },
+  )
+})
+
+/** Nothing is said about when now is, so the clock the screen runs on answers. */
+test('the clock it reads by default is the one running now', async () => {
+  const at = Date.now()
+
+  standing([
+    onNetwork('y1', 151, '一分前に終わった取消', {
+      state: 'cancelled',
+      standing: 'cancelled',
+      window: window(
+        new Date(at - 3_600_000).toISOString(),
+        new Date(at - 60_000).toISOString(),
+      ),
+    }),
+    onNetwork('y2', 152, '一時間後に終わる取消', {
+      state: 'cancelled',
+      standing: 'cancelled',
+      window: window(
+        new Date(at - 60_000).toISOString(),
+        new Date(at + 3_600_000).toISOString(),
+      ),
+    }),
+  ])
+
+  const { items } = await listReservations()
+
+  assert.deepEqual(
+    items.map((row) => row.id),
+    ['y2'],
   )
 })
 
