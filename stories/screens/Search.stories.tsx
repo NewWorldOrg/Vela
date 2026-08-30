@@ -875,6 +875,17 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
     await expect(canvas.getByText('/search')).toBeVisible()
     await expect(canvas.queryByText(/件の条件を指定しています/)).toBeNull()
 
+    // Conditions that narrow nothing are refused as a rule, so the way to one
+    // is not offered yet: a button rather than a link, and no destination to
+    // press. Both halves are checked, here and after a condition is answered,
+    // because only the pair says the offer follows the conditions.
+    await expect(
+      canvas.queryByRole('link', { name: 'この条件でルールを作る' }),
+    ).toBeNull()
+    await expect(
+      canvas.getByRole('button', { name: 'この条件でルールを作る' }),
+    ).toBeDisabled()
+
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'キーワード' }),
       '夏 絶景',
@@ -893,6 +904,15 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
     await expect(
       canvas.getByText('/search?q=夏+絶景&genre=movie'),
     ).toBeVisible()
+
+    // Where it lands, and with which conditions: the span a search may carry
+    // is not one a rule keeps, so it is named here rather than counted.
+    await expect(
+      canvas.getByRole('link', { name: 'この条件でルールを作る' }),
+    ).toHaveAttribute(
+      'href',
+      '/reservations/rules?rule=new&q=%E5%A4%8F+%E7%B5%B6%E6%99%AF&genre=movie',
+    )
 
     await expect(router.push).not.toHaveBeenCalled()
     await expect(router.replace).not.toHaveBeenCalled()

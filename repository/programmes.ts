@@ -3,15 +3,44 @@ import {
   carinaClient,
   revalidatingCarinaClient,
 } from '@/repository/client/carina'
-import type { components } from '@/repository/client/schema'
+import type { components, paths } from '@/repository/client/schema'
+import type { SearchField } from '@/lib/search-condition'
+import type { ChannelKind } from '@/repository/channels'
 
 type GuideResponder = components['schemas']['GuideResponder']
 type ProgrammeResponder = components['schemas']['ProgrammeResponder']
 type ProgrammeSearchResponder =
   components['schemas']['ProgrammeSearchResponder']
-type ProgrammeSort = components['schemas']['ProgrammeSort']
 type TuneSystem = components['schemas']['TuneSystem']
-type ProgrammeField = components['schemas']['ProgrammeField']
+
+/**
+ * What the search takes, read off the endpoint rather than off a schema of its
+ * own: the document spells these inline now that one reader parses the query
+ * string for both a search and a rule, and the spellings are the API's own.
+ */
+type SearchParams = NonNullable<
+  paths['/api/programs/search']['get']['parameters']['query']
+>
+
+export type ProgrammeField = NonNullable<SearchParams['fields']>[number]
+
+export type ProgrammeSort = NonNullable<SearchParams['sort']>
+
+export type SearchSystem = NonNullable<SearchParams['type']>
+
+/** The parts of a programme a keyword is looked for in. */
+export const SEARCH_FIELDS_OF: Record<SearchField, ProgrammeField[]> = {
+  'title,description': ['Title', 'Description'],
+  title: ['Title'],
+  description: ['Description'],
+}
+
+/** The broadcast type a channel kind narrows the search to. */
+export const SEARCH_SYSTEM_OF_KIND: Record<ChannelKind, SearchSystem> = {
+  terrestrial: 'IsdbT',
+  bs: 'IsdbSBs',
+  cs110: 'IsdbSCs110',
+}
 
 export interface ProgrammeGenre {
   kind: number
@@ -71,7 +100,7 @@ export interface SearchQuery {
   exclude?: string
   fields?: ProgrammeField[]
   genres?: number[]
-  system?: TuneSystem
+  system?: SearchSystem
   channels?: string[]
   from?: Date
   to?: Date

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
 
+import { ruleNarrowsAnything } from '@/lib/rules'
 import { cn } from '@/lib/utils'
 import type { SearchHits, SearchResult } from '@/repository/search'
 import {
@@ -196,6 +197,13 @@ function SearchScreen({ result }: { result: SearchResult }) {
   const noHit = found !== undefined && found.hits.length === 0
   const written: string = searchQueryOf(asking)
   const href: string = written ? `${pathname}?${written}` : pathname
+  /**
+   * Whether the conditions narrow the guide, which is what a rule is refused
+   * for not doing. The span is not among them: a rule does not carry one.
+   */
+  const narrowing: boolean = ruleNarrowsAnything(terms)
+  const ruleHref =
+    `/reservations/rules?rule=new&${searchTermsQueryOf(terms)}` as Route
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !draft.genres.includes(option.value),
   )
@@ -532,15 +540,26 @@ function SearchScreen({ result }: { result: SearchResult }) {
               いまの検索条件は、そのまま自動録画ルールの条件になります。
             </b>
             <span className="block text-note text-ink-2">
-              {noHit
-                ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
-                : 'キーワード・除外キーワード・対象フィールド・ジャンル・チャンネルが引き継がれます。期間は引き継ぎません。'}
+              {!narrowing
+                ? 'キーワード・除外キーワード・対象フィールド・ジャンル・種別・チャンネルのうち、1 つ以上を指定するとルールにできます。'
+                : noHit
+                  ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
+                  : 'キーワード・除外キーワード・対象フィールド・ジャンル・種別・チャンネルが引き継がれます。期間は引き継ぎません。'}
             </span>
           </div>
-          <Button size="sm" disabled title="ルール作成はこれから実装されます">
-            <PlusIcon />
-            この条件でルールを作る
-          </Button>
+          {narrowing ? (
+            <Button size="sm" asChild>
+              <Link href={ruleHref}>
+                <PlusIcon />
+                この条件でルールを作る
+              </Link>
+            </Button>
+          ) : (
+            <Button size="sm" disabled>
+              <PlusIcon />
+              この条件でルールを作る
+            </Button>
+          )}
         </div>
       </section>
 

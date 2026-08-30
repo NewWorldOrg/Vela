@@ -281,6 +281,29 @@ export function withRelatedSettled(
   return settled
 }
 
+/**
+ * The channels a condition may name, in the order a reader picks them out of a
+ * list: the same order the guide draws them in, so a screen that offers them
+ * and a screen that draws them agree.
+ */
+export async function listPickableChannels(): Promise<GuideChannel[]> {
+  const carried = await fetchServiceChannels()
+
+  return [...carried].sort(compareChannels)
+}
+
+function compareChannels(left: GuideChannel, right: GuideChannel): number {
+  for (let index = 0; index < left.sortKey.length; index++) {
+    const gap = left.sortKey[index] - right.sortKey[index]
+
+    if (gap !== 0) {
+      return gap
+    }
+  }
+
+  return 0
+}
+
 export async function fetchServiceChannels(): Promise<GuideChannel[]> {
   const { data, error } = await carinaClient().GET('/api/services')
 
