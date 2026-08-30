@@ -260,6 +260,102 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/rules/{id}/apply-now': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['applyRuleNow']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/rules': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listRules']
+    put?: never
+    post: operations['createRule']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/rules/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getRule']
+    put: operations['replaceRule']
+    post?: never
+    delete: operations['deleteRule']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/rules/impact': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['impactOfRules']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/rules/preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['previewRules']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/rules/{id}/enabled': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['switchRule']
+    trace?: never
+  }
   '/api/reservations/{id}/cancel': {
     parameters: {
       query?: never
@@ -302,7 +398,7 @@ export interface paths {
     get: operations['getReservation']
     put?: never
     post?: never
-    delete?: never
+    delete: operations['deleteReservation']
     options?: never
     head?: never
     patch: operations['reviseReservation']
@@ -334,7 +430,7 @@ export interface paths {
     get: operations['getRecording']
     put?: never
     post?: never
-    delete?: never
+    delete: operations['deleteRecording']
     options?: never
     head?: never
     patch?: never
@@ -773,21 +869,6 @@ export interface components {
       message: string
       data: null | components['schemas']['GuideResponder']
     }
-    BaseResponderOfIReadOnlyListOfBroadcastServiceResponder: {
-      status: boolean
-      message: string
-      data: null | components['schemas']['BroadcastServiceResponder'][]
-    }
-    BaseResponderOfIReadOnlyListOfScanRunResponder: {
-      status: boolean
-      message: string
-      data: null | components['schemas']['ScanRunResponder'][]
-    }
-    BaseResponderOfIReadOnlyListOfSessionResponder: {
-      status: boolean
-      message: string
-      data: null | components['schemas']['SessionResponder'][]
-    }
     BaseResponderOfIntegrityListResponder: {
       status: boolean
       message: string
@@ -802,6 +883,21 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['IntegritySweepResponder']
+    }
+    BaseResponderOfIReadOnlyListOfBroadcastServiceResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['BroadcastServiceResponder'][]
+    }
+    BaseResponderOfIReadOnlyListOfScanRunResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ScanRunResponder'][]
+    }
+    BaseResponderOfIReadOnlyListOfSessionResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['SessionResponder'][]
     }
     BaseResponderOfMeResponder: {
       status: boolean
@@ -833,6 +929,16 @@ export interface components {
       message: string
       data: null | components['schemas']['RecordingDetailResponder']
     }
+    BaseResponderOfRecordingDiscardRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RecordingDiscardRefusedResponder']
+    }
+    BaseResponderOfRecordingDiscardResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RecordingDiscardResponder']
+    }
     BaseResponderOfRecordingListResponder: {
       status: boolean
       message: string
@@ -842,6 +948,16 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['RecordingStopResponder']
+    }
+    BaseResponderOfReservationDiscardRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationDiscardRefusedResponder']
+    }
+    BaseResponderOfReservationDiscardResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationDiscardResponder']
     }
     BaseResponderOfReservationListResponder: {
       status: boolean
@@ -857,6 +973,46 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['ReservationSettlementResponder']
+    }
+    BaseResponderOfRuleApplicationRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RuleApplicationRefusedResponder']
+    }
+    BaseResponderOfRuleApplicationResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RuleApplicationResponder']
+    }
+    BaseResponderOfRuleImpactResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RuleImpactResponder']
+    }
+    BaseResponderOfRuleListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RuleListResponder']
+    }
+    BaseResponderOfRulePreviewResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RulePreviewResponder']
+    }
+    BaseResponderOfRuleResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RuleResponder']
+    }
+    BaseResponderOfRuleRetirementResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RuleRetirementResponder']
+    }
+    BaseResponderOfRuleSwitchedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RuleSwitchedResponder']
     }
     BaseResponderOfScanApplicationResponder: {
       status: boolean
@@ -893,6 +1049,11 @@ export interface components {
       message: string
       data: null | components['schemas']['StorageResponder']
     }
+    BaseResponderOfstring: {
+      status: boolean
+      message: string
+      data: null | string
+    }
     BaseResponderOfThumbnailRemakeResponder: {
       status: boolean
       message: string
@@ -912,11 +1073,6 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['TunerObservationResponder']
-    }
-    BaseResponderOfstring: {
-      status: boolean
-      message: string
-      data: null | string
     }
     /** @enum {string} */
     BoostRefusal: 'none' | 'oneIsAlreadyRunning' | 'tooSoonAfterTheLastOne'
@@ -986,6 +1142,12 @@ export interface components {
       currentPassword?: null | string
       newPassword?: null | string
     }
+    CollectionStatusResponder: {
+      /** Format: int32 */
+      wantedCoverageHours: number | string
+      streams: components['schemas']['StreamCollectionStatusResponder'][]
+      rescans: components['schemas']['RescanNoticeResponder'][]
+    }
     CollectNowRequest: {
       /** Format: int32 */
       networkId?: null | number | string
@@ -993,12 +1155,6 @@ export interface components {
       transportStreamId?: null | number | string
       /** Format: int32 */
       serviceId?: null | number | string
-    }
-    CollectionStatusResponder: {
-      /** Format: int32 */
-      wantedCoverageHours: number | string
-      streams: components['schemas']['StreamCollectionStatusResponder'][]
-      rescans: components['schemas']['RescanNoticeResponder'][]
     }
     CreateReservationRequest: {
       programme?: null | string
@@ -1209,8 +1365,6 @@ export interface components {
       /** Format: int64 */
       after: number | string
     }
-    /** @enum {string} */
-    ProgrammeField: 'title' | 'description'
     ProgrammeGenreResponder: {
       /** Format: int32 */
       kind: number | string
@@ -1257,8 +1411,6 @@ export interface components {
       perPage: number | string
     }
     /** @enum {string} */
-    ProgrammeSort: 'startsAt' | 'name'
-    /** @enum {string} */
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
     RebuildEpgRequest: {
       confirm?: null | string
@@ -1274,6 +1426,15 @@ export interface components {
       interruptions: components['schemas']['RecordingInterruptionResponder'][]
       positions: components['schemas']['RecordingPositionsResponder']
     }
+    RecordingDiscardRefusedResponder: {
+      recordingId: string
+      refusal: components['schemas']['RecordingFailure']
+    }
+    RecordingDiscardResponder: {
+      recordingId: string
+      /** Format: int32 */
+      filesRemoved: number | string
+    }
     RecordingDropsResponder: {
       ccMeasured: boolean
       /** Format: int64 */
@@ -1287,6 +1448,19 @@ export interface components {
       /** Format: date-time */
       measuredUpdatedAt: null | string
     }
+    /** @enum {string} */
+    RecordingFailure:
+      | 'noSuchRecording'
+      | 'alreadyEnded'
+      | 'notBeingWritten'
+      | 'stillRecording'
+      | 'driverUnreachable'
+      | 'driverRefused'
+      | 'nowhereToPutPictures'
+      | 'fileOutOfReach'
+      | 'rootOutOfReach'
+      | 'filesLeftBehind'
+      | 'oneIsAlreadyBeingDiscarded'
     /** @enum {string} */
     RecordingFault:
       | 'tuneFailed'
@@ -1446,6 +1620,15 @@ export interface components {
       key: null | string
       role: components['schemas']['BroadcastGroupRole']
     }
+    ReservationDiscardRefusedResponder: {
+      /** Format: uuid */
+      reservationId: string
+      refusal: components['schemas']['ReservationFailure']
+    }
+    ReservationDiscardResponder: {
+      /** Format: uuid */
+      reservationId: string
+    }
     ReservationDivergedFieldResponder: {
       field: components['schemas']['DivergedField']
       before: null | string
@@ -1460,6 +1643,21 @@ export interface components {
       /** Format: date-time */
       acknowledgedAt: null | string
     }
+    /** @enum {string} */
+    ReservationFailure:
+      | 'noSuchReservation'
+      | 'noSuchProgramme'
+      | 'programmeIsAShadow'
+      | 'alreadyReserved'
+      | 'alreadyRecording'
+      | 'notStanding'
+      | 'notCancelled'
+      | 'alreadyOver'
+      | 'tunersCannotBeCounted'
+      | 'somethingArrivedWhileReading'
+      | 'turningIntoARecording'
+      | 'recordingCameOfIt'
+      | 'stillToBeRecorded'
     ReservationListResponder: {
       items: components['schemas']['ReservationResponder'][]
       /** Format: int32 */
@@ -1573,6 +1771,138 @@ export interface components {
     }
     /** @enum {string} */
     RotationState: 'active' | 'backingOff' | 'needsAttention'
+    RuleApplicationRefusedResponder: {
+      refusal: components['schemas']['RuleApplyRefusal']
+      /** Format: uuid */
+      runningApplyId: null | string
+      /** Format: date-time */
+      notBefore: null | string
+    }
+    RuleApplicationResponder: {
+      /** Format: uuid */
+      applyId: string
+      /** Format: int64 */
+      revision: number | string
+      /** Format: int32 */
+      read: number | string
+      /** Format: int32 */
+      made: number | string
+      /** Format: int32 */
+      refused: number | string
+      /** Format: int32 */
+      withdrawn: number | string
+      /** Format: int32 */
+      turnedOff: number | string
+      /** Format: int32 */
+      faulted: number | string
+    }
+    /** @enum {string} */
+    RuleApplyRefusal:
+      | 'none'
+      | 'oneIsAlreadyRunning'
+      | 'tooSoonAfterTheLastOne'
+      | 'aRecalculationIsAlreadyRunning'
+    RuleDraftRequest: {
+      /** Format: uuid */
+      ruleId?: null | string
+      query?: null | string
+      /** Format: int32 */
+      priority?: null | number | string
+      /** Format: int32 */
+      marginBeforeSeconds?: null | number | string
+      /** Format: int32 */
+      marginAfterSeconds?: null | number | string
+    }
+    RuleEnabledRequest: {
+      enabled?: null | boolean
+    }
+    RuleImpactResponder: {
+      /** Format: int32 */
+      making: number | string
+      /** Format: int32 */
+      withdrawing: number | string
+      /** Format: int32 */
+      changingHands: number | string
+      /** Format: int32 */
+      excludedAsShadows: number | string
+    }
+    RuleListResponder: {
+      rules: components['schemas']['RuleResponder'][]
+      /** Format: int32 */
+      total: number | string
+    }
+    RulePreviewResponder: {
+      takes: components['schemas']['RulePreviewTakeResponder'][]
+      /** Format: int32 */
+      matched: number | string
+      /** Format: int32 */
+      making: number | string
+      /** Format: int32 */
+      alreadyReserved: number | string
+      /** Format: int32 */
+      contended: number | string
+      /** Format: int32 */
+      contendedAltogether: number | string
+      /** Format: int32 */
+      excludedAsShadows: number | string
+      /** Format: int32 */
+      seatsLeftOut: number | string
+    }
+    RulePreviewTakeResponder: {
+      programme: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      /** Format: date-time */
+      startsAt: string
+      /** Format: date-time */
+      endsAt: null | string
+      name: string
+      alreadyReserved: boolean
+      verdict: null | components['schemas']['AllocationVerdict']
+    }
+    RuleResponder: {
+      /** Format: uuid */
+      id: string
+      name: string
+      query: string
+      /** Format: int32 */
+      priority: number | string
+      enabled: boolean
+      /** Format: int32 */
+      marginBeforeSeconds: number | string
+      /** Format: int32 */
+      marginAfterSeconds: number | string
+      /** Format: date-time */
+      createdAt: string
+    }
+    RuleRetirementResponder: {
+      /** Format: uuid */
+      ruleId: string
+      /** Format: int32 */
+      withdrawn: number | string
+      /** Format: int32 */
+      swept: number | string
+    }
+    RuleSwitchedResponder: {
+      rule: components['schemas']['RuleResponder']
+      /** Format: int32 */
+      withdrawn: number | string
+    }
+    SaveRuleRequest: {
+      name?: null | string
+      query?: null | string
+      /** Format: int32 */
+      priority?: null | number | string
+      enabled?: null | boolean
+      /** Format: int32 */
+      marginBeforeSeconds?: null | number | string
+      /** Format: int32 */
+      marginAfterSeconds?: null | number | string
+    }
     ScanApplicationResponder: {
       systems: components['schemas']['TuneSystem'][]
       /** Format: int32 */
@@ -1834,8 +2164,6 @@ export interface components {
     /** @enum {null|string} */
     TuneFailureKind:
       'noLock' | 'noData' | 'incompletePsi' | 'streamMismatch' | null
-    /** @enum {string} */
-    TuneSystem: 'unspecified' | 'isdbT' | 'isdbSBs' | 'isdbSCs110'
     TunerEntryRequest: {
       deviceId?: null | string
       disabled?: boolean
@@ -1897,6 +2225,8 @@ export interface components {
     /** @enum {string} */
     TunerState:
       'unspecified' | 'idle' | 'busy' | 'disabled' | 'faulted' | 'draining'
+    /** @enum {string} */
+    TuneSystem: 'unspecified' | 'isdbT' | 'isdbSBs' | 'isdbSCs110'
     TuningParametersRequest: {
       system?: components['schemas']['TuneSystem']
       /** Format: int32 */
@@ -2910,6 +3240,527 @@ export interface operations {
       }
     }
   }
+  applyRuleNow: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleApplicationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleApplicationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleApplicationResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleApplicationRefusedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleApplicationResponder']
+        }
+      }
+    }
+  }
+  listRules: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleListResponder']
+        }
+      }
+    }
+  }
+  createRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['SaveRuleRequest']
+        'application/*+json': null | components['schemas']['SaveRuleRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+    }
+  }
+  getRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+    }
+  }
+  replaceRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['SaveRuleRequest']
+        'application/*+json': null | components['schemas']['SaveRuleRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleResponder']
+        }
+      }
+    }
+  }
+  deleteRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleRetirementResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleRetirementResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleRetirementResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleRetirementResponder']
+        }
+      }
+    }
+  }
+  impactOfRules: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['RuleDraftRequest']
+        'application/*+json': null | components['schemas']['RuleDraftRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleImpactResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleImpactResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleImpactResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleImpactResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleImpactResponder']
+        }
+      }
+    }
+  }
+  previewRules: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['RuleDraftRequest']
+        'application/*+json': null | components['schemas']['RuleDraftRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRulePreviewResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRulePreviewResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRulePreviewResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRulePreviewResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRulePreviewResponder']
+        }
+      }
+    }
+  }
+  switchRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['RuleEnabledRequest']
+        'application/*+json': null | components['schemas']['RuleEnabledRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleSwitchedResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleSwitchedResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleSwitchedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleSwitchedResponder']
+        }
+      }
+    }
+  }
   cancelReservation: {
     parameters: {
       query?: never
@@ -3176,6 +4027,71 @@ export interface operations {
       }
     }
   }
+  deleteReservation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationDiscardResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationDiscardResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationDiscardRefusedResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationDiscardRefusedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationDiscardResponder']
+        }
+      }
+    }
+  }
   reviseReservation: {
     parameters: {
       query?: never
@@ -3384,6 +4300,80 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfRecordingDetailResponder']
+        }
+      }
+    }
+  }
+  deleteRecording: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDiscardResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDiscardResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDiscardRefusedResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDiscardRefusedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDiscardResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingDiscardRefusedResponder']
         }
       }
     }
@@ -4044,16 +5034,16 @@ export interface operations {
       query?: {
         keyword?: string
         exclude?: string
-        fields?: components['schemas']['ProgrammeField'][]
-        genre?: (number | string)[]
-        type?: components['schemas']['TuneSystem']
+        fields?: ('Title' | 'Description')[]
+        genre?: number[]
+        type?: 'Unspecified' | 'IsdbT' | 'IsdbSBs' | 'IsdbSCs110'
         channel?: string[]
         from?: string
         to?: string
-        sort?: components['schemas']['ProgrammeSort']
+        sort?: 'StartsAt' | 'Name'
         descending?: boolean
-        page?: number | string
-        perPage?: number | string
+        page?: number
+        perPage?: number
       }
       header?: never
       path?: never

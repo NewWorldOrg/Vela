@@ -175,7 +175,7 @@ test('the type that was asked for still reaches the store', async () => {
 
   await searchPrograms({ q: '観測所', type: 'bs' })
 
-  assert.equal(askedTheStore()?.query.type, 'isdbSBs')
+  assert.equal(askedTheStore()?.query.type, 'IsdbSBs')
 })
 
 test('a condition that narrows nothing never reaches the store', async () => {

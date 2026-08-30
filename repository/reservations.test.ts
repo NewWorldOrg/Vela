@@ -21,6 +21,7 @@ const store: {
   services: unknown[]
   pages: unknown[]
   recordings: unknown[]
+  rules: unknown[]
   programme: unknown
   programmeStatus: number
   writeStatus: number
@@ -29,6 +30,7 @@ const store: {
   services: [],
   pages: [],
   recordings: [],
+  rules: [],
   programme: undefined,
   programmeStatus: 200,
   writeStatus: 200,
@@ -163,6 +165,13 @@ mock.module('@/repository/client/carina', {
           return { data: { data: store.services }, response: answered(200) }
         }
 
+        if (path === '/api/rules') {
+          return {
+            data: { data: { rules: store.rules, total: store.rules.length } },
+            response: answered(200),
+          }
+        }
+
         if (path === '/api/recordings') {
           return {
             data: { data: page(store.recordings) },
@@ -211,6 +220,7 @@ function standing(items: unknown[] = [reservation()]): void {
   ]
   store.pages = [page(items)]
   store.recordings = []
+  store.rules = []
   store.programme = {
     id: '131-1310-40001',
     networkId: 131,
@@ -957,4 +967,66 @@ test('a programme asked for twice is booked by the one that holds the seat', asy
 
   assert.equal(booking?.id, 'held')
   assert.equal(booking?.priority, 20)
+})
+
+/**
+ * The name of the rule a reservation came from. The list answers with the
+ * rule's identifier and nothing else, so the name is read off the rules the
+ * API holds; both sides are asserted, because a row that named nothing at all
+ * would satisfy the absent case on its own.
+ */
+const RULE = {
+  id: 'e0b5bbef-79a6-44af-b651-510e2715b790',
+  name: '深夜アニメを追う',
+  query: 'keyword=%E6%96%B0%E7%95%AA%E7%B5%84',
+  priority: 20,
+  enabled: true,
+  marginBeforeSeconds: 0,
+  marginAfterSeconds: 0,
+  createdAt: '2026-08-01T02:00:00Z',
+}
+
+test('a reservation a rule made is named by that rule', async () => {
+  standing([reservation({ origin: 'byRule', ruleId: RULE.id })])
+  store.rules = [RULE]
+
+  const rows = await listed()
+
+  assert.equal(rows[0].ruleName, '深夜アニメを追う')
+})
+
+test('a reservation nobody asked for by rule is named by no rule', async () => {
+  standing([reservation({ origin: 'byHand', ruleId: null })])
+  store.rules = [RULE]
+
+  const rows = await listed()
+
+  assert.equal(rows[0].ruleName, undefined)
+})
+
+test('a rule the API no longer holds leaves the row without a name', async () => {
+  standing([reservation({ origin: 'byRule', ruleId: RULE.id })])
+  store.rules = []
+
+  const rows = await listed()
+
+  assert.equal(rows[0].ruleName, undefined)
+})
+
+test('the rule behind a rival is named in the conflict it explains', async () => {
+  standing([
+    onNetwork('a1', 131, '週末キッチンの手帖', { standing: 'conflict' }),
+    onNetwork('a2', 132, '灯台巡りの午後', {
+      standing: 'scheduled',
+      origin: 'byRule',
+      ruleId: RULE.id,
+    }),
+  ])
+  store.rules = [RULE]
+
+  const rows = await listed()
+  const conflict = rows.find((row) => row.id === 'a1')?.conflict
+
+  assert.equal(conflict?.entries.length, 1)
+  assert.equal(conflict?.entries[0].ruleName, '深夜アニメを追う')
 })

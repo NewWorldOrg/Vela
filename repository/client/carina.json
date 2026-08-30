@@ -1230,6 +1230,672 @@
         }
       }
     },
+    "/api/rules/{id}/apply-now": {
+      "post": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "applyRuleNow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleApplicationResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleApplicationResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleApplicationResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleApplicationRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleApplicationResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules": {
+      "post": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "createRule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SaveRuleRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SaveRuleRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "listRules",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules/{id}": {
+      "delete": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "deleteRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleRetirementResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleRetirementResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleRetirementResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleRetirementResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "getRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "replaceRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SaveRuleRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SaveRuleRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules/impact": {
+      "post": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "impactOfRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RuleDraftRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RuleDraftRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleImpactResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleImpactResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleImpactResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleImpactResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleImpactResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules/preview": {
+      "post": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "previewRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RuleDraftRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RuleDraftRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRulePreviewResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRulePreviewResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRulePreviewResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRulePreviewResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRulePreviewResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rules/{id}/enabled": {
+      "patch": {
+        "tags": [
+          "rules"
+        ],
+        "operationId": "switchRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RuleEnabledRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RuleEnabledRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleSwitchedResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleSwitchedResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleSwitchedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleSwitchedResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reservations/{id}/cancel": {
       "post": {
         "tags": [
@@ -1559,6 +2225,78 @@
       }
     },
     "/api/reservations/{id}": {
+      "delete": {
+        "tags": [
+          "reservations"
+        ],
+        "operationId": "deleteReservation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationDiscardResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationDiscardResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationDiscardRefusedResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationDiscardRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationDiscardResponder"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "reservations"
@@ -1829,6 +2567,87 @@
       }
     },
     "/api/recordings/{id}": {
+      "delete": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "deleteRecording",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDiscardResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDiscardResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDiscardRefusedResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDiscardRefusedResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDiscardRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingDiscardResponder"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "recordings"
@@ -2799,7 +3618,11 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/ProgrammeField"
+                "enum": [
+                  "Title",
+                  "Description"
+                ],
+                "type": "string"
               }
             }
           },
@@ -2809,11 +3632,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "pattern": "^-?(?:0|[1-9]\\d*)$",
-                "type": [
-                  "integer",
-                  "string"
-                ],
+                "type": "integer",
                 "format": "int32"
               }
             }
@@ -2822,7 +3641,13 @@
             "name": "type",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/TuneSystem"
+              "enum": [
+                "Unspecified",
+                "IsdbT",
+                "IsdbSBs",
+                "IsdbSCs110"
+              ],
+              "type": "string"
             }
           },
           {
@@ -2855,7 +3680,11 @@
             "name": "sort",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/ProgrammeSort"
+              "enum": [
+                "StartsAt",
+                "Name"
+              ],
+              "type": "string"
             }
           },
           {
@@ -2869,11 +3698,7 @@
             "name": "page",
             "in": "query",
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
+              "type": "integer",
               "format": "int32"
             }
           },
@@ -2881,11 +3706,7 @@
             "name": "perPage",
             "in": "query",
             "schema": {
-              "pattern": "^-?(?:0|[1-9]\\d*)$",
-              "type": [
-                "integer",
-                "string"
-              ],
+              "type": "integer",
               "format": "int32"
             }
           }
@@ -3776,81 +4597,6 @@
           }
         }
       },
-      "BaseResponderOfIReadOnlyListOfBroadcastServiceResponder": {
-        "required": [
-          "status",
-          "message",
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/BroadcastServiceResponder"
-            }
-          }
-        }
-      },
-      "BaseResponderOfIReadOnlyListOfScanRunResponder": {
-        "required": [
-          "status",
-          "message",
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/ScanRunResponder"
-            }
-          }
-        }
-      },
-      "BaseResponderOfIReadOnlyListOfSessionResponder": {
-        "required": [
-          "status",
-          "message",
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/SessionResponder"
-            }
-          }
-        }
-      },
       "BaseResponderOfIntegrityListResponder": {
         "required": [
           "status",
@@ -3926,6 +4672,81 @@
                 "$ref": "#/components/schemas/IntegritySweepResponder"
               }
             ]
+          }
+        }
+      },
+      "BaseResponderOfIReadOnlyListOfBroadcastServiceResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/BroadcastServiceResponder"
+            }
+          }
+        }
+      },
+      "BaseResponderOfIReadOnlyListOfScanRunResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ScanRunResponder"
+            }
+          }
+        }
+      },
+      "BaseResponderOfIReadOnlyListOfSessionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SessionResponder"
+            }
           }
         }
       },
@@ -4085,6 +4906,58 @@
           }
         }
       },
+      "BaseResponderOfRecordingDiscardRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingDiscardRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRecordingDiscardResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingDiscardResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfRecordingListResponder": {
         "required": [
           "status",
@@ -4132,6 +5005,58 @@
               },
               {
                 "$ref": "#/components/schemas/RecordingStopResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfReservationDiscardRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationDiscardRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfReservationDiscardResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationDiscardResponder"
               }
             ]
           }
@@ -4210,6 +5135,214 @@
               },
               {
                 "$ref": "#/components/schemas/ReservationSettlementResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRuleApplicationRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RuleApplicationRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRuleApplicationResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RuleApplicationResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRuleImpactResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RuleImpactResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRuleListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RuleListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRulePreviewResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RulePreviewResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRuleResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RuleResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRuleRetirementResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RuleRetirementResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfRuleSwitchedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RuleSwitchedResponder"
               }
             ]
           }
@@ -4397,6 +5530,28 @@
           }
         }
       },
+      "BaseResponderOfstring": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "BaseResponderOfThumbnailRemakeResponder": {
         "required": [
           "status",
@@ -4497,28 +5652,6 @@
               {
                 "$ref": "#/components/schemas/TunerObservationResponder"
               }
-            ]
-          }
-        }
-      },
-      "BaseResponderOfstring": {
-        "required": [
-          "status",
-          "message",
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": [
-              "null",
-              "string"
             ]
           }
         }
@@ -4812,6 +5945,36 @@
           }
         }
       },
+      "CollectionStatusResponder": {
+        "required": [
+          "wantedCoverageHours",
+          "streams",
+          "rescans"
+        ],
+        "type": "object",
+        "properties": {
+          "wantedCoverageHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "streams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamCollectionStatusResponder"
+            }
+          },
+          "rescans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RescanNoticeResponder"
+            }
+          }
+        }
+      },
       "CollectNowRequest": {
         "type": "object",
         "properties": {
@@ -4841,36 +6004,6 @@
               "string"
             ],
             "format": "int32"
-          }
-        }
-      },
-      "CollectionStatusResponder": {
-        "required": [
-          "wantedCoverageHours",
-          "streams",
-          "rescans"
-        ],
-        "type": "object",
-        "properties": {
-          "wantedCoverageHours": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "streams": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StreamCollectionStatusResponder"
-            }
-          },
-          "rescans": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RescanNoticeResponder"
-            }
           }
         }
       },
@@ -5750,13 +6883,6 @@
           }
         }
       },
-      "ProgrammeField": {
-        "enum": [
-          "title",
-          "description"
-        ],
-        "type": "string"
-      },
       "ProgrammeGenreResponder": {
         "required": [
           "kind",
@@ -5952,13 +7078,6 @@
           }
         }
       },
-      "ProgrammeSort": {
-        "enum": [
-          "startsAt",
-          "name"
-        ],
-        "type": "string"
-      },
       "ProgrammeSource": {
         "enum": [
           "presentFollowing",
@@ -6025,6 +7144,41 @@
           }
         }
       },
+      "RecordingDiscardRefusedResponder": {
+        "required": [
+          "recordingId",
+          "refusal"
+        ],
+        "type": "object",
+        "properties": {
+          "recordingId": {
+            "type": "string"
+          },
+          "refusal": {
+            "$ref": "#/components/schemas/RecordingFailure"
+          }
+        }
+      },
+      "RecordingDiscardResponder": {
+        "required": [
+          "recordingId",
+          "filesRemoved"
+        ],
+        "type": "object",
+        "properties": {
+          "recordingId": {
+            "type": "string"
+          },
+          "filesRemoved": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "RecordingDropsResponder": {
         "required": [
           "ccMeasured",
@@ -6082,6 +7236,22 @@
             "format": "date-time"
           }
         }
+      },
+      "RecordingFailure": {
+        "enum": [
+          "noSuchRecording",
+          "alreadyEnded",
+          "notBeingWritten",
+          "stillRecording",
+          "driverUnreachable",
+          "driverRefused",
+          "nowhereToPutPictures",
+          "fileOutOfReach",
+          "rootOutOfReach",
+          "filesLeftBehind",
+          "oneIsAlreadyBeingDiscarded"
+        ],
+        "type": "string"
       },
       "RecordingFault": {
         "enum": [
@@ -6708,6 +7878,34 @@
           }
         }
       },
+      "ReservationDiscardRefusedResponder": {
+        "required": [
+          "reservationId",
+          "refusal"
+        ],
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "refusal": {
+            "$ref": "#/components/schemas/ReservationFailure"
+          }
+        }
+      },
+      "ReservationDiscardResponder": {
+        "required": [
+          "reservationId"
+        ],
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "ReservationDivergedFieldResponder": {
         "required": [
           "field",
@@ -6767,6 +7965,24 @@
             "format": "date-time"
           }
         }
+      },
+      "ReservationFailure": {
+        "enum": [
+          "noSuchReservation",
+          "noSuchProgramme",
+          "programmeIsAShadow",
+          "alreadyReserved",
+          "alreadyRecording",
+          "notStanding",
+          "notCancelled",
+          "alreadyOver",
+          "tunersCannotBeCounted",
+          "somethingArrivedWhileReading",
+          "turningIntoARecording",
+          "recordingCameOfIt",
+          "stillToBeRecorded"
+        ],
+        "type": "string"
       },
       "ReservationListResponder": {
         "required": [
@@ -7194,6 +8410,542 @@
           "needsAttention"
         ],
         "type": "string"
+      },
+      "RuleApplicationRefusedResponder": {
+        "required": [
+          "refusal",
+          "runningApplyId",
+          "notBefore"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/RuleApplyRefusal"
+          },
+          "runningApplyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notBefore": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RuleApplicationResponder": {
+        "required": [
+          "applyId",
+          "revision",
+          "read",
+          "made",
+          "refused",
+          "withdrawn",
+          "turnedOff",
+          "faulted"
+        ],
+        "type": "object",
+        "properties": {
+          "applyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "read": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "made": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "refused": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "withdrawn": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "turnedOff": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "faulted": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RuleApplyRefusal": {
+        "enum": [
+          "none",
+          "oneIsAlreadyRunning",
+          "tooSoonAfterTheLastOne",
+          "aRecalculationIsAlreadyRunning"
+        ],
+        "type": "string"
+      },
+      "RuleDraftRequest": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "marginBeforeSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "marginAfterSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RuleEnabledRequest": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "RuleImpactResponder": {
+        "required": [
+          "making",
+          "withdrawing",
+          "changingHands",
+          "excludedAsShadows"
+        ],
+        "type": "object",
+        "properties": {
+          "making": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "withdrawing": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "changingHands": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "excludedAsShadows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RuleListResponder": {
+        "required": [
+          "rules",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RulePreviewResponder": {
+        "required": [
+          "takes",
+          "matched",
+          "making",
+          "alreadyReserved",
+          "contended",
+          "contendedAltogether",
+          "excludedAsShadows",
+          "seatsLeftOut"
+        ],
+        "type": "object",
+        "properties": {
+          "takes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RulePreviewTakeResponder"
+            }
+          },
+          "matched": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "making": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "alreadyReserved": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "contended": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "contendedAltogether": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "excludedAsShadows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "seatsLeftOut": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RulePreviewTakeResponder": {
+        "required": [
+          "programme",
+          "networkId",
+          "serviceId",
+          "eventId",
+          "startsAt",
+          "endsAt",
+          "name",
+          "alreadyReserved",
+          "verdict"
+        ],
+        "type": "object",
+        "properties": {
+          "programme": {
+            "type": "string"
+          },
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "eventId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "name": {
+            "type": "string"
+          },
+          "alreadyReserved": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AllocationVerdict"
+              }
+            ]
+          }
+        }
+      },
+      "RuleResponder": {
+        "required": [
+          "id",
+          "name",
+          "query",
+          "priority",
+          "enabled",
+          "marginBeforeSeconds",
+          "marginAfterSeconds",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string"
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "marginBeforeSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "marginAfterSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RuleRetirementResponder": {
+        "required": [
+          "ruleId",
+          "withdrawn",
+          "swept"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "withdrawn": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "swept": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RuleSwitchedResponder": {
+        "required": [
+          "rule",
+          "withdrawn"
+        ],
+        "type": "object",
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/RuleResponder"
+          },
+          "withdrawn": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "SaveRuleRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "enabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "marginBeforeSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "marginAfterSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       },
       "ScanApplicationResponder": {
         "required": [
@@ -8224,15 +9976,6 @@
           "string"
         ]
       },
-      "TuneSystem": {
-        "enum": [
-          "unspecified",
-          "isdbT",
-          "isdbSBs",
-          "isdbSCs110"
-        ],
-        "type": "string"
-      },
       "TunerEntryRequest": {
         "type": "object",
         "properties": {
@@ -8515,6 +10258,15 @@
         ],
         "type": "string"
       },
+      "TuneSystem": {
+        "enum": [
+          "unspecified",
+          "isdbT",
+          "isdbSBs",
+          "isdbSCs110"
+        ],
+        "type": "string"
+      },
       "TuningParametersRequest": {
         "type": "object",
         "properties": {
@@ -8631,6 +10383,9 @@
     },
     {
       "name": "services"
+    },
+    {
+      "name": "rules"
     },
     {
       "name": "reservations"

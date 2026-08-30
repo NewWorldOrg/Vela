@@ -12,7 +12,7 @@ import { fetchProgramme, toInt } from '@/repository/programmes'
 import { listRecordingsByReservation } from '@/repository/recordings'
 import type { GuideChannel, ProgramBooking } from '@/repository/programs'
 import { fetchServiceChannels, kindOfNetwork } from '@/repository/programs'
-import { RULES } from '@/repository/rules.fixtures'
+import { ruleNames } from '@/repository/rules'
 
 type ReservationResponder = components['schemas']['ReservationResponder']
 
@@ -63,18 +63,6 @@ export interface Reservation {
   conflict?: ReservationConflict
   /** The recording this reservation came to, where it came to one. */
   recordingId?: string
-}
-
-export interface Rule {
-  id: string
-  name: string
-  keywords: string
-  excludes?: string
-  genres: string[]
-  channels: string
-  target: string
-  enabled: boolean
-  matchCount: number
 }
 
 /**
@@ -130,10 +118,11 @@ export async function listReservations(
   filter: ReservationsFilter = {},
   now: Date = new Date(),
 ): Promise<ReservationsResult> {
-  const [carried, known, recordings] = await Promise.all([
+  const [carried, known, recordings, rules] = await Promise.all([
     fetchEveryReservation(),
     fetchServiceChannels(),
     listRecordingsByReservation(),
+    ruleNames(),
   ])
   const kept =
     filter.cancelled === 'all'
@@ -142,7 +131,7 @@ export async function listReservations(
 
   return {
     items: kept.map((one) =>
-      toReservation(one, carried.items, known, recordings),
+      toReservation(one, carried.items, known, recordings, rules),
     ),
     total: carried.total,
     filter,
@@ -184,10 +173,6 @@ export async function listBookings(): Promise<Map<string, ProgramBooking>> {
   }
 
   return bookings
-}
-
-export async function listRules(): Promise<Rule[]> {
-  return RULES
 }
 
 export async function createReservation(
@@ -362,6 +347,7 @@ export function toReservation(
   all: ReservationResponder[],
   known: GuideChannel[],
   recordings: Map<string, string>,
+  rules: ReadonlyMap<string, string>,
 ): Reservation {
   const channel = channelOf(r, known)
   const endAtConfirmed = r.window.endAtConfirmed
@@ -374,7 +360,7 @@ export function toReservation(
     channelNo: channel?.no,
     whenLabel: formatBroadcastSpan(r.window.startAt, r.window.endAt),
     origin: formatReservationOrigin(r.origin),
-    ruleName: ruleNameOf(r.ruleId),
+    ruleName: ruleNameOf(r.ruleId, rules),
     state: r.state,
     standing: r.standing,
     endAtConfirmed,
@@ -383,7 +369,7 @@ export function toReservation(
     marginBeforeSeconds: toInt(r.window.marginBeforeSeconds),
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
     stateNote: endAtConfirmed ? undefined : FOLLOWS_THE_END,
-    conflict: conflictOf(r, all, known),
+    conflict: conflictOf(r, all, known, rules),
     recordingId: recordings.get(r.id),
   }
 }
@@ -401,12 +387,11 @@ function channelOf(
   return known.find((one) => one.id === key)
 }
 
-function ruleNameOf(ruleId: string | null): string | undefined {
-  if (!ruleId) {
-    return undefined
-  }
-
-  return RULES.find((rule) => rule.id === ruleId)?.name
+function ruleNameOf(
+  ruleId: string | null,
+  rules: ReadonlyMap<string, string>,
+): string | undefined {
+  return ruleId ? rules.get(ruleId) : undefined
 }
 
 /**
@@ -420,6 +405,7 @@ function conflictOf(
   r: ReservationResponder,
   all: ReservationResponder[],
   known: GuideChannel[],
+  rules: ReadonlyMap<string, string>,
 ): ReservationConflict | undefined {
   if (r.standing !== 'conflict') {
     return undefined
@@ -438,7 +424,7 @@ function conflictOf(
   return {
     headline: `同時刻に${KIND_LABEL[kind]}チューナー ${seats.size} 本が録画予定です`,
     body: `${formatBroadcastStart(r.window.startAt)} の開始時点で空きがなく、この予約にはチューナーを割り当てられません。`,
-    entries: rivals.map((one) => toConflictEntry(one, known)),
+    entries: rivals.map((one) => toConflictEntry(one, known, rules)),
     raiseTo: Math.max(...rivals.map((one) => toInt(one.priority))) + 1,
   }
 }
@@ -467,6 +453,7 @@ function overlaps(one: ReservationResponder, other: ReservationResponder) {
 function toConflictEntry(
   one: ReservationResponder,
   known: GuideChannel[],
+  rules: ReadonlyMap<string, string>,
 ): ConflictEntry {
   const channel = channelOf(one, known)
   const span = formatClockSpan(one.window.startAt, one.window.endAt)
@@ -475,6 +462,6 @@ function toConflictEntry(
     title: one.programme.name,
     meta: `${channel?.name || serviceKeyOf(one)} · ${span}`,
     origin: formatReservationOrigin(one.origin),
-    ruleName: ruleNameOf(one.ruleId),
+    ruleName: ruleNameOf(one.ruleId, rules),
   }
 }
