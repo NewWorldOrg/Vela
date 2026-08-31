@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, userEvent, within } from 'storybook/test'
 
 import {
   Field,
@@ -24,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { MarkPill, MarkRuler, MarkSplit } from '@/components/vela/icons'
+import { PasswordInput } from '@/components/vela/password-input'
 
 const meta = {
   title: 'Components/Form',
@@ -122,6 +124,58 @@ export const TextInputs: Story = {
       </p>
     </div>
   ),
+}
+
+function PasswordSamples() {
+  return (
+    <div className="mx-auto max-w-[720px] p-6">
+      <SectionHeading mark={MarkRuler}>パスワード入力</SectionHeading>
+      <Surface>
+        <div className="grid gap-[17px] sm:grid-cols-2">
+          <Sample caption="通常">
+            <Field>
+              <FieldLabel htmlFor="current-secret">いまのパスワード</FieldLabel>
+              <PasswordInput
+                id="current-secret"
+                autoComplete="current-password"
+                defaultValue="打った文字は読めるべき"
+              />
+            </Field>
+          </Sample>
+          <Sample caption="無効">
+            <Field>
+              <FieldLabel htmlFor="held-secret">client secret</FieldLabel>
+              <PasswordInput id="held-secret" defaultValue="保持中" disabled />
+              <FieldHint>保存したあとは読み出せません。</FieldHint>
+            </Field>
+          </Sample>
+        </div>
+      </Surface>
+      <p className="mt-[9px] text-note text-ink-3">
+        マスクは切り替えられる。打ったものが読めないと、断られたのか打ち間違えたのかが本人にも分からない。
+        切り替えは欄の中ではなく横に置く。44px の触れる面は載せた側が press
+        を受け取るので、欄の中に置くと右端で文字を選べなくなる。
+      </p>
+    </div>
+  )
+}
+
+export const Passwords: Story = { render: () => <PasswordSamples /> }
+
+export const パスワードを表示中: Story = {
+  render: () => <PasswordSamples />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getAllByRole('button', { name: 'パスワードを表示する' })[0],
+    )
+
+    await expect(canvas.getByLabelText('いまのパスワード')).toHaveAttribute(
+      'type',
+      'text',
+    )
+  },
 }
 
 export const Selects: Story = {

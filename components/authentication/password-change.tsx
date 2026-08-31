@@ -14,10 +14,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { InlineAlert } from '@/components/vela/banner'
 import { Field, FieldHint, FieldLabel } from '@/components/vela/field'
 import { LockIcon, WarningIcon } from '@/components/vela/icons'
+import { PasswordInput } from '@/components/vela/password-input'
 import { passwordChangedHref } from '@/components/authentication/wording'
 
 /**
@@ -98,9 +98,8 @@ export function ChangePassword({
           <div className="flex flex-col gap-3.5">
             <Field>
               <FieldLabel htmlFor={currentId}>いまのパスワード</FieldLabel>
-              <Input
+              <PasswordInput
                 id={currentId}
-                type="password"
                 autoComplete="current-password"
                 value={currentPassword}
                 disabled={pending}
@@ -109,9 +108,8 @@ export function ChangePassword({
             </Field>
             <Field>
               <FieldLabel htmlFor={newId}>新しいパスワード</FieldLabel>
-              <Input
+              <PasswordInput
                 id={newId}
-                type="password"
                 autoComplete="new-password"
                 value={newPassword}
                 disabled={pending}
