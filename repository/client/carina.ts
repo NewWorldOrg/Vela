@@ -56,6 +56,8 @@ interface Asking {
  * A refused session ends at the login screen holding the page as the way back,
  * rather than as a screen that failed to read. An action posts to the page it
  * was taken on, so a refusal mid-action lands in the same place.
+ *
+ * Which 401 that is, `refusedTheSession` decides.
  */
 async function carrying(
   request: Request,
@@ -72,11 +74,43 @@ async function carrying(
 
   const response = await send(sent)
 
-  if (response.status === 401) {
+  if (await refusedTheSession(response)) {
     redirect(loginHref(page) as Route)
   }
 
   return response
+}
+
+/**
+ * A 401 says one of two things, and which one is readable from what came with
+ * it. The gate in front of every endpoint turns away a session the API no
+ * longer knows before any handler runs, and answers with an empty body; an
+ * endpoint that did run and refused what the request asked for answers with
+ * the envelope and a sentence naming the reason.
+ *
+ * Only the first is a sign-in. Reading the second as one throws the screen at
+ * the login page carrying a session that still works, and drops the one
+ * sentence that says what was wrong — which, on the password screen, leaves a
+ * refusal looking exactly like the sign-out a successful change causes.
+ */
+async function refusedTheSession(response: Response): Promise<boolean> {
+  if (response.status !== 401) {
+    return false
+  }
+
+  try {
+    const said: unknown = await response.clone().json()
+
+    return !(
+      typeof said === 'object' &&
+      said !== null &&
+      'message' in said &&
+      typeof said.message === 'string' &&
+      said.message.length > 0
+    )
+  } catch {
+    return true
+  }
 }
 
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS', 'TRACE']
