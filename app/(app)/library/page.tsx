@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { listRecordings, type RecordingsFilter } from '@/repository/recordings'
 import { LibraryView } from '@/components/library/library-page'
+import { throwRecordingAway } from '@/app/(app)/library/actions'
 
 export const metadata: Metadata = { title: 'ライブラリ' }
 
@@ -20,5 +21,11 @@ export default async function Page({
   }
   const result = await listRecordings(filter)
 
-  return <LibraryView result={result} filter={result.filter} />
+  return (
+    <LibraryView
+      result={result}
+      filter={result.filter}
+      onDelete={throwRecordingAway}
+    />
+  )
 }

@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useTransition } from 'react'
+
 import { formatBytes } from '@/lib/format'
-import type { Recording } from '@/repository/recordings'
+import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,20 +14,70 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { InlineAlert } from '@/components/vela/banner'
 import { TrashIcon, WarningIcon } from '@/components/vela/icons'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
 
+/**
+ * What the size is qualified by: that the file is not there, or when the size
+ * was last observed. A recording that says neither is left with the size
+ * alone, rather than with an empty pair of brackets after it.
+ */
+function observationOf(recording: Recording): string | undefined {
+  return recording.fileMissing ? '実ファイルなし' : recording.sizeObservedAt
+}
+
+const SIGNED_OUT =
+  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+
 export function DeleteRecordingDialog({
   recording,
   onOpenChange,
+  onDelete,
 }: {
   recording: Recording | null
   onOpenChange: (open: boolean) => void
+  onDelete: (id: string) => Promise<RecordingDiscarded>
 }) {
+  const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
+
+  const remove = (): void => {
+    if (!recording) {
+      return
+    }
+
+    startTransition(async () => {
+      const result = await onDelete(recording.id)
+
+      if (result.state === 'ok') {
+        setRefusal(undefined)
+        onOpenChange(false)
+
+        return
+      }
+
+      // The reason is the API's own, and it is what says whether the files are
+      // still there, so it stays in front of the reader with the question open.
+      setRefusal(
+        result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
+      )
+    })
+  }
+
   return (
-    <AlertDialog open={recording !== null} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={recording !== null}
+      onOpenChange={(open) => {
+        if (!open) {
+          setRefusal(undefined)
+        }
+
+        onOpenChange(open)
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>この録画を削除します</AlertDialogTitle>
@@ -45,11 +97,7 @@ export function DeleteRecordingDialog({
                   {recording.sizeBytes == null
                     ? '—'
                     : formatBytes(recording.sizeBytes)}
-                  (
-                  {recording.fileMissing
-                    ? '実ファイルなし'
-                    : recording.sizeObservedAt}
-                  )
+                  {observationOf(recording) && ` (${observationOf(recording)})`}
                 </dd>
                 <dt className="text-ink-3">結果と品質</dt>
                 <dd>
@@ -67,12 +115,18 @@ export function DeleteRecordingDialog({
           <WarningIcon className="size-4 shrink-0" />
           録画ファイルも削除されます。元に戻せません。
         </p>
+        <span aria-live="polite">
+          {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+        </span>
         <AlertDialogFooter>
-          <AlertDialogCancel>キャンセル</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            disabled
-            title="削除はこれから実装されます"
+            disabled={pending}
+            onClick={(event) => {
+              event.preventDefault()
+              remove()
+            }}
           >
             <TrashIcon />
             削除する

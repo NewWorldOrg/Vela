@@ -8,6 +8,7 @@ import type {
 } from '@/repository/reservations'
 import {
   cancelReservation,
+  discardReservation,
   restoreReservation,
   reviseReservation,
   setReservationPriority,
@@ -49,6 +50,16 @@ export async function reviseReservationDetails(
   revision: ReservationRevision,
 ): Promise<ReservationWrite> {
   const result = await reviseReservation(id, revision)
+
+  revalidatePath(RESERVATIONS)
+
+  return result
+}
+
+export async function throwReservationAway(
+  id: string,
+): Promise<ReservationWrite> {
+  const result = await discardReservation(id)
 
   revalidatePath(RESERVATIONS)
 

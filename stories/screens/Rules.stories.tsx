@@ -20,6 +20,8 @@ interface Saved {
 
 const retired: string[] = []
 
+const weighed: { id: string | undefined; draft: RuleDraft }[] = []
+
 const PREVIEW: RulePreview = {
   takes: [
     {
@@ -56,9 +58,15 @@ const PREVIEW: RulePreview = {
   excluded: 2,
 }
 
+/**
+ * The two counts differ on purpose. Saving and deleting read the reservations
+ * on different terms, so a screen that showed one where the other belongs
+ * would be telling the reader a number that is not the one it names.
+ */
 const IMPACT: RuleImpact = {
   making: 2,
   withdrawing: 1,
+  sweeping: 5,
   changingHands: 3,
   excluded: 2,
 }
@@ -91,10 +99,11 @@ function recording(saved: Saved[], turned: [string, boolean][]): RuleActions {
       state: 'ok',
       data: PREVIEW,
     }),
-    onImpact: async (): Promise<RuleWrite<RuleImpact>> => ({
-      state: 'ok',
-      data: IMPACT,
-    }),
+    onImpact: async (draft, id): Promise<RuleWrite<RuleImpact>> => {
+      weighed.push({ id, draft })
+
+      return { state: 'ok', data: IMPACT }
+    },
   }
 }
 
@@ -239,6 +248,13 @@ export const ルールを編集: Story = {
     await expect(await screen.findByRole('alertdialog')).toHaveTextContent(
       'このルールを削除します',
     )
+
+    // The count deleting would leave, which is not the one saving would: the
+    // fixture answers 1 for a save and 5 for a delete, so a question wired to
+    // the save count reads 1 here and this fails.
+    await expect(
+      await within(screen.getByRole('alertdialog')).findByText(/引っ込む予約/),
+    ).toHaveTextContent('引っ込む予約 5 件')
     await expect(retired).toEqual([])
 
     await userEvent.click(
@@ -398,6 +414,7 @@ export const 影響を数えられないとき: Story = {
     const canvas = within(canvasElement)
 
     refusedSaved.length = 0
+    retired.length = 0
 
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
@@ -408,5 +425,66 @@ export const 影響を数えられないとき: Story = {
     ).toBeVisible()
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await expect(refusedSaved).toEqual([])
+
+    // Deleting stands behind the same count, so an uncounted delete is refused
+    // the same way rather than asked for over a question showing nothing.
+    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    await expect(retired).toEqual([])
+  },
+}
+
+const standingSaved: Saved[] = []
+
+/**
+ * The fields may have been written into since the rule was opened, and the
+ * question about deleting is not about what they hold: what a delete leaves is
+ * read from the rule the list holds.
+ */
+export const 削除の件数は保存済みのルールから数える: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[0] },
+    actions: recording(standingSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    standingSaved.length = 0
+    retired.length = 0
+    weighed.length = 0
+
+    await userEvent.clear(canvas.getByLabelText('ルール名'))
+    await userEvent.type(canvas.getByLabelText('ルール名'), '書きかけの名前')
+    await userEvent.type(canvas.getByLabelText('キーワード'), 'まだ保存前')
+
+    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+
+    await expect(
+      await within(await screen.findByRole('alertdialog')).findByText(
+        /引っ込む予約/,
+      ),
+    ).toHaveTextContent('引っ込む予約 5 件')
+
+    await waitFor(() => expect(weighed).toHaveLength(1))
+    await expect(weighed[0].id).toBe('rule-301')
+    await expect(weighed[0].draft.name).toBe('深夜アニメを追う')
+    await expect(weighed[0].draft.terms.q).toBe('新番組')
+
+    // The name in the question is the rule's, and the fields keep what was
+    // written into them: neither is quietly replaced by the other.
+    await expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      '深夜アニメを追う',
+    )
+    await expect(canvas.getByLabelText('ルール名')).toHaveValue(
+      '書きかけの名前',
+    )
+
+    await userEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+    await waitFor(() => expect(retired).toEqual(['rule-301']))
+    await expect(standingSaved).toEqual([])
   },
 }

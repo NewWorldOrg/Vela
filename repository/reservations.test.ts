@@ -26,6 +26,8 @@ const store: {
   programmeStatus: number
   writeStatus: number
   settlement: unknown
+  discardStatus: number
+  discarded: unknown
 } = {
   services: [],
   pages: [],
@@ -35,6 +37,8 @@ const store: {
   programmeStatus: 200,
   writeStatus: 200,
   settlement: undefined,
+  discardStatus: 200,
+  discarded: { reservationId: 'a1' },
 }
 
 interface Over {
@@ -194,6 +198,28 @@ mock.module('@/repository/client/carina', {
       },
       POST: write('POST'),
       PATCH: write('PATCH'),
+      /**
+       * The generated client hands the parsed body back as `data` for an
+       * answer it accepts and as `error` for one it does not — the same
+       * either-or the production code has to read, because a stand-in that
+       * always answered `data` would leave the refusal path untried.
+       */
+      DELETE: async (path: string, init?: Asking) => {
+        sent.push({
+          method: 'DELETE',
+          path,
+          query: {},
+          id: init?.params?.path?.id,
+        })
+
+        const ok = store.discardStatus < 400
+        const body = { status: ok, message: '', data: store.discarded }
+
+        return {
+          ...(ok ? { data: body } : { error: body }),
+          response: answered(store.discardStatus),
+        }
+      },
     }),
     revalidatingCarinaClient: () => {
       throw new Error('reservations do not revalidate')
@@ -204,6 +230,7 @@ mock.module('@/repository/client/carina', {
 const {
   cancelReservation,
   createReservation,
+  discardReservation,
   listBookings,
   listReservations,
   restoreReservation,
@@ -1029,4 +1056,182 @@ test('the rule behind a rival is named in the conflict it explains', async () =>
 
   assert.equal(conflict?.entries.length, 1)
   assert.equal(conflict?.entries[0].ruleName, '深夜アニメを追う')
+})
+
+/**
+ * Throwing the record of a reservation away, and what the row says about
+ * whether it may be. The refusals all arrive on one status, so a screen that
+ * read the status alone would say the same thing to somebody who has to cancel
+ * first and to somebody who has to throw a recording away first.
+ */
+
+function discarding(status: number, data: unknown): void {
+  store.discardStatus = status
+  store.discarded = data
+}
+
+test('deleting names the reservation it was pressed on', async () => {
+  standing()
+  discarding(200, { reservationId: 'a1' })
+
+  const result = await discardReservation('a1')
+  const asked = sent.find((one) => one.method === 'DELETE')
+
+  assert.deepEqual(result, { state: 'ok' })
+  assert.equal(asked?.path, '/api/reservations/{id}')
+  assert.equal(asked?.id, 'a1')
+})
+
+const DISCARD_REFUSALS = [
+  'noSuchReservation',
+  'stillToBeRecorded',
+  'turningIntoARecording',
+  'recordingCameOfIt',
+] as const
+
+test('each reason a deletion is refused for is said apart from the others', async () => {
+  standing()
+
+  const said = new Set<string>()
+
+  for (const refusal of DISCARD_REFUSALS) {
+    discarding(refusal === 'noSuchReservation' ? 404 : 409, {
+      reservationId: 'a1',
+      refusal,
+    })
+
+    const result = await discardReservation('a1')
+
+    assert.equal(result.state, 'rejected', refusal)
+
+    const message = result.state === 'rejected' ? result.message : ''
+
+    assert.doesNotMatch(message, /\(409\)/, refusal)
+    said.add(message)
+  }
+
+  assert.equal(said.size, DISCARD_REFUSALS.length)
+})
+
+test('the reason is read from the answer, not from the status it shares', async () => {
+  standing()
+  discarding(409, { reservationId: 'a1', refusal: 'stillToBeRecorded' })
+
+  const standingStill = await discardReservation('a1')
+
+  discarding(409, { reservationId: 'a1', refusal: 'recordingCameOfIt' })
+
+  const recorded = await discardReservation('a1')
+
+  assert.match(
+    standingStill.state === 'rejected' ? standingStill.message : '',
+    /先に取り消してください/,
+  )
+  assert.match(
+    recorded.state === 'rejected' ? recorded.message : '',
+    /先にその録画を削除してください/,
+  )
+})
+
+test('a refusal with no reason of its own falls back to the status', async () => {
+  standing()
+  discarding(409, null)
+
+  const result = await discardReservation('a1')
+
+  assert.equal(result.state, 'rejected')
+  assert.match(result.state === 'rejected' ? result.message : '', /\(409\)/)
+})
+
+test('a session that has run out is not a refusal of the deletion', async () => {
+  standing()
+  discarding(401, null)
+
+  assert.deepEqual(await discardReservation('a1'), {
+    state: 'unauthenticated',
+  })
+})
+
+/** Every window the fixtures are written for has ended by this moment. */
+const AFTER_THEM_ALL = new Date('2026-08-09T00:00:00Z')
+
+test('a cancelled reservation may be thrown away, and one still to come may not', async () => {
+  standing([
+    reservation({ id: 'a1', state: 'cancelled', standing: 'cancelled' }),
+    reservation({ id: 'a2' }),
+  ])
+
+  const rows = await listReservations({ cancelled: 'all' }, BEFORE_THEM_ALL)
+
+  assert.deepEqual(
+    rows.items.map((one) => [one.id, one.discardable]),
+    [
+      ['a1', true],
+      ['a2', false],
+    ],
+  )
+})
+
+test('a reservation a recording came of may not be thrown away', async () => {
+  standing([reservation({ id: 'a1', standing: 'complete' })])
+  store.recordings = [madeFor('rec-1', 'a1')]
+
+  const rows = await listed(AFTER_THEM_ALL)
+
+  assert.equal(rows[0].recordingId, 'rec-1')
+  assert.equal(rows[0].discardable, false)
+})
+
+test('a settled reservation whose recording is gone may be thrown away', async () => {
+  standing([reservation({ id: 'a1', standing: 'complete' })])
+  store.recordings = []
+
+  const rows = await listed(AFTER_THEM_ALL)
+
+  assert.equal(rows[0].recordingId, undefined)
+  assert.equal(rows[0].discardable, true)
+})
+
+test('a reservation being recorded may not be thrown away', async () => {
+  standing([reservation({ id: 'a1', standing: 'recording' })])
+
+  assert.equal((await listed(AFTER_THEM_ALL))[0].discardable, false)
+})
+
+/**
+ * The moment a reservation still holding a seat becomes one that may be thrown
+ * away is the end of the margin it would have run on, not the end of the
+ * broadcast: the three moments are read separately so a reading taken off the
+ * wrong end passes none of them.
+ */
+const MARGINED = window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z', {
+  marginAfterSeconds: 300,
+  effectiveEndAt: '2026-08-08T13:45:00Z',
+})
+
+test('a conflict is thrown away only once the margin it would have run on is past', async () => {
+  const at: [string, boolean][] = [
+    ['2026-08-08T13:39:59Z', false],
+    ['2026-08-08T13:40:00Z', false],
+    ['2026-08-08T13:44:59Z', false],
+    ['2026-08-08T13:45:00Z', true],
+    ['2026-08-08T13:45:01Z', true],
+  ]
+
+  for (const [moment, expected] of at) {
+    standing([
+      reservation({
+        id: 'a1',
+        state: 'conflict',
+        standing: 'conflict',
+        window: MARGINED,
+      }),
+    ])
+
+    assert.equal(
+      (await listed(new Date(moment)))[0].discardable,
+      expected,
+      moment,
+    )
+  }
 })

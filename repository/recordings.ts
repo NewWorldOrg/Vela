@@ -298,6 +298,89 @@ export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
   }
 }
 
+type RecordingRefusal = components['schemas']['RecordingFailure']
+
+type RecordingDiscardRefused =
+  components['schemas']['RecordingDiscardRefusedResponder']
+
+/**
+ * What throwing a recording away came to. `filesRemoved` counts the files that
+ * went with it, which is nothing when the ledger row outlived files that were
+ * already gone.
+ */
+export type RecordingDiscarded =
+  | { state: 'ok'; filesRemoved: number }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
+
+/**
+ * Each way the API refuses, said in the words of that refusal. The reasons
+ * separate what is still being written from what the store cannot be reached
+ * for and from a removal that stopped part-way, and those three ask different
+ * things of the reader, so none of them is folded into the others.
+ */
+const DISCARD_REFUSAL: Record<RecordingRefusal, string> = {
+  noSuchRecording: 'この録画は残っていないため、削除できませんでした。',
+  stillRecording:
+    'この録画はまだ書き込み中です。録画を止めてから削除してください。',
+  oneIsAlreadyBeingDiscarded:
+    '別の録画の削除が進行中です。削除は同時に 1 件までのため、終わってからもう一度お試しください。',
+  rootOutOfReach:
+    '録画ファイルの保存先に到達できないため、削除を実行していません。録画ファイルは残っています。',
+  fileOutOfReach:
+    '録画ファイルに到達できないため、削除を実行していません。録画ファイルは残っています。',
+  driverUnreachable:
+    '保存先の一覧を確認できないため、削除を実行していません。録画ファイルは残っています。',
+  driverRefused:
+    '保存先の一覧の確認を断られたため、削除を実行していません。録画ファイルは残っています。',
+  filesLeftBehind:
+    '一部の録画ファイルを削除できませんでした。録画の記録が残っているのは削除が終わっていないためで、もう一度削除すると残りから続きます。',
+  alreadyEnded: 'この録画はすでに終わっているため、削除できませんでした。',
+  notBeingWritten:
+    'この録画は書き込み中ではないため、削除できませんでした。最新の状態を読み直してください。',
+  nowhereToPutPictures:
+    'サムネイルの保存先に到達できないため、削除を実行していません。録画ファイルは残っています。',
+}
+
+const CANNOT_DISCARD = '録画を削除できませんでした'
+
+/**
+ * Throws the recording away: the files first and the ledger row last, which is
+ * the API's own order and is why a refusal part-way leaves the row standing.
+ */
+export async function discardRecording(
+  id: string,
+): Promise<RecordingDiscarded> {
+  const { data, error, response } = await carinaClient().DELETE(
+    '/api/recordings/{id}',
+    { params: { path: { id } } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok && data?.data) {
+    return {
+      state: 'ok',
+      filesRemoved: toInt(
+        (data.data as { filesRemoved: Counted }).filesRemoved,
+      ),
+    }
+  }
+
+  // A refusal arrives as `error`, not as `data`: the generated client hands
+  // back the parsed body under whichever of the two the status calls for.
+  const refused = error?.data as RecordingDiscardRefused | null | undefined
+
+  return {
+    state: 'rejected',
+    message: refused
+      ? DISCARD_REFUSAL[refused.refusal]
+      : `${CANNOT_DISCARD}(${response.status})。`,
+  }
+}
+
 /**
  * The store answers a page at a time and caps the page at 200, while the
  * screen lists everything it is given and says so. Walking to the last page

@@ -1822,6 +1822,8 @@ export interface components {
       /** Format: int32 */
       withdrawing: number | string
       /** Format: int32 */
+      sweeping: number | string
+      /** Format: int32 */
       changingHands: number | string
       /** Format: int32 */
       excludedAsShadows: number | string
@@ -3296,6 +3298,15 @@ export interface operations {
       }
       /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
       500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRuleApplicationResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
         headers: {
           [name: string]: unknown
         }

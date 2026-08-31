@@ -5,6 +5,7 @@ import {
   formatClockSpan,
   formatReservationOrigin,
 } from '@/lib/format'
+import { isDiscardable } from '@/lib/reservations'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -63,6 +64,13 @@ export interface Reservation {
   conflict?: ReservationConflict
   /** The recording this reservation came to, where it came to one. */
   recordingId?: string
+  /**
+   * Whether the record of the reservation may be thrown away. Read from the
+   * same conditions the API reads, so the screen offers what the API accepts;
+   * the API is still the one that answers, and refuses what has moved on since
+   * the list was drawn.
+   */
+  discardable: boolean
 }
 
 /**
@@ -79,6 +87,29 @@ export type ReservationWrite =
   | { state: 'ok'; verdict?: AllocationVerdict }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
+
+type ReservationRefusal = components['schemas']['ReservationFailure']
+
+type ReservationDiscardRefused =
+  components['schemas']['ReservationDiscardRefusedResponder']
+
+/**
+ * The four answers a deletion can be refused with. They all arrive on the same
+ * status, so the reason is read off the body: which one it is says whether to
+ * cancel first, to wait, or to throw the recording away first, and a single
+ * sentence covering all three would say none of them.
+ */
+const DISCARD_REFUSAL: Partial<Record<ReservationRefusal, string>> = {
+  noSuchReservation: 'この予約は残っていないため、削除できませんでした。',
+  stillToBeRecorded:
+    'この予約はこれから録画される見込みがあるため、削除できませんでした。先に取り消してください。',
+  turningIntoARecording:
+    'この予約は録画に切り替わる途中のため、削除できませんでした。録画の記録が現れてから、その録画を先に削除してください。',
+  recordingCameOfIt:
+    'この予約からは録画ができています。残るのは録画のため、先にその録画を削除してください。',
+}
+
+const CANNOT_DISCARD = '予約を削除できませんでした'
 
 /**
  * What the list is narrowed by. A cancelled reservation is what the screen has
@@ -131,7 +162,7 @@ export async function listReservations(
 
   return {
     items: kept.map((one) =>
-      toReservation(one, carried.items, known, recordings, rules),
+      toReservation(one, carried.items, known, recordings, rules, now),
     ),
     total: carried.total,
     filter,
@@ -285,6 +316,38 @@ export async function reviseReservation(
   )
 }
 
+/**
+ * Throws the record of the reservation away. Cancelling keeps the record and
+ * is what a reservation still to be recorded is given; this is what removes
+ * one that has nothing left to explain.
+ */
+export async function discardReservation(
+  id: string,
+): Promise<ReservationWrite> {
+  const { error, response } = await carinaClient().DELETE(
+    '/api/reservations/{id}',
+    { params: { path: { id } } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok) {
+    return { state: 'ok' }
+  }
+
+  // A refusal arrives as `error`, not as `data`: the generated client hands
+  // back the parsed body under whichever of the two the status calls for.
+  const refused = error?.data as ReservationDiscardRefused | null | undefined
+  const refusal = refused ? DISCARD_REFUSAL[refused.refusal] : undefined
+
+  return {
+    state: 'rejected',
+    message: refusal ?? `${CANNOT_DISCARD}(${response.status})。`,
+  }
+}
+
 function toWrite(
   response: Response,
   verdict: AllocationVerdict | undefined,
@@ -348,9 +411,11 @@ export function toReservation(
   known: GuideChannel[],
   recordings: Map<string, string>,
   rules: ReadonlyMap<string, string>,
+  now: Date,
 ): Reservation {
   const channel = channelOf(r, known)
   const endAtConfirmed = r.window.endAtConfirmed
+  const recordingId = recordings.get(r.id)
 
   return {
     id: r.id,
@@ -370,7 +435,13 @@ export function toReservation(
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
     stateNote: endAtConfirmed ? undefined : FOLLOWS_THE_END,
     conflict: conflictOf(r, all, known, rules),
-    recordingId: recordings.get(r.id),
+    recordingId,
+    discardable: isDiscardable({
+      standing: r.standing,
+      recorded: recordingId !== undefined,
+      windowClosed:
+        new Date(r.window.effectiveEndAt).getTime() <= now.getTime(),
+    }),
   }
 }
 

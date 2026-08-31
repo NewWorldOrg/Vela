@@ -143,6 +143,7 @@ export const DeleteRecording: Story = {
           <DeleteRecordingDialog
             recording={target}
             onOpenChange={(open) => !open && setTarget(null)}
+            onDelete={async () => ({ state: 'ok', filesRemoved: 1 })}
           />
           <p className="mt-[11px] text-cap text-ink-3">
             取り返しのつかない操作は、消える対象を全て見せてから確認する。番組名だけでなくファイルのパスとサイズまで出す。

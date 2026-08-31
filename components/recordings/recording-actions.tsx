@@ -1,9 +1,35 @@
-import type { Recording } from '@/repository/recordings'
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { PlayIcon, TrashIcon } from '@/components/vela/icons'
+import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 
-export function RecordingActions({ recording }: { recording: Recording }) {
+export function RecordingActions({
+  recording,
+  onDelete,
+}: {
+  recording: Recording
+  onDelete: (id: string) => Promise<RecordingDiscarded>
+}) {
   const deletable = recording.outcome !== 'recording'
+  const router = useRouter()
+  const [asked, setAsked] = useState<Recording | null>(null)
+
+  // The screen stands on the recording that has just gone, so what is left to
+  // read is the list it was in.
+  const remove = async (id: string): Promise<RecordingDiscarded> => {
+    const result = await onDelete(id)
+
+    if (result.state === 'ok') {
+      router.push('/library')
+    }
+
+    return result
+  }
 
   return (
     <>
@@ -22,10 +48,9 @@ export function RecordingActions({ recording }: { recording: Recording }) {
         <Button
           variant="destructive"
           className="ml-auto"
-          disabled
-          title={
-            deletable ? '削除はこれから実装されます' : '録画中は削除できません'
-          }
+          disabled={!deletable}
+          title={deletable ? undefined : '録画中は削除できません'}
+          onClick={() => setAsked(recording)}
         >
           <TrashIcon />
           削除
@@ -36,6 +61,11 @@ export function RecordingActions({ recording }: { recording: Recording }) {
         TS
         は削除されません。削除は録画ごと、ライブラリからの明示操作でのみ行われます。
       </p>
+      <DeleteRecordingDialog
+        recording={asked}
+        onOpenChange={(open) => !open && setAsked(null)}
+        onDelete={remove}
+      />
     </>
   )
 }

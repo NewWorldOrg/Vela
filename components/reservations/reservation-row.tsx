@@ -10,6 +10,16 @@ import type {
   ReservationRevision,
   ReservationWrite,
 } from '@/repository/reservations'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { InlineAlert } from '@/components/vela/banner'
@@ -17,6 +27,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ListIcon,
+  TrashIcon,
   WarningIcon,
 } from '@/components/vela/icons'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
@@ -30,6 +41,7 @@ export interface ReservationActions {
     id: string,
     revision: ReservationRevision,
   ) => Promise<ReservationWrite>
+  onDiscard: (id: string) => Promise<ReservationWrite>
 }
 
 const SIGNED_OUT =
@@ -52,6 +64,7 @@ export function ReservationRow({
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
   const [editing, setEditing] = useState(false)
+  const [removing, setRemoving] = useState(false)
 
   const run = (write: () => Promise<ReservationWrite>) => {
     startTransition(async () => {
@@ -185,9 +198,62 @@ export function ReservationRow({
                 )}
               </>
             )}
+            {reservation.discardable && (
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={pending}
+                onClick={() => setRemoving(true)}
+              >
+                <TrashIcon />
+                削除
+              </Button>
+            )}
           </span>
         </TableCell>
       </TableRow>
+      <AlertDialog open={removing} onOpenChange={setRemoving}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>この予約を削除します</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-ui">
+                <dt className="text-ink-3">番組</dt>
+                <dd className="font-bold text-ink">{reservation.title}</dd>
+                <dt className="text-ink-3">チャンネル</dt>
+                <dd className="text-ink-2">{reservation.channelName}</dd>
+                <dt className="text-ink-3">放送日時</dt>
+                <dd className="font-code text-ink-2">
+                  {reservation.whenLabel}
+                </dd>
+              </dl>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <p className="flex items-start gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
+            <WarningIcon className="mt-0.5 size-4 shrink-0" />
+            <span>
+              予約の記録が消えます。元に戻せません。
+              {reservation.standing === 'cancelled' &&
+                '取り消した記録も無くなるため、この番組はふたたびルールの対象になります。'}
+            </span>
+          </p>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={pending}
+              onClick={(event) => {
+                event.preventDefault()
+                setRemoving(false)
+                run(() => actions.onDiscard(reservation.id))
+              }}
+            >
+              <TrashIcon />
+              削除する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {conflict && expanded && reservation.conflict && (
         <TableRow className="hover:bg-transparent">
           <TableCell colSpan={7} className="border-b-0 px-3.5 pb-3">

@@ -402,6 +402,18 @@ function termsOfEntry(entry: Entry): SearchTerms {
   }
 }
 
+/** The rule as it stands, spelled as a draft so it can be weighed again. */
+function draftOf(rule: Rule): RuleDraft {
+  return {
+    name: rule.name,
+    terms: rule.terms,
+    priority: rule.priority,
+    enabled: rule.enabled,
+    marginBeforeSeconds: rule.marginBeforeSeconds,
+    marginAfterSeconds: rule.marginAfterSeconds,
+  }
+}
+
 function RuleEditor({
   rule,
   terms,
@@ -422,6 +434,7 @@ function RuleEditor({
   const [refusal, setRefusal] = useState<string>()
   const [preview, setPreview] = useState<RulePreview>()
   const [impact, setImpact] = useState<RuleImpact>()
+  const [leaving, setLeaving] = useState<RuleImpact>()
   const [confirming, setConfirming] = useState(false)
   const [retiring, setRetiring] = useState(false)
   const [pending, startTransition] = useTransition()
@@ -600,6 +613,37 @@ function RuleEditor({
       }
 
       setConfirming(false)
+      setRefusal(
+        result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
+      )
+    })
+  }
+
+  /**
+   * What deleting would leave, counted from the rule as it stands rather than
+   * from the fields, which may have been written into since it was opened.
+   * The count reaches the question before the question can be answered, so
+   * pressing through it cannot report a number nobody has.
+   */
+  const retire = (): void => {
+    if (!rule) {
+      return
+    }
+
+    setLeaving(undefined)
+    setRetiring(true)
+
+    startTransition(async () => {
+      const result = await actions.onImpact(draftOf(rule), rule.id)
+
+      if (result.state === 'ok') {
+        setRefusal(undefined)
+        setLeaving(result.data)
+
+        return
+      }
+
+      setRetiring(false)
       setRefusal(
         result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
       )
@@ -1035,7 +1079,7 @@ function RuleEditor({
             variant="destructive"
             size="sm"
             disabled={pending}
-            onClick={() => setRetiring(true)}
+            onClick={retire}
           >
             <TrashIcon />
             削除
@@ -1064,9 +1108,21 @@ function RuleEditor({
               <AlertDialogTitle>このルールを削除します</AlertDialogTitle>
               <AlertDialogDescription>
                 {rule.name}{' '}
-                から作られた予約のうち、録画がまだ始まっていないものは取り下げられます。録画が始まったものと、取り消したものは残ります。
+                から作られた予約のうち、録画がまだ始まっておらず、取り消してもいないものが引っ込みます。録画が始まったものと、取り消したものは残ります。
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="flex flex-col gap-1.5 text-ui text-ink-2">
+              {leaving ? (
+                <span>
+                  引っ込む予約 <Count value={leaving.sweeping} /> 件
+                </span>
+              ) : (
+                <span className="text-ink-3">件数を数えています。</span>
+              )}
+              <span className="text-note leading-relaxed text-ink-3">
+                削除では、番組表の収集が完了していない放送の予約と、開始が猶予以内に迫っている予約も引っ込みます。保存して再適用したときに引っ込む件数とは異なることがあります。
+              </span>
+            </div>
             <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
               <WarningIcon className="size-4 shrink-0" />
               削除したルールは元に戻せません。
@@ -1075,7 +1131,7 @@ function RuleEditor({
               <AlertDialogCancel>キャンセル</AlertDialogCancel>
               <AlertDialogAction
                 variant="destructive"
-                disabled={pending}
+                disabled={pending || !leaving}
                 onClick={(event) => {
                   event.preventDefault()
                   remove()
