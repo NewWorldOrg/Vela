@@ -119,6 +119,25 @@ function body(value: unknown, init?: ResponseInit): Response {
   })
 }
 
+/**
+ * What the gate in front of every endpoint answers a session the API no longer
+ * knows: a bare 401, no content type and nothing to read. Measured against the
+ * running API rather than imagined, because the whole of the difference below
+ * is that one 401 carries something and the other does not.
+ */
+function turnedAway(): Response {
+  return new Response(null, { status: 401 })
+}
+
+/**
+ * What an endpoint that ran and refused what the request asked for answers.
+ * The envelope is the API's own, and the message is the only place the reason
+ * is written down.
+ */
+function refusing(message: string): Response {
+  return body({ status: false, message, data: null }, { status: 401 })
+}
+
 beforeEach(() => {
   sent = []
   asked.cookies = { [SESSION_COOKIE]: 'the-session-that-asked' }
@@ -220,12 +239,52 @@ test('a request from no session carries none', async () => {
 test('a session the API refuses is sent to sign in again, holding the page', async () => {
   asked.page = '/guide?date=2026-08-08'
 
-  apiAnswering(body({ error: 'no session' }, { status: 401 }))
+  apiAnswering(turnedAway())
 
   await assert.rejects(
     () => carinaClient().GET('/api/health'),
     (error: Error & { where?: string }) =>
       error.where === loginHref('/guide?date=2026-08-08'),
+  )
+})
+
+/**
+ * The other 401. An endpoint reached its own handler and refused what was
+ * asked, which is the caller's to read and answer for: the session in hand is
+ * fine, and the sentence the API wrote is the only account of what was wrong.
+ * Sending it to sign in instead loses that sentence and leaves the screen
+ * looking as though the change went through.
+ */
+test('a 401 that names a reason is handed back with the reason, not signed out', async () => {
+  asked.page = '/settings/authentication'
+
+  apiAnswering(refusing('The current password is wrong.'))
+
+  const { data, error, response } = await carinaClient().POST(
+    '/api/auth/password',
+    { body: { currentPassword: 'not it', newPassword: 'a long enough one' } },
+  )
+
+  assert.equal(response.status, 401)
+  assert.equal(data, undefined)
+  assert.equal(error?.message, 'The current password is wrong.')
+})
+
+/**
+ * What separates the two is a reason there is something to do with. An
+ * envelope with nothing written in it leaves the screen with a refusal it
+ * cannot explain, and a sign-in is the better guess at what a 401 saying
+ * nothing means — so the empty message is read as the gate, not the endpoint.
+ */
+test('a 401 whose envelope names no reason is a sign-in like any other', async () => {
+  asked.page = '/settings/authentication'
+
+  apiAnswering(refusing(''))
+
+  await assert.rejects(
+    () => carinaClient().GET('/api/health'),
+    (error: Error & { where?: string }) =>
+      error.where === loginHref('/settings/authentication'),
   )
 })
 
