@@ -7,6 +7,7 @@ import {
   dropReservation,
   raiseReservationPriority,
   reviseReservationDetails,
+  throwReservationAway,
 } from '@/app/(app)/reservations/actions'
 
 export const metadata: Metadata = { title: '予約' }
@@ -29,6 +30,7 @@ export default async function Page({
         onRestore: bringBackReservation,
         onRaise: raiseReservationPriority,
         onRevise: reviseReservationDetails,
+        onDiscard: throwReservationAway,
       }}
     />
   )
