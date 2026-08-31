@@ -1288,6 +1288,16 @@
               }
             }
           },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRuleApplicationResponder"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
           },
@@ -8582,6 +8592,7 @@
         "required": [
           "making",
           "withdrawing",
+          "sweeping",
           "changingHands",
           "excludedAsShadows"
         ],
@@ -8596,6 +8607,14 @@
             "format": "int32"
           },
           "withdrawing": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sweeping": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",

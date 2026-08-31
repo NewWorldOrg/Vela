@@ -86,10 +86,17 @@ export interface RulePreview {
   excluded: number
 }
 
-/** What saving the draft would change about the reservations that already stand. */
+/**
+ * What the reservations that already stand would come to. `withdrawing` counts
+ * the ones a save and the re-application behind it would leave, and `sweeping`
+ * the ones deleting the rule would leave: deleting asks neither that the guide
+ * be collected for the broadcast nor that the start be far enough off, so the
+ * two counts are read by different occasions and are not interchangeable.
+ */
 export interface RuleImpact {
   making: number
   withdrawing: number
+  sweeping: number
   changingHands: number
   excluded: number
 }
@@ -527,6 +534,7 @@ function toImpact(impact: RuleImpactResponder): RuleImpact {
   return {
     making: toInt(impact.making),
     withdrawing: toInt(impact.withdrawing),
+    sweeping: toInt(impact.sweeping),
     changingHands: toInt(impact.changingHands),
     excluded: toInt(impact.excludedAsShadows),
   }

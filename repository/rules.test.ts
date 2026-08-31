@@ -464,6 +464,7 @@ test('what saving would change is counted from the same draft', async () => {
   store.answer = {
     making: 2,
     withdrawing: 1,
+    sweeping: 5,
     changingHands: 3,
     excludedAsShadows: 4,
   }
@@ -473,8 +474,51 @@ test('what saving would change is counted from the same draft', async () => {
   assert.equal(asked('/api/rules/impact').method, 'POST')
   assert.deepEqual(result, {
     state: 'ok',
-    data: { making: 2, withdrawing: 1, changingHands: 3, excluded: 4 },
+    data: {
+      making: 2,
+      withdrawing: 1,
+      sweeping: 5,
+      changingHands: 3,
+      excluded: 4,
+    },
   })
+})
+
+/**
+ * Saving and deleting are counted on different terms and answered as two
+ * numbers. Reading one where the other belongs is what said nothing would be
+ * left while several were, so each is pinned to the field it comes from.
+ */
+test('what deleting would leave is counted apart from what saving would', async () => {
+  standing()
+  store.answer = {
+    making: 0,
+    withdrawing: 0,
+    sweeping: 3,
+    changingHands: 0,
+    excludedAsShadows: 0,
+  }
+
+  const result = await impactOfRule(draft(), 'r-1')
+  const impact = result.state === 'ok' ? result.data : undefined
+
+  assert.equal(impact?.withdrawing, 0)
+  assert.equal(impact?.sweeping, 3)
+})
+
+test('a count the API spells as a string still reads as a number', async () => {
+  standing()
+  store.answer = {
+    making: '0',
+    withdrawing: '1',
+    sweeping: '7',
+    changingHands: '0',
+    excludedAsShadows: '0',
+  }
+
+  const result = await impactOfRule(draft(), 'r-1')
+
+  assert.equal(result.state === 'ok' ? result.data.sweeping : undefined, 7)
 })
 
 test('an application answers with what the pass read and settled', async () => {
