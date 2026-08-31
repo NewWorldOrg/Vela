@@ -23,6 +23,8 @@ const store: {
   detailStatus: number
   remake: unknown
   remakeStatus: number
+  discarded: unknown
+  discardStatus: number
 } = {
   services: [],
   pages: [],
@@ -30,6 +32,8 @@ const store: {
   detailStatus: 200,
   remake: { remake: 'drawn', thumbnail: { state: 'ready' } },
   remakeStatus: 200,
+  discarded: { recordingId: '7e7a14cf', filesRemoved: 2 },
+  discardStatus: 200,
 }
 
 const service = (
@@ -169,6 +173,26 @@ mock.module('@/repository/client/carina', {
           },
         }
       },
+      /**
+       * The generated client hands the parsed body back as `data` for an
+       * answer it accepts and as `error` for one it does not — the same
+       * either-or the production code has to read, because a stand-in that
+       * always answered `data` would leave the refusal path untried.
+       */
+      DELETE: async (
+        path: string,
+        init?: { params?: { path?: { id: string } } },
+      ) => {
+        asked.push({ path, query: { id: init?.params?.path?.id ?? '' } })
+
+        const ok = store.discardStatus < 400
+        const body = { status: ok, message: '', data: store.discarded }
+
+        return {
+          ...(ok ? { data: body } : { error: body }),
+          response: { status: store.discardStatus, ok },
+        }
+      },
     }),
     revalidatingCarinaClient: () => {
       throw new Error('the library does not revalidate')
@@ -177,6 +201,7 @@ mock.module('@/repository/client/carina', {
 })
 
 const {
+  discardRecording,
   getRecording,
   listRecordings,
   listRecordingsByReservation,
@@ -725,4 +750,126 @@ test('a status the endpoint does not name falls back to saying which it was', as
 
   assert.equal(result.state, 'rejected')
   assert.match(result.state === 'rejected' ? result.message : '', /\(500\)/)
+})
+
+/**
+ * Throwing a recording away. Each way the API refuses says something different
+ * about what is left on disk, so the refusals are read apart rather than
+ * folded into one sentence.
+ */
+
+function discarding(status: number, data: unknown): void {
+  store.discardStatus = status
+  store.discarded = data
+}
+
+test('throwing a recording away names the recording, and counts the files', async () => {
+  discarding(200, { recordingId: '7e7a14cf', filesRemoved: 2 })
+
+  const result = await discardRecording('7e7a14cf')
+
+  assert.deepEqual(result, { state: 'ok', filesRemoved: 2 })
+  assert.deepEqual(asked.at(-1), {
+    path: '/api/recordings/{id}',
+    query: { id: '7e7a14cf' },
+  })
+})
+
+test('a count the API spells as a string still reads as a number', async () => {
+  discarding(200, { recordingId: 're-1', filesRemoved: '3' })
+
+  assert.deepEqual(await discardRecording('re-1'), {
+    state: 'ok',
+    filesRemoved: 3,
+  })
+})
+
+test('nothing left to remove is an answer, not a refusal', async () => {
+  discarding(200, { recordingId: 're-1', filesRemoved: 0 })
+
+  assert.deepEqual(await discardRecording('re-1'), {
+    state: 'ok',
+    filesRemoved: 0,
+  })
+})
+
+const REFUSALS = [
+  ['noSuchRecording', 404],
+  ['stillRecording', 409],
+  ['oneIsAlreadyBeingDiscarded', 409],
+  ['rootOutOfReach', 409],
+  ['fileOutOfReach', 503],
+  ['driverUnreachable', 503],
+  ['driverRefused', 502],
+  ['filesLeftBehind', 503],
+  ['alreadyEnded', 409],
+  ['notBeingWritten', 409],
+  ['nowhereToPutPictures', 503],
+] as const
+
+test('every refusal the endpoint can give is said in words of its own', async () => {
+  const said = new Set<string>()
+
+  for (const [refusal, status] of REFUSALS) {
+    discarding(status, { recordingId: 're-1', refusal })
+
+    const result = await discardRecording('re-1')
+
+    assert.equal(result.state, 'rejected', refusal)
+
+    const message = result.state === 'rejected' ? result.message : ''
+
+    assert.notEqual(message, '', refusal)
+    assert.doesNotMatch(message, /undefined/, refusal)
+    said.add(message)
+  }
+
+  assert.equal(said.size, REFUSALS.length)
+})
+
+test('two refusals that share a status are still told apart', async () => {
+  discarding(409, { recordingId: 're-1', refusal: 'stillRecording' })
+
+  const writing = await discardRecording('re-1')
+
+  discarding(409, {
+    recordingId: 're-1',
+    refusal: 'oneIsAlreadyBeingDiscarded',
+  })
+
+  const busy = await discardRecording('re-1')
+
+  assert.match(
+    writing.state === 'rejected' ? writing.message : '',
+    /書き込み中/,
+  )
+  assert.match(busy.state === 'rejected' ? busy.message : '', /同時に 1 件/)
+})
+
+test('a refusal that says the files are still there says so, not that it failed', async () => {
+  discarding(409, { recordingId: 're-1', refusal: 'rootOutOfReach' })
+
+  const result = await discardRecording('re-1')
+
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /録画ファイルは残っています/,
+  )
+})
+
+test('a refusal carrying no reason falls back to saying which status it was', async () => {
+  discarding(400, null)
+
+  const result = await discardRecording('re-1')
+
+  assert.equal(result.state, 'rejected')
+  assert.match(result.state === 'rejected' ? result.message : '', /\(400\)/)
+})
+
+test('a session that has run out is not a refusal of the deletion', async () => {
+  discarding(401, null)
+
+  assert.deepEqual(await discardRecording('re-1'), {
+    state: 'unauthenticated',
+  })
 })

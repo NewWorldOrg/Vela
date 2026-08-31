@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import type { Recording } from '@/repository/recordings'
+import type { Recording, RecordingDiscarded } from '@/repository/recordings'
+import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import { RecordingRow } from '@/components/library/recording-row'
 
 const HEADERS: { label: string; hidden?: boolean }[] = [
@@ -18,8 +20,17 @@ const HEADERS: { label: string; hidden?: boolean }[] = [
   { label: '録画詳細へ', hidden: true },
 ]
 
-export function RecordingsTable({ items }: { items: Recording[] }) {
+export function RecordingsTable({
+  items,
+  onDelete,
+}: {
+  items: Recording[]
+  onDelete: (id: string) => Promise<RecordingDiscarded>
+}) {
   const router = useRouter()
+  // One question for the whole table, holding the row it was opened on: a
+  // dialog per row would mount as many as the list is long.
+  const [asked, setAsked] = useState<Recording | null>(null)
 
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-1">
@@ -58,10 +69,16 @@ export function RecordingsTable({ items }: { items: Recording[] }) {
               key={r.id}
               recording={r}
               onOpen={() => router.push(`/recordings/${r.id}`)}
+              onDelete={() => setAsked(r)}
             />
           ))}
         </tbody>
       </table>
+      <DeleteRecordingDialog
+        recording={asked}
+        onOpenChange={(open) => !open && setAsked(null)}
+        onDelete={onDelete}
+      />
     </div>
   )
 }

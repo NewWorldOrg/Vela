@@ -29,9 +29,11 @@ const CELL =
 export function RecordingRow({
   recording: r,
   onOpen,
+  onDelete,
 }: {
   recording: Recording
   onOpen: () => void
+  onDelete: () => void
 }) {
   const playable =
     r.outcome !== 'failed' && r.outcome !== 'recording' && !r.fileMissing
@@ -140,12 +142,9 @@ export function RecordingRow({
             variant="outline"
             size="icon-sm"
             aria-label="削除"
-            title={
-              deletable
-                ? '削除はこれから実装されます'
-                : '録画中は削除できません'
-            }
-            disabled
+            title={deletable ? '削除' : '録画中は削除できません'}
+            disabled={!deletable}
+            onClick={onDelete}
           >
             <TrashIcon />
           </Button>

@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
 import type {
+  RecordingDiscarded,
   RecordingsFilter,
   RecordingsResult,
 } from '@/repository/recordings'
@@ -21,9 +22,11 @@ import { RecordingsTable } from '@/components/library/recordings-table'
 export function LibraryView({
   result,
   filter,
+  onDelete,
 }: {
   result: RecordingsResult
   filter: RecordingsFilter
+  onDelete: (id: string) => Promise<RecordingDiscarded>
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -149,7 +152,7 @@ export function LibraryView({
 
       {items.length > 0 ? (
         <>
-          <RecordingsTable items={items} />
+          <RecordingsTable items={items} onDelete={onDelete} />
           {!hasFilter && (
             <div className="mt-3.5 flex flex-wrap items-center gap-2.5 text-note text-ink-3">
               <ListIcon className="size-3.5 shrink-0" />

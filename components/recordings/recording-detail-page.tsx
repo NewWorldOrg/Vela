@@ -5,7 +5,11 @@ import type { Route } from 'next'
 import { cn } from '@/lib/utils'
 import { isPlayableSource } from '@/lib/recordings'
 import { reservationHref } from '@/lib/reservations'
-import type { RecordingDetail, ThumbnailWrite } from '@/repository/recordings'
+import type {
+  RecordingDetail,
+  RecordingDiscarded,
+  ThumbnailWrite,
+} from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChipDot } from '@/components/vela/status'
@@ -51,9 +55,11 @@ const OUTCOME_LABEL = {
 export function RecordingDetailView({
   detail: d,
   onRemakeThumbnail,
+  onDelete,
 }: {
   detail: RecordingDetail
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
+  onDelete: (id: string) => Promise<RecordingDiscarded>
 }) {
   return (
     <main className="min-h-0 flex-1 overflow-y-auto pb-16">
@@ -239,7 +245,7 @@ export function RecordingDetailView({
             </p>
           )}
           <div className="mt-[18px]">
-            <RecordingActions recording={d} />
+            <RecordingActions recording={d} onDelete={onDelete} />
           </div>
 
           {d.failureReason && (
