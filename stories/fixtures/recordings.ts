@@ -1,6 +1,12 @@
 import type { Recording } from '@/repository/recordings'
+import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
-export const RECORDING_FIXTURES: Recording[] = [
+/**
+ * Where a drawn picture is. The repository puts the API's own path here for a
+ * recording that has one; the catalogue puts the drawing in `frames` there,
+ * for the same reason no fixture carries a broadcast of its own.
+ */
+const RECORDINGS: Recording[] = [
   {
     id: '1291',
     startedAt: '2026-08-10T23:15:00+09:00',
@@ -192,3 +198,7 @@ export const RECORDING_FIXTURES: Recording[] = [
     thumbnailLabel: '生成失敗',
   },
 ]
+
+export const RECORDING_FIXTURES: Recording[] = RECORDINGS.map((one) =>
+  one.thumbnail === 'shot' ? { ...one, thumbnailHref: DRAWN_FRAME } : one,
+)

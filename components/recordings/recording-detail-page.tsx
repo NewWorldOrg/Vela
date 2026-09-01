@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import type { ReactNode } from 'react'
 import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
@@ -10,6 +11,11 @@ import type {
   RecordingDiscarded,
   ThumbnailWrite,
 } from '@/repository/recordings'
+import type {
+  PlaybackRead,
+  PlaybackRefusal,
+  TicketWrite,
+} from '@/repository/videos'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChipDot } from '@/components/vela/status'
@@ -25,11 +31,9 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
+import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import { QualityChip } from '@/components/recordings/quality-chip'
-import {
-  PLAYER_BUTTON,
-  PLAYER_PALETTE,
-} from '@/components/recordings/player-palette'
+import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { Player } from '@/components/recordings/player'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailRow } from '@/components/recordings/detail-row'
@@ -46,6 +50,50 @@ const OUTCOME_STYLE = {
   failed: 'bg-tint-salmon',
 } as const
 
+/**
+ * What the API said instead of a plan. Four refusals, four notices: a
+ * recording still being written, one that wrote nothing, a file out of reach
+ * and an answer that could not be read are different things to do next, and
+ * one notice for all of them would leave the reader to guess which they have.
+ */
+const REFUSED: Record<PlaybackRefusal, ReactNode> = {
+  stillRecording: (
+    <PlaybackNotice
+      tone="waiting"
+      mark={<ListIcon className="size-[22px]" />}
+      title="録画中は再生できません"
+      body="書き込み中の録画は再生の対象外です。再生できるのは録画の完了後です。"
+    />
+  ),
+  nothingToPlay: (
+    <PlaybackNotice
+      tone="gone"
+      mark={<OutcomeFailedIcon className="size-[22px]" />}
+      title="再生できるものがありません"
+      body="この録画には書かれた中身がありません。理由は「録画の記録」にあります。"
+    />
+  ),
+  outOfReach: (
+    <PlaybackNotice
+      tone="waiting"
+      mark={<ThumbMissingIcon className="size-[22px]" />}
+      title="録画ファイルに到達できません"
+      body="録画の記録に行はありますが、保存先に到達できません。整合性チェックの一覧に理由付きで出ています。"
+    >
+      <Link href="/library/integrity" className={PLAYER_BUTTON}>
+        整合性チェックの結果へ
+      </Link>
+    </PlaybackNotice>
+  ),
+  unreadable: (
+    <PlaybackNotice
+      mark={<WarningIcon className="size-[22px]" />}
+      title="再生の可否を読めませんでした"
+      body="再生できるかどうかの応答がありません。時間をおいて開き直すと読める場合があります。"
+    />
+  ),
+}
+
 const OUTCOME_LABEL = {
   complete: '完全',
   truncated: '尻切れ',
@@ -54,12 +102,19 @@ const OUTCOME_LABEL = {
 
 export function RecordingDetailView({
   detail: d,
+  playback,
   onRemakeThumbnail,
   onDelete,
+  onTakeTicket,
+  startAt,
 }: {
   detail: RecordingDetail
+  playback: PlaybackRead
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onDelete: (id: string) => Promise<RecordingDiscarded>
+  onTakeTicket: (id: string) => Promise<TicketWrite>
+  /** The second the quality panel sent the reader to, where it did. */
+  startAt?: number
 }) {
   return (
     <main className="min-h-0 flex-1 overflow-y-auto pb-16">
@@ -155,41 +210,47 @@ export function RecordingDetailView({
         </div>
       )}
 
-      {d.fileMissing ? (
-        <section
-          style={PLAYER_PALETTE}
-          className="mx-[30px] rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[22px] text-center max-[1060px]:mx-5 max-[700px]:mx-3.5"
-        >
-          <ThumbMissingIcon className="mx-auto mb-2 size-[34px] text-(--pl-ink-2)" />
-          <b className="heading block text-[14.5px] text-(--pl-ink)">
-            ファイルが見つかりません
-          </b>
-          <p className="mt-[5px] text-sub leading-relaxed text-(--pl-ink-2)">
-            録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。
-          </p>
-          <div className="mt-3 flex justify-center">
+      <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
+        {d.fileMissing ? (
+          <PlaybackNotice
+            tone="waiting"
+            mark={<ThumbMissingIcon className="size-[22px]" />}
+            title="ファイルが見つかりません"
+            body="録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。"
+          >
             <Link href="/library/integrity" className={PLAYER_BUTTON}>
               整合性チェックの結果へ
             </Link>
-          </div>
-        </section>
-      ) : d.outcome === 'failed' ? (
-        <section
-          style={PLAYER_PALETTE}
-          className="mx-[30px] rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[22px] text-center max-[1060px]:mx-5 max-[700px]:mx-3.5"
-        >
-          <OutcomeFailedIcon className="mx-auto mb-2 size-[34px] text-(--pl-ink-2)" />
-          <b className="heading block text-[14.5px] text-(--pl-ink)">
-            再生できません
-          </b>
-          <p className="mt-[5px] text-sub leading-relaxed text-(--pl-ink-2)">
-            実ファイルが 0 B
-            のため、再生できるものがありません。理由は「失敗の理由」にあります。
-          </p>
-        </section>
-      ) : d.outcome !== 'recording' ? (
-        <Player key={d.id} detail={d} />
-      ) : null}
+          </PlaybackNotice>
+        ) : d.outcome === 'failed' ? (
+          <PlaybackNotice
+            tone="gone"
+            mark={<OutcomeFailedIcon className="size-[22px]" />}
+            title="再生できません"
+            body="実ファイルが 0 B のため、再生できるものがありません。理由は「失敗の理由」にあります。"
+          />
+        ) : playback.state === 'refused' ? (
+          REFUSED[playback.refusal]
+        ) : playback.plan.route === 'nothing' ? (
+          <PlaybackNotice
+            mark={<ThumbMissingIcon className="size-[22px]" />}
+            title="再生できる成果物がありません"
+            body="この録画には、ブラウザへ渡せる成果物がありません。"
+          />
+        ) : null}
+      </div>
+      {!d.fileMissing &&
+        d.outcome !== 'failed' &&
+        playback.state === 'planned' &&
+        playback.plan.route !== 'nothing' && (
+          <Player
+            key={`${d.id}:${startAt ?? ''}`}
+            detail={d}
+            plan={playback.plan}
+            onTakeTicket={onTakeTicket}
+            startAt={startAt}
+          />
+        )}
 
       <div className="grid grid-cols-[1.35fr_1fr] items-start gap-[18px] px-[30px] pt-[22px] pb-[34px] *:min-w-0 max-[1060px]:grid-cols-1 max-[1060px]:px-5 max-[700px]:px-3.5">
         <section className="rounded-xl bg-surface px-[22px] py-5">
@@ -398,14 +459,14 @@ export function RecordingDetailView({
                       {spot.at}
                     </span>
                     <span className="font-code text-ink-2">{spot.packets}</span>
-                    <button
-                      type="button"
-                      disabled
-                      title="この時間帯の再生はこれから実装されます"
-                      className="tap-target ml-auto text-sub font-bold whitespace-nowrap text-brand disabled:cursor-not-allowed disabled:text-ink-3"
+                    <Link
+                      href={`/recordings/${d.id}?at=${spot.second}` as Route}
+                      scroll={false}
+                      replace
+                      className="tap-target ml-auto text-sub font-bold whitespace-nowrap text-brand underline-offset-[3px] hover:underline"
                     >
                       この時間帯を再生
-                    </button>
+                    </Link>
                   </div>
                 ))}
                 <p className="mt-3 text-note leading-relaxed text-ink-3">

@@ -6,6 +6,7 @@ import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
 import { fetchServiceChannels } from '@/repository/programs'
+import { videoThumbnailHref } from '@/repository/video-paths'
 import type { GuideChannel } from '@/repository/programs'
 
 type RecordingResponder = components['schemas']['RecordingResponder']
@@ -65,6 +66,8 @@ export interface Recording {
   encode?: RecordingEncode
   thumbnail: ThumbnailState
   thumbnailLabel?: string
+  /** Where the drawn picture is. Unset until one has been drawn. */
+  thumbnailHref?: string
 }
 
 export interface RecordingsFilter {
@@ -179,14 +182,19 @@ export async function listRecordingsByReservation(): Promise<
 export interface QualitySpot {
   at: string
   packets: string
+  /** Seconds from the start of the recording, which is where playing resumes. */
+  second: number
 }
 
+/**
+ * The marks drawn along the bar that are not read off the recording itself.
+ * Where the playhead is, and where the drops fell, are known from the picture
+ * and from the counters; a chapter is neither, and nothing upstream carries
+ * one yet.
+ */
 export interface SeekMarks {
-  playedPct: number
-  time: string
   cmSpans?: { leftPct: number; widthPct: number }[]
   chapterPcts?: number[]
-  dropPcts?: number[]
 }
 
 export interface RecordingDetail extends Recording {
@@ -209,7 +217,7 @@ export interface RecordingDetail extends Recording {
   qualityRatio?: string
   qualityTotal?: string
   qualitySpots?: QualitySpot[]
-  /** Unset: nothing has been played, so there is no position to draw. */
+  /** Unset: nothing upstream carries a chapter or a commercial break. */
   seek?: SeekMarks
   /** Unset: nothing upstream carries an encoding state yet. */
   encodePanel?: {
@@ -461,6 +469,8 @@ export function toRecording(
     quality,
     thumbnail: thumbnail.state,
     thumbnailLabel: thumbnail.label,
+    thumbnailHref:
+      thumbnail.state === 'shot' ? videoThumbnailHref(r.id) : undefined,
   }
 }
 
@@ -763,6 +773,7 @@ export function spotsOf(buckets: DropBucket[], startedAt: Date): QualitySpot[] {
     .map(([minute, packets]) => ({
       at: `${clockOf(new Date(startedAt.getTime() + minute * 60_000))} 付近`,
       packets: `${grouped(packets)} パケット`,
+      second: minute * 60,
     }))
 }
 

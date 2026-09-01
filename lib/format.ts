@@ -94,6 +94,19 @@ export function formatLength(sec: number) {
 }
 
 /** `6分32秒`, the way an elapsed span is spelled on the admin screens. */
+/**
+ * The playhead, which always carries its hour. A reading that drops the hour
+ * changes width as playing passes an hour, and the figure beside it — the
+ * length of the recording — keeps its own, so the two would stop lining up.
+ */
+export function formatPlayhead(sec: number) {
+  const whole = Math.max(0, Math.floor(sec))
+  const h = Math.floor(whole / 3600)
+  const m = String(Math.floor((whole % 3600) / 60)).padStart(2, '0')
+  const s = String(whole % 60).padStart(2, '0')
+  return `${h}:${m}:${s}`
+}
+
 export function formatSpan(sec: number) {
   const m = Math.floor(sec / 60)
   const s = Math.round(sec % 60)
