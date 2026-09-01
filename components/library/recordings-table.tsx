@@ -34,15 +34,24 @@ export function RecordingsTable({
 
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-1">
-      <table className="w-full min-w-[1296px] table-fixed border-separate border-spacing-0">
+      {/*
+        1208px is what the 1280 column leaves once the screen's own margins
+        and the scrollbar down its side are taken off, and the columns add up
+        to that. At 1296 the list was too wide for every window there is: the
+        last column was cut off, and the page itself scrolled sideways to
+        reach it. The width came off the columns that were carrying more than
+        their content — the title truncates at any width, and the other three
+        hold a chip or a figure that never came near their edge.
+      */}
+      <table className="w-full min-w-[1208px] table-fixed border-separate border-spacing-0">
         <colgroup>
-          <col className="w-[296px]" />
+          <col className="w-[252px]" />
           <col className="w-[104px]" />
           <col className="w-[142px]" />
           <col className="w-[86px]" />
-          <col className="w-[110px]" />
-          <col className="w-[112px]" />
-          <col className="w-[158px]" />
+          <col className="w-[96px]" />
+          <col className="w-[100px]" />
+          <col className="w-[140px]" />
           <col className="w-[110px]" />
           <col className="w-[144px]" />
           <col className="w-[34px]" />
