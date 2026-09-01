@@ -68,7 +68,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
     qualityTotal: '0',
     qualityRatio: '0.0000',
-    seek: { playedPct: 23, time: '0:06:55 / 0:30:04' },
     encodePanel: {
       profile: '録画再生用(H.264)',
       sourceSize: '3.4 GB',
@@ -101,7 +100,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
     qualityTotal: '0',
     qualityRatio: '0.0000',
-    seek: { playedPct: 0, time: '0:00:00 / 0:30:00' },
     encodePanel: {
       profile: '録画再生用(H.264)',
       progressPct: 42,
@@ -134,12 +132,10 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     qualityTotal: '38,412',
     qualityRatio: '0.023',
     qualitySpots: [
-      { at: '13:12 付近', packets: '36,980 パケット' },
-      { at: '15:44 付近', packets: '1,432 パケット' },
+      { at: '13:12 付近', packets: '36,980 パケット', second: 2_580 },
+      { at: '15:44 付近', packets: '1,432 パケット', second: 11_100 },
     ],
     seek: {
-      playedPct: 23,
-      time: '0:58:12 / 4:12:38',
       cmSpans: [
         { leftPct: 12.4, widthPct: 5.2 },
         { leftPct: 34.8, widthPct: 4.6 },
@@ -147,7 +143,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
         { leftPct: 80.3, widthPct: 4.9 },
       ],
       chapterPcts: [12.4, 17.6, 34.8, 39.4, 58.1, 63.5, 80.3, 85.2],
-      dropPcts: [17, 74],
     },
     encodePanel: {
       profile: '録画再生用(H.264)',
@@ -185,7 +180,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
     qualityTotal: '0',
     qualityRatio: '0.0000',
-    seek: { playedPct: 0, time: '0:00:00 / 0:36:12' },
     encodePanel: {
       profile: '録画再生用(H.264)',
       queueSub:
@@ -234,7 +228,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     eoverflow: '—',
     stopReason: '移行で取り込み(記録なし)',
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
-    seek: { playedPct: 0, time: '0:00:00 / 0:30:00' },
     encodePanel: {
       profile: '録画再生用(H.264)',
       queueSub:
@@ -272,10 +265,9 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     qualityTotal: '178,530',
     qualityRatio: '0.227',
     qualitySpots: [
-      { at: '21:41 付近', packets: '171,204 パケット' },
-      { at: '21:58 付近', packets: '7,326 パケット' },
+      { at: '21:41 付近', packets: '171,204 パケット', second: 1_560 },
+      { at: '21:58 付近', packets: '7,326 パケット', second: 2_580 },
     ],
-    seek: { playedPct: 0, time: '0:00:00 / 2:06:14', dropPcts: [33, 46] },
     encodePanel: { profile: '録画再生用(H.264)', attempts: '2 回 / 上限 3 回' },
   },
   {
