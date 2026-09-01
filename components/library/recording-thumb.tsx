@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 import { cn } from '@/lib/utils'
 import type { Recording } from '@/repository/recordings'
 import {
@@ -14,6 +18,14 @@ const ART = {
   error: <ThumbErrorIcon className="size-[19px] text-coral" />,
 }
 
+/**
+ * The picture drawn of a recording, where one was drawn.
+ *
+ * A row whose recording has a picture shows the picture. The drawing beside it
+ * is what the other three states have instead, and it is also what a picture
+ * that will not load falls back to — a broken image icon in a table of
+ * recordings reads as a broken screen rather than as a missing frame.
+ */
 export function RecordingThumb({
   recording,
   subTone = 'text-ink-3',
@@ -21,6 +33,9 @@ export function RecordingThumb({
   recording: Recording
   subTone?: string
 }) {
+  const [reached, setReached] = useState(true)
+  const drawn = reached ? recording.thumbnailHref : undefined
+
   return (
     <span
       className={cn(
@@ -33,16 +48,33 @@ export function RecordingThumb({
         recording.thumbnail === 'error' && 'border-coral-line bg-coral-soft',
       )}
     >
-      {ART[recording.thumbnail]}
-      {recording.thumbnailLabel && (
-        <span
-          className={cn(
-            'text-center text-[9px] leading-tight',
-            recording.thumbnail === 'error' ? 'text-coral' : subTone,
+      {drawn ? (
+        // The picture is behind the session, and the optimiser fetches it
+        // without one; it is also 92px wide and read once, so there is nothing
+        // for the optimiser to save.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={drawn}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setReached(false)}
+          className="size-full object-cover"
+        />
+      ) : (
+        <>
+          {ART[recording.thumbnail]}
+          {recording.thumbnailLabel && (
+            <span
+              className={cn(
+                'text-center text-[9px] leading-tight',
+                recording.thumbnail === 'error' ? 'text-coral' : subTone,
+              )}
+            >
+              {recording.thumbnailLabel}
+            </span>
           )}
-        >
-          {recording.thumbnailLabel}
-        </span>
+        </>
       )}
     </span>
   )
