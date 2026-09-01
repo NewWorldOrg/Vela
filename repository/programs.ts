@@ -57,6 +57,16 @@ export interface Program {
   booked?: boolean
   booking?: ProgramBooking
   endUndecided?: boolean
+  /**
+   * The extended description the broadcaster sends alongside the summary, and
+   * the other listings this one is tied to. They arrive with every programme
+   * the guide reads, and are kept rather than dropped so that a programme read
+   * from the grid and the same programme read at its own address are the same
+   * reading rather than two readings that agree by hand.
+   */
+  items?: ProgramItem[]
+  related?: RelatedProgram[]
+  durationLabel?: string
 }
 
 export interface GuideDay {
@@ -95,9 +105,6 @@ export interface ProgramDetail {
   program: Program
   day: GuideDay
   channel?: Channel
-  items: ProgramItem[]
-  related: RelatedProgram[]
-  durationLabel?: string
 }
 
 const PAST_DAYS = 7
@@ -161,8 +168,8 @@ export async function getGuide(
     windowStart.getTime() + WINDOW_HOURS * 60 * 60 * 1000,
   )
 
-  const [channels, guide] = await Promise.all([
-    fetchGuideChannels(kind),
+  const [services, guide] = await Promise.all([
+    fetchServiceChannels(),
     fetchGuide({
       type: SYSTEM_OF_KIND[kind],
       from: windowStart,
@@ -171,7 +178,7 @@ export async function getGuide(
   ])
 
   const settled = splitServicesSettled(
-    channels,
+    columnsOf(services, kind),
     guide.programmes.filter((programme) => !programme.isShadow),
   )
 
@@ -190,7 +197,7 @@ export async function getGuide(
       sub ? { ...service, sub } : { ...service },
     ),
     programs: settled.broadcasts
-      .map((programme) => toProgram(programme, windowStart))
+      .map((programme) => toProgram(programme, windowStart, services))
       .filter((program): program is Program => program !== null)
       .map((program) => booked(program, bookings.get(program.id))),
   }
@@ -207,40 +214,29 @@ export async function getProgram(
 
   const day = dayOf(new Date(programme.startsAt))
   const windowStart = windowStartOf(day.date)
-  const program = toProgram(programme, windowStart)
+  const services = await fetchServiceChannels()
+  const program = toProgram(programme, windowStart, services)
 
   if (!program) {
     return undefined
   }
 
-  const channels = await fetchServiceChannels()
-  const channelOf = (
-    networkId: number,
-    serviceId: number,
-  ): GuideChannel | undefined =>
-    channels.find(
-      (channel) =>
-        channel.networkId === networkId && channel.serviceId === serviceId,
-    )
-  const channel = channelOf(programme.networkId, programme.serviceId)
-
   return {
     program,
     day,
-    channel,
-    items: programme.items,
-    related: withRelatedSettled(
-      programme.related.map((related) => ({
-        key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
-        kind: related.kind,
-        channelLabel: channelLabelOf(
-          channelOf(related.networkId, related.serviceId),
-        ),
-      })),
-      channel,
-    ),
-    durationLabel: durationLabelOf(programme),
+    channel: serviceOf(services, programme.networkId, programme.serviceId),
   }
+}
+
+function serviceOf(
+  services: GuideChannel[],
+  networkId: number,
+  serviceId: number,
+): GuideChannel | undefined {
+  return services.find(
+    (service) =>
+      service.networkId === networkId && service.serviceId === serviceId,
+  )
 }
 
 function channelLabelOf(channel: Channel | undefined): string | undefined {
@@ -345,22 +341,20 @@ export async function fetchServiceChannels(): Promise<GuideChannel[]> {
     })
 }
 
-async function fetchGuideChannels(kind: ChannelKind): Promise<GuideChannel[]> {
-  const rows = (await fetchServiceChannels()).filter(
-    (channel) => channel.kind === kind,
-  )
-
-  rows.sort(
-    (a, b) =>
-      a.sortKey[0] - b.sortKey[0] ||
-      a.sortKey[1] - b.sortKey[1] ||
-      a.sortKey[2] - b.sortKey[2],
-  )
-
-  return rows
+function columnsOf(
+  services: GuideChannel[],
+  kind: ChannelKind,
+): GuideChannel[] {
+  return services
+    .filter((service) => service.kind === kind)
+    .sort(compareChannels)
 }
 
-function toProgram(programme: Programme, windowStart: Date): Program | null {
+function toProgram(
+  programme: Programme,
+  windowStart: Date,
+  services: GuideChannel[],
+): Program | null {
   const startsAt = new Date(programme.startsAt)
   const endsAt = programme.endsAt ? new Date(programme.endsAt) : undefined
   const windowEnd = windowStart.getTime() + WINDOW_HOURS * 60 * 60 * 1000
@@ -376,6 +370,7 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
   }
 
   const genre = genreDisplayOf(programme)
+  const service = serviceOf(services, programme.networkId, programme.serviceId)
 
   return {
     id: programme.id,
@@ -391,6 +386,18 @@ function toProgram(programme: Programme, windowStart: Date): Program | null {
     endLabel: endsAt ? clockLabel(endsAt) : '未定',
     subtitled: programme.hasSubtitles || undefined,
     endUndecided: endsAt ? undefined : true,
+    items: programme.items,
+    related: withRelatedSettled(
+      programme.related.map((related) => ({
+        key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
+        kind: related.kind,
+        channelLabel: channelLabelOf(
+          serviceOf(services, related.networkId, related.serviceId),
+        ),
+      })),
+      service,
+    ),
+    durationLabel: durationLabelOf(programme),
   }
 }
 

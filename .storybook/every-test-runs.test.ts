@@ -48,6 +48,7 @@ const THE_SUITE = [
   'lib/state-terms.test.ts',
   'repository/client/carina.test.ts',
   'repository/integrity.test.ts',
+  'repository/programs.test.ts',
   'repository/recordings.test.ts',
   'repository/reservations.test.ts',
   'repository/rules.test.ts',

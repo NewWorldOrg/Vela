@@ -769,6 +769,52 @@ function onScreenIn(
   return first
 }
 
+/**
+ * What the surface is drawn showing for the programme it was opened from: the
+ * hour, the genre, whatever the broadcaster wrote, and every extended section
+ * that programme carries. Reading it here rather than reading a way to go and
+ * find it, because there is no longer a way — pressing a cell in the guide
+ * puts the whole of the programme on the layer, and never sends the reader off
+ * the guide to its own page.
+ *
+ * The absence is claimed alongside the reading, never on its own: a run where
+ * nothing opened satisfies "no link to the page" without opening anything.
+ */
+async function readsInFull(
+  surface: HTMLElement,
+  program: Program,
+): Promise<void> {
+  const shown = within(surface)
+  const detail = surface.querySelector<HTMLElement>('[data-program-detail]')
+
+  await expect(detail).not.toBeNull()
+
+  const reading = (detail!.textContent ?? '').replace(/\s+/g, ' ').trim()
+
+  await expect(
+    shown.getByRole('heading', { name: program.title }),
+  ).toBeVisible()
+  await expect(reading).toContain(program.genreLabel)
+  await expect(reading).toContain(program.startLabel)
+
+  if (program.description) {
+    await expect(reading).toContain(
+      program.description.replace(/\s+/g, ' ').trim(),
+    )
+  }
+
+  for (const item of program.items ?? []) {
+    await expect(
+      shown.getByRole('heading', { name: item.heading }),
+    ).toBeVisible()
+    await expect(reading).toContain(item.text.replace(/\s+/g, ' ').trim())
+  }
+
+  await expect(
+    surface.querySelector(`a[href="/guide/programs/${program.id}"]`),
+  ).toBeNull()
+}
+
 /** The surface a programme opens onto, once it is up and holding focus. */
 async function openedPanel(canvasElement: HTMLElement): Promise<HTMLElement> {
   const doc = canvasElement.ownerDocument
@@ -808,9 +854,8 @@ const middleOf = (element: Element): [number, number] => {
  * grid put back where it opens would be indistinguishable from one left alone
  * if the two were the same place.
  *
- * The panel is also where the programme's own address is: `/guide/programs/`
- * and the identifier of the programme that was pressed, so what is opened
- * standalone is that programme rather than whatever the grid was showing.
+ * The panel is also the whole of the reading: what used to be a way through to
+ * a separate page is the page's own content, drawn on the layer.
  */
 export const 番組を開いても場所は動かない: Story = {
   args: { guide: day },
@@ -828,16 +873,11 @@ export const 番組を開いても場所は動かない: Story = {
 
     await userEvent.click(cell)
 
-    const panel = within(await openedPanel(canvasElement))
+    const panel = await openedPanel(canvasElement)
 
     await expect(scroller.scrollTop).toBe(wasAt)
     await expect(scroller.scrollLeft).toBe(wasAcross)
-    await expect(
-      panel.getByRole('heading', { name: program.title }),
-    ).toBeVisible()
-    await expect(
-      panel.getByRole('link', { name: '番組詳細を開く' }),
-    ).toHaveAttribute('href', `/guide/programs/${program.id}`)
+    await readsInFull(panel, program)
   },
 }
 
@@ -872,11 +912,7 @@ export const 別の番組を押すとまず閉じる: Story = {
 
     await userEvent.click(read.cell)
 
-    await expect(
-      within(await openedPanel(canvasElement)).getByRole('heading', {
-        name: read.program.title,
-      }),
-    ).toBeVisible()
+    await readsInFull(await openedPanel(canvasElement), read.program)
 
     const [across, down] = middleOf(next.cell)
 
@@ -896,14 +932,61 @@ export const 別の番組を押すとまず閉じる: Story = {
     )
     await userEvent.click(next.cell)
 
-    const again = within(await openedPanel(canvasElement))
+    await readsInFull(await openedPanel(canvasElement), next.program)
+  },
+}
 
-    await expect(
-      again.getByRole('heading', { name: next.program.title }),
-    ).toBeVisible()
-    await expect(
-      again.getByRole('link', { name: '番組詳細を開く' }),
-    ).toHaveAttribute('href', `/guide/programs/${next.program.id}`)
+/**
+ * A programme the broadcaster sent more about than a synopsis, opened from the
+ * grid. Every extended section it carries is on the layer, and the listing it
+ * is tied to is reachable at that listing's own address — the one address a
+ * programme still opens a page from. Its own is not among them.
+ */
+export const 番組の詳細が層の中に出る: Story = {
+  args: { guide: base },
+  play: async ({ canvasElement }) => {
+    const carries = PROGRAM_FIXTURES.filter(
+      (program) => (program.items ?? []).length > 0,
+    )
+
+    await expect(carries.length).toBeGreaterThan(0)
+
+    const cells = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]',
+      ),
+    )
+
+    for (const program of carries) {
+      const at = IN_GRID_ORDER.findIndex((one) => one.id === program.id)
+
+      await expect(at).toBeGreaterThanOrEqual(0)
+
+      const cell = cells[at]
+
+      cell.scrollIntoView({ block: 'center' })
+
+      await userEvent.click(cell)
+
+      const surface = await openedPanel(canvasElement)
+
+      await readsInFull(surface, program)
+
+      for (const other of program.related ?? []) {
+        await expect(
+          surface.querySelector(`a[href="/guide/programs/${other.key}"]`),
+        ).not.toBeNull()
+      }
+
+      await userEvent.keyboard('{Escape}')
+      await waitFor(() =>
+        expect(
+          canvasElement.ownerDocument.querySelector(
+            '[data-slot="dialog-content"]',
+          ),
+        ).toBeNull(),
+      )
+    }
   },
 }
 
