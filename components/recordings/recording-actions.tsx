@@ -11,9 +11,12 @@ import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-
 export function RecordingActions({
   recording,
   onDelete,
+  plays,
 }: {
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>
+  /** Whether the picture is drawn on this page, above these buttons. */
+  plays?: boolean
 }) {
   const deletable = recording.outcome !== 'recording'
   const router = useRouter()
@@ -34,14 +37,21 @@ export function RecordingActions({
   return (
     <>
       <div className="flex flex-wrap items-center gap-[9px]">
-        <Button disabled title="再生はこれから実装されます">
+        <Button
+          disabled
+          title={
+            plays
+              ? '再生はこの上のプレイヤーで操作します'
+              : 'この録画には再生できるものがありません'
+          }
+        >
           <PlayIcon />
           再生
         </Button>
         <Button
           variant="outline"
           disabled
-          title="エンコードはこれから実装されます"
+          title="エンコードの登録はこれから実装されます"
         >
           エンコード
         </Button>
@@ -57,7 +67,7 @@ export function RecordingActions({
         </Button>
       </div>
       <p className="mt-[9px] text-note leading-relaxed text-ink-3">
-        プロファイルは1つのため、「エンコード」を押すと、選択なしでそのまま待機列へ登録されます。元
+        「エンコード」からの登録はこれから実装されます。プロファイルは1つのため、登録に選択はありません。元
         TS
         は削除されません。削除は録画ごと、ライブラリからの明示操作でのみ行われます。
       </p>

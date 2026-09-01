@@ -58,6 +58,18 @@ export const 通常: Story = {
       ).getByRole('button', { name: '削除' }),
     ).toBeDisabled()
 
+    // The level is the one the API graded. This recording dropped nothing and
+    // was written without ever being descrambled; counted from the dropped
+    // packets alone, as the column used to, it read 良好.
+    const unwatchable = within(
+      canvas.getByRole('row', { name: /波止場のブラスバンド/ }),
+    )
+
+    await expect(unwatchable.getByText('視聴不可の恐れ')).toBeVisible()
+    await expect(
+      unwatchable.getByText('ドロップ 0 / スクランブル残存 5,042,768'),
+    ).toBeVisible()
+
     const finished = within(
       canvas.getByRole('row', { name: /週末キッチンの手帖/ }),
     ).getByRole('button', { name: '削除' })

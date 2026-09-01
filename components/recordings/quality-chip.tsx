@@ -32,13 +32,13 @@ export function QualityChip({
   const variant =
     r.quality.level === 'good'
       ? 'ok'
-      : r.quality.level === 'warn'
+      : r.quality.level === 'warning'
         ? 'warn'
         : 'err'
   const label =
     r.quality.level === 'good'
       ? '良好'
-      : r.quality.level === 'warn'
+      : r.quality.level === 'warning'
         ? '警告水準'
         : '視聴不可の恐れ'
   return (

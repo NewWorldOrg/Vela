@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
+import { formatBytes } from '@/lib/format'
 import { isPlayableSource } from '@/lib/recordings'
 import { reservationHref } from '@/lib/reservations'
 import type {
@@ -33,7 +34,10 @@ import {
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import { QualityChip } from '@/components/recordings/quality-chip'
-import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
+import {
+  PLAYER_BUTTON,
+  PLAYER_PANE,
+} from '@/components/recordings/player-palette'
 import { Player } from '@/components/recordings/player'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailRow } from '@/components/recordings/detail-row'
@@ -94,6 +98,25 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
   ),
 }
 
+/**
+ * Why a failed recording has no picture to draw.
+ *
+ * The size is read off the recording rather than written into the sentence: it
+ * said "実ファイルが 0 B のため" over a recording the band above the same
+ * notice reported as gigabytes. The reader is sent to 「失敗の理由」 only where
+ * that block is drawn — it is drawn only for a fault the store named, and a
+ * pointer to a section that is not on the page is another wrong answer.
+ */
+function whyItCannotBePlayed(d: RecordingDetail) {
+  const size = d.sizeBytes
+    ? `実ファイルは ${formatBytes(d.sizeBytes)} ありますが、結果は失敗として記録されています。`
+    : '実ファイルは 0 B で、再生できる中身がありません。'
+
+  return d.failureReason
+    ? `${size}理由は下の「失敗の理由」にあります。`
+    : `${size}経緯は下の「録画の記録」にあります。`
+}
+
 const OUTCOME_LABEL = {
   complete: '完全',
   truncated: '尻切れ',
@@ -116,6 +139,12 @@ export function RecordingDetailView({
   /** The second the quality panel sent the reader to, where it did. */
   startAt?: number
 }) {
+  const plays =
+    !d.fileMissing &&
+    d.outcome !== 'failed' &&
+    playback.state === 'planned' &&
+    playback.plan.route !== 'nothing'
+
   return (
     <main className="min-h-0 flex-1 overflow-y-auto pb-16">
       <div className="flex items-center px-[30px] pt-[18px] pb-3 max-[1060px]:px-5 max-[700px]:px-3.5">
@@ -211,46 +240,45 @@ export function RecordingDetailView({
       )}
 
       <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
-        {d.fileMissing ? (
-          <PlaybackNotice
-            tone="waiting"
-            mark={<ThumbMissingIcon className="size-[22px]" />}
-            title="ファイルが見つかりません"
-            body="録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。"
-          >
-            <Link href="/library/integrity" className={PLAYER_BUTTON}>
-              整合性チェックの結果へ
-            </Link>
-          </PlaybackNotice>
-        ) : d.outcome === 'failed' ? (
-          <PlaybackNotice
-            tone="gone"
-            mark={<OutcomeFailedIcon className="size-[22px]" />}
-            title="再生できません"
-            body="実ファイルが 0 B のため、再生できるものがありません。理由は「失敗の理由」にあります。"
-          />
-        ) : playback.state === 'refused' ? (
-          REFUSED[playback.refusal]
-        ) : playback.plan.route === 'nothing' ? (
-          <PlaybackNotice
-            mark={<ThumbMissingIcon className="size-[22px]" />}
-            title="再生できる成果物がありません"
-            body="この録画には、ブラウザへ渡せる成果物がありません。"
-          />
-        ) : null}
+        <div className={PLAYER_PANE}>
+          {d.fileMissing ? (
+            <PlaybackNotice
+              tone="waiting"
+              mark={<ThumbMissingIcon className="size-[22px]" />}
+              title="ファイルが見つかりません"
+              body="録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。"
+            >
+              <Link href="/library/integrity" className={PLAYER_BUTTON}>
+                整合性チェックの結果へ
+              </Link>
+            </PlaybackNotice>
+          ) : d.outcome === 'failed' ? (
+            <PlaybackNotice
+              tone="gone"
+              mark={<OutcomeFailedIcon className="size-[22px]" />}
+              title="再生できません"
+              body={whyItCannotBePlayed(d)}
+            />
+          ) : playback.state === 'refused' ? (
+            REFUSED[playback.refusal]
+          ) : playback.plan.route === 'nothing' ? (
+            <PlaybackNotice
+              mark={<ThumbMissingIcon className="size-[22px]" />}
+              title="再生できる成果物がありません"
+              body="この録画には、ブラウザへ渡せる成果物がありません。"
+            />
+          ) : null}
+        </div>
       </div>
-      {!d.fileMissing &&
-        d.outcome !== 'failed' &&
-        playback.state === 'planned' &&
-        playback.plan.route !== 'nothing' && (
-          <Player
-            key={`${d.id}:${startAt ?? ''}`}
-            detail={d}
-            plan={playback.plan}
-            onTakeTicket={onTakeTicket}
-            startAt={startAt}
-          />
-        )}
+      {plays && playback.state === 'planned' && (
+        <Player
+          key={`${d.id}:${startAt ?? ''}`}
+          detail={d}
+          plan={playback.plan}
+          onTakeTicket={onTakeTicket}
+          startAt={startAt}
+        />
+      )}
 
       <div className="grid grid-cols-[1.35fr_1fr] items-start gap-[18px] px-[30px] pt-[22px] pb-[34px] *:min-w-0 max-[1060px]:grid-cols-1 max-[1060px]:px-5 max-[700px]:px-3.5">
         <section className="rounded-xl bg-surface px-[22px] py-5">
@@ -306,7 +334,7 @@ export function RecordingDetailView({
             </p>
           )}
           <div className="mt-[18px]">
-            <RecordingActions recording={d} onDelete={onDelete} />
+            <RecordingActions recording={d} onDelete={onDelete} plays={plays} />
           </div>
 
           {d.failureReason && (

@@ -56,6 +56,7 @@ interface Over {
 }
 
 const drops = (over: Over = {}) => ({
+  quality: 'good',
   ccMeasured: true,
   ccDroppedPackets: 0,
   ccTotalPackets: 1_000_000,
@@ -355,9 +356,11 @@ test('a recording nothing measured is not good, it is unmeasured', async () => {
   const one = await only([
     recording({
       drops: drops({
+        quality: 'unmeasured',
         ccMeasured: false,
         ccDroppedPackets: null,
         ccTotalPackets: null,
+        scrambledPackets: null,
         measuredUpdatedAt: null,
       }),
     }),
@@ -367,24 +370,27 @@ test('a recording nothing measured is not good, it is unmeasured', async () => {
   assert.equal(one.quality.level, undefined)
 })
 
-test('the quality falls as the share of dropped packets rises', async () => {
-  const levelAt = async (dropped: number) =>
-    (
-      await only([
-        recording({
-          drops: drops({
-            ccDroppedPackets: dropped,
-            ccTotalPackets: 1_000_000,
-          }),
-        }),
-      ])
-    ).quality.level
+/**
+ * The level is the API's own grading, which weighs the packets lost against the
+ * packets left scrambled and keeps whichever is worse. Counted again from the
+ * dropped packets alone, a recording that was written without ever being
+ * descrambled reads as 良好 — every one of them did.
+ */
+test('the quality is the level the API graded, not one counted from the drops', async () => {
+  const levelOf = async (over: Over) =>
+    (await only([recording({ drops: drops(over) })])).quality.level
 
-  assert.equal(await levelAt(0), 'good')
-  assert.equal(await levelAt(200), 'good')
-  assert.equal(await levelAt(201), 'warn')
-  assert.equal(await levelAt(1_000), 'warn')
-  assert.equal(await levelAt(1_001), 'danger')
+  assert.equal(await levelOf({ quality: 'good' }), 'good')
+  assert.equal(await levelOf({ quality: 'warning' }), 'warning')
+  assert.equal(
+    await levelOf({
+      quality: 'mayNotBeWatchable',
+      ccDroppedPackets: 0,
+      ccTotalPackets: 5_302_549,
+      scrambledPackets: 5_042_768,
+    }),
+    'mayNotBeWatchable',
+  )
 })
 
 test('the count of dropped packets is spelled with its thousands apart', async () => {
@@ -395,6 +401,21 @@ test('the count of dropped packets is spelled with its thousands apart', async (
   ])
 
   assert.equal(one.quality.detail, 'ドロップ 38,412')
+})
+
+test('the reading under the badge names the scrambled packets where there are any', async () => {
+  const one = await only([
+    recording({
+      drops: drops({
+        quality: 'mayNotBeWatchable',
+        ccDroppedPackets: 0,
+        ccTotalPackets: 5_302_549,
+        scrambledPackets: 5_042_768,
+      }),
+    }),
+  ])
+
+  assert.equal(one.quality.detail, 'ドロップ 0 / スクランブル残存 5,042,768')
 })
 
 test('a thumbnail that was not going to be made says so', async () => {
