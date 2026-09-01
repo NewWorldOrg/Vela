@@ -7,6 +7,7 @@ import {
   formatClock,
   formatDateTime,
   formatLength,
+  formatPlayhead,
   formatMonth,
   formatSpan,
   formatStamp,
@@ -125,6 +126,14 @@ test('formatBytes rounds to the unit the size deserves', () => {
   assert.equal(formatBytes(2048), '2 KB')
   assert.equal(formatBytes(5 * 1024 ** 2), '5 MB')
   assert.equal(formatBytes(3 * 1024 ** 3), '3.0 GB')
+})
+
+test('formatPlayhead keeps the hour so the two readings line up', () => {
+  assert.equal(formatPlayhead(0), '0:00:00')
+  assert.equal(formatPlayhead(392), '0:06:32')
+  assert.equal(formatPlayhead(3932), '1:05:32')
+  assert.equal(formatPlayhead(-4), '0:00:00')
+  assert.equal(formatPlayhead(12.7), '0:00:12')
 })
 
 test('formatLength drops the hour when there is none', () => {
