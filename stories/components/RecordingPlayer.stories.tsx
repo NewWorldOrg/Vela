@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
@@ -292,7 +292,10 @@ export const 画質を選ぶ: Story = {
   args: { detail: detail('1266'), startAt: 0, pictureHref: keeping },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const quality = canvas.getByRole('group', { name: '画質' })
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
 
     // The steps are the profiles the API names, and nothing besides. 480p was
     // on the control and on no endpoint.
@@ -320,9 +323,10 @@ export const 画質を選ぶ: Story = {
 }
 
 /**
- * Two controls the API takes no argument for. They stay on the chrome and are
- * drawn switched off, with the reason beside them, rather than moving their
- * own pills over a picture that never changes.
+ * Two controls the API takes no argument for. They are kept and drawn switched
+ * off, with the reason beside them, rather than moving their own pills over a
+ * picture that never changes. The one on the bar is the toggle a player is
+ * reached for; the tracks, and the reason for both, are in the gear.
  */
 export const 効かない操作子: Story = {
   args: { detail: detail('1266') },
@@ -334,16 +338,21 @@ export const 効かない操作子: Story = {
     await expect(subtitles).toBeDisabled()
     await expect(subtitles).toHaveAttribute('aria-pressed', 'false')
 
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
     for (const track of within(
-      canvas.getByRole('group', { name: '音声' }),
+      await screen.findByRole('group', { name: '音声' }),
     ).getAllByRole('button')) {
       await expect(track).toBeDisabled()
     }
 
+    // Once, beside the two rows it answers for. What the burnt-in subtitles
+    // are is read under the picture, where the rest of the prose is.
     await expect(
-      canvas.getByText(
-        '字幕と音声の選択はこれから実装されます。画面に見えている字幕は映像に焼き付いたものです。',
-      ),
+      screen.getAllByText('字幕と音声の選択はこれから実装されます'),
+    ).toHaveLength(1)
+    await expect(
+      canvas.getByText('画面に見えている字幕は映像に焼き付いたものです。'),
     ).toBeVisible()
   },
 }

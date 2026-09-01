@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { videoFileHref } from '@/repository/video-paths'
 import type { TicketWrite } from '@/repository/videos'
 import { Spinner } from '@/components/vela/progress'
+import { buttonVariants } from '@/components/ui/button'
 import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 
 /**
@@ -31,16 +32,29 @@ function ticketed(id: string, inTheClear: string) {
   return url.toString()
 }
 
+/**
+ * Where the two buttons are standing. On the dark plate that replaces the
+ * picture they are drawn in the player's own colours; under the picture they
+ * are on the page's surface, where a white hairline on white would be no
+ * button at all.
+ */
+const DRESSED = {
+  player: PLAYER_BUTTON,
+  page: buttonVariants({ variant: 'outline', size: 'sm' }),
+} as const
+
 export function ExternalPlayer({
   id,
   onTakeTicket,
   video,
+  tone = 'player',
   className,
 }: {
   id: string
   onTakeTicket: (id: string) => Promise<TicketWrite>
   /** The element AirPlay hands over. Absent where no picture is drawn. */
   video?: RefObject<HTMLVideoElement | null>
+  tone?: keyof typeof DRESSED
   className?: string
 }) {
   const [taking, setTaking] = useState<'external' | 'airplay' | null>(null)
@@ -93,7 +107,7 @@ export function ExternalPlayer({
           type="button"
           onClick={() => take('external')}
           aria-disabled={taking !== null}
-          className={PLAYER_BUTTON}
+          className={DRESSED[tone]}
         >
           {taking === 'external' && (
             <Spinner className="mr-1.5 inline size-3" />
@@ -104,14 +118,20 @@ export function ExternalPlayer({
           type="button"
           onClick={() => take('airplay')}
           aria-disabled={taking !== null}
-          className={PLAYER_BUTTON}
+          className={DRESSED[tone]}
         >
           {taking === 'airplay' && <Spinner className="mr-1.5 inline size-3" />}
           AirPlay
         </button>
       </div>
       {refused && (
-        <p role="status" className="text-[11px] text-[#EC9A93]">
+        <p
+          role="status"
+          className={cn(
+            'text-[11px]',
+            tone === 'page' ? 'text-coral' : 'text-[#EC9A93]',
+          )}
+        >
           {refused}
         </p>
       )}
