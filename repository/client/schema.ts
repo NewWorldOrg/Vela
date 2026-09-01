@@ -4,6 +4,73 @@
  */
 
 export interface paths {
+  '/api/videos/{id}/play': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Plays a recording. Asked with Accept: application/json it answers the plan alone - how the recording ended, whether it is transcoded as it plays, and whether seeking is a byte range or a restart. Asked for anything else it answers the picture itself. */
+    get: operations['playVideo']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/videos/{id}/thumbnail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The picture drawn of a recording once it had ended. */
+    get: operations['getVideoThumbnail']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/videos/{id}/scrub': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** One frame taken out of a recording at the second asked for. */
+    get: operations['getVideoScrubFrame']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/videos/{id}/ticket': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['issueVideoTicket']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/tuners/detected': {
     parameters: {
       query?: never
@@ -914,6 +981,16 @@ export interface components {
       message: string
       data: null | components['schemas']['PasswordChangedResponder']
     }
+    BaseResponderOfPlaybackPlanResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['PlaybackPlanResponder']
+    }
+    BaseResponderOfPlaybackTicketResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['PlaybackTicketResponder']
+    }
     BaseResponderOfProgrammeResponder: {
       status: boolean
       message: string
@@ -1365,6 +1442,28 @@ export interface components {
       /** Format: int64 */
       after: number | string
     }
+    PlaybackPlanResponder: {
+      standing: components['schemas']['PlaybackStanding']
+      route: components['schemas']['PlaybackRoute']
+      seeking: null | components['schemas']['PlaybackSeeking']
+      canSeek: boolean
+      transcodes: boolean
+      showsAsAWholeRecording: boolean
+      mediaType: string
+      /** Format: int64 */
+      bytes: null | number | string
+    }
+    /** @enum {string} */
+    PlaybackRoute: 'direct' | 'onTheFly' | 'nothing'
+    /** @enum {null|string} */
+    PlaybackSeeking: 'byRange' | 'byStartingAgain' | null
+    /** @enum {string} */
+    PlaybackStanding: 'notEndedYet' | 'whole' | 'cutShort' | 'failed'
+    PlaybackTicketResponder: {
+      inTheClear: string
+      /** Format: date-time */
+      lapsesAt: string
+    }
     ProgrammeGenreResponder: {
       /** Format: int32 */
       kind: number | string
@@ -1412,6 +1511,8 @@ export interface components {
     }
     /** @enum {string} */
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
+    /** @enum {string} */
+    QualityLevel: 'good' | 'unmeasured' | 'warning' | 'mayNotBeWatchable'
     RebuildEpgRequest: {
       confirm?: null | string
       meansIt?: boolean
@@ -1436,6 +1537,7 @@ export interface components {
       filesRemoved: number | string
     }
     RecordingDropsResponder: {
+      quality: components['schemas']['QualityLevel']
       ccMeasured: boolean
       /** Format: int64 */
       ccDroppedPackets: null | number | string
@@ -2263,6 +2365,180 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  playVideo: {
+    parameters: {
+      query?: {
+        /** @description The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional, and asking for none starts at the beginning. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range. */
+        from?: number
+        /** @description The profile the picture is encoded in while it is transcoded as it plays. */
+        profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackPlanResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackPlanResponder']
+        }
+      }
+    }
+  }
+  getVideoThumbnail: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  getVideoScrubFrame: {
+    parameters: {
+      query?: {
+        /** @description The second of the recording the frame is taken from, counted from where the recording begins. Seconds may be fractional, and asking for none takes the first frame. */
+        at?: number
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  issueVideoTicket: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+    }
+  }
   getDetectedTuners: {
     parameters: {
       query?: never

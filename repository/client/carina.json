@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Carina",
-    "description": "The HTTP surface of the app process. Three contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`) and the bulk programme guide (`GET /api/programs/bulk`).",
+    "description": "The HTTP surface of the app process. Four contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`) and the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through.",
     "version": "1.0.0"
   },
   "servers": [
@@ -11,6 +11,222 @@
     }
   ],
   "paths": {
+    "/api/videos/{id}/play": {
+      "get": {
+        "tags": [
+          "videos"
+        ],
+        "summary": "Plays a recording. Asked with Accept: application/json it answers the plan alone - how the recording ended, whether it is transcoded as it plays, and whether seeking is a byte range or a restart. Asked for anything else it answers the picture itself.",
+        "operationId": "playVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional, and asking for none starts at the beginning. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "default": 0
+            }
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "description": "The profile the picture is encoded in while it is transcoded as it plays.",
+            "schema": {
+              "enum": [
+                "1080p60",
+                "1080p30",
+                "720p60",
+                "720p30"
+              ],
+              "type": "string",
+              "default": "720p30"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackPlanResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackPlanResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/videos/{id}/thumbnail": {
+      "get": {
+        "tags": [
+          "videos"
+        ],
+        "summary": "The picture drawn of a recording once it had ended.",
+        "operationId": "getVideoThumbnail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/videos/{id}/scrub": {
+      "get": {
+        "tags": [
+          "videos"
+        ],
+        "summary": "One frame taken out of a recording at the second asked for.",
+        "operationId": "getVideoScrubFrame",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "description": "The second of the recording the frame is taken from, counted from where the recording begins. Seconds may be fractional, and asking for none takes the first frame.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
+    "/api/videos/{id}/ticket": {
+      "post": {
+        "tags": [
+          "videos"
+        ],
+        "operationId": "issueVideoTicket",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tuners/detected": {
       "get": {
         "tags": [
@@ -4838,6 +5054,58 @@
           }
         }
       },
+      "BaseResponderOfPlaybackPlanResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlaybackPlanResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfPlaybackTicketResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlaybackTicketResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfProgrammeResponder": {
         "required": [
           "status",
@@ -6893,6 +7161,102 @@
           }
         }
       },
+      "PlaybackPlanResponder": {
+        "required": [
+          "standing",
+          "route",
+          "seeking",
+          "canSeek",
+          "transcodes",
+          "showsAsAWholeRecording",
+          "mediaType",
+          "bytes"
+        ],
+        "type": "object",
+        "properties": {
+          "standing": {
+            "$ref": "#/components/schemas/PlaybackStanding"
+          },
+          "route": {
+            "$ref": "#/components/schemas/PlaybackRoute"
+          },
+          "seeking": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlaybackSeeking"
+              }
+            ]
+          },
+          "canSeek": {
+            "type": "boolean"
+          },
+          "transcodes": {
+            "type": "boolean"
+          },
+          "showsAsAWholeRecording": {
+            "type": "boolean"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "bytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "PlaybackRoute": {
+        "enum": [
+          "direct",
+          "onTheFly",
+          "nothing"
+        ],
+        "type": "string"
+      },
+      "PlaybackSeeking": {
+        "enum": [
+          "byRange",
+          "byStartingAgain",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "PlaybackStanding": {
+        "enum": [
+          "notEndedYet",
+          "whole",
+          "cutShort",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "PlaybackTicketResponder": {
+        "required": [
+          "inTheClear",
+          "lapsesAt"
+        ],
+        "type": "object",
+        "properties": {
+          "inTheClear": {
+            "type": "string"
+          },
+          "lapsesAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ProgrammeGenreResponder": {
         "required": [
           "kind",
@@ -7096,6 +7460,15 @@
         ],
         "type": "string"
       },
+      "QualityLevel": {
+        "enum": [
+          "good",
+          "unmeasured",
+          "warning",
+          "mayNotBeWatchable"
+        ],
+        "type": "string"
+      },
       "RebuildEpgRequest": {
         "type": "object",
         "properties": {
@@ -7191,6 +7564,7 @@
       },
       "RecordingDropsResponder": {
         "required": [
+          "quality",
           "ccMeasured",
           "ccDroppedPackets",
           "ccTotalPackets",
@@ -7200,6 +7574,9 @@
         ],
         "type": "object",
         "properties": {
+          "quality": {
+            "$ref": "#/components/schemas/QualityLevel"
+          },
           "ccMeasured": {
             "type": "boolean"
           },
@@ -10394,6 +10771,9 @@
     }
   },
   "tags": [
+    {
+      "name": "videos"
+    },
     {
       "name": "tuners"
     },
