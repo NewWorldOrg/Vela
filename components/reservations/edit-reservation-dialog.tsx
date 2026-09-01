@@ -165,7 +165,10 @@ export function EditReservationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
+        <div
+          data-slot="dialog-body"
+          className="flex min-h-0 flex-col gap-4 overflow-y-auto"
+        >
           <Field>
             <FieldLabel htmlFor="reservation-priority">優先度</FieldLabel>
             <Input
