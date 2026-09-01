@@ -42,6 +42,9 @@ import { pressable, still } from '@/components/vela/tactile'
  */
 const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
 
+/** What the chapter marks cannot be jumped along yet. */
+const NOT_YET = '再生はこれから実装されます'
+
 /**
  * How long the bar stays after the pointer last said anything, while the
  * picture is running.
@@ -502,6 +505,26 @@ export function Player({
               <span className="font-code text-sub whitespace-nowrap text-(--pl-ink-2)">
                 {formatPlayhead(position)} / {formatPlayhead(duration)}
               </span>
+              {/*
+                Beside the transport and not in the gear: moving along the
+                recording is what a player is pressed for, and the marks it
+                jumps between are on the bar above it. The rule it comes from
+                is that a chapter is jumped by a press and never skipped on
+                the reader's behalf, so there has to be a press.
+              */}
+              {d.seek?.chapterPcts && (
+                <button
+                  type="button"
+                  disabled
+                  title={NOT_YET}
+                  className={PLAYER_BUTTON}
+                >
+                  次のチャプターへ
+                  <span className="ml-1.5 inline-block rounded border border-white/20 px-1 font-code text-[11px] leading-normal text-(--pl-ink-3)">
+                    →
+                  </span>
+                </button>
+              )}
               <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-4 max-[700px]:ml-0">
                 <button
                   type="button"
