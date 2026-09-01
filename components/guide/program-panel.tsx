@@ -23,18 +23,6 @@ import { ProgramDetailBody } from '@/components/guide/program-detail'
 const SIGNED_OUT =
   'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
 
-/**
- * How tall the surface is allowed to get, as a share of the window rather than
- * a number of pixels. The width is the shared dialog's own — relative below the
- * cap it sets and at the cap above it — and nothing here writes a second one.
- *
- * The floor is the content: a programme with no synopsis draws a short surface.
- * The ceiling leaves the guide showing around every edge, which is what tells a
- * layer over the grid apart from a page in front of it. Past it the body
- * scrolls inside, so the title and the way out stay where they were put.
- */
-const AS_TALL_AS = 'max-h-[85dvh] grid-rows-[auto_minmax(0,1fr)]'
-
 export function ProgramPanel({
   program,
   channel,
@@ -96,11 +84,11 @@ export function ProgramPanel({
           is the one case SPEC holds a surface open through. A cell of the grid
           is beside it like anything else, so the first press on one shuts this
           and the programme underneath is not swapped in behind the reader. */}
-      <DialogContent aria-describedby={undefined} className={AS_TALL_AS}>
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="pr-[30px]">{program.title}</DialogTitle>
         </DialogHeader>
-        <div data-program-scroll className="min-h-0 overflow-y-auto pb-2.5">
+        <div data-slot="dialog-body" className="min-h-0 overflow-y-auto pb-2.5">
           <ProgramDetailBody
             program={program}
             channel={channel}

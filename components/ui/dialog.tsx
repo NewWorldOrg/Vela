@@ -94,8 +94,21 @@ function DialogContent({
             back.focus({ preventScroll: true })
           }
         }}
+        /**
+         * The ceiling is a share of the window rather than a count of pixels:
+         * the floor is the content, and what it leaves showing around every
+         * edge is what tells a layer over a screen apart from a screen of its
+         * own. It sits here beside the width, so no screen writes its own.
+         *
+         * Which row gives way is the screen's to say — these surfaces carry
+         * anywhere from one child to four, and a template written for two
+         * pushes the third out from under the fourth. A body marked
+         * `dialog-body`, carrying `min-h-0 overflow-y-auto`, takes the row
+         * that can shrink, so the reading sends inside it while the title and
+         * the way out stay where they were put.
+         */
         className={cn(
-          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] translate-x-[-50%] translate-y-[-50%] gap-[15px] rounded-xl border border-line-strong bg-surface px-5 pt-[18px] pb-[17px] text-ink shadow-pop-xl duration-200 outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-2xl',
+          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] max-h-[85dvh] translate-x-[-50%] translate-y-[-50%] gap-[15px] rounded-xl border border-line-strong bg-surface px-5 pt-[18px] pb-[17px] text-ink shadow-pop-xl duration-200 outline-none has-[>[data-slot=dialog-body]]:grid-rows-[auto_minmax(0,1fr)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-2xl',
           className,
         )}
         {...props}

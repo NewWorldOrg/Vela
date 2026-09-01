@@ -563,7 +563,9 @@ export const 長い本文は面の中で送る: Story = {
       view.innerHeight,
     )
 
-    const reading = surface.querySelector<HTMLElement>('[data-program-scroll]')
+    const reading = surface.querySelector<HTMLElement>(
+      '[data-slot="dialog-body"]',
+    )
 
     await expect(reading).not.toBeNull()
     await expect(reading!.scrollHeight).toBeGreaterThan(reading!.clientHeight)
