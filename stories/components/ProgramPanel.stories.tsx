@@ -11,11 +11,28 @@ import {
   PROGRAM_DETAIL_FIXTURES,
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
+import { ProgramDetailView } from '@/components/guide/program-detail-page'
 import { ProgramPanel } from '@/components/guide/program-panel'
 
-const idle = PROGRAM_FIXTURES.find((p) => p.subtitled && p.description)!
-const booked = PROGRAM_FIXTURES.find((p) => p.booking)!
+const standard = PROGRAM_DETAIL_FIXTURES.standard.program
+const relayed = PROGRAM_DETAIL_FIXTURES.relayed.program
+const undecided = PROGRAM_DETAIL_FIXTURES.undecided.program
 const multiline = PROGRAM_DETAIL_FIXTURES.multiline.program
+
+/**
+ * A programme the broadcaster said nothing more about than its name and its
+ * hour: no synopsis, no extended sections, nothing it is tied to. The surface
+ * has to be readable drawn from that alone, and a story that only ever reads a
+ * fully described programme never asks it.
+ */
+const bare = PROGRAM_DETAIL_FIXTURES.minimal.program
+
+/** The same programme with a seat already held for it. */
+const booked: Program = {
+  ...standard,
+  booked: true,
+  booking: PROGRAM_FIXTURES.find((program) => program.booking)!.booking,
+}
 
 /** A synopsis long enough that the window, not the text, decides the height. */
 const wordy: Program = {
@@ -97,39 +114,159 @@ async function opened(canvasElement: HTMLElement): Promise<HTMLElement> {
   })
 }
 
+/** The reading the layer and the programme's own page are both drawn from. */
+function detailIn(root: ParentNode): HTMLElement {
+  const found = root.querySelector<HTMLElement>('[data-program-detail]')
+
+  if (found === null) {
+    throw new Error('the programme is not drawn')
+  }
+
+  return found
+}
+
+const plain = (text: string): string => text.replace(/\s+/g, ' ').trim()
+
+const wordsOf = (element: HTMLElement): string =>
+  plain(element.textContent ?? '')
+
+/** The one row of the reading that every programme can answer. */
+const subtitlesRowOf = (detail: HTMLElement): string | undefined =>
+  detail.querySelector('dl dd')?.textContent ?? undefined
+
 /**
  * What the surface is drawn showing, held against the programme it was given
  * rather than against the fact that something is up. A layer that opens empty
  * answers a test of the opening on its own.
+ *
+ * The reading itself is asked for, not a way to go and find it: the hour, the
+ * service, what the broadcaster wrote, and every extended section the
+ * programme carries. And the programme's own address is not among what is
+ * drawn — reading a programme in the guide does not send the reader off the
+ * guide — which is a claim about an absence, so it is only ever made in the
+ * same breath as the reading being there.
  */
 async function reads(surface: HTMLElement, program: Program): Promise<void> {
   const shown = within(surface)
+  const detail = detailIn(surface)
 
   await expect(
     shown.getByRole('heading', { name: program.title }),
   ).toBeVisible()
   await expect(shown.getByText(program.genreLabel)).toBeVisible()
+
+  const reading = wordsOf(detail)
+
+  await expect(reading).toContain(program.startLabel)
+
+  if (program.description) {
+    await expect(reading).toContain(plain(program.description))
+  }
+
+  for (const item of program.items ?? []) {
+    await expect(
+      shown.getByRole('heading', { name: item.heading }),
+    ).toBeVisible()
+    await expect(reading).toContain(plain(item.text))
+  }
+
+  await expect(subtitlesRowOf(detail)).toBe(program.subtitled ? 'あり' : 'なし')
   await expect(
-    shown.getByRole('link', { name: '番組詳細を開く' }),
-  ).toHaveAttribute('href', `/guide/programs/${program.id}`)
+    surface.querySelector(`a[href="/guide/programs/${program.id}"]`),
+  ).toBeNull()
 }
 
 export const 通常: Story = {
-  args: { program: idle, channel: channelOf(idle.channelId) },
+  args: { program: standard, channel: channelOf(standard.channelId) },
   play: async ({ canvasElement }) => {
-    await reads(await opened(canvasElement), idle)
+    await reads(await opened(canvasElement), standard)
+  },
+}
+
+/**
+ * Nothing beyond the name and the hour. Every part that draws itself from
+ * something the broadcaster may not have sent is asked to leave no wreckage
+ * behind when it did not: no empty synopsis, no headings with nothing under
+ * them, and the one row that is always answerable answered.
+ */
+export const 情報最小: Story = {
+  args: { program: bare, channel: channelOf(bare.channelId) },
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, bare)
+
+    const shown = within(surface)
+
+    await expect(bare.items ?? []).toHaveLength(0)
+    await expect(bare.related ?? []).toHaveLength(0)
+    await expect(bare.description).toBeUndefined()
+    await expect(detailIn(surface).querySelectorAll('h2')).toHaveLength(0)
+    await expect(
+      surface.querySelectorAll('a[href^="/guide/programs/"]'),
+    ).toHaveLength(0)
+    await expect(shown.getByRole('button', { name: '録画予約' })).toBeEnabled()
+  },
+}
+
+/**
+ * A programme carried on more than one service. The other listing is reached
+ * at its own address, which is the one place a programme still opens a page
+ * from here — its own address is not, and both are asked for at once so that
+ * neither is met by a surface that drew no links at all.
+ */
+export const 関連番組あり: Story = {
+  args: { program: relayed, channel: channelOf(relayed.channelId) },
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, relayed)
+
+    const elsewhere = relayed.related ?? []
+
+    await expect(elsewhere.length).toBeGreaterThan(0)
+
+    for (const other of elsewhere) {
+      const to = surface.querySelector<HTMLElement>(
+        `a[href="/guide/programs/${other.key}"]`,
+      )
+
+      await expect(to).not.toBeNull()
+      await expect(to!).toBeVisible()
+    }
+  },
+}
+
+/** A programme the broadcaster has not said the end of yet. */
+export const 終了未定: Story = {
+  args: { program: undecided, channel: channelOf(undecided.channelId) },
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, undecided)
+
+    const reading = wordsOf(detailIn(surface))
+
+    await expect(reading).toContain('終了未定')
+    await expect(reading).toContain('延長に追従して録画します')
   },
 }
 
 export const 予約済み: Story = {
   args: { program: booked, channel: channelOf(booked.channelId) },
   play: async ({ canvasElement }) => {
-    const surface = within(await opened(canvasElement))
+    const surface = await opened(canvasElement)
 
-    await expect(surface.getByText('チューナー確保済み')).toBeVisible()
+    await reads(surface, booked)
+
+    const shown = within(surface)
+
+    await expect(shown.getByText('チューナー確保済み')).toBeVisible()
     await expect(
-      surface.getByRole('button', { name: '予約を取り消す' }),
+      shown.getByRole('button', { name: '予約を取り消す' }),
     ).toBeEnabled()
+    // The seat is held, so the way to take one is not offered a second time.
+    await expect(shown.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
 }
 
@@ -140,9 +277,49 @@ export const 改行を含む本文: Story = {
   },
 }
 
+/**
+ * The layer and the programme's own page, up at once and drawn from the same
+ * programme. What each of them reads has to be the same words in the same
+ * order — not each of them separately right, which is what two copies of a
+ * screen are while nobody holds them against each other.
+ *
+ * Both halves are asked for: the reading is held against the programme first,
+ * so a pair that agree by both being empty does not answer.
+ */
+export const 別ページと同じ中身: Story = {
+  args: { program: relayed, channel: channelOf(relayed.channelId) },
+  render: (args) => (
+    <>
+      <ProgramDetailView
+        detail={{
+          program: args.program,
+          channel: args.channel,
+          day: PROGRAM_DAY,
+        }}
+        onReserve={args.onReserve}
+      />
+      <ProgramPanel {...args} />
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, relayed)
+
+    const inTheLayer = wordsOf(detailIn(surface))
+    const onThePage = wordsOf(detailIn(canvasElement))
+
+    for (const item of relayed.items ?? []) {
+      await expect(onThePage).toContain(item.heading)
+    }
+
+    await expect(inTheLayer).toBe(onThePage)
+  },
+}
+
 const showing: Story['args'] = {
-  program: idle,
-  channel: channelOf(idle.channelId),
+  program: standard,
+  channel: channelOf(standard.channelId),
 }
 
 /**
@@ -152,7 +329,7 @@ const showing: Story['args'] = {
 export const 範囲外を押すと閉じる: Story = {
   args: showing,
   play: async ({ args, canvasElement }) => {
-    await reads(await opened(canvasElement), idle)
+    await reads(await opened(canvasElement), standard)
 
     const outside = overlayIn(canvasElement)
 
@@ -167,7 +344,7 @@ export const 中を押しても閉じない: Story = {
   play: async ({ args, canvasElement }) => {
     const surface = await opened(canvasElement)
 
-    await userEvent.click(within(surface).getByText(idle.title))
+    await userEvent.click(within(surface).getByText(standard.title))
     await expect(args.onClose).not.toHaveBeenCalled()
     await expect(surfaceIn(canvasElement)).not.toBeNull()
   },
@@ -176,7 +353,7 @@ export const 中を押しても閉じない: Story = {
 export const Escで閉じる: Story = {
   args: showing,
   play: async ({ args, canvasElement }) => {
-    await reads(await opened(canvasElement), idle)
+    await reads(await opened(canvasElement), standard)
     await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(args.onClose).toHaveBeenCalled())
   },
@@ -305,7 +482,7 @@ export const 閉じるとフォーカスが戻る: Story = {
     })
 
     await userEvent.click(opener)
-    await reads(await opened(canvasElement), idle)
+    await reads(await opened(canvasElement), standard)
 
     await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(surfaceIn(canvasElement)).toBeNull())
@@ -364,9 +541,10 @@ export const 広い窓では読める幅で止まる: Story = {
 }
 
 /**
- * Down, the window is the ceiling and the content is the floor. A synopsis
- * longer than the window leaves the surface at the ceiling with the reading
- * scrolling inside it, and the title and the way out where they were put.
+ * Down, the window is the ceiling and the content is the floor. A programme
+ * whose reading is longer than the window leaves the surface at the ceiling
+ * with the reading scrolling inside it, and the title and the way out where
+ * they were put.
  */
 export const 長い本文は面の中で送る: Story = {
   args: { program: wordy, channel: channelOf(wordy.channelId) },
@@ -400,7 +578,7 @@ export const 長い本文は面の中で送る: Story = {
     // and sending the surface's own reading down is what brings it inside. A
     // face that is merely cut off at the same place answers the first of those
     // and not the second: nothing moves, and the end stays out of reach.
-    const end = within(surface).getByRole('link', { name: '番組詳細を開く' })
+    const end = within(surface).getByRole('link', { name: 'この番組名で検索' })
 
     await expect(end.getBoundingClientRect().top).toBeGreaterThan(box.bottom)
 
@@ -420,7 +598,7 @@ export const 長い本文は面の中で送る: Story = {
 
 /** A short programme in the same window: the content decides, not the ceiling. */
 export const 短い本文では内容ぶんの高さ: Story = {
-  args: showing,
+  args: { program: bare, channel: channelOf(bare.channelId) },
   parameters: { screen: A_SHORT_WINDOW },
   play: async ({ canvasElement }) => {
     const surface = await opened(canvasElement)

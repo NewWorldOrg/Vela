@@ -72,6 +72,17 @@ export const PROGRAM_FIXTURES: Program[] = [
     startLabel: '21:00',
     endLabel: '22:00',
     subtitled: true,
+    items: [
+      {
+        heading: '番組内容',
+        text: '需給の見通しと、家庭でできる備えを図解でたどる。後半は各地の取材から、猛暑の続く週の見通しを整理する。',
+      },
+      {
+        heading: '出演者',
+        text: '【キャスター】小坂 玲\n【解説】担当記者 石動 亨',
+      },
+    ],
+    durationLabel: '1時間',
   },
   {
     id: 'p005',
@@ -440,6 +451,19 @@ export const PROGRAM_FIXTURES: Program[] = [
     startLabel: '23:30',
     endLabel: '未定',
     endUndecided: true,
+    items: [
+      {
+        heading: '番組内容',
+        text: '本拠地から第 18 回戦を実況生中継。延長の場合は放送時間を繰り下げてお伝えする。',
+      },
+    ],
+    related: [
+      {
+        key: '33221-1531-40901',
+        kind: 'relayed',
+        channelLabel: '191 みなと教育1',
+      },
+    ],
   },
   /**
    * A run of short programmes, the kind that fills the turn of the night. They
@@ -677,21 +701,21 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       startLabel: '21:00',
       endLabel: '23:25',
       subtitled: true,
+      items: [
+        {
+          heading: '番組内容',
+          text: '【解説】川田 このみ\n【アナウンサー】津島 陽\n決勝は 3 回戦制。第 1 回戦は各校 2 名による早押し、第 2 回戦は近似値、最終回戦は代表 1 名の一騎打ちで勝敗を決める。',
+        },
+        {
+          heading: '出演者',
+          text: '【司会】田無 千秋\n【ゲスト】前回優勝校のみなさん',
+        },
+      ],
+      related: [],
+      durationLabel: '2時間25分',
     },
     day: PROGRAM_DAY,
     channel: CHANNEL_FIXTURES[0],
-    items: [
-      {
-        heading: '番組内容',
-        text: '【解説】川田 このみ\n【アナウンサー】津島 陽\n決勝は 3 回戦制。第 1 回戦は各校 2 名による早押し、第 2 回戦は近似値、最終回戦は代表 1 名の一騎打ちで勝敗を決める。',
-      },
-      {
-        heading: '出演者',
-        text: '【司会】田無 千秋\n【ゲスト】前回優勝校のみなさん',
-      },
-    ],
-    related: [],
-    durationLabel: '2時間25分',
   },
   relayed: {
     program: {
@@ -707,27 +731,27 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       startLabel: '19:00',
       endLabel: '21:00',
       subtitled: true,
+      items: [
+        {
+          heading: '番組内容',
+          text: '準決勝屈指の接戦が予想される一戦。前の試合で全問正答を記録した常連校と、無敗で勝ち上がった初出場校が激突する。',
+        },
+      ],
+      related: withRelatedSettled(
+        [
+          {
+            key: '33221-1531-40622',
+            kind: 'relayed',
+            channelLabel: '191 みなと教育1',
+          },
+          { key: '33251-1541-40623', kind: 'shared' },
+        ],
+        CHANNEL_FIXTURES[0],
+      ),
+      durationLabel: '2時間',
     },
     day: PROGRAM_DAY,
     channel: CHANNEL_FIXTURES[0],
-    items: [
-      {
-        heading: '番組内容',
-        text: '準決勝屈指の接戦が予想される一戦。前の試合で全問正答を記録した常連校と、無敗で勝ち上がった初出場校が激突する。',
-      },
-    ],
-    related: withRelatedSettled(
-      [
-        {
-          key: '33221-1531-40622',
-          kind: 'relayed',
-          channelLabel: '191 みなと教育1',
-        },
-        { key: '33251-1541-40623', kind: 'shared' },
-      ],
-      CHANNEL_FIXTURES[0],
-    ),
-    durationLabel: '2時間',
   },
   simulcast: {
     program: {
@@ -743,41 +767,41 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       startLabel: '19:00',
       endLabel: '19:30',
       subtitled: true,
+      items: [
+        {
+          heading: '出演者',
+          text: '【キャスター】小坂 玲\n【気象キャスター】木戸 真幸',
+        },
+      ],
+      related: withRelatedSettled(
+        [
+          {
+            key: '33221-1522-40641',
+            kind: 'shared',
+            channelLabel: '151 みなと総合1',
+          },
+          {
+            key: '33221-1523-40641',
+            kind: 'shared',
+            channelLabel: '151 みなと総合1',
+          },
+          {
+            key: '33251-1541-40641',
+            kind: 'shared',
+            channelLabel: '181 第一テレビ1',
+          },
+          {
+            key: '33251-1542-40641',
+            kind: 'shared',
+            channelLabel: '181 第一テレビ1',
+          },
+        ],
+        CHANNEL_FIXTURES[0],
+      ),
+      durationLabel: '30分',
     },
     day: PROGRAM_DAY,
     channel: CHANNEL_FIXTURES[0],
-    items: [
-      {
-        heading: '出演者',
-        text: '【キャスター】小坂 玲\n【気象キャスター】木戸 真幸',
-      },
-    ],
-    related: withRelatedSettled(
-      [
-        {
-          key: '33221-1522-40641',
-          kind: 'shared',
-          channelLabel: '151 みなと総合1',
-        },
-        {
-          key: '33221-1523-40641',
-          kind: 'shared',
-          channelLabel: '151 みなと総合1',
-        },
-        {
-          key: '33251-1541-40641',
-          kind: 'shared',
-          channelLabel: '181 第一テレビ1',
-        },
-        {
-          key: '33251-1542-40641',
-          kind: 'shared',
-          channelLabel: '181 第一テレビ1',
-        },
-      ],
-      CHANNEL_FIXTURES[0],
-    ),
-    durationLabel: '30分',
   },
   undecided: {
     program: {
@@ -792,16 +816,16 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       startLabel: '23:30',
       endLabel: '未定',
       endUndecided: true,
+      items: [
+        {
+          heading: '出演者',
+          text: '【実況】三崎 高志\n【解説】元監督 浜口 剛',
+        },
+      ],
+      related: [],
     },
     day: PROGRAM_DAY,
     channel: CHANNEL_FIXTURES[5],
-    items: [
-      {
-        heading: '出演者',
-        text: '【実況】三崎 高志\n【解説】元監督 浜口 剛',
-      },
-    ],
-    related: [],
   },
   multiline: {
     program: {
@@ -817,21 +841,21 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       startLabel: '19:00',
       endLabel: '20:15',
       subtitled: true,
+      items: [
+        {
+          heading: '番組内容',
+          text: '一日目  道具の手入れ\n二日目  窯入れと火の番\n三日目  仕上げと搬出\n\n工房の主が四十年つづけてきた手順を、季節の道具とともにたどる。',
+        },
+        {
+          heading: '出演者',
+          text: '【語り】  相原 みどり\n【出演】  柏木 泉',
+        },
+      ],
+      related: [],
+      durationLabel: '1時間15分',
     },
     day: PROGRAM_DAY,
     channel: CHANNEL_FIXTURES[0],
-    items: [
-      {
-        heading: '番組内容',
-        text: '一日目  道具の手入れ\n二日目  窯入れと火の番\n三日目  仕上げと搬出\n\n工房の主が四十年つづけてきた手順を、季節の道具とともにたどる。',
-      },
-      {
-        heading: '出演者',
-        text: '【語り】  相原 みどり\n【出演】  柏木 泉',
-      },
-    ],
-    related: [],
-    durationLabel: '1時間15分',
   },
   minimal: {
     program: {
@@ -844,11 +868,11 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       durationMin: 60,
       startLabel: '01:00',
       endLabel: '02:00',
+      items: [],
+      related: [],
+      durationLabel: '1時間',
     },
     day: PROGRAM_DAY,
     channel: CHANNEL_FIXTURES[7],
-    items: [],
-    related: [],
-    durationLabel: '1時間',
   },
 }
