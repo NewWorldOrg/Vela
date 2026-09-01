@@ -732,44 +732,72 @@ export const 番組情報が不足: Story = {
  * what it focuses into view, and a scroll the browser did would be read here
  * as a scroll the guide did.
  */
-function onScreenIn(
+function onScreenCells(
   canvasElement: HTMLElement,
   scroller: HTMLElement,
-): { cell: HTMLElement; program: Program } {
+): { cell: HTMLElement; program: Program }[] {
   const view = scroller.getBoundingClientRect()
   const cells = Array.from(
     canvasElement.querySelectorAll<HTMLElement>('[data-opens="program-panel"]'),
   )
-  const index = cells.findIndex((cell) => {
-    const at = cell.getBoundingClientRect()
 
-    return (
-      at.height > 0 &&
-      at.top >= view.top &&
-      at.bottom <= view.bottom &&
-      at.left >= view.left &&
-      at.right <= view.right
-    )
-  })
+  return cells
+    .map((cell, index) => ({ cell, program: IN_GRID_ORDER[index] }))
+    .filter(({ cell }) => {
+      const at = cell.getBoundingClientRect()
 
-  if (index < 0) {
+      return (
+        at.height > 0 &&
+        at.top >= view.top &&
+        at.bottom <= view.bottom &&
+        at.left >= view.left &&
+        at.right <= view.right
+      )
+    })
+}
+
+function onScreenIn(
+  canvasElement: HTMLElement,
+  scroller: HTMLElement,
+): { cell: HTMLElement; program: Program } {
+  const [first] = onScreenCells(canvasElement, scroller)
+
+  if (!first) {
     throw new Error('the guide is showing no programme whole')
   }
 
-  return { cell: cells[index], program: IN_GRID_ORDER[index] }
+  return first
 }
 
-/** The panel, once it is open rather than merely rendered closed. */
+/** The surface a programme opens onto, once it is up and holding focus. */
 async function openedPanel(canvasElement: HTMLElement): Promise<HTMLElement> {
-  return waitFor(() => {
-    const panel = partOf(canvasElement, 'aside')
+  const doc = canvasElement.ownerDocument
 
-    if (panel.getAttribute('aria-hidden') !== 'false') {
-      throw new Error('the panel is not open')
+  return waitFor(() => {
+    const surface = doc.querySelector<HTMLElement>(
+      '[data-slot="dialog-content"]',
+    )
+
+    if (surface === null) {
+      throw new Error('no programme is open')
     }
 
-    return panel
+    if (!surface.contains(doc.activeElement)) {
+      throw new Error('the surface does not hold focus')
+    }
+
+    return surface
   })
+}
+
+/** The layer the surface lays over the guide, and where a press outside lands. */
+const overlayOver = (canvasElement: HTMLElement): Element | null =>
+  canvasElement.ownerDocument.querySelector('[data-slot="dialog-overlay"]')
+
+const middleOf = (element: Element): [number, number] => {
+  const at = element.getBoundingClientRect()
+
+  return [at.left + at.width / 2, at.top + at.height / 2]
 }
 
 /**
@@ -810,6 +838,72 @@ export const 番組を開いても場所は動かない: Story = {
     await expect(
       panel.getByRole('link', { name: '番組詳細を開く' }),
     ).toHaveAttribute('href', `/guide/programs/${program.id}`)
+  },
+}
+
+/**
+ * A programme is read on a layer over the guide, and the grid underneath is out
+ * of reach while it is up. A press on a cell is a press outside, so what it
+ * does is shut what is open — the programme it landed on is opened by the press
+ * after that, not by the one that closed.
+ *
+ * Which is the difference from the surface that stood here before: that one
+ * swapped the new programme in under the reader, so a press meant to put the
+ * reading down changed what was being read instead.
+ *
+ * Both halves are asked for. A run where nothing ever opened would satisfy the
+ * shutting on its own, so the surface is read for the programme it was opened
+ * from first; and a run where the presses landed nowhere would satisfy it too,
+ * so the second press has to open the programme the first one was aimed at.
+ */
+export const 別の番組を押すとまず閉じる: Story = {
+  args: { guide: day },
+  decorators: [shorterThanADay],
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument
+    const scroller = partOf(canvasElement, '[data-guide-scroll]')
+    const showing = onScreenCells(canvasElement, scroller)
+
+    await expect(showing.length).toBeGreaterThan(1)
+
+    const [read, next] = showing
+
+    await expect(next.program.id).not.toBe(read.program.id)
+
+    await userEvent.click(read.cell)
+
+    await expect(
+      within(await openedPanel(canvasElement)).getByRole('heading', {
+        name: read.program.title,
+      }),
+    ).toBeVisible()
+
+    const [across, down] = middleOf(next.cell)
+
+    await expect(doc.elementFromPoint(across, down)).toBe(
+      overlayOver(canvasElement),
+    )
+
+    await userEvent.click(overlayOver(canvasElement) as HTMLElement)
+
+    await waitFor(() =>
+      expect(doc.querySelector('[data-slot="dialog-content"]')).toBeNull(),
+    )
+    await expect(next.cell).toHaveAttribute('aria-pressed', 'false')
+
+    await waitFor(() =>
+      expect(next.cell.contains(doc.elementFromPoint(across, down))).toBe(true),
+    )
+    await userEvent.click(next.cell)
+
+    const again = within(await openedPanel(canvasElement))
+
+    await expect(
+      again.getByRole('heading', { name: next.program.title }),
+    ).toBeVisible()
+    await expect(
+      again.getByRole('link', { name: '番組詳細を開く' }),
+    ).toHaveAttribute('href', `/guide/programs/${next.program.id}`)
   },
 }
 

@@ -43,11 +43,11 @@ const KEEPS_DEFAULT = [
  * from the probe — so the screen says which it is, and the probe reads every
  * control the story drew that is not behind an open layer or one of these.
  *
- * Two drawers have it, and the mark goes on only while they are shut.
+ * One drawer has it, and the mark goes on only while it is shut. A surface that
+ * unmounts when it closes needs no mark: it draws no control to be skipped.
  */
 const SHUT = [
   "components/guide/collection-drawer.tsx | data-cursor-shut={!open ? 'the drawer is shut' : undefined}",
-  "components/guide/program-panel.tsx | data-cursor-shut={!open ? 'the panel is shut' : undefined}",
 ]
 
 /**
