@@ -156,6 +156,21 @@ export const 尻切れ: Story = {
     ).toBeVisible()
   },
 }
+/**
+ * Nothing was dropped and the whole stream stayed scrambled, which is a
+ * recording that cannot be watched and reads as one. The count is on the
+ * record below under スクランブル残存, which is where the notice sends anyone
+ * who presses play.
+ */
+export const スクランブル残存: Story = {
+  args: { detail: detail('0906') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('視聴不可の恐れ')).toBeVisible()
+    await expect(canvas.getByText('5,042,768 パケット')).toBeVisible()
+  },
+}
 export const 失敗: Story = { args: { detail: detail('1239') } }
 export const ファイル不在: Story = { args: { detail: detail('0731') } }
 export const 録画中: Story = {

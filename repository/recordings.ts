@@ -19,7 +19,18 @@ type Counted = number | string
 type Countable = Counted | null
 
 export type RecordingOutcome = 'recording' | 'complete' | 'truncated' | 'failed'
-export type QualityLevel = 'good' | 'warn' | 'danger'
+
+/**
+ * How a recording reads as something to watch. The API grades it, weighing the
+ * packets lost against the packets left scrambled and keeping whichever is
+ * worse, so the level is taken from there rather than counted again here: a
+ * reading made from the dropped packets alone calls a recording that never
+ * descrambled good.
+ */
+export type QualityLevel = Exclude<
+  components['schemas']['QualityLevel'],
+  'unmeasured'
+>
 export type EncodeStatus = 'none' | 'waiting' | 'running' | 'done' | 'failed'
 export type ThumbnailState = 'shot' | 'pending' | 'none' | 'error'
 
@@ -81,7 +92,9 @@ export interface RecordingsFilter {
 function matchesState(r: Recording, state: string) {
   switch (state) {
     case '問題のある録画':
-      return r.quality.level === 'warn' || r.quality.level === 'danger'
+      return (
+        r.quality.level === 'warning' || r.quality.level === 'mayNotBeWatchable'
+      )
     case '尻切れ・失敗':
       return r.outcome === 'truncated' || r.outcome === 'failed'
     case '未計測':
@@ -211,6 +224,14 @@ export interface RecordingDetail extends Recording {
   tunerUnit?: { main: string; sub?: string }
   eoverflow?: string
   scramble?: { main: string; sub?: string }
+  /**
+   * The share of the recording's packets that were still scrambled when it was
+   * written, as a fraction of the packets counted. Unset where nothing counted
+   * them. A picture cannot be built out of packets that were never descrambled,
+   * so this is what tells a failed playback apart from one that would come back
+   * on its own.
+   */
+  scrambledShare?: number
   stopReason?: string
   failureReason?: { title: string; body: string }
   thumbnailState?: { main: string; sub?: string; canGenerate?: boolean }
@@ -513,6 +534,10 @@ function toDetail(
             main: `${grouped(scrambled)} パケット`,
             sub: 'サイズが正しいのに再生できない場合はここを見ます',
           },
+    scrambledShare:
+      scrambled == null || totalPackets === 0
+        ? undefined
+        : scrambled / totalPackets,
     stopReason: stopReasonOf(d),
     failureReason:
       base.outcome === 'failed' && failure
@@ -556,7 +581,7 @@ function qualityOf(
   r: RecordingResponder,
   outcome: RecordingOutcome,
 ): RecordingQuality {
-  if (!r.drops.ccMeasured) {
+  if (r.drops.quality === 'unmeasured') {
     return {
       measured: false,
       detail: outcome === 'recording' ? '録画の完了時に確定します' : undefined,
@@ -564,29 +589,22 @@ function qualityOf(
   }
 
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
-  const total = counted(r.drops.ccTotalPackets) ?? 0
+  const scrambled = counted(r.drops.scrambledPackets)
 
   return {
     measured: true,
-    level: levelOf(ratioOf(dropped, total)),
-    detail: `ドロップ ${grouped(dropped)}`,
+    level: r.drops.quality,
+    // Both readings, because either can be what decided the level, and a
+    // recording graded on its scrambled packets under a line that counts only
+    // the dropped ones reads as a badge with nothing behind it.
+    detail: scrambled
+      ? `ドロップ ${grouped(dropped)} / スクランブル残存 ${grouped(scrambled)}`
+      : `ドロップ ${grouped(dropped)}`,
   }
 }
-
-const WARN_ABOVE_PERCENT = 0.02
-
-const DANGER_ABOVE_PERCENT = 0.1
 
 function ratioOf(dropped: number, total: number): number {
   return total === 0 ? 0 : (dropped / total) * 100
-}
-
-function levelOf(percent: number): QualityLevel {
-  if (percent > DANGER_ABOVE_PERCENT) {
-    return 'danger'
-  }
-
-  return percent > WARN_ABOVE_PERCENT ? 'warn' : 'good'
 }
 
 const THUMBNAILS: Record<

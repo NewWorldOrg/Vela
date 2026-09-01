@@ -271,6 +271,34 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     encodePanel: { profile: '録画再生用(H.264)', attempts: '2 回 / 上限 3 回' },
   },
   {
+    ...base('0906'),
+    channelNo: '091',
+    genres: ['音楽'],
+    avInfo: '1080i · ステレオ',
+    outcomeBody:
+      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 1.3 GB。突き合わせの内訳は「録画の記録」にあります。',
+    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
+    reconcile: {
+      main: '1.3 GB / 期待レンジ 1.2–1.5 GB',
+      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
+    },
+    interruptions: { main: '中断 0 回 / 再開 0 回' },
+    tunerUnit: {
+      main: 'adapter2/frontend0',
+      sub: '地上 · セッション rec-20250906-2100-091',
+    },
+    eoverflow: '0 件',
+    scramble: {
+      main: '5,042,768 パケット',
+      sub: 'サイズが正しいのに再生できない場合はここを見ます',
+    },
+    scrambledShare: 5_042_768 / 5_302_549,
+    stopReason: '自分の abort(終了時刻に到達)',
+    thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
+    qualityTotal: '0',
+    qualityRatio: '0.0000',
+  },
+  {
     ...base('0731'),
     channelNo: '131',
     genres: ['ドキュメンタリー'],
