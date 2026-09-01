@@ -207,14 +207,47 @@ export function AdminSideNavItem({
   )
 }
 
-export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
+/**
+ * How wide a screen is read, in two steps the screen picks by name.
+ *
+ * Nothing bounded a screen before this, so every one of them was as wide as
+ * the window: at 2560 a row of a list ran the whole desk and the eye lost the
+ * line between a value and the label it belongs to. The step is held here and
+ * chosen by name, the way the width of a surface over the page is — a number
+ * written per screen is a number half of them will be missing.
+ *
+ * `full` is not a screen that happens to be wide. It is a screen whose content
+ * is an axis: the guide is hours across and services down, and the live screen
+ * puts a picture beside the list it is chosen from. Bounding either would take
+ * away the thing being read rather than tidy it.
+ */
+const SCREEN_WIDTHS = {
+  default: 'mx-auto w-full max-w-[1280px]',
+  full: 'w-full',
+} as const
+
+export type ScreenWidth = keyof typeof SCREEN_WIDTHS
+
+export function ScreenMain({
+  width = 'default',
+  className,
+  ...props
+}: ComponentProps<'main'> & { width?: ScreenWidth }) {
   return (
     <main
+      data-slot="screen-main"
+      data-width={width}
+      className={cn('min-h-0 flex-1', SCREEN_WIDTHS[width], className)}
+      {...props}
+    />
+  )
+}
+
+export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
+  return (
+    <ScreenMain
       data-slot="admin-main"
-      className={cn(
-        'min-w-0 flex-1 overflow-y-auto px-[18px] pt-4 pb-5',
-        className,
-      )}
+      className={cn('min-w-0 overflow-y-auto px-[18px] pt-4 pb-5', className)}
       {...props}
     />
   )

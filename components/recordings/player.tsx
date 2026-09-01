@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { formatBytes, formatPlayhead } from '@/lib/format'
+import { formatPlayhead } from '@/lib/format'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import {
-  PLAYBACK_PROFILES,
   PLAYBACK_PROFILE_UNASKED,
   videoPictureHref,
   videoFrameHref,
@@ -19,37 +18,42 @@ import {
   PLAYER_BUTTON,
   PLAYER_PALETTE,
   PLAYER_PANE,
-  PLAYER_PICTURE_PANE,
+  PLAYER_ROUND_BUTTON,
+  PLAYER_ROUND_BUTTON_ON,
 } from '@/components/recordings/player-palette'
-import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { PlayerVolume } from '@/components/recordings/player-volume'
 import { PlayerSeek } from '@/components/recordings/player-seek'
-import { PlaybackStandingChip } from '@/components/recordings/playback-standing'
+import { PlayerSettings } from '@/components/recordings/player-settings'
+import { PlayerReading } from '@/components/recordings/player-reading'
 import {
   askWhyItWouldNotPlay,
   faultOnTheFace,
   PlaybackFaultNotice,
   type PlaybackFault,
 } from '@/components/recordings/playback-fault'
-import { ExternalPlayer } from '@/components/recordings/external-player'
 import { pressable, still } from '@/components/vela/tactile'
 
-const PTOG = PLAYER_BUTTON
-const CBTN = cn(
-  'tap-target flex size-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/5 text-(--pl-ink-2) transition-[translate,background-color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px disabled:border-white/12 disabled:bg-white/3 disabled:text-(--pl-ink-3) disabled:hover:border-white/12 disabled:hover:bg-white/3 disabled:hover:text-(--pl-ink-3)',
-  pressable,
-  still,
-)
-const CBTN_ON =
-  'bg-[rgba(150,187,180,.22)] border-[rgba(150,187,180,.55)] text-[#C0D8D3]'
+/**
+ * What has no argument on the API yet. The control stays on the bar, drawn
+ * switched off: taken away it would be missed, and left pressable it would
+ * move its own pill over a picture that never changed. Why is in the gear,
+ * beside the two tracks it is the same answer for.
+ */
+const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
+
+/** What the chapter marks cannot be jumped along yet. */
 const NOT_YET = '再生はこれから実装されます'
 
 /**
- * What has no argument on the API yet. The controls stay on the chrome, drawn
- * switched off: taken away they would be missed, and left pressable they would
- * move their own pill over a picture that never changed.
+ * How long the bar stays after the pointer last said anything, while the
+ * picture is running.
+ *
+ * Three seconds is long enough to cross the bar and reach a control, and short
+ * enough that a picture watched to the end is not watched through a strip of
+ * chrome. Nothing counts down while the picture is not running: a paused
+ * player has nothing to get out of the way of.
  */
-const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
+const RESTS = 3000
 
 /** What the picture is doing. */
 type Phase = 'idle' | 'waiting' | 'playing' | 'paused' | 'diagnosing' | 'broken'
@@ -62,6 +66,17 @@ const WAITING_ON = {
 
 /**
  * The recording, played.
+ *
+ * The picture takes the whole of the player and the controls are laid over it,
+ * the way every player anyone has used is built. They were stacked under the
+ * picture before — seven strips of switches, keys and prose — and the picture
+ * was the smallest thing on a screen about watching a recording.
+ *
+ * The bar is up whenever the picture is not running, and while it is running
+ * it is up for as long as the pointer is saying something, or the keyboard is
+ * inside it. Hidden, it is still in the tab order and comes back the moment
+ * focus reaches it: a control that cannot be reached without a pointer is a
+ * control half the readers do not have.
  *
  * The plan is read before any picture is asked for, so the screen knows how
  * the recording ended, which route the picture comes by and what a change of
@@ -102,9 +117,15 @@ export function Player({
    */
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
 }) {
-  const encoded = d.encode?.status === 'done'
   const video = useRef<HTMLVideoElement>(null)
-  const shell = useRef<HTMLElement>(null)
+  /**
+   * The pane the picture is drawn in, held as state and not as a ref: it is
+   * what goes fullscreen, and it is also where the settings surface has to be
+   * put while it is — and a portal is given its container while rendering, so
+   * a ref that is still null on the first pass would send the surface to a
+   * body that is not being drawn.
+   */
+  const [shell, setShell] = useState<HTMLElement | null>(null)
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile>(
     PLAYBACK_PROFILE_UNASKED,
@@ -129,6 +150,20 @@ export function Player({
         ),
   )
 
+  /** Whether the pointer has said anything in the last few seconds. */
+  const [stirred, setStirred] = useState(false)
+  /** Whether the pointer is resting on the bar itself. */
+  const [onTheBar, setOnTheBar] = useState(false)
+  /**
+   * Whether the keyboard — and not a click — is somewhere inside the bar.
+   *
+   * `:focus-visible` and not `:focus`, because pressing play with a mouse
+   * leaves that button focused: read as focus, the bar would never go down
+   * again after the one press every reader makes first.
+   */
+  const [held, setHeld] = useState(false)
+  const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   /**
    * Which attempt an answer belongs to. A reason is asked for over the network
    * and arrives after the press that started it, so an answer about a picture
@@ -137,21 +172,41 @@ export function Player({
   const attempt = useRef(0)
 
   const duration = d.lengthSec ?? 0
-  const tsLabel =
-    d.sizeBytes == null ? '元 TS' : `元 TS ${formatBytes(d.sizeBytes)}`
-  const encodedLabel = `H.264 ${d.encodePanel?.outSize ?? ''}`.trim()
   const drops = d.qualitySpots?.map((spot) => spot.second)
+  const chromeUp = phase !== 'playing' || stirred || onTheBar || held
 
   // useEffect exception: browser API (the document's fullscreen element) +
   // listener cleanup. Leaving fullscreen by Esc is not a press this component
   // sees, and the control that says "leave" is inside the picture now.
   useEffect(() => {
-    const read = () => setFull(document.fullscreenElement === shell.current)
+    const read = () => setFull(document.fullscreenElement === shell)
 
     document.addEventListener('fullscreenchange', read)
 
     return () => document.removeEventListener('fullscreenchange', read)
-  }, [])
+  }, [shell])
+
+  // useEffect exception: clearing a timer on unmount. Nothing is read or
+  // synced here; the timer is started by a pointer and would otherwise fire
+  // into a component that has gone.
+  useEffect(
+    () => () => {
+      if (settling.current) {
+        clearTimeout(settling.current)
+      }
+    },
+    [],
+  )
+
+  /** The pointer said something: put the bar up and start the count again. */
+  const stir = () => {
+    if (settling.current) {
+      clearTimeout(settling.current)
+    }
+
+    setStirred(true)
+    settling.current = setTimeout(() => setStirred(false), RESTS)
+  }
 
   /**
    * Ask for the picture from a second in, in the profile asked for. The source
@@ -244,6 +299,14 @@ export function Player({
     play(position, asked)
   }
 
+  const chooseSpeed = (next: string) => {
+    setSpeed(next)
+
+    if (video.current) {
+      video.current.playbackRate = Number(next)
+    }
+  }
+
   /**
    * How loud. Nought is silence, and silence is the same state the speaker
    * beside the level switches on, so the two say the same thing rather than
@@ -282,7 +345,7 @@ export function Player({
       return
     }
 
-    void shell.current?.requestFullscreen?.()
+    void shell?.requestFullscreen?.()
   }
 
   if (phase === 'broken') {
@@ -303,15 +366,18 @@ export function Player({
   return (
     <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
       <section
-        ref={shell}
+        ref={setShell}
         style={PLAYER_PALETTE}
+        onPointerMove={stir}
+        onPointerLeave={stir}
+        onKeyDown={stir}
         className={cn(
-          'overflow-hidden rounded-xl border border-line-strong bg-(--pl-bg) shadow-pop-xl',
-          PLAYER_PICTURE_PANE,
+          'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl',
+          PLAYER_PANE,
           '[&:fullscreen]:flex [&:fullscreen]:max-w-none [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
         )}
       >
-        <div className="relative flex aspect-video w-full items-center justify-center bg-(--pl-video) [:fullscreen_&]:aspect-auto [:fullscreen_&]:min-h-0 [:fullscreen_&]:flex-1">
+        <div className="relative flex aspect-video w-full items-center justify-center [:fullscreen_&]:aspect-auto [:fullscreen_&]:min-h-0 [:fullscreen_&]:flex-1">
           <video
             ref={video}
             src={source}
@@ -330,7 +396,10 @@ export function Player({
             onLoadedData={() =>
               setPhase((was) => (was === 'waiting' ? 'paused' : was))
             }
-            onPlaying={() => setPhase('playing')}
+            onPlaying={() => {
+              setPhase('playing')
+              stir()
+            }}
             onWaiting={() => setPhase('waiting')}
             onPause={() =>
               setPhase((was) => (was === 'waiting' ? was : 'paused'))
@@ -370,242 +439,167 @@ export function Player({
               {WAITING_ON[phase]}
             </p>
           )}
-        </div>
-        <div className="px-6 pt-2 pb-4 max-[700px]:px-4 [:fullscreen_&]:max-h-[45vh] [:fullscreen_&]:shrink-0 [:fullscreen_&]:overflow-y-auto">
-          <div className="pt-1.5">
-            <PlaybackStandingChip standing={plan.standing} />
-          </div>
-          {duration > 0 && (
-            <PlayerSeek
-              id={d.id}
-              duration={duration}
-              position={position}
-              drops={drops}
-              marks={d.seek}
-              seeking={plan.seeking}
-              onChoose={choose}
-              frameHref={frameHref}
-            />
-          )}
-          {/* The row wraps, and a 44px press area on a 27px control reaches
-            8.5px past it top and bottom. The lines are held far enough apart
-            that no area reaches into the line above or below it, and the row
-            starts clear of the bar's own area — 13px below an 18px bar. */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-5">
-            <button
-              type="button"
-              aria-label={phase === 'playing' ? '一時停止' : '再生'}
-              onClick={toggle}
-              className={CBTN}
-            >
-              {phase === 'playing' ? (
-                <svg
-                  viewBox="0 0 24 24"
-                  className="fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-                >
-                  <path d="M9.4 5.8v12.4M14.6 5.8v12.4" />
-                </svg>
-              ) : (
-                <PlayIcon />
-              )}
-            </button>
-            <span className="font-code text-sub whitespace-nowrap text-(--pl-ink-2)">
-              {formatPlayhead(position)} / {formatPlayhead(duration)}
-            </span>
-            <button
-              type="button"
-              disabled
-              aria-pressed={false}
-              title={NOT_WIRED}
-              className={PTOG}
-            >
-              字幕
-            </button>
-            {d.seek?.chapterPcts && (
-              <button type="button" disabled title={NOT_YET} className={PTOG}>
-                次のチャプターへ
-                <span className="ml-1.5 inline-block rounded border border-white/20 px-1 font-code text-[11px] leading-normal text-(--pl-ink-3)">
-                  →
-                </span>
+          {/*
+            Down is said with `opacity` and the pointer events, not with
+            `visibility` or by taking it out of the page: a bar that is not
+            laid out cannot be tabbed to, and a control the keyboard cannot
+            reach is a control that is not there. The keyboard is what brings
+            it back — `:focus-visible`, so that the click that started the
+            picture does not leave the bar standing over it for the rest of the
+            programme — and the CSS says so as well as the handler, so the rule
+            holds on the first tab in.
+          */}
+          <div
+            data-slot="player-chrome"
+            data-up={chromeUp ? 'true' : undefined}
+            onPointerEnter={() => setOnTheBar(true)}
+            onPointerLeave={() => setOnTheBar(false)}
+            onFocus={(event) =>
+              setHeld(
+                event.target instanceof Element &&
+                  event.target.matches(':focus-visible'),
+              )
+            }
+            onBlur={() => setHeld(false)}
+            className={cn(
+              'absolute inset-x-0 bottom-0 z-10 bg-(--pl-chrome) px-4 pt-3.5 pb-3 max-[700px]:px-3',
+              'pointer-events-none opacity-0 transition-opacity duration-200',
+              'data-[up]:pointer-events-auto data-[up]:opacity-100',
+              'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:opacity-100',
+            )}
+          >
+            {duration > 0 && (
+              <PlayerSeek
+                id={d.id}
+                duration={duration}
+                position={position}
+                drops={drops}
+                marks={d.seek}
+                onChoose={choose}
+                frameHref={frameHref}
+              />
+            )}
+            {/* The seek bar is 18px tall and its 44px area reaches 13px past
+              it; the round buttons are 32px and theirs reaches 6px. 24px
+              between the two rows leaves 5px of clear air, so neither answers
+              a press meant for the other. */}
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-4">
+              <button
+                type="button"
+                aria-label={phase === 'playing' ? '一時停止' : '再生'}
+                onClick={toggle}
+                className={PLAYER_ROUND_BUTTON}
+              >
+                {phase === 'playing' ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
+                  >
+                    <path d="M9.4 5.8v12.4M14.6 5.8v12.4" />
+                  </svg>
+                ) : (
+                  <PlayIcon className="size-4" />
+                )}
               </button>
-            )}
-            <div className="inline-flex flex-wrap items-center gap-2">
-              <span className="text-[11px] whitespace-nowrap text-(--pl-ink-3)">
-                音声
+              <span className="font-code text-sub whitespace-nowrap text-(--pl-ink-2)">
+                {formatPlayhead(position)} / {formatPlayhead(duration)}
               </span>
-              <PlayerSegmentedControl
-                label="音声"
-                options={['主音声', '副音声']}
-                onChange={() => {}}
-                off
-                title={NOT_WIRED}
-              />
-            </div>
-            <div className="inline-flex flex-wrap items-center gap-2">
-              <span className="text-[11px] whitespace-nowrap text-(--pl-ink-3)">
-                速度
-              </span>
-              <PlayerSegmentedControl
-                label="速度"
-                options={['0.5', '1.0', '1.25', '1.5', '2.0']}
-                value={speed}
-                onChange={(next) => {
-                  setSpeed(next)
-
-                  if (video.current) {
-                    video.current.playbackRate = Number(next)
-                  }
-                }}
-                numeric
-              />
-            </div>
-            {(d.seek?.cmSpans || (drops && drops.length > 0)) && (
-              <div className="ml-auto flex flex-wrap items-center gap-4 max-[700px]:ml-0">
-                {d.seek?.cmSpans && (
-                  <span className="inline-flex items-center gap-[7px] text-[11px] text-(--pl-ink-3)">
-                    <i className="inline-block h-[5px] w-4 rounded-full [background:repeating-linear-gradient(115deg,rgba(215,172,94,.62)_0_4px,rgba(215,172,94,.26)_4px_8px)]" />
-                    CM と判定された区間 — 飛ばすかは自分で決めます
-                  </span>
-                )}
-                {drops && drops.length > 0 && (
-                  <span className="inline-flex items-center gap-[7px] text-[11px] text-(--pl-ink-3)">
-                    <i className="inline-block size-2 rounded-full bg-(--pl-coral)" />
-                    ドロップ発生位置
-                  </span>
-                )}
-              </div>
-            )}
-            <PlayerVolume level={muted ? 0 : volume} onChoose={chooseVolume} />
-            <button
-              type="button"
-              aria-label="消音"
-              aria-pressed={muted}
-              onClick={() => mute(!muted)}
-              className={cn(CBTN, muted && CBTN_ON)}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-              >
-                <path d="M11.2 5.2 6.7 9.1H3.2v5.9h3.5l4.5 3.9V5.2Z" />
-                {muted ? (
-                  <path d="M15.2 9.4 19.6 14.6M19.6 9.4 15.2 14.6" />
-                ) : (
-                  <path d="M15 9.3a3.7 3.7 0 0 1 .1 5.5" />
-                )}
-              </svg>
-            </button>
-            <button
-              type="button"
-              aria-label="全画面"
-              aria-pressed={full}
-              onClick={toggleFullscreen}
-              className={cn(CBTN, full && CBTN_ON)}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-              >
-                {full ? (
-                  <path d="M9.4 4.3v5.1H4.3M14.6 4.3v5.1h5.1M9.4 19.7v-5.1H4.3M14.6 19.7v-5.1h5.1" />
-                ) : (
-                  <path d="M4.3 9.4V4.3h5.1M19.7 9.4V4.3h-5.1M4.3 14.6v5.1h5.1M19.7 14.6v5.1h-5.1" />
-                )}
-              </svg>
-            </button>
-          </div>
-          <p className="mt-2.5 text-[11px] leading-relaxed text-(--pl-ink-3)">
-            字幕と音声の選択はこれから実装されます。画面に見えている字幕は映像に焼き付いたものです。
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3.5 border-t border-dashed border-white/15 pt-3">
-            <div className="flex flex-wrap items-center gap-[9px]">
-              <span className="text-[11px] text-(--pl-ink-3)">再生ソース</span>
-              {encoded ? (
-                <span
-                  role="group"
-                  aria-label="再生ソース"
-                  className="inline-flex gap-1 rounded-full border border-white/20 p-0.5"
+              {/*
+                Beside the transport and not in the gear: moving along the
+                recording is what a player is pressed for, and the marks it
+                jumps between are on the bar above it. The rule it comes from
+                is that a chapter is jumped by a press and never skipped on
+                the reader's behalf, so there has to be a press.
+              */}
+              {d.seek?.chapterPcts && (
+                <button
+                  type="button"
+                  disabled
+                  title={NOT_YET}
+                  className={PLAYER_BUTTON}
                 >
-                  {[encodedLabel, tsLabel].map((label, index) => {
-                    const inUse = index === (onTheFly ? 1 : 0)
-
-                    return (
-                      <span
-                        key={label}
-                        aria-current={inUse ? 'true' : undefined}
-                        className={cn(
-                          'rounded-full px-[11px] py-[3px] font-code text-[11.5px] font-medium whitespace-nowrap text-(--pl-ink-2)',
-                          inUse &&
-                            'bg-[rgba(150,187,180,.24)] font-bold text-[#C0D8D3]',
-                        )}
-                      >
-                        {label}
-                      </span>
-                    )
-                  })}
-                </span>
-              ) : (
-                <span className="font-code text-[11.5px] text-(--pl-ink-2)">
-                  {tsLabel}(オンザフライ)
-                </span>
+                  次のチャプターへ
+                  <span className="ml-1.5 inline-block rounded border border-white/20 px-1 font-code text-[11px] leading-normal text-(--pl-ink-3)">
+                    →
+                  </span>
+                </button>
               )}
+              <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-4 max-[700px]:ml-0">
+                <button
+                  type="button"
+                  disabled
+                  aria-pressed={false}
+                  title={NOT_WIRED}
+                  className={PLAYER_BUTTON}
+                >
+                  字幕
+                </button>
+                <PlayerVolume
+                  level={muted ? 0 : volume}
+                  onChoose={chooseVolume}
+                />
+                <button
+                  type="button"
+                  aria-label="消音"
+                  aria-pressed={muted}
+                  onClick={() => mute(!muted)}
+                  className={cn(
+                    PLAYER_ROUND_BUTTON,
+                    muted && PLAYER_ROUND_BUTTON_ON,
+                  )}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
+                  >
+                    <path d="M11.2 5.2 6.7 9.1H3.2v5.9h3.5l4.5 3.9V5.2Z" />
+                    {muted ? (
+                      <path d="M15.2 9.4 19.6 14.6M19.6 9.4 15.2 14.6" />
+                    ) : (
+                      <path d="M15 9.3a3.7 3.7 0 0 1 .1 5.5" />
+                    )}
+                  </svg>
+                </button>
+                <PlayerSettings
+                  container={shell}
+                  profile={profile}
+                  onChooseProfile={chooseProfile}
+                  onTheFly={onTheFly}
+                  speed={speed}
+                  onChooseSpeed={chooseSpeed}
+                />
+                <button
+                  type="button"
+                  aria-label="全画面"
+                  aria-pressed={full}
+                  onClick={toggleFullscreen}
+                  className={cn(
+                    PLAYER_ROUND_BUTTON,
+                    full && PLAYER_ROUND_BUTTON_ON,
+                  )}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
+                  >
+                    {full ? (
+                      <path d="M9.4 4.3v5.1H4.3M14.6 4.3v5.1h5.1M9.4 19.7v-5.1H4.3M14.6 19.7v-5.1h5.1" />
+                    ) : (
+                      <path d="M4.3 9.4V4.3h5.1M19.7 9.4V4.3h-5.1M4.3 14.6v5.1h5.1M19.7 14.6v5.1h-5.1" />
+                    )}
+                  </svg>
+                </button>
+              </div>
             </div>
-            <p className="min-w-[220px] flex-1 text-[11.5px] leading-relaxed text-(--pl-ink-3)">
-              {!onTheFly ? (
-                <>
-                  <b className="block font-bold text-(--pl-ink-2)">
-                    エンコード済みを再生しています。
-                  </b>
-                  Range 直配信のため、シークはバイト範囲の要求だけで済みます。
-                </>
-              ) : encoded ? (
-                <>
-                  <b className="block font-bold text-(--pl-ink-2)">
-                    元 TS を再生しています。
-                  </b>
-                  シークのたびにトランスコーダを立て直します。
-                </>
-              ) : d.encode?.status === 'failed' ? (
-                <>
-                  <b className="block font-bold text-(--pl-ink-2)">
-                    エンコードは失敗したため、元 TS をオンザフライで再生します。
-                  </b>
-                  シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。
-                </>
-              ) : (
-                <>
-                  <b className="block font-bold text-(--pl-ink-2)">
-                    未エンコードの録画を再生しています。
-                  </b>
-                  シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。エンコード済みの成果物があれば
-                  Range 直配信になり、同じシークバーでも体感が桁違いになります。
-                </>
-              )}
-            </p>
-            <ExternalPlayer
-              id={d.id}
-              onTakeTicket={onTakeTicket}
-              video={video}
-              className="ml-auto max-[700px]:ml-0"
-            />
           </div>
-          {onTheFly && (
-            <div className="mt-3 flex flex-wrap items-center gap-[9px] border-t border-dashed border-white/15 pt-3">
-              <span className="text-[11px] text-(--pl-ink-3)">画質</span>
-              <PlayerSegmentedControl
-                label="画質"
-                options={PLAYBACK_PROFILES}
-                value={profile}
-                onChange={chooseProfile}
-                numeric
-              />
-              <span className="text-[11px] text-(--pl-ink-3)">
-                オンザフライ再生のときだけ選べます
-              </span>
-            </div>
-          )}
         </div>
       </section>
+      <PlayerReading
+        detail={d}
+        plan={plan}
+        onTakeTicket={onTakeTicket}
+        video={video}
+      />
     </div>
   )
 }

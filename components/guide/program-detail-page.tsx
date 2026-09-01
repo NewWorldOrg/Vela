@@ -5,6 +5,7 @@ import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { ChevronLeftIcon } from '@/components/vela/icons'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 export function ProgramDetailView({
   detail,
@@ -16,7 +17,7 @@ export function ProgramDetailView({
   const { program, channel, day } = detail
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto pb-16">
+    <ScreenMain className="overflow-y-auto pb-16">
       <div className="mx-auto max-w-[780px] px-6 pt-[22px] max-[700px]:px-3.5">
         <Button variant="ghost" size="sm" className="mb-3.5" asChild>
           <Link href="/guide">
@@ -43,6 +44,6 @@ export function ProgramDetailView({
           で単体で開けます。番組の識別子は(ネットワーク・サービス・イベント)の組で、開始時刻を併記して同一性を判定します。
         </p>
       </div>
-    </main>
+    </ScreenMain>
   )
 }

@@ -97,10 +97,11 @@ export const 完全: Story = {
       canvas.getByRole('link', { name: 'この録画の予約' }),
     ).toHaveAttribute('href', '/reservations#reservation-r-309')
 
-    // How the recording ended, said on the player rather than only in the band
-    // above it: a recording that stops short hands over a picture that looks
-    // like a whole one.
-    await expect(canvas.getByText('録画全体が再生されます')).toBeVisible()
+    // 完全 is said once, in the band at the top. Said again under the picture
+    // it would be the loudest thing on a screen where nothing is wrong, and
+    // the two standings that do change what can be watched would read like it.
+    await expect(canvas.getByText('完全')).toBeVisible()
+    await expect(canvas.queryByText('録画全体が再生されます')).toBeNull()
 
     // Nothing is asked for until the play button is pressed, so no transcoder
     // is started for a reader who came to read the record.
@@ -149,6 +150,8 @@ export const 尻切れ: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    // Under the picture, where 完全 says nothing: what can be watched is not
+    // what was asked for, and the picture itself will not say so.
     await expect(
       canvas.getByText(
         '録画は途中で終わっています。欠けた部分は再生されません',

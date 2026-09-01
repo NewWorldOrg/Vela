@@ -53,6 +53,7 @@ import {
   PlusIcon,
   SearchIcon,
 } from '@/components/vela/icons'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 /**
  * The 種別 row's neutral choice. Every other row says "not asked for" by being
@@ -223,7 +224,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
     channels.find((channel) => channel.id === id)?.name || id
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-4 flex flex-wrap items-start gap-3.5">
         <div className="min-w-0 flex-1">
           <h1 className="heading text-[20px]">番組検索</h1>
@@ -754,7 +755,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
           </>
         )
       )}
-    </main>
+    </ScreenMain>
   )
 }
 

@@ -47,6 +47,7 @@ import { EncodeStatusChip } from '@/components/recordings/encode-status-chip'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import { RecordingActions } from '@/components/recordings/recording-actions'
 import { ThumbnailButton } from '@/components/recordings/thumbnail-button'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 const OUTCOME_STYLE = {
   complete: 'bg-tint-sage',
@@ -146,7 +147,7 @@ export function RecordingDetailView({
     playback.plan.route !== 'nothing'
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto pb-16">
+    <ScreenMain className="overflow-y-auto pb-16">
       <div className="flex items-center px-[30px] pt-[18px] pb-3 max-[1060px]:px-5 max-[700px]:px-3.5">
         <Link
           href="/library"
@@ -521,6 +522,6 @@ export function RecordingDetailView({
           </section>
         </div>
       </div>
-    </main>
+    </ScreenMain>
   )
 }

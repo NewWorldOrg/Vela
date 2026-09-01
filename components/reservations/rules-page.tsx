@@ -100,6 +100,7 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 /** What the address asks the editor to hold. */
 export type RuleEditing =
@@ -196,7 +197,7 @@ function RulesScreen({
     channels.find((channel) => channel.id === id)?.name || id
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <ReservationTabs
         current="rules"
         action={
@@ -286,7 +287,7 @@ function RulesScreen({
           />
         )}
       </div>
-    </main>
+    </ScreenMain>
   )
 }
 

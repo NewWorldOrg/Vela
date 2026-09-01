@@ -38,6 +38,7 @@ const TOLD_TO_RUN = [
 const THE_SUITE = [
   '.storybook/cursor-exempt.test.ts',
   '.storybook/every-test-runs.test.ts',
+  '.storybook/screen-main.test.ts',
   '.storybook/tap-exempt.test.ts',
   'lib/dismiss.test.ts',
   'lib/format.test.ts',

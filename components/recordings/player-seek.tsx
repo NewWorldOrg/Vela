@@ -5,7 +5,6 @@ import { useRef, useState, type KeyboardEvent } from 'react'
 import { formatPlayhead } from '@/lib/format'
 import type { SeekMarks } from '@/repository/recordings'
 import { videoFrameHref } from '@/repository/video-paths'
-import type { PlaybackSeeking } from '@/repository/videos'
 
 /** How long the pointer rests before the frame under it is asked for. */
 const SETTLES = 140
@@ -16,12 +15,13 @@ const STEP = 10
 const PAGE = 60
 
 /**
- * The bar the recording is followed and chosen along.
+ * The bar the recording is followed and chosen along, laid over the picture.
  *
- * Where the picture is transcoded as it plays there is no byte range to seek
- * by, so choosing a position is not a scrub: the stream is built again from
- * the second chosen. The bar says so under itself rather than moving a
- * playhead that the transport cannot honour.
+ * What choosing a position costs is read under the picture rather than under
+ * the bar: where the picture is transcoded as it plays the stream is built
+ * again from the second chosen, and that is a thing to know about the
+ * recording, not a thing to press. Written here it was a strip of prose across
+ * the middle of the chrome.
  *
  * The frame under the pointer is asked for by the second, and only after the
  * pointer rests. A recording the API has no frames for answers 404 for every
@@ -34,7 +34,6 @@ export function PlayerSeek({
   position,
   drops,
   marks,
-  seeking,
   onChoose,
   frameHref = videoFrameHref,
 }: {
@@ -43,7 +42,6 @@ export function PlayerSeek({
   position: number
   drops?: number[]
   marks?: SeekMarks
-  seeking?: PlaybackSeeking
   onChoose: (second: number) => void
   frameHref?: (id: string, at: number) => string
 }) {
@@ -130,7 +128,7 @@ export function PlayerSeek({
   }
 
   return (
-    <div className="mt-2">
+    <div>
       <div
         role="slider"
         tabIndex={0}
@@ -212,11 +210,6 @@ export function PlayerSeek({
           </div>
         )}
       </div>
-      {seeking === 'byStartingAgain' && (
-        <p className="mt-1 text-[11px] leading-relaxed text-(--pl-ink-3)">
-          シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。
-        </p>
-      )}
     </div>
   )
 }

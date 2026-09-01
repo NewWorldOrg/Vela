@@ -22,6 +22,7 @@ import { ChevronLeftIcon, QualityIcon } from '@/components/vela/icons'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { RunCheckButton } from '@/components/integrity/run-check-button'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 const COLUMNS = ['ファイル', '理由', 'サイズ', '検出']
 
@@ -43,7 +44,7 @@ export function IntegrityView({
   const { check, findings, roots } = result
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-3">
         <Link
           href="/library"
@@ -188,6 +189,6 @@ export function IntegrityView({
           </p>
         </>
       )}
-    </main>
+    </ScreenMain>
   )
 }
