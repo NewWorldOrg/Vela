@@ -1,5 +1,6 @@
 import { EmptyState } from '@/components/vela/empty-state'
 import type { SpotName } from '@/components/vela/spot-illustration'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 export function ScreenPlaceholder({
   spot = 'antenna',
@@ -9,10 +10,10 @@ export function ScreenPlaceholder({
   children: React.ReactNode
 }) {
   return (
-    <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-8">
+    <ScreenMain className="flex items-center justify-center overflow-y-auto p-8">
       <EmptyState spot={spot} className="w-full max-w-[420px]">
         {children}
       </EmptyState>
-    </main>
+    </ScreenMain>
   )
 }

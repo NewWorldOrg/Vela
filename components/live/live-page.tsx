@@ -13,6 +13,7 @@ import {
 } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { PlayIcon, QualityIcon } from '@/components/vela/icons'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 const NOT_YET = '再生はこれから実装されます'
 
@@ -40,7 +41,10 @@ export function LiveView({ live }: { live: LiveResult }) {
   )
 
   return (
-    <main className="flex min-h-0 flex-1 items-start gap-3.5 overflow-y-auto px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1060px]:flex-col">
+    <ScreenMain
+      width="full"
+      className="flex items-start gap-3.5 overflow-y-auto px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1060px]:flex-col"
+    >
       <div className="min-w-0 flex-1">
         <section
           style={PLAYER_PALETTE}
@@ -251,6 +255,6 @@ export function LiveView({ live }: { live: LiveResult }) {
           </button>
         ))}
       </aside>
-    </main>
+    </ScreenMain>
   )
 }

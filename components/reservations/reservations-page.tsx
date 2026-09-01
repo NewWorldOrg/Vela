@@ -20,6 +20,7 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { ReservationRow } from '@/components/reservations/reservation-row'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 const COLUMNS: { label: string; hidden?: boolean }[] = [
   { label: '競合の詳細の開閉', hidden: true },
@@ -76,7 +77,7 @@ export function ReservationsView({
   )
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <ReservationTabs
         current="reservations"
         action={
@@ -149,6 +150,6 @@ export function ReservationsView({
           ))}
         </TableBody>
       </Table>
-    </main>
+    </ScreenMain>
   )
 }

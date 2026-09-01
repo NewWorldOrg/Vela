@@ -18,6 +18,7 @@ import { LibraryIcon, ListIcon, SearchIcon } from '@/components/vela/icons'
 import { ChannelChip } from '@/components/library/channel-chip'
 import { LibraryFilterSelect } from '@/components/library/library-filter-select'
 import { RecordingsTable } from '@/components/library/recordings-table'
+import { ScreenMain } from '@/components/vela/app-shell'
 
 export function LibraryView({
   result,
@@ -54,7 +55,7 @@ export function LibraryView({
   )
 
   return (
-    <main className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
         <h1 className="heading flex items-center gap-2 text-[20px]">
           <LibraryIcon className="size-[18px] text-brand" />
@@ -233,6 +234,6 @@ export function LibraryView({
           各行は「録れたか(結果)」と「壊れていないか(品質)」を別々に申告します。
         </EmptyState>
       )}
-    </main>
+    </ScreenMain>
   )
 }
