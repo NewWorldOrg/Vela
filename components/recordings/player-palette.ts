@@ -70,7 +70,4 @@ export const PLAYER_ROUND_BUTTON_ON =
  * and past about three fifths of the window there is no room left under it for
  * the reading of how the recording ended, or the record below.
  */
-export const PLAYER_PANE = 'mx-auto w-full max-w-[1280px]'
-
-export const PLAYER_PICTURE_PANE =
-  'mx-auto w-full max-w-[min(1280px,calc(62vh*16/9))]'
+export const PLAYER_PANE = 'mx-auto w-full max-w-[min(1280px,calc(62vh*16/9))]'

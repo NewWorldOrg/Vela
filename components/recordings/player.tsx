@@ -18,7 +18,6 @@ import {
   PLAYER_BUTTON,
   PLAYER_PALETTE,
   PLAYER_PANE,
-  PLAYER_PICTURE_PANE,
   PLAYER_ROUND_BUTTON,
   PLAYER_ROUND_BUTTON_ON,
 } from '@/components/recordings/player-palette'
@@ -374,7 +373,7 @@ export function Player({
         onKeyDown={stir}
         className={cn(
           'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl',
-          PLAYER_PICTURE_PANE,
+          PLAYER_PANE,
           '[&:fullscreen]:flex [&:fullscreen]:max-w-none [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
         )}
       >

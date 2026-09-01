@@ -8,7 +8,7 @@ import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import {
   PLAYER_PALETTE,
-  PLAYER_PICTURE_PANE,
+  PLAYER_PANE,
 } from '@/components/recordings/player-palette'
 import { PlaybackStandingChip } from '@/components/recordings/playback-standing'
 import { ExternalPlayer } from '@/components/recordings/external-player'
@@ -51,7 +51,7 @@ export function PlayerReading({
   return (
     <section
       className={cn(
-        PLAYER_PICTURE_PANE,
+        PLAYER_PANE,
         'mt-3 rounded-xl bg-surface px-[22px] py-4',
         className,
       )}
