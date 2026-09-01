@@ -84,7 +84,7 @@ export function ProgramPanel({
           is the one case SPEC holds a surface open through. A cell of the grid
           is beside it like anything else, so the first press on one shuts this
           and the programme underneath is not swapped in behind the reader. */}
-      <DialogContent aria-describedby={undefined}>
+      <DialogContent size="reading" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="pr-[30px]">{program.title}</DialogTitle>
         </DialogHeader>

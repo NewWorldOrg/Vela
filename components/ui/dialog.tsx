@@ -51,11 +51,13 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  size = 'default',
   onOpenAutoFocus,
   onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  size?: 'default' | 'reading'
 }) {
   /**
    * Where focus was when the surface went up, so that closing it puts focus
@@ -73,6 +75,7 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        data-size={size}
         onOpenAutoFocus={(event) => {
           const surface = event.target
           const held =
@@ -100,6 +103,13 @@ function DialogContent({
          * edge is what tells a layer over a screen apart from a screen of its
          * own. It sits here beside the width, so no screen writes its own.
          *
+         * Across, there are two steps and the screen picks one by name rather
+         * than by writing a number: a surface that asks something is as wide as
+         * the question, and a surface that is read carries a synopsis, a cast
+         * and a list of what else it is on, which the width of a question
+         * squeezes into a column. Both stop short of the window's edge, so what
+         * is under the layer is still there around it either way.
+         *
          * Which row gives way is the screen's to say — these surfaces carry
          * anywhere from one child to four, and a template written for two
          * pushes the third out from under the fourth. A body marked
@@ -108,7 +118,7 @@ function DialogContent({
          * the way out stay where they were put.
          */
         className={cn(
-          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] max-h-[85dvh] translate-x-[-50%] translate-y-[-50%] gap-[15px] rounded-xl border border-line-strong bg-surface px-5 pt-[18px] pb-[17px] text-ink shadow-pop-xl duration-200 outline-none has-[>[data-slot=dialog-body]]:grid-rows-[auto_minmax(0,1fr)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 sm:max-w-2xl',
+          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] max-h-[85dvh] translate-x-[-50%] translate-y-[-50%] gap-[15px] rounded-xl border border-line-strong bg-surface px-5 pt-[18px] pb-[17px] text-ink shadow-pop-xl duration-200 outline-none has-[>[data-slot=dialog-body]]:grid-rows-[auto_minmax(0,1fr)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[size=default]:sm:max-w-2xl data-[size=reading]:sm:max-w-[min(56rem,calc(100%-2.5rem))]',
           className,
         )}
         {...props}
