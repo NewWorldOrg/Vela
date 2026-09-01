@@ -168,6 +168,57 @@ function measureTapTargets(): Findings {
   const inSight = (box: DOMRect) =>
     box.left >= 0 && box.top >= 0 && box.right <= width && box.bottom <= height
 
+  /** The panes between a control and the page, each of which cuts at its edge. */
+  const panesAround = (node: Element): Element[] => {
+    const found: Element[] = []
+
+    for (
+      let up: Element | null = node.parentElement;
+      up;
+      up = up.parentElement
+    ) {
+      const { overflowX, overflowY } = getComputedStyle(up)
+
+      if (
+        /^(auto|scroll)$/.test(overflowX) ||
+        /^(auto|scroll)$/.test(overflowY)
+      ) {
+        found.push(up)
+      }
+    }
+
+    return found
+  }
+
+  /**
+   * Whether a control is anywhere a press could not reach all of it — past the
+   * edge of the window, or past the edge of a pane it is read inside.
+   *
+   * The window was once asked on its own, and a pane that scrolls cuts off what
+   * is past its edge exactly as the window does: a control sitting on the last
+   * line of a pane is drawn in full, reports a box in the middle of the window,
+   * and is still sliced in half by the pane's edge, area and all. Asked of the
+   * window alone it read as in sight and was measured where nothing could press
+   * it. Both are answered by scrolling it into view, which is what the caller
+   * does with this.
+   *
+   * A control larger than the pane on an axis is not cut on that axis: there is
+   * nowhere to scroll it to, and skipping it would drop the widest rows — the
+   * ones inside a table that scrolls sideways — out of the measuring entirely.
+   */
+  const heldBack = (box: DOMRect, node: Element) =>
+    !inSight(box) ||
+    panesAround(node).some((pane) => {
+      const edge = pane.getBoundingClientRect()
+
+      return (
+        (box.height <= edge.height &&
+          (box.top < edge.top || box.bottom > edge.bottom)) ||
+        (box.width <= edge.width &&
+          (box.left < edge.left || box.right > edge.right))
+      )
+    })
+
   /**
    * Where every scroller stood before anything was brought into sight, kept so
    * they can be put back once the measuring is done.
@@ -213,7 +264,7 @@ function measureTapTargets(): Findings {
     }
 
     let box = control.getBoundingClientRect()
-    if (drawn(box) && !inSight(box)) {
+    if (drawn(box) && heldBack(box, control)) {
       remember(control)
       control.scrollIntoView({
         block: 'center',
@@ -224,7 +275,7 @@ function measureTapTargets(): Findings {
     }
     // Drawn nowhere, or held out of sight by something other than the scroll —
     // a drawer that is shut, the preview's own furniture.
-    if (!drawn(box) || !inSight(box)) {
+    if (!drawn(box) || heldBack(box, control)) {
       continue
     }
 

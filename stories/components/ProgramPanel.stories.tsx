@@ -74,12 +74,12 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * The width the surface settles at once the window has room for it. SPEC set
- * the number for every dialog, and it is written out here rather than read back
- * off the component: a figure taken from what is being measured moves with it
- * and holds nothing.
+ * The width the surface settles at once the window has room for it. SPEC gives
+ * a surface that is read a wider step than the one it gives a question, and
+ * this is that step, written out here rather than read back off the component:
+ * a figure taken from what is being measured moves with it and holds nothing.
  */
-const AT_MOST_ACROSS = 672
+const AT_MOST_ACROSS = 896
 
 /** What is left beside the surface once the window is narrower than that. */
 const BESIDE_IT = 40
@@ -499,12 +499,20 @@ const A_NARROW_WINDOW = { width: 460, height: 900 }
 
 const A_WIDE_WINDOW = { width: 1680, height: 1000 }
 
+/**
+ * A window barely wider than the surface asks for. The step is wide enough that
+ * an ordinary laptop lands here rather than out past it, so this is where a
+ * width written as a flat number would run to both edges.
+ */
+const A_SNUG_WINDOW = { width: 900, height: 900 }
+
 const A_SHORT_WINDOW = { width: 1280, height: 560 }
 
 /**
- * Across, the surface is a share of the window up to the width SPEC gives every
- * dialog, and that width from there on. Both ends are read off the same
- * expression, so neither is met by a surface that is simply one size.
+ * Across, the surface is a share of the window up to the width SPEC gives a
+ * surface that is read, and that width from there on. Every window is read off
+ * the same expression, so none of them is met by a surface that is simply one
+ * size.
  */
 async function acrossTheWindow(
   canvasElement: HTMLElement,
@@ -537,6 +545,15 @@ export const 広い窓では読める幅で止まる: Story = {
   parameters: { screen: A_WIDE_WINDOW },
   play: async ({ canvasElement }) => {
     await acrossTheWindow(canvasElement, A_WIDE_WINDOW.width)
+  },
+}
+
+/** The window the surface almost fills: the guide is still there beside it. */
+export const 幅ぎりぎりの窓でも脇が残る: Story = {
+  args: showing,
+  parameters: { screen: A_SNUG_WINDOW },
+  play: async ({ canvasElement }) => {
+    await acrossTheWindow(canvasElement, A_SNUG_WINDOW.width)
   },
 }
 
