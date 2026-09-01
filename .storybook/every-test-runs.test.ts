@@ -56,6 +56,7 @@ const THE_SUITE = [
   'repository/tuners.test.ts',
   'repository/search.test.ts',
   'repository/tuning.test.ts',
+  'repository/videos.test.ts',
 ]
 
 /** How a file says it is one of these tests. */
