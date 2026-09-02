@@ -88,7 +88,8 @@ interface Said {
   tone: 'gone' | 'waiting' | 'quiet'
   mark: ReactNode
   title: string
-  body: (detail: RecordingDetail) => string
+  /** The cause, where the title alone does not carry it. */
+  body?: (detail: RecordingDetail) => string
   /** Whether asking again can end differently. */
   worthRetrying: boolean
   /** Whether a player outside the browser reaches what this one could not. */
@@ -101,7 +102,7 @@ const SAID: Record<PlaybackFault, Said> = {
     mark: <DangerIcon className="size-[22px]" />,
     title: 'スクランブルが解けていません',
     body: (d) =>
-      `スクランブル残存 ${d.scramble?.main ?? '—'}(全体の ${scrambledPercent(d)}%)。スクランブルされたままの映像は復号できないため、時間をおいても再生できるようにはなりません。同じ値は下の「録画の記録」にあります。`,
+      `スクランブル残存 ${d.scramble?.main ?? '—'}(全体の ${scrambledPercent(d)}%)。スクランブルされたままの映像は復号できないため、時間をおいても再生できるようにはなりません。`,
     worthRetrying: false,
     worthLeaving: false,
   },
@@ -109,8 +110,6 @@ const SAID: Record<PlaybackFault, Said> = {
     tone: 'waiting',
     mark: <ClockIcon className="size-[22px]" />,
     title: '同時に再生できる本数の上限に達しています',
-    body: () =>
-      '同時にトランスコードできる本数は上限に達しています。ほかの再生が終わると空きが出るため、しばらく待ってから再試行してください。',
     worthRetrying: true,
     worthLeaving: true,
   },
@@ -118,8 +117,7 @@ const SAID: Record<PlaybackFault, Said> = {
     tone: 'gone',
     mark: <OutcomeFailedIcon className="size-[22px]" />,
     title: '再生できるものがありません',
-    body: () =>
-      'この録画には、ブラウザへ渡せる中身がありません。経緯は下の「録画の記録」にあります。',
+    body: () => 'この録画には、ブラウザへ渡せる中身がありません。',
     worthRetrying: false,
     worthLeaving: false,
   },
@@ -127,8 +125,7 @@ const SAID: Record<PlaybackFault, Said> = {
     tone: 'gone',
     mark: <WarningIcon className="size-[22px]" />,
     title: 'このブラウザでは再生できません',
-    body: () =>
-      '成果物のコーデックをこのブラウザが復号できません。外部プレイヤーで開いてください。',
+    body: () => '成果物のコーデックをこのブラウザが復号できません。',
     worthRetrying: false,
     worthLeaving: true,
   },
@@ -136,8 +133,7 @@ const SAID: Record<PlaybackFault, Said> = {
     tone: 'gone',
     mark: <PlayIcon className="size-[22px]" />,
     title: '再生を開始できませんでした',
-    body: () =>
-      '元 TS からのトランスコードに失敗しました。時間をおいて再試行するか、外部プレイヤーで開いてください。',
+    body: () => '元 TS からのトランスコードに失敗しました。',
     worthRetrying: true,
     worthLeaving: true,
   },
@@ -168,7 +164,7 @@ export function PlaybackFaultNotice({
       tone={said.tone}
       mark={said.mark}
       title={said.title}
-      body={said.body(d)}
+      body={said.body?.(d)}
     >
       {said.worthRetrying && (
         <button type="button" onClick={onRetry} className={PLAYER_BUTTON}>

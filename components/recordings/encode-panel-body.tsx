@@ -1,4 +1,3 @@
-import { isPlayableSource } from '@/lib/recordings'
 import type { RecordingDetail } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/vela/progress'
@@ -105,18 +104,9 @@ export function EncodePanelBody({ detail: d }: { detail: RecordingDetail }) {
               再実行
             </Button>
           </div>
-          <p className="mt-3 text-note leading-relaxed text-ink-3">
-            エンコードの失敗は録画の結果を書き換えません。録画は成功のまま、成果物だけが無い状態です。
-          </p>
         </>
       )
     case 'none':
-      return (
-        <p className="text-sub leading-relaxed text-ink-2">
-          {isPlayableSource(d)
-            ? '成果物はまだありません。オンザフライで再生できますが、シークのたびにトランスコーダを立て直します。'
-            : '成果物はありません。'}
-        </p>
-      )
+      return null
   }
 }

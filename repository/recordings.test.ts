@@ -593,7 +593,7 @@ test('a recording detail names the channel number beside the channel', async () 
   assert.equal(detail?.channelNo, '1')
   assert.equal(
     detail?.reconcile?.sub,
-    '書けた尺 30:04 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
+    '書けた尺 30:04 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
   )
 })
 
@@ -605,9 +605,8 @@ test('a recording the store does not have is not a recording', async () => {
 })
 
 /**
- * The four ways a tuning can fail are named on the screen, and which of them
- * happened is the whole point of the row. Leaving it off would say "選局失敗"
- * and stop.
+ * Which of the four ways a tuning can fail is the whole point of the row: the
+ * body is that one value, and nothing lists the other three beside it.
  */
 test('a tuning that failed says which of the four ways it failed', async () => {
   const failed = recording({
@@ -628,7 +627,7 @@ test('a tuning that failed says which of the four ways it failed', async () => {
   const detail = await getRecording('d2')
 
   assert.equal(detail?.failureReason?.title, '選局失敗')
-  assert.match(detail?.failureReason?.body ?? '', /今回は ③ PSI 不完全。$/)
+  assert.equal(detail?.failureReason?.body, '③ PSI 不完全')
 })
 
 test('a stop somebody asked for is not read as the clock running out', async () => {

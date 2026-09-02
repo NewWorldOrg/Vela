@@ -34,7 +34,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
         followedAt: '23:41:52',
       },
     },
-    thumbnailState: { main: '未生成', sub: 'まだ作られていません' },
+    thumbnailState: { main: '未生成' },
   },
   {
     ...base('1274'),
@@ -45,15 +45,13 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     synopsis:
       '保存瓶の煮沸から常備菜の段取りまで、台所の一週間を整える30分。今週は夏野菜の作り置き特集。',
     outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:04・実ファイル 3.4 GB。突き合わせの内訳は「録画の記録」にあります。',
-    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
+      '期待ウィンドウ 30分に対し、書けた尺 30:04・実ファイル 3.4 GB。',
     reconcile: {
       main: '3.4 GB / 期待レンジ 3.2–3.7 GB',
-      sub: '書けた尺 30:04 / 実効ウィンドウ 30:04 · 被覆率 100.0%(判定の許容差は暫定値)',
+      sub: '書けた尺 30:04 / 実効ウィンドウ 30:04 · 被覆率 100.0%',
     },
     interruptions: {
       main: '中断 0 回 / 再開 0 回',
-      sub: '追記再開のため、繋ぎ目の有無はここで確認します',
     },
     tunerUnit: {
       main: 'adapter1/frontend0',
@@ -62,7 +60,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     eoverflow: '0 件',
     scramble: {
       main: '0 パケット',
-      sub: 'サイズが正しいのに再生できない場合はここを見ます',
     },
     stopReason: '自分の abort(終了時刻に到達)',
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
@@ -83,11 +80,10 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     genres: ['アニメ'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.3 GB。突き合わせの内訳は「録画の記録」にあります。',
-    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
+      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.3 GB。',
     reconcile: {
       main: '3.3 GB / 期待レンジ 3.2–3.7 GB',
-      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
+      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
@@ -115,10 +111,9 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       '各都市の代表チームが知力で競う夏の恒例戦。準決勝は近似値クイズと早押しの二本立て。',
     outcomeBody:
       '期待ウィンドウ 4時間13分に対し、書けた尺 4:12:38・実ファイル 29.6 GB。リレー放送 3 セグメントの1本目です。',
-    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     reconcile: {
       main: '29.6 GB / 期待レンジ 28.4–32.6 GB',
-      sub: '書けた尺 4:12:38 / 実効ウィンドウ 4:13:00 · 被覆率 99.8%(判定の許容差は暫定値)',
+      sub: '書けた尺 4:12:38 / 実効ウィンドウ 4:13:00 · 被覆率 99.8%',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
@@ -161,14 +156,12 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
       '被覆率 67.0% · 実ファイル 4.2 GB(期待レンジ 5.9–6.8 GB)· 書けた尺 36:12 / 実効ウィンドウ 54:00 · 中断 3 回 / 再開 2 回',
-    outcomeAxis: '末尾 18 分が欠けています',
     reconcile: {
       main: '4.2 GB / 期待レンジ 5.9–6.8 GB',
-      sub: '書けた尺 36:12 / 実効ウィンドウ 54:00 · 被覆率 67.0%(判定の許容差は暫定値)',
+      sub: '書けた尺 36:12 / 実効ウィンドウ 54:00 · 被覆率 67.0%',
     },
     interruptions: {
       main: '中断 3 回 / 再開 2 回',
-      sub: '追記再開のため、繋ぎ目の有無はここで確認します',
     },
     tunerUnit: {
       main: 'adapter1/frontend0',
@@ -182,8 +175,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     qualityRatio: '0.0000',
     encodePanel: {
       profile: '録画再生用(H.264)',
-      queueSub:
-        '待機列の 2 番目です。ライブ視聴がエンコードより優先されます。視聴中は使用コアが抑えられます。',
+      queueSub: '待機列の 2 番目です。',
       registeredAt: '08/04(月) 23:40',
     },
   },
@@ -192,9 +184,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     channelNo: '161',
     genres: ['バラエティ'],
     avInfo: '—',
-    outcomeBody:
-      '実ファイル 0 B · 開始 00:15:04 / 終了 00:15:21 · 理由は「失敗の理由」に分類して残ります',
-    outcomeAxis: 'サムネイルは生成されません',
+    outcomeBody: '実ファイル 0 B · 開始 00:15:04 / 終了 00:15:21',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter2/frontend0',
@@ -203,12 +193,11 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     eoverflow: '0 件',
     scramble: {
       main: '18,203 パケット',
-      sub: 'サイズが正しいのに再生できない場合はここを見ます',
     },
     stopReason: '自分の abort(スクランブル解除失敗)',
     failureReason: {
       title: 'スクランブル解除失敗',
-      body: '閾値を超えた残存パケットを検出しました。サイズが正しいのに全編再生できない場合の唯一の手がかりです。',
+      body: '閾値を超えた残存パケットを検出しました。',
     },
     thumbnailState: { main: 'failed のため生成されず' },
   },
@@ -218,11 +207,10 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     genres: ['ドキュメンタリー'],
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.5 GB。移行で取り込んだ録画のため、品質は未計測です。',
-    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
+      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.5 GB。',
     reconcile: {
       main: '3.5 GB / 期待レンジ 3.2–3.7 GB',
-      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
+      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     eoverflow: '—',
@@ -230,8 +218,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
     encodePanel: {
       profile: '録画再生用(H.264)',
-      queueSub:
-        '待機列の 5 番目です。ライブ視聴がエンコードより優先されます。視聴中は使用コアが抑えられます。',
+      queueSub: '待機列の 5 番目です。',
       registeredAt: '08/10(日) 04:05',
     },
   },
@@ -243,11 +230,10 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     synopsis:
       '渡り鳥の観測小屋を営む青年と、星の写真を撮りに来た旅人。ひと夏の岬を舞台に、去る者と残る者のすれ違いを描く劇場公開作をテレビ初放送。',
     outcomeBody:
-      '期待ウィンドウ 2時間6分に対し、書けた尺 2:06:14・実ファイル 13.8 GB。突き合わせの内訳は「録画の記録」にあります。',
-    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
+      '期待ウィンドウ 2時間6分に対し、書けた尺 2:06:14・実ファイル 13.8 GB。',
     reconcile: {
       main: '13.8 GB / 期待レンジ 13.1–15.1 GB',
-      sub: '書けた尺 2:06:14 / 実効ウィンドウ 2:06:14 · 被覆率 100.0%(判定の許容差は暫定値)',
+      sub: '書けた尺 2:06:14 / 実効ウィンドウ 2:06:14 · 被覆率 100.0%',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
@@ -259,7 +245,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     stopReason: '自分の abort(終了時刻に到達)',
     thumbnailState: {
       main: '生成失敗',
-      sub: 'サムネイルが無いことは録画の失敗ではありません',
       canGenerate: true,
     },
     qualityTotal: '178,530',
@@ -276,11 +261,10 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     genres: ['音楽'],
     avInfo: '1080i · ステレオ',
     outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 1.3 GB。突き合わせの内訳は「録画の記録」にあります。',
-    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
+      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 1.3 GB。',
     reconcile: {
       main: '1.3 GB / 期待レンジ 1.2–1.5 GB',
-      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%(判定の許容差は暫定値)',
+      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
     },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
@@ -290,7 +274,6 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     eoverflow: '0 件',
     scramble: {
       main: '5,042,768 パケット',
-      sub: 'サイズが正しいのに再生できない場合はここを見ます',
     },
     scrambledShare: 5_042_768 / 5_302_549,
     stopReason: '自分の abort(終了時刻に到達)',
@@ -305,10 +288,9 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     avInfo: '1080i · ステレオ · 字幕あり',
     outcomeBody:
       '期待ウィンドウ 30分に対し、書けた尺 30:04。録画の記録は 3.6 GB、実ファイルはありません。',
-    outcomeAxis: '結果は品質(ドロップ)とは別の軸',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     eoverflow: '—',
     stopReason: '移行で取り込み(記録なし)',
-    thumbnailState: { main: '未生成', sub: 'まだ作られていません' },
+    thumbnailState: { main: '未生成' },
   },
 ]

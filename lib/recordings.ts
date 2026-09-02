@@ -11,14 +11,6 @@ export const RECORDING_STATE_FILTERS = [
   '未計測',
 ] as const
 
-/** Whether the source TS can be played on the fly, encoded or not. */
-export function isPlayableSource(detail: RecordingDetail) {
-  return (
-    !detail.fileMissing &&
-    (detail.outcome === 'complete' || detail.outcome === 'truncated')
-  )
-}
-
 /**
  * The share of a recording's packets that may stay scrambled and still leave a
  * picture behind. It is the same share the API's own quality reading calls
