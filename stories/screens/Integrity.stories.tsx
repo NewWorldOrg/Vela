@@ -28,8 +28,7 @@ export const 保存先を読めない: Story = {
     result: {
       ...INTEGRITY_FIXTURE,
       roots: [],
-      storageProblem:
-        '保存先の空き容量を読めませんでした。見つかったものの一覧は下のとおりです。',
+      storageProblem: '保存先の空き容量を読めませんでした。',
     },
   },
 }
