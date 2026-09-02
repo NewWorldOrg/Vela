@@ -43,6 +43,7 @@ const THE_SUITE = [
   'lib/dismiss.test.ts',
   'lib/format.test.ts',
   'lib/guide.test.ts',
+  'lib/live-captions.test.ts',
   'lib/live-startup.test.ts',
   'lib/live-wire.test.ts',
   'lib/recordings.test.ts',
