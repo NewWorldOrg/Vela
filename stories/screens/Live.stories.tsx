@@ -8,6 +8,7 @@ import {
   progressPayload,
   refusalPayload,
   type LiveRefusal,
+  type LiveStartup,
   type LiveSupplyEnd,
   type TranscodeCeiling,
 } from '@/lib/live-wire'
@@ -84,16 +85,30 @@ function scripted(script: (socket: ScriptedSocket) => void): OpenSocket {
   }
 }
 
-/** A wire that says where the startup is, and then nothing more. */
-const starting = scripted((socket) =>
-  socket.say(
-    frameOf(
-      'control',
-      0,
-      progressPayload({ tunerSecured: 612, channelLocked: 2_105 }),
-    ),
-  ),
-)
+/** One progress report, as the wire sends one each time a segment is reached. */
+function progress(startup: LiveStartup): Uint8Array {
+  return frameOf('control', 0, progressPayload(startup))
+}
+
+/** What the wire has to say by the handshake: the tuner, and the transcoder beside it. */
+const SECURED: LiveStartup = { tunerSecured: 496, transcoderStarted: 511 }
+
+/** The lock, which landed after the transcoder. */
+const LOCKED: LiveStartup = { ...SECURED, channelLocked: 751 }
+
+/**
+ * A wire that reports the startup the way a channel comes up on air: what was
+ * reached by the handshake at once, the lock as it lands, and then nothing
+ * more. The two reports after these come with the header and the picture,
+ * which no story here has to send.
+ */
+const starting = scripted((socket) => {
+  socket.say(progress(SECURED))
+  setTimeout(() => socket.say(progress(LOCKED)), 255)
+})
+
+/** A wire heard from once, with the lock still to come. */
+const securing = scripted((socket) => socket.say(progress(SECURED)))
 
 function refusing(refusal: LiveRefusal, ceiling?: TranscodeCeiling) {
   return scripted((socket) => {
@@ -190,7 +205,9 @@ export const 選局前: Story = {
 
 /**
  * Between the press and the picture. The wire has said how far it is, and the
- * rows read what each segment took and how long the one underway has run.
+ * rows read what each segment took — from what it waited for, so the lock
+ * landing after the transcoder reads its own span rather than a negative one —
+ * and how long the one underway has run.
  */
 export const 起動中: Story = {
   play: async ({ canvasElement }) => {
@@ -200,9 +217,14 @@ export const 起動中: Story = {
       await canvas.findByText('チャンネルを準備しています'),
     ).toBeVisible()
     await expect(canvas.getByText('準備中')).toBeVisible()
-    await waitFor(() => expect(canvas.getByText('0.6 秒')).toBeVisible())
-    await expect(canvas.getByText('1.5 秒')).toBeVisible()
+    await waitFor(() => expect(canvas.getByText('0.3 秒')).toBeVisible())
+    await expect(canvas.getByText('0.5 秒')).toBeVisible()
+    await expect(canvas.getByText('0.0 秒')).toBeVisible()
     await expect(canvas.getByText(/^経過 /)).toBeVisible()
+    await expect(canvas.getByText('最初の絵').closest('li')).toHaveAttribute(
+      'data-startup',
+      'now',
+    )
 
     // The wire was asked for this channel, in the profile the API defaults to.
     await expect(opened[0].href).toBe(
@@ -211,6 +233,32 @@ export const 起動中: Story = {
 
     // Nothing to press yet: the picture has not come.
     await expect(canvas.getByRole('button', { name: '再生' })).toBeDisabled()
+  },
+}
+
+/**
+ * The lock and the transcoder run side by side once the tuner is secured. The
+ * transcoder has been reached and the lock has not, so the one is done and the
+ * other underway, each counting from the tuner.
+ */
+export const 起動中_選局を待つ: Story = {
+  args: { openSocket: securing },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(canvas.getByText('0.5 秒')).toBeVisible())
+    await expect(canvas.getByText('選局(lock)').closest('li')).toHaveAttribute(
+      'data-startup',
+      'now',
+    )
+    await expect(
+      canvas.getByText('トランスコーダ起動').closest('li'),
+    ).toHaveAttribute('data-startup', 'done')
+    await expect(canvas.getByText('0.0 秒')).toBeVisible()
+    await expect(canvas.getByText('最初の絵').closest('li')).toHaveAttribute(
+      'data-startup',
+      'ahead',
+    )
   },
 }
 
