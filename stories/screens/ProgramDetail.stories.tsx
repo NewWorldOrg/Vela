@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
 import type { ProgramDetail } from '@/repository/programs'
-import { PROGRAM_DETAIL_FIXTURES } from '@/repository/programs.fixtures'
+import {
+  NOW_MIN,
+  PROGRAM_DETAIL_FIXTURES,
+} from '@/repository/programs.fixtures'
 import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 
@@ -128,5 +131,32 @@ export const 改行を含む本文: Story = {
   args: { detail: PROGRAM_DETAIL_FIXTURES.multiline },
   play: async ({ canvasElement }) => {
     await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.multiline)
+  },
+}
+
+/**
+ * The programme is on air as the page reads the clock, so the way to the live
+ * screen is offered, with this channel chosen — the address the live screen's
+ * own list would have made. Off the air it is not there at all: a way into a
+ * picture that is not being broadcast leads nowhere.
+ */
+export const 放送中: Story = {
+  args: { detail: { ...standard, nowMin: NOW_MIN } },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+
+    await reads(canvasElement, args.detail)
+    await expect(
+      canvas.getByRole('link', { name: 'ライブ視聴' }),
+    ).toHaveAttribute('href', `/live?ch=${standard.program.channelId}`)
+  },
+}
+
+export const 放送前: Story = {
+  args: { detail: { ...standard, nowMin: standard.program.startMin - 1 } },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).queryByRole('link', { name: 'ライブ視聴' }),
+    ).toBeNull()
   },
 }

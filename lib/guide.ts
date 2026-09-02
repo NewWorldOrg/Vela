@@ -51,6 +51,26 @@ export function nowMinOf(now: Date, windowStart: Date): number | undefined {
 }
 
 /**
+ * Whether the programme is on air at this reading of the clock: begun, and not
+ * yet over. A day with no present in it has nothing on air, so no programme of
+ * it is — the guide of yesterday holds what was on, and tomorrow's what will
+ * be, and neither can be watched live.
+ */
+export function isOnAir(
+  program: { startMin: number; durationMin: number },
+  nowMin: number | undefined,
+): boolean {
+  if (nowMin === undefined) {
+    return false
+  }
+
+  return (
+    program.startMin <= nowMin &&
+    nowMin < program.startMin + program.durationMin
+  )
+}
+
+/**
  * How far down the grid is scrolled when it is opened: half an hour above the
  * line, so that what is on air now is on screen with the end of what it
  * followed still above it.

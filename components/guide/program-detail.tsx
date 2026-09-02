@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Route } from 'next'
 import type { ReactNode } from 'react'
 
 import type { Channel } from '@/repository/channels'
@@ -9,11 +10,13 @@ import type {
   RelationKind,
 } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
+import { liveScreenHref } from '@/repository/live-paths'
 import { mainTitleOf } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   ListIcon,
+  LiveIcon,
   PersonIcon,
   RecordIcon,
   RelayIcon,
@@ -59,17 +62,23 @@ const RELATION_WORDING: Record<
  *
  * `reservation` stands in for the reserve controls when a seat is already
  * held, which is a thing only the guide knows and only the guide can undo.
+ *
+ * `onAir` is the caller's reading of the clock against the programme. While
+ * it holds, the way to the live screen is offered, with this channel chosen —
+ * the same address a press on the live screen's own list would have made.
  */
 export function ProgramDetailBody({
   program,
   channel,
   dayLabel,
+  onAir = false,
   onReserve,
   reservation,
 }: {
   program: Program
   channel?: Channel
   dayLabel: string
+  onAir?: boolean
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   reservation?: ReactNode
 }) {
@@ -143,6 +152,18 @@ export function ProgramDetailBody({
       </div>
 
       <div className="mt-[22px] border-t border-dashed border-line pt-[17px]">
+        {onAir && (
+          <div className="mb-[13px] flex flex-wrap gap-[9px]">
+            <Button variant="outline" asChild>
+              <Link
+                href={liveScreenHref(program.channelId, channel?.kind) as Route}
+              >
+                <LiveIcon />
+                ライブ視聴
+              </Link>
+            </Button>
+          </div>
+        )}
         {reservation ?? (
           <>
             <div className="flex flex-wrap gap-[9px]">

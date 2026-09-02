@@ -70,6 +70,25 @@ export const 通常: Story = {
       unwatchable.getByText('ドロップ 0 / スクランブル残存 5,042,768'),
     ).toBeVisible()
 
+    // The way to the player is the row's 再生, and it is offered only where
+    // the player would have something to show. A recording that stayed
+    // scrambled has nothing, whatever its outcome says; one graded the same
+    // level for its drops still plays, so the two are not told apart by the
+    // badge.
+    await expect(
+      unwatchable.getByRole('button', { name: '再生' }),
+    ).toBeDisabled()
+    await expect(
+      within(
+        canvas.getByRole('row', { name: /金曜シネマ「星の渡り鳥」/ }),
+      ).getByRole('link', { name: '再生' }),
+    ).toHaveAttribute('href', '/recordings/1198?at=0')
+    await expect(
+      within(
+        canvas.getByRole('row', { name: /夜ふかしラジオ倶楽部/ }),
+      ).getByRole('button', { name: '再生' }),
+    ).toBeDisabled()
+
     const finished = within(
       canvas.getByRole('row', { name: /週末キッチンの手帖/ }),
     ).getByRole('button', { name: '削除' })

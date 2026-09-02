@@ -105,6 +105,12 @@ export interface ProgramDetail {
   program: Program
   day: GuideDay
   channel?: Channel
+  /**
+   * Where now falls in the programme's day, the way the guide carries it, and
+   * absent when the day is not today. What is on air is read from this rather
+   * than from a second reading of the clock.
+   */
+  nowMin?: number
 }
 
 const PAST_DAYS = 7
@@ -205,6 +211,7 @@ export async function getGuide(
 
 export async function getProgram(
   id: string,
+  now: Date = new Date(),
 ): Promise<ProgramDetail | undefined> {
   const programme = await fetchProgramme(id)
 
@@ -225,6 +232,7 @@ export async function getProgram(
     program,
     day,
     channel: serviceOf(services, programme.networkId, programme.serviceId),
+    nowMin: nowMinOf(now, windowStart),
   }
 }
 

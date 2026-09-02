@@ -23,6 +23,28 @@ export const LIVE_SESSION_PROBE_PATH = '/api/live/profiles'
 /** The profile chosen until another is asked for: the API's own default. */
 export const LIVE_PROFILE_UNASKED = '720p30'
 
+/** Where the live screen is. */
+const LIVE_SCREEN_PATH = '/live'
+
+/**
+ * The live screen with this channel chosen, the way the screen itself writes
+ * it: the channel in `ch`, and the broadcast type in `kind` only where it is
+ * not the one the screen opens on. The URL is the state, so a way in is an
+ * address the screen would have arrived at on its own.
+ */
+export function liveScreenHref(
+  channelId: string,
+  kind?: 'terrestrial' | 'bs' | 'cs110',
+): string {
+  const asked = new URLSearchParams({ ch: channelId })
+
+  if (kind && kind !== 'terrestrial') {
+    asked.set('kind', kind)
+  }
+
+  return `${LIVE_SCREEN_PATH}?${asked.toString()}`
+}
+
 export function liveWireHref(
   networkId: number,
   serviceId: number,

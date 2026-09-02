@@ -26,6 +26,7 @@ export function ProgramPanel({
   program,
   channel,
   dayLabel,
+  onAir,
   open,
   onClose,
   onReserve,
@@ -35,6 +36,8 @@ export function ProgramPanel({
   program: Program
   channel?: Channel
   dayLabel: string
+  /** Whether the programme is on air as the guide reads the clock. */
+  onAir?: boolean
   open: boolean
   onClose: () => void
   onReserve: (programmeId: string) => Promise<ReservationWrite>
@@ -92,6 +95,7 @@ export function ProgramPanel({
             program={program}
             channel={channel}
             dayLabel={dayLabel}
+            onAir={onAir}
             onReserve={onReserve}
             reservation={
               booking && (

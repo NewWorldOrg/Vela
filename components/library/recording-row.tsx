@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { formatBytes, formatLength } from '@/lib/format'
+import { playsInBrowser } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ChevronRightIcon, PlayIcon, TrashIcon } from '@/components/vela/icons'
@@ -18,6 +19,9 @@ const CELL =
 
 /**
  * A row of the library, which is pressed as a whole to open what it lists.
+ * Its 再生 is the other way in: the same page, opened at the start of the
+ * picture with playback under way, so that the press that says 再生 plays and
+ * the press on the row reads.
  *
  * `data-pressable-row` is how the 44px probe knows that. A row carries no role
  * saying it can be pressed — one that did would stop being a row to a screen
@@ -35,8 +39,7 @@ export function RecordingRow({
   onOpen: () => void
   onDelete: () => void
 }) {
-  const playable =
-    r.outcome !== 'failed' && r.outcome !== 'recording' && !r.fileMissing
+  const playable = playsInBrowser(r)
   const deletable = r.outcome !== 'recording'
   const subTone = r.outcome === 'recording' ? 'text-ink-2' : 'text-ink-3'
 
@@ -127,7 +130,7 @@ export function RecordingRow({
         >
           {playable ? (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/recordings/${r.id}`}>
+              <Link href={`/recordings/${r.id}?at=0`}>
                 <PlayIcon />
                 再生
               </Link>

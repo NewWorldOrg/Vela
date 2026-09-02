@@ -5,6 +5,7 @@ import type { GuideRelationKind } from './guide.ts'
 import {
   broadcastDateOf,
   gridMinWidthOf,
+  isOnAir,
   nowMinOf,
   openingScrollTopOf,
   sharesWith,
@@ -396,4 +397,22 @@ test('a programme that started before the window does not shift the runs back', 
     unscheduledSpansOf([{ startMin: -30, durationMin: 60 }], EVENING_MIN),
     [{ startMin: 30, durationMin: EVENING_MIN - 30 }],
   )
+})
+
+/** A programme of the fixtures' evening: nine o'clock, an hour long. */
+const AT_NINE = { startMin: 120, durationMin: 60 }
+
+test('a programme that has begun and not ended is on air', () => {
+  assert.equal(isOnAir(AT_NINE, 120), true)
+  assert.equal(isOnAir(AT_NINE, 124), true)
+  assert.equal(isOnAir(AT_NINE, 179), true)
+})
+
+test('a programme still to come, or already over, is not', () => {
+  assert.equal(isOnAir(AT_NINE, 119), false)
+  assert.equal(isOnAir(AT_NINE, 180), false)
+})
+
+test('a day with no present in it has nothing on air', () => {
+  assert.equal(isOnAir(AT_NINE, undefined), false)
 })

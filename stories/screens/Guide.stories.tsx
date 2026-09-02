@@ -3,7 +3,7 @@ import type { Decorator, Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
-import { COLUMN_MIN_PX, gridMinWidthOf } from '@/lib/guide'
+import { COLUMN_MIN_PX, gridMinWidthOf, isOnAir } from '@/lib/guide'
 import {
   AERIAL_CHANNEL_FIXTURES,
   CHANNEL_FIXTURES,
@@ -987,6 +987,65 @@ export const 番組の詳細が層の中に出る: Story = {
         ).toBeNull(),
       )
     }
+  },
+}
+
+/**
+ * The way from the guide to the live screen. A programme on air as the guide
+ * reads the clock offers it, with its channel chosen in the address; the one
+ * after it does not, and nothing on a day that is not today does either. The
+ * address is the live screen's own, so a second reader opening it lands on the
+ * same channel.
+ */
+export const 放送中の番組からライブへ: Story = {
+  args: { guide: base },
+  play: async ({ canvasElement }) => {
+    const cells = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]',
+      ),
+    )
+    const onAir = IN_GRID_ORDER.find((program) => isOnAir(program, NOW_MIN))
+    const later = IN_GRID_ORDER.find(
+      (program) => program.startMin > NOW_MIN + 60,
+    )
+
+    await expect(onAir).toBeDefined()
+    await expect(later).toBeDefined()
+
+    const open = async (program: Program) => {
+      const cell = cells[IN_GRID_ORDER.indexOf(program)]
+
+      cell.scrollIntoView({ block: 'center' })
+      await userEvent.click(cell)
+
+      return openedPanel(canvasElement)
+    }
+
+    const close = async () => {
+      await userEvent.keyboard('{Escape}')
+      await waitFor(() =>
+        expect(
+          canvasElement.ownerDocument.querySelector(
+            '[data-slot="dialog-content"]',
+          ),
+        ).toBeNull(),
+      )
+    }
+
+    const now = await open(onAir!)
+
+    await expect(
+      within(now).getByRole('link', { name: 'ライブ視聴' }),
+    ).toHaveAttribute('href', `/live?ch=${onAir!.channelId}`)
+    await close()
+
+    const soon = await open(later!)
+
+    await expect(
+      within(soon).queryByRole('link', { name: 'ライブ視聴' }),
+    ).toBeNull()
+    await close()
   },
 }
 

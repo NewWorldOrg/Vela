@@ -133,6 +133,34 @@ function ending(why: LiveSupplyEnd) {
 /** A wire that closes without a word, as one does when the handshake failed. */
 const dropping = scripted((socket) => socket.drop(1006))
 
+/**
+ * A wire that drops once and is then heard from: the first is lost without a
+ * word, and the one opened by the press after it says how far it has come.
+ */
+const droppingOnce = scripted((socket) => {
+  if (opened.length === 1) {
+    socket.drop(1006)
+  } else {
+    socket.say(progress(SECURED))
+  }
+})
+
+/**
+ * A picture frame the wire said before anything the element could be opened
+ * for: the moment between the first picture arriving and the first frame
+ * drawn, which is also where the playhead stands when the picture stalls.
+ */
+const PICTURED = frameOf(
+  'picture',
+  0,
+  new Uint8Array([0, 0, 0, 8, 0x6d, 0x6f, 0x6f, 0x66]),
+)
+
+const stalling = scripted((socket) => {
+  socket.say(progress(LOCKED))
+  socket.say(PICTURED)
+})
+
 /** The caption canvas, said once before any caption. */
 const CAPTION_CANVAS = frameOf(
   'captionHeader',
@@ -500,6 +528,48 @@ export const 接続が切れた: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '再試行' }))
 
     await waitFor(() => expect(opened).toHaveLength(2))
+  },
+}
+
+/**
+ * The press after a lost wire opens the next one, and the startup over the
+ * picture says it is a reconnection and which one — not the words a channel
+ * tuned for the first time gets. Nothing counts down beside it: the wire is
+ * reopened by the press and by nothing else.
+ */
+export const 再接続中: Story = {
+  args: { openSocket: droppingOnce },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(await canvas.findByText('接続が切れました')).toBeVisible()
+    await userEvent.click(canvas.getByRole('button', { name: '再試行' }))
+
+    await expect(await canvas.findByText('再接続中')).toBeVisible()
+    await expect(canvas.getByText('1 回目')).toBeVisible()
+    await expect(canvas.queryByText('チャンネルを準備しています')).toBeNull()
+    await expect(canvas.getByText('準備中')).toBeVisible()
+    await waitFor(() => expect(canvas.getByText('0.5 秒')).toBeVisible())
+    await expect(opened).toHaveLength(2)
+  },
+}
+
+/**
+ * The wire has said a picture and the element has nothing to draw yet: the
+ * startup plate is down, the channel reads as on air, and the one word over
+ * the picture is that it is buffering.
+ */
+export const バッファリング: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(await canvas.findByText('バッファリング中')).toBeVisible()
+    await expect(canvas.getByText('生放送')).toBeVisible()
+    await expect(canvas.queryByText('チャンネルを準備しています')).toBeNull()
+    await expect(
+      canvasElement.querySelector('[data-slot="live-player"]'),
+    ).toHaveAttribute('data-phase', 'buffering')
   },
 }
 
