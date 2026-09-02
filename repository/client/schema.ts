@@ -1546,6 +1546,7 @@ export interface components {
       reachedAtMs: null | number | string
       /** Format: int64 */
       tookMs: null | number | string
+      tookFrom: null | components['schemas']['LiveStartupSegment']
     }
     LiveStartupResponder: {
       inProgress: boolean
