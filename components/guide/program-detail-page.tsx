@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { isOnAir } from '@/lib/guide'
 import type { ProgramDetail } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,7 @@ export function ProgramDetailView({
   detail: ProgramDetail
   onReserve: (programmeId: string) => Promise<ReservationWrite>
 }) {
-  const { program, channel, day } = detail
+  const { program, channel, day, nowMin } = detail
 
   return (
     <ScreenMain className="pb-16">
@@ -34,6 +35,7 @@ export function ProgramDetailView({
             program={program}
             channel={channel}
             dayLabel={day.label}
+            onAir={isOnAir(program, nowMin)}
             onReserve={onReserve}
           />
         </section>

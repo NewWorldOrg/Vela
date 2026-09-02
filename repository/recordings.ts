@@ -73,6 +73,14 @@ export interface Recording {
   outcome: RecordingOutcome
   outcomeDetail?: string
   quality: RecordingQuality
+  /**
+   * The share of the recording's packets that were still scrambled when it was
+   * written, as a fraction of the packets counted. Unset where nothing counted
+   * them. A picture cannot be built out of packets that were never descrambled,
+   * so this is what tells a failed playback apart from one that would come back
+   * on its own — and what keeps the library from offering a way to it.
+   */
+  scrambledShare?: number
   /** Unset: nothing upstream carries an encoding state yet. */
   encode?: RecordingEncode
   thumbnail: ThumbnailState
@@ -223,14 +231,6 @@ export interface RecordingDetail extends Recording {
   tunerUnit?: { main: string; sub?: string }
   eoverflow?: string
   scramble?: { main: string }
-  /**
-   * The share of the recording's packets that were still scrambled when it was
-   * written, as a fraction of the packets counted. Unset where nothing counted
-   * them. A picture cannot be built out of packets that were never descrambled,
-   * so this is what tells a failed playback apart from one that would come back
-   * on its own.
-   */
-  scrambledShare?: number
   stopReason?: string
   failureReason?: { title: string; body?: string }
   thumbnailState?: { main: string; sub?: string; canGenerate?: boolean }
@@ -464,6 +464,8 @@ export function toRecording(
   const writtenMs = toInt(r.writtenDurationMs)
   const quality = qualityOf(r, outcome)
   const thumbnail = thumbnailOf(r)
+  const totalPackets = counted(r.drops.ccTotalPackets) ?? 0
+  const scrambled = counted(r.drops.scrambledPackets)
 
   return {
     id: r.id,
@@ -487,6 +489,10 @@ export function toRecording(
     outcome,
     outcomeDetail: faultTitleOf(r.outcomeDetail),
     quality,
+    scrambledShare:
+      scrambled == null || totalPackets === 0
+        ? undefined
+        : scrambled / totalPackets,
     thumbnail: thumbnail.state,
     thumbnailLabel: thumbnail.label,
     thumbnailHref:
@@ -525,10 +531,6 @@ function toDetail(
       scrambled == null
         ? undefined
         : { main: `${grouped(scrambled)} パケット` },
-    scrambledShare:
-      scrambled == null || totalPackets === 0
-        ? undefined
-        : scrambled / totalPackets,
     stopReason: stopReasonOf(d),
     failureReason:
       base.outcome === 'failed' && failure

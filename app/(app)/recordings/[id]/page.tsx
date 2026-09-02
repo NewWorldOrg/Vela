@@ -19,13 +19,15 @@ export async function generateMetadata({
 
 /**
  * The second the page opens at. The quality panel sends the reader to a drop
- * by putting it here, which is the state a second reader opening the link
- * would need and a reload has to bring back.
+ * by putting it here, and the library's 再生 sends them to the start, which is
+ * the state a second reader opening the link would need and a reload has to
+ * bring back. Nothing asked is the page opened to read, with the picture
+ * waiting for a press.
  */
 function secondsIn(asked: string | string[] | undefined) {
   const read = Number(Array.isArray(asked) ? asked[0] : asked)
 
-  return Number.isFinite(read) && read > 0 ? Math.floor(read) : undefined
+  return Number.isFinite(read) && read >= 0 ? Math.floor(read) : undefined
 }
 
 export default async function Page({

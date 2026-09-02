@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { isOnAir } from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import { CHANNEL_KINDS } from '@/repository/channels'
 import type {
@@ -215,6 +216,7 @@ export function GuideView({
               program={shown}
               channel={guide.channels.find((c) => c.id === shown.channelId)}
               dayLabel={guide.day.label}
+              onAir={isOnAir(shown, guide.nowMin)}
               open={panelOpen}
               onClose={() => setPanelOpen(false)}
               onReserve={onReserve}

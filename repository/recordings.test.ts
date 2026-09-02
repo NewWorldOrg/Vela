@@ -416,6 +416,20 @@ test('the reading under the badge names the scrambled packets where there are an
   ])
 
   assert.equal(one.quality.detail, 'ドロップ 0 / スクランブル残存 5,042,768')
+  assert.equal(one.scrambledShare, 5_042_768 / 5_302_549)
+})
+
+test('a recording nothing counted carries no scrambled share', async () => {
+  const one = await only([
+    recording({
+      drops: drops({
+        ccTotalPackets: null,
+        scrambledPackets: null,
+      }),
+    }),
+  ])
+
+  assert.equal(one.scrambledShare, undefined)
 })
 
 test('a thumbnail that was not going to be made says so', async () => {

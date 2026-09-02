@@ -282,3 +282,20 @@ test('a channel with no programme known stands at nought, and one with no end ha
   assert.equal(watchingOf(undecided, NOW).restMin, undefined)
   assert.equal(watchingOf(undecided, NOW).progressPct, 0)
 })
+
+const { liveScreenHref } = await import('./live-paths.ts')
+
+/**
+ * A way into the live screen is an address the screen writes for itself: the
+ * channel in `ch`, and the kind only where it is not the one the screen opens
+ * on, so the address from the guide is the one a press on the list would make.
+ */
+test('the live screen is addressed by channel, and by kind only off the aerial', () => {
+  assert.equal(liveScreenHref('32736-1024'), '/live?ch=32736-1024')
+  assert.equal(
+    liveScreenHref('32736-1024', 'terrestrial'),
+    '/live?ch=32736-1024',
+  )
+  assert.equal(liveScreenHref('4-101', 'bs'), '/live?ch=4-101&kind=bs')
+  assert.equal(liveScreenHref('6-1000', 'cs110'), '/live?ch=6-1000&kind=cs110')
+})

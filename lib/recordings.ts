@@ -1,4 +1,4 @@
-import type { RecordingDetail } from '@/repository/recordings'
+import type { Recording, RecordingDetail } from '@/repository/recordings'
 
 /**
  * The states the library offers to narrow by. A screen picks one of these, so
@@ -26,8 +26,27 @@ const SCRAMBLED_BEYOND_WATCHING = 0.01
  * second time would build another transcoder for a recording that has nothing
  * to decode.
  */
-export function isLeftScrambled(detail: RecordingDetail) {
-  return (detail.scrambledShare ?? 0) >= SCRAMBLED_BEYOND_WATCHING
+export function isLeftScrambled(recording: Pick<Recording, 'scrambledShare'>) {
+  return (recording.scrambledShare ?? 0) >= SCRAMBLED_BEYOND_WATCHING
+}
+
+/**
+ * Whether the browser has anything to play for this recording. A recording
+ * still being written, one that failed, one whose file is gone and one that
+ * stayed scrambled all end the same way in front of the element — with no
+ * picture — so no way to the player is offered from them (BR-PD-009). The
+ * reading is made from the row itself, so a list of a thousand recordings asks
+ * nothing more of the API to say which of them play.
+ */
+export function playsInBrowser(
+  recording: Pick<Recording, 'outcome' | 'fileMissing' | 'scrambledShare'>,
+) {
+  return (
+    recording.outcome !== 'failed' &&
+    recording.outcome !== 'recording' &&
+    !recording.fileMissing &&
+    !isLeftScrambled(recording)
+  )
 }
 
 /** The scrambled share, spelled the way the screen spells a percentage. */

@@ -250,3 +250,26 @@ test('the channel a related listing names is resolved at both readings', async (
     inTheGuide.related?.[0]?.channelLabel,
   )
 })
+
+/**
+ * The programme's own address carries where now falls in its day, the way the
+ * guide does, so what is on air is read from one reading of the clock. A day
+ * that is not today has no present in it, and the address says so by carrying
+ * nothing.
+ */
+test('the address carries where now falls in its day, and nothing on another day', async () => {
+  standing()
+
+  const detail = await getProgram(idOf(CARRIED))
+
+  assert.ok(detail)
+  assert.equal(typeof detail.nowMin, 'number')
+
+  const elsewhen = await getProgram(
+    idOf(CARRIED),
+    new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+  )
+
+  assert.ok(elsewhen)
+  assert.equal(elsewhen.nowMin, undefined)
+})
