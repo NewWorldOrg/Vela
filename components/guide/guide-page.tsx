@@ -196,14 +196,9 @@ export function GuideView({
               <Link href="/settings/channels">チャンネル設定へ</Link>
             </Button>
           }
-        >
-          チャンネル設定を確認してください。
-        </EmptyState>
+        />
       ) : guide.programs.length === 0 ? (
-        <EmptyState spot="antenna" title="この日の番組情報がありません">
-          {guide.day.label}{' '}
-          の番組情報がまだ取れていません。取得できた日から順に並びます。
-        </EmptyState>
+        <EmptyState spot="antenna" title="この日の番組情報がありません" />
       ) : (
         <>
           <GuideGrid

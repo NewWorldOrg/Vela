@@ -37,12 +37,6 @@ export function ProgramDetailView({
             onReserve={onReserve}
           />
         </section>
-
-        <p className="mt-3.5 px-1.5 text-note leading-[1.8] text-ink-3">
-          この画面は固有 URL{' '}
-          <span className="font-code">/guide/programs/{program.id}</span>{' '}
-          で単体で開けます。番組の識別子は(ネットワーク・サービス・イベント)の組で、開始時刻を併記して同一性を判定します。
-        </p>
       </div>
     </ScreenMain>
   )

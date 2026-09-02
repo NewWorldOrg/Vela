@@ -96,54 +96,49 @@ export function ProgramPanel({
             onReserve={onReserve}
             reservation={
               booking && (
-                <>
-                  <div className="rounded-lg bg-mint-soft px-3.5 py-3">
-                    <div className="flex items-center gap-1.5 text-ui font-bold text-mint">
-                      <SuccessIcon className="size-4" />
-                      チューナー確保済み
-                    </div>
-                    <p className="mt-1 text-sub leading-relaxed text-ink-2 [word-break:auto-phrase]">
-                      <b>地上波</b>のチューナーを 1 本、
-                      {program.dateLabel ?? dayLabel} {program.startLabel} の 10
-                      秒前から確保しました。
-                    </p>
-                    <div className="mt-2.5 flex flex-wrap gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditing(true)}
-                      >
-                        予約を編集
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={pending}
-                        onClick={drop}
-                      >
-                        予約を取り消す
-                      </Button>
-                      {refusal && (
-                        <span aria-live="polite" className="basis-full">
-                          <InlineAlert tone="warn">{refusal}</InlineAlert>
-                        </span>
-                      )}
-                    </div>
-                    {/* Mounted only while it is open, so each opening reads the
-                        reservation as it stands. */}
-                    {editing && (
-                      <EditReservationDialog
-                        booking={{ ...booking, title: program.title }}
-                        open
-                        onOpenChange={setEditing}
-                        onRevise={onRevise}
-                      />
+                <div className="rounded-lg bg-mint-soft px-3.5 py-3">
+                  <div className="flex items-center gap-1.5 text-ui font-bold text-mint">
+                    <SuccessIcon className="size-4" />
+                    チューナー確保済み
+                  </div>
+                  <p className="mt-1 text-sub leading-relaxed text-ink-2 [word-break:auto-phrase]">
+                    <b>地上波</b>のチューナーを 1 本、
+                    {program.dateLabel ?? dayLabel} {program.startLabel} の 10
+                    秒前から確保しました。
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditing(true)}
+                    >
+                      予約を編集
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={pending}
+                      onClick={drop}
+                    >
+                      予約を取り消す
+                    </Button>
+                    {refusal && (
+                      <span aria-live="polite" className="basis-full">
+                        <InlineAlert tone="warn">{refusal}</InlineAlert>
+                      </span>
                     )}
                   </div>
-                  <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-                    録画の 10 秒前から開始し、終了 30 秒後まで延長に追従します。
-                  </p>
-                </>
+                  {/* Mounted only while it is open, so each opening reads the
+                      reservation as it stands. */}
+                  {editing && (
+                    <EditReservationDialog
+                      booking={{ ...booking, title: program.title }}
+                      open
+                      onOpenChange={setEditing}
+                      onRevise={onRevise}
+                    />
+                  )}
+                </div>
               )
             }
           />
