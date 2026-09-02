@@ -3,7 +3,6 @@ import type { EncodeProfile, EncodeResult } from '@/repository/encode'
 const PLAYBACK_PROFILE: EncodeProfile = {
   id: 'pf-1',
   name: '録画再生用',
-  note: 'ブラウザで直接再生できる成果物を 1 本つくります',
   codec: 'H.264',
   resolution: 'ソースのまま',
   crf: '22',
@@ -31,14 +30,14 @@ export const ENCODE: EncodeResult = {
     {
       id: 'fail-1',
       title: '金曜シネマ「星の渡り鳥」',
-      body: 'ffmpeg が 0 以外の終了コードで終わりました。元 TS は残っているので、何度でもやり直せます。',
+      body: 'ffmpeg が 0 以外の終了コードで終わりました。',
       classification: 'ffmpeg_exit_nonzero',
       tone: 'err',
     },
     {
       id: 'fail-2',
       title: '都市対抗クイズ選手権 準決勝',
-      body: '出力先の空き容量が足りませんでした。空きを作ってから再試行してください。',
+      body: '出力先の空き容量が足りませんでした。',
       classification: 'disk_insufficient',
       tone: 'warn',
     },

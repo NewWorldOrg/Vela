@@ -176,8 +176,7 @@ export const CHANNELS: ChannelsResult = {
           { class: INCOMPLETE, count: 0 },
           { class: MISMATCH, count: 0 },
         ],
-        verdict:
-          '走査した 10 件すべてが「1 信号を掴めない」で止まっています。チューナーが同調できない状態が全体に及んでいます。',
+        verdict: '走査した 10 件すべてが「1 信号を掴めない」で止まっています。',
       },
     },
     {

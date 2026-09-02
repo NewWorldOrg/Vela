@@ -27,7 +27,6 @@ export interface MigrationNotTakenGroup {
   name: string
   count: string
   unit: string
-  body: string
   rows: MigrationNotTakenRow[]
   empty?: string
 }
@@ -53,14 +52,10 @@ export interface MigrationResult {
     source: string
     dryRunNote: string
     output: string
-    foot: string
   }
   populations: MigrationPopulation[]
-  populationsNote: string
   unclassified: string
-  unclassifiedNote: string
   notTakenGroups: MigrationNotTakenGroup[]
-  notTakenNote: string
   omissions: MigrationOmission[]
 }
 

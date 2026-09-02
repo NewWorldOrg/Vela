@@ -21,7 +21,6 @@ export interface EncodeFailure {
 export interface EncodeProfile {
   id: string
   name: string
-  note: string
   codec: 'H.264' | 'H.265'
   resolution: string
   crf: string

@@ -532,7 +532,7 @@ function toDiagnosis(
     counts,
     verdict:
       only &&
-      `走査した ${attempts.length} 件すべてが「${only.class.no} ${only.class.label}」で止まっています。${only.class.note}状態が全体に及んでいます。`,
+      `走査した ${attempts.length} 件すべてが「${only.class.no} ${only.class.label}」で止まっています。`,
   }
 }
 

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
-import { CloseIcon, WarningIcon } from '@/components/vela/icons'
+import { CloseIcon } from '@/components/vela/icons'
 import { METHOD_LABEL, revokedHref } from '@/components/authentication/wording'
 
 /**
@@ -92,14 +92,6 @@ export function RevokeSession({
               {session.lastUsed.at ?? session.lastUsed.label}
             </dd>
           </dl>
-
-          <div className="flex items-start gap-2.5 rounded-lg bg-coral-soft px-3.5 py-[11px] text-ui leading-[1.7] text-coral">
-            <WarningIcon className="mt-[3px] size-[17px] shrink-0" />
-            <div>
-              この端末は次のリクエストから 401
-              になり、もう一度サインインが必要になります。いまの端末とほかの端末はそのまま使えます。
-            </div>
-          </div>
 
           <span aria-live="polite">
             {refusal && (

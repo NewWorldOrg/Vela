@@ -173,8 +173,7 @@ export function AddCandidateDialog({
         <DialogHeader>
           <DialogTitle>候補チャンネルを手動追加</DialogTitle>
           <DialogDescription>
-            {serviceName}{' '}
-            に候補チャンネルを追加します。追加した候補は次回の巡回で受信を確かめます。
+            {serviceName} に候補チャンネルを追加します。
           </DialogDescription>
         </DialogHeader>
 
@@ -240,10 +239,7 @@ export function AddCandidateDialog({
                 }
                 onChange={(event) => setStream(event.target.value)}
               />
-              <FieldHint>
-                BS スロットは複数のストリームを載せるため、どれかを指定します(0
-                〜 65535)
-              </FieldHint>
+              <FieldHint>0 〜 65535</FieldHint>
               <span aria-live="polite">
                 {problem?.field === 'stream' && (
                   <FieldError id="candidate-stream-error">

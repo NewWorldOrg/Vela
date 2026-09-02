@@ -76,7 +76,7 @@ function refusalFace(refusal: Refusal): Face {
     case 'recording':
       return {
         tone: 'warn',
-        body: `driver は再起動を断りました。${holding(refusal.recordings, refusal.until)}それまでは再起動できません。`,
+        body: `driver は再起動を断りました。${holding(refusal.recordings, refusal.until)}`,
         action: { label: RESTART, press: 'restart', disabled: true },
       }
     case 'unauthenticated':
@@ -129,7 +129,7 @@ function idleFace(notice: TunerNotice): Face {
 
   return {
     tone: notice.tone,
-    body: `${notice.body}${holding(offer.recordings, offer.until)}それまでは再起動できません。`,
+    body: `${notice.body}${holding(offer.recordings, offer.until)}`,
     action: { label: RESTART, press: 'restart', disabled: true },
   }
 }
@@ -139,24 +139,24 @@ function windowFace(judged: RestartWindow): Face {
     case 'restarting':
       return {
         tone: 'info',
-        body: `再起動を受け付けました。driver が入れ替わるのを最大 ${judged.budgetSeconds} 秒待っています。下の一覧は再起動前の状態です。`,
+        body: `再起動を受け付けました。driver が入れ替わるのを最大 ${judged.budgetSeconds} 秒待っています。`,
         action: { label: RESTART, press: 'restart', disabled: true },
       }
     case 'returned':
       return {
         tone: 'info',
-        body: `driver が再起動しました(instance ${judged.instanceId})。保存済みの設定はこの driver に読み込まれています。`,
+        body: `driver が再起動しました(instance ${judged.instanceId})。`,
       }
     case 'unverifiable':
       return {
         tone: 'warn',
-        body: '再起動を受け付けましたが、入れ替わりを確かめる手掛かりがありません。driver の稼働はこの画面の表示で確認してください。',
+        body: '再起動を受け付けましたが、入れ替わりを確かめる手掛かりがありません。',
         action: { label: REREAD, press: 'dismiss' },
       }
     case 'overdue':
       return {
         tone: 'warn',
-        body: `再起動を受け付けてから ${judged.budgetSeconds} 秒待ちましたが、driver はまだ戻っていません。下の一覧は再起動前の状態です。`,
+        body: `再起動を受け付けてから ${judged.budgetSeconds} 秒待ちましたが、driver はまだ戻っていません。`,
         action: { label: REREAD, press: 'dismiss' },
       }
   }
@@ -178,7 +178,7 @@ function toFace(
     case 'unreachable':
       return {
         tone: 'danger',
-        body: 'この画面から API に届きませんでした。driver が再起動したかどうかは、状態を読み直して確かめてください。',
+        body: 'この画面から API に届きませんでした。',
         action: { label: REREAD, press: 'reread' },
       }
     case 'refused':

@@ -12,9 +12,7 @@ export const MIGRATION: MigrationResult = {
       '旧録画システムのデータベース(読み取り専用接続)/ 出力ディレクトリ /srv/legacy/recorded',
     dryRunNote:
       '本番。直前の下見は 2026-08-09 22:41 で、そのとき未分類は 0 件だった',
-    output:
-      '新しい出力ルート /srv/recordings。ハードリンクを張るだけで、移行元のファイルは改名もコピーも削除もしていない',
-    foot: '記録はこの画面が唯一の原簿です。ファイル出力は作りません。移行元の設定にあった平文の資格情報は運んでいません。',
+    output: '新しい出力ルート /srv/recordings',
   },
   populations: [
     {
@@ -71,17 +69,12 @@ export const MIGRATION: MigrationResult = {
       note: '定義そのものは移行しない',
     },
   ],
-  populationsNote:
-    '録画ファイルの母集団は video_file の 53 件と、移行元の行と結びつかないファイル 6 件の合計です。チャンネル定義は定義そのものを移行せず、「取り込んだ」は再スキャン結果と名前対応が付いたことを指します。',
   unclassified: '0',
-  unclassifiedNote:
-    '移行元に存在したすべての行・すべてのファイルが、新システム側の在り処か、移行しなかった理由のどちらかを持っています。どちらでもないものはありません。',
   notTakenGroups: [
     {
       name: '実0バイト',
       count: '2',
       unit: '件',
-      body: '移行元に行はあるが、実ファイルの大きさが 0 バイト',
       rows: [
         {
           id: 'nt-1',
@@ -103,7 +96,6 @@ export const MIGRATION: MigrationResult = {
       name: 'ファイル不在',
       count: '1',
       unit: '件',
-      body: 'DB に行はあるが、実ファイルが見つからない',
       rows: [
         {
           id: 'nt-3',
@@ -118,7 +110,6 @@ export const MIGRATION: MigrationResult = {
       name: '孤児',
       count: '6',
       unit: '件',
-      body: '出力ディレクトリにあるが、移行元の行と結びつかない',
       rows: [
         {
           id: 'nt-4',
@@ -162,7 +153,6 @@ export const MIGRATION: MigrationResult = {
       name: '同定不能',
       count: '2',
       unit: '件',
-      body: 'どれを指しているのかを決められなかった',
       rows: [
         {
           id: 'nt-10',
@@ -184,7 +174,6 @@ export const MIGRATION: MigrationResult = {
       name: '型として表現不能',
       count: '3',
       unit: '件',
-      body: '本システムの型に、その種別が存在しない',
       rows: [
         {
           id: 'nt-12',
@@ -213,7 +202,6 @@ export const MIGRATION: MigrationResult = {
       name: '本システムに機能が無い',
       count: '0',
       unit: '件',
-      body: '受け皿となる機能が無いことを理由に落としたもの',
       rows: [],
       empty:
         '該当なし。この分類で落とした行はありません。項目単位で落とした avoidDuplicate は「やらなかったこと」に 1 行として記録しています',
@@ -222,7 +210,6 @@ export const MIGRATION: MigrationResult = {
       name: '対象外',
       count: '14',
       unit: '件',
-      body: '運ぶ必要が無いと判断したもの',
       rows: [
         {
           id: 'nt-15',
@@ -339,8 +326,6 @@ export const MIGRATION: MigrationResult = {
       ],
     },
   ],
-  notTakenNote:
-    'この 28 件は、品質画面の異常件数にもライブラリの不整合件数にも合算していません。移行元が既に壊れていた事実であり、新システムの整合性チェックが見つけたものとは別に数えます。',
   omissions: [
     {
       id: 'om-1',

@@ -26,7 +26,6 @@ export const QUALITY: QualityResult = {
       level: 'bad',
       levelLabel: '視聴不可の恐れ 1',
       link: { href: '/library', label: 'ライブラリで絞り込む' },
-      foot: '警告水準以上の録画。未計測は含めない',
     },
     {
       key: 'scramble',
@@ -61,41 +60,6 @@ export const QUALITY: QualityResult = {
       label: '供給途絶の判定',
       value: '10 分',
       basis: '根拠 = 信号品質サンプル 4,320 件',
-    },
-  ],
-  thresholdNote:
-    '根拠となる実測がまだ少なく、この数値の妥当性は確認できていません。',
-  legend: [
-    { level: 'good', label: '良好', body: '計測が行われ、閾値内' },
-    {
-      level: 'warn',
-      label: '警告水準',
-      body: '計測が行われ、警告水準を超過',
-    },
-    {
-      level: 'bad',
-      label: '視聴不可の恐れ',
-      body: '計測が行われ、視聴不可の恐れの水準を超過',
-    },
-    {
-      level: 'unmeasured',
-      label: '未計測',
-      body: '対象はあるが計測されていない。分母から外し、別に数える',
-    },
-    {
-      level: 'nodata',
-      label: '対象なし',
-      body: '期間内に該当する録画・セッションがない',
-    },
-    {
-      level: 'unsupported',
-      label: '非対応',
-      body: 'チューナーがその統計を持たない',
-    },
-    {
-      level: 'unreachable',
-      label: '取得できず',
-      body: '到達できない / 供給が途絶している',
     },
   ],
   channels: [
@@ -212,10 +176,7 @@ export const QUALITY: QualityResult = {
       },
       drop: { level: 'nodata', sub: '録画 0 本' },
       lock: { value: '0', unit: '%', sub: '09:41:02 取得 · LOCK せず' },
-      cnr: {
-        level: 'unreachable',
-        sub: 'lock していないため値として扱わない',
-      },
+      cnr: { level: 'unreachable' },
       ber: { level: 'unreachable', sub: '09:24 以降サンプルなし' },
     },
     {
@@ -231,7 +192,7 @@ export const QUALITY: QualityResult = {
       drop: { level: 'nodata', sub: '録画 0 本' },
       lock: { level: 'unmeasured', sub: '割当停止中でサンプルなし' },
       cnr: { level: 'unmeasured', sub: '割当停止中でサンプルなし' },
-      ber: { level: 'unsupported', sub: 'この個体は統計を返さない' },
+      ber: { level: 'unsupported' },
     },
   ],
   problemRecordings: [

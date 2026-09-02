@@ -119,14 +119,13 @@ function DeleteCandidateDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>この候補チャンネルを削除します</AlertDialogTitle>
           <AlertDialogDescription>
-            {candidate?.channel}{' '}
-            を候補から外します。巡回の対象ではなくなります。
+            {candidate?.channel} を候補から外します。
           </AlertDialogDescription>
         </AlertDialogHeader>
         {candidate?.selected && (
           <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
             <WarningIcon className="size-4 shrink-0" />
-            現在の選局先です。削除するとこのサービスの選局先がなくなります。
+            現在の選局先です。
           </p>
         )}
         <AlertDialogFooter>
@@ -188,9 +187,7 @@ export function CandidateList({
 
   return (
     <>
-      <p className="mb-[9px] text-cap font-bold text-ink-3">
-        候補チャンネル — 実測順(受信可 → 品質)。切替は次回の選局から有効
-      </p>
+      <p className="mb-[9px] text-cap font-bold text-ink-3">候補チャンネル</p>
       {candidates.map((candidate) => (
         <div
           key={candidate.id}
@@ -217,8 +214,6 @@ export function CandidateList({
           )}
           <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-3">
             発見 {candidate.discovered} · 評価 {candidate.lastSeen}
-            {candidate.needsRevalidation &&
-              ' · チューナー構成が変わったため測り直しが必要です'}
             {candidate.rotation && ` · ${candidate.rotation.note}`}
           </span>
           <span className="ml-auto flex items-center gap-2">

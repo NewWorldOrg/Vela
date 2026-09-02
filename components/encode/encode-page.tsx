@@ -11,9 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Banner } from '@/components/vela/banner'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
-import { Field, FieldHint, FieldLabel } from '@/components/vela/field'
+import { Field, FieldLabel } from '@/components/vela/field'
 import {
   MarkDots,
   MarkPanel,
@@ -44,20 +43,10 @@ export function EncodeView({ result }: { result: EncodeResult }) {
       <Crumb>
         設定 / <CrumbCurrent>エンコード</CrumbCurrent>
       </Crumb>
-      <PageHeading description="録画を一度だけ変換して、再生のたびに払っている CPU を前払いにします。シークが即座になり、視聴が CPU を食わなくなります。">
-        エンコード
-      </PageHeading>
-
-      <Banner className="mt-3.5 [word-break:auto-phrase]">
-        <b className="block">元 TS は削除されません。</b>
-        削除は録画ごと、ライブラリからの明示操作でのみ行われます。エンコードの成果物は再生用の派生物で、作り直せます。
-      </Banner>
+      <PageHeading>エンコード</PageHeading>
 
       <section className="mt-5">
         <SectionHeading mark={MarkDots}>ジョブの現在地</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          いま何が走っているか、待機が何本か、直近で何が失敗したか。
-        </p>
 
         {running && (
           <Surface>
@@ -88,9 +77,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
               <Button variant="ghost" size="sm" disabled>
                 録画詳細を開く
               </Button>
-              <span className="text-note text-ink-3">
-                進捗が止まったままの状態は「実行中」と表示されず、停滞として検知されます
-              </span>
             </div>
           </Surface>
         )}
@@ -100,11 +86,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
             <TintMetric label="待機" value={String(result.waiting)} unit="本" />
           </TintPanel>
           <TintPanel tint="salmon" className="min-w-[160px] flex-1">
-            <TintMetric
-              label="失敗"
-              value={String(result.failed)}
-              unit="本 · 分類は下の一覧"
-            />
+            <TintMetric label="失敗" value={String(result.failed)} unit="本" />
           </TintPanel>
           <TintPanel tint="butter" className="min-w-[160px] flex-1">
             <TintMetric
@@ -151,9 +133,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
 
       <section className="mt-5">
         <SectionHeading mark={MarkPanel}>プロファイル</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          どう変換するかの定義。予約・ルールは ID でこれを参照します。
-        </p>
         <div className="mb-2.5">
           <Button size="sm" disabled>
             <PlusIcon />
@@ -173,7 +152,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
               <TableRow key={profile.id}>
                 <TableCell>
                   <b className="block text-[13px] font-bold">{profile.name}</b>
-                  <span className="text-note text-ink-3">{profile.note}</span>
                 </TableCell>
                 <TableCell className="font-code">{profile.codec}</TableCell>
                 <TableCell>{profile.resolution}</TableCell>
@@ -192,9 +170,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
         <SectionHeading mark={MarkRuler}>
           プロファイルの編集 — {editing.name}
         </SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          変更は保存後の新しいエンコードジョブから適用されます。実行中のジョブには影響しません。
-        </p>
         <Surface>
           <div className="grid gap-4 min-[760px]:grid-cols-2">
             <Field>
@@ -208,19 +183,10 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 defaultValue={editing.resolution}
                 disabled
               />
-              <FieldHint>
-                放送波は 1440×1080 と 1920×1080 が混在します。
-              </FieldHint>
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-codec">コーデック</FieldLabel>
               <Input id="profile-codec" defaultValue={editing.codec} disabled />
-              <FieldHint>
-                H.265 は同じ画質でファイルが小さくなりますが、
-                <b>ブラウザによっては再生できません</b>
-                。そのときは元 TS
-                からのオンザフライ再生に落ちて、シークが数秒かかる状態に戻ります。
-              </FieldHint>
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-crf">品質(CRF)</FieldLabel>
@@ -234,10 +200,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 <span>18 · 高品質</span>
                 <span>38 · 高圧縮</span>
               </div>
-              <FieldHint>
-                小さいほど高品質・大容量。天秤にかけるのは容量ではなく、元 TS
-                と見比べたときの画質です。
-              </FieldHint>
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-deinterlace">
@@ -248,25 +210,14 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 defaultValue={editing.deinterlace}
                 disabled
               />
-              <FieldHint>
-                ソースがプログレッシブのときは適用されません。
-              </FieldHint>
             </Field>
             <Field>
               <FieldLabel>音声・字幕</FieldLabel>
               <p className="rounded-md bg-surface-2 px-3 py-2 text-ui text-ink-2">
                 音声は無変換で全トラック · 字幕は多重化しない
               </p>
-              <FieldHint>
-                字幕は元 TS から生成され、別経路で送られます。成果物の尺は元 TS
-                と一致します。
-              </FieldHint>
             </Field>
           </div>
-          <p className="mt-3 text-note text-ink-3">
-            ffmpeg
-            は引数配列でのみ起動します。オプションを自由に書き足す欄はこの画面に存在しません。
-          </p>
           <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-dashed border-line pt-3">
             <span className="font-code text-note text-ink-3">
               {result.lastSavedAt}
@@ -285,9 +236,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
 
       <section className="mt-5">
         <SectionHeading mark={MarkSplit}>自動実行</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          録画の完了を検知して、エンコードジョブが登録されます。
-        </p>
         <Surface className="space-y-3.5">
           <AutoEncodeRow label="録画終了後に自動エンコード">
             <span className="flex items-center gap-2.5">
@@ -300,21 +248,12 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 {result.autoEncode.enabled ? 'オン' : 'オフ'}
               </label>
             </span>
-            <FieldHint>
-              オフにすると、録画詳細から 1 件ずつ手で登録することになります。
-            </FieldHint>
           </AutoEncodeRow>
           <AutoEncodeRow label="対象">
             <p className="text-ui text-ink-2">{result.autoEncode.target}</p>
-            <FieldHint>
-              失敗した録画にジョブは作られません。尻切れは対象で、尻切れであることが画面に明示されます。
-            </FieldHint>
           </AutoEncodeRow>
           <AutoEncodeRow label="使用コア数の上限">
             <p className="text-ui text-ink-2">{result.autoEncode.coreLimit}</p>
-            <FieldHint>
-              ライブ視聴がエンコードより優先されます。視聴中は使用コアが抑えられます。
-            </FieldHint>
           </AutoEncodeRow>
           <AutoEncodeRow label="同時実行">
             <p className="text-ui text-ink-2">
@@ -323,9 +262,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
               </span>{' '}
               本(固定)
             </p>
-            <FieldHint>
-              到着間隔よりも短く終わるため、並べても待ち時間は縮みません。
-            </FieldHint>
           </AutoEncodeRow>
         </Surface>
       </section>

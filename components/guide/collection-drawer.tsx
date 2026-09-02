@@ -28,7 +28,6 @@ import {
   ClockIcon,
   CloseIcon,
   CollectIcon,
-  DangerIcon,
   ListIcon,
   RebuildIcon,
   SuccessIcon,
@@ -124,9 +123,6 @@ function VisitDetail({ row }: { row: StreamVisitRow }) {
         <span>
           {row.outcome === 'noLock' ? '信号を掴めない' : 'データが来ない'}
         </span>
-        <span className="text-ink-3">
-          候補 ch 単位で「要確認」となり巡回から外れています(チャンネル画面)
-        </span>
       </>
     )
   }
@@ -135,7 +131,6 @@ function VisitDetail({ row }: { row: StreamVisitRow }) {
     return (
       <>
         <span>収集中に中断されました</span>
-        <span className="text-ink-3">失敗回数には数えません</span>
       </>
     )
   }
@@ -158,7 +153,7 @@ function VisitDetail({ row }: { row: StreamVisitRow }) {
         )}
         {row.notBeforeLabel && (
           <span>
-            次の訪問 <Figure>{row.notBeforeLabel}</Figure> 以降(間隔を延長中)
+            次の訪問 <Figure>{row.notBeforeLabel}</Figure> 以降
           </span>
         )}
       </>
@@ -199,8 +194,7 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
             巡回は完了しています
           </b>
           <span className="block text-note leading-[1.7] text-ink-2">
-            全 <Figure>{rows.length}</Figure> TS が Complete。信号が来しだい、
-            この記録が動きます
+            全 <Figure>{rows.length}</Figure> TS が Complete。
           </span>
         </div>
       </div>
@@ -214,7 +208,7 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
   if (!latest) {
     return (
       <div className="rounded-xl bg-surface-2 px-3.5 py-3 text-note leading-[1.7] text-ink-2">
-        まだどの TS も訪問していません。巡回が動くとここに記録が並びます
+        まだどの TS も訪問していません。
       </div>
     )
   }
@@ -250,7 +244,7 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
         <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
         <span>
           いますぐ集めるを受け付けました(
-          <Figure>{outcome.streams}</Figure> TS)。訪問記録に順次反映されます。
+          <Figure>{outcome.streams}</Figure> TS)。
         </span>
       </p>
     )
@@ -262,9 +256,6 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
         <b className="block font-bold">
           実行中のブーストが 1 本あります(同時に 1 本まで)。
         </b>
-        いま押しても受け付けられません(
-        <span className="font-code tabular-nums">409</span>
-        )。空きチューナーが無いとき(予約の確保分は使われません)も同じように押せなくなります。
       </span>
     ) : outcome.state === 'cooldown' ? (
       <span>
@@ -287,7 +278,6 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
         <b className="block font-bold">
           指定した対象は巡回の対象にありません。
         </b>
-        対象を選び直してください。
       </span>
     ) : outcome.state === 'unauthenticated' ? (
       <span>
@@ -392,9 +382,6 @@ export function CollectionDrawer({
     })
 
   const troubled = status.troubledCount
-  const misbehaving = status.streams.some(
-    (row) => row.outcome === 'noLock' || row.outcome === 'noBytes',
-  )
 
   return (
     <>
@@ -481,18 +468,9 @@ export function CollectionDrawer({
               <AntennaIcon />
               いますぐ集める
             </Button>
-            {coolingDown ? (
+            {coolingDown && (
               <p className="min-w-[180px] flex-1 text-note leading-[1.7] text-ink-3">
                 終わってから、間隔を置いてもう一度押せます。
-              </p>
-            ) : (
-              <p className="min-w-[180px] flex-1 text-note leading-[1.7] text-ink-3">
-                巡回を前倒しするブーストです(優先度{' '}
-                <b className="font-code font-medium text-ink-2">8</b>
-                )。同時に <b className="font-code font-medium text-ink-2">
-                  1
-                </b>{' '}
-                本まで、連打は受け付けられません。
               </p>
             )}
           </div>
@@ -530,49 +508,17 @@ export function CollectionDrawer({
             ))}
             {status.streams.length === 0 && (
               <p className="py-2.5 text-note leading-[1.7] text-ink-3">
-                訪問記録はまだありません。チャンネルスキャンで TS
-                が定まると、巡回がここに記録されます。
+                訪問記録はまだありません。
               </p>
             )}
           </div>
-          <p className="mt-3 border-t border-dashed border-line pt-[11px] text-note leading-[1.75] text-ink-2">
-            完了区分 — <b className="font-bold text-ink">Complete</b>
-            =基本も詳細も揃った /{' '}
-            <b className="font-bold text-ink">BasicOnly</b>
-            =基本のみ揃い、詳細は次回へ持ち越し /{' '}
-            <b className="font-bold text-ink">Incomplete</b>
-            =揃わないまま打ち切り。時間で打ち切った収集は成功として記録されません。
-          </p>
-
-          {misbehaving && (
-            <div className="mt-3 rounded-xl bg-tint-butter px-3.5 py-[11px]">
-              <div className="flex items-start gap-[9px] text-sub leading-[1.7] text-ink-2">
-                <WarningIcon className="mt-1 size-3.5 shrink-0 text-ink-3" />
-                <div>
-                  <b className="font-bold text-ink">収集不調</b> —
-                  選局はできるのに EIT
-                  が揃わない状態。巡回間隔を延ばすだけで、受信可否の判定には使われません。
-                  <b className="font-bold text-ink">録画予約は弾かれません。</b>
-                </div>
-              </div>
-              <div className="mt-[7px] flex items-start gap-[9px] border-t border-dashed border-lemon-line pt-[7px] text-sub leading-[1.7] text-ink-2">
-                <DangerIcon className="mt-1 size-3.5 shrink-0 text-ink-3" />
-                <div>
-                  <b className="font-bold text-ink">選局失敗</b> —
-                  信号を掴めない・データが来ない状態。候補 ch
-                  単位で「要確認」となり、予約リトライを含む巡回から外れます(チャンネル画面が持ち場)。
-                </div>
-              </div>
-            </div>
-          )}
 
           {status.zeroServiceKinds.length > 0 && (
             <div className="mt-3 flex items-start gap-[9px] text-sub leading-[1.7] text-ink-2">
               <WarningIcon className="mt-[3px] size-[15px] shrink-0 text-lemon" />
               <div>
                 {status.zeroServiceKinds.map((kind) => kind.label).join(' / ')}{' '}
-                — サービス <Figure>0</Figure> 件。チューナー側の異常「サービス 0
-                件」の再掲です。{' '}
+                — サービス <Figure>0</Figure> 件。{' '}
                 <Link
                   href="/settings/tuners"
                   className="tap-target font-bold whitespace-nowrap underline underline-offset-[3px]"
@@ -584,9 +530,6 @@ export function CollectionDrawer({
           )}
 
           <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-dashed border-line pt-[13px]">
-            <p className="min-w-[170px] flex-1 text-note leading-[1.6] text-ink-3">
-              番組表のデータを全て破棄して集め直す破壊的操作です。確認が必ず入ります。
-            </p>
             <Button
               variant="destructive"
               size="sm"
@@ -602,8 +545,7 @@ export function CollectionDrawer({
                 <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
                 <span>
                   番組表のデータを破棄しました(
-                  <Figure>{discarded}</Figure> 件)。全 TS を 1
-                  周すると番組表が復元します。
+                  <Figure>{discarded}</Figure> 件)。
                 </span>
               </p>
             )}

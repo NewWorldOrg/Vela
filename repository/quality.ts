@@ -90,8 +90,6 @@ export interface QualityResult {
   supplyOutage?: { title: string; body: string }
   stats: QualityStat[]
   thresholds: QualityThreshold[]
-  thresholdNote: string
-  legend: { level: QualityLevel; label: string; body: string }[]
   channels: QualityChannel[]
   satelliteMeasured: boolean
   tuners: QualityTuner[]

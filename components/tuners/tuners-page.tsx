@@ -155,21 +155,11 @@ function DetectionPanel({
   // is between the live observation and a fresh probe; the restart takes the
   // observation again, and that is the remedy stated.
   const notes = changes
-    ? [
-        removes &&
-          '「消失」のデバイスは一覧から削除され、有効・LNB 給電の設定も失われます。',
-        mismatches && '「種別相違」は保存では変わりません。',
-        '反映には driver の再起動が必要です(保存後にバナーで通知)。',
-      ]
-    : [
-        mismatches &&
-          '種別の食い違いは一覧の保存では直りません。driver の再起動で観測が取り直されます。',
-        !mismatches && '保存できる変更がないため、保存はありません。',
-      ]
+    ? []
+    : [!mismatches && '保存できる変更がないため、保存はありません。']
 
   return (
     <DetectionCard
-      lede={changes ? '保存すると一覧が更新されます' : undefined}
       footer={
         <>
           <CancelDetection />
@@ -245,25 +235,20 @@ export function TunersView({
             spot="tuner"
             titleLevel={2}
             title="サインインしないと見られません"
-          >
-            driver
-            の状態はサインインしたユーザーだけに見せています。サインインしてから開き直してください。
-          </EmptyState>
+          />
         ) : restarting ? (
           <EmptyState
             spot="tuner"
             titleLevel={2}
             title="driver の入れ替わりを待っています"
-          >
-            再起動中は一覧を読めません。driver が戻ると自動で表示に戻ります。
-          </EmptyState>
+          />
         ) : (
           <EmptyState
             spot="tuner"
             titleLevel={2}
             title="状態を取得できませんでした"
           >
-            API は driver の状態を答えられませんでした。{result.message}
+            {result.message}
           </EmptyState>
         )}
       </>
@@ -281,7 +266,6 @@ export function TunersView({
       <PageHeading
         description={
           <>
-            接続されたチューナーデバイスの一覧と稼働状態。
             {DRIVER_LABEL[tuners.connection]}
             {tuners.instanceId && (
               <>
@@ -330,11 +314,10 @@ export function TunersView({
 
       <p className="mx-0.5 mt-[22px] mb-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2">
         <ClockIcon className="size-[15px] text-brand" />
-        健全性のしきい値: 種別単位でサービス取得が連続{' '}
+        健全性のしきい値{' '}
         <b className="font-code font-medium text-ink">
           {tuners.thresholdHours} 時間
-        </b>{' '}
-        0 件になると警告
+        </b>
         <ThresholdControl
           hours={tuners.thresholdHours}
           onSave={onSaveThreshold}
@@ -383,8 +366,6 @@ export function TunersView({
                 {row.draining && (
                   <span className="mt-1 block text-[11px] leading-[1.5] text-lemon">
                     無効化を受付済み
-                    <br />
-                    解放後に停止します
                   </span>
                 )}
               </TableCell>
@@ -454,9 +435,6 @@ export function TunersView({
           <SectionHeading mark={MarkAxis}>
             デバイス検出 — 差分の確認
           </SectionHeading>
-          <p className="-mt-1.5 mb-3.5 text-note text-ink-2">
-            「デバイスを検出」実行後、保存前に必ず差分を確認する。空になる保存はできない。
-          </p>
           <div
             className={cn(
               'grid items-start gap-[18px]',
@@ -482,9 +460,7 @@ export function TunersView({
                     </Link>
                   </Button>
                 }
-              >
-                接続済みのデバイスを検出して一覧を作成します。設定ファイルを手で編集する必要はありません。
-              </EmptyState>
+              />
             )}
           </div>
         </section>
