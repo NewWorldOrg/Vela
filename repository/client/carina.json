@@ -7562,7 +7562,8 @@
         "required": [
           "segment",
           "reachedAtMs",
-          "tookMs"
+          "tookMs",
+          "tookFrom"
         ],
         "type": "object",
         "properties": {
@@ -7586,6 +7587,16 @@
               "string"
             ],
             "format": "int64"
+          },
+          "tookFrom": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LiveStartupSegment"
+              }
+            ]
           }
         }
       },
