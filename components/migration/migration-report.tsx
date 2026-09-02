@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Banner } from '@/components/vela/banner'
 import {
   CheckIcon,
   MarkDots,
@@ -30,17 +29,8 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
 
   return (
     <>
-      <Banner className="mt-3.5 [word-break:auto-phrase]">
-        <b className="block">この画面は読み取り専用です。</b>
-        移行の実行は CLI
-        で行います。移行できなかった件数は、品質画面やライブラリの不整合件数には合算されません。
-      </Banner>
-
       <section className="mt-5">
         <SectionHeading mark={MarkDots}>実行情報</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          いつ・どこから・どの区分で実行したか。
-        </p>
         <Surface>
           <div className="flex flex-wrap items-center gap-2.5">
             <b className="text-ui font-bold">{run.heading}</b>
@@ -60,17 +50,11 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             </MigrationRunRow>
             <MigrationRunRow label="取り込み先">{run.output}</MigrationRunRow>
           </dl>
-          <p className="mt-3 border-t border-dashed border-line pt-3 text-note text-ink-3">
-            {run.foot}
-          </p>
         </Surface>
       </section>
 
       <section className="mt-5">
         <SectionHeading mark={MarkPanel}>母集団サマリ</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          移行元に存在したすべての行・すべてのファイルを、5つの母集団に分けて数えています。
-        </p>
         <div className="space-y-2.5">
           {result.populations.map((population) => (
             <Surface
@@ -125,7 +109,6 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             </Surface>
           ))}
         </div>
-        <p className="mt-2.5 text-note text-ink-3">{result.populationsNote}</p>
 
         <div className="mt-2.5 flex items-start gap-[11px] rounded-lg bg-mint-soft px-[15px] py-3 text-mint">
           <CheckIcon className="mt-[3px] size-[17px]" />
@@ -137,7 +120,6 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               </span>{' '}
               件
             </b>
-            <p className="text-sub">{result.unclassifiedNote}</p>
           </div>
         </div>
       </section>
@@ -146,9 +128,6 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
         <SectionHeading mark={MarkType}>
           取り込まなかったものの明細
         </SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          理由分類ごとに並べています。理由は単一の文字列に潰されず、打ち切りもされません。
-        </p>
         <Table className="min-w-[860px]" containerClassName="pb-1">
           <TableHeader>
             <TableRow>
@@ -169,7 +148,6 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                         {group.unit}
                       </em>
                     </span>
-                    <span className="text-note text-ink-3">{group.body}</span>
                   </span>
                 </TableCell>
               </TableRow>
@@ -218,15 +196,10 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             </TableBody>
           ))}
         </Table>
-        <p className="mt-2.5 text-note text-ink-3">{result.notTakenNote}</p>
       </section>
 
       <section className="mt-5">
         <SectionHeading mark={MarkSlashes}>やらなかったこと</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          運ばなかったものも 1
-          行として記録されます。記録が無いと、後から機能欠落と区別できません
-        </p>
         <div className="space-y-2">
           {result.omissions.map((omission) => (
             <Surface
