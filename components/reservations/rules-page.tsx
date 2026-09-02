@@ -197,7 +197,7 @@ function RulesScreen({
     channels.find((channel) => channel.id === id)?.name || id
 
   return (
-    <ScreenMain className="overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <ReservationTabs
         current="rules"
         action={

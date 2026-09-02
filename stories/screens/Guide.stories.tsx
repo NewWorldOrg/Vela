@@ -19,6 +19,7 @@ import {
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
+import { AppFrame } from '@/components/vela/app-shell'
 import { GuideView } from '@/components/guide/guide-page'
 
 const base = {
@@ -50,9 +51,9 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="dot-grid flex h-dvh flex-col overflow-hidden bg-bg">
+      <AppFrame>
         <Story />
-      </div>
+      </AppFrame>
     ),
   ],
 } satisfies Meta<typeof GuideView>

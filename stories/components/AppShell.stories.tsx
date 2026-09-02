@@ -5,6 +5,7 @@ import {
   AdminMain,
   AdminSideNav,
   AdminSideNavItem,
+  AppFrame,
   AppShell,
   Brand,
   Crumb,
@@ -184,7 +185,7 @@ export const Admin: Story = {
 
 function AdminFrame() {
   return (
-    <div className="dot-grid flex h-dvh flex-col overflow-hidden bg-bg">
+    <AppFrame>
       <ServiceTopBar settingsActive />
       <AdminBody className="min-h-0 flex-1">
         <AdminSideNav caption="管理" aria-label="管理メニュー">
@@ -218,7 +219,7 @@ function AdminFrame() {
           </TintPanel>
         </AdminMain>
       </AdminBody>
-    </div>
+    </AppFrame>
   )
 }
 

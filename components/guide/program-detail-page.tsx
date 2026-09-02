@@ -17,7 +17,7 @@ export function ProgramDetailView({
   const { program, channel, day } = detail
 
   return (
-    <ScreenMain className="overflow-y-auto pb-16">
+    <ScreenMain className="pb-16">
       <div className="mx-auto max-w-[780px] px-6 pt-[22px] max-[700px]:px-3.5">
         <Button variant="ghost" size="sm" className="mb-3.5" asChild>
           <Link href="/guide">

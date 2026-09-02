@@ -10,7 +10,7 @@ export function ScreenPlaceholder({
   children: React.ReactNode
 }) {
   return (
-    <ScreenMain className="flex items-center justify-center overflow-y-auto p-8">
+    <ScreenMain className="flex items-center justify-center p-8">
       <EmptyState spot={spot} className="w-full max-w-[420px]">
         {children}
       </EmptyState>

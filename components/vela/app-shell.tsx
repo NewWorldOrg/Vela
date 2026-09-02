@@ -5,9 +5,43 @@ import { cn } from '@/lib/utils'
 import { SettingsIcon, VelaMark } from '@/components/vela/icons'
 
 /**
- * The application frame. Everyday areas — 番組表 / ライブ / ライブラリ / 予約 —
- * live in the top bar. The occasional ones sit behind 設定 in an admin area
- * with its own side navigation.
+ * The top bar's height, and so where anything pinned beneath it begins. Both
+ * are written as the class Tailwind needs, so that the number lives once.
+ */
+const TOP_BAR_HEIGHT = 'h-[46px]'
+const BELOW_TOP_BAR = 'top-[46px]'
+
+/**
+ * The window-filling frame every route inside the shell is drawn in: the top
+ * bar, then the screen.
+ *
+ * The frame is not a scroll container, and neither is the screen inside it.
+ * The document scrolls, so the scrollbar is at the edge of the window rather
+ * than at the edge of a column narrower than the window, and nothing here is
+ * a scroller the browser would let the keyboard land on and draw its focus
+ * ring around. The frame is only as tall as the window when the screen asks
+ * for that (`ScreenMain scroll="within"`), which is what gives a list inside
+ * it a height to fill; otherwise it is at least the window and grows with
+ * the page.
+ */
+export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
+  return (
+    <div
+      data-slot="app-frame"
+      className={cn(
+        'dot-grid flex min-h-dvh flex-col bg-bg',
+        'has-[[data-scroll=within]]:h-dvh has-[[data-scroll=within]]:overflow-hidden',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+/**
+ * The application frame as a story draws it. Everyday areas — 番組表 / ライブ /
+ * ライブラリ / 予約 — live in the top bar. The occasional ones sit behind 設定
+ * in an admin area with its own side navigation.
  */
 export function AppShell({ className, ...props }: ComponentProps<'div'>) {
   return (
@@ -27,7 +61,8 @@ export function TopBar({ className, ...props }: ComponentProps<'header'>) {
     <header
       data-slot="top-bar"
       className={cn(
-        'flex h-[46px] items-center gap-1 border-b border-line bg-surface px-[14px]',
+        'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[14px]',
+        TOP_BAR_HEIGHT,
         className,
       )}
       {...props}
@@ -141,24 +176,31 @@ export function AdminSideNav({
       data-slot="admin-side-nav"
       aria-label={ariaLabel ?? caption}
       className={cn(
-        'w-[152px] shrink-0 border-r border-dashed border-line px-[9px] py-3.5 max-[900px]:w-auto',
+        'w-[152px] shrink-0 border-r border-dashed border-line px-[9px] max-[900px]:w-auto',
         className,
       )}
       {...props}
     >
       {/*
-        The gap under the caption matches the 11px between the rows below it.
-        Widening the rows' gaps to keep their areas apart left the caption at
-        7px, nearer to the first row than the rows are to each other, and a
-        heading that sits closer to what follows than that follows itself reads
-        as one of the rows rather than as the head of them.
+        The column runs the height of the page so its rule does, while the
+        items stay in view under the top bar as the page scrolls. The padding
+        travels with the items, so they sit where they sat before the scroll.
       */}
-      {caption && (
-        <div className="mb-[11px] px-2.5 font-code text-[9.5px] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
-          {caption}
-        </div>
-      )}
-      {children}
+      <div className={cn('sticky py-3.5', BELOW_TOP_BAR)}>
+        {/*
+          The gap under the caption matches the 11px between the rows below it.
+          Widening the rows' gaps to keep their areas apart left the caption at
+          7px, nearer to the first row than the rows are to each other, and a
+          heading that sits closer to what follows than that follows itself
+          reads as one of the rows rather than as the head of them.
+        */}
+        {caption && (
+          <div className="mb-[11px] px-2.5 font-code text-[9.5px] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
+            {caption}
+          </div>
+        )}
+        {children}
+      </div>
     </nav>
   )
 }
@@ -228,15 +270,35 @@ const SCREEN_WIDTHS = {
 
 export type ScreenWidth = keyof typeof SCREEN_WIDTHS
 
+/**
+ * What scrolls when a screen is taller than the window, chosen by name.
+ *
+ * `page` is the document: the screen grows with what is on it and the window
+ * scrolls, with the scrollbar at its edge. It is every screen that is read.
+ *
+ * `within` pins the frame to the window and gives the screen exactly what is
+ * left under the top bar, so that a list inside it can take the rest and
+ * scroll on its own with its header row held. Nothing but the list moves. It
+ * is for a screen whose content is the axis being read, which is the guide.
+ *
+ * Neither makes `<main>` the scroller. A screen that scrolled inside its own
+ * column put the scrollbar at the column's edge, inside the window, and made
+ * the column a thing the keyboard could land on, ringed in the browser's
+ * default blue.
+ */
+export type ScreenScroll = 'page' | 'within'
+
 export function ScreenMain({
   width = 'default',
+  scroll = 'page',
   className,
   ...props
-}: ComponentProps<'main'> & { width?: ScreenWidth }) {
+}: ComponentProps<'main'> & { width?: ScreenWidth; scroll?: ScreenScroll }) {
   return (
     <main
       data-slot="screen-main"
       data-width={width}
+      data-scroll={scroll}
       className={cn('min-h-0 flex-1', SCREEN_WIDTHS[width], className)}
       {...props}
     />
@@ -247,7 +309,7 @@ export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
   return (
     <ScreenMain
       data-slot="admin-main"
-      className={cn('min-w-0 overflow-y-auto px-[18px] pt-4 pb-5', className)}
+      className={cn('min-w-0 px-[18px] pt-4 pb-5', className)}
       {...props}
     />
   )
