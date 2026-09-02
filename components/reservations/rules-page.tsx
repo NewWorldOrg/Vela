@@ -121,9 +121,6 @@ const EVERY_KIND = 'all'
 const SIGNED_OUT =
   'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
 
-const FOLLOWS_LATER =
-  '保存した条件は再計算のあとに予約へ反映されます。一覧にすぐ現れないことがあります。'
-
 interface Named {
   field: 'name' | 'terms' | 'priority' | 'before' | 'after'
   text: string
@@ -210,16 +207,6 @@ function RulesScreen({
         }
       />
 
-      <Banner tone="info" className="mb-3.5">
-        <b className="block font-bold">
-          ルールは番組検索と同じ条件で書きます。
-        </b>
-        <span className="block">
-          保存する前に、条件に一致する番組と、いまの予約がどう変わるかを確認できます。
-          {FOLLOWS_LATER}
-        </span>
-      </Banner>
-
       <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(280px,360px)_1fr]">
         <section className="rounded-lg bg-surface px-4 py-3.5">
           <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
@@ -271,9 +258,7 @@ function RulesScreen({
             spot="antenna"
             title="ルールが選ばれていません"
             className="min-[1061px]:mt-6"
-          >
-            左の一覧からルールを選ぶか、「ルールを追加」を押すと、ここで条件を書けます。
-          </EmptyState>
+          />
         ) : (
           <RuleEditor
             rule={editing.state === 'rule' ? editing.rule : undefined}
@@ -708,7 +693,6 @@ function RuleEditor({
             }
             onChange={(event) => amend({ name: event.target.value })}
           />
-          <FieldHint>一覧でこのルールを探すための名前です</FieldHint>
           <span aria-live="polite">
             {problem?.field === 'name' && (
               <FieldError id="rule-name-error">{problem.text}</FieldError>
@@ -724,7 +708,6 @@ function RuleEditor({
               value={entry.q}
               onChange={(event) => amend({ q: event.target.value })}
             />
-            <FieldHint>空白で区切ると、すべてを含む番組が対象です</FieldHint>
           </Field>
 
           <Field>
@@ -734,7 +717,6 @@ function RuleEditor({
               value={entry.exclude}
               onChange={(event) => amend({ exclude: event.target.value })}
             />
-            <FieldHint>この語を含む番組は対象から外れます</FieldHint>
           </Field>
         </div>
 
@@ -764,7 +746,6 @@ function RuleEditor({
                 ))}
               </SelectContent>
             </Select>
-            <FieldHint>キーワードと除外キーワードを探す場所です</FieldHint>
           </Field>
 
           <Field>
@@ -839,9 +820,6 @@ function RuleEditor({
               </Select>
             )}
           </span>
-          <FieldHint>
-            複数指定したときは、どれかに当たる番組が対象です
-          </FieldHint>
         </Field>
 
         <Field>
@@ -884,11 +862,11 @@ function RuleEditor({
                 </Select>
               )}
           </span>
-          <FieldHint>
-            {entry.channels.length === 0
-              ? '未選択のときは、すべてのチャンネルが対象です'
-              : `チャンネルは ${SEARCH_MOST_CHANNELS} 局まで指定できます`}
-          </FieldHint>
+          {entry.channels.length >= SEARCH_MOST_CHANNELS && (
+            <FieldHint>
+              チャンネルは {SEARCH_MOST_CHANNELS} 局まで指定できます
+            </FieldHint>
+          )}
         </Field>
 
         <span aria-live="polite">
@@ -918,8 +896,7 @@ function RuleEditor({
               onChange={(event) => amend({ priority: event.target.value })}
             />
             <FieldHint>
-              数が大きいほど先にチューナーを取ります({PRIORITY_RANGE.least} 〜{' '}
-              {PRIORITY_RANGE.most})
+              {PRIORITY_RANGE.least} 〜 {PRIORITY_RANGE.most}
             </FieldHint>
             <span aria-live="polite">
               {problem?.field === 'priority' && (
@@ -943,7 +920,7 @@ function RuleEditor({
               onChange={(event) => amend({ before: event.target.value })}
             />
             <FieldHint>
-              放送開始の何秒前から録画を始めるか(0 〜 {MARGIN_RANGE.most})
+              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
             </FieldHint>
             <span aria-live="polite">
               {problem?.field === 'before' && (
@@ -969,7 +946,7 @@ function RuleEditor({
               onChange={(event) => amend({ after: event.target.value })}
             />
             <FieldHint>
-              放送終了の何秒後まで録画を続けるか(0 〜 {MARGIN_RANGE.most})
+              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
             </FieldHint>
             <span aria-live="polite">
               {problem?.field === 'after' && (
@@ -988,9 +965,6 @@ function RuleEditor({
             onCheckedChange={(next) => amend({ enabled: next })}
           />
           <FieldLabel htmlFor="rule-enabled">有効</FieldLabel>
-          <FieldHint>
-            無効のルールからは予約が作られません。有効にした時点から対象になります。
-          </FieldHint>
         </div>
       </FormSection>
 
@@ -1033,7 +1007,7 @@ function RuleEditor({
             )}
             {preview.takes.length === 0 ? (
               <p className="text-sub text-ink-3">
-                いまの番組表に、この条件に一致する番組はありません。条件に合う番組が放送されたときに予約が作られます。
+                いまの番組表に、この条件に一致する番組はありません。
               </p>
             ) : (
               <>
@@ -1107,10 +1081,7 @@ function RuleEditor({
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>このルールを削除します</AlertDialogTitle>
-              <AlertDialogDescription>
-                {rule.name}{' '}
-                から作られた予約のうち、録画がまだ始まっておらず、取り消してもいないものが引っ込みます。録画が始まったものと、取り消したものは残ります。
-              </AlertDialogDescription>
+              <AlertDialogDescription>{rule.name}</AlertDialogDescription>
             </AlertDialogHeader>
             <div className="flex flex-col gap-1.5 text-ui text-ink-2">
               {leaving ? (
@@ -1120,9 +1091,6 @@ function RuleEditor({
               ) : (
                 <span className="text-ink-3">件数を数えています。</span>
               )}
-              <span className="text-note leading-relaxed text-ink-3">
-                削除では、番組表の収集が完了していない放送の予約と、開始が猶予以内に迫っている予約も引っ込みます。保存して再適用したときに引っ込む件数とは異なることがあります。
-              </span>
             </div>
             <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
               <WarningIcon className="size-4 shrink-0" />
@@ -1147,14 +1115,15 @@ function RuleEditor({
       )}
 
       <Dialog open={confirming} onOpenChange={setConfirming}>
-        <DialogContent onInteractOutside={(event) => event.preventDefault()}>
+        <DialogContent
+          aria-describedby={undefined}
+          onInteractOutside={(event) => event.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>この保存で予約がどう変わるか</DialogTitle>
-            <DialogDescription>
-              {impact
-                ? 'いまの番組表で数えた件数です。'
-                : '件数を数えています。'}
-            </DialogDescription>
+            {!impact && (
+              <DialogDescription>件数を数えています。</DialogDescription>
+            )}
           </DialogHeader>
 
           {impact && (
@@ -1174,7 +1143,6 @@ function RuleEditor({
                   <Count value={impact.excluded} /> 件は除外されました。
                 </span>
               )}
-              <span className="text-note text-ink-3">{FOLLOWS_LATER}</span>
             </div>
           )}
 

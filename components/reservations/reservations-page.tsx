@@ -14,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Banner } from '@/components/vela/banner'
 import { PlusIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
@@ -115,10 +114,6 @@ export function ReservationsView({
           )}
         </span>
       </div>
-
-      <Banner tone="info" className="mb-3.5">
-        予約時点でチューナーを確保します。競合はこの画面で解決できます。
-      </Banner>
 
       <Table className="min-w-[900px]" containerClassName="pb-1">
         <TableHeader>
