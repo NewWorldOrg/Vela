@@ -57,7 +57,6 @@ export function QualityView({ result }: { result: QualityResult }) {
         設定 / <CrumbCurrent>品質</CrumbCurrent>
       </Crumb>
       <PageHeading
-        description="録画品質の常時計測。ドロップの発生状況とチューナーの健全性。"
         action={
           <div className="inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]">
             {result.windowOptions.map((option) => (
@@ -141,9 +140,6 @@ export function QualityView({ result }: { result: QualityResult }) {
       <div className="mt-3.5 grid gap-2.5 min-[900px]:grid-cols-2">
         <Surface>
           <SectionHeading mark={MarkPill}>適用中の閾値</SectionHeading>
-          <p className="-mt-2 mb-3 text-note text-ink-2">
-            いずれも初期値のまま。実測が溜まるまでは暫定として扱う。
-          </p>
           <div className="space-y-2">
             {result.thresholds.map((threshold) => (
               <div
@@ -161,44 +157,19 @@ export function QualityView({ result }: { result: QualityResult }) {
               </div>
             ))}
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
-            <p className="min-w-0 flex-1 text-note text-ink-3">
-              {result.thresholdNote}
-            </p>
+          <div className="mt-3 flex justify-end border-t border-dashed border-line pt-3">
             <Button variant="ghost" size="sm" disabled>
               閾値を変更
             </Button>
           </div>
-        </Surface>
-
-        <Surface>
-          <SectionHeading mark={MarkDoubleCircle}>状態の見分け</SectionHeading>
-          <p className="-mt-2 mb-3 text-note text-ink-2">
-            状態は独立して数える。潰すとどれかが良好に化ける。
-          </p>
-          <dl className="space-y-2">
-            {result.legend.map((entry) => (
-              <div
-                key={entry.label}
-                className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1"
-              >
-                <dt className="w-[140px] shrink-0">
-                  <QualityChip level={entry.level}>{entry.label}</QualityChip>
-                </dt>
-                <dd className="min-w-0 flex-1 text-note text-ink-2">
-                  {entry.body}
-                </dd>
-              </div>
-            ))}
-          </dl>
         </Surface>
       </div>
 
       <section className="mt-5">
         <SectionHeading mark={MarkDots}>チャンネル別ドロップ率</SectionHeading>
         <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          直近 24 時間の録画の実測。バーは 0.1%(視聴不可の恐れ)を上限に表示し、
-          破線は 0.02%(警告水準)。いずれも暫定。
+          バーは 0.1%(視聴不可の恐れ)を上限に表示し、破線は
+          0.02%(警告水準)。いずれも暫定。
         </p>
         <Surface className="space-y-3">
           {result.channels.map((channel) => (
@@ -244,23 +215,15 @@ export function QualityView({ result }: { result: QualityResult }) {
 
       <section className="mt-5">
         <SectionHeading mark={MarkSlashes}>BS / CS のドロップ率</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          同じ期間・同じ閾値で判定する。
-        </p>
         {result.satelliteMeasured ? null : (
           <EmptyState spot="antenna" title="対象なし">
-            期間内に BS / CS
-            の録画がありません。ドロップ率を計算する母数がまだできていません。
+            期間内に BS / CS の録画がありません。
           </EmptyState>
         )}
       </section>
 
       <section className="mt-5">
         <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          取得できるのは lock 状態 / CNR / post-Viterbi ビット誤り率の
-          3つ。値の隣は取得時刻で、同一値が続くことは安定を意味しない。
-        </p>
         <Table className="min-w-[900px]" containerClassName="pb-1">
           <TableHeader>
             <TableRow>
@@ -297,11 +260,7 @@ export function QualityView({ result }: { result: QualityResult }) {
             ))}
           </TableBody>
         </Table>
-        <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
-          <p className="min-w-0 flex-1 text-note text-ink-3">
-            lock 状態と CNR
-            は別の取得時刻を持つ。1つのスナップショットとして扱わない
-          </p>
+        <div className="mt-2.5 flex justify-end">
           <Link
             href="/settings/tuners"
             className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
@@ -314,9 +273,6 @@ export function QualityView({ result }: { result: QualityResult }) {
       <div className="mt-5 grid gap-2.5 min-[900px]:grid-cols-2">
         <Surface>
           <SectionHeading mark={MarkDots}>問題のある録画</SectionHeading>
-          <p className="-mt-2 mb-3 text-note text-ink-2">
-            直近 24 時間 · 警告水準以上のドロップが出た録画。
-          </p>
           <div className="space-y-2">
             {result.problemRecordings.map((recording) => (
               <div
@@ -346,10 +302,7 @@ export function QualityView({ result }: { result: QualityResult }) {
               </div>
             ))}
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
-            <p className="min-w-0 flex-1 text-note text-ink-3">
-              未計測 3 本はここに含めない。別に数える
-            </p>
+          <div className="mt-3 flex justify-end border-t border-dashed border-line pt-3">
             <Link
               href="/library"
               className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
@@ -361,10 +314,7 @@ export function QualityView({ result }: { result: QualityResult }) {
 
         <Surface>
           <SectionHeading mark={MarkDoubleCircle}>異常一覧</SectionHeading>
-          <div className="-mt-2 mb-3 flex flex-wrap items-center gap-2.5">
-            <p className="min-w-0 flex-1 text-note text-ink-2">
-              再掲は自ドメイン所有の件数と合算しない。
-            </p>
+          <div className="-mt-2 mb-3 flex flex-wrap items-center justify-end gap-2.5">
             <QualityChip level="bad">所有 {result.ownedCount} 件</QualityChip>
             <Badge variant="mute">再掲 {result.recapCount} 件</Badge>
           </div>
@@ -403,9 +353,6 @@ export function QualityView({ result }: { result: QualityResult }) {
               </div>
             ))}
           </div>
-          <p className="mt-3 border-t border-dashed border-line pt-3 text-note text-ink-3">
-            確認済みは削除されない。再発すれば新しい発生として再度出る
-          </p>
         </Surface>
       </div>
     </>
