@@ -44,7 +44,7 @@ export function IntegrityView({
   const { check, findings, roots } = result
 
   return (
-    <ScreenMain className="overflow-y-auto px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
       <div className="mb-3">
         <Link
           href="/library"

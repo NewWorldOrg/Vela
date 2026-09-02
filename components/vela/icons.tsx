@@ -62,11 +62,15 @@ export function SearchIcon(props: IconProps) {
   )
 }
 
+/**
+ * A gear: eight teeth on a ring, and a hub. It was a ring with eight rays,
+ * which beside the sun of the theme switch read as a second sun.
+ */
 export function SettingsIcon(props: IconProps) {
   return (
     <Icon {...props}>
-      <circle cx="12" cy="12" r="3.1" />
-      <path d="M12 4.2v2.4M12 17.4v2.4M19.8 12h-2.4M6.6 12H4.2M17.5 6.5l-1.7 1.7M8.2 15.8l-1.7 1.7M17.5 17.5l-1.7-1.7M8.2 8.2 6.5 6.5" />
+      <path d="M10.1 5.3 10.4 2.7 13.6 2.7 13.9 5.3 15.4 5.9 17.5 4.3 19.7 6.5 18.1 8.6 18.7 10.1 21.3 10.4 21.3 13.6 18.7 13.9 18.1 15.4 19.7 17.5 17.5 19.7 15.4 18.1 13.9 18.7 13.6 21.3 10.4 21.3 10.1 18.7 8.6 18.1 6.5 19.7 4.3 17.5 5.9 15.4 5.3 13.9 2.7 13.6 2.7 10.4 5.3 10.1 5.9 8.6 4.3 6.5 6.5 4.3 8.6 5.9Z" />
+      <circle cx="12" cy="12" r="2.7" />
     </Icon>
   )
 }

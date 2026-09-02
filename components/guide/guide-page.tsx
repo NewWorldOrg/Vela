@@ -98,6 +98,7 @@ export function GuideView({
   return (
     <ScreenMain
       width="full"
+      scroll="within"
       className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[30px]"
     >
       <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[18px] py-[9px] max-[700px]:px-3.5">

@@ -43,7 +43,7 @@ export function LiveView({ live }: { live: LiveResult }) {
   return (
     <ScreenMain
       width="full"
-      className="flex items-start gap-3.5 overflow-y-auto px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1060px]:flex-col"
+      className="flex items-start gap-3.5 px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1060px]:flex-col"
     >
       <div className="min-w-0 flex-1">
         <section

@@ -82,3 +82,34 @@ test('a screen takes its width from the shared part, not from a <main> of its ow
       'pick a step by name — `full` is for a screen whose content is an axis.',
   )
 })
+
+/**
+ * The document scrolls; the screen does not scroll inside its own column. A
+ * screen that did put the scrollbar at the column's edge, inside the window,
+ * and made the column a scroller the keyboard could land on and the browser
+ * ring. A list that is taller than the window scrolls inside the list, which
+ * is the list's own container and never `<main>`.
+ */
+test('a screen does not make its <main> the scroller', async () => {
+  const files = await sourceFiles('.')
+  const scrolls: string[] = []
+
+  for (const file of files) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+    for (const opening of source.matchAll(
+      /<(ScreenMain|AdminMain)\b[^>]*>/gs,
+    )) {
+      if (/overflow-(y-)?(auto|scroll)/.test(opening[0])) {
+        scrolls.push(file)
+      }
+    }
+  }
+
+  assert.deepEqual(
+    scrolls,
+    [],
+    'A screen gave its <main> an overflow, which makes the column the ' +
+      'scroller. Leave `ScreenMain` alone and let the document scroll, or ' +
+      'pick `scroll="within"` and give the list inside its own scroller.',
+  )
+})
