@@ -13,12 +13,14 @@ import { PLAYER_ROUND_BUTTON } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-settings'
 
-/** Why neither track can be chosen: the wire takes no argument for either. */
-export const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
+/** Why the sound track cannot be chosen: the wire takes no argument for it. */
+const SOUND_NOT_WIRED = '音声の選択はこれから実装されます'
 
 /**
  * The settings behind the gear, for a live picture: the profile it is encoded
- * in, and the two tracks nothing behind them answers yet.
+ * in, and the sound track nothing behind it answers yet. The captions are not
+ * here: there is one track and no choice to make, and whether it is drawn is
+ * the switch on the bar.
  *
  * A profile is part of the session's key, so choosing one is a new session on
  * the same channel rather than a change to the one running. There is no rate
@@ -61,16 +63,15 @@ export function LiveSettings({
             numeric
           />
         </Setting>
-        <Setting label="音声">
+        <Setting label="音声" reason={SOUND_NOT_WIRED}>
           <PlayerSegmentedControl
             label="音声"
             options={['主音声', '副音声']}
             onChange={() => {}}
             off
-            title={NOT_WIRED}
+            title={SOUND_NOT_WIRED}
           />
         </Setting>
-        <Setting label="字幕" reason={NOT_WIRED} />
       </PopoverContent>
     </Popover>
   )
