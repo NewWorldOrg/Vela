@@ -768,7 +768,7 @@ function toNotices(ledger: TunerLedgerResponder): TunerNotice[] {
   if (ledger.observationFailure) {
     notices.push({
       tone: 'danger',
-      body: 'driver からチューナーの観測を取得できませんでした。一覧は保存済みの内容のみを示しています。',
+      body: 'driver からチューナーの観測を取得できませんでした。',
     })
   }
 
@@ -782,8 +782,7 @@ function toNotices(ledger: TunerLedgerResponder): TunerNotice[] {
 function toDriftNotice(
   observed: TunerObservationResponder[] | null,
 ): TunerNotice {
-  const body =
-    '保存済み・未反映の変更があります。反映には driver の再起動が必要です。'
+  const body = '保存済み・未反映の変更があります。'
 
   if (observed === null) {
     return { tone: 'warn', body, restart: {} }

@@ -11,7 +11,7 @@ export const TUNERS: TunerResult = {
     },
     {
       tone: 'warn',
-      body: '保存済み・未反映の変更があります。反映には driver の再起動が必要です。',
+      body: '保存済み・未反映の変更があります。',
       restart: { recordings: 1, until: '08/07 21:15' },
     },
   ],

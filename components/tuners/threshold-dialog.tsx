@@ -79,10 +79,6 @@ export function ThresholdDialog({
       <DialogContent onInteractOutside={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>健全性のしきい値を変更</DialogTitle>
-          <DialogDescription>
-            種別単位でサービス取得が連続して 0
-            件だった時間が、この長さを超えると警告になります。
-          </DialogDescription>
         </DialogHeader>
 
         <Field>
