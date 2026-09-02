@@ -74,19 +74,14 @@ export function OidcSettings({
         <span className="heading block text-ui text-ink">
           登録すべき redirect URI
         </span>
-        <p className="mt-px mb-2.5 text-note text-ink-2">
-          ID
-          プロバイダ側へホスト名ごとに先に登録します。登録がないと、認証が終わったあとで初めて失敗します。
-        </p>
-        <RedirectUri value={config.redirectUri} />
+        <div className="mt-2">
+          <RedirectUri value={config.redirectUri} />
+        </div>
       </div>
 
       {config.admitsEveryone && (
         <InlineAlert tone="warn">
-          <b className="block font-bold">
-            絞り込みが設定されていないため、テナントで認証できる全員が通ります。
-          </b>
-          許可グループか許可ドメインのどちらかを入れて絞り込んでください。
+          絞り込みが設定されていないため、テナントで認証できる全員が通ります。
         </InlineAlert>
       )}
 
@@ -102,11 +97,6 @@ export function OidcSettings({
             disabled={pending}
             onChange={(event) => setDiscoveryUrl(event.target.value)}
           />
-          <FieldHint>
-            保存の前に到達を確かめます。discovery URL と client ID
-            を両方空にして保存すると、ID
-            プロバイダの設定そのものを取り消します。
-          </FieldHint>
         </Field>
 
         <Field>
@@ -126,20 +116,12 @@ export function OidcSettings({
             type="password"
             autoComplete="off"
             placeholder={
-              config.secretHeld
-                ? '保持しています(変えるときだけ入力)'
-                : '保持していません'
+              config.secretHeld ? '保持しています' : '保持していません'
             }
             value={clientSecret}
             disabled={pending}
             onChange={(event) => setClientSecret(event.target.value)}
           />
-          <FieldHint>
-            書き込み専用です。保存したあとは読み出せないため、空のままなら
-            {config.secretHeld
-              ? 'いま保持しているものを使い続けます。'
-              : '保存できません。'}
-          </FieldHint>
         </Field>
 
         <Field>
@@ -151,10 +133,7 @@ export function OidcSettings({
             disabled={pending}
             onChange={(event) => setGroups(event.target.value)}
           />
-          <FieldHint>
-            1 行に 1 つ。グループクレームで絞り込みます。クレームが大きすぎて
-            `_claim_names` に退避された要求は、既定では拒否します。
-          </FieldHint>
+          <FieldHint>1 行に 1 つ</FieldHint>
         </Field>
 
         <Field>
@@ -166,10 +145,7 @@ export function OidcSettings({
             disabled={pending}
             onChange={(event) => setDomains(event.target.value)}
           />
-          <FieldHint>
-            1 行に 1 つ。groups クレームが出ない ID プロバイダでは、`hd`
-            クレームのドメインで絞り込みます。
-          </FieldHint>
+          <FieldHint>1 行に 1 つ</FieldHint>
         </Field>
       </div>
 
@@ -182,10 +158,7 @@ export function OidcSettings({
         {saved && (
           <span className="flex items-start gap-[9px] rounded-md bg-mint-soft px-3 py-2 text-sub text-mint">
             <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
-            <span>
-              保存しました。discovery
-              に到達できることを確かめたうえで書き込んでいます。
-            </span>
+            <span>保存しました。</span>
           </span>
         )}
       </span>

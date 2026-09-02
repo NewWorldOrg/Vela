@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
-import { Field, FieldHint, FieldLabel } from '@/components/vela/field'
-import { LockIcon, WarningIcon } from '@/components/vela/icons'
+import { Field, FieldLabel } from '@/components/vela/field'
+import { LockIcon } from '@/components/vela/icons'
 import { PasswordInput } from '@/components/vela/password-input'
 import { passwordChangedHref } from '@/components/authentication/wording'
 
@@ -88,11 +88,11 @@ export function ChangePassword({
               <LockIcon className="size-[19px] text-coral" />
               ローカルアカウントのパスワードを変更します
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {username
-                ? `ユーザー名 ${username} のパスワードを変更します。`
-                : 'ローカルアカウントは起動時に一度だけ自動で作られ、無効にはできません。'}
-            </AlertDialogDescription>
+            {username && (
+              <AlertDialogDescription>
+                ユーザー名 {username} のパスワードを変更します。
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
 
           <div className="flex flex-col gap-3.5">
@@ -115,18 +115,7 @@ export function ChangePassword({
                 disabled={pending}
                 onChange={(event) => setNewPassword(event.target.value)}
               />
-              <FieldHint>
-                外部プレイヤーにも同じアカウントを設定しているときは、変更後に入れ直してください。
-              </FieldHint>
             </Field>
-          </div>
-
-          <div className="flex items-start gap-2.5 rounded-lg bg-coral-soft px-3.5 py-[11px] text-ui leading-[1.7] text-coral">
-            <WarningIcon className="mt-[3px] size-[17px] shrink-0" />
-            <div>
-              変更すると、自分の現在のセッション以外が全て失効します。ほかの端末は次のリクエストから
-              401 になり、もう一度サインインが必要になります。
-            </div>
           </div>
 
           <span aria-live="polite">
