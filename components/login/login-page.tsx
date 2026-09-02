@@ -36,20 +36,13 @@ export function LoginView({
         <h1 className="heading text-[23px] leading-[1.4] tracking-[0.02em]">
           Vela
         </h1>
-        <p className="mt-0.5 mb-2 text-[13px] text-ink-2">
-          サインインして続行してください
-        </p>
-        <div className="mx-auto mb-[18px] w-14 border-t border-dashed border-line-strong" />
+        <div className="mx-auto mt-2.5 mb-[18px] w-14 border-t border-dashed border-line-strong" />
         {identityProviderFailed ? (
           <Banner
             tone="danger"
             className="mb-4 gap-[9px] px-3.5 py-[11px] text-left"
           >
             サインインに失敗しました。もう一度お試しください。
-            <span className="mt-1 block">
-              組織の ID
-              プロバイダに接続できないときは、ローカルアカウントでサインインできます。
-            </span>
           </Banner>
         ) : (
           outOfReach && (
@@ -57,8 +50,7 @@ export function LoginView({
               tone="warn"
               className="mb-4 gap-[9px] px-3.5 py-[11px] text-left"
             >
-              組織の ID
-              プロバイダに接続できません。ローカルアカウントでサインインできます。
+              組織の ID プロバイダに接続できません。
             </Banner>
           )
         )}
@@ -76,9 +68,6 @@ export function LoginView({
                   : `${identityProvider.providerName} でサインイン`}
               </a>
             </Button>
-            <p className="mt-[15px] text-note leading-[1.7] text-ink-3">
-              認証は組織の ID プロバイダで行われます
-            </p>
           </>
         )}
         <LocalSignIn
