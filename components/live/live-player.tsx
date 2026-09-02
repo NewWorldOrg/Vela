@@ -474,6 +474,7 @@ export function LivePlayer({
         )}
         <div
           data-slot="player-chrome"
+          hidden={key === null}
           data-up={chromeUp ? 'true' : undefined}
           onPointerEnter={() => setOnTheBar(true)}
           onPointerLeave={() => setOnTheBar(false)}
