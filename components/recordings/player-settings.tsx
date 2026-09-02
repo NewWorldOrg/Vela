@@ -33,7 +33,7 @@ const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
  * below the picture instead: neither is a setting, and neither should be laid
  * over the picture to be read.
  */
-function Setting({
+export function Setting({
   label,
   reason,
   children,
