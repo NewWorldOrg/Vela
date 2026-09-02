@@ -73,9 +73,6 @@ export const 通常: Story = {
 
     await reads(canvasElement, standard)
     await expect(
-      canvas.getByText(`/guide/programs/${standard.program.id}`),
-    ).toBeVisible()
-    await expect(
       canvas.getByRole('link', { name: '番組表へ' }),
     ).toHaveAttribute('href', '/guide')
   },

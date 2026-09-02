@@ -148,10 +148,6 @@ export function LocalSignIn({
       </div>
       {open && (
         <div id={panelId} className="mt-3.5 text-left">
-          <p className="mb-3 text-note leading-[1.7] text-ink-3">
-            組織の ID
-            プロバイダを使えない外部プレイヤーのために残しているアカウントです
-          </p>
           {form}
         </div>
       )}

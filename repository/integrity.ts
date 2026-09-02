@@ -62,8 +62,7 @@ export type SweepWrite =
 
 const UNREADABLE = '整合性チェックの結果を読めませんでした'
 
-const STORAGE_UNREADABLE =
-  '保存先の空き容量を読めませんでした。見つかったものの一覧は下のとおりです。'
+const STORAGE_UNREADABLE = '保存先の空き容量を読めませんでした。'
 
 const MOST_PER_PAGE = 200
 
@@ -128,8 +127,7 @@ type SweepDone = components['schemas']['IntegritySweepResponder']
 const ALREADY_RUNNING =
   'いま別の整合性チェックが走っています。終わるまで待ってからもう一度お試しください。'
 
-const TOO_SOON =
-  '直前の整合性チェックから間がないため、まだ実行できません。録画をすべて読み直す処理のため、少し置いてからお試しください。'
+const TOO_SOON = '直前の整合性チェックから間がないため、まだ実行できません。'
 
 /**
  * A refusal names itself, so it is read rather than guessed from the status.

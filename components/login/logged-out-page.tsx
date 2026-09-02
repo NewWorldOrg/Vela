@@ -35,11 +35,11 @@ export function LoggedOutView({ method }: { method: AuthMethod }) {
             もう一度ログイン
           </Link>
         </Button>
-        <p className="mt-[15px] text-note leading-[1.7] text-ink-3">
-          {method === 'oidc'
-            ? '組織の ID プロバイダからはサインアウトしていません'
-            : 'ローカルアカウントでサインインします'}
-        </p>
+        {method === 'oidc' && (
+          <p className="mt-[15px] text-note leading-[1.7] text-ink-3">
+            組織の ID プロバイダからはサインアウトしていません
+          </p>
+        )}
       </main>
     </div>
   )

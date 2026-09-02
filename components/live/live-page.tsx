@@ -12,7 +12,7 @@ import {
   PLAYER_PALETTE,
 } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
-import { PlayIcon, QualityIcon } from '@/components/vela/icons'
+import { PlayIcon } from '@/components/vela/icons'
 import { ScreenMain } from '@/components/vela/app-shell'
 
 const NOT_YET = '再生はこれから実装されます'
@@ -135,19 +135,6 @@ export function LiveView({ live }: { live: LiveResult }) {
               </button>
             </div>
           </div>
-          <p className="border-t border-dashed border-white/15 px-6 py-3 text-[11.5px] leading-relaxed text-(--pl-ink-3) max-[700px]:px-4">
-            画質を選ぶとセッションが分かれ、
-            <b className="font-bold text-(--pl-ink-2)">
-              同じ画質を見ている人がいない限りトランスコードが1本増えます
-            </b>
-            。ドロップはライブ専用の指標で、背圧で捨てた映像の件数です。
-            <b className="font-bold text-(--pl-ink-2)">
-              録画のドロップ率とは別の指標
-            </b>
-            のため、品質画面には表示されません。外部プレイヤー・AirPlay
-            は使い捨ての ticket(有効 <span className="font-code">30</span>{' '}
-            秒・1回で失効)で開きます。
-          </p>
         </section>
 
         <section className="mt-3.5 rounded-lg bg-surface px-[18px] py-4">
@@ -185,41 +172,6 @@ export function LiveView({ live }: { live: LiveResult }) {
               <Badge key={c}>{c}</Badge>
             ))}
           </div>
-        </section>
-
-        <section className="mt-3.5 rounded-lg bg-surface px-[18px] py-4">
-          <h2 className="heading flex items-center gap-1.5 text-[15px]">
-            <QualityIcon className="size-4 text-brand" />
-            遅延の判定
-          </h2>
-          <ul className="mt-2.5 space-y-1.5 text-ui text-ink-2">
-            <li className="flex items-start gap-2">
-              <i className="mt-1.5 inline-block size-2 shrink-0 rounded-full bg-mint" />
-              <span>
-                <b className="font-bold text-ink">3.0 秒以下</b>{' '}
-                良好。定常の内訳はフラグメント 0.2 秒 +
-                クライアントジッタバッファ 1.0 秒 + ドライバ側 0.025 秒
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <i className="mt-1.5 inline-block size-2 shrink-0 rounded-full bg-lemon" />
-              <span>
-                <b className="font-bold text-ink">3.0 秒 超</b> 再生レート 1.05
-                で追い付きます
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <i className="mt-1.5 inline-block size-2 shrink-0 rounded-full bg-coral" />
-              <span>
-                <b className="font-bold text-ink">8.0 秒 超</b> 追い付きをやめて
-                live edge へシークします
-              </span>
-            </li>
-          </ul>
-          <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-            緑ドットの境界 3.0 秒は暫定値です。8.0
-            秒は追い付きをやめてシークに切り替える境界で、実装の閾値と同じ値を出しています。
-          </p>
         </section>
       </div>
 

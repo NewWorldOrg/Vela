@@ -60,17 +60,10 @@ export function IntegrityView({
           <QualityIcon className="size-[18px] text-brand" />
           整合性チェック
         </h1>
-        <p className="text-sub text-ink-2">
-          録画の記録と実ファイルの食い違いを理由付きで並べます。
-        </p>
         <span className="ml-auto">
           <RunCheckButton onRun={onRun} />
         </span>
       </div>
-
-      <Banner tone="info" className="mb-3.5">
-        動画ファイルの自動削除と、その結果の通知は行いません。
-      </Banner>
 
       {result.storageProblem && (
         <Banner tone="warn" className="mb-3.5">
@@ -108,7 +101,7 @@ export function IntegrityView({
             <p className="mt-2.5 text-note leading-relaxed text-ink-3">
               届かなかったルートが {check.rootsOutOfReach} 件あり、そこにある
               録画の記録 {check.ledgerRowsInRootsOutOfReach}{' '}
-              行は判定していません。届かないことと、無いことは別に数えます。
+              行は判定していません。
             </p>
           )}
         </section>
@@ -139,55 +132,49 @@ export function IntegrityView({
       )}
 
       {findings.length === 0 ? (
-        <EmptyState spot="antenna" title="食い違いはありません" titleLevel={2}>
-          直近の整合性チェックでは、録画の記録と実ファイルの食い違いは見つかりませんでした。
-        </EmptyState>
+        <EmptyState
+          spot="antenna"
+          title="食い違いはありません"
+          titleLevel={2}
+        />
       ) : (
-        <>
-          <Table className="min-w-[720px]" containerClassName="pb-1">
-            <TableHeader>
-              <TableRow>
-                {COLUMNS.map((column) => (
-                  <TableHead key={column}>{column}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {findings.map((finding) => (
-                <TableRow key={finding.key}>
-                  <TableCell className="align-top whitespace-normal">
-                    <b className="block font-code text-[12px] font-medium break-all">
-                      {finding.path}
-                    </b>
-                    <span className="text-note text-ink-3">{finding.root}</span>
-                  </TableCell>
-                  <TableCell className="align-top">
-                    <Badge variant={REASON_VARIANT[finding.fault]}>
-                      {finding.reason}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="align-top text-right">
-                    <span className="font-code tabular-nums">
-                      {finding.size}
-                    </span>
-                    {finding.sizeNote && (
-                      <small className="block text-[10.5px] text-ink-3">
-                        {finding.sizeNote}
-                      </small>
-                    )}
-                  </TableCell>
-                  <TableCell className="align-top text-right font-code tabular-nums text-ink-2">
-                    {finding.noticedAt}
-                  </TableCell>
-                </TableRow>
+        <Table className="min-w-[720px]" containerClassName="pb-1">
+          <TableHeader>
+            <TableRow>
+              {COLUMNS.map((column) => (
+                <TableHead key={column}>{column}</TableHead>
               ))}
-            </TableBody>
-          </Table>
-          <p className="mt-3 px-1.5 text-note leading-relaxed text-ink-3">
-            0
-            バイトは常に失敗として扱います。整合性チェックは見つけたものを並べるところまでで、ファイルは変更されません。
-          </p>
-        </>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {findings.map((finding) => (
+              <TableRow key={finding.key}>
+                <TableCell className="align-top whitespace-normal">
+                  <b className="block font-code text-[12px] font-medium break-all">
+                    {finding.path}
+                  </b>
+                  <span className="text-note text-ink-3">{finding.root}</span>
+                </TableCell>
+                <TableCell className="align-top">
+                  <Badge variant={REASON_VARIANT[finding.fault]}>
+                    {finding.reason}
+                  </Badge>
+                </TableCell>
+                <TableCell className="align-top text-right">
+                  <span className="font-code tabular-nums">{finding.size}</span>
+                  {finding.sizeNote && (
+                    <small className="block text-[10.5px] text-ink-3">
+                      {finding.sizeNote}
+                    </small>
+                  )}
+                </TableCell>
+                <TableCell className="align-top text-right font-code tabular-nums text-ink-2">
+                  {finding.noticedAt}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </ScreenMain>
   )

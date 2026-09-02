@@ -13,7 +13,6 @@ import { mainTitleOf } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  InfoIcon,
   ListIcon,
   PersonIcon,
   RecordIcon,
@@ -159,14 +158,6 @@ export function ProgramDetailBody({
                 <ListIcon />
                 シリーズで予約
               </Button>
-            </div>
-            <div className="mt-[11px] flex items-start gap-[9px] text-note leading-[1.75] text-ink-3">
-              <InfoIcon className="mt-[3px] size-[15px] shrink-0" />
-              <span>
-                予約した時点でチューナーを確保します。空きがない場合はこの場で競合として提示します。
-                {program.endUndecided &&
-                  'この番組は終了時刻が延びる可能性があるため、延長に追従して録画します。'}
-              </span>
             </div>
           </>
         )}

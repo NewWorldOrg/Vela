@@ -159,10 +159,7 @@ export function EditReservationDialog({
       <DialogContent onInteractOutside={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>予約を編集</DialogTitle>
-          <DialogDescription>
-            {booking.title}{' '}
-            の優先度とマージンを変えます。放送日時とチャンネルは番組表が決めるため、ここでは変えられません。
-          </DialogDescription>
+          <DialogDescription>{booking.title}</DialogDescription>
         </DialogHeader>
 
         <div
@@ -184,8 +181,7 @@ export function EditReservationDialog({
               onChange={(event) => setPriority(event.target.value)}
             />
             <FieldHint>
-              数が大きいほど先にチューナーを取ります({PRIORITY_RANGE.least} 〜{' '}
-              {PRIORITY_RANGE.most})
+              {PRIORITY_RANGE.least} 〜 {PRIORITY_RANGE.most}
             </FieldHint>
             <span aria-live="polite">
               {problem?.field === 'priority' && (
@@ -213,7 +209,7 @@ export function EditReservationDialog({
               onChange={(event) => setBefore(event.target.value)}
             />
             <FieldHint>
-              放送開始の何秒前から録画を始めるか(0 〜 {MARGIN_RANGE.most})
+              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
             </FieldHint>
             <span aria-live="polite">
               {problem?.field === 'before' && (
@@ -241,7 +237,7 @@ export function EditReservationDialog({
               onChange={(event) => setAfter(event.target.value)}
             />
             <FieldHint>
-              放送終了の何秒後まで録画を続けるか(0 〜 {MARGIN_RANGE.most})
+              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
             </FieldHint>
             <span aria-live="polite">
               {problem?.field === 'after' && (

@@ -41,9 +41,11 @@ export function EmptyState({
     >
       <SpotIllustration name={spot} className="mx-auto size-[78px]" />
       {title && <Title className="heading mt-2.5 text-h3">{title}</Title>}
-      <p className="mx-auto mt-[9px] mb-[13px] max-w-[520px] text-ui text-ink-2">
-        {children}
-      </p>
+      {children && (
+        <p className="mx-auto mt-[9px] mb-[13px] max-w-[520px] text-ui text-ink-2">
+          {children}
+        </p>
+      )}
       {action}
     </div>
   )

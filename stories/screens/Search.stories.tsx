@@ -230,20 +230,10 @@ export const 入力前: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    await expect(canvas.getByText('まだ検索していません')).toBeVisible()
     await expect(
-      canvas.getByText(
-        '条件を組み立ててから検索します。条件はそのまま自動録画ルールにできます。',
-      ),
-    ).toBeVisible()
-    await expect(
-      canvas.getByText(
-        '条件を決めて「検索」を押すと、8 日先までの番組表から該当する番組を探します。',
-      ),
-    ).toBeVisible()
-    /** Where the screen does say it, and says it of the case it is true of. */
-    await expect(
-      canvas.getByText('空のままなら、放送予定のすべてが対象です'),
-    ).toBeVisible()
+      canvas.getByRole('button', { name: 'この条件でルールを作る' }),
+    ).toBeDisabled()
     await saysNothingItCannotKeep(canvas)
   },
 }
@@ -377,12 +367,16 @@ export const 該当なし: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    /** Said once, at the top; what follows is what to do about it. */
-    await expect(canvas.getByText('該当する番組がありません')).toBeVisible()
+    /** Said once, at the top; the ways out sit under it. */
+    const empty = canvas
+      .getByText('該当する番組がありません')
+      .closest<HTMLElement>('[data-slot="empty-state"]')
+
+    await expect(empty).not.toBeNull()
     await expect(
-      canvas.getByText(
-        'キーワード・除外キーワード・期間を見直してください。開始日を空にすると、これから放送される番組だけを探します。',
-      ),
+      within(empty as HTMLElement).getByRole('button', {
+        name: '条件をすべて消す',
+      }),
     ).toBeVisible()
     await saysNothingItCannotKeep(canvas)
   },
@@ -1313,9 +1307,7 @@ export const チャンネルは上限で足せなくなる: Story = {
       canvas.queryByRole('combobox', { name: 'チャンネルを足す' }),
     ).toBeNull()
 
-    await expect(
-      canvas.getByText(/局まで指定できます。足すには、どれかを外してください/),
-    ).toBeVisible()
+    await expect(canvas.getByText(/局まで指定できます/)).toBeVisible()
 
     await expect(
       canvas.getAllByRole('button', { name: /^チャンネル .+ を外す$/ }),

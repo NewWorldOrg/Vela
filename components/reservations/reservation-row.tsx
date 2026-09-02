@@ -281,10 +281,7 @@ export function ReservationRow({
                   </div>
                 ))}
               </div>
-              <p className="mt-2.5 text-note leading-relaxed whitespace-normal text-ink-3">
-                優先度を上げると、上のいずれかの予約が代わりに競合となります。
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2.5 flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"

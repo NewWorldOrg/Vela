@@ -14,7 +14,7 @@ import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
-import { LibraryIcon, ListIcon, SearchIcon } from '@/components/vela/icons'
+import { LibraryIcon, SearchIcon } from '@/components/vela/icons'
 import { ChannelChip } from '@/components/library/channel-chip'
 import { LibraryFilterSelect } from '@/components/library/library-filter-select'
 import { RecordingsTable } from '@/components/library/recordings-table'
@@ -61,9 +61,6 @@ export function LibraryView({
           <LibraryIcon className="size-[18px] text-brand" />
           録画ライブラリ
         </h1>
-        <p className="text-sub text-ink-2">
-          録ったものを新しい順に並べます。行を押すと録画詳細へ移動します。
-        </p>
       </div>
 
       <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
@@ -152,21 +149,7 @@ export function LibraryView({
       </div>
 
       {items.length > 0 ? (
-        <>
-          <RecordingsTable items={items} onDelete={onDelete} />
-          {!hasFilter && (
-            <div className="mt-3.5 flex flex-wrap items-center gap-2.5 text-note text-ink-3">
-              <ListIcon className="size-3.5 shrink-0" />
-              <span>
-                新しい順に{' '}
-                <b className="font-code font-medium text-ink-2">
-                  {items.length}
-                </b>{' '}
-                件すべてを表示しています。サイズは観測値で、括弧内の時刻に確認したものです
-              </span>
-            </div>
-          )}
-        </>
+        <RecordingsTable items={items} onDelete={onDelete} />
       ) : hasFilter ? (
         <EmptyState
           spot="tape"
@@ -209,10 +192,7 @@ export function LibraryView({
                 )}
             </div>
           }
-        >
-          キーワードは番組名・概要・詳細(出演者を含む)を対象に探しています。
-          全角と半角、囲み文字の違いは自動でそろえてから照合します。条件を減らすと見つかることがあります。
-        </EmptyState>
+        />
       ) : (
         <EmptyState
           spot="antenna"
@@ -229,10 +209,7 @@ export function LibraryView({
               </Button>
             </div>
           }
-        >
-          予約した番組の録画が終わると、ここに新しい順で並びます。
-          各行は「録れたか(結果)」と「壊れていないか(品質)」を別々に申告します。
-        </EmptyState>
+        />
       )}
     </ScreenMain>
   )

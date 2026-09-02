@@ -195,7 +195,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
     Boolean(terms.from || terms.to),
   ].filter((asked) => asked).length
   const found = outcome.state === 'searched' ? outcome.found : undefined
-  const noHit = found !== undefined && found.hits.length === 0
   const written: string = searchQueryOf(asking)
   const href: string = written ? `${pathname}?${written}` : pathname
   /**
@@ -228,9 +227,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
       <div className="mb-4 flex flex-wrap items-start gap-3.5">
         <div className="min-w-0 flex-1">
           <h1 className="heading text-[20px]">番組検索</h1>
-          <p className="mt-0.5 text-sub text-ink-2">
-            条件を組み立ててから検索します。条件はそのまま自動録画ルールにできます。
-          </p>
         </div>
         <Button variant="ghost" size="sm" asChild>
           <Link href="/guide">
@@ -292,7 +288,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
               areaClassName="w-[300px] max-w-full"
               className="h-[33px] rounded-full"
             />
-            <Hint>空白で区切ると、すべてを含む番組を探します</Hint>
           </ConditionRow>
 
           <ConditionRow label="除外">
@@ -303,7 +298,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
               areaClassName="w-[300px] max-w-full"
               className="h-[33px] rounded-full"
             />
-            <Hint>この語を含む番組を結果から外します</Hint>
           </ConditionRow>
 
           <ConditionRow label="探す場所">
@@ -446,13 +440,9 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   </SelectContent>
                 </Select>
               )}
-            {draft.channels.length === 0 && (
-              <Hint>指定しなければ、すべてのチャンネルから探します</Hint>
-            )}
             {draft.channels.length >= SEARCH_MOST_CHANNELS && (
               <Hint>
-                チャンネルは {SEARCH_MOST_CHANNELS}{' '}
-                局まで指定できます。足すには、どれかを外してください
+                チャンネルは {SEARCH_MOST_CHANNELS} 局まで指定できます
               </Hint>
             )}
           </ConditionRow>
@@ -479,7 +469,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
               areaClassName="w-[150px]"
               className="h-[33px] rounded-full"
             />
-            <Hint>空のままなら、放送予定のすべてが対象です</Hint>
           </ConditionRow>
 
           <div className="mt-3.5 flex flex-wrap items-center gap-3">
@@ -531,23 +520,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
               ? 'この条件の URL をコピー'
               : copied.ok
                 ? 'コピーしました'
-                : 'コピーできません。左の URL を選んで写してください'}
+                : 'コピーできません'}
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md bg-brand-soft px-3.5 py-3">
-          <div className="min-w-[220px] flex-1">
-            <b className="block text-ui font-bold text-brand">
-              いまの検索条件は、そのまま自動録画ルールの条件になります。
-            </b>
-            <span className="block text-note text-ink-2">
-              {!narrowing
-                ? 'キーワード・除外キーワード・対象フィールド・ジャンル・種別・チャンネルのうち、1 つ以上を指定するとルールにできます。'
-                : noHit
-                  ? 'いま該当がなくても、条件に合う番組が放送されたときに録画されます。'
-                  : 'キーワード・除外キーワード・対象フィールド・ジャンル・種別・チャンネルが引き継がれます。期間は引き継ぎません。'}
-            </span>
-          </div>
+        <div className="mt-6 flex justify-end">
           {narrowing ? (
             <Button size="sm" asChild>
               <Link href={ruleHref}>
@@ -556,7 +533,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
               </Link>
             </Button>
           ) : (
-            <Button size="sm" disabled>
+            <Button
+              size="sm"
+              disabled
+              title="キーワード・除外キーワード・対象フィールド・ジャンル・種別・チャンネルのうち、1 つ以上を指定するとルールにできます。"
+            >
               <PlusIcon />
               この条件でルールを作る
             </Button>
@@ -569,10 +550,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
           spot="antenna"
           title="まだ検索していません"
           className="mx-auto mt-10 max-w-[560px]"
-        >
-          条件を決めて「検索」を押すと、8
-          日先までの番組表から該当する番組を探します。
-        </EmptyState>
+        />
       ) : outcome.state === 'refused' ? (
         <EmptyState
           spot="antenna"
@@ -675,9 +653,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                     </Button>
                   </div>
                 }
-              >
-                キーワード・除外キーワード・期間を見直してください。開始日を空にすると、これから放送される番組だけを探します。
-              </EmptyState>
+              />
             ) : (
               <>
                 <div className="-mx-1 overflow-x-auto px-1 pb-1">

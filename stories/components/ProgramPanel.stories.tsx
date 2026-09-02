@@ -248,7 +248,6 @@ export const 終了未定: Story = {
     const reading = wordsOf(detailIn(surface))
 
     await expect(reading).toContain('終了未定')
-    await expect(reading).toContain('延長に追従して録画します')
   },
 }
 

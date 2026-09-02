@@ -11,12 +11,11 @@ const SIGNED_OUT =
   'サインインが切れているため、予約できませんでした。サインインしてから開き直してください。'
 
 const CONTENDED =
-  'チューナーに空きがないため、この予約は競合として登録されました。予約一覧で解決してください。'
+  'チューナーに空きがないため、この予約は競合として登録されました。'
 
-const UNREACHABLE =
-  'このサービスには選局先がないため、録画できません。設定のチャンネルで選局先を決めてください。'
+const UNREACHABLE = 'このサービスには選局先がないため、録画できません。'
 
-const RESERVED = 'この番組を予約しました。予約一覧で確認できます。'
+const RESERVED = 'この番組を予約しました。'
 
 export function ReserveButton({
   programmeId,

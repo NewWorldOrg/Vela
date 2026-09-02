@@ -68,7 +68,6 @@ export interface CollectionStatus {
 
 export interface CoverageWarning {
   emphasis: string
-  body: string
 }
 
 export type CollectScope = {
@@ -153,12 +152,6 @@ export function coverageWarningOf(
 
   return {
     emphasis: `${shown}${rest > 0 ? ` ほか ${rest} TS` : ''} の番組情報が不足しています。`,
-    body:
-      struggling.length > 0
-        ? 'EPG の収集が連続して揃っていません。'
-        : uncovered.some((row) => row.lastCompletedLabel === undefined)
-          ? 'EPG の収集がまだ一巡していません。'
-          : 'EPG の収集がしばらく完了していません。',
   }
 }
 
