@@ -1,43 +1,454 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { getRouter } from '@storybook/nextjs/navigation.mock'
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
+import {
+  endingPayload,
+  frameOf,
+  progressPayload,
+  refusalPayload,
+  type LiveRefusal,
+  type LiveSupplyEnd,
+  type TranscodeCeiling,
+} from '@/lib/live-wire'
+import type { LiveScreen } from '@/repository/live'
+import { LIVE_SCREEN_FIXTURE } from '@/repository/live.fixtures'
+import { AppFrame } from '@/components/vela/app-shell'
+import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
 
-const rows = CHANNEL_FIXTURES.filter((c) => !c.sub).map((c, i) => ({
-  id: c.id,
-  no: c.no ?? '',
-  name: c.name,
-  now: ['ニュースの視点9', 'クラシックの時間', '夜ふかしラジオ倶楽部'][i % 3],
-  next: '次 22:00 土曜ドラマ「灯台のある町」',
-  onAir: i === 0,
-}))
+/**
+ * A socket a story drives. It opens on the next tick, the way a real one opens
+ * after the handlers are set, and then runs the script it was given; what the
+ * player sends is kept so a story can read it back.
+ */
+class ScriptedSocket implements LiveSocket {
+  binaryType: BinaryType = 'blob'
+  readyState = 0
+  onopen: ((event: Event) => void) | null = null
+  onmessage: ((event: MessageEvent) => void) | null = null
+  onclose: ((event: CloseEvent) => void) | null = null
+  onerror: ((event: Event) => void) | null = null
+  readonly sent: Uint8Array[] = []
+
+  constructor(
+    readonly href: string,
+    script: (socket: ScriptedSocket) => void,
+  ) {
+    setTimeout(() => {
+      this.readyState = 1
+      this.onopen?.(new Event('open'))
+      script(this)
+    }, 0)
+  }
+
+  send(data: ArrayBuffer | ArrayBufferView) {
+    this.sent.push(
+      data instanceof ArrayBuffer
+        ? new Uint8Array(data)
+        : new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
+    )
+  }
+
+  close(code = 1000) {
+    this.drop(code)
+  }
+
+  /** One frame off the wire, in a buffer of exactly its length. */
+  say(frame: Uint8Array) {
+    const copy = frame.slice()
+
+    this.onmessage?.(new MessageEvent('message', { data: copy.buffer }))
+  }
+
+  drop(code: number) {
+    if (this.readyState === 3) {
+      return
+    }
+
+    this.readyState = 3
+    this.onclose?.(new CloseEvent('close', { code }))
+  }
+}
+
+/** The sockets a story opened, in order. */
+const opened: ScriptedSocket[] = []
+
+function scripted(script: (socket: ScriptedSocket) => void): OpenSocket {
+  return (href) => {
+    const socket = new ScriptedSocket(href, script)
+
+    opened.push(socket)
+
+    return socket
+  }
+}
+
+/** A wire that says where the startup is, and then nothing more. */
+const starting = scripted((socket) =>
+  socket.say(
+    frameOf(
+      'control',
+      0,
+      progressPayload({ tunerSecured: 612, channelLocked: 2_105 }),
+    ),
+  ),
+)
+
+function refusing(refusal: LiveRefusal, ceiling?: TranscodeCeiling) {
+  return scripted((socket) => {
+    socket.say(frameOf('control', 0, refusalPayload(refusal, ceiling)))
+    socket.drop(1008)
+  })
+}
+
+function ending(why: LiveSupplyEnd) {
+  return scripted((socket) => {
+    socket.say(frameOf('control', 0, endingPayload(why)))
+    socket.drop(1000)
+  })
+}
+
+/** A wire that closes without a word, as one does when the handshake failed. */
+const dropping = scripted((socket) => socket.drop(1006))
+
+/** A header with no H.264 in it, which no `MediaSource` here can be opened for. */
+const HEADERLESS = frameOf(
+  'pictureHeader',
+  0,
+  new Uint8Array([0, 0, 0, 8, 0x66, 0x74, 0x79, 0x70]),
+)
+
+const undecodable = scripted((socket) => socket.say(HEADERLESS))
+
+const nothingToWatch = () => {
+  throw new Error('no channel was chosen, so no wire is opened')
+}
+
+const stillSignedIn = async () => false
+
+const signedOut = async () => true
+
+const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
+
+const UNCHOSEN: LiveScreen = { ...LIVE_SCREEN_FIXTURE, watching: undefined }
 
 const meta = {
   title: 'Screens/ライブ',
   component: LiveView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/live', query: { ch: '32736-1024' } },
+    },
+  },
+  args: {
+    screen: CHOSEN,
+    openSocket: starting,
+    askSignedOut: stillSignedIn,
+  },
+  decorators: [
+    (Story) => (
+      <AppFrame>
+        <Story />
+      </AppFrame>
+    ),
+  ],
+  beforeEach: () => {
+    opened.length = 0
+  },
 } satisfies Meta<typeof LiveView>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = {
-  args: {
-    live: {
-      channelId: rows[0].id,
-      channelNo: rows[0].no,
-      channelName: rows[0].name,
-      title: 'ニュースの視点9',
-      timeLabel: '21:00 – 22:00',
-      progressPct: 7,
-      nowLabel: '21:04',
-      restLabel: '残り 56 分',
-      description:
-        '政府がまとめた電力需給対策のポイントを担当記者が詳しく解説。\n乱高下する為替が家計と中小企業に与える影響を取材。',
-      chips: ['字幕あり', 'ニュース/報道', '1080i', 'ステレオ(日本語)'],
-      latencySec: 1.8,
-      drops: 18,
-      rows,
+/**
+ * Nothing chosen: the face is black and the list is the whole of the screen's
+ * business. Pressing a row puts the channel in the URL, and nothing is asked
+ * of the API until then.
+ */
+export const 選局前: Story = {
+  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.queryByText('生放送')).toBeNull()
+    await expect(canvas.queryByRole('heading', { level: 1 })).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
+
+    await expect(getRouter().replace).toHaveBeenCalledWith(
+      '/live?ch=32737-1032',
+      { scroll: false },
+    )
+  },
+}
+
+/**
+ * Between the press and the picture. The wire has said how far it is, and the
+ * rows read what each segment took and how long the one underway has run.
+ */
+export const 起動中: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('チャンネルを準備しています'),
+    ).toBeVisible()
+    await expect(canvas.getByText('準備中')).toBeVisible()
+    await waitFor(() => expect(canvas.getByText('0.6 秒')).toBeVisible())
+    await expect(canvas.getByText('1.5 秒')).toBeVisible()
+    await expect(canvas.getByText(/^経過 /)).toBeVisible()
+
+    // The wire was asked for this channel, in the profile the API defaults to.
+    await expect(opened[0].href).toBe(
+      '/api/live/ws?network=32736&service=1024&profile=720p30',
+    )
+
+    // Nothing to press yet: the picture has not come.
+    await expect(canvas.getByRole('button', { name: '再生' })).toBeDisabled()
+  },
+}
+
+/**
+ * The profile is part of the session's key: choosing another leaves the wire
+ * — saying so, rather than going quiet — and opens a new one in that profile.
+ */
+export const 画質を選ぶ: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
+
+    await expect(
+      within(quality)
+        .getAllByRole('button')
+        .map((one) => one.textContent),
+    ).toEqual(['1080p60', '1080p30', '720p60', '720p30'])
+
+    await userEvent.click(
+      within(quality).getByRole('button', { name: '1080p30' }),
+    )
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await expect(opened[1].href).toContain('profile=1080p30')
+
+    // The first wire was told the viewer is leaving: a control frame carrying
+    // the one byte that says so.
+    await expect(opened[0].sent.map((frame) => [...frame])).toContainEqual([
+      0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0x03,
+    ])
+    await expect(opened[0].readyState).toBe(3)
+  },
+}
+
+function refused(
+  refusal: LiveRefusal,
+  title: string,
+  over: { ceiling?: TranscodeCeiling; retries?: boolean; looks?: boolean } = {},
+): Story {
+  return {
+    args: { openSocket: refusing(refusal, over.ceiling) },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await expect(await canvas.findByText(title)).toBeVisible()
+
+      if (over.retries === false) {
+        await expect(
+          canvas.queryByRole('button', { name: '再試行' }),
+        ).toBeNull()
+      } else {
+        await expect(
+          canvas.getByRole('button', { name: '再試行' }),
+        ).toBeEnabled()
+      }
+
+      if (over.looks) {
+        await expect(
+          canvas.getByRole('link', { name: '使用状況を見る' }),
+        ).toHaveAttribute('href', '/settings/tuners')
+      } else {
+        await expect(
+          canvas.queryByRole('link', { name: '使用状況を見る' }),
+        ).toBeNull()
+      }
     },
+  }
+}
+
+export const 断り_チャンネルなし: Story = refused(
+  'noSuchChannel',
+  'チャンネルが見つかりません',
+  { retries: false },
+)
+
+export const 断り_チューナー枯渇: Story = refused(
+  'noTunerFree',
+  '空いているチューナーがありません',
+  { looks: true },
+)
+
+export const 断り_選局失敗: Story = refused(
+  'wouldNotTune',
+  '選局できませんでした',
+)
+
+export const 断り_driver未接続: Story = refused(
+  'driverUnavailable',
+  'driver 未接続',
+)
+
+export const 断り_同時本数上限: Story = {
+  ...refused('tooManyAlready', '同時に配信できる本数の上限です', {
+    ceiling: { running: 4, atOnce: 4 },
+    looks: true,
+  }),
+  play: async (context) => {
+    await refused('tooManyAlready', '同時に配信できる本数の上限です', {
+      ceiling: { running: 4, atOnce: 4 },
+      looks: true,
+    }).play?.(context)
+
+    await expect(
+      within(context.canvasElement).getByText('実行中 4 本 / 上限 4 本'),
+    ).toBeVisible()
+  },
+}
+
+export const 断り_トランスコーダ起動失敗: Story = refused(
+  'transcoderWouldNotStart',
+  '再生を開始できませんでした',
+)
+
+function ended(why: LiveSupplyEnd, title: string): Story {
+  return {
+    args: { openSocket: ending(why) },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await expect(await canvas.findByText(title)).toBeVisible()
+      await expect(canvas.getByRole('button', { name: '再試行' })).toBeEnabled()
+      await expect(canvas.queryByText('生放送')).toBeNull()
+    },
+  }
+}
+
+export const 撤収_録画に奪われた: Story = ended(
+  'takenForARecording',
+  '録画のために切れました',
+)
+
+export const 撤収_driver停止処理: Story = ended(
+  'driverDraining',
+  'サーバが停止処理に入りました',
+)
+
+export const 撤収_視聴時間の上限: Story = ended(
+  'windowClosed',
+  '視聴時間の上限に達しました',
+)
+
+export const 撤収_チューナー停止: Story = ended(
+  'tunerFailed',
+  'チューナーが停止しました',
+)
+
+export const 撤収_別の操作で停止: Story = ended(
+  'stoppedByAnother',
+  '別の操作で停止されました',
+)
+
+export const 撤収_driver消失: Story = ended('driverLost', 'driver 消失')
+
+export const 撤収_配信終了: Story = ended('letGo', '配信が終了しました')
+
+/**
+ * The wire closed without a word and the session is gone with it. The socket
+ * is not reopened: the one way on is to sign in, and the way back is this
+ * channel.
+ */
+export const セッション切れ: Story = {
+  args: { openSocket: dropping, askSignedOut: signedOut },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('セッションが切れました'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('link', { name: 'ログイン' }),
+    ).toHaveAttribute('href', '/login?next=%2Flive%3Fch%3D32736-1024')
+    await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
+
+    // One wire, and no second one opened behind the reader's back.
+    await expect(opened).toHaveLength(1)
+  },
+}
+
+/**
+ * The wire closed without a word and the session still stands. Nothing is
+ * retried on its own; the press that asks again is here, and it opens a new
+ * wire.
+ */
+export const 接続が切れた: Story = {
+  args: { openSocket: dropping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(await canvas.findByText('接続が切れました')).toBeVisible()
+    await expect(opened).toHaveLength(1)
+
+    await userEvent.click(canvas.getByRole('button', { name: '再試行' }))
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+  },
+}
+
+/** A header this browser cannot open a buffer for. */
+export const 再生不能: Story = {
+  args: { openSocket: undecodable },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('このブラウザでは再生できません'),
+    ).toBeVisible()
+    await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
+  },
+}
+
+/** A broadcast type with nothing on it. */
+export const 空状態: Story = {
+  args: {
+    screen: { ...UNCHOSEN, kind: 'bs', channels: [] },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/live', query: { kind: 'bs' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText('視聴できるチャンネルがありません'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('link', { name: 'チャンネル設定へ' }),
+    ).toHaveAttribute('href', '/settings/channels')
+    await expect(canvas.getByRole('button', { name: 'BS' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   },
 }

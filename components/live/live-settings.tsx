@@ -1,0 +1,77 @@
+'use client'
+
+import { useState } from 'react'
+
+import type { LiveProfile } from '@/repository/live'
+import { SettingsIcon } from '@/components/vela/icons'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { PLAYER_ROUND_BUTTON } from '@/components/recordings/player-palette'
+import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
+import { Setting } from '@/components/recordings/player-settings'
+
+/** Why neither track can be chosen: the wire takes no argument for either. */
+export const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
+
+/**
+ * The settings behind the gear, for a live picture: the profile it is encoded
+ * in, and the two tracks nothing behind them answers yet.
+ *
+ * A profile is part of the session's key, so choosing one is a new session on
+ * the same channel rather than a change to the one running. There is no rate
+ * here: a live picture is watched at the speed it is broadcast, and the only
+ * time it runs faster is the player's own, catching up to the edge.
+ */
+export function LiveSettings({
+  container,
+  profiles,
+  profile,
+  onChooseProfile,
+}: {
+  /** The element the picture is drawn in, which is what goes fullscreen. */
+  container: HTMLElement | null
+  profiles: LiveProfile[]
+  profile: string
+  onChooseProfile: (next: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger aria-label="設定" className={PLAYER_ROUND_BUTTON}>
+        <SettingsIcon className="size-4" />
+      </PopoverTrigger>
+      <PopoverContent
+        container={container}
+        aria-label="設定"
+        side="top"
+        align="end"
+        sideOffset={10}
+        className="w-auto max-w-[min(20rem,calc(100vw-2rem))] min-w-[17rem] rounded-lg border-white/20 bg-(--pl-bg) p-4 text-(--pl-ink) shadow-pop-xl"
+      >
+        <Setting label="画質">
+          <PlayerSegmentedControl
+            label="画質"
+            options={profiles.map((one) => one.name)}
+            value={profile}
+            onChange={onChooseProfile}
+            numeric
+          />
+        </Setting>
+        <Setting label="音声">
+          <PlayerSegmentedControl
+            label="音声"
+            options={['主音声', '副音声']}
+            onChange={() => {}}
+            off
+            title={NOT_WIRED}
+          />
+        </Setting>
+        <Setting label="字幕" reason={NOT_WIRED} />
+      </PopoverContent>
+    </Popover>
+  )
+}
