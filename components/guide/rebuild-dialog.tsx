@@ -51,7 +51,7 @@ export function RebuildEpgDialog({
 
       setRefusal(
         result.state === 'unauthenticated'
-          ? 'サインインが切れているため、実行できませんでした。サインインしてから開き直してください。'
+          ? 'サインインが切れているため、実行できませんでした。'
           : result.message,
       )
     })

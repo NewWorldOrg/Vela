@@ -29,8 +29,7 @@ function observationOf(recording: Recording): string | undefined {
   return recording.fileMissing ? '実ファイルなし' : recording.sizeObservedAt
 }
 
-const SIGNED_OUT =
-  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
 
 export function DeleteRecordingDialog({
   recording,

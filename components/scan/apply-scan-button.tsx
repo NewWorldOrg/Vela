@@ -42,7 +42,7 @@ export function ApplyScanAction({
 
               setRefusal(
                 result.state === 'unauthenticated'
-                  ? 'サインインが切れているため、保存できませんでした。サインインしてから開き直してください。'
+                  ? 'サインインが切れているため、保存できませんでした。'
                   : result.state === 'rejected'
                     ? result.message
                     : undefined,

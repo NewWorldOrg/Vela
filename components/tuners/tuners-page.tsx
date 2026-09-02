@@ -126,7 +126,7 @@ function DetectionPanel({
         <div className="px-[19px] py-[13px]">
           <InlineAlert tone="warn">
             {detection.state === 'unauthenticated'
-              ? 'サインインが切れているため、デバイスを検出できませんでした。サインインしてから開き直してください。'
+              ? 'サインインが切れているため、デバイスを検出できませんでした。'
               : `デバイスを検出できませんでした。${detection.message}`}
           </InlineAlert>
         </div>

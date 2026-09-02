@@ -44,8 +44,7 @@ export interface ReservationActions {
   onDiscard: (id: string) => Promise<ReservationWrite>
 }
 
-const SIGNED_OUT =
-  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
 
 export function ReservationRow({
   reservation,
