@@ -48,6 +48,18 @@ const TICK_MS = 250
 type Phase = 'starting' | 'buffering' | 'playing' | 'paused' | 'faulted'
 
 /**
+ * The retries pressed on one channel in one profile, and what the last wire
+ * had come to when the press was made. Held against the channel so that a
+ * press on one is not carried to the next: a channel chosen afresh begins at
+ * its first attempt, however many the last one took.
+ */
+interface Retries {
+  of: string
+  count: number
+  after: LiveFault['kind']
+}
+
+/**
  * One session, as the screen sees it. Keyed by the channel, the profile and
  * the attempt, so that what one wire said is never read as the next one's:
  * a key the render does not recognise is a session that has just begun.
@@ -139,7 +151,7 @@ export function LivePlayer({
       ? LIVE_PROFILE_UNASKED
       : (profiles[0]?.name ?? LIVE_PROFILE_UNASKED),
   )
-  const [attempt, setAttempt] = useState(0)
+  const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
@@ -152,10 +164,23 @@ export function LivePlayer({
 
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
-  const key =
+  const seat =
     networkId === undefined || serviceId === undefined
       ? null
-      : `${networkId}:${serviceId}:${profile}:${attempt}`
+      : `${networkId}:${serviceId}:${profile}`
+  const retried = retries && retries.of === seat ? retries : null
+  const attempt = retried?.count ?? 0
+  const key = seat === null ? null : `${seat}:${attempt}`
+
+  /**
+   * A retry after a wire that was open and then lost — dropped, or ended by
+   * the server — is a reconnection, and the startup says so; one after a
+   * refusal is a fresh tune, because no wire ever carried anything.
+   */
+  const reconnecting =
+    retried && (retried.after === 'dropped' || retried.after === 'ended')
+      ? retried.count
+      : undefined
 
   /**
    * The session on screen, derived rather than reset: a key the held state
@@ -496,6 +521,7 @@ export function LivePlayer({
           <LiveStartupSteps
             startup={running.startup}
             elapsedMs={running.elapsedMs}
+            reconnecting={reconnecting}
           />
         )}
         {phase === 'buffering' && (
@@ -510,7 +536,10 @@ export function LivePlayer({
         {phase === 'faulted' && fault && (
           <LiveFaultNotice
             fault={fault}
-            onRetry={() => setAttempt((was) => was + 1)}
+            onRetry={() =>
+              seat &&
+              setRetries({ of: seat, count: attempt + 1, after: fault.kind })
+            }
             returnPath={returnPath}
             className="absolute inset-0 flex flex-col items-center justify-center"
           />
