@@ -4,7 +4,10 @@
  * Every message is one frame: a channel byte, a 90 kHz presentation time in
  * eight big-endian bytes, and the payload. The picture channels carry fMP4 —
  * the header is `ftyp`+`moov`, and every frame after it is `moof`+`mdat` with
- * the sound muxed in. The control channel carries the few typed messages a
+ * the sound muxed in. The caption channels carry the broadcast's captions as
+ * the server drew them: a header naming the canvas, then a picture — placed on
+ * that canvas, as a palette PNG — each time the caption changes, and an empty
+ * frame when it goes. The control channel carries the few typed messages a
  * wire says about itself, told apart by their length and by nothing else.
  *
  * The numbers here are the API's own enumerations, copied from its source and
@@ -84,6 +87,115 @@ export function frameOf(
 
 export function ptsSeconds(pts: number): number {
   return pts / PTS_HERTZ
+}
+
+/** The canvas the captions are drawn on: the broadcast's own picture, in pixels. */
+export interface CaptionCanvas {
+  width: number
+  height: number
+}
+
+/** Two big-endian bytes a side. */
+export const CAPTION_CANVAS_LENGTH = 4
+
+/**
+ * A caption as the server drew it: the part of the canvas it covers, and the
+ * palette PNG of that part. The wire places and measures it in two bytes each.
+ */
+export interface CaptionPicture {
+  left: number
+  top: number
+  width: number
+  height: number
+  png: Uint8Array
+}
+
+/** Left, top, width and height, before the PNG. */
+export const CAPTION_PLACEMENT_LENGTH = 8
+
+export type CaptionSaid =
+  | { said: 'shown'; picture: CaptionPicture }
+  | { said: 'cleared' }
+  | { said: 'unknown' }
+
+/** The canvas the caption header names. Anything but two sides, or a side of nothing, is not one. */
+export function readCaptionCanvas(payload: Uint8Array): CaptionCanvas | null {
+  if (payload.length !== CAPTION_CANVAS_LENGTH) {
+    return null
+  }
+
+  const view = new DataView(
+    payload.buffer,
+    payload.byteOffset,
+    payload.byteLength,
+  )
+  const width = view.getUint16(0)
+  const height = view.getUint16(2)
+
+  return width > 0 && height > 0 ? { width, height } : null
+}
+
+/** A caption header as the wire carries it. */
+export function captionCanvasPayload(canvas: CaptionCanvas): Uint8Array {
+  const payload = new Uint8Array(CAPTION_CANVAS_LENGTH)
+  const view = new DataView(payload.buffer)
+
+  view.setUint16(0, canvas.width)
+  view.setUint16(2, canvas.height)
+
+  return payload
+}
+
+/**
+ * What a caption frame says. An empty payload takes the caption off; anything
+ * with a placement and a PNG behind it is a caption shown; a placement with
+ * nothing behind it, or one that measures nothing, is `unknown`.
+ */
+export function readCaption(payload: Uint8Array): CaptionSaid {
+  if (payload.length === 0) {
+    return { said: 'cleared' }
+  }
+
+  if (payload.length <= CAPTION_PLACEMENT_LENGTH) {
+    return { said: 'unknown' }
+  }
+
+  const view = new DataView(
+    payload.buffer,
+    payload.byteOffset,
+    payload.byteLength,
+  )
+  const width = view.getUint16(4)
+  const height = view.getUint16(6)
+
+  if (width === 0 || height === 0) {
+    return { said: 'unknown' }
+  }
+
+  return {
+    said: 'shown',
+    picture: {
+      left: view.getUint16(0),
+      top: view.getUint16(2),
+      width,
+      height,
+      png: payload.subarray(CAPTION_PLACEMENT_LENGTH),
+    },
+  }
+}
+
+/** A caption shown, as the wire carries it. */
+export function captionPayload(picture: CaptionPicture): Uint8Array {
+  const payload = new Uint8Array(CAPTION_PLACEMENT_LENGTH + picture.png.length)
+  const view = new DataView(payload.buffer)
+
+  view.setUint16(0, picture.left)
+  view.setUint16(2, picture.top)
+  view.setUint16(4, picture.width)
+  view.setUint16(6, picture.height)
+  payload.set(picture.png, CAPTION_PLACEMENT_LENGTH)
+
+  return payload
 }
 
 /** The one-byte messages. A viewer may say the last two and nothing else. */
