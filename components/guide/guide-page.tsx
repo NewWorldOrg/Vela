@@ -183,7 +183,6 @@ export function GuideView({
           ]}
         >
           <b className="block font-bold">{guide.coverageWarning.emphasis}</b>
-          {guide.coverageWarning.body}
         </Banner>
       )}
 

@@ -673,7 +673,6 @@ export const 健全性バナー: Story = {
       ...base,
       coverageWarning: {
         emphasis: '湾岸放送1 の番組情報が不足しています。',
-        body: 'EPG の収集が連続して揃っていません。',
       },
     },
   },
