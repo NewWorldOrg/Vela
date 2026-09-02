@@ -66,7 +66,8 @@ export const PLAYER_ROUND_BUTTON_ON =
  * The picture is not stretched to meet it. 1280px is the width the API encodes
  * at when no profile is asked for (`720p30` is 1280x720), so past that a pixel
  * would be invented rather than shown: it stops there, sits in the middle, and
- * the difference is left black — 80px a side on a 1440 column.
+ * the difference is left black — about 40px a side on the widest column the
+ * screen has, once its own margins and the scrollbar are off the 1440 step.
  *
  * The face's height is the second bound. A 16:9 face as wide as the column is
  * 9/16 as tall, and past about three fifths of the window there is no room
