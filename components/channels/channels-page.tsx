@@ -62,7 +62,7 @@ function ServiceGroupSection({
         ) : (
           <EmptyState spot="antenna" className="mx-auto max-w-[520px]">
             {group.walk === 'never'
-              ? `${group.label}はまだスキャンされていません。総当たりで選局し、受信できたサービスを一覧にします。`
+              ? `${group.label}はまだスキャンされていません。`
               : group.walk === 'unknown'
                 ? `${group.label}のサービスは 0 件です。直近のスキャンを読み取れなかったため、走査済みかどうかは分かりません。`
                 : `${group.label}のサービスは 0 件です。直近のスキャンでは受信できたサービスがありませんでした。`}
@@ -148,7 +148,6 @@ export function ChannelsView({
         設定 / <CrumbCurrent>チャンネル</CrumbCurrent>
       </Crumb>
       <PageHeading
-        description="受信できるサービスと候補チャンネル。スキャンの結果は確認してから適用します。"
         action={
           <Button variant="ghost" size="sm" asChild>
             <Link href={'/settings/channels#scan-history' as Route}>
@@ -172,18 +171,14 @@ export function ChannelsView({
             titleLevel={2}
             title="サインインしないと見られません"
             className="mt-4"
-          >
-            チャンネルの定義はサインインしたユーザーだけに見せています。サインインしてから開き直してください。
-          </EmptyState>
+          />
         ) : (
           <EmptyState
             spot="antenna"
             titleLevel={2}
             title="一覧を取得できませんでした"
             className="mt-4"
-          >
-            API はこの画面に必要な一覧を答えられませんでした。
-          </EmptyState>
+          />
         )}
       </>
     )
@@ -218,7 +213,6 @@ export function ChannelsView({
           <b className="block font-bold">
             {zero.label} のサービスが 0 件です。
           </b>
-          有効な候補チャンネルを持つサービスがひとつも確認できていません。
         </Banner>
       )}
 
@@ -233,7 +227,7 @@ export function ChannelsView({
             },
           ]}
         >
-          直近のスキャンの結果がまだ適用されていません。適用するまで既存の定義は変わりません。
+          直近のスキャンの結果がまだ適用されていません。
         </Banner>
       )}
 
@@ -257,12 +251,7 @@ export function ChannelsView({
             titleLevel={2}
             title="まだスキャンしていません"
             className="mt-9"
-          >
-            チューナーの種別ごとに総当たりで選局し、受信できたサービスを一覧にします。
-            <br />
-            結果は差分として提示され、確認してから適用します。地上波 50ch で 6
-            分程度かかります。
-          </EmptyState>
+          />
         ) : (
           channels.groups.map((group) => (
             <ServiceGroupSection
@@ -279,10 +268,6 @@ export function ChannelsView({
               title="種別を特定できないサービス"
               stat={`${channels.unattributed.length} サービス`}
             />
-            <p className="mb-2 px-0.5 text-note leading-[1.7] text-ink-2">
-              候補チャンネルが 1
-              件も残っていないため、どの種別で受信していたのかが分かりません。定義は残っています。
-            </p>
             <ServiceTable services={channels.unattributed} actions={actions} />
           </section>
         )}

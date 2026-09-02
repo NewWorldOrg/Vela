@@ -58,7 +58,7 @@ function AttemptResult({ attempt }: { attempt: ScanAttemptRow }) {
 
   return (
     <FailureLabel failure={attempt.failure}>
-      {attempt.streamMismatch ?? attempt.failure.note}
+      {attempt.streamMismatch}
     </FailureLabel>
   )
 }
@@ -190,11 +190,6 @@ export function ScanRunPanel({
                       .map((system) => SYSTEM_LABEL[system])
                       .join(' · ')}
             </h2>
-            <p className="text-ui text-ink-2">
-              {running.state === 'read'
-                ? '走査した物理chから順に結果が並びます。定義の書き換えはまだ起きていません'
-                : 'スキャンは走ったままです。状況の読み直しを続けています'}
-            </p>
           </div>
           <Button
             variant="outline"
@@ -221,11 +216,6 @@ export function ScanRunPanel({
         </div>
 
         {progress && <ScanCounts progress={progress} />}
-
-        <p className="mt-[11px] border-t border-dashed border-line pt-[11px] text-note leading-[1.7] text-ink-2">
-          キャンセルした場合も既存の定義は変わりません。録画・ライブ・EPG
-          収集が優先され、必要になればスキャンは中断されます。
-        </p>
       </div>
 
       <span aria-live="polite">

@@ -11,31 +11,26 @@ export interface FailureClass {
   /** 1–4, the order the four are always listed in. */
   no: 1 | 2 | 3 | 4
   label: string
-  note: string
 }
 
 export const NO_LOCK: FailureClass = {
   no: 1,
   label: '信号を掴めない',
-  note: 'チューナーが同調できない',
 }
 
 export const LOCKED_WITHOUT_DATA: FailureClass = {
   no: 2,
   label: 'データが来ない',
-  note: '同調したが受信データなし',
 }
 
 export const INCOMPLETE_TABLES: FailureClass = {
   no: 3,
   label: '情報が揃わない',
-  note: 'データはあるが番組情報が不完全',
 }
 
 export const UNEXPECTED_STREAM: FailureClass = {
   no: 4,
   label: '内容が食い違う',
-  note: '期待と異なる局(再編の可能性)',
 }
 
 export const FAILURE_CLASSES: FailureClass[] = [

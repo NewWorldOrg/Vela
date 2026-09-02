@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/section-heading'
-import { InfoIcon, SearchIcon } from '@/components/vela/icons'
+import { SearchIcon } from '@/components/vela/icons'
 import { ApplyScanAction } from '@/components/scan/apply-scan-button'
 import { ScanAttemptsTable } from '@/components/scan/scan-run-panel'
 import { FailureLegend } from '@/components/scan/failure-mark'
@@ -30,18 +30,9 @@ const CHANNEL_KIND_VARIANT = {
   missing: 'err',
 } as const
 
-function ProposalRows({
-  services,
-  description,
-}: {
-  services: ProposalService[]
-  description: string
-}) {
+function ProposalRows({ services }: { services: ProposalService[] }) {
   return (
     <>
-      <p className="mb-[11px] px-0.5 text-note leading-[1.7] text-ink-2">
-        {description}
-      </p>
       <div className="rounded-xl bg-surface px-[17px]">
         {services.map((service) => (
           <div
@@ -87,10 +78,6 @@ function ProposalRows({
 function DepartureRows({ departures }: { departures: RotationDeparture[] }) {
   return (
     <>
-      <p className="mb-[11px] px-0.5 text-note leading-[1.7] text-ink-2">
-        続けて失敗したため巡回から外れた候補チャンネルです。定義は残ります —
-        黙って消えることはありません。
-      </p>
       <div className="rounded-xl bg-surface px-[17px]">
         {departures.map((departure) => (
           <div
@@ -122,28 +109,24 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
       label: '新規',
       value: proposal.added.length,
       unit: 'サービス',
-      note: '一覧に追加されます',
       tint: 'bg-tint-sage',
     },
     {
       label: '更新',
       value: proposal.updated.length,
       unit: 'サービス',
-      note: '候補ch・区分が変わりました',
       tint: 'bg-tint-sky',
     },
     {
       label: '消失',
       value: proposal.missing.length,
       unit: 'サービス',
-      note: '今回の走査で見つかりませんでした',
       tint: 'bg-tint-salmon',
     },
     {
       label: '失敗',
       value: proposal.failures.length,
       unit: '物理ch',
-      note: '4 分類の理由つきで記録しました',
       tint: 'bg-tint-butter',
     },
   ]
@@ -162,7 +145,6 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
               {cell.unit}
             </small>
           </div>
-          <p className="text-cap leading-[1.6] text-ink-2">{cell.note}</p>
         </div>
       ))}
     </div>
@@ -205,9 +187,7 @@ export function ScanProposalView({
     return (
       <>
         {crumb}
-        <PageHeading description="この内容で保存するまで、既存の定義は変わりません。">
-          スキャン結果の確認
-        </PageHeading>
+        <PageHeading>スキャン結果の確認</PageHeading>
         <EmptyState
           spot="antenna"
           titleLevel={2}
@@ -225,11 +205,7 @@ export function ScanProposalView({
             </Button>
           }
         >
-          {result.state === 'unauthenticated'
-            ? 'スキャンの結果はサインインしたユーザーだけに見せています。サインインしてから開き直してください。'
-            : result.state === 'unavailable'
-              ? `API はこのスキャンの結果を答えられませんでした。${result.message}`
-              : '走査が終わっていないか、結果がすでに適用されています。'}
+          {result.state === 'unavailable' && result.message}
         </EmptyState>
       </>
     )
@@ -244,9 +220,7 @@ export function ScanProposalView({
   return (
     <>
       {crumb}
-      <PageHeading description="この内容で保存するまで、既存の定義は変わりません。">
-        スキャン結果の確認
-      </PageHeading>
+      <PageHeading>スキャン結果の確認</PageHeading>
 
       <div className="mt-4 flex flex-wrap items-start gap-3 rounded-xl bg-surface px-[18px] py-4">
         <SearchIcon className="mt-1 size-[17px] shrink-0 text-brand" />
@@ -268,16 +242,11 @@ export function ScanProposalView({
         {applyAction}
       </div>
 
-      <p className="my-3 flex items-start gap-2 px-0.5 text-note leading-[1.7] text-ink-2">
-        <InfoIcon className="mt-1 size-[15px] shrink-0 text-ink-3" />
-        この差分は提案です。「この内容で保存」を押すまで、サービスの定義も候補チャンネルも書き換わりません。保存は一度きりで、一部だけを選んで保存することはできません。
-      </p>
-
       <Summary proposal={proposal} />
 
       {proposal.empty ? (
         <EmptyState spot="antenna" className="mx-auto max-w-[520px]">
-          今回の走査で変わるものはありませんでした。保存しても定義は変わりません。
+          今回の走査で変わるものはありませんでした。
         </EmptyState>
       ) : (
         <>
@@ -287,10 +256,7 @@ export function ScanProposalView({
                 title="新規"
                 stat={`${proposal.added.length} サービス`}
               />
-              <ProposalRows
-                services={proposal.added}
-                description="今回の走査で初めて見つかったサービスです。保存すると一覧に追加されます。"
-              />
+              <ProposalRows services={proposal.added} />
             </section>
           )}
 
@@ -300,10 +266,7 @@ export function ScanProposalView({
                 title="更新"
                 stat={`${proposal.updated.length} サービス`}
               />
-              <ProposalRows
-                services={proposal.updated}
-                description="既存サービスの変わった項目だけが書き換わります。nid+sid は変わらないため、予約と EPG は影響を受けません。"
-              />
+              <ProposalRows services={proposal.updated} />
             </section>
           )}
 
@@ -313,10 +276,7 @@ export function ScanProposalView({
                 title="消失"
                 stat={`${proposal.missing.length} サービス`}
               />
-              <ProposalRows
-                services={proposal.missing}
-                description="今回の走査で見つからなかったサービスです。一時的な受信不良・中継局の停波・アンテナ工事でも消失として出ます。"
-              />
+              <ProposalRows services={proposal.missing} />
             </section>
           )}
 
@@ -338,10 +298,6 @@ export function ScanProposalView({
             title="失敗"
             stat={`${proposal.failures.length} 物理ch / 保存対象にはなりません`}
           />
-          <p className="mb-[11px] px-0.5 text-note leading-[1.7] text-ink-2">
-            走査できなかった物理chです。成功した分はそのまま保存できます。どの段階で止まったかを
-            4 分類で記録しています。
-          </p>
           <FailureLegend />
           <ScanAttemptsTable attempts={proposal.failures} />
         </section>
@@ -361,7 +317,6 @@ export function ScanProposalView({
           <b className="font-code font-medium tabular-nums text-ink">
             {proposal.missing.length}
           </b>
-          。破棄を選ぶと既存の定義は変わりません。
         </p>
         {applyAction}
       </div>

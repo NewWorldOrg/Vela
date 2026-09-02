@@ -36,7 +36,7 @@ export function FailureMark({
   )
 }
 
-/** The class named in full: mark, label, and the one line that explains it. */
+/** The class named in full: mark and label, and a detail where the caller has one. */
 export function FailureLabel({
   failure,
   children,
@@ -51,9 +51,11 @@ export function FailureLabel({
         <b className="block text-ui leading-[1.55] font-bold text-ink">
           {failure.label}
         </b>
-        <span className="block text-note leading-[1.55] text-ink-2">
-          {children ?? failure.note}
-        </span>
+        {children && (
+          <span className="block text-note leading-[1.55] text-ink-2">
+            {children}
+          </span>
+        )}
       </span>
     </span>
   )
@@ -70,9 +72,6 @@ export function FailureLegend() {
             <b className="block text-ui leading-[1.5] font-bold">
               {failure.label}
             </b>
-            <span className="block text-cap leading-[1.55] text-ink-2">
-              {failure.note}
-            </span>
           </span>
         </div>
       ))}
