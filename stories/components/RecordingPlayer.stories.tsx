@@ -5,6 +5,7 @@ import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { drawnFrame, SUBTITLED_FRAME } from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
+import { ScreenMain } from '@/components/vela/app-shell'
 import type { PlaybackFault } from '@/components/recordings/playback-fault'
 
 function detail(id: string) {
@@ -103,9 +104,15 @@ const meta = {
     frameHref: drawnFrame,
   },
   decorators: [
+    // The player is read inside the column a screen is given, and the column
+    // is now wider than the picture may be. Standing it in the shared step
+    // rather than loose in the canvas is what makes the black either side of
+    // the picture the same black the screen draws.
     (Story) => (
       <div className="bg-bg py-6">
-        <Story />
+        <ScreenMain>
+          <Story />
+        </ScreenMain>
       </div>
     ),
   ],
