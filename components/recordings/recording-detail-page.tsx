@@ -34,10 +34,7 @@ import {
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import { QualityChip } from '@/components/recordings/quality-chip'
-import {
-  PLAYER_BUTTON,
-  PLAYER_PANE,
-} from '@/components/recordings/player-palette'
+import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { Player } from '@/components/recordings/player'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailRow } from '@/components/recordings/detail-row'
@@ -241,35 +238,33 @@ export function RecordingDetailView({
       )}
 
       <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
-        <div className={PLAYER_PANE}>
-          {d.fileMissing ? (
-            <PlaybackNotice
-              tone="waiting"
-              mark={<ThumbMissingIcon className="size-[22px]" />}
-              title="ファイルが見つかりません"
-              body="録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。"
-            >
-              <Link href="/library/integrity" className={PLAYER_BUTTON}>
-                整合性チェックの結果へ
-              </Link>
-            </PlaybackNotice>
-          ) : d.outcome === 'failed' ? (
-            <PlaybackNotice
-              tone="gone"
-              mark={<OutcomeFailedIcon className="size-[22px]" />}
-              title="再生できません"
-              body={whyItCannotBePlayed(d)}
-            />
-          ) : playback.state === 'refused' ? (
-            REFUSED[playback.refusal]
-          ) : playback.plan.route === 'nothing' ? (
-            <PlaybackNotice
-              mark={<ThumbMissingIcon className="size-[22px]" />}
-              title="再生できる成果物がありません"
-              body="この録画には、ブラウザへ渡せる成果物がありません。"
-            />
-          ) : null}
-        </div>
+        {d.fileMissing ? (
+          <PlaybackNotice
+            tone="waiting"
+            mark={<ThumbMissingIcon className="size-[22px]" />}
+            title="ファイルが見つかりません"
+            body="録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。"
+          >
+            <Link href="/library/integrity" className={PLAYER_BUTTON}>
+              整合性チェックの結果へ
+            </Link>
+          </PlaybackNotice>
+        ) : d.outcome === 'failed' ? (
+          <PlaybackNotice
+            tone="gone"
+            mark={<OutcomeFailedIcon className="size-[22px]" />}
+            title="再生できません"
+            body={whyItCannotBePlayed(d)}
+          />
+        ) : playback.state === 'refused' ? (
+          REFUSED[playback.refusal]
+        ) : playback.plan.route === 'nothing' ? (
+          <PlaybackNotice
+            mark={<ThumbMissingIcon className="size-[22px]" />}
+            title="再生できる成果物がありません"
+            body="この録画には、ブラウザへ渡せる成果物がありません。"
+          />
+        ) : null}
       </div>
       {plays && playback.state === 'planned' && (
         <Player

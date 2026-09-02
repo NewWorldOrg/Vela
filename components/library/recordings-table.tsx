@@ -35,9 +35,9 @@ export function RecordingsTable({
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-1">
       {/*
-        1208px is what the 1280 column leaves once the screen's own margins
-        and the scrollbar down its side are taken off, and the columns add up
-        to that. At 1296 the list was too wide for every window there is: the
+        1208px is what the columns add up to, and the width under which the
+        list runs sideways inside its own box rather than taking the page with
+        it. At 1296 the list was too wide for every window there is: the
         last column was cut off, and the page itself scrolled sideways to
         reach it. The width came off the columns that were carrying more than
         their content — the title truncates at any width, and the other three

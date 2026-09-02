@@ -6,10 +6,7 @@ import { cn } from '@/lib/utils'
 import { formatBytes } from '@/lib/format'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
-import {
-  PLAYER_PALETTE,
-  PLAYER_PANE,
-} from '@/components/recordings/player-palette'
+import { PLAYER_PALETTE } from '@/components/recordings/player-palette'
 import { PlaybackStandingChip } from '@/components/recordings/playback-standing'
 import { ExternalPlayer } from '@/components/recordings/external-player'
 
@@ -50,11 +47,7 @@ export function PlayerReading({
 
   return (
     <section
-      className={cn(
-        PLAYER_PANE,
-        'mt-3 rounded-xl bg-surface px-[22px] py-4',
-        className,
-      )}
+      className={cn('mt-3 rounded-xl bg-surface px-[22px] py-4', className)}
     >
       {/*
         Only where what can be watched is not what was asked for. The band at

@@ -16,8 +16,9 @@ import { PlayIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BUTTON,
+  PLAYER_FACE,
   PLAYER_PALETTE,
-  PLAYER_PANE,
+  PLAYER_PICTURE,
   PLAYER_ROUND_BUTTON,
   PLAYER_ROUND_BUTTON_ON,
 } from '@/components/recordings/player-palette'
@@ -351,14 +352,12 @@ export function Player({
   if (phase === 'broken') {
     return (
       <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
-        <div className={PLAYER_PANE}>
-          <PlaybackFaultNotice
-            detail={d}
-            fault={fault}
-            onRetry={() => play(position)}
-            onTakeTicket={onTakeTicket}
-          />
-        </div>
+        <PlaybackFaultNotice
+          detail={d}
+          fault={fault}
+          onRetry={() => play(position)}
+          onTakeTicket={onTakeTicket}
+        />
       </div>
     )
   }
@@ -372,12 +371,17 @@ export function Player({
         onPointerLeave={stir}
         onKeyDown={stir}
         className={cn(
-          'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl',
-          PLAYER_PANE,
-          '[&:fullscreen]:flex [&:fullscreen]:max-w-none [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
+          'relative w-full overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl',
+          '[&:fullscreen]:flex [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
         )}
       >
-        <div className="relative flex aspect-video w-full items-center justify-center [:fullscreen_&]:aspect-auto [:fullscreen_&]:min-h-0 [:fullscreen_&]:flex-1">
+        <div
+          className={cn(
+            'relative flex items-center justify-center',
+            PLAYER_FACE,
+            '[:fullscreen_&]:aspect-auto [:fullscreen_&]:max-h-none [:fullscreen_&]:min-h-0 [:fullscreen_&]:flex-1',
+          )}
+        >
           <video
             ref={video}
             src={source}
@@ -409,7 +413,7 @@ export function Player({
             onTimeUpdate={(event) =>
               setPosition(from + event.currentTarget.currentTime)
             }
-            className="size-full object-contain"
+            className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
           />
           {phase === 'idle' && (
             <button

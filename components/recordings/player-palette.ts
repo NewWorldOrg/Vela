@@ -57,17 +57,25 @@ export const PLAYER_ROUND_BUTTON_ON =
   'border-[rgba(150,187,180,.55)] bg-[rgba(150,187,180,.22)] text-[#C0D8D3]'
 
 /**
- * How wide the player stands, and where the picture stops growing.
+ * The face of the player, and where the picture on it stops growing.
  *
- * The pane used to take the whole content column while the picture inside it
- * stayed at 757px, so on a wide window a small picture floated in a field of
- * black. The picture takes the pane now, and the pane is what is bounded.
+ * The face is the column: it takes the whole width the screen is given and is
+ * painted in the picture's own black, so a picture narrower than the column
+ * stands on black instead of floating on the page.
  *
- * 1280px is the width of the picture the API encodes when no profile is asked
- * for (`720p30` is 1280x720), so at the cap the default picture is drawn at
- * one pixel per pixel and nothing above it is invented. The second bound is
- * the window's own height: a 16:9 picture as wide as the pane is 9/16 as tall,
- * and past about three fifths of the window there is no room left under it for
- * the reading of how the recording ended, or the record below.
+ * The picture is not stretched to meet it. 1280px is the width the API encodes
+ * at when no profile is asked for (`720p30` is 1280x720), so past that a pixel
+ * would be invented rather than shown: it stops there, sits in the middle, and
+ * the difference is left black — 80px a side on a 1440 column.
+ *
+ * The face's height is the second bound. A 16:9 face as wide as the column is
+ * 9/16 as tall, and past about three fifths of the window there is no room
+ * under it for the reading of how the recording ended, or the record below.
+ * Held there, the face keeps its width while the picture comes down to the
+ * height that is left, which is the same rule read on the other axis: the
+ * picture keeps its shape and the black takes the difference.
  */
-export const PLAYER_PANE = 'mx-auto w-full max-w-[min(1280px,calc(62vh*16/9))]'
+export const PLAYER_FACE = 'aspect-video max-h-[62vh] w-full'
+
+/** The picture on that face, at its own size and in the middle of it. */
+export const PLAYER_PICTURE = 'h-full w-full max-w-[1280px] object-contain'
