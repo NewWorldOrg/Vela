@@ -583,6 +583,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/live/ticket': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['issueLiveTicket']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/live/channels': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listLiveChannels']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/live/profiles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listLiveProfiles']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/live/sessions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listLiveSessions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/health': {
     parameters: {
       query?: never
@@ -956,6 +1020,16 @@ export interface components {
       message: string
       data: null | components['schemas']['BroadcastServiceResponder'][]
     }
+    BaseResponderOfIReadOnlyListOfLiveProfileResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['LiveProfileResponder'][]
+    }
+    BaseResponderOfIReadOnlyListOfLiveSessionResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['LiveSessionResponder'][]
+    }
     BaseResponderOfIReadOnlyListOfScanRunResponder: {
       status: boolean
       message: string
@@ -965,6 +1039,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['SessionResponder'][]
+    }
+    BaseResponderOfLiveChannelListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['LiveChannelListResponder']
     }
     BaseResponderOfMeResponder: {
       status: boolean
@@ -1400,6 +1479,90 @@ export interface components {
       check: components['schemas']['IntegrityCheckResponder']
       /** Format: int32 */
       findings: number | string
+    }
+    /** @enum {string} */
+    LiveChannelField: 'tuning' | 'sessions'
+    LiveChannelListResponder: {
+      items: components['schemas']['LiveChannelResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    LiveChannelResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      name: string
+      category: components['schemas']['ServiceCategory']
+      /** Format: int32 */
+      remoteControlKeyId: null | number | string
+      /** Format: int32 */
+      viewers: number | string
+      tuning: null | components['schemas']['ScanTargetResponder']
+      sessions: null | components['schemas']['LiveSessionResponder'][]
+    }
+    /** @enum {string} */
+    LiveChannelSort: 'remoteControlKey' | 'name' | 'viewers'
+    LiveFrameRateResponder: {
+      /** Format: int32 */
+      numerator: number | string
+      /** Format: int32 */
+      denominator: number | string
+    }
+    LiveProfileResponder: {
+      name: string
+      codec: components['schemas']['VideoCodec']
+      /** Format: int32 */
+      width: number | string
+      /** Format: int32 */
+      height: number | string
+      frameRate: components['schemas']['LiveFrameRateResponder']
+      /** Format: int32 */
+      softwareKilobitsPerSecond: number | string
+      /** Format: int32 */
+      vaapiQuantiser: number | string
+    }
+    LiveSessionResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      profile: string
+      /** Format: int32 */
+      viewers: number | string
+      /** Format: int64 */
+      dropped: number | string
+      startup: components['schemas']['LiveStartupResponder']
+    }
+    LiveStartupMarkResponder: {
+      segment: components['schemas']['LiveStartupSegment']
+      /** Format: int64 */
+      reachedAtMs: null | number | string
+      /** Format: int64 */
+      tookMs: null | number | string
+    }
+    LiveStartupResponder: {
+      inProgress: boolean
+      marks: components['schemas']['LiveStartupMarkResponder'][]
+    }
+    /** @enum {string} */
+    LiveStartupSegment:
+      | 'tunerSecured'
+      | 'channelLocked'
+      | 'transcoderStarted'
+      | 'initReached'
+      | 'firstPicture'
+    LiveTicketRequest: {
+      /** Format: int32 */
+      networkId?: null | number | string
+      /** Format: int32 */
+      serviceId?: null | number | string
     }
     LoginRequest: {
       username?: null | string
@@ -2338,6 +2501,8 @@ export interface components {
       /** Format: int32 */
       transportStreamId?: null | number | string
     }
+    /** @enum {string} */
+    VideoCodec: 'h264'
     VisitTallyResponder: {
       /** Format: int32 */
       serviceId: number | string
@@ -4974,6 +5139,198 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+    }
+  }
+  issueLiveTicket: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LiveTicketRequest']
+        'text/json': components['schemas']['LiveTicketRequest']
+        'application/*+json': components['schemas']['LiveTicketRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+    }
+  }
+  listLiveChannels: {
+    parameters: {
+      query?: {
+        sort?: components['schemas']['LiveChannelSort']
+        descending?: boolean
+        fields?: components['schemas']['LiveChannelField'][]
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfLiveChannelListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfLiveChannelListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfLiveChannelListResponder']
+        }
+      }
+    }
+  }
+  listLiveProfiles: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfLiveProfileResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfLiveProfileResponder']
+        }
+      }
+    }
+  }
+  listLiveSessions: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfLiveSessionResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfLiveSessionResponder']
         }
       }
     }

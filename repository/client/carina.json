@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Carina",
-    "description": "The HTTP surface of the app process. Four contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`) and the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through.",
+    "description": "The HTTP surface of the app process. Five contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through, and the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists; a viewer that is refused is told why on the control channel before the wire is closed.",
     "version": "1.0.0"
   },
   "servers": [
@@ -3397,6 +3397,248 @@
         }
       }
     },
+    "/api/live/ticket": {
+      "post": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "issueLiveTicket",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveTicketRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveTicketRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveTicketRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/channels": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "listLiveChannels",
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/LiveChannelSort"
+            }
+          },
+          {
+            "name": "descending",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/LiveChannelField"
+              }
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfLiveChannelListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfLiveChannelListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfLiveChannelListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/profiles": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "listLiveProfiles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfLiveProfileResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfLiveProfileResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/sessions": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "listLiveSessions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfLiveSessionResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfLiveSessionResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "tags": [
@@ -4926,6 +5168,56 @@
           }
         }
       },
+      "BaseResponderOfIReadOnlyListOfLiveProfileResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LiveProfileResponder"
+            }
+          }
+        }
+      },
+      "BaseResponderOfIReadOnlyListOfLiveSessionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LiveSessionResponder"
+            }
+          }
+        }
+      },
       "BaseResponderOfIReadOnlyListOfScanRunResponder": {
         "required": [
           "status",
@@ -4973,6 +5265,32 @@
             "items": {
               "$ref": "#/components/schemas/SessionResponder"
             }
+          }
+        }
+      },
+      "BaseResponderOfLiveChannelListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LiveChannelListResponder"
+              }
+            ]
           }
         }
       },
@@ -6964,6 +7282,357 @@
           "findings": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LiveChannelField": {
+        "enum": [
+          "tuning",
+          "sessions"
+        ],
+        "type": "string"
+      },
+      "LiveChannelListResponder": {
+        "required": [
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiveChannelResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LiveChannelResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "name",
+          "category",
+          "remoteControlKeyId",
+          "viewers",
+          "tuning",
+          "sessions"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ServiceCategory"
+          },
+          "remoteControlKeyId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "viewers": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tuning": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScanTargetResponder"
+              }
+            ]
+          },
+          "sessions": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LiveSessionResponder"
+            }
+          }
+        }
+      },
+      "LiveChannelSort": {
+        "enum": [
+          "remoteControlKey",
+          "name",
+          "viewers"
+        ],
+        "type": "string"
+      },
+      "LiveFrameRateResponder": {
+        "required": [
+          "numerator",
+          "denominator"
+        ],
+        "type": "object",
+        "properties": {
+          "numerator": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "denominator": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LiveProfileResponder": {
+        "required": [
+          "name",
+          "codec",
+          "width",
+          "height",
+          "frameRate",
+          "softwareKilobitsPerSecond",
+          "vaapiQuantiser"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "codec": {
+            "$ref": "#/components/schemas/VideoCodec"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "frameRate": {
+            "$ref": "#/components/schemas/LiveFrameRateResponder"
+          },
+          "softwareKilobitsPerSecond": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "vaapiQuantiser": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LiveSessionResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "profile",
+          "viewers",
+          "dropped",
+          "startup"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "viewers": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "dropped": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "startup": {
+            "$ref": "#/components/schemas/LiveStartupResponder"
+          }
+        }
+      },
+      "LiveStartupMarkResponder": {
+        "required": [
+          "segment",
+          "reachedAtMs",
+          "tookMs"
+        ],
+        "type": "object",
+        "properties": {
+          "segment": {
+            "$ref": "#/components/schemas/LiveStartupSegment"
+          },
+          "reachedAtMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "tookMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "LiveStartupResponder": {
+        "required": [
+          "inProgress",
+          "marks"
+        ],
+        "type": "object",
+        "properties": {
+          "inProgress": {
+            "type": "boolean"
+          },
+          "marks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiveStartupMarkResponder"
+            }
+          }
+        }
+      },
+      "LiveStartupSegment": {
+        "enum": [
+          "tunerSecured",
+          "channelLocked",
+          "transcoderStarted",
+          "initReached",
+          "firstPicture"
+        ],
+        "type": "string"
+      },
+      "LiveTicketRequest": {
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
               "integer",
               "string"
             ],
@@ -10689,6 +11358,12 @@
           }
         }
       },
+      "VideoCodec": {
+        "enum": [
+          "h264"
+        ],
+        "type": "string"
+      },
       "VisitTallyResponder": {
         "required": [
           "serviceId",
@@ -10791,6 +11466,9 @@
     },
     {
       "name": "recordings"
+    },
+    {
+      "name": "live"
     },
     {
       "name": "health"
