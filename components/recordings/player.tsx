@@ -59,11 +59,14 @@ const RESTS = 3000
 /** What the picture is doing. */
 type Phase = 'idle' | 'waiting' | 'playing' | 'paused' | 'diagnosing' | 'broken'
 
-/** What the plate over the picture reads while there is no picture yet. */
-const WAITING_ON = {
-  waiting: '絵が出るまで数秒かかります',
+/**
+ * What the plate over the picture reads while there is no picture yet. A
+ * picture merely being waited for gets the spinner alone: how long it takes is
+ * not something the screen says.
+ */
+const WAITING_ON: Partial<Record<Phase, string>> = {
   diagnosing: '再生できませんでした — 理由の確認中',
-} as const
+}
 
 /**
  * The recording, played.
@@ -432,7 +435,7 @@ export function Player({
           )}
           {(phase === 'waiting' || phase === 'diagnosing') && (
             // Over the middle, on a plate of its own. Japanese recordings carry
-            // their subtitles burnt into the bottom of the picture, so a line
+            // their subtitles burnt into the bottom of the picture, so anything
             // laid there in thin grey is read off the programme rather than off
             // the player.
             <p

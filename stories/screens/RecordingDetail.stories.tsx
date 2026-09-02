@@ -101,7 +101,7 @@ export const 完全: Story = {
     // it would be the loudest thing on a screen where nothing is wrong, and
     // the two standings that do change what can be watched would read like it.
     await expect(canvas.getByText('完全')).toBeVisible()
-    await expect(canvas.queryByText('録画全体が再生されます')).toBeNull()
+    await expect(canvasElement.querySelector('[data-standing]')).toBeNull()
 
     // Nothing is asked for until the play button is pressed, so no transcoder
     // is started for a reader who came to read the record.
@@ -151,12 +151,12 @@ export const 尻切れ: Story = {
     const canvas = within(canvasElement)
 
     // Under the picture, where 完全 says nothing: what can be watched is not
-    // what was asked for, and the picture itself will not say so.
-    await expect(
-      canvas.getByText(
-        '録画は途中で終わっています。欠けた部分は再生されません',
-      ),
-    ).toBeVisible()
+    // what was asked for, and the picture itself will not say so. The word and
+    // its colour are the whole of it.
+    const standing = canvasElement.querySelector('[data-standing="cutShort"]')
+
+    await expect(standing).toBeVisible()
+    await expect(standing).toHaveTextContent('尻切れ')
   },
 }
 /**
@@ -238,15 +238,13 @@ export const Range直配信: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // A stream that answers a byte range says nothing about rebuilding, and
-    // the note beside the source says what it costs instead.
-    await expect(
-      canvas.queryByText(
-        'シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。',
-      ),
-    ).toBeNull()
-    await expect(
-      canvas.getByText('エンコード済みを再生しています。'),
-    ).toBeVisible()
+    // The source reading marks the encoded artefact as the one in use, and
+    // that is all the page says about it: what a seek costs is not written.
+    const source = canvas.getByRole('group', { name: '再生ソース' })
+
+    await expect(within(source).getByText(/^H\.264/)).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
   },
 }

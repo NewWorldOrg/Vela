@@ -66,11 +66,6 @@ export function RecordingActions({
           削除
         </Button>
       </div>
-      <p className="mt-[9px] text-note leading-relaxed text-ink-3">
-        「エンコード」からの登録はこれから実装されます。プロファイルは1つのため、登録に選択はありません。元
-        TS
-        は削除されません。削除は録画ごと、ライブラリからの明示操作でのみ行われます。
-      </p>
       <DeleteRecordingDialog
         recording={asked}
         onOpenChange={(open) => !open && setAsked(null)}

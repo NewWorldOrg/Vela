@@ -125,14 +125,10 @@ export const 待機中: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // The poster stands where the picture will be, and the bar says what
-    // choosing a position on it costs.
-    await expect(
-      canvas.getByText(
-        'シークのたびにトランスコーダを立て直すため、シーク後に絵が出るまで数秒かかります。',
-      ),
-    ).toBeVisible()
+    // The poster stands where the picture will be, and the bar reads the
+    // position. Nothing under it explains what choosing one costs.
     await expect(canvas.getByText('0:00:00 / 4:12:38')).toBeVisible()
+    await expect(canvas.queryByText(/トランスコーダ/)).toBeNull()
   },
 }
 
@@ -263,18 +259,17 @@ export const 再生できない_トランスコード失敗: Story = {
       expect(canvas.getByText('再生を開始できませんでした')).toBeVisible(),
     )
     await expect(
-      canvas.getByText(
-        '元 TS からのトランスコードに失敗しました。時間をおいて再試行するか、外部プレイヤーで開いてください。',
-      ),
+      canvas.getByText('元 TS からのトランスコードに失敗しました。'),
     ).toBeVisible()
   },
 }
 
 /**
- * While there is no picture yet, what the player is doing is drawn on a plate
- * over the middle. Japanese recordings carry their subtitles burnt into the
- * bottom of the frame, and a thin grey line laid there is read as part of the
- * programme.
+ * While there is no picture yet, the spinner is drawn on a plate over the
+ * middle, and nothing is written beside it: how long the picture takes is not
+ * something the player says. Japanese recordings carry their subtitles burnt
+ * into the bottom of the frame, and anything laid there in thin grey is read as
+ * part of the programme.
  */
 export const 読み込み中: Story = {
   args: {
@@ -283,11 +278,11 @@ export const 読み込み中: Story = {
     pictureHref: stalling,
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const plate = within(canvasElement).getByRole('status')
 
-    await expect(canvas.getByRole('status')).toHaveTextContent(
-      '絵が出るまで数秒かかります',
-    )
+    await expect(plate).toBeVisible()
+    await expect(plate.querySelector('[data-slot="spinner"]')).not.toBeNull()
+    await expect(plate.textContent).toBe('')
   },
 }
 
@@ -353,14 +348,10 @@ export const 効かない操作子: Story = {
       await expect(track).toBeDisabled()
     }
 
-    // Once, beside the two rows it answers for. What the burnt-in subtitles
-    // are is read under the picture, where the rest of the prose is.
+    // Once, beside the two rows it answers for, and nowhere else on the page.
     await expect(
       screen.getAllByText('字幕と音声の選択はこれから実装されます'),
     ).toHaveLength(1)
-    await expect(
-      canvas.getByText('画面に見えている字幕は映像に焼き付いたものです。'),
-    ).toBeVisible()
   },
 }
 

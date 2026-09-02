@@ -4,8 +4,6 @@ import type { ReactNode } from 'react'
 import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
-import { formatBytes } from '@/lib/format'
-import { isPlayableSource } from '@/lib/recordings'
 import { reservationHref } from '@/lib/reservations'
 import type {
   RecordingDetail,
@@ -57,6 +55,8 @@ const OUTCOME_STYLE = {
  * recording still being written, one that wrote nothing, a file out of reach
  * and an answer that could not be read are different things to do next, and
  * one notice for all of them would leave the reader to guess which they have.
+ * Each says what happened and stops; where the title is the whole of it, there
+ * is no second line restating it.
  */
 const REFUSED: Record<PlaybackRefusal, ReactNode> = {
   stillRecording: (
@@ -64,7 +64,6 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
       tone="waiting"
       mark={<ListIcon className="size-[22px]" />}
       title="録画中は再生できません"
-      body="書き込み中の録画は再生の対象外です。再生できるのは録画の完了後です。"
     />
   ),
   nothingToPlay: (
@@ -72,7 +71,7 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
       tone="gone"
       mark={<OutcomeFailedIcon className="size-[22px]" />}
       title="再生できるものがありません"
-      body="この録画には書かれた中身がありません。理由は「録画の記録」にあります。"
+      body="この録画には書かれた中身がありません。"
     />
   ),
   outOfReach: (
@@ -80,7 +79,6 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
       tone="waiting"
       mark={<ThumbMissingIcon className="size-[22px]" />}
       title="録画ファイルに到達できません"
-      body="録画の記録に行はありますが、保存先に到達できません。整合性チェックの一覧に理由付きで出ています。"
     >
       <Link href="/library/integrity" className={PLAYER_BUTTON}>
         整合性チェックの結果へ
@@ -91,28 +89,8 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
     <PlaybackNotice
       mark={<WarningIcon className="size-[22px]" />}
       title="再生の可否を読めませんでした"
-      body="再生できるかどうかの応答がありません。時間をおいて開き直すと読める場合があります。"
     />
   ),
-}
-
-/**
- * Why a failed recording has no picture to draw.
- *
- * The size is read off the recording rather than written into the sentence: it
- * said "実ファイルが 0 B のため" over a recording the band above the same
- * notice reported as gigabytes. The reader is sent to 「失敗の理由」 only where
- * that block is drawn — it is drawn only for a fault the store named, and a
- * pointer to a section that is not on the page is another wrong answer.
- */
-function whyItCannotBePlayed(d: RecordingDetail) {
-  const size = d.sizeBytes
-    ? `実ファイルは ${formatBytes(d.sizeBytes)} ありますが、結果は失敗として記録されています。`
-    : '実ファイルは 0 B で、再生できる中身がありません。'
-
-  return d.failureReason
-    ? `${size}理由は下の「失敗の理由」にあります。`
-    : `${size}経緯は下の「録画の記録」にあります。`
 }
 
 const OUTCOME_LABEL = {
@@ -170,11 +148,6 @@ export function RecordingDetailView({
           <p className="min-w-[200px] flex-1 text-ui leading-relaxed text-ink-2">
             {d.outcomeBody}
           </p>
-          {d.outcomeAxis && (
-            <span className="text-note whitespace-nowrap text-ink-2">
-              {d.outcomeAxis}
-            </span>
-          )}
         </div>
       )}
 
@@ -186,14 +159,7 @@ export function RecordingDetailView({
                 <ListIcon className="size-[13px]" />
                 録画中
               </Badge>
-              <span className="text-[11px] text-ink-3">
-                録画の記録が原簿(ファイル名では判別しない)
-              </span>
             </div>
-            <p className="mb-2.5 text-sub leading-relaxed text-ink-2">
-              進行中の値は driver の通知を 30
-              秒周期で録画の記録へ書いています。値が動いていること自体が、計測が生きている証拠です。
-            </p>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2.5">
               <DetailStat label="経過" value={d.live.elapsed} />
               <DetailStat label="書き込み済み" value={d.live.written} />
@@ -201,8 +167,7 @@ export function RecordingDetailView({
               <DetailStat label="残り" value={d.live.rest} />
             </div>
             <p className="mt-2.5 text-note text-ink-3">
-              最終更新 <span className="font-code">{d.live.updatedAt}</span> ·
-              30 秒ごとに更新
+              最終更新 <span className="font-code">{d.live.updatedAt}</span>
             </p>
           </section>
           {d.live.extension && (
@@ -213,9 +178,6 @@ export function RecordingDetailView({
                   延長に追従しました
                 </Badge>
               </div>
-              <p className="mb-2.5 text-sub leading-relaxed text-ink-2">
-                終了予定が後ろへ動きました。追従は後方のみで、前方へ短縮された場合は追従しません。
-              </p>
               <DetailKeyRow
                 label="当初の終了予定"
                 main={d.live.extension.plannedEnd}
@@ -229,9 +191,6 @@ export function RecordingDetailView({
                 label="最終追従"
                 main={d.live.extension.followedAt}
               />
-              <p className="mt-2.5 text-note leading-relaxed text-ink-3">
-                録画中は録画の記録が唯一の原簿です。進行中と完成の判別にファイル名は使われません。
-              </p>
             </section>
           )}
         </div>
@@ -243,7 +202,6 @@ export function RecordingDetailView({
             tone="waiting"
             mark={<ThumbMissingIcon className="size-[22px]" />}
             title="ファイルが見つかりません"
-            body="録画の記録に行はありますが、実ファイルがありません。整合性チェックの一覧に理由付きで出ています。"
           >
             <Link href="/library/integrity" className={PLAYER_BUTTON}>
               整合性チェックの結果へ
@@ -254,7 +212,6 @@ export function RecordingDetailView({
             tone="gone"
             mark={<OutcomeFailedIcon className="size-[22px]" />}
             title="再生できません"
-            body={whyItCannotBePlayed(d)}
           />
         ) : playback.state === 'refused' ? (
           REFUSED[playback.refusal]
@@ -262,7 +219,6 @@ export function RecordingDetailView({
           <PlaybackNotice
             mark={<ThumbMissingIcon className="size-[22px]" />}
             title="再生できる成果物がありません"
-            body="この録画には、ブラウザへ渡せる成果物がありません。"
           />
         ) : null}
       </div>
@@ -281,9 +237,6 @@ export function RecordingDetailView({
           <div className="mb-[7px] flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3">
             <ListIcon className="size-3.5 text-brand" />
             番組情報
-            <span className="font-normal tracking-normal">
-              録画時点のスナップショット
-            </span>
           </div>
           <h1 className="heading mb-3.5 text-[20px] leading-normal">
             {d.title}
@@ -347,9 +300,11 @@ export function RecordingDetailView({
                   <b className="heading block text-[13.5px]">
                     {d.failureReason.title}
                   </b>
-                  <p className="mt-0.5 text-sub leading-relaxed text-ink-2">
-                    {d.failureReason.body}
-                  </p>
+                  {d.failureReason.body && (
+                    <p className="mt-0.5 text-sub leading-relaxed text-ink-2">
+                      {d.failureReason.body}
+                    </p>
+                  )}
                 </div>
               </div>
             </>
@@ -358,9 +313,6 @@ export function RecordingDetailView({
           <div className="mt-[22px] mb-[7px] flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3">
             <QualityIcon className="size-3.5 text-brand" />
             録画の記録
-            <span className="font-normal tracking-normal">
-              録画の記録が唯一の原簿。ファイル名からは判別しない
-            </span>
           </div>
           {d.reconcile && (
             <DetailKeyRow
@@ -370,11 +322,7 @@ export function RecordingDetailView({
             />
           )}
           {d.interruptions && (
-            <DetailKeyRow
-              label="中断と再開"
-              main={d.interruptions.main}
-              sub={d.interruptions.sub}
-            />
+            <DetailKeyRow label="中断と再開" main={d.interruptions.main} />
           )}
           {d.tunerUnit && (
             <DetailKeyRow
@@ -387,11 +335,7 @@ export function RecordingDetailView({
             <DetailKeyRow label="dvr EOVERFLOW" main={d.eoverflow} />
           )}
           {d.scramble && (
-            <DetailKeyRow
-              label="スクランブル残存"
-              main={d.scramble.main}
-              sub={d.scramble.sub}
-            />
+            <DetailKeyRow label="スクランブル残存" main={d.scramble.main} />
           )}
           {d.stopReason && (
             <DetailKeyRow label="停止理由" main={d.stopReason} plain />
@@ -438,7 +382,7 @@ export function RecordingDetailView({
                 </Badge>
               )}
             </div>
-            <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-[11px]">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-[11px]">
               <DetailStat
                 label="ドロップ合計"
                 value={d.quality.measured ? (d.qualityTotal ?? '—') : '未計測'}
@@ -452,22 +396,6 @@ export function RecordingDetailView({
                 wordy={!d.quality.measured}
               />
             </div>
-            {d.quality.measured ? (
-              <p className="text-note leading-relaxed text-ink-3">
-                判定は <b className="font-code font-medium text-ink-2">0.02%</b>{' '}
-                超で警告水準 /{' '}
-                <b className="font-code font-medium text-ink-2">0.1%</b>{' '}
-                超で視聴不可の恐れ(いずれも暫定値)。計測していない録画は「未計測」で、良好とは別の状態です。
-              </p>
-            ) : d.outcome === 'recording' ? (
-              <p className="text-note leading-relaxed text-ink-3">
-                {d.quality.detail}
-              </p>
-            ) : (
-              <p className="text-note leading-relaxed text-ink-3">
-                計測が無かった録画です。良好とは別の状態として扱い、集計にも混ざりません。
-              </p>
-            )}
             {d.qualitySpots && d.qualitySpots.length > 0 && (
               <>
                 <div className="mt-3.5 mb-1 flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3">
@@ -493,9 +421,6 @@ export function RecordingDetailView({
                     </Link>
                   </div>
                 ))}
-                <p className="mt-3 text-note leading-relaxed text-ink-3">
-                  ドロップは映像・音声の乱れとして現れることがあります。該当の時間帯を再生して、視聴に支障がないか確認できます。
-                </p>
               </>
             )}
           </section>
@@ -509,11 +434,6 @@ export function RecordingDetailView({
               <EncodeStatusChip detail={d} />
             </div>
             <EncodePanelBody detail={d} />
-            {isPlayableSource(d) && (
-              <p className="mt-3 text-note leading-relaxed text-ink-3">
-                エンコード状態は「軽く見られるか(シークが安いか)」の軸です。未エンコードでも失敗でも、オンザフライで再生できます。結果(録れたか)・品質(壊れていないか)とは独立しています。
-              </p>
-            )}
           </section>
         </div>
       </div>

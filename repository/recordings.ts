@@ -218,12 +218,11 @@ export interface RecordingDetail extends Recording {
   avInfo?: string
   synopsis?: string
   outcomeBody?: string
-  outcomeAxis?: string
   reconcile?: { main: string; sub: string }
-  interruptions?: { main: string; sub?: string }
+  interruptions?: { main: string }
   tunerUnit?: { main: string; sub?: string }
   eoverflow?: string
-  scramble?: { main: string; sub?: string }
+  scramble?: { main: string }
   /**
    * The share of the recording's packets that were still scrambled when it was
    * written, as a fraction of the packets counted. Unset where nothing counted
@@ -233,7 +232,7 @@ export interface RecordingDetail extends Recording {
    */
   scrambledShare?: number
   stopReason?: string
-  failureReason?: { title: string; body: string }
+  failureReason?: { title: string; body?: string }
   thumbnailState?: { main: string; sub?: string; canGenerate?: boolean }
   qualityRatio?: string
   qualityTotal?: string
@@ -516,24 +515,16 @@ function toDetail(
     sizeObservedAt: observedLabelOf(d, base.outcome),
     synopsis: r.programme.summary || undefined,
     outcomeBody: outcomeBodyOf(r, base),
-    outcomeAxis:
-      base.outcome === 'recording'
-        ? undefined
-        : '結果は品質(ドロップ)とは別の軸',
     reconcile: reconcileOf(d, base),
     interruptions: {
       main: `中断 ${d.interruptions.length} 回 / 再開 ${toInt(r.resumeCount)} 回`,
-      sub: '追記再開のため、繋ぎ目の有無はここで確認します',
     },
     tunerUnit: r.tunerDeviceId ? { main: r.tunerDeviceId } : undefined,
     eoverflow: `${grouped(toInt(r.drops.eovfCount))} 件`,
     scramble:
       scrambled == null
         ? undefined
-        : {
-            main: `${grouped(scrambled)} パケット`,
-            sub: 'サイズが正しいのに再生できない場合はここを見ます',
-          },
+        : { main: `${grouped(scrambled)} パケット` },
     scrambledShare:
       scrambled == null || totalPackets === 0
         ? undefined
@@ -626,20 +617,9 @@ const THUMBNAIL_ROWS: Record<
   { main: string; sub?: string; canGenerate?: boolean }
 > = {
   ready: { main: '生成済み' },
-  pending: {
-    main: '未生成',
-    sub: 'まだ作られていません',
-    canGenerate: true,
-  },
-  failed: {
-    main: '生成失敗',
-    sub: 'サムネイルが無いことは録画の失敗ではありません',
-    canGenerate: true,
-  },
-  skipped: {
-    main: 'failed のため生成されず',
-    sub: '失敗した録画にサムネイルは生成されません',
-  },
+  pending: { main: '未生成', canGenerate: true },
+  failed: { main: '生成失敗', canGenerate: true },
+  skipped: { main: 'failed のため生成されず' },
 }
 
 const STOPS: Partial<Record<Fault, string>> = {
@@ -649,22 +629,19 @@ const STOPS: Partial<Record<Fault, string>> = {
   driverLost: 'driver 消失',
 }
 
-const FAILURES: Partial<Record<Fault, { title: string; body: string }>> = {
-  tuneFailed: {
-    title: '選局失敗',
-    body: '4分類で記録されます。① lock しない ② lock したが dvr 無データ ③ PSI 不完全 ④ 期待 TSID / サービス不一致。',
-  },
+const FAILURES: Partial<Record<Fault, { title: string; body?: string }>> = {
+  tuneFailed: { title: '選局失敗' },
   diskExhausted: {
     title: 'ENOSPC(書き込み中にディスクが尽きた)',
-    body: 'その時点までの実績を録画の記録に残して停止しました。リトライで切れ端は作られません。',
+    body: 'その時点までの実績を録画の記録に残して停止しました。',
   },
   refusedByDiskPrecheck: {
     title: 'ディスク不足で開始せず',
-    body: '開始前の事前チェックで不足を検出しました。警告のみで、自動削除は行いません。',
+    body: '開始前の事前チェックで不足を検出しました。',
   },
   scramblingUnresolved: {
     title: 'スクランブル解除失敗',
-    body: '閾値を超えた残存パケットを検出しました。サイズが正しいのに全編再生できない場合の唯一の手がかりです。',
+    body: '閾値を超えた残存パケットを検出しました。',
   },
 }
 
@@ -686,17 +663,17 @@ function faultTitleOf(detail: FaultResponder[]): string | undefined {
 }
 
 function bodyOf(
-  failure: { title: string; body: string },
+  failure: { title: string; body?: string },
   fault: Fault | undefined,
   detail: FaultResponder[],
-): string {
+): string | undefined {
   if (fault !== 'tuneFailed') {
     return failure.body
   }
 
   const kind = detail.find((one) => one.fault === 'tuneFailed')?.tuneFailure
 
-  return kind ? `${failure.body}今回は ${TUNE_FAILURES[kind]}。` : failure.body
+  return kind ? TUNE_FAILURES[kind] : undefined
 }
 
 function stopReasonOf(d: DetailResponder): string | undefined {
@@ -720,7 +697,7 @@ function outcomeBodyOf(
   const window = spanLabel(toInt(r.expectedWindow.durationMs))
   const written = spanLabel(toInt(r.writtenDurationMs))
 
-  return `期待ウィンドウ ${window}に対し、書けた尺 ${written}・実ファイル ${formatBytes(base.sizeBytes)}。突き合わせの内訳は「録画の記録」にあります。`
+  return `期待ウィンドウ ${window}に対し、書けた尺 ${written}・実ファイル ${formatBytes(base.sizeBytes)}。`
 }
 
 function reconcileOf(
@@ -741,7 +718,7 @@ function reconcileOf(
 
   return {
     main: formatBytes(base.sizeBytes),
-    sub: `書けた尺 ${written} / 実効ウィンドウ ${window} · 被覆率 ${coverage}%(判定の許容差は暫定値)`,
+    sub: `書けた尺 ${written} / 実効ウィンドウ ${window} · 被覆率 ${coverage}%`,
   }
 }
 

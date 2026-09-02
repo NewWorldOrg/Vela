@@ -10,7 +10,8 @@ import { PLAYER_PALETTE } from '@/components/recordings/player-palette'
  * recording that wrote nothing, a file the API cannot reach and a transcoder
  * that would not start are four different things to do next, and a reader told
  * only "cannot play" is left to guess which one they have. The mark and its
- * tone are what separates them at a glance; the words say the rest.
+ * tone are what separates them at a glance; the title says what happened, and
+ * a body is drawn only where it carries a cause the title does not.
  */
 const TONES = {
   gone: 'border-[rgba(236,154,147,.45)] bg-[rgba(236,154,147,.12)] text-[#EC9A93]',
@@ -30,7 +31,7 @@ export function PlaybackNotice({
   mark: ReactNode
   tone?: keyof typeof TONES
   title: string
-  body: ReactNode
+  body?: ReactNode
   children?: ReactNode
   className?: string
 }) {
@@ -51,9 +52,11 @@ export function PlaybackNotice({
         {mark}
       </span>
       <b className="heading block text-[14.5px] text-(--pl-ink)">{title}</b>
-      <p className="mx-auto mt-[5px] max-w-[46em] text-sub leading-relaxed text-(--pl-ink-2)">
-        {body}
-      </p>
+      {body && (
+        <p className="mx-auto mt-[5px] max-w-[46em] text-sub leading-relaxed text-(--pl-ink-2)">
+          {body}
+        </p>
+      )}
       {children && (
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {children}
