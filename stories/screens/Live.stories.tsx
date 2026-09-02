@@ -3,6 +3,8 @@ import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
+  captionCanvasPayload,
+  captionPayload,
   endingPayload,
   frameOf,
   progressPayload,
@@ -14,6 +16,10 @@ import {
 } from '@/lib/live-wire'
 import type { LiveScreen } from '@/repository/live'
 import { LIVE_SCREEN_FIXTURE } from '@/repository/live.fixtures'
+import {
+  CAPTION_CANVAS_FIXTURE,
+  CAPTION_PICTURE_FIXTURE,
+} from '@/stories/fixtures/captions'
 import { AppFrame } from '@/components/vela/app-shell'
 import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
@@ -126,6 +132,43 @@ function ending(why: LiveSupplyEnd) {
 
 /** A wire that closes without a word, as one does when the handshake failed. */
 const dropping = scripted((socket) => socket.drop(1006))
+
+/** The caption canvas, said once before any caption. */
+const CAPTION_CANVAS = frameOf(
+  'captionHeader',
+  0,
+  captionCanvasPayload(CAPTION_CANVAS_FIXTURE),
+)
+
+/**
+ * A caption stamped at the start of the clock. The element here has no picture
+ * and its clock stands at zero, so a stamp of zero is one the playhead has
+ * already reached — the case a viewer joining late is in, handed the caption
+ * that is showing now.
+ */
+const CAPTION_SHOWN = frameOf(
+  'caption',
+  0,
+  captionPayload(CAPTION_PICTURE_FIXTURE),
+)
+
+/** The caption taken off, as an empty frame. */
+const CAPTION_CLEARED = frameOf('caption', 0, new Uint8Array(0))
+
+/** A wire with a caption showing on it. */
+const captioned = scripted((socket) => {
+  socket.say(progress(SECURED))
+  socket.say(CAPTION_CANVAS)
+  socket.say(CAPTION_SHOWN)
+})
+
+/** A wire whose caption has been taken off. */
+const uncaptioned = scripted((socket) => {
+  socket.say(progress(SECURED))
+  socket.say(CAPTION_CANVAS)
+  socket.say(CAPTION_SHOWN)
+  socket.say(CAPTION_CLEARED)
+})
 
 /** A header with no H.264 in it, which no `MediaSource` here can be opened for. */
 const HEADERLESS = frameOf(
@@ -457,6 +500,89 @@ export const 接続が切れた: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '再試行' }))
 
     await waitFor(() => expect(opened).toHaveLength(2))
+  },
+}
+
+/** The canvas the captions are laid on, as the story's canvas element. */
+function captionLayer(canvasElement: HTMLElement): HTMLElement {
+  const layer = canvasElement.querySelector('[data-slot="live-captions"]')
+
+  if (!(layer instanceof HTMLElement)) {
+    throw new Error('the caption layer is not on the screen')
+  }
+
+  return layer
+}
+
+/**
+ * A caption on the wire, drawn over the picture as soon as the playhead has
+ * reached its stamp. The switch on the bar is on, as it starts.
+ */
+export const 字幕あり: Story = {
+  args: { openSocket: captioned },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+    await expect(canvas.getByRole('button', { name: '字幕' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  },
+}
+
+/** The caption was taken off by an empty frame, and the layer is clear. */
+export const 字幕なし: Story = {
+  args: { openSocket: uncaptioned },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'none',
+      ),
+    )
+  },
+}
+
+/**
+ * The switch stops the drawing and nothing else: what is showing is gone from
+ * the layer while it is off, and back the moment it is on again.
+ */
+export const 字幕を消す: Story = {
+  args: { openSocket: captioned },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    const toggle = canvas.getByRole('button', { name: '字幕' })
+
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(captionLayer(canvasElement)).toHaveAttribute(
+      'data-caption',
+      'off',
+    )
+
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await expect(captionLayer(canvasElement)).toHaveAttribute(
+      'data-caption',
+      'shown',
+    )
   },
 }
 

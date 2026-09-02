@@ -56,6 +56,9 @@ export const PLAYER_ROUND_BUTTON = cn(
 export const PLAYER_ROUND_BUTTON_ON =
   'border-[rgba(150,187,180,.55)] bg-[rgba(150,187,180,.22)] text-[#C0D8D3]'
 
+/** The pill, held on: the state the caption switch reads in. */
+export const PLAYER_BUTTON_ON = PLAYER_ROUND_BUTTON_ON
+
 /**
  * The face of the player, and where the picture on it stops growing.
  *
@@ -78,5 +81,8 @@ export const PLAYER_ROUND_BUTTON_ON =
  */
 export const PLAYER_FACE = 'aspect-video max-h-[62vh] w-full'
 
-/** The picture on that face, at its own size and in the middle of it. */
-export const PLAYER_PICTURE = 'h-full w-full max-w-[1280px] object-contain'
+/** The box the picture is given on that face: as wide as the face, up to 1280px, and in the middle of it. */
+export const PLAYER_PICTURE_BOX = 'h-full w-full max-w-[1280px]'
+
+/** The picture in that box, at its own shape. */
+export const PLAYER_PICTURE = cn(PLAYER_PICTURE_BOX, 'object-contain')

@@ -1,7 +1,11 @@
 import {
   controlFrame,
+  readCaption,
+  readCaptionCanvas,
   readControl,
   readFrame,
+  type CaptionCanvas,
+  type CaptionPicture,
   type LiveRefusal,
   type LiveStartup,
   type LiveSupplyEnd,
@@ -29,6 +33,10 @@ export type OpenSocket = (href: string) => LiveSocket
 export interface LiveSessionEvents {
   onHeader: (init: Uint8Array) => void
   onPicture: (payload: Uint8Array, pts: number) => void
+  /** The canvas the captions are drawn on, said before the first of them. */
+  onCaptionCanvas: (canvas: CaptionCanvas) => void
+  /** A caption to show from this stamp on — or, with nothing, the caption taken off. */
+  onCaption: (picture: CaptionPicture | null, pts: number) => void
   onProgress: (startup: LiveStartup) => void
   onRefusal: (refusal: LiveRefusal, ceiling?: TranscodeCeiling) => void
   onEnding: (why: LiveSupplyEnd) => void
@@ -57,10 +65,11 @@ const openWebSocket: OpenSocket = (href) => new WebSocket(socketUrl(href))
 /**
  * One viewing of one channel in one profile, from the handshake to leaving.
  *
- * Everything that arrives is a frame, and every frame goes one of three ways:
- * the header and the pictures go to whoever feeds the element, a control
- * message is answered or reported, and anything else — the channels the wire
- * has reserved and does not use yet — is passed over. A ping is answered here,
+ * Everything that arrives is a frame, and every frame goes one of four ways:
+ * the header and the pictures go to whoever feeds the element, the captions
+ * and their canvas to whoever lays them over it, a control message is answered
+ * or reported, and anything else — the channels the wire has reserved and does
+ * not use yet — is passed over. A ping is answered here,
  * because it is the wire's business and not the screen's.
  *
  * The close is read against what was said before it. A refusal and an ending
@@ -97,6 +106,24 @@ export function openLiveSession(
       case 'picture':
         events.onPicture(frame.payload, frame.pts)
         break
+      case 'captionHeader': {
+        const canvas = readCaptionCanvas(frame.payload)
+
+        if (canvas) {
+          events.onCaptionCanvas(canvas)
+        }
+        break
+      }
+      case 'caption': {
+        const caption = readCaption(frame.payload)
+
+        if (caption.said === 'shown') {
+          events.onCaption(caption.picture, frame.pts)
+        } else if (caption.said === 'cleared') {
+          events.onCaption(null, frame.pts)
+        }
+        break
+      }
       case 'control':
         heard(frame.payload)
         break

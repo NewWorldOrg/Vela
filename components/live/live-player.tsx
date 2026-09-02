@@ -10,13 +10,15 @@ import { PlayIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BUTTON,
+  PLAYER_BUTTON_ON,
   PLAYER_FACE,
   PLAYER_PALETTE,
-  PLAYER_PICTURE,
+  PLAYER_PICTURE_BOX,
   PLAYER_ROUND_BUTTON,
   PLAYER_ROUND_BUTTON_ON,
 } from '@/components/recordings/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
+import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
 import {
   askWhetherSignedOut,
@@ -24,7 +26,7 @@ import {
   type OpenSocket,
 } from '@/components/live/live-session'
 import { LiveFaultNotice, type LiveFault } from '@/components/live/live-notice'
-import { LiveSettings, NOT_WIRED } from '@/components/live/live-settings'
+import { LiveSettings } from '@/components/live/live-settings'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
 /** How long the bar stays after the pointer last said anything, while playing. */
@@ -101,6 +103,11 @@ const LATENCY_TONE = {
  * The playhead is held about a second behind the newest picture. Fallen further
  * behind, it runs slightly fast to catch up; fallen far behind, it is moved to
  * the edge. How far behind it is, the bar reads out.
+ *
+ * The captions come on the same wire as pictures the server drew, and are laid
+ * over the element on a canvas of their own as the playhead reaches each one's
+ * stamp. The switch on the bar stops the drawing, not the receiving, so what is
+ * showing now comes back the moment it is switched on again.
  */
 export function LivePlayer({
   channel,
@@ -122,6 +129,10 @@ export function LivePlayer({
   wireHref?: (networkId: number, serviceId: number, profile: string) => string
 }) {
   const video = useRef<HTMLVideoElement>(null)
+  const overlay = useRef<HTMLCanvasElement>(null)
+  const captions = useRef<CaptionLayer | null>(null)
+  const captionsWanted = useRef(true)
+  const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [profile, setProfile] = useState(() =>
     profiles.some((one) => one.name === LIVE_PROFILE_UNASKED)
@@ -226,6 +237,13 @@ export function LivePlayer({
       fail({ kind: 'unsupported' })
     })
 
+    const layer = overlay.current
+      ? new CaptionLayer(overlay.current, element)
+      : null
+
+    layer?.show(captionsWanted.current)
+    captions.current = layer
+
     const session = openLiveSession(
       wireHref(networkId, serviceId, profile),
       {
@@ -244,6 +262,8 @@ export function LivePlayer({
             )
           }
         },
+        onCaptionCanvas: (canvas) => layer?.canvasOf(canvas),
+        onCaption: (picture, pts) => layer?.offer(picture, pts),
         // The wire's own times outrank the ones read off the browser's clock.
         onProgress: (reported) =>
           change((was) => ({
@@ -312,6 +332,8 @@ export function LivePlayer({
       clearInterval(ticking)
       session.leave()
       feed.close()
+      layer?.close()
+      captions.current = null
     }
   }, [key, networkId, serviceId, profile, openSocket, askSignedOut, wireHref])
 
@@ -353,6 +375,14 @@ export function LivePlayer({
     }
 
     element.pause()
+  }
+
+  const toggleCaptions = () => {
+    const next = !captioned
+
+    captionsWanted.current = next
+    setCaptioned(next)
+    captions.current?.show(next)
   }
 
   const chooseVolume = (next: number) => {
@@ -413,29 +443,42 @@ export function LivePlayer({
           '[:fullscreen_&]:aspect-auto [:fullscreen_&]:max-h-none [:fullscreen_&]:min-h-0 [:fullscreen_&]:flex-1',
         )}
       >
-        <video
-          ref={video}
-          playsInline
-          onPlaying={() => {
-            heard((was) => ({ ...was, phase: 'playing' }))
-            stir()
-          }}
-          onPause={() =>
-            heard((was) =>
-              was.phase === 'playing' ? { ...was, phase: 'paused' } : was,
-            )
-          }
-          onWaiting={() =>
-            heard((was) =>
-              was.phase === 'playing' ? { ...was, phase: 'buffering' } : was,
-            )
-          }
+        <div
           className={cn(
-            PLAYER_PICTURE,
+            'relative',
+            PLAYER_PICTURE_BOX,
             '[:fullscreen_&]:max-w-none',
-            !hasPicture && 'invisible',
           )}
-        />
+        >
+          <video
+            ref={video}
+            playsInline
+            onPlaying={() => {
+              heard((was) => ({ ...was, phase: 'playing' }))
+              stir()
+            }}
+            onPause={() =>
+              heard((was) =>
+                was.phase === 'playing' ? { ...was, phase: 'paused' } : was,
+              )
+            }
+            onWaiting={() =>
+              heard((was) =>
+                was.phase === 'playing' ? { ...was, phase: 'buffering' } : was,
+              )
+            }
+            className={cn(
+              'size-full object-contain',
+              !hasPicture && 'invisible',
+            )}
+          />
+          <canvas
+            ref={overlay}
+            aria-hidden="true"
+            data-slot="live-captions"
+            className="pointer-events-none absolute inset-0 size-full"
+          />
+        </div>
         {channel && running && phase !== 'faulted' && (
           <span className="absolute top-3 left-3 rounded-full bg-black/45 px-3 py-1 text-[11.5px] text-(--pl-ink)">
             <b className="font-bold">
@@ -538,10 +581,9 @@ export function LivePlayer({
             <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-4 max-[700px]:ml-0">
               <button
                 type="button"
-                disabled
-                aria-pressed={false}
-                title={NOT_WIRED}
-                className={PLAYER_BUTTON}
+                aria-pressed={captioned}
+                onClick={toggleCaptions}
+                className={cn(PLAYER_BUTTON, captioned && PLAYER_BUTTON_ON)}
               >
                 字幕
               </button>

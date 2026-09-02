@@ -2,7 +2,10 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  CAPTION_PLACEMENT_LENGTH,
   HEADER_LENGTH,
+  captionCanvasPayload,
+  captionPayload,
   codecsOf,
   controlFrame,
   endingPayload,
@@ -10,6 +13,8 @@ import {
   LIVE_REFUSALS,
   LIVE_SUPPLY_ENDS,
   progressPayload,
+  readCaption,
+  readCaptionCanvas,
   readControl,
   readFrame,
   refusalPayload,
@@ -209,4 +214,71 @@ test('the codecs are read off the header: the H.264 profile and level, and the s
 test('a header with no H.264 in it answers nothing', () => {
   assert.equal(codecsOf(box('moov', box('trak'))), null)
   assert.equal(codecsOf(new Uint8Array([0, 0, 0])), null)
+})
+
+test('a caption header is the canvas, two big-endian bytes a side', () => {
+  const payload = captionCanvasPayload({ width: 1440, height: 1080 })
+
+  assert.deepEqual([...payload], [0x05, 0xa0, 0x04, 0x38])
+  assert.deepEqual(readCaptionCanvas(payload), { width: 1440, height: 1080 })
+})
+
+test('a canvas with a side of nothing, or of any other length, is not one', () => {
+  assert.equal(readCaptionCanvas(new Uint8Array([0, 0, 4, 0x38])), null)
+  assert.equal(readCaptionCanvas(new Uint8Array([5, 0xa0, 0, 0])), null)
+  assert.equal(readCaptionCanvas(new Uint8Array(3)), null)
+  assert.equal(readCaptionCanvas(new Uint8Array(5)), null)
+})
+
+test('a caption is placed and measured in two bytes each, and then the PNG', () => {
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47])
+  const picture = { left: 240, top: 900, width: 960, height: 120, png }
+  const payload = captionPayload(picture)
+
+  assert.deepEqual(
+    [...payload.subarray(0, CAPTION_PLACEMENT_LENGTH)],
+    [0, 240, 3, 132, 3, 192, 0, 120],
+  )
+
+  const read = readCaption(payload)
+
+  assert.equal(read.said, 'shown')
+
+  if (read.said === 'shown') {
+    assert.deepEqual(
+      { ...read.picture, png: [...read.picture.png] },
+      { ...picture, png: [...png] },
+    )
+  }
+})
+
+test('an empty caption frame takes the caption off', () => {
+  assert.deepEqual(readCaption(new Uint8Array(0)), { said: 'cleared' })
+})
+
+test('a placement with no picture behind it, or one that measures nothing, is unknown', () => {
+  assert.deepEqual(readCaption(new Uint8Array(CAPTION_PLACEMENT_LENGTH)), {
+    said: 'unknown',
+  })
+
+  const flat = captionPayload({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 120,
+    png: new Uint8Array([1]),
+  })
+
+  assert.deepEqual(readCaption(flat), { said: 'unknown' })
+})
+
+test('the caption frames ride the channels the API set aside for them', () => {
+  const header = readFrame(
+    frameOf('captionHeader', 0, captionCanvasPayload({ width: 1, height: 1 })),
+  )
+  const shown = readFrame(frameOf('caption', 4_500_000, new Uint8Array(0)))
+
+  assert.equal(header?.channel, 'captionHeader')
+  assert.equal(shown?.channel, 'caption')
+  assert.equal(shown?.pts, 4_500_000)
 })
