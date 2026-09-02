@@ -222,7 +222,7 @@ export function AdminSideNavItem({
  * away the thing being read rather than tidy it.
  */
 const SCREEN_WIDTHS = {
-  default: 'mx-auto w-full max-w-[1280px]',
+  default: 'mx-auto w-full max-w-[1440px]',
   full: 'w-full',
 } as const
 

@@ -5,6 +5,7 @@ import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { drawnFrame, SUBTITLED_FRAME } from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
+import { ScreenMain } from '@/components/vela/app-shell'
 import type { PlaybackFault } from '@/components/recordings/playback-fault'
 
 function detail(id: string) {
@@ -103,9 +104,15 @@ const meta = {
     frameHref: drawnFrame,
   },
   decorators: [
+    // The player is read inside the column a screen is given, and the column
+    // is now wider than the picture may be. Standing it in the shared step
+    // rather than loose in the canvas is what makes the black either side of
+    // the picture the same black the screen draws.
     (Story) => (
       <div className="bg-bg py-6">
-        <Story />
+        <ScreenMain>
+          <Story />
+        </ScreenMain>
       </div>
     ),
   ],
@@ -369,5 +376,53 @@ export const 音量: Story = {
       'aria-pressed',
       'false',
     )
+  },
+}
+
+/**
+ * Wider than the picture is allowed to be, and tall enough that three fifths
+ * of it still clears 720 — so what stops the picture growing is its own cap
+ * and not the window.
+ */
+const A_WIDE_WINDOW = { width: 1680, height: 1200 }
+
+/**
+ * The face is the column and the picture is not stretched to meet it.
+ *
+ * The face used to be the picture, so a window wider than the picture left the
+ * player floating in the middle of the page with the page's own ground either
+ * side of it. Now the black is the player's, the picture stops where the API
+ * stops encoding, and what is left over is black on all four sides.
+ */
+export const 面いっぱいの黒: Story = {
+  parameters: { screen: A_WIDE_WINDOW },
+  play: async ({ canvasElement }) => {
+    const face = canvasElement.querySelector('[data-slot="player-chrome"]')
+      ?.parentElement as HTMLElement
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+    const bar = canvasElement.querySelector(
+      '[data-slot="player-chrome"]',
+    ) as HTMLElement
+
+    const faceBox = face.getBoundingClientRect()
+    const pictureBox = picture.getBoundingClientRect()
+
+    // The window is wider than the picture may be, so the face is wider too
+    // and the picture is at its cap rather than at the face's width.
+    await expect(faceBox.width).toBeGreaterThan(1280)
+    await expect(Math.round(pictureBox.width)).toBe(1280)
+
+    // Centred, with the same black either side of it.
+    await expect(
+      Math.abs(
+        pictureBox.left - faceBox.left - (faceBox.right - pictureBox.right),
+      ),
+    ).toBeLessThan(1)
+
+    // The bar is the face's, not the picture's: it runs over the black as
+    // every player anyone has used does.
+    await expect(
+      Math.abs(bar.getBoundingClientRect().width - faceBox.width),
+    ).toBeLessThan(1)
   },
 }
