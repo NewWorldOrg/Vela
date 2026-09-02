@@ -280,9 +280,7 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
         </b>
       </span>
     ) : outcome.state === 'unauthenticated' ? (
-      <span>
-        サインインが切れているため、受け付けられませんでした。サインインしてから開き直してください。
-      </span>
+      <span>サインインが切れているため、受け付けられませんでした。</span>
     ) : (
       <span>{outcome.message}</span>
     )

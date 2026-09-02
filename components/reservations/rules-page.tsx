@@ -118,8 +118,7 @@ export interface RuleActions {
 
 const EVERY_KIND = 'all'
 
-const SIGNED_OUT =
-  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
 
 interface Named {
   field: 'name' | 'terms' | 'priority' | 'before' | 'after'

@@ -180,7 +180,7 @@ export function CandidateList({
 
   const toRefusal = (result: WriteResult, verb: string) =>
     result.state === 'unauthenticated'
-      ? `サインインが切れているため、${verb}できませんでした。サインインしてから開き直してください。`
+      ? `サインインが切れているため、${verb}できませんでした。`
       : result.state === 'rejected'
         ? result.message
         : undefined

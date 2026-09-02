@@ -20,8 +20,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
 
-const SIGNED_OUT =
-  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
 
 export function ProgramPanel({
   program,

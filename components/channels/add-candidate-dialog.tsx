@@ -158,7 +158,7 @@ export function AddCandidateDialog({
 
       setRefusal(
         result.state === 'unauthenticated'
-          ? 'サインインが切れているため、追加できませんでした。サインインしてから開き直してください。'
+          ? 'サインインが切れているため、追加できませんでした。'
           : result.message,
       )
     })

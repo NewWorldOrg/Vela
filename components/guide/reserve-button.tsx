@@ -7,8 +7,7 @@ import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 
-const SIGNED_OUT =
-  'サインインが切れているため、予約できませんでした。サインインしてから開き直してください。'
+const SIGNED_OUT = 'サインインが切れているため、予約できませんでした。'
 
 const CONTENDED =
   'チューナーに空きがないため、この予約は競合として登録されました。'

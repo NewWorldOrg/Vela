@@ -22,8 +22,7 @@ import {
   FieldLabel,
 } from '@/components/vela/field'
 
-const SIGNED_OUT =
-  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
 
 const OUT_OF_RANGE = `しきい値は ${SILENCE_RANGE.least} 〜 ${SILENCE_RANGE.most} 時間の半角数字です。`
 

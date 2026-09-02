@@ -203,7 +203,7 @@ export function ScanRunPanel({
 
                 setRefusal(
                   result.state === 'unauthenticated'
-                    ? 'サインインが切れているため、キャンセルできませんでした。サインインしてから開き直してください。'
+                    ? 'サインインが切れているため、キャンセルできませんでした。'
                     : result.state === 'rejected'
                       ? result.message
                       : undefined,

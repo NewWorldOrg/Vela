@@ -24,7 +24,7 @@ function toOutcome(
     case 'unauthenticated':
       return {
         failed: true,
-        text: `${asked}できませんでした。サインインしてから開き直してください。`,
+        text: `${asked}できませんでした。`,
       }
     case 'unavailable':
       return {

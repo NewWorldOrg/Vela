@@ -33,8 +33,7 @@ import {
 
 type Named = 'priority' | 'before' | 'after'
 
-const SIGNED_OUT =
-  'サインインが切れているため、操作できませんでした。サインインしてから開き直してください。'
+const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
 
 const NOTHING_CHANGED = '変える値がありません。どれかを書き換えてください。'
 
