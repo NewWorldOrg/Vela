@@ -15,22 +15,10 @@ import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { ChipDot, StatusText } from '@/components/vela/status'
 import { Surface } from '@/components/vela/surface'
 
-const API_TROUBLE: Record<
-  Exclude<ApiHealthResult['state'], 'ok'>,
-  { title: string; body: string }
-> = {
-  unconfigured: {
-    title: 'API の接続先が設定されていません',
-    body: '環境変数 CARINA_API_BASE_URL に API の URL を設定してください。',
-  },
-  unreachable: {
-    title: 'API に接続できません',
-    body: 'API が起動しているか、接続先の URL が正しいかを確認してください。',
-  },
-  failed: {
-    title: 'API が想定した応答を返しませんでした',
-    body: '接続はできています。API 側のログを確認してください。',
-  },
+const API_TROUBLE: Record<Exclude<ApiHealthResult['state'], 'ok'>, string> = {
+  unconfigured: 'API の接続先が設定されていません',
+  unreachable: 'API に接続できません',
+  failed: 'API が想定した応答を返しませんでした',
 }
 
 const CONNECTION: Record<
@@ -51,14 +39,11 @@ export function SystemView({ status }: { status: SystemStatus }) {
       <Crumb>
         設定 / <CrumbCurrent>システム</CrumbCurrent>
       </Crumb>
-      <PageHeading description="アプリと driver の接続状態。">
-        システム
-      </PageHeading>
+      <PageHeading>システム</PageHeading>
 
       {trouble && (
         <Banner tone="danger" className="mt-3.5">
-          <b className="block">{trouble.title}</b>
-          {trouble.body}
+          <b>{trouble}</b>
           {api.state === 'failed' && (
             <span className="ml-1 font-code">HTTP {api.httpStatus}</span>
           )}
@@ -96,18 +81,13 @@ function DriverSection({ result }: { result: DriverStatusResult }) {
   }
 
   if (result.state === 'unauthenticated') {
-    return (
-      <EmptyState spot="tuner" title="サインインしないと見られません">
-        driver
-        の状態はサインインしたユーザーだけに見せています。サインインしてから開き直してください。
-      </EmptyState>
-    )
+    return <EmptyState spot="tuner" title="サインインしないと見られません" />
   }
 
   if (result.state === 'unavailable') {
     return (
       <EmptyState spot="tuner" title="状態を取得できませんでした">
-        API は driver の状態を答えられませんでした。{result.message}
+        {result.message}
       </EmptyState>
     )
   }
@@ -171,8 +151,7 @@ function DriverFacts({ status }: { status: DriverStatus }) {
       </dl>
       {status.driverUpdateRequired && (
         <InlineAlert tone="warn" className="mt-3.5">
-          driver の更新が必要です。アプリが使う機能の一部をこの driver
-          は持っていません。
+          driver の更新が必要です。
         </InlineAlert>
       )}
     </Surface>
