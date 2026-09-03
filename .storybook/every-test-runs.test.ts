@@ -47,6 +47,7 @@ const THE_SUITE = [
   'lib/live-startup.test.ts',
   'lib/live-wire.test.ts',
   'lib/player-keys.test.ts',
+  'lib/program-title.test.ts',
   'lib/recordings.test.ts',
   'lib/reservations.test.ts',
   'lib/rules.test.ts',

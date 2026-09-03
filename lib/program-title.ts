@@ -1,5 +1,16 @@
 const ENCLOSED_MARK = /[\u{1F100}-\u{1F2FF}]/u
 
+/** 字 — 字幕があることを放送局が番組名の中で言う印。 */
+const SUBTITLED_MARK = '\u{1F211}'
+
+/**
+ * 番組名そのものが「字幕あり」と言っているか。放送局は番組名のどこにでもこの印を
+ * 置くので、位置は見ない。
+ */
+export function saysSubtitled(title: string): boolean {
+  return title.includes(SUBTITLED_MARK)
+}
+
 const LATIN = /[0-9A-Za-z]/
 
 /** 先頭に付く時は番組の区分を表す札で、主題ではない。 */
