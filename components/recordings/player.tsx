@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@/lib/utils'
 import { formatPlayhead } from '@/lib/format'
@@ -15,6 +15,7 @@ import {
 import { PlayIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 import {
+  PLAYER_BOARD,
   PLAYER_BUTTON,
   PLAYER_FACE,
   PLAYER_PALETTE,
@@ -22,6 +23,11 @@ import {
   PLAYER_ROUND_BUTTON,
   PLAYER_ROUND_BUTTON_ON,
 } from '@/components/recordings/player-palette'
+import {
+  playerCommand,
+  SEEK_STEP_SECONDS,
+  VOLUME_STEP_PERCENT,
+} from '@/lib/player-keys'
 import { PlayerVolume } from '@/components/recordings/player-volume'
 import { PlayerSeek } from '@/components/recordings/player-seek'
 import { PlayerSettings } from '@/components/recordings/player-settings'
@@ -55,6 +61,24 @@ const NOT_YET = '再生はこれから実装されます'
  * player has nothing to get out of the way of.
  */
 const RESTS = 3000
+
+/**
+ * How long the hand rests before a position that costs a transcoder is asked
+ * for.
+ *
+ * Where the picture is made as it plays, every position chosen is a new
+ * request and a transcoder built behind it, and the arrows are pressed in
+ * runs: five presses is five rebuilds queued behind a picture nobody is
+ * waiting for any more. The mark and the reading move on every press; the
+ * request waits until the presses stop.
+ *
+ * 400ms is longer than the keyboard's own repeat, so a key held down is one
+ * request however long it is held, and longer than the gap between the taps of
+ * a deliberate run, so a run is one request too. Against a rebuild that costs
+ * seconds it is not a wait anybody sees. Where the file answers a byte range
+ * there is nothing to rebuild, so nothing is held back.
+ */
+const SETTLES_BEFORE_SEEK = 400
 
 /** What the picture is doing. */
 type Phase = 'idle' | 'waiting' | 'playing' | 'paused' | 'diagnosing' | 'broken'
@@ -169,6 +193,15 @@ export function Player({
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /**
+   * The position the marks are drawn at while a request for it is still being
+   * waited on, and the timer that will ask for it. Set, it also means the
+   * element's own time is not to be read: the element is still playing the
+   * second the reader has moved away from.
+   */
+  const wanted = useRef<number | null>(null)
+  const asking = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  /**
    * Which attempt an answer belongs to. A reason is asked for over the network
    * and arrives after the press that started it, so an answer about a picture
    * nobody is waiting for any more is dropped rather than drawn.
@@ -198,6 +231,10 @@ export function Player({
       if (settling.current) {
         clearTimeout(settling.current)
       }
+
+      if (asking.current) {
+        clearTimeout(asking.current)
+      }
     },
     [],
   )
@@ -220,6 +257,12 @@ export function Player({
    * step by hand.
    */
   const play = (second: number, asked: PlaybackProfile = profile) => {
+    if (asking.current) {
+      clearTimeout(asking.current)
+      asking.current = null
+    }
+
+    wanted.current = null
     attempt.current += 1
     setFrom(second)
     setPosition(second)
@@ -275,19 +318,33 @@ export function Player({
   }
 
   const choose = (second: number) => {
+    const at = Math.min(duration, Math.max(0, second))
+
     // A stream handed over as it is answers a byte range, so the position moves
-    // inside the picture already loaded. One made as it plays does not: the
-    // second chosen is a new request, and the transcoder behind it is built
-    // again.
+    // inside the picture already loaded, and there is nothing to wait for.
     if (plan.seeking === 'byRange' && video.current && source) {
-      video.current.currentTime = second
-      setPosition(second)
+      video.current.currentTime = at
+      setPosition(at)
 
       return
     }
 
-    play(second)
+    // One made as it plays does not: the second chosen is a new request, and
+    // the transcoder behind it is built again. The mark goes there now and the
+    // request goes once the presses stop, so a run of them costs one rebuild
+    // rather than one each.
+    wanted.current = at
+    setPosition(at)
+
+    if (asking.current) {
+      clearTimeout(asking.current)
+    }
+
+    asking.current = setTimeout(() => play(at), SETTLES_BEFORE_SEEK)
   }
+
+  /** Along from wherever the marks stand, which is ahead of the picture while a request is waiting. */
+  const step = (by: number) => choose((wanted.current ?? position) + by)
 
   const chooseProfile = (next: string) => {
     const asked = next as PlaybackProfile
@@ -328,6 +385,18 @@ export function Player({
     }
   }
 
+  /**
+   * Louder or quieter by a step, read off the level the bar is showing: silent
+   * reads as nought whatever level the mute is holding, so the first press
+   * after a mute moves from where the eye is rather than from where the sound
+   * was.
+   */
+  const stepVolume = (by: number) => {
+    const shown = Math.round((muted ? 0 : volume) * 100)
+
+    chooseVolume(Math.min(100, Math.max(0, shown + by)) / 100)
+  }
+
   /** Silence, without losing where the level was set. */
   const mute = (quiet: boolean) => {
     const element = video.current
@@ -343,13 +412,64 @@ export function Player({
   }
 
   const toggleFullscreen = () => {
+    // A browser may refuse either of these — a frame without the permission,
+    // a press it did not read as a gesture. Nothing is drawn from the call, so
+    // there is nothing to correct: what the bar reads comes from the
+    // `fullscreenchange` listener above, which says nothing after a refusal
+    // because nothing changed.
     if (document.fullscreenElement) {
-      void document.exitFullscreen()
+      void document.exitFullscreen().catch(() => undefined)
 
       return
     }
 
-    void shell?.requestFullscreen?.()
+    void shell?.requestFullscreen?.().catch(() => undefined)
+  }
+
+  /**
+   * The keys, once the player has the focus — which a click on the picture
+   * gives it, and a tab into the bar gives it too.
+   *
+   * Scoped to the focus and not to the pointer: the pointer resting over a
+   * picture is not a statement that the keys are meant for it, and on the live
+   * screen the list beside the picture is read with the same keys. The focus
+   * is the one place the reader has already said where the keys go, it is
+   * drawn where it is, and it is the axis the bar already comes back up on.
+   */
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    stir()
+
+    const command = playerCommand(event, { seeks: duration > 0 })
+
+    if (!command) {
+      return
+    }
+
+    event.preventDefault()
+
+    switch (command) {
+      case 'toggle':
+        toggle()
+        break
+      case 'back':
+        step(-SEEK_STEP_SECONDS)
+        break
+      case 'forward':
+        step(SEEK_STEP_SECONDS)
+        break
+      case 'louder':
+        stepVolume(VOLUME_STEP_PERCENT)
+        break
+      case 'quieter':
+        stepVolume(-VOLUME_STEP_PERCENT)
+        break
+      case 'mute':
+        mute(!muted)
+        break
+      case 'fullscreen':
+        toggleFullscreen()
+        break
+    }
   }
 
   if (phase === 'broken') {
@@ -369,14 +489,13 @@ export function Player({
     <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
       <section
         ref={setShell}
+        tabIndex={-1}
+        data-slot="player"
         style={PLAYER_PALETTE}
         onPointerMove={stir}
         onPointerLeave={stir}
-        onKeyDown={stir}
-        className={cn(
-          'relative w-full overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl',
-          '[&:fullscreen]:flex [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
-        )}
+        onKeyDown={onKeyDown}
+        className={PLAYER_BOARD}
       >
         <div
           className={cn(
@@ -413,26 +532,51 @@ export function Player({
             }
             onEnded={() => setPhase('paused')}
             onError={stumbled}
-            onTimeUpdate={(event) =>
-              setPosition(from + event.currentTarget.currentTime)
-            }
+            onTimeUpdate={(event) => {
+              // While a chosen position is still being waited on, the element
+              // is playing the second the reader has already moved away from.
+              if (wanted.current === null) {
+                setPosition(from + event.currentTarget.currentTime)
+              }
+            }}
             className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
           />
-          {phase === 'idle' && (
-            <button
-              type="button"
-              onClick={toggle}
-              aria-label="再生"
-              className={cn(
-                'absolute inset-0 flex items-center justify-center bg-transparent',
-                pressable,
-              )}
-            >
+          {/*
+            The picture answers the pointer the way every player does: one
+            press runs it or stops it, two put it on the whole screen. The
+            second press of a double is itself the undo of the first, so a
+            picture that was running is still running once it fills the screen,
+            and a single press does not have to wait on a double-press clock to
+            find out whether it was one.
+
+            A press area and not a control: the control that says 再生 is on
+            the bar, named and in the tab order. Drawn again here it would be
+            read out twice, so this one is out of the reading and hands the
+            focus to the player rather than keeping it — which is what puts the
+            keys on the picture that was just clicked.
+          */}
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            data-slot="player-press"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              shell?.focus()
+            }}
+            onClick={toggle}
+            onDoubleClick={toggleFullscreen}
+            className={cn(
+              'absolute inset-0 flex items-center justify-center bg-transparent',
+              pressable,
+            )}
+          >
+            {phase === 'idle' && (
               <span className="flex size-[72px] items-center justify-center rounded-full border-[1.5px] border-white/60 opacity-70 transition-opacity duration-150 hover:opacity-100">
                 <PlayIcon className="ml-[3px] size-[27px] text-white/90" />
               </span>
-            </button>
-          )}
+            )}
+          </button>
           {(phase === 'waiting' || phase === 'diagnosing') && (
             // Over the middle, on a plate of its own. Japanese recordings carry
             // their subtitles burnt into the bottom of the picture, so anything
