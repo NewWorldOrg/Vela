@@ -1,4 +1,4 @@
-import { servicesSettled } from '@/lib/guide'
+import { servicesSettled, type SettledGuide } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -36,6 +36,8 @@ const AROUND_NOW_MS = 6 * 60 * 60 * 1000
 /** How long a programme whose end the broadcaster has not said is taken to run. */
 const UNDECIDED_DURATION_MS = 30 * 60 * 1000
 
+type SettledLineup = SettledGuide<LiveChannel, Programme>
+
 /** More than the aerial reaches: every channel arrives on one page. */
 const EVERY_CHANNEL = 200
 
@@ -59,10 +61,20 @@ export interface LiveChannel {
   /** The remote-control key, where the broadcast type has one. */
   no?: string
   kind: ChannelKind
+  /** Whether this service split off another of its network. */
+  sub?: boolean
+  /**
+   * The channel this one split off, where it split off one. It is what says
+   * which card a split's hours are read against, and a split says nothing
+   * about that itself.
+   */
+  whole?: string
   /** How many are watching this channel right now, over every profile. */
   viewers: number
   now?: LiveProgramme
   next?: LiveProgramme
+  /** 0–100 of the programme on air. Nought where no programme is known. */
+  progressPct?: number
 }
 
 export interface LiveProfile {
@@ -119,11 +131,19 @@ export async function getLiveScreen(
   const onAir = guides
     .flatMap((guide) => guide.programmes)
     .filter((programme) => !programme.isShadow)
-  const carried = carriedBy(listed, onAir)
-  const withProgrammes = (channel: LiveChannel): LiveChannel => ({
-    ...channel,
-    ...nowNextOf(carried.get(channel.id) ?? [], now),
-  })
+  const settled = servicesSettled(listed, onAir)
+  const carried = carriedBy(settled)
+  const split = splitFrom(settled)
+  const withProgrammes = (channel: LiveChannel): LiveChannel => {
+    const playing = nowNextOf(carried.get(channel.id) ?? [], now)
+
+    return {
+      ...channel,
+      ...split.get(channel.id),
+      ...playing,
+      progressPct: progressOf(playing.now, now),
+    }
+  }
 
   return {
     kind,
@@ -210,13 +230,10 @@ function endOf(programme: Programme): number {
  * so a row read by service number alone says the split has no listing while
  * the row above it names the very programme the split is showing.
  */
-function carriedBy(
-  channels: readonly LiveChannel[],
-  broadcasts: readonly Programme[],
-): Map<string, Programme[]> {
+function carriedBy(settled: SettledLineup): Map<string, Programme[]> {
   const carried = new Map<string, Programme[]>()
 
-  for (const one of servicesSettled(channels, broadcasts).carried) {
+  for (const one of settled.carried) {
     const already = carried.get(one.service.id)
 
     if (already) {
@@ -227,6 +244,23 @@ function carriedBy(
   }
 
   return carried
+}
+
+/**
+ * Which card a split's hours are read against, taken from the same settling
+ * the guide's columns are: the service each network split from is the lowest
+ * numbered it hands over, which is a fact about the numbering and not about
+ * the order the line-up arrived in.
+ */
+function splitFrom(
+  settled: SettledLineup,
+): Map<string, Pick<LiveChannel, 'sub' | 'whole'>> {
+  return new Map(
+    settled.services.map((one) => [
+      one.service.id,
+      { sub: one.sub, whole: one.whole.id },
+    ]),
+  )
 }
 
 /**
@@ -273,29 +307,41 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
   }
 }
 
+/**
+ * How far into the programme the clock is, as a share of it.
+ *
+ * A programme whose end the broadcaster has not said stands at nought rather
+ * than at a guess: a bar drawn against an invented length says how far through
+ * something the viewer is, and nobody knows that yet.
+ */
+function progressOf(programme: LiveProgramme | undefined, now: Date): number {
+  if (!programme?.endsAt) {
+    return 0
+  }
+
+  const from = new Date(programme.startsAt).getTime()
+  const to = new Date(programme.endsAt).getTime()
+  const share = to > from ? (now.getTime() - from) / (to - from) : 0
+
+  return Math.round(Math.min(1, Math.max(0, share)) * 100)
+}
+
 /** Where the programme on the chosen channel stands at this moment. */
 export function watchingOf(channel: LiveChannel, now: Date): LiveWatching {
   const nowLabel = clockLabel(now)
   const programme = channel.now
+  const progressPct = progressOf(programme, now)
 
-  if (!programme) {
-    return { channel, progressPct: 0, nowLabel }
-  }
-
-  const from = new Date(programme.startsAt).getTime()
-  const at = now.getTime()
-
-  if (!programme.endsAt) {
-    return { channel, progressPct: 0, nowLabel }
+  if (!programme?.endsAt) {
+    return { channel, progressPct, nowLabel }
   }
 
   const to = new Date(programme.endsAt).getTime()
-  const share = to > from ? (at - from) / (to - from) : 0
 
   return {
     channel,
-    progressPct: Math.round(Math.min(1, Math.max(0, share)) * 100),
+    progressPct,
     nowLabel,
-    restMin: Math.max(0, Math.ceil((to - at) / 60_000)),
+    restMin: Math.max(0, Math.ceil((to - now.getTime()) / 60_000)),
   }
 }

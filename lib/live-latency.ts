@@ -37,18 +37,23 @@ export const PART_SECONDS = 0.2
 export const TARGET_SECONDS = 1.0
 
 /**
- * How far either side of the target the playhead is left where it is.
+ * How far past the target the playhead drifts before it is brought back.
  *
- * A live playhead is never at a figure, it is near one, and a controller that
- * acts on every deviation from a single number acts constantly. So the target
- * is a band and not a point: outside it the picture is brought back, inside it
- * nothing is done. This is the shape shaka-player ships (`liveSync`:
- * `targetLatency` 0.5 with `targetLatencyTolerance` 0.5, giving a band of
- * 0–1.0 s) and the shape DVB-DASH asks for, which specifies the target as
- * ±500 ms rather than as a figure (ETSI TS 103 285 §10.20.6).
+ * A live playhead is never at a figure, it is near one, and something brought
+ * back on every deviation from a single number is being brought back
+ * constantly. So there are two figures and not one: the picture is quickened
+ * past the target plus this, and it is quickened until it is at the target.
+ * Not until it is merely inside — measured, stopping at the outer figure left
+ * the rate flicking between 1 and 1.05 every few seconds at the edge, which is
+ * a tempo that keeps changing rather than one that changed.
  *
- * Four tenths puts the near edge at 0.6 s, which is three of the wire's parts
- * — the floor HLS says a live playhead should not go under.
+ * Two figures with a gap between them is what dash.js's step mode is, and its
+ * settings say why in as many words: the stop window "prevents instability
+ * when using higher min and max playback rates and should be tuned to prevent
+ * overshooting the target". What that mode has that this one must not lose is
+ * its second clause — a playhead already being quickened is read every tick
+ * whether or not it is still past the start figure, so the stop always gets
+ * its chance to fire.
  */
 export const TOLERANCE_SECONDS = 0.4
 
@@ -97,6 +102,8 @@ export const STALL_ALLOWANCE_CAP_SECONDS = 1.0
 
 /** What the picture on a live wire has come to, as the hold below reads it. */
 export interface LivePlayhead {
+  /** The rate the picture is being played at now. */
+  rate: number
   /** Where the playhead is, in the element's own seconds. */
   at: number
   /** How far the newest picture held reaches. */
@@ -128,28 +135,32 @@ export function targetOf(stalls: number): number {
   )
 }
 
-/** The band the playhead is left alone in, as the two figures that bound it. */
-export function bandOf(stalls: number): { near: number; far: number } {
+/**
+ * The two figures the picture is quickened between: past `start` it begins,
+ * and it goes on until `stop`.
+ */
+export function windowOf(stalls: number): { start: number; stop: number } {
   const target = targetOf(stalls)
 
-  return {
-    near: target - TOLERANCE_SECONDS,
-    far: target + TOLERANCE_SECONDS,
-  }
+  return { start: target + TOLERANCE_SECONDS, stop: target }
 }
 
 /**
  * What to do with the playhead, given where it is.
  *
- * The answer is one branch of one chain over one reading, and the chain ends
- * in an unconditional rate of one. That shape is the whole of the point: the
- * screen used to ask two questions instead — start catching up past 2.5 s,
- * stop under 1.25 s — and a playhead between those two figures answered
- * neither, so whatever rate it happened to be carrying it kept. Coming down
- * from a catch-up that meant five per cent for as long as the picture stayed
- * in the gap, and a picture that started 2.4 s behind — which is what a first
- * frame costs over a slow path — sat in the gap from the first second to the
- * last, at a delay nothing in the screen would ever act on.
+ * The answer is one chain over one reading, and the chain ends in an
+ * unconditional rate of one. That shape is the whole of the point. The screen
+ * used to ask two separate questions of the same playhead — start catching up
+ * past 2.5 s, stop under 1.25 s — with nothing said about the ground between
+ * them, so a playhead there answered neither and kept whatever rate it had
+ * arrived carrying. A picture that started 2.4 s behind, which is what a first
+ * frame costs over a slow path, was in that ground from its first second to
+ * its last, at a delay nothing in the screen would ever act on.
+ *
+ * There are still two figures here, and the difference is the second half of
+ * the condition: a picture already being quickened is asked about the stop
+ * figure, not only about the start one, so the ground between them is ground
+ * the chain has an answer for.
  *
  * A playhead that is not inside the run of picture it is playing cannot reach
  * the edge by being played faster, however long it is played: the hole in
@@ -157,9 +168,9 @@ export function bandOf(stalls: number): { near: number; far: number } {
  * worth chasing. Both are answered by moving the playhead, not by the rate.
  */
 export function holdOf(playhead: LivePlayhead): LiveHold {
-  const { at, edge, reach, from, stalls } = playhead
+  const { at, edge, reach, from, stalls, rate } = playhead
   const behind = Math.max(0, edge - at)
-  const band = bandOf(stalls)
+  const window = windowOf(stalls)
   const toTheEdge = {
     rate: 1,
     seekTo: Math.max(from, edge - targetOf(stalls)),
@@ -175,7 +186,7 @@ export function holdOf(playhead: LivePlayhead): LiveHold {
     return toTheEdge
   }
 
-  if (behind > band.far) {
+  if (behind > window.start || (rate > 1 && behind > window.stop)) {
     return { rate: CATCH_UP_RATE }
   }
 

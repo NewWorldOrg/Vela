@@ -42,6 +42,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
       genreLabel: 'ニュース/報道',
     }),
     next: programme('p002', 'クローズアップ列島', '22:00', '22:30'),
+    progressPct: 7,
   },
   {
     id: '32736-1025',
@@ -50,7 +51,15 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     name: 'みなと総合2',
     no: '1',
     kind: 'terrestrial',
+    sub: true,
+    whole: '32736-1024',
     viewers: 0,
+    now: programme('p001', 'ニュースの視点9', '21:00', '22:00', {
+      hasSubtitles: true,
+      genreLabel: 'ニュース/報道',
+    }),
+    next: programme('p002', 'クローズアップ列島', '22:00', '22:30'),
+    progressPct: 7,
   },
   {
     id: '32737-1032',
@@ -64,6 +73,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
       genreLabel: '趣味/教育',
     }),
     next: programme('p004', 'きょうの健康', '21:25', '21:40'),
+    progressPct: 30,
   },
   {
     id: '32738-1040',
@@ -77,6 +87,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
       genreLabel: 'ニュース/報道',
     }),
     next: programme('p006', 'スポーツニュース', '22:00', '22:54'),
+    progressPct: 15,
   },
   {
     id: '32741-1064',
@@ -91,6 +102,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
       genreLabel: 'ニュース/報道',
     }),
     next: programme('p008', '木曜ドラマ「灯台のある町」', '22:10', undefined),
+    progressPct: 6,
   },
   {
     id: '32739-1048',
@@ -102,6 +114,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     viewers: 0,
     now: programme('p009', 'news23', '21:00', '22:00'),
     next: programme('p010', '木曜劇場', '22:00', '22:54'),
+    progressPct: 7,
   },
   {
     id: '32742-1072',
@@ -113,6 +126,21 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     viewers: 0,
     now: programme('p011', 'ワールドビジネス', '21:00', '22:00'),
     next: programme('p012', 'ガイアの夜明け', '22:00', '22:54'),
+    progressPct: 7,
+  },
+  {
+    id: '32739-1049',
+    networkId: 32739,
+    serviceId: 1049,
+    name: '湾岸放送2',
+    no: '6',
+    kind: 'terrestrial',
+    sub: true,
+    whole: '32739-1048',
+    viewers: 0,
+    now: programme('p013', '深夜の海図', '20:30', '22:00'),
+    next: programme('p014', '湾岸ジャズ', '22:00', '23:00'),
+    progressPct: 36,
   },
   {
     id: '32391-23608',

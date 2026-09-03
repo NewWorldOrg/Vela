@@ -5,7 +5,6 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import type { ChannelKind } from '@/repository/channels'
-import { CHANNEL_KINDS } from '@/repository/channels'
 import type { LiveChannel } from '@/repository/live'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
@@ -15,6 +14,7 @@ import {
   LiveIcon,
 } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
+import { ChannelKinds } from '@/components/live/channel-kinds'
 
 /** The remote-control key, as a small plate. */
 export function ChannelKey({
@@ -81,32 +81,11 @@ export function ChannelList({
   return (
     <div className={cn('flex min-h-0 flex-col', className)}>
       <div className="mb-3.5 flex items-start justify-end gap-1.5">
-        <div
-          role="group"
-          aria-label="放送の種別"
-          className={cn(
-            'flex min-w-0 flex-1 flex-wrap gap-1.5',
-            folded && 'hidden',
-          )}
-        >
-          {CHANNEL_KINDS.map((one) => (
-            <button
-              key={one.value}
-              type="button"
-              aria-pressed={one.value === kind}
-              onClick={() => onKind(one.value)}
-              className={cn(
-                'tap-target rounded-full border border-edge bg-transparent px-[15px] py-[5px] text-ui font-medium whitespace-nowrap text-ink-2 outline-none',
-                'transition-[background-color,color,translate] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px focus-visible:shadow-ring',
-                one.value === kind &&
-                  'border-brand bg-brand-soft font-bold text-brand',
-                pressable,
-              )}
-            >
-              {one.label}
-            </button>
-          ))}
-        </div>
+        <ChannelKinds
+          kind={kind}
+          onKind={onKind}
+          className={cn('flex-1', folded && 'hidden')}
+        />
         {onFold && (
           <Button
             type="button"

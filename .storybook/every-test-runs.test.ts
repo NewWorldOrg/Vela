@@ -45,6 +45,7 @@ const THE_SUITE = [
   'lib/guide.test.ts',
   'lib/live-captions.test.ts',
   'lib/live-latency.test.ts',
+  'lib/live-lineup.test.ts',
   'lib/live-startup.test.ts',
   'lib/live-wire.test.ts',
   'lib/player-keys.test.ts',

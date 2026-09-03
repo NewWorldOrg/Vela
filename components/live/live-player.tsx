@@ -8,12 +8,12 @@ import type { LiveChannel, LiveProfile } from '@/repository/live'
 import { LIVE_PROFILE_UNASKED, liveWireHref } from '@/repository/live-paths'
 import { playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import {
-  bandOf,
   CATCH_UP_RATE,
   holdOf,
   reachOf,
   SEEK_FROM_SECONDS,
   targetOf,
+  windowOf,
 } from '@/lib/live-latency'
 import {
   CaptionsGlyph,
@@ -119,7 +119,7 @@ function latencyTone(seconds: number): 'ok' | 'warn' | 'err' {
     return 'err'
   }
 
-  return seconds > bandOf(0).far ? 'warn' : 'ok'
+  return seconds > windowOf(0).start ? 'warn' : 'ok'
 }
 
 const LATENCY_TONE = {
@@ -424,6 +424,7 @@ export function LivePlayer({
 
       if (!element.paused) {
         const hold = holdOf({
+          rate: element.playbackRate,
           at: element.currentTime,
           edge: end,
           reach: reachOf(runs, element.currentTime),

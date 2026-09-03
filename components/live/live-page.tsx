@@ -5,29 +5,33 @@ import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
+import { foldedLineupOf, foldsAChannel } from '@/lib/live-lineup'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
+import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
 import type { LiveScreen } from '@/repository/live'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
+import { ChannelGrid } from '@/components/live/channel-grid'
+import { ChannelKinds } from '@/components/live/channel-kinds'
 import { ChannelList } from '@/components/live/channel-list'
 import { LivePlayer } from '@/components/live/live-player'
-import { LiveUnchosen } from '@/components/live/live-unchosen'
 import type { OpenSocket } from '@/components/live/live-session'
 import { NowNext } from '@/components/live/now-next'
 
 /**
- * The live screen: the picture, what is on it, and the channels it is chosen
- * from, read side by side.
+ * The live screen, which is two screens.
  *
- * The picture takes the column the list leaves it, up to the width the window's
- * height allows, and what is on now is held to the same width, so the two stay
- * one column with the list beside them however wide the window is.
+ * Before a channel is chosen it is a screen for choosing one: the channels
+ * across the width as cards, with what is on each of them. Once one is chosen
+ * it is a screen for watching: the picture takes the width, what is on it is
+ * read under it, and the channels stand beside it as a list that folds away.
  *
- * The screen is that wide only while there is a picture on it. Before a channel
- * is chosen there is nothing to spend the width on, and a full-width screen
- * spent it on nothing: at 2560 the list sat at one edge with two thirds of the
- * desk empty beside it. Unchosen, the screen is the step every other one is
- * read at, and choosing opens it out.
+ * It used to be the second of those with nothing in it — an empty 16:9 panel
+ * where the picture would go, seven tenths of the width, with the channels in
+ * a column beside it and nothing at all underneath. The shape of watching,
+ * before there was anything to watch. What every product that has this screen
+ * does instead is make the choosing the screen: KonomiTV and Chinachu open on
+ * their channels, Plex and Jellyfin on theirs.
  *
  * The channel and the broadcast type are in the URL — a second reader opening
  * the link sees the same channel, and a reload brings it back. Choosing a
@@ -36,24 +40,23 @@ import { NowNext } from '@/components/live/now-next'
  *
  * That change is an entry in the history, not a rewrite of the one standing.
  * Rewritten, the screen with nothing chosen — the one every reader arrives at,
- * and the one the list belongs to — was thrown away the moment a channel was
- * pressed, so back left the live screen entirely and landed wherever the reader
- * had been before it. Pressed on a screen whose middle had just filled with a
- * picture, that reads as having been carried off to another page.
+ * and the one the channels belong to — was thrown away the moment a channel
+ * was pressed, so back left the live screen entirely and landed wherever the
+ * reader had been before it.
  *
  * Every choice is an entry, the second and the tenth as much as the first: back
  * is the channel before this one, and back again the one before that, down to
  * the screen with nothing chosen. Measured on the services that do this for a
- * living, both zap the same way — ABEMA's channel switcher and radiko's station
- * list each add an entry per change, so back on either is the last thing
- * watched. Collapsing the later ones would make back mean the empty screen
- * after the second press and the previous channel after the first, which is a
- * press whose meaning depends on history the reader cannot see.
+ * living, they all zap the same way — ABEMA, radiko, TVer and KonomiTV each add
+ * an entry per change, so back on any of them is the last thing watched.
+ * Collapsing the later ones would make back mean the choosing screen after the
+ * second press and the previous channel after the first, which is a press whose
+ * meaning depends on history the reader cannot see.
  *
- * While a channel is being watched the list folds away, and the picture takes
- * the width it leaves. Before one is chosen it does not: the list is the whole
- * of the screen's business then, and a fold would leave a screen with one press
- * on it and nothing to press it for.
+ * There is no press that goes back to the choosing screen, because no product
+ * that was measured has one: the way to another channel while watching is the
+ * list beside the picture, which is KonomiTV's panel and Twitch's chat rail,
+ * and the way back to the choosing screen is the way back to any screen.
  */
 export function LiveView({
   screen,
@@ -93,37 +96,76 @@ export function LiveView({
   )
 
   const watching = screen.watching
-  const [folded, fold] = useChannelsFolded()
+  const [away, fold] = useChannelsFolded()
+  /**
+   * A station splits into two or three for the hours it has that much to show
+   * and puts the one thing out on all of them for the rest of the day, so most
+   * of the time most of the line-up is one programme listed two or three times
+   * over. Folded, the splits showing nothing their station is not showing come
+   * out — of the grid and of the list alike, because both are drawn from the
+   * one line-up, and a fold that held on one of them would come undone the
+   * moment a channel was chosen.
+   *
+   * It is offered only where it would take a card away, and only on the screen
+   * where the channels are what is being read. It is the reader's, held in the
+   * browser and not in the URL: the channel and the broadcast type are what a
+   * second reader opening the link needs, and how many cards this one is
+   * looking at is not.
+   */
+  const [subsFolded, foldSubs] = useLiveSubChannelsFolded()
+  const foldable = foldsAChannel(screen.channels, watching?.channel.id)
+  const channels =
+    subsFolded && foldable
+      ? foldedLineupOf(screen.channels, watching?.channel.id)
+      : screen.channels
 
-  // Folded is the viewer's, and it is kept while they are watching. With
-  // nothing on the picture the list is the screen, so it is opened out
-  // whatever the last fold said, and the press that folds it is not offered.
-  const away = folded && watching !== undefined
+  const choose = (id: string) => patch({ ch: id })
+  const kind = (value: string) =>
+    patch({ kind: value === 'terrestrial' ? null : value })
+
+  if (!watching) {
+    return (
+      <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
+        <div className="mb-3.5 flex flex-wrap items-center gap-2">
+          <ChannelKinds kind={screen.kind} onKind={kind} />
+          {foldable && (
+            <button
+              type="button"
+              aria-pressed={!subsFolded}
+              onClick={() => foldSubs(!subsFolded)}
+              className={cn(
+                'tap-target ml-auto cursor-pointer rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg',
+                !subsFolded &&
+                  'border-brand bg-brand-soft font-bold text-brand',
+              )}
+            >
+              副チャンネル
+            </button>
+          )}
+        </div>
+        <ChannelGrid
+          channels={channels}
+          onSelect={(channel) => choose(channel.id)}
+        />
+      </ScreenMain>
+    )
+  }
 
   return (
     <ScreenMain
-      width={watching ? 'full' : 'default'}
+      width="full"
       className="flex items-start gap-[26px] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1180px]:flex-col"
     >
       <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
-        {watching ? (
-          <>
-            <LivePlayer
-              channel={watching.channel}
-              profiles={screen.profiles}
-              returnPath={query ? `${pathname}?${query}` : pathname}
-              openSocket={openSocket}
-              askSignedOut={askSignedOut}
-              startupDeadlineMs={startupDeadlineMs}
-            />
-            <NowNext watching={watching} />
-          </>
-        ) : (
-          // With no channel to watch at all, the list beside this says so on
-          // its own, and an invitation to choose from it would be the second
-          // thing on the screen saying there is nothing to choose.
-          screen.channels.length > 0 && <LiveUnchosen />
-        )}
+        <LivePlayer
+          channel={watching.channel}
+          profiles={screen.profiles}
+          returnPath={query ? `${pathname}?${query}` : pathname}
+          openSocket={openSocket}
+          askSignedOut={askSignedOut}
+          startupDeadlineMs={startupDeadlineMs}
+        />
+        <NowNext watching={watching} />
       </div>
       {/*
         102px is what the list is not allowed to have: the top bar (46), the
@@ -141,14 +183,12 @@ export function LiveView({
       >
         <ChannelList
           kind={screen.kind}
-          channels={screen.channels}
-          watchingId={watching?.channel.id}
+          channels={channels}
+          watchingId={watching.channel.id}
           folded={away}
-          onFold={watching ? fold : undefined}
-          onKind={(kind) =>
-            patch({ kind: kind === 'terrestrial' ? null : kind })
-          }
-          onSelect={(channel) => patch({ ch: channel.id })}
+          onFold={fold}
+          onKind={kind}
+          onSelect={(channel) => choose(channel.id)}
         />
       </aside>
     </ScreenMain>
