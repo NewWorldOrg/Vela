@@ -259,7 +259,21 @@ export function LivePlayer({
     const change = (patch: (was: Running) => Running) =>
       setHeld((was) => patch(was && was.key === key ? was : begun(key)))
 
+    /**
+     * The session is over, and this is why. Said once: the first answer is the
+     * true one, and the clock below must not talk over it — a wire refused at
+     * once is a wire that never carried a picture, and left on the screen it
+     * would otherwise reach the startup deadline and have its reason replaced
+     * by one that reads as a slow start.
+     */
+    let settled = false
+
     const fail = (why: LiveFault) => {
+      if (settled) {
+        return
+      }
+
+      settled = true
       change((was) => ({ ...was, phase: 'faulted', fault: why }))
       element.pause()
     }
@@ -335,6 +349,12 @@ export function LivePlayer({
     )
 
     const ticking = setInterval(() => {
+      if (settled) {
+        clearInterval(ticking)
+
+        return
+      }
+
       const elapsedMs = performance.now() - openedAt
 
       // Nothing has come and nothing is going to. The seat is given up here

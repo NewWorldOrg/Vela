@@ -743,6 +743,29 @@ export const 起動が終わらない: Story = {
   },
 }
 
+/**
+ * A wire refused at once never carries a picture either, so the clock that
+ * waits out a silent startup must not reach past the refusal and rename it.
+ * The channel that does not exist is still the channel that does not exist a
+ * minute later, and the press it deliberately does not offer stays absent.
+ */
+export const 断りは時間で書き換わらない: Story = {
+  args: { openSocket: refusing('noSuchChannel'), startupDeadlineMs: 300 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('チャンネルが見つかりません'),
+    ).toBeVisible()
+
+    await new Promise((rest) => setTimeout(rest, 1200))
+
+    await expect(canvas.getByText('チャンネルが見つかりません')).toBeVisible()
+    await expect(canvas.queryByText('映像が始まりませんでした')).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
+  },
+}
+
 /** A broadcast type with nothing on it. */
 export const 空状態: Story = {
   args: {
