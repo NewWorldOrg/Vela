@@ -2,6 +2,9 @@ export function formatBytes(bytes: number) {
   if (bytes === 0) {
     return '0 B'
   }
+  if (bytes >= 1024 ** 4) {
+    return `${(bytes / 1024 ** 4).toFixed(1)} TB`
+  }
   if (bytes >= 0.1 * 1024 ** 3) {
     return `${(bytes / 1024 ** 3).toFixed(1)} GB`
   }
@@ -9,10 +12,6 @@ export function formatBytes(bytes: number) {
     return `${(bytes / 1024 ** 2).toFixed(0)} MB`
   }
   return `${Math.ceil(bytes / 1024)} KB`
-}
-
-export function formatInstant(iso: string) {
-  return iso.replace('T', ' ').replace(/\.\d+(?=[Z+-]|$)/, '')
 }
 
 /**
