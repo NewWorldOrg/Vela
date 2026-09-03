@@ -696,3 +696,97 @@ export const 空状態: Story = {
     )
   },
 }
+
+/** The live player, as a press on the picture or a tab into the bar leaves it. */
+function livePlayer(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector('[data-slot="live-player"]')
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error('the live player is not on the screen')
+  }
+
+  return found
+}
+
+/** One press, on the player itself, the way the browser sends one. */
+function press(on: HTMLElement, key: string) {
+  on.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+}
+
+/** The keys the live player shares with the recording one. */
+export const キーで音量と消音: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const level = canvas.getByRole('slider', { name: '音量' })
+    const quiet = canvas.getByRole('button', { name: '消音' })
+    const player = livePlayer(canvasElement)
+
+    press(player, 'ArrowDown')
+    press(player, 'ArrowDown')
+    await waitFor(() => expect(level).toHaveValue('90'))
+
+    press(player, 'm')
+    await waitFor(() => expect(quiet).toHaveAttribute('aria-pressed', 'true'))
+
+    press(player, 'm')
+    await waitFor(() => expect(quiet).toHaveAttribute('aria-pressed', 'false'))
+    await expect(level).toHaveValue('90')
+  },
+}
+
+/**
+ * Live has no position, so the arrows that move one are not taken.
+ *
+ * There is one picture on a live wire and it is the edge: back would leave the
+ * seconds the browser is holding and forward has nothing to go into. There is
+ * no seek bar on this player for a key to mirror, so the keys are left where
+ * they were rather than given a meaning invented for them.
+ */
+export const 送りと戻しはライブに無い: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = livePlayer(canvasElement)
+
+    await expect(canvas.queryByRole('slider', { name: '再生位置' })).toBeNull()
+
+    const level = canvas.getByRole('slider', { name: '音量' })
+
+    press(player, 'ArrowLeft')
+    press(player, 'ArrowRight')
+
+    await expect(level).toHaveValue('100')
+    await expect(canvas.getByRole('button', { name: '消音' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  },
+}
+
+/**
+ * The press area is over a picture and nowhere else. A wire still coming up
+ * has its own plate there, and one that faulted has a press on it that has to
+ * be reachable.
+ */
+export const 映像の上だけが押せる: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-slot="player-press"]'),
+      ).not.toBeNull(),
+    )
+  },
+}
+
+/** Faulted, the press on the notice is the only thing over the face. */
+export const 失敗中は映像を押せない: Story = {
+  args: { openSocket: ending('takenForARecording') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByRole('button', { name: '再試行' })
+    await expect(
+      canvasElement.querySelector('[data-slot="player-press"]'),
+    ).toBeNull()
+  },
+}

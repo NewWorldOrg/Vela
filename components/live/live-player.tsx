@@ -1,14 +1,16 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
 import { LIVE_PROFILE_UNASKED, liveWireHref } from '@/repository/live-paths'
+import { playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import { PlayIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 import {
+  PLAYER_BOARD,
   PLAYER_BUTTON,
   PLAYER_BUTTON_ON,
   PLAYER_FACE,
@@ -18,6 +20,7 @@ import {
   PLAYER_ROUND_BUTTON_ON,
 } from '@/components/recordings/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
+import { pressable } from '@/components/vela/tactile'
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
 import {
@@ -422,6 +425,28 @@ export function LivePlayer({
     }
   }
 
+  /**
+   * The level the bar is showing, read off the element rather than the state,
+   * so that a run of presses arriving faster than React draws steps once per
+   * press. Silent reads as nought whatever level the mute is holding.
+   */
+  const showing = () => {
+    const element = video.current
+
+    if (!element) {
+      return muted ? 0 : volume
+    }
+
+    return element.muted ? 0 : element.volume
+  }
+
+  /** Louder or quieter by a step. */
+  const stepVolume = (by: number) => {
+    chooseVolume(
+      Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100,
+    )
+  }
+
   const mute = (quiet: boolean) => {
     const element = video.current
     const level = !quiet && volume === 0 ? 1 : volume
@@ -436,13 +461,58 @@ export function LivePlayer({
   }
 
   const toggleFullscreen = () => {
+    // Refused either way, nothing is drawn from the call: what the bar reads
+    // comes from the `fullscreenchange` listener, which says nothing after a
+    // refusal because nothing changed.
     if (document.fullscreenElement) {
-      void document.exitFullscreen()
+      void document.exitFullscreen().catch(() => undefined)
 
       return
     }
 
-    void shell?.requestFullscreen?.()
+    void shell?.requestFullscreen?.().catch(() => undefined)
+  }
+
+  /**
+   * The keys, the recording player's set less the two that move a position.
+   *
+   * There is one picture on a live wire and it is the edge: back would leave
+   * the few seconds the browser is holding, and forward has nothing to go
+   * into. So the arrows are not taken — not disabled, not given a meaning of
+   * their own — and the browser keeps whatever it would have done with them.
+   * An assignment with no control on the bar to mirror it would be an
+   * invention, and the bar has no seek.
+   */
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    stir()
+
+    const command = playerCommand(event, { seeks: false })
+
+    if (!command) {
+      return
+    }
+
+    event.preventDefault()
+
+    switch (command) {
+      case 'toggle':
+        toggle()
+        break
+      case 'louder':
+        stepVolume(VOLUME_STEP_PERCENT)
+        break
+      case 'quieter':
+        stepVolume(-VOLUME_STEP_PERCENT)
+        break
+      case 'mute':
+        mute(!(video.current?.muted ?? muted))
+        break
+      case 'fullscreen':
+        toggleFullscreen()
+        break
+      default:
+        break
+    }
   }
 
   const latency = running?.latency
@@ -450,16 +520,14 @@ export function LivePlayer({
   return (
     <section
       ref={setShell}
+      tabIndex={-1}
       data-slot="live-player"
       data-phase={phase ?? 'idle'}
       style={PLAYER_PALETTE}
       onPointerMove={stir}
       onPointerLeave={stir}
-      onKeyDown={stir}
-      className={cn(
-        'relative w-full overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl',
-        '[&:fullscreen]:flex [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
-      )}
+      onKeyDown={onKeyDown}
+      className={PLAYER_BOARD}
     >
       <div
         className={cn(
@@ -504,6 +572,24 @@ export function LivePlayer({
             className="pointer-events-none absolute inset-0 size-full"
           />
         </div>
+        {hasPicture && (
+          // The same press area the recording player has: one press runs or
+          // stops the picture, two put it on the whole screen, and the second
+          // press of a double undoes the first. The picture answering a press,
+          // not a control — the one that says 再生 is on the bar. Only over a
+          // picture: a wire still starting, or one that faulted, has its own
+          // plate there, and the one on a fault is pressed.
+          <div
+            data-slot="player-press"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              shell?.focus()
+            }}
+            onClick={toggle}
+            onDoubleClick={toggleFullscreen}
+            className={cn('absolute inset-0 select-none', pressable)}
+          />
+        )}
         {channel && running && phase !== 'faulted' && (
           <span className="absolute top-3 left-3 rounded-full bg-black/45 px-3 py-1 text-[11.5px] text-(--pl-ink)">
             <b className="font-bold">

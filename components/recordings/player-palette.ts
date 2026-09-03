@@ -60,11 +60,41 @@ export const PLAYER_ROUND_BUTTON_ON =
 export const PLAYER_BUTTON_ON = PLAYER_ROUND_BUTTON_ON
 
 /**
+ * The black board, and how wide it may get.
+ *
+ * v3.19 said the board is the column, which held while every screen carrying a
+ * player was the 1440 step. Live is a full-width screen, so its column is the
+ * window: at 2560 the board ran about 2250 wide with the picture still capped
+ * at 1280, and the picture sat as an island in the middle of a field of black.
+ *
+ * The board stops at the width the default step gives it — 1440 less the 30px
+ * the player keeps either side — and is centred in anything wider. The picture
+ * is then surrounded by the same black on the live screen as on the recording,
+ * on both axes, because both are read off one number. On the 1440 step the
+ * board already takes exactly this width, so nothing there moves.
+ *
+ * Full screen is the one place the cap comes off: there the board is the
+ * screen.
+ *
+ * `PLAYER_COLUMN` is the step on its own, for what stands under the board on a
+ * full-width screen: the live screen's reading of what is on now sits below the
+ * picture, and left as wide as the window it would run out either side of a
+ * board that had been brought in.
+ */
+export const PLAYER_COLUMN = 'mx-auto w-full max-w-[1380px]'
+
+export const PLAYER_BOARD = cn(
+  PLAYER_COLUMN,
+  'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl outline-none',
+  '[&:fullscreen]:flex [&:fullscreen]:max-w-none [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
+)
+
+/**
  * The face of the player, and where the picture on it stops growing.
  *
- * The face is the column: it takes the whole width the screen is given and is
- * painted in the picture's own black, so a picture narrower than the column
- * stands on black instead of floating on the page.
+ * The face is the board: it takes the whole width the board is given and is
+ * painted in the picture's own black, so a picture narrower than it stands on
+ * black instead of floating on the page.
  *
  * The picture is not stretched to meet it. 1280px is the width the API encodes
  * at when no profile is asked for (`720p30` is 1280x720), so past that a pixel

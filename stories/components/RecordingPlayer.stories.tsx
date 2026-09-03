@@ -417,3 +417,210 @@ export const 面いっぱいの黒: Story = {
     ).toBeLessThan(1)
   },
 }
+
+/** The player, as a press on the picture or a tab into the bar leaves it. */
+function board(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector('[data-slot="player"]')
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error('the player is not on the screen')
+  }
+
+  return found
+}
+
+/** One press, on the player itself, the way the browser sends one. */
+function press(on: HTMLElement, key: string) {
+  on.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+}
+
+/**
+ * The keys every player has. They are the player's while the focus is inside
+ * it, which a press on the picture gives it.
+ */
+export const キーで音量と消音: Story = {
+  args: { detail: detail('1266') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const level = canvas.getByRole('slider', { name: '音量' })
+    const quiet = canvas.getByRole('button', { name: '消音' })
+    const player = board(canvasElement)
+
+    press(player, 'ArrowDown')
+    press(player, 'ArrowDown')
+    await waitFor(() => expect(level).toHaveValue('90'))
+
+    press(player, 'ArrowUp')
+    await waitFor(() => expect(level).toHaveValue('95'))
+
+    press(player, 'm')
+    await waitFor(() => expect(quiet).toHaveAttribute('aria-pressed', 'true'))
+    await expect(level).toHaveValue('0')
+
+    // The level the mute was pressed at comes back with it.
+    press(player, 'm')
+    await waitFor(() => expect(quiet).toHaveAttribute('aria-pressed', 'false'))
+    await expect(level).toHaveValue('95')
+  },
+}
+
+/**
+ * A run of presses moves the mark on every one of them and asks for the
+ * picture once, when the presses stop.
+ *
+ * Where the picture is made as it plays, a position is a request and a
+ * transcoder built behind it. Asked for on every press, five presses would
+ * queue five rebuilds, four of them for a second nobody is waiting for any
+ * more.
+ */
+export const 送りを続けても要求は一度: Story = {
+  args: { detail: detail('1266'), startAt: 0, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = board(canvasElement)
+
+    asked.length = 0
+
+    for (let i = 0; i < 5; i += 1) {
+      press(player, 'ArrowRight')
+    }
+
+    // The mark and the reading are already there, and nothing has been asked
+    // for.
+    await waitFor(() =>
+      expect(canvas.getByText('0:00:25 / 4:12:38')).toBeVisible(),
+    )
+    await expect(asked).toEqual([])
+    await expect(
+      canvas.getByRole('slider', { name: '再生位置' }),
+    ).toHaveAttribute('aria-valuenow', '25')
+
+    // One request, for where the presses left off.
+    await waitFor(() => expect(asked).toEqual(['25/720p30']), { timeout: 3000 })
+
+    // And no second one behind it.
+    await new Promise((rest) => setTimeout(rest, 800))
+    await expect(asked).toEqual(['25/720p30'])
+  },
+}
+
+/** Back the same way, and never past the start. */
+export const 戻しは頭で止まる: Story = {
+  args: { detail: detail('1266'), startAt: 0, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = board(canvasElement)
+
+    asked.length = 0
+
+    for (let i = 0; i < 3; i += 1) {
+      press(player, 'ArrowLeft')
+    }
+
+    await waitFor(() =>
+      expect(canvas.getByText('0:00:00 / 4:12:38')).toBeVisible(),
+    )
+    await waitFor(() => expect(asked).toEqual(['0/720p30']), { timeout: 3000 })
+  },
+}
+
+/**
+ * The picture is pressed to run it, and pressed twice to put it on the whole
+ * screen. Two presses ask for the picture once: the second is the undo of the
+ * first, not a second start.
+ */
+export const 映像を押して再生: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const area = canvasElement.querySelector('[data-slot="player-press"]')
+
+    asked.length = 0
+    await userEvent.click(area as HTMLElement)
+    await waitFor(() => expect(asked).toEqual(['0/720p30']))
+
+    // Two presses: the picture goes on the whole screen and is not asked for
+    // again — the second press of the double is the undo of the first.
+    asked.length = 0
+    await userEvent.dblClick(area as HTMLElement)
+    await waitFor(() => expect(document.fullscreenElement).not.toBeNull())
+    await expect(asked).toEqual([])
+
+    await document.exitFullscreen()
+    await waitFor(() => expect(document.fullscreenElement).toBeNull())
+  },
+}
+
+/**
+ * A press on a control on the bar is that control being pressed, and nothing
+ * else. The picture underneath is not started by it, and space on it does not
+ * reach the picture either.
+ */
+export const バーの操作子は再生を動かさない: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const quiet = canvas.getByRole('button', { name: '消音' })
+
+    asked.length = 0
+    await userEvent.click(quiet)
+
+    await expect(quiet).toHaveAttribute('aria-pressed', 'true')
+    await expect(asked).toEqual([])
+
+    // Space on a focused control presses that control. Read as the player's,
+    // it would silence the sound and start the picture with one press.
+    quiet.focus()
+    press(quiet, ' ')
+    await expect(asked).toEqual([])
+
+    // An arrow on the seek bar is the seek bar's own step, taken once.
+    const seek = canvas.getByRole('slider', { name: '再生位置' })
+
+    seek.focus()
+    press(seek, 'ArrowRight')
+    await waitFor(() =>
+      expect(canvas.getByText('0:00:10 / 4:12:38')).toBeVisible(),
+    )
+  },
+}
+
+/**
+ * Where the file answers a byte range there is nothing to build again, so the
+ * position moves inside the picture already loaded and nothing is asked for.
+ */
+export const Range直配信は待たずに動く: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: {
+      ...ON_THE_FLY,
+      route: 'direct',
+      seeking: 'byRange',
+      canSeek: true,
+      transcodes: false,
+      bytes: 3_490_550_128,
+    },
+    startAt: 0,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = board(canvasElement)
+
+    asked.length = 0
+
+    for (let i = 0; i < 4; i += 1) {
+      press(player, 'ArrowRight')
+    }
+
+    await waitFor(() =>
+      expect(canvas.getByRole('slider', { name: '再生位置' })).toHaveAttribute(
+        'aria-valuenow',
+        '20',
+      ),
+    )
+
+    // Nothing was asked for, then or after the wait the other route takes.
+    await new Promise((rest) => setTimeout(rest, 800))
+    await expect(asked).toEqual([])
+  },
+}
