@@ -126,6 +126,7 @@ test('formatBytes rounds to the unit the size deserves', () => {
   assert.equal(formatBytes(2048), '2 KB')
   assert.equal(formatBytes(5 * 1024 ** 2), '5 MB')
   assert.equal(formatBytes(3 * 1024 ** 3), '3.0 GB')
+  assert.equal(formatBytes(4 * 1024 ** 4), '4.0 TB')
 })
 
 test('formatPlayhead keeps the hour so the two readings line up', () => {

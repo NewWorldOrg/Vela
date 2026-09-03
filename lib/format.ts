@@ -2,6 +2,9 @@ export function formatBytes(bytes: number) {
   if (bytes === 0) {
     return '0 B'
   }
+  if (bytes >= 1024 ** 4) {
+    return `${(bytes / 1024 ** 4).toFixed(1)} TB`
+  }
   if (bytes >= 0.1 * 1024 ** 3) {
     return `${(bytes / 1024 ** 3).toFixed(1)} GB`
   }
