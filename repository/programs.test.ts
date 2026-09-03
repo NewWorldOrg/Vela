@@ -108,11 +108,6 @@ mock.module('@/repository/client/carina', {
 
 const { getGuide, getProgram } = await import('./programs.ts')
 
-/** An hour inside the broadcast day the guide opens on, in ISO. */
-function soon(hoursFromNow: number): string {
-  return new Date(Date.now() + hoursFromNow * 60 * 60 * 1000).toISOString()
-}
-
 /** The broadcast day an instant falls in, which is the day the guide opens on. */
 function broadcastDay(at: string): string {
   return new Date(
@@ -122,8 +117,29 @@ function broadcastDay(at: string): string {
     .slice(0, 10)
 }
 
-const STARTS = soon(2)
-const ENDS = soon(3.5)
+/** The instant the broadcast day the guide opens on began. */
+const DAY_TURNED = new Date(
+  new Date(`${broadcastDay(new Date().toISOString())}T00:00:00Z`).getTime() +
+    DAY_TURNS_AT_HOUR * 60 * 60 * 1000 -
+    JST_OFFSET_MS,
+)
+
+/**
+ * An hour of the broadcast day the guide opens on, in ISO.
+ *
+ * Counted from the top of that day and not off the clock. Hours counted
+ * forward from now leave the window whenever the tests are run in the hours
+ * before the day turns — two hours on from one in the morning is past four,
+ * which is the next day's window — and a run the guide clips away for part of
+ * the day makes every assertion about the column a fact about the hour the
+ * tests happened to be run at.
+ */
+function hourOfTheDay(hour: number): string {
+  return new Date(DAY_TURNED.getTime() + hour * 60 * 60 * 1000).toISOString()
+}
+
+const STARTS = hourOfTheDay(8)
+const ENDS = hourOfTheDay(9.5)
 
 const CARRIED = {
   networkId: 33221,
@@ -304,8 +320,8 @@ function splitting(): void {
       SPLIT.serviceId,
       SPLIT.eventId,
       '高校野球 県大会 準決勝',
-      soon(4),
-      soon(6),
+      hourOfTheDay(10),
+      hourOfTheDay(12),
     ),
   ]
 }
