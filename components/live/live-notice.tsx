@@ -74,7 +74,7 @@ const REFUSED: Record<LiveRefusal, Said> = {
   driverUnavailable: {
     tone: 'waiting',
     mark: <WarningIcon className="size-[22px]" />,
-    title: 'driver 未接続',
+    title: 'チューナーに接続できません',
     worthRetrying: true,
   },
   tooManyAlready: {
@@ -132,7 +132,7 @@ const ENDED: Record<LiveSupplyEnd, Said> = {
   driverLost: {
     tone: 'gone',
     mark: <SignalIcon className="size-[22px]" />,
-    title: 'driver 消失',
+    title: 'チューナーとの接続が切れました',
     worthRetrying: true,
   },
 }

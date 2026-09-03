@@ -1,7 +1,15 @@
 import { cache } from 'react'
 
-import { formatBytes, formatLength } from '@/lib/format'
+import { formatBytes, formatLength, formatPlayhead } from '@/lib/format'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
+import {
+  INCOMPLETE_TABLES,
+  LOCKED_WITHOUT_DATA,
+  NO_LOCK,
+  numbered,
+  UNEXPECTED_STREAM,
+  type FailureClass,
+} from '@/repository/scan-failures'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -544,7 +552,7 @@ function toDetail(
     qualityRatio: measured
       ? ratioOf(dropped, totalPackets).toFixed(4)
       : undefined,
-    qualitySpots: spotsOf(d.positions.buckets, new Date(r.startedAt)),
+    qualitySpots: spotsOf(d.positions.buckets),
     live: base.outcome === 'recording' ? liveOf(d, base, now) : undefined,
   }
 }
@@ -621,20 +629,34 @@ const THUMBNAIL_ROWS: Record<
   ready: { main: '生成済み' },
   pending: { main: '未生成', canGenerate: true },
   failed: { main: '生成失敗', canGenerate: true },
-  skipped: { main: 'failed のため生成されず' },
+  skipped: { main: '録画が失敗したため作成されません' },
 }
 
+/**
+ * Why a recording stopped, said to the person who wanted to watch it.
+ *
+ * What the reader is asking is why it ended, not which part of the system
+ * ended it, so nothing here names one: `grace`, `driver` and `abort` are the
+ * store's words for its own machinery and mean nothing on a screen about a
+ * programme. Four of the store's faults are a stop; the rest are either how
+ * the recording failed, which the reason beside this one carries, or a reading
+ * taken of the finished file, which the outcome carries.
+ */
 const STOPS: Partial<Record<Fault, string>> = {
   stoppedByHand: '手動停止',
   tunerContended: '競合により落とされた',
-  drainGraceExpired: 'grace 上限',
-  driverLost: 'driver 消失',
+  drainGraceExpired: '終了処理が時間切れ',
+  driverLost: 'チューナーとの接続が切れた',
+  // Nothing asked this recording to stop and it stopped anyway, which the
+  // store knows and the screen was saying nothing about: the reason row was
+  // simply absent for the one ending that most wants a reason.
+  stoppedUnasked: '予期しない停止',
 }
 
 const FAILURES: Partial<Record<Fault, { title: string; body?: string }>> = {
   tuneFailed: { title: '選局失敗' },
   diskExhausted: {
-    title: 'ENOSPC(書き込み中にディスクが尽きた)',
+    title: '書き込み中にディスクが尽きた',
     body: 'その時点までの実績を録画の記録に残して停止しました。',
   },
   refusedByDiskPrecheck: {
@@ -647,11 +669,17 @@ const FAILURES: Partial<Record<Fault, { title: string; body?: string }>> = {
   },
 }
 
-const TUNE_FAILURES: Record<TuneFailure, string> = {
-  noLock: '① lock しない',
-  noData: '② lock したが dvr 無データ',
-  incompletePsi: '③ PSI 不完全',
-  streamMismatch: '④ 期待 TSID / サービス不一致',
+/**
+ * Which of the four a failed tune was. The four are already named for the
+ * channel scans, in the words this product uses for them and with the numbers
+ * they are always listed by; naming them a second time here in the store's
+ * vocabulary gave one classification two spellings.
+ */
+const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {
+  noLock: NO_LOCK,
+  noData: LOCKED_WITHOUT_DATA,
+  incompletePsi: INCOMPLETE_TABLES,
+  streamMismatch: UNEXPECTED_STREAM,
 }
 
 function leadingFault(detail: FaultResponder[]): Fault | undefined {
@@ -675,7 +703,11 @@ function bodyOf(
 
   const kind = detail.find((one) => one.fault === 'tuneFailed')?.tuneFailure
 
-  return kind ? TUNE_FAILURES[kind] : undefined
+  if (!kind) {
+    return undefined
+  }
+
+  return numbered(TUNE_FAILURES[kind])
 }
 
 function stopReasonOf(d: DetailResponder): string | undefined {
@@ -685,7 +717,10 @@ function stopReasonOf(d: DetailResponder): string | undefined {
     return STOPS[named.fault]
   }
 
-  return d.recording.abortedAt ? '自分の abort(終了時刻に到達)' : undefined
+  // Asked to stop, by nothing that left a fault behind: the window this
+  // recording was promised closed and it was stopped at its end. Which part of
+  // the system did the asking is not the question anyone opened this row for.
+  return d.recording.abortedAt ? '終了時刻に到達' : undefined
 }
 
 function outcomeBodyOf(
@@ -749,8 +784,14 @@ function secondsBetween(from: number, to: number): number {
 /**
  * The buckets the store keeps are one second wide, and the screen names a spot
  * by the minute it fell in, so the seconds of one minute are one spot.
+ *
+ * A spot is named by where it is inside the recording and not by the clock it
+ * fell on. The second a bucket carries is counted from the start of the
+ * stream, which is the same axis the seek bar is drawn on and the same one
+ * `この時間帯を再生` already jumps to — spelled as a time of day it could not
+ * be put beside either of them.
  */
-export function spotsOf(buckets: DropBucket[], startedAt: Date): QualitySpot[] {
+export function spotsOf(buckets: DropBucket[]): QualitySpot[] {
   const byMinute = new Map<number, number>()
 
   for (const bucket of buckets) {
@@ -768,7 +809,7 @@ export function spotsOf(buckets: DropBucket[], startedAt: Date): QualitySpot[] {
   return [...byMinute.entries()]
     .sort(([left], [right]) => left - right)
     .map(([minute, packets]) => ({
-      at: `${clockOf(new Date(startedAt.getTime() + minute * 60_000))} 付近`,
+      at: `${formatPlayhead(minute * 60)} 付近`,
       packets: `${grouped(packets)} パケット`,
       second: minute * 60,
     }))

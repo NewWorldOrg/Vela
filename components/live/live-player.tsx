@@ -7,7 +7,12 @@ import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
 import { LIVE_PROFILE_UNASKED, liveWireHref } from '@/repository/live-paths'
 import { playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
-import { PlayIcon } from '@/components/vela/icons'
+import {
+  FullscreenIcon,
+  PauseIcon,
+  PlayIcon,
+  VolumeIcon,
+} from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
@@ -658,16 +663,7 @@ export function LivePlayer({
               onClick={toggle}
               className={PLAYER_ROUND_BUTTON}
             >
-              {phase === 'playing' ? (
-                <svg
-                  viewBox="0 0 24 24"
-                  className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-                >
-                  <path d="M9.4 5.8v12.4M14.6 5.8v12.4" />
-                </svg>
-              ) : (
-                <PlayIcon className="size-4" />
-              )}
+              {phase === 'playing' ? <PauseIcon /> : <PlayIcon />}
             </button>
             {latency !== undefined && (
               <span
@@ -716,17 +712,7 @@ export function LivePlayer({
                   muted && PLAYER_ROUND_BUTTON_ON,
                 )}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-                >
-                  <path d="M11.2 5.2 6.7 9.1H3.2v5.9h3.5l4.5 3.9V5.2Z" />
-                  {muted ? (
-                    <path d="M15.2 9.4 19.6 14.6M19.6 9.4 15.2 14.6" />
-                  ) : (
-                    <path d="M15 9.3a3.7 3.7 0 0 1 .1 5.5" />
-                  )}
-                </svg>
+                <VolumeIcon level={muted ? 0 : volume} />
               </button>
               <LiveSettings
                 container={shell}
@@ -744,16 +730,7 @@ export function LivePlayer({
                   full && PLAYER_ROUND_BUTTON_ON,
                 )}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-                >
-                  {full ? (
-                    <path d="M9.4 4.3v5.1H4.3M14.6 4.3v5.1h5.1M9.4 19.7v-5.1H4.3M14.6 19.7v-5.1h5.1" />
-                  ) : (
-                    <path d="M4.3 9.4V4.3h5.1M19.7 9.4V4.3h-5.1M4.3 14.6v5.1h5.1M19.7 14.6v5.1h-5.1" />
-                  )}
-                </svg>
+                <FullscreenIcon leaving={full} />
               </button>
             </div>
           </div>

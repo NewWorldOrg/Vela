@@ -318,7 +318,7 @@ export const 起動中_選局を待つ: Story = {
     const canvas = within(canvasElement)
 
     await waitFor(() => expect(canvas.getByText('0.5 秒')).toBeVisible())
-    await expect(canvas.getByText('選局(lock)').closest('li')).toHaveAttribute(
+    await expect(canvas.getByText('選局').closest('li')).toHaveAttribute(
       'data-startup',
       'now',
     )
@@ -422,7 +422,7 @@ export const 断り_選局失敗: Story = refused(
 
 export const 断り_driver未接続: Story = refused(
   'driverUnavailable',
-  'driver 未接続',
+  'チューナーに接続できません',
 )
 
 export const 断り_同時本数上限: Story = {
@@ -485,7 +485,10 @@ export const 撤収_別の操作で停止: Story = ended(
   '別の操作で停止されました',
 )
 
-export const 撤収_driver消失: Story = ended('driverLost', 'driver 消失')
+export const 撤収_driver消失: Story = ended(
+  'driverLost',
+  'チューナーとの接続が切れました',
+)
 
 export const 撤収_配信終了: Story = ended('letGo', '配信が終了しました')
 

@@ -50,7 +50,7 @@ test('the lock and the transcoder run side by side: one done leaves the other un
     rows.map((row) => [row.label, row.state, row.figure]),
     [
       ['チューナー確保', 'done', '0.5 秒'],
-      ['選局(lock)', 'now', '経過 0.4 秒'],
+      ['選局', 'now', '経過 0.4 秒'],
       ['トランスコーダ起動', 'done', '0.0 秒'],
       ['最初の絵', 'ahead', '—'],
     ],

@@ -30,7 +30,7 @@ export const STARTUP_ROWS: {
   label: string
 }[] = [
   { segment: 'tunerSecured', begins: 'tunerSecured', label: 'チューナー確保' },
-  { segment: 'channelLocked', begins: 'channelLocked', label: '選局(lock)' },
+  { segment: 'channelLocked', begins: 'channelLocked', label: '選局' },
   {
     segment: 'transcoderStarted',
     begins: 'transcoderStarted',
