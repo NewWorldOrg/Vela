@@ -60,28 +60,38 @@ export const PLAYER_ROUND_BUTTON_ON =
 export const PLAYER_BUTTON_ON = PLAYER_ROUND_BUTTON_ON
 
 /**
- * The black board, and how wide it may get.
+ * How wide the picture may get, and so how wide the board around it is and
+ * everything held to the board's width.
  *
- * v3.19 said the board is the column, which held while every screen carrying a
- * player was the 1440 step. Live is a full-width screen, so its column is the
- * window: at 2560 the board ran about 2250 wide with the picture still capped
- * at 1280, and the picture sat as an island in the middle of a field of black.
+ * The picture takes the column it is given. What stops it is the window's
+ * height: a 16:9 picture as wide as the column is 9/16 as tall, and past the
+ * height that leaves the top bar and the strip under the picture on screen
+ * there is nothing gained by growing. So the width is capped at what that
+ * height allows — 210px is the bar, the padding over the picture, and the
+ * reading that stands under it — and the shorter of the two bounds wins. On a
+ * tall window the column wins and the picture fills it; on a short one the
+ * height wins and the picture comes down, keeping its shape.
  *
- * The board stops at the width the default step gives it — 1440 less the 30px
- * the player keeps either side — and is centred in anything wider. The picture
- * is then surrounded by the same black on the live screen as on the recording,
- * on both axes, because both are read off one number. On the 1440 step the
- * board already takes exactly this width, so nothing there moves.
+ * The two numbers this replaces were fixed widths, and both of them made the
+ * picture small on a wide desk. The board stopped at 1380px and the picture at
+ * 1280px, so a 2560 window that had 2115px of column to give showed the picture
+ * at half the width of the screen with the rest of the desk empty. 1280px was
+ * read as the width past which a pixel would be invented, but it is only the
+ * width of one profile: 1080p60 and 1080p30 are offered beside it, and holding
+ * every profile to the smallest one's shape threw away what the larger ones
+ * carry. Every service that shows video stretches it — the picture is the point
+ * of the screen, and softness at a size worth watching beats sharpness at a
+ * size that is not.
  *
- * Full screen is the one place the cap comes off: there the board is the
+ * Full screen is the one place both bounds come off: there the board is the
  * screen.
  *
- * `PLAYER_COLUMN` is the step on its own, for what stands under the board on a
+ * `PLAYER_COLUMN` is the bound on its own, for what stands under the board on a
  * full-width screen: the live screen's reading of what is on now sits below the
- * picture, and left as wide as the window it would run out either side of a
- * board that had been brought in.
+ * picture, and left as wide as the window it would run out either side of it.
  */
-export const PLAYER_COLUMN = 'mx-auto w-full max-w-[1380px]'
+export const PLAYER_COLUMN =
+  'mx-auto w-full max-w-[calc((100dvh_-_210px)*16/9)]'
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
@@ -90,29 +100,17 @@ export const PLAYER_BOARD = cn(
 )
 
 /**
- * The face of the player, and where the picture on it stops growing.
+ * The face of the player: the board, at 16:9.
  *
- * The face is the board: it takes the whole width the board is given and is
- * painted in the picture's own black, so a picture narrower than it stands on
- * black instead of floating on the page.
- *
- * The picture is not stretched to meet it. 1280px is the width the API encodes
- * at when no profile is asked for (`720p30` is 1280x720), so past that a pixel
- * would be invented rather than shown: it stops there, sits in the middle, and
- * the difference is left black — about 40px a side on the widest column the
- * screen has, once its own margins and the scrollbar are off the 1440 step.
- *
- * The face's height is the second bound. A 16:9 face as wide as the column is
- * 9/16 as tall, and past about three fifths of the window there is no room
- * under it for the reading of how the recording ended, or the record below.
- * Held there, the face keeps its width while the picture comes down to the
- * height that is left, which is the same rule read on the other axis: the
- * picture keeps its shape and the black takes the difference.
+ * The width is already bounded so that this height fits the window, so the face
+ * needs no height of its own. It stays black because a picture whose own shape
+ * is not 16:9 is fitted inside it rather than distorted, and the difference has
+ * to stand on something.
  */
-export const PLAYER_FACE = 'aspect-video max-h-[62vh] w-full'
+export const PLAYER_FACE = 'aspect-video w-full'
 
-/** The box the picture is given on that face: as wide as the face, up to 1280px, and in the middle of it. */
-export const PLAYER_PICTURE_BOX = 'h-full w-full max-w-[1280px]'
+/** The box the picture is given on that face: the whole of it. */
+export const PLAYER_PICTURE_BOX = 'size-full'
 
 /** The picture in that box, at its own shape. */
 export const PLAYER_PICTURE = cn(PLAYER_PICTURE_BOX, 'object-contain')
