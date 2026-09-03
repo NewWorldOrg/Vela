@@ -273,3 +273,92 @@ test('the address carries where now falls in its day, and nothing on another day
   assert.ok(elsewhen)
   assert.equal(elsewhen.nowMin, undefined)
 })
+
+/**
+ * The service a station splits into for part of the day, and carries its
+ * broadcast on for the rest of it.
+ *
+ * The station sends nothing at all on the split for the hours it is not split
+ * — those events reach the guide as shadows and are dropped — and says which
+ * hours those are on its own event, by naming the split under a share.
+ */
+const SPLIT = { networkId: CARRIED.networkId, serviceId: 1522, eventId: 40711 }
+
+function splitting(): void {
+  store.services = [
+    service(CARRIED.networkId, CARRIED.serviceId, 'みなと総合1', 1),
+    service(SPLIT.networkId, SPLIT.serviceId, 'みなと総合2', 1),
+  ]
+  store.programmes = [
+    programme(
+      CARRIED.networkId,
+      CARRIED.serviceId,
+      CARRIED.eventId,
+      '入り江のアトリエ 夏の三日間',
+      STARTS,
+      ENDS,
+      { related: [{ ...SPLIT, kind: 'shared' }] },
+    ),
+    programme(
+      SPLIT.networkId,
+      SPLIT.serviceId,
+      SPLIT.eventId,
+      '高校野球 県大会 準決勝',
+      soon(4),
+      soon(6),
+    ),
+  ]
+}
+
+test('a service the line-up hands over is a column of the guide', async () => {
+  splitting()
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+
+  assert.deepEqual(
+    guide.channels.map((channel) => channel.name),
+    ['みなと総合1', 'みなと総合2'],
+  )
+})
+
+/**
+ * The defect this stands against: the hours a split is carrying the station's
+ * broadcast read as hours with no schedule, while the hours it has something
+ * of its own read normally — so a column showing the same thing as the one
+ * beside it looked like a channel that had stopped.
+ */
+test('the hours a split is sharing carry what it is sharing', async () => {
+  splitting()
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+  const column = guide.programs.filter(
+    (program) => program.channelId === `${SPLIT.networkId}-${SPLIT.serviceId}`,
+  )
+
+  assert.deepEqual(
+    column.map((program) => program.title),
+    ['高校野球 県大会 準決勝', '入り江のアトリエ 夏の三日間'],
+  )
+})
+
+/**
+ * What a shared cell opens is the broadcast itself, sitting where it is
+ * listed. Reserving it from the split's column and from the station's column
+ * is the one reservation, because it is the one broadcast.
+ */
+test('a shared cell is the broadcast it shares, not a copy of it', async () => {
+  splitting()
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+  const shared = guide.programs.filter(
+    (program) => program.id === idOf(CARRIED),
+  )
+
+  assert.deepEqual(
+    shared.map((program) => program.channelId),
+    [
+      `${CARRIED.networkId}-${CARRIED.serviceId}`,
+      `${SPLIT.networkId}-${SPLIT.serviceId}`,
+    ],
+  )
+})
