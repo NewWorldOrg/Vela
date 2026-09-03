@@ -66,12 +66,12 @@ export function PlayerCenter({
         <span
           key={burst.nth}
           data-slot="player-center-burst"
-          className="absolute flex size-[76px] animate-player-burst items-center justify-center rounded-full bg-black/55 text-white"
+          className="absolute flex size-[54px] animate-player-burst items-center justify-center rounded-full bg-black/50 text-white"
         >
           {burst.was === 'play' ? (
-            <PlayGlyph className="ml-[3px] size-[32px]" />
+            <PlayGlyph className="ml-[2px] size-10" />
           ) : (
-            <PauseGlyph className="size-[32px]" />
+            <PauseGlyph className="size-10" />
           )}
         </span>
       )}

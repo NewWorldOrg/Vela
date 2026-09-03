@@ -25,6 +25,7 @@ import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
   PLAYER_BUTTON,
+  PLAYER_CHROME_FADE,
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
@@ -48,7 +49,7 @@ import {
   PlaybackFaultNotice,
   type PlaybackFault,
 } from '@/components/recordings/playback-fault'
-import { pressable, still } from '@/components/vela/tactile'
+import { still } from '@/components/vela/tactile'
 
 /**
  * What has no argument on the API yet. The control stays on the bar, drawn
@@ -206,6 +207,25 @@ export function Player({
   /** How far ahead of the head the picture is loaded, in seconds. */
   const [buffered, setBuffered] = useState(0)
   /**
+   * Whether the settings surface is open.
+   *
+   * It is drawn into the pane the picture is in rather than into the bar — it
+   * has to be, or full screen would not show it — so it does not go down when
+   * the bar does. Left to itself it stood over a picture whose controls had
+   * gone, with nothing under it and no way to tell what it belonged to.
+   */
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  /**
+   * Whether the settings surface was open when the press began.
+   *
+   * A press outside the surface dismisses it, and that press is not also a
+   * press on the picture: YouTube's settings menu closes on a click over the
+   * video and the video keeps playing. The surface is dismissed on the press
+   * going down, so by the time the click arrives the state already says shut —
+   * which is why what it said at `pointerdown` is what the click has to read.
+   */
+  const dismissing = useRef(false)
+  /**
    * Whether the keyboard — and not a click — is somewhere inside the bar.
    *
    * `:focus-visible` and not `:focus`, because pressing play with a mouse
@@ -239,7 +259,8 @@ export function Player({
     stirred ||
     onTheBar ||
     held ||
-    scrubbingAt !== null
+    scrubbingAt !== null ||
+    settingsOpen
 
   // useEffect exception: browser API (the document's fullscreen element) +
   // listener cleanup. Leaving fullscreen by Esc is not a press this component
@@ -557,7 +578,7 @@ export function Player({
           a pointer left standing on a picture is the one piece of chrome that
           never fades, sitting wherever the hand happened to stop.
         */
-        className={cn(PLAYER_BOARD, 'cursor-none data-[up]:cursor-auto')}
+        className={PLAYER_BOARD}
       >
         <div
           className={cn(
@@ -632,11 +653,32 @@ export function Player({
             data-slot="player-press"
             onMouseDown={(event) => {
               event.preventDefault()
+              dismissing.current = settingsOpen
               shell?.focus()
             }}
-            onClick={toggle}
+            onClick={() => {
+              if (dismissing.current) {
+                dismissing.current = false
+
+                return
+              }
+
+              toggle()
+            }}
             onDoubleClick={toggleFullscreen}
-            className={cn('absolute inset-0 select-none', pressable)}
+            data-up={chromeUp ? 'true' : undefined}
+            /*
+              The pointer goes down with the bar. Every player does it —
+              YouTube's is `.ytp-autohide{cursor:none}`, and it applies
+              windowed and not only full screen — because a pointer left
+              standing on a picture is the one piece of chrome that never
+              fades, sitting wherever the hand happened to stop.
+
+              It is said here and not on the whole player: the bar's own
+              controls have cursors of their own to say, and a rule on the
+              board would be what the pointer lands on instead of theirs.
+            */
+            className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
           />
           {/*
             The middle of the picture. A stopped picture carries the mark that
@@ -692,7 +734,8 @@ export function Player({
             style={{ backgroundImage: PLAYER_SCRIM }}
             className={cn(
               'absolute inset-x-0 bottom-0 z-10 px-4 pt-14 pb-3 max-[700px]:px-3',
-              'pointer-events-none translate-y-2 opacity-0 transition-[opacity,translate] duration-200 ease-out',
+              'pointer-events-none translate-y-2 opacity-0',
+              PLAYER_CHROME_FADE,
               'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
               'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
             )}
@@ -789,8 +832,7 @@ export function Player({
                 the hour carried only by a recording that has one.
               */}
               <span className="ml-2 font-code text-[13px] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
-                {formatPlayerTime(scrubbingAt ?? position)}
-                <span className="mx-1 text-(--pl-ink-3)">/</span>
+                {formatPlayerTime(scrubbingAt ?? position)} /{' '}
                 {formatPlayerTime(duration)}
               </span>
               {/*
@@ -826,6 +868,7 @@ export function Player({
                 </button>
                 <PlayerSettings
                   container={shell}
+                  onOpenChange={setSettingsOpen}
                   profile={profile}
                   onChooseProfile={chooseProfile}
                   onTheFly={onTheFly}

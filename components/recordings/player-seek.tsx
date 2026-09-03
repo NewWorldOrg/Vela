@@ -59,7 +59,13 @@ export function PlayerSeek({
   id: string
   duration: number
   position: number
-  /** How far ahead of the head the picture is already loaded, in seconds. */
+  /**
+   * How far ahead of the head the picture is already loaded, in seconds.
+   *
+   * Drawn at `white/40` on a `white/20` track — the pair YouTube ships and
+   * media-chrome copies byte for byte (`rgb(255 255 255 / .4)` over
+   * `rgb(255 255 255 / .2)`).
+   */
   buffered?: number
   drops?: number[]
   marks?: SeekMarks
@@ -79,8 +85,17 @@ export function PlayerSeek({
   const [hover, setHover] = useState<{ pct: number; at: number } | null>(null)
   const [frameAt, setFrameAt] = useState<number | null>(null)
   const [framesGone, setFramesGone] = useState(false)
-  /** The position being dragged out, until the hand lets go of it. */
+  /**
+   * The position being dragged out, until the hand lets go of it.
+   *
+   * Held in a ref beside the state because the moves arrive faster than React
+   * draws: read from the state, the first `pointermove` after the press still
+   * sees `null` — the render that would have set it has not run — and the drag
+   * is read as a hover and dropped. The ref is what the handlers branch on;
+   * the state is what the drawing follows.
+   */
   const [dragging, setDragging] = useState<number | null>(null)
+  const held = useRef<number | null>(null)
 
   const shown = dragging ?? position
   const playedPct = duration > 0 ? (shown / duration) * 100 : 0
@@ -149,13 +164,14 @@ export function PlayerSeek({
     }
 
     event.currentTarget.setPointerCapture(event.pointerId)
+    held.current = found.at
     setDragging(found.at)
     setHover(found)
     onScrubbing?.(found.at)
   }
 
   const drag = (event: PointerEvent<HTMLDivElement>) => {
-    if (dragging === null) {
+    if (held.current === null) {
       follow(event.clientX)
 
       return
@@ -164,6 +180,7 @@ export function PlayerSeek({
     const found = secondAt(event.clientX)
 
     if (found) {
+      held.current = found.at
       setDragging(found.at)
       setHover(found)
       onScrubbing?.(found.at)
@@ -176,12 +193,15 @@ export function PlayerSeek({
   }
 
   const letGo = (event: PointerEvent<HTMLDivElement>) => {
-    if (dragging === null) {
+    const at = held.current
+
+    if (at === null) {
       return
     }
 
     event.currentTarget.releasePointerCapture?.(event.pointerId)
-    choose(dragging)
+    held.current = null
+    choose(at)
     setDragging(null)
     onScrubbing?.(null)
   }
@@ -234,7 +254,7 @@ export function PlayerSeek({
       onPointerDown={take}
       onPointerUp={letGo}
       onPointerCancel={letGo}
-      onPointerLeave={() => dragging === null && leave()}
+      onPointerLeave={() => held.current === null && leave()}
       onKeyDown={onKeyDown}
       className="tap-target group relative h-[18px] cursor-pointer focus-visible:outline-none"
     >
@@ -245,12 +265,12 @@ export function PlayerSeek({
       */}
       <div
         ref={rail}
-        className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/25 transition-[height] duration-100 ease-out group-hover:h-[5px] group-focus-visible:h-[5px] group-data-[wanted]:h-[5px]"
+        className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/20 transition-[height] duration-100 ease-out group-hover:h-[5px] group-focus-visible:h-[5px] group-data-[wanted]:h-[5px]"
       >
         {/* What is here already but not yet played. */}
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 rounded-full bg-white/45"
+          className="absolute inset-y-0 left-0 rounded-full bg-white/40"
           style={{ width: `${loadedPct}%` }}
         />
         <span

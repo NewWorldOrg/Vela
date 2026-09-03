@@ -19,6 +19,7 @@ import {
   PLAYER_BOARD,
   PLAYER_BUTTON,
   PLAYER_BUTTON_ON,
+  PLAYER_CHROME_FADE,
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
@@ -29,7 +30,7 @@ import {
 } from '@/components/recordings/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
 import { PlayerCenter } from '@/components/recordings/player-center'
-import { pressable } from '@/components/vela/tactile'
+
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
 import {
@@ -200,6 +201,10 @@ export function LivePlayer({
     was: 'play' | 'pause'
     nth: number
   } | null>(null)
+  /** Whether the settings surface is open, which holds the bar up. */
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  /** Whether that surface was open when the press began — see the recording player. */
+  const dismissing = useRef(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const networkId = channel?.networkId
@@ -454,7 +459,8 @@ export function LivePlayer({
 
   const hasPicture =
     phase === 'playing' || phase === 'paused' || phase === 'buffering'
-  const chromeUp = phase !== 'playing' || stirred || onTheBar || focused
+  const chromeUp =
+    phase !== 'playing' || stirred || onTheBar || focused || settingsOpen
 
   const stir = () => {
     if (settling.current) {
@@ -569,7 +575,7 @@ export function LivePlayer({
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     stir()
 
-    const command = playerCommand(event, { seeks: false })
+    const command = playerCommand(event, { seeks: false, captions: true })
 
     if (!command) {
       return
@@ -593,6 +599,9 @@ export function LivePlayer({
       case 'fullscreen':
         toggleFullscreen()
         break
+      case 'captions':
+        toggleCaptions()
+        break
       default:
         break
     }
@@ -610,8 +619,7 @@ export function LivePlayer({
       onPointerMove={stir}
       onPointerLeave={stir}
       onKeyDown={onKeyDown}
-      data-up={chromeUp ? 'true' : undefined}
-      className={cn(PLAYER_BOARD, 'cursor-none data-[up]:cursor-auto')}
+      className={PLAYER_BOARD}
     >
       <div
         className={cn(
@@ -667,11 +675,21 @@ export function LivePlayer({
             data-slot="player-press"
             onMouseDown={(event) => {
               event.preventDefault()
+              dismissing.current = settingsOpen
               shell?.focus()
             }}
-            onClick={toggle}
+            onClick={() => {
+              if (dismissing.current) {
+                dismissing.current = false
+
+                return
+              }
+
+              toggle()
+            }}
             onDoubleClick={toggleFullscreen}
-            className={cn('absolute inset-0 select-none', pressable)}
+            data-up={chromeUp ? 'true' : undefined}
+            className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
           />
         )}
         {hasPicture && (
@@ -697,7 +715,8 @@ export function LivePlayer({
             style={{ backgroundImage: PLAYER_SCRIM_TOP }}
             className={cn(
               'pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-3 pb-10',
-              '-translate-y-2 opacity-0 transition-[opacity,translate] duration-200 ease-out',
+              '-translate-y-2 opacity-0',
+              PLAYER_CHROME_FADE,
               'data-[up]:translate-y-0 data-[up]:opacity-100',
             )}
           >
@@ -771,7 +790,8 @@ export function LivePlayer({
           style={{ backgroundImage: PLAYER_SCRIM }}
           className={cn(
             'absolute inset-x-0 bottom-0 z-10 px-4 pt-12 pb-3 max-[700px]:px-3',
-            'pointer-events-none translate-y-2 opacity-0 transition-[opacity,translate] duration-200 ease-out',
+            'pointer-events-none translate-y-2 opacity-0',
+            PLAYER_CHROME_FADE,
             'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
             'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
           )}
@@ -838,6 +858,7 @@ export function LivePlayer({
               </button>
               <LiveSettings
                 container={shell}
+                onOpenChange={setSettingsOpen}
                 profiles={profiles}
                 profile={profile}
                 onChooseProfile={setProfile}

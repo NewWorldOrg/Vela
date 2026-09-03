@@ -369,18 +369,24 @@
    * that never stops; this stops in half a second and only ever starts
    * because somebody pressed something.
    */
-  --animate-player-burst: player-burst 500ms cubic-bezier(0.22, 0.61, 0.36, 1)
-    forwards;
+  --animate-player-burst: player-burst 500ms linear forwards;
 }
 
+/*
+ * YouTube's own `ytp-bezel-fadeout`, which is the only published spec for this
+ * mark: `animation: ytp-bezel-fadeout .5s linear 1 normal forwards` over
+ * `0%{opacity:1} to{opacity:0;transform:scale(2)}`. It grows as it fades, so
+ * the mark reads as something leaving rather than something arriving, and it
+ * is gone in half a second.
+ */
 @keyframes player-burst {
   from {
-    opacity: 0.92;
-    scale: 0.86;
+    opacity: 1;
+    scale: 1;
   }
   to {
     opacity: 0;
-    scale: 1.35;
+    scale: 2;
   }
 }
 

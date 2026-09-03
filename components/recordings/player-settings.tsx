@@ -77,6 +77,7 @@ export function PlayerSettings({
   onTheFly,
   speed,
   onChooseSpeed,
+  onOpenChange,
 }: {
   /** The element the picture is drawn in, which is what goes fullscreen. */
   container: HTMLElement | null
@@ -86,11 +87,27 @@ export function PlayerSettings({
   onTheFly: boolean
   speed: string
   onChooseSpeed: (next: string) => void
+  /**
+   * That the surface is open, told to the player.
+   *
+   * The surface is drawn into the element the picture is in — it has to be, or
+   * it would not be visible in full screen — and so it is not inside the bar
+   * and does not go down with it. The player holds the bar up while this is
+   * open, which is what YouTube does: its settings menu and its control bar
+   * come and go together, and a menu left standing over a picture whose
+   * controls have gone is the one piece of chrome with nothing behind it.
+   */
+  onOpenChange?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(false)
 
+  const change = (next: boolean) => {
+    setOpen(next)
+    onOpenChange?.(next)
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={change}>
       <PopoverTrigger aria-label="設定" className={PLAYER_GLYPH_BUTTON}>
         <SettingsIcon className="size-4" />
       </PopoverTrigger>

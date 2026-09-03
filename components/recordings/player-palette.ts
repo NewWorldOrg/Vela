@@ -34,6 +34,19 @@ export const PLAYER_PALETTE = {
 export const PLAYER_SCRIM =
   'linear-gradient(to top, rgba(6,5,9,.92) 0%, rgba(6,5,9,.82) 34%, rgba(6,5,9,.58) 58%, rgba(6,5,9,.24) 80%, rgba(6,5,9,0) 100%)'
 
+/**
+ * How the bar comes and goes: in over 250ms easing out, away over 100ms easing
+ * in.
+ *
+ * The pair is YouTube's own — `.25s cubic-bezier(0,0,.2,1)` arriving and
+ * `.1s cubic-bezier(.4,0,1,1)` leaving. It is not symmetry for its own sake:
+ * arriving is an answer to a hand that has just moved and wants to be seen
+ * settling, while leaving is chrome getting off a picture and has no reason to
+ * linger over it.
+ */
+export const PLAYER_CHROME_FADE =
+  'transition-[opacity,translate] duration-100 ease-[cubic-bezier(.4,0,1,1)] data-[up]:duration-[250ms] data-[up]:ease-[cubic-bezier(0,0,.2,1)]'
+
 /** The same wash at the top edge, for what is written over the picture there. */
 export const PLAYER_SCRIM_TOP =
   'linear-gradient(to bottom, rgba(6,5,9,.78) 0%, rgba(6,5,9,.42) 52%, rgba(6,5,9,0) 100%)'
