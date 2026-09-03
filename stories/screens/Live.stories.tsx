@@ -16,6 +16,7 @@ import {
 } from '@/lib/live-wire'
 import type { LiveScreen } from '@/repository/live'
 import { LIVE_SCREEN_FIXTURE } from '@/repository/live.fixtures'
+import { CHANNELS_FOLDED_KEY } from '@/hooks/useChannelsFolded'
 import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
@@ -243,6 +244,7 @@ const meta = {
   ],
   beforeEach: () => {
     opened.length = 0
+    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
   },
 } satisfies Meta<typeof LiveView>
 
@@ -714,6 +716,78 @@ export const 空状態: Story = {
     // One reading of what is missing, not two: with nothing to choose from,
     // the screen does not also invite a choice.
     await expect(canvas.queryByText('チャンネルが選ばれていません')).toBeNull()
+  },
+}
+
+/**
+ * Watching, the list folds away on one press and the picture takes the width
+ * it leaves. Folded, the types and the rows are out of the page, and the press
+ * that brings them back is what is left of the list.
+ */
+export const 一覧を畳む: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+
+    await expect(fold).toHaveAttribute('aria-expanded', 'true')
+    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+
+    const wide = canvasElement.querySelector('main aside')?.clientWidth ?? 0
+
+    await userEvent.click(fold)
+
+    await expect(fold).toHaveAttribute('aria-expanded', 'false')
+    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+    await expect(
+      canvasElement.querySelector('main aside')?.clientWidth ?? 0,
+    ).toBeLessThan(wide)
+    await expect(window.localStorage.getItem(CHANNELS_FOLDED_KEY)).toBe(
+      'folded',
+    )
+
+    await userEvent.click(fold)
+
+    await expect(fold).toHaveAttribute('aria-expanded', 'true')
+    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+  },
+}
+
+/** A fold made earlier is the state the screen comes back in. */
+export const 畳んだまま開く: Story = {
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: 'チャンネル一覧' }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+  },
+}
+
+/**
+ * Before a channel is chosen the list is the screen, so there is nothing to
+ * fold it for and no press to do it with — whatever an earlier fold said.
+ */
+export const 選局前は畳めない: Story = {
+  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByRole('button', { name: 'チャンネル一覧' }),
+    ).toBeNull()
+    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
   },
 }
 
