@@ -425,11 +425,26 @@ export function LivePlayer({
     }
   }
 
-  /** Louder or quieter by a step, read off the level the bar is showing. */
-  const stepVolume = (by: number) => {
-    const shown = Math.round((muted ? 0 : volume) * 100)
+  /**
+   * The level the bar is showing, read off the element rather than the state,
+   * so that a run of presses arriving faster than React draws steps once per
+   * press. Silent reads as nought whatever level the mute is holding.
+   */
+  const showing = () => {
+    const element = video.current
 
-    chooseVolume(Math.min(100, Math.max(0, shown + by)) / 100)
+    if (!element) {
+      return muted ? 0 : volume
+    }
+
+    return element.muted ? 0 : element.volume
+  }
+
+  /** Louder or quieter by a step. */
+  const stepVolume = (by: number) => {
+    chooseVolume(
+      Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100,
+    )
   }
 
   const mute = (quiet: boolean) => {
@@ -490,7 +505,7 @@ export function LivePlayer({
         stepVolume(-VOLUME_STEP_PERCENT)
         break
       case 'mute':
-        mute(!muted)
+        mute(!(video.current?.muted ?? muted))
         break
       case 'fullscreen':
         toggleFullscreen()
@@ -560,13 +575,11 @@ export function LivePlayer({
         {hasPicture && (
           // The same press area the recording player has: one press runs or
           // stops the picture, two put it on the whole screen, and the second
-          // press of a double undoes the first. Only over a picture — a wire
-          // still starting, or one that faulted, has its own plate there, and
-          // the one on a fault is pressed.
-          <button
-            type="button"
-            aria-hidden="true"
-            tabIndex={-1}
+          // press of a double undoes the first. The picture answering a press,
+          // not a control — the one that says 再生 is on the bar. Only over a
+          // picture: a wire still starting, or one that faulted, has its own
+          // plate there, and the one on a fault is pressed.
+          <div
             data-slot="player-press"
             onMouseDown={(event) => {
               event.preventDefault()
@@ -574,7 +587,7 @@ export function LivePlayer({
             }}
             onClick={toggle}
             onDoubleClick={toggleFullscreen}
-            className={cn('absolute inset-0 bg-transparent', pressable)}
+            className={cn('absolute inset-0 select-none', pressable)}
           />
         )}
         {channel && running && phase !== 'faulted' && (

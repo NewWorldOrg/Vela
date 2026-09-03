@@ -193,12 +193,13 @@ export function Player({
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /**
-   * The position the marks are drawn at while a request for it is still being
-   * waited on, and the timer that will ask for it. Set, it also means the
-   * element's own time is not to be read: the element is still playing the
-   * second the reader has moved away from.
+   * Where the marks stand, when that is not where the element is: the position
+   * chosen by hand, until the element reports having reached it. A run of
+   * presses steps from here rather than from the state, which is one render
+   * behind while the presses are arriving faster than React draws.
    */
   const wanted = useRef<number | null>(null)
+  /** The timer that will ask for the position the marks are standing at. */
   const asking = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /**
@@ -320,21 +321,21 @@ export function Player({
   const choose = (second: number) => {
     const at = Math.min(duration, Math.max(0, second))
 
+    wanted.current = at
+    setPosition(at)
+
     // A stream handed over as it is answers a byte range, so the position moves
     // inside the picture already loaded, and there is nothing to wait for.
     if (plan.seeking === 'byRange' && video.current && source) {
       video.current.currentTime = at
-      setPosition(at)
 
       return
     }
 
     // One made as it plays does not: the second chosen is a new request, and
-    // the transcoder behind it is built again. The mark goes there now and the
+    // the transcoder behind it is built again. The mark is already there; the
     // request goes once the presses stop, so a run of them costs one rebuild
     // rather than one each.
-    wanted.current = at
-    setPosition(at)
 
     if (asking.current) {
       clearTimeout(asking.current)
@@ -386,15 +387,29 @@ export function Player({
   }
 
   /**
-   * Louder or quieter by a step, read off the level the bar is showing: silent
-   * reads as nought whatever level the mute is holding, so the first press
-   * after a mute moves from where the eye is rather than from where the sound
-   * was.
+   * The level the bar is showing, read off the element rather than the state.
+   *
+   * Silent reads as nought whatever level the mute is holding, so a press after
+   * a mute moves from where the eye is rather than from where the sound was.
+   * The element is asked because a run of presses arrives faster than React
+   * draws: read from the state, the second press of a run would compute the
+   * same step as the first and the level would move once for two presses.
    */
-  const stepVolume = (by: number) => {
-    const shown = Math.round((muted ? 0 : volume) * 100)
+  const showing = () => {
+    const element = video.current
 
-    chooseVolume(Math.min(100, Math.max(0, shown + by)) / 100)
+    if (!element) {
+      return muted ? 0 : volume
+    }
+
+    return element.muted ? 0 : element.volume
+  }
+
+  /** Louder or quieter by a step. */
+  const stepVolume = (by: number) => {
+    chooseVolume(
+      Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100,
+    )
   }
 
   /** Silence, without losing where the level was set. */
@@ -464,7 +479,7 @@ export function Player({
         stepVolume(-VOLUME_STEP_PERCENT)
         break
       case 'mute':
-        mute(!muted)
+        mute(!(video.current?.muted ?? muted))
         break
       case 'fullscreen':
         toggleFullscreen()
@@ -533,11 +548,14 @@ export function Player({
             onEnded={() => setPhase('paused')}
             onError={stumbled}
             onTimeUpdate={(event) => {
-              // While a chosen position is still being waited on, the element
-              // is playing the second the reader has already moved away from.
-              if (wanted.current === null) {
-                setPosition(from + event.currentTarget.currentTime)
+              // While a request for a chosen position is still on its way, the
+              // element is playing the second the reader has moved away from.
+              if (asking.current) {
+                return
               }
+
+              wanted.current = null
+              setPosition(from + event.currentTarget.currentTime)
             }}
             className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
           />
@@ -549,16 +567,14 @@ export function Player({
             and a single press does not have to wait on a double-press clock to
             find out whether it was one.
 
-            A press area and not a control: the control that says 再生 is on
-            the bar, named and in the tab order. Drawn again here it would be
-            read out twice, so this one is out of the reading and hands the
-            focus to the player rather than keeping it — which is what puts the
-            keys on the picture that was just clicked.
+            The picture and not a control. The control that says 再生 is on the
+            bar, named and in the tab order; a second one here would be read out
+            twice and would have to be tabbed past to reach anything. So this is
+            the picture answering a press — no role, nothing in the reading —
+            and the press hands the focus to the player rather than taking it,
+            which is what puts the keys on the picture that was just clicked.
           */}
-          <button
-            type="button"
-            aria-hidden="true"
-            tabIndex={-1}
+          <div
             data-slot="player-press"
             onMouseDown={(event) => {
               event.preventDefault()
@@ -567,7 +583,7 @@ export function Player({
             onClick={toggle}
             onDoubleClick={toggleFullscreen}
             className={cn(
-              'absolute inset-0 flex items-center justify-center bg-transparent',
+              'absolute inset-0 flex items-center justify-center select-none',
               pressable,
             )}
           >
@@ -576,7 +592,7 @@ export function Player({
                 <PlayIcon className="ml-[3px] size-[27px] text-white/90" />
               </span>
             )}
-          </button>
+          </div>
           {(phase === 'waiting' || phase === 'diagnosing') && (
             // Over the middle, on a plate of its own. Japanese recordings carry
             // their subtitles burnt into the bottom of the picture, so anything

@@ -538,10 +538,15 @@ export const 映像を押して再生: Story = {
     await userEvent.click(area as HTMLElement)
     await waitFor(() => expect(asked).toEqual(['0/720p30']))
 
+    // Two presses: the picture goes on the whole screen and is not asked for
+    // again — the second press of the double is the undo of the first.
     asked.length = 0
     await userEvent.dblClick(area as HTMLElement)
-    await new Promise((rest) => setTimeout(rest, 300))
+    await waitFor(() => expect(document.fullscreenElement).not.toBeNull())
     await expect(asked).toEqual([])
+
+    await document.exitFullscreen()
+    await waitFor(() => expect(document.fullscreenElement).toBeNull())
   },
 }
 
