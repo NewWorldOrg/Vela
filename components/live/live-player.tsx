@@ -696,19 +696,22 @@ export function LivePlayer({
           />
         )}
         {/*
-          The bar is drawn over a picture, and only over one. A wire still
-          starting and a wire that was refused each have a plate of their own
-          on the face — the startup's steps, the fault's reason and its retry —
-          and both are the whole of what there is to do at that moment.
+          A wire that faulted takes the bar with it. Its plate is on the face —
+          the reason, and the retry — and that is the whole of what there is to
+          do: no picture is coming, so 字幕 has nothing to draw over, the
+          volume has nothing to make louder, 設定 has no session to reopen in
+          another profile and 全画面 has nothing to fill the screen with. Left
+          laid out, as it was, only 再生 came up disabled and the other four
+          stayed live and answered a press by doing nothing.
 
-          Under a refusal the bar was still laid out: 再生 came up disabled,
-          but 字幕, the volume, the settings and 全画面 stayed live over a face
-          with nothing on it, and answered a press by doing nothing. The canon
-          draws no bar on any of these plates.
+          A wire still starting keeps it. There the picture is on its way, the
+          levels set now are the ones it arrives at, and the profile it arrives
+          in can still be changed — which is a press that only exists on this
+          bar.
         */}
         <div
           data-slot="player-chrome"
-          hidden={!hasPicture}
+          hidden={key === null || phase === 'faulted'}
           data-up={chromeUp ? 'true' : undefined}
           onPointerEnter={() => setOnTheBar(true)}
           onPointerLeave={() => setOnTheBar(false)}
@@ -730,6 +733,7 @@ export function LivePlayer({
             <button
               type="button"
               aria-label={phase === 'playing' ? '一時停止' : '再生'}
+              disabled={!hasPicture}
               onClick={toggle}
               className={PLAYER_ROUND_BUTTON}
             >
