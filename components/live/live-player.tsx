@@ -8,6 +8,14 @@ import type { LiveChannel, LiveProfile } from '@/repository/live'
 import { LIVE_PROFILE_UNASKED, liveWireHref } from '@/repository/live-paths'
 import { playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import {
+  bandOf,
+  CATCH_UP_RATE,
+  holdOf,
+  reachOf,
+  SEEK_FROM_SECONDS,
+  targetOf,
+} from '@/lib/live-latency'
+import {
   CaptionsGlyph,
   FullscreenIcon,
   PauseGlyph,
@@ -44,17 +52,6 @@ import { LiveStartupSteps } from '@/components/live/live-startup'
 
 /** How long the bar stays after the pointer last said anything, while playing. */
 const RESTS = 3000
-
-/** How far behind the newest picture the playhead is kept. */
-const TARGET_SECONDS = 1.0
-
-/** Behind by this much, the picture runs a little fast until it is back. */
-const CATCH_UP_FROM_SECONDS = 2.5
-
-const CATCH_UP_RATE = 1.05
-
-/** Behind by this much, the playhead is moved to the edge instead. */
-const SEEK_FROM_SECONDS = 8
 
 const TICK_MS = 250
 
@@ -122,7 +119,7 @@ function latencyTone(seconds: number): 'ok' | 'warn' | 'err' {
     return 'err'
   }
 
-  return seconds >= CATCH_UP_FROM_SECONDS ? 'warn' : 'ok'
+  return seconds > bandOf(0).far ? 'warn' : 'ok'
 }
 
 const LATENCY_TONE = {
@@ -206,6 +203,14 @@ export function LivePlayer({
   /** Whether that surface was open when the press began — see the recording player. */
   const dismissing = useRef(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /**
+   * The times this session's picture has run out of ground to play. It is what
+   * moves the figure the playhead is held at: a target is a claim about what
+   * this wire and this machine can hold, and a stall is that claim being
+   * wrong. Held against the session, so a wire that opens afresh begins by
+   * believing the figure again.
+   */
+  const stalls = useRef(0)
 
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
@@ -285,6 +290,12 @@ export function LivePlayer({
      * by one that reads as a slow start.
      */
     let settled = false
+
+    // The element outlives the wire, and the rate is the element's. A session
+    // that opened while the last one was still catching up would otherwise
+    // begin quickened, on ground it has not lost.
+    element.playbackRate = 1
+    stalls.current = 0
 
     const fail = (why: LiveFault) => {
       if (settled) {
@@ -389,6 +400,7 @@ export function LivePlayer({
 
       change((was) => (was.phase === 'starting' ? { ...was, elapsedMs } : was))
 
+      const runs = feed.runs()
       const end = feed.end()
       const start = feed.start()
 
@@ -397,9 +409,9 @@ export function LivePlayer({
       }
 
       if (!everPlayed) {
-        if (end - start >= TARGET_SECONDS) {
+        if (end - start >= targetOf(0)) {
           everPlayed = true
-          element.currentTime = Math.max(start, end - TARGET_SECONDS)
+          element.currentTime = Math.max(start, end - targetOf(0))
           void element
             .play()
             .catch(() => change((was) => ({ ...was, phase: 'paused' })))
@@ -411,13 +423,20 @@ export function LivePlayer({
       const behind = Math.max(0, end - element.currentTime)
 
       if (!element.paused) {
-        if (behind >= SEEK_FROM_SECONDS) {
-          element.currentTime = Math.max(start, end - TARGET_SECONDS)
-          element.playbackRate = 1
-        } else if (behind >= CATCH_UP_FROM_SECONDS) {
-          element.playbackRate = CATCH_UP_RATE
-        } else if (behind <= TARGET_SECONDS + 0.25) {
-          element.playbackRate = 1
+        const hold = holdOf({
+          at: element.currentTime,
+          edge: end,
+          reach: reachOf(runs, element.currentTime),
+          from: start,
+          stalls: stalls.current,
+        })
+
+        if (hold.seekTo !== undefined) {
+          element.currentTime = hold.seekTo
+        }
+
+        if (element.playbackRate !== hold.rate) {
+          element.playbackRate = hold.rate
         }
       }
 
@@ -647,11 +666,15 @@ export function LivePlayer({
                 was.phase === 'playing' ? { ...was, phase: 'paused' } : was,
               )
             }
-            onWaiting={() =>
+            onWaiting={() => {
+              if (phase === 'playing') {
+                stalls.current += 1
+              }
+
               heard((was) =>
                 was.phase === 'playing' ? { ...was, phase: 'buffering' } : was,
               )
-            }
+            }}
             className={cn(
               'size-full object-contain',
               !hasPicture && 'invisible',
