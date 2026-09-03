@@ -1,3 +1,4 @@
+import { servicesSettled } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -118,9 +119,10 @@ export async function getLiveScreen(
   const onAir = guides
     .flatMap((guide) => guide.programmes)
     .filter((programme) => !programme.isShadow)
+  const carried = carriedBy(listed, onAir)
   const withProgrammes = (channel: LiveChannel): LiveChannel => ({
     ...channel,
-    ...nowNextOf(onAir, channel, now),
+    ...nowNextOf(carried.get(channel.id) ?? [], now),
   })
 
   return {
@@ -198,31 +200,55 @@ function endOf(programme: Programme): number {
 }
 
 /**
- * What is on this channel now, and what follows it. A programme with no end
- * said is taken to run half an hour, the way the guide draws it.
+ * What each channel of the list is carrying, settled the way the guide settles
+ * its columns: what is its own, and for the hours it has nothing of its own,
+ * whatever names it under a share.
+ *
+ * A service splits into two or three for the hours it has two or three things
+ * to show and carries the one thing on all of them for the rest of the day.
+ * Nearly every one of those hours reaches the split with no event of its own,
+ * so a row read by service number alone says the split has no listing while
+ * the row above it names the very programme the split is showing.
+ */
+function carriedBy(
+  channels: readonly LiveChannel[],
+  broadcasts: readonly Programme[],
+): Map<string, Programme[]> {
+  const carried = new Map<string, Programme[]>()
+
+  for (const one of servicesSettled(channels, broadcasts).carried) {
+    const already = carried.get(one.service.id)
+
+    if (already) {
+      already.push(one.broadcast)
+    } else {
+      carried.set(one.service.id, [one.broadcast])
+    }
+  }
+
+  return carried
+}
+
+/**
+ * What is on this channel now, and what follows it, read off what the channel
+ * carries. A programme with no end said is taken to run half an hour, the way
+ * the guide draws it.
  */
 export function nowNextOf(
-  programmes: Programme[],
-  channel: Pick<LiveChannel, 'networkId' | 'serviceId'>,
+  carried: readonly Programme[],
   now: Date,
 ): Pick<LiveChannel, 'now' | 'next'> {
   const at = now.getTime()
-  const own = programmes
-    .filter(
-      (programme) =>
-        programme.networkId === channel.networkId &&
-        programme.serviceId === channel.serviceId,
-    )
-    .sort(
-      (left, right) =>
-        new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime(),
-    )
+  const inOrder = [...carried].sort(
+    (left, right) =>
+      new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime(),
+  )
 
-  const current = own.find(
+  const current = inOrder.find(
     (programme) =>
       new Date(programme.startsAt).getTime() <= at && endOf(programme) > at,
   )
-  const following = own.find(
+  const following = inOrder.find(
     (programme) => new Date(programme.startsAt).getTime() > at,
   )
 
