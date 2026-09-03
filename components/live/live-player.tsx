@@ -695,9 +695,20 @@ export function LivePlayer({
             className="absolute inset-0 flex flex-col items-center justify-center"
           />
         )}
+        {/*
+          The bar is drawn over a picture, and only over one. A wire still
+          starting and a wire that was refused each have a plate of their own
+          on the face — the startup's steps, the fault's reason and its retry —
+          and both are the whole of what there is to do at that moment.
+
+          Under a refusal the bar was still laid out: 再生 came up disabled,
+          but 字幕, the volume, the settings and 全画面 stayed live over a face
+          with nothing on it, and answered a press by doing nothing. The canon
+          draws no bar on any of these plates.
+        */}
         <div
           data-slot="player-chrome"
-          hidden={key === null}
+          hidden={!hasPicture}
           data-up={chromeUp ? 'true' : undefined}
           onPointerEnter={() => setOnTheBar(true)}
           onPointerLeave={() => setOnTheBar(false)}
@@ -719,7 +730,6 @@ export function LivePlayer({
             <button
               type="button"
               aria-label={phase === 'playing' ? '一時停止' : '再生'}
-              disabled={!hasPicture}
               onClick={toggle}
               className={PLAYER_ROUND_BUTTON}
             >
