@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
+import { useChannelsFolded } from '@/hooks/useChannelsFolded'
 import type { LiveScreen } from '@/repository/live'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
@@ -32,6 +33,11 @@ import { NowNext } from '@/components/live/now-next'
  * the link sees the same channel, and a reload brings it back. Choosing a
  * channel changes the URL, the screen re-reads what is on it, and the player
  * opens the new wire once the channel reaches it.
+ *
+ * While a channel is being watched the list folds away, and the picture takes
+ * the width it leaves. Before one is chosen it does not: the list is the whole
+ * of the screen's business then, and a fold would leave a screen with one press
+ * on it and nothing to press it for.
  */
 export function LiveView({
   screen,
@@ -69,6 +75,12 @@ export function LiveView({
   )
 
   const watching = screen.watching
+  const [folded, fold] = useChannelsFolded()
+
+  // Folded is the viewer's, and it is kept while they are watching. With
+  // nothing on the picture the list is the screen, so it is opened out
+  // whatever the last fold said, and the press that folds it is not offered.
+  const away = folded && watching !== undefined
 
   return (
     <ScreenMain
@@ -96,12 +108,17 @@ export function LiveView({
       </div>
       <aside
         aria-label="チャンネル"
-        className="sticky top-[62px] flex max-h-[calc(100dvh-78px)] w-[344px] shrink-0 flex-col max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full"
+        className={cn(
+          'sticky top-[62px] flex max-h-[calc(100dvh-78px)] shrink-0 flex-col max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          away ? 'w-11' : 'w-[344px]',
+        )}
       >
         <ChannelList
           kind={screen.kind}
           channels={screen.channels}
           watchingId={watching?.channel.id}
+          folded={away}
+          onFold={watching ? fold : undefined}
           onKind={(kind) =>
             patch({ kind: kind === 'terrestrial' ? null : kind })
           }
