@@ -59,10 +59,12 @@ export function LiveView({
   screen,
   openSocket,
   askSignedOut,
+  startupDeadlineMs,
 }: {
   screen: LiveScreen
   openSocket?: OpenSocket
   askSignedOut?: () => Promise<boolean>
+  startupDeadlineMs?: number
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -112,6 +114,7 @@ export function LiveView({
               returnPath={query ? `${pathname}?${query}` : pathname}
               openSocket={openSocket}
               askSignedOut={askSignedOut}
+              startupDeadlineMs={startupDeadlineMs}
             />
             <NowNext watching={watching} />
           </>

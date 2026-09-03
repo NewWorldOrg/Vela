@@ -715,6 +715,34 @@ export const 再生不能: Story = {
   },
 }
 
+/**
+ * A wire that was neither refused nor closed and never carried a picture. The
+ * screen stops waiting on its own rather than holding the startup plate for as
+ * long as the reader will look at it, and gives the seat up as it goes: a
+ * tuner held by a session that will show nothing is one nobody else can have.
+ */
+export const 起動が終わらない: Story = {
+  args: { openSocket: securing, startupDeadlineMs: 700 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('チャンネルを準備しています'),
+    ).toBeVisible()
+
+    await expect(
+      await canvas.findByText('映像が始まりませんでした', undefined, {
+        timeout: 4000,
+      }),
+    ).toBeVisible()
+    await expect(canvas.queryByText('チャンネルを準備しています')).toBeNull()
+    await expect(canvas.getByRole('button', { name: '再試行' })).toBeVisible()
+
+    await waitFor(() => expect(opened[0]?.readyState).toBe(3))
+    await expect(opened[0]?.sent.length).toBeGreaterThan(0)
+  },
+}
+
 /** A broadcast type with nothing on it. */
 export const 空状態: Story = {
   args: {

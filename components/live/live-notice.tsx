@@ -33,6 +33,11 @@ import { PlaybackNotice } from '@/components/recordings/playback-notice'
  * and each reason is a different thing to do next — a tuner taken for a
  * recording comes back when the recording ends, a channel nobody holds never
  * does — so each is drawn as itself and none are folded into one.
+ *
+ * One of them the wire never names: a session that says nothing at all. The
+ * seat was neither refused nor withdrawn, and no picture came, so the screen is
+ * left on the startup plate with nothing to move it off. That is the only fault
+ * the screen decides for itself, and it decides it on the clock.
  */
 export type LiveFault =
   | { kind: 'refused'; refusal: LiveRefusal; ceiling?: TranscodeCeiling }
@@ -40,6 +45,7 @@ export type LiveFault =
   | { kind: 'dropped' }
   | { kind: 'signedOut' }
   | { kind: 'unsupported' }
+  | { kind: 'tookTooLong' }
 
 interface Said {
   tone: 'gone' | 'waiting' | 'quiet'
@@ -151,6 +157,14 @@ const SIGNED_OUT: Said = {
   worthRetrying: false,
 }
 
+const TOOK_TOO_LONG: Said = {
+  tone: 'waiting',
+  mark: <ClockIcon className="size-[22px]" />,
+  title: '映像が始まりませんでした',
+  worthRetrying: true,
+  worthLooking: true,
+}
+
 const UNSUPPORTED: Said = {
   tone: 'gone',
   mark: <DisplayIcon className="size-[22px]" />,
@@ -183,6 +197,8 @@ function saidOf(fault: LiveFault): Said {
       return SIGNED_OUT
     case 'unsupported':
       return UNSUPPORTED
+    case 'tookTooLong':
+      return TOOK_TOO_LONG
   }
 }
 
