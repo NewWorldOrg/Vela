@@ -199,8 +199,8 @@ export async function getGuide(
     windowHours: WINDOW_HOURS,
     nowMin,
     nowLabel: nowMin === undefined ? undefined : clockLabel(now),
-    channels: settled.services.map(({ service, sub }) =>
-      sub ? { ...service, sub } : { ...service },
+    channels: settled.services.map(({ service, sub, whole }) =>
+      sub ? { ...service, sub, whole: whole.id } : { ...service },
     ),
     programs: settled.carried
       .map(({ service, broadcast }) =>
@@ -236,6 +236,14 @@ export async function getProgram(
     channel: serviceOf(services, programme.networkId, programme.serviceId),
     nowMin: nowMinOf(now, windowStart),
   }
+}
+
+/** Whether the broadcast is the named service's own. */
+function isOf(broadcast: GuideService, service: GuideService): boolean {
+  return (
+    broadcast.networkId === service.networkId &&
+    broadcast.serviceId === service.serviceId
+  )
 }
 
 function serviceOf(
@@ -438,10 +446,7 @@ function alsoCarryingIt(
   on: GuideService,
   services: GuideChannel[],
 ): RelatedProgram[] {
-  if (
-    on.networkId === programme.networkId &&
-    on.serviceId === programme.serviceId
-  ) {
+  if (isOf(programme, on)) {
     return []
   }
 

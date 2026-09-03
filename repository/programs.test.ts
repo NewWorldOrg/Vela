@@ -380,6 +380,29 @@ test('a shared cell is the broadcast it shares, not a copy of it', async () => {
 })
 
 /**
+ * A split says nothing about which column its hours are to be read against:
+ * the number in front of it is the station's, and the order the columns
+ * arrived in is a sort. The column carries it, so the fold has it.
+ */
+test('a split column names the column it split from', async () => {
+  splitting()
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+
+  assert.deepEqual(
+    guide.channels.map((channel) => [channel.id, channel.sub, channel.whole]),
+    [
+      [`${CARRIED.networkId}-${CARRIED.serviceId}`, undefined, undefined],
+      [
+        `${SPLIT.networkId}-${SPLIT.serviceId}`,
+        true,
+        `${CARRIED.networkId}-${CARRIED.serviceId}`,
+      ],
+    ],
+  )
+})
+
+/**
  * A broadcast names the splits it is shared onto and never itself, so read
  * from one of those splits the others are named and the service all of them
  * are carrying is not — which is the one a reader is most likely to be after.
