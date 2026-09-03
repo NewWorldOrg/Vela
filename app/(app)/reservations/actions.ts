@@ -3,12 +3,15 @@
 import { revalidatePath } from 'next/cache'
 
 import type {
+  ReservationBatch,
   ReservationRevision,
   ReservationWrite,
 } from '@/repository/reservations'
 import {
   cancelReservation,
+  cancelReservations,
   discardReservation,
+  discardReservations,
   restoreReservation,
   reviseReservation,
   setReservationPriority,
@@ -60,6 +63,26 @@ export async function throwReservationAway(
   id: string,
 ): Promise<ReservationWrite> {
   const result = await discardReservation(id)
+
+  revalidatePath(RESERVATIONS)
+
+  return result
+}
+
+export async function dropReservations(
+  ids: string[],
+): Promise<ReservationBatch> {
+  const result = await cancelReservations(ids)
+
+  revalidatePath(RESERVATIONS)
+
+  return result
+}
+
+export async function throwReservationsAway(
+  ids: string[],
+): Promise<ReservationBatch> {
+  const result = await discardReservations(ids)
 
   revalidatePath(RESERVATIONS)
 

@@ -345,6 +345,56 @@ export async function discardReservation(
   }
 }
 
+/**
+ * What became of one operation asked for over several reservations. The API takes them one at a
+ * time, so this is that many answers folded into one: how many went through before an answer that
+ * was not a yes, and what that answer said.
+ */
+export type ReservationBatch =
+  | { state: 'ok'; done: number }
+  | { state: 'unauthenticated'; done: number }
+  | { state: 'rejected'; done: number; message: string }
+
+export function cancelReservations(
+  ids: readonly string[],
+): Promise<ReservationBatch> {
+  return overEach(ids, cancelReservation)
+}
+
+export function discardReservations(
+  ids: readonly string[],
+): Promise<ReservationBatch> {
+  return overEach(ids, discardReservation)
+}
+
+/**
+ * Stops at the first reservation that answers with anything but a yes. Carrying on would leave the
+ * reader with one message standing for several different refusals, and the ones not reached are
+ * still selected to ask about again.
+ */
+async function overEach(
+  ids: readonly string[],
+  write: (id: string) => Promise<ReservationWrite>,
+): Promise<ReservationBatch> {
+  let done = 0
+
+  for (const id of ids) {
+    const result = await write(id)
+
+    if (result.state === 'unauthenticated') {
+      return { state: 'unauthenticated', done }
+    }
+
+    if (result.state === 'rejected') {
+      return { state: 'rejected', done, message: result.message }
+    }
+
+    done += 1
+  }
+
+  return { state: 'ok', done }
+}
+
 function toWrite(
   response: Response,
   verdict: AllocationVerdict | undefined,

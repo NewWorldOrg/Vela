@@ -3,6 +3,7 @@ import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type {
   Reservation,
+  ReservationBatch,
   ReservationsResult,
   ReservationWrite,
 } from '@/repository/reservations'
@@ -15,6 +16,27 @@ import { ReservationsView } from '@/components/reservations/reservations-page'
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
 
 const discarded: string[] = []
+
+const discardedTogether: string[] = []
+
+const cancelledTogether: string[] = []
+
+const acceptAll = async (ids: string[]): Promise<ReservationBatch> => ({
+  state: 'ok',
+  done: ids.length,
+})
+
+const throwingAll = async (ids: string[]): Promise<ReservationBatch> => {
+  discardedTogether.push(...ids)
+
+  return { state: 'ok', done: ids.length }
+}
+
+const cancellingAll = async (ids: string[]): Promise<ReservationBatch> => {
+  cancelledTogether.push(...ids)
+
+  return { state: 'ok', done: ids.length }
+}
 
 const throwing = async (id: string): Promise<ReservationWrite> => {
   discarded.push(id)
@@ -57,6 +79,7 @@ const meta = {
       onRevise: accept,
       onDiscard: throwing,
     },
+    bulk: { onCancelAll: acceptAll, onDiscardAll: acceptAll },
   },
 } satisfies Meta<typeof ReservationsView>
 
@@ -213,4 +236,69 @@ export const 予約の削除を断られたとき: Story = {
 
 export const 放送の終わった取消を隠している: Story = {
   args: { result: shown(RESERVATION_FIXTURES, { total: 46 }) },
+}
+
+/**
+ * Several rows chosen at once. What the bar offers is what a row offers, and it
+ * offers each only while every chosen row would take it: a settled reservation
+ * has nothing left to cancel, so choosing one puts 取り消す out of reach.
+ */
+export const 一括で選んで削除する: Story = {
+  args: {
+    result: shown(SETTLED_RESERVATION_FIXTURES, {
+      filter: { cancelled: 'all' },
+    }),
+    bulk: { onCancelAll: cancellingAll, onDiscardAll: throwingAll },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: '朝のニュース を選ぶ' }),
+    )
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: '真昼の博物誌 を選ぶ' }),
+    )
+
+    await expect(await canvas.findByText('2')).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: '取り消す' }),
+    ).toBeDisabled()
+
+    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+
+    await expect(
+      dialog.getByText('選択した 2 件の予約を削除します'),
+    ).toBeVisible()
+
+    await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
+    await waitFor(() => expect(discardedTogether).toEqual(['r-305', 'r-310']))
+  },
+}
+
+/**
+ * The head of the list takes the whole page at once, and lets go of it again.
+ */
+export const 一括で選んで取り消す: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    bulk: { onCancelAll: cancellingAll, onDiscardAll: throwingAll },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: '表示中の予約をすべて選ぶ' }),
+    )
+    await expect(canvas.getByRole('button', { name: '削除' })).toBeDisabled()
+
+    await userEvent.click(canvas.getByRole('button', { name: '取り消す' }))
+    await waitFor(() =>
+      expect(cancelledTogether).toEqual(
+        RESERVATION_FIXTURES.map((one) => one.id),
+      ),
+    )
+  },
 }

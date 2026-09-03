@@ -5,9 +5,11 @@ import { ReservationsView } from '@/components/reservations/reservations-page'
 import {
   bringBackReservation,
   dropReservation,
+  dropReservations,
   raiseReservationPriority,
   reviseReservationDetails,
   throwReservationAway,
+  throwReservationsAway,
 } from '@/app/(app)/reservations/actions'
 
 export const metadata: Metadata = { title: '予約' }
@@ -31,6 +33,10 @@ export default async function Page({
         onRaise: raiseReservationPriority,
         onRevise: reviseReservationDetails,
         onDiscard: throwReservationAway,
+      }}
+      bulk={{
+        onCancelAll: dropReservations,
+        onDiscardAll: throwReservationsAway,
       }}
     />
   )

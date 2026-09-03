@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { InlineAlert } from '@/components/vela/banner'
 import {
@@ -50,11 +51,15 @@ export function ReservationRow({
   reservation,
   expanded,
   onToggle,
+  selected,
+  onSelect,
   actions,
 }: {
   reservation: Reservation
   expanded: boolean
   onToggle: () => void
+  selected: boolean
+  onSelect: (chosen: boolean) => void
   actions: ReservationActions
 }) {
   const conflict = reservation.standing === 'conflict'
@@ -85,11 +90,19 @@ export function ReservationRow({
     <>
       <TableRow
         id={reservationAnchor(reservation.id)}
+        data-state={selected ? 'selected' : undefined}
         className={cn(
           conflict &&
             'bg-coral-soft/40 hover:bg-coral-soft/40 has-aria-expanded:bg-coral-soft/40',
         )}
       >
+        <TableCell className="align-top">
+          <Checkbox
+            checked={selected}
+            onCheckedChange={(next) => onSelect(next === true)}
+            aria-label={`${reservation.title} を選ぶ`}
+          />
+        </TableCell>
         <TableCell className="align-top">
           {conflict && (
             <button
@@ -250,7 +263,7 @@ export function ReservationRow({
       </AlertDialog>
       {conflict && expanded && reservation.conflict && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="border-b-0 px-3.5 pb-3">
+          <TableCell colSpan={8} className="border-b-0 px-3.5 pb-3">
             <div className="rounded-lg bg-surface px-4 py-3.5">
               <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
                 <WarningIcon className="size-4" />
@@ -312,7 +325,7 @@ export function ReservationRow({
       )}
       {refusal && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="border-b-0 px-3.5 pb-3">
+          <TableCell colSpan={8} className="border-b-0 px-3.5 pb-3">
             <span aria-live="polite">
               <InlineAlert tone="warn">{refusal}</InlineAlert>
             </span>
