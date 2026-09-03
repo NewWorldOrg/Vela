@@ -362,3 +362,24 @@ test('a shared cell is the broadcast it shares, not a copy of it', async () => {
     ],
   )
 })
+
+/**
+ * A broadcast names the splits it is shared onto and never itself, so read
+ * from one of those splits the others are named and the service all of them
+ * are carrying is not — which is the one a reader is most likely to be after.
+ */
+test('a shared cell names the channel the broadcast is listed under', async () => {
+  splitting()
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+  const [listed, shared] = guide.programs.filter(
+    (program) => program.id === idOf(CARRIED),
+  )
+
+  assert.deepEqual(listed.related, [
+    { key: idOf(SPLIT), kind: 'shared', channelLabel: '1 みなと総合2' },
+  ])
+  assert.deepEqual(shared.related, [
+    { key: idOf(CARRIED), kind: 'shared', channelLabel: '1 みなと総合1' },
+  ])
+})

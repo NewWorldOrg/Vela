@@ -409,17 +409,51 @@ function toProgram(
     endUndecided: endsAt ? undefined : true,
     items: programme.items,
     related: withRelatedSettled(
-      programme.related.map((related) => ({
-        key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
-        kind: related.kind,
-        channelLabel: channelLabelOf(
-          serviceOf(services, related.networkId, related.serviceId),
-        ),
-      })),
+      [
+        ...alsoCarryingIt(programme, on, services),
+        ...programme.related.map((related) => ({
+          key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
+          kind: related.kind,
+          channelLabel: channelLabelOf(
+            serviceOf(services, related.networkId, related.serviceId),
+          ),
+        })),
+      ],
       service,
     ),
     durationLabel: durationLabelOf(programme),
   }
+}
+
+/**
+ * The service a broadcast is listed under, where the column drawing it is not
+ * that service.
+ *
+ * A broadcast names the splits it is shared onto and never itself. Read from
+ * one of those splits, the others are named and the service they are all
+ * carrying is not — which is the one a reader is most likely to be after.
+ */
+function alsoCarryingIt(
+  programme: Programme,
+  on: GuideService,
+  services: GuideChannel[],
+): RelatedProgram[] {
+  if (
+    on.networkId === programme.networkId &&
+    on.serviceId === programme.serviceId
+  ) {
+    return []
+  }
+
+  return [
+    {
+      key: programme.id,
+      kind: 'shared',
+      channelLabel: channelLabelOf(
+        serviceOf(services, programme.networkId, programme.serviceId),
+      ),
+    },
+  ]
 }
 
 function booked(
