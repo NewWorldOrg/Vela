@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { PLAYER_ROUND_BUTTON } from '@/components/recordings/player-palette'
+import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 
 export const PLAYBACK_SPEEDS = ['0.5', '1.0', '1.25', '1.5', '2.0'] as const
@@ -91,7 +91,7 @@ export function PlayerSettings({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger aria-label="設定" className={PLAYER_ROUND_BUTTON}>
+      <PopoverTrigger aria-label="設定" className={PLAYER_GLYPH_BUTTON}>
         <SettingsIcon className="size-4" />
       </PopoverTrigger>
       <PopoverContent

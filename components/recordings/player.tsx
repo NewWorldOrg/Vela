@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@/lib/utils'
-import { formatPlayhead } from '@/lib/format'
+import { formatPlayerTime } from '@/lib/format'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import {
@@ -13,9 +13,10 @@ import {
   type PlaybackProfile,
 } from '@/repository/video-paths'
 import {
+  CaptionsGlyph,
   FullscreenIcon,
-  PauseIcon,
-  PlayIcon,
+  PauseGlyph,
+  PlayGlyph,
   SkipBackIcon,
   SkipForwardIcon,
   VolumeIcon,
@@ -25,10 +26,11 @@ import {
   PLAYER_BOARD,
   PLAYER_BUTTON,
   PLAYER_FACE,
+  PLAYER_GLYPH_BUTTON,
+  PLAYER_GLYPH_BUTTON_ON,
   PLAYER_PALETTE,
   PLAYER_PICTURE,
-  PLAYER_ROUND_BUTTON,
-  PLAYER_ROUND_BUTTON_ON,
+  PLAYER_SCRIM,
 } from '@/components/recordings/player-palette'
 import {
   playerCommand,
@@ -37,6 +39,7 @@ import {
 } from '@/lib/player-keys'
 import { PlayerVolume } from '@/components/recordings/player-volume'
 import { PlayerSeek } from '@/components/recordings/player-seek'
+import { PlayerCenter } from '@/components/recordings/player-center'
 import { PlayerSettings } from '@/components/recordings/player-settings'
 import { PlayerReading } from '@/components/recordings/player-reading'
 import {
@@ -189,6 +192,19 @@ export function Player({
   const [stirred, setStirred] = useState(false)
   /** Whether the pointer is resting on the bar itself. */
   const [onTheBar, setOnTheBar] = useState(false)
+  /** The second being dragged out along the seek bar, while the hand holds it. */
+  const [scrubbingAt, setScrubbingAt] = useState<number | null>(null)
+  /**
+   * The mark that answers a press in the middle of the picture, and which
+   * press it is answering. The count is what makes a second press restart the
+   * animation instead of being swallowed by the one still running.
+   */
+  const [burst, setBurst] = useState<{
+    was: 'play' | 'pause'
+    nth: number
+  } | null>(null)
+  /** How far ahead of the head the picture is loaded, in seconds. */
+  const [buffered, setBuffered] = useState(0)
   /**
    * Whether the keyboard — and not a click — is somewhere inside the bar.
    *
@@ -218,7 +234,12 @@ export function Player({
 
   const duration = d.lengthSec ?? 0
   const drops = d.qualitySpots?.map((spot) => spot.second)
-  const chromeUp = phase !== 'playing' || stirred || onTheBar || held
+  const chromeUp =
+    phase !== 'playing' ||
+    stirred ||
+    onTheBar ||
+    held ||
+    scrubbingAt !== null
 
   // useEffect exception: browser API (the document's fullscreen element) +
   // listener cleanup. Leaving fullscreen by Esc is not a press this component
@@ -307,21 +328,33 @@ export function Player({
     })
   }
 
+  /**
+   * Answer the press in the middle of the picture with what the picture is
+   * about to do — the glyph of the state being moved to, which is what
+   * YouTube's bloom carries. The count rises on every press so that pressing
+   * twice quickly is two answers rather than one.
+   */
+  const answer = (was: 'play' | 'pause') =>
+    setBurst((last) => ({ was, nth: (last?.nth ?? 0) + 1 }))
+
   const toggle = () => {
     const element = video.current
 
     if (phase === 'idle' || phase === 'broken' || !element || !source) {
+      answer('play')
       play(position)
 
       return
     }
 
     if (element.paused) {
+      answer('play')
       void element.play().catch(() => setPhase('paused'))
 
       return
     }
 
+    answer('pause')
     element.pause()
   }
 
@@ -517,7 +550,14 @@ export function Player({
         onPointerMove={stir}
         onPointerLeave={stir}
         onKeyDown={onKeyDown}
-        className={PLAYER_BOARD}
+        data-up={chromeUp ? 'true' : undefined}
+        /*
+          The pointer goes with the bar. Every player hides it — video.js
+          spells it `.vjs-fullscreen.vjs-user-inactive { cursor: none }` — and
+          a pointer left standing on a picture is the one piece of chrome that
+          never fades, sitting wherever the hand happened to stop.
+        */
+        className={cn(PLAYER_BOARD, 'cursor-none data-[up]:cursor-auto')}
       >
         <div
           className={cn(
@@ -554,6 +594,13 @@ export function Player({
             }
             onEnded={() => setPhase('paused')}
             onError={stumbled}
+            onProgress={(event) => {
+              const ranges = event.currentTarget.buffered
+
+              setBuffered(
+                ranges.length > 0 ? from + ranges.end(ranges.length - 1) : 0,
+              )
+            }}
             onTimeUpdate={(event) => {
               // While a request for a chosen position is still on its way, the
               // element is playing the second the reader has moved away from.
@@ -589,17 +636,24 @@ export function Player({
             }}
             onClick={toggle}
             onDoubleClick={toggleFullscreen}
-            className={cn(
-              'absolute inset-0 flex items-center justify-center select-none',
-              pressable,
-            )}
-          >
-            {phase === 'idle' && (
-              <span className="flex size-[72px] items-center justify-center rounded-full border-[1.5px] border-white/60 opacity-70 transition-opacity duration-150 hover:opacity-100">
-                <PlayIcon className="ml-[3px] size-[27px] text-white/90" />
-              </span>
-            )}
-          </div>
+            className={cn('absolute inset-0 select-none', pressable)}
+          />
+          {/*
+            The middle of the picture. A stopped picture carries the mark that
+            says so, and every press is answered there whether it came from the
+            bar, from the picture or from a key — the bar is at the bottom edge
+            and a key is nowhere, while the eye is in the middle.
+
+            Drawn after the press area and not inside it, so it is never what
+            answers a press: it has no pointer events at all, and the press
+            goes through to the picture underneath.
+          */}
+          <PlayerCenter
+            standing={
+              phase === 'idle' || phase === 'paused' ? 'play' : undefined
+            }
+            burst={burst ?? undefined}
+          />
           {(phase === 'waiting' || phase === 'diagnosing') && (
             // Over the middle, on a plate of its own. Japanese recordings carry
             // their subtitles burnt into the bottom of the picture, so anything
@@ -635,11 +689,12 @@ export function Player({
               )
             }
             onBlur={() => setHeld(false)}
+            style={{ backgroundImage: PLAYER_SCRIM }}
             className={cn(
-              'absolute inset-x-0 bottom-0 z-10 bg-(--pl-chrome) px-4 pt-3.5 pb-3 max-[700px]:px-3',
-              'pointer-events-none opacity-0 transition-opacity duration-200',
-              'data-[up]:pointer-events-auto data-[up]:opacity-100',
-              'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:opacity-100',
+              'absolute inset-x-0 bottom-0 z-10 px-4 pt-14 pb-3 max-[700px]:px-3',
+              'pointer-events-none translate-y-2 opacity-0 transition-[opacity,translate] duration-200 ease-out',
+              'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
+              'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
             )}
           >
             {duration > 0 && (
@@ -647,24 +702,26 @@ export function Player({
                 id={d.id}
                 duration={duration}
                 position={position}
+                buffered={buffered}
                 drops={drops}
                 marks={d.seek}
                 onChoose={choose}
+                onScrubbing={setScrubbingAt}
                 frameHref={frameHref}
               />
             )}
             {/* The seek bar is 18px tall and its 44px area reaches 13px past
-              it; the round buttons are 32px and theirs reaches 6px. 24px
+              it; the glyph buttons are 40px and theirs reaches 2px. 20px
               between the two rows leaves 5px of clear air, so neither answers
               a press meant for the other. */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-4">
+            <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-2">
               <button
                 type="button"
                 aria-label={phase === 'playing' ? '一時停止' : '再生'}
                 onClick={toggle}
-                className={PLAYER_ROUND_BUTTON}
+                className={PLAYER_GLYPH_BUTTON}
               >
-                {phase === 'playing' ? <PauseIcon /> : <PlayIcon />}
+                {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
               </button>
               {/*
                 The two skips, beside the transport and in the order every
@@ -688,7 +745,7 @@ export function Player({
                     type="button"
                     aria-label={`${SEEK_STEP_SECONDS}秒戻る`}
                     onClick={() => step(-SEEK_STEP_SECONDS)}
-                    className={PLAYER_ROUND_BUTTON}
+                    className={PLAYER_GLYPH_BUTTON}
                   >
                     <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
                   </button>
@@ -696,14 +753,45 @@ export function Player({
                     type="button"
                     aria-label={`${SEEK_STEP_SECONDS}秒進む`}
                     onClick={() => step(SEEK_STEP_SECONDS)}
-                    className={PLAYER_ROUND_BUTTON}
+                    className={PLAYER_GLYPH_BUTTON}
                   >
                     <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
                   </button>
                 </>
               )}
-              <span className="font-code text-sub whitespace-nowrap text-(--pl-ink-2)">
-                {formatPlayhead(position)} / {formatPlayhead(duration)}
+              {/*
+                The sound, beside the transport. Both references put it there —
+                YouTube's speaker comes straight after the transport and before
+                the reading, Netflix's after its two skips — and it was on the
+                far right here, which is a place neither of them uses. The
+                speaker before the level, so that the switch is the thing the
+                hand lands on first and the level is what it slides into.
+              */}
+              <button
+                type="button"
+                aria-label="消音"
+                aria-pressed={muted}
+                onClick={() => mute(!muted)}
+                className={cn(
+                  PLAYER_GLYPH_BUTTON,
+                  muted && PLAYER_GLYPH_BUTTON_ON,
+                )}
+              >
+                <VolumeIcon level={muted ? 0 : volume} />
+              </button>
+              <PlayerVolume
+                level={muted ? 0 : volume}
+                onChoose={chooseVolume}
+              />
+              {/*
+                The reading, beside the transport as every player puts it, and
+                spelled the way every player spells it: `26:12 / 1:54:03`, with
+                the hour carried only by a recording that has one.
+              */}
+              <span className="ml-2 font-code text-[13px] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
+                {formatPlayerTime(scrubbingAt ?? position)}
+                <span className="mx-1 text-(--pl-ink-3)">/</span>
+                {formatPlayerTime(duration)}
               </span>
               {/*
                 Beside the transport and not in the gear: moving along the
@@ -725,31 +813,16 @@ export function Player({
                   </span>
                 </button>
               )}
-              <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-4 max-[700px]:ml-0">
+              <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
                 <button
                   type="button"
                   disabled
+                  aria-label="字幕"
                   aria-pressed={false}
                   title={NOT_WIRED}
-                  className={PLAYER_BUTTON}
+                  className={PLAYER_GLYPH_BUTTON}
                 >
-                  字幕
-                </button>
-                <PlayerVolume
-                  level={muted ? 0 : volume}
-                  onChoose={chooseVolume}
-                />
-                <button
-                  type="button"
-                  aria-label="消音"
-                  aria-pressed={muted}
-                  onClick={() => mute(!muted)}
-                  className={cn(
-                    PLAYER_ROUND_BUTTON,
-                    muted && PLAYER_ROUND_BUTTON_ON,
-                  )}
-                >
-                  <VolumeIcon level={muted ? 0 : volume} />
+                  <CaptionsGlyph />
                 </button>
                 <PlayerSettings
                   container={shell}
@@ -764,10 +837,7 @@ export function Player({
                   aria-label="全画面"
                   aria-pressed={full}
                   onClick={toggleFullscreen}
-                  className={cn(
-                    PLAYER_ROUND_BUTTON,
-                    full && PLAYER_ROUND_BUTTON_ON,
-                  )}
+                  className={PLAYER_GLYPH_BUTTON}
                 >
                   <FullscreenIcon leaving={full} />
                 </button>

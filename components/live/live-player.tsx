@@ -8,9 +8,10 @@ import type { LiveChannel, LiveProfile } from '@/repository/live'
 import { LIVE_PROFILE_UNASKED, liveWireHref } from '@/repository/live-paths'
 import { playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import {
+  CaptionsGlyph,
   FullscreenIcon,
-  PauseIcon,
-  PlayIcon,
+  PauseGlyph,
+  PlayGlyph,
   VolumeIcon,
 } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
@@ -19,12 +20,15 @@ import {
   PLAYER_BUTTON,
   PLAYER_BUTTON_ON,
   PLAYER_FACE,
+  PLAYER_GLYPH_BUTTON,
+  PLAYER_GLYPH_BUTTON_ON,
   PLAYER_PALETTE,
   PLAYER_PICTURE_BOX,
-  PLAYER_ROUND_BUTTON,
-  PLAYER_ROUND_BUTTON_ON,
+  PLAYER_SCRIM,
+  PLAYER_SCRIM_TOP,
 } from '@/components/recordings/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
+import { PlayerCenter } from '@/components/recordings/player-center'
 import { pressable } from '@/components/vela/tactile'
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
@@ -187,6 +191,15 @@ export function LivePlayer({
   const [stirred, setStirred] = useState(false)
   const [onTheBar, setOnTheBar] = useState(false)
   const [focused, setFocused] = useState(false)
+  /**
+   * The mark that answers a press in the middle of the picture, and which
+   * press it answers. The recording player's, unchanged: a live picture is
+   * still a picture that stops when it is told to.
+   */
+  const [burst, setBurst] = useState<{
+    was: 'play' | 'pause'
+    nth: number
+  } | null>(null)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const networkId = channel?.networkId
@@ -452,6 +465,9 @@ export function LivePlayer({
     settling.current = setTimeout(() => setStirred(false), RESTS)
   }
 
+  const answer = (was: 'play' | 'pause') =>
+    setBurst((last) => ({ was, nth: (last?.nth ?? 0) + 1 }))
+
   const toggle = () => {
     const element = video.current
 
@@ -460,6 +476,7 @@ export function LivePlayer({
     }
 
     if (element.paused) {
+      answer('play')
       void element
         .play()
         .catch(() => heard((was) => ({ ...was, phase: 'paused' })))
@@ -467,6 +484,7 @@ export function LivePlayer({
       return
     }
 
+    answer('pause')
     element.pause()
   }
 
@@ -592,7 +610,8 @@ export function LivePlayer({
       onPointerMove={stir}
       onPointerLeave={stir}
       onKeyDown={onKeyDown}
-      className={PLAYER_BOARD}
+      data-up={chromeUp ? 'true' : undefined}
+      className={cn(PLAYER_BOARD, 'cursor-none data-[up]:cursor-auto')}
     >
       <div
         className={cn(
@@ -655,18 +674,45 @@ export function LivePlayer({
             className={cn('absolute inset-0 select-none', pressable)}
           />
         )}
+        {hasPicture && (
+          // The recording player's middle, unchanged. A live picture that has
+          // been stopped is as still as any other, and the press that stopped
+          // it was made at the bottom edge or on a key.
+          <PlayerCenter
+            standing={phase === 'paused' ? 'play' : undefined}
+            burst={burst ?? undefined}
+          />
+        )}
         {channel && running && phase !== 'faulted' && (
-          <span className="absolute top-3 left-3 rounded-full bg-black/45 px-3 py-1 text-[11.5px] text-(--pl-ink)">
-            <b className="font-bold">
-              {channel.no && (
-                <span className="mr-1.5 font-code font-medium">
-                  {channel.no}
-                </span>
-              )}
-              {channel.name}
-            </b>{' '}
-            {phase === 'starting' ? '準備中' : '生放送'}
-          </span>
+          /*
+            What is being watched, at the top of the picture, on a wash of its
+            own — the place and the treatment YouTube and Netflix both give a
+            title over video. It comes and goes with the bar, because it is the
+            same statement: a reader who has stopped moving is watching, and a
+            reader who moves is looking for the controls and for what this is.
+          */
+          <div
+            data-slot="live-title"
+            data-up={chromeUp ? 'true' : undefined}
+            style={{ backgroundImage: PLAYER_SCRIM_TOP }}
+            className={cn(
+              'pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-3 pb-10',
+              '-translate-y-2 opacity-0 transition-[opacity,translate] duration-200 ease-out',
+              'data-[up]:translate-y-0 data-[up]:opacity-100',
+            )}
+          >
+            <span className="text-[12px] text-white">
+              <b className="font-bold">
+                {channel.no && (
+                  <span className="mr-1.5 font-code font-medium">
+                    {channel.no}
+                  </span>
+                )}
+                {channel.name}
+              </b>{' '}
+              {phase === 'starting' ? '準備中' : '生放送'}
+            </span>
+          </div>
         )}
         {running && phase === 'starting' && (
           <LiveStartupSteps
@@ -722,23 +768,37 @@ export function LivePlayer({
             )
           }
           onBlur={() => setFocused(false)}
+          style={{ backgroundImage: PLAYER_SCRIM }}
           className={cn(
-            'absolute inset-x-0 bottom-0 z-10 bg-(--pl-chrome) px-4 py-3 max-[700px]:px-3',
-            'pointer-events-none opacity-0 transition-opacity duration-200',
-            'data-[up]:pointer-events-auto data-[up]:opacity-100',
-            'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:opacity-100',
+            'absolute inset-x-0 bottom-0 z-10 px-4 pt-12 pb-3 max-[700px]:px-3',
+            'pointer-events-none translate-y-2 opacity-0 transition-[opacity,translate] duration-200 ease-out',
+            'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
+            'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
           )}
         >
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-4">
+          <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
             <button
               type="button"
               aria-label={phase === 'playing' ? '一時停止' : '再生'}
               disabled={!hasPicture}
               onClick={toggle}
-              className={PLAYER_ROUND_BUTTON}
+              className={PLAYER_GLYPH_BUTTON}
             >
-              {phase === 'playing' ? <PauseIcon /> : <PlayIcon />}
+              {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
             </button>
+            <button
+              type="button"
+              aria-label="消音"
+              aria-pressed={muted}
+              onClick={() => mute(!muted)}
+              className={cn(
+                PLAYER_GLYPH_BUTTON,
+                muted && PLAYER_GLYPH_BUTTON_ON,
+              )}
+            >
+              <VolumeIcon level={muted ? 0 : volume} />
+            </button>
+            <PlayerVolume level={muted ? 0 : volume} onChoose={chooseVolume} />
             {latency !== undefined && (
               <span
                 data-slot="live-latency"
@@ -763,30 +823,18 @@ export function LivePlayer({
                 )}
               </span>
             )}
-            <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-4 max-[700px]:ml-0">
+            <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
               <button
                 type="button"
+                aria-label="字幕"
                 aria-pressed={captioned}
                 onClick={toggleCaptions}
-                className={cn(PLAYER_BUTTON, captioned && PLAYER_BUTTON_ON)}
-              >
-                字幕
-              </button>
-              <PlayerVolume
-                level={muted ? 0 : volume}
-                onChoose={chooseVolume}
-              />
-              <button
-                type="button"
-                aria-label="消音"
-                aria-pressed={muted}
-                onClick={() => mute(!muted)}
                 className={cn(
-                  PLAYER_ROUND_BUTTON,
-                  muted && PLAYER_ROUND_BUTTON_ON,
+                  PLAYER_GLYPH_BUTTON,
+                  captioned && PLAYER_GLYPH_BUTTON_ON,
                 )}
               >
-                <VolumeIcon level={muted ? 0 : volume} />
+                <CaptionsGlyph />
               </button>
               <LiveSettings
                 container={shell}
@@ -799,10 +847,7 @@ export function LivePlayer({
                 aria-label="全画面"
                 aria-pressed={full}
                 onClick={toggleFullscreen}
-                className={cn(
-                  PLAYER_ROUND_BUTTON,
-                  full && PLAYER_ROUND_BUTTON_ON,
-                )}
+                className={PLAYER_GLYPH_BUTTON}
               >
                 <FullscreenIcon leaving={full} />
               </button>

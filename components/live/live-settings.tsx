@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { PLAYER_ROUND_BUTTON } from '@/components/recordings/player-palette'
+import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-settings'
 
@@ -43,7 +43,7 @@ export function LiveSettings({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger aria-label="設定" className={PLAYER_ROUND_BUTTON}>
+      <PopoverTrigger aria-label="設定" className={PLAYER_GLYPH_BUTTON}>
         <SettingsIcon className="size-4" />
       </PopoverTrigger>
       <PopoverContent
