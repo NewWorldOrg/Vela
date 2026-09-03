@@ -16,6 +16,7 @@ import type {
   SystemStatus,
   TunerCensus,
 } from '@/repository/system'
+import { capabilityLabel } from '@/repository/driver-capabilities'
 import { Badge } from '@/components/ui/badge'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { Banner } from '@/components/vela/banner'
@@ -311,7 +312,7 @@ export function SystemView({ status }: { status: SystemStatus }) {
                 <span className="flex flex-wrap gap-1.5">
                   {reading.hello.capabilities.map((capability) => (
                     <Badge key={capability} variant="secondary">
-                      {capability}
+                      {capabilityLabel(capability)}
                     </Badge>
                   ))}
                 </span>
@@ -366,7 +367,7 @@ function DriverReading({ status }: { status: DriverStatus }) {
   const connection = CONNECTION[status.connection]
   const missing = status.missingCapabilities.map((key) => ({
     key,
-    label: key,
+    label: capabilityLabel(key),
   }))
   const degraded = missing.length > 0 || status.driverUpdateRequired
   const tone = connection.tone === 'ok' && degraded ? 'warn' : connection.tone

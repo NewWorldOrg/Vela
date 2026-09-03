@@ -3,6 +3,7 @@ import type { Route } from 'next'
 import { formatStamp } from '@/lib/format'
 import { SILENCE_RANGE } from '@/lib/tuners'
 import { carinaClient } from '@/repository/client/carina'
+import { SESSION_PURPOSE_LABEL } from '@/repository/driver-capabilities'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
 import { promisedEndOf, tuningLabelOf } from '@/repository/tuning'
@@ -230,14 +231,7 @@ const KIND_LABEL: Partial<Record<TunerKind, '地上波' | '衛星'>> = {
   satellite: '衛星',
 }
 
-const SESSION_LABEL: Record<SessionPurpose, string> = {
-  unspecified: '用途不明',
-  recording: '録画',
-  survey: 'EPG 収集',
-  surveyNow: 'EPG 収集（前倒し）',
-  live: 'ライブ',
-  scan: 'スキャン',
-}
+const SESSION_LABEL = SESSION_PURPOSE_LABEL
 
 /**
  * What the screen says while the setting itself could not be read. It is the
