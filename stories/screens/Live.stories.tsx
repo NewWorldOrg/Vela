@@ -282,10 +282,38 @@ export const 選局前: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
 
-    await expect(getRouter().replace).toHaveBeenCalledWith(
-      '/live?ch=32737-1032',
+    // Pushed, not written over: the screen the reader is standing on is the
+    // one back has to come to, and rewriting it sent back out of the live
+    // screen the moment a channel was pressed.
+    await expect(getRouter().push).toHaveBeenCalledWith('/live?ch=32737-1032', {
+      scroll: false,
+    })
+    await expect(getRouter().replace).not.toHaveBeenCalled()
+  },
+}
+
+/**
+ * Watching one channel and choosing another is an entry of its own, so back is
+ * the channel before it rather than the screen the reader entered from. The
+ * broadcast type goes the same way, as every other list in Vela puts a filter
+ * in the history.
+ */
+export const 選局は履歴に積む: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
+    await expect(getRouter().push).toHaveBeenCalledWith('/live?ch=32737-1032', {
+      scroll: false,
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: 'BS' }))
+    await expect(getRouter().push).toHaveBeenCalledWith(
+      '/live?ch=32736-1024&kind=bs',
       { scroll: false },
     )
+
+    await expect(getRouter().replace).not.toHaveBeenCalled()
   },
 }
 
@@ -683,6 +711,57 @@ export const 再生不能: Story = {
     await expect(
       await canvas.findByText('このブラウザでは再生できません'),
     ).toBeVisible()
+    await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
+  },
+}
+
+/**
+ * A wire that was neither refused nor closed and never carried a picture. The
+ * screen stops waiting on its own rather than holding the startup plate for as
+ * long as the reader will look at it, and gives the seat up as it goes: a
+ * tuner held by a session that will show nothing is one nobody else can have.
+ */
+export const 起動が終わらない: Story = {
+  args: { openSocket: securing, startupDeadlineMs: 700 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('チャンネルを準備しています'),
+    ).toBeVisible()
+
+    await expect(
+      await canvas.findByText('映像が始まりませんでした', undefined, {
+        timeout: 4000,
+      }),
+    ).toBeVisible()
+    await expect(canvas.queryByText('チャンネルを準備しています')).toBeNull()
+    await expect(canvas.getByRole('button', { name: '再試行' })).toBeVisible()
+
+    await waitFor(() => expect(opened[0]?.readyState).toBe(3))
+    await expect(opened[0]?.sent.length).toBeGreaterThan(0)
+  },
+}
+
+/**
+ * A wire refused at once never carries a picture either, so the clock that
+ * waits out a silent startup must not reach past the refusal and rename it.
+ * The channel that does not exist is still the channel that does not exist a
+ * minute later, and the press it deliberately does not offer stays absent.
+ */
+export const 断りは時間で書き換わらない: Story = {
+  args: { openSocket: refusing('noSuchChannel'), startupDeadlineMs: 300 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('チャンネルが見つかりません'),
+    ).toBeVisible()
+
+    await new Promise((rest) => setTimeout(rest, 1200))
+
+    await expect(canvas.getByText('チャンネルが見つかりません')).toBeVisible()
+    await expect(canvas.queryByText('映像が始まりませんでした')).toBeNull()
     await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
   },
 }

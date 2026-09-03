@@ -53,6 +53,22 @@ const SEEK_FROM_SECONDS = 8
 
 const TICK_MS = 250
 
+/**
+ * How long the startup is given before the screen stops waiting for it.
+ *
+ * A wire that is refused says so and a wire that drops closes, and both put
+ * something on the screen the reader can act on. A wire that does neither —
+ * open, silent, and carrying no picture — leaves the startup plate spinning
+ * with nothing that will ever take it off, and a reader watching that has no
+ * way to tell it from a channel that is merely slow.
+ *
+ * The bound is set well past a slow one rather than near a quick one: the
+ * design's own worked example has a transcoder still starting at 18.7 seconds
+ * against a median of 22.3, so a startup of half a minute is ordinary and only
+ * one much longer than that is stuck.
+ */
+const STARTUP_DEADLINE_MS = 45000
+
 type Phase = 'starting' | 'buffering' | 'playing' | 'paused' | 'faulted'
 
 /**
@@ -136,6 +152,7 @@ export function LivePlayer({
   openSocket,
   askSignedOut = askWhetherSignedOut,
   wireHref = liveWireHref,
+  startupDeadlineMs = STARTUP_DEADLINE_MS,
 }: {
   /** The channel chosen. Nothing chosen is a face with no picture on it. */
   channel?: LiveChannel
@@ -147,6 +164,8 @@ export function LivePlayer({
   /** How a wire that dropped is asked whether the session went with it. */
   askSignedOut?: () => Promise<boolean>
   wireHref?: (networkId: number, serviceId: number, profile: string) => string
+  /** How long a silent startup is waited out. A story sets its own and waits. */
+  startupDeadlineMs?: number
 }) {
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -240,7 +259,21 @@ export function LivePlayer({
     const change = (patch: (was: Running) => Running) =>
       setHeld((was) => patch(was && was.key === key ? was : begun(key)))
 
+    /**
+     * The session is over, and this is why. Said once: the first answer is the
+     * true one, and the clock below must not talk over it — a wire refused at
+     * once is a wire that never carried a picture, and left on the screen it
+     * would otherwise reach the startup deadline and have its reason replaced
+     * by one that reads as a slow start.
+     */
+    let settled = false
+
     const fail = (why: LiveFault) => {
+      if (settled) {
+        return
+      }
+
+      settled = true
       change((was) => ({ ...was, phase: 'faulted', fault: why }))
       element.pause()
     }
@@ -316,7 +349,25 @@ export function LivePlayer({
     )
 
     const ticking = setInterval(() => {
+      if (settled) {
+        clearInterval(ticking)
+
+        return
+      }
+
       const elapsedMs = performance.now() - openedAt
+
+      // Nothing has come and nothing is going to. The seat is given up here
+      // rather than held until the socket is closed for us: a tuner kept by a
+      // session that will never show a picture is one no other viewer, and no
+      // recording, can have.
+      if (!pictured && elapsedMs >= startupDeadlineMs) {
+        clearInterval(ticking)
+        session.leave()
+        fail({ kind: 'tookTooLong' })
+
+        return
+      }
 
       change((was) => (was.phase === 'starting' ? { ...was, elapsedMs } : was))
 
@@ -368,7 +419,16 @@ export function LivePlayer({
       layer?.close()
       captions.current = null
     }
-  }, [key, networkId, serviceId, profile, openSocket, askSignedOut, wireHref])
+  }, [
+    key,
+    networkId,
+    serviceId,
+    profile,
+    openSocket,
+    askSignedOut,
+    wireHref,
+    startupDeadlineMs,
+  ])
 
   /** The element said something about this session. */
   const heard = (patch: (was: Running) => Running) => {
