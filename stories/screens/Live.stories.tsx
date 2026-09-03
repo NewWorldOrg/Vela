@@ -442,6 +442,13 @@ function refused(
           canvas.queryByRole('link', { name: '使用状況を見る' }),
         ).toBeNull()
       }
+
+      // Nothing arrived and nothing will, so the bar that works a picture is
+      // not laid over the face. What is on it — the reason, and the retry —
+      // is the whole of what there is to press.
+      for (const control of ['再生', '字幕', '消音', '全画面']) {
+        await expect(canvas.queryByRole('button', { name: control })).toBeNull()
+      }
     },
   }
 }
