@@ -72,8 +72,9 @@ export function ReservationSelection({
 
   return (
     <div
+      role="group"
+      aria-label="選択した予約の操作"
       className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[17px] py-[13px]"
-      aria-live="polite"
     >
       <span className="text-ui font-medium whitespace-nowrap text-ink">
         <b className="font-code font-bold">{chosen.length}</b> 件を選択
@@ -101,7 +102,7 @@ export function ReservationSelection({
         選択を解除
       </Button>
       {outcome && (
-        <span className="basis-full">
+        <span aria-live="polite" className="basis-full">
           <InlineAlert tone="warn">{outcome}</InlineAlert>
         </span>
       )}

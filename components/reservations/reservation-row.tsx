@@ -96,7 +96,7 @@ export function ReservationRow({
             'bg-coral-soft/40 hover:bg-coral-soft/40 has-aria-expanded:bg-coral-soft/40',
         )}
       >
-        <TableCell className="align-top">
+        <TableCell className="h-11 align-top">
           <Checkbox
             checked={selected}
             onCheckedChange={(next) => onSelect(next === true)}
@@ -169,13 +169,19 @@ export function ReservationRow({
               </Button>
             ) : (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditing(true)}
-                >
-                  編集
-                </Button>
+                {/* The API takes a revision only while the reservation is still
+                    waiting for its tuner, which is the same standing that can be
+                    cancelled. Offering it on a settled or running one draws a
+                    button that is always refused. */}
+                {cancellable && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditing(true)}
+                  >
+                    編集
+                  </Button>
+                )}
                 {/* Mounted only while it is open, so each opening reads the
                     reservation as it stands rather than as it stood when the
                     row was first drawn. */}
