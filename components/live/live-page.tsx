@@ -4,8 +4,10 @@ import { useCallback } from 'react'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { cn } from '@/lib/utils'
 import type { LiveScreen } from '@/repository/live'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
 import { ChannelList } from '@/components/live/channel-list'
 import { LivePlayer } from '@/components/live/live-player'
 import type { OpenSocket } from '@/components/live/live-session'
@@ -14,6 +16,10 @@ import { NowNext } from '@/components/live/now-next'
 /**
  * The live screen: the picture, what is on it, and the channels it is chosen
  * from. Full width, because the picture and the list are read side by side.
+ *
+ * Full width is the screen and not the picture: the player's board stops at the
+ * step the default screens are read at, and what is on now stops with it, so
+ * the two stay one column with the list beside them however wide the window is.
  *
  * The channel and the broadcast type are in the URL — a second reader opening
  * the link sees the same channel, and a reload brings it back. Choosing a
@@ -62,7 +68,7 @@ export function LiveView({
       width="full"
       className="flex items-start gap-[26px] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1180px]:flex-col"
     >
-      <div className="w-full min-w-0 flex-1">
+      <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
         <LivePlayer
           channel={watching?.channel}
           profiles={screen.profiles}
