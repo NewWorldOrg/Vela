@@ -250,7 +250,8 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Nothing chosen: the face is black and the list is the whole of the screen's
+ * Nothing chosen: no player stands on the screen, the box the picture will
+ * appear in says what is missing, and the list is the whole of the screen's
  * business. Pressing a row puts the channel in the URL, and nothing is asked
  * of the API until then.
  */
@@ -264,6 +265,18 @@ export const 選局前: Story = {
 
     await expect(canvas.queryByText('生放送')).toBeNull()
     await expect(canvas.queryByRole('heading', { level: 1 })).toBeNull()
+    await expect(
+      canvas.getByRole('heading', { name: 'チャンネルが選ばれていません' }),
+    ).toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="live-player"]'),
+    ).toBeNull()
+
+    // The width the screen is read at is the step, not the whole window: there
+    // is no picture yet to spend the window on.
+    await expect(
+      canvasElement.querySelector('[data-slot="screen-main"]'),
+    ).toHaveAttribute('data-width', 'default')
 
     await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
 
@@ -697,6 +710,10 @@ export const 空状態: Story = {
       'aria-pressed',
       'true',
     )
+
+    // One reading of what is missing, not two: with nothing to choose from,
+    // the screen does not also invite a choice.
+    await expect(canvas.queryByText('チャンネルが選ばれていません')).toBeNull()
   },
 }
 

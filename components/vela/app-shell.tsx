@@ -259,9 +259,11 @@ export function AdminSideNavItem({
  * written per screen is a number half of them will be missing.
  *
  * `full` is not a screen that happens to be wide. It is a screen whose content
- * is an axis: the guide is hours across and services down, and the live screen
- * puts a picture beside the list it is chosen from. Bounding either would take
- * away the thing being read rather than tidy it.
+ * is an axis: the guide is hours across and services down, and the live screen,
+ * once a channel is chosen, puts a picture beside the list it is chosen from.
+ * Bounding either would take away the thing being read rather than tidy it. A
+ * screen asks for it while it has that content and not by name alone: live
+ * before a channel is chosen has no picture, and takes the step instead.
  */
 const SCREEN_WIDTHS = {
   default: 'mx-auto w-full max-w-[1440px]',

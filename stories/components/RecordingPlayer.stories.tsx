@@ -371,50 +371,68 @@ export const 音量: Story = {
 }
 
 /**
- * Wider than the picture is allowed to be, and tall enough that three fifths
- * of it still clears 720 — so what stops the picture growing is its own cap
- * and not the window.
+ * Wider than the step the screen is read at, and tall enough that the height
+ * the window allows is more than the step — so what stops the picture growing
+ * is the column and not the window.
  */
 const A_WIDE_WINDOW = { width: 1680, height: 1200 }
 
+/** Wide, but too short for the column: here the window stops the picture. */
+const A_SHORT_WINDOW = { width: 1680, height: 700 }
+
+/** The face, the picture on it, and the bar over both. */
+function faceOf(canvasElement: HTMLElement) {
+  const bar = canvasElement.querySelector(
+    '[data-slot="player-chrome"]',
+  ) as HTMLElement
+
+  return {
+    face: (bar.parentElement as HTMLElement).getBoundingClientRect(),
+    picture: (
+      canvasElement.querySelector('video') as HTMLVideoElement
+    ).getBoundingClientRect(),
+    bar: bar.getBoundingClientRect(),
+  }
+}
+
 /**
- * The face is the column and the picture is not stretched to meet it.
+ * The picture is the face, and the face is the column.
  *
- * The face used to be the picture, so a window wider than the picture left the
- * player floating in the middle of the page with the page's own ground either
- * side of it. Now the black is the player's, the picture stops where the API
- * stops encoding, and what is left over is black on all four sides.
+ * It used to stop at 1280 — the width of the smallest profile the API offers —
+ * so a window with more column than that showed the picture with black either
+ * side of it and the rest of the desk empty. It takes the column now, and the
+ * black is left for a broadcast whose own shape is not 16:9.
  */
-export const 面いっぱいの黒: Story = {
+export const 面いっぱいの映像: Story = {
   parameters: { screen: A_WIDE_WINDOW },
   play: async ({ canvasElement }) => {
-    const face = canvasElement.querySelector('[data-slot="player-chrome"]')
-      ?.parentElement as HTMLElement
-    const picture = canvasElement.querySelector('video') as HTMLVideoElement
-    const bar = canvasElement.querySelector(
-      '[data-slot="player-chrome"]',
-    ) as HTMLElement
+    const { face, picture, bar } = faceOf(canvasElement)
 
-    const faceBox = face.getBoundingClientRect()
-    const pictureBox = picture.getBoundingClientRect()
+    // The column, not a cap of the picture's own: wider than the old 1280.
+    await expect(face.width).toBeGreaterThan(1280)
+    await expect(Math.abs(picture.width - face.width)).toBeLessThan(3)
+    await expect(Math.abs(picture.height - face.height)).toBeLessThan(3)
 
-    // The window is wider than the picture may be, so the face is wider too
-    // and the picture is at its cap rather than at the face's width.
-    await expect(faceBox.width).toBeGreaterThan(1280)
-    await expect(Math.round(pictureBox.width)).toBe(1280)
+    // The bar runs the face, as every player anyone has used does.
+    await expect(Math.abs(bar.width - face.width)).toBeLessThan(1)
+  },
+}
 
-    // Centred, with the same black either side of it.
-    await expect(
-      Math.abs(
-        pictureBox.left - faceBox.left - (faceBox.right - pictureBox.right),
-      ),
-    ).toBeLessThan(1)
+/**
+ * A window too short for the column brings the picture down by its width, so
+ * it keeps its shape and the reading under it stays on the screen. Black is
+ * not stacked over and under to hold the width.
+ */
+export const 背の低い窓では映像が縮む: Story = {
+  parameters: { screen: A_SHORT_WINDOW },
+  play: async ({ canvasElement }) => {
+    const { face, picture } = faceOf(canvasElement)
 
-    // The bar is the face's, not the picture's: it runs over the black as
-    // every player anyone has used does.
-    await expect(
-      Math.abs(bar.getBoundingClientRect().width - faceBox.width),
-    ).toBeLessThan(1)
+    // (700 - 210) * 16 / 9 is about 871, well inside the column the 1440 step
+    // would otherwise give it.
+    await expect(face.width).toBeLessThan(1000)
+    await expect(Math.abs(picture.width - face.width)).toBeLessThan(3)
+    await expect(Math.abs(face.width / face.height - 16 / 9)).toBeLessThan(0.02)
   },
 }
 
