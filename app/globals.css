@@ -201,15 +201,40 @@
   }
 }
 
+/* The broadcast marks — 字 for subtitled, 再 for a repeat, デ for a data
+   channel, and the rest of the set a broadcaster writes into a programme's
+   own name. They are carried in two Unicode blocks that no font in the stacks
+   below draws: the brand faces have no glyph for them, and neither do the
+   Japanese system faces most readers have, so the name arrives on screen with
+   a blank box in it and the mark's meaning is lost.
+
+   Served here rather than left to the reader's machine, over the two blocks
+   and nothing else — every other character is answered by the faces below,
+   exactly as before. Noto Sans CJK JP 2.004 (© 2014-2021 Adobe), subset to
+   those blocks, SIL Open Font License 1.1: http://scripts.sil.org/OFL */
+@font-face {
+  font-family: 'Broadcast Marks';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/broadcast-marks.woff2') format('woff2');
+  unicode-range:
+    U+1F110-1F16F, U+1F200-1F202, U+1F210-1F23B, U+1F240-1F248, U+1F250-1F251;
+}
+
 /* Headings = Zen Maru Gothic, body/UI = Zen Kaku Gothic New,
    numbers / model names / times = M PLUS 1 Code with tabular-nums. */
 @theme {
-  --font-heading: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
+  --font-heading:
+    'Broadcast Marks', 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN',
+    sans-serif;
   --font-body:
-    'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    'Broadcast Marks', 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP',
+    sans-serif;
   --font-code: 'M PLUS 1 Code', ui-monospace, 'SFMono-Regular', monospace;
   --font-sans:
-    'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    'Broadcast Marks', 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP',
+    sans-serif;
   --font-mono: 'M PLUS 1 Code', ui-monospace, 'SFMono-Regular', monospace;
 }
 
