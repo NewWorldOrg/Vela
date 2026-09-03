@@ -641,7 +641,7 @@ test('a tuning that failed says which of the four ways it failed', async () => {
   const detail = await getRecording('d2')
 
   assert.equal(detail?.failureReason?.title, '選局失敗')
-  assert.equal(detail?.failureReason?.body, '③ PSI 不完全')
+  assert.equal(detail?.failureReason?.body, '③ 情報が揃わない')
 })
 
 test('a stop somebody asked for is not read as the clock running out', async () => {
@@ -663,10 +663,7 @@ test('a stop somebody asked for is not read as the clock running out', async () 
 
   standing()
 
-  assert.equal(
-    (await getRecording('d4'))?.stopReason,
-    '自分の abort(終了時刻に到達)',
-  )
+  assert.equal((await getRecording('d4'))?.stopReason, '終了時刻に到達')
 })
 
 /**

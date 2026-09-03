@@ -1,7 +1,6 @@
 import type { ZeroDiagnosis } from '@/repository/services'
+import { numbered } from '@/repository/scan-failures'
 import { DangerIcon } from '@/components/vela/icons'
-
-const CIRCLED = { 1: '①', 2: '②', 3: '③', 4: '④' } as const
 
 /**
  * A system with no service at all. The count is the same in every case, so the
@@ -50,7 +49,7 @@ export function ZeroDiagnosisPanel({
                     : 'mb-0.5 text-cap font-medium text-ink-3'
                 }
               >
-                {CIRCLED[failure.no]} {failure.label}
+                {numbered(failure)}
               </div>
               <div
                 className={

@@ -485,7 +485,10 @@ export const 撤収_別の操作で停止: Story = ended(
   '別の操作で停止されました',
 )
 
-export const 撤収_driver消失: Story = ended('driverLost', 'driver 消失')
+export const 撤収_driver消失: Story = ended(
+  'driverLost',
+  'チューナーとの接続が切れました',
+)
 
 export const 撤収_配信終了: Story = ended('letGo', '配信が終了しました')
 
