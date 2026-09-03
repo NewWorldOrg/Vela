@@ -215,7 +215,6 @@ test('a channel not on the list is nothing being watched', async () => {
 })
 
 test('a programme with no end said runs half an hour, and a shadow is not on air', () => {
-  const channel = { networkId: 32736, serviceId: 1024 }
   const at = (minutes: number) =>
     new Date(NOW.getTime() + minutes * 60_000).toISOString()
 
@@ -231,11 +230,7 @@ test('a programme with no end said runs half an hour, and a shadow is not on air
     items: [],
   }))
 
-  const read = nowNextOf(
-    open.filter((one) => !one.isShadow) as never,
-    channel,
-    NOW,
-  )
+  const read = nowNextOf(open.filter((one) => !one.isShadow) as never, NOW)
 
   assert.equal(read.now?.title, '終了未定')
   assert.equal(read.now?.endLabel, undefined)
@@ -243,12 +238,130 @@ test('a programme with no end said runs half an hour, and a shadow is not on air
 
   const later = nowNextOf(
     open.filter((one) => !one.isShadow) as never,
-    channel,
     new Date(NOW.getTime() + 11 * 60_000),
   )
 
   assert.equal(later.now?.title, 'あと')
   assert.equal(later.next, undefined)
+})
+
+/**
+ * A service that has split carries what the service it split from is carrying,
+ * for the hours it has nothing of its own. The broadcaster says so on the
+ * whole service's event — it names the split under a share — and sends the
+ * split no event of its own at all, so a row read by service number alone has
+ * nothing to show on it.
+ */
+test('a split carries what the whole is carrying, on air and next', async () => {
+  store.channels = [
+    listed(32736, 1024, '総合1'),
+    listed(32736, 1025, '総合2', { remoteControlKeyId: null }),
+  ]
+  store.profiles = []
+  store.programmes = [
+    programme(
+      32736,
+      1024,
+      'あとで分かれる',
+      '2026-08-08T12:00:00Z',
+      '2026-08-08T13:00:00Z',
+      {
+        related: [
+          { networkId: 32736, serviceId: 1025, eventId: 9, kind: 'shared' },
+        ],
+      },
+    ),
+    programme(
+      32736,
+      1024,
+      'このあと',
+      '2026-08-08T13:00:00Z',
+      '2026-08-08T13:30:00Z',
+      {
+        related: [
+          { networkId: 32736, serviceId: 1025, eventId: 10, kind: 'shared' },
+        ],
+      },
+    ),
+  ]
+
+  const screen = await getLiveScreen(undefined, undefined, NOW)
+  const split = screen.channels[1]
+
+  assert.equal(split.id, '32736-1025')
+  assert.equal(split.now?.title, 'あとで分かれる')
+  assert.equal(split.next?.title, 'このあと')
+})
+
+/**
+ * The hours a split does have something of its own are its own. Two answers to
+ * what is on a channel is one answer too many, and the one the split keeps is
+ * the one the broadcaster sent to the split.
+ */
+test('what a split has of its own stands over what it is carrying', async () => {
+  store.channels = [
+    listed(32736, 1024, '総合1'),
+    listed(32736, 1025, '総合2', { remoteControlKeyId: null }),
+  ]
+  store.profiles = []
+  store.programmes = [
+    programme(
+      32736,
+      1024,
+      '分け合っているやつ',
+      '2026-08-08T12:00:00Z',
+      '2026-08-08T13:00:00Z',
+      {
+        related: [
+          { networkId: 32736, serviceId: 1025, eventId: 9, kind: 'shared' },
+        ],
+      },
+    ),
+    programme(
+      32736,
+      1025,
+      '枝番の自分のやつ',
+      '2026-08-08T12:00:00Z',
+      '2026-08-08T13:00:00Z',
+    ),
+  ]
+
+  const screen = await getLiveScreen(undefined, undefined, NOW)
+
+  assert.equal(screen.channels[1].now?.title, '枝番の自分のやつ')
+})
+
+/**
+ * A relay and a move name another service and mean the opposite of a share:
+ * the same programme at another hour or off another transmitter, which is not
+ * what that service is showing now.
+ */
+test('a relay and a move are not carried onto the service they name', async () => {
+  store.channels = [
+    listed(32736, 1024, '総合1'),
+    listed(32736, 1025, '総合2', { remoteControlKeyId: null }),
+  ]
+  store.profiles = []
+  store.programmes = [
+    programme(
+      32736,
+      1024,
+      '中継',
+      '2026-08-08T12:00:00Z',
+      '2026-08-08T13:00:00Z',
+      {
+        related: [
+          { networkId: 32736, serviceId: 1025, eventId: 9, kind: 'relayed' },
+          { networkId: 32736, serviceId: 1025, eventId: 11, kind: 'moved' },
+        ],
+      },
+    ),
+  ]
+
+  const screen = await getLiveScreen(undefined, undefined, NOW)
+
+  assert.equal(screen.channels[1].now, undefined)
+  assert.equal(screen.channels[1].next, undefined)
 })
 
 test('a channel with no programme known stands at nought, and one with no end has no remainder', () => {
