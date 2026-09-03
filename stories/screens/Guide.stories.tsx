@@ -18,6 +18,7 @@ import {
   NOW_MIN,
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
+import { SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useSubChannelsFolded'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { AppFrame } from '@/components/vela/app-shell'
 import { GuideView } from '@/components/guide/guide-page'
@@ -56,6 +57,19 @@ const meta = {
       </AppFrame>
     ),
   ],
+  /**
+   * The fold is remembered per browser, and every story here is rendered into
+   * the one browser. Left alone, a story that folds would decide what the
+   * story after it opens on, and the run would only pass in the order it was
+   * written in.
+   */
+  beforeEach: () => {
+    try {
+      window.localStorage.removeItem(SUB_CHANNELS_FOLDED_KEY)
+    } catch (error) {
+      console.warn('[Guide.stories] the fold could not be cleared', error)
+    }
+  },
 } satisfies Meta<typeof GuideView>
 
 export default meta
@@ -1163,5 +1177,162 @@ export const iPadを横にした幅: Story = {
   parameters: { screen: AN_IPAD_TURNED },
   play: async ({ canvasElement }) => {
     await sidewaysInsideTheGrid(canvasElement)
+  },
+}
+
+/**
+ * A station and the three services it splits into: the one it splits from, a
+ * split with a schedule of its own for part of the evening, and a split
+ * showing nothing all evening that the station is not showing. Beside them a
+ * station that has not split.
+ *
+ * It is the shape one aerial really hands over. Measured on a real line-up:
+ * 27 columns, of which 15 draw nothing all day that the column they split from
+ * is not drawing.
+ */
+const A_STATION_AND_ITS_SPLITS = [
+  CHANNEL_FIXTURES[0],
+  CHANNEL_FIXTURES[1],
+  {
+    id: 'ch-153',
+    no: '153',
+    name: 'みなと総合3',
+    kind: 'terrestrial' as const,
+    sub: true,
+    whole: 'ch-151',
+  },
+  CHANNEL_FIXTURES[2],
+]
+
+const STATION = A_STATION_AND_ITS_SPLITS[0]
+const SPLIT_WITH_ITS_OWN = A_STATION_AND_ITS_SPLITS[1]
+const SPLIT_REPEATING_IT = A_STATION_AND_ITS_SPLITS[2]
+
+const drawnOn = (channelId: string) =>
+  PROGRAM_FIXTURES.filter((program) => program.channelId === channelId)
+
+/**
+ * The same broadcast drawn on a column that is not the one it is listed under.
+ * The id is the broadcast's own, the way the guide draws a carried hour: what
+ * the cell opens is the one broadcast, whichever of the columns it was pressed
+ * on.
+ */
+const repeatedOnto = (channelId: string, from: Program[]) =>
+  from.map((program) => ({ ...program, channelId }))
+
+/**
+ * The hours the split with a schedule of its own is not using it, which are
+ * the hours it repeats the station.
+ */
+const BETWEEN_ITS_OWN = drawnOn(STATION.id).filter((program) =>
+  drawnOn(SPLIT_WITH_ITS_OWN.id).every(
+    (mine) =>
+      program.startMin + program.durationMin <= mine.startMin ||
+      mine.startMin + mine.durationMin <= program.startMin,
+  ),
+)
+
+const A_STATION_AS_IT_GOES_OUT = [
+  ...drawnOn(STATION.id),
+  ...drawnOn(SPLIT_WITH_ITS_OWN.id),
+  ...repeatedOnto(SPLIT_WITH_ITS_OWN.id, BETWEEN_ITS_OWN),
+  ...repeatedOnto(SPLIT_REPEATING_IT.id, drawnOn(STATION.id)),
+  ...drawnOn(A_STATION_AND_ITS_SPLITS[3].id),
+]
+
+const SPLIT_LINE_UP_GUIDE = {
+  ...base,
+  channels: A_STATION_AND_ITS_SPLITS,
+  programs: A_STATION_AS_IT_GOES_OUT,
+}
+
+function columnsOf(canvasElement: HTMLElement): string[] {
+  return Array.from(
+    canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
+  ).map((heading) => heading.textContent ?? '')
+}
+
+/**
+ * Every column the station hands over, which is what the guide draws until it
+ * is asked not to. A split is a channel that can be tuned, and a channel that
+ * can be tuned is a channel whose evening can be read.
+ */
+export const 副チャンネルを出している: Story = {
+  args: { guide: SPLIT_LINE_UP_GUIDE },
+  decorators: [aScreenWide],
+  play: async ({ canvasElement }) => {
+    const columns = columnsOf(canvasElement)
+
+    await expect(columns).toHaveLength(A_STATION_AND_ITS_SPLITS.length)
+    await expect(columns.join(' ')).toContain(SPLIT_REPEATING_IT.name)
+
+    const press = within(canvasElement).getByRole('button', {
+      name: '副チャンネル',
+    })
+
+    await expect(press).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+/**
+ * Pressed, the hours a split is repeating the station come out, and the
+ * columns left with nothing else in them come out with them. What a split has
+ * of its own stays — a reader folding away a repetition has not asked to stop
+ * being shown what is only on that channel — and the hours it was repeating
+ * become the blank hours they already are on any other day.
+ */
+export const 副チャンネルを畳んでいる: Story = {
+  args: { guide: SPLIT_LINE_UP_GUIDE },
+  decorators: [aScreenWide],
+  play: async ({ canvasElement }) => {
+    const press = within(canvasElement).getByRole('button', {
+      name: '副チャンネル',
+    })
+
+    await userEvent.click(press)
+    await expect(press).toHaveAttribute('aria-pressed', 'false')
+
+    const columns = columnsOf(canvasElement)
+
+    await expect(columns.join(' ')).not.toContain(SPLIT_REPEATING_IT.name)
+    await expect(columns.join(' ')).toContain(SPLIT_WITH_ITS_OWN.name)
+    await expect(columns).toHaveLength(A_STATION_AND_ITS_SPLITS.length - 1)
+
+    const kept = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+    )[columns.findIndex((one) => one.includes(SPLIT_WITH_ITS_OWN.name))]
+    const cells = Array.from(
+      kept.querySelectorAll<HTMLElement>('[data-opens="program-panel"]'),
+    )
+
+    await expect(cells).toHaveLength(drawnOn(SPLIT_WITH_ITS_OWN.id).length)
+
+    for (const mine of drawnOn(SPLIT_WITH_ITS_OWN.id)) {
+      await expect(kept).toHaveTextContent(mine.title)
+    }
+
+    await expect(
+      kept.querySelectorAll('[data-guide-unscheduled]').length,
+    ).toBeGreaterThan(0)
+  },
+}
+
+/**
+ * A line-up the press cannot change is a line-up it is not offered on: every
+ * split here has a schedule of its own, so folding would take no column away.
+ */
+export const 畳む先が無ければ操作子を出さない: Story = {
+  args: {
+    guide: {
+      ...base,
+      channels: A_STATION_AND_ITS_SPLITS.slice(0, 2),
+      programs: [...drawnOn(STATION.id), ...drawnOn(SPLIT_WITH_ITS_OWN.id)],
+    },
+  },
+  decorators: [aScreenWide],
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).queryByRole('button', { name: '副チャンネル' }),
+    ).toBeNull()
   },
 }

@@ -4,6 +4,8 @@ import { test } from 'node:test'
 import type { GuideRelationKind } from './guide.ts'
 import {
   broadcastDateOf,
+  foldedGuideOf,
+  foldsAColumn,
   gridMinWidthOf,
   isOnAir,
   nowMinOf,
@@ -207,7 +209,9 @@ test('the service of a network takes a column and keeps all of it', () => {
   const own = carrying(WHOLE, 'the evening news')
   const settled = servicesSettled([WHOLE], [own])
 
-  assert.deepEqual(settled.services, [{ service: WHOLE, sub: false }])
+  assert.deepEqual(settled.services, [
+    { service: WHOLE, sub: false, whole: WHOLE },
+  ])
   assert.deepEqual(settled.carried, [{ service: WHOLE, broadcast: own }])
 })
 
@@ -227,8 +231,8 @@ test('a service that has split carries its own hours and shares the rest', () =>
   const settled = servicesSettled([WHOLE, SPLIT], [news, half, own])
 
   assert.deepEqual(settled.services, [
-    { service: WHOLE, sub: false },
-    { service: SPLIT, sub: true },
+    { service: WHOLE, sub: false, whole: WHOLE },
+    { service: SPLIT, sub: true, whole: WHOLE },
   ])
   assert.deepEqual(settled.carried, [
     { service: WHOLE, broadcast: news },
@@ -300,8 +304,8 @@ test('a service sharing every hour of the day still takes its column', () => {
   const settled = servicesSettled([WHOLE, SPLIT], [news])
 
   assert.deepEqual(settled.services, [
-    { service: WHOLE, sub: false },
-    { service: SPLIT, sub: true },
+    { service: WHOLE, sub: false, whole: WHOLE },
+    { service: SPLIT, sub: true, whole: WHOLE },
   ])
   assert.deepEqual(settled.carried, [
     { service: WHOLE, broadcast: news },
@@ -321,8 +325,8 @@ test('a service with nothing listed at all keeps an empty column', () => {
   )
 
   assert.deepEqual(settled.services, [
-    { service: WHOLE, sub: false },
-    { service: SPLIT, sub: true },
+    { service: WHOLE, sub: false, whole: WHOLE },
+    { service: SPLIT, sub: true, whole: WHOLE },
   ])
   assert.deepEqual(
     settled.carried.map(({ service }) => service.serviceId),
@@ -361,8 +365,8 @@ test('the whole service is the lowest numbered, in whatever order it arrives', (
   )
 
   assert.deepEqual(settled.services, [
-    { service: SPLIT, sub: true },
-    { service: WHOLE, sub: false },
+    { service: SPLIT, sub: true, whole: WHOLE },
+    { service: WHOLE, sub: false, whole: WHOLE },
   ])
 })
 
@@ -494,4 +498,131 @@ test('a programme still to come, or already over, is not', () => {
 
 test('a day with no present in it has nothing on air', () => {
   assert.equal(isOnAir(AT_NINE, undefined), false)
+})
+
+/**
+ * A station and the services it splits into: the whole, a split repeating it
+ * all day, and a split with a schedule of its own for part of the evening.
+ * Beside them a station that has not split, whose column is empty because the
+ * listings have not arrived.
+ */
+const LINE_UP = [
+  { id: 'a-1', name: '総合1' },
+  { id: 'a-2', name: '総合2', sub: true, whole: 'a-1' },
+  { id: 'b-1', name: 'ローカル1' },
+  { id: 'b-2', name: 'ローカル2', sub: true, whole: 'b-1' },
+  { id: 'c-1', name: '情報が来ていない局' },
+]
+
+const evening = (
+  channelId: string,
+  title: string,
+  startMin: number,
+  durationMin: number,
+) => ({ channelId, title, startMin, durationMin })
+
+const CELLS = [
+  evening('a-1', 'ニュース', 0, 60),
+  evening('a-1', 'ドラマ', 60, 60),
+  evening('a-2', 'ニュース', 0, 60),
+  evening('a-2', 'ドラマ', 60, 60),
+  evening('b-1', '演芸', 0, 60),
+  evening('b-1', '生活情報', 60, 60),
+  evening('b-2', '演芸', 0, 60),
+  evening('b-2', '高校野球', 60, 60),
+]
+
+test('the fold takes the hours a split is repeating, not the split', () => {
+  const folded = foldedGuideOf(LINE_UP, CELLS)
+
+  assert.deepEqual(
+    folded.programs.map((cell) => `${cell.channelId} ${cell.title}`),
+    ['a-1 ニュース', 'a-1 ドラマ', 'b-1 演芸', 'b-1 生活情報', 'b-2 高校野球'],
+  )
+})
+
+test('a split left with nothing loses its column, one with something keeps it', () => {
+  const folded = foldedGuideOf(LINE_UP, CELLS)
+
+  assert.deepEqual(
+    folded.channels.map((channel) => channel.id),
+    ['a-1', 'b-1', 'b-2', 'c-1'],
+  )
+})
+
+/**
+ * The same name over other minutes is another broadcast. A split showing at
+ * eight what the station showed at seven is not repeating it now.
+ */
+test('the same name over other minutes is not a repetition', () => {
+  const folded = foldedGuideOf(LINE_UP, [
+    evening('a-1', 'ニュース', 0, 60),
+    evening('a-2', 'ニュース', 60, 60),
+    evening('b-1', '演芸', 0, 60),
+    evening('b-2', '演芸', 0, 60),
+  ])
+
+  assert.deepEqual(
+    folded.channels.map((channel) => channel.id),
+    ['a-1', 'a-2', 'b-1', 'c-1'],
+  )
+})
+
+/**
+ * A column is read against the station it split from and nothing else. Two
+ * stations showing the same relay at the same hour are two stations showing
+ * it, not one repeating the other.
+ */
+test('a split is read against its own station', () => {
+  const folded = foldedGuideOf(LINE_UP, [
+    evening('a-1', '中継', 0, 60),
+    evening('b-2', '中継', 0, 60),
+  ])
+
+  assert.deepEqual(
+    folded.programs.map((cell) => cell.channelId),
+    ['a-1', 'b-2'],
+  )
+})
+
+/**
+ * A column that has not split is empty because its listings have not arrived,
+ * which is not what the reader asked to stop being shown.
+ */
+test('a column that has not split is never folded away', () => {
+  const folded = foldedGuideOf(LINE_UP, [])
+
+  assert.deepEqual(
+    folded.channels.map((channel) => channel.id),
+    ['a-1', 'b-1', 'c-1'],
+  )
+})
+
+test('a day with a column repeating another has a fold to offer', () => {
+  assert.equal(foldsAColumn(LINE_UP, CELLS), true)
+})
+
+test('a day whose splits all have something of their own folds nothing', () => {
+  assert.equal(
+    foldsAColumn(LINE_UP, [
+      evening('a-1', 'ニュース', 0, 60),
+      evening('a-2', '高校野球', 0, 60),
+      evening('b-1', '演芸', 0, 60),
+      evening('b-2', '囲碁', 0, 60),
+    ]),
+    false,
+  )
+})
+
+test('a day with no split at all folds nothing', () => {
+  assert.equal(
+    foldsAColumn(
+      [
+        { id: 'a-1', name: '総合1' },
+        { id: 'b-1', name: 'ローカル1' },
+      ],
+      [evening('a-1', 'ニュース', 0, 60)],
+    ),
+    false,
+  )
 })

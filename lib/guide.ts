@@ -152,7 +152,8 @@ export interface GuideRun {
 
 /** A service the grid draws, and the broadcasts that go in its column. */
 export interface SettledGuide<S, B> {
-  services: { service: S; sub: boolean }[]
+  /** `whole` is the service the column split from, and itself where it has not. */
+  services: { service: S; sub: boolean; whole: S }[]
   carried: { service: S; broadcast: B }[]
 }
 
@@ -184,7 +185,7 @@ export function servicesSettled<
   B extends GuideService & GuideRun & { related: readonly GuideRelation[] },
 >(services: readonly S[], broadcasts: readonly B[]): SettledGuide<S, B> {
   const wholes = wholeServicesOf(services)
-  const drawn: { service: S; sub: boolean }[] = []
+  const drawn: { service: S; sub: boolean; whole: S }[] = []
   const carried: { service: S; broadcast: B }[] = []
 
   for (const service of services) {
@@ -200,6 +201,7 @@ export function servicesSettled<
     drawn.push({
       service,
       sub: whole !== undefined && whole.serviceId !== service.serviceId,
+      whole: whole ?? service,
     })
     carried.push(
       ...[...own, ...shared].map((broadcast) => ({ service, broadcast })),
@@ -317,6 +319,121 @@ export function unscheduledSpansOf(
   }
 
   return spans
+}
+
+/** A column of the grid, as the fold reads one. */
+export interface FoldableColumn {
+  id: string
+  /** A service that split off another, which is all the fold ever takes away. */
+  sub?: boolean
+  /** The column this one split from, where it split from one. */
+  whole?: string
+}
+
+/** A cell of the grid, as the fold reads one. */
+export interface FoldableCell {
+  channelId: string
+  startMin: number
+  durationMin: number
+  title: string
+}
+
+/** The line-up and the cells it is drawn with, after a fold. */
+export interface FoldedGuide<C, P> {
+  channels: C[]
+  programs: P[]
+}
+
+/**
+ * A cell as the fold compares it: the minutes it covers and what is in them.
+ * Two columns drawing this are two columns showing the same thing.
+ */
+function drawnAs(cell: FoldableCell): string {
+  return `${cell.startMin}|${cell.durationMin}|${cell.title}`
+}
+
+/**
+ * The grid with the hours a split is repeating its station taken out, and then
+ * the columns that had nothing else in them.
+ *
+ * A station splits into two or three for the hours it has that much to show
+ * and puts the one thing out on all of them for the rest of the day, so most
+ * of the grid's width goes on columns whose cells are the cell beside them
+ * printed again. Measured on one aerial's evening: **27 columns, of which 15
+ * draw nothing all day that the column they split from is not drawing.**
+ *
+ * What is compared is what is drawn — the run and the name — and not what the
+ * broadcaster said about it. The station spells the same arrangement two ways
+ * and sends both on the same night: it names the split under a share on its
+ * own event, and it also sends the split events of its own carrying the same
+ * programme at the same hour. A fold that read only the naming took one column
+ * of the 27 away and left the rest of the repetition on screen.
+ *
+ * The fold is put as "take out the repeated hours, then the columns left
+ * empty", and not as "take out the splits", because a split is not the same
+ * thing as a repetition. A split running a schedule of its own for part of the
+ * day keeps its column and keeps those hours; what it loses is the hours it
+ * was repeating, which become the blank hours they already are on any other
+ * day. A fold that took the column would take that schedule with it, and a
+ * reader folding away a repetition has not asked to stop being shown what is
+ * only on that channel.
+ *
+ * Only a split is ever taken. A column of a station that has not split is
+ * empty because its listings have not arrived, which is a different thing from
+ * a column with nothing of its own to show, and not what the reader asked to
+ * hide.
+ */
+export function foldedGuideOf<C extends FoldableColumn, P extends FoldableCell>(
+  channels: readonly C[],
+  programs: readonly P[],
+): FoldedGuide<C, P> {
+  const drawnOn = new Map<string, Set<string>>()
+
+  for (const cell of programs) {
+    const column = drawnOn.get(cell.channelId)
+
+    if (column) {
+      column.add(drawnAs(cell))
+    } else {
+      drawnOn.set(cell.channelId, new Set([drawnAs(cell)]))
+    }
+  }
+
+  const splitFrom = new Map<string, string>()
+
+  for (const channel of channels) {
+    if (channel.sub && channel.whole && channel.whole !== channel.id) {
+      splitFrom.set(channel.id, channel.whole)
+    }
+  }
+
+  const kept = programs.filter((cell) => {
+    const whole = splitFrom.get(cell.channelId)
+
+    return whole === undefined || !drawnOn.get(whole)?.has(drawnAs(cell))
+  })
+
+  return {
+    channels: channels.filter(
+      (channel) =>
+        !splitFrom.has(channel.id) ||
+        kept.some((cell) => cell.channelId === channel.id),
+    ),
+    programs: kept,
+  }
+}
+
+/**
+ * Whether folding would take a column away, which is when there is a fold to
+ * offer. A day whose splits all have something of their own — or one with no
+ * split at all — is a day the press cannot change, and a press that cannot
+ * change anything is not drawn.
+ */
+export function foldsAColumn<C extends FoldableColumn, P extends FoldableCell>(
+  channels: readonly C[],
+  programs: readonly P[],
+): boolean {
+  return foldedGuideOf(channels, programs).channels.length < channels.length
 }
 
 /** The hour gutter down the left of the grid, which is not a channel. */

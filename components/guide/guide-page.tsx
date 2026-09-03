@@ -5,8 +5,9 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
-import { isOnAir } from '@/lib/guide'
+import { foldedGuideOf, foldsAColumn, isOnAir } from '@/lib/guide'
 import { cn } from '@/lib/utils'
+import { useSubChannelsFolded } from '@/hooks/useSubChannelsFolded'
 import { CHANNEL_KINDS } from '@/repository/channels'
 import type {
   CollectNowResult,
@@ -59,6 +60,25 @@ export function GuideView({
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
   /**
+   * A station splits into two or three for the hours it has that much to show
+   * and carries the one thing on all of them for the rest of the day, so most
+   * of the grid's width goes on columns whose cells are the cell beside them
+   * printed again. Folded, the hours a column is carrying come out and the
+   * columns left with nothing else in them go with them.
+   *
+   * The fold is the reader's, held in the browser and not in the URL: the day
+   * and the broadcast type are what a second reader opening the link needs,
+   * and how many columns this one is looking at is not.
+   *
+   * It is offered only where it would take a column away. A day whose splits
+   * all have something of their own is a day the press cannot change, and a
+   * press that cannot change anything is not drawn.
+   */
+  const [folded, fold] = useSubChannelsFolded()
+  const foldable = foldsAColumn(guide.channels, guide.programs)
+  const shownGuide =
+    folded && foldable ? foldedGuideOf(guide.channels, guide.programs) : guide
+  /**
    * The panel shows the programme as the guide now has it, not as it was when
    * it was picked: a reservation taken or dropped from inside the panel
    * changes the row it was opened from.
@@ -70,7 +90,7 @@ export function GuideView({
    * broadcast happens to be listed under.
    */
   const shown = selected
-    ? (guide.programs.find(
+    ? (shownGuide.programs.find(
         (one) => one.id === selected.id && one.channelId === selected.channelId,
       ) ?? selected)
     : null
@@ -161,6 +181,20 @@ export function GuideView({
           )}
         </div>
 
+        {foldable && (
+          <button
+            type="button"
+            aria-pressed={!folded}
+            onClick={() => fold(!folded)}
+            className={cn(
+              'tap-target cursor-pointer rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg',
+              !folded && 'border-brand bg-brand-soft font-bold text-brand',
+            )}
+          >
+            副チャンネル
+          </button>
+        )}
+
         <button
           type="button"
           data-opens="collection"
@@ -195,7 +229,7 @@ export function GuideView({
         </Banner>
       )}
 
-      {guide.channels.length === 0 ? (
+      {shownGuide.channels.length === 0 ? (
         <EmptyState
           spot="antenna"
           title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ 0 日)`}
@@ -205,13 +239,13 @@ export function GuideView({
             </Button>
           }
         />
-      ) : guide.programs.length === 0 ? (
+      ) : shownGuide.programs.length === 0 ? (
         <EmptyState spot="antenna" title="この日の番組情報がありません" />
       ) : (
         <>
           <GuideGrid
-            channels={guide.channels}
-            programs={guide.programs}
+            channels={shownGuide.channels}
+            programs={shownGuide.programs}
             windowStartHour={guide.windowStartHour}
             windowHours={guide.windowHours}
             nowMin={guide.nowMin}
@@ -222,7 +256,9 @@ export function GuideView({
           {shown && (
             <ProgramPanel
               program={shown}
-              channel={guide.channels.find((c) => c.id === shown.channelId)}
+              channel={shownGuide.channels.find(
+                (c) => c.id === shown.channelId,
+              )}
               dayLabel={guide.day.label}
               onAir={isOnAir(shown, guide.nowMin)}
               open={panelOpen}
