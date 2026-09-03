@@ -11,10 +11,6 @@ export function formatBytes(bytes: number) {
   return `${Math.ceil(bytes / 1024)} KB`
 }
 
-export function formatInstant(iso: string) {
-  return iso.replace('T', ' ').replace(/\.\d+(?=[Z+-]|$)/, '')
-}
-
 /**
  * The zone every stamp below is spelled in. Broadcasting runs on Japan
  * Standard Time, so that is what a screen means by a date and an hour — never
