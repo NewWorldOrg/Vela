@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { PLAYER_ROUND_BUTTON } from '@/components/recordings/player-palette'
+import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-settings'
 
@@ -32,18 +32,26 @@ export function LiveSettings({
   profiles,
   profile,
   onChooseProfile,
+  onOpenChange,
 }: {
   /** The element the picture is drawn in, which is what goes fullscreen. */
   container: HTMLElement | null
   profiles: LiveProfile[]
   profile: string
   onChooseProfile: (next: string) => void
+  /** That the surface is open, told to the player, as on the recording player. */
+  onOpenChange?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(false)
 
+  const change = (next: boolean) => {
+    setOpen(next)
+    onOpenChange?.(next)
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger aria-label="設定" className={PLAYER_ROUND_BUTTON}>
+    <Popover open={open} onOpenChange={change}>
+      <PopoverTrigger aria-label="設定" className={PLAYER_GLYPH_BUTTON}>
         <SettingsIcon className="size-4" />
       </PopoverTrigger>
       <PopoverContent

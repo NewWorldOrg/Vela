@@ -176,3 +176,20 @@ test('a target that is not an element is nobody, and the player takes the press'
   assert.equal(answersItself(null, ' '), false)
   assert.equal(playerCommand({ key: ' ' }, { seeks: true }), 'toggle')
 })
+
+test('J and L move the same way the arrows and the two buttons do', () => {
+  assert.equal(playerCommand({ key: 'j' }, { seeks: true }), 'back')
+  assert.equal(playerCommand({ key: 'l' }, { seeks: true }), 'forward')
+  assert.equal(playerCommand({ key: 'J' }, { seeks: true }), 'back')
+  // Live has no position to move along, so neither is taken there.
+  assert.equal(playerCommand({ key: 'j' }, { seeks: false }), null)
+  assert.equal(playerCommand({ key: 'l' }, { seeks: false }), null)
+})
+
+test('C is only taken where a caption switch exists to press', () => {
+  assert.equal(
+    playerCommand({ key: 'c' }, { seeks: false, captions: true }),
+    'captions',
+  )
+  assert.equal(playerCommand({ key: 'c' }, { seeks: true }), null)
+})

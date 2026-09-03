@@ -8,6 +8,7 @@ import {
   formatDateTime,
   formatLength,
   formatPlayhead,
+  formatPlayerTime,
   formatMonth,
   formatSpan,
   formatStamp,
@@ -135,6 +136,31 @@ test('formatPlayhead keeps the hour so the two readings line up', () => {
   assert.equal(formatPlayhead(3932), '1:05:32')
   assert.equal(formatPlayhead(-4), '0:00:00')
   assert.equal(formatPlayhead(12.7), '0:00:12')
+})
+
+test('formatPlayerTime writes a bar reading, hour only where there is one', () => {
+  assert.equal(formatPlayerTime(0), '0:00')
+  assert.equal(formatPlayerTime(392), '6:32')
+  assert.equal(formatPlayerTime(3932), '1:05:32')
+  assert.equal(formatPlayerTime(-4), '0:00')
+  assert.equal(formatPlayerTime(12.7), '0:12')
+})
+
+test('formatPlayerTime writes each figure at its own width', () => {
+  // The head of a two-hour recording, which is the reading that started this:
+  // the elapsed figure is not padded out to the length's shape.
+  assert.equal(
+    `${formatPlayerTime(0)} / ${formatPlayerTime(7191)}`,
+    '0:00 / 1:59:51',
+  )
+  assert.equal(
+    `${formatPlayerTime(3599)} / ${formatPlayerTime(7191)}`,
+    '59:59 / 1:59:51',
+  )
+  assert.equal(
+    `${formatPlayerTime(3600)} / ${formatPlayerTime(7191)}`,
+    '1:00:00 / 1:59:51',
+  )
 })
 
 test('formatLength drops the hour when there is none', () => {
