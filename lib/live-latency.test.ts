@@ -96,6 +96,20 @@ test('a playhead with a hole in front of it is moved, because no rate crosses a 
   )
 })
 
+test('two run ends that do not meet exactly are not a hole', () => {
+  assert.deepEqual(
+    holdOf({
+      rate: 1,
+      at: 598.9,
+      edge: 600,
+      reach: 599.9,
+      from: 540,
+      stalls: 0,
+    }),
+    { rate: 1 },
+  )
+})
+
 test('a stall moves the figure out, so a wire that cannot hold the target is not chased to it', () => {
   assert.equal(targetOf(0), 1)
   assert.equal(targetOf(1), 1.2)

@@ -181,8 +181,10 @@ export function holdOf(playhead: LivePlayhead): LiveHold {
   }
 
   // The playhead is inside a run that stops short of the newest picture: what
-  // is in front of it never arrived, and no rate crosses a hole.
-  if (reach < edge) {
+  // is in front of it never arrived, and no rate crosses a hole. A hole
+  // narrower than one of the wire's pictures is not one — the element merges
+  // runs that meet, so anything smaller is the two ends not meeting exactly.
+  if (edge - reach > PART_SECONDS) {
     return toTheEdge
   }
 
