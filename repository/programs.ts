@@ -1,11 +1,11 @@
-import type { GuideRelationKind } from '@/lib/guide'
+import type { GuideRelationKind, GuideService } from '@/lib/guide'
 import {
   DAY_STARTS_AT_HOUR,
   JST_OFFSET_MS,
   WINDOW_HOURS,
   broadcastDateOf,
   nowMinOf,
-  splitServicesSettled,
+  servicesSettled,
   windowStartOf,
 } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
@@ -183,7 +183,7 @@ export async function getGuide(
     }),
   ])
 
-  const settled = splitServicesSettled(
+  const settled = servicesSettled(
     columnsOf(services, kind),
     guide.programmes.filter((programme) => !programme.isShadow),
   )
@@ -202,8 +202,10 @@ export async function getGuide(
     channels: settled.services.map(({ service, sub }) =>
       sub ? { ...service, sub } : { ...service },
     ),
-    programs: settled.broadcasts
-      .map((programme) => toProgram(programme, windowStart, services))
+    programs: settled.carried
+      .map(({ service, broadcast }) =>
+        toProgram(broadcast, windowStart, services, service),
+      )
       .filter((program): program is Program => program !== null)
       .map((program) => booked(program, bookings.get(program.id))),
   }
@@ -358,10 +360,21 @@ function columnsOf(
     .sort(compareChannels)
 }
 
+/**
+ * A programme as one column draws it.
+ *
+ * Which column it is drawn in is handed in rather than read off the programme:
+ * an hour a service is sharing is the broadcast of the service it split from,
+ * and that broadcast is what the column shows. What the cell opens — the
+ * listing, and the reservation taken from it — stays the broadcast's own, so
+ * the same hour reserved from any of the columns carrying it is the one
+ * reservation it is.
+ */
 function toProgram(
   programme: Programme,
   windowStart: Date,
   services: GuideChannel[],
+  on: GuideService = programme,
 ): Program | null {
   const startsAt = new Date(programme.startsAt)
   const endsAt = programme.endsAt ? new Date(programme.endsAt) : undefined
@@ -378,11 +391,11 @@ function toProgram(
   }
 
   const genre = genreDisplayOf(programme)
-  const service = serviceOf(services, programme.networkId, programme.serviceId)
+  const service = serviceOf(services, on.networkId, on.serviceId)
 
   return {
     id: programme.id,
-    channelId: `${programme.networkId}-${programme.serviceId}`,
+    channelId: `${on.networkId}-${on.serviceId}`,
     title: programme.name,
     description: programme.summary || undefined,
     genre: genre.slug,
@@ -396,17 +409,51 @@ function toProgram(
     endUndecided: endsAt ? undefined : true,
     items: programme.items,
     related: withRelatedSettled(
-      programme.related.map((related) => ({
-        key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
-        kind: related.kind,
-        channelLabel: channelLabelOf(
-          serviceOf(services, related.networkId, related.serviceId),
-        ),
-      })),
+      [
+        ...alsoCarryingIt(programme, on, services),
+        ...programme.related.map((related) => ({
+          key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
+          kind: related.kind,
+          channelLabel: channelLabelOf(
+            serviceOf(services, related.networkId, related.serviceId),
+          ),
+        })),
+      ],
       service,
     ),
     durationLabel: durationLabelOf(programme),
   }
+}
+
+/**
+ * The service a broadcast is listed under, where the column drawing it is not
+ * that service.
+ *
+ * A broadcast names the splits it is shared onto and never itself. Read from
+ * one of those splits, the others are named and the service they are all
+ * carrying is not — which is the one a reader is most likely to be after.
+ */
+function alsoCarryingIt(
+  programme: Programme,
+  on: GuideService,
+  services: GuideChannel[],
+): RelatedProgram[] {
+  if (
+    on.networkId === programme.networkId &&
+    on.serviceId === programme.serviceId
+  ) {
+    return []
+  }
+
+  return [
+    {
+      key: programme.id,
+      kind: 'shared',
+      channelLabel: channelLabelOf(
+        serviceOf(services, programme.networkId, programme.serviceId),
+      ),
+    },
+  ]
 }
 
 function booked(

@@ -9,7 +9,7 @@ import {
   nowMinOf,
   openingScrollTopOf,
   sharesWith,
-  splitServicesSettled,
+  servicesSettled,
   unscheduledSpansOf,
   windowStartOf,
 } from './guide.ts'
@@ -179,6 +179,14 @@ test('one share among several is a share', () => {
   )
 })
 
+/**
+ * An evening's worth of half hours, so that a broadcast and the share that
+ * names it can be told apart from a broadcast and the column's own programme
+ * standing in the same minutes.
+ */
+const AT = (hour: number) =>
+  `2026-08-20T${String(hour).padStart(2, '0')}:00:00Z`
+
 const carrying = (
   service: { networkId: number; serviceId: number },
   name: string,
@@ -187,118 +195,181 @@ const carrying = (
     networkId: number
     serviceId: number
   }[]
-) => ({ ...service, name, related })
+) => ({ ...service, name, startsAt: AT(12), endsAt: AT(13), related })
+
+const at = <B extends { startsAt: string; endsAt?: string }>(
+  broadcast: B,
+  hour: number,
+  hours = 1,
+) => ({ ...broadcast, startsAt: AT(hour), endsAt: AT(hour + hours) })
 
 test('the service of a network takes a column and keeps all of it', () => {
   const own = carrying(WHOLE, 'the evening news')
-  const settled = splitServicesSettled([WHOLE], [own])
+  const settled = servicesSettled([WHOLE], [own])
 
   assert.deepEqual(settled.services, [{ service: WHOLE, sub: false }])
-  assert.deepEqual(settled.broadcasts, [own])
+  assert.deepEqual(settled.carried, [{ service: WHOLE, broadcast: own }])
 })
 
-test('a service that has split keeps only what it does not share', () => {
-  const shared = carrying(SPLIT, 'the evening news', {
-    kind: 'shared',
-    ...WHOLE,
-  })
-  const own = carrying(SPLIT, 'the second half')
-  const settled = splitServicesSettled([WHOLE, SPLIT], [shared, own])
+/**
+ * The hours a split has something of its own are its own, and the rest of the
+ * day is the whole service's broadcast going out on it as well. The broadcaster
+ * says which hours those are, on the whole service's own event, so both come
+ * from the one naming rather than from a guess about what a blank hour means.
+ */
+test('a service that has split carries its own hours and shares the rest', () => {
+  const news = at(
+    carrying(WHOLE, 'the evening news', { kind: 'shared', ...SPLIT }),
+    18,
+  )
+  const half = at(carrying(WHOLE, 'the second half'), 19)
+  const own = at(carrying(SPLIT, 'the other match'), 19)
+  const settled = servicesSettled([WHOLE, SPLIT], [news, half, own])
 
   assert.deepEqual(settled.services, [
     { service: WHOLE, sub: false },
     { service: SPLIT, sub: true },
   ])
-  assert.deepEqual(settled.broadcasts, [own])
+  assert.deepEqual(settled.carried, [
+    { service: WHOLE, broadcast: news },
+    { service: WHOLE, broadcast: half },
+    { service: SPLIT, broadcast: own },
+    { service: SPLIT, broadcast: news },
+  ])
 })
 
 /**
- * The named case, which is the one a reading by name gets wrong: the
- * broadcaster does send a name for some shared hours, and it is the whole
- * service's own name. Read by name the column repeats what is beside it; read
- * by the share it says nothing, which is what it is doing.
+ * The hour is the whole service's broadcast whichever way the broadcaster
+ * spells it. One sends the split a titled copy of the event; another sends
+ * nothing at all on the split and names it under a share on the whole service's
+ * event. Both are the same hour of the same programme, and a guide that drew
+ * one and left the other blank would be drawing the encoding.
  */
-test('a shared broadcast is dropped however it is named', () => {
-  const settled = splitServicesSettled(
-    [WHOLE, SPLIT],
-    [
-      carrying(WHOLE, 'the shopping hour'),
-      carrying(SPLIT, 'the shopping hour', {
-        kind: 'shared',
-        ...WHOLE,
-      }),
-    ],
+test('a shared hour reaches the split however the broadcaster spells it', () => {
+  const spelt = at(
+    carrying(WHOLE, 'the shopping hour', { kind: 'shared', ...SPLIT }),
+    15,
+  )
+  const copied = at(
+    carrying(SPLIT, 'the shopping hour', { kind: 'shared', ...WHOLE }),
+    15,
   )
 
-  assert.deepEqual(settled.services, [{ service: WHOLE, sub: false }])
   assert.deepEqual(
-    settled.broadcasts.map((carried) => carried.serviceId),
-    [WHOLE.serviceId],
+    servicesSettled([WHOLE, SPLIT], [spelt]).carried.filter(
+      ({ service }) => service === SPLIT,
+    ),
+    [{ service: SPLIT, broadcast: spelt }],
+  )
+  assert.deepEqual(
+    servicesSettled(
+      [WHOLE, SPLIT],
+      [at(carrying(WHOLE, 'the shopping hour'), 15), copied],
+    ).carried.filter(({ service }) => service === SPLIT),
+    [{ service: SPLIT, broadcast: copied }],
   )
 })
 
-test('a service sharing every hour of the day takes no column at all', () => {
-  const settled = splitServicesSettled(
-    [WHOLE, SPLIT],
-    [
-      carrying(WHOLE, 'the evening news'),
-      carrying(SPLIT, '', { kind: 'shared', ...WHOLE }),
-    ],
+/**
+ * A copy the split already carries is the hour answered. The share that names
+ * it is the same broadcast said a second time, and drawn as well it would put
+ * two cells over the same minutes.
+ */
+test('a share is not drawn over an hour the split already carries', () => {
+  const named = at(
+    carrying(WHOLE, 'the shopping hour', { kind: 'shared', ...SPLIT }),
+    15,
   )
+  const copy = at(
+    carrying(SPLIT, 'the shopping hour', { kind: 'shared', ...WHOLE }),
+    15,
+  )
+  const settled = servicesSettled([WHOLE, SPLIT], [named, copy])
 
-  assert.deepEqual(settled.services, [{ service: WHOLE, sub: false }])
-  assert.equal(settled.broadcasts.length, 1)
+  assert.deepEqual(
+    settled.carried.filter(({ service }) => service === SPLIT),
+    [{ service: SPLIT, broadcast: copy }],
+  )
 })
 
-test('a service with nothing listed at all takes no column either', () => {
-  const settled = splitServicesSettled(
+test('a service sharing every hour of the day still takes its column', () => {
+  const news = at(
+    carrying(WHOLE, 'the evening news', { kind: 'shared', ...SPLIT }),
+    18,
+  )
+  const settled = servicesSettled([WHOLE, SPLIT], [news])
+
+  assert.deepEqual(settled.services, [
+    { service: WHOLE, sub: false },
+    { service: SPLIT, sub: true },
+  ])
+  assert.deepEqual(settled.carried, [
+    { service: WHOLE, broadcast: news },
+    { service: SPLIT, broadcast: news },
+  ])
+})
+
+/**
+ * A share is what the broadcaster says, not what the guide infers from a blank
+ * column. A service the line-up hands over and nothing is listed for keeps its
+ * column and says nothing in it, which is what is known about it.
+ */
+test('a service with nothing listed at all keeps an empty column', () => {
+  const settled = servicesSettled(
     [WHOLE, SPLIT],
     [carrying(WHOLE, 'the evening news')],
   )
 
-  assert.deepEqual(settled.services, [{ service: WHOLE, sub: false }])
+  assert.deepEqual(settled.services, [
+    { service: WHOLE, sub: false },
+    { service: SPLIT, sub: true },
+  ])
+  assert.deepEqual(
+    settled.carried.map(({ service }) => service.serviceId),
+    [WHOLE.serviceId],
+  )
+})
+
+/**
+ * A relay and a move name another service too and mean the opposite of a
+ * share: the same programme at another hour or from another transmitter. Read
+ * as a share, a column would fill with hours that are not on it.
+ */
+test('only a share fills a column, never a relay or a move', () => {
+  const relayed = at(
+    carrying(WHOLE, 'the late film', { kind: 'relayed', ...SPLIT }),
+    23,
+  )
+  const settled = servicesSettled([WHOLE, SPLIT], [relayed])
+
+  assert.deepEqual(
+    settled.carried.map(({ service }) => service.serviceId),
+    [WHOLE.serviceId],
+  )
 })
 
 /**
  * The order the columns arrive in is how they are drawn and nothing more. They
  * are sorted for reading, by a remote control key a service does not always
- * send, and a key that has not arrived yet can put a split ahead of the
- * service it split from.
- *
- * Read as the whole service, that split would take the real one for a split of
- * its own — and since the whole service names it under a share on every hour
- * it hands over, every one of those hours would be dropped and the column that
- * carries the network's whole schedule would leave the guide. So the service
- * is the lowest numbered either way, and the order only says where to draw it.
+ * send, and a key that has not arrived yet can put a split ahead of the service
+ * it split from. Which of them is the split is the service number, either way.
  */
 test('the whole service is the lowest numbered, in whatever order it arrives', () => {
-  const all = carrying(WHOLE, 'the evening news', { kind: 'shared', ...SPLIT })
-  const shared = carrying(SPLIT, 'the evening news', {
-    kind: 'shared',
-    ...WHOLE,
-  })
-  const own = carrying(SPLIT, 'the second half')
-  const settled = splitServicesSettled([SPLIT, WHOLE], [all, shared, own])
+  const settled = servicesSettled(
+    [SPLIT, WHOLE],
+    [carrying(WHOLE, 'the evening news', { kind: 'shared', ...SPLIT })],
+  )
 
   assert.deepEqual(settled.services, [
     { service: SPLIT, sub: true },
     { service: WHOLE, sub: false },
   ])
-  assert.deepEqual(settled.broadcasts, [own, all])
 })
 
-/**
- * A third column is settled against the service the rest of the network split
- * from, not against the second: what the second is showing is its own
- * business, and two splits showing the same thing are two things neither of
- * them shares with the whole service.
- */
-test('a third service is settled against the whole, not the second', () => {
-  const one = carrying(SPLIT, 'the second half')
-  const two = carrying(SPLIT_AGAIN, 'the second half')
-  const settled = splitServicesSettled(
+test('a third service is a split of the whole, not of the second', () => {
+  const settled = servicesSettled(
     [WHOLE, SPLIT, SPLIT_AGAIN],
-    [carrying(WHOLE, 'the evening news'), one, two],
+    [carrying(WHOLE, 'the evening news')],
   )
 
   assert.deepEqual(
@@ -309,22 +380,30 @@ test('a third service is settled against the whole, not the second', () => {
       [SPLIT_AGAIN.serviceId, true],
     ],
   )
-  assert.equal(settled.broadcasts.length, 3)
 })
 
 test('each network is settled on its own', () => {
-  const settled = splitServicesSettled(
+  const settled = servicesSettled(
     [WHOLE, SPLIT, ELSEWHERE],
     [
-      carrying(WHOLE, 'the evening news'),
-      carrying(SPLIT, '', { kind: 'shared', ...WHOLE }),
+      carrying(WHOLE, 'the evening news', { kind: 'shared', ...SPLIT }),
       carrying(ELSEWHERE, 'the late film'),
     ],
   )
 
   assert.deepEqual(
-    settled.services.map(({ service }) => service.serviceId),
-    [WHOLE.serviceId, ELSEWHERE.serviceId],
+    settled.services.map(({ service, sub }) => [service.serviceId, sub]),
+    [
+      [WHOLE.serviceId, false],
+      [SPLIT.serviceId, true],
+      [ELSEWHERE.serviceId, false],
+    ],
+  )
+  assert.deepEqual(
+    settled.carried
+      .filter(({ service }) => service === ELSEWHERE)
+      .map(({ broadcast }) => broadcast.name),
+    ['the late film'],
   )
 })
 

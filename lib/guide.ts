@@ -143,73 +143,120 @@ export function sharesWith(
   )
 }
 
+/** When a broadcast runs, as the API spells it. */
+export interface GuideRun {
+  startsAt: string
+  /** Absent while the broadcaster has not said when it ends. */
+  endsAt?: string
+}
+
+/** A service the grid draws, and the broadcasts that go in its column. */
+export interface SettledGuide<S, B> {
+  services: { service: S; sub: boolean }[]
+  carried: { service: S; broadcast: B }[]
+}
+
 /**
  * Which services the grid draws a column for, and which broadcasts go in them.
  *
- * The lowest numbered service of a network is the service. Any above it is a
- * column that service splits into for the hours it has a second thing to show,
- * and such a column carries only what is its own: an hour it is sharing the
- * whole service's broadcast is not a second programme, and drawn as one it
- * fills the column with a copy of the one beside it.
+ * Every service the line-up hands over takes a column. A channel that can be
+ * tuned is a channel whose evening can be read, and one that leaves the grid
+ * on the days it is carrying its neighbour's broadcast reads as a channel that
+ * has stopped rather than one that is showing the same thing — while the
+ * channel beside it, whose broadcaster spells the same arrangement a different
+ * way, stays. Which columns there are would then be a fact about the
+ * broadcaster's encoding rather than about what is on air.
  *
- * A day it has nothing of its own at any hour takes no column. A column is put
- * out for the hours a split is on air, and a day with no such hour has none to
- * put out; a column that said nothing from four in the morning to four again
- * would still take a column's width off a grid that already runs off the side.
+ * A service splits into two or three for the hours it has two or three things
+ * to show, and carries the one thing on all of them for the rest of the day.
+ * Those hours are not blank ones, and the broadcaster says what is in them: the
+ * event it sends on the service the split came from names, under a share, the
+ * split the same programme is going out on. So a column carries what is its
+ * own, and for the hours it has nothing of its own, whatever names it under a
+ * share.
+ *
+ * That naming is the only reliable word for it, and the title is not. Most
+ * shared hours reach the split with no title at all, and the ones that do
+ * arrive titled carry the whole service's title.
  */
-export function splitServicesSettled<
+export function servicesSettled<
   S extends GuideService,
-  B extends GuideService & { related: readonly GuideRelation[] },
->(
-  services: readonly S[],
-  broadcasts: readonly B[],
-): { services: { service: S; sub: boolean }[]; broadcasts: B[] } {
+  B extends GuideService & GuideRun & { related: readonly GuideRelation[] },
+>(services: readonly S[], broadcasts: readonly B[]): SettledGuide<S, B> {
   const wholes = wholeServicesOf(services)
   const drawn: { service: S; sub: boolean }[] = []
-  const carried: B[] = []
+  const carried: { service: S; broadcast: B }[] = []
 
   for (const service of services) {
-    const on = broadcasts.filter(
+    const own = broadcasts.filter((broadcast) => isOf(broadcast, service))
+    const shared = broadcasts.filter(
       (broadcast) =>
-        broadcast.networkId === service.networkId &&
-        broadcast.serviceId === service.serviceId,
+        !isOf(broadcast, service) &&
+        sharesWith(broadcast, service) &&
+        !own.some((mine) => runsOver(mine, broadcast)),
     )
     const whole = wholes.get(service.networkId)
 
-    if (!whole || whole.serviceId === service.serviceId) {
-      drawn.push({ service, sub: false })
-      carried.push(...on)
-
-      continue
-    }
-
-    const own = on.filter((broadcast) => !sharesWith(broadcast, whole))
-
-    if (own.length === 0) {
-      continue
-    }
-
-    drawn.push({ service, sub: true })
-    carried.push(...own)
+    drawn.push({
+      service,
+      sub: whole !== undefined && whole.serviceId !== service.serviceId,
+    })
+    carried.push(
+      ...[...own, ...shared].map((broadcast) => ({ service, broadcast })),
+    )
   }
 
-  return { services: drawn, broadcasts: carried }
+  return { services: drawn, carried }
+}
+
+function isOf(broadcast: GuideService, service: GuideService): boolean {
+  return (
+    broadcast.networkId === service.networkId &&
+    broadcast.serviceId === service.serviceId
+  )
+}
+
+/**
+ * Whether two broadcasts would be drawn over each other in one column.
+ *
+ * A share belongs in the hours the column has nothing of its own, and the
+ * broadcaster's naming already keeps the two apart. This is what holds that
+ * rather than trusting it: two cells over the same minutes are two answers to
+ * what is on, and the column's own is the one it keeps.
+ *
+ * A broadcast whose end the broadcaster has not said runs to no length here.
+ * It is a start and nothing more until they say otherwise, and a guessed length
+ * would let the guess decide what a column shows; two such starting together
+ * are still the same minute twice.
+ */
+function runsOver(one: GuideRun, other: GuideRun): boolean {
+  const [from, to] = runOf(one)
+  const [start, end] = runOf(other)
+
+  return from === start || (from < end && start < to)
+}
+
+function runOf(run: GuideRun): [number, number] {
+  const from = new Date(run.startsAt).getTime()
+
+  return [
+    from,
+    run.endsAt === undefined ? from : new Date(run.endsAt).getTime(),
+  ]
 }
 
 /**
  * The service each network split from, which is the lowest numbered it hands
- * over.
+ * over. It is what says whether a column is a split of another, which is how
+ * the grid marks it.
  *
  * It is read off the network rather than off the order the columns arrived in.
  * That order is a presentation — the line-up is sorted by remote control key,
  * which a service does not always send — and a key that has not arrived yet
  * puts a column at the number it would sort under instead, which can be ahead
- * of the service it split from. Settled against whichever column came first,
- * the whole service would be the one read as a split, and since every one of
- * its broadcasts names the split under a share, every one of them would be
- * dropped and its column would leave the guide. A service number is allocated
- * before the ones that split off it and is sent either way, so it answers the
- * question the sort order was never being asked.
+ * of the service it split from. A service number is allocated before the ones
+ * that split off it and is sent either way, so it answers the question the sort
+ * order was never being asked.
  */
 function wholeServicesOf<S extends GuideService>(
   services: readonly S[],

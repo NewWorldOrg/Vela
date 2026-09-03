@@ -30,6 +30,17 @@ export interface StreamVisitRow {
   kind: ChannelKind
   /** The lead service's name; a stream the service list no longer names has none. */
   name?: string
+  /**
+   * The channels the stream carries, in service order.
+   *
+   * A visit is made to a stream and its outcome is a fact about the stream, but
+   * what a reader of the guide has in front of them is the columns. So what is
+   * said about a stream is said about all of them and not about the first of
+   * them: the lead is the service the collector reads first and the one whose
+   * listings are least likely to be the ones missing, so naming a stream by it
+   * points at the fullest column on the screen.
+   */
+  channelNames: string[]
   /** The tuned physical channel, e.g. `58ch` / `BS15` / `ND12`. */
   channelLabel?: string
   serviceCount: number
@@ -146,12 +157,14 @@ export function coverageWarningOf(
     return undefined
   }
 
-  const names = named.map((row) => row.name ?? streamLabel(row))
+  const names = named.flatMap((row) =>
+    row.channelNames.length > 0 ? row.channelNames : [streamLabel(row)],
+  )
   const shown = names.slice(0, 2).join('・')
   const rest = names.length - 2
 
   return {
-    emphasis: `${shown}${rest > 0 ? ` ほか ${rest} TS` : ''} の番組情報が不足しています。`,
+    emphasis: `${shown}${rest > 0 ? ` ほか ${rest} チャンネル` : ''} の番組情報が不足しています。`,
   }
 }
 
@@ -318,7 +331,8 @@ function toRow(
         serviceIds.includes(service.serviceId),
     )
     .sort((a, b) => a.serviceId - b.serviceId)
-  const lead = carried.find((service) => service.television) ?? carried[0]
+  const televised = carried.filter((service) => service.television)
+  const lead = televised[0] ?? carried[0]
   const completedAt = stream.lastCompletedAt
     ? new Date(stream.lastCompletedAt)
     : undefined
@@ -333,6 +347,7 @@ function toRow(
     transportStreamId,
     kind: lead?.kind ?? kindOfNetwork(networkId),
     name: lead?.name || undefined,
+    channelNames: televised.map((service) => service.name).filter(Boolean),
     channelLabel: lead?.channelLabel ?? tunedLabel,
     serviceCount: serviceIds.length,
     outcome: stream.outcome,
