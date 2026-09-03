@@ -667,12 +667,18 @@ export const 列が多ければ横に流れる: Story = {
   },
 }
 
+/**
+ * A stream the collector is not getting through, said as the columns it costs.
+ * The judgement is the stream's, so every channel it carries is named by it —
+ * naming the first of them alone points at the fullest column on the screen.
+ */
 export const 健全性バナー: Story = {
   args: {
     guide: {
       ...base,
       coverageWarning: {
-        emphasis: '湾岸放送1 の番組情報が不足しています。',
+        emphasis:
+          '湾岸放送1・湾岸放送2 ほか 1 チャンネル の番組情報が不足しています。',
       },
     },
   },

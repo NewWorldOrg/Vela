@@ -70,11 +70,17 @@ function row(
       transportStreamId: number
     },
 ): StreamVisitRow {
+  const serviceCount = fixture.serviceCount ?? 3
+
   return {
     key: `${fixture.transportStreamId}-${fixture.transportStreamId}`,
     networkId: fixture.transportStreamId,
     kind: 'terrestrial',
-    serviceCount: 3,
+    serviceCount,
+    channelNames: Array.from(
+      { length: serviceCount },
+      (_, carried) => `${fixture.name}${carried + 1}`,
+    ),
     consecutiveIncomplete: 0,
     stale: false,
     ...fixture,
