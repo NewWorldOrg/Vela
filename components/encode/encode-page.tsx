@@ -35,6 +35,23 @@ const PROFILE_COLUMNS = [
   '成果物',
 ]
 
+/*
+ * Nothing on this screen can be pressed yet: the encode domain has no wire
+ * behind it, and what is drawn is a shape with sample values in it. A control
+ * that will one day answer is kept and told why it cannot answer now — the
+ * other kind of disabled, a state that will never accept the action, is drawn
+ * by leaving the control out.
+ */
+const CANCEL_NOT_WIRED = 'ジョブの中止はこれから実装されます'
+const OPEN_RECORDING_NOT_WIRED = '録画詳細への移動はこれから実装されます'
+const RETRY_NOT_WIRED = '失敗したジョブの再試行はこれから実装されます'
+const ADD_PROFILE_NOT_WIRED = 'プロファイルの追加はこれから実装されます'
+const EDIT_PROFILE_NOT_WIRED = 'プロファイルの編集はこれから実装されます'
+const AUTO_ENCODE_NOT_WIRED = '自動エンコードの切り替えはこれから実装されます'
+
+/** What the switch in the 自動実行 panel is for, rather than what it says. */
+const AUTO_ENCODE_LABEL_ID = 'auto-encode-label'
+
 export function EncodeView({ result }: { result: EncodeResult }) {
   const { running, editing } = result
 
@@ -71,10 +88,20 @@ export function EncodeView({ result }: { result: EncodeResult }) {
               <span>{running.cores}</span>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button variant="ghost" size="sm" disabled>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                title={CANCEL_NOT_WIRED}
+              >
                 中止
               </Button>
-              <Button variant="ghost" size="sm" disabled>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                title={OPEN_RECORDING_NOT_WIRED}
+              >
                 録画詳細を開く
               </Button>
             </div>
@@ -123,7 +150,12 @@ export function EncodeView({ result }: { result: EncodeResult }) {
               >
                 失敗
               </Badge>
-              <Button variant="outline" size="sm" disabled>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                title={RETRY_NOT_WIRED}
+              >
                 再試行
               </Button>
             </Surface>
@@ -134,7 +166,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkPanel}>プロファイル</SectionHeading>
         <div className="mb-2.5">
-          <Button size="sm" disabled>
+          <Button size="sm" disabled title={ADD_PROFILE_NOT_WIRED}>
             <PlusIcon />
             プロファイルを追加
           </Button>
@@ -174,7 +206,12 @@ export function EncodeView({ result }: { result: EncodeResult }) {
           <div className="grid gap-4 min-[760px]:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="profile-name">名称</FieldLabel>
-              <Input id="profile-name" defaultValue={editing.name} disabled />
+              <Input
+                id="profile-name"
+                defaultValue={editing.name}
+                disabled
+                title={EDIT_PROFILE_NOT_WIRED}
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-resolution">解像度</FieldLabel>
@@ -182,11 +219,17 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 id="profile-resolution"
                 defaultValue={editing.resolution}
                 disabled
+                title={EDIT_PROFILE_NOT_WIRED}
               />
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-codec">コーデック</FieldLabel>
-              <Input id="profile-codec" defaultValue={editing.codec} disabled />
+              <Input
+                id="profile-codec"
+                defaultValue={editing.codec}
+                disabled
+                title={EDIT_PROFILE_NOT_WIRED}
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-crf">品質(CRF)</FieldLabel>
@@ -195,11 +238,8 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 className="font-code tabular-nums"
                 defaultValue={editing.crf}
                 disabled
+                title={EDIT_PROFILE_NOT_WIRED}
               />
-              <div className="flex justify-between font-code text-note text-ink-3">
-                <span>18 · 高品質</span>
-                <span>38 · 高圧縮</span>
-              </div>
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-deinterlace">
@@ -209,6 +249,7 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 id="profile-deinterlace"
                 defaultValue={editing.deinterlace}
                 disabled
+                title={EDIT_PROFILE_NOT_WIRED}
               />
             </Field>
             <Field>
@@ -223,10 +264,15 @@ export function EncodeView({ result }: { result: EncodeResult }) {
               {result.lastSavedAt}
             </span>
             <span className="ml-auto flex gap-2">
-              <Button variant="ghost" size="sm" disabled>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                title={EDIT_PROFILE_NOT_WIRED}
+              >
                 元に戻す
               </Button>
-              <Button size="sm" disabled>
+              <Button size="sm" disabled title={EDIT_PROFILE_NOT_WIRED}>
                 保存
               </Button>
             </span>
@@ -237,16 +283,21 @@ export function EncodeView({ result }: { result: EncodeResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkSplit}>自動実行</SectionHeading>
         <Surface className="space-y-3.5">
-          <AutoEncodeRow label="録画終了後に自動エンコード">
+          <AutoEncodeRow
+            label="録画終了後に自動エンコード"
+            labelId={AUTO_ENCODE_LABEL_ID}
+          >
             <span className="flex items-center gap-2.5">
               <Switch
                 id="auto-encode"
+                aria-labelledby={AUTO_ENCODE_LABEL_ID}
                 defaultChecked={result.autoEncode.enabled}
                 disabled
+                title={AUTO_ENCODE_NOT_WIRED}
               />
-              <label htmlFor="auto-encode" className="text-ui">
+              <span className="text-ui">
                 {result.autoEncode.enabled ? 'オン' : 'オフ'}
-              </label>
+              </span>
             </span>
           </AutoEncodeRow>
           <AutoEncodeRow label="対象">
