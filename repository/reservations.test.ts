@@ -229,8 +229,10 @@ mock.module('@/repository/client/carina', {
 
 const {
   cancelReservation,
+  cancelReservations,
   createReservation,
   discardReservation,
+  discardReservations,
   listBookings,
   listReservations,
   restoreReservation,
@@ -431,14 +433,12 @@ test('an unsettled end holds beside a conflict rather than instead of it', async
   assert.equal(one.state, 'conflict')
   assert.equal(one.standing, 'conflict')
   assert.equal(one.endAtConfirmed, false)
-  assert.equal(one.stateNote, '延長時は終了に自動で追従します')
 })
 
-test('a settled end says so, and carries no note', async () => {
+test('a settled end says so', async () => {
   const one = await only()
 
   assert.equal(one.endAtConfirmed, true)
-  assert.equal(one.stateNote, undefined)
 })
 
 /** Not a standing: a reservation with no way to tune reads as secured without it. */
@@ -1172,6 +1172,32 @@ test('a cancelled reservation may be thrown away, and one still to come may not'
   )
 })
 
+test('a cancelled reservation is brought back only while it still has a window', async () => {
+  standing([
+    reservation({ id: 'a1', state: 'cancelled', standing: 'cancelled' }),
+    reservation({ id: 'a2' }),
+  ])
+
+  const ahead = await listReservations({ cancelled: 'all' }, BEFORE_THEM_ALL)
+
+  assert.deepEqual(
+    ahead.items.map((one) => [one.id, one.restorable]),
+    [
+      ['a1', true],
+      ['a2', false],
+    ],
+  )
+
+  const over = await listReservations({ cancelled: 'all' }, AFTER_THEM_ALL)
+
+  assert.equal(
+    over.items.find((one) => one.id === 'a1')?.restorable,
+    false,
+    'the window has closed, and the API refuses a restoration that would leave ' +
+      'a row nothing will ever record',
+  )
+})
+
 test('a reservation a recording came of may not be thrown away', async () => {
   standing([reservation({ id: 'a1', standing: 'complete' })])
   store.recordings = [madeFor('rec-1', 'a1')]
@@ -1234,4 +1260,49 @@ test('a conflict is thrown away only once the margin it would have run on is pas
       moment,
     )
   }
+})
+
+test('several thrown away at once are asked for one at a time, in the order given', async () => {
+  standing()
+  discarding(200, { reservationId: 'a1' })
+
+  const result = await discardReservations(['a3', 'a1', 'a2'])
+
+  assert.deepEqual(result, { state: 'ok', done: 3 })
+  assert.deepEqual(
+    sent.filter((one) => one.method === 'DELETE').map((one) => one.id),
+    ['a3', 'a1', 'a2'],
+  )
+})
+
+test('a refusal stops the rest, and says how many had gone through', async () => {
+  standing()
+  discarding(409, { reservationId: 'a1', refusal: 'stillToBeRecorded' })
+
+  const result = await discardReservations(['a1', 'a2'])
+
+  assert.equal(result.state, 'rejected')
+  assert.equal(result.done, 0)
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /先に取り消してください/,
+  )
+  assert.equal(sent.filter((one) => one.method === 'DELETE').length, 1)
+})
+
+test('a session that has run out stops the rest of a batch as well', async () => {
+  standing()
+  store.writeStatus = 401
+
+  const result = await cancelReservations(['a1', 'a2'])
+
+  assert.deepEqual(result, { state: 'unauthenticated', done: 0 })
+  assert.equal(sent.filter((one) => one.path.endsWith('/cancel')).length, 1)
+})
+
+test('nothing chosen asks for nothing', async () => {
+  standing()
+
+  assert.deepEqual(await cancelReservations([]), { state: 'ok', done: 0 })
+  assert.equal(sent.filter((one) => one.method === 'POST').length, 0)
 })

@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import type { ReservationsResult } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -18,11 +19,13 @@ import { PlusIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { ReservationRow } from '@/components/reservations/reservation-row'
+import type { ReservationBulkActions } from '@/components/reservations/reservation-selection'
+import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: '競合の詳細の開閉', hidden: true },
+const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
+  { label: '競合の詳細の開閉', hidden: true, narrow: true },
   { label: '番組' },
   { label: 'チャンネル' },
   { label: '放送日時' },
@@ -45,14 +48,21 @@ const CANCELLED_OPTIONS = [
 export function ReservationsView({
   result,
   actions,
+  bulk,
 }: {
   result: ReservationsResult
   actions: ReservationActions
+  bulk: ReservationBulkActions
 }) {
   const { items, total, filter } = result
   const [expanded, setExpanded] = useState<string | null>(
     items.find((r) => r.standing === 'conflict')?.id ?? null,
   )
+  // Read against the list as it stands, so a row that has since gone leaves the
+  // selection with it rather than being asked about again.
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
+  const chosen = items.filter((one) => picked.has(one.id))
+  const clear = useCallback(() => setPicked(new Set()), [])
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -76,7 +86,10 @@ export function ReservationsView({
   )
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain
+      scroll="within"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+    >
       <ReservationTabs
         current="reservations"
         action={
@@ -115,11 +128,45 @@ export function ReservationsView({
         </span>
       </div>
 
-      <Table className="min-w-[900px]" containerClassName="pb-1">
-        <TableHeader>
+      {chosen.length > 0 && (
+        <ReservationSelection chosen={chosen} onClear={clear} actions={bulk} />
+      )}
+
+      <Table
+        className="min-w-[960px]"
+        containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+      >
+        {/* The header is as tall as it is so that the area of the select-all and
+            the area of the first row's checkbox do not reach into one another;
+            the column is as wide as one area so it does not reach the caret
+            beside it either. */}
+        <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[13px]">
           <TableRow>
+            <TableHead className="w-11">
+              <Checkbox
+                checked={
+                  chosen.length === 0
+                    ? false
+                    : chosen.length === items.length
+                      ? true
+                      : 'indeterminate'
+                }
+                disabled={items.length === 0}
+                onCheckedChange={(next) =>
+                  setPicked(
+                    next === true
+                      ? new Set(items.map((one) => one.id))
+                      : new Set(),
+                  )
+                }
+                aria-label="表示中の予約をすべて選ぶ"
+              />
+            </TableHead>
             {COLUMNS.map((column) => (
-              <TableHead key={column.label} className="first:w-8">
+              <TableHead
+                key={column.label}
+                className={column.narrow ? 'w-8' : undefined}
+              >
                 {column.hidden ? (
                   <span className="sr-only">{column.label}</span>
                 ) : (
@@ -140,6 +187,20 @@ export function ReservationsView({
                 setExpanded((prev) =>
                   prev === reservation.id ? null : reservation.id,
                 )
+              }
+              selected={picked.has(reservation.id)}
+              onSelect={(taken) =>
+                setPicked((prev) => {
+                  const next = new Set(prev)
+
+                  if (taken) {
+                    next.add(reservation.id)
+                  } else {
+                    next.delete(reservation.id)
+                  }
+
+                  return next
+                })
               }
             />
           ))}

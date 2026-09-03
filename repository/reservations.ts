@@ -5,7 +5,7 @@ import {
   formatClockSpan,
   formatReservationOrigin,
 } from '@/lib/format'
-import { isDiscardable } from '@/lib/reservations'
+import { isDiscardable, isRestorable } from '@/lib/reservations'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -60,7 +60,6 @@ export interface Reservation {
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number
-  stateNote?: string
   conflict?: ReservationConflict
   /** The recording this reservation came to, where it came to one. */
   recordingId?: string
@@ -71,6 +70,8 @@ export interface Reservation {
    * the list was drawn.
    */
   discardable: boolean
+  /** Whether a cancelled reservation may be brought back, read the same way. */
+  restorable: boolean
 }
 
 /**
@@ -132,8 +133,6 @@ export interface ReservationsResult {
 }
 
 const MOST_PER_PAGE = 200
-
-const FOLLOWS_THE_END = '延長時は終了に自動で追従します'
 
 const UNREADABLE = '予約を読めませんでした'
 
@@ -348,6 +347,56 @@ export async function discardReservation(
   }
 }
 
+/**
+ * What became of one operation asked for over several reservations. The API takes them one at a
+ * time, so this is that many answers folded into one: how many went through before an answer that
+ * was not a yes, and what that answer said.
+ */
+export type ReservationBatch =
+  | { state: 'ok'; done: number }
+  | { state: 'unauthenticated'; done: number }
+  | { state: 'rejected'; done: number; message: string }
+
+export function cancelReservations(
+  ids: readonly string[],
+): Promise<ReservationBatch> {
+  return overEach(ids, cancelReservation)
+}
+
+export function discardReservations(
+  ids: readonly string[],
+): Promise<ReservationBatch> {
+  return overEach(ids, discardReservation)
+}
+
+/**
+ * Stops at the first reservation that answers with anything but a yes. Carrying on would leave the
+ * reader with one message standing for several different refusals, and the ones not reached are
+ * still selected to ask about again.
+ */
+async function overEach(
+  ids: readonly string[],
+  write: (id: string) => Promise<ReservationWrite>,
+): Promise<ReservationBatch> {
+  let done = 0
+
+  for (const id of ids) {
+    const result = await write(id)
+
+    if (result.state === 'unauthenticated') {
+      return { state: 'unauthenticated', done }
+    }
+
+    if (result.state === 'rejected') {
+      return { state: 'rejected', done, message: result.message }
+    }
+
+    done += 1
+  }
+
+  return { state: 'ok', done }
+}
+
 function toWrite(
   response: Response,
   verdict: AllocationVerdict | undefined,
@@ -416,6 +465,11 @@ export function toReservation(
   const channel = channelOf(r, known)
   const endAtConfirmed = r.window.endAtConfirmed
   const recordingId = recordings.get(r.id)
+  const stands = {
+    standing: r.standing,
+    recorded: recordingId !== undefined,
+    windowClosed: new Date(r.window.effectiveEndAt).getTime() <= now.getTime(),
+  }
 
   return {
     id: r.id,
@@ -433,15 +487,10 @@ export function toReservation(
     priority: toInt(r.priority),
     marginBeforeSeconds: toInt(r.window.marginBeforeSeconds),
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
-    stateNote: endAtConfirmed ? undefined : FOLLOWS_THE_END,
     conflict: conflictOf(r, all, known, rules),
     recordingId,
-    discardable: isDiscardable({
-      standing: r.standing,
-      recorded: recordingId !== undefined,
-      windowClosed:
-        new Date(r.window.effectiveEndAt).getTime() <= now.getTime(),
-    }),
+    discardable: isDiscardable(stands),
+    restorable: isRestorable(stands),
   }
 }
 

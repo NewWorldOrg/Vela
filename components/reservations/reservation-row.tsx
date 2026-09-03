@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { InlineAlert } from '@/components/vela/banner'
 import {
@@ -50,16 +51,20 @@ export function ReservationRow({
   reservation,
   expanded,
   onToggle,
+  selected,
+  onSelect,
   actions,
 }: {
   reservation: Reservation
   expanded: boolean
   onToggle: () => void
+  selected: boolean
+  onSelect: (chosen: boolean) => void
   actions: ReservationActions
 }) {
   const conflict = reservation.standing === 'conflict'
   const cancellable = conflict || reservation.standing === 'scheduled'
-  const restorable = reservation.standing === 'cancelled'
+  const restorable = reservation.restorable
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
   const [editing, setEditing] = useState(false)
@@ -85,11 +90,19 @@ export function ReservationRow({
     <>
       <TableRow
         id={reservationAnchor(reservation.id)}
+        data-state={selected ? 'selected' : undefined}
         className={cn(
           conflict &&
             'bg-coral-soft/40 hover:bg-coral-soft/40 has-aria-expanded:bg-coral-soft/40',
         )}
       >
+        <TableCell className="h-11 align-top">
+          <Checkbox
+            checked={selected}
+            onCheckedChange={(next) => onSelect(next === true)}
+            aria-label={`${reservation.title} を選ぶ`}
+          />
+        </TableCell>
         <TableCell className="align-top">
           {conflict && (
             <button
@@ -135,11 +148,6 @@ export function ReservationRow({
         </TableCell>
         <TableCell className="align-top">
           <ReservationStateChip reservation={reservation} />
-          {reservation.stateNote && (
-            <span className="mt-[3px] block text-[10.5px] leading-relaxed text-ink-3">
-              {reservation.stateNote}
-            </span>
-          )}
         </TableCell>
         <TableCell className="text-right align-top">
           <span className="inline-flex flex-wrap justify-end gap-2">
@@ -150,7 +158,12 @@ export function ReservationRow({
                 </Link>
               </Button>
             )}
-            {restorable ? (
+            {/* Each of these is offered only while the API would take it: a
+                revision and a cancellation while the reservation is still
+                waiting for its tuner, and a restoration while a cancelled one
+                still has a window left to be recorded in. Drawn any wider, they
+                are buttons the API answers with a refusal every time. */}
+            {restorable && (
               <Button
                 variant="outline"
                 size="sm"
@@ -159,43 +172,42 @@ export function ReservationRow({
               >
                 復元
               </Button>
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditing(true)}
-                >
-                  編集
-                </Button>
-                {/* Mounted only while it is open, so each opening reads the
-                    reservation as it stands rather than as it stood when the
-                    row was first drawn. */}
-                {editing && (
-                  <EditReservationDialog
-                    booking={{
-                      id: reservation.id,
-                      title: reservation.title,
-                      priority: reservation.priority,
-                      marginBeforeSeconds: reservation.marginBeforeSeconds,
-                      marginAfterSeconds: reservation.marginAfterSeconds,
-                    }}
-                    open
-                    onOpenChange={setEditing}
-                    onRevise={actions.onRevise}
-                  />
-                )}
-                {cancellable && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => run(() => actions.onCancel(reservation.id))}
-                  >
-                    取り消す
-                  </Button>
-                )}
-              </>
+            )}
+            {cancellable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(true)}
+              >
+                編集
+              </Button>
+            )}
+            {/* Mounted only while it is open, so each opening reads the
+                reservation as it stands rather than as it stood when the row
+                was first drawn. */}
+            {editing && (
+              <EditReservationDialog
+                booking={{
+                  id: reservation.id,
+                  title: reservation.title,
+                  priority: reservation.priority,
+                  marginBeforeSeconds: reservation.marginBeforeSeconds,
+                  marginAfterSeconds: reservation.marginAfterSeconds,
+                }}
+                open
+                onOpenChange={setEditing}
+                onRevise={actions.onRevise}
+              />
+            )}
+            {cancellable && (
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={pending}
+                onClick={() => run(() => actions.onCancel(reservation.id))}
+              >
+                取り消す
+              </Button>
             )}
             {reservation.discardable && (
               <Button
@@ -255,7 +267,7 @@ export function ReservationRow({
       </AlertDialog>
       {conflict && expanded && reservation.conflict && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="border-b-0 px-3.5 pb-3">
+          <TableCell colSpan={8} className="border-b-0 px-3.5 pb-3">
             <div className="rounded-lg bg-surface px-4 py-3.5">
               <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
                 <WarningIcon className="size-4" />
@@ -317,7 +329,7 @@ export function ReservationRow({
       )}
       {refusal && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="border-b-0 px-3.5 pb-3">
+          <TableCell colSpan={8} className="border-b-0 px-3.5 pb-3">
             <span aria-live="polite">
               <InlineAlert tone="warn">{refusal}</InlineAlert>
             </span>
