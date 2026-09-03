@@ -488,19 +488,56 @@ export const 送りを続けても要求は一度: Story = {
     // The mark and the reading are already there, and nothing has been asked
     // for.
     await waitFor(() =>
-      expect(canvas.getByText('0:00:25 / 4:12:38')).toBeVisible(),
+      expect(canvas.getByText('0:00:50 / 4:12:38')).toBeVisible(),
     )
     await expect(asked).toEqual([])
     await expect(
       canvas.getByRole('slider', { name: '再生位置' }),
-    ).toHaveAttribute('aria-valuenow', '25')
+    ).toHaveAttribute('aria-valuenow', '50')
 
     // One request, for where the presses left off.
-    await waitFor(() => expect(asked).toEqual(['25/720p30']), { timeout: 3000 })
+    await waitFor(() => expect(asked).toEqual(['50/720p30']), { timeout: 3000 })
 
     // And no second one behind it.
     await new Promise((rest) => setTimeout(rest, 800))
-    await expect(asked).toEqual(['25/720p30'])
+    await expect(asked).toEqual(['50/720p30'])
+  },
+}
+
+/**
+ * The same run, made with the buttons on the bar rather than the keys.
+ *
+ * The two are one path: the button is what the key does with a face on it, so
+ * a run of presses on the bar costs one rebuild too, and the number written on
+ * the button is the number the mark moves by.
+ */
+export const 送りのボタンも要求は一度: Story = {
+  args: { detail: detail('1266'), startAt: 0, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    asked.length = 0
+
+    const forward = canvas.getByRole('button', { name: '10秒進む' })
+
+    for (let i = 0; i < 5; i += 1) {
+      await userEvent.click(forward)
+    }
+
+    await waitFor(() =>
+      expect(canvas.getByText('0:00:50 / 4:12:38')).toBeVisible(),
+    )
+
+    await waitFor(() => expect(asked).toEqual(['50/720p30']), { timeout: 3000 })
+
+    await new Promise((rest) => setTimeout(rest, 800))
+    await expect(asked).toEqual(['50/720p30'])
+
+    // Back the same way, and the mark comes back with it.
+    await userEvent.click(canvas.getByRole('button', { name: '10秒戻る' }))
+    await waitFor(() =>
+      expect(canvas.getByText('0:00:40 / 4:12:38')).toBeVisible(),
+    )
   },
 }
 
@@ -615,7 +652,7 @@ export const Range直配信は待たずに動く: Story = {
     await waitFor(() =>
       expect(canvas.getByRole('slider', { name: '再生位置' })).toHaveAttribute(
         'aria-valuenow',
-        '20',
+        '40',
       ),
     )
 

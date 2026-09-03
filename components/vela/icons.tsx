@@ -735,26 +735,27 @@ function SkipIcon({
   ...props
 }: IconProps & { seconds: number; back?: boolean }) {
   return (
-    <Icon {...props}>
+    <Icon strokeWidth={1.5} {...props}>
       {back ? (
         <>
-          <path d="M8.1 5.6a8 8 0 1 0 3.9-1" />
-          <path d="M11.1 3.2 7.9 5.6l2.2 3" />
+          <path d="M7.3 5.9A8.4 8.4 0 1 0 16.7 5.9" />
+          <path d="M10.5 3.4 7.1 5.9l2.7 3" />
         </>
       ) : (
         <>
-          <path d="M15.9 5.6a8 8 0 1 1-3.9-1" />
-          <path d="M12.9 3.2l3.2 2.4-2.2 3" />
+          <path d="M16.7 5.9A8.4 8.4 0 1 1 7.3 5.9" />
+          <path d="M13.5 3.4l3.4 2.5-2.7 3" />
         </>
       )}
       <text
         x="12"
-        y="16.4"
+        y="16.6"
         textAnchor="middle"
         stroke="none"
         fill="currentColor"
-        fontSize="8.6"
+        fontSize="10.4"
         fontWeight="700"
+        letterSpacing="-0.6"
       >
         {seconds}
       </text>
