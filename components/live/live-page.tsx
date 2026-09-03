@@ -125,10 +125,17 @@ export function LiveView({
           screen.channels.length > 0 && <LiveUnchosen />
         )}
       </div>
+      {/*
+        102px is what the list is not allowed to have: the top bar (46), the
+        screen's own padding above it (16) and below it (40). Given less than
+        it takes away — it was written as 78 — the list runs 24px past the
+        bottom of the window, the document grows to hold it, and the page
+        draws a scrollbar of its own beside the one the list already has.
+      */}
       <aside
         aria-label="チャンネル"
         className={cn(
-          'sticky top-[62px] flex max-h-[calc(100dvh-78px)] shrink-0 flex-col max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
           away ? 'w-11' : 'w-[344px]',
         )}
       >

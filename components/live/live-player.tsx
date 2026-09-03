@@ -695,9 +695,23 @@ export function LivePlayer({
             className="absolute inset-0 flex flex-col items-center justify-center"
           />
         )}
+        {/*
+          A wire that faulted takes the bar with it. Its plate is on the face —
+          the reason, and the retry — and that is the whole of what there is to
+          do: no picture is coming, so 字幕 has nothing to draw over, the
+          volume has nothing to make louder, 設定 has no session to reopen in
+          another profile and 全画面 has nothing to fill the screen with. Left
+          laid out, as it was, only 再生 came up disabled and the other four
+          stayed live and answered a press by doing nothing.
+
+          A wire still starting keeps it. There the picture is on its way, the
+          levels set now are the ones it arrives at, and the profile it arrives
+          in can still be changed — which is a press that only exists on this
+          bar.
+        */}
         <div
           data-slot="player-chrome"
-          hidden={key === null}
+          hidden={key === null || phase === 'faulted'}
           data-up={chromeUp ? 'true' : undefined}
           onPointerEnter={() => setOnTheBar(true)}
           onPointerLeave={() => setOnTheBar(false)}

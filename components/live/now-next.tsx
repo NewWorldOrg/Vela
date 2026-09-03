@@ -1,4 +1,5 @@
 import type { LiveWatching } from '@/repository/live'
+import { saysSubtitled } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChannelKey } from '@/components/live/channel-list'
@@ -10,6 +11,14 @@ import { ChannelKey } from '@/components/live/channel-list'
 export function NowNext({ watching }: { watching: LiveWatching }) {
   const { channel, progressPct, nowLabel, restMin } = watching
   const programme = channel.now
+
+  // The 字 the broadcaster writes into the name says what this badge says.
+  // Both on screen is the same fact told twice, a hand's breadth apart, so the
+  // badge stands only where the name has not already said it.
+  const subtitled =
+    programme !== undefined &&
+    programme.hasSubtitles &&
+    !saysSubtitled(programme.title)
 
   return (
     <section
@@ -45,9 +54,9 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
           )}
         </div>
       )}
-      {programme && (programme.hasSubtitles || programme.genreLabel) && (
+      {programme && (subtitled || programme.genreLabel) && (
         <div className="mt-3 flex flex-wrap gap-[7px]">
-          {programme.hasSubtitles && (
+          {subtitled && (
             <Badge variant="ok" className="font-bold">
               字幕あり
             </Badge>
