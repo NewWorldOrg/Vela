@@ -8,8 +8,16 @@
  * question about the element under it rather than about video.
  */
 
-/** What a press moves the position by. */
-export const SEEK_STEP_SECONDS = 5
+/**
+ * What a press moves the position by, and what the two skip buttons on the bar
+ * are drawn with.
+ *
+ * Ten, because the buttons say ten. Netflix's bar carries a ⏪10 and a ⏩10 and
+ * its arrows move by the same ten; a button that reads 10 beside an arrow that
+ * moves 5 is the player disagreeing with itself, and the number is written on
+ * the button where anyone can check it.
+ */
+export const SEEK_STEP_SECONDS = 10
 
 /** What a press moves the level by, on the 0-100 scale the bar reads in. */
 export const VOLUME_STEP_PERCENT = 5

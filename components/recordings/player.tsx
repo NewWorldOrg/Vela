@@ -12,7 +12,14 @@ import {
   videoFrameHref,
   type PlaybackProfile,
 } from '@/repository/video-paths'
-import { PlayIcon } from '@/components/vela/icons'
+import {
+  FullscreenIcon,
+  PauseIcon,
+  PlayIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  VolumeIcon,
+} from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
@@ -657,17 +664,44 @@ export function Player({
                 onClick={toggle}
                 className={PLAYER_ROUND_BUTTON}
               >
-                {phase === 'playing' ? (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-                  >
-                    <path d="M9.4 5.8v12.4M14.6 5.8v12.4" />
-                  </svg>
-                ) : (
-                  <PlayIcon className="size-4" />
-                )}
+                {phase === 'playing' ? <PauseIcon /> : <PlayIcon />}
               </button>
+              {/*
+                The two skips, beside the transport and in the order every
+                player that is not live puts them: back, then forward, then
+                the reading of where the playhead is. Netflix draws them on
+                the bar and YouTube leaves them to a double tap; drawn is the
+                one of the two a reader can find without being told.
+
+                They are the arrow keys with a face on them, so they call what
+                the keys call and inherit the run-of-presses rule with it: on a
+                route that rebuilds a transcoder, ten presses move the mark ten
+                times and ask once.
+
+                Only where there is a position to move along — the same
+                condition the seek bar itself is drawn under. A recording whose
+                length is not known has no bar for these to mirror.
+              */}
+              {duration > 0 && (
+                <>
+                  <button
+                    type="button"
+                    aria-label={`${SEEK_STEP_SECONDS}秒戻る`}
+                    onClick={() => step(-SEEK_STEP_SECONDS)}
+                    className={PLAYER_ROUND_BUTTON}
+                  >
+                    <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`${SEEK_STEP_SECONDS}秒進む`}
+                    onClick={() => step(SEEK_STEP_SECONDS)}
+                    className={PLAYER_ROUND_BUTTON}
+                  >
+                    <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
+                  </button>
+                </>
+              )}
               <span className="font-code text-sub whitespace-nowrap text-(--pl-ink-2)">
                 {formatPlayhead(position)} / {formatPlayhead(duration)}
               </span>
@@ -715,17 +749,7 @@ export function Player({
                     muted && PLAYER_ROUND_BUTTON_ON,
                   )}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-                  >
-                    <path d="M11.2 5.2 6.7 9.1H3.2v5.9h3.5l4.5 3.9V5.2Z" />
-                    {muted ? (
-                      <path d="M15.2 9.4 19.6 14.6M19.6 9.4 15.2 14.6" />
-                    ) : (
-                      <path d="M15 9.3a3.7 3.7 0 0 1 .1 5.5" />
-                    )}
-                  </svg>
+                  <VolumeIcon level={muted ? 0 : volume} />
                 </button>
                 <PlayerSettings
                   container={shell}
@@ -745,16 +769,7 @@ export function Player({
                     full && PLAYER_ROUND_BUTTON_ON,
                   )}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="size-4 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-                  >
-                    {full ? (
-                      <path d="M9.4 4.3v5.1H4.3M14.6 4.3v5.1h5.1M9.4 19.7v-5.1H4.3M14.6 19.7v-5.1h5.1" />
-                    ) : (
-                      <path d="M4.3 9.4V4.3h5.1M19.7 9.4V4.3h-5.1M4.3 14.6v5.1h5.1M19.7 14.6v5.1h-5.1" />
-                    )}
-                  </svg>
+                  <FullscreenIcon leaving={full} />
                 </button>
               </div>
             </div>
