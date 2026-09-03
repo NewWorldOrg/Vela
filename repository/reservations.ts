@@ -60,7 +60,6 @@ export interface Reservation {
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number
-  stateNote?: string
   conflict?: ReservationConflict
   /** The recording this reservation came to, where it came to one. */
   recordingId?: string
@@ -132,8 +131,6 @@ export interface ReservationsResult {
 }
 
 const MOST_PER_PAGE = 200
-
-const FOLLOWS_THE_END = '延長時は終了に自動で追従します'
 
 const UNREADABLE = '予約を読めませんでした'
 
@@ -433,7 +430,6 @@ export function toReservation(
     priority: toInt(r.priority),
     marginBeforeSeconds: toInt(r.window.marginBeforeSeconds),
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
-    stateNote: endAtConfirmed ? undefined : FOLLOWS_THE_END,
     conflict: conflictOf(r, all, known, rules),
     recordingId,
     discardable: isDiscardable({

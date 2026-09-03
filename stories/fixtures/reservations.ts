@@ -36,7 +36,6 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
-    stateNote: '延長時は終了に自動で追従します',
   },
   {
     id: 'r-303',

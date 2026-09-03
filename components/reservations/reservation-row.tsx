@@ -135,11 +135,6 @@ export function ReservationRow({
         </TableCell>
         <TableCell className="align-top">
           <ReservationStateChip reservation={reservation} />
-          {reservation.stateNote && (
-            <span className="mt-[3px] block text-[10.5px] leading-relaxed text-ink-3">
-              {reservation.stateNote}
-            </span>
-          )}
         </TableCell>
         <TableCell className="text-right align-top">
           <span className="inline-flex flex-wrap justify-end gap-2">

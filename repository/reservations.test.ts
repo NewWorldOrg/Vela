@@ -431,14 +431,12 @@ test('an unsettled end holds beside a conflict rather than instead of it', async
   assert.equal(one.state, 'conflict')
   assert.equal(one.standing, 'conflict')
   assert.equal(one.endAtConfirmed, false)
-  assert.equal(one.stateNote, '延長時は終了に自動で追従します')
 })
 
-test('a settled end says so, and carries no note', async () => {
+test('a settled end says so', async () => {
   const one = await only()
 
   assert.equal(one.endAtConfirmed, true)
-  assert.equal(one.stateNote, undefined)
 })
 
 /** Not a standing: a reservation with no way to tune reads as secured without it. */
