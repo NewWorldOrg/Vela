@@ -282,10 +282,38 @@ export const 選局前: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
 
-    await expect(getRouter().replace).toHaveBeenCalledWith(
-      '/live?ch=32737-1032',
+    // Pushed, not written over: the screen the reader is standing on is the
+    // one back has to come to, and rewriting it sent back out of the live
+    // screen the moment a channel was pressed.
+    await expect(getRouter().push).toHaveBeenCalledWith('/live?ch=32737-1032', {
+      scroll: false,
+    })
+    await expect(getRouter().replace).not.toHaveBeenCalled()
+  },
+}
+
+/**
+ * Watching one channel and choosing another is an entry of its own, so back is
+ * the channel before it rather than the screen the reader entered from. The
+ * broadcast type goes the same way, as every other list in Vela puts a filter
+ * in the history.
+ */
+export const 選局は履歴に積む: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
+    await expect(getRouter().push).toHaveBeenCalledWith('/live?ch=32737-1032', {
+      scroll: false,
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: 'BS' }))
+    await expect(getRouter().push).toHaveBeenCalledWith(
+      '/live?ch=32736-1024&kind=bs',
       { scroll: false },
     )
+
+    await expect(getRouter().replace).not.toHaveBeenCalled()
   },
 }
 

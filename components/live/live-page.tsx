@@ -34,6 +34,22 @@ import { NowNext } from '@/components/live/now-next'
  * channel changes the URL, the screen re-reads what is on it, and the player
  * opens the new wire once the channel reaches it.
  *
+ * That change is an entry in the history, not a rewrite of the one standing.
+ * Rewritten, the screen with nothing chosen — the one every reader arrives at,
+ * and the one the list belongs to — was thrown away the moment a channel was
+ * pressed, so back left the live screen entirely and landed wherever the reader
+ * had been before it. Pressed on a screen whose middle had just filled with a
+ * picture, that reads as having been carried off to another page.
+ *
+ * Every choice is an entry, the second and the tenth as much as the first: back
+ * is the channel before this one, and back again the one before that, down to
+ * the screen with nothing chosen. Measured on the services that do this for a
+ * living, both zap the same way — ABEMA's channel switcher and radiko's station
+ * list each add an entry per change, so back on either is the last thing
+ * watched. Collapsing the later ones would make back mean the empty screen
+ * after the second press and the previous channel after the first, which is a
+ * press whose meaning depends on history the reader cannot see.
+ *
  * While a channel is being watched the list folds away, and the picture takes
  * the width it leaves. Before one is chosen it does not: the list is the whole
  * of the screen's business then, and a fold would leave a screen with one press
@@ -67,7 +83,7 @@ export function LiveView({
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+      router.push((qs ? `${pathname}?${qs}` : pathname) as Route, {
         scroll: false,
       })
     },
