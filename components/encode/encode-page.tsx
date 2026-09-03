@@ -240,10 +240,6 @@ export function EncodeView({ result }: { result: EncodeResult }) {
                 disabled
                 title={EDIT_PROFILE_NOT_WIRED}
               />
-              <div className="flex justify-between font-code text-note text-ink-3">
-                <span>18 · 高品質</span>
-                <span>38 · 高圧縮</span>
-              </div>
             </Field>
             <Field>
               <FieldLabel htmlFor="profile-deinterlace">
