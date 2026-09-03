@@ -24,8 +24,8 @@ import { ReservationSelection } from '@/components/reservations/reservation-sele
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: '競合の詳細の開閉', hidden: true },
+const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
+  { label: '競合の詳細の開閉', hidden: true, narrow: true },
   { label: '番組' },
   { label: 'チャンネル' },
   { label: '放送日時' },
@@ -159,7 +159,10 @@ export function ReservationsView({
               />
             </TableHead>
             {COLUMNS.map((column) => (
-              <TableHead key={column.label} className="first:w-8">
+              <TableHead
+                key={column.label}
+                className={column.narrow ? 'w-8' : undefined}
+              >
                 {column.hidden ? (
                   <span className="sr-only">{column.label}</span>
                 ) : (
