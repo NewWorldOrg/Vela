@@ -62,9 +62,17 @@ export function GuideView({
    * The panel shows the programme as the guide now has it, not as it was when
    * it was picked: a reservation taken or dropped from inside the panel
    * changes the row it was opened from.
+   *
+   * A broadcast a station is putting out on more than one of its channels is
+   * in a cell on each of their columns, so which cell was picked is the
+   * programme and the column together. The panel names the channel the reader
+   * pressed and offers to watch that one, rather than whichever of them the
+   * broadcast happens to be listed under.
    */
   const shown = selected
-    ? (guide.programs.find((one) => one.id === selected.id) ?? selected)
+    ? (guide.programs.find(
+        (one) => one.id === selected.id && one.channelId === selected.channelId,
+      ) ?? selected)
     : null
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
