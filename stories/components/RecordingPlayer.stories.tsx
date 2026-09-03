@@ -90,8 +90,8 @@ function scrub(canvasElement: HTMLElement, share: number) {
   )
 }
 
-/** The reading the bubble carries, which is a playhead and nothing else. */
-const READING = /^\d+:\d\d:\d\d$/
+/** The reading the bubble carries, which is a position and nothing else. */
+const READING = /^\d+:\d\d(:\d\d)?$/
 
 const meta = {
   title: 'Components/録画プレイヤー',
@@ -127,7 +127,7 @@ export const 待機中: Story = {
 
     // The poster stands where the picture will be, and the bar reads the
     // position. Nothing under it explains what choosing one costs.
-    await expect(canvas.getByText('0:00:00 / 4:12:38')).toBeVisible()
+    await expect(canvas.getByText('0:00 / 4:12:38')).toBeVisible()
     await expect(canvas.queryByText(/トランスコーダ/)).toBeNull()
   },
 }
@@ -506,7 +506,7 @@ export const 送りを続けても要求は一度: Story = {
     // The mark and the reading are already there, and nothing has been asked
     // for.
     await waitFor(() =>
-      expect(canvas.getByText('0:00:50 / 4:12:38')).toBeVisible(),
+      expect(canvas.getByText('0:50 / 4:12:38')).toBeVisible(),
     )
     await expect(asked).toEqual([])
     await expect(
@@ -543,7 +543,7 @@ export const 送りのボタンも要求は一度: Story = {
     }
 
     await waitFor(() =>
-      expect(canvas.getByText('0:00:50 / 4:12:38')).toBeVisible(),
+      expect(canvas.getByText('0:50 / 4:12:38')).toBeVisible(),
     )
 
     await waitFor(() => expect(asked).toEqual(['50/720p30']), { timeout: 3000 })
@@ -554,7 +554,7 @@ export const 送りのボタンも要求は一度: Story = {
     // Back the same way, and the mark comes back with it.
     await userEvent.click(canvas.getByRole('button', { name: '10秒戻る' }))
     await waitFor(() =>
-      expect(canvas.getByText('0:00:40 / 4:12:38')).toBeVisible(),
+      expect(canvas.getByText('0:40 / 4:12:38')).toBeVisible(),
     )
   },
 }
@@ -573,7 +573,7 @@ export const 戻しは頭で止まる: Story = {
     }
 
     await waitFor(() =>
-      expect(canvas.getByText('0:00:00 / 4:12:38')).toBeVisible(),
+      expect(canvas.getByText('0:00 / 4:12:38')).toBeVisible(),
     )
     await waitFor(() => expect(asked).toEqual(['0/720p30']), { timeout: 3000 })
   },
@@ -634,7 +634,7 @@ export const バーの操作子は再生を動かさない: Story = {
     seek.focus()
     press(seek, 'ArrowRight')
     await waitFor(() =>
-      expect(canvas.getByText('0:00:10 / 4:12:38')).toBeVisible(),
+      expect(canvas.getByText('0:10 / 4:12:38')).toBeVisible(),
     )
   },
 }
@@ -677,5 +677,173 @@ export const Range直配信は待たずに動く: Story = {
     // Nothing was asked for, then or after the wait the other route takes.
     await new Promise((rest) => setTimeout(rest, 800))
     await expect(asked).toEqual([])
+  },
+}
+
+/**
+ * The bar is up while the picture is not running, and it is laid over the
+ * picture on a wash rather than on a plate.
+ */
+export const 操作列が出ている: Story = {
+  play: async ({ canvasElement }) => {
+    const chrome = canvasElement.querySelector('[data-slot="player-chrome"]')
+
+    await expect(chrome).toHaveAttribute('data-up', 'true')
+    await expect(getComputedStyle(chrome as Element).backgroundImage).toContain(
+      'linear-gradient',
+    )
+    // A wash and not a plate: no flat fill underneath it.
+    await expect(getComputedStyle(chrome as Element).backgroundColor).toMatch(
+      /rgba\(0, 0, 0, 0\)|transparent/,
+    )
+  },
+}
+
+/**
+ * A stopped picture carries the mark that says so, and every press is answered
+ * in the middle whether it came from the bar, the picture or a key.
+ */
+export const 停止中は中央に印: Story = {
+  play: async ({ canvasElement }) => {
+    const standing = () =>
+      canvasElement.querySelector('[data-slot="player-center-standing"]')
+
+    await expect(standing()).not.toBeNull()
+
+    const burst = () =>
+      canvasElement.querySelector('[data-slot="player-center-burst"]')
+
+    await expect(burst()).toBeNull()
+
+    await userEvent.click(
+      canvasElement.querySelector('[data-slot="player-press"]') as HTMLElement,
+    )
+    await waitFor(() => expect(burst()).not.toBeNull())
+    await expect(getComputedStyle(burst() as Element).animationName).toBe(
+      'player-burst',
+    )
+  },
+}
+
+/**
+ * While a position is being dragged out the bar stays a band, the knob stays
+ * out, the controls stay up, and the reading follows the hand. The position is
+ * asked for once, when the hand lets go.
+ */
+export const シーク中: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const seek = canvas.getByRole('slider', { name: '再生位置' })
+    const chrome = canvasElement.querySelector('[data-slot="player-chrome"]')
+    const box = seek.getBoundingClientRect()
+    const at = (share: number) => ({
+      clientX: box.left + box.width * share,
+      clientY: box.top + box.height / 2,
+      pointerId: 1,
+      pointerType: 'mouse',
+      isPrimary: true,
+      bubbles: true,
+    })
+
+    seek.setPointerCapture = () => undefined
+    seek.releasePointerCapture = () => undefined
+
+    asked.length = 0
+    seek.dispatchEvent(new PointerEvent('pointerdown', at(0.2)))
+    seek.dispatchEvent(new PointerEvent('pointermove', at(0.5)))
+
+    await waitFor(() => expect(seek).toHaveAttribute('data-wanted', 'true'))
+    await expect(chrome).toHaveAttribute('data-up', 'true')
+    // The line is a band and the knob is out, both held there by the drag.
+    await waitFor(() =>
+      expect(getComputedStyle(seek.firstElementChild as Element).height).toBe(
+        '5px',
+      ),
+    )
+    await waitFor(() =>
+      expect(
+        getComputedStyle(
+          canvasElement.querySelector(
+            '[data-slot="player-seek-knob"]',
+          ) as Element,
+        ).scale,
+      ).toBe('1'),
+    )
+    // The reading moved with the hand, and nothing has been asked for yet.
+    await waitFor(() => expect(canvas.getByText(/^2:06:19 \//)).toBeVisible())
+    await expect(asked).toEqual([])
+
+    seek.dispatchEvent(new PointerEvent('pointerup', at(0.5)))
+    await waitFor(() => expect(asked.length).toBe(1))
+  },
+}
+
+/**
+ * The settings surface is drawn into the pane the picture is in, so it is not
+ * inside the bar and does not go down with it. While it is open the bar stays
+ * up, which is what YouTube does: a surface left standing over a picture whose
+ * controls have gone is the one piece of chrome with nothing behind it.
+ */
+export const 設定を開いているあいだ操作列は消えない: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const chrome = canvasElement.querySelector('[data-slot="player-chrome"]')
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const surface = await screen.findByRole('dialog', { name: '設定' })
+
+    // Outside the bar, which is why the bar going down used to leave it
+    // standing on its own.
+    await expect(surface.closest('[data-slot="player-chrome"]')).toBeNull()
+
+    // The picture is told it is running, which is the only state the bar goes
+    // down in. It has to stay up anyway, and stay up past the count.
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    await new Promise((rest) => setTimeout(rest, 3400))
+
+    await expect(chrome).toHaveAttribute('data-up', 'true')
+    await expect(surface).toBeVisible()
+  },
+}
+
+/**
+ * A press outside the surface dismisses it and is not also a press on the
+ * picture. The surface shuts as the press goes down, so what the click has to
+ * read is what was open when the press began.
+ */
+export const 設定を閉じる押下は再生を動かさない: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const area = canvasElement.querySelector(
+      '[data-slot="player-press"]',
+    ) as HTMLElement
+
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '一時停止' })).toBeVisible(),
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await screen.findByRole('dialog', { name: '設定' })
+
+    // The press lands on the picture, the surface goes, and the picture is
+    // still running — the transport still offers to stop it.
+    await userEvent.click(area)
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+    )
+    await expect(canvas.getByRole('button', { name: '一時停止' })).toBeVisible()
+
+    // Far enough after the last press that the browser reads a second one and
+    // not a double. With nothing open, it is a press on the picture again.
+    await new Promise((rest) => setTimeout(rest, 700))
+    await userEvent.click(area)
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '再生' })).toBeVisible(),
+    )
   },
 }

@@ -44,6 +44,16 @@ import { RecordingActions } from '@/components/recordings/recording-actions'
 import { ThumbnailButton } from '@/components/recordings/thumbnail-button'
 import { ScreenMain } from '@/components/vela/app-shell'
 
+/**
+ * The step the record under the picture is held to, now that the screen itself
+ * is as wide as the window while a picture is on it.
+ *
+ * The same 1440px `ScreenMain default` gives every other screen — written here
+ * rather than reached for by name because this screen needs both widths at
+ * once: the window for the picture, the step for everything read around it.
+ */
+const READING_COLUMN = 'mx-auto w-full max-w-[1440px]'
+
 const OUTCOME_STYLE = {
   complete: 'bg-tint-sage',
   truncated: 'bg-tint-butter',
@@ -121,108 +131,124 @@ export function RecordingDetailView({
     playback.state === 'planned' &&
     playback.plan.route !== 'nothing'
 
+  const watching = plays && playback.state === 'planned'
+
   return (
-    <ScreenMain className="pb-16">
-      <div className="flex items-center px-[30px] pt-[18px] pb-3 max-[1060px]:px-5 max-[700px]:px-3.5">
-        <Link
-          href="/library"
-          className="tap-target inline-flex items-center gap-[7px] rounded-full border border-edge py-[5px] pr-[13px] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
-        >
-          <ChevronLeftIcon className="size-[15px]" />
-          ライブラリへ
-        </Link>
-      </div>
-
-      {d.outcome !== 'recording' && (
-        <div
-          className={cn(
-            'mx-[30px] mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[18px] py-[13px] max-[1060px]:mx-5 max-[700px]:mx-3.5',
-            OUTCOME_STYLE[d.outcome],
-          )}
-        >
-          <OutcomeMark outcome={d.outcome} />
-          <h2 className="heading text-[15px] whitespace-nowrap">
-            {OUTCOME_LABEL[d.outcome]}
-          </h2>
-          {d.fileMissing && <FileMissingChip className="mt-0" />}
-          <p className="min-w-[200px] flex-1 text-ui leading-relaxed text-ink-2">
-            {d.outcomeBody}
-          </p>
+    /*
+      The screen takes the window while there is a picture on it, the way the
+      live screen does once a channel is chosen. Held to the 1440px step, the
+      picture was capped by the column rather than by the window: at 2560 it
+      came out 1380px — 54% of the desk — against the live screen's 84%, and
+      the height it could have had was going spare.
+     
+      What stands above and below the picture keeps the step. The reason the
+      step exists is that a row of a list running the whole desk loses the line
+      between a value and its label, and the record under a recording is
+      exactly that kind of reading. Only the picture is an axis.
+    */
+    <ScreenMain width={watching ? 'full' : 'default'} className="pb-16">
+      <div className={READING_COLUMN}>
+        <div className="flex items-center px-[30px] pt-[18px] pb-3 max-[1060px]:px-5 max-[700px]:px-3.5">
+          <Link
+            href="/library"
+            className="tap-target inline-flex items-center gap-[7px] rounded-full border border-edge py-[5px] pr-[13px] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
+          >
+            <ChevronLeftIcon className="size-[15px]" />
+            ライブラリへ
+          </Link>
         </div>
-      )}
 
-      {d.outcome === 'recording' && d.live && (
-        <div className="mx-[30px] mb-3.5 grid grid-cols-2 gap-4 max-[1060px]:mx-5 max-[900px]:grid-cols-1 max-[700px]:mx-3.5">
-          <section className="rounded-xl bg-surface px-[19px] py-[17px]">
-            <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-              <Badge variant="recording" className="gap-[7px] pl-[9px]">
-                <ListIcon className="size-[13px]" />
-                録画中
-              </Badge>
-            </div>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2.5">
-              <DetailStat label="経過" value={d.live.elapsed} />
-              <DetailStat label="書き込み済み" value={d.live.written} />
-              <DetailStat label="進行中のドロップ" value={d.live.drops} />
-              <DetailStat label="残り" value={d.live.rest} />
-            </div>
-            <p className="mt-2.5 text-note text-ink-3">
-              最終更新 <span className="font-code">{d.live.updatedAt}</span>
+        {d.outcome !== 'recording' && (
+          <div
+            className={cn(
+              'mx-[30px] mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[18px] py-[13px] max-[1060px]:mx-5 max-[700px]:mx-3.5',
+              OUTCOME_STYLE[d.outcome],
+            )}
+          >
+            <OutcomeMark outcome={d.outcome} />
+            <h2 className="heading text-[15px] whitespace-nowrap">
+              {OUTCOME_LABEL[d.outcome]}
+            </h2>
+            {d.fileMissing && <FileMissingChip className="mt-0" />}
+            <p className="min-w-[200px] flex-1 text-ui leading-relaxed text-ink-2">
+              {d.outcomeBody}
             </p>
-          </section>
-          {d.live.extension && (
+          </div>
+        )}
+
+        {d.outcome === 'recording' && d.live && (
+          <div className="mx-[30px] mb-3.5 grid grid-cols-2 gap-4 max-[1060px]:mx-5 max-[900px]:grid-cols-1 max-[700px]:mx-3.5">
             <section className="rounded-xl bg-surface px-[19px] py-[17px]">
-              <div className="mb-2.5">
-                <Badge variant="info" className="font-bold">
-                  <ChipDot />
-                  延長に追従しました
+              <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
+                <Badge variant="recording" className="gap-[7px] pl-[9px]">
+                  <ListIcon className="size-[13px]" />
+                  録画中
                 </Badge>
               </div>
-              <DetailKeyRow
-                label="当初の終了予定"
-                main={d.live.extension.plannedEnd}
-              />
-              <DetailKeyRow
-                label="現在の終了予定"
-                main={d.live.extension.currentEnd}
-                sub={d.live.extension.delta}
-              />
-              <DetailKeyRow
-                label="最終追従"
-                main={d.live.extension.followedAt}
-              />
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2.5">
+                <DetailStat label="経過" value={d.live.elapsed} />
+                <DetailStat label="書き込み済み" value={d.live.written} />
+                <DetailStat label="進行中のドロップ" value={d.live.drops} />
+                <DetailStat label="残り" value={d.live.rest} />
+              </div>
+              <p className="mt-2.5 text-note text-ink-3">
+                最終更新 <span className="font-code">{d.live.updatedAt}</span>
+              </p>
             </section>
-          )}
-        </div>
-      )}
+            {d.live.extension && (
+              <section className="rounded-xl bg-surface px-[19px] py-[17px]">
+                <div className="mb-2.5">
+                  <Badge variant="info" className="font-bold">
+                    <ChipDot />
+                    延長に追従しました
+                  </Badge>
+                </div>
+                <DetailKeyRow
+                  label="当初の終了予定"
+                  main={d.live.extension.plannedEnd}
+                />
+                <DetailKeyRow
+                  label="現在の終了予定"
+                  main={d.live.extension.currentEnd}
+                  sub={d.live.extension.delta}
+                />
+                <DetailKeyRow
+                  label="最終追従"
+                  main={d.live.extension.followedAt}
+                />
+              </section>
+            )}
+          </div>
+        )}
 
-      <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
-        {d.fileMissing ? (
-          <PlaybackNotice
-            tone="waiting"
-            mark={<ThumbMissingIcon className="size-[22px]" />}
-            title="ファイルが見つかりません"
-          >
-            <Link href="/library/integrity" className={PLAYER_BUTTON}>
-              整合性チェックの結果へ
-            </Link>
-          </PlaybackNotice>
-        ) : d.outcome === 'failed' ? (
-          <PlaybackNotice
-            tone="gone"
-            mark={<OutcomeFailedIcon className="size-[22px]" />}
-            title="再生できません"
-          />
-        ) : playback.state === 'refused' ? (
-          REFUSED[playback.refusal]
-        ) : playback.plan.route === 'nothing' ? (
-          <PlaybackNotice
-            mark={<ThumbMissingIcon className="size-[22px]" />}
-            title="再生できる成果物がありません"
-          />
-        ) : null}
+        <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
+          {d.fileMissing ? (
+            <PlaybackNotice
+              tone="waiting"
+              mark={<ThumbMissingIcon className="size-[22px]" />}
+              title="ファイルが見つかりません"
+            >
+              <Link href="/library/integrity" className={PLAYER_BUTTON}>
+                整合性チェックの結果へ
+              </Link>
+            </PlaybackNotice>
+          ) : d.outcome === 'failed' ? (
+            <PlaybackNotice
+              tone="gone"
+              mark={<OutcomeFailedIcon className="size-[22px]" />}
+              title="再生できません"
+            />
+          ) : playback.state === 'refused' ? (
+            REFUSED[playback.refusal]
+          ) : playback.plan.route === 'nothing' ? (
+            <PlaybackNotice
+              mark={<ThumbMissingIcon className="size-[22px]" />}
+              title="再生できる成果物がありません"
+            />
+          ) : null}
+        </div>
       </div>
-      {plays && playback.state === 'planned' && (
+      {watching && (
         <Player
           key={`${d.id}:${startAt ?? ''}`}
           detail={d}
@@ -232,7 +258,12 @@ export function RecordingDetailView({
         />
       )}
 
-      <div className="grid grid-cols-[1.35fr_1fr] items-start gap-[18px] px-[30px] pt-[22px] pb-[34px] *:min-w-0 max-[1060px]:grid-cols-1 max-[1060px]:px-5 max-[700px]:px-3.5">
+      <div
+        className={cn(
+          READING_COLUMN,
+          'grid grid-cols-[1.35fr_1fr] items-start gap-[18px] px-[30px] pt-[22px] pb-[34px] *:min-w-0 max-[1060px]:grid-cols-1 max-[1060px]:px-5 max-[700px]:px-3.5',
+        )}
+      >
         <section className="rounded-xl bg-surface px-[22px] py-5">
           <div className="mb-[7px] flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3">
             <ListIcon className="size-3.5 text-brand" />

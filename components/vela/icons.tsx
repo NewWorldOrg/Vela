@@ -722,6 +722,54 @@ export function PauseIcon(props: IconProps) {
 }
 
 /**
+ * The two transport glyphs, filled — the one place the icon set's outline is
+ * put down.
+ *
+ * Everywhere else in Vela an icon is a 1.6px stroke with no fill, and the
+ * player keeps that for the volume, the settings and the fullscreen corners.
+ * The transport is different: a triangle drawn as an outline reads as the
+ * outline of a triangle, and the shape a reader has learned to press is solid.
+ * YouTube, Netflix, Prime Video, Vimeo and Plyr all draw these two solid and
+ * none of them draws them hollow — it is the most recognisable pair of shapes
+ * on any player, and a version nobody else has is not more recognisable for
+ * being ours.
+ *
+ * The same two shapes serve the bar and the mark in the middle of the picture,
+ * which is why they take their size from the box they are put in.
+ */
+export function PlayGlyph({ className, ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="none"
+      aria-hidden="true"
+      focusable="false"
+      className={cn('size-4 shrink-0', className)}
+      {...props}
+    >
+      <path d="M7.4 4.6 20 12 7.4 19.4Z" />
+    </svg>
+  )
+}
+
+export function PauseGlyph({ className, ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="none"
+      aria-hidden="true"
+      focusable="false"
+      className={cn('size-4 shrink-0', className)}
+      {...props}
+    >
+      <path d="M6.6 4.6h4.1v14.8H6.6ZM13.3 4.6h4.1v14.8h-4.1Z" />
+    </svg>
+  )
+}
+
+/**
  * The two skip buttons every player that is not live carries on its bar.
  *
  * A circular arrow with the number of seconds inside it — the shape Netflix,
@@ -800,6 +848,33 @@ export function VolumeIcon({
       {waves >= 2 && <path d="M15.9 8.2a5.6 5.6 0 0 1 0 7.6" />}
       {waves >= 3 && <path d="M18.2 6.2a8.6 8.6 0 0 1 0 11.6" />}
     </Icon>
+  )
+}
+
+/**
+ * The caption switch: the rounded box with two lines in it that every player
+ * draws, and that a reader has met on a television remote before meeting it
+ * here. Filled rather than stroked for the same reason the transport is —
+ * at 24px the box and the two lines inside it are three strokes crowding each
+ * other, and the shape is read by its silhouette.
+ */
+export function CaptionsGlyph({ className, ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="none"
+      aria-hidden="true"
+      focusable="false"
+      className={cn('size-4 shrink-0', className)}
+      {...props}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M3.4 5.6h17.2c.66 0 1.2.54 1.2 1.2v10.4c0 .66-.54 1.2-1.2 1.2H3.4c-.66 0-1.2-.54-1.2-1.2V6.8c0-.66.54-1.2 1.2-1.2Zm2.5 4.2h4.4v1.7H7.6v2.6h2.7v1.7H5.9a.8.8 0 0 1-.8-.8v-4.4a.8.8 0 0 1 .8-.8Zm7.8 0h4.4v1.7h-2.7v2.6h2.7v1.7h-4.4a.8.8 0 0 1-.8-.8v-4.4a.8.8 0 0 1 .8-.8Z"
+      />
+    </svg>
   )
 }
 

@@ -23,7 +23,14 @@ export const SEEK_STEP_SECONDS = 10
 export const VOLUME_STEP_PERCENT = 5
 
 export type PlayerCommand =
-  'toggle' | 'back' | 'forward' | 'louder' | 'quieter' | 'mute' | 'fullscreen'
+  | 'toggle'
+  | 'back'
+  | 'forward'
+  | 'louder'
+  | 'quieter'
+  | 'mute'
+  | 'fullscreen'
+  | 'captions'
 
 /** Just enough of the element a press landed on to say who answers it. */
 export interface PressedOn {
@@ -144,15 +151,29 @@ const KEYS: Record<string, PlayerCommand> = {
   k: 'toggle',
   arrowleft: 'back',
   arrowright: 'forward',
+  /*
+   * J and L beside the arrows, which is the pair YouTube and Vimeo both carry
+   * for the same two moves. They are not a second assignment: they call what
+   * the arrows call and what the two buttons on the bar call, so the rule that
+   * every key mirrors a control the eye can find still holds.
+   */
+  j: 'back',
+  l: 'forward',
   arrowup: 'louder',
   arrowdown: 'quieter',
   m: 'mute',
   f: 'fullscreen',
+  /* The caption switch is on the bar, so the key that presses it may exist. */
+  c: 'captions',
 }
 
 /**
  * What a press means to the player, or nothing where the press is not the
  * player's to take.
+ *
+ * `captions` is only taken where there is a switch on the bar for it to press.
+ * A recording has one but it is not wired to anything yet, and a key that
+ * silently does nothing is worse than a key that is not taken.
  *
  * `seeks` is false where there is no position to move to. Live is that case:
  * the only picture there is, is the edge, so back has nowhere to go and
@@ -169,7 +190,7 @@ export function playerCommand(
     altKey?: boolean
     target?: unknown
   },
-  { seeks }: { seeks: boolean },
+  { seeks, captions = false }: { seeks: boolean; captions?: boolean },
 ): PlayerCommand | null {
   if (
     press.ctrlKey === true ||
@@ -192,6 +213,10 @@ export function playerCommand(
   }
 
   if (!seeks && (command === 'back' || command === 'forward')) {
+    return null
+  }
+
+  if (!captions && command === 'captions') {
     return null
   }
 

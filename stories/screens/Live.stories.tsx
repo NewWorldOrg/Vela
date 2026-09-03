@@ -970,3 +970,98 @@ export const 失敗中は映像を押せない: Story = {
     ).toBeNull()
   },
 }
+
+/**
+ * The bar is laid over the picture on a wash, and what is being watched sits
+ * on a wash of its own at the top. Neither is a plate.
+ */
+export const 操作列は透かしの上: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const chrome = canvasElement.querySelector('[data-slot="player-chrome"]')
+    const title = canvasElement.querySelector('[data-slot="live-title"]')
+
+    await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
+    await expect(getComputedStyle(chrome as Element).backgroundImage).toContain(
+      'linear-gradient',
+    )
+    await expect(getComputedStyle(title as Element).backgroundImage).toContain(
+      'linear-gradient',
+    )
+    // The title comes and goes with the bar: it is the same statement.
+    await expect(title).toHaveAttribute('data-up', 'true')
+  },
+}
+
+/** Stopped, the middle carries the mark, and every press is answered there. */
+export const 停止中は中央に印: Story = {
+  // A wire that carries a picture and then stalls: there is something to stop,
+  // which is what the mark in the middle is about. `captioned` sends captions
+  // and no picture, so nothing there is ever pressable.
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // A press only reaches the picture once there is one, so the press area
+    // is what says the wire has come up. The transport reads 再生 or 一時停止
+    // by what the element is doing; either way it is the control aimed at.
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-slot="player-press"]'),
+      ).not.toBeNull(),
+    )
+
+    // A wire that stalls never reaches playing on its own, so the element is
+    // told what it is doing: what is under test is the rule the phase drives,
+    // not the decoder. Stopped, the middle carries the standing mark.
+    const video = canvasElement.querySelector('video') as HTMLVideoElement
+
+    video.dispatchEvent(new Event('playing'))
+    video.dispatchEvent(new Event('pause'))
+
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-slot="player-center-standing"]'),
+      ).not.toBeNull(),
+    )
+
+    // And the press that starts it again is answered in the middle too.
+    await userEvent.click(await canvas.findByRole('button', { name: '再生' }))
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-slot="player-center-burst"]'),
+      ).not.toBeNull(),
+    )
+  },
+}
+
+/** C presses the caption switch, which is the control on the bar it mirrors. */
+export const 鍵で字幕: Story = {
+  args: { openSocket: captioned },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = livePlayer(canvasElement)
+    const toggle = await canvas.findByRole('button', { name: '字幕' })
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+
+    press(player, 'c')
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'false'))
+
+    press(player, 'c')
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
+  },
+}
+
+/** Refused, the bar goes with the picture — nothing on it has anything to act on. */
+export const 断られたらバーごと消える: Story = {
+  args: { openSocket: ending('takenForARecording') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByRole('button', { name: '再試行' })
+    await expect(canvas.queryByRole('button', { name: '全画面' })).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '字幕' })).toBeNull()
+    await expect(canvas.queryByRole('slider', { name: '音量' })).toBeNull()
+  },
+}

@@ -106,6 +106,33 @@ export function formatPlayhead(sec: number) {
   return `${h}:${m}:${s}`
 }
 
+/**
+ * The reading on a player's own bar: `4:31`, or `1:04:15` where there is an
+ * hour to carry.
+ *
+ * Not `formatPlayhead`, which always writes the hour. That form is right where
+ * it is used — the rows of a quality breakdown, which stand in a column and
+ * have to line up with each other — and wrong on a bar, where `0:04:31` is a
+ * shape no player has ever shown and reads as a clock rather than as a
+ * position. YouTube, Netflix, Vimeo and Plyr all drop the empty hour.
+ *
+ * Each figure carries only the hour it has itself, so the head of a two-hour
+ * recording reads `0:00 / 1:59:51` and not `0:00:00 / 1:59:51`. Padding the
+ * elapsed figure out to the length's shape was tried first and is wrong: it is
+ * the padded form that was the complaint, it is not what any player does, and
+ * the pair it produces at the head of a long recording is exactly the reading
+ * that started this. The figure grows a field as playing crosses the hour,
+ * which is what YouTube's does.
+ */
+export function formatPlayerTime(sec: number) {
+  const whole = Math.max(0, Math.floor(sec))
+  const h = Math.floor(whole / 3600)
+  const m = Math.floor((whole % 3600) / 60)
+  const s = String(whole % 60).padStart(2, '0')
+
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`
+}
+
 export function formatSpan(sec: number) {
   const m = Math.floor(sec / 60)
   const s = Math.round(sec % 60)

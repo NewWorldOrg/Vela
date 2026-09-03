@@ -356,6 +356,38 @@
   --shadow-pop-ring: 2px 2px 0 var(--pop), var(--ring);
 
   --ease-toy: var(--ease);
+
+  /*
+   * The mark that answers a press in the middle of a picture: it grows a
+   * little and fades, and it is gone. Every player draws one — YouTube's
+   * circle blooms out of the centre on every play and pause — because the
+   * control that was pressed is at the bottom edge while the eye is in the
+   * middle, and without it the only proof a press landed is the picture
+   * itself, which for a pause is a picture that stopped changing.
+   *
+   * It runs once per press. The ban on looping animation is about decoration
+   * that never stops; this stops in half a second and only ever starts
+   * because somebody pressed something.
+   */
+  --animate-player-burst: player-burst 500ms linear forwards;
+}
+
+/*
+ * YouTube's own `ytp-bezel-fadeout`, which is the only published spec for this
+ * mark: `animation: ytp-bezel-fadeout .5s linear 1 normal forwards` over
+ * `0%{opacity:1} to{opacity:0;transform:scale(2)}`. It grows as it fades, so
+ * the mark reads as something leaving rather than something arriving, and it
+ * is gone in half a second.
+ */
+@keyframes player-burst {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 2;
+  }
 }
 
 /* The graph-paper dot grid behind pages and panes. */
