@@ -1,6 +1,6 @@
 import { cache } from 'react'
 
-import { formatBytes, formatLength } from '@/lib/format'
+import { formatBytes, formatLength, formatPlayhead } from '@/lib/format'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
@@ -544,7 +544,7 @@ function toDetail(
     qualityRatio: measured
       ? ratioOf(dropped, totalPackets).toFixed(4)
       : undefined,
-    qualitySpots: spotsOf(d.positions.buckets, new Date(r.startedAt)),
+    qualitySpots: spotsOf(d.positions.buckets),
     live: base.outcome === 'recording' ? liveOf(d, base, now) : undefined,
   }
 }
@@ -749,8 +749,13 @@ function secondsBetween(from: number, to: number): number {
 /**
  * The buckets the store keeps are one second wide, and the screen names a spot
  * by the minute it fell in, so the seconds of one minute are one spot.
+ *
+ * A spot is named by where it is inside the recording and not by the clock it
+ * fell on. The second a bucket carries is counted along the stream, which is
+ * the axis the seek bar is drawn on and the one `この時間帯を再生` already
+ * jumps to; spelled as a time of day it could be put beside neither.
  */
-export function spotsOf(buckets: DropBucket[], startedAt: Date): QualitySpot[] {
+export function spotsOf(buckets: DropBucket[]): QualitySpot[] {
   const byMinute = new Map<number, number>()
 
   for (const bucket of buckets) {
@@ -768,7 +773,7 @@ export function spotsOf(buckets: DropBucket[], startedAt: Date): QualitySpot[] {
   return [...byMinute.entries()]
     .sort(([left], [right]) => left - right)
     .map(([minute, packets]) => ({
-      at: `${clockOf(new Date(startedAt.getTime() + minute * 60_000))} 付近`,
+      at: `${formatPlayhead(minute * 60)} 付近`,
       packets: `${grouped(packets)} パケット`,
       second: minute * 60,
     }))

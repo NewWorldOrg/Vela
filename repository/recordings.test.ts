@@ -674,19 +674,16 @@ test('a stop somebody asked for is not read as the clock running out', async () 
  * playing resumes from, so the spot carries the second the minute begins at.
  */
 test('drops in the same minute are one spot, and a clean second is none', () => {
-  const spots = spotsOf(
-    [
-      { second: 720, continuity: 600, scrambled: 0 },
-      { second: 740, continuity: 380, scrambled: 0 },
-      { second: 900, continuity: 0, scrambled: 12 },
-      { second: 2_640, continuity: 224, scrambled: 0 },
-    ],
-    new Date('2026-08-09T12:00:00Z'),
-  )
+  const spots = spotsOf([
+    { second: 720, continuity: 600, scrambled: 0 },
+    { second: 740, continuity: 380, scrambled: 0 },
+    { second: 900, continuity: 0, scrambled: 12 },
+    { second: 2_640, continuity: 224, scrambled: 0 },
+  ])
 
   assert.deepEqual(spots, [
-    { at: '21:12 付近', packets: '980 パケット', second: 720 },
-    { at: '21:44 付近', packets: '224 パケット', second: 2_640 },
+    { at: '0:12:00 付近', packets: '980 パケット', second: 720 },
+    { at: '0:44:00 付近', packets: '224 パケット', second: 2_640 },
   ])
 })
 
