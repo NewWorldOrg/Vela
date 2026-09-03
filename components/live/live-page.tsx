@@ -10,16 +10,23 @@ import { ScreenMain } from '@/components/vela/app-shell'
 import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
 import { ChannelList } from '@/components/live/channel-list'
 import { LivePlayer } from '@/components/live/live-player'
+import { LiveUnchosen } from '@/components/live/live-unchosen'
 import type { OpenSocket } from '@/components/live/live-session'
 import { NowNext } from '@/components/live/now-next'
 
 /**
  * The live screen: the picture, what is on it, and the channels it is chosen
- * from. Full width, because the picture and the list are read side by side.
+ * from, read side by side.
  *
- * Full width is the screen and not the picture: the player's board stops at the
- * step the default screens are read at, and what is on now stops with it, so
- * the two stay one column with the list beside them however wide the window is.
+ * The picture takes the column the list leaves it, up to the width the window's
+ * height allows, and what is on now is held to the same width, so the two stay
+ * one column with the list beside them however wide the window is.
+ *
+ * The screen is that wide only while there is a picture on it. Before a channel
+ * is chosen there is nothing to spend the width on, and a full-width screen
+ * spent it on nothing: at 2560 the list sat at one edge with two thirds of the
+ * desk empty beside it. Unchosen, the screen is the step every other one is
+ * read at, and choosing opens it out.
  *
  * The channel and the broadcast type are in the URL — a second reader opening
  * the link sees the same channel, and a reload brings it back. Choosing a
@@ -65,18 +72,27 @@ export function LiveView({
 
   return (
     <ScreenMain
-      width="full"
+      width={watching ? 'full' : 'default'}
       className="flex items-start gap-[26px] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1180px]:flex-col"
     >
       <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
-        <LivePlayer
-          channel={watching?.channel}
-          profiles={screen.profiles}
-          returnPath={query ? `${pathname}?${query}` : pathname}
-          openSocket={openSocket}
-          askSignedOut={askSignedOut}
-        />
-        {watching && <NowNext watching={watching} />}
+        {watching ? (
+          <>
+            <LivePlayer
+              channel={watching.channel}
+              profiles={screen.profiles}
+              returnPath={query ? `${pathname}?${query}` : pathname}
+              openSocket={openSocket}
+              askSignedOut={askSignedOut}
+            />
+            <NowNext watching={watching} />
+          </>
+        ) : (
+          // With no channel to watch at all, the list beside this says so on
+          // its own, and an invitation to choose from it would be the second
+          // thing on the screen saying there is nothing to choose.
+          screen.channels.length > 0 && <LiveUnchosen />
+        )}
       </div>
       <aside
         aria-label="チャンネル"
