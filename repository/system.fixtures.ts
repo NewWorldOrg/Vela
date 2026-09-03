@@ -28,8 +28,30 @@ export const DRIVER_CAPABILITIES = [
   'descrambling',
 ]
 
+/** The censuses a system that is running normally answers with. */
+export const SYSTEM_CENSUS = {
+  tuners: {
+    state: 'ok',
+    value: { total: 4, busy: 1, disabled: 0, faulted: 0, drifted: false },
+  },
+  storage: {
+    state: 'ok',
+    value: {
+      roots: 1,
+      freeBytes: 1_412_000_000_000,
+      totalBytes: 3_840_000_000_000,
+      unwritable: 0,
+      inFlight: 1,
+      short: false,
+    },
+  },
+  collection: { state: 'ok', value: { streams: 34, troubled: 0 } },
+  live: { state: 'ok', value: { sessions: 0, viewers: 0 } },
+} satisfies Pick<SystemStatus, 'tuners' | 'storage' | 'collection' | 'live'>
+
 export const SYSTEM_STATUS: SystemStatus = {
-  api: { state: 'ok', status: 'ok' },
+  ...SYSTEM_CENSUS,
+  api: { state: 'ok', status: 'ok', degraded: [] },
   driver: {
     state: 'ok',
     status: {
