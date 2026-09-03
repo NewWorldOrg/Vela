@@ -35,6 +35,9 @@ const PROFILE_COLUMNS = [
   '成果物',
 ]
 
+/** What the switch in the 自動実行 panel is for, rather than what it says. */
+const AUTO_ENCODE_LABEL_ID = 'auto-encode-label'
+
 export function EncodeView({ result }: { result: EncodeResult }) {
   const { running, editing } = result
 
@@ -237,16 +240,20 @@ export function EncodeView({ result }: { result: EncodeResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkSplit}>自動実行</SectionHeading>
         <Surface className="space-y-3.5">
-          <AutoEncodeRow label="録画終了後に自動エンコード">
+          <AutoEncodeRow
+            label="録画終了後に自動エンコード"
+            labelId={AUTO_ENCODE_LABEL_ID}
+          >
             <span className="flex items-center gap-2.5">
               <Switch
                 id="auto-encode"
+                aria-labelledby={AUTO_ENCODE_LABEL_ID}
                 defaultChecked={result.autoEncode.enabled}
                 disabled
               />
-              <label htmlFor="auto-encode" className="text-ui">
+              <span className="text-ui">
                 {result.autoEncode.enabled ? 'オン' : 'オフ'}
-              </label>
+              </span>
             </span>
           </AutoEncodeRow>
           <AutoEncodeRow label="対象">
