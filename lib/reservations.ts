@@ -51,6 +51,16 @@ export interface Discardable {
   windowClosed: boolean
 }
 
+/**
+ * What a reservation has to be for it to be brought back, read the same way the
+ * API reads it. Being cancelled is not enough on its own: a window that has
+ * closed leaves a row nothing will ever record, so the API refuses it and the
+ * screen does not offer it.
+ */
+export function isRestorable(reservation: Discardable): boolean {
+  return reservation.standing === 'cancelled' && !reservation.windowClosed
+}
+
 export function isDiscardable(reservation: Discardable): boolean {
   if (reservation.recorded) {
     return false

@@ -64,7 +64,7 @@ export function ReservationRow({
 }) {
   const conflict = reservation.standing === 'conflict'
   const cancellable = conflict || reservation.standing === 'scheduled'
-  const restorable = reservation.standing === 'cancelled'
+  const restorable = reservation.restorable
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
   const [editing, setEditing] = useState(false)
@@ -158,7 +158,12 @@ export function ReservationRow({
                 </Link>
               </Button>
             )}
-            {restorable ? (
+            {/* Each of these is offered only while the API would take it: a
+                revision and a cancellation while the reservation is still
+                waiting for its tuner, and a restoration while a cancelled one
+                still has a window left to be recorded in. Drawn any wider, they
+                are buttons the API answers with a refusal every time. */}
+            {restorable && (
               <Button
                 variant="outline"
                 size="sm"
@@ -167,49 +172,42 @@ export function ReservationRow({
               >
                 復元
               </Button>
-            ) : (
-              <>
-                {/* The API takes a revision only while the reservation is still
-                    waiting for its tuner, which is the same standing that can be
-                    cancelled. Offering it on a settled or running one draws a
-                    button that is always refused. */}
-                {cancellable && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditing(true)}
-                  >
-                    編集
-                  </Button>
-                )}
-                {/* Mounted only while it is open, so each opening reads the
-                    reservation as it stands rather than as it stood when the
-                    row was first drawn. */}
-                {editing && (
-                  <EditReservationDialog
-                    booking={{
-                      id: reservation.id,
-                      title: reservation.title,
-                      priority: reservation.priority,
-                      marginBeforeSeconds: reservation.marginBeforeSeconds,
-                      marginAfterSeconds: reservation.marginAfterSeconds,
-                    }}
-                    open
-                    onOpenChange={setEditing}
-                    onRevise={actions.onRevise}
-                  />
-                )}
-                {cancellable && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => run(() => actions.onCancel(reservation.id))}
-                  >
-                    取り消す
-                  </Button>
-                )}
-              </>
+            )}
+            {cancellable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(true)}
+              >
+                編集
+              </Button>
+            )}
+            {/* Mounted only while it is open, so each opening reads the
+                reservation as it stands rather than as it stood when the row
+                was first drawn. */}
+            {editing && (
+              <EditReservationDialog
+                booking={{
+                  id: reservation.id,
+                  title: reservation.title,
+                  priority: reservation.priority,
+                  marginBeforeSeconds: reservation.marginBeforeSeconds,
+                  marginAfterSeconds: reservation.marginAfterSeconds,
+                }}
+                open
+                onOpenChange={setEditing}
+                onRevise={actions.onRevise}
+              />
+            )}
+            {cancellable && (
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={pending}
+                onClick={() => run(() => actions.onCancel(reservation.id))}
+              >
+                取り消す
+              </Button>
             )}
             {reservation.discardable && (
               <Button

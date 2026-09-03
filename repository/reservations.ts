@@ -5,7 +5,7 @@ import {
   formatClockSpan,
   formatReservationOrigin,
 } from '@/lib/format'
-import { isDiscardable } from '@/lib/reservations'
+import { isDiscardable, isRestorable } from '@/lib/reservations'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -70,6 +70,8 @@ export interface Reservation {
    * the list was drawn.
    */
   discardable: boolean
+  /** Whether a cancelled reservation may be brought back, read the same way. */
+  restorable: boolean
 }
 
 /**
@@ -463,6 +465,11 @@ export function toReservation(
   const channel = channelOf(r, known)
   const endAtConfirmed = r.window.endAtConfirmed
   const recordingId = recordings.get(r.id)
+  const stands = {
+    standing: r.standing,
+    recorded: recordingId !== undefined,
+    windowClosed: new Date(r.window.effectiveEndAt).getTime() <= now.getTime(),
+  }
 
   return {
     id: r.id,
@@ -482,12 +489,8 @@ export function toReservation(
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
     conflict: conflictOf(r, all, known, rules),
     recordingId,
-    discardable: isDiscardable({
-      standing: r.standing,
-      recorded: recordingId !== undefined,
-      windowClosed:
-        new Date(r.window.effectiveEndAt).getTime() <= now.getTime(),
-    }),
+    discardable: isDiscardable(stands),
+    restorable: isRestorable(stands),
   }
 }
 

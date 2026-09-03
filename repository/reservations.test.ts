@@ -1172,6 +1172,32 @@ test('a cancelled reservation may be thrown away, and one still to come may not'
   )
 })
 
+test('a cancelled reservation is brought back only while it still has a window', async () => {
+  standing([
+    reservation({ id: 'a1', state: 'cancelled', standing: 'cancelled' }),
+    reservation({ id: 'a2' }),
+  ])
+
+  const ahead = await listReservations({ cancelled: 'all' }, BEFORE_THEM_ALL)
+
+  assert.deepEqual(
+    ahead.items.map((one) => [one.id, one.restorable]),
+    [
+      ['a1', true],
+      ['a2', false],
+    ],
+  )
+
+  const over = await listReservations({ cancelled: 'all' }, AFTER_THEM_ALL)
+
+  assert.equal(
+    over.items.find((one) => one.id === 'a1')?.restorable,
+    false,
+    'the window has closed, and the API refuses a restoration that would leave ' +
+      'a row nothing will ever record',
+  )
+})
+
 test('a reservation a recording came of may not be thrown away', async () => {
   standing([reservation({ id: 'a1', standing: 'complete' })])
   store.recordings = [madeFor('rec-1', 'a1')]
