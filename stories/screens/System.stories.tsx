@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { SYSTEM_STATUS } from '@/repository/system.fixtures'
+import {
+  DRIVER_CAPABILITIES,
+  SYSTEM_STATUS,
+} from '@/repository/system.fixtures'
 import { SystemView } from '@/components/system/system-page'
 
 const meta = {
@@ -19,6 +22,54 @@ export const サインインが必要: Story = {
     status: {
       api: { state: 'ok', status: 'ok' },
       driver: { state: 'unauthenticated' },
+    },
+  },
+}
+
+export const 機能が足りない: Story = {
+  args: {
+    status: {
+      api: { state: 'ok', status: 'ok' },
+      driver: {
+        state: 'ok',
+        status: {
+          connection: 'connected',
+          hello: {
+            protocolVersion: '1',
+            instanceId: '4f1c8a926d0b4e779a351cb2e0f74d58',
+            capabilities: DRIVER_CAPABILITIES.slice(0, 12),
+            draining: false,
+          },
+          appProtocolVersion: '2',
+          missingCapabilities: ['descrambling', 'storage'],
+          driverUpdateRequired: true,
+          observedAt: '2026-08-14T00:31:12.4821930+09:00',
+        },
+      },
+    },
+  },
+}
+
+export const 停止準備中: Story = {
+  args: {
+    status: {
+      api: { state: 'ok', status: 'ok' },
+      driver: {
+        state: 'ok',
+        status: {
+          connection: 'draining',
+          hello: {
+            protocolVersion: '1',
+            instanceId: '4f1c8a926d0b4e779a351cb2e0f74d58',
+            capabilities: DRIVER_CAPABILITIES,
+            draining: true,
+          },
+          appProtocolVersion: '1',
+          missingCapabilities: [],
+          driverUpdateRequired: false,
+          observedAt: '2026-08-14T00:31:12.4821930+09:00',
+        },
+      },
     },
   },
 }
