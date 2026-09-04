@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import type { ReservationStanding } from '@/repository/reservations'
 import {
   isDiscardable,
+  recordingWasRemoved,
   reservationAnchor,
   reservationHref,
 } from './reservations.ts'
@@ -115,4 +116,41 @@ test('録画中は、放送の終わりを過ぎていても消せない', () =>
     }),
     false,
   )
+})
+
+/**
+ * The standings a recording is what put on the reservation. Reaching one of
+ * them with no recording written down means the recording was thrown away after
+ * it ran, because the outcome cannot be reached any other way — which is what
+ * lets the row say so rather than reading as broken.
+ */
+test('録画から来た状態なのに録画が無ければ、その録画は削除されている', () => {
+  for (const standing of ['complete', 'truncated', 'failed'] as const) {
+    assert.equal(
+      recordingWasRemoved({ standing, recorded: false }),
+      true,
+      standing,
+    )
+    assert.equal(
+      recordingWasRemoved({ standing, recorded: true }),
+      false,
+      standing,
+    )
+  }
+})
+
+test('録画がまだ無くて当たり前の状態では、削除されたとは言わない', () => {
+  for (const standing of [
+    'scheduled',
+    'conflict',
+    'recording',
+    'cancelled',
+    'missed',
+  ] as const) {
+    assert.equal(
+      recordingWasRemoved({ standing, recorded: false }),
+      false,
+      standing,
+    )
+  }
 })
