@@ -370,6 +370,29 @@
    * because somebody pressed something.
    */
   --animate-player-burst: player-burst 500ms linear forwards;
+  /*
+   * The word beside the mark — the level a volume press moved to. It is a
+   * second element in YouTube's bezel, not part of the circle
+   * (`.ytp-bezel-text-wrapper` sits at `top:10%` while `.ytp-bezel` is at the
+   * centre), and it does not grow with it: a number that doubles in size while
+   * it fades is unreadable for most of the half second it is up.
+   */
+  --animate-player-bezel-text: player-bezel-text 500ms linear forwards;
+  /*
+   * The answer to a seek, at the side the picture moved towards.
+   *
+   * 700ms, which is the hide timer YouTube gives its own seek overlay
+   * (`new g.DQ(this.hide,700,this)`) and the length of Chromium's native
+   * `arrow-pulse`. The two arrived at it independently.
+   */
+  --animate-player-seek-flash: player-seek-flash 700ms linear forwards;
+  /*
+   * The three arrows under it, each starting later than the last, so the run
+   * reads as movement in one direction rather than as three marks blinking.
+   * Chromium staggers its three by 67ms and 134ms; the shape of one arrow's
+   * life — up, peak, down — is YouTube's `arrow-fade-out-N`.
+   */
+  --animate-player-seek-arrow: player-seek-arrow 700ms linear infinite;
 }
 
 /*
@@ -387,6 +410,50 @@
   to {
     opacity: 0;
     scale: 2;
+  }
+}
+
+/*
+ * The level a volume press moved to, said in words beside the mark. YouTube's
+ * is `padding:10px 20px; font-size:175%; background:rgba(0,0,0,.5);
+ * border-radius:3px`, hidden by the same 500ms timer as the circle.
+ */
+@keyframes player-bezel-text {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/*
+ * The seek answer. Opaque for most of its life and then gone, which is the
+ * shape VLC gives every one of its on-screen answers (solid for the first 75%
+ * of the duration, then a linear ramp) and the one YouTube's newer bezel took.
+ * A fade that runs the whole 700ms reads as far slower than 700ms.
+ */
+@keyframes player-seek-flash {
+  0% {
+    opacity: 0;
+  }
+  12%,
+  72% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes player-seek-arrow {
+  0%,
+  to {
+    opacity: 0.25;
+  }
+  42% {
+    opacity: 1;
   }
 }
 
