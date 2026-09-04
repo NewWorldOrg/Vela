@@ -105,13 +105,77 @@ test('a refusal names its reason, and a full budget carries its ceiling', () => 
   }
 
   const full = readControl(
-    refusalPayload('tooManyAlready', { running: 4, atOnce: 4 }),
+    refusalPayload('tooManyAlready', { ceiling: { running: 4, atOnce: 4 } }),
   )
 
   assert.deepEqual(full, {
     said: 'refusal',
     refusal: 'tooManyAlready',
     ceiling: { running: 4, atOnce: 4 },
+  })
+})
+
+test('a refusal detail is read against the reason beside it', () => {
+  assert.deepEqual(
+    readControl(
+      refusalPayload('wouldNotTune', {
+        detail: { of: 'tuneFailure', failure: 'noLock' },
+      }),
+    ),
+    {
+      said: 'refusal',
+      refusal: 'wouldNotTune',
+      detail: { of: 'tuneFailure', failure: 'noLock' },
+    },
+  )
+
+  assert.deepEqual(
+    readControl(
+      refusalPayload('noTunerFree', {
+        detail: { of: 'heldBy', holder: 'aRecording' },
+      }),
+    ),
+    {
+      said: 'refusal',
+      refusal: 'noTunerFree',
+      detail: { of: 'heldBy', holder: 'aRecording' },
+    },
+  )
+
+  assert.deepEqual(
+    readControl(
+      refusalPayload('noTunerFree', {
+        detail: { of: 'heldBy', holder: 'anotherViewer' },
+      }),
+    ),
+    {
+      said: 'refusal',
+      refusal: 'noTunerFree',
+      detail: { of: 'heldBy', holder: 'anotherViewer' },
+    },
+  )
+})
+
+test('a detail the reason has no meaning for is not read as one it does', () => {
+  // The same byte says a different thing beside each reason, and nothing at
+  // all beside the rest: 1 is a lock that never came under `wouldNotTune` and
+  // a recording under `noTunerFree`, and neither under `driverUnavailable`.
+  assert.deepEqual(readControl(new Uint8Array([4, 1, 0, 0, 0])), {
+    said: 'refusal',
+    refusal: 'driverUnavailable',
+  })
+
+  // A nought is the API saying nothing, not one of the things it can say.
+  assert.deepEqual(readControl(refusalPayload('wouldNotTune')), {
+    said: 'refusal',
+    refusal: 'wouldNotTune',
+  })
+
+  // A value outside the enumeration is read as nothing said, rather than as
+  // whichever name happens to sit next to it.
+  assert.deepEqual(readControl(new Uint8Array([2, 9, 0, 0, 0])), {
+    said: 'refusal',
+    refusal: 'noTunerFree',
   })
 })
 
@@ -123,6 +187,25 @@ test('the refusal numbers are the API’s own', () => {
   assert.deepEqual(readControl(new Uint8Array([7, 0, 0, 0, 0])), {
     said: 'unknown',
   })
+
+  // The four ways a tuning fails, and the two things that hold a tuner, are
+  // the API's numbers too.
+  assert.deepEqual(
+    (['noLock', 'noData', 'incompletePsi', 'streamMismatch'] as const).map(
+      (failure) =>
+        refusalPayload('wouldNotTune', {
+          detail: { of: 'tuneFailure', failure },
+        })[1],
+    ),
+    [1, 2, 3, 4],
+  )
+  assert.deepEqual(
+    (['aRecording', 'anotherViewer'] as const).map(
+      (holder) =>
+        refusalPayload('noTunerFree', { detail: { of: 'heldBy', holder } })[1],
+    ),
+    [1, 2],
+  )
 })
 
 test('an ending report is the mark and the reason', () => {
