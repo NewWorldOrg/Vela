@@ -169,7 +169,7 @@ export function Player({
    * Where the frame that was on screen is kept while the next one is being
    * made. See `hold`.
    */
-  const kept = useRef<HTMLCanvasElement>(null)
+  const holder = useRef<HTMLCanvasElement>(null)
   /**
    * The pane the picture is drawn in, held as state and not as a ref: it is
    * what goes fullscreen, and it is also where the settings surface has to be
@@ -206,7 +206,7 @@ export function Player({
    * Whether the frame kept from the last picture is standing in for the one
    * being made. See `hold`.
    */
-  const [keeping, setKeeping] = useState(false)
+  const [holding, setHolding] = useState(false)
 
   /** Whether the pointer has said anything in the last few seconds. */
   const [stirred, setStirred] = useState(false)
@@ -397,7 +397,7 @@ export function Player({
    */
   const hold = () => {
     const element = video.current
-    const plate = kept.current
+    const plate = holder.current
 
     if (
       !element ||
@@ -411,7 +411,7 @@ export function Player({
     plate.width = element.videoWidth
     plate.height = element.videoHeight
     plate.getContext('2d')?.drawImage(element, 0, 0)
-    setKeeping(true)
+    setHolding(true)
   }
 
   /**
@@ -776,13 +776,15 @@ export function Player({
               // A load with nothing kept is the screen being opened at a
               // position, and there a picture that arrives and does not run —
               // autoplay refused, no press behind it — is genuinely stopped.
-              setPhase((was) => (was === 'waiting' && !keeping ? 'paused' : was))
+              setPhase((was) =>
+                was === 'waiting' && !holding ? 'paused' : was,
+              )
             }
             onPlaying={() => {
               // The element is running its own picture now, so the kept frame
               // comes down. Here and not on `loadeddata`, for the reason
               // above.
-              setKeeping(false)
+              setHolding(false)
               setPhase('playing')
               stir()
             }}
@@ -821,12 +823,12 @@ export function Player({
             the same fit, so that the picture does not move as the two swap.
           */}
           <canvas
-            ref={kept}
+            ref={holder}
             aria-hidden="true"
-            data-slot="player-kept-frame"
-            data-keeping={keeping ? 'true' : undefined}
+            data-slot="player-held-frame"
+            data-holding={holding ? 'true' : undefined}
             className={cn(
-              'pointer-events-none absolute inset-0 hidden data-[keeping]:block',
+              'pointer-events-none absolute inset-0 hidden data-[holding]:block',
               PLAYER_PICTURE,
               '[:fullscreen_&]:max-w-none',
             )}
