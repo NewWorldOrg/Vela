@@ -35,12 +35,20 @@ import {
 } from '@/components/recordings/player-palette'
 import {
   playerCommand,
+  SEEK_FLASH_LASTS,
   SEEK_STEP_SECONDS,
   VOLUME_STEP_PERCENT,
 } from '@/lib/player-keys'
 import { PlayerVolume } from '@/components/recordings/player-volume'
 import { PlayerSeek } from '@/components/recordings/player-seek'
-import { PlayerCenter } from '@/components/recordings/player-center'
+import {
+  PlayerCenter,
+  type PlayerBezel,
+} from '@/components/recordings/player-center'
+import {
+  PlayerSeekFlash,
+  type SeekFlash,
+} from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
 import { AirPlayButton } from '@/components/recordings/external-player'
 import {
@@ -200,10 +208,16 @@ export function Player({
    * press it is answering. The count is what makes a second press restart the
    * animation instead of being swallowed by the one still running.
    */
-  const [burst, setBurst] = useState<{
-    was: 'play' | 'pause'
-    nth: number
-  } | null>(null)
+  const [bezel, setBezel] = useState<(PlayerBezel & { nth: number }) | null>(
+    null,
+  )
+  /**
+   * The answer to a seek, at the side the picture went towards, and how far a
+   * run of presses has moved it.
+   */
+  const [flash, setFlash] = useState<SeekFlash | null>(null)
+  /** When the seek answer went up, so a press soon after adds to it. */
+  const flashedAt = useRef(0)
   /** How far ahead of the head the picture is loaded, in seconds. */
   const [buffered, setBuffered] = useState(0)
   /**
@@ -358,32 +372,52 @@ export function Player({
   }
 
   /**
-   * Answer the press in the middle of the picture with what the picture is
-   * about to do — the glyph of the state being moved to, which is what
-   * YouTube's bloom carries. The count rises on every press so that pressing
-   * twice quickly is two answers rather than one.
+   * Answer a press in the middle of the picture. For the transport that is the
+   * glyph of the state being moved to, which is what YouTube's bloom carries;
+   * for the sound it is the speaker at its new level and the level in words.
+   * The count rises on every press so that pressing twice quickly is two
+   * answers rather than one.
    */
-  const answer = (was: 'play' | 'pause') =>
-    setBurst((last) => ({ was, nth: (last?.nth ?? 0) + 1 }))
+  const answer = (what: PlayerBezel) =>
+    setBezel((last) => ({ ...what, nth: (last?.nth ?? 0) + 1 }))
+
+  /**
+   * Answer a seek at the side it went towards, adding to the count if the last
+   * answer is still on the picture and went the same way.
+   */
+  const answerSeek = (way: 'back' | 'forward') => {
+    const now = Date.now()
+    const running = now - flashedAt.current < SEEK_FLASH_LASTS
+
+    flashedAt.current = now
+    setFlash((last) => ({
+      way,
+      seconds:
+        running && last?.way === way
+          ? last.seconds + SEEK_STEP_SECONDS
+          : SEEK_STEP_SECONDS,
+      nth: (last?.nth ?? 0) + 1,
+    }))
+  }
 
   const toggle = () => {
     const element = video.current
 
     if (phase === 'idle' || phase === 'broken' || !element || !source) {
-      answer('play')
+      answer({ was: 'play' })
       play(position)
 
       return
     }
 
     if (element.paused) {
-      answer('play')
+      answer({ was: 'play' })
       void element.play().catch(() => setPhase('paused'))
 
       return
     }
 
-    answer('pause')
+    answer({ was: 'pause' })
     element.pause()
   }
 
@@ -414,7 +448,10 @@ export function Player({
   }
 
   /** Along from wherever the marks stand, which is ahead of the picture while a request is waiting. */
-  const step = (by: number) => choose((wanted.current ?? position) + by)
+  const step = (by: number) => {
+    answerSeek(by < 0 ? 'back' : 'forward')
+    choose((wanted.current ?? position) + by)
+  }
 
   const chooseProfile = (next: string) => {
     const asked = next as PlaybackProfile
@@ -476,9 +513,11 @@ export function Player({
 
   /** Louder or quieter by a step. */
   const stepVolume = (by: number) => {
-    chooseVolume(
-      Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100,
-    )
+    const next =
+      Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100
+
+    chooseVolume(next)
+    answer({ was: 'volume', level: next })
   }
 
   /** Silence, without losing where the level was set. */
@@ -488,6 +527,9 @@ export function Player({
 
     setMuted(quiet)
     setVolume(level)
+    // Silence is 0%, which is what the speaker beside the level says too — the
+    // two answers agree rather than one reading 0 while the other reads 40.
+    answer({ was: 'volume', level: quiet ? 0 : level })
 
     if (element) {
       element.volume = level
@@ -702,8 +744,9 @@ export function Player({
             standing={
               phase === 'idle' || phase === 'paused' ? 'play' : undefined
             }
-            burst={burst ?? undefined}
+            bezel={bezel ?? undefined}
           />
+          <PlayerSeekFlash flash={flash ?? undefined} />
           {(phase === 'waiting' || phase === 'diagnosing') && (
             // Over the middle, on a plate of its own. Japanese recordings carry
             // their subtitles burnt into the bottom of the picture, so anything

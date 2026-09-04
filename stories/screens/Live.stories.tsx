@@ -442,6 +442,40 @@ export const 起動中: Story = {
 }
 
 /**
+ * The sound is answered on the picture here as it is on a recording, with the
+ * speaker at its new level and the level in words.
+ *
+ * Seeking is not answered, because seeking is not taken: the live picture is
+ * one edge with nowhere to go back to and nothing to go forward into, so ← →
+ * are left to the browser (v3.24) and there is no mark for them.
+ */
+export const キーの印: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const player = livePlayer(canvasElement)
+    const said = () =>
+      canvasElement.querySelector('[data-slot="player-center-bezel-text"]')
+
+    await expect(said()).toBeNull()
+
+    press(player, 'ArrowDown')
+    await waitFor(() => expect(said()).toHaveTextContent('95%'))
+
+    press(player, 'm')
+    await waitFor(() => expect(said()).toHaveTextContent('0%'))
+
+    press(player, 'm')
+    await waitFor(() => expect(said()).toHaveTextContent('95%'))
+
+    // Nothing at the side: there is no seek on the live picture to answer.
+    press(player, 'ArrowRight')
+    await expect(
+      canvasElement.querySelector('[data-slot="player-seek-flash"]'),
+    ).toBeNull()
+  },
+}
+
+/**
  * The lock and the transcoder run side by side once the tuner is secured. The
  * transcoder has been reached and the lock has not, so the one is done and the
  * other underway, each counting from the tuner.
@@ -1124,7 +1158,7 @@ export const 停止中は中央に印: Story = {
     await userEvent.click(await canvas.findByRole('button', { name: '再生' }))
     await waitFor(() =>
       expect(
-        canvasElement.querySelector('[data-slot="player-center-burst"]'),
+        canvasElement.querySelector('[data-slot="player-center-bezel"] span'),
       ).not.toBeNull(),
     )
   },

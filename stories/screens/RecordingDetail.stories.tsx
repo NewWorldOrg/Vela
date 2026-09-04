@@ -166,8 +166,12 @@ export const 尻切れ: Story = {
 
     // A band, because what can be watched is not what was asked for and the
     // picture itself will not say so. Values and not a sentence: the lengths
-    // it is short by are the whole of it.
-    await expect(canvas.getByText('尻切れ')).toBeVisible()
+    // it is short by are the whole of it. The word is said twice — once in the
+    // band, once as a value in the record — and only the band is on the screen
+    // until the record is opened.
+    const said = canvas.getAllByText('尻切れ')
+
+    await expect(said[0]).toBeVisible()
     await expect(canvas.getByText(/書けた尺 36:12 \/ 予定 54:00/)).toBeVisible()
   },
 }

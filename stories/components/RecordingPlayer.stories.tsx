@@ -710,18 +710,98 @@ export const 停止中は中央に印: Story = {
 
     await expect(standing()).not.toBeNull()
 
-    const burst = () =>
-      canvasElement.querySelector('[data-slot="player-center-burst"]')
+    const bezel = () =>
+      canvasElement.querySelector('[data-slot="player-center-bezel"] span')
 
-    await expect(burst()).toBeNull()
+    await expect(bezel()).toBeNull()
 
     await userEvent.click(
       canvasElement.querySelector('[data-slot="player-press"]') as HTMLElement,
     )
-    await waitFor(() => expect(burst()).not.toBeNull())
-    await expect(getComputedStyle(burst() as Element).animationName).toBe(
+    await waitFor(() => expect(bezel()).not.toBeNull())
+    await expect(getComputedStyle(bezel() as Element).animationName).toBe(
       'player-burst',
     )
+  },
+}
+
+/**
+ * A volume press is answered too, and with the level it moved to.
+ *
+ * YouTube is the only web player that does this, and it is the one worth
+ * copying here: the level lives in a slider on a bar that is not up while the
+ * keys are being used, so without a mark on the picture a volume press has no
+ * answer at all. Its own is a speaker glyph in the same 52px circle and a
+ * separate band of text reading `NN%` — `.ytp-bezel-text`, at `top:10%`, not
+ * inside the circle and not growing with it. Silence says `0%`, so the number
+ * and the speaker beside it agree.
+ */
+export const 音量の押しにも印: Story = {
+  args: { detail: detail('1266') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = board(canvasElement)
+    const said = () =>
+      canvasElement.querySelector('[data-slot="player-center-bezel-text"]')
+
+    await expect(said()).toBeNull()
+
+    press(player, 'ArrowDown')
+    await waitFor(() => expect(said()).toHaveTextContent('95%'))
+
+    press(player, 'm')
+    await waitFor(() => expect(said()).toHaveTextContent('0%'))
+    await expect(canvas.getByRole('button', { name: '消音' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    press(player, 'm')
+    await waitFor(() => expect(said()).toHaveTextContent('95%'))
+  },
+}
+
+/**
+ * A seek is answered at the side the picture went towards, and not in the
+ * middle.
+ *
+ * Measured on YouTube's shipping player, the arrow keys and J / L do not touch
+ * `.ytp-bezel`: they drive `ytp-doubletap-ui-legacy`, a 110px circle at
+ * `rgba(0,0,0,.6)` placed at one side, hidden after 700ms, with three arrows on
+ * staggered keyframes and a label that adds up over a run of presses.
+ * Chromium's own `<video>` controls draw the same mark with the same 700ms and
+ * the same three arrows for a double tap. Two implementations, one answer.
+ */
+export const 送り戻しの印は脇に立つ: Story = {
+  args: { detail: detail('1266'), startAt: 0, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const player = board(canvasElement)
+    const mark = () =>
+      canvasElement.querySelector('[data-slot="player-seek-flash"]')
+
+    await expect(mark()).toBeNull()
+
+    press(player, 'ArrowRight')
+    await waitFor(() => expect(mark()).not.toBeNull())
+    await expect(mark()).toHaveAttribute('data-way', 'forward')
+    await expect(mark()).toHaveTextContent('10秒')
+    await expect(getComputedStyle(mark() as Element).animationDuration).toBe(
+      '0.7s',
+    )
+
+    // The middle stays out of it.
+    await expect(
+      canvasElement.querySelector('[data-slot="player-center-bezel"] span'),
+    ).toBeNull()
+
+    // A run of presses is one answer that adds up, not one answer per press.
+    press(player, 'ArrowRight')
+    press(player, 'ArrowRight')
+    await waitFor(() => expect(mark()).toHaveTextContent('30秒'))
+
+    press(player, 'ArrowLeft')
+    await waitFor(() => expect(mark()).toHaveAttribute('data-way', 'back'))
+    await expect(mark()).toHaveTextContent('10秒')
   },
 }
 
