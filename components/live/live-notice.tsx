@@ -14,13 +14,13 @@ import type {
 } from '@/lib/live-wire'
 import { loginHref } from '@/repository/auth'
 import {
-  AntennaIcon,
   ClockIcon,
   DangerIcon,
   DisplayIcon,
   LockIcon,
   PersonIcon,
   PlayIcon,
+  QualityIcon,
   RecordIcon,
   SignalIcon,
   TunerIcon,
@@ -82,7 +82,7 @@ const REFUSED: Record<LiveRefusal, Said> = {
   },
   wouldNotTune: {
     tone: 'gone',
-    mark: <AntennaIcon className="size-[22px]" />,
+    mark: <SignalIcon className="size-[22px]" />,
     title: '選局できませんでした',
     worthRetrying: true,
   },
@@ -150,7 +150,7 @@ const HELD_BY: Record<LiveTunerHolder, Said> = {
  */
 const NO_LOCK: Said = {
   tone: 'gone',
-  mark: <SignalIcon className="size-[22px]" />,
+  mark: <QualityIcon className="size-[22px]" />,
   title: '信号を掴めませんでした',
   worthRetrying: false,
 }
