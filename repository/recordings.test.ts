@@ -762,7 +762,7 @@ test('a recording still being written is refused in its own words', async () => 
   const result = await remakeThumbnail('7e7a14cf')
 
   assert.equal(result.state, 'rejected')
-  assert.match(result.state === 'rejected' ? result.message : '', /書き込み中/)
+  assert.match(result.state === 'rejected' ? result.message : '', /録画中/)
 })
 
 test('each refusal the endpoint can give is told apart from the others', async () => {

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
+import { redrawnHref } from '@/lib/thumbnail-redraw'
+import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import {
@@ -177,6 +179,7 @@ export function Player({
    * a ref that is still null on the first pass would send the surface to a
    * body that is not being drawn.
    */
+  const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile>(
@@ -201,6 +204,17 @@ export function Player({
           onTheFly ? PLAYBACK_PROFILE_UNASKED : undefined,
         ),
   )
+
+  /**
+   * The picture the element stands at before it has one of its own, asked for
+   * as it stands after the last press of サムネイルを作り直す. Without the moment
+   * on it the browser answers from the minute it is holding the old picture
+   * for, and the poster would go on being the frame that press replaced.
+   */
+  const poster =
+    d.thumbnailHref === undefined
+      ? undefined
+      : redrawnHref(d.thumbnailHref, redrawnAt)
 
   /**
    * Whether the frame kept from the last picture is standing in for the one
@@ -753,7 +767,7 @@ export function Player({
             ref={video}
             src={source}
             autoPlay={source !== undefined}
-            poster={d.thumbnailHref}
+            poster={poster}
             preload="none"
             playsInline
             onLoadedMetadata={(event) => {

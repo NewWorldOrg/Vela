@@ -3,6 +3,8 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
+import { redrawnHref } from '@/lib/thumbnail-redraw'
+import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import type { Recording } from '@/repository/recordings'
 import {
   ThumbErrorIcon,
@@ -34,7 +36,14 @@ export function RecordingThumb({
   subTone?: string
 }) {
   const [reached, setReached] = useState(true)
-  const drawn = reached ? recording.thumbnailHref : undefined
+  // As it stands after the last press of サムネイルを作り直す on the recording:
+  // the browser holds the picture for a minute, and the row is where the
+  // reader comes back to after pressing it.
+  const redrawnAt = useRedrawnThumbnail(recording.id)
+  const drawn =
+    reached && recording.thumbnailHref !== undefined
+      ? redrawnHref(recording.thumbnailHref, redrawnAt)
+      : undefined
 
   return (
     <span

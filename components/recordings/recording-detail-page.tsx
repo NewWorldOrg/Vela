@@ -327,6 +327,7 @@ export function RecordingDetailView({
             <RecordingActions
               recording={d}
               onDelete={onDelete}
+              onRemakeThumbnail={onRemakeThumbnail}
               onTakeTicket={onTakeTicket}
               plays={plays}
             />
@@ -353,7 +354,6 @@ export function RecordingDetailView({
           <RecordingRecord
             detail={d}
             plan={playback.state === 'planned' ? playback.plan : undefined}
-            onRemakeThumbnail={onRemakeThumbnail}
           />
         </div>
       </div>

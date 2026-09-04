@@ -219,10 +219,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     eoverflow: '2 回',
     scramble: { main: '0 パケット' },
     stopReason: '終了時刻に到達',
-    thumbnailState: {
-      main: '生成失敗',
-      canGenerate: true,
-    },
+    thumbnailState: { main: '生成失敗' },
     qualityTotal: '178,530',
     qualityRatio: '0.227',
     qualitySpots: [
