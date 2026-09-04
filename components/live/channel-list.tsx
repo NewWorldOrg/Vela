@@ -1,13 +1,12 @@
 'use client'
 
 import { useId } from 'react'
-import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import type { ChannelKind } from '@/repository/channels'
 import type { LiveChannel } from '@/repository/live'
 import { Button } from '@/components/ui/button'
-import { EmptyState } from '@/components/vela/empty-state'
+import { ChannelsMissing } from '@/components/live/channels-missing'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -56,6 +55,7 @@ export function ChannelKey({
  */
 export function ChannelList({
   kind,
+  kinds,
   channels,
   watchingId,
   onKind,
@@ -65,6 +65,8 @@ export function ChannelList({
   className,
 }: {
   kind: ChannelKind
+  /** The types that have a channel, in the order they are listed. */
+  kinds: ChannelKind[]
   channels: LiveChannel[]
   /** The channel being watched, where it is on this list. */
   watchingId?: string
@@ -83,6 +85,7 @@ export function ChannelList({
       <div className="mb-3.5 flex items-start justify-end gap-1.5">
         <ChannelKinds
           kind={kind}
+          kinds={kinds}
           onKind={onKind}
           className={cn('flex-1', folded && 'hidden')}
         />
@@ -110,15 +113,7 @@ export function ChannelList({
           <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
         </div>
         {channels.length === 0 ? (
-          <EmptyState
-            spot="antenna"
-            title="視聴できるチャンネルがありません"
-            action={
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/settings/channels">チャンネル設定へ</Link>
-              </Button>
-            }
-          />
+          <ChannelsMissing kind={kind} kinds={kinds} onKind={onKind} />
         ) : (
           <ul className="min-h-0 flex-1 overflow-y-auto rounded-lg bg-surface">
             {channels.map((channel) => {

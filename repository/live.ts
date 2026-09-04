@@ -1,7 +1,7 @@
 import { servicesSettled, type SettledGuide } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
-import type { ChannelKind } from '@/repository/channels'
+import { CHANNEL_KIND_ORDER, type ChannelKind } from '@/repository/channels'
 import type { Programme } from '@/repository/programmes'
 import { fetchGuide, toInt } from '@/repository/programmes'
 import {
@@ -95,6 +95,12 @@ export interface LiveWatching {
 
 export interface LiveScreen {
   kind: ChannelKind
+  /**
+   * The broadcast types that have a channel on them, in the order they are
+   * always listed. It is what the type bar may offer: a type with nothing on
+   * it leads to the same nothing whichever screen it is pressed from.
+   */
+  kinds: ChannelKind[]
   channels: LiveChannel[]
   watching?: LiveWatching
   profiles: LiveProfile[]
@@ -110,8 +116,24 @@ export interface LiveScreen {
   tuners?: number
 }
 
-export function kindOf(rawKind: string | undefined): ChannelKind {
-  return rawKind === 'bs' || rawKind === 'cs110' ? rawKind : 'terrestrial'
+/**
+ * The broadcast type the screen is reading.
+ *
+ * A URL that names one is answered with it, whether or not anything is on it:
+ * the type is what the reader asked for, and answering with another would be
+ * a different screen than the link says. A URL that names none — or names
+ * nothing this product has — is answered with the first type that has a
+ * channel, so that the screen opens on something to press.
+ */
+export function kindOf(
+  rawKind: string | undefined,
+  had: ChannelKind[] = [],
+): ChannelKind {
+  if (rawKind === 'bs' || rawKind === 'cs110' || rawKind === 'terrestrial') {
+    return rawKind
+  }
+
+  return had[0] ?? 'terrestrial'
 }
 
 export async function getLiveScreen(
@@ -119,19 +141,22 @@ export async function getLiveScreen(
   rawChannel: string | undefined,
   now: Date = new Date(),
 ): Promise<LiveScreen> {
-  const kind = kindOf(rawKind)
   const [listed, profiles, tuners] = await Promise.all([
     fetchLiveChannels(),
     fetchLiveProfiles(),
     countTuners(),
   ])
+  const kinds = CHANNEL_KIND_ORDER.filter((one) =>
+    listed.some((channel) => channel.kind === one),
+  )
+  const kind = kindOf(rawKind, kinds)
   const chosen = listed.find((channel) => channel.id === rawChannel)
 
   // The channel being watched stays on air while another kind's list is
   // browsed, so its programmes are read even when it is not on the list shown.
-  const kinds = [...new Set([kind, ...(chosen ? [chosen.kind] : [])])]
+  const read = [...new Set([kind, ...(chosen ? [chosen.kind] : [])])]
   const guides = await Promise.all(
-    kinds.map((one) =>
+    read.map((one) =>
       fetchGuide({
         type: SYSTEM_OF_KIND[one],
         from: new Date(now.getTime() - AROUND_NOW_MS),
@@ -158,6 +183,7 @@ export async function getLiveScreen(
 
   return {
     kind,
+    kinds,
     channels: listed
       .filter((channel) => channel.kind === kind)
       .map(withProgrammes),

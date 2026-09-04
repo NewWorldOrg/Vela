@@ -449,3 +449,75 @@ test('チューナーは数えられ、台帳が答えなければ数そのも�
   // this ledger, so it does not go down with it.
   assert.equal(unread.channels.length, 1)
 })
+
+/**
+ * Which broadcast types the screen may offer, and which one it opens on.
+ *
+ * A type with no channel on it reaches the same nothing from wherever it is
+ * pressed, so it is not offered; and where nothing is offered for the type the
+ * URL leaves out, the screen opens on the first type that has a channel rather
+ * than on an empty one.
+ */
+test('種別は、チャンネルを持つものだけが並ぶ', async () => {
+  store.profiles = []
+  store.programmes = []
+  store.tuners = []
+
+  const satellite = {
+    system: 'isdbSBs',
+    physicalChannel: 15,
+    transportStreamId: 50001,
+  }
+
+  store.channels = [listed(32736, 1024, '総合1')]
+
+  const aerialOnly = await getLiveScreen(undefined, undefined, NOW)
+
+  assert.deepEqual(aerialOnly.kinds, ['terrestrial'])
+  assert.equal(aerialOnly.kind, 'terrestrial')
+
+  store.channels = [
+    listed(32736, 1024, '総合1'),
+    listed(4, 101, '衛星1', { tuning: satellite }),
+  ]
+
+  assert.deepEqual((await getLiveScreen(undefined, undefined, NOW)).kinds, [
+    'terrestrial',
+    'bs',
+  ])
+
+  // The aerial has nothing on it, so the screen opens on the one that has.
+  store.channels = [listed(4, 101, '衛星1', { tuning: satellite })]
+
+  const satelliteOnly = await getLiveScreen(undefined, undefined, NOW)
+
+  assert.deepEqual(satelliteOnly.kinds, ['bs'])
+  assert.equal(satelliteOnly.kind, 'bs')
+
+  // Nothing anywhere leaves nothing to open on, and the screen says so with
+  // the type it would have opened on.
+  store.channels = []
+
+  const nothing = await getLiveScreen(undefined, undefined, NOW)
+
+  assert.deepEqual(nothing.kinds, [])
+  assert.equal(nothing.kind, 'terrestrial')
+})
+
+/**
+ * A URL that names a type is answered with that type, empty or not: the type
+ * is what the reader asked for, and answering with another would be a screen
+ * the link does not say.
+ */
+test('URL が名指した種別は、空でもその種別のまま答える', async () => {
+  store.profiles = []
+  store.programmes = []
+  store.tuners = []
+  store.channels = [listed(32736, 1024, '総合1')]
+
+  const asked = await getLiveScreen('cs110', undefined, NOW)
+
+  assert.equal(asked.kind, 'cs110')
+  assert.deepEqual(asked.channels, [])
+  assert.deepEqual(asked.kinds, ['terrestrial'])
+})

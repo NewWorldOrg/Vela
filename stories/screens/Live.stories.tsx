@@ -945,17 +945,18 @@ export const 断りは時間で書き換わらない: Story = {
   },
 }
 
-/** A broadcast type with nothing on it. */
+/**
+ * Nothing anywhere: the aerial has never been scanned, and the way on is the
+ * screen that scans it. There is no type bar either — three tabs onto this one
+ * panel would be three presses that change nothing.
+ */
 export const 空状態: Story = {
   args: {
-    screen: { ...UNCHOSEN, kind: 'bs', channels: [] },
+    screen: { ...UNCHOSEN, kind: 'terrestrial', kinds: [], channels: [] },
     openSocket: nothingToWatch,
   },
   parameters: {
-    nextjs: {
-      appDirectory: true,
-      navigation: { pathname: '/live', query: { kind: 'bs' } },
-    },
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -966,16 +967,85 @@ export const 空状態: Story = {
     await expect(
       canvas.getByRole('link', { name: 'チャンネル設定へ' }),
     ).toHaveAttribute('href', '/settings/channels')
-    await expect(canvas.getByRole('button', { name: 'BS' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    await expect(canvas.queryByRole('group', { name: '放送の種別' })).toBeNull()
 
     // Nothing to choose from is one reading, not two: no grid stands beside
     // the panel saying the same thing a second way.
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).toBeNull()
+  },
+}
+
+/**
+ * A link named a broadcast type this aerial carries nothing on, while another
+ * type carries twenty-seven. Saying there is nothing to watch would be false,
+ * and the channel settings are not the way on: the channels are there, and
+ * that screen is for adding the ones that are not.
+ *
+ * The type is answered as the link names it — a URL that says CS110 is not a
+ * screen of terrestrial channels — and the way on is the channels there are.
+ */
+export const 空状態_この種別にチャンネルが無い: Story = {
+  args: {
+    screen: {
+      ...UNCHOSEN,
+      kind: 'cs110',
+      kinds: ['terrestrial'],
+      channels: [],
+    },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/live', query: { kind: 'cs110' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText('CS110のチャンネルがありません'),
+    ).toBeVisible()
+    await expect(
+      canvas.queryByText('視聴できるチャンネルがありません'),
+    ).toBeNull()
+    await expect(
+      canvas.queryByRole('link', { name: 'チャンネル設定へ' }),
+    ).toBeNull()
+
+    // The press takes the empty type out of the address, which is what puts
+    // the screen back on the channels there are.
+    await userEvent.click(
+      canvas.getByRole('button', { name: '地上のチャンネルへ' }),
+    )
+    await waitFor(() => expect(getRouter().push).toHaveBeenCalled())
+    await expect(getRouter().push.mock.calls[0][0] as string).not.toContain(
+      'kind=',
+    )
+  },
+}
+
+/**
+ * Only one type has channels, so there is nothing to switch between: a lone
+ * tab, already pressed, is a press onto the face it is already on.
+ */
+export const 種別が1つなら帯を出さない: Story = {
+  args: {
+    screen: { ...UNCHOSEN, kinds: ['terrestrial'] },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.queryByRole('group', { name: '放送の種別' })).toBeNull()
+    await expect(
+      canvasElement.querySelector('[data-slot="channel-grid"]'),
+    ).not.toBeNull()
   },
 }
 

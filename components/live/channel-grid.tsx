@@ -1,11 +1,7 @@
 'use client'
 
-import Link from 'next/link'
-
 import { cn } from '@/lib/utils'
 import type { LiveChannel } from '@/repository/live'
-import { Button } from '@/components/ui/button'
-import { EmptyState } from '@/components/vela/empty-state'
 import { ProgressBar } from '@/components/vela/progress'
 import { Tile } from '@/components/vela/surface'
 import { ChannelKey } from '@/components/live/channel-list'
@@ -58,22 +54,6 @@ export function ChannelGrid({
   onSelect: (channel: LiveChannel) => void
   className?: string
 }) {
-  if (channels.length === 0) {
-    return (
-      <EmptyState
-        spot="antenna"
-        titleLevel={2}
-        title="視聴できるチャンネルがありません"
-        action={
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/settings/channels">チャンネル設定へ</Link>
-          </Button>
-        }
-        className={className}
-      />
-    )
-  }
-
   return (
     <ul
       data-slot="channel-grid"
