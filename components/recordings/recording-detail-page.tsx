@@ -158,6 +158,7 @@ export function RecordingDetailView({
 
           {alarming && (
             <div
+              data-slot="recording-outcome"
               className={cn(
                 'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[18px] py-[13px]',
                 OUTCOME_STYLE[alarming],
