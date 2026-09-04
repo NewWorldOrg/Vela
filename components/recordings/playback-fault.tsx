@@ -18,7 +18,7 @@ import {
 } from '@/components/vela/icons'
 import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
-import { ExternalPlayer } from '@/components/recordings/external-player'
+import { OpenExternally } from '@/components/recordings/external-player'
 
 /**
  * Why the picture asked for never arrived.
@@ -172,7 +172,7 @@ export function PlaybackFaultNotice({
         </button>
       )}
       {said.worthLeaving && (
-        <ExternalPlayer id={d.id} onTakeTicket={onTakeTicket} />
+        <OpenExternally id={d.id} onTakeTicket={onTakeTicket} tone="player" />
       )}
     </PlaybackNotice>
   )

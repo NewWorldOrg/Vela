@@ -879,6 +879,25 @@ export function CaptionsGlyph({ className, ...props }: IconProps) {
 }
 
 /** The corners the fullscreen switch reads in, pointing out and then back in. */
+/**
+ * AirPlay: a screen open at its foot with a triangle standing in the gap.
+ *
+ * The mark is Apple's and every player that offers the picker draws this same
+ * shape, so it is not redrawn into this set's idiom past the stroke weight —
+ * a screen and a triangle that were not these proportions would not be read as
+ * AirPlay at all. The triangle is filled because it is filled everywhere it
+ * appears; the play glyph is the other exception in this file for the same
+ * reason.
+ */
+export function AirPlayIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M18.4 16.2h1a1.4 1.4 0 0 0 1.4-1.4V6.6a1.4 1.4 0 0 0-1.4-1.4H4.6a1.4 1.4 0 0 0-1.4 1.4v8.2a1.4 1.4 0 0 0 1.4 1.4h1" />
+      <path d="M12 13.2 17 20H7Z" fill="currentColor" stroke="none" />
+    </Icon>
+  )
+}
+
 export function FullscreenIcon({
   leaving,
   ...props
