@@ -60,7 +60,7 @@ export const RECORDING_OUTCOME_TERMS: Record<RecordingOutcome, StateTerm> = {
 }
 
 /**
- * The two marks that sit beside a standing. Neither is a standing nor the
+ * The marks that sit beside a standing. None of them is a standing nor any
  * other's alternative, so they are here rather than in the record above.
  */
 export const END_UNDECIDED_TERM: StateTerm = {
@@ -71,6 +71,16 @@ export const END_UNDECIDED_TERM: StateTerm = {
 export const RESERVATION_RECEPTION_TERM: StateTerm = {
   label: '受信不可',
   explanation: 'このサービスに選局先がないため、録画できない状態。',
+}
+
+/**
+ * The third mark, and the same shape as the two above: the reservation is still
+ * in the standing its recording left it in, and whether that recording is still
+ * kept is a separate thing from which standing it reached.
+ */
+export const RESERVATION_RECORDING_REMOVED_TERM: StateTerm = {
+  label: '録画削除済み',
+  explanation: 'この予約からできた録画が、あとから削除された状態。',
 }
 
 /**

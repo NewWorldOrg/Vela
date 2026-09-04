@@ -148,6 +148,25 @@ export const 終わった予約: Story = {
       ).toBeNull()
     }
 
+    // The row whose recording was thrown away afterwards: still `完了`,
+    // because that is what the recording left it in, and marked beside it so
+    // the reader is not left with a settled row that opens nothing.
+    const removed = rowFor(canvas.getByText('真昼の博物誌'))
+
+    await expect(within(removed).getByText('完了')).toBeInTheDocument()
+    await expect(within(removed).getByText('録画削除済み')).toBeInTheDocument()
+    await expect(
+      within(removed).queryByRole('link', { name: 'この予約の録画' }),
+    ).toBeNull()
+
+    // And not on the rows that still have theirs, which a check that only
+    // looked at the row above would pass on a screen that marked every one.
+    for (const title of ['週末キッチンの手帖', '真夜中の音楽室']) {
+      await expect(
+        within(rowFor(canvas.getByText(title))).queryByText('録画削除済み'),
+      ).toBeNull()
+    }
+
     // The anchor the recording screen sends the reader back to. Spelled here
     // rather than read off the row, so the two spellings have to agree.
     await expect(
@@ -196,6 +215,57 @@ export const 終わった予約: Story = {
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await waitFor(() => expect(discarded).toEqual(['r-305']))
+  },
+}
+
+/**
+ * The recordings these reservations came to have been thrown away since. The
+ * standing is left as the recording left it — the recording having run and the
+ * file having been removed afterwards are two different facts, and the ledger
+ * keeps the first after the second — so the row carries the mark rather than a
+ * different word, and every standing a recording can leave behind takes it.
+ */
+export const 録画が削除された予約: Story = {
+  args: {
+    result: shown(
+      SETTLED_RESERVATION_FIXTURES.map(({ recordingId, ...rest }) =>
+        recordingId === undefined
+          ? rest
+          : // What the row is once the recording is gone, and not only in the
+            // one badge: the recording was the thing holding the record of the
+            // reservation in place, so throwing it away is what makes the
+            // record itself something that can be thrown away too.
+            { ...rest, discardable: true },
+      ),
+      { filter: { cancelled: 'all' } },
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    for (const [title, standing] of [
+      ['真夜中の音楽室', '尻切れ'],
+      ['週末キッチンの手帖', '完了'],
+      ['真昼の博物誌', '完了'],
+    ]) {
+      const row = rowFor(canvas.getByText(title))
+
+      await expect(within(row).getByText(standing)).toBeInTheDocument()
+      await expect(within(row).getByText('録画削除済み')).toBeInTheDocument()
+    }
+
+    // Not on the ones a recording was never made of, which are already saying
+    // what became of them.
+    for (const title of ['朝のニュース', '午後のロードショー']) {
+      await expect(
+        within(rowFor(canvas.getByText(title))).queryByText('録画削除済み'),
+      ).toBeNull()
+    }
+
+    // Nothing to open on any of them, and no button offering to.
+    await expect(
+      canvas.queryAllByRole('link', { name: 'この予約の録画' }),
+    ).toEqual([])
   },
 }
 

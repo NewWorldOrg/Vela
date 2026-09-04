@@ -80,3 +80,37 @@ export function isDiscardable(reservation: Discardable): boolean {
       return true
   }
 }
+
+/**
+ * The standings the recording ledger put there, rather than the reservation
+ * itself: reaching one of them means a recording was written down against this
+ * reservation and ran to an outcome.
+ */
+const CAME_OF_A_RECORDING: ReservationStanding[] = [
+  'complete',
+  'truncated',
+  'failed',
+]
+
+/**
+ * Whether the recording this reservation came to has since been thrown away.
+ *
+ * The projection on the reservation outlives the recording row on purpose: the
+ * recording having happened and the file having been removed afterwards are two
+ * different facts, and the ledger keeps the first one after the second. So a
+ * settled reservation with nothing to open is not a fault — it is the state the
+ * decision asks for, and the only thing missing was the screen saying so.
+ *
+ * It is read off the standing rather than off the recording, because the
+ * standings above can only have come from a recording that existed: the outcome
+ * is written onto the reservation by the ledger and cannot be reached any other
+ * way.
+ */
+export function recordingWasRemoved(reservation: {
+  standing: ReservationStanding
+  recorded: boolean
+}): boolean {
+  return (
+    !reservation.recorded && CAME_OF_A_RECORDING.includes(reservation.standing)
+  )
+}
