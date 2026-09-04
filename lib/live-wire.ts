@@ -247,6 +247,46 @@ export interface TranscodeCeiling {
   atOnce: number
 }
 
+/**
+ * The four ways a tuning fails, as the API enumerates them.
+ *
+ * Only the first of them reaches a viewer: the rest are the scan's readings —
+ * a lock that carried nothing, tables that never completed, a stream that was
+ * not the one asked for — and the driver does not report them on the path that
+ * seats a viewer. They are named here because the byte is the API's own
+ * enumeration and reading it as anything else would be a guess; what the
+ * screen draws for each is a separate question, answered where it draws.
+ */
+const TUNE_FAILURE_BYTE = {
+  noLock: 1,
+  noData: 2,
+  incompletePsi: 3,
+  streamMismatch: 4,
+} as const
+
+export type TuneFailure = keyof typeof TUNE_FAILURE_BYTE
+
+/** What has the tuner a viewer was turned away for. */
+const TUNER_HOLDER_BYTE = {
+  aRecording: 1,
+  anotherViewer: 2,
+} as const
+
+export type LiveTunerHolder = keyof typeof TUNER_HOLDER_BYTE
+
+/**
+ * The one thing a refusal adds to its reason, read off the byte beside it.
+ *
+ * The byte means whatever the reason next to it says it means — the way a
+ * tuning failed where the tuning was refused, what holds the tuner where no
+ * tuner was free — and nothing at all for every other reason, which send a
+ * nought. Absent here is that nought: the API declining to say, which is not
+ * the same as any of the things it could have said.
+ */
+export type LiveRefusalDetail =
+  | { of: 'tuneFailure'; failure: TuneFailure }
+  | { of: 'heldBy'; holder: LiveTunerHolder }
+
 const ENDING_BYTE = {
   letGo: 1,
   takenForARecording: 2,
@@ -268,7 +308,12 @@ const ENDING_MARK = 0xe0
 export type LiveControlSaid =
   | { said: LiveControl }
   | { said: 'progress'; startup: LiveStartup }
-  | { said: 'refusal'; refusal: LiveRefusal; ceiling?: TranscodeCeiling }
+  | {
+      said: 'refusal'
+      refusal: LiveRefusal
+      ceiling?: TranscodeCeiling
+      detail?: LiveRefusalDetail
+    }
   | { said: 'ending'; why: LiveSupplyEnd }
   | { said: 'unknown' }
 
@@ -323,10 +368,40 @@ function readRefusal(payload: Uint8Array): LiveControlSaid {
   const atOnce = view.getUint16(3)
 
   if (refusal !== 'tooManyAlready') {
-    return { said: 'refusal', refusal }
+    const detail = detailOf(refusal, payload[1])
+
+    return detail
+      ? { said: 'refusal', refusal, detail }
+      : { said: 'refusal', refusal }
   }
 
   return { said: 'refusal', refusal, ceiling: { running, atOnce } }
+}
+
+/**
+ * The detail byte, read against the reason it arrived with.
+ *
+ * A nought is the API saying nothing, and a value this reason has no meaning
+ * for is not read as one it does: both come back absent, and the screen says
+ * what it can say about the reason alone.
+ */
+function detailOf(
+  refusal: LiveRefusal,
+  said: number,
+): LiveRefusalDetail | undefined {
+  if (refusal === 'wouldNotTune') {
+    const failure = nameOf(TUNE_FAILURE_BYTE, said)
+
+    return failure ? { of: 'tuneFailure', failure } : undefined
+  }
+
+  if (refusal === 'noTunerFree') {
+    const holder = nameOf(TUNER_HOLDER_BYTE, said)
+
+    return holder ? { of: 'heldBy', holder } : undefined
+  }
+
+  return undefined
 }
 
 function readProgress(payload: Uint8Array): LiveControlSaid {
@@ -365,19 +440,33 @@ export function progressPayload(startup: LiveStartup): Uint8Array {
   return payload
 }
 
-/** A refusal as the wire carries it. */
+/**
+ * A refusal as the wire carries it.
+ *
+ * The ceiling and the detail sit on the same bytes, and only one reason takes
+ * a ceiling, so nothing that carries one carries the other.
+ */
 export function refusalPayload(
   refusal: LiveRefusal,
-  ceiling?: TranscodeCeiling,
+  over: { ceiling?: TranscodeCeiling; detail?: LiveRefusalDetail } = {},
 ): Uint8Array {
   const payload = new Uint8Array(REFUSAL_LENGTH)
   const view = new DataView(payload.buffer)
 
   payload[0] = REFUSAL_BYTE[refusal]
 
-  if (ceiling) {
-    view.setUint16(1, ceiling.running)
-    view.setUint16(3, ceiling.atOnce)
+  if (over.ceiling) {
+    view.setUint16(1, over.ceiling.running)
+    view.setUint16(3, over.ceiling.atOnce)
+
+    return payload
+  }
+
+  if (over.detail) {
+    payload[1] =
+      over.detail.of === 'tuneFailure'
+        ? TUNE_FAILURE_BYTE[over.detail.failure]
+        : TUNER_HOLDER_BYTE[over.detail.holder]
   }
 
   return payload

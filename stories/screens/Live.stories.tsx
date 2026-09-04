@@ -10,6 +10,7 @@ import {
   progressPayload,
   refusalPayload,
   type LiveRefusal,
+  type LiveRefusalDetail,
   type LiveStartup,
   type LiveSupplyEnd,
   type TranscodeCeiling,
@@ -118,9 +119,12 @@ const starting = scripted((socket) => {
 /** A wire heard from once, with the lock still to come. */
 const securing = scripted((socket) => socket.say(progress(SECURED)))
 
-function refusing(refusal: LiveRefusal, ceiling?: TranscodeCeiling) {
+function refusing(
+  refusal: LiveRefusal,
+  over: { ceiling?: TranscodeCeiling; detail?: LiveRefusalDetail } = {},
+) {
   return scripted((socket) => {
-    socket.say(frameOf('control', 0, refusalPayload(refusal, ceiling)))
+    socket.say(frameOf('control', 0, refusalPayload(refusal, over)))
     socket.drop(1008)
   })
 }
@@ -540,10 +544,20 @@ export const 画質を選ぶ: Story = {
 function refused(
   refusal: LiveRefusal,
   title: string,
-  over: { ceiling?: TranscodeCeiling; retries?: boolean; looks?: boolean } = {},
+  over: {
+    ceiling?: TranscodeCeiling
+    detail?: LiveRefusalDetail
+    retries?: boolean
+    looks?: boolean
+  } = {},
 ): Story {
   return {
-    args: { openSocket: refusing(refusal, over.ceiling) },
+    args: {
+      openSocket: refusing(refusal, {
+        ceiling: over.ceiling,
+        detail: over.detail,
+      }),
+    },
     play: async ({ canvasElement }) => {
       const canvas = within(canvasElement)
 
@@ -585,15 +599,47 @@ export const 断り_チャンネルなし: Story = refused(
   { retries: false },
 )
 
+/**
+ * The wire says nothing about what has the tuner, so neither does the screen.
+ */
 export const 断り_チューナー枯渇: Story = refused(
   'noTunerFree',
   '空いているチューナーがありません',
   { looks: true },
 )
 
+/**
+ * A recording has it. It comes back at an hour the guide already shows, so the
+ * press that asks again is worth drawing.
+ */
+export const 断り_チューナー枯渇_録画: Story = refused(
+  'noTunerFree',
+  'チューナーは録画に使われています',
+  { detail: { of: 'heldBy', holder: 'aRecording' }, looks: true },
+)
+
+/** Someone else is watching on it. It comes back when they stop. */
+export const 断り_チューナー枯渇_別の視聴: Story = refused(
+  'noTunerFree',
+  'チューナーは別の視聴に使われています',
+  { detail: { of: 'heldBy', holder: 'anotherViewer' }, looks: true },
+)
+
+/** The wire did not classify the failure, so the screen does not either. */
 export const 断り_選局失敗: Story = refused(
   'wouldNotTune',
   '選局できませんでした',
+)
+
+/**
+ * The aerial was reached and never locked on to. Nothing in the system changes
+ * between one press and the next, so there is no press: the same ask is
+ * refused the same way, and a control that is always refused is not drawn.
+ */
+export const 断り_選局失敗_信号を掴めない: Story = refused(
+  'wouldNotTune',
+  '信号を掴めませんでした',
+  { detail: { of: 'tuneFailure', failure: 'noLock' }, retries: false },
 )
 
 export const 断り_driver未接続: Story = refused(
