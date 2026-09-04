@@ -55,6 +55,7 @@ const THE_SUITE = [
   'lib/rules.test.ts',
   'lib/search-condition.test.ts',
   'lib/state-terms.test.ts',
+  'lib/thumbnail-redraw.test.ts',
   'repository/client/carina.test.ts',
   'repository/collection.test.ts',
   'repository/driver-capabilities.test.ts',
