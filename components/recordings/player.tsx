@@ -42,7 +42,7 @@ import { PlayerVolume } from '@/components/recordings/player-volume'
 import { PlayerSeek } from '@/components/recordings/player-seek'
 import { PlayerCenter } from '@/components/recordings/player-center'
 import { PlayerSettings } from '@/components/recordings/player-settings'
-import { PlayerReading } from '@/components/recordings/player-reading'
+import { AirPlayButton } from '@/components/recordings/external-player'
 import {
   askWhyItWouldNotPlay,
   faultOnTheFace,
@@ -206,6 +206,14 @@ export function Player({
   } | null>(null)
   /** How far ahead of the head the picture is loaded, in seconds. */
   const [buffered, setBuffered] = useState(0)
+  /**
+   * Why the picker could not be opened, where it could not.
+   *
+   * On the bar, where it was pressed: this is the only place the question is
+   * asked, and a line about AirPlay standing somewhere else on the page would
+   * be there for everyone who never pressed it.
+   */
+  const [aired, setAired] = useState<string | null>(null)
   /**
    * Whether the settings surface is open.
    *
@@ -753,6 +761,14 @@ export function Player({
                 frameHref={frameHref}
               />
             )}
+            {aired && (
+              <p
+                role="status"
+                className="mt-2 text-[11px] font-medium text-[#EC9A93]"
+              >
+                {aired}
+              </p>
+            )}
             {/* The seek bar is 18px tall and its 44px area reaches 13px past
               it; the glyph buttons are 40px and theirs reaches 2px. 20px
               between the two rows leaves 5px of clear air, so neither answers
@@ -856,6 +872,19 @@ export function Player({
                 </button>
               )}
               <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+                {/*
+                  The picker is a player control everywhere it exists — Safari's
+                  own `<video>` chrome, YouTube's Cast, Netflix, Disney+ all put
+                  it in the bar — and it needs the element that is playing, which
+                  only the bar has. It used to stand on a band under the picture
+                  (v3.35).
+                */}
+                <AirPlayButton
+                  id={d.id}
+                  onTakeTicket={onTakeTicket}
+                  video={video}
+                  onRefused={setAired}
+                />
                 <button
                   type="button"
                   disabled
@@ -889,12 +918,6 @@ export function Player({
           </div>
         </div>
       </section>
-      <PlayerReading
-        detail={d}
-        plan={plan}
-        onTakeTicket={onTakeTicket}
-        video={video}
-      />
     </div>
   )
 }

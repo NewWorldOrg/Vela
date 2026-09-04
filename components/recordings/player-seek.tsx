@@ -278,10 +278,17 @@ export function PlayerSeek({
           className="absolute inset-y-0 left-0 rounded-full bg-(--pl-accent)"
           style={{ width: `${playedPct}%` }}
         />
+        {/*
+          The mark carries its own name. A key printed under the picture is a
+          guide to reading the screen (v3.21) and no real player draws one:
+          YouTube's chapter divisions name the chapter when a finger rests on
+          them, and that is where the name belongs — on the mark.
+        */}
         {marks?.cmSpans?.map((span) => (
           <span
             key={span.leftPct}
             aria-hidden="true"
+            title="CM と判定された区間"
             className="absolute inset-y-0 rounded-full [background:repeating-linear-gradient(115deg,rgba(215,172,94,.62)_0_4px,rgba(215,172,94,.26)_4px_8px)]"
             style={{ left: `${span.leftPct}%`, width: `${span.widthPct}%` }}
           />
@@ -300,6 +307,7 @@ export function PlayerSeek({
           <span
             key={second}
             aria-hidden="true"
+            title="ドロップ発生位置"
             className="absolute top-1/2 -ml-[3px] size-1.5 -translate-y-1/2 rounded-full bg-(--pl-coral)"
             style={{ left: `${Math.min(100, (second / duration) * 100)}%` }}
           />

@@ -13,7 +13,7 @@ export function DetailKeyRow({
 }) {
   return (
     <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[9px] text-ui last:border-b-0">
-      <span className="w-[132px] shrink-0 text-note text-ink-3 max-[900px]:w-[110px] max-[700px]:w-full">
+      <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-3 max-[900px]:w-[110px] max-[700px]:w-full">
         {label}
       </span>
       <span className="min-w-0 flex-1">
