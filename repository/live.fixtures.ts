@@ -164,6 +164,7 @@ export const LIVE_NOW_FIXTURE = NOW
 
 export const LIVE_SCREEN_FIXTURE: LiveScreen = {
   kind: 'terrestrial',
+  kinds: ['terrestrial', 'bs', 'cs110'],
   channels: LIVE_CHANNEL_FIXTURES,
   watching: {
     channel: LIVE_CHANNEL_FIXTURES[0],

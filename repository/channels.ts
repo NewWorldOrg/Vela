@@ -22,8 +22,15 @@ export const CHANNEL_KIND_LABEL: Record<ChannelKind, string> = {
   cs110: 'CS110',
 }
 
-export const CHANNEL_KINDS: { value: ChannelKind; label: string }[] = [
-  { value: 'terrestrial', label: '地上' },
-  { value: 'bs', label: 'BS' },
-  { value: 'cs110', label: 'CS110' },
-]
+/** The broadcast types, in the order they are always listed. */
+export const CHANNEL_KIND_ORDER: ChannelKind[] = ['terrestrial', 'bs', 'cs110']
+
+/** The type as the bar that switches between them names it. */
+export const CHANNEL_KIND_TAB: Record<ChannelKind, string> = {
+  terrestrial: '地上',
+  bs: 'BS',
+  cs110: 'CS110',
+}
+
+export const CHANNEL_KINDS: { value: ChannelKind; label: string }[] =
+  CHANNEL_KIND_ORDER.map((value) => ({ value, label: CHANNEL_KIND_TAB[value] }))

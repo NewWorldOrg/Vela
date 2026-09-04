@@ -15,6 +15,7 @@ import { ScreenMain } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
 import { ChannelGrid } from '@/components/live/channel-grid'
+import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { ChannelList } from '@/components/live/channel-list'
 import { LivePlayer } from '@/components/live/live-player'
@@ -156,7 +157,7 @@ export function LiveView({
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
         <div className="mb-3.5 flex flex-wrap items-center gap-2">
-          <ChannelKinds kind={screen.kind} onKind={kind} />
+          <ChannelKinds kind={screen.kind} kinds={screen.kinds} onKind={kind} />
           {foldable && (
             <button
               type="button"
@@ -172,10 +173,27 @@ export function LiveView({
             </button>
           )}
         </div>
-        <ChannelGrid
-          channels={channels}
-          onSelect={(channel) => choose(channel.id)}
-        />
+        {/*
+          What there is nothing of decides what is said and where it points.
+          Nothing anywhere is a product that has not been scanned, and the way
+          on is the screen that scans it; nothing on this one broadcast, with
+          channels on another, is a reader who has been sent to a type that
+          holds none — telling them there is nothing to watch is false, and
+          sending them to add channels sends them to add what they have.
+        */}
+        {screen.channels.length === 0 ? (
+          <ChannelsMissing
+            kind={screen.kind}
+            kinds={screen.kinds}
+            onKind={kind}
+            titleLevel={2}
+          />
+        ) : (
+          <ChannelGrid
+            channels={channels}
+            onSelect={(channel) => choose(channel.id)}
+          />
+        )}
         {/*
           The cards each say they have no programme, which leaves a reader
           looking at a screenful of channels that all appear to be broken. They
@@ -233,6 +251,7 @@ export function LiveView({
       >
         <ChannelList
           kind={screen.kind}
+          kinds={screen.kinds}
           channels={channels}
           watchingId={watching.channel.id}
           folded={away}
