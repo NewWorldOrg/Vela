@@ -91,6 +91,30 @@ export class LiveFeed {
     return held && held.length > 0 ? held.end(held.length - 1) : undefined
   }
 
+  /**
+   * The runs of picture the element holds, oldest first.
+   *
+   * A segment that never arrived leaves a hole rather than shifting what
+   * follows it, so what is held is a run and not always one run. Which run the
+   * playhead is inside is what says whether the newest picture is somewhere it
+   * can be played to.
+   */
+  runs(): { from: number; to: number }[] {
+    const held = this.buffer?.buffered
+
+    if (!held) {
+      return []
+    }
+
+    const runs: { from: number; to: number }[] = []
+
+    for (let index = 0; index < held.length; index += 1) {
+      runs.push({ from: held.start(index), to: held.end(index) })
+    }
+
+    return runs
+  }
+
   /** Where the picture held begins. */
   start(): number | undefined {
     const held = this.buffer?.buffered

@@ -17,6 +17,7 @@ import {
 import type { LiveScreen } from '@/repository/live'
 import { LIVE_SCREEN_FIXTURE } from '@/repository/live.fixtures'
 import { CHANNELS_FOLDED_KEY } from '@/hooks/useChannelsFolded'
+import { LIVE_SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useLiveSubChannelsFolded'
 import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
@@ -245,6 +246,7 @@ const meta = {
   beforeEach: () => {
     opened.length = 0
     window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
   },
 } satisfies Meta<typeof LiveView>
 
@@ -252,10 +254,10 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * Nothing chosen: no player stands on the screen, the box the picture will
- * appear in says what is missing, and the list is the whole of the screen's
- * business. Pressing a row puts the channel in the URL, and nothing is asked
- * of the API until then.
+ * Nothing chosen: the screen is the channels, laid out across it as cards with
+ * what is on each. No player stands on it, because there is nothing to put in
+ * one. Pressing a card puts the channel in the URL, and nothing is asked of
+ * the API until then.
  */
 export const 選局前: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
@@ -268,11 +270,17 @@ export const 選局前: Story = {
     await expect(canvas.queryByText('生放送')).toBeNull()
     await expect(canvas.queryByRole('heading', { level: 1 })).toBeNull()
     await expect(
-      canvas.getByRole('heading', { name: 'チャンネルが選ばれていません' }),
-    ).toBeVisible()
-    await expect(
       canvasElement.querySelector('[data-slot="live-player"]'),
     ).toBeNull()
+    await expect(
+      canvasElement.querySelector('[data-slot="channel-grid"]'),
+    ).toBeVisible()
+
+    // What is on now is the largest thing on a card, and the station the line
+    // above it.
+    await expect(canvas.getAllByText('ニュースの視点9')[0]).toBeVisible()
+    await expect(canvas.getAllByText('21:00–22:00')[0]).toBeVisible()
+    await expect(canvas.getAllByText(/クローズアップ列島/)[0]).toBeVisible()
 
     // The width the screen is read at is the step, not the whole window: there
     // is no picture yet to spend the window on.
@@ -289,6 +297,89 @@ export const 選局前: Story = {
       scroll: false,
     })
     await expect(getRouter().replace).not.toHaveBeenCalled()
+  },
+}
+
+/**
+ * The splits are all there by default, repetitions and all: a channel that can
+ * be tuned is one whose card can be read, and which of them are repeating
+ * changes hour by hour.
+ */
+export const 副チャンネルを出している: Story = {
+  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: '副チャンネル' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      canvas.getByRole('button', { name: /みなと総合2/ }),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: /湾岸放送2/ }),
+    ).toBeVisible()
+  },
+}
+
+/**
+ * Folded, the splits showing nothing their station is not showing come out —
+ * and the one running a schedule of its own stays, with what only it is
+ * showing.
+ */
+export const 副チャンネルを畳んでいる: Story = {
+  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: '副チャンネル' })
+
+    await userEvent.click(fold)
+
+    await expect(fold).toHaveAttribute('aria-pressed', 'false')
+    await expect(
+      canvas.queryByRole('button', { name: /みなと総合2/ }),
+    ).toBeNull()
+    await expect(
+      canvas.getByRole('button', { name: /みなと総合1/ }),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: /湾岸放送2/ }),
+    ).toBeVisible()
+    await expect(
+      window.localStorage.getItem(LIVE_SUB_CHANNELS_FOLDED_KEY),
+    ).toBe('folded')
+  },
+}
+
+/**
+ * A line-up with no repetition in it is one the press cannot change, so the
+ * press is not drawn.
+ */
+export const 畳む先が無いときは出さない: Story = {
+  args: {
+    screen: {
+      ...UNCHOSEN,
+      channels: UNCHOSEN.channels.filter(
+        (channel) => channel.id !== '32736-1025',
+      ),
+    },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByRole('button', { name: '副チャンネル' }),
+    ).toBeNull()
   },
 }
 
@@ -799,9 +890,11 @@ export const 空状態: Story = {
       'true',
     )
 
-    // One reading of what is missing, not two: with nothing to choose from,
-    // the screen does not also invite a choice.
-    await expect(canvas.queryByText('チャンネルが選ばれていません')).toBeNull()
+    // Nothing to choose from is one reading, not two: no grid stands beside
+    // the panel saying the same thing a second way.
+    await expect(
+      canvasElement.querySelector('[data-slot="channel-grid"]'),
+    ).toBeNull()
   },
 }
 
@@ -843,6 +936,7 @@ export const 畳んだまま開く: Story = {
   beforeEach: () => {
     opened.length = 0
     window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -855,8 +949,8 @@ export const 畳んだまま開く: Story = {
 }
 
 /**
- * Before a channel is chosen the list is the screen, so there is nothing to
- * fold it for and no press to do it with — whatever an earlier fold said.
+ * Before a channel is chosen there is no list beside a picture to fold away,
+ * so there is no press for it — whatever an earlier fold said.
  */
 export const 選局前は畳めない: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
@@ -866,6 +960,7 @@ export const 選局前は畳めない: Story = {
   beforeEach: () => {
     opened.length = 0
     window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
