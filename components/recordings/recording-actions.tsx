@@ -4,18 +4,32 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
+import type { TicketWrite } from '@/repository/videos'
 import { Button } from '@/components/ui/button'
-import { PlayIcon, TrashIcon } from '@/components/vela/icons'
+import { TrashIcon } from '@/components/vela/icons'
+import { OpenExternally } from '@/components/recordings/external-player'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 
+/**
+ * What can be done with this recording, as against what can be done with the
+ * picture — which is on the bar, over the picture.
+ *
+ * `再生` used to stand here, greyed out, directly under a player that plays.
+ * `エンコード` stood beside it, greyed out, under a panel that has never had
+ * anything in it because the API carries no encoding state at all. Neither was
+ * a control anyone could press, and a control that is always refused is not
+ * drawn (v3.31, v3.35).
+ */
 export function RecordingActions({
   recording,
   onDelete,
+  onTakeTicket,
+  /** Whether a recording can be handed to something outside the browser. */
   plays,
 }: {
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>
-  /** Whether the picture is drawn on this page, above these buttons. */
+  onTakeTicket: (id: string) => Promise<TicketWrite>
   plays?: boolean
 }) {
   const deletable = recording.outcome !== 'recording'
@@ -36,25 +50,10 @@ export function RecordingActions({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-[9px]">
-        <Button
-          disabled
-          title={
-            plays
-              ? '再生はこの上のプレイヤーで操作します'
-              : 'この録画には再生できるものがありません'
-          }
-        >
-          <PlayIcon />
-          再生
-        </Button>
-        <Button
-          variant="outline"
-          disabled
-          title="エンコードの登録はこれから実装されます"
-        >
-          エンコード
-        </Button>
+      <div className="flex flex-wrap items-start gap-[9px]">
+        {plays && (
+          <OpenExternally id={recording.id} onTakeTicket={onTakeTicket} />
+        )}
         <Button
           variant="destructive"
           className="ml-auto"

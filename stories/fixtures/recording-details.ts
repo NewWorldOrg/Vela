@@ -20,7 +20,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       main: 'adapter0/frontend0',
       sub: '地上 · セッション rec-20260810-2315-181',
     },
-    eoverflow: '0 件',
+    eoverflow: '0 回',
     live: {
       elapsed: '0:42:18',
       written: '2.1 GB',
@@ -44,12 +44,8 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     avInfo: '1080i · ステレオ · 字幕あり',
     synopsis:
       '保存瓶の煮沸から常備菜の段取りまで、台所の一週間を整える30分。今週は夏野菜の作り置き特集。',
-    outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:04・実ファイル 3.4 GB。',
-    reconcile: {
-      main: '3.4 GB / 期待レンジ 3.2–3.7 GB',
-      sub: '書けた尺 30:04 / 実効ウィンドウ 30:04 · 被覆率 100.0%',
-    },
+    outcomeBody: '書けた尺 30:04 / 予定 30:04 · 3.4 GB',
+    reconcile: { size: '3.4 GB', written: '30:04', planned: '30:04' },
     interruptions: {
       main: '中断 0 回 / 再開 0 回',
     },
@@ -57,7 +53,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       main: 'adapter1/frontend0',
       sub: '地上 · セッション rec-20260809-2300-131',
     },
-    eoverflow: '0 件',
+    eoverflow: '0 回',
     scramble: {
       main: '0 パケット',
     },
@@ -79,18 +75,14 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     channelNo: '141',
     genres: ['アニメ'],
     avInfo: '1080i · ステレオ · 字幕あり',
-    outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.3 GB。',
-    reconcile: {
-      main: '3.3 GB / 期待レンジ 3.2–3.7 GB',
-      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
-    },
+    outcomeBody: '書けた尺 30:00 / 予定 30:00 · 3.3 GB',
+    reconcile: { size: '3.3 GB', written: '30:00', planned: '30:00' },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter3/frontend0',
       sub: '地上 · セッション rec-20260809-0105-141',
     },
-    eoverflow: '0 件',
+    eoverflow: '0 回',
     scramble: { main: '0 パケット' },
     stopReason: '終了時刻に到達',
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
@@ -109,18 +101,14 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     avInfo: '1080i · ステレオ · 字幕あり',
     synopsis:
       '各都市の代表チームが知力で競う夏の恒例戦。準決勝は近似値クイズと早押しの二本立て。',
-    outcomeBody:
-      '期待ウィンドウ 4時間13分に対し、書けた尺 4:12:38・実ファイル 29.6 GB。リレー放送 3 セグメントの1本目です。',
-    reconcile: {
-      main: '29.6 GB / 期待レンジ 28.4–32.6 GB',
-      sub: '書けた尺 4:12:38 / 実効ウィンドウ 4:13:00 · 被覆率 99.8%',
-    },
+    outcomeBody: '書けた尺 4:12:38 / 予定 4:13:00 · 29.6 GB',
+    reconcile: { size: '29.6 GB', written: '4:12:38', planned: '4:13:00' },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter0/frontend0',
       sub: '地上 · セッション rec-20260808-1230-151',
     },
-    eoverflow: '0 件',
+    eoverflow: '0 回',
     scramble: { main: '0 パケット' },
     stopReason: '終了時刻に到達',
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
@@ -154,12 +142,8 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     channelNo: '131',
     genres: ['バラエティ'],
     avInfo: '1080i · ステレオ · 字幕あり',
-    outcomeBody:
-      '被覆率 67.0% · 実ファイル 4.2 GB(期待レンジ 5.9–6.8 GB)· 書けた尺 36:12 / 実効ウィンドウ 54:00 · 中断 3 回 / 再開 2 回',
-    reconcile: {
-      main: '4.2 GB / 期待レンジ 5.9–6.8 GB',
-      sub: '書けた尺 36:12 / 実効ウィンドウ 54:00 · 被覆率 67.0%',
-    },
+    outcomeBody: '書けた尺 36:12 / 予定 54:00 · 4.2 GB',
+    reconcile: { size: '4.2 GB', written: '36:12', planned: '54:00' },
     interruptions: {
       main: '中断 3 回 / 再開 2 回',
     },
@@ -167,7 +151,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
       main: 'adapter1/frontend0',
       sub: '地上 · セッション rec-20260804-2300-131',
     },
-    eoverflow: '0 件',
+    eoverflow: '0 回',
     scramble: { main: '0 パケット' },
     stopReason: '競合により落とされた',
     thumbnailState: { main: '生成済み', sub: '抽出位置 120 秒' },
@@ -184,13 +168,13 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     channelNo: '161',
     genres: ['バラエティ'],
     avInfo: '—',
-    outcomeBody: '実ファイル 0 B · 開始 00:15:04 / 終了 00:15:21',
+    outcomeBody: '0 B · 00:15:04 – 00:15:21',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter2/frontend0',
       sub: '地上 · セッション rec-20260802-0015-161',
     },
-    eoverflow: '0 件',
+    eoverflow: '0 回',
     scramble: {
       main: '18,203 パケット',
     },
@@ -206,12 +190,8 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     channelNo: '171',
     genres: ['ドキュメンタリー'],
     avInfo: '1080i · ステレオ · 字幕あり',
-    outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 3.5 GB。',
-    reconcile: {
-      main: '3.5 GB / 期待レンジ 3.2–3.7 GB',
-      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
-    },
+    outcomeBody: '書けた尺 30:00 / 予定 30:00 · 3.5 GB',
+    reconcile: { size: '3.5 GB', written: '30:00', planned: '30:00' },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     eoverflow: '—',
     stopReason: '移行で取り込み(記録なし)',
@@ -229,18 +209,14 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     avInfo: '1080i · ステレオ · 字幕あり',
     synopsis:
       '渡り鳥の観測小屋を営む青年と、星の写真を撮りに来た旅人。ひと夏の岬を舞台に、去る者と残る者のすれ違いを描く劇場公開作をテレビ初放送。',
-    outcomeBody:
-      '期待ウィンドウ 2時間6分に対し、書けた尺 2:06:14・実ファイル 13.8 GB。',
-    reconcile: {
-      main: '13.8 GB / 期待レンジ 13.1–15.1 GB',
-      sub: '書けた尺 2:06:14 / 実効ウィンドウ 2:06:14 · 被覆率 100.0%',
-    },
+    outcomeBody: '書けた尺 2:06:14 / 予定 2:06:14 · 13.8 GB',
+    reconcile: { size: '13.8 GB', written: '2:06:14', planned: '2:06:14' },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter1/frontend0',
       sub: '地上 · セッション rec-20260725-2100-131',
     },
-    eoverflow: '2 件',
+    eoverflow: '2 回',
     scramble: { main: '0 パケット' },
     stopReason: '終了時刻に到達',
     thumbnailState: {
@@ -260,18 +236,14 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     channelNo: '091',
     genres: ['音楽'],
     avInfo: '1080i · ステレオ',
-    outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:00・実ファイル 1.3 GB。',
-    reconcile: {
-      main: '1.3 GB / 期待レンジ 1.2–1.5 GB',
-      sub: '書けた尺 30:00 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
-    },
+    outcomeBody: '書けた尺 30:00 / 予定 30:00 · 1.3 GB',
+    reconcile: { size: '1.3 GB', written: '30:00', planned: '30:00' },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     tunerUnit: {
       main: 'adapter2/frontend0',
       sub: '地上 · セッション rec-20250906-2100-091',
     },
-    eoverflow: '0 件',
+    eoverflow: '0 回',
     scramble: {
       main: '5,042,768 パケット',
     },
@@ -286,8 +258,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     channelNo: '131',
     genres: ['ドキュメンタリー'],
     avInfo: '1080i · ステレオ · 字幕あり',
-    outcomeBody:
-      '期待ウィンドウ 30分に対し、書けた尺 30:04。録画の記録は 3.6 GB、実ファイルはありません。',
+    outcomeBody: '書けた尺 30:04 / 予定 30:00 · 実ファイルなし',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     eoverflow: '—',
     stopReason: '移行で取り込み(記録なし)',
