@@ -484,6 +484,24 @@ export function LivePlayer({
   const chromeUp =
     phase !== 'playing' || stirred || onTheBar || focused || settingsOpen
 
+  /**
+   * Whether the reader has aimed at this player, as against the screen having
+   * handed it the focus when the picture came up.
+   *
+   * Only the arrows read it, and on live only the two that move the volume.
+   * They are the page's way down a page before they are anyone's, and the
+   * channel list sits beside this picture. video.js does not give the arrows
+   * to the player at all — its sliders own them — and Shaka passes them only
+   * when the seek bar has the focus or the picture is full screen.
+   *
+   * Pressing the picture is aiming. Tabbing into the bar is aiming. The
+   * picture arriving is not.
+   *
+   * A ref and not state: nothing is drawn from it, and a press in the same
+   * tick as the aim would read a value React has not re-rendered yet.
+   */
+  const aimed = useRef(false)
+
   const stir = () => {
     if (settling.current) {
       clearTimeout(settling.current)
@@ -603,14 +621,19 @@ export function LivePlayer({
    * invention, and the bar has no seek.
    */
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    stir()
-
-    const command = playerCommand(event, { seeks: false, captions: true })
+    const command = playerCommand(event, {
+      seeks: false,
+      captions: true,
+      aimed: aimed.current,
+    })
 
     if (!command) {
       return
     }
 
+    // Only now: a press the player did not take must not raise the bar, or
+    // reading the channel list would flash chrome over the picture.
+    stir()
     event.preventDefault()
 
     switch (command) {
@@ -637,6 +660,20 @@ export function LivePlayer({
     }
   }
 
+  /*
+    useEffect exception: a browser API when the picture arrives. The keys are
+    the player's while it has the focus (WCAG 2.1.4), so the player takes the
+    focus as soon as there is a picture to press keys at — otherwise the focus
+    is left wherever choosing the channel put it and Space does nothing.
+
+    `preventScroll`, so the page does not jump under the hand.
+  */
+  useEffect(() => {
+    if (hasPicture) {
+      shell?.focus({ preventScroll: true })
+    }
+  }, [shell, hasPicture])
+
   const latency = running?.latency
 
   return (
@@ -648,6 +685,9 @@ export function LivePlayer({
       style={PLAYER_PALETTE}
       onPointerMove={stir}
       onPointerLeave={stir}
+      onPointerDown={() => {
+        aimed.current = true
+      }}
       onKeyDown={onKeyDown}
       className={PLAYER_BOARD}
     >
@@ -710,7 +750,7 @@ export function LivePlayer({
             onMouseDown={(event) => {
               event.preventDefault()
               dismissing.current = settingsOpen
-              shell?.focus()
+              shell?.focus({ preventScroll: true })
             }}
             onClick={() => {
               if (dismissing.current) {
@@ -732,6 +772,16 @@ export function LivePlayer({
           // it was made at the bottom edge or on a key.
           <PlayerCenter
             standing={phase === 'paused' ? 'play' : undefined}
+            /*
+              The button goes as soon as the picture runs, and a focused
+              element that unmounts drops the focus back to `<body>` — which
+              is where the keys were dead to begin with. So the press hands the
+              focus to the player before the button leaves.
+            */
+            onStanding={() => {
+              shell?.focus({ preventScroll: true })
+              toggle()
+            }}
             bezel={bezel ?? undefined}
           />
         )}
@@ -814,12 +864,17 @@ export function LivePlayer({
           data-up={chromeUp ? 'true' : undefined}
           onPointerEnter={() => setOnTheBar(true)}
           onPointerLeave={() => setOnTheBar(false)}
-          onFocus={(event) =>
-            setFocused(
+          onFocus={(event) => {
+            const reached =
               event.target instanceof Element &&
-                event.target.matches(':focus-visible'),
-            )
-          }
+              event.target.matches(':focus-visible')
+
+            setFocused(reached)
+
+            if (reached) {
+              aimed.current = true
+            }
+          }}
           onBlur={() => setFocused(false)}
           style={{ backgroundImage: PLAYER_SCRIM }}
           className={cn(

@@ -447,6 +447,19 @@ function board(canvasElement: HTMLElement): HTMLElement {
   return found
 }
 
+/**
+ * Aiming at the player, which is what a press on the picture does at the
+ * moment it goes down.
+ *
+ * The arrows are the page's until this has happened (v3.37): they scroll, and
+ * the screen is scrolled to read the record under the picture. Every story
+ * that presses an arrow does this first, because a reader pressing an arrow
+ * has done it first.
+ */
+function aim(on: HTMLElement) {
+  on.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+}
+
 /** One press, on the player itself, the way the browser sends one. */
 function press(on: HTMLElement, key: string) {
   on.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
@@ -464,6 +477,7 @@ export const キーで音量と消音: Story = {
     const quiet = canvas.getByRole('button', { name: '消音' })
     const player = board(canvasElement)
 
+    aim(player)
     press(player, 'ArrowDown')
     press(player, 'ArrowDown')
     await waitFor(() => expect(level).toHaveValue('90'))
@@ -500,6 +514,7 @@ export const 送りを続けても要求は一度: Story = {
     asked.length = 0
 
     for (let i = 0; i < 5; i += 1) {
+      aim(player)
       press(player, 'ArrowRight')
     }
 
@@ -569,6 +584,7 @@ export const 戻しは頭で止まる: Story = {
     asked.length = 0
 
     for (let i = 0; i < 3; i += 1) {
+      aim(player)
       press(player, 'ArrowLeft')
     }
 
@@ -664,6 +680,7 @@ export const Range直配信は待たずに動く: Story = {
     asked.length = 0
 
     for (let i = 0; i < 4; i += 1) {
+      aim(player)
       press(player, 'ArrowRight')
     }
 
@@ -710,6 +727,21 @@ export const 停止中は中央に印: Story = {
 
     await expect(standing()).not.toBeNull()
 
+    // A target, not a mark. It was drawn as a mark and could not be pressed,
+    // which left the only thing on the screen meaning 再生 at 40px on the
+    // bottom edge (v3.37). Five of five real players make this a real button;
+    // WCAG 2.5.5 lets the small one on the bar stand beside it.
+    await expect(standing()).toHaveProperty('tagName', 'BUTTON')
+    await expect(standing()).toHaveAccessibleName('再生')
+    await expect(
+      getComputedStyle(standing() as Element).pointerEvents,
+    ).not.toBe('none')
+
+    const box = (standing() as Element).getBoundingClientRect()
+
+    await expect(box.width).toBeGreaterThanOrEqual(44)
+    await expect(box.height).toBeGreaterThanOrEqual(44)
+
     const bezel = () =>
       canvasElement.querySelector('[data-slot="player-center-bezel"] span')
 
@@ -722,6 +754,79 @@ export const 停止中は中央に印: Story = {
     await expect(getComputedStyle(bezel() as Element).animationName).toBe(
       'player-burst',
     )
+  },
+}
+
+/**
+ * Pressing the target in the middle is what starts a recording that has not
+ * been played yet, and the keys stay alive after it.
+ *
+ * The button goes as soon as the picture runs, and a focused element that
+ * unmounts drops the focus to `<body>` — where the keys are dead. So the press
+ * hands the focus to the player on its way through.
+ */
+export const 真ん中の的を押して始める: Story = {
+  args: { detail: detail('1266') },
+  play: async ({ canvasElement }) => {
+    const target = canvasElement.querySelector(
+      '[data-slot="player-center-standing"]',
+    ) as HTMLElement
+
+    await userEvent.click(target)
+
+    await waitFor(() =>
+      expect(canvasElement.querySelector('video')).toHaveAttribute('src'),
+    )
+
+    // Not left on the body: the keys have to keep working once it is running.
+    await expect(board(canvasElement).contains(document.activeElement)).toBe(
+      true,
+    )
+  },
+}
+
+/**
+ * The screen hands the player the focus as it opens, so Space works without
+ * aiming at anything — and the page does not jump doing it.
+ *
+ * Focus-scoped and not on the document: Plyr, video.js, Shaka and media-chrome
+ * are all scoped, and WCAG 2.1.4 wants a single-character shortcut either
+ * switchable off, remappable, or live only while the component has focus.
+ */
+export const 開いた時点で鍵が効く: Story = {
+  args: { detail: detail('1266') },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(board(canvasElement).contains(document.activeElement)).toBe(true),
+    )
+  },
+}
+
+/**
+ * The arrows are the page's until the reader has aimed at the player.
+ *
+ * They scroll, and this screen is scrolled to read the record under the
+ * picture. video.js does not give the arrows to the player at all — its
+ * sliders own them — and Shaka passes them only with the seek bar focused or
+ * in full screen.
+ */
+export const 矢印は狙ってから: Story = {
+  args: { detail: detail('1266') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const level = canvas.getByRole('slider', { name: '音量' })
+    const player = board(canvasElement)
+
+    // Opened, not aimed at: the press is not the player's.
+    press(player, 'ArrowDown')
+    await expect(level).toHaveValue('100')
+
+    // Pressing the picture is aiming.
+    await userEvent.click(
+      canvasElement.querySelector('[data-slot="player-press"]') as HTMLElement,
+    )
+    press(player, 'ArrowDown')
+    await waitFor(() => expect(level).toHaveValue('95'))
   },
 }
 
@@ -746,6 +851,7 @@ export const 音量の押しにも印: Story = {
 
     await expect(said()).toBeNull()
 
+    aim(player)
     press(player, 'ArrowDown')
     await waitFor(() => expect(said()).toHaveTextContent('95%'))
 
@@ -781,6 +887,7 @@ export const 送り戻しの印は脇に立つ: Story = {
 
     await expect(mark()).toBeNull()
 
+    aim(player)
     press(player, 'ArrowRight')
     await waitFor(() => expect(mark()).not.toBeNull())
     await expect(mark()).toHaveAttribute('data-way', 'forward')

@@ -46,18 +46,24 @@ export type PlayerBezel =
  *
  * Seeking is answered somewhere else: see `PlayerSeekFlash`.
  *
- * Neither mark is a control. The play button on the bar is the one that has a
- * name and a place in the tab order; a second one here would be read out twice
- * and would have to be tabbed past to reach anything. The press area under it
- * is the picture's, and it is what carries the press through.
+ * `standing` is a control and `bezel` is not. That distinction is the whole of
+ * this file: a mark answers a press that has already happened, a target takes
+ * one. v3.35 said neither should be a control, on the grounds that a second
+ * one would be read out twice — and what that produced was a 68px play symbol
+ * in the middle of a stopped picture that could not be pressed, while the only
+ * thing on screen that could was 40px at the bottom edge. Every player that
+ * draws this symbol makes it the largest target it has.
  */
 export function PlayerCenter({
   standing,
+  onStanding,
   bezel,
   className,
 }: {
-  /** The mark that stays: what the picture would do if it were pressed now. */
+  /** The target that stays: what the picture would do if it were pressed now. */
   standing?: 'play' | 'pause'
+  /** What pressing it does. The same thing the bar's own transport does. */
+  onStanding?: () => void
   /**
    * The mark that answers a press. The number changes on every press so that a
    * second press restarts the animation rather than being swallowed by the one
@@ -68,7 +74,6 @@ export function PlayerCenter({
 }) {
   return (
     <div
-      aria-hidden="true"
       data-slot="player-center"
       className={cn(
         'pointer-events-none absolute inset-0 flex items-center justify-center',
@@ -76,19 +81,32 @@ export function PlayerCenter({
       )}
     >
       {standing && (
-        <span
+        <button
+          type="button"
           data-slot="player-center-standing"
-          className="flex size-[68px] items-center justify-center rounded-full bg-black/45 text-white"
+          aria-label={standing === 'play' ? '再生' : '一時停止'}
+          onClick={onStanding}
+          /*
+            A press here must not also reach the picture underneath, which
+            would run the toggle twice and land back where it started.
+          */
+          onMouseDown={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+          className="pointer-events-auto flex size-[68px] cursor-pointer items-center justify-center rounded-full bg-black/45 text-white transition-[background-color,scale] duration-150 ease-out hover:bg-black/60 hover:scale-105 active:scale-95 focus-visible:shadow-ring focus-visible:outline-none"
         >
           {standing === 'play' ? (
             <PlayGlyph className="ml-[3px] size-[34px]" />
           ) : (
             <PauseGlyph className="size-[34px]" />
           )}
-        </span>
+        </button>
       )}
       {bezel && (
-        <span key={bezel.nth} data-slot="player-center-bezel">
+        <span
+          aria-hidden="true"
+          key={bezel.nth}
+          data-slot="player-center-bezel"
+        >
           {bezel.was === 'volume' && (
             <span
               data-slot="player-center-bezel-text"

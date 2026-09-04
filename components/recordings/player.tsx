@@ -295,6 +295,19 @@ export function Player({
     return () => document.removeEventListener('fullscreenchange', read)
   }, [shell])
 
+  /*
+    useEffect exception: a browser API on mount. The screen's subject is this
+    player, and the keys are the player's while it has the focus (WCAG 2.1.4),
+    so the screen hands it the focus as it opens — otherwise the first Space
+    anyone presses goes to `<body>` and does nothing.
+
+    `preventScroll`, or the page jumps to the picture on open and the reading
+    above it is skipped past.
+  */
+  useEffect(() => {
+    shell?.focus({ preventScroll: true })
+  }, [shell])
+
   // useEffect exception: clearing a timer on unmount. Nothing is read or
   // synced here; the timer is started by a pointer and would otherwise fire
   // into a component that has gone.
@@ -310,6 +323,27 @@ export function Player({
     },
     [],
   )
+
+  /**
+   * Whether the reader has aimed at this player, as against the screen having
+   * handed it the focus when it opened.
+   *
+   * Only the arrows read it. They are the page's way down a page, and this
+   * screen has the recording's own record under the picture; a player that
+   * took them from the moment it opened would leave no way to scroll there
+   * without a pointer. video.js does not give the arrows to the player at all
+   * — its sliders own them — and Shaka passes them only when the seek bar has
+   * the focus or the picture is full screen. Both are saying the same thing:
+   * the arrows belong to whatever the reader has actually reached.
+   *
+   * Pressing the picture is aiming. Tabbing into the bar is aiming. Opening
+   * the screen is not.
+   *
+   * A ref and not state: nothing is drawn from it, and a press that arrives in
+   * the same tick as the aim — which a test does, and a fast hand can — would
+   * read a value React has not re-rendered yet.
+   */
+  const aimed = useRef(false)
 
   /** The pointer said something: put the bar up and start the count again. */
   const stir = () => {
@@ -553,24 +587,39 @@ export function Player({
   }
 
   /**
-   * The keys, once the player has the focus — which a click on the picture
-   * gives it, and a tab into the bar gives it too.
+   * The keys, once the player has the focus — and the screen hands it the
+   * focus as it opens, so they work without aiming at anything first.
    *
-   * Scoped to the focus and not to the pointer: the pointer resting over a
-   * picture is not a statement that the keys are meant for it, and on the live
-   * screen the list beside the picture is read with the same keys. The focus
-   * is the one place the reader has already said where the keys go, it is
-   * drawn where it is, and it is the axis the bar already comes back up on.
+   * Scoped to the focus and not to the document. Every player that was
+   * measured is: Plyr's `window` binding is opt-in and its README says it is
+   * only safe with one player on a page, video.js binds to the player element,
+   * Shaka promotes to `window` only in full screen, media-chrome binds to
+   * `<media-controller>`. WCAG 2.1.4 is why — a single-character shortcut has
+   * to be switchable off, remappable, or **active only while the component has
+   * focus**, and the third is the one that costs nothing to keep. A handler on
+   * the document would put the first two on us.
+   *
+   * What was broken was never the scope, it was that nothing held the focus:
+   * the screen opened with it on `<body>` and the first Space did nothing.
+   *
+   * Three guards keep a press that was meant for something else, and all three
+   * read the element the press landed on: `typingIn` for the reader writing,
+   * `answersItself` for a control whose own activation key this is, and
+   * `aimed` for the arrows.
    */
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    stir()
-
-    const command = playerCommand(event, { seeks: duration > 0 })
+    const command = playerCommand(event, {
+      seeks: duration > 0,
+      aimed: aimed.current,
+    })
 
     if (!command) {
       return
     }
 
+    // Only now: a press the player did not take must not raise the bar, or
+    // typing anywhere on the page would flash chrome over the picture.
+    stir()
     event.preventDefault()
 
     switch (command) {
@@ -620,6 +669,9 @@ export function Player({
         style={PLAYER_PALETTE}
         onPointerMove={stir}
         onPointerLeave={stir}
+        onPointerDown={() => {
+          aimed.current = true
+        }}
         onKeyDown={onKeyDown}
         data-up={chromeUp ? 'true' : undefined}
         /*
@@ -704,7 +756,11 @@ export function Player({
             onMouseDown={(event) => {
               event.preventDefault()
               dismissing.current = settingsOpen
-              shell?.focus()
+              // `preventScroll`, because a press must not move the picture out
+              // from under the hand between the press going down and coming
+              // up — the click would then be delivered to whatever the pointer
+              // was left over, and the press would read as having done nothing.
+              shell?.focus({ preventScroll: true })
             }}
             onClick={() => {
               if (dismissing.current) {
@@ -744,6 +800,16 @@ export function Player({
             standing={
               phase === 'idle' || phase === 'paused' ? 'play' : undefined
             }
+            /*
+              The button goes as soon as the picture runs, and a focused
+              element that unmounts drops the focus back to `<body>` — which
+              is where the keys were dead to begin with. So the press hands the
+              focus to the player before the button leaves.
+            */
+            onStanding={() => {
+              shell?.focus({ preventScroll: true })
+              toggle()
+            }}
             bezel={bezel ?? undefined}
           />
           <PlayerSeekFlash flash={flash ?? undefined} />
@@ -775,12 +841,17 @@ export function Player({
             data-up={chromeUp ? 'true' : undefined}
             onPointerEnter={() => setOnTheBar(true)}
             onPointerLeave={() => setOnTheBar(false)}
-            onFocus={(event) =>
-              setHeld(
+            onFocus={(event) => {
+              const reached =
                 event.target instanceof Element &&
-                  event.target.matches(':focus-visible'),
-              )
-            }
+                event.target.matches(':focus-visible')
+
+              setHeld(reached)
+
+              if (reached) {
+                aimed.current = true
+              }
+            }}
             onBlur={() => setHeld(false)}
             style={{ backgroundImage: PLAYER_SCRIM }}
             className={cn(
