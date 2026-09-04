@@ -48,8 +48,29 @@ function refused(refusal: PlaybackRefusal): PlaybackRead {
   return { state: 'refused', refusal }
 }
 
-async function remade(): Promise<ThumbnailWrite> {
+const redrawn: string[] = []
+
+async function remade(id: string): Promise<ThumbnailWrite> {
+  redrawn.push(id)
+
   return { state: 'ok', remake: 'drawn' }
+}
+
+/** A press the API has not answered yet, so the button can be read mid-press. */
+function stillDrawing(): Promise<ThumbnailWrite> {
+  return new Promise(() => {})
+}
+
+async function outOfReach(): Promise<ThumbnailWrite> {
+  return {
+    state: 'rejected',
+    message: '録画ファイルかサムネイルの保存先に到達できません。',
+  }
+}
+
+/** A finished pass that drew nothing: a 200, and no picture behind it. */
+async function drewNothing(): Promise<ThumbnailWrite> {
+  return { state: 'ok', remake: 'failed' }
 }
 
 const asked: string[] = []
@@ -279,5 +300,159 @@ export const Range直配信: Story = {
       'aria-current',
       'true',
     )
+  },
+}
+
+/**
+ * The picture of a recording is drawn again from the recording itself, one at a
+ * time, and the press stands with the other things done with this recording.
+ * The four states it can be read in are below.
+ */
+export const サムネイルを作り直す: Story = {
+  args: { detail: detail('1274') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    redrawn.length = 0
+
+    // With the other things done with the recording, and not inside the
+    // record, which is shut: one press for it, in one place.
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+
+    await expect(redraw).toBeEnabled()
+    await userEvent.click(redraw)
+    await waitFor(() => expect(redrawn).toEqual(['1274']))
+
+    // The picture changes where it is drawn, and the press says what it came
+    // to as well: the poster is only on screen before the first play.
+    await expect(
+      await canvas.findByText('サムネイルを作り直しました。'),
+    ).toBeVisible()
+
+    // Asked for as it stands after the press. Without the moment on it the
+    // browser answers the poster out of the minute it is holding the picture
+    // the press has just replaced for.
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('video')?.getAttribute('poster'),
+      ).toMatch(/redrawn=\d+$/),
+    )
+
+    // And the record carries the reading only, with no second button on it.
+    await userEvent.click(canvas.getByText('録画の記録'))
+    await expect(canvas.getByText('生成済み')).toBeVisible()
+    await expect(
+      canvas.getAllByRole('button', { name: 'サムネイルを作り直す' }),
+    ).toHaveLength(1)
+  },
+}
+/** Pressed, and the pass has not answered. It cannot be pressed again. */
+export const サムネイルを作り直している最中: Story = {
+  args: { detail: detail('1274'), onRemakeThumbnail: stillDrawing },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+
+    await userEvent.click(redraw)
+
+    await waitFor(() => expect(redraw).toHaveAttribute('aria-disabled', 'true'))
+  },
+}
+/**
+ * The three states that refuse the press, and the one that is never offered it.
+ *
+ * A recording being written, a file that is not there and a recording nothing
+ * was written into all leave the state they are in, so the button stands with
+ * the reason on it. A failed recording never gets a picture — the pass answers
+ * `skipped` for it and always will — so no button is drawn, and the band over
+ * the picture and the record both already say why.
+ */
+export const サムネイルを作り直せない: Story = {
+  args: { detail: detail('1291'), playback: refused('stillRecording') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+
+    await expect(redraw).toBeDisabled()
+    await expect(redraw).toHaveAttribute('title', '録画中は作り直せません')
+  },
+}
+export const 作り直せないファイル不在: Story = {
+  args: { detail: detail('0731') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+
+    await expect(redraw).toBeDisabled()
+    await expect(redraw).toHaveAttribute(
+      'title',
+      'ファイルが見つからないため作り直せません',
+    )
+  },
+}
+export const 作り直せない中身なし: Story = {
+  args: { detail: { ...detail('1274'), sizeBytes: 0 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+
+    await expect(redraw).toBeDisabled()
+    await expect(redraw).toHaveAttribute(
+      'title',
+      '中身が書かれていないため作り直せません',
+    )
+  },
+}
+export const 作り直しの操作子を出さない: Story = {
+  args: { detail: detail('1239') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByRole('button', { name: 'サムネイルを作り直す' }),
+    ).toBeNull()
+  },
+}
+/**
+ * The two ways a press comes back with no picture behind it: a refusal read off
+ * the status, and a finished pass that drew nothing, which is a 200. Either way
+ * the press says so rather than leaving the screen unchanged and silent.
+ */
+export const サムネイルを作り直せなかった: Story = {
+  args: { detail: detail('1266'), onRemakeThumbnail: outOfReach },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'サムネイルを作り直す' }),
+    )
+
+    await expect(
+      await canvas.findByText(
+        '録画ファイルかサムネイルの保存先に到達できません。',
+      ),
+    ).toBeVisible()
+  },
+}
+// A recording of its own, because a picture redrawn is remembered for the tab
+// and a screen standing on the recording the story above redrew would carry the
+// moment of that press.
+export const 作り直しても絵が取れなかった: Story = {
+  args: { detail: detail('0412'), onRemakeThumbnail: drewNothing },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'サムネイルを作り直す' }),
+    )
+
+    await expect(
+      await canvas.findByText('サムネイルを作り直せませんでした。'),
+    ).toBeVisible()
+
+    // Nothing was drawn, so nothing asks the browser for a new picture.
+    await expect(
+      canvasElement.querySelector('video')?.getAttribute('poster'),
+    ).not.toMatch(/redrawn=/)
   },
 }
