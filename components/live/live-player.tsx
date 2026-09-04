@@ -37,7 +37,10 @@ import {
   PLAYER_SCRIM_TOP,
 } from '@/components/recordings/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
-import { PlayerCenter } from '@/components/recordings/player-center'
+import {
+  PlayerCenter,
+  type PlayerBezel,
+} from '@/components/recordings/player-center'
 
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
@@ -194,10 +197,9 @@ export function LivePlayer({
    * press it answers. The recording player's, unchanged: a live picture is
    * still a picture that stops when it is told to.
    */
-  const [burst, setBurst] = useState<{
-    was: 'play' | 'pause'
-    nth: number
-  } | null>(null)
+  const [bezel, setBezel] = useState<(PlayerBezel & { nth: number }) | null>(
+    null,
+  )
   /** Whether the settings surface is open, which holds the bar up. */
   const [settingsOpen, setSettingsOpen] = useState(false)
   /** Whether that surface was open when the press began — see the recording player. */
@@ -491,8 +493,13 @@ export function LivePlayer({
     settling.current = setTimeout(() => setStirred(false), RESTS)
   }
 
-  const answer = (was: 'play' | 'pause') =>
-    setBurst((last) => ({ was, nth: (last?.nth ?? 0) + 1 }))
+  /*
+    The sound is answered here as it is on a recording. Seeking is not: the
+    live picture is one edge and there is nowhere to go, so ← → are not taken
+    at all (v3.24) and there is nothing to answer.
+  */
+  const answer = (what: PlayerBezel) =>
+    setBezel((last) => ({ ...what, nth: (last?.nth ?? 0) + 1 }))
 
   const toggle = () => {
     const element = video.current
@@ -502,7 +509,7 @@ export function LivePlayer({
     }
 
     if (element.paused) {
-      answer('play')
+      answer({ was: 'play' })
       void element
         .play()
         .catch(() => heard((was) => ({ ...was, phase: 'paused' })))
@@ -510,7 +517,7 @@ export function LivePlayer({
       return
     }
 
-    answer('pause')
+    answer({ was: 'pause' })
     element.pause()
   }
 
@@ -551,9 +558,11 @@ export function LivePlayer({
 
   /** Louder or quieter by a step. */
   const stepVolume = (by: number) => {
-    chooseVolume(
-      Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100,
-    )
+    const next =
+      Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100
+
+    chooseVolume(next)
+    answer({ was: 'volume', level: next })
   }
 
   const mute = (quiet: boolean) => {
@@ -562,6 +571,7 @@ export function LivePlayer({
 
     setMuted(quiet)
     setVolume(level)
+    answer({ was: 'volume', level: quiet ? 0 : level })
 
     if (element) {
       element.volume = level
@@ -722,7 +732,7 @@ export function LivePlayer({
           // it was made at the bottom edge or on a key.
           <PlayerCenter
             standing={phase === 'paused' ? 'play' : undefined}
-            burst={burst ?? undefined}
+            bezel={bezel ?? undefined}
           />
         )}
         {channel && running && phase !== 'faulted' && (

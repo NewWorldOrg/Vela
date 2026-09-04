@@ -22,6 +22,18 @@ export const SEEK_STEP_SECONDS = 10
 /** What a press moves the level by, on the 0-100 scale the bar reads in. */
 export const VOLUME_STEP_PERCENT = 5
 
+/**
+ * How long the answer to a seek stays on the picture, and so how long a run of
+ * presses keeps adding to one answer instead of starting another.
+ *
+ * 700ms. YouTube hides its seek overlay on `new g.DQ(this.hide,700,this)` and
+ * Chromium's own `<video>` controls run their three-arrow pulse for `700ms`;
+ * the two arrived at the number separately. The wider family sits just above
+ * it — mpv's `--osd-duration` and VLC's on-screen text are both 1000ms — so
+ * 700 is the short end of a real cluster rather than a number of our own.
+ */
+export const SEEK_FLASH_LASTS = 700
+
 export type PlayerCommand =
   | 'toggle'
   | 'back'
