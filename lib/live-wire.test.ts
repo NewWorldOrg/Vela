@@ -156,6 +156,29 @@ test('a refusal detail is read against the reason beside it', () => {
   )
 })
 
+/**
+ * The three refusals seen coming off the real API, read as the bytes that
+ * arrived rather than as the bytes this file writes. A reader that agrees with
+ * its own writer and with nothing else is not a reader.
+ */
+test('the bytes the API was measured sending are read as what was measured', () => {
+  assert.deepEqual(readControl(new Uint8Array([3, 1, 0, 0, 0])), {
+    said: 'refusal',
+    refusal: 'wouldNotTune',
+    detail: { of: 'tuneFailure', failure: 'noLock' },
+  })
+  assert.deepEqual(readControl(new Uint8Array([2, 1, 0, 0, 0])), {
+    said: 'refusal',
+    refusal: 'noTunerFree',
+    detail: { of: 'heldBy', holder: 'aRecording' },
+  })
+  assert.deepEqual(readControl(new Uint8Array([2, 2, 0, 0, 0])), {
+    said: 'refusal',
+    refusal: 'noTunerFree',
+    detail: { of: 'heldBy', holder: 'anotherViewer' },
+  })
+})
+
 test('a detail the reason has no meaning for is not read as one it does', () => {
   // The same byte says a different thing beside each reason, and nothing at
   // all beside the rest: 1 is a lock that never came under `wouldNotTune` and
