@@ -233,8 +233,24 @@ export interface RecordingDetail extends Recording {
   /** Unset: nothing upstream describes the video or the audio. */
   avInfo?: string
   synopsis?: string
+  /**
+   * What is left to say about a recording that did not run to the end, in
+   * values. The band this fills is drawn only for 尻切れ and 失敗 (v3.35): for
+   * a recording that ran to its end the picture above says it, and a sentence
+   * repeating it is a manual page over a player.
+   */
   outcomeBody?: string
-  reconcile?: { main: string; sub: string }
+  /**
+   * The file, and the length written into it against the length that was
+   * promised.
+   *
+   * No ratio. The two are counted from different instants — the numerator from
+   * the moment the tuner was opened, the denominator from the window that has
+   * the tuning lead cut off its head — so their quotient runs over 100% on a
+   * recording that ran to the end (34:53 / 34:35 = 100.9%, measured). Both
+   * lengths are shown instead, which is what the ratio was standing in for.
+   */
+  reconcile?: { size: string; written: string; planned: string }
   interruptions?: { main: string }
   tunerUnit?: { main: string; sub?: string }
   eoverflow?: string
@@ -534,7 +550,7 @@ function toDetail(
       main: `中断 ${d.interruptions.length} 回 / 再開 ${toInt(r.resumeCount)} 回`,
     },
     tunerUnit: r.tunerDeviceId ? { main: r.tunerDeviceId } : undefined,
-    eoverflow: `${grouped(toInt(r.drops.eovfCount))} 件`,
+    eoverflow: `${grouped(toInt(r.drops.eovfCount))} 回`,
     scramble:
       scrambled == null
         ? undefined
@@ -731,31 +747,42 @@ function outcomeBodyOf(
     return undefined
   }
 
-  const window = spanLabel(toInt(r.expectedWindow.durationMs))
-  const written = spanLabel(toInt(r.writtenDurationMs))
+  const planned = formatLength(
+    Math.round(toInt(r.expectedWindow.durationMs) / 1000),
+  )
+  const written = formatLength(Math.round(toInt(r.writtenDurationMs) / 1000))
 
-  return `期待ウィンドウ ${window}に対し、書けた尺 ${written}・実ファイル ${formatBytes(base.sizeBytes)}。`
+  return `書けた尺 ${written} / 予定 ${planned} · ${formatBytes(base.sizeBytes)}`
 }
 
+/**
+ * The file and the two lengths, without the ratio between them.
+ *
+ * `coverage` is not read. The store counts its numerator from the instant the
+ * tuner was opened and its denominator from a window that has the tuning lead
+ * — 25 seconds by default — cut off its head, so the quotient is
+ * `L / (L - lead)` and stands above 1 on every recording that ran to the end:
+ * 34:53 against 34:35 came out as 被覆率 100.8% on the screen. Rounding it down
+ * to 100% would make it read as "exactly as asked for", which is a different
+ * claim and not one the numbers support. The two lengths say the same thing
+ * and can be checked by eye.
+ */
 function reconcileOf(
   d: DetailResponder,
   base: Recording,
-): { main: string; sub: string } | undefined {
+): { size: string; written: string; planned: string } | undefined {
   if (!d.reconciliation.sizeObserved || base.sizeBytes == null) {
     return undefined
   }
 
-  const written = formatLength(
-    Math.round(toInt(d.reconciliation.writtenDurationMs) / 1000),
-  )
-  const window = formatLength(
-    Math.round(toInt(d.reconciliation.expectedWindow.durationMs) / 1000),
-  )
-  const coverage = (Number(d.reconciliation.coverage) * 100).toFixed(1)
-
   return {
-    main: formatBytes(base.sizeBytes),
-    sub: `書けた尺 ${written} / 実効ウィンドウ ${window} · 被覆率 ${coverage}%`,
+    size: formatBytes(base.sizeBytes),
+    written: formatLength(
+      Math.round(toInt(d.reconciliation.writtenDurationMs) / 1000),
+    ),
+    planned: formatLength(
+      Math.round(toInt(d.reconciliation.expectedWindow.durationMs) / 1000),
+    ),
   }
 }
 

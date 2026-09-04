@@ -605,10 +605,15 @@ test('a recording detail names the channel number beside the channel', async () 
   const detail = await getRecording('d1')
 
   assert.equal(detail?.channelNo, '1')
-  assert.equal(
-    detail?.reconcile?.sub,
-    '書けた尺 30:04 / 実効ウィンドウ 30:00 · 被覆率 100.0%',
-  )
+  // The two lengths, and no ratio between them: the store counts the numerator
+  // from the instant the tuner opened and the denominator from a window with
+  // the tuning lead cut off its head, so their quotient runs over 100% on a
+  // recording that ran to the end (v3.35).
+  assert.deepEqual(detail?.reconcile, {
+    size: '3.4 GB',
+    written: '30:04',
+    planned: '30:00',
+  })
 })
 
 test('a recording the store does not have is not a recording', async () => {
