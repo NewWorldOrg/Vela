@@ -166,6 +166,11 @@ export function Player({
 }) {
   const video = useRef<HTMLVideoElement>(null)
   /**
+   * Where the frame that was on screen is kept while the next one is being
+   * made. See `hold`.
+   */
+  const holder = useRef<HTMLCanvasElement>(null)
+  /**
    * The pane the picture is drawn in, held as state and not as a ref: it is
    * what goes fullscreen, and it is also where the settings surface has to be
    * put while it is — and a portal is given its container while rendering, so
@@ -196,6 +201,12 @@ export function Player({
           onTheFly ? PLAYBACK_PROFILE_UNASKED : undefined,
         ),
   )
+
+  /**
+   * Whether the frame kept from the last picture is standing in for the one
+   * being made. See `hold`.
+   */
+  const [holding, setHolding] = useState(false)
 
   /** Whether the pointer has said anything in the last few seconds. */
   const [stirred, setStirred] = useState(false)
@@ -356,6 +367,54 @@ export function Player({
   }
 
   /**
+   * Keep the frame that is on screen, because the next one comes from a
+   * different resource.
+   *
+   * What a picture shows while it is seeking or buffering is settled: "the
+   * `video` element represents the last frame of the video to have been
+   * rendered". The element does that by itself, and every player that was
+   * measured relies on it — they seek inside one resource, by byte range or by
+   * appending to a `MediaSource`, so nothing is ever thrown away.
+   *
+   * This route cannot. A position is an argument on the request, so choosing
+   * one is a new resource, and the load algorithm sets `readyState` back to
+   * `HAVE_NOTHING` and the show poster flag back to true. That is the first
+   * condition in the same list — "The `video` element represents its poster
+   * frame" — so the thumbnail comes back over a recording being watched.
+   * Measured before this: 0.34s to 0.51s of it on every seek, and the
+   * thumbnail is a frame from somewhere else in the programme.
+   *
+   * So the frame is copied out before the resource goes, and stands where the
+   * element would have stood it if it could. A canvas and not a poster of its
+   * own: `drawImage` costs no encode and cannot be refused for a frame the
+   * page is not allowed to read, and the moment it comes down is this
+   * component's to choose rather than a fetch's to race.
+   *
+   * A frame that has never been rendered cannot be kept — `drawImage` draws
+   * nothing below `HAVE_CURRENT_DATA` — and then the poster is the truthful
+   * answer, which is what opening the screen and pressing play the first time
+   * both are.
+   */
+  const hold = () => {
+    const element = video.current
+    const plate = holder.current
+
+    if (
+      !element ||
+      !plate ||
+      element.readyState < element.HAVE_CURRENT_DATA ||
+      element.videoWidth === 0
+    ) {
+      return
+    }
+
+    plate.width = element.videoWidth
+    plate.height = element.videoHeight
+    plate.getContext('2d')?.drawImage(element, 0, 0)
+    setHolding(true)
+  }
+
+  /**
    * Ask for the picture from a second in, in the profile asked for. The source
    * is state rather than a call on the element: every change of position is a
    * new request when the picture is made as it plays, so the element is told
@@ -368,6 +427,7 @@ export function Player({
       asking.current = null
     }
 
+    hold()
     wanted.current = null
     attempt.current += 1
     setFrom(second)
@@ -705,9 +765,26 @@ export function Player({
               event.currentTarget.muted = muted
             }}
             onLoadedData={() =>
-              setPhase((was) => (was === 'waiting' ? 'paused' : was))
+              // Not while a frame is being kept. Having the data is not the
+              // same as showing it: a freshly loaded element is paused at its
+              // first frame with the show poster flag set, which is the
+              // condition that draws the poster, and it stays there until
+              // autoplay decides it has enough. Measured: 0.79s between the
+              // two on one seek. Settling to `paused` there would put the
+              // centre target over a picture on its way back.
+              //
+              // A load with nothing kept is the screen being opened at a
+              // position, and there a picture that arrives and does not run —
+              // autoplay refused, no press behind it — is genuinely stopped.
+              setPhase((was) =>
+                was === 'waiting' && !holding ? 'paused' : was,
+              )
             }
             onPlaying={() => {
+              // The element is running its own picture now, so the kept frame
+              // comes down. Here and not on `loadeddata`, for the reason
+              // above.
+              setHolding(false)
               setPhase('playing')
               stir()
             }}
@@ -735,6 +812,26 @@ export function Player({
               setPosition(from + event.currentTarget.currentTime)
             }}
             className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
+          />
+          {/*
+            The frame kept from the last picture, over the element while it has
+            none of its own. Always in the page, because it is drawn into
+            before the resource it is drawn from goes — a canvas mounted at the
+            same moment would have nothing left to copy.
+
+            Under the press area and over the element, in the same box and at
+            the same fit, so that the picture does not move as the two swap.
+          */}
+          <canvas
+            ref={holder}
+            aria-hidden="true"
+            data-slot="player-held-frame"
+            data-holding={holding ? 'true' : undefined}
+            className={cn(
+              'pointer-events-none absolute inset-0 hidden data-[holding]:block',
+              PLAYER_PICTURE,
+              '[:fullscreen_&]:max-w-none',
+            )}
           />
           {/*
             The picture answers the pointer the way every player does: one

@@ -3,7 +3,11 @@ import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
-import { drawnFrame, SUBTITLED_FRAME } from '@/stories/fixtures/frames'
+import {
+  DRAWN_PICTURE,
+  drawnFrame,
+  SUBTITLED_FRAME,
+} from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
 import { ScreenMain } from '@/components/vela/app-shell'
 import type { PlaybackFault } from '@/components/recordings/playback-fault'
@@ -1032,5 +1036,106 @@ export const 設定を閉じる押下は再生を動かさない: Story = {
     await waitFor(() =>
       expect(canvas.getByRole('button', { name: '再生' })).toBeVisible(),
     )
+  },
+}
+
+/**
+ * A position is an argument on the request, so choosing one is a new resource
+ * and the element is emptied to load it. What that used to put on screen was
+ * the thumbnail: the load algorithm sets `readyState` back to `HAVE_NOTHING`
+ * and the show poster flag back to true, which is the first condition in the
+ * list a `video` element is drawn from.
+ *
+ * The frame that was on screen is copied out before the resource goes, and
+ * stands where the element would have stood it if it could — which is what the
+ * same list says a picture that is seeking or buffering shows. Here the
+ * position asked for is one nothing ever answers, so the frame stays.
+ */
+export const 立て直しのあいだ映っていたコマが残る: Story = {
+  args: {
+    detail: { ...detail('1266'), thumbnailHref: SUBTITLED_FRAME },
+    startAt: 0,
+    pictureHref: (_id: string, from: number) =>
+      from === 0 ? DRAWN_PICTURE : stalling(),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const held = canvasElement.querySelector(
+      '[data-slot="player-held-frame"]',
+    ) as HTMLCanvasElement
+
+    // Nothing is kept until something has been shown.
+    await expect(held).not.toHaveAttribute('data-holding')
+
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+    await waitFor(() => expect(picture.readyState).toBeGreaterThan(1), {
+      timeout: 10000,
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+
+    // The request waits for the hand, so the frame is kept when it goes out.
+    await waitFor(() => expect(held).toHaveAttribute('data-holding', 'true'), {
+      timeout: 5000,
+    })
+    await expect(picture.readyState).toBe(0)
+    await expect(held.width).toBe(640)
+    await expect(held.height).toBe(360)
+
+    // It is the frame, and not an empty plate the size of one.
+    const drawn = held
+      .getContext('2d')
+      ?.getImageData(0, 0, held.width, held.height).data as Uint8ClampedArray
+    let lit = 0
+    for (let at = 0; at < drawn.length; at += 4) {
+      if (drawn[at] > 40 || drawn[at + 1] > 40 || drawn[at + 2] > 40) {
+        lit += 1
+      }
+    }
+    await expect(lit).toBeGreaterThan(drawn.length / 4 / 10)
+
+    // And the middle says the picture is on its way, not that it stopped:
+    // the spinner is up and the target that offers to start it is not.
+    await expect(canvas.getByRole('status')).toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="player-center-standing"]'),
+    ).toBeNull()
+  },
+}
+
+/**
+ * The picture asked for never comes. The reason is read off the recording
+ * where the recording answers it, and the notice takes the player's place —
+ * so the frame that was being kept goes with it, rather than standing over a
+ * screen that is no longer about watching.
+ */
+export const 立て直しに失敗したらコマごと断りに変わる: Story = {
+  args: {
+    detail: { ...detail('1266'), thumbnailHref: SUBTITLED_FRAME },
+    startAt: 0,
+    pictureHref: (_id: string, from: number) =>
+      from === 0 ? DRAWN_PICTURE : noPicture(),
+    askWhy: answering('transcode'),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+    await waitFor(() => expect(picture.readyState).toBeGreaterThan(1), {
+      timeout: 10000,
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+
+    await waitFor(
+      () =>
+        expect(
+          canvas.getByText('元 TS からのトランスコードに失敗しました。'),
+        ).toBeVisible(),
+      { timeout: 10000 },
+    )
+    await expect(
+      canvasElement.querySelector('[data-slot="player-held-frame"]'),
+    ).toBeNull()
   },
 }
