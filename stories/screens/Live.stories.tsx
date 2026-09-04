@@ -458,6 +458,7 @@ export const キーの印: Story = {
 
     await expect(said()).toBeNull()
 
+    aim(player)
     press(player, 'ArrowDown')
     await waitFor(() => expect(said()).toHaveTextContent('95%'))
 
@@ -1018,6 +1019,19 @@ function livePlayer(canvasElement: HTMLElement): HTMLElement {
 }
 
 /** One press, on the player itself, the way the browser sends one. */
+/**
+ * Aiming at the player, which is what a press on the picture does at the
+ * moment it goes down.
+ *
+ * The arrows are the page's until this has happened (v3.37): they scroll, and
+ * the screen is scrolled to read the record under the picture. Every story
+ * that presses an arrow does this first, because a reader pressing an arrow
+ * has done it first.
+ */
+function aim(on: HTMLElement) {
+  on.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+}
+
 function press(on: HTMLElement, key: string) {
   on.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
 }
@@ -1030,6 +1044,7 @@ export const キーで音量と消音: Story = {
     const quiet = canvas.getByRole('button', { name: '消音' })
     const player = livePlayer(canvasElement)
 
+    aim(player)
     press(player, 'ArrowDown')
     press(player, 'ArrowDown')
     await waitFor(() => expect(level).toHaveValue('90'))
@@ -1060,6 +1075,7 @@ export const 送りと戻しはライブに無い: Story = {
 
     const level = canvas.getByRole('slider', { name: '音量' })
 
+    aim(player)
     press(player, 'ArrowLeft')
     press(player, 'ArrowRight')
 
@@ -1154,8 +1170,18 @@ export const 停止中は中央に印: Story = {
       ).not.toBeNull(),
     )
 
-    // And the press that starts it again is answered in the middle too.
-    await userEvent.click(await canvas.findByRole('button', { name: '再生' }))
+    // And the press that starts it again is answered in the middle too. The
+    // press is the one on the bar: there are two controls named 再生 on a
+    // stopped picture now — the big target in the middle and the small one on
+    // the bar — which is the pair WCAG 2.5.5 allows and every real player
+    // ships (v3.37). This story is about the bar's.
+    const bar = canvasElement.querySelector(
+      '[data-slot="player-chrome"]',
+    ) as HTMLElement
+
+    await userEvent.click(
+      await within(bar).findByRole('button', { name: '再生' }),
+    )
     await waitFor(() =>
       expect(
         canvasElement.querySelector('[data-slot="player-center-bezel"] span'),

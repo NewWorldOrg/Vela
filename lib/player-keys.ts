@@ -105,6 +105,21 @@ const WRITTEN_IN = new Set([
  * A player that took the keys wherever they were pressed would answer the
  * space in a search term and the arrows in a name being edited. The keys are
  * the player's only where nothing is being written.
+ *
+ * `<input>` is not excluded wholesale, and that is deliberate: a player's own
+ * seek bar and volume are `input[type=range]`, and a rule that threw out every
+ * input would throw those out with it. Shaka carves the same hole with
+ * `.shaka-range-element` and media-chrome with `isRangeInput`; here the types
+ * that are written into are named instead, so a range never matches.
+ *
+ * `isContentEditable` is read as the property and not as an attribute match,
+ * because the property is inherited — a press on a plain child node inside an
+ * editable region is still the reader writing, and `matches('[contenteditable]')`
+ * on that child would say it is not.
+ *
+ * `select` is excluded. The four players split on this — Plyr and Shaka
+ * exclude it, video.js does not — and a dropdown that swallows a keystroke the
+ * reader meant for it is the worse of the two failures.
  */
 export function typingIn(on: PressedOn | null): boolean {
   if (!on) {
@@ -128,6 +143,25 @@ export function typingIn(on: PressedOn | null): boolean {
   )
 }
 
+/**
+ * The roles whose own activation key is Space, so a press on one of them is
+ * that control being used and not the player being asked for anything.
+ *
+ * Plyr is the one that spells this rule out; the rest of the list is what
+ * WAI-ARIA gives each role as its keyboard activation.
+ */
+const ACTIVATED_BY_SPACE = new Set([
+  'button',
+  'checkbox',
+  'menuitem',
+  'menuitemcheckbox',
+  'menuitemradio',
+  'option',
+  'radio',
+  'switch',
+  'tab',
+])
+
 function isSlider(on: PressedOn): boolean {
   return on.role === 'slider' || (on.tagName === 'input' && on.type === 'range')
 }
@@ -150,7 +184,7 @@ export function answersItself(on: PressedOn | null, key: string): boolean {
       on.tagName === 'button' ||
       on.tagName === 'a' ||
       on.tagName === 'summary' ||
-      on.role === 'button' ||
+      ACTIVATED_BY_SPACE.has(on.role ?? '') ||
       isSlider(on)
     )
   }
@@ -180,6 +214,26 @@ const KEYS: Record<string, PlayerCommand> = {
 }
 
 /**
+ * The keys the player takes only once the reader has aimed at it.
+ *
+ * The arrows scroll, and the screen hands the player the focus as it opens, so
+ * a player that took them would leave the page with no way down it that needs
+ * no pointer. Neither of the two players measured gives the arrows to the
+ * player as a whole: video.js leaves them to its sliders, and Shaka passes
+ * them only with the seek bar focused or in full screen.
+ *
+ * Nothing else here has a default worth keeping, and Space is the key a reader
+ * presses without aiming at anything — which is the whole reason the screen
+ * takes the focus on open.
+ */
+const ONLY_ONCE_AIMED = new Set([
+  'arrowleft',
+  'arrowright',
+  'arrowup',
+  'arrowdown',
+])
+
+/**
  * What a press means to the player, or nothing where the press is not the
  * player's to take.
  *
@@ -202,7 +256,19 @@ export function playerCommand(
     altKey?: boolean
     target?: unknown
   },
-  { seeks, captions = false }: { seeks: boolean; captions?: boolean },
+  {
+    seeks,
+    captions = false,
+    aimed = true,
+  }: {
+    seeks: boolean
+    captions?: boolean
+    /**
+     * Whether the reader has aimed at the player — pressed it, or reached a
+     * control in it — rather than the screen having focused it on open.
+     */
+    aimed?: boolean
+  },
 ): PlayerCommand | null {
   if (
     press.ctrlKey === true ||
@@ -218,9 +284,14 @@ export function playerCommand(
     return null
   }
 
-  const command = KEYS[press.key.toLowerCase()]
+  const key = press.key.toLowerCase()
+  const command = KEYS[key]
 
   if (command === undefined || answersItself(on, press.key)) {
+    return null
+  }
+
+  if (!aimed && ONLY_ONCE_AIMED.has(key)) {
     return null
   }
 
