@@ -367,8 +367,8 @@ export function LivePlayer({
             ...was,
             startup: { ...was.startup, ...reported },
           })),
-        onRefusal: (refusal, ceiling) =>
-          fail({ kind: 'refused', refusal, ceiling }),
+        onRefusal: (refusal, over) =>
+          fail({ kind: 'refused', refusal, ...over }),
         onEnding: (why) => fail({ kind: 'ended', why }),
         onDropped: () => {
           void askSignedOut().then((signedOut) =>

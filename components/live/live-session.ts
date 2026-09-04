@@ -7,6 +7,7 @@ import {
   type CaptionCanvas,
   type CaptionPicture,
   type LiveRefusal,
+  type LiveRefusalDetail,
   type LiveStartup,
   type LiveSupplyEnd,
   type TranscodeCeiling,
@@ -38,7 +39,10 @@ export interface LiveSessionEvents {
   /** A caption to show from this stamp on — or, with nothing, the caption taken off. */
   onCaption: (picture: CaptionPicture | null, pts: number) => void
   onProgress: (startup: LiveStartup) => void
-  onRefusal: (refusal: LiveRefusal, ceiling?: TranscodeCeiling) => void
+  onRefusal: (
+    refusal: LiveRefusal,
+    over: { ceiling?: TranscodeCeiling; detail?: LiveRefusalDetail },
+  ) => void
   onEnding: (why: LiveSupplyEnd) => void
   /** Closed with neither a refusal nor an ending said first. */
   onDropped: (code: number) => void
@@ -154,7 +158,10 @@ export function openLiveSession(
         break
       case 'refusal':
         said = 'refusal'
-        events.onRefusal(control.refusal, control.ceiling)
+        events.onRefusal(control.refusal, {
+          ceiling: control.ceiling,
+          detail: control.detail,
+        })
         break
       case 'ending':
         said = 'ending'

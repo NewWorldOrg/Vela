@@ -7,7 +7,9 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type {
   LiveRefusal,
+  LiveRefusalDetail,
   LiveSupplyEnd,
+  LiveTunerHolder,
   TranscodeCeiling,
 } from '@/lib/live-wire'
 import { loginHref } from '@/repository/auth'
@@ -16,7 +18,9 @@ import {
   DangerIcon,
   DisplayIcon,
   LockIcon,
+  PersonIcon,
   PlayIcon,
+  QualityIcon,
   RecordIcon,
   SignalIcon,
   TunerIcon,
@@ -40,7 +44,12 @@ import { PlaybackNotice } from '@/components/recordings/playback-notice'
  * the screen decides for itself, and it decides it on the clock.
  */
 export type LiveFault =
-  | { kind: 'refused'; refusal: LiveRefusal; ceiling?: TranscodeCeiling }
+  | {
+      kind: 'refused'
+      refusal: LiveRefusal
+      ceiling?: TranscodeCeiling
+      detail?: LiveRefusalDetail
+    }
   | { kind: 'ended'; why: LiveSupplyEnd }
   | { kind: 'dropped' }
   | { kind: 'signedOut' }
@@ -96,6 +105,54 @@ const REFUSED: Record<LiveRefusal, Said> = {
     title: '再生を開始できませんでした',
     worthRetrying: true,
   },
+}
+
+/**
+ * What holds the tuner the viewer was turned away for.
+ *
+ * Both come back — that is the whole of what separates them from the reasons
+ * that do not — but they come back on different clocks, and a reader deciding
+ * whether to wait or to go elsewhere is deciding on that: a recording ends at
+ * an hour the guide already shows, and a viewer leaves when they leave. So
+ * each is said as itself, and both keep the press that asks again and the way
+ * to the screen that shows what is on every tuner.
+ */
+const HELD_BY: Record<LiveTunerHolder, Said> = {
+  aRecording: {
+    tone: 'gone',
+    mark: <RecordIcon className="size-[22px]" />,
+    title: 'チューナーは録画に使われています',
+    worthRetrying: true,
+    worthLooking: true,
+  },
+  anotherViewer: {
+    tone: 'gone',
+    mark: <PersonIcon className="size-[22px]" />,
+    title: 'チューナーは別の視聴に使われています',
+    worthRetrying: true,
+    worthLooking: true,
+  },
+}
+
+/**
+ * A tuning that reached the aerial and never locked on to it.
+ *
+ * It is the one refusal with no press on it. Every other reason a viewer is
+ * turned away is something that clears — a recording ends, a viewer leaves, a
+ * driver comes back, a budget frees — so asking again is a press that can end
+ * differently. This one is the aerial, the cable and the channel, and none of
+ * them are changed by the asking: the same press does the same thing and is
+ * refused the same way, which is the control the canon says not to draw.
+ *
+ * It is named in the words this product already uses for it — the four classes
+ * a scan is read by, which the channel screen has carried since before there
+ * was a live picture to refuse.
+ */
+const NO_LOCK: Said = {
+  tone: 'gone',
+  mark: <QualityIcon className="size-[22px]" />,
+  title: '信号を掴めませんでした',
+  worthRetrying: false,
 }
 
 const ENDED: Record<LiveSupplyEnd, Said> = {
@@ -185,10 +242,31 @@ function LiveEndMark() {
   )
 }
 
+/**
+ * A refusal, read with the one thing it says beyond its name.
+ *
+ * The detail is drawn where the screen has something of its own to draw for
+ * it, and falls back to the reason alone where it has not. Three of the four
+ * tuning failures the wire can name fall back: they are the scan's readings,
+ * the driver does not report them on the path that seats a viewer, and a look
+ * built for something that never arrives is a look nobody can check.
+ */
+function refusedSaid(refusal: LiveRefusal, detail?: LiveRefusalDetail): Said {
+  if (detail?.of === 'heldBy') {
+    return HELD_BY[detail.holder]
+  }
+
+  if (detail?.of === 'tuneFailure' && detail.failure === 'noLock') {
+    return NO_LOCK
+  }
+
+  return REFUSED[refusal]
+}
+
 function saidOf(fault: LiveFault): Said {
   switch (fault.kind) {
     case 'refused':
-      return REFUSED[fault.refusal]
+      return refusedSaid(fault.refusal, fault.detail)
     case 'ended':
       return ENDED[fault.why]
     case 'dropped':
