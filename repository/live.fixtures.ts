@@ -172,4 +172,5 @@ export const LIVE_SCREEN_FIXTURE: LiveScreen = {
     restMin: 56,
   },
   profiles: LIVE_PROFILE_FIXTURES,
+  tuners: 2,
 }

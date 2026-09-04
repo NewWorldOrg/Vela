@@ -18,7 +18,8 @@ const store: {
   channels: unknown[]
   profiles: unknown[]
   programmes: unknown[]
-} = { channels: [], profiles: [], programmes: [] }
+  tuners?: unknown[]
+} = { channels: [], profiles: [], programmes: [], tuners: [] }
 
 const answering = (data: unknown) => ({
   data: { status: true, message: '', data },
@@ -43,6 +44,12 @@ const GET = async (
       })
     case '/api/live/profiles':
       return answering(store.profiles)
+    case '/api/tuners':
+      if (!store.tuners) {
+        throw new Error('the tuner ledger is not answering')
+      }
+
+      return answering({ desired: store.tuners, observed: [], drifted: false })
     case '/api/programs':
       return answering({ programmes: store.programmes })
     default:
@@ -411,4 +418,34 @@ test('the live screen is addressed by channel, and by kind only off the aerial',
   )
   assert.equal(liveScreenHref('4-101', 'bs'), '/live?ch=4-101&kind=bs')
   assert.equal(liveScreenHref('6-1000', 'cs110'), '/live?ch=6-1000&kind=cs110')
+})
+
+/**
+ * The tuners are counted, not listed: this screen has no use for which ones
+ * they are, only for whether there is one at all. A ledger that will not
+ * answer leaves the count absent rather than nought, so the screen says
+ * nothing about tuners instead of sending the reader off to add the ones they
+ * already have.
+ */
+test('チューナーは数えられ、台帳が答えなければ数そのものが無い', async () => {
+  store.channels = [listed(32736, 1024, '総合1')]
+  store.profiles = []
+  store.programmes = []
+  store.tuners = [{}, {}]
+
+  assert.equal((await getLiveScreen(undefined, undefined, NOW)).tuners, 2)
+
+  store.tuners = []
+
+  assert.equal((await getLiveScreen(undefined, undefined, NOW)).tuners, 0)
+
+  store.tuners = undefined
+
+  const unread = await getLiveScreen(undefined, undefined, NOW)
+
+  assert.equal(unread.tuners, undefined)
+
+  // And the rest of the screen is still there: watching does not depend on
+  // this ledger, so it does not go down with it.
+  assert.equal(unread.channels.length, 1)
 })

@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react'
 import type { Route } from 'next'
+import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
@@ -9,7 +10,9 @@ import { foldedLineupOf, foldsAChannel } from '@/lib/live-lineup'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
 import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
 import type { LiveScreen } from '@/repository/live'
+import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { EmptyState } from '@/components/vela/empty-state'
 import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
 import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelKinds } from '@/components/live/channel-kinds'
@@ -119,9 +122,35 @@ export function LiveView({
       ? foldedLineupOf(screen.channels, watching?.channel.id)
       : screen.channels
 
+  const nothingIsOn =
+    channels.length > 0 && channels.every((one) => one.now === undefined)
   const choose = (id: string) => patch({ ch: id })
   const kind = (value: string) =>
     patch({ kind: value === 'terrestrial' ? null : value })
+
+  /*
+    Nothing on this screen can be watched without one, whichever channel is
+    pressed and whichever broadcast type is looked under, so the grid and the
+    type bar both come down: three tabs that all lead to this same panel are
+    three presses that change nothing. It is only said when the ledger was
+    actually read — not knowing how many there are is not none.
+  */
+  if (!watching && screen.tuners === 0) {
+    return (
+      <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
+        <EmptyState
+          spot="tuner"
+          titleLevel={2}
+          title="チューナーが登録されていません"
+          action={
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/settings/tuners">チューナー設定へ</Link>
+            </Button>
+          }
+        />
+      </ScreenMain>
+    )
+  }
 
   if (!watching) {
     return (
@@ -147,6 +176,27 @@ export function LiveView({
           channels={channels}
           onSelect={(channel) => choose(channel.id)}
         />
+        {/*
+          The cards each say they have no programme, which leaves a reader
+          looking at a screenful of channels that all appear to be broken. They
+          are not: they can be tuned, and it is the guide behind them that has
+          not been collected. So the panel is under the grid rather than in
+          place of it — the channels are still what the screen is for — and it
+          is out the moment any one of them has a programme, since from then on
+          the empty cards are that channel's own silence and not the guide's.
+        */}
+        {nothingIsOn && (
+          <EmptyState
+            spot={null}
+            title="EPG をまだ取得していません"
+            className="mt-3.5"
+            action={
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/guide">EPG 取得の状況を見る</Link>
+              </Button>
+            }
+          />
+        )}
       </ScreenMain>
     )
   }
