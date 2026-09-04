@@ -164,11 +164,23 @@ export const 尻切れ: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // A band, because what can be watched is not what was asked for and the
-    // picture itself will not say so. Values and not a sentence: the lengths
-    // it is short by are the whole of it.
-    await expect(canvas.getByText('尻切れ')).toBeVisible()
-    await expect(canvas.getByText(/書けた尺 36:12 \/ 予定 54:00/)).toBeVisible()
+    // On the band above the picture, which is where a reader about to watch
+    // half a programme has to meet it — not somewhere further down the page.
+    // Values and not a sentence: the lengths it is short by are the whole of it.
+    const band = within(
+      canvasElement.querySelector(
+        '[data-slot="recording-outcome"]',
+      ) as HTMLElement,
+    )
+
+    await expect(band.getByText('尻切れ')).toBeVisible()
+    await expect(band.getByText(/書けた尺 36:12 \/ 予定 54:00/)).toBeVisible()
+
+    // And said once. The record carries the outcome only where the screen has
+    // not already said it, which is 完全 and nothing else.
+    await userEvent.click(canvas.getByText('録画の記録'))
+    await expect(canvas.getAllByText('尻切れ')).toHaveLength(1)
+    await expect(canvas.queryByText('結果')).toBeNull()
   },
 }
 /**

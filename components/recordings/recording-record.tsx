@@ -15,13 +15,6 @@ import { DetailStat } from '@/components/recordings/detail-stat'
 import { QualityChip } from '@/components/recordings/quality-chip'
 import { ThumbnailButton } from '@/components/recordings/thumbnail-button'
 
-const OUTCOME_LABEL = {
-  complete: '完全',
-  truncated: '尻切れ',
-  failed: '失敗',
-  recording: '録画中',
-} as const
-
 /** A rule with a caption sitting in it, between the groups of rows. */
 function Caption({
   children,
@@ -94,7 +87,17 @@ export function RecordingRecord({
         style={{ '--row-label': '176px' } as CSSProperties}
         className="max-w-[900px] border-t border-dashed border-line pt-4 pb-5"
       >
-        <DetailKeyRow label="結果" main={OUTCOME_LABEL[d.outcome]} plain />
+        {/*
+          Only where the screen has not said it already. 尻切れ and 失敗 are on
+          the band above the picture and 録画中 is on the badge beside the
+          counters; repeating the word down here would be the same statement
+          twice on one screen, and the reader would have to work out whether
+          the two were about the same thing. 完全 has no band — that is the
+          whole reason this row exists (v3.35).
+        */}
+        {d.outcome === 'complete' && (
+          <DetailKeyRow label="結果" main="完全" plain />
+        )}
 
         <Caption>
           受信品質
