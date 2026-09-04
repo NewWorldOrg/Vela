@@ -5,7 +5,7 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatBytes } from '@/lib/format'
-import type { RecordingDetail, ThumbnailWrite } from '@/repository/recordings'
+import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan } from '@/repository/videos'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
@@ -13,7 +13,6 @@ import { ChevronRightIcon, QualityIcon } from '@/components/vela/icons'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { QualityChip } from '@/components/recordings/quality-chip'
-import { ThumbnailButton } from '@/components/recordings/thumbnail-button'
 
 /** A rule with a caption sitting in it, between the groups of rows. */
 function Caption({
@@ -60,12 +59,10 @@ function Caption({
 export function RecordingRecord({
   detail: d,
   plan,
-  onRemakeThumbnail,
 }: {
   detail: RecordingDetail
   /** How the picture is being served, where one is. */
   plan?: PlaybackPlan
-  onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
 }) {
   const spots = d.qualitySpots ?? []
 
@@ -198,29 +195,19 @@ export function RecordingRecord({
           </>
         )}
         {plan && <SourceRow detail={d} plan={plan} />}
+        {/*
+          A reading, not a control. Drawing the picture again is something done
+          with the recording and stands with 削除 and 外部プレイヤーで開く, where
+          everything else done with the recording is; a second button for it in
+          here would be the same press in two places on one screen.
+        */}
         {d.thumbnailState && (
-          <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[9px] text-ui last:border-b-0">
-            <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-3 max-[900px]:w-[130px] max-[700px]:w-full">
-              サムネイル
-            </span>
-            <span className="min-w-0 flex-1">
-              {d.thumbnailState.main}
-              {d.thumbnailState.sub && (
-                <small className="block text-[11px] leading-[1.7] text-ink-3">
-                  {d.thumbnailState.sub}
-                </small>
-              )}
-            </span>
-            {d.thumbnailState.canGenerate && (
-              <ThumbnailButton
-                id={d.id}
-                label={
-                  d.thumbnailState.main === '未生成' ? '生成する' : '再生成'
-                }
-                onRemake={onRemakeThumbnail}
-              />
-            )}
-          </div>
+          <DetailKeyRow
+            label="サムネイル"
+            main={d.thumbnailState.main}
+            sub={d.thumbnailState.sub}
+            plain
+          />
         )}
       </div>
     </details>

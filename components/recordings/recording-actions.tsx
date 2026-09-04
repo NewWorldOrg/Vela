@@ -3,12 +3,20 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import type { Recording, RecordingDiscarded } from '@/repository/recordings'
+import type {
+  Recording,
+  RecordingDiscarded,
+  ThumbnailWrite,
+} from '@/repository/recordings'
 import type { TicketWrite } from '@/repository/videos'
 import { Button } from '@/components/ui/button'
 import { TrashIcon } from '@/components/vela/icons'
 import { OpenExternally } from '@/components/recordings/external-player'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
+import {
+  redrawsThumbnail,
+  ThumbnailButton,
+} from '@/components/recordings/thumbnail-button'
 
 /**
  * What can be done with this recording, as against what can be done with the
@@ -23,12 +31,14 @@ import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-
 export function RecordingActions({
   recording,
   onDelete,
+  onRemakeThumbnail,
   onTakeTicket,
   /** Whether a recording can be handed to something outside the browser. */
   plays,
 }: {
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>
+  onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onTakeTicket: (id: string) => Promise<TicketWrite>
   plays?: boolean
 }) {
@@ -53,6 +63,9 @@ export function RecordingActions({
       <div className="flex flex-wrap items-start gap-[9px]">
         {plays && (
           <OpenExternally id={recording.id} onTakeTicket={onTakeTicket} />
+        )}
+        {redrawsThumbnail(recording) && (
+          <ThumbnailButton recording={recording} onRemake={onRemakeThumbnail} />
         )}
         <Button
           variant="destructive"

@@ -257,7 +257,7 @@ export interface RecordingDetail extends Recording {
   scramble?: { main: string }
   stopReason?: string
   failureReason?: { title: string; body?: string }
-  thumbnailState?: { main: string; sub?: string; canGenerate?: boolean }
+  thumbnailState?: { main: string; sub?: string }
   qualityRatio?: string
   qualityTotal?: string
   qualitySpots?: QualitySpot[]
@@ -326,10 +326,10 @@ export type ThumbnailWrite =
   | { state: 'rejected'; message: string }
 
 const THUMBNAIL_REFUSAL: Partial<Record<number, string>> = {
-  400: 'この録画の指定が正しくないため、サムネイルを生成できませんでした。',
-  404: 'この録画は残っていないため、サムネイルを生成できませんでした。',
-  409: 'この録画はまだ書き込み中です。サムネイルは録画の完了後に生成されます。',
-  503: '録画ファイルかサムネイルの保存先に到達できないため、生成できませんでした。',
+  400: 'この録画の指定が正しくありません。',
+  404: 'この録画は残っていません。',
+  409: '録画中はサムネイルを作り直せません。',
+  503: '録画ファイルかサムネイルの保存先に到達できません。',
 }
 
 export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
@@ -346,7 +346,7 @@ export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
     state: 'rejected',
     message:
       THUMBNAIL_REFUSAL[response.status] ??
-      `サムネイルを生成できませんでした(${response.status})。`,
+      `サムネイルを作り直せませんでした(${response.status})。`,
   }
 }
 
@@ -640,11 +640,11 @@ function thumbnailOf(r: RecordingResponder) {
 
 const THUMBNAIL_ROWS: Record<
   components['schemas']['ThumbnailState'],
-  { main: string; sub?: string; canGenerate?: boolean }
+  { main: string; sub?: string }
 > = {
   ready: { main: '生成済み' },
-  pending: { main: '未生成', canGenerate: true },
-  failed: { main: '生成失敗', canGenerate: true },
+  pending: { main: '未生成' },
+  failed: { main: '生成失敗' },
   skipped: { main: '録画が失敗したため作成されません' },
 }
 
