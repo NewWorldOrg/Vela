@@ -98,6 +98,16 @@ export interface LiveScreen {
   channels: LiveChannel[]
   watching?: LiveWatching
   profiles: LiveProfile[]
+  /**
+   * How many tuners are written down. None of them means nothing on this
+   * screen can be watched whatever is chosen, which is the one thing the
+   * screen has to say before it offers anything to press.
+   *
+   * Absent when the ledger could not be read, which is not the same as it
+   * being empty: a screen that said there were no tuners because it failed to
+   * ask would send the reader to add the ones they already have.
+   */
+  tuners?: number
 }
 
 export function kindOf(rawKind: string | undefined): ChannelKind {
@@ -110,9 +120,10 @@ export async function getLiveScreen(
   now: Date = new Date(),
 ): Promise<LiveScreen> {
   const kind = kindOf(rawKind)
-  const [listed, profiles] = await Promise.all([
+  const [listed, profiles, tuners] = await Promise.all([
     fetchLiveChannels(),
     fetchLiveProfiles(),
+    countTuners(),
   ])
   const chosen = listed.find((channel) => channel.id === rawChannel)
 
@@ -152,6 +163,27 @@ export async function getLiveScreen(
       .map(withProgrammes),
     watching: chosen && watchingOf(withProgrammes(chosen), now),
     profiles,
+    tuners,
+  }
+}
+
+/**
+ * The tuners written down, counted rather than listed: this screen has no use
+ * for which ones they are, only for whether there is one at all.
+ *
+ * A failure to read them is not a nought, and is the whole reason for the
+ * catch: watching does not depend on this ledger — the channels and the wire
+ * do — so a screen that threw here would lose a working live picture to a
+ * settings endpoint being down. The count going missing is not swallowed, it
+ * is the answer, and the screen says nothing about tuners when it gets it.
+ */
+async function countTuners(): Promise<number | undefined> {
+  try {
+    const { data } = await carinaClient().GET('/api/tuners')
+
+    return data?.data?.desired.length
+  } catch {
+    return undefined
   }
 }
 

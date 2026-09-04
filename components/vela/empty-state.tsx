@@ -9,6 +9,11 @@ import {
 /**
  * Nothing here yet: one small drawing, one line, one way forward. The panel is
  * a surface with a dashed hairline — no shadow.
+ *
+ * `spot={null}` drops the drawing, for the panels that sit under something
+ * rather than in place of it: there the drawing is a second thing to look at
+ * beside content the reader is already reading, and the panel is a note on it
+ * rather than the whole of what the screen has.
  */
 export function EmptyState({
   spot = 'antenna',
@@ -19,7 +24,7 @@ export function EmptyState({
   children,
   ...props
 }: ComponentProps<'div'> & {
-  spot?: SpotName
+  spot?: SpotName | null
   title?: string
   /**
    * The heading rank, for pages where the panel is not nested under a section
@@ -39,8 +44,12 @@ export function EmptyState({
       )}
       {...props}
     >
-      <SpotIllustration name={spot} className="mx-auto size-[78px]" />
-      {title && <Title className="heading mt-2.5 text-h3">{title}</Title>}
+      {spot && <SpotIllustration name={spot} className="mx-auto size-[78px]" />}
+      {title && (
+        <Title className={cn('heading text-h3', spot && 'mt-2.5')}>
+          {title}
+        </Title>
+      )}
       {children && (
         <p className="mx-auto mt-[9px] mb-[13px] max-w-[520px] text-ui text-ink-2">
           {children}

@@ -934,6 +934,138 @@ export const 空状態: Story = {
 }
 
 /**
+ * No tuner is written down, so nothing on this screen can be watched whichever
+ * channel is pressed and whichever broadcast type is looked under. The grid and
+ * the type bar both come down: three tabs leading to this same panel would be
+ * three presses that change nothing.
+ */
+export const 空状態_チューナーなし: Story = {
+  args: {
+    screen: { ...UNCHOSEN, tuners: 0 },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText('チューナーが登録されていません'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('link', { name: 'チューナー設定へ' }),
+    ).toHaveAttribute('href', '/settings/tuners')
+
+    // The channels are not offered, and neither is the choice of which ones to
+    // be offered: both would be presses that cannot lead to a picture.
+    await expect(
+      canvasElement.querySelector('[data-slot="channel-grid"]'),
+    ).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+  },
+}
+
+/**
+ * The tuners could not be counted, which is not the same as there being none.
+ * A screen that said there were none because it failed to ask would send the
+ * reader off to add the tuners they already have.
+ */
+export const 空状態_チューナーが数えられない: Story = {
+  args: {
+    screen: { ...UNCHOSEN, tuners: undefined },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByText('チューナーが登録されていません'),
+    ).toBeNull()
+    await expect(
+      canvasElement.querySelector('[data-slot="channel-grid"]'),
+    ).not.toBeNull()
+  },
+}
+
+/**
+ * The channels are there and can be tuned; it is the guide behind them that
+ * has not been collected. Every card saying it has no programme leaves a reader
+ * looking at a screenful of channels that all appear to be broken, so the panel
+ * goes under the grid — the channels are still what the screen is for — rather
+ * than in place of it.
+ */
+export const 空状態_番組情報なし: Story = {
+  args: {
+    screen: {
+      ...UNCHOSEN,
+      channels: UNCHOSEN.channels.map((channel) => ({
+        ...channel,
+        now: undefined,
+        next: undefined,
+        progressPct: undefined,
+      })),
+    },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // The cards stay, and stay pressable: a channel with no programme listed
+    // is still a channel that tunes.
+    await expect(
+      canvasElement.querySelectorAll('[data-slot="channel-grid"] > li').length,
+    ).toBe(UNCHOSEN.channels.length)
+    await expect(canvas.getAllByText('番組情報がありません').length).toBe(
+      UNCHOSEN.channels.length,
+    )
+
+    await expect(canvas.getByText('EPG をまだ取得していません')).toBeVisible()
+    await expect(
+      canvas.getByRole('link', { name: 'EPG 取得の状況を見る' }),
+    ).toHaveAttribute('href', '/guide')
+  },
+}
+
+/**
+ * One channel between programmes is that channel's own silence, not the
+ * guide's, so the panel is not out.
+ */
+export const 番組情報が一部だけ無いときは言わない: Story = {
+  args: {
+    screen: {
+      ...UNCHOSEN,
+      channels: UNCHOSEN.channels.map((channel, at) =>
+        at === 0
+          ? { ...channel, now: undefined, progressPct: undefined }
+          : channel,
+      ),
+    },
+    openSocket: nothingToWatch,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Cards with a programme and cards without, standing side by side: this is
+    // the line-up as it comes, not a guide that failed to arrive.
+    const silent = canvas.getAllByText('番組情報がありません')
+
+    await expect(silent.length).toBeLessThan(UNCHOSEN.channels.length)
+    await expect(silent.length).toBeGreaterThan(0)
+    await expect(canvas.queryByText('EPG をまだ取得していません')).toBeNull()
+  },
+}
+
+/**
  * Watching, the list folds away on one press and the picture takes the width
  * it leaves. Folded, the types and the rows are out of the page, and the press
  * that brings them back is what is left of the list.
