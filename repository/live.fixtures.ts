@@ -153,12 +153,20 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
   },
 ]
 
+/** The list as a machine with a GPU to encode on hands it back. */
 export const LIVE_PROFILE_FIXTURES: LiveProfile[] = [
-  { name: '1080p60', width: 1920, height: 1080 },
-  { name: '1080p30', width: 1920, height: 1080 },
-  { name: '720p60', width: 1280, height: 720 },
-  { name: '720p30', width: 1280, height: 720 },
+  { name: '1080p60', width: 1920, height: 1080, unasked: true },
+  { name: '1080p30', width: 1920, height: 1080, unasked: false },
+  { name: '720p60', width: 1280, height: 720, unasked: false },
+  { name: '720p30', width: 1280, height: 720, unasked: false },
 ]
+
+/** The same list from a machine with none, which marks the smallest instead. */
+export const LIVE_PROFILE_FIXTURES_SOFTWARE: LiveProfile[] =
+  LIVE_PROFILE_FIXTURES.map((one) => ({
+    ...one,
+    unasked: one.name === '720p30',
+  }))
 
 export const LIVE_NOW_FIXTURE = NOW
 
