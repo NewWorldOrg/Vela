@@ -28,10 +28,6 @@ const answering = (data: unknown) => ({
   response: { status: 200, ok: true },
 })
 
-/**
- * The generated client hands the body of a refusal back under `error` and
- * leaves `data` unset, so the stand-in answers the same way.
- */
 const refusing = (status: number, message: string) => ({
   data: undefined,
   error: { status: false, message, data: null },

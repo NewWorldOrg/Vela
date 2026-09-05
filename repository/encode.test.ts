@@ -39,12 +39,6 @@ const envelope = (data: unknown) => ({
   response: answered(200),
 })
 
-/**
- * The generated client hands a body back under `data` only where the status is
- * one it read as an answer, and under `error` where it read a refusal, so the
- * stand-in answers the same way. A stand-in that filled both would let a
- * refusal be read from the half the real client leaves empty.
- */
 const refusal = (status: number, message: string) => ({
   error: { status: false, message, data: null },
   response: answered(status),

@@ -58,13 +58,6 @@ export function ChannelKey({
  * folded, so that folding does not move the thing that unfolds. Folded, only
  * that press is left; the types and the rows are taken out of the page rather
  * than dimmed, because a list that cannot be read is not a list that is off.
- *
- * Given `motion` as well, that going and coming back is drawn rather than
- * switched: the panel is wiped across by a clip and the parts behind it arrive
- * one behind another, in the order they are read opening and the reverse of it
- * closing. Nothing in the run touches a length the page is measured from, so
- * the picture beside the list is laid out once — when the column changes width
- * — and not once a frame. `channel-fold.ts` is where the shape of it is.
  */
 export function ChannelList({
   kind,
@@ -90,7 +83,6 @@ export function ChannelList({
   folded?: boolean
   /** Given, the list can be folded; left out, it cannot. */
   onFold?: (folded: boolean) => void
-  /** Given, the fold is drawn as a run rather than as a switch. */
   motion?: FoldMotion
   className?: string
 }) {
@@ -101,18 +93,6 @@ export function ChannelList({
   const settle = motion?.onSettle
   const shown = motion === undefined ? !folded : motion.shown
 
-  /**
-   * A run is over when everything it started has stopped, whichever part that
-   * turns out to be — the clip on the way in, the last row on the way out.
-   * Until it is, a list that has been folded is still on the page, holding the
-   * column open so the picture beside it widens once rather than into a panel
-   * still leaving.
-   *
-   * A run that never began is over as well. Asking for the clip is what makes
-   * the browser resolve the style the transitions are to start from; counted
-   * before that, or in a browser that interpolates none of it, the fold ends
-   * here instead of waiting for something that is not coming.
-   */
   useEffect(() => {
     const whole = listed.current
     const clipped = panel.current

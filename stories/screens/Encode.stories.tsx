@@ -36,7 +36,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** The waiting and failed counts, read as the two chips under the running job. */
 async function counts(
   canvas: ReturnType<typeof within>,
   waiting: number,
