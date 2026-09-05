@@ -18,11 +18,10 @@ import { ruleNames } from '@/repository/rules'
 type ReservationResponder = components['schemas']['ReservationResponder']
 
 /**
- * The four the reservation itself is in, and the eight the screen reads once
- * the recording behind it has a say. `endAtConfirmed` and `reception` are
+ * The eight the screen reads: what the reservation is in, folded together with
+ * what the recording behind it came to. `endAtConfirmed` and `reception` are
  * neither: they hold across all of them and are carried beside them.
  */
-export type ReservationState = components['schemas']['ReservationState']
 export type ReservationStanding = components['schemas']['ReservationStanding']
 export type AllocationVerdict = NonNullable<
   components['schemas']['AllocationVerdict']
@@ -53,7 +52,6 @@ export interface Reservation {
   whenNote?: string
   origin: OriginLabel
   ruleName?: string
-  state: ReservationState
   standing: ReservationStanding
   endAtConfirmed: boolean
   receptionUnavailable: boolean
@@ -480,7 +478,6 @@ export function toReservation(
     whenLabel: formatBroadcastSpan(r.window.startAt, r.window.endAt),
     origin: formatReservationOrigin(r.origin),
     ruleName: ruleNameOf(r.ruleId, rules),
-    state: r.state,
     standing: r.standing,
     endAtConfirmed,
     receptionUnavailable: r.reception.unavailable,
