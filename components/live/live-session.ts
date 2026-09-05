@@ -12,7 +12,16 @@ import {
   type LiveSupplyEnd,
   type TranscodeCeiling,
 } from '@/lib/live-wire'
-import { LIVE_SESSION_PROBE_PATH } from '@/repository/live-paths'
+import {
+  LIVE_SESSION_PROBE_PATH,
+  LIVE_SESSIONS_PATH,
+} from '@/repository/live-paths'
+import {
+  backlogOf,
+  readLiveSessions,
+  type LiveBacklog,
+  type LiveSeat,
+} from '@/repository/live-sessions'
 
 /**
  * The part of a `WebSocket` the session drives. Named so that a story can hand
@@ -204,5 +213,36 @@ export async function askWhetherSignedOut(): Promise<boolean> {
     return answer.status === 401
   } catch {
     return false
+  }
+}
+
+/** How a session's backlog is read. The screen asks the API; a story hands in its own. */
+export type AskBacklog = (seat: LiveSeat) => Promise<LiveBacklog | undefined>
+
+/**
+ * What the session being watched has thrown away so far, asked of the API.
+ *
+ * The wire carries no such count, and the sessions it belongs to are listed
+ * at one address for every viewer, so the seat's own is picked out of the
+ * list. Anything short of an answer — a refused request, a body that is not
+ * the list, a list the seat is not on — is no reading rather than a nought:
+ * the count on screen is the last one read, and a moment the API could not
+ * be asked is not a moment nothing was dropped.
+ */
+export const askLiveBacklog: AskBacklog = async (seat) => {
+  try {
+    const answer = await fetch(LIVE_SESSIONS_PATH, { cache: 'no-store' })
+
+    if (!answer.ok) {
+      void answer.body?.cancel()
+
+      return undefined
+    }
+
+    const sessions = readLiveSessions(await answer.json())
+
+    return sessions ? backlogOf(sessions, seat) : undefined
+  } catch {
+    return undefined
   }
 }

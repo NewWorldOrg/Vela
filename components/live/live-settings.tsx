@@ -18,9 +18,18 @@ const SOUND_NOT_WIRED = '音声の選択はこれから実装されます'
 
 /**
  * The settings behind the gear, for a live picture: the profile it is encoded
- * in, and the sound track nothing behind it answers yet. The captions are not
- * here: there is one track and no choice to make, and whether it is drawn is
- * the switch on the bar.
+ * in, the sound track nothing behind it answers yet, and the one reading of
+ * the session that is not a setting — how many pictures it has thrown away.
+ * The captions are not here: there is one track and no choice to make, and
+ * whether it is drawn is the switch on the bar.
+ *
+ * The count is here and not on the bar because that is where the players
+ * that count it put it. YouTube's Dropped Frames is in Stats for nerds, a
+ * panel off the context menu; Twitch's Skipped Frames is in Video Stats,
+ * under Advanced in the gear. Neither puts it beside the play button — the
+ * bar is for what is pressed and for the one live reading everyone glances
+ * at, the distance from the edge — and a panel off a context menu is a panel
+ * a finger cannot open, so the gear it is.
  *
  * A profile is part of the session's key, so choosing one is a new session on
  * the same channel rather than a change to the one running. There is no rate
@@ -32,6 +41,7 @@ export function LiveSettings({
   profiles,
   profile,
   onChooseProfile,
+  dropped,
   onOpenChange,
 }: {
   /** The element the picture is drawn in, which is what goes fullscreen. */
@@ -40,6 +50,12 @@ export function LiveSettings({
   /** Unset where the API offered no profile, and so nothing is being watched. */
   profile?: string
   onChooseProfile: (next: string) => void
+  /**
+   * Pictures the session has thrown away for viewers who fell behind, as the
+   * API has counted them so far. Unset until the API has been asked, and
+   * then the row is not drawn: a nought the screen has not read is a claim.
+   */
+  dropped?: number
   /** That the surface is open, told to the player, as on the recording player. */
   onOpenChange?: (open: boolean) => void
 }) {
@@ -81,6 +97,19 @@ export function LiveSettings({
             title={SOUND_NOT_WIRED}
           />
         </Setting>
+        {dropped !== undefined && (
+          <Setting label="ドロップ">
+            <span
+              data-slot="live-dropped"
+              className="text-[12px] text-(--pl-ink-2)"
+            >
+              <span className="font-code text-[15px] font-medium text-(--pl-ink)">
+                {dropped}
+              </span>{' '}
+              件
+            </span>
+          </Setting>
+        )}
       </PopoverContent>
     </Popover>
   )

@@ -61,6 +61,7 @@ const THE_SUITE = [
   'repository/collection.test.ts',
   'repository/driver-capabilities.test.ts',
   'repository/integrity.test.ts',
+  'repository/live-sessions.test.ts',
   'repository/live.test.ts',
   'repository/programs.test.ts',
   'repository/recordings.test.ts',
