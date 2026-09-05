@@ -22,6 +22,11 @@ const BELOW_TOP_BAR = 'top-[46px]'
  * something that is read — a form — cannot: the form takes the window and
  * leaves the list nothing. Such a list is bounded instead: it grows with its
  * rows until it would reach past the window, and from there scrolls inside.
+ *
+ * A screen with several such lists bounds each one the same: the bound is a
+ * list's relation to the window, not to its neighbours, and every list can be
+ * brought whole into one position of the page. The search results, under the
+ * conditions they answer, take the same bound outside the admin area.
  */
 export const ADMIN_LIST_HEIGHT_CAP = 'max-h-[calc(100dvh-66px)]'
 
@@ -295,7 +300,8 @@ export type ScreenWidth = keyof typeof SCREEN_WIDTHS
  * `within` pins the frame to the window and gives the screen exactly what is
  * left under the top bar, so that a list inside it can take the rest and
  * scroll on its own with its header row held. Nothing but the list moves. It
- * is for a screen whose content is the axis being read, which is the guide.
+ * is for a screen whose content is the axis being read — the guide — and for
+ * a screen that is a list: reservations, the library, the integrity check.
  *
  * Neither makes `<main>` the scroller. A screen that scrolled inside its own
  * column put the scrollbar at the column's edge, inside the window, and made
