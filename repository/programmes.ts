@@ -6,6 +6,7 @@ import {
 import type { components, paths } from '@/repository/client/schema'
 import type { SearchField } from '@/lib/search-condition'
 import type { ChannelKind } from '@/repository/channels'
+import { whatItSaid } from '@/repository/said'
 
 type GuideResponder = components['schemas']['GuideResponder']
 type ProgrammeResponder = components['schemas']['ProgrammeResponder']
@@ -125,23 +126,24 @@ export async function fetchGuide(query: GuideQuery): Promise<Guide> {
   )
 
   if (error || !data?.data) {
-    throw new Error(data?.message || '番組表を読めませんでした')
+    throw new Error(whatItSaid(error, data) || '番組表を読めませんでした')
   }
 
   return toGuide(data.data)
 }
 
 export async function fetchProgramme(id: string): Promise<Programme | null> {
-  const { data, response } = await carinaClient().GET('/api/programs/{id}', {
-    params: { path: { id } },
-  })
+  const { data, error, response } = await carinaClient().GET(
+    '/api/programs/{id}',
+    { params: { path: { id } } },
+  )
 
   if (response.status === 404 || response.status === 400) {
     return null
   }
 
   if (!data?.data) {
-    throw new Error(data?.message || '番組を読めませんでした')
+    throw new Error(whatItSaid(error, data) || '番組を読めませんでした')
   }
 
   return toProgramme(data.data)
@@ -180,7 +182,7 @@ export async function searchProgrammes(
   }
 
   if (error || !data?.data) {
-    throw new Error(data?.message || '番組を探せませんでした')
+    throw new Error(whatItSaid(error, data) || '番組を探せませんでした')
   }
 
   return { state: 'ok', page: toPage(data.data) }

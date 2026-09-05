@@ -3,6 +3,7 @@ import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
 import { grouped } from '@/repository/recordings'
+import { whatItSaid } from '@/repository/said'
 
 type FindingResponder = components['schemas']['IntegrityFindingResponder']
 type CheckResponder = components['schemas']['IntegrityCheckResponder']
@@ -90,7 +91,7 @@ export async function getIntegrity(): Promise<IntegrityResult> {
   ])
 
   if (listing.error || !listing.data?.data) {
-    throw new Error(listing.data?.message || UNREADABLE)
+    throw new Error(whatItSaid(listing.error, listing.data) || UNREADABLE)
   }
 
   const answered = listing.data.data

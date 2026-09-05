@@ -10,6 +10,7 @@ import {
   dayLabel,
   kindOfNetwork,
 } from '@/repository/programs'
+import { whatItSaid } from '@/repository/said'
 
 type ServiceResponder = components['schemas']['BroadcastServiceResponder']
 type StreamResponder = components['schemas']['StreamCollectionStatusResponder']
@@ -124,11 +125,16 @@ export async function getCollectionStatus(): Promise<CollectionStatus> {
   ])
 
   if (status.error || !status.data?.data) {
-    throw new Error(status.data?.message || '収集状態を読めませんでした')
+    throw new Error(
+      whatItSaid(status.error, status.data) || '収集状態を読めませんでした',
+    )
   }
 
   if (services.error || !services.data?.data) {
-    throw new Error(services.data?.message || 'チャンネルを読めませんでした')
+    throw new Error(
+      whatItSaid(services.error, services.data) ||
+        'チャンネルを読めませんでした',
+    )
   }
 
   return toCollectionStatus(status.data.data.streams, services.data.data)

@@ -9,6 +9,7 @@ import {
   genreDisplayOf,
   kindOfNetwork,
 } from '@/repository/programs'
+import { whatItSaid } from '@/repository/said'
 
 type LiveChannelResponder = components['schemas']['LiveChannelResponder']
 type LiveProfileResponder = components['schemas']['LiveProfileResponder']
@@ -232,7 +233,7 @@ async function fetchLiveChannels(): Promise<LiveChannel[]> {
   })
 
   if (error || !data?.data) {
-    throw new Error(data?.message || 'チャンネルを読めませんでした')
+    throw new Error(whatItSaid(error, data) || 'チャンネルを読めませんでした')
   }
 
   return data.data.items.map(toChannel)
@@ -242,7 +243,7 @@ async function fetchLiveProfiles(): Promise<LiveProfile[]> {
   const { data, error } = await carinaClient().GET('/api/live/profiles')
 
   if (error || !data?.data) {
-    throw new Error(data?.message || '画質を読めませんでした')
+    throw new Error(whatItSaid(error, data) || '画質を読めませんでした')
   }
 
   return data.data.map(toProfile)
