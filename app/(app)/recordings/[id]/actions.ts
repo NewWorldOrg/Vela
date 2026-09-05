@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 
+import type { EncodeWrite } from '@/repository/encode'
+import { queueEncode } from '@/repository/encode'
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
 import type { TicketWrite } from '@/repository/videos'
@@ -24,4 +26,18 @@ export async function redrawThumbnail(id: string): Promise<ThumbnailWrite> {
  */
 export async function takeTicket(id: string): Promise<TicketWrite> {
   return takePlaybackTicket(id)
+}
+
+export async function queueEncoding(
+  recordingId: string,
+  destinationId: string,
+  profileId?: string,
+): Promise<EncodeWrite> {
+  const result = await queueEncode(recordingId, destinationId, profileId)
+
+  if (result.state === 'ok') {
+    revalidatePath('/settings/encode')
+  }
+
+  return result
 }

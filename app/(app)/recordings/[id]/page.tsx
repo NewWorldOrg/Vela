@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
+import { listEncodeChoices } from '@/repository/encode'
 import { getRecording } from '@/repository/recordings'
 import { getPlaybackPlan } from '@/repository/videos'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
-import { redrawThumbnail, takeTicket } from './actions'
+import { queueEncoding, redrawThumbnail, takeTicket } from './actions'
 
 export async function generateMetadata({
   params,
@@ -39,9 +40,10 @@ export default async function Page({
 }) {
   const { id } = await params
   const { at } = await searchParams
-  const [detail, playback] = await Promise.all([
+  const [detail, playback, encodeChoices] = await Promise.all([
     getRecording(id),
     getPlaybackPlan(id),
+    listEncodeChoices(),
   ])
 
   if (!detail) {
@@ -56,6 +58,8 @@ export default async function Page({
       onRemakeThumbnail={redrawThumbnail}
       onDelete={throwRecordingAway}
       onTakeTicket={takeTicket}
+      onQueueEncode={queueEncoding}
+      encodeChoices={encodeChoices}
     />
   )
 }

@@ -16,6 +16,7 @@ import type {
   PlaybackRefusal,
   TicketWrite,
 } from '@/repository/videos'
+import type { EncodeChoices } from '@/repository/encode'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 import {
@@ -35,6 +36,7 @@ import { Player } from '@/components/recordings/player'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
+import type { QueueEncode } from '@/components/recordings/encode-button'
 import { RecordingActions } from '@/components/recordings/recording-actions'
 import { RecordingRecord } from '@/components/recordings/recording-record'
 import { ScreenMain } from '@/components/vela/app-shell'
@@ -114,6 +116,8 @@ export function RecordingDetailView({
   onRemakeThumbnail,
   onDelete,
   onTakeTicket,
+  onQueueEncode,
+  encodeChoices,
   startAt,
 }: {
   detail: RecordingDetail
@@ -121,6 +125,8 @@ export function RecordingDetailView({
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onTakeTicket: (id: string) => Promise<TicketWrite>
+  onQueueEncode: QueueEncode
+  encodeChoices: EncodeChoices
   /** The second the quality panel sent the reader to, where it did. */
   startAt?: number
 }) {
@@ -329,6 +335,8 @@ export function RecordingDetailView({
               onDelete={onDelete}
               onRemakeThumbnail={onRemakeThumbnail}
               onTakeTicket={onTakeTicket}
+              onQueueEncode={onQueueEncode}
+              encodeChoices={encodeChoices}
               plays={plays}
             />
           </div>

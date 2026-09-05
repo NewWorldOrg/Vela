@@ -471,6 +471,38 @@ export interface paths {
     patch: operations['reviseReservation']
     trace?: never
   }
+  '/api/reservations/health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getReservationHealth']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/reservations/outcomes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listReservationOutcomes']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/reservations/{id}/restore': {
     parameters: {
       query?: never
@@ -775,6 +807,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/encoding/jobs/{id}/cancel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['cancelEncodeJob']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/encoding/destinations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listEncodeDestinations']
+    put?: never
+    post: operations['createEncodeDestination']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/encoding/profiles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listEncodeProfiles']
+    put?: never
+    post: operations['createEncodeProfile']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/encoding/jobs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listEncodeJobs']
+    put?: never
+    post: operations['queueEncodeJob']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/driver/status': {
     parameters: {
       query?: never
@@ -990,6 +1086,36 @@ export interface components {
       message: string
       data: null | components['schemas']['DriverStatusResponder']
     }
+    BaseResponderOfEncodeDestinationListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeDestinationListResponder']
+    }
+    BaseResponderOfEncodeDestinationResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeDestinationResponder']
+    }
+    BaseResponderOfEncodeJobListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeJobListResponder']
+    }
+    BaseResponderOfEncodeJobResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeJobResponder']
+    }
+    BaseResponderOfEncodeProfileListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeProfileListResponder']
+    }
+    BaseResponderOfEncodeProfileResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeProfileResponder']
+    }
     BaseResponderOfEpgRebuiltResponder: {
       status: boolean
       message: string
@@ -1115,10 +1241,20 @@ export interface components {
       message: string
       data: null | components['schemas']['ReservationDiscardResponder']
     }
+    BaseResponderOfReservationHealthResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationHealthResponder']
+    }
     BaseResponderOfReservationListResponder: {
       status: boolean
       message: string
       data: null | components['schemas']['ReservationListResponder']
+    }
+    BaseResponderOfReservationOutcomeListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationOutcomeListResponder']
     }
     BaseResponderOfReservationResponder: {
       status: boolean
@@ -1312,6 +1448,22 @@ export interface components {
       /** Format: int32 */
       serviceId?: null | number | string
     }
+    CreateEncodeDestinationRequest: {
+      label?: null | string
+      outputRoot?: null | string
+      /** Format: uuid */
+      defaultProfileId?: null | string
+    }
+    CreateEncodeProfileRequest: {
+      label?: null | string
+      codec?: null | components['schemas']['EncodeCodec']
+      resolution?: null | components['schemas']['EncodeResolution']
+      deinterlace?: null | components['schemas']['Deinterlace']
+      /** Format: int32 */
+      rateFactor?: null | number | string
+      /** Format: int32 */
+      quantiser?: null | number | string
+    }
     CreateReservationRequest: {
       programme?: null | string
       /** Format: date-time */
@@ -1323,6 +1475,8 @@ export interface components {
       /** Format: int32 */
       marginAfterSeconds?: null | number | string
     }
+    /** @enum {string} */
+    Deinterlace: 'leave' | 'everyFrame' | 'everyField'
     DetectedDeviceResponder: {
       deviceId: string
       detection: components['schemas']['DeviceDetection']
@@ -1385,6 +1539,114 @@ export interface components {
     }
     /** @enum {null|string} */
     DropReading: 'dropped' | 'clean' | 'unmeasured' | null
+    /** @enum {string} */
+    EncodeCodec: 'h264' | 'h265'
+    EncodeDestinationListResponder: {
+      items: components['schemas']['EncodeDestinationResponder'][]
+    }
+    EncodeDestinationResponder: {
+      /** Format: uuid */
+      id: string
+      label: string
+      outputRoot: string
+      /** Format: uuid */
+      defaultProfileId: string
+      /** Format: date-time */
+      definedAt: string
+    }
+    /** @enum {string} */
+    EncodeEncoder: 'software' | 'vaapi'
+    /** @enum {string} */
+    EncodeFailure:
+      | 'ffmpegExitedNonZero'
+      | 'notEnoughRoom'
+      | 'sourceMissing'
+      | 'capabilityUnavailable'
+      | 'timedOut'
+      | 'destinationCollision'
+    EncodeFailureResponder: {
+      failure: components['schemas']['EncodeFailure']
+      note: string
+      /** Format: date-time */
+      noticedAt: string
+    }
+    EncodeHeadwayResponder: {
+      /** Format: double */
+      portion: null | number | string
+      /** Format: int32 */
+      leftSeconds: null | number | string
+      /** Format: date-time */
+      at: string
+    }
+    EncodeJobListResponder: {
+      items: components['schemas']['EncodeJobResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    EncodeJobResponder: {
+      /** Format: uuid */
+      id: string
+      recordingId: string
+      /** Format: uuid */
+      profileId: string
+      /** Format: uuid */
+      destinationId: string
+      outputRoot: string
+      status: components['schemas']['EncodeJobStatus']
+      /** Format: int32 */
+      attempt: number | string
+      /** Format: date-time */
+      queuedAt: string
+      /** Format: date-time */
+      startedAt: null | string
+      /** Format: date-time */
+      endedAt: null | string
+      route: null | components['schemas']['EncodeRouteResponder']
+      headway: null | components['schemas']['EncodeHeadwayResponder']
+      /** Format: int32 */
+      quietForSeconds: null | number | string
+      stalled: boolean
+      failure: null | components['schemas']['EncodeFailureResponder']
+      artefactName: null | string
+    }
+    /** @enum {string} */
+    EncodeJobStatus: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+    EncodeProfileListResponder: {
+      items: components['schemas']['EncodeProfileResponder'][]
+    }
+    EncodeProfileResponder: {
+      /** Format: uuid */
+      id: string
+      label: string
+      codec: components['schemas']['EncodeCodec']
+      resolution: components['schemas']['EncodeResolution']
+      deinterlace: components['schemas']['Deinterlace']
+      /** Format: int32 */
+      rateFactor: number | string
+      /** Format: int32 */
+      quantiser: number | string
+      /** Format: date-time */
+      definedAt: string
+    }
+    /** @enum {string} */
+    EncodeResolution: 'asSource' | 'fullHd' | 'hd'
+    EncodeRouteResponder: {
+      asked: components['schemas']['EncodeEncoder']
+      ran: components['schemas']['EncodeEncoder']
+      swerved: null | components['schemas']['EncodeSwerve']
+    }
+    /** @enum {null|string} */
+    EncodeSwerve:
+      | 'theCardIsOutOfReach'
+      | 'theCardCannotDoThisCodec'
+      | 'theProcessorCannotDoThisCodec'
+      | null
     EpgRebuiltResponder: {
       /** Format: int32 */
       discarded: number | string
@@ -1680,6 +1942,13 @@ export interface components {
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
     /** @enum {string} */
     QualityLevel: 'good' | 'unmeasured' | 'warning' | 'mayNotBeWatchable'
+    QueueEncodeJobRequest: {
+      recordingId?: null | string
+      /** Format: uuid */
+      profileId?: null | string
+      /** Format: uuid */
+      destinationId?: null | string
+    }
     RebuildEpgRequest: {
       confirm?: null | string
       meansIt?: boolean
@@ -1927,6 +2196,18 @@ export interface components {
       | 'turningIntoARecording'
       | 'recordingCameOfIt'
       | 'stillToBeRecorded'
+    ReservationHealthResponder: {
+      /** Format: date-time */
+      asOf: string
+      /** Format: int32 */
+      contended: number | string
+      /** Format: int32 */
+      receptionUnavailable: number | string
+      /** Format: int32 */
+      epgDiverged: number | string
+      /** Format: int32 */
+      epgMissing: number | string
+    }
     ReservationListResponder: {
       items: components['schemas']['ReservationResponder'][]
       /** Format: int32 */
@@ -1940,6 +2221,53 @@ export interface components {
     }
     /** @enum {string} */
     ReservationOrigin: 'byHand' | 'byRule'
+    /** @enum {string} */
+    ReservationOutcomeKind:
+      'competing' | 'missed' | 'tuneFailure' | 'recordingFailure'
+    ReservationOutcomeListResponder: {
+      items: components['schemas']['ReservationOutcomeResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    ReservationOutcomeProgrammeResponder: {
+      id: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      /** Format: date-time */
+      startsAt: string
+      name: string
+    }
+    ReservationOutcomeResponder: {
+      /** Format: uuid */
+      id: string
+      /** Format: uuid */
+      reservationId: string
+      programme: components['schemas']['ReservationOutcomeProgrammeResponder']
+      kind: components['schemas']['ReservationOutcomeKind']
+      tuneFailure: null | components['schemas']['TuneFailureKind']
+      recordingOutcome: null | components['schemas']['RecordingOutcome']
+      recordedInstead: string[]
+      /** Format: date-time */
+      effectiveStartAt: string
+      /** Format: date-time */
+      effectiveEndAt: string
+      /** Format: int32 */
+      priority: number | string
+      /** Format: uuid */
+      ruleId: null | string
+      /** Format: date-time */
+      occurredAt: string
+    }
     ReservationProgrammeResponder: {
       id: string
       /** Format: int32 */
@@ -4628,6 +4956,95 @@ export interface operations {
       }
     }
   }
+  getReservationHealth: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationHealthResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationHealthResponder']
+        }
+      }
+    }
+  }
+  listReservationOutcomes: {
+    parameters: {
+      query?: {
+        kind?: components['schemas']['ReservationOutcomeKind'][]
+        channel?: string[]
+        rule?: string
+        from?: string
+        to?: string
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationOutcomeListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationOutcomeListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfReservationOutcomeListResponder']
+        }
+      }
+    }
+  }
   restoreReservation: {
     parameters: {
       query?: never
@@ -5729,6 +6146,388 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfProgrammeSearchResponder']
+        }
+      }
+    }
+  }
+  cancelEncodeJob: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+    }
+  }
+  listEncodeDestinations: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationListResponder']
+        }
+      }
+    }
+  }
+  createEncodeDestination: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreateEncodeDestinationRequest']
+        'text/json':
+          null | components['schemas']['CreateEncodeDestinationRequest']
+        'application/*+json':
+          null | components['schemas']['CreateEncodeDestinationRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+    }
+  }
+  listEncodeProfiles: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileListResponder']
+        }
+      }
+    }
+  }
+  createEncodeProfile: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreateEncodeProfileRequest']
+        'text/json': null | components['schemas']['CreateEncodeProfileRequest']
+        'application/*+json':
+          null | components['schemas']['CreateEncodeProfileRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+    }
+  }
+  listEncodeJobs: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['EncodeJobStatus'][]
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobListResponder']
+        }
+      }
+    }
+  }
+  queueEncodeJob: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['QueueEncodeJobRequest']
+        'text/json': null | components['schemas']['QueueEncodeJobRequest']
+        'application/*+json':
+          null | components['schemas']['QueueEncodeJobRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
         }
       }
     }

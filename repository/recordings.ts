@@ -208,6 +208,29 @@ export async function listRecordingsByReservation(): Promise<
   return byReservation
 }
 
+export interface RecordingName {
+  title: string
+  startedAt: string
+  outputRoot: string
+}
+
+export async function listRecordingNames(): Promise<
+  Map<string, RecordingName>
+> {
+  const carried = await fetchEveryRecording()
+  const names = new Map<string, RecordingName>()
+
+  for (const one of carried.items) {
+    names.set(one.id, {
+      title: one.programme.name,
+      startedAt: one.startedAt,
+      outputRoot: one.outputRoot,
+    })
+  }
+
+  return names
+}
+
 export interface QualitySpot {
   at: string
   packets: string
@@ -910,7 +933,7 @@ function clockOf(at: Date): string {
   return `${spelled.hour}:${spelled.minute}`
 }
 
-function clockWithSeconds(at: Date): string {
+export function clockWithSeconds(at: Date): string {
   const spelled = jst(at)
 
   return `${spelled.hour}:${spelled.minute}:${spelled.second}`
