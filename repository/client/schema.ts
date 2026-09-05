@@ -1539,6 +1539,8 @@ export interface components {
       viewers: number | string
       /** Format: int64 */
       dropped: number | string
+      /** Format: int32 */
+      queued: number | string
       startup: components['schemas']['LiveStartupResponder']
     }
     LiveStartupMarkResponder: {
@@ -1970,7 +1972,6 @@ export interface components {
       /** Format: int32 */
       priority: number | string
       window: components['schemas']['ReservationWindowResponder']
-      state: components['schemas']['ReservationState']
       standing: components['schemas']['ReservationStanding']
       /** Format: date-time */
       startedAt: null | string
@@ -2000,8 +2001,6 @@ export interface components {
       | 'complete'
       | 'truncated'
       | 'failed'
-    /** @enum {string} */
-    ReservationState: 'scheduled' | 'conflict' | 'cancelled' | 'missed'
     ReservationWindowResponder: {
       /** Format: date-time */
       startAt: string
