@@ -10,6 +10,8 @@ import type {
   WriteResult,
 } from '@/repository/services'
 import { SCAN_SYSTEMS, SYSTEM_LABEL } from '@/repository/scan-systems'
+import { cn } from '@/lib/utils'
+import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InlineAlert } from '@/components/vela/banner'
 import { Button } from '@/components/ui/button'
 import {
@@ -69,8 +71,11 @@ export function ScanAttemptsTable({
   attempts: ScanAttemptRow[]
 }) {
   return (
-    <Table className="min-w-[720px]" containerClassName="pb-1">
-      <TableHeader>
+    <Table
+      className="min-w-[720px]"
+      containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
+    >
+      <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {RESULT_COLUMNS.map((column) => (
             <TableHead key={column}>{column}</TableHead>

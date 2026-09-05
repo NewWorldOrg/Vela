@@ -1,6 +1,7 @@
 import type { Route } from 'next'
 import Link from 'next/link'
 
+import { cn } from '@/lib/utils'
 import type {
   ChannelsScreenResult,
   ScanRun,
@@ -20,7 +21,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Banner } from '@/components/vela/banner'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import {
+  ADMIN_LIST_HEIGHT_CAP,
+  Crumb,
+  CrumbCurrent,
+} from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { MarkDots } from '@/components/vela/icons'
@@ -84,8 +89,11 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
           スキャンはまだ一度も実行されていません。
         </p>
       ) : (
-        <Table className="min-w-[560px]" containerClassName="pb-1">
-          <TableHeader>
+        <Table
+          className="min-w-[560px]"
+          containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
+        >
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {['開始', '状態', '所要', '終了'].map((column) => (
                 <TableHead key={column}>{column}</TableHead>

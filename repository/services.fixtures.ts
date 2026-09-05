@@ -336,3 +336,56 @@ export const SCAN_PROPOSAL: ScanProposal = {
     },
   ],
 }
+
+/**
+ * More services than a window holds, and more runs: the terrestrial group
+ * found again and again, and the same two runs walked night after night.
+ */
+export const MORE_CHANNELS_THAN_FIT: ChannelsResult = {
+  ...CHANNELS,
+  unattributed: [],
+  groups: CHANNELS.groups.map((group) =>
+    group.system === 'isdbT'
+      ? {
+          ...group,
+          services: Array.from({ length: 12 }, (_, round) =>
+            SERVICES.slice(0, 4).map((service) => ({
+              ...service,
+              key: `${service.key}-${round}`,
+              sid: `sid ${Number(service.sid.slice(4)) + round * 16}`,
+              candidates: service.candidates.map((candidate) => ({
+                ...candidate,
+                id: `${candidate.id}-${round}`,
+              })),
+            })),
+          ).flat(),
+          stat: '48 サービス(TV 36 · ワンセグ 12)',
+        }
+      : group,
+  ),
+  history: Array.from({ length: 10 }, (_, round) =>
+    CHANNELS.history.map((run) => ({
+      ...run,
+      id: `${run.id}-${round}`,
+      startedAt: `08/${String(14 - round).padStart(2, '0')} ${run.startedAt.slice(6)}`,
+      finishedAt: `08/${String(14 - round).padStart(2, '0')} ${run.finishedAt?.slice(6)}`,
+    })),
+  ).flat(),
+}
+
+/** More attempts than a window holds: the whole UHF band, newest first. */
+export const MORE_ATTEMPTS_THAN_FIT: ScanRunProgress = {
+  ...SCAN_RUNNING,
+  attempted: 40,
+  succeeded: 10,
+  failed: 30,
+  attempts: Array.from({ length: 40 }, (_, index) => {
+    const attempt = SCAN_RUNNING.attempts[index % SCAN_RUNNING.attempts.length]
+
+    return {
+      ...attempt,
+      id: `attempt-${40 - index}`,
+      channel: `${52 - index}ch`,
+    }
+  }),
+}

@@ -3,9 +3,15 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { WriteResult } from '@/repository/services'
-import { CHANNELS, SCAN_RUNNING } from '@/repository/services.fixtures'
+import {
+  CHANNELS,
+  MORE_ATTEMPTS_THAN_FIT,
+  MORE_CHANNELS_THAN_FIT,
+  SCAN_RUNNING,
+} from '@/repository/services.fixtures'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { ChannelsView } from '@/components/channels/channels-page'
+import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 type ChannelsViewProps = ComponentProps<typeof ChannelsView>
 
@@ -336,5 +342,61 @@ export const 手動追加はEscで閉じる: Story = {
 
     await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  },
+}
+
+/**
+ * Two lists on one page, each bounded by the window on its own: the services
+ * of a broadcast and the runs that found them. The page still scrolls between
+ * them and for the scan bar above.
+ */
+async function bothListsScrollInside(canvasElement: HTMLElement) {
+  await scrollsInsideWithItsHeaderHeld(canvasElement, 'サービス')
+  await scrollsInsideWithItsHeaderHeld(canvasElement, '開始')
+}
+
+export const 収まらないほどのサービスと履歴: Story = {
+  args: { result: { state: 'ok', result: MORE_CHANNELS_THAN_FIT } },
+  play: async ({ canvasElement }) => {
+    await bothListsScrollInside(canvasElement)
+  },
+}
+
+export const 狭い幅で収まらないほどのサービスと履歴: Story = {
+  args: { result: { state: 'ok', result: MORE_CHANNELS_THAN_FIT } },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await bothListsScrollInside(canvasElement)
+  },
+}
+
+export const スキャン中に収まらないほどの走査結果: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...CHANNELS,
+        running: { state: 'read', progress: MORE_ATTEMPTS_THAN_FIT },
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
+  },
+}
+
+export const 狭い幅でスキャン中に収まらないほどの走査結果: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...CHANNELS,
+        running: { state: 'read', progress: MORE_ATTEMPTS_THAN_FIT },
+      },
+    },
+  },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
   },
 }
