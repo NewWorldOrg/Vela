@@ -22,7 +22,7 @@ import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChipDot } from '@/components/vela/status'
 import { RevokeSession } from '@/components/authentication/revoke-session'
 import { SignOut } from '@/components/authentication/sign-out'
-import { METHOD_LABEL, METHOD_NOTE } from '@/components/authentication/wording'
+import { METHOD_LABEL } from '@/components/authentication/wording'
 
 const DEVICE_ICON: Record<
   DeviceKind,
@@ -50,13 +50,13 @@ export function SessionTable({
     <Table
       containerClassName={cn(
         ADMIN_LIST_HEIGHT_CAP,
-        'overflow-y-auto pb-1 [&>table]:min-w-[720px]',
+        'overflow-y-auto pb-1 [&>table]:min-w-[800px]',
       )}
     >
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           <TableHead>端末</TableHead>
-          <TableHead>認証方式</TableHead>
+          <TableHead>アカウント</TableHead>
           <TableHead>作成</TableHead>
           <TableHead>最終利用</TableHead>
           <TableHead className="text-right">操作</TableHead>
@@ -72,7 +72,7 @@ export function SessionTable({
               <DeviceName session={session} />
             </TableCell>
             <TableCell>
-              <Method method={session.method} />
+              <Account session={session} />
             </TableCell>
             <TableCell className="font-code text-sub tabular-nums">
               {session.createdAt}
@@ -143,13 +143,18 @@ function DeviceName({ session }: { session: SessionRow }) {
   )
 }
 
-function Method({ method }: { method: AuthMethod }) {
-  const note = METHOD_NOTE[method]
-
+/**
+ * Whose the session is, over how it signed in. The list holds every session on
+ * the system, so a name too long for one line folds inside its own column
+ * rather than pushing the other columns out of the window.
+ */
+function Account({ session }: { session: SessionRow }) {
   return (
-    <span className="text-sub">
-      {METHOD_LABEL[method]}
-      {note && <small className="block text-cap text-ink-3">{note}</small>}
+    <span className="block max-w-[240px] min-w-[160px] whitespace-normal wrap-anywhere">
+      <b className="heading block text-ui">{session.displayName}</b>
+      <small className="block text-cap text-ink-3">
+        {METHOD_LABEL[session.method]}
+      </small>
     </span>
   )
 }

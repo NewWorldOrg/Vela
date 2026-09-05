@@ -13,6 +13,7 @@ export const SIGNED_IN_WITH_A_PROVIDER: SignedIn = {
 
 const THIS_DEVICE: SessionRow = {
   id: 'session-this-device',
+  displayName: 'aki@example.test',
   device: { name: 'Chrome / Windows', kind: 'デスクトップ' },
   method: 'oidc',
   createdAt: '2026/08/18 09:12',
@@ -24,6 +25,7 @@ export const SESSIONS: SessionRow[] = [
   THIS_DEVICE,
   {
     id: 'session-tablet',
+    displayName: 'aki@example.test',
     device: { name: 'Safari / iPadOS 18', kind: 'タブレット' },
     method: 'oidc',
     createdAt: '2026/08/16 21:40',
@@ -32,6 +34,7 @@ export const SESSIONS: SessionRow[] = [
   },
   {
     id: 'session-laptop',
+    displayName: 'nao@example.test',
     device: { name: 'Firefox / macOS', kind: 'デスクトップ' },
     method: 'oidc',
     createdAt: '2026/08/12 08:05',
@@ -40,6 +43,7 @@ export const SESSIONS: SessionRow[] = [
   },
   {
     id: 'session-player',
+    displayName: 'operator',
     device: { name: 'VLC / iPadOS 18', kind: '外部プレイヤー' },
     method: 'local',
     createdAt: '2026/08/10 19:33',
@@ -63,6 +67,34 @@ export const MORE_SESSIONS_THAN_FIT: SessionRow[] = [
       },
     })),
   ).flat(),
+]
+
+/**
+ * Names the column has to hold without widening the whole table: an address
+ * with nowhere to break, and a session that has not signed in since it was
+ * given a name, so what it says is the subject the identity provider handed.
+ */
+export const LONG_NAMES: SessionRow[] = [
+  THIS_DEVICE,
+  {
+    id: 'session-long-address',
+    displayName:
+      'someone.with.a.rather.long.name@accounts.subdomain.example.test',
+    device: { name: 'Safari / iPadOS 18', kind: 'タブレット' },
+    method: 'oidc',
+    createdAt: '2026/08/16 21:40',
+    lastUsed: { label: '約 3 分前', at: '2026/08/19 11:44' },
+    current: false,
+  },
+  {
+    id: 'session-still-a-subject',
+    displayName: 'k3Jr9vQm2LZp8xWc4TnB7yHd0sFq6aUe1oGiRtYlMwK',
+    device: { name: 'Firefox / macOS', kind: 'デスクトップ' },
+    method: 'oidc',
+    createdAt: '2026/08/12 08:05',
+    lastUsed: { label: '2026/08/17 22:18' },
+    current: false,
+  },
 ]
 
 export const OIDC_UNCONFIGURED: OidcConfig = {

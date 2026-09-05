@@ -6,6 +6,7 @@ import {
   OIDC_OUT_OF_REACH,
   OIDC_REACHABLE,
   OIDC_UNCONFIGURED,
+  LONG_NAMES,
   ONLY_THIS_DEVICE,
   MORE_SESSIONS_THAN_FIT,
   SESSIONS,
@@ -32,7 +33,54 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = {}
+/**
+ * Every session on the system is here, not only this device's, so each row
+ * says whose it is. Only the row reading the page signs out; every other row,
+ * whoever it belongs to, can be revoked.
+ */
+export const 通常: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('columnheader', { name: 'アカウント' }),
+    ).toBeVisible()
+    await expect(canvas.getAllByText('aki@example.test')).toHaveLength(2)
+    await expect(canvas.getByText('nao@example.test')).toBeVisible()
+    await expect(canvas.getByText('operator')).toBeVisible()
+
+    await expect(
+      canvas.getAllByRole('button', { name: 'ログアウト' }),
+    ).toHaveLength(1)
+    await expect(
+      canvas.getAllByRole('button', { name: '失効させる' }),
+    ).toHaveLength(SESSIONS.length - 1)
+  },
+}
+
+/**
+ * A name the column cannot hold on one line folds inside the column rather
+ * than pushing every other column out of the window.
+ */
+export const 名前が長いセッション: Story = {
+  args: { sessions: LONG_NAMES },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const subject = canvas.getByText(
+      'k3Jr9vQm2LZp8xWc4TnB7yHd0sFq6aUe1oGiRtYlMwK',
+    )
+    const cell = subject.closest('td')
+
+    if (!cell) {
+      throw new Error('the name is not in a cell')
+    }
+
+    await expect(cell.getBoundingClientRect().width).toBeLessThanOrEqual(280)
+    await expect(subject.getBoundingClientRect().height).toBeGreaterThan(
+      Number.parseFloat(getComputedStyle(subject).lineHeight),
+    )
+  },
+}
 
 export const いまの端末のみ: Story = { args: { sessions: ONLY_THIS_DEVICE } }
 
