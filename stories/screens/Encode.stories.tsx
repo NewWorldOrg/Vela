@@ -34,6 +34,16 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/** The waiting and failed counts, read as the two chips under the running job. */
+async function counts(
+  canvas: ReturnType<typeof within>,
+  waiting: number,
+  failed: number,
+) {
+  await expect(canvas.getByText(`待機 ${waiting} 本`)).toBeVisible()
+  await expect(canvas.getByText(`失敗 ${failed} 本`)).toBeVisible()
+}
+
 export const 通常: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -43,6 +53,7 @@ export const 通常: Story = {
     await expect(canvas.getByText('ジョブの現在地')).toBeVisible()
     await expect(jobs.getAllByRole('button', { name: '中止' })).toHaveLength(1)
     await expect(jobs.getByText('録画削除済み')).toBeVisible()
+    await counts(canvas, 1, 1)
   },
 }
 
@@ -54,6 +65,7 @@ export const 空の状態: Story = {
     await expect(canvas.getByText('ジョブの履歴がありません')).toBeVisible()
     await expect(canvas.getByText('プロファイルがありません')).toBeVisible()
     await expect(canvas.getByText('保存先がありません')).toBeVisible()
+    await counts(canvas, 0, 0)
 
     const destination = canvas.getByRole('button', { name: '保存先を追加' })
     await expect(destination).toBeDisabled()
@@ -72,6 +84,7 @@ export const 待機中: Story = {
     const jobs = within(canvas.getAllByRole('table')[0])
 
     await expect(jobs.getByText('待機中')).toBeVisible()
+    await counts(canvas, 1, 0)
     await expect(jobs.getByRole('button', { name: '中止' })).toBeEnabled()
   },
 }
@@ -85,6 +98,7 @@ export const 実行中: Story = {
       canvas.getByRole('progressbar', { name: 'エンコードの進捗' }),
     ).toHaveAttribute('aria-valuenow', '42')
     await expect(canvas.getAllByText('残り 10:23').length).toBeGreaterThan(0)
+    await counts(canvas, 0, 0)
     await expect(
       within(canvas.getAllByRole('table')[0]).queryByRole('button', {
         name: '中止',
@@ -116,6 +130,7 @@ export const 失敗: Story = {
     await expect(jobs.getByText('失敗')).toBeVisible()
     await expect(jobs.getByText('ffmpeg 非0終了')).toBeVisible()
     await expect(jobs.getByText('2 回目')).toBeVisible()
+    await counts(canvas, 0, 1)
   },
 }
 

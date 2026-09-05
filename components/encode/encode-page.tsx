@@ -33,10 +33,10 @@ import {
 import { EmptyState } from '@/components/vela/empty-state'
 import { MarkDots, MarkPanel, MarkSplit } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
-import { TintMetric, TintPanel } from '@/components/vela/surface'
 import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'
 import { AddProfileDialog } from '@/components/encode/add-profile-dialog'
 import { EncodeTicker } from '@/components/encode/encode-ticker'
+import { JobCounts } from '@/components/encode/job-counts'
 import { JobTable } from '@/components/encode/job-table'
 import { JobsFilter, JobsPager } from '@/components/encode/jobs-navigation'
 import { RunningJob } from '@/components/encode/running-job'
@@ -85,14 +85,14 @@ export function EncodeView({
 
         {running && <RunningJob job={running} />}
 
-        <div className={cn('flex flex-wrap gap-2.5', running && 'mt-2.5')}>
-          <TintPanel tint="lavender" className="min-w-[160px] flex-1">
-            <TintMetric label="待機" value={String(screen.waiting)} unit="本" />
-          </TintPanel>
-          <TintPanel tint="salmon" className="min-w-[160px] flex-1">
-            <TintMetric label="失敗" value={String(screen.failed)} unit="本" />
-          </TintPanel>
-        </div>
+        <JobCounts
+          waiting={screen.waiting}
+          failed={screen.failed}
+          className={cn(
+            'flex flex-wrap items-center gap-2',
+            running && 'mt-2.5',
+          )}
+        />
 
         <div className="mt-3.5">
           <JobsFilter jobs={jobs} />
