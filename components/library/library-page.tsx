@@ -55,7 +55,10 @@ export function LibraryView({
   )
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain
+      scroll="within"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+    >
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
         <h1 className="heading flex items-center gap-2 text-[20px]">
           <LibraryIcon className="size-[18px] text-brand" />

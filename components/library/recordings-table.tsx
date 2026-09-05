@@ -33,7 +33,12 @@ export function RecordingsTable({
   const [asked, setAsked] = useState<Recording | null>(null)
 
   return (
-    <div className="-mx-1 overflow-x-auto px-1 pb-1">
+    <div
+      data-slot="table-container"
+      // The container scrolls, so it has to be reachable by keyboard.
+      tabIndex={0}
+      className="-mx-1 min-h-0 flex-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring"
+    >
       {/*
         1208px is what the columns add up to, and the width under which the
         list runs sideways inside its own box rather than taking the page with
@@ -61,7 +66,7 @@ export function RecordingsTable({
             {HEADERS.map((header) => (
               <th
                 key={header.label}
-                className="bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
+                className="sticky top-0 z-10 bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
               >
                 {header.hidden ? (
                   <span className="sr-only">{header.label}</span>
