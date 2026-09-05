@@ -21,6 +21,9 @@ const store: {
   pages: unknown[]
   detail: unknown
   detailStatus: number
+  detailMessage: string
+  listingStatus: number
+  listingMessage: string
   remake: unknown
   remakeStatus: number
   discarded: unknown
@@ -30,6 +33,9 @@ const store: {
   pages: [],
   detail: undefined,
   detailStatus: 200,
+  detailMessage: '',
+  listingStatus: 200,
+  listingMessage: '',
   remake: { remake: 'drawn', thumbnail: { state: 'ready' } },
   remakeStatus: 200,
   discarded: { recordingId: '7e7a14cf', filesRemoved: 2 },
@@ -147,7 +153,27 @@ mock.module('@/repository/client/carina', {
         if (path === '/api/recordings/{id}') {
           return store.detailStatus === 200
             ? { data: { data: store.detail }, response: { status: 200 } }
-            : { data: undefined, response: { status: store.detailStatus } }
+            : {
+                data: undefined,
+                error: {
+                  status: false,
+                  message: store.detailMessage,
+                  data: null,
+                },
+                response: { status: store.detailStatus },
+              }
+        }
+
+        if (store.listingStatus !== 200) {
+          return {
+            data: undefined,
+            error: {
+              status: false,
+              message: store.listingMessage,
+              data: null,
+            },
+            response: { status: store.listingStatus },
+          }
         }
 
         const wanted = Number(init?.params?.query?.page ?? 1)
@@ -218,6 +244,9 @@ function standing(items: unknown[] = [recording()]): void {
   store.pages = [page(items)]
   store.detail = detailOf(items[0])
   store.detailStatus = 200
+  store.detailMessage = ''
+  store.listingStatus = 200
+  store.listingMessage = ''
 }
 
 const only = async (items?: unknown[]) => {
@@ -909,4 +938,27 @@ test('a session that has run out is not a refusal of the deletion', async () => 
   assert.deepEqual(await discardRecording('re-1'), {
     state: 'unauthenticated',
   })
+})
+
+test('a recording that cannot be read throws what the API said about it', async () => {
+  standing()
+  store.detailStatus = 500
+  store.detailMessage = 'The recording ledger would not answer for this row.'
+
+  await assert.rejects(
+    () => getRecording('7e7a14cf'),
+    /The recording ledger would not answer for this row\./,
+  )
+
+  standing()
+  store.detailStatus = 500
+  await assert.rejects(() => getRecording('7e7a14cf'), /録画を読めませんでした/)
+
+  standing()
+  store.listingStatus = 503
+  store.listingMessage = 'The recording ledger is out of reach.'
+  await assert.rejects(
+    () => listRecordings({}),
+    /The recording ledger is out of reach\./,
+  )
 })

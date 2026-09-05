@@ -16,6 +16,7 @@ import { toInt } from '@/repository/programmes'
 import { fetchServiceChannels } from '@/repository/programs'
 import { videoThumbnailHref } from '@/repository/video-paths'
 import type { GuideChannel } from '@/repository/programs'
+import { whatItSaid } from '@/repository/said'
 
 type RecordingResponder = components['schemas']['RecordingResponder']
 type DetailResponder = components['schemas']['RecordingDetailResponder']
@@ -316,7 +317,7 @@ export interface RecordingDetail extends Recording {
 
 export const getRecording = cache(
   async (id: string): Promise<RecordingDetail | undefined> => {
-    const { data, response } = await carinaClient().GET(
+    const { data, error, response } = await carinaClient().GET(
       '/api/recordings/{id}',
       {
         params: { path: { id } },
@@ -328,7 +329,7 @@ export const getRecording = cache(
     }
 
     if (!data?.data) {
-      throw new Error(data?.message || '録画を読めませんでした')
+      throw new Error(whatItSaid(error, data) || '録画を読めませんでした')
     }
 
     const known = await fetchServiceChannels()
@@ -487,7 +488,7 @@ async function fetchEveryRecording(): Promise<EveryRecording> {
     })
 
     if (error || !data?.data) {
-      throw new Error(data?.message || '録画を読めませんでした')
+      throw new Error(whatItSaid(error, data) || '録画を読めませんでした')
     }
 
     items.push(...data.data.items)

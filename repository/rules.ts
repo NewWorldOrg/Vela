@@ -18,6 +18,7 @@ import {
   toInt,
 } from '@/repository/programmes'
 import type { AllocationVerdict } from '@/repository/reservations'
+import { whatItSaid } from '@/repository/said'
 
 type RuleResponder = components['schemas']['RuleResponder']
 type RulePreviewResponder = components['schemas']['RulePreviewResponder']
@@ -257,7 +258,7 @@ export async function listRules(): Promise<RulesResult> {
   const { data, error } = await carinaClient().GET('/api/rules')
 
   if (error || !data?.data) {
-    throw new Error(data?.message || UNREADABLE)
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
   }
 
   return {
@@ -392,7 +393,7 @@ export async function impactOfRule(
 export async function applyRulesNow(
   id: string,
 ): Promise<RuleWrite<RuleApplication>> {
-  const { data, response } = await carinaClient().POST(
+  const { data, error, response } = await carinaClient().POST(
     '/api/rules/{id}/apply-now',
     { params: { path: { id } } },
   )
@@ -401,7 +402,7 @@ export async function applyRulesNow(
     return {
       state: 'rejected',
       message: refusedBecause(
-        data?.data as RuleApplicationRefusedResponder | null | undefined,
+        error?.data as RuleApplicationRefusedResponder | null | undefined,
       ),
     }
   }

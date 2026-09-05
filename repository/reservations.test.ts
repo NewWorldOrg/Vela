@@ -28,6 +28,8 @@ const store: {
   settlement: unknown
   discardStatus: number
   discarded: unknown
+  listingStatus: number
+  listingMessage: string
 } = {
   services: [],
   pages: [],
@@ -39,6 +41,8 @@ const store: {
   settlement: undefined,
   discardStatus: 200,
   discarded: { reservationId: 'a1' },
+  listingStatus: 200,
+  listingMessage: '',
 }
 
 interface Over {
@@ -188,6 +192,18 @@ mock.module('@/repository/client/carina', {
             : { data: undefined, response: answered(store.programmeStatus) }
         }
 
+        if (store.listingStatus !== 200) {
+          return {
+            data: undefined,
+            error: {
+              status: false,
+              message: store.listingMessage,
+              data: null,
+            },
+            response: answered(store.listingStatus),
+          }
+        }
+
         const wanted = Number(init?.params?.query?.page ?? 1)
 
         return {
@@ -241,6 +257,8 @@ const {
 
 function standing(items: unknown[] = [reservation()]): void {
   sent.length = 0
+  store.listingStatus = 200
+  store.listingMessage = ''
   store.services = [
     service(131, 1310, '中央テレビ1'),
     service(132, 1320, '湾岸放送1'),
@@ -1291,4 +1309,19 @@ test('nothing chosen asks for nothing', async () => {
 
   assert.deepEqual(await cancelReservations([]), { state: 'ok', done: 0 })
   assert.equal(sent.filter((one) => one.method === 'POST').length, 0)
+})
+
+test('a reservation ledger that will not be read throws what the API said', async () => {
+  standing()
+  store.listingStatus = 503
+  store.listingMessage = 'The reservation ledger is out of reach.'
+
+  await assert.rejects(
+    () => listReservations({}),
+    /The reservation ledger is out of reach\./,
+  )
+
+  standing()
+  store.listingStatus = 503
+  await assert.rejects(() => listReservations({}), /予約を読めませんでした/)
 })

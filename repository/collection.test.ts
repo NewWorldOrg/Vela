@@ -44,12 +44,28 @@ const stream = (over: Record<string, unknown> = {}) => ({
   ...over,
 })
 
-const store: { streams: unknown[]; services: unknown[] } = {
+const store: {
+  streams: unknown[]
+  services: unknown[]
+  refusing?: { path: string; status: number; message: string }
+} = {
   streams: [],
   services: [],
 }
 
+/**
+ * The generated client hands the body of a refusal back under `error` and
+ * leaves `data` unset, so the stand-in answers the same way.
+ */
 const answer = async (path: string) => {
+  if (store.refusing?.path === path) {
+    return {
+      data: undefined,
+      error: { status: false, message: store.refusing.message, data: null },
+      response: { status: store.refusing.status, ok: false },
+    }
+  }
+
   if (path === '/api/epg/collection-status') {
     return {
       data: { data: { wantedCoverageHours: 192, streams: store.streams } },
@@ -75,6 +91,7 @@ const { coverageWarningOf, getCollectionStatus } =
   await import('./collection.ts')
 
 function standing(over: Record<string, unknown> = {}): void {
+  store.refusing = undefined
   store.streams = [stream(over)]
   store.services = [
     service(101, '海辺テレビ1'),
@@ -141,4 +158,35 @@ test('a stream with no channel left to name falls back to the stream', async () 
     coverageWarningOf(await getCollectionStatus(), 'terrestrial')?.emphasis,
     'TS 32701 の番組情報が不足しています。',
   )
+})
+
+test('a collection ledger that refuses throws what the API said about it', async () => {
+  standing()
+  store.refusing = {
+    path: '/api/epg/collection-status',
+    status: 503,
+    message: 'The collector is not answering for its streams.',
+  }
+  await assert.rejects(
+    () => getCollectionStatus(),
+    /The collector is not answering for its streams\./,
+  )
+
+  store.refusing = {
+    path: '/api/services',
+    status: 503,
+    message: 'The service ledger is out of reach.',
+  }
+  await assert.rejects(
+    () => getCollectionStatus(),
+    /The service ledger is out of reach\./,
+  )
+
+  store.refusing = { path: '/api/services', status: 503, message: '' }
+  await assert.rejects(
+    () => getCollectionStatus(),
+    /チャンネルを読めませんでした/,
+  )
+
+  store.refusing = undefined
 })

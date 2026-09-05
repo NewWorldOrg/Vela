@@ -25,6 +25,7 @@ import {
   listRecordingNames,
   type RecordingName,
 } from '@/repository/recordings'
+import { whatItSaid } from '@/repository/said'
 
 type ProfileResponder = components['schemas']['EncodeProfileResponder']
 type DestinationResponder = components['schemas']['EncodeDestinationResponder']
@@ -205,12 +206,12 @@ export async function listEncodeChoices(): Promise<EncodeChoices> {
 export async function defineProfile(
   draft: EncodeProfileDraft,
 ): Promise<EncodeWrite> {
-  const { data, response } = await carinaClient().POST(
+  const { error, response } = await carinaClient().POST(
     '/api/encoding/profiles',
     { body: draft },
   )
 
-  return toWrite(response, data?.message, {
+  return toWrite(response, whatItSaid(error), {
     400: 'この内容ではプロファイルを保存できませんでした。',
   })
 }
@@ -218,13 +219,14 @@ export async function defineProfile(
 export async function defineDestination(
   draft: EncodeDestinationDraft,
 ): Promise<EncodeWrite> {
-  const { data, response } = await carinaClient().POST(
+  const { error, response } = await carinaClient().POST(
     '/api/encoding/destinations',
     { body: draft },
   )
+  const said = whatItSaid(error)
 
-  return toWrite(response, data?.message, {
-    400: /outputRoot/.test(data?.message ?? '')
+  return toWrite(response, said, {
+    400: /outputRoot/.test(said ?? '')
       ? 'この出力ルートには成果物を置けません。'
       : 'この内容では保存先を保存できませんでした。',
     502: '保存先の一覧を確認できないため、保存できませんでした。',
@@ -262,7 +264,7 @@ export async function queueEncode(
   destinationId: string,
   profileId?: string,
 ): Promise<EncodeWrite> {
-  const { data, response } = await carinaClient().POST('/api/encoding/jobs', {
+  const { error, response } = await carinaClient().POST('/api/encoding/jobs', {
     body: { recordingId, destinationId, profileId: profileId ?? null },
   })
 
@@ -274,7 +276,7 @@ export async function queueEncode(
     return { state: 'ok' }
   }
 
-  const said = data?.message ?? ''
+  const said = whatItSaid(error) ?? ''
   const known = QUEUE_REFUSED.find(([reads]) => reads.test(said))
 
   return {
@@ -286,12 +288,12 @@ export async function queueEncode(
 }
 
 export async function callOffEncode(id: string): Promise<EncodeWrite> {
-  const { data, response } = await carinaClient().POST(
+  const { error, response } = await carinaClient().POST(
     '/api/encoding/jobs/{id}/cancel',
     { params: { path: { id } } },
   )
 
-  return toWrite(response, data?.message, {
+  return toWrite(response, whatItSaid(error), {
     404: 'このジョブは残っていないため、中止できませんでした。',
     409: 'このジョブはすでに終わっているため、中止できませんでした。',
   })
@@ -322,7 +324,7 @@ async function fetchProfiles(): Promise<ProfileResponder[]> {
   const { data, error } = await carinaClient().GET('/api/encoding/profiles')
 
   if (error || !data?.data) {
-    throw new Error(data?.message || UNREADABLE)
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
   }
 
   return data.data.items
@@ -332,7 +334,7 @@ async function fetchDestinations(): Promise<DestinationResponder[]> {
   const { data, error } = await carinaClient().GET('/api/encoding/destinations')
 
   if (error || !data?.data) {
-    throw new Error(data?.message || UNREADABLE)
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
   }
 
   return data.data.items
@@ -342,7 +344,7 @@ async function fetchRoots(): Promise<string[]> {
   const { data, error } = await carinaClient().GET('/api/storage')
 
   if (error || !data?.data) {
-    throw new Error(data?.message || UNREADABLE)
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
   }
 
   return data.data.roots.map((root) => root.name)
@@ -364,7 +366,7 @@ async function fetchJobs(query: {
   })
 
   if (error || !data?.data) {
-    throw new Error(data?.message || UNREADABLE)
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
   }
 
   return data.data
