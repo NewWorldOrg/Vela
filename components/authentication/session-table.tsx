@@ -145,12 +145,13 @@ function DeviceName({ session }: { session: SessionRow }) {
 
 /**
  * Whose the session is, over how it signed in. The list holds every session on
- * the system, so a name too long for one line folds inside its own column
- * rather than pushing the other columns out of the window.
+ * the system, so a name is given the width the table has to spare and, once
+ * the table is down to its floor, folds inside its own column rather than
+ * pushing the other columns out of the window.
  */
 function Account({ session }: { session: SessionRow }) {
   return (
-    <span className="block max-w-[240px] min-w-[160px] whitespace-normal wrap-anywhere">
+    <span className="block min-w-[160px] whitespace-normal wrap-anywhere">
       <b className="heading block text-ui">{session.displayName}</b>
       <small className="block text-cap text-ink-3">
         {METHOD_LABEL[session.method]}

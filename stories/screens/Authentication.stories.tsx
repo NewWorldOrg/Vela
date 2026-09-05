@@ -58,24 +58,56 @@ export const 通常: Story = {
   },
 }
 
+const A_SUBJECT = 'k3Jr9vQm2LZp8xWc4TnB7yHd0sFq6aUe1oGiRtYlMwK'
+
 /**
- * A name the column cannot hold on one line folds inside the column rather
- * than pushing every other column out of the window.
+ * A long name takes the width the table has to spare: with a window this
+ * wide nothing folds and nothing scrolls sideways.
  */
 export const 名前が長いセッション: Story = {
   args: { sessions: LONG_NAMES },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const subject = canvas.getByText(
-      'k3Jr9vQm2LZp8xWc4TnB7yHd0sFq6aUe1oGiRtYlMwK',
-    )
-    const cell = subject.closest('td')
+    const container = canvas
+      .getByText(A_SUBJECT)
+      .closest<HTMLElement>('[data-slot="table-container"]')
 
-    if (!cell) {
-      throw new Error('the name is not in a cell')
+    if (!container) {
+      throw new Error('the name is not in a list')
     }
 
-    await expect(cell.getBoundingClientRect().width).toBeLessThanOrEqual(280)
+    await expect(container.scrollWidth).toBeLessThanOrEqual(
+      container.clientWidth,
+    )
+  },
+}
+
+/**
+ * Down at the table's floor the name folds inside its own column, which stays
+ * near its own floor, instead of the column growing to the name's full length
+ * and widening the whole table by that much. The width the table does have
+ * here is what the other columns, which never fold, ask for.
+ */
+export const 狭い幅で名前が長いセッション: Story = {
+  args: { sessions: LONG_NAMES },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const subject = canvas.getByText(A_SUBJECT)
+    const cell = subject.closest('td')
+    const table = subject.closest('table')
+
+    if (!cell || !table) {
+      throw new Error('the name is not in a list')
+    }
+
+    const width = cell.getBoundingClientRect().width
+
+    await expect(width).toBeGreaterThanOrEqual(160)
+    await expect(width).toBeLessThan(260)
+    await expect(table.getBoundingClientRect().width).toBeLessThan(
+      table.getBoundingClientRect().width - width + 260,
+    )
     await expect(subject.getBoundingClientRect().height).toBeGreaterThan(
       Number.parseFloat(getComputedStyle(subject).lineHeight),
     )
