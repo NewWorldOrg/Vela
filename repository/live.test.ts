@@ -131,6 +131,16 @@ test('the channels of the kind asked for arrive with their key, their viewers an
   ]
   store.profiles = [
     {
+      name: '1080p60',
+      codec: 'h264',
+      width: 1920,
+      height: 1080,
+      frameRate: { numerator: 60000, denominator: 1001 },
+      softwareKilobitsPerSecond: 9000,
+      vaapiQuantiser: 24,
+      unasked: true,
+    },
+    {
       name: '720p30',
       codec: 'h264',
       width: 1280,
@@ -138,6 +148,7 @@ test('the channels of the kind asked for arrive with their key, their viewers an
       frameRate: { numerator: 30000, denominator: 1001 },
       softwareKilobitsPerSecond: 3000,
       vaapiQuantiser: 24,
+      unasked: false,
     },
   ]
   store.programmes = [
@@ -181,7 +192,8 @@ test('the channels of the kind asked for arrive with their key, their viewers an
   assert.equal(screen.channels[0].next?.title, 'つぎ')
   assert.equal(screen.channels[1].now, undefined)
   assert.deepEqual(screen.profiles, [
-    { name: '720p30', width: 1280, height: 720 },
+    { name: '1080p60', width: 1920, height: 1080, unasked: true },
+    { name: '720p30', width: 1280, height: 720, unasked: false },
   ])
 
   assert.equal(screen.watching?.channel.id, '32736-1024')

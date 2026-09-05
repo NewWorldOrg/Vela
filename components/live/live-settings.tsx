@@ -37,7 +37,8 @@ export function LiveSettings({
   /** The element the picture is drawn in, which is what goes fullscreen. */
   container: HTMLElement | null
   profiles: LiveProfile[]
-  profile: string
+  /** Unset where the API offered no profile, and so nothing is being watched. */
+  profile?: string
   onChooseProfile: (next: string) => void
   /** That the surface is open, told to the player, as on the recording player. */
   onOpenChange?: (open: boolean) => void

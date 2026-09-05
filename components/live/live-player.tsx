@@ -5,8 +5,9 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
-import { LIVE_PROFILE_UNASKED, liveWireHref } from '@/repository/live-paths'
+import { liveWireHref } from '@/repository/live-paths'
 import { playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import { unaskedIn } from '@/lib/live-profiles'
 import {
   CATCH_UP_RATE,
   holdOf,
@@ -178,11 +179,7 @@ export function LivePlayer({
   const captionsWanted = useRef(true)
   const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
-  const [profile, setProfile] = useState(() =>
-    profiles.some((one) => one.name === LIVE_PROFILE_UNASKED)
-      ? LIVE_PROFILE_UNASKED
-      : (profiles[0]?.name ?? LIVE_PROFILE_UNASKED),
-  )
+  const [profile, setProfile] = useState(() => unaskedIn(profiles))
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
   const [muted, setMuted] = useState(false)
@@ -217,7 +214,7 @@ export function LivePlayer({
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
   const seat =
-    networkId === undefined || serviceId === undefined
+    networkId === undefined || serviceId === undefined || profile === undefined
       ? null
       : `${networkId}:${serviceId}:${profile}`
   const retried = retries && retries.of === seat ? retries : null
@@ -276,6 +273,7 @@ export function LivePlayer({
       key === null ||
       networkId === undefined ||
       serviceId === undefined ||
+      profile === undefined ||
       !element
     ) {
       return

@@ -46,6 +46,7 @@ const THE_SUITE = [
   'lib/live-captions.test.ts',
   'lib/live-latency.test.ts',
   'lib/live-lineup.test.ts',
+  'lib/live-profiles.test.ts',
   'lib/live-startup.test.ts',
   'lib/live-wire.test.ts',
   'lib/player-keys.test.ts',
@@ -69,6 +70,7 @@ const THE_SUITE = [
   'repository/tuners.test.ts',
   'repository/search.test.ts',
   'repository/tuning.test.ts',
+  'repository/video-paths.test.ts',
   'repository/videos.test.ts',
 ]
 

@@ -16,7 +16,10 @@ import {
   type TranscodeCeiling,
 } from '@/lib/live-wire'
 import type { LiveScreen } from '@/repository/live'
-import { LIVE_SCREEN_FIXTURE } from '@/repository/live.fixtures'
+import {
+  LIVE_PROFILE_FIXTURES_SOFTWARE,
+  LIVE_SCREEN_FIXTURE,
+} from '@/repository/live.fixtures'
 import { CHANNELS_FOLDED_KEY } from '@/hooks/useChannelsFolded'
 import { LIVE_SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useLiveSubChannelsFolded'
 import {
@@ -435,9 +438,9 @@ export const 起動中: Story = {
       'now',
     )
 
-    // The wire was asked for this channel, in the profile the API defaults to.
+    // The wire was asked for this channel, in the profile the API marks.
     await expect(opened[0].href).toBe(
-      '/api/live/ws?network=32736&service=1024&profile=720p30',
+      '/api/live/ws?network=32736&service=1024&profile=1080p60',
     )
 
     // Nothing to press yet: the picture has not come.
@@ -503,6 +506,73 @@ export const 起動中_選局を待つ: Story = {
       'data-startup',
       'ahead',
     )
+  },
+}
+
+/**
+ * The picture opens in the profile the API marks as the one it encodes in when
+ * the wire asks for none. On a machine with a GPU to hand the encoding to that
+ * is the largest of them, and the switch stands on it from the first frame —
+ * without a press, and without the screen having a name of its own for it.
+ */
+export const 画質は_API_が既定と言うもので開く: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await expect(opened[0].href).toContain('profile=1080p60')
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
+
+    await expect(
+      within(quality).getByRole('button', { name: '1080p60' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+/**
+ * The same build on a machine with no GPU. The API marks the smallest profile
+ * instead, and the screen opens on that — the switch follows the list it was
+ * handed, so neither machine needs a build of its own.
+ */
+export const 画質は機械が変われば変わる: Story = {
+  args: {
+    screen: { ...CHOSEN, profiles: LIVE_PROFILE_FIXTURES_SOFTWARE },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await expect(opened[0].href).toContain('profile=720p30')
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
+
+    await expect(
+      within(quality).getByRole('button', { name: '720p30' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+/**
+ * A list with nothing on it. There is no profile the API would accept, so no
+ * wire is opened and the bar stays away: asking for a name that is not on the
+ * list would turn "nothing is offered" into a refusal blaming the tuner.
+ */
+export const 画質が一つも無ければ開かない: Story = {
+  args: {
+    screen: { ...CHOSEN, profiles: [] },
+    openSocket: nothingToWatch,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(livePlayer(canvasElement)).toBeVisible()
+    await expect(opened).toHaveLength(0)
+    await expect(canvas.queryByRole('button', { name: '設定' })).toBeNull()
   },
 }
 
