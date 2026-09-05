@@ -19,7 +19,7 @@ import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { ChannelList } from '@/components/live/channel-list'
 import { LivePlayer } from '@/components/live/live-player'
-import type { OpenSocket } from '@/components/live/live-session'
+import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import { NowNext } from '@/components/live/now-next'
 
 /**
@@ -66,11 +66,13 @@ export function LiveView({
   screen,
   openSocket,
   askSignedOut,
+  askBacklog,
   startupDeadlineMs,
 }: {
   screen: LiveScreen
   openSocket?: OpenSocket
   askSignedOut?: () => Promise<boolean>
+  askBacklog?: AskBacklog
   startupDeadlineMs?: number
 }) {
   const router = useRouter()
@@ -231,6 +233,7 @@ export function LiveView({
           returnPath={query ? `${pathname}?${query}` : pathname}
           openSocket={openSocket}
           askSignedOut={askSignedOut}
+          askBacklog={askBacklog}
           startupDeadlineMs={startupDeadlineMs}
         />
         <NowNext watching={watching} />

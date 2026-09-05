@@ -55,3 +55,10 @@ export function liveWireHref(
 
   return `${LIVE_WIRE_PATH}?${asked.toString()}`
 }
+
+/**
+ * Where the API counts what every running session has thrown away. Read from
+ * the browser while a channel is watched, on the cookie the wire itself rides
+ * on: the count moves while the picture plays, and nothing on the wire says so.
+ */
+export const LIVE_SESSIONS_PATH = '/api/live/sessions'

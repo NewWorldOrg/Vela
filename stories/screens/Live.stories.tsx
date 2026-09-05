@@ -16,6 +16,7 @@ import {
   type TranscodeCeiling,
 } from '@/lib/live-wire'
 import type { LiveScreen } from '@/repository/live'
+import type { LiveBacklog } from '@/repository/live-sessions'
 import {
   LIVE_PROFILE_FIXTURES_SOFTWARE,
   LIVE_SCREEN_FIXTURE,
@@ -27,7 +28,11 @@ import {
   CAPTION_PICTURE_FIXTURE,
 } from '@/stories/fixtures/captions'
 import { AppFrame } from '@/components/vela/app-shell'
-import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
+import type {
+  AskBacklog,
+  LiveSocket,
+  OpenSocket,
+} from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
 
 /**
@@ -224,6 +229,28 @@ const stillSignedIn = async () => false
 
 const signedOut = async () => true
 
+/** An API that has no count to give: the row for it is never drawn. */
+const uncounted: AskBacklog = async () => undefined
+
+/**
+ * An API that answers each asking with the next count, and the last one for
+ * ever after — the way a session's count only ever climbs.
+ */
+function counting(dropped: number[]): AskBacklog {
+  let asked = 0
+
+  return async () => {
+    const read: LiveBacklog = {
+      dropped: dropped[Math.min(asked, dropped.length - 1)],
+      queued: 0,
+    }
+
+    asked += 1
+
+    return read
+  }
+}
+
 const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
 
 const UNCHOSEN: LiveScreen = { ...LIVE_SCREEN_FIXTURE, watching: undefined }
@@ -242,6 +269,7 @@ const meta = {
     screen: CHOSEN,
     openSocket: starting,
     askSignedOut: stillSignedIn,
+    askBacklog: uncounted,
   },
   decorators: [
     (Story) => (
@@ -608,6 +636,56 @@ export const 画質を選ぶ: Story = {
       0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0x03,
     ])
     await expect(opened[0].readyState).toBe(3)
+  },
+}
+
+/**
+ * What the session has thrown away, read off the API every two seconds and
+ * shown in the gear as a count and nothing else — no line under it saying
+ * what a drop is. The count is the session's: every viewer on this channel in
+ * this profile is behind the same one, and a viewer who left took nothing
+ * off it.
+ */
+export const ドロップを数える: Story = {
+  args: { openSocket: stalling, askBacklog: counting([18, 19]) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const gear = await screen.findByRole('dialog', { name: '設定' })
+    const dropped = () =>
+      gear.querySelector('[data-slot="live-dropped"]')?.textContent
+
+    await waitFor(() => expect(dropped()).toBe('18 件'))
+    await expect(within(gear).getByText('ドロップ')).toBeVisible()
+    await expect(within(gear).queryByText(/捨てた/)).toBeNull()
+
+    // The next asking read one more, and the row moved with it.
+    await waitFor(() => expect(dropped()).toBe('19 件'), { timeout: 5000 })
+  },
+}
+
+/**
+ * An API that gives no count — refused, unreachable, or the session not on
+ * its list — leaves the row undrawn. A nought the screen has not read would
+ * say the session had thrown nothing away, which nobody knows.
+ */
+export const ドロップが読めなければ出さない: Story = {
+  args: { openSocket: stalling, askBacklog: uncounted },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const gear = await screen.findByRole('dialog', { name: '設定' })
+
+    await expect(
+      within(gear).getByRole('group', { name: '画質' }),
+    ).toBeVisible()
+    await expect(within(gear).queryByText('ドロップ')).toBeNull()
   },
 }
 

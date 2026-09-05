@@ -46,8 +46,10 @@ import {
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
 import {
+  askLiveBacklog,
   askWhetherSignedOut,
   openLiveSession,
+  type AskBacklog,
   type OpenSocket,
 } from '@/components/live/live-session'
 import { LiveFaultNotice, type LiveFault } from '@/components/live/live-notice'
@@ -58,6 +60,14 @@ import { LiveStartupSteps } from '@/components/live/live-startup'
 const RESTS = 3000
 
 const TICK_MS = 250
+
+/**
+ * How often the API is asked what the session has thrown away. It is a
+ * count that moves while the picture plays and is on no frame of the wire,
+ * so it is read on the clock; two seconds is ten of the wire's pictures, and
+ * a count read that often is never far behind the one the API holds.
+ */
+const BACKLOG_EVERY_MS = 2000
 
 /**
  * How long the startup is given before the screen stops waiting for it.
@@ -104,6 +114,8 @@ interface Running {
   /** How far behind the newest picture the playhead is, once it is playing. */
   latency?: number
   catchingUp: boolean
+  /** Pictures the session has thrown away, as last read off the API. */
+  dropped?: number
 }
 
 function begun(key: string): Running {
@@ -157,6 +169,7 @@ export function LivePlayer({
   returnPath,
   openSocket,
   askSignedOut = askWhetherSignedOut,
+  askBacklog = askLiveBacklog,
   wireHref = liveWireHref,
   startupDeadlineMs = STARTUP_DEADLINE_MS,
 }: {
@@ -169,6 +182,8 @@ export function LivePlayer({
   openSocket?: OpenSocket
   /** How a wire that dropped is asked whether the session went with it. */
   askSignedOut?: () => Promise<boolean>
+  /** How the session's backlog is read. The screen asks the API; a story hands in its own. */
+  askBacklog?: AskBacklog
   wireHref?: (networkId: number, serviceId: number, profile: string) => string
   /** How long a silent startup is waited out. A story sets its own and waits. */
   startupDeadlineMs?: number
@@ -315,7 +330,11 @@ export function LivePlayer({
 
     let pictured = false
     let everPlayed = false
+    let gone = false
     const openedAt = performance.now()
+    const seated = { networkId, serviceId, profile }
+    let askedAt = -BACKLOG_EVERY_MS
+    let asking = false
 
     const mark = (segment: LiveStartupSegment) => {
       const at = Math.round(performance.now() - openedAt)
@@ -400,6 +419,27 @@ export function LivePlayer({
 
       change((was) => (was.phase === 'starting' ? { ...was, elapsedMs } : was))
 
+      // One question in flight at a time, and the answer kept only while this
+      // is still the session it was asked about.
+      if (!asking && elapsedMs - askedAt >= BACKLOG_EVERY_MS) {
+        asking = true
+        askedAt = elapsedMs
+
+        void askBacklog(seated).then((read) => {
+          asking = false
+
+          if (gone || settled || !read) {
+            return
+          }
+
+          change((was) =>
+            was.dropped === read.dropped
+              ? was
+              : { ...was, dropped: read.dropped },
+          )
+        })
+      }
+
       const runs = feed.runs()
       const end = feed.end()
       const start = feed.start()
@@ -451,6 +491,7 @@ export function LivePlayer({
     }, TICK_MS)
 
     return () => {
+      gone = true
       clearInterval(ticking)
       session.leave()
       feed.close()
@@ -464,6 +505,7 @@ export function LivePlayer({
     profile,
     openSocket,
     askSignedOut,
+    askBacklog,
     wireHref,
     startupDeadlineMs,
   ])
@@ -949,6 +991,7 @@ export function LivePlayer({
                 profiles={profiles}
                 profile={profile}
                 onChooseProfile={setProfile}
+                dropped={running?.dropped}
               />
               <button
                 type="button"
