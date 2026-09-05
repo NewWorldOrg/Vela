@@ -14,6 +14,7 @@ import { listRecordingsByReservation } from '@/repository/recordings'
 import type { GuideChannel, ProgramBooking } from '@/repository/programs'
 import { fetchServiceChannels, kindOfNetwork } from '@/repository/programs'
 import { ruleNames } from '@/repository/rules'
+import { whatItSaid } from '@/repository/said'
 
 type ReservationResponder = components['schemas']['ReservationResponder']
 
@@ -440,7 +441,7 @@ async function fetchEveryReservation(): Promise<{
     })
 
     if (error || !data?.data) {
-      throw new Error(data?.message || UNREADABLE)
+      throw new Error(whatItSaid(error, data) || UNREADABLE)
     }
 
     items.push(...data.data.items)

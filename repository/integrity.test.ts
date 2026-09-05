@@ -18,6 +18,7 @@ const sent: Sent[] = []
 const store: {
   listing: unknown
   listingStatus: number
+  listingMessage: string
   roots: unknown
   storageStatus: number
   sweep: unknown
@@ -26,6 +27,7 @@ const store: {
 } = {
   listing: undefined,
   listingStatus: 200,
+  listingMessage: '',
   roots: undefined,
   storageStatus: 200,
   sweep: undefined,
@@ -111,8 +113,12 @@ mock.module('@/repository/client/carina', {
               response: answered(200),
             }
           : {
-              data: { status: false, message: '読めません', data: null },
-              error: { status: false, message: '読めません', data: null },
+              data: undefined,
+              error: {
+                status: false,
+                message: store.listingMessage,
+                data: null,
+              },
               response: answered(store.listingStatus),
             }
       },
@@ -143,6 +149,7 @@ function standing(items: unknown[] = [finding()], over: Over = {}): void {
   sent.length = 0
   store.listing = listing(items, over)
   store.listingStatus = 200
+  store.listingMessage = 'The integrity ledger is out of reach.'
   store.roots = { roots: [root()] }
   store.storageStatus = 200
   store.sweep = { check: check(), findings: items.length }
@@ -300,7 +307,16 @@ test('a list that will not be read is an error, not an empty list', async () => 
   standing()
   store.listingStatus = 500
 
-  await assert.rejects(() => getIntegrity(), /読めません/)
+  await assert.rejects(
+    () => getIntegrity(),
+    /The integrity ledger is out of reach\./,
+  )
+
+  store.listingMessage = ''
+  await assert.rejects(
+    () => getIntegrity(),
+    /整合性チェックの結果を読めませんでした/,
+  )
 })
 
 test('a walk asked for by hand answers with how many it found', async () => {

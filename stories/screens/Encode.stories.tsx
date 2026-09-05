@@ -349,3 +349,33 @@ export const 保存先を追加する: Story = {
     await expect(within(dialog).getByText('録画再生用')).toBeVisible()
   },
 }
+
+export const 保存先の追加を断られる: Story = {
+  args: {
+    actions: {
+      onDefineProfile: async () => ({ state: 'ok' }) as const,
+      onDefineDestination: async () =>
+        ({
+          state: 'rejected',
+          message: 'この出力ルートには成果物を置けません。',
+        }) as const,
+      onCallOff: callOff,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '保存先を追加' }))
+
+    const dialog = await screen.findByRole('dialog', { name: '保存先を追加' })
+
+    await userEvent.type(within(dialog).getByLabelText(/名称/), '書庫')
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '追加する' }),
+    )
+
+    await expect(
+      await within(dialog).findByText('この出力ルートには成果物を置けません。'),
+    ).toBeVisible()
+  },
+}

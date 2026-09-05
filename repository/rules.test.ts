@@ -22,7 +22,18 @@ const store: {
   services: unknown[]
   answer: unknown
   status: number
-} = { rules: [], services: [], answer: undefined, status: 200 }
+  message: string
+  listing: number
+  listingMessage: string
+} = {
+  rules: [],
+  services: [],
+  answer: undefined,
+  status: 200,
+  message: '',
+  listing: 200,
+  listingMessage: '',
+}
 
 const answered = (status: number) => ({ status, ok: status < 400 })
 
@@ -31,13 +42,23 @@ interface Asking {
   body?: Record<string, unknown>
 }
 
+/**
+ * The generated client hands a body back under `data` where it read an answer
+ * and under `error` where it read a refusal, so the stand-in answers the same
+ * way. A stand-in that filled both would let a refusal be read from the half
+ * the real client leaves empty.
+ */
 const write = (method: string) => async (path: string, init?: Asking) => {
   sent.push({ method, path, id: init?.params?.path?.id, body: init?.body })
 
-  return {
-    data: { status: store.status < 400, message: '', data: store.answer },
-    response: answered(store.status),
+  const body = {
+    status: store.status < 400,
+    message: store.message,
+    data: store.answer,
   }
+  const response = answered(store.status)
+
+  return response.ok ? { data: body, response } : { error: body, response }
 }
 
 mock.module('@/repository/client/carina', {
@@ -48,6 +69,17 @@ mock.module('@/repository/client/carina', {
 
         if (path === '/api/services') {
           return { data: { data: store.services }, response: answered(200) }
+        }
+
+        if (store.listing >= 400) {
+          return {
+            error: {
+              status: false,
+              message: store.listingMessage,
+              data: null,
+            },
+            response: answered(store.listing),
+          }
         }
 
         return {
@@ -135,6 +167,9 @@ function standing(rules: unknown[] = []): void {
   ]
   store.answer = held()
   store.status = 200
+  store.message = ''
+  store.listing = 200
+  store.listingMessage = ''
 }
 
 /** What was sent to one address, whatever else the same call asked for. */
@@ -584,4 +619,15 @@ test('an application refused because one is walking says that instead', async ()
     result.state === 'rejected' ? result.message : '',
     /すでに走っている/,
   )
+})
+
+test('rules that cannot be read throw what the API said about them', async () => {
+  standing()
+  store.listing = 503
+  store.listingMessage = 'The rule ledger is out of reach.'
+
+  await assert.rejects(() => listRules(), /The rule ledger is out of reach\./)
+
+  store.listingMessage = ''
+  await assert.rejects(() => listRules(), /ルールを読めませんでした/)
 })

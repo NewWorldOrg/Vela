@@ -19,6 +19,7 @@ const store: {
   profiles: unknown[]
   programmes: unknown[]
   tuners?: unknown[]
+  refusing?: { path: string; status: number; message: string }
 } = { channels: [], profiles: [], programmes: [], tuners: [] }
 
 const answering = (data: unknown) => ({
@@ -27,11 +28,25 @@ const answering = (data: unknown) => ({
   response: { status: 200, ok: true },
 })
 
+/**
+ * The generated client hands the body of a refusal back under `error` and
+ * leaves `data` unset, so the stand-in answers the same way.
+ */
+const refusing = (status: number, message: string) => ({
+  data: undefined,
+  error: { status: false, message, data: null },
+  response: { status, ok: false },
+})
+
 const GET = async (
   path: string,
   init?: { params?: { query?: Record<string, unknown> } },
 ) => {
   sent.push({ path, query: init?.params?.query })
+
+  if (store.refusing?.path === path) {
+    return refusing(store.refusing.status, store.refusing.message)
+  }
 
   switch (path) {
     case '/api/live/channels':
@@ -532,4 +547,37 @@ test('URL が名指した種別は、空でもその種別のまま答える', a
   assert.equal(asked.kind, 'cs110')
   assert.deepEqual(asked.channels, [])
   assert.deepEqual(asked.kinds, ['terrestrial'])
+})
+
+test('a live ledger that refuses throws what the API said about it', async () => {
+  store.channels = []
+  store.profiles = []
+
+  store.refusing = {
+    path: '/api/live/channels',
+    status: 503,
+    message: 'The channel ledger is out of reach.',
+  }
+  await assert.rejects(
+    () => getLiveScreen(undefined, undefined, NOW),
+    /The channel ledger is out of reach\./,
+  )
+
+  store.refusing = {
+    path: '/api/live/profiles',
+    status: 503,
+    message: 'The profiles cannot be read while the driver is silent.',
+  }
+  await assert.rejects(
+    () => getLiveScreen(undefined, undefined, NOW),
+    /The profiles cannot be read while the driver is silent\./,
+  )
+
+  store.refusing = { path: '/api/live/profiles', status: 503, message: '' }
+  await assert.rejects(
+    () => getLiveScreen(undefined, undefined, NOW),
+    /画質を読めませんでした/,
+  )
+
+  store.refusing = undefined
 })

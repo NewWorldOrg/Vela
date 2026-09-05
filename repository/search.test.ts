@@ -31,6 +31,7 @@ const store: {
   services: unknown[]
   page: StorePage
   refuses: boolean
+  unreadable?: { status: number; message: string }
 } = {
   services: [],
   page: { items: [], total: 0, currentPage: 1, lastPage: 1, perPage: 20 },
@@ -95,6 +96,22 @@ mock.module('@/repository/client/carina', {
           return { data: undefined, response: { status: 400 } }
         }
 
+        /**
+         * The generated client hands the body of a refusal back under `error`
+         * and leaves `data` unset, so the stand-in answers the same way.
+         */
+        if (store.unreadable) {
+          return {
+            data: undefined,
+            error: {
+              status: false,
+              message: store.unreadable.message,
+              data: null,
+            },
+            response: { status: store.unreadable.status },
+          }
+        }
+
         return { data: { data: store.page }, response: { status: 200 } }
       },
     }),
@@ -109,6 +126,7 @@ const { searchPrograms } = await import('./search.ts')
 function standing(): void {
   asked.length = 0
   store.refuses = false
+  store.unreadable = undefined
   store.page = { items: [], total: 0, currentPage: 1, lastPage: 1, perPage: 20 }
   store.services = [
     service(131, 1310, '中央テレビ1', 'isdbT', 'television', 1),
@@ -325,5 +343,24 @@ test('a search that found nothing holds no range at all', async () => {
       ? [result.outcome.found.rangeFrom, result.outcome.found.rangeTo]
       : null,
     [0, 0],
+  )
+})
+
+test('a search the store cannot answer throws what the API said about it', async () => {
+  standing()
+  store.unreadable = {
+    status: 503,
+    message: 'The guide index is being rebuilt.',
+  }
+
+  await assert.rejects(
+    () => searchPrograms({ q: '料理' }),
+    /The guide index is being rebuilt\./,
+  )
+
+  store.unreadable = { status: 503, message: '' }
+  await assert.rejects(
+    () => searchPrograms({ q: '料理' }),
+    /番組を探せませんでした/,
   )
 })

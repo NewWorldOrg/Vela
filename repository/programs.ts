@@ -13,6 +13,7 @@ import type { components } from '@/repository/client/schema'
 import type { Channel, ChannelKind } from '@/repository/channels'
 import type { Programme } from '@/repository/programmes'
 import { fetchGuide, fetchProgramme, toInt } from '@/repository/programmes'
+import { whatItSaid } from '@/repository/said'
 
 type TuneSystem = components['schemas']['TuneSystem']
 
@@ -322,7 +323,7 @@ export async function fetchServiceChannels(): Promise<GuideChannel[]> {
   const { data, error } = await carinaClient().GET('/api/services')
 
   if (error || !data?.data) {
-    throw new Error(data?.message || 'チャンネルを読めませんでした')
+    throw new Error(whatItSaid(error, data) || 'チャンネルを読めませんでした')
   }
 
   return data.data

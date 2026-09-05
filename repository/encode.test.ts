@@ -16,6 +16,8 @@ const store: {
   roots: unknown[]
   recordings: unknown[]
   jobs: unknown[]
+  readStatus: number
+  readMessage: string
   writeStatus: number
   writeMessage: string
 } = {
@@ -24,6 +26,8 @@ const store: {
   roots: [],
   recordings: [],
   jobs: [],
+  readStatus: 200,
+  readMessage: '',
   writeStatus: 201,
   writeMessage: '',
 }
@@ -33,6 +37,17 @@ const answered = (status: number) => ({ status, ok: status < 400 })
 const envelope = (data: unknown) => ({
   data: { status: true, message: '', data },
   response: answered(200),
+})
+
+/**
+ * The generated client hands a body back under `data` only where the status is
+ * one it read as an answer, and under `error` where it read a refusal, so the
+ * stand-in answers the same way. A stand-in that filled both would let a
+ * refusal be read from the half the real client leaves empty.
+ */
+const refusal = (status: number, message: string) => ({
+  error: { status: false, message, data: null },
+  response: answered(status),
 })
 
 const PROFILE = {
@@ -115,6 +130,10 @@ const client = () => ({
     const query = options?.params?.query
     sent.push({ method: 'GET', path, query })
 
+    if (store.readStatus >= 400) {
+      return refusal(store.readStatus, store.readMessage)
+    }
+
     switch (path) {
       case '/api/encoding/profiles':
         return envelope({ items: store.profiles })
@@ -153,14 +172,12 @@ const client = () => ({
   ) => {
     sent.push({ method: 'POST', path, body: options?.body })
 
-    return {
-      data: {
-        status: store.writeStatus < 400,
-        message: store.writeMessage,
-        data: null,
-      },
-      response: answered(store.writeStatus),
-    }
+    return store.writeStatus < 400
+      ? {
+          data: { status: true, message: store.writeMessage, data: null },
+          response: answered(store.writeStatus),
+        }
+      : refusal(store.writeStatus, store.writeMessage)
   },
 })
 
@@ -171,6 +188,7 @@ mock.module('@/repository/client/carina', {
 const {
   callOffEncode,
   defineDestination,
+  defineProfile,
   getEncodeScreen,
   listEncodeChoices,
   queueEncode,
@@ -185,6 +203,8 @@ beforeEach(() => {
   store.roots = [{ name: 'primary' }, { name: 'encodes' }]
   store.recordings = [RECORDING]
   store.jobs = [RUNNING, COMPLETED]
+  store.readStatus = 200
+  store.readMessage = ''
   store.writeStatus = 201
   store.writeMessage = ''
 })
@@ -355,4 +375,84 @@ test('a destination refused for its root says so, and one the driver cannot vouc
     state: 'rejected',
     message: '保存先の一覧を確認できないため、保存できませんでした。',
   })
+})
+
+test('a profile refused in words of its own keeps the reading for its status', async () => {
+  const draft = {
+    label: 'Viewing',
+    codec: 'h264' as const,
+    resolution: 'asSource' as const,
+    deinterlace: 'everyFrame' as const,
+    rateFactor: 22,
+    quantiser: 24,
+  }
+
+  store.writeStatus = 400
+  store.writeMessage = 'quantiser: a constant quantiser between 0 and 51.'
+  assert.deepEqual(await defineProfile(draft), {
+    state: 'rejected',
+    message: 'この内容ではプロファイルを保存できませんでした。',
+  })
+
+  store.writeStatus = 500
+  store.writeMessage = 'The ledger would not take the profile.'
+  assert.deepEqual(await defineProfile(draft), {
+    state: 'rejected',
+    message: 'The ledger would not take the profile.(500)。',
+  })
+
+  store.writeStatus = 401
+  assert.deepEqual(await defineProfile(draft), { state: 'unauthenticated' })
+})
+
+test('a destination refused for anything but its root says the general thing', async () => {
+  const draft = {
+    label: 'Shelf',
+    outputRoot: 'encodes',
+    defaultProfileId: PROFILE.id,
+  }
+
+  store.writeStatus = 400
+  store.writeMessage = 'defaultProfileId: the id of a profile that is defined.'
+  assert.deepEqual(await defineDestination(draft), {
+    state: 'rejected',
+    message: 'この内容では保存先を保存できませんでした。',
+  })
+})
+
+test('a job the ledger no longer holds cannot be called off, and says so', async () => {
+  store.writeStatus = 404
+  store.writeMessage = 'The ledger holds no job x.'
+  assert.deepEqual(await callOffEncode(COMPLETED.id), {
+    state: 'rejected',
+    message: 'このジョブは残っていないため、中止できませんでした。',
+  })
+
+  store.writeStatus = 500
+  store.writeMessage = 'The ledger would not take the cancellation.'
+  assert.deepEqual(await callOffEncode(RUNNING.id), {
+    state: 'rejected',
+    message: 'The ledger would not take the cancellation.(500)。',
+  })
+
+  store.writeStatus = 401
+  assert.deepEqual(await callOffEncode(RUNNING.id), {
+    state: 'unauthenticated',
+  })
+})
+
+test('a ledger that cannot be read throws what the API said about it', async () => {
+  store.readStatus = 503
+  store.readMessage = 'The encoding ledger is out of reach.'
+
+  await assert.rejects(
+    () => listEncodeChoices(),
+    /The encoding ledger is out of reach\./,
+  )
+
+  store.readMessage = ''
+  await assert.rejects(
+    () => listEncodeChoices(),
+    /エンコードの台帳を読めませんでした/,
+  )
 })

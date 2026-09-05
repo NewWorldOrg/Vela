@@ -70,12 +70,25 @@ const programme = (
 const store: {
   services: unknown[]
   programmes: ReturnType<typeof programme>[]
+  refusing?: { path: string; status: number; message: string }
 } = { services: [], programmes: [] }
 
+/**
+ * The generated client hands the body of a refusal back under `error` and
+ * leaves `data` unset, so the stand-in answers the same way.
+ */
 const answer = async (
   path: string,
   init?: { params?: { path?: Record<string, string> } },
 ) => {
+  if (store.refusing?.path === path) {
+    return {
+      data: undefined,
+      error: { status: false, message: store.refusing.message, data: null },
+      response: { status: store.refusing.status },
+    }
+  }
+
   if (path === '/api/services') {
     return { data: { data: store.services }, response: { status: 200 } }
   }
@@ -421,4 +434,47 @@ test('a shared cell names the channel the broadcast is listed under', async () =
   assert.deepEqual(shared.related, [
     { key: idOf(CARRIED), kind: 'shared', channelLabel: '1 みなと総合1' },
   ])
+})
+
+test('a guide that will not be read throws what the API said about it', async () => {
+  store.services = []
+  store.programmes = []
+
+  store.refusing = {
+    path: '/api/programs',
+    status: 503,
+    message: 'The guide is being rebuilt and answers nothing meanwhile.',
+  }
+  await assert.rejects(
+    () => getGuide('terrestrial', broadcastDay(STARTS)),
+    /The guide is being rebuilt and answers nothing meanwhile\./,
+  )
+
+  store.refusing = {
+    path: '/api/programs/{id}',
+    status: 500,
+    message: 'The programme could not be read out of the guide.',
+  }
+  await assert.rejects(
+    () => getProgram(idOf(CARRIED)),
+    /The programme could not be read out of the guide\./,
+  )
+
+  store.refusing = { path: '/api/programs/{id}', status: 500, message: '' }
+  await assert.rejects(
+    () => getProgram(idOf(CARRIED)),
+    /番組を読めませんでした/,
+  )
+
+  store.refusing = {
+    path: '/api/services',
+    status: 503,
+    message: 'The service ledger is out of reach.',
+  }
+  await assert.rejects(
+    () => getGuide('terrestrial', broadcastDay(STARTS)),
+    /The service ledger is out of reach\./,
+  )
+
+  store.refusing = undefined
 })
