@@ -10593,6 +10593,7 @@
       "SessionResponder": {
         "required": [
           "id",
+          "displayName",
           "method",
           "createdAt",
           "lastUsedAt",
@@ -10602,6 +10603,9 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string"
+          },
+          "displayName": {
             "type": "string"
           },
           "method": {
