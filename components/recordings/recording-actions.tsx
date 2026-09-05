@@ -8,11 +8,17 @@ import type {
   RecordingDiscarded,
   ThumbnailWrite,
 } from '@/repository/recordings'
+import type { EncodeChoices } from '@/repository/encode'
 import type { TicketWrite } from '@/repository/videos'
 import { Button } from '@/components/ui/button'
 import { TrashIcon } from '@/components/vela/icons'
 import { OpenExternally } from '@/components/recordings/external-player'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
+import {
+  EncodeButton,
+  encodes,
+  type QueueEncode,
+} from '@/components/recordings/encode-button'
 import {
   redrawsThumbnail,
   ThumbnailButton,
@@ -22,17 +28,18 @@ import {
  * What can be done with this recording, as against what can be done with the
  * picture — which is on the bar, over the picture.
  *
- * `再生` used to stand here, greyed out, directly under a player that plays.
- * `エンコード` stood beside it, greyed out, under a panel that has never had
- * anything in it because the API carries no encoding state at all. Neither was
- * a control anyone could press, and a control that is always refused is not
- * drawn (v3.31, v3.35).
+ * `再生` used to stand here, greyed out, directly under a player that plays;
+ * a control that is always refused is not drawn (v3.31, v3.35). `エンコード`
+ * asks the API to queue this recording, and is left out only for a recording
+ * that failed, which has nothing to encode.
  */
 export function RecordingActions({
   recording,
   onDelete,
   onRemakeThumbnail,
   onTakeTicket,
+  onQueueEncode,
+  encodeChoices,
   /** Whether a recording can be handed to something outside the browser. */
   plays,
 }: {
@@ -40,6 +47,8 @@ export function RecordingActions({
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onTakeTicket: (id: string) => Promise<TicketWrite>
+  onQueueEncode: QueueEncode
+  encodeChoices: EncodeChoices
   plays?: boolean
 }) {
   const deletable = recording.outcome !== 'recording'
@@ -66,6 +75,13 @@ export function RecordingActions({
         )}
         {redrawsThumbnail(recording) && (
           <ThumbnailButton recording={recording} onRemake={onRemakeThumbnail} />
+        )}
+        {encodes(recording) && (
+          <EncodeButton
+            recording={recording}
+            choices={encodeChoices}
+            onQueue={onQueueEncode}
+          />
         )}
         <Button
           variant="destructive"

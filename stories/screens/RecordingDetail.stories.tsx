@@ -11,6 +11,12 @@ import type {
   PlaybackRefusal,
   TicketWrite,
 } from '@/repository/videos'
+import type { EncodeWrite } from '@/repository/encode'
+import {
+  ENCODE_CHOICES,
+  MANY_ENCODE_CHOICES,
+  NO_ENCODE_CHOICES,
+} from '@/repository/encode.fixtures'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 
@@ -75,6 +81,25 @@ async function drewNothing(): Promise<ThumbnailWrite> {
 
 const asked: string[] = []
 
+const queued: [string, string, string | undefined][] = []
+
+async function queuing(
+  recordingId: string,
+  destinationId: string,
+  profileId?: string,
+): Promise<EncodeWrite> {
+  queued.push([recordingId, destinationId, profileId])
+
+  return { state: 'ok' }
+}
+
+async function alreadyEncoded(): Promise<EncodeWrite> {
+  return {
+    state: 'rejected',
+    message: 'この録画はこのプロファイルですでにエンコード済みです。',
+  }
+}
+
 async function throwing(id: string): Promise<RecordingDiscarded> {
   asked.push(id)
 
@@ -99,6 +124,8 @@ const meta = {
     onRemakeThumbnail: remade,
     onDelete: throwing,
     onTakeTicket: ticketed,
+    onQueueEncode: queuing,
+    encodeChoices: ENCODE_CHOICES,
     playback: planned(),
   },
 } satisfies Meta<typeof RecordingDetailView>
@@ -454,5 +481,95 @@ export const 作り直しても絵が取れなかった: Story = {
     await expect(
       canvasElement.querySelector('video')?.getAttribute('poster'),
     ).not.toMatch(/redrawn=/)
+  },
+}
+
+export const エンコードを登録する: Story = {
+  args: { detail: detail('1274') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    queued.length = 0
+
+    const encode = canvas.getByRole('button', { name: 'エンコード' })
+
+    await expect(encode).toBeEnabled()
+    await userEvent.click(encode)
+    await waitFor(() => expect(queued).toEqual([['1274', 'ds-1', undefined]]))
+    await expect(
+      await canvas.findByText('エンコードを登録しました。'),
+    ).toBeVisible()
+  },
+}
+
+export const エンコードの保存先を選ぶ: Story = {
+  args: { detail: detail('1274'), encodeChoices: MANY_ENCODE_CHOICES },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    queued.length = 0
+
+    await userEvent.click(canvas.getByRole('button', { name: 'エンコード' }))
+
+    const dialog = await screen.findByRole('dialog', { name: 'エンコード' })
+
+    await expect(within(dialog).getByText('棚')).toBeVisible()
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'エンコード' }),
+    )
+    await waitFor(() => expect(queued).toEqual([['1274', 'ds-1', undefined]]))
+  },
+}
+
+export const エンコードを断られた: Story = {
+  args: { detail: detail('1274'), onQueueEncode: alreadyEncoded },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: 'エンコード' }))
+    await expect(
+      await canvas.findByText(
+        'この録画はこのプロファイルですでにエンコード済みです。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const エンコードの保存先がない: Story = {
+  args: { detail: detail('1274'), encodeChoices: NO_ENCODE_CHOICES },
+  play: async ({ canvasElement }) => {
+    const encode = within(canvasElement).getByRole('button', {
+      name: 'エンコード',
+    })
+
+    await expect(encode).toBeDisabled()
+    await expect(encode).toHaveAttribute(
+      'title',
+      '保存先がないためエンコードできません',
+    )
+  },
+}
+
+export const 録画中はエンコードできない: Story = {
+  args: { detail: detail('1291') },
+  play: async ({ canvasElement }) => {
+    const encode = within(canvasElement).getByRole('button', {
+      name: 'エンコード',
+    })
+
+    await expect(encode).toBeDisabled()
+    await expect(encode).toHaveAttribute(
+      'title',
+      '録画中はエンコードできません',
+    )
+  },
+}
+
+export const 失敗した録画にエンコードの操作子を出さない: Story = {
+  args: { detail: detail('1239') },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).queryByRole('button', { name: 'エンコード' }),
+    ).toBeNull()
   },
 }
