@@ -48,7 +48,6 @@ export interface EncodeDestination {
   label: string
   outputRoot: string
   defaultProfileId: string
-  /** Unset where the profile the destination names is no longer defined. */
   defaultProfileLabel?: string
   definedAt: string
 }
@@ -74,7 +73,6 @@ export interface EncodeFailureDetail {
 export interface EncodeJob {
   id: string
   recordingId: string
-  /** Unset where the recording has since been thrown away. */
   title?: string
   recordedAt?: string
   profileLabel?: string

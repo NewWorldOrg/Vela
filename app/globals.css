@@ -356,14 +356,6 @@
   --shadow-pop-ring: 2px 2px 0 var(--pop), var(--ring);
 
   --ease-toy: var(--ease);
-  /*
-   * The two curves a fold runs on. Unfurling leaves fast and arrives slowly,
-   * so the panel is most of the way across before the eye has followed it and
-   * then settles rather than stopping; furling does the reverse, holding still
-   * for a moment and then leaving, which is what makes a thing read as being
-   * put away rather than deleted. They are not each other's mirror on purpose:
-   * arriving is worth watching and leaving is not.
-   */
   --ease-unfurl: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-furl: cubic-bezier(0.6, 0, 0.9, 0.25);
 

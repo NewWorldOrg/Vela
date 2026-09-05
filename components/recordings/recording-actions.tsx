@@ -27,11 +27,6 @@ import {
 /**
  * What can be done with this recording, as against what can be done with the
  * picture — which is on the bar, over the picture.
- *
- * `再生` used to stand here, greyed out, directly under a player that plays;
- * a control that is always refused is not drawn (v3.31, v3.35). `エンコード`
- * asks the API to queue this recording, and is left out only for a recording
- * that failed, which has nothing to encode.
  */
 export function RecordingActions({
   recording,

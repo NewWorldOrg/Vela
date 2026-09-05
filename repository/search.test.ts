@@ -96,10 +96,6 @@ mock.module('@/repository/client/carina', {
           return { data: undefined, response: { status: 400 } }
         }
 
-        /**
-         * The generated client hands the body of a refusal back under `error`
-         * and leaves `data` unset, so the stand-in answers the same way.
-         */
         if (store.unreadable) {
           return {
             data: undefined,

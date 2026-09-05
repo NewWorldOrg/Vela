@@ -53,10 +53,6 @@ const store: {
   services: [],
 }
 
-/**
- * The generated client hands the body of a refusal back under `error` and
- * leaves `data` unset, so the stand-in answers the same way.
- */
 const answer = async (path: string) => {
   if (store.refusing?.path === path) {
     return {

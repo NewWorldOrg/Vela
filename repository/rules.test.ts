@@ -42,12 +42,6 @@ interface Asking {
   body?: Record<string, unknown>
 }
 
-/**
- * The generated client hands a body back under `data` where it read an answer
- * and under `error` where it read a refusal, so the stand-in answers the same
- * way. A stand-in that filled both would let a refusal be read from the half
- * the real client leaves empty.
- */
 const write = (method: string) => async (path: string, init?: Asking) => {
   sent.push({ method, path, id: init?.params?.path?.id, body: init?.body })
 

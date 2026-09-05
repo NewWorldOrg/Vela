@@ -1,12 +1,4 @@
-/**
- * The sentence the API put in the envelope, wherever the answer landed. The
- * generated client hands the parsed body back under `error` and leaves `data`
- * unset once the status is a refusal, so a sentence looked for under `data`
- * alone is never found on the answers that carry a reason.
- *
- * What comes back is an envelope only where the body parsed as one — a wire
- * that answered with something else answered with no sentence at all.
- */
+// The generated client puts a refusal's body under `error`, not `data`.
 export function whatItSaid(error: unknown, data?: unknown): string | undefined {
   return sentenceIn(error) ?? sentenceIn(data)
 }
