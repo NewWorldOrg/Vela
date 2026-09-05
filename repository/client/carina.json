@@ -7460,7 +7460,8 @@
           "height",
           "frameRate",
           "softwareKilobitsPerSecond",
-          "vaapiQuantiser"
+          "vaapiQuantiser",
+          "unasked"
         ],
         "type": "object",
         "properties": {
@@ -7504,6 +7505,9 @@
               "string"
             ],
             "format": "int32"
+          },
+          "unasked": {
+            "type": "boolean"
           }
         }
       },

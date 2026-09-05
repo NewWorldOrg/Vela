@@ -81,6 +81,13 @@ export interface LiveProfile {
   name: string
   width: number
   height: number
+  /**
+   * Whether this is the one the API encodes in when the wire names none. It
+   * depends on the machine the API is running on — the same list comes back
+   * marked differently where there is a GPU to hand the work to — so it is
+   * read off the list and never written down here.
+   */
+  unasked: boolean
 }
 
 /** The channel being watched, and where its programme stands. */
@@ -268,6 +275,7 @@ function toProfile(profile: LiveProfileResponder): LiveProfile {
     name: profile.name,
     width: toInt(profile.width),
     height: toInt(profile.height),
+    unasked: profile.unasked,
   }
 }
 

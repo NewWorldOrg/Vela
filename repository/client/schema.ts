@@ -1527,6 +1527,7 @@ export interface components {
       softwareKilobitsPerSecond: number | string
       /** Format: int32 */
       vaapiQuantiser: number | string
+      unasked: boolean
     }
     LiveSessionResponder: {
       /** Format: int32 */
