@@ -84,7 +84,6 @@ const reservation = (over: Over = {}) => ({
   ruleId: null,
   priority: 10,
   window: window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z'),
-  state: 'scheduled',
   standing: 'scheduled',
   startedAt: null,
   recordingOutcome: null,
@@ -407,30 +406,26 @@ test('the window is spelled in the zone broadcasting runs on', async () => {
 })
 
 /**
- * The three the API answers with separately. A recording under way is the
- * recording's standing, not a fifth state the reservation is in, and whether
- * the end is settled holds across every one of them.
+ * A recording under way is a standing of the reservation like any other, and
+ * whether the end is settled holds across every one of them.
  */
-test('a recording under way leaves the reservation scheduled', async () => {
+test('a recording under way is read as the standing', async () => {
   const one = await only({
     standing: 'recording',
     startedAt: '2026-08-08T12:10:00Z',
   })
 
-  assert.equal(one.state, 'scheduled')
   assert.equal(one.standing, 'recording')
 })
 
 test('an unsettled end holds beside a conflict rather than instead of it', async () => {
   const one = await only({
-    state: 'conflict',
     standing: 'conflict',
     window: window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z', {
       endAtConfirmed: false,
     }),
   })
 
-  assert.equal(one.state, 'conflict')
   assert.equal(one.standing, 'conflict')
   assert.equal(one.endAtConfirmed, false)
 })
@@ -471,7 +466,6 @@ test('the origin is spelled the way the screen names it', async () => {
 const CONTENDED = [
   onNetwork('a1', 131, '週末キッチンの手帖'),
   onNetwork('b2', 132, '金曜シネマ', {
-    state: 'conflict',
     standing: 'conflict',
     window: window('2026-08-08T13:00:00Z', '2026-08-08T15:00:00Z'),
   }),
@@ -483,7 +477,6 @@ const CONTENDED = [
     window: window('2026-08-08T13:00:00Z', '2026-08-08T15:00:00Z'),
   }),
   onNetwork('e5', 134, '取り消された予約', {
-    state: 'cancelled',
     standing: 'cancelled',
     window: window('2026-08-08T13:00:00Z', '2026-08-08T14:00:00Z'),
   }),
@@ -564,7 +557,6 @@ test('every page the store names is walked', async () => {
  * visibly wrong.
  */
 const CANCELLED_EARLY = onNetwork('x1', 141, '取り消した昼の番組', {
-  state: 'cancelled',
   standing: 'cancelled',
   window: window('2026-08-08T02:00:00Z', '2026-08-08T03:00:00Z'),
 })
@@ -572,12 +564,10 @@ const CANCELLED_EARLY = onNetwork('x1', 141, '取り消した昼の番組', {
 const MIXED = [
   CANCELLED_EARLY,
   onNetwork('x2', 142, '取り消した夜の番組', {
-    state: 'cancelled',
     standing: 'cancelled',
     window: window('2026-08-08T12:00:00Z', '2026-08-08T13:00:00Z'),
   }),
   onNetwork('x3', 143, '撮り逃した番組', {
-    state: 'missed',
     standing: 'missed',
     window: window('2026-08-08T01:00:00Z', '2026-08-08T02:00:00Z'),
   }),
@@ -680,7 +670,6 @@ test('a second after the end leaves the cancellation out', async () => {
 test('the margin the recording would have run on does not hold it in', async () => {
   standing([
     onNetwork('x7', 147, '余白のついた取消', {
-      state: 'cancelled',
       standing: 'cancelled',
       window: window('2026-08-08T02:00:00Z', '2026-08-08T03:00:00Z', {
         marginAfterSeconds: 600,
@@ -723,7 +712,6 @@ test('the clock it reads by default is the one running now', async () => {
 
   standing([
     onNetwork('y1', 151, '一分前に終わった取消', {
-      state: 'cancelled',
       standing: 'cancelled',
       window: window(
         new Date(at - 3_600_000).toISOString(),
@@ -731,7 +719,6 @@ test('the clock it reads by default is the one running now', async () => {
       ),
     }),
     onNetwork('y2', 152, '一時間後に終わる取消', {
-      state: 'cancelled',
       standing: 'cancelled',
       window: window(
         new Date(at - 60_000).toISOString(),
@@ -1248,7 +1235,6 @@ test('a conflict is thrown away only once the margin it would have run on is pas
     standing([
       reservation({
         id: 'a1',
-        state: 'conflict',
         standing: 'conflict',
         window: MARGINED,
       }),
