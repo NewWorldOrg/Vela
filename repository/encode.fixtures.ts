@@ -86,6 +86,7 @@ export const RUNNING_JOB: EncodeJob = {
   elapsedSeconds: 461,
   headway: { percent: 42, leftSeconds: 623, at: '23:38:41' },
   route: { asked: 'software', ran: 'software' },
+  cancellable: true,
 }
 
 export const STALLED_JOB: EncodeJob = {

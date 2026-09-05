@@ -228,6 +228,7 @@ test('a running job carries where it ran, how far it got and how long it has bee
   assert.equal(running.elapsedSeconds, 1214)
   assert.equal(running.quietForSeconds, 754)
   assert.equal(running.stalled, true)
+  assert.equal(running.cancellable, true)
   assert.deepEqual(running.route, {
     asked: 'vaapi',
     ran: 'software',

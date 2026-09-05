@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 
 import { formatLength, formatSpan } from '@/lib/format'
-import type { EncodeJob } from '@/repository/encode'
+import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
   ENCODER_LABEL,
   RECORDING_REMOVED_LABEL,
@@ -15,8 +15,15 @@ import { EncodeIcon } from '@/components/vela/icons'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChipDot } from '@/components/vela/status'
 import { Surface } from '@/components/vela/surface'
+import { CancelJobButton } from '@/components/encode/cancel-job-button'
 
-export function RunningJob({ job }: { job: EncodeJob }) {
+export function RunningJob({
+  job,
+  onCallOff,
+}: {
+  job: EncodeJob
+  onCallOff: (id: string) => Promise<EncodeWrite>
+}) {
   const percent = job.headway?.percent
 
   return (
@@ -66,15 +73,16 @@ export function RunningJob({ job }: { job: EncodeJob }) {
           </span>
         )}
       </div>
-      {job.title !== undefined && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {job.title !== undefined && (
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/recordings/${job.recordingId}` as Route}>
               録画詳細を開く
             </Link>
           </Button>
-        </div>
-      )}
+        )}
+        {job.cancellable && <CancelJobButton job={job} onCallOff={onCallOff} />}
+      </div>
     </Surface>
   )
 }

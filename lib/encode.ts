@@ -44,7 +44,11 @@ export function secondsBetween(fromIso: string, to: Date): number {
 }
 
 export function callsOff(status: EncodeJobStatus): boolean {
-  return status === 'queued'
+  return status === 'queued' || status === 'running'
+}
+
+export function asksBeforeCallingOff(status: EncodeJobStatus): boolean {
+  return status === 'running'
 }
 
 export function labelProblem(label: string): string | undefined {
