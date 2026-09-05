@@ -4,8 +4,11 @@ import type { SweepWrite } from '@/repository/integrity'
 import {
   INTEGRITY_CLEAR_FIXTURE,
   INTEGRITY_FIXTURE,
+  INTEGRITY_MORE_THAN_FIT_FIXTURE,
 } from '@/stories/fixtures/integrity'
+import { AppFrame } from '@/components/vela/app-shell'
 import { IntegrityView } from '@/components/integrity/integrity-page'
+import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const swept = async (): Promise<SweepWrite> => ({ state: 'ok', findings: 5 })
 
@@ -14,6 +17,15 @@ const meta = {
   component: IntegrityView,
   parameters: { layout: 'fullscreen' },
   args: { onRun: swept },
+  // The screen pins the frame to the window and gives the list what is left,
+  // so it is drawn in the frame that answers the pin.
+  decorators: [
+    (Story) => (
+      <AppFrame>
+        <Story />
+      </AppFrame>
+    ),
+  ],
 } satisfies Meta<typeof IntegrityView>
 
 export default meta
@@ -43,5 +55,24 @@ export const 届かないルートがある: Story = {
         ledgerRowsInRootsOutOfReach: 8,
       },
     },
+  },
+}
+
+export const 収まらないほどの食い違い: Story = {
+  args: { result: INTEGRITY_MORE_THAN_FIT_FIXTURE },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
+      pageStays: true,
+    })
+  },
+}
+
+export const 狭い幅で収まらないほどの食い違い: Story = {
+  args: { result: INTEGRITY_MORE_THAN_FIT_FIXTURE },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
+      pageStays: true,
+    })
   },
 }

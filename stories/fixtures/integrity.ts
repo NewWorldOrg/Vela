@@ -89,3 +89,16 @@ export const INTEGRITY_CLEAR_FIXTURE: IntegrityResult = {
   roots: ROOTS,
   findings: [],
 }
+
+/** More findings than a window holds: each fault, on ten nights' files. */
+export const INTEGRITY_MORE_THAN_FIT_FIXTURE: IntegrityResult = {
+  ...INTEGRITY_FIXTURE,
+  total: INTEGRITY_FIXTURE.findings.length * 10,
+  findings: Array.from({ length: 10 }, (_, round) =>
+    INTEGRITY_FIXTURE.findings.map((finding) => ({
+      ...finding,
+      key: `${finding.key}-${round}`,
+      path: finding.path.replace(/\d+/, (id) => String(Number(id) - round)),
+    })),
+  ).flat(),
+}
