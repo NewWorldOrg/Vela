@@ -17,6 +17,12 @@ export interface Moment {
 /** One signed-in device, as the settings screen spells it. */
 export interface SessionRow {
   id: string
+  /**
+   * Whose session it is, as the API wrote it when the session was made: the
+   * username of a local account, or what the identity provider said — its
+   * email, failing that its name, failing that the subject it handed.
+   */
+  displayName: string
   device: Device
   method: AuthMethod
   createdAt: string
@@ -60,6 +66,7 @@ export async function getSessions(): Promise<SessionRow[]> {
 
   return data.data.map((session) => ({
     id: session.id,
+    displayName: session.displayName,
     device: describeDevice(session.deviceLabel),
     method: session.method,
     createdAt: formatDateTime(session.createdAt),

@@ -6,6 +6,7 @@ import {
   OIDC_OUT_OF_REACH,
   OIDC_REACHABLE,
   OIDC_UNCONFIGURED,
+  LONG_NAMES,
   ONLY_THIS_DEVICE,
   MORE_SESSIONS_THAN_FIT,
   SESSIONS,
@@ -32,7 +33,86 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = {}
+/**
+ * Every session on the system is here, not only this device's, so each row
+ * says whose it is. Only the row reading the page signs out; every other row,
+ * whoever it belongs to, can be revoked.
+ */
+export const 通常: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('columnheader', { name: 'アカウント' }),
+    ).toBeVisible()
+    await expect(canvas.getAllByText('aki@example.test')).toHaveLength(2)
+    await expect(canvas.getByText('nao@example.test')).toBeVisible()
+    await expect(canvas.getByText('operator')).toBeVisible()
+
+    await expect(
+      canvas.getAllByRole('button', { name: 'ログアウト' }),
+    ).toHaveLength(1)
+    await expect(
+      canvas.getAllByRole('button', { name: '失効させる' }),
+    ).toHaveLength(SESSIONS.length - 1)
+  },
+}
+
+const A_SUBJECT = 'k3Jr9vQm2LZp8xWc4TnB7yHd0sFq6aUe1oGiRtYlMwK'
+
+/**
+ * A long name takes the width the table has to spare: with a window this
+ * wide nothing folds and nothing scrolls sideways.
+ */
+export const 名前が長いセッション: Story = {
+  args: { sessions: LONG_NAMES },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const container = canvas
+      .getByText(A_SUBJECT)
+      .closest<HTMLElement>('[data-slot="table-container"]')
+
+    if (!container) {
+      throw new Error('the name is not in a list')
+    }
+
+    await expect(container.scrollWidth).toBeLessThanOrEqual(
+      container.clientWidth,
+    )
+  },
+}
+
+/**
+ * Down at the table's floor the name folds inside its own column, which stays
+ * near its own floor, instead of the column growing to the name's full length
+ * and widening the whole table by that much. The width the table does have
+ * here is what the other columns, which never fold, ask for.
+ */
+export const 狭い幅で名前が長いセッション: Story = {
+  args: { sessions: LONG_NAMES },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const subject = canvas.getByText(A_SUBJECT)
+    const cell = subject.closest('td')
+    const table = subject.closest('table')
+
+    if (!cell || !table) {
+      throw new Error('the name is not in a list')
+    }
+
+    const width = cell.getBoundingClientRect().width
+
+    await expect(width).toBeGreaterThanOrEqual(160)
+    await expect(width).toBeLessThan(260)
+    await expect(table.getBoundingClientRect().width).toBeLessThan(
+      table.getBoundingClientRect().width - width + 260,
+    )
+    await expect(subject.getBoundingClientRect().height).toBeGreaterThan(
+      Number.parseFloat(getComputedStyle(subject).lineHeight),
+    )
+  },
+}
 
 export const いまの端末のみ: Story = { args: { sessions: ONLY_THIS_DEVICE } }
 

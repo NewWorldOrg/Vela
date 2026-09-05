@@ -19,9 +19,9 @@ import { CloseIcon } from '@/components/vela/icons'
 import { METHOD_LABEL, revokedHref } from '@/components/authentication/wording'
 
 /**
- * A destructive operation, so it says what is cut off and what is not before
- * it happens. Only another device is ever revoked here — the device reading
- * the page signs itself out instead.
+ * A destructive operation, so it says what is cut off — and whose it is —
+ * before it happens. Only another device is ever revoked here, whoever it
+ * belongs to; the device reading the page signs itself out instead.
  */
 export function RevokeSession({
   session,
@@ -83,6 +83,8 @@ export function RevokeSession({
               {session.device.name}
               {session.device.kind && `(${session.device.kind})`}
             </dd>
+            <dt className="text-sub text-ink-3">アカウント</dt>
+            <dd className="min-w-0 wrap-anywhere">{session.displayName}</dd>
             <dt className="text-sub text-ink-3">認証方式</dt>
             <dd>{METHOD_LABEL[session.method]}</dd>
             <dt className="text-sub text-ink-3">作成</dt>

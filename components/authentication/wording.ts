@@ -13,11 +13,6 @@ export const METHOD_LABEL: Record<AuthMethod, string> = {
   oidc: 'OIDC',
 }
 
-/** The line under the method, where the method needs one. */
-export const METHOD_NOTE: Partial<Record<AuthMethod, string>> = {
-  local: '外部プレイヤー用',
-}
-
 export function revokedHref(device: string): string {
   return `${AUTHENTICATION_PATH}?${REVOKED_KEY}=${encodeURIComponent(device)}`
 }

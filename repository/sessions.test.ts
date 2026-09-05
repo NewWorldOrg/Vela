@@ -78,7 +78,7 @@ registerHooks({
 
 process.env.CARINA_API_BASE_URL = 'http://carina.test'
 
-const { changePassword } = await import('./sessions.ts')
+const { changePassword, getSessions } = await import('./sessions.ts')
 
 const SESSION_COOKIE = 'carina_session'
 
@@ -207,4 +207,52 @@ test('the change is sent as the API will accept it, carrying the session', async
     `${SESSION_COOKIE}=the-session-that-asked`,
   )
   assert.deepEqual(await request.json(), TYPED)
+})
+
+/**
+ * The list is every session on the system, not the caller's alone, so each
+ * row has to carry whose it is — the name the API wrote when the session was
+ * made — beside how it signed in. Only the caller's own row is current.
+ */
+test('BR-AU-018: every session on the system is listed, each saying whose it is', async () => {
+  apiAnswering(
+    envelope(
+      {
+        status: true,
+        message: '',
+        data: [
+          {
+            id: 'theirs',
+            displayName: 'nao@example.test',
+            method: 'oidc',
+            createdAt: '2026-09-05T00:51:56Z',
+            lastUsedAt: '2026-09-05T01:00:00Z',
+            deviceLabel:
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/150.0.0.0',
+            current: false,
+          },
+          {
+            id: 'mine',
+            displayName: 'operator',
+            method: 'local',
+            createdAt: '2026-09-05T02:44:51Z',
+            lastUsedAt: '2026-09-05T02:44:51Z',
+            deviceLabel: 'curl/8.5.0',
+            current: true,
+          },
+        ],
+      },
+      200,
+    ),
+  )
+
+  const rows = await getSessions()
+
+  assert.deepEqual(
+    rows.map((row) => [row.id, row.displayName, row.method, row.current]),
+    [
+      ['theirs', 'nao@example.test', 'oidc', false],
+      ['mine', 'operator', 'local', true],
+    ],
+  )
 })

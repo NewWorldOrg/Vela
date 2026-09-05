@@ -2311,6 +2311,7 @@ export interface components {
       'unspecified' | 'recording' | 'live' | 'survey' | 'scan' | 'surveyNow'
     SessionResponder: {
       id: string
+      displayName: string
       method: components['schemas']['AuthMethod']
       /** Format: date-time */
       createdAt: string
