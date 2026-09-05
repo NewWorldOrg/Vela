@@ -83,7 +83,7 @@ export function EncodeView({
       <section className="mt-5">
         <SectionHeading mark={MarkDots}>ジョブの現在地</SectionHeading>
 
-        {running && <RunningJob job={running} />}
+        {running && <RunningJob job={running} onCallOff={actions.onCallOff} />}
 
         <JobCounts
           waiting={screen.waiting}

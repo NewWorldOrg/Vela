@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  asksBeforeCallingOff,
   callsOff,
   headwayPercent,
   jobStatusIn,
@@ -48,12 +49,20 @@ test('seconds between two instants never runs backwards', () => {
   )
 })
 
-test('only a job still waiting can be called off from the screen', () => {
+test('a job still waiting or still running can be called off from the screen', () => {
   assert.equal(callsOff('queued'), true)
-  assert.equal(callsOff('running'), false)
+  assert.equal(callsOff('running'), true)
   assert.equal(callsOff('completed'), false)
   assert.equal(callsOff('failed'), false)
   assert.equal(callsOff('cancelled'), false)
+})
+
+test('only calling off a running job, which throws work away, asks first', () => {
+  assert.equal(asksBeforeCallingOff('running'), true)
+  assert.equal(asksBeforeCallingOff('queued'), false)
+  assert.equal(asksBeforeCallingOff('completed'), false)
+  assert.equal(asksBeforeCallingOff('failed'), false)
+  assert.equal(asksBeforeCallingOff('cancelled'), false)
 })
 
 test('a label is a name a person reads, within the length the API keeps', () => {

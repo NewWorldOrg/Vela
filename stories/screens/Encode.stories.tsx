@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, screen, userEvent, within } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   CANCELLED_JOB,
@@ -17,6 +17,8 @@ import {
 import { EncodeView } from '@/components/encode/encode-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
+const callOff = fn(async () => ({ state: 'ok' }) as const)
+
 const meta = {
   title: 'Screens/設定・エンコード',
   component: EncodeView,
@@ -26,7 +28,7 @@ const meta = {
     actions: {
       onDefineProfile: async () => ({ state: 'ok' }) as const,
       onDefineDestination: async () => ({ state: 'ok' }) as const,
-      onCallOff: async () => ({ state: 'ok' }) as const,
+      onCallOff: callOff,
     },
   },
 } satisfies Meta<typeof EncodeView>
@@ -44,6 +46,18 @@ async function counts(
   await expect(canvas.getByText(`失敗 ${failed} 本`)).toBeVisible()
 }
 
+function runningCard(canvasElement: HTMLElement) {
+  const card = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="running-job"]',
+  )
+
+  if (!card) {
+    throw new Error('the running job is not on the screen')
+  }
+
+  return within(card)
+}
+
 export const 通常: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -51,7 +65,7 @@ export const 通常: Story = {
     const jobs = within(canvas.getAllByRole('table')[0])
 
     await expect(canvas.getByText('ジョブの現在地')).toBeVisible()
-    await expect(jobs.getAllByRole('button', { name: '中止' })).toHaveLength(1)
+    await expect(jobs.getAllByRole('button', { name: '中止' })).toHaveLength(2)
     await expect(jobs.getByText('録画削除済み')).toBeVisible()
     await counts(canvas, 1, 1)
   },
@@ -79,13 +93,19 @@ export const 空の状態: Story = {
 export const 待機中: Story = {
   args: { screen: screenWith(QUEUED_JOB) },
   play: async ({ canvasElement }) => {
+    callOff.mockClear()
+
     const canvas = within(canvasElement)
 
     const jobs = within(canvas.getAllByRole('table')[0])
 
     await expect(jobs.getByText('待機中')).toBeVisible()
     await counts(canvas, 1, 0)
-    await expect(jobs.getByRole('button', { name: '中止' })).toBeEnabled()
+
+    await userEvent.click(jobs.getByRole('button', { name: '中止' }))
+
+    await waitFor(() => expect(callOff).toHaveBeenCalledWith('job-q'))
+    await expect(screen.queryByRole('alertdialog')).toBeNull()
   },
 }
 
@@ -98,12 +118,94 @@ export const 実行中: Story = {
       canvas.getByRole('progressbar', { name: 'エンコードの進捗' }),
     ).toHaveAttribute('aria-valuenow', '42')
     await expect(canvas.getAllByText('残り 10:23').length).toBeGreaterThan(0)
-    await counts(canvas, 0, 0)
     await expect(
-      within(canvas.getAllByRole('table')[0]).queryByRole('button', {
+      within(canvas.getAllByRole('table')[0]).getByRole('button', {
         name: '中止',
       }),
-    ).toBeNull()
+    ).toBeEnabled()
+    await expect(
+      runningCard(canvasElement).getByRole('button', { name: '中止' }),
+    ).toBeEnabled()
+    await counts(canvas, 0, 0)
+  },
+}
+
+export const 実行中の中止を確かめる: Story = {
+  args: { screen: screenWith(RUNNING_JOB) },
+  play: async ({ canvasElement }) => {
+    callOff.mockClear()
+
+    await userEvent.click(
+      runningCard(canvasElement).getByRole('button', { name: '中止' }),
+    )
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'このエンコードを中止します',
+    })
+
+    await expect(
+      within(dialog).getByText('のエンコードを途中で止めます。', {
+        exact: false,
+      }),
+    ).toBeVisible()
+    await expect(within(dialog).getByText('週末キッチンの手帖')).toBeVisible()
+    await expect(callOff).not.toHaveBeenCalled()
+  },
+}
+
+export const 実行中を中止する: Story = {
+  args: { screen: screenWith(RUNNING_JOB) },
+  play: async ({ canvasElement }) => {
+    callOff.mockClear()
+
+    const jobs = within(within(canvasElement).getAllByRole('table')[0])
+
+    await userEvent.click(jobs.getByRole('button', { name: '中止' }))
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'このエンコードを中止します',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '中止する' }),
+    )
+
+    await waitFor(() => expect(callOff).toHaveBeenCalledWith('job-r'))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+  },
+}
+
+export const 実行中の中止を断られる: Story = {
+  args: {
+    screen: screenWith(RUNNING_JOB),
+    actions: {
+      onDefineProfile: async () => ({ state: 'ok' }) as const,
+      onDefineDestination: async () => ({ state: 'ok' }) as const,
+      onCallOff: async () =>
+        ({
+          state: 'rejected',
+          message: 'このジョブはすでに終わっているため、中止できませんでした。',
+        }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      runningCard(canvasElement).getByRole('button', { name: '中止' }),
+    )
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'このエンコードを中止します',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '中止する' }),
+    )
+
+    await expect(
+      await within(dialog).findByText(
+        'このジョブはすでに終わっているため、中止できませんでした。',
+      ),
+    ).toBeVisible()
   },
 }
 

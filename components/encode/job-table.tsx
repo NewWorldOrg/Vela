@@ -106,7 +106,7 @@ export function JobTable({
             <TableCell className={STAMP}>{job.endedAt ?? <Dash />}</TableCell>
             <TableCell className="text-right">
               {job.cancellable && (
-                <CancelJobButton id={job.id} onCallOff={onCallOff} />
+                <CancelJobButton job={job} onCallOff={onCallOff} />
               )}
             </TableCell>
           </TableRow>
