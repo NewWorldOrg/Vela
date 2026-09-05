@@ -18,6 +18,7 @@ import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { ChannelList } from '@/components/live/channel-list'
+import { useFoldingChannels } from '@/components/live/channel-fold'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import { NowNext } from '@/components/live/now-next'
@@ -102,7 +103,8 @@ export function LiveView({
   )
 
   const watching = screen.watching
-  const [away, fold] = useChannelsFolded()
+  const [away, remember] = useChannelsFolded()
+  const { motion, fold } = useFoldingChannels(away, remember)
   /**
    * A station splits into two or three for the hours it has that much to show
    * and puts the one thing out on all of them for the rest of the day, so most
@@ -244,12 +246,20 @@ export function LiveView({
         it takes away — it was written as 78 — the list runs 24px past the
         bottom of the window, the document grows to hold it, and the page
         draws a scrollbar of its own beside the one the list already has.
+
+        The width is still switched in one step and never interpolated: a
+        column that changes width over time lays the picture beside it out
+        again on every frame of the change. It is the fold's own run — the
+        clip, the slide, the fade — that is drawn, and none of that is a
+        length. So the picture is laid out once per press: on the way in at
+        the press, and on the way out when the panel has finished leaving,
+        which is what `motion.shown` is holding the column open for.
       */}
       <aside
         aria-label="チャンネル"
         className={cn(
           'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
-          away ? 'w-11' : 'w-[344px]',
+          motion.shown ? 'w-[344px]' : 'w-11',
         )}
       >
         <ChannelList
@@ -259,6 +269,7 @@ export function LiveView({
           watchingId={watching.channel.id}
           folded={away}
           onFold={fold}
+          motion={motion}
           onKind={kind}
           onSelect={(channel) => choose(channel.id)}
         />

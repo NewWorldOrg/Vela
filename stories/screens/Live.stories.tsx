@@ -18,6 +18,7 @@ import {
 import type { LiveScreen } from '@/repository/live'
 import type { LiveBacklog } from '@/repository/live-sessions'
 import {
+  LIVE_CHANNEL_FIXTURES,
   LIVE_PROFILE_FIXTURES_SOFTWARE,
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
@@ -254,6 +255,24 @@ function counting(dropped: number[]): AskBacklog {
 const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
 
 const UNCHOSEN: LiveScreen = { ...LIVE_SCREEN_FIXTURE, watching: undefined }
+
+/**
+ * What a full aerial gives: a line-up long enough that most of it is below the
+ * edge of the panel it is drawn in. Built from the same channels over again,
+ * each with a key and an identity of its own so nothing folds into anything.
+ */
+const MANY: LiveScreen = {
+  ...LIVE_SCREEN_FIXTURE,
+  channels: Array.from({ length: 34 }, (unused, nth) => ({
+    ...LIVE_CHANNEL_FIXTURES[nth % LIVE_CHANNEL_FIXTURES.length],
+    id: nth === 0 ? LIVE_CHANNEL_FIXTURES[0].id : `32800-${2000 + nth}`,
+    serviceId: 2000 + nth,
+    no: `${nth + 1}`,
+    kind: 'terrestrial' as const,
+    sub: false,
+    whole: undefined,
+  })),
+}
 
 const meta = {
   title: 'Screens/ライブ',
@@ -1329,6 +1348,69 @@ export const 番組情報が一部だけ無いときは言わない: Story = {
   },
 }
 
+/** The column the channel list stands in, which is what the picture is left. */
+function asideWidth(canvasElement: HTMLElement): number {
+  return canvasElement.querySelector('main aside')?.clientWidth ?? 0
+}
+
+/** Where the fold is: at rest, or on its way one way or the other. */
+function foldPhaseOf(canvasElement: HTMLElement): string | null {
+  return (
+    canvasElement
+      .querySelector('[data-slot="channel-list"]')
+      ?.getAttribute('data-fold') ?? null
+  )
+}
+
+/** When each row is told to move, in the order the rows are read. */
+function rowDelaysOf(canvasElement: HTMLElement): string[] {
+  return [
+    ...canvasElement.querySelectorAll<HTMLElement>(
+      '[data-slot="channel-list"] li',
+    ),
+  ].map((one) => one.style.transitionDelay)
+}
+
+/**
+ * Everything moving in the list at the moment it is asked, other than the
+ * press itself: a button answers being pressed by sinking and coming back, and
+ * that is the press's own feel and not the fold's.
+ */
+function foldRunning(canvasElement: HTMLElement): Animation[] {
+  const listed = canvasElement.querySelector('[data-slot="channel-list"]')
+  const press = listed?.querySelector('button[aria-label="チャンネル一覧"]')
+
+  return (listed?.getAnimations({ subtree: true }) ?? []).filter((one) => {
+    const moved =
+      one.effect instanceof KeyframeEffect ? one.effect.target : null
+
+    return moved !== null && press?.contains(moved) !== true
+  })
+}
+
+/** A reader who has asked their browser for less motion, for one story. */
+function askedForLessMotion(): () => void {
+  const asked = window.matchMedia.bind(window)
+
+  window.matchMedia = ((query: string) =>
+    query.includes('prefers-reduced-motion')
+      ? ({
+          matches: true,
+          media: query,
+          onchange: null,
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          addListener: () => {},
+          removeListener: () => {},
+          dispatchEvent: () => false,
+        } as MediaQueryList)
+      : asked(query)) as typeof window.matchMedia
+
+  return () => {
+    window.matchMedia = asked
+  }
+}
+
 /**
  * Watching, the list folds away on one press and the picture takes the width
  * it leaves. Folded, the types and the rows are out of the page, and the press
@@ -1342,27 +1424,38 @@ export const 一覧を畳む: Story = {
     await expect(fold).toHaveAttribute('aria-expanded', 'true')
     await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
 
-    const wide = canvasElement.querySelector('main aside')?.clientWidth ?? 0
+    const wide = asideWidth(canvasElement)
 
     await userEvent.click(fold)
 
+    // The press is answered at once. What the fold takes its time over is the
+    // drawing of it, and the column is held open until that is done.
     await expect(fold).toHaveAttribute('aria-expanded', 'false')
-    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
-    await expect(
-      canvasElement.querySelector('main aside')?.clientWidth ?? 0,
-    ).toBeLessThan(wide)
     await expect(window.localStorage.getItem(CHANNELS_FOLDED_KEY)).toBe(
       'folded',
     )
+
+    await waitFor(async () => {
+      await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+      await expect(asideWidth(canvasElement)).toBeLessThan(wide)
+    })
 
     await userEvent.click(fold)
 
     await expect(fold).toHaveAttribute('aria-expanded', 'true')
     await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+      await expect(asideWidth(canvasElement)).toBe(wide)
+    })
   },
 }
 
-/** A fold made earlier is the state the screen comes back in. */
+/**
+ * A fold made earlier is the state the screen comes back in — drawn folded,
+ * not folded in front of the reader. Nothing runs on the first paint.
+ */
 export const 畳んだまま開く: Story = {
   beforeEach: () => {
     opened.length = 0
@@ -1376,6 +1469,8 @@ export const 畳んだまま開く: Story = {
       canvas.getByRole('button', { name: 'チャンネル一覧' }),
     ).toHaveAttribute('aria-expanded', 'false')
     await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+    await expect(foldPhaseOf(canvasElement)).toBe('still')
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
   },
 }
 
@@ -1400,6 +1495,192 @@ export const 選局前は畳めない: Story = {
       canvas.queryByRole('button', { name: 'チャンネル一覧' }),
     ).toBeNull()
     await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+  },
+}
+
+/**
+ * At rest the list is drawn and nothing about it is moving. Opening a screen
+ * on a fold made yesterday is not an event, and a panel that wipes itself in
+ * every time the live screen is reached — or every time a channel is chosen,
+ * which redraws this screen — would be a panel announcing itself for no
+ * reason. Only a press moves it.
+ */
+export const 一覧を開いたまま: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(foldPhaseOf(canvasElement)).toBe('still')
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
+    await expect(rowDelaysOf(canvasElement).join('')).toBe('')
+  },
+}
+
+/**
+ * Opening. The panel is wiped in from the edge it folds into and the parts
+ * behind the wipe arrive one behind another, from the top of the list down —
+ * so each row is told to move a little later than the one above it.
+ */
+export const 一覧が開くあいだ: Story = {
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+
+    await userEvent.click(fold)
+
+    const phase = foldPhaseOf(canvasElement)
+    const delays = rowDelaysOf(canvasElement)
+    const running = foldRunning(canvasElement).length
+
+    await expect(phase).toBe('opening')
+    await expect(running).toBeGreaterThan(0)
+    await expect(delays).toHaveLength(9)
+    await expect(delays[0]).toBe('26ms')
+    await expect(delays[1]).toBe('52ms')
+    await expect(delays.at(-1)).toBe('234ms')
+
+    // And then it is over, and nothing is left running against the picture.
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+    })
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
+  },
+}
+
+/**
+ * Closing, the order turns round: the row at the bottom of what can be read
+ * leaves first and the one at the top last, so the panel empties upwards into
+ * the edge it folds into. The column keeps its width the whole way, because a
+ * picture widening into a panel still on its way out would be laid out twice.
+ */
+export const 一覧が閉じるあいだ: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+    const wide = asideWidth(canvasElement)
+
+    await userEvent.click(fold)
+
+    const phase = foldPhaseOf(canvasElement)
+    const delays = rowDelaysOf(canvasElement)
+    const held = asideWidth(canvasElement)
+
+    await expect(phase).toBe('closing')
+    await expect(held).toBe(wide)
+    await expect(delays).toHaveLength(9)
+    await expect(delays[0]).toBe('208ms')
+    await expect(delays[1]).toBe('182ms')
+    await expect(delays.at(-1)).toBe('0ms')
+
+    await waitFor(async () => {
+      await expect(asideWidth(canvasElement)).toBeLessThan(wide)
+    })
+    await expect(foldPhaseOf(canvasElement)).toBe('still')
+  },
+}
+
+/**
+ * Pressed twice before the first press has finished, the fold turns round
+ * where it stands rather than running a second time on top of the first. The
+ * cascade is dropped for the run that turns round: a row waiting out its delay
+ * while the run it belongs to has been called off is a row that looks stuck.
+ */
+export const 畳みかけて開き直す: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+    const wide = asideWidth(canvasElement)
+
+    await userEvent.click(fold)
+    await expect(foldPhaseOf(canvasElement)).toBe('closing')
+
+    await userEvent.click(fold)
+
+    const phase = foldPhaseOf(canvasElement)
+    const delays = rowDelaysOf(canvasElement)
+
+    await expect(phase).toBe('opening')
+    await expect(delays.join('')).toBe('')
+
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+    })
+    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(asideWidth(canvasElement)).toBe(wide)
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
+  },
+}
+
+/**
+ * A reader who has asked their browser for less motion is given the fold in
+ * one step. Nothing is staggered, nothing is wiped, and nothing is left
+ * waiting on a transition that is never going to run — the panel is simply
+ * gone on the press, which is the fold as the canon had it before this.
+ */
+export const 動きを減らす設定では一息で畳む: Story = {
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+
+    return askedForLessMotion()
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+    const wide = asideWidth(canvasElement)
+
+    await userEvent.click(fold)
+
+    await expect(foldPhaseOf(canvasElement)).toBe('still')
+    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+    await expect(asideWidth(canvasElement)).toBeLessThan(wide)
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
+
+    await userEvent.click(fold)
+
+    await expect(foldPhaseOf(canvasElement)).toBe('still')
+    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(asideWidth(canvasElement)).toBe(wide)
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
+  },
+}
+
+/**
+ * A full aerial. The cascade is capped, so the last row of thirty-four is told
+ * to move at the same moment as the tenth and the fold takes exactly as long
+ * as it does on nine — the rows past the cap are below the panel's edge, where
+ * arriving one behind another is something nobody is looking at.
+ */
+export const 長い一覧でも畳みの長さは変わらない: Story = {
+  args: { screen: MANY },
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+
+    await userEvent.click(fold)
+
+    const delays = rowDelaysOf(canvasElement)
+
+    await expect(delays).toHaveLength(MANY.channels.length)
+    await expect(delays[0]).toBe('26ms')
+    await expect(delays[8]).toBe('234ms')
+    await expect(new Set(delays.slice(8)).size).toBe(1)
+
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+    })
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
   },
 }
 
