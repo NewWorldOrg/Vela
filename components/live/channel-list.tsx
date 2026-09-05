@@ -1,6 +1,6 @@
 'use client'
 
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 
 import { cn } from '@/lib/utils'
 import type { ChannelKind } from '@/repository/channels'
@@ -14,6 +14,12 @@ import {
 } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 import { ChannelKinds } from '@/components/live/channel-kinds'
+import {
+  foldPanel,
+  foldPart,
+  foldPartDelay,
+  type FoldMotion,
+} from '@/components/live/channel-fold'
 
 /** The remote-control key, as a small plate. */
 export function ChannelKey({
@@ -52,6 +58,13 @@ export function ChannelKey({
  * folded, so that folding does not move the thing that unfolds. Folded, only
  * that press is left; the types and the rows are taken out of the page rather
  * than dimmed, because a list that cannot be read is not a list that is off.
+ *
+ * Given `motion` as well, that going and coming back is drawn rather than
+ * switched: the panel is wiped across by a clip and the parts behind it arrive
+ * one behind another, in the order they are read opening and the reverse of it
+ * closing. Nothing in the run touches a length the page is measured from, so
+ * the picture beside the list is laid out once — when the column changes width
+ * — and not once a frame. `channel-fold.ts` is where the shape of it is.
  */
 export function ChannelList({
   kind,
@@ -62,6 +75,7 @@ export function ChannelList({
   onSelect,
   folded,
   onFold,
+  motion,
   className,
 }: {
   kind: ChannelKind
@@ -76,19 +90,76 @@ export function ChannelList({
   folded?: boolean
   /** Given, the list can be folded; left out, it cannot. */
   onFold?: (folded: boolean) => void
+  /** Given, the fold is drawn as a run rather than as a switch. */
+  motion?: FoldMotion
   className?: string
 }) {
   const body = useId()
+  const listed = useRef<HTMLDivElement>(null)
+  const panel = useRef<HTMLDivElement>(null)
+  const phase = motion?.phase ?? 'still'
+  const settle = motion?.onSettle
+  const shown = motion === undefined ? !folded : motion.shown
+
+  /**
+   * A run is over when everything it started has stopped, whichever part that
+   * turns out to be — the clip on the way in, the last row on the way out.
+   * Until it is, a list that has been folded is still on the page, holding the
+   * column open so the picture beside it widens once rather than into a panel
+   * still leaving.
+   *
+   * A run that never began is over as well. Asking for the clip is what makes
+   * the browser resolve the style the transitions are to start from; counted
+   * before that, or in a browser that interpolates none of it, the fold ends
+   * here instead of waiting for something that is not coming.
+   */
+  useEffect(() => {
+    const whole = listed.current
+    const clipped = panel.current
+
+    if (phase === 'still' || settle === undefined || whole === null) {
+      return
+    }
+
+    const begun =
+      clipped !== null && getComputedStyle(clipped).clipPath !== 'none'
+    const running = begun ? whole.getAnimations({ subtree: true }) : []
+
+    if (running.length === 0) {
+      settle()
+
+      return
+    }
+
+    let left = false
+
+    void Promise.allSettled(running.map((one) => one.finished)).then(() => {
+      if (!left) {
+        settle()
+      }
+    })
+
+    return () => {
+      left = true
+    }
+  }, [phase, settle])
 
   return (
-    <div className={cn('flex min-h-0 flex-col', className)}>
+    <div
+      ref={listed}
+      data-slot="channel-list"
+      data-fold={phase}
+      className={cn('flex min-h-0 flex-col', className)}
+    >
       <div className="mb-3.5 flex items-start justify-end gap-1.5">
-        <ChannelKinds
-          kind={kind}
-          kinds={kinds}
-          onKind={onKind}
-          className={cn('flex-1', folded && 'hidden')}
-        />
+        {shown && (
+          <ChannelKinds
+            kind={kind}
+            kinds={kinds}
+            onKind={onKind}
+            className={cn('flex-1', foldPanel(motion))}
+          />
+        )}
         {onFold && (
           <Button
             type="button"
@@ -103,88 +174,111 @@ export function ChannelList({
           </Button>
         )}
       </div>
-      <div
-        id={body}
-        className={cn('flex min-h-0 flex-1 flex-col', folded && 'hidden')}
-      >
-        <div className="flex items-center gap-[7px] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-3">
-          <LiveIcon className="size-3.5 text-brand" />
-          放送中
-          <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
-        </div>
-        {channels.length === 0 ? (
-          <ChannelsMissing kind={kind} kinds={kinds} onKind={onKind} />
-        ) : (
-          <ul className="min-h-0 flex-1 overflow-y-auto rounded-lg bg-surface">
-            {channels.map((channel) => {
-              const on = channel.id === watchingId
+      {shown && (
+        <div
+          id={body}
+          ref={panel}
+          inert={folded}
+          className={cn('flex min-h-0 flex-1 flex-col', foldPanel(motion))}
+        >
+          <div
+            style={{ transitionDelay: foldPartDelay(0, motion) }}
+            className={cn(
+              'flex items-center gap-[7px] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-3',
+              foldPart(motion),
+            )}
+          >
+            <LiveIcon className="size-3.5 text-brand" />
+            放送中
+            <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
+          </div>
+          {channels.length === 0 ? (
+            <div
+              style={{ transitionDelay: foldPartDelay(1, motion) }}
+              className={foldPart(motion)}
+            >
+              <ChannelsMissing kind={kind} kinds={kinds} onKind={onKind} />
+            </div>
+          ) : (
+            <ul className="min-h-0 flex-1 overflow-y-auto rounded-lg bg-surface">
+              {channels.map((channel, nth) => {
+                const on = channel.id === watchingId
 
-              return (
-                <li
-                  key={channel.id}
-                  className="border-b border-dashed border-line last:border-b-0"
-                >
-                  <button
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => onSelect(channel)}
+                return (
+                  <li
+                    key={channel.id}
+                    style={{ transitionDelay: foldPartDelay(nth + 1, motion) }}
                     className={cn(
-                      'flex min-h-11 w-full items-start gap-[11px] rounded-lg px-3 py-2.5 text-left outline-none',
-                      'transition-[background-color] duration-150 ease-out hover:bg-surface-2 focus-visible:shadow-ring',
-                      on && 'bg-brand-soft hover:bg-brand-soft',
-                      pressable,
+                      'border-b border-dashed border-line last:border-b-0',
+                      foldPart(motion),
                     )}
                   >
-                    {channel.no && (
-                      <ChannelKey no={channel.no} on={on} className="mt-0.5" />
-                    )}
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={cn(
-                          'block truncate text-ui font-bold',
-                          on && 'text-brand',
-                        )}
-                      >
-                        {channel.name}
-                      </span>
-                      {channel.now ? (
-                        <span className="block truncate text-sub text-ink-2">
-                          {channel.now.title}
-                        </span>
-                      ) : (
-                        <span className="block text-sub text-ink-3">
-                          番組情報がありません
-                        </span>
+                    <button
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => onSelect(channel)}
+                      className={cn(
+                        'flex min-h-11 w-full items-start gap-[11px] rounded-lg px-3 py-2.5 text-left outline-none',
+                        'transition-[background-color] duration-150 ease-out hover:bg-surface-2 focus-visible:shadow-ring',
+                        on && 'bg-brand-soft hover:bg-brand-soft',
+                        pressable,
                       )}
-                      {channel.next && (
-                        <span className="mt-px block truncate text-note text-ink-3">
-                          次{' '}
-                          <span className="font-code">
-                            {channel.next.startLabel}
-                          </span>{' '}
-                          {channel.next.title}
-                        </span>
-                      )}
-                    </span>
-                    {channel.viewers > 0 && (
-                      <span
-                        aria-label={`視聴者 ${channel.viewers}`}
-                        className="mt-[7px] inline-flex shrink-0 items-center gap-1.5 font-code text-note text-coral"
-                      >
-                        <i
-                          aria-hidden="true"
-                          className="size-[7px] rounded-full bg-coral"
+                    >
+                      {channel.no && (
+                        <ChannelKey
+                          no={channel.no}
+                          on={on}
+                          className="mt-0.5"
                         />
-                        {channel.viewers}
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={cn(
+                            'block truncate text-ui font-bold',
+                            on && 'text-brand',
+                          )}
+                        >
+                          {channel.name}
+                        </span>
+                        {channel.now ? (
+                          <span className="block truncate text-sub text-ink-2">
+                            {channel.now.title}
+                          </span>
+                        ) : (
+                          <span className="block text-sub text-ink-3">
+                            番組情報がありません
+                          </span>
+                        )}
+                        {channel.next && (
+                          <span className="mt-px block truncate text-note text-ink-3">
+                            次{' '}
+                            <span className="font-code">
+                              {channel.next.startLabel}
+                            </span>{' '}
+                            {channel.next.title}
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+                      {channel.viewers > 0 && (
+                        <span
+                          aria-label={`視聴者 ${channel.viewers}`}
+                          className="mt-[7px] inline-flex shrink-0 items-center gap-1.5 font-code text-note text-coral"
+                        >
+                          <i
+                            aria-hidden="true"
+                            className="size-[7px] rounded-full bg-coral"
+                          />
+                          {channel.viewers}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   )
 }
