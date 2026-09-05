@@ -20,9 +20,6 @@ const LIVE_WIRE_PATH = '/api/live/ws'
  */
 export const LIVE_SESSION_PROBE_PATH = '/api/live/profiles'
 
-/** The profile chosen until another is asked for: the API's own default. */
-export const LIVE_PROFILE_UNASKED = '720p30'
-
 /** Where the live screen is. */
 const LIVE_SCREEN_PATH = '/live'
 
