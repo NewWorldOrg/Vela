@@ -1,4 +1,5 @@
 import type { DeviceKind } from '@/lib/device'
+import { cn } from '@/lib/utils'
 import type { AuthMethod } from '@/repository/auth'
 import type { RevokeResult, SessionRow } from '@/repository/sessions'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +18,7 @@ import {
   DeviceTabletIcon,
   type IconProps,
 } from '@/components/vela/icons'
+import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChipDot } from '@/components/vela/status'
 import { RevokeSession } from '@/components/authentication/revoke-session'
 import { SignOut } from '@/components/authentication/sign-out'
@@ -45,8 +47,13 @@ export function SessionTable({
   onRevoke: (id: string) => Promise<RevokeResult>
 }) {
   return (
-    <Table containerClassName="[&>table]:min-w-[720px]">
-      <TableHeader>
+    <Table
+      containerClassName={cn(
+        ADMIN_LIST_HEIGHT_CAP,
+        'overflow-y-auto pb-1 [&>table]:min-w-[720px]',
+      )}
+    >
+      <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           <TableHead>端末</TableHead>
           <TableHead>認証方式</TableHead>
