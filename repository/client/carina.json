@@ -2708,6 +2708,152 @@
         }
       }
     },
+    "/api/reservations/health": {
+      "get": {
+        "tags": [
+          "reservations"
+        ],
+        "operationId": "getReservationHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationHealthResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationHealthResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/outcomes": {
+      "get": {
+        "tags": [
+          "reservations"
+        ],
+        "operationId": "listReservationOutcomes",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ReservationOutcomeKind"
+              }
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "rule",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationOutcomeListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationOutcomeListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfReservationOutcomeListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reservations/{id}/restore": {
       "post": {
         "tags": [
@@ -4216,6 +4362,508 @@
         }
       }
     },
+    "/api/encoding/jobs/{id}/cancel": {
+      "post": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "cancelEncodeJob",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/encoding/destinations": {
+      "post": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "createEncodeDestination",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CreateEncodeDestinationRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CreateEncodeDestinationRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CreateEncodeDestinationRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeDestinationResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeDestinationResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeDestinationResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeDestinationResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeDestinationResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "listEncodeDestinations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeDestinationListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeDestinationListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/encoding/profiles": {
+      "post": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "createEncodeProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CreateEncodeProfileRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CreateEncodeProfileRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CreateEncodeProfileRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeProfileResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeProfileResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeProfileResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "listEncodeProfiles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeProfileListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeProfileListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/encoding/jobs": {
+      "get": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "listEncodeJobs",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/EncodeJobStatus"
+              }
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobListResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "queueEncodeJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/QueueEncodeJobRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/QueueEncodeJobRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/QueueEncodeJobRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeJobResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/driver/status": {
       "get": {
         "tags": [
@@ -5013,6 +5661,162 @@
           }
         }
       },
+      "BaseResponderOfEncodeDestinationListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeDestinationListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfEncodeDestinationResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeDestinationResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfEncodeJobListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeJobListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfEncodeJobResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeJobResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfEncodeProfileListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeProfileListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfEncodeProfileResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeProfileResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfEpgRebuiltResponder": {
         "required": [
           "status",
@@ -5658,6 +6462,32 @@
           }
         }
       },
+      "BaseResponderOfReservationHealthResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationHealthResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfReservationListResponder": {
         "required": [
           "status",
@@ -5679,6 +6509,32 @@
               },
               {
                 "$ref": "#/components/schemas/ReservationListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfReservationOutcomeListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationOutcomeListResponder"
               }
             ]
           }
@@ -6603,6 +7459,89 @@
           }
         }
       },
+      "CreateEncodeDestinationRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "outputRoot": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defaultProfileId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateEncodeProfileRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "codec": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeCodec"
+              }
+            ]
+          },
+          "resolution": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeResolution"
+              }
+            ]
+          },
+          "deinterlace": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Deinterlace"
+              }
+            ]
+          },
+          "rateFactor": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "quantiser": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "CreateReservationRequest": {
         "type": "object",
         "properties": {
@@ -6647,6 +7586,14 @@
             "format": "int32"
           }
         }
+      },
+      "Deinterlace": {
+        "enum": [
+          "leave",
+          "everyFrame",
+          "everyField"
+        ],
+        "type": "string"
       },
       "DetectedDeviceResponder": {
         "required": [
@@ -6902,6 +7849,416 @@
           "dropped",
           "clean",
           "unmeasured",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "EncodeCodec": {
+        "enum": [
+          "h264",
+          "h265"
+        ],
+        "type": "string"
+      },
+      "EncodeDestinationListResponder": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncodeDestinationResponder"
+            }
+          }
+        }
+      },
+      "EncodeDestinationResponder": {
+        "required": [
+          "id",
+          "label",
+          "outputRoot",
+          "defaultProfileId",
+          "definedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "outputRoot": {
+            "type": "string"
+          },
+          "defaultProfileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "definedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EncodeEncoder": {
+        "enum": [
+          "software",
+          "vaapi"
+        ],
+        "type": "string"
+      },
+      "EncodeFailure": {
+        "enum": [
+          "ffmpegExitedNonZero",
+          "notEnoughRoom",
+          "sourceMissing",
+          "capabilityUnavailable",
+          "timedOut",
+          "destinationCollision"
+        ],
+        "type": "string"
+      },
+      "EncodeFailureResponder": {
+        "required": [
+          "failure",
+          "note",
+          "noticedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "failure": {
+            "$ref": "#/components/schemas/EncodeFailure"
+          },
+          "note": {
+            "type": "string"
+          },
+          "noticedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EncodeHeadwayResponder": {
+        "required": [
+          "portion",
+          "leftSeconds",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "portion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "leftSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EncodeJobListResponder": {
+        "required": [
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncodeJobResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "EncodeJobResponder": {
+        "required": [
+          "id",
+          "recordingId",
+          "profileId",
+          "destinationId",
+          "outputRoot",
+          "status",
+          "attempt",
+          "queuedAt",
+          "startedAt",
+          "endedAt",
+          "route",
+          "headway",
+          "quietForSeconds",
+          "stalled",
+          "failure",
+          "artefactName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recordingId": {
+            "type": "string"
+          },
+          "profileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outputRoot": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncodeJobStatus"
+          },
+          "attempt": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "queuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "route": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeRouteResponder"
+              }
+            ]
+          },
+          "headway": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeHeadwayResponder"
+              }
+            ]
+          },
+          "quietForSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalled": {
+            "type": "boolean"
+          },
+          "failure": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeFailureResponder"
+              }
+            ]
+          },
+          "artefactName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "EncodeJobStatus": {
+        "enum": [
+          "queued",
+          "running",
+          "completed",
+          "failed",
+          "cancelled"
+        ],
+        "type": "string"
+      },
+      "EncodeProfileListResponder": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncodeProfileResponder"
+            }
+          }
+        }
+      },
+      "EncodeProfileResponder": {
+        "required": [
+          "id",
+          "label",
+          "codec",
+          "resolution",
+          "deinterlace",
+          "rateFactor",
+          "quantiser",
+          "definedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "codec": {
+            "$ref": "#/components/schemas/EncodeCodec"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/EncodeResolution"
+          },
+          "deinterlace": {
+            "$ref": "#/components/schemas/Deinterlace"
+          },
+          "rateFactor": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "quantiser": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "definedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EncodeResolution": {
+        "enum": [
+          "asSource",
+          "fullHd",
+          "hd"
+        ],
+        "type": "string"
+      },
+      "EncodeRouteResponder": {
+        "required": [
+          "asked",
+          "ran",
+          "swerved"
+        ],
+        "type": "object",
+        "properties": {
+          "asked": {
+            "$ref": "#/components/schemas/EncodeEncoder"
+          },
+          "ran": {
+            "$ref": "#/components/schemas/EncodeEncoder"
+          },
+          "swerved": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeSwerve"
+              }
+            ]
+          }
+        }
+      },
+      "EncodeSwerve": {
+        "enum": [
+          "theCardIsOutOfReach",
+          "theCardCannotDoThisCodec",
+          "theProcessorCannotDoThisCodec",
           null
         ],
         "type": [
@@ -8162,6 +9519,31 @@
         ],
         "type": "string"
       },
+      "QueueEncodeJobRequest": {
+        "type": "object",
+        "properties": {
+          "recordingId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "profileId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "destinationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "RebuildEpgRequest": {
         "type": "object",
         "properties": {
@@ -9064,6 +10446,54 @@
         ],
         "type": "string"
       },
+      "ReservationHealthResponder": {
+        "required": [
+          "asOf",
+          "contended",
+          "receptionUnavailable",
+          "epgDiverged",
+          "epgMissing"
+        ],
+        "type": "object",
+        "properties": {
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "contended": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "receptionUnavailable": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "epgDiverged": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "epgMissing": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ReservationListResponder": {
         "required": [
           "items",
@@ -9120,6 +10550,199 @@
           "byRule"
         ],
         "type": "string"
+      },
+      "ReservationOutcomeKind": {
+        "enum": [
+          "competing",
+          "missed",
+          "tuneFailure",
+          "recordingFailure"
+        ],
+        "type": "string"
+      },
+      "ReservationOutcomeListResponder": {
+        "required": [
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservationOutcomeResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ReservationOutcomeProgrammeResponder": {
+        "required": [
+          "id",
+          "networkId",
+          "serviceId",
+          "eventId",
+          "startsAt",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "eventId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ReservationOutcomeResponder": {
+        "required": [
+          "id",
+          "reservationId",
+          "programme",
+          "kind",
+          "tuneFailure",
+          "recordingOutcome",
+          "recordedInstead",
+          "effectiveStartAt",
+          "effectiveEndAt",
+          "priority",
+          "ruleId",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "programme": {
+            "$ref": "#/components/schemas/ReservationOutcomeProgrammeResponder"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ReservationOutcomeKind"
+          },
+          "tuneFailure": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TuneFailureKind"
+              }
+            ]
+          },
+          "recordingOutcome": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingOutcome"
+              }
+            ]
+          },
+          "recordedInstead": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "effectiveStartAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effectiveEndAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ruleId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       },
       "ReservationProgrammeResponder": {
         "required": [
@@ -11493,6 +13116,9 @@
     },
     {
       "name": "programs"
+    },
+    {
+      "name": "encoding"
     },
     {
       "name": "driver"
