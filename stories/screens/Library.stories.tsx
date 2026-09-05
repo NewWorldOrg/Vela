@@ -1,9 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import type { RecordingDiscarded } from '@/repository/recordings'
-import { RECORDING_FIXTURES } from '@/stories/fixtures/recordings'
+import type { Recording, RecordingDiscarded } from '@/repository/recordings'
+import {
+  MORE_RECORDINGS_THAN_FIT,
+  RECORDING_FIXTURES,
+} from '@/stories/fixtures/recordings'
+import { AppFrame } from '@/components/vela/app-shell'
 import { LibraryView } from '@/components/library/library-page'
+import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const asked: string[] = []
 
@@ -22,20 +27,35 @@ const all = [...RECORDING_FIXTURES].sort(
     b.id.localeCompare(a.id, undefined, { numeric: true }),
 )
 
-const result = {
-  items: all,
-  total: all.length,
-  channels: [...new Set(all.map((r) => r.channel))],
-  years: [...new Set(all.map((r) => r.year))].sort((a, b) => b - a),
-  genres: [...new Set(all.map((r) => r.genre).filter((g) => g !== undefined))],
-  filter: {},
+function resultOf(items: Recording[]) {
+  return {
+    items,
+    total: items.length,
+    channels: [...new Set(items.map((r) => r.channel))],
+    years: [...new Set(items.map((r) => r.year))].sort((a, b) => b - a),
+    genres: [
+      ...new Set(items.map((r) => r.genre).filter((g) => g !== undefined)),
+    ],
+    filter: {},
+  }
 }
+
+const result = resultOf(all)
 
 const meta = {
   title: 'Screens/録画ライブラリ',
   component: LibraryView,
   parameters: { layout: 'fullscreen' },
   args: { onDelete: throwing },
+  // The screen pins the frame to the window and gives the list what is left,
+  // so it is drawn in the frame that answers the pin.
+  decorators: [
+    (Story) => (
+      <AppFrame>
+        <Story />
+      </AppFrame>
+    ),
+  ],
 } satisfies Meta<typeof LibraryView>
 
 export default meta
@@ -203,5 +223,24 @@ export const 実ファイルのない録画の削除: Story = {
     await expect(
       within(await screen.findByRole('alertdialog')).getByText(/GB/),
     ).toHaveTextContent('3.4 GB (実ファイルなし)')
+  },
+}
+
+export const 収まらないほどの録画: Story = {
+  args: { result: resultOf(MORE_RECORDINGS_THAN_FIT), filter: {} },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '番組', {
+      pageStays: true,
+    })
+  },
+}
+
+export const 狭い幅で収まらないほどの録画: Story = {
+  args: { result: resultOf(MORE_RECORDINGS_THAN_FIT), filter: {} },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '番組', {
+      pageStays: true,
+    })
   },
 }

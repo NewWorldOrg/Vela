@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
-import { ENCODE } from '@/repository/encode.fixtures'
+import { ENCODE, MORE_PROFILES_THAN_FIT } from '@/repository/encode.fixtures'
 import { EncodeView } from '@/components/encode/encode-page'
+import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const meta = {
   title: 'Screens/設定・エンコード',
@@ -71,5 +72,20 @@ export const 押せない理由: Story = {
         'プロファイルの編集はこれから実装されます',
       )
     }
+  },
+}
+
+export const 収まらないほどのプロファイル: Story = {
+  args: { result: MORE_PROFILES_THAN_FIT },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '名称')
+  },
+}
+
+export const 狭い幅で収まらないほどのプロファイル: Story = {
+  args: { result: MORE_PROFILES_THAN_FIT },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '名称')
   },
 }

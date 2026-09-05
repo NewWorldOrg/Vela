@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { QUALITY } from '@/repository/quality.fixtures'
+import { MORE_TUNERS_THAN_FIT, QUALITY } from '@/repository/quality.fixtures'
 import { QualityView } from '@/components/quality/quality-page'
+import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const meta = {
   title: 'Screens/設定・品質',
@@ -21,5 +22,20 @@ export const 供給途絶なし: Story = {
       supplyOutage: undefined,
       anomalies: QUALITY.anomalies.filter((a) => a.level !== 'unreachable'),
     },
+  },
+}
+
+export const 収まらないほどのチューナー: Story = {
+  args: { result: MORE_TUNERS_THAN_FIT },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チューナー')
+  },
+}
+
+export const 狭い幅で収まらないほどのチューナー: Story = {
+  args: { result: MORE_TUNERS_THAN_FIT },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チューナー')
   },
 }

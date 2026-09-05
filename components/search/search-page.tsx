@@ -53,7 +53,7 @@ import {
   PlusIcon,
   SearchIcon,
 } from '@/components/vela/icons'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ADMIN_LIST_HEIGHT_CAP, ScreenMain } from '@/components/vela/app-shell'
 
 /**
  * The 種別 row's neutral choice. Every other row says "not asked for" by being
@@ -656,7 +656,20 @@ function SearchScreen({ result }: { result: SearchResult }) {
               />
             ) : (
               <>
-                <div className="-mx-1 overflow-x-auto px-1 pb-1">
+                {/*
+                  The conditions above are read, so the results are bounded
+                  the way an admin list under a form is, and to the same
+                  height: a list is one height wherever it sits.
+                */}
+                <div
+                  data-slot="table-container"
+                  // The container scrolls, so it has to be reachable by keyboard.
+                  tabIndex={0}
+                  className={cn(
+                    ADMIN_LIST_HEIGHT_CAP,
+                    '-mx-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring',
+                  )}
+                >
                   <table className="w-full min-w-[760px] border-separate border-spacing-0">
                     <thead>
                       <tr>
@@ -664,7 +677,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                           (h) => (
                             <th
                               key={h}
-                              className="bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
+                              className="sticky top-0 z-10 bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
                             >
                               {h}
                             </th>

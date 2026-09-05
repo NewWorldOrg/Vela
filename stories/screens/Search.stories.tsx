@@ -19,10 +19,12 @@ import {
   searchConditionOfQuery,
 } from '@/repository/search-options'
 import {
+  MORE_HITS_THAN_FIT,
   SEARCH_CHANNEL_FIXTURES,
   SEARCH_HIT_FIXTURES,
 } from '@/repository/search.fixtures'
 import { SearchView } from '@/components/search/search-page'
+import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const emptyCondition: SearchCondition = {
   fields: 'title,description',
@@ -1312,5 +1314,37 @@ export const チャンネルは上限で足せなくなる: Story = {
     await expect(
       canvas.getAllByRole('button', { name: /^チャンネル .+ を外す$/ }),
     ).toHaveLength(SEARCH_MOST_CHANNELS)
+  },
+}
+
+const aPageOfFifty: SearchResult = {
+  condition: { ...condition, perPage: 50 },
+  channels,
+  outcome: {
+    state: 'searched',
+    found: {
+      hits: MORE_HITS_THAN_FIT,
+      total: 67,
+      page: 1,
+      lastPage: 2,
+      perPage: 50,
+      rangeFrom: 1,
+      rangeTo: 50,
+    },
+  },
+}
+
+export const 収まらないほどの検索結果: Story = {
+  args: { result: aPageOfFifty },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チャンネル')
+  },
+}
+
+export const 狭い幅で収まらないほどの検索結果: Story = {
+  args: { result: aPageOfFifty },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チャンネル')
   },
 }

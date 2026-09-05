@@ -205,19 +205,47 @@ function measureTapTargets(): Findings {
    * A control larger than the pane on an axis is not cut on that axis: there is
    * nowhere to scroll it to, and skipping it would drop the widest rows — the
    * ones inside a table that scrolls sideways — out of the measuring entirely.
+   *
+   * It is the area that is asked about at a pane's edge, not the drawn box. A
+   * 14px caret drawn whole on the last line a pane shows has its 44px area
+   * sliced by that edge all the same, and asked of the box alone it read as in
+   * sight and was measured where a third of it could not be pressed. The
+   * window's own edge is left to `reachable`, which already counts a press on
+   * the edge as landing.
    */
-  const heldBack = (box: DOMRect, node: Element) =>
-    !inSight(box) ||
-    panesAround(node).some((pane) => {
-      const edge = pane.getBoundingClientRect()
+  const areaOf = (box: DOMRect) => {
+    const areaWidth = Math.max(box.width, TAP)
+    const areaHeight = Math.max(box.height, TAP)
+    const cx = box.left + box.width / 2
+    const cy = box.top + box.height / 2
 
-      return (
-        (box.height <= edge.height &&
-          (box.top < edge.top || box.bottom > edge.bottom)) ||
-        (box.width <= edge.width &&
-          (box.left < edge.left || box.right > edge.right))
-      )
-    })
+    return {
+      left: cx - areaWidth / 2,
+      right: cx + areaWidth / 2,
+      top: cy - areaHeight / 2,
+      bottom: cy + areaHeight / 2,
+      width: areaWidth,
+      height: areaHeight,
+    }
+  }
+
+  const heldBack = (box: DOMRect, node: Element) => {
+    const area = areaOf(box)
+
+    return (
+      !inSight(box) ||
+      panesAround(node).some((pane) => {
+        const edge = pane.getBoundingClientRect()
+
+        return (
+          (area.height <= edge.height &&
+            (area.top < edge.top || area.bottom > edge.bottom)) ||
+          (area.width <= edge.width &&
+            (area.left < edge.left || area.right > edge.right))
+        )
+      })
+    )
+  }
 
   /**
    * Where every scroller stood before anything was brought into sight, kept so

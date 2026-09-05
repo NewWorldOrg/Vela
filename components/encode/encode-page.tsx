@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import type { EncodeResult } from '@/repository/encode'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,7 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import {
+  ADMIN_LIST_HEIGHT_CAP,
+  Crumb,
+  CrumbCurrent,
+} from '@/components/vela/app-shell'
 import { Field, FieldLabel } from '@/components/vela/field'
 import {
   MarkDots,
@@ -171,8 +176,11 @@ export function EncodeView({ result }: { result: EncodeResult }) {
             プロファイルを追加
           </Button>
         </div>
-        <Table className="min-w-[720px]" containerClassName="pb-1">
-          <TableHeader>
+        <Table
+          className="min-w-[720px]"
+          containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
+        >
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {PROFILE_COLUMNS.map((column) => (
                 <TableHead key={column}>{column}</TableHead>

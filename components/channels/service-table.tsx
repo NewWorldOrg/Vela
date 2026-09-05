@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { CandidateList } from '@/components/channels/candidate-list'
 import { cn } from '@/lib/utils'
@@ -241,8 +242,11 @@ export function ServiceTable({
   const { open, folding, toggle, settle } = useUnfolded()
 
   return (
-    <Table className="min-w-[860px]" containerClassName="pb-1">
-      <TableHeader>
+    <Table
+      className="min-w-[860px]"
+      containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
+    >
+      <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {SERVICE_COLUMNS.map((column) => (
             <TableHead key={column.label}>

@@ -382,3 +382,19 @@ export const MIGRATION: MigrationResult = {
     },
   ],
 }
+
+/** More rows than a window holds: every group's rows, one per hour of the night. */
+export const MORE_NOT_TAKEN_THAN_FIT: MigrationResult = {
+  ...MIGRATION,
+  notTakenGroups: MIGRATION.notTakenGroups.map((group) => ({
+    ...group,
+    count: String(group.rows.length * 8),
+    rows: Array.from({ length: 8 }, (_, round) =>
+      group.rows.map((row) => ({
+        ...row,
+        id: `${row.id}-${round}`,
+        file: row.file.replace(/_\d\d-/, `_${String(round).padStart(2, '0')}-`),
+      })),
+    ).flat(),
+  })),
+}

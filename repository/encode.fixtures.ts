@@ -52,3 +52,14 @@ export const ENCODE: EncodeResult = {
     concurrency: '1',
   },
 }
+
+/** More profiles than a window holds: the one profile, at every quality. */
+export const MORE_PROFILES_THAN_FIT: EncodeResult = {
+  ...ENCODE,
+  profiles: Array.from({ length: 24 }, (_, index) => ({
+    ...PLAYBACK_PROFILE,
+    id: `pf-${index + 1}`,
+    name: `${PLAYBACK_PROFILE.name} ${index + 1}`,
+    crf: String(16 + (index % 12)),
+  })),
+}

@@ -226,3 +226,12 @@ const RECORDINGS: Recording[] = [
 export const RECORDING_FIXTURES: Recording[] = RECORDINGS.map((one) =>
   one.thumbnail === 'shot' ? { ...one, thumbnailHref: DRAWN_FRAME } : one,
 )
+
+/** More recordings than a window holds: the finished ones, week after week. */
+export const MORE_RECORDINGS_THAN_FIT: Recording[] = Array.from(
+  { length: 5 },
+  (_, round) =>
+    RECORDING_FIXTURES.filter((one) => one.outcome !== 'recording').map(
+      (one) => ({ ...one, id: `${one.id}${round}` }),
+    ),
+).flat()

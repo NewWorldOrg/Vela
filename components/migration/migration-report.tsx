@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { cn } from '@/lib/utils'
 import type { MigrationResult } from '@/repository/migration'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -17,6 +18,7 @@ import {
   MarkSlashes,
   MarkType,
 } from '@/components/vela/icons'
+import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { MigrationCountCell } from '@/components/migration/migration-count-cell'
@@ -128,8 +130,11 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
         <SectionHeading mark={MarkType}>
           取り込まなかったものの明細
         </SectionHeading>
-        <Table className="min-w-[860px]" containerClassName="pb-1">
-          <TableHeader>
+        <Table
+          className="min-w-[860px]"
+          containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
+        >
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {NOT_TAKEN_COLUMNS.map((column) => (
                 <TableHead key={column}>{column}</TableHead>

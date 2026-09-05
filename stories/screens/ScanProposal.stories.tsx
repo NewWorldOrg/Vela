@@ -2,8 +2,12 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import type { WriteResult } from '@/repository/services'
-import { SCAN_PROPOSAL } from '@/repository/services.fixtures'
+import {
+  MORE_ATTEMPTS_THAN_FIT,
+  SCAN_PROPOSAL,
+} from '@/repository/services.fixtures'
 import { ScanProposalView } from '@/components/scan/scan-proposal-page'
+import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const GONE =
   'このスキャンの差分はもう保持されていないため、保存できませんでした。別の保存が先に完了した可能性があります。チャンネル一覧を確かめ、反映されていなければスキャンし直してください。'
@@ -91,5 +95,30 @@ export const サインインしていないとき: Story = {
 export const 取得できないとき: Story = {
   args: {
     result: { state: 'unavailable', message: 'driver に接続できません' },
+  },
+}
+
+export const 収まらないほどの失敗: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      proposal: { ...SCAN_PROPOSAL, failures: MORE_ATTEMPTS_THAN_FIT.attempts },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
+  },
+}
+
+export const 狭い幅で収まらないほどの失敗: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      proposal: { ...SCAN_PROPOSAL, failures: MORE_ATTEMPTS_THAN_FIT.attempts },
+    },
+  },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
   },
 }

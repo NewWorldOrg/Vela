@@ -44,7 +44,10 @@ export function IntegrityView({
   const { check, findings, roots } = result
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain
+      scroll="within"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+    >
       <div className="mb-3">
         <Link
           href="/library"
@@ -138,8 +141,11 @@ export function IntegrityView({
           titleLevel={2}
         />
       ) : (
-        <Table className="min-w-[720px]" containerClassName="pb-1">
-          <TableHeader>
+        <Table
+          className="min-w-[720px]"
+          containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+        >
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {COLUMNS.map((column) => (
                 <TableHead key={column}>{column}</TableHead>
