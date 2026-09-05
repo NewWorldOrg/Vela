@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, within } from 'storybook/test'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   OIDC_ADMITS_EVERYONE,
@@ -7,6 +7,7 @@ import {
   OIDC_REACHABLE,
   OIDC_UNCONFIGURED,
   ONLY_THIS_DEVICE,
+  MORE_SESSIONS_THAN_FIT,
   SESSIONS,
   SIGNED_IN_LOCALLY,
   SIGNED_IN_WITH_A_PROVIDER,
@@ -55,6 +56,53 @@ export const OIDC未設定: Story = {
 }
 
 export const 絞り込み未設定: Story = { args: { oidc: OIDC_ADMITS_EVERYONE } }
+
+/**
+ * The list is bounded by the window rather than the page by the list: it
+ * stops short of the window's height and sends the rest inside, with the
+ * header row held at its top while the rows go by under it. The form above
+ * the list is what the page still scrolls for.
+ */
+async function scrollsInsideWithItsHeaderHeld(
+  canvasElement: HTMLElement,
+): Promise<void> {
+  const container = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="table-container"]',
+  )
+
+  if (!container) {
+    throw new Error('the session list is not on the screen')
+  }
+
+  const header = within(container).getByRole('columnheader', { name: '端末' })
+
+  await expect(container.scrollHeight).toBeGreaterThan(container.clientHeight)
+  await expect(container.clientHeight).toBeLessThan(window.innerHeight)
+
+  container.scrollTop = 300
+
+  await waitFor(() => expect(container.scrollTop).toBeGreaterThan(0))
+
+  const headerTop = header.getBoundingClientRect().top
+  const containerTop = container.getBoundingClientRect().top
+
+  await expect(Math.abs(headerTop - containerTop)).toBeLessThanOrEqual(1)
+}
+
+export const 収まらないほどのセッション: Story = {
+  args: { sessions: MORE_SESSIONS_THAN_FIT },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement)
+  },
+}
+
+export const 狭い幅で収まらないほどのセッション: Story = {
+  args: { sessions: MORE_SESSIONS_THAN_FIT },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement)
+  },
+}
 
 export const IDプロバイダに到達できない: Story = {
   args: { oidc: OIDC_OUT_OF_REACH },

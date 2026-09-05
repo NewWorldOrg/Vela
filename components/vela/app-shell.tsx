@@ -12,6 +12,20 @@ const TOP_BAR_HEIGHT = 'h-[46px]'
 const BELOW_TOP_BAR = 'top-[46px]'
 
 /**
+ * The most a list on an admin page may be tall: the window less the top bar
+ * and the page's own bottom padding (`AdminMain`), so that a page scrolled to
+ * its end shows the list's header row just under the top bar and its last row
+ * at the window's edge.
+ *
+ * A screen that is only a list pins itself to the window and lets the list
+ * take what is left (`ScreenMain scroll="within"`). A list that sits under
+ * something that is read — a form — cannot: the form takes the window and
+ * leaves the list nothing. Such a list is bounded instead: it grows with its
+ * rows until it would reach past the window, and from there scrolls inside.
+ */
+export const ADMIN_LIST_HEIGHT_CAP = 'max-h-[calc(100dvh-66px)]'
+
+/**
  * The window-filling frame every route inside the shell is drawn in: the top
  * bar, then the screen.
  *

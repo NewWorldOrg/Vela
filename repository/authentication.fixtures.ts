@@ -50,6 +50,21 @@ export const SESSIONS: SessionRow[] = [
 
 export const ONLY_THIS_DEVICE: SessionRow[] = [THIS_DEVICE]
 
+/** More sessions than a window holds: the other devices, signed in again and again. */
+export const MORE_SESSIONS_THAN_FIT: SessionRow[] = [
+  THIS_DEVICE,
+  ...Array.from({ length: 12 }, (_, round) =>
+    SESSIONS.filter((session) => !session.current).map((session) => ({
+      ...session,
+      id: `${session.id}-${round}`,
+      createdAt: `2026/07/${String(1 + round).padStart(2, '0')} 21:40`,
+      lastUsed: {
+        label: `2026/08/${String(1 + round).padStart(2, '0')} 11:44`,
+      },
+    })),
+  ).flat(),
+]
+
 export const OIDC_UNCONFIGURED: OidcConfig = {
   configured: false,
   discoveryUrl: '',
