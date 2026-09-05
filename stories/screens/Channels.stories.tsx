@@ -231,6 +231,15 @@ export const 開くのは一度にひとつ: Story = {
 
     await expect(first).toHaveAttribute('aria-expanded', 'false')
     await expect(second).toHaveAttribute('aria-expanded', 'true')
+
+    // The first row's candidates are still folding shut while the second's
+    // unfold, and a fold that is cut off mid-way never settles. The story is
+    // over when only the second's are left.
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelectorAll('[data-slot="unfold"]'),
+      ).toHaveLength(1),
+    )
   },
 }
 
