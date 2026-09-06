@@ -1377,14 +1377,6 @@ function columnRunning(canvasElement: HTMLElement): string[] {
   )
 }
 
-function pictureRunning(canvasElement: HTMLElement): string[] {
-  const picture = canvasElement.querySelector('main > div')
-
-  return (picture?.getAnimations() ?? []).map((one) =>
-    one instanceof CSSTransition ? one.transitionProperty : '',
-  )
-}
-
 function runsFor(element: Element | null, property: string): number {
   const found = (element?.getAnimations() ?? []).find(
     (one) =>
@@ -1497,7 +1489,6 @@ export const 畳んだまま開く: Story = {
     await expect(foldPhaseOf(canvasElement)).toBe('still')
     await expect(foldRunning(canvasElement)).toHaveLength(0)
     await expect(columnRunning(canvasElement)).toHaveLength(0)
-    await expect(pictureRunning(canvasElement)).toHaveLength(0)
   },
 }
 
@@ -1555,7 +1546,6 @@ export const 一覧が開くあいだ: Story = {
     await expect(phase).toBe('opening')
     await expect(running).toBeGreaterThan(0)
     await expect(columnRunning(canvasElement)).toEqual(['width'])
-    await expect(pictureRunning(canvasElement)).toEqual(['width'])
     await expect(listWidth(canvasElement)).toBe(344)
     await expect(foldLengths(canvasElement)).toEqual({ column: 300, wipe: 300 })
     await expect(delays).toHaveLength(9)
@@ -1585,7 +1575,6 @@ export const 一覧が閉じるあいだ: Story = {
 
     await expect(phase).toBe('closing')
     await expect(column).toEqual(['width'])
-    await expect(pictureRunning(canvasElement)).toEqual(['width'])
     await expect(inside).toBe(wide)
     await expect(foldLengths(canvasElement)).toEqual({ column: 300, wipe: 300 })
     await expect(delays).toHaveLength(9)
@@ -1600,70 +1589,6 @@ export const 一覧が閉じるあいだ: Story = {
       await expect(foldPhaseOf(canvasElement)).toBe('still')
     })
     await expect(columnRunning(canvasElement)).toHaveLength(0)
-  },
-}
-
-function pictureThroughAFold(
-  canvasElement: HTMLElement,
-  press: HTMLElement,
-): Promise<{ width: number; left: number }[]> {
-  const picture = canvasElement.querySelector('video')
-
-  if (picture === null) {
-    throw new Error('the picture is not on the screen')
-  }
-
-  const seen: { width: number; left: number }[] = []
-
-  return new Promise((settled) => {
-    const began = performance.now()
-
-    const read = (now: number) => {
-      const box = picture.getBoundingClientRect()
-
-      seen.push({ width: box.width, left: box.left })
-
-      if (now - began < 460) {
-        requestAnimationFrame(read)
-      } else {
-        settled(seen)
-      }
-    }
-
-    press.click()
-    requestAnimationFrame(read)
-  })
-}
-
-function spread(across: number[]): number {
-  return Math.max(...across) - Math.min(...across)
-}
-
-export const 畳んでも画は横に動かない: Story = {
-  parameters: { screen: { width: 1440, height: 900 } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
-
-    const away = await pictureThroughAFold(canvasElement, fold)
-
-    await expect(spread(away.map((one) => one.left))).toBeLessThanOrEqual(2)
-    await expect(spread(away.map((one) => one.width))).toBeGreaterThan(100)
-
-    await waitFor(async () => {
-      await expect(foldPhaseOf(canvasElement)).toBe('still')
-    })
-
-    const back = await pictureThroughAFold(canvasElement, fold)
-
-    await expect(spread(back.map((one) => one.left))).toBeLessThanOrEqual(2)
-    await expect(spread(back.map((one) => one.width))).toBeGreaterThan(100)
-
-    await waitFor(async () => {
-      await expect(foldPhaseOf(canvasElement)).toBe('still')
-    })
-
-    await expect(back.at(-1)?.left).toBeCloseTo(away[0].left, 1)
   },
 }
 

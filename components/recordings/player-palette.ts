@@ -130,7 +130,7 @@ export const PLAYER_BUTTON_ON =
  * picture, and left as wide as the window it would run out either side of it.
  */
 export const PLAYER_COLUMN =
-  'mx-auto w-full [--pl-cap:calc((100dvh_-_210px)*16/9)] max-w-(--pl-cap)'
+  'mx-auto w-full max-w-[calc((100dvh_-_210px)*16/9)]'
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
