@@ -282,7 +282,6 @@ export interface RecordingDetail extends Recording {
   qualitySpots?: QualitySpot[]
   /** Unset: nothing upstream carries a chapter or a commercial break. */
   seek?: SeekMarks
-  /** Unset: the jobs standing behind a recording are not read here. */
   encodePanel?: {
     profile?: string
     doneSub?: string
