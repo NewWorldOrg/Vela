@@ -12,6 +12,7 @@ import { EncodeChip } from '@/components/recordings/encode-chip'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 
 const CELL =
@@ -70,7 +71,12 @@ export function RecordingRow({
           </span>
         </span>
       </td>
-      <td className={cn(CELL, 'text-ui whitespace-nowrap')}>{r.channel}</td>
+      <td className={cn(CELL, 'text-ui')}>
+        <span className="flex items-center gap-2">
+          <ChannelMark logo={r.channelLogo} no={r.channelNo} keepsTheSlot />
+          <span className="min-w-0">{r.channel}</span>
+        </span>
+      </td>
       <td
         className={cn(CELL, 'font-code text-ui whitespace-nowrap text-ink-2')}
       >

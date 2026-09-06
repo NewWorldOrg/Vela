@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { ProgramCell } from '@/components/guide/program-cell'
 
 /** The hour gutter is the one column of the grid that is not a channel. */
@@ -111,14 +112,10 @@ export function GuideGrid({
               key={c.id}
               data-guide-heading
               style={{ flex: COLUMN_FLEX }}
-              className="min-w-0 overflow-hidden border-l border-line px-1.5 py-2 text-center text-sub font-bold text-ellipsis whitespace-nowrap first-of-type:border-l-0"
+              className="flex min-w-0 items-center justify-center gap-1.5 overflow-hidden border-l border-line px-1.5 py-2 text-sub font-bold first-of-type:border-l-0"
             >
-              {c.no && (
-                <span className="mr-[5px] font-code text-[10.5px] font-normal text-ink-3">
-                  {c.no}
-                </span>
-              )}
-              {c.name}
+              <ChannelMark logo={c.logo} no={c.no} />
+              <span className="min-w-0 truncate">{c.name}</span>
             </div>
           ))}
         </div>

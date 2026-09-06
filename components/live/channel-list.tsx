@@ -13,6 +13,7 @@ import {
   LiveIcon,
 } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import {
   foldPanel,
@@ -20,29 +21,6 @@ import {
   foldPartDelay,
   type FoldMotion,
 } from '@/components/live/channel-fold'
-
-/** The remote-control key, as a small plate. */
-export function ChannelKey({
-  no,
-  on,
-  className,
-}: {
-  no: string
-  on?: boolean
-  className?: string
-}) {
-  return (
-    <span
-      className={cn(
-        'shrink-0 rounded-[10px] border border-line bg-surface-2 px-2 font-code text-[11px] leading-[1.7] font-medium text-ink-2',
-        on && 'border-brand-line bg-surface text-brand',
-        className,
-      )}
-    >
-      {no}
-    </span>
-  )
-}
 
 /**
  * The channels of one broadcast type, one row each, with what is on air and
@@ -204,13 +182,13 @@ export function ChannelList({
                         pressable,
                       )}
                     >
-                      {channel.no && (
-                        <ChannelKey
-                          no={channel.no}
-                          on={on}
-                          className="mt-0.5"
-                        />
-                      )}
+                      <ChannelMark
+                        logo={channel.logo}
+                        no={channel.no}
+                        on={on}
+                        keepsTheSlot
+                        className="mt-0.5"
+                      />
                       <span className="min-w-0 flex-1">
                         <span
                           className={cn(

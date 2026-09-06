@@ -117,6 +117,7 @@
     --pop: rgba(72, 60, 46, 0.22);
     --scrim: rgba(0, 0, 0, 0.32);
     --ring: 0 0 0 3px rgba(63, 100, 97, 0.2);
+    --logo-plate: #fffdf8;
   }
 
   .dark {
@@ -198,6 +199,7 @@
     --pop: rgba(0, 0, 0, 0.5);
     --scrim: rgba(0, 0, 0, 0.5);
     --ring: 0 0 0 3px rgba(150, 187, 180, 0.28);
+    --logo-plate: #efece5;
   }
 }
 
@@ -267,6 +269,7 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-edge: var(--edge);
+  --color-logo-plate: var(--logo-plate);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
