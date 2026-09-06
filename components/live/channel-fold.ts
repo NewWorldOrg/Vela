@@ -75,17 +75,27 @@ export function foldPanel(motion: FoldMotion | undefined): string {
   return '[clip-path:inset(-14px_-14px_-14px_-14px)]'
 }
 
-export function foldColumn(
-  folded: boolean,
-  motion: FoldMotion | undefined,
-): string {
+export function foldRail(folded: boolean): string {
+  return folded ? '[--live-rail:44px]' : '[--live-rail:344px]'
+}
+
+export function foldColumn(motion: FoldMotion | undefined): string {
   if (motion === undefined || motion.phase === 'still') {
-    return folded ? 'w-11' : 'w-[344px]'
+    return 'w-(--live-rail)'
   }
 
-  return folded
-    ? 'w-11 transition-[width] duration-300 ease-fold motion-reduce:transition-none'
-    : 'w-[344px] transition-[width] duration-300 ease-fold motion-reduce:transition-none'
+  return 'w-(--live-rail) transition-[width] duration-300 ease-fold motion-reduce:transition-none'
+}
+
+const PICTURE_HOLDS_STILL =
+  'min-[1181px]:ml-0 min-[1181px]:flex-none min-[1181px]:w-[min(100%_-_var(--live-gap)_-_var(--live-rail),var(--pl-cap))]'
+
+export function foldPicture(motion: FoldMotion | undefined): string {
+  if (motion === undefined || motion.phase === 'still') {
+    return PICTURE_HOLDS_STILL
+  }
+
+  return `${PICTURE_HOLDS_STILL} transition-[width] duration-300 ease-fold motion-reduce:transition-none`
 }
 
 export function foldPart(motion: FoldMotion | undefined): string {
