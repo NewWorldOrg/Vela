@@ -1377,27 +1377,61 @@ function columnRunning(canvasElement: HTMLElement): string[] {
   )
 }
 
-function runsFor(element: Element | null, property: string): number {
-  const found = (element?.getAnimations() ?? []).find(
-    (one) =>
+function transitionOn(
+  element: Element | null,
+  property: string,
+): CSSTransition | undefined {
+  return (element?.getAnimations() ?? []).find(
+    (one): one is CSSTransition =>
       one instanceof CSSTransition && one.transitionProperty === property,
   )
-  const took = found?.effect?.getComputedTiming().duration
+}
+
+function runsFor(element: Element | null, property: string): number {
+  const took = transitionOn(element, property)?.effect?.getComputedTiming()
+    .duration
 
   return typeof took === 'number' ? took : 0
 }
 
+function waitsFor(element: Element | null, property: string): number {
+  const held = transitionOn(element, property)?.effect?.getComputedTiming()
+    .delay
+
+  return typeof held === 'number' ? held : 0
+}
+
+function firstRow(canvasElement: HTMLElement): Element | null {
+  return canvasElement.querySelector('[data-slot="channel-list"] li')
+}
+
 function foldLengths(canvasElement: HTMLElement): {
   column: number
-  wipe: number
+  band: number
 } {
   return {
     column: runsFor(canvasElement.querySelector('main aside'), 'width'),
-    wipe: runsFor(
-      canvasElement.querySelector('[data-slot="channel-list"] > div[id]'),
-      'clip-path',
-    ),
+    band: runsFor(firstRow(canvasElement), 'translate'),
   }
+}
+
+function rowTravelOf(canvasElement: HTMLElement): number {
+  const row = firstRow(canvasElement)
+  const listed = canvasElement.querySelector('[data-slot="channel-list"] ul')
+
+  if (row === null || listed === null) {
+    return Number.NaN
+  }
+
+  return Math.round(
+    row.getBoundingClientRect().left - listed.getBoundingClientRect().left,
+  )
+}
+
+function pageScrollsSideways(): boolean {
+  const page = document.documentElement
+
+  return page.scrollWidth > page.clientWidth
 }
 
 function foldRunning(canvasElement: HTMLElement): Animation[] {
@@ -1524,6 +1558,7 @@ export const 一覧を開いたまま: Story = {
     await expect(foldPhaseOf(canvasElement)).toBe('still')
     await expect(foldRunning(canvasElement)).toHaveLength(0)
     await expect(rowDelaysOf(canvasElement).join('')).toBe('')
+    await expect(rowTravelOf(canvasElement)).toBe(0)
   },
 }
 
@@ -1547,11 +1582,15 @@ export const 一覧が開くあいだ: Story = {
     await expect(running).toBeGreaterThan(0)
     await expect(columnRunning(canvasElement)).toEqual(['width'])
     await expect(listWidth(canvasElement)).toBe(344)
-    await expect(foldLengths(canvasElement)).toEqual({ column: 300, wipe: 300 })
+    await expect(foldLengths(canvasElement)).toEqual({ column: 300, band: 300 })
+    await expect(
+      waitsFor(canvasElement.querySelector('main aside'), 'width'),
+    ).toBe(0)
     await expect(delays).toHaveLength(9)
-    await expect(delays[0]).toBe('26ms')
-    await expect(delays[1]).toBe('52ms')
-    await expect(delays.at(-1)).toBe('234ms')
+    await expect(delays[0]).toBe('44ms')
+    await expect(delays[1]).toBe('66ms')
+    await expect(delays.at(-1)).toBe('220ms')
+    await expect(pageScrollsSideways()).toBe(false)
 
     await waitFor(async () => {
       await expect(foldPhaseOf(canvasElement)).toBe('still')
@@ -1576,11 +1615,15 @@ export const 一覧が閉じるあいだ: Story = {
     await expect(phase).toBe('closing')
     await expect(column).toEqual(['width'])
     await expect(inside).toBe(wide)
-    await expect(foldLengths(canvasElement)).toEqual({ column: 300, wipe: 300 })
+    await expect(foldLengths(canvasElement)).toEqual({ column: 300, band: 300 })
+    await expect(
+      waitsFor(canvasElement.querySelector('main aside'), 'width'),
+    ).toBe(220)
     await expect(delays).toHaveLength(9)
-    await expect(delays[0]).toBe('208ms')
-    await expect(delays[1]).toBe('182ms')
+    await expect(delays[0]).toBe('176ms')
+    await expect(delays[1]).toBe('154ms')
     await expect(delays.at(-1)).toBe('0ms')
+    await expect(pageScrollsSideways()).toBe(false)
 
     await waitFor(async () => {
       await expect(asideWidth(canvasElement)).toBeLessThan(wide)
@@ -1608,6 +1651,9 @@ export const 畳みかけて開き直す: Story = {
 
     await expect(phase).toBe('opening')
     await expect(delays.join('')).toBe('')
+    await expect(
+      waitsFor(canvasElement.querySelector('main aside'), 'width'),
+    ).toBe(0)
 
     await waitFor(async () => {
       await expect(foldPhaseOf(canvasElement)).toBe('still')
@@ -1664,8 +1710,8 @@ export const 長い一覧でも畳みの長さは変わらない: Story = {
     const delays = rowDelaysOf(canvasElement)
 
     await expect(delays).toHaveLength(MANY.channels.length)
-    await expect(delays[0]).toBe('26ms')
-    await expect(delays[8]).toBe('234ms')
+    await expect(delays[0]).toBe('44ms')
+    await expect(delays[8]).toBe('220ms')
     await expect(new Set(delays.slice(8)).size).toBe(1)
 
     await waitFor(async () => {

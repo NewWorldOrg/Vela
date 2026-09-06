@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 import { foldedLineupOf, foldsAChannel } from '@/lib/live-lineup'
+import { foldColumn } from '@/lib/live-fold'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
 import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
 import type { LiveScreen } from '@/repository/live'
@@ -18,7 +19,7 @@ import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { ChannelList } from '@/components/live/channel-list'
-import { foldColumn, useFoldingChannels } from '@/components/live/channel-fold'
+import { useFoldingChannels } from '@/components/live/channel-fold'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import { NowNext } from '@/components/live/now-next'
@@ -253,7 +254,7 @@ export function LiveView({
       <aside
         aria-label="チャンネル"
         className={cn(
-          'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col items-end max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
           foldColumn(away, motion),
         )}
       >

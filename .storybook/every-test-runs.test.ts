@@ -45,6 +45,7 @@ const THE_SUITE = [
   'lib/format.test.ts',
   'lib/guide.test.ts',
   'lib/live-captions.test.ts',
+  'lib/live-fold.test.ts',
   'lib/live-latency.test.ts',
   'lib/live-lineup.test.ts',
   'lib/live-profiles.test.ts',
