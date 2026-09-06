@@ -10,6 +10,7 @@ import {
   UNEXPECTED_STREAM,
   type FailureClass,
 } from '@/repository/scan-failures'
+import type { StationLogo } from '@/repository/channels'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -65,6 +66,8 @@ export interface Recording {
   cast?: string[]
   segments?: number
   channel: string
+  channelNo?: string
+  channelLogo?: StationLogo
   /** The recording's own snapshot of its programme carries no genre. */
   genre?: string
   year: number
@@ -251,7 +254,6 @@ export interface SeekMarks {
 }
 
 export interface RecordingDetail extends Recording {
-  channelNo?: string
   /** The recording's own snapshot of its programme carries no genre. */
   genres?: string[]
   /** Unset: nothing upstream describes the video or the audio. */
@@ -521,6 +523,8 @@ export function toRecording(
     title: r.programme.name,
     description: r.programme.summary || undefined,
     channel: channel?.name || serviceKeyOf(r),
+    channelNo: channel?.no,
+    channelLogo: channel?.logo,
     year: Number(jst(startedAt).year),
     startedAt: r.startedAt,
     recordedAtLabel: recordedAtLabelOf(startedAt, now),
@@ -555,7 +559,6 @@ function toDetail(
 ): RecordingDetail {
   const r = d.recording
   const base = toRecording(r, known, now)
-  const channel = channelOf(r, known)
   const fault = leadingFault(r.outcomeDetail)
   const failure = fault ? FAILURES[fault] : undefined
   const measured = r.drops.ccMeasured
@@ -565,7 +568,6 @@ function toDetail(
 
   return {
     ...base,
-    channelNo: channel?.no,
     sizeObservedAt: observedLabelOf(d, base.outcome),
     synopsis: r.programme.summary || undefined,
     outcomeBody: outcomeBodyOf(r, base),

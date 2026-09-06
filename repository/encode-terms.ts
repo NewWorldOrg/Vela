@@ -59,6 +59,7 @@ export const FAILURE_LABEL: Record<EncodeFailure, string> = {
   capabilityUnavailable: 'capability 不足',
   timedOut: 'タイムアウト',
   destinationCollision: '出力先の衝突',
+  headTooFar: '頭出しが遠すぎる',
 }
 
 export const STALLED_LABEL = '停滞'

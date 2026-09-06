@@ -1,3 +1,5 @@
+import { cache } from 'react'
+
 import type { GuideRelationKind, GuideService } from '@/lib/guide'
 import {
   DAY_STARTS_AT_HOUR,
@@ -10,11 +12,13 @@ import {
 } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
-import type { Channel, ChannelKind } from '@/repository/channels'
+import type { Channel, ChannelKind, StationLogo } from '@/repository/channels'
 import type { Programme } from '@/repository/programmes'
 import { fetchGuide, fetchProgramme, toInt } from '@/repository/programmes'
 import { whatItSaid } from '@/repository/said'
 
+type BroadcastServiceResponder =
+  components['schemas']['BroadcastServiceResponder']
 type TuneSystem = components['schemas']['TuneSystem']
 
 export type Genre =
@@ -319,46 +323,64 @@ function compareChannels(left: GuideChannel, right: GuideChannel): number {
   return 0
 }
 
-export async function fetchServiceChannels(): Promise<GuideChannel[]> {
-  const { data, error } = await carinaClient().GET('/api/services')
+function logoOf(service: BroadcastServiceResponder): StationLogo {
+  const carried = service.logo
 
-  if (error || !data?.data) {
-    throw new Error(whatItSaid(error, data) || 'チャンネルを読めませんでした')
+  if (carried == null) {
+    return {
+      declaration:
+        service.logoDeclaration === 'noPictureIsBroadcast'
+          ? 'noPictureIsBroadcast'
+          : 'notYetRead',
+    }
   }
 
-  return data.data
-    .filter((service) => service.category === 'television')
-    .map((service) => {
-      const networkId = toInt(service.networkId)
-      const serviceId = toInt(service.serviceId)
-      const remoteKey =
-        service.remoteControlKeyId == null
-          ? undefined
-          : toInt(service.remoteControlKeyId)
-      const target = service.selectedChannel ?? service.candidates[0]?.target
-      const system =
-        !target || target.system === 'unspecified' ? undefined : target.system
-      const kind =
-        (system && KIND_OF_SYSTEM[system]) ?? kindOfNetwork(networkId)
-
-      return {
-        id: `${networkId}-${serviceId}`,
-        no: remoteKey == null ? undefined : String(remoteKey),
-        name: service.name ?? '',
-        kind,
-        networkId,
-        serviceId,
-        sortKey:
-          kind === 'terrestrial'
-            ? ([remoteKey ?? serviceId, networkId, serviceId] as [
-                number,
-                number,
-                number,
-              ])
-            : ([serviceId, networkId, serviceId] as [number, number, number]),
-      }
-    })
+  return { declaration: 'inTheCommonDataTable', href: carried.url }
 }
+
+export const fetchServiceChannels = cache(
+  async function fetchServiceChannels(): Promise<GuideChannel[]> {
+    const { data, error } = await carinaClient().GET('/api/services')
+
+    if (error || !data?.data) {
+      throw new Error(whatItSaid(error, data) || 'チャンネルを読めませんでした')
+    }
+
+    return data.data
+      .filter((service) => service.category === 'television')
+      .map((service) => {
+        const networkId = toInt(service.networkId)
+        const serviceId = toInt(service.serviceId)
+        const remoteKey =
+          service.remoteControlKeyId == null
+            ? undefined
+            : toInt(service.remoteControlKeyId)
+        const target = service.selectedChannel ?? service.candidates[0]?.target
+        const system =
+          !target || target.system === 'unspecified' ? undefined : target.system
+        const kind =
+          (system && KIND_OF_SYSTEM[system]) ?? kindOfNetwork(networkId)
+
+        return {
+          id: `${networkId}-${serviceId}`,
+          no: remoteKey == null ? undefined : String(remoteKey),
+          name: service.name ?? '',
+          kind,
+          logo: logoOf(service),
+          networkId,
+          serviceId,
+          sortKey:
+            kind === 'terrestrial'
+              ? ([remoteKey ?? serviceId, networkId, serviceId] as [
+                  number,
+                  number,
+                  number,
+                ])
+              : ([serviceId, networkId, serviceId] as [number, number, number]),
+        }
+      })
+  },
+)
 
 function columnsOf(
   services: GuideChannel[],

@@ -47,6 +47,7 @@ const service = (
   serviceId: number,
   name: string,
   remoteControlKeyId?: number,
+  logo: { declaration: string; url?: string } = { declaration: 'notYetRead' },
 ) => ({
   networkId,
   serviceId,
@@ -55,6 +56,11 @@ const service = (
   remoteControlKeyId: remoteControlKeyId ?? null,
   selectedChannel: { system: 'isdbT' },
   candidates: [],
+  logoDeclaration: logo.declaration,
+  logo:
+    logo.url === undefined
+      ? null
+      : { url: logo.url, collectedAt: '2026-09-05T09:00:00Z' },
 })
 
 interface Over {
@@ -961,4 +967,33 @@ test('a recording that cannot be read throws what the API said about it', async 
     () => listRecordings({}),
     /The recording ledger is out of reach\./,
   )
+})
+
+test('a row of the library carries the station it was recorded off, key and logo', async () => {
+  standing()
+  store.services = [
+    service(131, 1310, '中央テレビ1', 1, {
+      declaration: 'inTheCommonDataTable',
+      url: '/api/services/131-1310/logo',
+    }),
+  ]
+
+  const result = await listRecordings({})
+
+  assert.equal(result.items[0].channel, '中央テレビ1')
+  assert.equal(result.items[0].channelNo, '1')
+  assert.deepEqual(result.items[0].channelLogo, {
+    declaration: 'inTheCommonDataTable',
+    href: '/api/services/131-1310/logo',
+  })
+})
+
+test('a recording off a station no longer in the ledger keeps its key and asks for no picture', async () => {
+  standing()
+  store.services = []
+
+  const result = await listRecordings({})
+
+  assert.equal(result.items[0].channelNo, undefined)
+  assert.equal(result.items[0].channelLogo, undefined)
 })

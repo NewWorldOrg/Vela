@@ -40,18 +40,19 @@ export function RecordingsTable({
       className="-mx-1 min-h-0 flex-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring"
     >
       {/*
-        1208px is what the columns add up to, and the width under which the
+        1256px is what the columns add up to, and the width under which the
         list runs sideways inside its own box rather than taking the page with
         it. At 1296 the list was too wide for every window there is: the
         last column was cut off, and the page itself scrolled sideways to
         reach it. The width came off the columns that were carrying more than
         their content — the title truncates at any width, and the other three
-        hold a chip or a figure that never came near their edge.
+        hold a chip or a figure that never came near their edge. The channel
+        column carries the station's mark ahead of its name and is 152px.
       */}
-      <table className="w-full min-w-[1208px] table-fixed border-separate border-spacing-0">
+      <table className="w-full min-w-[1256px] table-fixed border-separate border-spacing-0">
         <colgroup>
           <col className="w-[252px]" />
-          <col className="w-[104px]" />
+          <col className="w-[152px]" />
           <col className="w-[142px]" />
           <col className="w-[86px]" />
           <col className="w-[96px]" />

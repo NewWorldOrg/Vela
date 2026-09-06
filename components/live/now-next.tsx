@@ -2,7 +2,7 @@ import type { LiveWatching } from '@/repository/live'
 import { saysSubtitled } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
-import { ChannelKey } from '@/components/live/channel-list'
+import { ChannelMark } from '@/components/vela/channel-mark'
 
 /**
  * What is on the channel being watched, and how far into it the clock is:
@@ -26,7 +26,11 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
       className="mt-4 rounded-lg bg-surface px-5 pt-[17px] pb-[19px]"
     >
       <div className="flex flex-wrap items-baseline gap-[11px]">
-        {channel.no && <ChannelKey no={channel.no} />}
+        <ChannelMark
+          logo={channel.logo}
+          no={channel.no}
+          className="self-center"
+        />
         <h1 className="heading text-[18px] leading-[1.45]">
           {programme ? programme.title : '番組情報がありません'}
         </h1>

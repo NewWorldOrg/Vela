@@ -18,9 +18,10 @@ const store: {
   channels: unknown[]
   profiles: unknown[]
   programmes: unknown[]
+  services: unknown[]
   tuners?: unknown[]
   refusing?: { path: string; status: number; message: string }
-} = { channels: [], profiles: [], programmes: [], tuners: [] }
+} = { channels: [], profiles: [], programmes: [], services: [], tuners: [] }
 
 const answering = (data: unknown) => ({
   data: { status: true, message: '', data },
@@ -63,6 +64,8 @@ const GET = async (
       return answering({ desired: store.tuners, observed: [], drifted: false })
     case '/api/programs':
       return answering({ programmes: store.programmes })
+    case '/api/services':
+      return answering(store.services)
     default:
       throw new Error(`nothing answers ${path}`)
   }
@@ -576,4 +579,53 @@ test('a live ledger that refuses throws what the API said about it', async () =>
   )
 
   store.refusing = undefined
+})
+
+test('the station logo reaches a live channel from the service ledger', async () => {
+  store.channels = [listed(32736, 1024, '総合1'), listed(32736, 1025, '総合2')]
+  store.profiles = []
+  store.programmes = []
+  store.services = [
+    {
+      networkId: 32736,
+      serviceId: 1024,
+      name: '総合1',
+      category: 'television',
+      remoteControlKeyId: 1,
+      selectedChannel: { system: 'isdbT' },
+      candidates: [],
+      logoDeclaration: 'inTheCommonDataTable',
+      logo: {
+        url: '/api/services/32736-1024/logo',
+        collectedAt: '2026-09-05T09:00:00Z',
+      },
+    },
+    {
+      networkId: 32736,
+      serviceId: 1025,
+      name: '総合2',
+      category: 'television',
+      remoteControlKeyId: 1,
+      selectedChannel: { system: 'isdbT' },
+      candidates: [],
+      logoDeclaration: 'noPictureIsBroadcast',
+      logo: null,
+    },
+  ]
+
+  const screen = await getLiveScreen(undefined, '32736-1024', NOW)
+
+  assert.deepEqual(screen.channels[0].logo, {
+    declaration: 'inTheCommonDataTable',
+    href: '/api/services/32736-1024/logo',
+  })
+  assert.deepEqual(screen.channels[1].logo, {
+    declaration: 'noPictureIsBroadcast',
+  })
+  assert.deepEqual(screen.watching?.channel.logo, {
+    declaration: 'inTheCommonDataTable',
+    href: '/api/services/32736-1024/logo',
+  })
+
+  store.services = []
 })

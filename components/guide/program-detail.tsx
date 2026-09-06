@@ -21,6 +21,7 @@ import {
   RecordIcon,
   RelayIcon,
 } from '@/components/vela/icons'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { ReserveButton } from '@/components/guide/reserve-button'
 
 const RELATION_WORDING: Record<
@@ -88,11 +89,7 @@ export function ProgramDetailBody({
   return (
     <div data-program-detail>
       <div className="mb-[9px] flex items-center gap-2.5">
-        {channel?.no && (
-          <span className="rounded-md border border-line bg-surface-2 px-2 py-px font-code text-[11px] font-medium text-ink-2">
-            {channel.no}
-          </span>
-        )}
+        <ChannelMark logo={channel?.logo} no={channel?.no} />
         {channel?.name && (
           <span className="text-ui text-ink-2">{channel.name}</span>
         )}

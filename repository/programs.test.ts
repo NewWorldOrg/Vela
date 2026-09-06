@@ -21,6 +21,7 @@ const service = (
   serviceId: number,
   name: string,
   remoteControlKeyId: number,
+  logo: { declaration: string; url?: string } = { declaration: 'notYetRead' },
 ) => ({
   networkId,
   serviceId,
@@ -29,6 +30,11 @@ const service = (
   remoteControlKeyId,
   selectedChannel: { system: 'isdbT' },
   candidates: [],
+  logoDeclaration: logo.declaration,
+  logo:
+    logo.url === undefined
+      ? null
+      : { url: logo.url, collectedAt: '2026-09-05T09:00:00Z' },
 })
 
 interface Extra {
@@ -473,4 +479,53 @@ test('a guide that will not be read throws what the API said about it', async ()
   )
 
   store.refusing = undefined
+})
+
+test('a station whose logo has been read hands the guide the address to draw it from', async () => {
+  standing()
+  store.services = [
+    service(CARRIED.networkId, CARRIED.serviceId, 'みなと総合1', 1, {
+      declaration: 'inTheCommonDataTable',
+      url: '/api/services/32736-1024/logo',
+    }),
+  ]
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+
+  assert.deepEqual(guide.channels[0].logo, {
+    declaration: 'inTheCommonDataTable',
+    href: '/api/services/32736-1024/logo',
+  })
+})
+
+test('a station that broadcasts none and one not read yet are told apart, and neither hands over an address', async () => {
+  standing()
+  store.services = [
+    service(CARRIED.networkId, CARRIED.serviceId, 'みなと総合1', 1, {
+      declaration: 'noPictureIsBroadcast',
+    }),
+    service(ELSEWHERE.networkId, ELSEWHERE.serviceId, 'みなと教育1', 9, {
+      declaration: 'notYetRead',
+    }),
+  ]
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+
+  assert.deepEqual(guide.channels[0].logo, {
+    declaration: 'noPictureIsBroadcast',
+  })
+  assert.deepEqual(guide.channels[1].logo, { declaration: 'notYetRead' })
+})
+
+test('a station the table claims a picture for, with none carried, is read as not yet read', async () => {
+  standing()
+  store.services = [
+    service(CARRIED.networkId, CARRIED.serviceId, 'みなと総合1', 1, {
+      declaration: 'inTheCommonDataTable',
+    }),
+  ]
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+
+  assert.deepEqual(guide.channels[0].logo, { declaration: 'notYetRead' })
 })

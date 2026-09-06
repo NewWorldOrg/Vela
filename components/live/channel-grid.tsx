@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress'
 import { Tile } from '@/components/vela/surface'
-import { ChannelKey } from '@/components/live/channel-list'
+import { ChannelMark } from '@/components/vela/channel-mark'
 
 /**
  * The channels, as cards laid out across the screen — the whole of what the
@@ -86,7 +86,7 @@ function ChannelCard({
       className="relative flex size-full min-w-0 flex-none flex-col gap-1 overflow-hidden px-4 pt-3 pb-[15px]"
     >
       <span className="flex min-w-0 items-center gap-2">
-        {channel.no && <ChannelKey no={channel.no} />}
+        <ChannelMark logo={channel.logo} no={channel.no} />
         <span className="min-w-0 flex-1 truncate text-sub font-medium text-ink-2">
           {channel.name}
         </span>
