@@ -15,7 +15,9 @@ export interface CaptureAsk {
 
 export type TakeCapture = (ask: CaptureAsk) => Promise<Captured>
 
-const REVOKED_ON_THE_NEXT_TASK = 0
+// Not at once: a browser may not have begun reading the blob when the press
+// returns, and a URL revoked under it hands the viewer nothing.
+const REVOKED_AFTER_MS = 10_000
 
 function readable(context: CanvasRenderingContext2D): boolean {
   try {
@@ -47,7 +49,7 @@ function handOver(blob: Blob, name: string): void {
   document.body.append(link)
   link.click()
   link.remove()
-  setTimeout(() => URL.revokeObjectURL(href), REVOKED_ON_THE_NEXT_TASK)
+  setTimeout(() => URL.revokeObjectURL(href), REVOKED_AFTER_MS)
 }
 
 export async function drawCapture({
