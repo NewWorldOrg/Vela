@@ -11,6 +11,7 @@ import {
   type FailureClass,
 } from '@/repository/scan-failures'
 import type { StationLogo } from '@/repository/channels'
+import type { EncodeStanding } from '@/repository/encode-terms'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -41,19 +42,12 @@ export type QualityLevel = Exclude<
   components['schemas']['QualityLevel'],
   'unmeasured'
 >
-export type EncodeStatus = 'none' | 'waiting' | 'running' | 'done' | 'failed'
 export type ThumbnailState = 'shot' | 'pending' | 'none' | 'error'
 
 export interface RecordingQuality {
   measured: boolean
   level?: QualityLevel
   detail?: string
-}
-
-export interface RecordingEncode {
-  status: EncodeStatus
-  progress?: number
-  reason?: string
 }
 
 export interface Recording {
@@ -93,8 +87,7 @@ export interface Recording {
    * on its own — and what keeps the library from offering a way to it.
    */
   scrambledShare?: number
-  /** Unset: nothing upstream carries an encoding state yet. */
-  encode?: RecordingEncode
+  encode: EncodeStanding
   thumbnail: ThumbnailState
   thumbnailLabel?: string
   /** Where the drawn picture is. Unset until one has been drawn. */
@@ -289,7 +282,7 @@ export interface RecordingDetail extends Recording {
   qualitySpots?: QualitySpot[]
   /** Unset: nothing upstream carries a chapter or a commercial break. */
   seek?: SeekMarks
-  /** Unset: nothing upstream carries an encoding state yet. */
+  /** Unset: the jobs standing behind a recording are not read here. */
   encodePanel?: {
     profile?: string
     doneSub?: string
@@ -541,6 +534,7 @@ export function toRecording(
     outcome,
     outcomeDetail: faultTitleOf(r.outcomeDetail),
     quality,
+    encode: r.encode.standing,
     scrambledShare:
       scrambled == null || totalPackets === 0
         ? undefined
