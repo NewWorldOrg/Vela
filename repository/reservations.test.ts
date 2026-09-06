@@ -788,7 +788,7 @@ const EVERY_STANDING = [
 
 const AFTER_EVERY_STANDING = new Date('2026-08-08T03:00:00Z')
 
-test('after the broadcast, 完了 and 取消済み are the two that leave', async () => {
+test('after the broadcast, the completed and the cancelled leave', async () => {
   standing(EVERY_STANDING)
 
   const { items } = await listReservations({}, AFTER_EVERY_STANDING)
@@ -830,7 +830,7 @@ test('before the broadcast has ended, every standing is listed', async () => {
   assert.equal(items.length, EVERY_STANDING.length)
 })
 
-test('a 完了 whose recording was thrown away leaves with the rest', async () => {
+test('a completed one whose recording was thrown away leaves too', async () => {
   standing(EVERY_STANDING)
   store.recordings = []
 
