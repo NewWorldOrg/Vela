@@ -21,7 +21,7 @@ export default async function Page({
 }) {
   const params = await searchParams
   const result = await listReservations({
-    cancelled: params.cancelled === 'all' ? 'all' : undefined,
+    show: params.show === 'all' ? 'all' : undefined,
   })
 
   return (

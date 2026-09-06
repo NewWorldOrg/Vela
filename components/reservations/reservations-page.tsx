@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { EmptyState } from '@/components/vela/empty-state'
 import { PlusIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
@@ -34,14 +35,14 @@ const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
   { label: '操作', hidden: true },
 ]
 
-const CANCELLED_PARAM = 'cancelled'
+const SHOW_PARAM = 'show'
 
-const BEFORE_THE_END = 'beforeTheEnd'
+const UNSETTLED = 'unsettled'
 
 const EVERY = 'all'
 
-const CANCELLED_OPTIONS = [
-  { value: BEFORE_THE_END, label: '放送終了前' },
+const SHOW_OPTIONS = [
+  { value: UNSETTLED, label: '未完了' },
   { value: EVERY, label: 'すべて' },
 ]
 
@@ -66,14 +67,14 @@ export function ReservationsView({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const onCancelledChange = useCallback(
+  const onShowChange = useCallback(
     (next: string) => {
       const params = new URLSearchParams(searchParams.toString())
 
       if (next === EVERY) {
-        params.set(CANCELLED_PARAM, EVERY)
+        params.set(SHOW_PARAM, EVERY)
       } else {
-        params.delete(CANCELLED_PARAM)
+        params.delete(SHOW_PARAM)
       }
 
       const qs = params.toString()
@@ -104,13 +105,13 @@ export function ReservationsView({
 
       <div className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[17px] py-[13px]">
         <span className="text-ui font-medium whitespace-nowrap text-ink-2">
-          取消済み
+          表示
         </span>
         <SegmentedControl
-          aria-label="取消済み"
-          options={CANCELLED_OPTIONS}
-          value={filter.cancelled === EVERY ? EVERY : BEFORE_THE_END}
-          onValueChange={onCancelledChange}
+          aria-label="表示"
+          options={SHOW_OPTIONS}
+          value={filter.show === EVERY ? EVERY : UNSETTLED}
+          onValueChange={onShowChange}
         />
         <span className="ml-auto text-sub whitespace-nowrap text-ink-2 max-[900px]:ml-0">
           {items.length === total ? (
@@ -132,80 +133,99 @@ export function ReservationsView({
         <ReservationSelection chosen={chosen} onClear={clear} actions={bulk} />
       )}
 
-      <Table
-        className="min-w-[960px]"
-        containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
-      >
-        {/* The header is as tall as it is so that the area of the select-all and
+      {items.length === 0 ? (
+        <EmptyState
+          spot={total === 0 ? 'antenna' : 'star'}
+          title={total === 0 ? '予約はありません' : '未完了の予約はありません'}
+          titleLevel={2}
+          className="mx-auto mt-10 max-w-[560px]"
+          action={
+            total === 0 ? undefined : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onShowChange(EVERY)}
+              >
+                絞り込みを解除
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <Table
+          className="min-w-[960px]"
+          containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+        >
+          {/* The header is as tall as it is so that the area of the select-all and
             the area of the first row's checkbox do not reach into one another;
             the column is as wide as one area so it does not reach the caret
             beside it either. */}
-        <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[13px]">
-          <TableRow>
-            <TableHead className="w-11">
-              <Checkbox
-                checked={
-                  chosen.length === 0
-                    ? false
-                    : chosen.length === items.length
-                      ? true
-                      : 'indeterminate'
-                }
-                disabled={items.length === 0}
-                onCheckedChange={(next) =>
-                  setPicked(
-                    next === true
-                      ? new Set(items.map((one) => one.id))
-                      : new Set(),
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[13px]">
+            <TableRow>
+              <TableHead className="w-11">
+                <Checkbox
+                  checked={
+                    chosen.length === 0
+                      ? false
+                      : chosen.length === items.length
+                        ? true
+                        : 'indeterminate'
+                  }
+                  onCheckedChange={(next) =>
+                    setPicked(
+                      next === true
+                        ? new Set(items.map((one) => one.id))
+                        : new Set(),
+                    )
+                  }
+                  aria-label="表示中の予約をすべて選ぶ"
+                />
+              </TableHead>
+              {COLUMNS.map((column) => (
+                <TableHead
+                  key={column.label}
+                  className={column.narrow ? 'w-8' : undefined}
+                >
+                  {column.hidden ? (
+                    <span className="sr-only">{column.label}</span>
+                  ) : (
+                    column.label
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((reservation) => (
+              <ReservationRow
+                key={reservation.id}
+                reservation={reservation}
+                actions={actions}
+                expanded={expanded === reservation.id}
+                onToggle={() =>
+                  setExpanded((prev) =>
+                    prev === reservation.id ? null : reservation.id,
                   )
                 }
-                aria-label="表示中の予約をすべて選ぶ"
+                selected={picked.has(reservation.id)}
+                onSelect={(taken) =>
+                  setPicked((prev) => {
+                    const next = new Set(prev)
+
+                    if (taken) {
+                      next.add(reservation.id)
+                    } else {
+                      next.delete(reservation.id)
+                    }
+
+                    return next
+                  })
+                }
               />
-            </TableHead>
-            {COLUMNS.map((column) => (
-              <TableHead
-                key={column.label}
-                className={column.narrow ? 'w-8' : undefined}
-              >
-                {column.hidden ? (
-                  <span className="sr-only">{column.label}</span>
-                ) : (
-                  column.label
-                )}
-              </TableHead>
             ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.map((reservation) => (
-            <ReservationRow
-              key={reservation.id}
-              reservation={reservation}
-              actions={actions}
-              expanded={expanded === reservation.id}
-              onToggle={() =>
-                setExpanded((prev) =>
-                  prev === reservation.id ? null : reservation.id,
-                )
-              }
-              selected={picked.has(reservation.id)}
-              onSelect={(taken) =>
-                setPicked((prev) => {
-                  const next = new Set(prev)
-
-                  if (taken) {
-                    next.add(reservation.id)
-                  } else {
-                    next.delete(reservation.id)
-                  }
-
-                  return next
-                })
-              }
-            />
-          ))}
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
+      )}
     </ScreenMain>
   )
 }

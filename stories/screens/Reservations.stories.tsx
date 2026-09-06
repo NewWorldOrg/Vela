@@ -8,6 +8,7 @@ import type {
   ReservationWrite,
 } from '@/repository/reservations'
 import {
+  EVERY_STANDING_FIXTURES,
   RESERVATION_FIXTURES,
   SETTLED_RESERVATION_FIXTURES,
 } from '@/stories/fixtures/reservations'
@@ -117,7 +118,7 @@ export const 競合なし: Story = {
 export const 終わった予約: Story = {
   args: {
     result: shown(SETTLED_RESERVATION_FIXTURES, {
-      filter: { cancelled: 'all' },
+      filter: { show: 'all' },
     }),
   },
   play: async ({ canvasElement }) => {
@@ -237,7 +238,7 @@ export const 録画が削除された予約: Story = {
             // record itself something that can be thrown away too.
             { ...rest, discardable: true },
       ),
-      { filter: { cancelled: 'all' } },
+      { filter: { show: 'all' } },
     ),
   },
   play: async ({ canvasElement }) => {
@@ -277,7 +278,7 @@ export const 録画が削除された予約: Story = {
 export const 予約の削除を断られたとき: Story = {
   args: {
     result: shown(SETTLED_RESERVATION_FIXTURES, {
-      filter: { cancelled: 'all' },
+      filter: { show: 'all' },
     }),
     actions: {
       onCancel: accept,
@@ -309,8 +310,110 @@ export const 予約の削除を断られたとき: Story = {
   },
 }
 
-export const 放送の終わった取消を隠している: Story = {
-  args: { result: shown(RESERVATION_FIXTURES, { total: 46 }) },
+const LEFT_OUT_ONCE_THE_BROADCAST_ENDS = ['complete', 'cancelled']
+
+const STILL_LISTED = EVERY_STANDING_FIXTURES.filter(
+  (one) => !LEFT_OUT_ONCE_THE_BROADCAST_ENDS.includes(one.standing),
+)
+
+const STANDING_WORDS = {
+  scheduled: 'チューナー確保済み',
+  conflict: '競合',
+  cancelled: '取消済み',
+  missed: '撮り逃し',
+  recording: '録画中',
+  complete: '完了',
+  truncated: '尻切れ',
+  failed: '失敗',
+}
+
+export const 未完了だけを出している: Story = {
+  args: {
+    result: shown(STILL_LISTED, {
+      total: EVERY_STANDING_FIXTURES.length,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const strip = within(canvas.getByRole('group', { name: '表示' }))
+
+    await expect(strip.getByRole('button', { name: '未完了' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await expect(strip.getByRole('button', { name: 'すべて' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+
+    for (const standing of [
+      'scheduled',
+      'conflict',
+      'missed',
+      'recording',
+      'truncated',
+      'failed',
+    ] as const) {
+      await expect(canvas.getByText(STANDING_WORDS[standing])).toBeVisible()
+    }
+
+    for (const standing of ['complete', 'cancelled'] as const) {
+      await expect(canvas.queryByText(STANDING_WORDS[standing])).toBeNull()
+    }
+  },
+}
+
+export const 未完了が一件も無い: Story = {
+  args: { result: shown([], { total: EVERY_STANDING_FIXTURES.length }) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('heading', { name: '未完了の予約はありません' }),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: '絞り込みを解除' }),
+    ).toBeEnabled()
+    await expect(canvas.queryByRole('table')).toBeNull()
+  },
+}
+
+export const 予約が一件も無い: Story = {
+  args: { result: shown([]) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('heading', { name: '予約はありません' }),
+    ).toBeVisible()
+    await expect(
+      canvas.queryByRole('button', { name: '絞り込みを解除' }),
+    ).toBeNull()
+    await expect(canvas.getByRole('link', { name: '予約を追加' })).toBeVisible()
+  },
+}
+
+export const すべての予約を出している: Story = {
+  args: {
+    result: shown(EVERY_STANDING_FIXTURES, { filter: { show: 'all' } }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const strip = within(canvas.getByRole('group', { name: '表示' }))
+
+    await expect(strip.getByRole('button', { name: 'すべて' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await expect(strip.getByRole('button', { name: '未完了' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+
+    for (const word of Object.values(STANDING_WORDS)) {
+      await expect(canvas.getByText(word)).toBeVisible()
+    }
+  },
 }
 
 /**
@@ -321,7 +424,7 @@ export const 放送の終わった取消を隠している: Story = {
 export const 一括で選んで削除する: Story = {
   args: {
     result: shown(SETTLED_RESERVATION_FIXTURES, {
-      filter: { cancelled: 'all' },
+      filter: { show: 'all' },
     }),
     bulk: { onCancelAll: cancellingAll, onDiscardAll: throwingAll },
   },

@@ -21,7 +21,14 @@ test('予約の行の錨は、その予約の id から綴られる', () => {
 })
 
 test('録画から入るリンクは、その錨を名指す', () => {
-  assert.equal(reservationHref('r-309'), '/reservations#reservation-r-309')
+  assert.equal(
+    reservationHref('r-309'),
+    '/reservations?show=all#reservation-r-309',
+  )
+})
+
+test('録画から入るリンクは、既定で隠れる予約にも届く', () => {
+  assert.match(reservationHref('r-309'), /\?show=all#/)
 })
 
 /**
