@@ -257,11 +257,6 @@ export function Player({
   const flashedAt = useRef(0)
   /** How far ahead of the head the picture is loaded, in seconds. */
   const [buffered, setBuffered] = useState(0)
-  /**
-   * What a press on the bar did, said where it was pressed: this is the only
-   * place the question is asked, and a line standing anywhere else on the page
-   * would be there for everyone who never pressed anything.
-   */
   const [said, setSaid] = useState<{
     text: string
     tone: 'ok' | 'err'
@@ -897,10 +892,7 @@ export function Player({
               onMouseDown={(event) => {
                 event.preventDefault()
                 dismissing.current = settingsOpen
-                // `preventScroll`, because a press must not move the picture out
-                // from under the hand between the press going down and coming
-                // up — the click would then be delivered to whatever the pointer
-                // was left over, and the press would read as having done nothing.
+                // Focusing without preventScroll would slide the picture out from under the hand.
                 shell?.focus({ preventScroll: true })
               }}
               onClick={() => {
