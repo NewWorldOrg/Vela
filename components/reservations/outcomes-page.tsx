@@ -92,9 +92,8 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
     },
     [router, pathname, searchParams],
   )
-  const narrowed = Boolean(
-    filter.kind || filter.days || filter.ch || filter.rule,
-  )
+  const emptyLedger =
+    total === 0 && !(filter.kind || filter.days || filter.ch || filter.rule)
 
   return (
     <ScreenMain
@@ -187,7 +186,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
             />
           )}
         </>
-      ) : narrowed ? (
+      ) : !emptyLedger ? (
         <EmptyState
           spot="tape"
           title="条件に合う記録がありません"
