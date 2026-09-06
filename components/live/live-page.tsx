@@ -22,6 +22,7 @@ import { ChannelList } from '@/components/live/channel-list'
 import { useFoldingChannels } from '@/components/live/channel-fold'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
+import type { TakeCapture } from '@/components/recordings/player-capture'
 import { NowNext } from '@/components/live/now-next'
 
 /**
@@ -70,12 +71,14 @@ export function LiveView({
   askSignedOut,
   askBacklog,
   startupDeadlineMs,
+  takeCapture,
 }: {
   screen: LiveScreen
   openSocket?: OpenSocket
   askSignedOut?: () => Promise<boolean>
   askBacklog?: AskBacklog
   startupDeadlineMs?: number
+  takeCapture?: TakeCapture
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -238,6 +241,7 @@ export function LiveView({
           askSignedOut={askSignedOut}
           askBacklog={askBacklog}
           startupDeadlineMs={startupDeadlineMs}
+          takeCapture={takeCapture}
         />
         <NowNext watching={watching} />
       </div>

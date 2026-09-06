@@ -16,8 +16,10 @@ import {
 } from '@/repository/video-paths'
 import {
   CaptionsGlyph,
+  CaptureIcon,
   FullscreenIcon,
   PauseGlyph,
+  PictureInPictureIcon,
   PlayGlyph,
   SkipBackIcon,
   SkipForwardIcon,
@@ -52,6 +54,14 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
+import {
+  SAID_CAPTURED,
+  SAID_NOT_CAPTURED,
+  takeCapture as takeItNow,
+  type TakeCapture,
+} from '@/components/recordings/player-capture'
+import { capturedAt, capturedName } from '@/lib/player-capture'
+import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { AirPlayButton } from '@/components/recordings/external-player'
 import {
   askWhyItWouldNotPlay,
@@ -142,6 +152,7 @@ export function Player({
   frameHref = videoFrameHref,
   pictureHref = videoPictureHref,
   askWhy = askWhyItWouldNotPlay,
+  takeCapture = takeItNow,
 }: {
   detail: RecordingDetail
   plan: PlaybackPlan
@@ -165,6 +176,7 @@ export function Player({
    * and read in a catalogue with no API behind it.
    */
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
+  takeCapture?: TakeCapture
 }) {
   const video = useRef<HTMLVideoElement>(null)
   /**
@@ -246,13 +258,14 @@ export function Player({
   /** How far ahead of the head the picture is loaded, in seconds. */
   const [buffered, setBuffered] = useState(0)
   /**
-   * Why the picker could not be opened, where it could not.
-   *
-   * On the bar, where it was pressed: this is the only place the question is
-   * asked, and a line about AirPlay standing somewhere else on the page would
-   * be there for everyone who never pressed it.
+   * What a press on the bar did, said where it was pressed: this is the only
+   * place the question is asked, and a line standing anywhere else on the page
+   * would be there for everyone who never pressed anything.
    */
-  const [aired, setAired] = useState<string | null>(null)
+  const [said, setSaid] = useState<{
+    text: string
+    tone: 'ok' | 'err'
+  } | null>(null)
   /**
    * Whether the settings surface is open.
    *
@@ -299,15 +312,31 @@ export function Player({
    */
   const attempt = useRef(0)
 
+  const pip = usePictureInPicture(video)
   const duration = d.lengthSec ?? 0
   const drops = d.qualitySpots?.map((spot) => spot.second)
+  const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
     stirred ||
     onTheBar ||
     held ||
     scrubbingAt !== null ||
-    settingsOpen
+    settingsOpen ||
+    pip.out
+
+  const capture = async () => {
+    const got = await takeCapture({
+      video: video.current,
+      name: capturedName(d.title, capturedAt(position)),
+    })
+
+    setSaid(
+      got === 'saved'
+        ? { text: SAID_CAPTURED, tone: 'ok' }
+        : { text: SAID_NOT_CAPTURED, tone: 'err' },
+    )
+  }
 
   // useEffect exception: browser API (the document's fullscreen element) +
   // listener cleanup. Leaving fullscreen by Esc is not a press this component
@@ -862,41 +891,43 @@ export function Player({
             and the press hands the focus to the player rather than taking it,
             which is what puts the keys on the picture that was just clicked.
           */}
-          <div
-            data-slot="player-press"
-            onMouseDown={(event) => {
-              event.preventDefault()
-              dismissing.current = settingsOpen
-              // `preventScroll`, because a press must not move the picture out
-              // from under the hand between the press going down and coming
-              // up — the click would then be delivered to whatever the pointer
-              // was left over, and the press would read as having done nothing.
-              shell?.focus({ preventScroll: true })
-            }}
-            onClick={() => {
-              if (dismissing.current) {
-                dismissing.current = false
+          {!pip.out && (
+            <div
+              data-slot="player-press"
+              onMouseDown={(event) => {
+                event.preventDefault()
+                dismissing.current = settingsOpen
+                // `preventScroll`, because a press must not move the picture out
+                // from under the hand between the press going down and coming
+                // up — the click would then be delivered to whatever the pointer
+                // was left over, and the press would read as having done nothing.
+                shell?.focus({ preventScroll: true })
+              }}
+              onClick={() => {
+                if (dismissing.current) {
+                  dismissing.current = false
 
-                return
-              }
+                  return
+                }
 
-              toggle()
-            }}
-            onDoubleClick={toggleFullscreen}
-            data-up={chromeUp ? 'true' : undefined}
-            /*
-              The pointer goes down with the bar. Every player does it —
-              YouTube's is `.ytp-autohide{cursor:none}`, and it applies
-              windowed and not only full screen — because a pointer left
-              standing on a picture is the one piece of chrome that never
-              fades, sitting wherever the hand happened to stop.
+                toggle()
+              }}
+              onDoubleClick={toggleFullscreen}
+              data-up={chromeUp ? 'true' : undefined}
+              /*
+                The pointer goes down with the bar. Every player does it —
+                YouTube's is `.ytp-autohide{cursor:none}`, and it applies
+                windowed and not only full screen — because a pointer left
+                standing on a picture is the one piece of chrome that never
+                fades, sitting wherever the hand happened to stop.
 
-              It is said here and not on the whole player: the bar's own
-              controls have cursors of their own to say, and a rule on the
-              board would be what the pointer lands on instead of theirs.
-            */
-            className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
-          />
+                It is said here and not on the whole player: the bar's own
+                controls have cursors of their own to say, and a rule on the
+                board would be what the pointer lands on instead of theirs.
+              */
+              className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
+            />
+          )}
           {/*
             The middle of the picture. A stopped picture carries the mark that
             says so, and every press is answered there whether it came from the
@@ -909,7 +940,9 @@ export function Player({
           */}
           <PlayerCenter
             standing={
-              phase === 'idle' || phase === 'paused' ? 'play' : undefined
+              !pip.out && (phase === 'idle' || phase === 'paused')
+                ? 'play'
+                : undefined
             }
             /*
               The button goes as soon as the picture runs, and a focused
@@ -924,7 +957,15 @@ export function Player({
             bezel={bezel ?? undefined}
           />
           <PlayerSeekFlash flash={flash ?? undefined} />
-          {(phase === 'waiting' || phase === 'diagnosing') && (
+          {pip.out && (
+            <p
+              role="status"
+              className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
+            >
+              ピクチャーインピクチャーで再生中
+            </p>
+          )}
+          {!pip.out && (phase === 'waiting' || phase === 'diagnosing') && (
             // Over the middle, on a plate of its own. Japanese recordings carry
             // their subtitles burnt into the bottom of the picture, so anything
             // laid there in thin grey is read off the programme rather than off
@@ -986,12 +1027,15 @@ export function Player({
                 frameHref={frameHref}
               />
             )}
-            {aired && (
+            {said && (
               <p
                 role="status"
-                className="mt-2 text-[11px] font-medium text-[#EC9A93]"
+                className={cn(
+                  'mt-2 text-[11px] font-medium',
+                  said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
+                )}
               >
-                {aired}
+                {said.text}
               </p>
             )}
             {/* The seek bar is 18px tall and its 44px area reaches 13px past
@@ -1108,7 +1152,9 @@ export function Player({
                   id={d.id}
                   onTakeTicket={onTakeTicket}
                   video={video}
-                  onRefused={setAired}
+                  onRefused={(message) =>
+                    setSaid({ text: message, tone: 'err' })
+                  }
                 />
                 <button
                   type="button"
@@ -1129,6 +1175,30 @@ export function Player({
                   speed={speed}
                   onChooseSpeed={chooseSpeed}
                 />
+                <button
+                  type="button"
+                  aria-label="キャプチャ"
+                  disabled={!framed}
+                  onClick={capture}
+                  className={PLAYER_GLYPH_BUTTON}
+                >
+                  <CaptureIcon />
+                </button>
+                {pip.offered && (
+                  <button
+                    type="button"
+                    aria-label="ピクチャーインピクチャー"
+                    aria-pressed={pip.out}
+                    disabled={!framed}
+                    onClick={pip.toggle}
+                    className={cn(
+                      PLAYER_GLYPH_BUTTON,
+                      pip.out && PLAYER_GLYPH_BUTTON_ON,
+                    )}
+                  >
+                    <PictureInPictureIcon />
+                  </button>
+                )}
                 <button
                   type="button"
                   aria-label="全画面"

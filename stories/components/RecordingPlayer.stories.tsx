@@ -9,6 +9,10 @@ import {
   SUBTITLED_FRAME,
 } from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
+import {
+  drawCapture,
+  type TakeCapture,
+} from '@/components/recordings/player-capture'
 import { ScreenMain } from '@/components/vela/app-shell'
 import type { PlaybackFault } from '@/components/recordings/playback-fault'
 
@@ -1137,5 +1141,216 @@ export const 立て直しに失敗したらコマごと断りに変わる: Story
     await expect(
       canvasElement.querySelector('[data-slot="player-held-frame"]'),
     ).toBeNull()
+  },
+}
+
+const showing = (canvasElement: HTMLElement) => {
+  const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+  return waitFor(() => expect(picture.readyState).toBeGreaterThan(1), {
+    timeout: 10000,
+  })
+}
+
+const taken: { name: string; blob: Blob | null }[] = []
+
+const capturing: TakeCapture = async ({ video, name, over }) => {
+  const blob = await drawCapture({ video, over })
+
+  taken.push({ name, blob })
+
+  return blob ? 'saved' : 'refused'
+}
+
+async function sizeOf(blob: Blob) {
+  const bitmap = await createImageBitmap(blob)
+
+  return { width: bitmap.width, height: bitmap.height }
+}
+
+async function litIn(blob: Blob) {
+  const bitmap = await createImageBitmap(blob)
+  const plate = document.createElement('canvas')
+
+  plate.width = bitmap.width
+  plate.height = bitmap.height
+  plate.getContext('2d')?.drawImage(bitmap, 0, 0)
+
+  const pixels = plate
+    .getContext('2d')
+    ?.getImageData(0, 0, plate.width, plate.height).data as Uint8ClampedArray
+  let lit = 0
+
+  for (let at = 0; at < pixels.length; at += 4) {
+    if (pixels[at] > 40 || pixels[at + 1] > 40 || pixels[at + 2] > 40) {
+      lit += 1
+    }
+  }
+
+  return lit / (pixels.length / 4)
+}
+
+export const キャプチャ: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+    takeCapture: capturing,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    taken.length = 0
+    await userEvent.click(canvas.getByRole('button', { name: 'キャプチャ' }))
+    await waitFor(() => expect(taken).toHaveLength(1))
+
+    const got = taken[0]
+
+    await expect(got.name).toBe(`${detail('1266').title} 0-00.png`)
+    await expect(got.blob?.type).toBe('image/png')
+    await expect(await sizeOf(got.blob as Blob)).toEqual({
+      width: 640,
+      height: 360,
+    })
+    await expect(await litIn(got.blob as Blob)).toBeGreaterThan(0.1)
+    await expect(canvas.getByText('キャプチャを保存しました')).toBeVisible()
+  },
+}
+
+export const キャプチャを断られる: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    const reading = CanvasRenderingContext2D.prototype.getImageData
+
+    CanvasRenderingContext2D.prototype.getImageData = () => {
+      throw new DOMException(
+        'Tainted canvases may not be exported.',
+        'SecurityError',
+      )
+    }
+
+    try {
+      await userEvent.click(canvas.getByRole('button', { name: 'キャプチャ' }))
+      await waitFor(() =>
+        expect(canvas.getByText('この映像は保存できません')).toBeVisible(),
+      )
+    } finally {
+      CanvasRenderingContext2D.prototype.getImageData = reading
+    }
+
+    await expect(
+      canvas.getByRole('button', { name: 'キャプチャ' }),
+    ).toBeEnabled()
+    await expect(
+      canvasElement.querySelector('video') as HTMLVideoElement,
+    ).toBeVisible()
+  },
+}
+
+function pictureOut(canvasElement: HTMLElement, out: boolean) {
+  const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+  Object.defineProperty(document, 'pictureInPictureElement', {
+    value: out ? picture : null,
+    configurable: true,
+  })
+  picture.dispatchEvent(
+    new Event(out ? 'enterpictureinpicture' : 'leavepictureinpicture', {
+      bubbles: true,
+    }),
+  )
+}
+
+function pictureBack() {
+  Reflect.deleteProperty(document, 'pictureInPictureElement')
+}
+
+export const ピクチャーインピクチャー: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    const control = canvas.getByRole('button', {
+      name: 'ピクチャーインピクチャー',
+    })
+
+    await expect(control).toHaveAttribute('aria-pressed', 'false')
+    await expect(
+      canvas.queryByText('ピクチャーインピクチャーで再生中'),
+    ).toBeNull()
+
+    try {
+      pictureOut(canvasElement, true)
+
+      await waitFor(() =>
+        expect(control).toHaveAttribute('aria-pressed', 'true'),
+      )
+      await expect(
+        canvas.getByText('ピクチャーインピクチャーで再生中'),
+      ).toBeVisible()
+      await expect(
+        canvasElement.querySelector('[data-slot="player-press"]'),
+      ).toBeNull()
+      await expect(
+        canvasElement.querySelector('[data-slot="player-chrome"]'),
+      ).toHaveAttribute('data-up', 'true')
+
+      pictureOut(canvasElement, false)
+
+      await waitFor(() =>
+        expect(control).toHaveAttribute('aria-pressed', 'false'),
+      )
+      await expect(
+        canvas.queryByText('ピクチャーインピクチャーで再生中'),
+      ).toBeNull()
+      await expect(
+        canvasElement.querySelector('[data-slot="player-press"]'),
+      ).not.toBeNull()
+    } finally {
+      pictureBack()
+    }
+  },
+}
+
+export const ピクチャーインピクチャーを断るブラウザ: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+    picture.disablePictureInPicture = true
+    picture.dispatchEvent(new Event('leavepictureinpicture', { bubbles: true }))
+
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole('button', { name: 'ピクチャーインピクチャー' }),
+      ).toBeNull(),
+    )
+    await expect(
+      canvas.getByRole('button', { name: 'キャプチャ' }),
+    ).toBeVisible()
   },
 }
