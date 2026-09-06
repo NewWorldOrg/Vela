@@ -14,9 +14,9 @@ import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
+import { FilterSelect } from '@/components/vela/filter-select'
 import { LibraryIcon, SearchIcon } from '@/components/vela/icons'
 import { ChannelChip } from '@/components/library/channel-chip'
-import { LibraryFilterSelect } from '@/components/library/library-filter-select'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import { ScreenMain } from '@/components/vela/app-shell'
 
@@ -91,19 +91,19 @@ export function LibraryView({
               className="h-[33px] rounded-full pl-[34px]"
             />
           </form>
-          <LibraryFilterSelect
+          <FilterSelect
             prefix="期間"
             value={filter.year}
             options={years.map((y) => ({ value: String(y), label: `${y} 年` }))}
             onChange={(next) => onFiltersChange({ year: next })}
           />
-          <LibraryFilterSelect
+          <FilterSelect
             prefix="ジャンル"
             value={filter.genre}
             options={genres.map((g) => ({ value: g, label: g }))}
             onChange={(next) => onFiltersChange({ genre: next })}
           />
-          <LibraryFilterSelect
+          <FilterSelect
             prefix="状態"
             value={filter.state}
             options={RECORDING_STATE_FILTERS.map((f) => ({
