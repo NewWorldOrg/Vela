@@ -1,4 +1,5 @@
 import type { RecordingOutcome } from '@/repository/recordings'
+import type { ReservationOutcomeKind } from '@/repository/reservation-outcomes'
 import type { ReservationStanding } from '@/repository/reservations'
 
 /**
@@ -22,6 +23,7 @@ const CUT_SHORT =
   '録画は始まったが、録画するはずだった時間を満たさずに終わった状態。'
 const NOTHING_KEPT = '録画が残らなかった状態。'
 const IN_PROGRESS = '録画が進行中の状態。結果は録画の完了時に確定します。'
+const NOTHING_STARTED = '開始時刻を過ぎても録画が始まらなかった予約。'
 
 export const RESERVATION_STANDING_TERMS: Record<
   ReservationStanding,
@@ -43,10 +45,7 @@ export const RESERVATION_STANDING_TERMS: Record<
     explanation:
       '取り消された予約。記録は残り、同じ番組の予約は一覧から復元できます。',
   },
-  missed: {
-    label: '撮り逃し',
-    explanation: '開始時刻を過ぎても録画が始まらなかった予約。',
-  },
+  missed: { label: '撮り逃し', explanation: NOTHING_STARTED },
   complete: { label: '完了', explanation: FILLED_THE_WINDOW },
   truncated: { label: '尻切れ', explanation: CUT_SHORT },
   failed: { label: '失敗', explanation: NOTHING_KEPT },
@@ -57,6 +56,25 @@ export const RECORDING_OUTCOME_TERMS: Record<RecordingOutcome, StateTerm> = {
   complete: { label: '完全', explanation: FILLED_THE_WINDOW },
   truncated: { label: '尻切れ', explanation: CUT_SHORT },
   failed: { label: '失敗', explanation: NOTHING_KEPT },
+}
+
+export const RESERVATION_OUTCOME_KIND_TERMS: Record<
+  ReservationOutcomeKind,
+  StateTerm
+> = {
+  competing: {
+    label: '競合',
+    explanation: '同じ時間帯にチューナーの空きがなく、録画されなかった予約。',
+  },
+  missed: { label: '撮り逃し', explanation: NOTHING_STARTED },
+  tuneFailure: {
+    label: '選局失敗',
+    explanation: '選局できず、録画が始まらなかった予約。',
+  },
+  recordingFailure: {
+    label: '録画失敗',
+    explanation: '録画は始まったが、録画から失敗が報告された予約。',
+  },
 }
 
 /**

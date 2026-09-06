@@ -8,6 +8,7 @@ import {
   CANDIDATE_UNLOCKED_TERM,
   END_UNDECIDED_TERM,
   RECORDING_OUTCOME_TERMS,
+  RESERVATION_OUTCOME_KIND_TERMS,
   RESERVATION_RECEPTION_TERM,
   RESERVATION_STANDING_TERMS,
   type StateTerm,
@@ -54,6 +55,17 @@ test('録画の結果は API の enum に「録画中」を足したもの', asy
 })
 
 /**
+ * The ledger's four classifications, read off the document the same way. A
+ * fifth one lands as a red run rather than as a chip with `undefined` in it.
+ */
+test('予約結果の分類は API の enum を漏れなく説明している', async () => {
+  assert.deepEqual(
+    Object.keys(RESERVATION_OUTCOME_KIND_TERMS).sort(),
+    await enumOf('ReservationOutcomeKind'),
+  )
+})
+
+/**
  * The words the requirements settled on, tied to the state each one names.
  * They are not the design system's to soften and not this file's to reword:
  * every one of these appears verbatim in the requirements — the recording
@@ -76,6 +88,12 @@ const FROM_THE_REQUIREMENTS = {
     truncated: '尻切れ',
     failed: '失敗',
   },
+  outcomeKind: {
+    competing: '競合',
+    missed: '撮り逃し',
+    tuneFailure: '選局失敗',
+    recordingFailure: '録画失敗',
+  },
 } as const
 
 test('要件文書の語がそのまま画面の語になっている', () => {
@@ -95,6 +113,18 @@ test('要件文書の語がそのまま画面の語になっている', () => {
         .label,
       word,
       `録画の ${state} は要件文書の「${word}」で呼ぶ`,
+    )
+  }
+
+  for (const [kind, word] of Object.entries(
+    FROM_THE_REQUIREMENTS.outcomeKind,
+  )) {
+    assert.equal(
+      RESERVATION_OUTCOME_KIND_TERMS[
+        kind as keyof typeof RESERVATION_OUTCOME_KIND_TERMS
+      ].label,
+      word,
+      `予約結果の ${kind} は要件文書の「${word}」で呼ぶ`,
     )
   }
 
@@ -123,6 +153,9 @@ const EVERY_TERM: [string, StateTerm][] = [
   ),
   ...Object.entries(RECORDING_OUTCOME_TERMS).map(
     ([state, term]): [string, StateTerm] => [`録画 ${state}`, term],
+  ),
+  ...Object.entries(RESERVATION_OUTCOME_KIND_TERMS).map(
+    ([kind, term]): [string, StateTerm] => [`予約結果 ${kind}`, term],
   ),
   ['終了未定の印', END_UNDECIDED_TERM],
   ['予約の受信不可の印', RESERVATION_RECEPTION_TERM],
@@ -157,6 +190,7 @@ test('説明は状態と条件を述べ、話し言葉の癖を持たない', as
     (await enumOf('ReservationStanding')).length +
       (await enumOf('RecordingOutcome')).length +
       1 +
+      (await enumOf('ReservationOutcomeKind')).length +
       MARKS,
     '説明を集めそこねている(この数が合わないと、以下の検査は素通りする)',
   )
