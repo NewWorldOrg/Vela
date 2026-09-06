@@ -26,6 +26,7 @@ import {
   ThumbMissingIcon,
   WarningIcon,
 } from '@/components/vela/icons'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import {
@@ -274,14 +275,13 @@ export function RecordingDetailView({
       <div className={GUTTER}>
         <div className={cn(PLAYER_COLUMN, 'pt-5')}>
           <h1 className="heading text-[24px] leading-[1.45]">{d.title}</h1>
-          <div className="mt-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2">
-            <span>
-              {d.channel}
-              {d.channelNo && (
-                <small className="ml-[7px] font-code text-[11.5px] text-ink-3">
-                  {d.channelNo}
-                </small>
-              )}
+          <div
+            data-slot="watch-meta"
+            className="mt-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2"
+          >
+            <span className="inline-flex items-center gap-2">
+              <ChannelMark logo={d.channelLogo} no={d.channelNo} />
+              <span>{d.channel}</span>
             </span>
             <Dot />
             <span className="font-code">{d.recordedRange}</span>

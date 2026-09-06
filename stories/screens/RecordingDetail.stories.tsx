@@ -250,6 +250,43 @@ export const スクランブル残存: Story = {
   },
 }
 export const 失敗: Story = { args: { detail: detail('1239') } }
+
+function watchMeta(canvasElement: HTMLElement) {
+  return canvasElement.querySelector('[data-slot="watch-meta"]') as HTMLElement
+}
+
+export const 局のロゴ: Story = {
+  args: { detail: detail('1274') },
+  play: async ({ canvasElement }) => {
+    const meta = watchMeta(canvasElement)
+
+    await waitFor(() => expect(meta.querySelectorAll('img')).toHaveLength(1))
+    await expect(meta.querySelector('img')).toHaveAttribute('alt', '')
+    await expect(within(meta).getByText('中央テレビ1')).toBeVisible()
+    await expect(within(meta).queryByText('131')).toBeNull()
+    await expect(canvasElement.querySelectorAll('img')).toHaveLength(1)
+  },
+}
+export const ロゴをまだ読んでいない局: Story = {
+  args: { detail: detail('1270') },
+  play: async ({ canvasElement }) => {
+    const meta = watchMeta(canvasElement)
+
+    await expect(meta.querySelectorAll('img')).toHaveLength(0)
+    await expect(within(meta).getByText('141')).toBeVisible()
+    await expect(within(meta).getByText('シティ MX1')).toBeVisible()
+  },
+}
+export const ロゴを放送していない局: Story = {
+  args: { detail: detail('0412') },
+  play: async ({ canvasElement }) => {
+    const meta = watchMeta(canvasElement)
+
+    await expect(meta.querySelectorAll('img')).toHaveLength(0)
+    await expect(within(meta).getByText('171')).toBeVisible()
+    await expect(within(meta).getByText('湾岸放送1')).toBeVisible()
+  },
+}
 export const ファイル不在: Story = { args: { detail: detail('0731') } }
 export const 録画中: Story = {
   args: { detail: detail('1291'), playback: refused('stillRecording') },
