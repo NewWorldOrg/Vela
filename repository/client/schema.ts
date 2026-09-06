@@ -1662,6 +1662,8 @@ export interface components {
       ran: components['schemas']['EncodeEncoder']
       swerved: null | components['schemas']['EncodeSwerve']
     }
+    /** @enum {string} */
+    EncodeStanding: 'notEncoded' | 'queued' | 'running' | 'completed' | 'failed'
     /** @enum {null|string} */
     EncodeSwerve:
       | 'theCardIsOutOfReach'
@@ -2022,6 +2024,9 @@ export interface components {
       /** Format: date-time */
       measuredUpdatedAt: null | string
     }
+    RecordingEncodeResponder: {
+      standing: components['schemas']['EncodeStanding']
+    }
     /** @enum {string} */
     RecordingFailure:
       | 'noSuchRecording'
@@ -2141,6 +2146,7 @@ export interface components {
       drops: components['schemas']['RecordingDropsResponder']
       thumbnail: components['schemas']['RecordingThumbnailResponder']
       broadcastGroup: components['schemas']['RecordingBroadcastGroupResponder']
+      encode: components['schemas']['RecordingEncodeResponder']
     }
     /** @enum {string} */
     RecordingSort: 'startedAt' | 'programmeStartsAt'
@@ -6508,6 +6514,7 @@ export interface operations {
     parameters: {
       query?: {
         status?: components['schemas']['EncodeJobStatus'][]
+        recordingId?: string
         page?: number | string
         perPage?: number | string
       }

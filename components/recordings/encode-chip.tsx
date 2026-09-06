@@ -1,7 +1,16 @@
 import { cn } from '@/lib/utils'
 import type { Recording } from '@/repository/recordings'
+import { STANDING_LABEL, type EncodeStanding } from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
+
+const TONE: Record<EncodeStanding, 'info' | 'ok' | 'err' | undefined> = {
+  notEncoded: undefined,
+  queued: undefined,
+  running: 'info',
+  completed: 'ok',
+  failed: 'err',
+}
 
 export function EncodeChip({
   recording: r,
@@ -10,55 +19,20 @@ export function EncodeChip({
   recording: Recording
   subTone?: string
 }) {
-  if (!r.encode) {
-    return null
+  const tone = TONE[r.encode]
+
+  if (!tone) {
+    return (
+      <Badge variant="outline" className={cn('border-line', subTone)}>
+        {STANDING_LABEL[r.encode]}
+      </Badge>
+    )
   }
 
-  switch (r.encode.status) {
-    case 'none':
-      return (
-        <Badge variant="outline" className={cn('border-line', subTone)}>
-          未エンコード
-        </Badge>
-      )
-    case 'waiting':
-      return (
-        <Badge variant="outline" className={cn('border-line', subTone)}>
-          待機中
-        </Badge>
-      )
-    case 'running':
-      return (
-        <Badge variant="info" className="font-bold">
-          <ChipDot />
-          実行中 <span className="font-code">{r.encode.progress}%</span>
-        </Badge>
-      )
-    case 'done':
-      return (
-        <Badge variant="ok" className="font-bold">
-          <ChipDot />
-          完了
-        </Badge>
-      )
-    case 'failed':
-      return (
-        <>
-          <Badge variant="err" className="font-bold">
-            <ChipDot />
-            失敗
-          </Badge>
-          {r.encode.reason && (
-            <span
-              className={cn(
-                'mt-[3px] block text-[10.5px] leading-relaxed',
-                subTone,
-              )}
-            >
-              {r.encode.reason}
-            </span>
-          )}
-        </>
-      )
-  }
+  return (
+    <Badge variant={tone} className="font-bold">
+      <ChipDot />
+      {STANDING_LABEL[r.encode]}
+    </Badge>
+  )
 }

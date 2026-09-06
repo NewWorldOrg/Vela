@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
+import { STANDING_LABEL, type EncodeStanding } from '@/repository/encode-terms'
 import {
   MORE_RECORDINGS_THAN_FIT,
   RECORDING_FIXTURES,
@@ -163,6 +164,52 @@ export const 削除を断られたとき: Story = {
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await expect(await dialog.findByText(STILL_RECORDING)).toBeVisible()
     await expect(screen.getByRole('alertdialog')).toBeVisible()
+  },
+}
+
+const STANDINGS: EncodeStanding[] = [
+  'notEncoded',
+  'queued',
+  'running',
+  'completed',
+  'failed',
+]
+
+const ENCODE_COLUMN = 7
+
+export const エンコードの5状態: Story = {
+  args: {
+    result: resultOf(
+      STANDINGS.map((encode, index) => ({ ...all[index], encode })),
+    ),
+    filter: {},
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByRole('row').slice(1)
+
+    for (const [index, standing] of STANDINGS.entries()) {
+      await expect(
+        within(rows[index]).getAllByRole('cell')[ENCODE_COLUMN],
+      ).toHaveTextContent(STANDING_LABEL[standing])
+    }
+  },
+}
+
+export const エンコードのない一覧: Story = {
+  args: {
+    result: resultOf(
+      all.map((r) => ({ ...r, encode: 'notEncoded' as EncodeStanding })),
+    ),
+    filter: {},
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByRole('row').slice(1)
+
+    for (const row of rows) {
+      await expect(
+        within(row).getAllByRole('cell')[ENCODE_COLUMN],
+      ).toHaveTextContent('未エンコード')
+    }
   },
 }
 

@@ -10,6 +10,7 @@ import type { PlaybackPlan } from '@/repository/videos'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 import { ChevronRightIcon, QualityIcon } from '@/components/vela/icons'
+import { STANDING_LABEL } from '@/repository/encode-terms'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { QualityChip } from '@/components/recordings/quality-chip'
@@ -195,6 +196,11 @@ export function RecordingRecord({
           </>
         )}
         {plan && <SourceRow detail={d} plan={plan} />}
+        <DetailKeyRow
+          label="エンコード"
+          main={STANDING_LABEL[d.encode]}
+          plain
+        />
         {/*
           A reading, not a control. Drawing the picture again is something done
           with the recording and stands with 削除 and 外部プレイヤーで開く, where
@@ -231,7 +237,7 @@ function SourceRow({
   const tsLabel =
     d.sizeBytes == null ? '元 TS' : `元 TS ${formatBytes(d.sizeBytes)}`
 
-  if (d.encode?.status !== 'done') {
+  if (d.encode !== 'completed') {
     return (
       <DetailKeyRow
         label="再生ソース"
