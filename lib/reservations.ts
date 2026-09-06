@@ -10,7 +10,7 @@ export function reservationAnchor(id: string): string {
 }
 
 export function reservationHref(id: string): string {
-  return `/reservations#${reservationAnchor(id)}`
+  return `/reservations?show=all#${reservationAnchor(id)}`
 }
 
 /**

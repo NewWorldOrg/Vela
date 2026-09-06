@@ -143,7 +143,7 @@ export const 完全: Story = {
     // the reservation among the rest.
     await expect(
       canvas.getByRole('link', { name: 'この録画の予約' }),
-    ).toHaveAttribute('href', '/reservations#reservation-r-309')
+    ).toHaveAttribute('href', '/reservations?show=all#reservation-r-309')
 
     // 完全 is not on the screen at all: the picture plays to its end and says
     // so, and a band above it repeating the word made the two outcomes that do

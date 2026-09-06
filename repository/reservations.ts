@@ -111,14 +111,8 @@ const DISCARD_REFUSAL: Partial<Record<ReservationRefusal, string>> = {
 
 const CANNOT_DISCARD = '予約を削除できませんでした'
 
-/**
- * What the list is narrowed by. A cancelled reservation is what the screen has
- * to answer "why is this not being recorded" with, so it stays while the
- * broadcast is still ahead or under way and is left out once the broadcast has
- * ended. `all` asks for those back; the record itself is never removed.
- */
 export interface ReservationsFilter {
-  cancelled?: 'all'
+  show?: 'all'
 }
 
 /**
@@ -154,9 +148,9 @@ export async function listReservations(
     ruleNames(),
   ])
   const kept =
-    filter.cancelled === 'all'
+    filter.show === 'all'
       ? carried.items
-      : carried.items.filter((one) => !isSpentCancellation(one, now))
+      : carried.items.filter((one) => !isSettled(one, now))
 
   return {
     items: kept.map((one) =>
@@ -167,16 +161,12 @@ export async function listReservations(
   }
 }
 
-/**
- * The broadcast is over at the end of its window, so the reservation has
- * nothing left to explain about it. The margin the recording would have run on
- * is not part of the broadcast and is not read here.
- */
-function isSpentCancellation(one: ReservationResponder, now: Date): boolean {
-  return (
-    one.standing === 'cancelled' &&
-    new Date(one.window.endAt).getTime() <= now.getTime()
-  )
+function isSettled(one: ReservationResponder, now: Date): boolean {
+  if (one.standing !== 'complete' && one.standing !== 'cancelled') {
+    return false
+  }
+
+  return new Date(one.window.endAt).getTime() <= now.getTime()
 }
 
 /**
