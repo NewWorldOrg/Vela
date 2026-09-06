@@ -18,12 +18,7 @@ import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { ChannelList } from '@/components/live/channel-list'
-import {
-  foldColumn,
-  foldPicture,
-  foldRail,
-  useFoldingChannels,
-} from '@/components/live/channel-fold'
+import { foldColumn, useFoldingChannels } from '@/components/live/channel-fold'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import { NowNext } from '@/components/live/now-next'
@@ -231,12 +226,9 @@ export function LiveView({
   return (
     <ScreenMain
       width="full"
-      className={cn(
-        'flex items-start [--live-gap:26px] gap-(--live-gap) px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1180px]:flex-col',
-        foldRail(away),
-      )}
+      className="flex items-start gap-[26px] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1180px]:flex-col"
     >
-      <div className={cn('min-w-0 flex-1', PLAYER_COLUMN, foldPicture(motion))}>
+      <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
         <LivePlayer
           channel={watching.channel}
           profiles={screen.profiles}
@@ -262,7 +254,7 @@ export function LiveView({
         aria-label="チャンネル"
         className={cn(
           'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col items-end max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
-          foldColumn(motion),
+          foldColumn(away, motion),
         )}
       >
         <ChannelList
