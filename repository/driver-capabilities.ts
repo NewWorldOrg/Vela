@@ -15,6 +15,7 @@ export const SESSION_PURPOSE_LABEL: Record<SessionPurpose, string> = {
   surveyNow: 'EPG 収集（前倒し）',
   live: 'ライブ',
   scan: 'スキャン',
+  logo: 'ロゴ収集',
 }
 
 /**

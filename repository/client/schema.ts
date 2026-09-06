@@ -55,6 +55,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/services/{networkId}-{serviceId}/logo': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The logo a station broadcasts, as a PNG. It answers 404 where the station has none, and carries an entity tag so a screen showing every channel asks for each logo once. */
+    get: operations['getServiceLogo']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/videos/{id}/ticket': {
     parameters: {
       query?: never
@@ -1403,6 +1420,8 @@ export interface components {
       selectedChannel: null | components['schemas']['ScanTargetResponder']
       betterChannel: null | components['schemas']['ScanTargetResponder']
       candidates: components['schemas']['CandidateChannelResponder'][]
+      logoDeclaration: components['schemas']['StationLogoDeclaration']
+      logo: null | components['schemas']['StationLogoResponder']
     }
     CandidateChannelResponder: {
       /** Format: uuid */
@@ -1564,6 +1583,7 @@ export interface components {
       | 'capabilityUnavailable'
       | 'timedOut'
       | 'destinationCollision'
+      | 'headTooFar'
     EncodeFailureResponder: {
       failure: components['schemas']['EncodeFailure']
       note: string
@@ -1614,6 +1634,7 @@ export interface components {
       stalled: boolean
       failure: null | components['schemas']['EncodeFailureResponder']
       artefactName: null | string
+      timeline: null | components['schemas']['EncodeTimelineResponder']
     }
     /** @enum {string} */
     EncodeJobStatus: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
@@ -1647,6 +1668,21 @@ export interface components {
       | 'theCardCannotDoThisCodec'
       | 'theProcessorCannotDoThisCodec'
       | null
+    EncodeTimelineResponder: {
+      /** Format: double */
+      sourceStartSeconds: number | string
+      /** Format: double */
+      headSkipSeconds: number | string
+      /** Format: double */
+      captionShiftSeconds: number | string
+      /** Format: double */
+      sourceLengthSeconds: null | number | string
+      /** Format: double */
+      artefactLengthSeconds: null | number | string
+      /** Format: double */
+      driftSeconds: null | number | string
+      lengthsAgree: null | boolean
+    }
     EpgRebuiltResponder: {
       /** Format: int32 */
       discarded: number | string
@@ -2636,7 +2672,13 @@ export interface components {
     }
     /** @enum {string} */
     SessionPurpose:
-      'unspecified' | 'recording' | 'live' | 'survey' | 'scan' | 'surveyNow'
+      | 'unspecified'
+      | 'recording'
+      | 'live'
+      | 'survey'
+      | 'scan'
+      | 'surveyNow'
+      | 'logo'
     SessionResponder: {
       id: string
       displayName: string
@@ -2656,6 +2698,14 @@ export interface components {
     StartScanRequest: {
       systems?: null | components['schemas']['TuneSystem'][]
       channels?: null | components['schemas']['TuningParametersRequest'][]
+    }
+    /** @enum {string} */
+    StationLogoDeclaration:
+      'notYetRead' | 'inTheCommonDataTable' | 'noPictureIsBroadcast'
+    StationLogoResponder: {
+      url: string
+      /** Format: date-time */
+      collectedAt: string
     }
     StopRecordingRequest: {
       reason?: null | string
@@ -2953,6 +3003,48 @@ export interface operations {
       }
       /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
       401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  getServiceLogo: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Modified */
+      304: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown
         }

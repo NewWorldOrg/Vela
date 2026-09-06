@@ -144,6 +144,51 @@
         }
       }
     },
+    "/api/services/{networkId}-{serviceId}/logo": {
+      "get": {
+        "tags": [
+          "services"
+        ],
+        "summary": "The logo a station broadcasts, as a PNG. It answers 404 where the station has none, and carries an entity tag so a screen showing every channel asks for each logo once.",
+        "operationId": "getServiceLogo",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
     "/api/videos/{id}/ticket": {
       "post": {
         "tags": [
@@ -7186,7 +7231,9 @@
           "candidateCount",
           "selectedChannel",
           "betterChannel",
-          "candidates"
+          "candidates",
+          "logoDeclaration",
+          "logo"
         ],
         "type": "object",
         "properties": {
@@ -7265,6 +7312,19 @@
             "items": {
               "$ref": "#/components/schemas/CandidateChannelResponder"
             }
+          },
+          "logoDeclaration": {
+            "$ref": "#/components/schemas/StationLogoDeclaration"
+          },
+          "logo": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/StationLogoResponder"
+              }
+            ]
           }
         }
       },
@@ -7921,7 +7981,8 @@
           "sourceMissing",
           "capabilityUnavailable",
           "timedOut",
-          "destinationCollision"
+          "destinationCollision",
+          "headTooFar"
         ],
         "type": "string"
       },
@@ -8044,7 +8105,8 @@
           "quietForSeconds",
           "stalled",
           "failure",
-          "artefactName"
+          "artefactName",
+          "timeline"
         ],
         "type": "object",
         "properties": {
@@ -8141,6 +8203,16 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "timeline": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeTimelineResponder"
+              }
             ]
           }
         }
@@ -8265,6 +8337,77 @@
           "null",
           "string"
         ]
+      },
+      "EncodeTimelineResponder": {
+        "required": [
+          "sourceStartSeconds",
+          "headSkipSeconds",
+          "captionShiftSeconds",
+          "sourceLengthSeconds",
+          "artefactLengthSeconds",
+          "driftSeconds",
+          "lengthsAgree"
+        ],
+        "type": "object",
+        "properties": {
+          "sourceStartSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "headSkipSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "captionShiftSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "sourceLengthSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "artefactLengthSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "driftSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lengthsAgree": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
       },
       "EpgRebuiltResponder": {
         "required": [
@@ -12209,7 +12352,8 @@
           "live",
           "survey",
           "scan",
-          "surveyNow"
+          "surveyNow",
+          "logo"
         ],
         "type": "string"
       },
@@ -12292,6 +12436,30 @@
             "items": {
               "$ref": "#/components/schemas/TuningParametersRequest"
             }
+          }
+        }
+      },
+      "StationLogoDeclaration": {
+        "enum": [
+          "notYetRead",
+          "inTheCommonDataTable",
+          "noPictureIsBroadcast"
+        ],
+        "type": "string"
+      },
+      "StationLogoResponder": {
+        "required": [
+          "url",
+          "collectedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "collectedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -13088,13 +13256,13 @@
       "name": "videos"
     },
     {
+      "name": "services"
+    },
+    {
       "name": "tuners"
     },
     {
       "name": "storage"
-    },
-    {
-      "name": "services"
     },
     {
       "name": "rules"
