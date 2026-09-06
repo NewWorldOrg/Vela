@@ -604,9 +604,24 @@ const MIXED = [
   onNetwork('x6', 146, 'これから録る番組', {
     window: window('2026-08-08T12:00:00Z', '2026-08-08T13:00:00Z'),
   }),
+  onNetwork('x7', 147, '尻切れになった番組', {
+    standing: 'truncated',
+    startedAt: '2026-08-08T01:00:00Z',
+    recordingOutcome: 'truncated',
+    window: window('2026-08-08T01:00:00Z', '2026-08-08T02:00:00Z'),
+  }),
+  onNetwork('x8', 148, '競合したままの番組', {
+    standing: 'conflict',
+    window: window('2026-08-08T12:00:00Z', '2026-08-08T13:00:00Z'),
+  }),
+  onNetwork('x9', 149, 'いま録っている番組', {
+    standing: 'recording',
+    startedAt: '2026-08-08T05:30:00Z',
+    window: window('2026-08-08T05:30:00Z', '2026-08-08T07:00:00Z'),
+  }),
 ]
 
-const mixedAt = async (at: string, filter: { cancelled?: 'all' } = {}) => {
+const mixedAt = async (at: string, filter: { show?: 'all' } = {}) => {
   standing(MIXED)
 
   return listReservations(filter, new Date(at))
@@ -619,26 +634,38 @@ test('a cancellation whose broadcast has ended is left out', async () => {
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x2', 'x3', 'x4', 'x5', 'x6'],
+    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
   )
 })
 
-test('the cancellation left out is listed when every one is asked for', async () => {
-  const { items } = await mixedAt(AFTER_THE_FIRST, { cancelled: 'all' })
+test('a recording that ran to the end takes its reservation out of the list', async () => {
+  const { items } = await mixedAt(AFTER_THE_FIRST)
+
+  assert.equal(
+    items.find((row) => row.id === 'x4'),
+    undefined,
+  )
+})
+
+test('the two left out are listed when every one is asked for', async () => {
+  const { items } = await mixedAt(AFTER_THE_FIRST, { show: 'all' })
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x1', 'x2', 'x3', 'x4', 'x5', 'x6'],
+    ['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9'],
   )
-  assert.equal(
-    items.find((row) => row.id === 'x1')?.title,
-    '取り消した昼の番組',
+  assert.deepEqual(
+    [
+      items.find((row) => row.id === 'x1')?.title,
+      items.find((row) => row.id === 'x4')?.title,
+    ],
+    ['取り消した昼の番組', '録り終えた番組'],
   )
 })
 
 test('a cancellation still ahead of its end is listed either way', async () => {
   const held = await mixedAt(AFTER_THE_FIRST)
-  const every = await mixedAt(AFTER_THE_FIRST, { cancelled: 'all' })
+  const every = await mixedAt(AFTER_THE_FIRST, { show: 'all' })
 
   for (const { items } of [held, every]) {
     assert.equal(
@@ -648,12 +675,12 @@ test('a cancellation still ahead of its end is listed either way', async () => {
   }
 })
 
-test('the settled standings stay once their broadcast has ended', async () => {
+test('the standings a recording never settled cleanly stay on', async () => {
   const { items } = await mixedAt('2026-08-09T00:00:00Z')
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x3', 'x4', 'x5', 'x6'],
+    ['x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
   )
 })
 
@@ -663,7 +690,7 @@ test('a second before the end still holds the cancellation in the list', async (
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x1', 'x2', 'x3', 'x4', 'x5', 'x6'],
+    ['x1', 'x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
   )
 })
 
@@ -672,7 +699,7 @@ test('the end of the broadcast is the moment the cancellation leaves', async () 
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x2', 'x3', 'x4', 'x5', 'x6'],
+    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
   )
 })
 
@@ -681,13 +708,13 @@ test('a second after the end leaves the cancellation out', async () => {
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x2', 'x3', 'x4', 'x5', 'x6'],
+    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
   )
 })
 
 test('the margin the recording would have run on does not hold it in', async () => {
   standing([
-    onNetwork('x7', 147, '余白のついた取消', {
+    onNetwork('m1', 147, '余白のついた取消', {
       standing: 'cancelled',
       window: window('2026-08-08T02:00:00Z', '2026-08-08T03:00:00Z', {
         marginAfterSeconds: 600,
@@ -710,17 +737,113 @@ test('the whole list is counted by the store, not by what is left in it', async 
   assert.equal(result.total, 41)
   assert.deepEqual(
     result.items.map((row) => row.id),
-    ['x2', 'x3', 'x4', 'x5', 'x6'],
+    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
   )
 })
 
 test('the filter it was asked for is handed back', async () => {
   assert.deepEqual((await mixedAt(AFTER_THE_FIRST)).filter, {})
+  assert.deepEqual((await mixedAt(AFTER_THE_FIRST, { show: 'all' })).filter, {
+    show: 'all',
+  })
+})
+
+const OVER = window('2026-08-08T01:00:00Z', '2026-08-08T02:00:00Z')
+
+const EVERY_STANDING = [
+  onNetwork('s1', 141, '確保したまま終わった番組', { window: OVER }),
+  onNetwork('s2', 142, '競合したまま終わった番組', {
+    standing: 'conflict',
+    window: OVER,
+  }),
+  onNetwork('s3', 143, '取り消した番組', {
+    standing: 'cancelled',
+    window: OVER,
+  }),
+  onNetwork('s4', 144, '撮り逃した番組', { standing: 'missed', window: OVER }),
+  onNetwork('s5', 145, 'いま録っている番組', {
+    standing: 'recording',
+    startedAt: '2026-08-08T01:00:00Z',
+    window: OVER,
+  }),
+  onNetwork('s6', 146, '録り終えた番組', {
+    standing: 'complete',
+    startedAt: '2026-08-08T01:00:00Z',
+    recordingOutcome: 'complete',
+    window: OVER,
+  }),
+  onNetwork('s7', 147, '尻切れになった番組', {
+    standing: 'truncated',
+    startedAt: '2026-08-08T01:00:00Z',
+    recordingOutcome: 'truncated',
+    window: OVER,
+  }),
+  onNetwork('s8', 148, '録画に失敗した番組', {
+    standing: 'failed',
+    startedAt: '2026-08-08T01:00:00Z',
+    recordingOutcome: 'failed',
+    window: OVER,
+  }),
+]
+
+const AFTER_EVERY_STANDING = new Date('2026-08-08T03:00:00Z')
+
+test('after the broadcast, 完了 and 取消済み are the two that leave', async () => {
+  standing(EVERY_STANDING)
+
+  const { items } = await listReservations({}, AFTER_EVERY_STANDING)
+
   assert.deepEqual(
-    (await mixedAt(AFTER_THE_FIRST, { cancelled: 'all' })).filter,
-    {
-      cancelled: 'all',
-    },
+    items.map((row) => row.standing),
+    ['scheduled', 'conflict', 'missed', 'recording', 'truncated', 'failed'],
+  )
+})
+
+test('asking for every one brings those two back and nothing else changes', async () => {
+  standing(EVERY_STANDING)
+
+  const { items } = await listReservations(
+    { show: 'all' },
+    AFTER_EVERY_STANDING,
+  )
+
+  assert.deepEqual(
+    items.map((row) => row.standing),
+    [
+      'scheduled',
+      'conflict',
+      'cancelled',
+      'missed',
+      'recording',
+      'complete',
+      'truncated',
+      'failed',
+    ],
+  )
+})
+
+test('before the broadcast has ended, every standing is listed', async () => {
+  standing(EVERY_STANDING)
+
+  const { items } = await listReservations({}, BEFORE_THEM_ALL)
+
+  assert.equal(items.length, EVERY_STANDING.length)
+})
+
+test('a 完了 whose recording was thrown away leaves with the rest', async () => {
+  standing(EVERY_STANDING)
+  store.recordings = []
+
+  const held = await listReservations({}, AFTER_EVERY_STANDING)
+  const every = await listReservations({ show: 'all' }, AFTER_EVERY_STANDING)
+
+  assert.equal(
+    held.items.find((row) => row.id === 's6'),
+    undefined,
+  )
+  assert.equal(
+    every.items.find((row) => row.id === 's6')?.recordingId,
+    undefined,
   )
 })
 
@@ -1166,7 +1289,7 @@ test('a cancelled reservation may be thrown away, and one still to come may not'
     reservation({ id: 'a2' }),
   ])
 
-  const rows = await listReservations({ cancelled: 'all' }, BEFORE_THEM_ALL)
+  const rows = await listReservations({ show: 'all' }, BEFORE_THEM_ALL)
 
   assert.deepEqual(
     rows.items.map((one) => [one.id, one.discardable]),
@@ -1183,7 +1306,7 @@ test('a cancelled reservation is brought back only while it still has a window',
     reservation({ id: 'a2' }),
   ])
 
-  const ahead = await listReservations({ cancelled: 'all' }, BEFORE_THEM_ALL)
+  const ahead = await listReservations({ show: 'all' }, BEFORE_THEM_ALL)
 
   assert.deepEqual(
     ahead.items.map((one) => [one.id, one.restorable]),
@@ -1193,7 +1316,7 @@ test('a cancelled reservation is brought back only while it still has a window',
     ],
   )
 
-  const over = await listReservations({ cancelled: 'all' }, AFTER_THEM_ALL)
+  const over = await listReservations({ show: 'all' }, AFTER_THEM_ALL)
 
   assert.equal(
     over.items.find((one) => one.id === 'a1')?.restorable,
@@ -1207,20 +1330,20 @@ test('a reservation a recording came of may not be thrown away', async () => {
   standing([reservation({ id: 'a1', standing: 'complete' })])
   store.recordings = [madeFor('rec-1', 'a1')]
 
-  const rows = await listed(AFTER_THEM_ALL)
+  const { items } = await listReservations({ show: 'all' }, AFTER_THEM_ALL)
 
-  assert.equal(rows[0].recordingId, 'rec-1')
-  assert.equal(rows[0].discardable, false)
+  assert.equal(items[0].recordingId, 'rec-1')
+  assert.equal(items[0].discardable, false)
 })
 
 test('a settled reservation whose recording is gone may be thrown away', async () => {
   standing([reservation({ id: 'a1', standing: 'complete' })])
   store.recordings = []
 
-  const rows = await listed(AFTER_THEM_ALL)
+  const { items } = await listReservations({ show: 'all' }, AFTER_THEM_ALL)
 
-  assert.equal(rows[0].recordingId, undefined)
-  assert.equal(rows[0].discardable, true)
+  assert.equal(items[0].recordingId, undefined)
+  assert.equal(items[0].discardable, true)
 })
 
 test('a reservation being recorded may not be thrown away', async () => {

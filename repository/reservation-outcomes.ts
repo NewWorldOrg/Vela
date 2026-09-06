@@ -155,7 +155,7 @@ async function namesOfWhatWonInstead(
     return new Map()
   }
 
-  const { items: reservations } = await listReservations({ cancelled: 'all' })
+  const { items: reservations } = await listReservations({ show: 'all' })
 
   return new Map(
     reservations
