@@ -9,11 +9,6 @@ import { OUTCOME_KINDS, OUTCOME_SPANS } from './reservation-outcomes.ts'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DOCUMENT = path.join(HERE, '..', 'repository', 'client', 'carina.json')
 
-/**
- * A classification missing from the strip is a classification nobody can ask
- * the ledger for, and the strip would still read as complete. Read off the
- * committed document so a fifth one lands as a red run.
- */
 test('分類の絞り込みは API の enum を一つも取りこぼさない', async () => {
   const document = JSON.parse(await readFile(DOCUMENT, 'utf8')) as {
     components: { schemas: Record<string, { enum?: (string | null)[] }> }
@@ -25,7 +20,6 @@ test('分類の絞り込みは API の enum を一つも取りこぼさない', 
   )
 })
 
-/** The span the API refuses beyond, which no option may reach. */
 const LONGEST_SPAN_DAYS = 366
 
 test('期間の選択肢は API が受ける長さに収まる', () => {

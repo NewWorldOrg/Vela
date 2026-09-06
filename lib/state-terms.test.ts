@@ -54,10 +54,6 @@ test('録画の結果は API の enum に「録画中」を足したもの', asy
   )
 })
 
-/**
- * The ledger's four classifications, read off the document the same way. A
- * fifth one lands as a red run rather than as a chip with `undefined` in it.
- */
 test('予約結果の分類は API の enum を漏れなく説明している', async () => {
   assert.deepEqual(
     Object.keys(RESERVATION_OUTCOME_KIND_TERMS).sort(),
