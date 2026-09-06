@@ -1363,6 +1363,43 @@ function rowDelaysOf(canvasElement: HTMLElement): string[] {
   ].map((one) => one.style.transitionDelay)
 }
 
+function listWidth(canvasElement: HTMLElement): number {
+  return (
+    canvasElement.querySelector('[data-slot="channel-list"]')?.clientWidth ?? 0
+  )
+}
+
+function columnRunning(canvasElement: HTMLElement): string[] {
+  const aside = canvasElement.querySelector('main aside')
+
+  return (aside?.getAnimations() ?? []).map((one) =>
+    one instanceof CSSTransition ? one.transitionProperty : '',
+  )
+}
+
+function runsFor(element: Element | null, property: string): number {
+  const found = (element?.getAnimations() ?? []).find(
+    (one) =>
+      one instanceof CSSTransition && one.transitionProperty === property,
+  )
+  const took = found?.effect?.getComputedTiming().duration
+
+  return typeof took === 'number' ? took : 0
+}
+
+function foldLengths(canvasElement: HTMLElement): {
+  column: number
+  wipe: number
+} {
+  return {
+    column: runsFor(canvasElement.querySelector('main aside'), 'width'),
+    wipe: runsFor(
+      canvasElement.querySelector('[data-slot="channel-list"] > div[id]'),
+      'clip-path',
+    ),
+  }
+}
+
 function foldRunning(canvasElement: HTMLElement): Animation[] {
   const listed = canvasElement.querySelector('[data-slot="channel-list"]')
   const press = listed?.querySelector('button[aria-label="チャンネル一覧"]')
@@ -1451,6 +1488,7 @@ export const 畳んだまま開く: Story = {
     await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
     await expect(foldPhaseOf(canvasElement)).toBe('still')
     await expect(foldRunning(canvasElement)).toHaveLength(0)
+    await expect(columnRunning(canvasElement)).toHaveLength(0)
   },
 }
 
@@ -1507,6 +1545,9 @@ export const 一覧が開くあいだ: Story = {
 
     await expect(phase).toBe('opening')
     await expect(running).toBeGreaterThan(0)
+    await expect(columnRunning(canvasElement)).toEqual(['width'])
+    await expect(listWidth(canvasElement)).toBe(344)
+    await expect(foldLengths(canvasElement)).toEqual({ column: 300, wipe: 300 })
     await expect(delays).toHaveLength(9)
     await expect(delays[0]).toBe('26ms')
     await expect(delays[1]).toBe('52ms')
@@ -1529,10 +1570,13 @@ export const 一覧が閉じるあいだ: Story = {
 
     const phase = foldPhaseOf(canvasElement)
     const delays = rowDelaysOf(canvasElement)
-    const held = asideWidth(canvasElement)
+    const column = columnRunning(canvasElement)
+    const inside = listWidth(canvasElement)
 
     await expect(phase).toBe('closing')
-    await expect(held).toBe(wide)
+    await expect(column).toEqual(['width'])
+    await expect(inside).toBe(wide)
+    await expect(foldLengths(canvasElement)).toEqual({ column: 300, wipe: 300 })
     await expect(delays).toHaveLength(9)
     await expect(delays[0]).toBe('208ms')
     await expect(delays[1]).toBe('182ms')
@@ -1541,7 +1585,10 @@ export const 一覧が閉じるあいだ: Story = {
     await waitFor(async () => {
       await expect(asideWidth(canvasElement)).toBeLessThan(wide)
     })
-    await expect(foldPhaseOf(canvasElement)).toBe('still')
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+    })
+    await expect(columnRunning(canvasElement)).toHaveLength(0)
   },
 }
 
@@ -1590,6 +1637,7 @@ export const 動きを減らす設定では一息で畳む: Story = {
     await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
     await expect(asideWidth(canvasElement)).toBeLessThan(wide)
     await expect(foldRunning(canvasElement)).toHaveLength(0)
+    await expect(columnRunning(canvasElement)).toHaveLength(0)
 
     await userEvent.click(fold)
 

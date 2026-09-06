@@ -359,8 +359,7 @@
   --shadow-pop-ring: 2px 2px 0 var(--pop), var(--ring);
 
   --ease-toy: var(--ease);
-  --ease-unfurl: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-furl: cubic-bezier(0.6, 0, 0.9, 0.25);
+  --ease-fold: cubic-bezier(0.25, 0.1, 0.45, 1);
 
   /*
    * The mark that answers a press in the middle of a picture: it grows a
