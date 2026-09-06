@@ -1369,7 +1369,6 @@ function listWidth(canvasElement: HTMLElement): number {
   )
 }
 
-/** What the column itself is running, which is the width beside the wipe. */
 function columnRunning(canvasElement: HTMLElement): string[] {
   const aside = canvasElement.querySelector('main aside')
 
@@ -1388,7 +1387,6 @@ function runsFor(element: Element | null, property: string): number {
   return typeof took === 'number' ? took : 0
 }
 
-/** The column and the wipe, in milliseconds, as the browser is running them. */
 function foldLengths(canvasElement: HTMLElement): {
   column: number
   wipe: number

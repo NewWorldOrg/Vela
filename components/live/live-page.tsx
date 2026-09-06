@@ -247,9 +247,8 @@ export function LiveView({
         bottom of the window, the document grows to hold it, and the page
         draws a scrollbar of its own beside the one the list already has.
 
-        The list is deliberately wider than the column it sits in while the
-        column is moving, and hangs off its start edge: that is what keeps the
-        lines inside it from being set again on every frame of the fold.
+        The list is deliberately wider than the moving column and hangs off
+        its start edge, so no line inside it is set again as the column moves.
       */}
       <aside
         aria-label="チャンネル"
