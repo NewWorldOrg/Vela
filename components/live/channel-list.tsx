@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef } from 'react'
 
 import { cn } from '@/lib/utils'
+import { foldBand, foldBandDelay, type FoldMotion } from '@/lib/live-fold'
 import type { ChannelKind } from '@/repository/channels'
 import type { LiveChannel } from '@/repository/live'
 import { Button } from '@/components/ui/button'
@@ -15,12 +16,6 @@ import {
 import { pressable } from '@/components/vela/tactile'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChannelKinds } from '@/components/live/channel-kinds'
-import {
-  foldPanel,
-  foldPart,
-  foldPartDelay,
-  type FoldMotion,
-} from '@/components/live/channel-fold'
 
 /**
  * The channels of one broadcast type, one row each, with what is on air and
@@ -66,22 +61,18 @@ export function ChannelList({
 }) {
   const body = useId()
   const listed = useRef<HTMLDivElement>(null)
-  const panel = useRef<HTMLDivElement>(null)
   const phase = motion?.phase ?? 'still'
   const settle = motion?.onSettle
   const shown = motion === undefined ? !folded : motion.shown
 
   useEffect(() => {
     const whole = listed.current
-    const clipped = panel.current
 
     if (phase === 'still' || settle === undefined || whole === null) {
       return
     }
 
-    const begun =
-      clipped !== null && getComputedStyle(clipped).clipPath !== 'none'
-    const running = begun ? whole.getAnimations({ subtree: true }) : []
+    const running = whole.getAnimations({ subtree: true })
 
     if (running.length === 0) {
       settle()
@@ -114,12 +105,14 @@ export function ChannelList({
     >
       <div className="mb-3.5 flex items-start justify-end gap-1.5">
         {shown && (
-          <ChannelKinds
-            kind={kind}
-            kinds={kinds}
-            onKind={onKind}
-            className={cn('flex-1', foldPanel(motion))}
-          />
+          <div className="min-w-0 flex-1 overflow-clip [overflow-clip-margin:6px]">
+            <div
+              style={{ transitionDelay: foldBandDelay(0, motion) }}
+              className={foldBand(motion)}
+            >
+              <ChannelKinds kind={kind} kinds={kinds} onKind={onKind} />
+            </div>
+          </div>
         )}
         {onFold && (
           <Button
@@ -137,17 +130,12 @@ export function ChannelList({
         )}
       </div>
       {shown && (
-        <div
-          id={body}
-          ref={panel}
-          inert={folded}
-          className={cn('flex min-h-0 flex-1 flex-col', foldPanel(motion))}
-        >
+        <div id={body} inert={folded} className="flex min-h-0 flex-1 flex-col">
           <div
-            style={{ transitionDelay: foldPartDelay(0, motion) }}
+            style={{ transitionDelay: foldBandDelay(1, motion) }}
             className={cn(
               'flex items-center gap-[7px] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-3',
-              foldPart(motion),
+              foldBand(motion),
             )}
           >
             <LiveIcon className="size-3.5 text-brand" />
@@ -156,23 +144,23 @@ export function ChannelList({
           </div>
           {channels.length === 0 ? (
             <div
-              style={{ transitionDelay: foldPartDelay(1, motion) }}
-              className={foldPart(motion)}
+              style={{ transitionDelay: foldBandDelay(2, motion) }}
+              className={foldBand(motion)}
             >
               <ChannelsMissing kind={kind} kinds={kinds} onKind={onKind} />
             </div>
           ) : (
-            <ul className="min-h-0 flex-1 overflow-y-auto rounded-lg bg-surface">
+            <ul className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto rounded-lg">
               {channels.map((channel, nth) => {
                 const on = channel.id === watchingId
 
                 return (
                   <li
                     key={channel.id}
-                    style={{ transitionDelay: foldPartDelay(nth + 1, motion) }}
+                    style={{ transitionDelay: foldBandDelay(nth + 2, motion) }}
                     className={cn(
-                      'border-b border-dashed border-line last:border-b-0',
-                      foldPart(motion),
+                      'border-b border-dashed border-line bg-surface last:border-b-0',
+                      foldBand(motion),
                     )}
                   >
                     <button

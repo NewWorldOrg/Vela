@@ -2,23 +2,12 @@
 
 import { useCallback, useState } from 'react'
 
-export type FoldPhase = 'still' | 'opening' | 'closing'
-
-export interface FoldMotion {
-  shown: boolean
-  phase: FoldPhase
-  staggered: boolean
-  onSettle: () => void
-}
+import type { FoldMotion, FoldPhase } from '@/lib/live-fold'
 
 const AT_REST: { phase: FoldPhase; staggered: boolean } = {
   phase: 'still',
   staggered: true,
 }
-
-const STEP_MS = 26
-
-const LAST_STEP = 9
 
 function atOnce(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -56,59 +45,4 @@ export function useFoldingChannels(
     },
     fold,
   }
-}
-
-export function foldPanel(motion: FoldMotion | undefined): string {
-  if (motion === undefined) {
-    return ''
-  }
-
-  if (motion.phase === 'opening') {
-    return '[clip-path:inset(-14px_-14px_-14px_-14px)] starting:[clip-path:inset(-14px_-14px_-14px_100%)] transition-[clip-path] duration-300 ease-fold motion-reduce:transition-none'
-  }
-
-  if (motion.phase === 'closing') {
-    return '[clip-path:inset(-14px_-14px_-14px_100%)] transition-[clip-path] duration-300 ease-fold motion-reduce:transition-none'
-  }
-
-  // clip-path cannot interpolate out of `none`, so at rest it is still an inset.
-  return '[clip-path:inset(-14px_-14px_-14px_-14px)]'
-}
-
-export function foldColumn(
-  folded: boolean,
-  motion: FoldMotion | undefined,
-): string {
-  if (motion === undefined || motion.phase === 'still') {
-    return folded ? 'w-11' : 'w-[344px]'
-  }
-
-  return folded
-    ? 'w-11 transition-[width] duration-300 ease-fold motion-reduce:transition-none'
-    : 'w-[344px] transition-[width] duration-300 ease-fold motion-reduce:transition-none'
-}
-
-export function foldPart(motion: FoldMotion | undefined): string {
-  if (motion === undefined || motion.phase === 'still') {
-    return 'translate-x-0 opacity-100'
-  }
-
-  if (motion.phase === 'opening') {
-    return 'translate-x-0 opacity-100 starting:translate-x-[22px] starting:opacity-0 transition-[translate,opacity] duration-300 ease-toy motion-reduce:transition-none'
-  }
-
-  return 'translate-x-[14px] opacity-0 transition-[translate,opacity] duration-170 ease-fold motion-reduce:transition-none'
-}
-
-export function foldPartDelay(
-  index: number,
-  motion: FoldMotion | undefined,
-): string | undefined {
-  if (motion === undefined || motion.phase === 'still' || !motion.staggered) {
-    return undefined
-  }
-
-  const step = Math.min(index, LAST_STEP)
-
-  return `${(motion.phase === 'closing' ? LAST_STEP - step : step) * STEP_MS}ms`
 }
