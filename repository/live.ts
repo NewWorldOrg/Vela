@@ -1,11 +1,16 @@
 import { servicesSettled, type SettledGuide } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
-import { CHANNEL_KIND_ORDER, type ChannelKind } from '@/repository/channels'
+import {
+  CHANNEL_KIND_ORDER,
+  type ChannelKind,
+  type StationLogo,
+} from '@/repository/channels'
 import type { Programme } from '@/repository/programmes'
 import { fetchGuide, toInt } from '@/repository/programmes'
 import {
   clockLabel,
+  fetchServiceChannels,
   genreDisplayOf,
   kindOfNetwork,
 } from '@/repository/programs'
@@ -70,6 +75,7 @@ export interface LiveChannel {
    * about that itself.
    */
   whole?: string
+  logo?: StationLogo
   /** How many are watching this channel right now, over every profile. */
   viewers: number
   now?: LiveProgramme
@@ -149,11 +155,13 @@ export async function getLiveScreen(
   rawChannel: string | undefined,
   now: Date = new Date(),
 ): Promise<LiveScreen> {
-  const [listed, profiles, tuners] = await Promise.all([
+  const [listed, profiles, tuners, known] = await Promise.all([
     fetchLiveChannels(),
     fetchLiveProfiles(),
     countTuners(),
+    fetchServiceChannels(),
   ])
+  const logos = new Map(known.map((one) => [one.id, one.logo]))
   const kinds = CHANNEL_KIND_ORDER.filter((one) =>
     listed.some((channel) => channel.kind === one),
   )
@@ -185,6 +193,7 @@ export async function getLiveScreen(
       ...channel,
       ...split.get(channel.id),
       ...playing,
+      logo: logos.get(channel.id),
       progressPct: progressOf(playing.now, now),
     }
   }

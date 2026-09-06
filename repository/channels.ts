@@ -1,4 +1,16 @@
+import type { components } from '@/repository/client/schema'
+
 export type ChannelKind = 'terrestrial' | 'bs' | 'cs110'
+
+export type StationLogoDeclaration =
+  components['schemas']['StationLogoDeclaration']
+
+export type StationLogo =
+  | {
+      declaration: Extract<StationLogoDeclaration, 'inTheCommonDataTable'>
+      href: string
+    }
+  | { declaration: Exclude<StationLogoDeclaration, 'inTheCommonDataTable'> }
 
 export interface Channel {
   id: string
@@ -13,6 +25,7 @@ export interface Channel {
    * the order the columns arrived in is a sort.
    */
   whole?: string
+  logo?: StationLogo
 }
 
 /** What the tuner a reservation holds is called, where the kind itself is the value shown. */
