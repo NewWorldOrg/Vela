@@ -4747,6 +4747,13 @@
             }
           },
           {
+            "name": "recordingId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -8326,6 +8333,16 @@
           }
         }
       },
+      "EncodeStanding": {
+        "enum": [
+          "notEncoded",
+          "queued",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "type": "string"
+      },
       "EncodeSwerve": {
         "enum": [
           "theCardIsOutOfReach",
@@ -9842,6 +9859,17 @@
           }
         }
       },
+      "RecordingEncodeResponder": {
+        "required": [
+          "standing"
+        ],
+        "type": "object",
+        "properties": {
+          "standing": {
+            "$ref": "#/components/schemas/EncodeStanding"
+          }
+        }
+      },
       "RecordingFailure": {
         "enum": [
           "noSuchRecording",
@@ -10167,7 +10195,8 @@
           "tunerDeviceId",
           "drops",
           "thumbnail",
-          "broadcastGroup"
+          "broadcastGroup",
+          "encode"
         ],
         "type": "object",
         "properties": {
@@ -10269,6 +10298,9 @@
           },
           "broadcastGroup": {
             "$ref": "#/components/schemas/RecordingBroadcastGroupResponder"
+          },
+          "encode": {
+            "$ref": "#/components/schemas/RecordingEncodeResponder"
           }
         }
       },

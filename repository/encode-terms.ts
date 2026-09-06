@@ -1,6 +1,7 @@
 import type { components } from '@/repository/client/schema'
 
 export type EncodeJobStatus = components['schemas']['EncodeJobStatus']
+export type EncodeStanding = components['schemas']['EncodeStanding']
 export type EncodeCodec = components['schemas']['EncodeCodec']
 export type EncodeResolution = components['schemas']['EncodeResolution']
 export type Deinterlace = components['schemas']['Deinterlace']
@@ -22,6 +23,14 @@ export const STATUS_LABEL: Record<EncodeJobStatus, string> = {
   completed: '完了',
   failed: '失敗',
   cancelled: '中止',
+}
+
+export const STANDING_LABEL: Record<EncodeStanding, string> = {
+  notEncoded: '未エンコード',
+  queued: STATUS_LABEL.queued,
+  running: STATUS_LABEL.running,
+  completed: STATUS_LABEL.completed,
+  failed: STATUS_LABEL.failed,
 }
 
 export const CODEC_LABEL: Record<EncodeCodec, string> = {

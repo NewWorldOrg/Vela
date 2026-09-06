@@ -156,6 +156,7 @@ export const 完全: Story = {
 
     await userEvent.click(canvas.getByText('録画の記録'))
     await expect(canvas.getByText('完全')).toBeVisible()
+    await expect(canvas.getByText('完了')).toBeVisible()
 
     // The names on the left are the reader's, and no ratio is drawn from two
     // clocks that start at different instants.

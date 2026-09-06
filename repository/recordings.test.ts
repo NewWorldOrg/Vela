@@ -109,6 +109,7 @@ const recording = (over: Over = {}) => ({
   tunerDeviceId: 'adapter1/frontend0',
   drops: drops(),
   thumbnail: { state: 'ready', fault: null, showsAnUnfinishedRecording: false },
+  encode: { standing: 'notEncoded' },
   ...over,
 })
 
@@ -465,6 +466,16 @@ test('a recording nothing counted carries no scrambled share', async () => {
   ])
 
   assert.equal(one.scrambledShare, undefined)
+})
+
+test('the encode standing is the one the API folded, not one read again here', async () => {
+  const running = await only([recording({ encode: { standing: 'running' } })])
+
+  assert.equal(running.encode, 'running')
+
+  const none = await only()
+
+  assert.equal(none.encode, 'notEncoded')
 })
 
 test('a thumbnail that was not going to be made says so', async () => {
