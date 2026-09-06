@@ -752,7 +752,7 @@ export function LivePlayer({
 
   useEffect(() => {
     captions.current?.show(!pip.out && captionsWanted.current)
-  }, [pip.out])
+  }, [pip.out, key])
 
   const latency = running?.latency
 
