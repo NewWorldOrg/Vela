@@ -107,7 +107,10 @@ export function ChannelList({
       ref={listed}
       data-slot="channel-list"
       data-fold={phase}
-      className={cn('flex min-h-0 flex-col', className)}
+      className={cn(
+        'flex min-h-0 flex-col data-[fold=closing]:pointer-events-none',
+        className,
+      )}
     >
       <div className="mb-3.5 flex items-start justify-end gap-1.5">
         {shown && (
@@ -127,6 +130,7 @@ export function ChannelList({
             aria-expanded={!folded}
             aria-controls={body}
             onClick={() => onFold(!folded)}
+            className="pointer-events-auto"
           >
             {folded ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </Button>

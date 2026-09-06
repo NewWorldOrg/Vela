@@ -18,7 +18,7 @@ import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { ChannelList } from '@/components/live/channel-list'
-import { useFoldingChannels } from '@/components/live/channel-fold'
+import { foldColumn, useFoldingChannels } from '@/components/live/channel-fold'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import { NowNext } from '@/components/live/now-next'
@@ -247,19 +247,15 @@ export function LiveView({
         bottom of the window, the document grows to hold it, and the page
         draws a scrollbar of its own beside the one the list already has.
 
-        The width is still switched in one step and never interpolated: a
-        column that changes width over time lays the picture beside it out
-        again on every frame of the change. It is the fold's own run — the
-        clip, the slide, the fade — that is drawn, and none of that is a
-        length. So the picture is laid out once per press: on the way in at
-        the press, and on the way out when the panel has finished leaving,
-        which is what `motion.shown` is holding the column open for.
+        The list is deliberately wider than the column it sits in while the
+        column is moving, and hangs off its start edge: that is what keeps the
+        lines inside it from being set again on every frame of the fold.
       */}
       <aside
         aria-label="チャンネル"
         className={cn(
-          'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
-          motion.shown ? 'w-[344px]' : 'w-11',
+          'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col items-end max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          foldColumn(away, motion),
         )}
       >
         <ChannelList
@@ -272,6 +268,7 @@ export function LiveView({
           motion={motion}
           onKind={kind}
           onSelect={(channel) => choose(channel.id)}
+          className={motion.shown ? 'w-full min-[1181px]:w-[344px]' : 'w-full'}
         />
       </aside>
     </ScreenMain>
