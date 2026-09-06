@@ -251,6 +251,15 @@ export function ListIcon(props: IconProps) {
   )
 }
 
+export function LedgerIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5.4 4.6h13v14.8H5.4z" />
+      <path d="M8.4 8.6h7M8.4 12h7M8.4 15.4h4" />
+    </Icon>
+  )
+}
+
 export function ChevronRightIcon(props: IconProps) {
   return (
     <Icon {...props}>

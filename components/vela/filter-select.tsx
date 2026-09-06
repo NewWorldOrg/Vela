@@ -9,7 +9,7 @@ import {
 
 const ALL = '__all__'
 
-export function LibraryFilterSelect({
+export function FilterSelect({
   prefix,
   value,
   options,
