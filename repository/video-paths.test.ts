@@ -2,18 +2,8 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-import { PLAYBACK_PROFILE_UNASKED, PLAYBACK_PROFILES } from './video-paths.ts'
+import { PLAYBACK_PROFILES } from './video-paths.ts'
 
-/**
- * Unlike the live profiles, the endpoint that plays a recording hands back no
- * list and marks nothing: what it encodes in when no profile is asked for is
- * written in the document, as the parameter's default, and nowhere else. So
- * the constant beside the paths is a copy, and a copy drifts silently — the
- * screen would go on opening at a profile the API had stopped defaulting to,
- * and nothing would say so.
- *
- * Read out of the document instead of written down twice.
- */
 const profileParameter = (() => {
   const document: unknown = JSON.parse(
     readFileSync(new URL('./client/carina.json', import.meta.url), 'utf8'),
@@ -26,6 +16,7 @@ const profileParameter = (() => {
           get: {
             parameters: {
               name: string
+              description?: string
               schema: { enum?: string[]; default?: string }
             }[]
           }
@@ -45,6 +36,10 @@ test('the profiles offered are the ones the endpoint accepts', () => {
   assert.deepEqual([...PLAYBACK_PROFILES], profileParameter.schema.enum)
 })
 
-test('a recording opens in the profile the endpoint defaults to', () => {
-  assert.equal(PLAYBACK_PROFILE_UNASKED, profileParameter.schema.default)
+test('the endpoint pins no profile, so the machine is what answers', () => {
+  assert.equal(profileParameter.schema.default, undefined)
+})
+
+test('the endpoint sends the unasked profile to the live list', () => {
+  assert.match(profileParameter.description ?? '', /\/api\/live\/profiles/)
 })

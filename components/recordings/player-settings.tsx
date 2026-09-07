@@ -81,7 +81,7 @@ export function PlayerSettings({
 }: {
   /** The element the picture is drawn in, which is what goes fullscreen. */
   container: HTMLElement | null
-  profile: PlaybackProfile
+  profile?: PlaybackProfile
   onChooseProfile: (next: string) => void
   /** Whether the picture is made as it plays, which is when a profile bites. */
   onTheFly: boolean

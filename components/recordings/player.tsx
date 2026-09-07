@@ -9,7 +9,6 @@ import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
 import {
-  PLAYBACK_PROFILE_UNASKED,
   videoPictureHref,
   videoFrameHref,
   type PlaybackProfile,
@@ -147,6 +146,7 @@ const WAITING_ON: Partial<Record<Phase, string>> = {
 export function Player({
   detail: d,
   plan,
+  unaskedProfile,
   onTakeTicket,
   startAt,
   frameHref = videoFrameHref,
@@ -156,6 +156,7 @@ export function Player({
 }: {
   detail: RecordingDetail
   plan: PlaybackPlan
+  unaskedProfile?: PlaybackProfile
   onTakeTicket: (id: string) => Promise<TicketWrite>
   /**
    * The second the page was opened at, which is how a drop in the quality
@@ -194,8 +195,8 @@ export function Player({
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [speed, setSpeed] = useState('1.0')
-  const [profile, setProfile] = useState<PlaybackProfile>(
-    PLAYBACK_PROFILE_UNASKED,
+  const [profile, setProfile] = useState<PlaybackProfile | undefined>(
+    unaskedProfile,
   )
   const [phase, setPhase] = useState<Phase>(
     startAt === undefined ? 'idle' : 'waiting',
@@ -210,11 +211,7 @@ export function Player({
   const [source, setSource] = useState(() =>
     startAt === undefined
       ? undefined
-      : pictureHref(
-          d.id,
-          startAt,
-          onTheFly ? PLAYBACK_PROFILE_UNASKED : undefined,
-        ),
+      : pictureHref(d.id, startAt, onTheFly ? unaskedProfile : undefined),
   )
 
   /**
@@ -459,7 +456,10 @@ export function Player({
    * where to read from and plays from there, and nothing has to be kept in
    * step by hand.
    */
-  const play = (second: number, asked: PlaybackProfile = profile) => {
+  const play = (
+    second: number,
+    asked: PlaybackProfile | undefined = profile,
+  ) => {
     if (asking.current) {
       clearTimeout(asking.current)
       asking.current = null

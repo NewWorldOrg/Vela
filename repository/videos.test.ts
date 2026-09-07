@@ -20,11 +20,15 @@ const store: {
   planStatus: number
   ticket: unknown
   ticketStatus: number
+  profiles: unknown[]
+  profilesStatus: number
 } = {
   plan: undefined,
   planStatus: 200,
   ticket: undefined,
   ticketStatus: 200,
+  profiles: [],
+  profilesStatus: 200,
 }
 
 const answered = (status: number) => ({ status, ok: status < 400 })
@@ -34,6 +38,18 @@ mock.module('@/repository/client/carina', {
     carinaClient: () => ({
       GET: async (path: string, init?: { headers?: { accept?: string } }) => {
         sent.push({ method: 'GET', path, accept: init?.headers?.accept })
+
+        if (path === '/api/live/profiles') {
+          return store.profilesStatus === 200
+            ? {
+                data: { status: true, message: '', data: store.profiles },
+                response: answered(200),
+              }
+            : {
+                error: { status: false, message: '', data: null },
+                response: answered(store.profilesStatus),
+              }
+        }
 
         return store.planStatus === 200
           ? {
@@ -65,7 +81,8 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getPlaybackPlan, takePlaybackTicket } = await import('./videos.ts')
+const { getPlaybackPlan, getUnaskedPlaybackProfile, takePlaybackTicket } =
+  await import('./videos.ts')
 
 test('the plan is asked for as the plan, not as the picture', async () => {
   sent.length = 0
@@ -196,4 +213,48 @@ test('a status nobody worded still says something', async () => {
     write.state === 'refused' && write.message,
     '外部プレイヤーの札を発行できませんでした(418)。',
   )
+})
+
+function profile(name: string, unasked: boolean) {
+  return { name, width: 1920, height: 1080, unasked }
+}
+
+const WITH_A_CARD = [
+  profile('1080p60', true),
+  profile('1080p30', false),
+  profile('720p30', false),
+]
+
+const WITHOUT_ONE = [
+  profile('1080p60', false),
+  profile('1080p30', false),
+  profile('720p30', true),
+]
+
+test('a recording opens at the profile the machine marks as its own', async () => {
+  store.profilesStatus = 200
+  store.profiles = WITH_A_CARD
+
+  assert.equal(await getUnaskedPlaybackProfile(), '1080p60')
+})
+
+test('a machine without a card names the smaller one, and that is honoured too', async () => {
+  store.profilesStatus = 200
+  store.profiles = WITHOUT_ONE
+
+  assert.equal(await getUnaskedPlaybackProfile(), '720p30')
+})
+
+test('a list that cannot be read leaves the profile unasked', async () => {
+  store.profilesStatus = 503
+  store.profiles = []
+
+  assert.equal(await getUnaskedPlaybackProfile(), undefined)
+})
+
+test('a name the play endpoint would refuse is not asked for', async () => {
+  store.profilesStatus = 200
+  store.profiles = [profile('480p30', true)]
+
+  assert.equal(await getUnaskedPlaybackProfile(), undefined)
 })

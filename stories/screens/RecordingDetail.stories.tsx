@@ -127,6 +127,7 @@ const meta = {
     onQueueEncode: queuing,
     encodeChoices: ENCODE_CHOICES,
     playback: planned(),
+    unaskedProfile: '1080p60',
   },
 } satisfies Meta<typeof RecordingDetailView>
 

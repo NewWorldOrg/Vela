@@ -1,7 +1,13 @@
 import { cache } from 'react'
 
+import { unaskedIn } from '@/lib/live-profiles'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
+import { fetchLiveProfiles } from '@/repository/live'
+import {
+  PLAYBACK_PROFILES,
+  type PlaybackProfile,
+} from '@/repository/video-paths'
 
 /**
  * How the recording ended, said by the side that plays it. `whole` and
@@ -92,6 +98,19 @@ export const getPlaybackPlan = cache(
     return {
       state: 'refused',
       refusal: REFUSALS[response.status] ?? 'unreadable',
+    }
+  },
+)
+
+export const getUnaskedPlaybackProfile = cache(
+  async (): Promise<PlaybackProfile | undefined> => {
+    try {
+      const named = unaskedIn(await fetchLiveProfiles())
+
+      return PLAYBACK_PROFILES.find((one) => one === named)
+    } catch {
+      // Sending no profile is the unasked request, not a fallback.
+      return undefined
     }
   },
 )
