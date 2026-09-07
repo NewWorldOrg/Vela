@@ -888,6 +888,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/encoding/destinations/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['removeEncodeDestination']
+    options?: never
+    head?: never
+    patch: operations['reviseEncodeDestination']
+    trace?: never
+  }
+  '/api/encoding/profiles/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['removeEncodeProfile']
+    options?: never
+    head?: never
+    patch: operations['reviseEncodeProfile']
+    trace?: never
+  }
   '/api/driver/status': {
     parameters: {
       query?: never
@@ -1132,6 +1164,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['EncodeProfileResponder']
+    }
+    BaseResponderOfEncodeRemovalResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeRemovalResponder']
     }
     BaseResponderOfEpgRebuiltResponder: {
       status: boolean
@@ -1572,6 +1609,8 @@ export interface components {
       defaultProfileId: string
       /** Format: date-time */
       definedAt: string
+      /** Format: date-time */
+      retiredAt: null | string
     }
     /** @enum {string} */
     EncodeEncoder: 'software' | 'vaapi'
@@ -1654,6 +1693,17 @@ export interface components {
       quantiser: number | string
       /** Format: date-time */
       definedAt: string
+      /** Format: date-time */
+      retiredAt: null | string
+    }
+    /** @enum {string} */
+    EncodeRemoval: 'deleted' | 'retired'
+    EncodeRemovalResponder: {
+      /** Format: uuid */
+      id: string
+      removal: components['schemas']['EncodeRemoval']
+      /** Format: date-time */
+      retiredAt: null | string
     }
     /** @enum {string} */
     EncodeResolution: 'asSource' | 'fullHd' | 'hd'
@@ -2386,6 +2436,22 @@ export interface components {
       /** Format: date-time */
       effectiveEndAt: string
     }
+    ReviseEncodeDestinationRequest: {
+      label?: null | string
+      outputRoot?: null | string
+      /** Format: uuid */
+      defaultProfileId?: null | string
+    }
+    ReviseEncodeProfileRequest: {
+      label?: null | string
+      codec?: null | components['schemas']['EncodeCodec']
+      resolution?: null | components['schemas']['EncodeResolution']
+      deinterlace?: null | components['schemas']['Deinterlace']
+      /** Format: int32 */
+      rateFactor?: null | number | string
+      /** Format: int32 */
+      quantiser?: null | number | string
+    }
     ReviseReservationRequest: {
       /** Format: int32 */
       priority?: null | number | string
@@ -2921,7 +2987,7 @@ export interface operations {
       query?: {
         /** @description The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional, and asking for none starts at the beginning. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range. */
         from?: number
-        /** @description The profile the picture is encoded in while it is transcoded as it plays. */
+        /** @description The profile the picture is encoded in while it is transcoded as it plays. Asking for none opens at what this machine encodes at, which depends on the encoder it has and so has no fixed default here; GET /api/live/profiles names it, marked as the unasked one, and the answer is the same for a recording as it is for a live channel. */
         profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
       }
       header?: never
@@ -6627,6 +6693,298 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfEncodeJobResponder']
+        }
+      }
+    }
+  }
+  removeEncodeDestination: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+    }
+  }
+  reviseEncodeDestination: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ReviseEncodeDestinationRequest']
+        'application/*+json':
+          null | components['schemas']['ReviseEncodeDestinationRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDestinationResponder']
+        }
+      }
+    }
+  }
+  removeEncodeProfile: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRemovalResponder']
+        }
+      }
+    }
+  }
+  reviseEncodeProfile: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ReviseEncodeProfileRequest']
+        'application/*+json':
+          null | components['schemas']['ReviseEncodeProfileRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
         }
       }
     }
