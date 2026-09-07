@@ -14,6 +14,11 @@ const NOTHING_KEPT = '録画が残らなかった状態。'
 const IN_PROGRESS = '録画が進行中の状態。結果は録画の完了時に確定します。'
 const NOTHING_STARTED = '開始時刻を過ぎても録画が始まらなかった予約。'
 
+export const RECORDING_IN_PROGRESS_TERM: StateTerm = {
+  label: '録画中',
+  explanation: IN_PROGRESS,
+}
+
 export const RESERVATION_STANDING_TERMS: Record<
   ReservationStanding,
   StateTerm
@@ -28,7 +33,7 @@ export const RESERVATION_STANDING_TERMS: Record<
     explanation:
       '開始時点でチューナーに空きがなく、この予約は録画されない状態。',
   },
-  recording: { label: '録画中', explanation: IN_PROGRESS },
+  recording: RECORDING_IN_PROGRESS_TERM,
   cancelled: {
     label: '取消済み',
     explanation:
@@ -41,7 +46,7 @@ export const RESERVATION_STANDING_TERMS: Record<
 }
 
 export const RECORDING_OUTCOME_TERMS: Record<RecordingOutcome, StateTerm> = {
-  recording: { label: '録画中', explanation: IN_PROGRESS },
+  recording: RECORDING_IN_PROGRESS_TERM,
   complete: { label: '完全', explanation: FILLED_THE_WINDOW },
   truncated: { label: '尻切れ', explanation: CUT_SHORT },
   failed: { label: '失敗', explanation: NOTHING_KEPT },

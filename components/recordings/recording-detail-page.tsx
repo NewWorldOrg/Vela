@@ -28,6 +28,7 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import {
@@ -165,10 +166,7 @@ export function RecordingDetailView({
             <div className="mb-3.5 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
               <section className="rounded-xl bg-surface px-[19px] py-[17px]">
                 <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-                  <Badge variant="recording" className="gap-[7px] pl-[9px]">
-                    <ListIcon className="size-[13px]" />
-                    録画中
-                  </Badge>
+                  <RecordingInProgressChip mark="ledger" />
                 </div>
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2.5">
                   <DetailStat label="経過" value={d.live.elapsed} />
