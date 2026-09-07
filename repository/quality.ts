@@ -188,6 +188,8 @@ const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
   supplySilence: { label: '供給途絶の判定', unit: '分', scale: 60 },
 }
 
+const SATELLITE_SYSTEMS = ['isdbSBs', 'isdbSCs110']
+
 const METRIC_DROPS: Record<QualityMetric, string> = {
   packetsLost: 'ドロップ',
   packetsLeftScrambled: 'スクランブル',
@@ -454,10 +456,7 @@ function countedIn(reading: ReadingResponder): string {
 }
 
 function everySignalUnmeasured(signal: SignalResponder[]): boolean {
-  return (
-    signal.length > 0 &&
-    signal.every((one) => one.reading.state !== 'good' && !one.lastTakenAt)
-  )
+  return signal.length > 0 && signal.every((one) => !one.lastTakenAt)
 }
 
 interface ChannelDraw extends QualityChannel {
@@ -480,7 +479,9 @@ function toChannel(
     id,
     name: found?.name || id,
     no: found?.no,
-    terrestrial: one.kind !== 'isdbSBs' && one.kind !== 'isdbSCs110',
+    terrestrial: one.kind
+      ? !SATELLITE_SYSTEMS.includes(one.kind)
+      : found?.kind !== 'bs' && found?.kind !== 'cs110',
     dropRate: share === undefined ? undefined : `${sharePercent(share)}%`,
     barPct:
       share === undefined || ceiling === undefined || ceiling === 0
@@ -491,11 +492,7 @@ function toChannel(
   }
 }
 
-function withoutKind(one: ChannelDraw): QualityChannel {
-  const { terrestrial, ...rest } = one
-
-  void terrestrial
-
+function withoutKind({ terrestrial, ...rest }: ChannelDraw): QualityChannel {
   return rest
 }
 
@@ -575,7 +572,6 @@ function toProblemRecording(
       each.standing === 'mayNotBeWatchable' || each.standing === 'warning',
   )
   const metric = breach?.metric ?? 'packetsLost'
-  const total = one.totalPackets == null ? undefined : toInt(one.totalPackets)
   const counted =
     metric === 'packetsLost'
       ? one.droppedPackets
@@ -595,7 +591,7 @@ function toProblemRecording(
         ? METRIC_DROPS[metric]
         : `${METRIC_DROPS[metric]} ${grouped(packets)}`,
     pct:
-      metric === 'overflows' || observed === undefined || total === 0
+      metric === 'overflows' || observed === undefined
         ? undefined
         : `${sharePercent(observed)}%`,
     level: level === 'bad' ? 'bad' : 'warn',
