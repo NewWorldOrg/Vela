@@ -29,12 +29,13 @@ export const PART_SECONDS = 0.05
 /**
  * How far behind the newest picture the playhead is held.
  *
- * Twenty of the wire's parts. HLS puts the same floor under a live playhead
+ * Twelve of the wire's parts. HLS puts the same floor under a live playhead
  * from the other side — `PART-HOLD-BACK` must be at least twice the part and
  * should be at least three times it, "doing so can trigger playback stalls" —
- * and twenty is well above that with room for a part that arrives late.
+ * and twelve is well above that with room for a part that arrives late, while
+ * the drift allowed on top of it still leaves the whole band inside a second.
  */
-export const TARGET_SECONDS = 1.0
+export const TARGET_SECONDS = 0.6
 
 /**
  * How far past the target the playhead drifts before it is brought back.
