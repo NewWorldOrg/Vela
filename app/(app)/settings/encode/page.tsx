@@ -2,7 +2,15 @@ import type { Metadata } from 'next'
 
 import { getEncodeScreen } from '@/repository/encode'
 import { EncodeView } from '@/components/encode/encode-page'
-import { addDestination, addProfile, callOffJob } from './actions'
+import {
+  addDestination,
+  addProfile,
+  callOffJob,
+  changeDestination,
+  changeProfile,
+  dropDestination,
+  dropProfile,
+} from './actions'
 
 export const metadata: Metadata = { title: 'エンコード' }
 
@@ -19,7 +27,11 @@ export default async function Page({
       screen={screen}
       actions={{
         onDefineProfile: addProfile,
+        onReviseProfile: changeProfile,
+        onRemoveProfile: dropProfile,
         onDefineDestination: addDestination,
+        onReviseDestination: changeDestination,
+        onRemoveDestination: dropDestination,
         onCallOff: callOffJob,
       }}
     />
