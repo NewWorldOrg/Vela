@@ -14,11 +14,6 @@ type ProgrammeSearchResponder =
   components['schemas']['ProgrammeSearchResponder']
 type TuneSystem = components['schemas']['TuneSystem']
 
-/**
- * What the search takes, read off the endpoint rather than off a schema of its
- * own: the document spells these inline now that one reader parses the query
- * string for both a search and a rule, and the spellings are the API's own.
- */
 type SearchParams = NonNullable<
   paths['/api/programs/search']['get']['parameters']['query']
 >
@@ -29,14 +24,12 @@ export type ProgrammeSort = NonNullable<SearchParams['sort']>
 
 export type SearchSystem = NonNullable<SearchParams['type']>
 
-/** The parts of a programme a keyword is looked for in. */
 export const SEARCH_FIELDS_OF: Record<SearchField, ProgrammeField[]> = {
   'title,description': ['Title', 'Description'],
   title: ['Title'],
   description: ['Description'],
 }
 
-/** The broadcast type a channel kind narrows the search to. */
 export const SEARCH_SYSTEM_OF_KIND: Record<ChannelKind, SearchSystem> = {
   terrestrial: 'IsdbT',
   bs: 'IsdbSBs',
@@ -66,7 +59,6 @@ export interface Programme {
   serviceId: number
   eventId: number
   startsAt: string
-  /** Absent while the broadcaster has not said when it ends. */
   endsAt?: string
   name: string
   summary: string

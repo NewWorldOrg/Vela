@@ -15,7 +15,6 @@ import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { QualityChip } from '@/components/recordings/quality-chip'
 
-/** A rule with a caption sitting in it, between the groups of rows. */
 function Caption({
   children,
   className,
@@ -35,34 +34,11 @@ function Caption({
   )
 }
 
-/**
- * How this recording came to be, folded away under the programme.
- *
- * It is kept — a recording that came out wrong is read here and nowhere else —
- * and it is not the screen. What was on the page before was every fact the API
- * answers with, laid out at the same weight as the programme's own name: four
- * of the twelve values above the fold were about the programme and eight were
- * about the machinery that recorded it (measured 2026-09-04, v3.35).
- *
- * One fold and not several. Reception, the reason it stopped, the file, the
- * tuner and the thumbnail are all "how this recording came out"; split across
- * panels, the reader has to guess which one to open. Opened, everything is
- * there.
- *
- * Not a second page either: a page would need a URL and a way to it written on
- * this one, and the way to it would be a sentence explaining what is over
- * there. A fold opens and shuts inside the screen and leaves the URL alone.
- *
- * Shut by default, and the state is not remembered. What v3.30 and v3.33
- * remember are states a reader keeps watching in; a record is read once and
- * closed.
- */
 export function RecordingRecord({
   detail: d,
   plan,
 }: {
   detail: RecordingDetail
-  /** How the picture is being served, where one is. */
   plan?: PlaybackPlan
 }) {
   const spots = d.qualitySpots ?? []
@@ -74,25 +50,10 @@ export function RecordingRecord({
         <QualityIcon className="size-[15px] text-brand" />
         録画の記録
       </summary>
-      {/*
-        Held to a measure of its own inside a column that follows the picture.
-        A name and its value lose each other across a 2187px desk — which is
-        the reason v3.28 put the reading on a step in the first place — while
-        the programme's own name and description above want the picture's
-        width.
-      */}
       <div
         style={{ '--row-label': '176px' } as CSSProperties}
         className="max-w-[900px] border-t border-dashed border-line pt-4 pb-5"
       >
-        {/*
-          Only where the screen has not said it already. 尻切れ and 失敗 are on
-          the band above the picture and 録画中 is on the badge beside the
-          counters; repeating the word down here would be the same statement
-          twice on one screen, and the reader would have to work out whether
-          the two were about the same thing. 完全 has no band — that is the
-          whole reason this row exists (v3.35).
-        */}
         {d.outcome === 'complete' && (
           <DetailKeyRow label="結果" main="完全" plain />
         )}
@@ -161,11 +122,6 @@ export function RecordingRecord({
         {d.interruptions && (
           <DetailKeyRow label="中断と再開" main={d.interruptions.main} />
         )}
-        {/*
-          The names on the left are the reader's; the values on the right stay
-          in the words the device answered with (v3.35 narrows v3.26's carve-out
-          to values). `dvr EOVERFLOW` was standing as a row's name.
-        */}
         {d.scramble && (
           <DetailKeyRow
             label="解除できなかったスクランブル"
@@ -201,12 +157,6 @@ export function RecordingRecord({
           main={STANDING_LABEL[d.encode]}
           plain
         />
-        {/*
-          A reading, not a control. Drawing the picture again is something done
-          with the recording and stands with 削除 and 外部プレイヤーで開く, where
-          everything else done with the recording is; a second button for it in
-          here would be the same press in two places on one screen.
-        */}
         {d.thumbnailState && (
           <DetailKeyRow
             label="サムネイル"
@@ -220,13 +170,6 @@ export function RecordingRecord({
   )
 }
 
-/**
- * What is being played, as a reading and not a switch (v3.17).
- *
- * The route is the API's to pick and it takes no argument for it, so a control
- * here would be one that moves and changes nothing. It stands in the record
- * rather than under the picture because knowing it is not part of watching.
- */
 function SourceRow({
   detail: d,
   plan,

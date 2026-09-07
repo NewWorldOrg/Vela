@@ -7,12 +7,10 @@ import type { SortDirection, SortState } from '@/types/dataTable'
 
 interface UseListUrlStateOptions {
   initialSort: SortState
-  /** Search-param keys treated as filters (read back into `filters`). */
   filterKeys?: string[]
   pageParam?: string
   sortKeyParam?: string
   sortDirParam?: string
-  /** Push (history entry) vs replace on page/filter changes. */
   pageChangePush?: boolean
   filterChangePush?: boolean
 }
@@ -23,7 +21,6 @@ interface UseListUrlStateResult {
   filters: Record<string, string>
   onPageChange: (page: number) => void
   onSortChange: (sortKey: string, sortDirection: SortDirection) => void
-  /** Patch filters; `null`/empty removes a key. Resets to page 1. */
   onFiltersChange: (patch: Record<string, string | null>) => void
 }
 
@@ -37,11 +34,6 @@ function parsePage(raw: string | null): number {
   return Number(raw)
 }
 
-/**
- * Keeps list state (page, sort, named filters) in the URL as the single source
- * of truth. State is derived from `useSearchParams` via `useMemo` (no
- * `useEffect`), and changes navigate with `scroll: false`.
- */
 export function useListUrlState(
   options: UseListUrlStateOptions,
 ): UseListUrlStateResult {
@@ -82,7 +74,6 @@ export function useListUrlState(
       }
     }
     return result
-    // filterKeys identity is unstable; key on its joined string instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, filtersKey])
 

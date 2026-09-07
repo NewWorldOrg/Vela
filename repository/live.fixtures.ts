@@ -12,7 +12,6 @@ import {
   LOGO_SOLID_BLOCK,
 } from '@/repository/logos.fixtures'
 
-/** The evening every fixture below sits in; the clock reads 21:04. */
 const NOW = '2026-08-08T12:04:00Z'
 
 function programme(
@@ -169,7 +168,6 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
   },
 ]
 
-/** The list as a machine with a GPU to encode on hands it back. */
 export const LIVE_PROFILE_FIXTURES: LiveProfile[] = [
   { name: '1080p60', width: 1920, height: 1080, unasked: true },
   { name: '1080p30', width: 1920, height: 1080, unasked: false },
@@ -177,7 +175,6 @@ export const LIVE_PROFILE_FIXTURES: LiveProfile[] = [
   { name: '720p30', width: 1280, height: 720, unasked: false },
 ]
 
-/** The same list from a machine with none, which marks the smallest instead. */
 export const LIVE_PROFILE_FIXTURES_SOFTWARE: LiveProfile[] =
   LIVE_PROFILE_FIXTURES.map((one) => ({
     ...one,

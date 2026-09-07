@@ -54,7 +54,6 @@ export const SESSIONS: SessionRow[] = [
 
 export const ONLY_THIS_DEVICE: SessionRow[] = [THIS_DEVICE]
 
-/** More sessions than a window holds: the other devices, signed in again and again. */
 export const MORE_SESSIONS_THAN_FIT: SessionRow[] = [
   THIS_DEVICE,
   ...Array.from({ length: 12 }, (_, round) =>
@@ -69,11 +68,6 @@ export const MORE_SESSIONS_THAN_FIT: SessionRow[] = [
   ).flat(),
 ]
 
-/**
- * Names the column has to hold without widening the whole table: an address
- * with nowhere to break, and a session that has not signed in since it was
- * given a name, so what it says is the subject the identity provider handed.
- */
 export const LONG_NAMES: SessionRow[] = [
   THIS_DEVICE,
   {

@@ -1,16 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The search, with the API standing in for itself.
- *
- * Only the module that reaches the network is replaced; everything between it
- * and the screen — reading the address, turning services into channels, turning
- * programmes into rows — is the real thing, which is the point. The two calls
- * this makes are recorded, so what the store was asked for can be read as well
- * as what came back.
- */
-
 interface Asked {
   path: string
   query: Record<string, unknown>
@@ -26,7 +16,6 @@ interface StorePage {
 
 const asked: Asked[] = []
 
-/** What the fake store holds, set by each test before it asks. */
 const store: {
   services: unknown[]
   page: StorePage
@@ -129,11 +118,6 @@ function standing(): void {
     service(4, 1032, 'BS みなと', 'isdbSBs', 'television'),
     service(4, 1040, 'BS 湾岸', 'isdbSBs', 'television'),
     service(161, 1610, '東都テレビ1', 'isdbT', 'television', 6),
-    /*
-      Not a channel a programme guide has rows for. The store carries every
-      service it can tune, sound-only ones included, so leaving them in would
-      put stations with no programme table in the チャンネル list.
-    */
     service(131, 2310, 'ラジオ第一', 'isdbT', 'radio'),
   ]
 }
@@ -141,13 +125,6 @@ function standing(): void {
 const askedTheStore = (): Asked | undefined =>
   asked.find((one) => one.path === '/api/programs/search')
 
-/**
- * The channels a screen may offer are every television service there is,
- * whatever broadcast type the address asks for. The type is a condition the
- * reader assembles before asking, so widening it back has to offer what the
- * narrower answer left out — and a list already cut down to the narrower answer
- * has nothing to widen to.
- */
 test('the channels on offer are not cut down to the type that was asked for', async () => {
   standing()
 
@@ -211,13 +188,6 @@ test('a condition the store turns away is turned away to the reader', async () =
   assert.equal(result.outcome.state, 'refused')
 })
 
-/**
- * What comes back is spelled for the screen: the channel by the name it is
- * known by, the times in `Asia/Tokyo`, the genre by its label. The second
- * programme is the awkward one — a channel the services call does not know, an
- * end the broadcaster has not said, no genre, nothing written about it, and a
- * start that is the small hours of the next day in Tokyo.
- */
 test('a programme comes back spelled the way the screen shows it', async () => {
   standing()
   store.page = {

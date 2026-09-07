@@ -9,13 +9,6 @@ import {
   reservationHref,
 } from '@/lib/reservations'
 
-/**
- * The anchor a reservation's row carries and the link the recording screen
- * sends the reader in on. Both are spelled out here rather than one derived
- * from the other, so a change to either spelling has to be a change here too:
- * building the expected link out of `reservationAnchor` would move the
- * goalposts with it and hold nothing.
- */
 test('予約の行の錨は、その予約の id から綴られる', () => {
   assert.equal(reservationAnchor('r-309'), 'reservation-r-309')
 })
@@ -30,15 +23,6 @@ test('録画から入るリンクは、その錨を名指す', () => {
 test('録画から入るリンクは、既定で隠れる予約にも届く', () => {
   assert.match(reservationHref('r-309'), /\?show=all#/)
 })
-
-/**
- * 予約を消せるかどうかの判定。8 つの立ち位置すべてを表に並べ、表全体を一度に
- * 突き合わせる。「消せないものは false」だけを見ると、常に false を返す実装で
- * も緑になるため、消せる側と消せない側の両方を同じ表で押さえる。
- *
- * 表は `Record<ReservationStanding, …>` なので、立ち位置が増えたときは型が先に
- * 落ちる。
- */
 
 const STANDINGS: ReservationStanding[] = [
   'scheduled',
@@ -125,12 +109,6 @@ test('録画中は、放送の終わりを過ぎていても消せない', () =>
   )
 })
 
-/**
- * The standings a recording is what put on the reservation. Reaching one of
- * them with no recording written down means the recording was thrown away after
- * it ran, because the outcome cannot be reached any other way — which is what
- * lets the row say so rather than reading as broken.
- */
 test('録画から来た状態なのに録画が無ければ、その録画は削除されている', () => {
   for (const standing of ['complete', 'truncated', 'failed'] as const) {
     assert.equal(

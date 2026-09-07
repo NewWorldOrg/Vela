@@ -1,13 +1,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { extendTailwindMerge } from 'tailwind-merge'
 
-/**
- * Vela's type scale lives in the `--text-*` namespace, so `text-ui`,
- * `text-note`, … are font sizes while `text-ink`, `text-on-btn`, … are colours.
- * tailwind-merge cannot tell them apart on its own and would silently drop one
- * of the two whenever both appear (which is every button and badge), so the
- * size names are declared explicitly here.
- */
+// tailwind-merge reads `text-ink` as a font size like `text-ui`, and silently drops one whenever both appear.
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {

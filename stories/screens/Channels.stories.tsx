@@ -61,12 +61,6 @@ export const 候補を開いた状態: Story = {
   },
 }
 
-/**
- * Every candidate states how it was last received, whether or not a figure
- * came with it. A frontend that never locked answers the carrier-to-noise
- * query anyway, so without the chip a row could carry a meter and nothing to
- * say that nothing was ever locked onto.
- */
 export const 候補の受信状態: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
@@ -81,11 +75,6 @@ export const 候補の受信状態: Story = {
   },
 }
 
-/**
- * Saving the tuner ledger marks every candidate as measured under a
- * configuration that no longer holds. The mark clears on the next successful
- * tune, so a candidate still carrying it is one nothing has reached since.
- */
 export const 構成変更後に測り直しを待つ候補: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
@@ -99,10 +88,6 @@ export const 構成変更後に測り直しを待つ候補: Story = {
   },
 }
 
-/**
- * Unfolding a service reads nothing back from the server: the candidates were
- * already in the payload the list was drawn from.
- */
 export const 候補の開閉は取得を伴わない: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
@@ -120,12 +105,6 @@ export const 候補の開閉は取得を伴わない: Story = {
   },
 }
 
-/**
- * The candidates grow out of the table instead of arriving whole: the row
- * carries a height to interpolate, over the shared duration and the
- * overshooting easing, and the caret turns rather than being swapped for
- * another one.
- */
 export const 開閉は遷移で伸び縮みする: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
@@ -146,7 +125,6 @@ export const 開閉は遷移で伸び縮みする: Story = {
       'cubic-bezier(0.34, 1.4, 0.64, 1)',
     )
 
-    // Read live: the caret may still be on its way round.
     const turn = getComputedStyle(caret.querySelector('svg')!)
     await expect(turn.transitionProperty).toContain('rotate')
     await expect(turn.transitionDuration).toBe('0.15s')
@@ -154,11 +132,6 @@ export const 開閉は遷移で伸び縮みする: Story = {
   },
 }
 
-/**
- * Closing folds the row shut and only then takes it out of the table, with the
- * candidates out of reach while it runs. A row taken out of the table on the
- * press would end no transition, and the wait below would never come back.
- */
 export const 閉じるときは縮んでから消える: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
@@ -186,11 +159,6 @@ export const 閉じるときは縮んでから消える: Story = {
   },
 }
 
-/**
- * Pressed twice inside one frame, the row is opened and shut before it has a
- * height, so nothing folds and no fold ends. It still has to leave the table:
- * pressed without awaiting, because awaiting is what gives it the frame.
- */
 export const 開いてすぐ閉じても行は残らない: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
@@ -214,7 +182,6 @@ export const 開いてすぐ閉じても行は残らない: Story = {
   },
 }
 
-/** One service unfolds at a time, as it did when the URL carried it. */
 export const 開くのは一度にひとつ: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
@@ -232,9 +199,6 @@ export const 開くのは一度にひとつ: Story = {
     await expect(first).toHaveAttribute('aria-expanded', 'false')
     await expect(second).toHaveAttribute('aria-expanded', 'true')
 
-    // The first row's candidates are still folding shut while the second's
-    // unfold, and a fold that is cut off mid-way never settles. The story is
-    // over when only the second's are left.
     await waitFor(() =>
       expect(
         canvasElement.querySelectorAll('[data-slot="unfold"]'),
@@ -308,7 +272,6 @@ export const 取得できないとき: Story = {
 
 const [service] = CHANNELS.groups[0].services
 
-/** Carries the open state so a dismissal shows up as the dialog going away. */
 function AddCandidate({ onAdd }: Pick<ChannelsViewProps, 'onAdd'>) {
   const [open, setOpen] = useState(true)
 
@@ -354,11 +317,6 @@ export const 手動追加はEscで閉じる: Story = {
   },
 }
 
-/**
- * Two lists on one page, each bounded by the window on its own: the services
- * of a broadcast and the runs that found them. The page still scrolls between
- * them and for the scan bar above.
- */
 async function bothListsScrollInside(canvasElement: HTMLElement) {
   await scrollsInsideWithItsHeaderHeld(canvasElement, 'サービス')
   await scrollsInsideWithItsHeaderHeld(canvasElement, '開始')

@@ -28,27 +28,14 @@ export function RecordingsTable({
   onDelete: (id: string) => Promise<RecordingDiscarded>
 }) {
   const router = useRouter()
-  // One question for the whole table, holding the row it was opened on: a
-  // dialog per row would mount as many as the list is long.
   const [asked, setAsked] = useState<Recording | null>(null)
 
   return (
     <div
       data-slot="table-container"
-      // The container scrolls, so it has to be reachable by keyboard.
       tabIndex={0}
       className="-mx-1 min-h-0 flex-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring"
     >
-      {/*
-        1256px is what the columns add up to, and the width under which the
-        list runs sideways inside its own box rather than taking the page with
-        it. At 1296 the list was too wide for every window there is: the
-        last column was cut off, and the page itself scrolled sideways to
-        reach it. The width came off the columns that were carrying more than
-        their content — the title truncates at any width, and the other three
-        hold a chip or a figure that never came near their edge. The channel
-        column carries the station's mark ahead of its name and is 152px.
-      */}
       <table className="w-full min-w-[1256px] table-fixed border-separate border-spacing-0">
         <colgroup>
           <col className="w-[252px]" />

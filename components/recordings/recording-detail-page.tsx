@@ -43,15 +43,6 @@ import { RecordingActions } from '@/components/recordings/recording-actions'
 import { RecordingRecord } from '@/components/recordings/recording-record'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-/**
- * The gutter every band on this screen stands in, and the column inside it.
- *
- * `PLAYER_COLUMN` is the picture's own bound — the column, capped by what the
- * window's height allows — so the reading under the picture starts and ends
- * where the picture does. Held to the 1440px step instead, it ran 26px short of
- * the picture at 1800x1050 and 373px short at 2560x1440: a reading that does
- * not line up with the thing it is about (v3.35).
- */
 const GUTTER = 'mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5'
 
 const OUTCOME_STYLE = {
@@ -59,14 +50,6 @@ const OUTCOME_STYLE = {
   failed: 'bg-tint-salmon',
 } as const
 
-/**
- * What the API said instead of a plan. Four refusals, four notices: a
- * recording still being written, one that wrote nothing, a file out of reach
- * and an answer that could not be read are different things to do next, and
- * one notice for all of them would leave the reader to guess which they have.
- * Each says what happened and stops; where the title is the whole of it, there
- * is no second line restating it.
- */
 const REFUSED: Record<PlaybackRefusal, ReactNode> = {
   stillRecording: (
     <PlaybackNotice
@@ -107,7 +90,6 @@ const OUTCOME_LABEL = {
   failed: '失敗',
 } as const
 
-/** A dot between two values on the line of values under the title. */
 function Dot() {
   return <span className="text-ink-3">・</span>
 }
@@ -131,7 +113,6 @@ export function RecordingDetailView({
   onTakeTicket: (id: string) => Promise<TicketWrite>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
-  /** The second the quality panel sent the reader to, where it did. */
   startAt?: number
 }) {
   const plays =
@@ -142,13 +123,6 @@ export function RecordingDetailView({
 
   const watching = plays && playback.state === 'planned'
 
-  /*
-    The band is drawn only where what can be watched is not what was asked for.
-    完全 is not that: the picture plays to its end and says so, and a band
-    repeating it above the player made the two outcomes that do change what can
-    be watched easier to miss rather than harder (v3.35). 完全 is kept as a
-    value, on the first row of the record.
-  */
   const alarming: 'truncated' | 'failed' | null =
     d.outcome === 'truncated' || d.outcome === 'failed' ? d.outcome : null
 
@@ -270,12 +244,6 @@ export function RecordingDetailView({
         />
       )}
 
-      {/*
-        Under the picture, what is needed to watch, in the order every product
-        that plays a recorded programme uses: the name, where and when it came
-        from, what it is about. The record of how it was recorded is folded
-        underneath (v3.35).
-      */}
       <div className={GUTTER}>
         <div className={cn(PLAYER_COLUMN, 'pt-5')}>
           <h1 className="heading text-[24px] leading-[1.45]">{d.title}</h1>

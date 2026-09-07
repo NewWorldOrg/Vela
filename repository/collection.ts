@@ -19,42 +19,24 @@ type TuneSystem = components['schemas']['TuneSystem']
 
 export type StreamOutcome = components['schemas']['StreamCollectionOutcome']
 
-/** Sorts a stream the collector has not reached yet behind the ones it has. */
 const UNREACHED = Number.MAX_SAFE_INTEGER
 
-/** One transport stream as the visit ledger holds it, spelled for the screen. */
 export interface StreamVisitRow {
   key: string
   networkId: number
-  /** A stream the collector has not reached yet carries no identifier. */
   transportStreamId?: number
   kind: ChannelKind
-  /** The lead service's name; a stream the service list no longer names has none. */
   name?: string
-  /**
-   * The channels the stream carries, in service order.
-   *
-   * A visit is made to a stream and its outcome is a fact about the stream, but
-   * what a reader of the guide has in front of them is the columns. So what is
-   * said about a stream is said about all of them and not about the first of
-   * them: the lead is the service the collector reads first and the one whose
-   * listings are least likely to be the ones missing, so naming a stream by it
-   * points at the fullest column on the screen.
-   */
   channelNames: string[]
-  /** The tuned physical channel, e.g. `58ch` / `BS15` / `ND12`. */
   channelLabel?: string
   serviceCount: number
   outcome: StreamOutcome
   lastCompletedLabel?: string
   lastAttemptedAt?: string
   lastAttemptedLabel?: string
-  /** How long the last visit took, e.g. `3分58秒`. */
   durationLabel?: string
   consecutiveIncomplete: number
-  /** While backing off, the time before which no revisit happens. */
   notBeforeLabel?: string
-  /** Completed once, but so long ago it no longer counts as coverage. */
   stale: boolean
 }
 
@@ -68,11 +50,8 @@ export interface CollectTarget {
 
 export interface CollectionStatus {
   streams: StreamVisitRow[]
-  /** `地上波 7` and friends, for the record heading. Kinds with no stream stay out. */
   kindCounts: { kind: ChannelKind; label: string; count: number }[]
-  /** Streams the collector is currently backing off from (収集不調). */
   troubledCount: number
-  /** Kinds carrying no television service at all — the tuner-side anomaly, restated. */
   zeroServiceKinds: { kind: ChannelKind; label: string }[]
   streamTargets: CollectTarget[]
   serviceTargets: CollectTarget[]
@@ -109,10 +88,8 @@ const KIND_LABEL: Record<ChannelKind, string> = {
 
 const KIND_ORDER: ChannelKind[] = ['terrestrial', 'bs', 'cs110']
 
-/** A completion older than this counts as missing coverage, not as fresh. */
 const STALE_AFTER_MS = 24 * 60 * 60 * 1000
 
-/** Incomplete visits in a row before the banner calls the stream out. */
 const STRUGGLING_STREAK = 2
 
 const REBUILD_CONFIRMATION = 'discard-everything'

@@ -12,16 +12,6 @@ import type {
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/vela/progress'
 
-/**
- * What a finished pass answered, said in one sentence.
- *
- * Only three of the six ever arrive here: the API turns the other three into a
- * refusal with a status of its own before the body is written, and those are
- * read from the status instead. `drawn` is also the only one of the three that
- * leaves a picture behind — the pass answers `skipped` for a recording it will
- * not illustrate and `failed` for one it could not, and a 200 saying either is
- * a press that changed nothing.
- */
 const DREW: Record<ThumbnailRemake, { drew: boolean; text: string }> = {
   drawn: { drew: true, text: 'サムネイルを作り直しました。' },
   skipped: { drew: false, text: 'この録画にサムネイルは作成されません。' },
@@ -34,21 +24,6 @@ const DREW: Record<ThumbnailRemake, { drew: boolean; text: string }> = {
   outOfReach: { drew: false, text: '録画ファイルに到達できません。' },
 }
 
-/**
- * Why the picture cannot be drawn again right now.
- *
- * Each of these is a state the recording leaves: a recording being written ends,
- * a file out of reach is what the integrity check is for, and a recording with
- * nothing in it is one the ledger has yet to observe a size for. So the button
- * stands, switched off, with the reason on it — as against a recording that
- * failed, which the pass answers `skipped` for and always will. There the
- * button is not drawn at all, and the band over the picture and the record both
- * already say why.
- *
- * A recording with no video in it is not here. Nothing in the answer says so
- * before the press: the pass reads the file itself, and a recording it can take
- * no frame from comes back as a 200 saying `failed`.
- */
 function refusing(recording: Recording): string | undefined {
   if (recording.outcome === 'recording') {
     return '録画中は作り直せません'
@@ -65,7 +40,6 @@ function refusing(recording: Recording): string | undefined {
   return undefined
 }
 
-/** Whether this recording is one the picture can ever be drawn again for. */
 export function redrawsThumbnail(recording: Recording): boolean {
   return recording.outcome !== 'failed'
 }

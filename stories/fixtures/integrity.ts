@@ -21,7 +21,6 @@ const ROOTS = [
   },
 ]
 
-/** One of each fault the sweep can raise, so every row shape is drawn once. */
 export const INTEGRITY_FIXTURE: IntegrityResult = {
   check: CHECK,
   total: 5,
@@ -90,7 +89,6 @@ export const INTEGRITY_CLEAR_FIXTURE: IntegrityResult = {
   findings: [],
 }
 
-/** More findings than a window holds: each fault, on ten nights' files. */
 export const INTEGRITY_MORE_THAN_FIT_FIXTURE: IntegrityResult = {
   ...INTEGRITY_FIXTURE,
   total: INTEGRITY_FIXTURE.findings.length * 10,

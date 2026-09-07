@@ -25,46 +25,6 @@ import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 
-/**
- * The live screen, which is two screens.
- *
- * Before a channel is chosen it is a screen for choosing one: the channels
- * across the width as cards, with what is on each of them. Once one is chosen
- * it is a screen for watching: the picture takes the width, what is on it is
- * read under it, and the channels stand beside it as a list that folds away.
- *
- * It used to be the second of those with nothing in it — an empty 16:9 panel
- * where the picture would go, seven tenths of the width, with the channels in
- * a column beside it and nothing at all underneath. The shape of watching,
- * before there was anything to watch. What every product that has this screen
- * does instead is make the choosing the screen: KonomiTV and Chinachu open on
- * their channels, Plex and Jellyfin on theirs.
- *
- * The channel and the broadcast type are in the URL — a second reader opening
- * the link sees the same channel, and a reload brings it back. Choosing a
- * channel changes the URL, the screen re-reads what is on it, and the player
- * opens the new wire once the channel reaches it.
- *
- * That change is an entry in the history, not a rewrite of the one standing.
- * Rewritten, the screen with nothing chosen — the one every reader arrives at,
- * and the one the channels belong to — was thrown away the moment a channel
- * was pressed, so back left the live screen entirely and landed wherever the
- * reader had been before it.
- *
- * Every choice is an entry, the second and the tenth as much as the first: back
- * is the channel before this one, and back again the one before that, down to
- * the screen with nothing chosen. Measured on the services that do this for a
- * living, they all zap the same way — ABEMA, radiko, TVer and KonomiTV each add
- * an entry per change, so back on any of them is the last thing watched.
- * Collapsing the later ones would make back mean the choosing screen after the
- * second press and the previous channel after the first, which is a press whose
- * meaning depends on history the reader cannot see.
- *
- * There is no press that goes back to the choosing screen, because no product
- * that was measured has one: the way to another channel while watching is the
- * list beside the picture, which is KonomiTV's panel and Twitch's chat rail,
- * and the way back to the choosing screen is the way back to any screen.
- */
 export function LiveView({
   screen,
   openSocket,
@@ -109,21 +69,6 @@ export function LiveView({
   const watching = screen.watching
   const [away, remember] = useChannelsFolded()
   const { motion, fold } = useFoldingChannels(away, remember)
-  /**
-   * A station splits into two or three for the hours it has that much to show
-   * and puts the one thing out on all of them for the rest of the day, so most
-   * of the time most of the line-up is one programme listed two or three times
-   * over. Folded, the splits showing nothing their station is not showing come
-   * out — of the grid and of the list alike, because both are drawn from the
-   * one line-up, and a fold that held on one of them would come undone the
-   * moment a channel was chosen.
-   *
-   * It is offered only where it would take a card away, and only on the screen
-   * where the channels are what is being read. It is the reader's, held in the
-   * browser and not in the URL: the channel and the broadcast type are what a
-   * second reader opening the link needs, and how many cards this one is
-   * looking at is not.
-   */
   const [subsFolded, foldSubs] = useLiveSubChannelsFolded()
   const foldable = foldsAChannel(screen.channels, watching?.channel.id)
   const channels =
@@ -137,13 +82,6 @@ export function LiveView({
   const kind = (value: string) =>
     patch({ kind: value === 'terrestrial' ? null : value })
 
-  /*
-    Nothing on this screen can be watched without one, whichever channel is
-    pressed and whichever broadcast type is looked under, so the grid and the
-    type bar both come down: three tabs that all lead to this same panel are
-    three presses that change nothing. It is only said when the ledger was
-    actually read — not knowing how many there are is not none.
-  */
   if (!watching && screen.tuners === 0) {
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
@@ -181,14 +119,6 @@ export function LiveView({
             </button>
           )}
         </div>
-        {/*
-          What there is nothing of decides what is said and where it points.
-          Nothing anywhere is a product that has not been scanned, and the way
-          on is the screen that scans it; nothing on this one broadcast, with
-          channels on another, is a reader who has been sent to a type that
-          holds none — telling them there is nothing to watch is false, and
-          sending them to add channels sends them to add what they have.
-        */}
         {screen.channels.length === 0 ? (
           <ChannelsMissing
             kind={screen.kind}
@@ -202,15 +132,6 @@ export function LiveView({
             onSelect={(channel) => choose(channel.id)}
           />
         )}
-        {/*
-          The cards each say they have no programme, which leaves a reader
-          looking at a screenful of channels that all appear to be broken. They
-          are not: they can be tuned, and it is the guide behind them that has
-          not been collected. So the panel is under the grid rather than in
-          place of it — the channels are still what the screen is for — and it
-          is out the moment any one of them has a programme, since from then on
-          the empty cards are that channel's own silence and not the guide's.
-        */}
         {nothingIsOn && (
           <EmptyState
             spot={null}
@@ -245,16 +166,6 @@ export function LiveView({
         />
         <NowNext watching={watching} />
       </div>
-      {/*
-        102px is what the list is not allowed to have: the top bar (46), the
-        screen's own padding above it (16) and below it (40). Given less than
-        it takes away — it was written as 78 — the list runs 24px past the
-        bottom of the window, the document grows to hold it, and the page
-        draws a scrollbar of its own beside the one the list already has.
-
-        The list is deliberately wider than the moving column and hangs off
-        its start edge, so no line inside it is set again as the column moves.
-      */}
       <aside
         aria-label="チャンネル"
         className={cn(

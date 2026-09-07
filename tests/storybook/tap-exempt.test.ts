@@ -4,32 +4,13 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
 
-/**
- * `data-tap-exempt` takes a control out of the 44px probe in test-runner.ts,
- * so every use of it is a control nobody measures — the one way past that gate
- * that leaves the run green. The probe cannot police its own waiver, because a
- * waived control is exactly the one it never looks at. This does.
- *
- * SPEC's 触れる大きさ leaves one opening and closes the rest by name: a
- * programme cell is as tall as the programme is long, and making it 44px would
- * make the time axis a lie. Rows that sit against one another grow to 44px
- * instead of being waived, and a replaced element is wrapped in a label that
- * carries the area instead of being waived. So the list below is the whole of
- * it, and a new entry is a design-system change before it is a code change.
- */
 const WAIVED = ['components/guide/program-cell.tsx']
 
-/**
- * Files that name the attribute without waiving anything — the probe that
- * honours it, and this test. Named rather than skipped by directory, so that a
- * waiver written into a decorator or a preview is still caught.
- */
 const NAMES_IT = [
   '.storybook/test-runner.ts',
   'tests/storybook/tap-exempt.test.ts',
 ]
 
-/** Build output and dependencies, which are not this repository's own source. */
 const NOT_SOURCE = new Set([
   '.git',
   '.next',

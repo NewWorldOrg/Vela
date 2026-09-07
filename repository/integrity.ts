@@ -11,12 +11,6 @@ type RootResponder = components['schemas']['StorageRootResponder']
 
 export type IntegrityFault = components['schemas']['IntegrityFault']
 
-/**
- * The API hands a finding a fresh identity on every walk, so the one it names
- * cannot stand for the same file across two of them. Nothing here carries it
- * out: the row is keyed by where the file is, which is what a second walk
- * finds again, and no part of the screen remembers a finding between walks.
- */
 export interface IntegrityFinding {
   key: string
   fault: IntegrityFault
@@ -49,12 +43,10 @@ export interface StorageRoot {
 }
 
 export interface IntegrityResult {
-  /** Unset until a check has walked at least once. */
   check?: IntegrityCheck
   findings: IntegrityFinding[]
   total: number
   roots: StorageRoot[]
-  /** Set when the roots could not be read; the findings still stand. */
   storageProblem?: string
 }
 
@@ -67,10 +59,6 @@ const STORAGE_UNREADABLE = '保存先の空き容量を読めませんでした�
 
 const MOST_PER_PAGE = 200
 
-/**
- * The reason a finding was raised, in the words the recording screens already
- * use: the row a recording keeps is "録画の記録", never a ledger.
- */
 const REASON: Record<IntegrityFault, string> = {
   sizeDisagrees: '録画の記録とサイズが食い違う',
   noLedgerRow: '録画の記録に対応する行が無い',
@@ -106,10 +94,6 @@ export async function getIntegrity(): Promise<IntegrityResult> {
   }
 }
 
-/**
- * A walk asked for by hand. Only one runs at a time and a fresh one waits for
- * the last to age, so a refusal is an answer rather than a failure.
- */
 export async function runIntegrityCheck(): Promise<SweepWrite> {
   const { data, error, response } = await carinaClient().POST(
     '/api/recordings/integrity/run',
@@ -130,11 +114,6 @@ const ALREADY_RUNNING =
 
 const TOO_SOON = '直前の整合性チェックから間がないため、まだ実行できません。'
 
-/**
- * A refusal names itself, so it is read rather than guessed from the status.
- * Only a body that says nothing falls back to the number the API answered
- * with.
- */
 function refusalOf(
   response: Response,
   answered: SweepRefused | SweepDone | null | undefined,
@@ -169,12 +148,6 @@ function toCheck(check: CheckResponder): IntegrityCheck {
   }
 }
 
-/**
- * A finding names at most two sizes and, depending on what it is, sometimes
- * neither: an orphan has no row to compare against and a missing file has
- * nothing left to weigh. What is unsaid is left unsaid rather than shown as a
- * zero, which is itself one of the faults.
- */
 function toFinding(finding: FindingResponder): IntegrityFinding {
   const observed = counted(finding.observedSize)
   const ledger = counted(finding.ledgerSize)

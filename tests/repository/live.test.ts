@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The live screen's reading, with the API standing in for itself. Only the
- * module that reaches the network is replaced; reading the channels, sorting
- * out which kind each is, and finding what is on air all run for real.
- */
-
 interface Sent {
   path: string
   query?: Record<string, unknown>
@@ -279,13 +273,6 @@ test('a programme with no end said runs half an hour, and a shadow is not on air
   assert.equal(later.next, undefined)
 })
 
-/**
- * A service that has split carries what the service it split from is carrying,
- * for the hours it has nothing of its own. The broadcaster says so on the
- * whole service's event — it names the split under a share — and sends the
- * split no event of its own at all, so a row read by service number alone has
- * nothing to show on it.
- */
 test('a split carries what the whole is carrying, on air and next', async () => {
   store.channels = [
     listed(32736, 1024, '総合1'),
@@ -327,11 +314,6 @@ test('a split carries what the whole is carrying, on air and next', async () => 
   assert.equal(split.next?.title, 'このあと')
 })
 
-/**
- * The hours a split does have something of its own are its own. Two answers to
- * what is on a channel is one answer too many, and the one the split keeps is
- * the one the broadcaster sent to the split.
- */
 test('what a split has of its own stands over what it is carrying', async () => {
   store.channels = [
     listed(32736, 1024, '総合1'),
@@ -365,11 +347,6 @@ test('what a split has of its own stands over what it is carrying', async () => 
   assert.equal(screen.channels[1].now?.title, '枝番の自分のやつ')
 })
 
-/**
- * A relay and a move name another service and mean the opposite of a share:
- * the same programme at another hour or off another transmitter, which is not
- * what that service is showing now.
- */
 test('a relay and a move are not carried onto the service they name', async () => {
   store.channels = [
     listed(32736, 1024, '総合1'),
@@ -432,11 +409,6 @@ test('a channel with no programme known stands at nought, and one with no end ha
 
 const { liveScreenHref } = await import('@/repository/live-paths')
 
-/**
- * A way into the live screen is an address the screen writes for itself: the
- * channel in `ch`, and the kind only where it is not the one the screen opens
- * on, so the address from the guide is the one a press on the list would make.
- */
 test('the live screen is addressed by channel, and by kind only off the aerial', () => {
   assert.equal(liveScreenHref('32736-1024'), '/live?ch=32736-1024')
   assert.equal(
@@ -447,13 +419,6 @@ test('the live screen is addressed by channel, and by kind only off the aerial',
   assert.equal(liveScreenHref('6-1000', 'cs110'), '/live?ch=6-1000&kind=cs110')
 })
 
-/**
- * The tuners are counted, not listed: this screen has no use for which ones
- * they are, only for whether there is one at all. A ledger that will not
- * answer leaves the count absent rather than nought, so the screen says
- * nothing about tuners instead of sending the reader off to add the ones they
- * already have.
- */
 test('チューナーは数えられ、台帳が答えなければ数そのものが無い', async () => {
   store.channels = [listed(32736, 1024, '総合1')]
   store.profiles = []
@@ -472,19 +437,9 @@ test('チューナーは数えられ、台帳が答えなければ数そのも�
 
   assert.equal(unread.tuners, undefined)
 
-  // And the rest of the screen is still there: watching does not depend on
-  // this ledger, so it does not go down with it.
   assert.equal(unread.channels.length, 1)
 })
 
-/**
- * Which broadcast types the screen may offer, and which one it opens on.
- *
- * A type with no channel on it reaches the same nothing from wherever it is
- * pressed, so it is not offered; and where nothing is offered for the type the
- * URL leaves out, the screen opens on the first type that has a channel rather
- * than on an empty one.
- */
 test('種別は、チャンネルを持つものだけが並ぶ', async () => {
   store.profiles = []
   store.programmes = []
@@ -513,7 +468,6 @@ test('種別は、チャンネルを持つものだけが並ぶ', async () => {
     'bs',
   ])
 
-  // The aerial has nothing on it, so the screen opens on the one that has.
   store.channels = [listed(4, 101, '衛星1', { tuning: satellite })]
 
   const satelliteOnly = await getLiveScreen(undefined, undefined, NOW)
@@ -521,8 +475,6 @@ test('種別は、チャンネルを持つものだけが並ぶ', async () => {
   assert.deepEqual(satelliteOnly.kinds, ['bs'])
   assert.equal(satelliteOnly.kind, 'bs')
 
-  // Nothing anywhere leaves nothing to open on, and the screen says so with
-  // the type it would have opened on.
   store.channels = []
 
   const nothing = await getLiveScreen(undefined, undefined, NOW)
@@ -531,11 +483,6 @@ test('種別は、チャンネルを持つものだけが並ぶ', async () => {
   assert.equal(nothing.kind, 'terrestrial')
 })
 
-/**
- * A URL that names a type is answered with that type, empty or not: the type
- * is what the reader asked for, and answering with another would be a screen
- * the link does not say.
- */
 test('URL が名指した種別は、空でもその種別のまま答える', async () => {
   store.profiles = []
   store.programmes = []

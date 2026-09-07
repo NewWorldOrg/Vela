@@ -11,10 +11,6 @@ const DOT_TONE: Record<StatusTone, string> = {
   off: 'bg-ink-3',
 }
 
-/**
- * The base form for state: a 7px dot plus text. The dot is decorative — the
- * text always carries the meaning, and nothing blinks.
- */
 export function StatusDot({
   tone = 'ok',
   className,
@@ -56,7 +52,6 @@ export function StatusText({
   )
 }
 
-/** The dot that sits inside a chip; it inherits the chip's text colour. */
 export function ChipDot({ className, ...props }: ComponentProps<'span'>) {
   return (
     <span

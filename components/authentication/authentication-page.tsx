@@ -19,7 +19,6 @@ import { OidcSettings } from '@/components/authentication/oidc-settings'
 import { ChangePassword } from '@/components/authentication/password-change'
 import { SessionTable } from '@/components/authentication/session-table'
 
-/** What the last operation did, said once and left behind on the next visit. */
 export type AuthenticationNotice =
   | { kind: 'revoked'; device: string }
   | { kind: 'password'; sessionsEnded: number }

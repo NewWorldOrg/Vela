@@ -4,12 +4,6 @@ import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
-/**
- * The chip. Dot-plus-text is the base form for state and the chip is the
- * supporting form, so chips stay quiet: a hairline, a soft colour surface and
- * text. `kind*` variants label a category rather than a state, so their text
- * stays ink-2 and only the surface colour changes.
- */
 const badgeVariants = cva(
   'inline-flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-full border px-[11px] py-[3px] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
   {

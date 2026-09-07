@@ -24,12 +24,6 @@ function PopoverContent({
   container,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> & {
-  /**
-   * Where the surface is put in the document. The default is the body, and a
-   * body is not drawn while something inside it is fullscreen — so a popover
-   * opened over a fullscreen picture goes up somewhere nobody can see. Naming
-   * the element that went fullscreen puts it back over the picture.
-   */
   container?: React.ComponentProps<typeof PopoverPrimitive.Portal>['container']
 }) {
   return (

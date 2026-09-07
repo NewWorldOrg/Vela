@@ -25,8 +25,6 @@ function Checkbox({
       )}
       {...props}
     >
-      {/* Some of them, not all of them, is its own answer: a tick here would say
-          the whole list is taken when it is not. */}
       <CheckboxPrimitive.Indicator
         data-slot="checkbox-indicator"
         className="grid place-content-center text-current"

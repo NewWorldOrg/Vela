@@ -32,26 +32,18 @@ const SYSTEM_OF_KIND: Record<ChannelKind, TuneSystem> = {
   cs110: 'isdbSCs110',
 }
 
-/**
- * How far either side of now the programmes are read. Six hours back reaches
- * the start of anything still on air, and six hours on always holds the one
- * that follows it.
- */
 const AROUND_NOW_MS = 6 * 60 * 60 * 1000
 
-/** How long a programme whose end the broadcaster has not said is taken to run. */
 const UNDECIDED_DURATION_MS = 30 * 60 * 1000
 
 type SettledLineup = SettledGuide<LiveChannel, Programme>
 
-/** More than the aerial reaches: every channel arrives on one page. */
 const EVERY_CHANNEL = 200
 
 export interface LiveProgramme {
   id: string
   title: string
   startsAt: string
-  /** Absent while the broadcaster has not said when it ends. */
   endsAt?: string
   startLabel: string
   endLabel?: string
@@ -64,23 +56,14 @@ export interface LiveChannel {
   networkId: number
   serviceId: number
   name: string
-  /** The remote-control key, where the broadcast type has one. */
   no?: string
   kind: ChannelKind
-  /** Whether this service split off another of its network. */
   sub?: boolean
-  /**
-   * The channel this one split off, where it split off one. It is what says
-   * which card a split's hours are read against, and a split says nothing
-   * about that itself.
-   */
   whole?: string
   logo?: StationLogo
-  /** How many are watching this channel right now, over every profile. */
   viewers: number
   now?: LiveProgramme
   next?: LiveProgramme
-  /** 0–100 of the programme on air. Nought where no programme is known. */
   progressPct?: number
 }
 
@@ -88,57 +71,25 @@ export interface LiveProfile {
   name: string
   width: number
   height: number
-  /**
-   * Whether this is the one the API encodes in when the wire names none. It
-   * depends on the machine the API is running on — the same list comes back
-   * marked differently where there is a GPU to hand the work to — so it is
-   * read off the list and never written down here.
-   */
   unasked: boolean
 }
 
-/** The channel being watched, and where its programme stands. */
 export interface LiveWatching {
   channel: LiveChannel
-  /** 0–100 of the programme on air. Nought when no programme is known. */
   progressPct: number
   nowLabel: string
-  /** Minutes left of the programme on air; absent when its end is unknown. */
   restMin?: number
 }
 
 export interface LiveScreen {
   kind: ChannelKind
-  /**
-   * The broadcast types that have a channel on them, in the order they are
-   * always listed. It is what the type bar may offer: a type with nothing on
-   * it leads to the same nothing whichever screen it is pressed from.
-   */
   kinds: ChannelKind[]
   channels: LiveChannel[]
   watching?: LiveWatching
   profiles: LiveProfile[]
-  /**
-   * How many tuners are written down. None of them means nothing on this
-   * screen can be watched whatever is chosen, which is the one thing the
-   * screen has to say before it offers anything to press.
-   *
-   * Absent when the ledger could not be read, which is not the same as it
-   * being empty: a screen that said there were no tuners because it failed to
-   * ask would send the reader to add the ones they already have.
-   */
   tuners?: number
 }
 
-/**
- * The broadcast type the screen is reading.
- *
- * A URL that names one is answered with it, whether or not anything is on it:
- * the type is what the reader asked for, and answering with another would be
- * a different screen than the link says. A URL that names none — or names
- * nothing this product has — is answered with the first type that has a
- * channel, so that the screen opens on something to press.
- */
 export function kindOf(
   rawKind: string | undefined,
   had: ChannelKind[] = [],
@@ -168,8 +119,6 @@ export async function getLiveScreen(
   const kind = kindOf(rawKind, kinds)
   const chosen = listed.find((channel) => channel.id === rawChannel)
 
-  // The channel being watched stays on air while another kind's list is
-  // browsed, so its programmes are read even when it is not on the list shown.
   const read = [...new Set([kind, ...(chosen ? [chosen.kind] : [])])]
   const guides = await Promise.all(
     read.map((one) =>
@@ -210,16 +159,6 @@ export async function getLiveScreen(
   }
 }
 
-/**
- * The tuners written down, counted rather than listed: this screen has no use
- * for which ones they are, only for whether there is one at all.
- *
- * A failure to read them is not a nought, and is the whole reason for the
- * catch: watching does not depend on this ledger — the channels and the wire
- * do — so a screen that threw here would lose a working live picture to a
- * settings endpoint being down. The count going missing is not swallowed, it
- * is the answer, and the screen says nothing about tuners when it gets it.
- */
 async function countTuners(): Promise<number | undefined> {
   try {
     const { data } = await carinaClient().GET('/api/tuners')
@@ -295,17 +234,6 @@ function endOf(programme: Programme): number {
     : new Date(programme.startsAt).getTime() + UNDECIDED_DURATION_MS
 }
 
-/**
- * What each channel of the list is carrying, settled the way the guide settles
- * its columns: what is its own, and for the hours it has nothing of its own,
- * whatever names it under a share.
- *
- * A service splits into two or three for the hours it has two or three things
- * to show and carries the one thing on all of them for the rest of the day.
- * Nearly every one of those hours reaches the split with no event of its own,
- * so a row read by service number alone says the split has no listing while
- * the row above it names the very programme the split is showing.
- */
 function carriedBy(settled: SettledLineup): Map<string, Programme[]> {
   const carried = new Map<string, Programme[]>()
 
@@ -322,12 +250,6 @@ function carriedBy(settled: SettledLineup): Map<string, Programme[]> {
   return carried
 }
 
-/**
- * Which card a split's hours are read against, taken from the same settling
- * the guide's columns are: the service each network split from is the lowest
- * numbered it hands over, which is a fact about the numbering and not about
- * the order the line-up arrived in.
- */
 function splitFrom(
   settled: SettledLineup,
 ): Map<string, Pick<LiveChannel, 'sub' | 'whole'>> {
@@ -339,11 +261,6 @@ function splitFrom(
   )
 }
 
-/**
- * What is on this channel now, and what follows it, read off what the channel
- * carries. A programme with no end said is taken to run half an hour, the way
- * the guide draws it.
- */
 export function nowNextOf(
   carried: readonly Programme[],
   now: Date,
@@ -383,13 +300,6 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
   }
 }
 
-/**
- * How far into the programme the clock is, as a share of it.
- *
- * A programme whose end the broadcaster has not said stands at nought rather
- * than at a guess: a bar drawn against an invented length says how far through
- * something the viewer is, and nobody knows that yet.
- */
 function progressOf(programme: LiveProgramme | undefined, now: Date): number {
   if (!programme?.endsAt) {
     return 0
@@ -402,7 +312,6 @@ function progressOf(programme: LiveProgramme | undefined, now: Date): number {
   return Math.round(Math.min(1, Math.max(0, share)) * 100)
 }
 
-/** Where the programme on the chosen channel stands at this moment. */
 export function watchingOf(channel: LiveChannel, now: Date): LiveWatching {
   const nowLabel = clockLabel(now)
   const programme = channel.now

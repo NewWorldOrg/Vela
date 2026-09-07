@@ -30,7 +30,6 @@ export class CaptionDrift {
 
   private staged = 0
 
-  // One instant gives both readings; an edge read later is another number.
   saw(stamp: number, edge: number): void {
     if (this.lastEdge !== null && edge + AFRESH_SECONDS < this.lastEdge) {
       this.reset()

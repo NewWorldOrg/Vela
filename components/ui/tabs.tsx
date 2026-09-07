@@ -25,11 +25,6 @@ function Tabs({
   )
 }
 
-/**
- * Underline tabs. The rule under the list is dashed, and the selected tab is
- * marked with the accent colour, a soft accent surface and a 2px underline —
- * not a solid fill.
- */
 const tabsListVariants = cva(
   'group/tabs-list flex w-fit items-center gap-1.5 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col group-data-[orientation=vertical]/tabs:items-stretch',
   {

@@ -30,12 +30,6 @@ function TooltipTrigger({
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
 
-/**
- * A floating thing, dressed the way every other floating thing in Vela is: the
- * page's own surface, the strong hairline, and the hard offset shadow at 4px.
- * No arrow and nothing that moves — the bubble is decoration only where it
- * carries meaning, and it carries none.
- */
 function TooltipContent({
   className,
   sideOffset = 6,

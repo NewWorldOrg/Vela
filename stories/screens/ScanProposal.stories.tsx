@@ -26,12 +26,6 @@ const wait = async (): Promise<WriteResult> => ({
   message: HELD,
 })
 
-/**
- * Presses the one button the page exists for. A refusal is only ever on screen
- * because the press was made and the answer came back — the page is drawn
- * without it, so a story that hands `onApply` a refusal and stops there is
- * drawing the same pixels as 通常.
- */
 function applying(refusal: string) {
   return async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement)

@@ -16,14 +16,8 @@ import {
   windowStartOf,
 } from '@/lib/guide'
 
-/** The height the grid gives an hour, which the guide's own metrics set. */
 const HOUR_PX = 96
 
-/**
- * One in the morning on the 21st: past midnight, and so still inside the
- * broadcast day the 20th named. Written as the instant it is, because that is
- * all the API ever hands over.
- */
 const AFTER_MIDNIGHT = new Date('2026-08-20T16:00:00Z')
 
 test('an hour past midnight still belongs to the day before', () => {
@@ -87,11 +81,6 @@ test('a minute past the lead opens a minute in', () => {
   assert.equal(openingScrollTopOf(31, HOUR_PX), HOUR_PX / 60)
 })
 
-/**
- * What one aerial really hands over: 27 television services, once the
- * one-segment, temporary and data services that never take a column are left
- * out. The number is here because it is the case the width rule exists for.
- */
 const TELEVISION_SERVICES = 27
 
 test('a channel is given a column a programme name fits in', () => {
@@ -110,15 +99,10 @@ test('a grid with no channels is the hour gutter and nothing else', () => {
   assert.equal(gridMinWidthOf(0), 46)
 })
 
-/**
- * One network: the service the rest of it split from, which is its lowest
- * number, and the two columns that service splits into above it.
- */
 const WHOLE = { networkId: 41000, serviceId: 5100 }
 const SPLIT = { networkId: 41000, serviceId: 5101 }
 const SPLIT_AGAIN = { networkId: 41000, serviceId: 5102 }
 
-/** A second network, whose services are nothing to do with the first's. */
 const ELSEWHERE = { networkId: 41001, serviceId: 6200 }
 
 const broadcast = (
@@ -137,11 +121,6 @@ test('a broadcast of its own is not shared, however it is named', () => {
   assert.equal(sharesWith(broadcast(), WHOLE), false)
 })
 
-/**
- * A relay and a move name another service too, and mean the opposite of a
- * share: the same programme at another hour or on another channel, not this
- * hour on both.
- */
 test('a relayed or moved broadcast is not shared', () => {
   assert.equal(
     sharesWith(broadcast({ kind: 'relayed', ...WHOLE }), WHOLE),
@@ -181,11 +160,6 @@ test('one share among several is a share', () => {
   )
 })
 
-/**
- * An evening's worth of half hours, so that a broadcast and the share that
- * names it can be told apart from a broadcast and the column's own programme
- * standing in the same minutes.
- */
 const AT = (hour: number) =>
   `2026-08-20T${String(hour).padStart(2, '0')}:00:00Z`
 
@@ -215,12 +189,6 @@ test('the service of a network takes a column and keeps all of it', () => {
   assert.deepEqual(settled.carried, [{ service: WHOLE, broadcast: own }])
 })
 
-/**
- * The hours a split has something of its own are its own, and the rest of the
- * day is the whole service's broadcast going out on it as well. The broadcaster
- * says which hours those are, on the whole service's own event, so both come
- * from the one naming rather than from a guess about what a blank hour means.
- */
 test('a service that has split carries its own hours and shares the rest', () => {
   const news = at(
     carrying(WHOLE, 'the evening news', { kind: 'shared', ...SPLIT }),
@@ -242,13 +210,6 @@ test('a service that has split carries its own hours and shares the rest', () =>
   ])
 })
 
-/**
- * The hour is the whole service's broadcast whichever way the broadcaster
- * spells it. One sends the split a titled copy of the event; another sends
- * nothing at all on the split and names it under a share on the whole service's
- * event. Both are the same hour of the same programme, and a guide that drew
- * one and left the other blank would be drawing the encoding.
- */
 test('a shared hour reaches the split however the broadcaster spells it', () => {
   const spelt = at(
     carrying(WHOLE, 'the shopping hour', { kind: 'shared', ...SPLIT }),
@@ -274,11 +235,6 @@ test('a shared hour reaches the split however the broadcaster spells it', () => 
   )
 })
 
-/**
- * A copy the split already carries is the hour answered. The share that names
- * it is the same broadcast said a second time, and drawn as well it would put
- * two cells over the same minutes.
- */
 test('a share is not drawn over an hour the split already carries', () => {
   const named = at(
     carrying(WHOLE, 'the shopping hour', { kind: 'shared', ...SPLIT }),
@@ -313,11 +269,6 @@ test('a service sharing every hour of the day still takes its column', () => {
   ])
 })
 
-/**
- * A share is what the broadcaster says, not what the guide infers from a blank
- * column. A service the line-up hands over and nothing is listed for keeps its
- * column and says nothing in it, which is what is known about it.
- */
 test('a service with nothing listed at all keeps an empty column', () => {
   const settled = servicesSettled(
     [WHOLE, SPLIT],
@@ -334,11 +285,6 @@ test('a service with nothing listed at all keeps an empty column', () => {
   )
 })
 
-/**
- * A relay and a move name another service too and mean the opposite of a
- * share: the same programme at another hour or from another transmitter. Read
- * as a share, a column would fill with hours that are not on it.
- */
 test('only a share fills a column, never a relay or a move', () => {
   const relayed = at(
     carrying(WHOLE, 'the late film', { kind: 'relayed', ...SPLIT }),
@@ -352,12 +298,6 @@ test('only a share fills a column, never a relay or a move', () => {
   )
 })
 
-/**
- * The order the columns arrive in is how they are drawn and nothing more. They
- * are sorted for reading, by a remote control key a service does not always
- * send, and a key that has not arrived yet can put a split ahead of the service
- * it split from. Which of them is the split is the service number, either way.
- */
 test('the whole service is the lowest numbered, in whatever order it arrives', () => {
   const settled = servicesSettled(
     [SPLIT, WHOLE],
@@ -411,7 +351,6 @@ test('each network is settled on its own', () => {
   )
 })
 
-/** An eight hour window, in minutes, which the fixtures are written on. */
 const EVENING_MIN = 8 * 60
 
 test('a column carrying nothing is unscheduled the whole window', () => {
@@ -456,11 +395,6 @@ test('the hours before the first and after the last are unscheduled', () => {
   )
 })
 
-/**
- * The programmes arrive in whatever order the API listed them, and a broadcast
- * that runs past the end of the window is clipped by the window rather than
- * pushing the runs past it.
- */
 test('programmes out of order, overlapping or overrunning still leave the same runs', () => {
   assert.deepEqual(
     unscheduledSpansOf(
@@ -482,7 +416,6 @@ test('a programme that started before the window does not shift the runs back', 
   )
 })
 
-/** A programme of the fixtures' evening: nine o'clock, an hour long. */
 const AT_NINE = { startMin: 120, durationMin: 60 }
 
 test('a programme that has begun and not ended is on air', () => {
@@ -500,12 +433,6 @@ test('a day with no present in it has nothing on air', () => {
   assert.equal(isOnAir(AT_NINE, undefined), false)
 })
 
-/**
- * A station and the services it splits into: the whole, a split repeating it
- * all day, and a split with a schedule of its own for part of the evening.
- * Beside them a station that has not split, whose column is empty because the
- * listings have not arrived.
- */
 const LINE_UP = [
   { id: 'a-1', name: '総合1' },
   { id: 'a-2', name: '総合2', sub: true, whole: 'a-1' },
@@ -550,10 +477,6 @@ test('a split left with nothing loses its column, one with something keeps it', 
   )
 })
 
-/**
- * The same name over other minutes is another broadcast. A split showing at
- * eight what the station showed at seven is not repeating it now.
- */
 test('the same name over other minutes is not a repetition', () => {
   const folded = foldedGuideOf(LINE_UP, [
     evening('a-1', 'ニュース', 0, 60),
@@ -568,11 +491,6 @@ test('the same name over other minutes is not a repetition', () => {
   )
 })
 
-/**
- * A column is read against the station it split from and nothing else. Two
- * stations showing the same relay at the same hour are two stations showing
- * it, not one repeating the other.
- */
 test('a split is read against its own station', () => {
   const folded = foldedGuideOf(LINE_UP, [
     evening('a-1', '中継', 0, 60),
@@ -585,10 +503,6 @@ test('a split is read against its own station', () => {
   )
 })
 
-/**
- * A column that has not split is empty because its listings have not arrived,
- * which is not what the reader asked to stop being shown.
- */
 test('a column that has not split is never folded away', () => {
   const folded = foldedGuideOf(LINE_UP, [])
 

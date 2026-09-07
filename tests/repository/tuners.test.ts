@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The health threshold the tuner screen shows, and the write that changes it,
- * with the API standing in for itself. The screen used to hold a number of its
- * own here, so what these guard is that it now reads one.
- */
-
 interface Sent {
   method: string
   path: string
@@ -132,10 +126,6 @@ test('a threshold the API spells as a string still reads as a number', async () 
   assert.equal(await threshold(), 48)
 })
 
-/**
- * The screen still has to say something when the setting cannot be read, and
- * what it says is the API's own default rather than a number invented here.
- */
 test('a threshold that will not be read falls back to the default, not to silence', async () => {
   standing()
   store.healthStatus = 503

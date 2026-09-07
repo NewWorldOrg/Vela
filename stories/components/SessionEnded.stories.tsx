@@ -5,18 +5,10 @@ import { GuideLive, RECONNECT_MS } from '@/components/guide/guide-live'
 
 const ENDED = 'セッションが切れました。'
 
-/** The streams `GuideLive` opened, in the order it opened them. */
 let streams: TestStream[] = []
 
-/** The retries `GuideLive` has scheduled and not yet run. */
 let retries: Array<() => void> = []
 
-/**
- * The stream in place of `EventSource` for the length of a story. It records
- * being opened and being closed, and `drop` is what the browser does when it
- * gives up on the connection: the state goes to CLOSED and `onerror` fires
- * without a status, which is the whole of what the screen has to go on.
- */
 class TestStream {
   static readonly CLOSED = 2
 
@@ -45,13 +37,6 @@ class TestStream {
   }
 }
 
-/**
- * Puts the hub behind a status of the story's choosing and holds the retry
- * timer instead of letting it run, so a retry that was scheduled is observed
- * rather than waited out — and so a story that says no retry was scheduled is
- * saying it about the timer itself rather than about the ten seconds it did
- * not sit through.
- */
 function hubAnswering(status: number) {
   return () => {
     streams = []
@@ -85,7 +70,6 @@ function hubAnswering(status: number) {
   }
 }
 
-/** The one stream on screen, once `GuideLive` has opened it. */
 async function theStream(): Promise<TestStream> {
   await waitFor(() => expect(streams).toHaveLength(1))
 
@@ -111,10 +95,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * The hub refuses the session. The stream is closed, no retry is put on the
- * clock, and the screen says so with the way back to a signed-in guide.
- */
 export const 番組表: Story = {
   beforeEach: hubAnswering(401),
   play: async ({ canvasElement }) => {
@@ -134,11 +114,6 @@ export const 番組表: Story = {
   },
 }
 
-/**
- * The same refusal on a guide that was filtered: the way back is the guide as
- * it was being read, query string and all, taken from the page rather than
- * handed to the banner.
- */
 export const 絞り込んだ番組表: Story = {
   parameters: {
     nextjs: {
@@ -167,11 +142,6 @@ export const 絞り込んだ番組表: Story = {
   },
 }
 
-/**
- * A stream that drops while the session is still good is a blip: nothing is
- * said on screen, one retry goes on the clock, and running it opens the stream
- * again.
- */
 export const 瞬断: Story = {
   beforeEach: hubAnswering(503),
   play: async ({ canvasElement }) => {

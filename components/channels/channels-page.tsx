@@ -197,7 +197,6 @@ export function ChannelsView({
     (group) => group.diagnosis !== undefined && group.services.length === 0,
   )
   const lastFinished = channels.history.find((run) => run.state !== 'running')
-  // Nothing has ever been walked: one way in, not three empty groups.
   const neverScanned =
     channels.history.length === 0 &&
     channels.unattributed.length === 0 &&

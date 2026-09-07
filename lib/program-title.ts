@@ -1,24 +1,17 @@
 const ENCLOSED_MARK = /[\u{1F100}-\u{1F2FF}]/u
 
-/** 字 — 字幕があることを放送局が番組名の中で言う印。 */
 const SUBTITLED_MARK = '\u{1F211}'
 
-/**
- * 番組名そのものが「字幕あり」と言っているか。放送局は番組名のどこにでもこの印を
- * 置くので、位置は見ない。
- */
 export function saysSubtitled(title: string): boolean {
   return title.includes(SUBTITLED_MARK)
 }
 
 const LATIN = /[0-9A-Za-z]/
 
-/** 先頭に付く時は番組の区分を表す札で、主題ではない。 */
 const LABEL_OPENING = '【〔［〖'
 
 const LABEL_CLOSING = '】〕］〗'
 
-/** 先頭に付く時は作品名そのもの。 */
 const TITLE_OPENING = '「『〈《（('
 
 const TITLE_CLOSING = '」』〉》）)'
@@ -33,20 +26,10 @@ const SPACES = ' 　'
 
 const TAIL = ' 　!！?？、,。.・/／&＆-‐−—―’\'”"'
 
-/** API がキーワードとして受け付ける最小の長さ。 */
 const SHORTEST_TERM = 2
 
-/**
- * ここに満たない位置の記号は区切りとみなさない。`映画「作品名」` の `映画` や
- * `北海道 いまの風景` の `北海道` だけを残しても、番組を絞り込む語にならない。
- */
 const SHORTEST_MAIN = 4
 
-/**
- * 番組名は「主題 + 副題 + 話数 + 記号」を1つの文字列に詰めて送られてくる。全文を
- * キーワードにするとその回しか当たらないので、区切りとして働く記号の手前までを
- * 主題とみなし、同じ番組の他の回を探せる語にする。
- */
 export function mainTitleOf(title: string): string {
   const whole = title.trim()
   const chars = Array.from(whole)
@@ -56,10 +39,6 @@ export function mainTitleOf(title: string): string {
   return Array.from(main).length >= SHORTEST_TERM ? main : whole
 }
 
-/**
- * 主題を探す範囲。先頭の記号・空白・区分の札を落とし、`『作品名』出演者` のように
- * 作品名の括弧で始まるものはその中身を範囲にする。
- */
 function regionOf(chars: string[]): [number, number] {
   let from = 0
 
@@ -128,12 +107,10 @@ function boundaryIn(chars: string[], from: number, until: number): number {
       return at
     }
 
-    // 単独の `〜` は `ら〜めん` のように主題の一部でありうる。対で囲む時だけ副題。
     if (WAVES.includes(char) && waves >= 2) {
       return at
     }
 
-    // 欧文の語間は副題の始まりではない。
     if (
       SPACES.includes(char) &&
       !(LATIN.test(chars[at - 1] ?? '') && LATIN.test(chars[at + 1] ?? ''))

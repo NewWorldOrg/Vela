@@ -21,10 +21,6 @@ interface DataTableColumnVisibilityProps {
   onReset: () => void
 }
 
-/**
- * Column picker: toggles per-column visibility. `alwaysVisible` columns are
- * excluded. A column counts as visible unless its id maps to `false`.
- */
 export default function DataTableColumnVisibility({
   options,
   columnVisibility,

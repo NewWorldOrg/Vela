@@ -1,13 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The rules the API holds, and the query string the two sides agree the
- * conditions are written as. Only the module that reaches the network is
- * replaced; spelling the conditions, reading them back and naming the channel
- * of a preview row all run for real.
- */
-
 interface Sent {
   method: string
   path: string
@@ -166,7 +159,6 @@ function standing(rules: unknown[] = []): void {
   store.listingMessage = ''
 }
 
-/** What was sent to one address, whatever else the same call asked for. */
 const asked = (path: string): Sent => {
   const found = sent.find((one) => one.path === path)
 
@@ -513,11 +505,6 @@ test('what saving would change is counted from the same draft', async () => {
   })
 })
 
-/**
- * Saving and deleting are counted on different terms and answered as two
- * numbers. Reading one where the other belongs is what said nothing would be
- * left while several were, so each is pinned to the field it comes from.
- */
 test('what deleting would leave is counted apart from what saving would', async () => {
   standing()
   store.answer = {

@@ -4,7 +4,6 @@ import { test } from 'node:test'
 import type { LiveStartup } from '@/lib/live-wire'
 import { startupRowsOf } from '@/lib/live-startup'
 
-/** A channel as it came up on air: the lock landed after the transcoder. */
 const ON_AIR: LiveStartup = {
   tunerSecured: 496,
   channelLocked: 751,

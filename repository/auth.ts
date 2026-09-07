@@ -12,10 +12,6 @@ export const IDENTITY_PROVIDER_FAILED = 'oidc'
 
 export const SIGNED_OUT_METHOD_KEY = 'method'
 
-/**
- * The path a request belongs to, put on it by the middleware. It is where a
- * session that turns out to be gone is sent back to after signing in again.
- */
 export const RENDERED_PAGE_HEADER = 'x-vela-page'
 
 const OIDC_START_PATH = '/api/auth/oidc/start'
@@ -123,7 +119,6 @@ export function oidcStartHref(returnPath: string): string {
   return `${OIDC_START_PATH}?${RETURN_KEY}=${encodeURIComponent(returnPath)}`
 }
 
-/** The login screen, holding where to come back to once signed in. */
 export function loginHref(returnPath: string | undefined): string {
   return `${LOGIN_PATH}?${RETURN_KEY}=${encodeURIComponent(returnPathWithin(returnPath))}`
 }

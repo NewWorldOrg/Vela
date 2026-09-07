@@ -158,11 +158,6 @@ export function ReservationRow({
                 </Link>
               </Button>
             )}
-            {/* Each of these is offered only while the API would take it: a
-                revision and a cancellation while the reservation is still
-                waiting for its tuner, and a restoration while a cancelled one
-                still has a window left to be recorded in. Drawn any wider, they
-                are buttons the API answers with a refusal every time. */}
             {restorable && (
               <Button
                 variant="outline"
@@ -182,9 +177,6 @@ export function ReservationRow({
                 編集
               </Button>
             )}
-            {/* Mounted only while it is open, so each opening reads the
-                reservation as it stands rather than as it stood when the row
-                was first drawn. */}
             {editing && (
               <EditReservationDialog
                 booking={{

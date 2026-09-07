@@ -1,11 +1,3 @@
-/**
- * What the search screen may ask for, and how its address is read back.
- *
- * The screen offers these and the reader accepts nothing else, so an address
- * that was tampered with comes back as the nearest thing the screen could have
- * written. Nothing here reaches the API, so a Client Component may hold it.
- */
-
 export type SearchSort = 'start_at.asc' | 'start_at.desc' | 'name.asc'
 
 export type SearchField = 'title,description' | 'title' | 'description'
@@ -39,7 +31,6 @@ export const SEARCH_FIELD_OPTIONS: { value: SearchField; label: string }[] = [
   { value: 'description', label: '概要だけ' },
 ]
 
-/** 大分類。値は URL に載る綴り、kind は放送規格の番号。 */
 export const SEARCH_GENRE_OPTIONS: {
   value: SearchGenre
   kind: number
@@ -74,10 +65,8 @@ export const SEARCH_DEFAULT_PER_PAGE = 20
 
 export const SEARCH_DEFAULT_FIELDS: SearchField = 'title,description'
 
-/** 検索の店が受け付けるチャンネル数の上限。 */
 export const SEARCH_MOST_CHANNELS = 64
 
-/** 「条件をすべて消す」が消す先。読む鍵はすべてここに現れる。 */
 export const SEARCH_QUERY_KEYS = [
   'q',
   'exclude',
@@ -106,32 +95,17 @@ export interface RawSearchCondition {
   page?: string
 }
 
-/**
- * 検索条件 — what the reader is asking the store to look for.
- *
- * These are assembled in the fields and confirmed in one go, so a condition
- * half typed is not a condition anybody asked for.
- */
 export interface SearchTerms {
   q?: string
   exclude?: string
   fields: SearchField
   genres: SearchGenre[]
   kind?: SearchKind
-  /** `network-service`。番組表のチャンネルと同じ綴り */
   channels: string[]
-  /** 放送日(JST 4:00 区切り)。`YYYY-MM-DD` */
   from?: string
   to?: string
 }
 
-/**
- * 結果の見せ方 — how what was already asked for is arranged.
- *
- * Nothing here changes which programmes come back, so there is nothing to
- * assemble and nothing to confirm: each of them takes effect where it is
- * chosen.
- */
 export interface SearchViewing {
   sort: SearchSort
   perPage: number
@@ -200,13 +174,6 @@ function channels(asked: string | undefined): string[] {
   return kept.slice(0, SEARCH_MOST_CHANNELS)
 }
 
-/**
- * The shape `searchParams` arrives in, named as the keys this module reads.
- *
- * A key that was asked for more than once arrives as a list, and only `genre`
- * is allowed to repeat; everything else takes the single value or nothing, so a
- * repeated `q` is not quietly read as its first spelling.
- */
 export function rawSearchConditionOf(
   asked: Record<string, string | string[] | undefined>,
 ): RawSearchCondition {
@@ -254,10 +221,8 @@ export function readSearchCondition(raw: RawSearchCondition): SearchCondition {
   }
 }
 
-/** A condition that asks for nothing, spelled by the reader itself. */
 export const EMPTY_SEARCH_CONDITION: SearchCondition = readSearchCondition({})
 
-/** 条件の側だけを取り出す。 */
 export function searchTermsOf(condition: SearchCondition): SearchTerms {
   return {
     q: condition.q,
@@ -271,7 +236,6 @@ export function searchTermsOf(condition: SearchCondition): SearchTerms {
   }
 }
 
-/** 見せ方の側だけを取り出す。 */
 export function searchViewingOf(condition: SearchCondition): SearchViewing {
   return {
     sort: condition.sort,
@@ -328,13 +292,6 @@ function writeViewing(params: URLSearchParams, viewing: SearchViewing): void {
   }
 }
 
-/**
- * The address the conditions alone are written to.
- *
- * This is what the screen compares one set of conditions with another by: two
- * addresses that differ only in how the result is arranged hold the same
- * question, and the fields the reader is filling in are left where they are.
- */
 export function searchTermsQueryOf(terms: SearchTerms): string {
   const params = new URLSearchParams()
 
@@ -343,14 +300,6 @@ export function searchTermsQueryOf(terms: SearchTerms): string {
   return params.toString()
 }
 
-/**
- * The address a condition is written to — the inverse of reading one.
- *
- * A condition that does not survive the trip is a condition the screen cannot
- * hold. What a reader would have supplied anyway is left out, which is why an
- * untouched screen has a bare address and why the count of conditions can be
- * taken from the condition rather than from the address.
- */
 export function searchQueryOf(condition: SearchCondition): string {
   const params = new URLSearchParams()
 
@@ -360,7 +309,6 @@ export function searchQueryOf(condition: SearchCondition): string {
   return params.toString()
 }
 
-/** The condition an address holds, read the way a request would deliver it. */
 export function searchConditionOfQuery(query: string): SearchCondition {
   const params = new URLSearchParams(query)
   const asked: Record<string, string | string[]> = {}
@@ -373,14 +321,6 @@ export function searchConditionOfQuery(query: string): SearchCondition {
   return readSearchCondition(rawSearchConditionOf(asked))
 }
 
-/**
- * Whether the address asks for anything the store can narrow by.
- *
- * The fields to look in are not such a thing: they only choose where a keyword
- * and an excluded keyword are looked for, so on their own they leave every
- * programme in. Neither are the sort and the paging, which only arrange what
- * came back.
- */
 export function narrowsAnything(terms: SearchTerms): boolean {
   return Boolean(
     terms.q ||

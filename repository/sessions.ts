@@ -7,35 +7,21 @@ const MINUTE = 60_000
 
 const HOUR = 60 * MINUTE
 
-/** When a moment is recent, how long ago it was, and the stamp behind it. */
 export interface Moment {
   label: string
-  /** Absent when the label already is the stamp. */
   at?: string
 }
 
-/** One signed-in device, as the settings screen spells it. */
 export interface SessionRow {
   id: string
-  /**
-   * Whose session it is, as the API wrote it when the session was made: the
-   * username of a local account, or what the identity provider said — its
-   * email, failing that its name, failing that the subject it handed.
-   */
   displayName: string
   device: Device
   method: AuthMethod
   createdAt: string
   lastUsed: Moment
-  /** The device reading this page. It is signed out, never revoked. */
   current: boolean
 }
 
-/**
- * Who the session in hand belongs to. A local session names the account, which
- * is the only place its username can be read; an OIDC one names the subject
- * the identity provider gave.
- */
 export interface SignedIn {
   subject: string
   method: AuthMethod
@@ -43,7 +29,6 @@ export interface SignedIn {
 
 export type RevokeResult =
   | { state: 'ok' }
-  /** The session had already ended, so the list was simply out of date. */
   | { state: 'gone' }
   | { state: 'unavailable'; message: string }
 

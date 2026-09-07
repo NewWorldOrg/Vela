@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { DangerIcon } from '@/components/vela/icons'
 import { Label } from '@/components/ui/label'
 
-/** Label, control, then hint or error — stacked with a 6px gap. */
 export function Field({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
@@ -27,7 +26,6 @@ export function FieldLabel({
   )
 }
 
-/** The 必須 pill that sits next to a label. */
 export function RequiredMark({ className, ...props }: ComponentProps<'span'>) {
   return (
     <span
@@ -70,7 +68,6 @@ export function FieldError({
   )
 }
 
-/** A group of related options, separated by a pastel panel instead of a box. */
 export function OptionGroup({
   title,
   className,

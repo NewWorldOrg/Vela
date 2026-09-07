@@ -76,12 +76,6 @@ export function LibraryView({
               onFiltersChange({ q: typeof q === 'string' ? q : null })
             }}
           >
-            {/*
-              Above the field, which its own label now raises: the label carries
-              the press area and is positioned to sit over what it reaches past,
-              which would otherwise paint the field's surface over this mark.
-              It answers no press either way — the press belongs to the field.
-            */}
             <SearchIcon className="pointer-events-none absolute top-1/2 left-[13px] z-10 size-[15px] -translate-y-1/2 text-ink-3" />
             <Input
               key={filter.q ?? ''}
@@ -131,8 +125,6 @@ export function LibraryView({
           <span className="text-cap font-bold tracking-[0.04em] text-ink-3">
             チャンネル
           </span>
-          {/* Every chip is wider than 44px, so only the wrapped rows have to be
-              held apart: 31px tall plus 13px is a 44px pitch. */}
           <div className="flex min-w-0 flex-wrap gap-x-1.5 gap-y-[13px]">
             <ChannelChip
               label="すべて"

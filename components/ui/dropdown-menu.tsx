@@ -59,11 +59,6 @@ function DropdownMenuGroup({
   )
 }
 
-/**
- * A row of an open menu is 44px tall, and that is its drawn height rather than
- * an invisible area over it — rows sit against one another, so an area grown
- * past a row's edges would only take the presses meant for its neighbours.
- */
 function DropdownMenuItem({
   className,
   inset,

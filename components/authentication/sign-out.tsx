@@ -10,11 +10,6 @@ import {
 } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 
-/**
- * The device reading this page leaves by signing out, which drops its own
- * session only. Revoking it from the list would say the same thing in the
- * language of the other rows, and read as though it could be undone.
- */
 export function SignOut({ method }: { method: AuthMethod }) {
   const [pending, setPending] = useState(false)
   const [refused, setRefused] = useState(false)

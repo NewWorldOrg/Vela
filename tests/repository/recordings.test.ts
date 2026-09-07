@@ -1,14 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The library and the recording detail, with the API standing in for itself.
- *
- * Only the module that reaches the network is replaced; reading the address,
- * naming the channel and spelling a recording for the screen all run for real.
- * What the store was asked for is recorded as well as what came back.
- */
-
 interface Asked {
   path: string
   query: Record<string, unknown>
@@ -207,12 +199,6 @@ mock.module('@/repository/client/carina', {
           },
         }
       },
-      /**
-       * The generated client hands the parsed body back as `data` for an
-       * answer it accepts and as `error` for one it does not — the same
-       * either-or the production code has to read, because a stand-in that
-       * always answered `data` would leave the refusal path untried.
-       */
       DELETE: async (
         path: string,
         init?: { params?: { path?: { id: string } } },
@@ -272,10 +258,6 @@ test('a recording carries the reservation it was made for', async () => {
   assert.equal(one.reservationId, 'res-1')
 })
 
-/**
- * The store may hold a recording no reservation asked for, and the screen has
- * to read that as nothing to link to rather than as a link to nowhere.
- */
 test('a recording no reservation asked for carries none', async () => {
   const one = await only([recording({ reservationId: null })])
 
@@ -300,11 +282,6 @@ test('the reservations each recording came from are keyed by reservation', async
   )
 })
 
-/**
- * Absent rather than held against nothing: the screen reads a reservation the
- * map does not name as one that came to no recording, and an entry pointing at
- * an empty string would draw a link to `/recordings/`.
- */
 test('a recording no reservation asked for is left out of the keying', async () => {
   standing([
     recording({ id: 'rec-1', reservationId: null }),
@@ -322,10 +299,6 @@ test('a recording is named by the channel the services call it', async () => {
   assert.equal(one.channel, '中央テレビ1')
 })
 
-/**
- * A recording outlives the service list — a station can be dropped from it —
- * so the row has to keep saying which channel it was, rather than going blank.
- */
 test('a channel the services no longer name is still named', async () => {
   standing()
   store.services = []
@@ -354,11 +327,6 @@ test('a recording that ended carries what was written as its length', async () =
   assert.equal(one.recordedRange, '2026/08/09(日) 23:00 — 23:30')
 })
 
-/**
- * The expected length is drawn beside the written one, which only says
- * something where the two differ. Putting it on every row would draw
- * `30:04 / 30:00` against a recording nothing went wrong with.
- */
 test('the length it was supposed to be is shown for a recording cut short', async () => {
   const cut = await only([recording({ outcome: 'truncated' })])
 
@@ -406,12 +374,6 @@ test('a recording nothing measured is not good, it is unmeasured', async () => {
   assert.equal(one.quality.level, undefined)
 })
 
-/**
- * The level is the API's own grading, which weighs the packets lost against the
- * packets left scrambled and keeps whichever is worse. Counted again from the
- * dropped packets alone, a recording that was written without ever being
- * descrambled reads as 良好 — every one of them did.
- */
 test('the quality is the level the API graded, not one counted from the drops', async () => {
   const levelOf = async (over: Over) =>
     (await only([recording({ drops: drops(over) })])).quality.level
@@ -498,11 +460,6 @@ test('a thumbnail that was not going to be made says so', async () => {
   assert.equal(drawn.thumbnailLabel, undefined)
 })
 
-/**
- * The store hands out a page at a time; the screen says it is showing all of
- * them. Stopping at the first page would leave that sentence counting the
- * store's page size.
- */
 test('every page the store names is walked, not only the first', async () => {
   standing()
   store.pages = [
@@ -575,11 +532,6 @@ test('a keyword keeps what carries it and drops what does not', async () => {
   )
 })
 
-/**
- * The state a reader may narrow by is one of a named few. Anything else is
- * not a narrower reading of the library, it is an address that means nothing,
- * and answering it with an empty library would read as "there is nothing".
- */
 test('a state nobody offers narrows nothing and is not carried back', async () => {
   standing([recording({ id: 'a1' }), recording({ id: 'a2' })])
 
@@ -611,12 +563,6 @@ test('a channel that is offered narrows to it', async () => {
   assert.deepEqual(result.channels, ['中央テレビ1', '東都テレビ1'])
 })
 
-/**
- * The genre is a condition the library offers, and the recording's own
- * snapshot of its programme does not carry one. An empty list of genres is
- * the honest answer; inventing one would put a filter in front of a reader
- * that silently matches nothing.
- */
 test('the genres on offer are empty, because a recording carries none', async () => {
   standing()
 
@@ -651,10 +597,6 @@ test('a recording detail names the channel number beside the channel', async () 
   const detail = await getRecording('d1')
 
   assert.equal(detail?.channelNo, '1')
-  // The two lengths, and no ratio between them: the store counts the numerator
-  // from the instant the tuner opened and the denominator from a window with
-  // the tuning lead cut off its head, so their quotient runs over 100% on a
-  // recording that ran to the end (v3.35).
   assert.deepEqual(detail?.reconcile, {
     size: '3.4 GB',
     written: '30:04',
@@ -669,10 +611,6 @@ test('a recording the store does not have is not a recording', async () => {
   assert.equal(await getRecording('nope'), undefined)
 })
 
-/**
- * Which of the four ways a tuning can fail is the whole point of the row: the
- * body is that one value, and nothing lists the other three beside it.
- */
 test('a tuning that failed says which of the four ways it failed', async () => {
   const failed = recording({
     outcome: 'failed',
@@ -717,10 +655,6 @@ test('a stop somebody asked for is not read as the clock running out', async () 
   assert.equal((await getRecording('d4'))?.stopReason, '終了時刻に到達')
 })
 
-/**
- * The minute the drops fell in is both what the spot is named by and where
- * playing resumes from, so the spot carries the second the minute begins at.
- */
 test('drops in the same minute are one spot, and a clean second is none', () => {
   const spots = spotsOf([
     { second: 720, continuity: 600, scrambled: 0 },
@@ -735,11 +669,6 @@ test('drops in the same minute are one spot, and a clean second is none', () => 
   ])
 })
 
-/**
- * The day alone places a recording in whichever year the reader is in. The
- * year in front is what stops a recording from two years ago reading as one
- * from last week.
- */
 test('a recording from another year is spelled with the year in front', () => {
   const now = new Date('2026-08-27T00:00:00Z')
 
@@ -753,10 +682,6 @@ test('a recording from another year is spelled with the year in front', () => {
   )
 })
 
-/**
- * The last hour of the 31st in Tokyo is the next day in UTC, and the year of
- * a recording made in the last hours of December turns over with it.
- */
 test('a recording is placed in the day Tokyo was in, not the day UTC was', () => {
   assert.equal(
     recordedAtLabelOf(
@@ -772,10 +697,6 @@ test('a span is spelled in hours once there is an hour to spell', () => {
   assert.equal(spanLabel(6_843_000), '1時間54分')
 })
 
-/**
- * A picture is asked for of one recording, and the three answers a finished
- * pass gives are carried through as they are — none of them is a refusal.
- */
 test('a picture asked for names the recording it is asked about', async () => {
   asked.length = 0
   store.remakeStatus = 200
@@ -834,12 +755,6 @@ test('a status the endpoint does not name falls back to saying which it was', as
   assert.equal(result.state, 'rejected')
   assert.match(result.state === 'rejected' ? result.message : '', /\(500\)/)
 })
-
-/**
- * Throwing a recording away. Each way the API refuses says something different
- * about what is left on disk, so the refusals are read apart rather than
- * folded into one sentence.
- */
 
 function discarding(status: number, data: unknown): void {
   store.discardStatus = status

@@ -18,10 +18,6 @@ const TEXT_TONE: Record<MeterTone, string> = {
   err: 'text-coral',
 }
 
-/**
- * A 4px single-colour bar. No gradient, no stripes; the only movement is the
- * width transition. The value is always spelled out in text next to it.
- */
 export function ProgressBar({
   value,
   tone = 'brand',
@@ -29,10 +25,8 @@ export function ProgressBar({
   className,
   ...props
 }: Omit<ComponentProps<'div'>, 'children'> & {
-  /** 0–100. */
   value: number
   tone?: MeterTone
-  /** Accessible name, when no visible label is associated with the bar. */
   label?: string
 }) {
   return (
@@ -57,11 +51,6 @@ export function ProgressBar({
   )
 }
 
-/**
- * Signal quality: channel on the left, the measured value and its verdict on
- * the right, and the bar underneath. CNR maps 0–40 dB onto the width, and the
- * number is always shown as text.
- */
 export function SignalMeter({
   channel,
   value,
@@ -72,11 +61,8 @@ export function SignalMeter({
   ...props
 }: ComponentProps<'div'> & {
   channel: string
-  /** The measured value with its unit, e.g. `31.2 dB`. */
   value: string
-  /** The verdict word shown next to the value. */
   status: string
-  /** 0–100. */
   percent: number
   tone?: MeterTone
 }) {
@@ -96,10 +82,6 @@ export function SignalMeter({
   )
 }
 
-/**
- * The only element allowed to animate on a loop. Everything else moves when
- * touched, or not at all.
- */
 export function Spinner({
   className,
   ...props

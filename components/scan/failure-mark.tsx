@@ -2,12 +2,6 @@ import type { FailureClass } from '@/repository/scan-failures'
 import { cn } from '@/lib/utils'
 import { FAILURE_CLASSES } from '@/repository/scan-failures'
 
-/**
- * The four ways a scan stops, each with a colour of its own. Collapsing them
- * into one error is what makes an aerial fault indistinguishable from a
- * descrambling fault, so the number and the colour travel together everywhere
- * a failure is named.
- */
 const MARK_CLASS: Record<1 | 2 | 3 | 4, string> = {
   1: 'bg-coral-soft text-coral',
   2: 'bg-lemon-soft text-lemon',
@@ -36,7 +30,6 @@ export function FailureMark({
   )
 }
 
-/** The class named in full: mark and label, and a detail where the caller has one. */
 export function FailureLabel({
   failure,
   children,
@@ -61,7 +54,6 @@ export function FailureLabel({
   )
 }
 
-/** The four, listed together, so the numbers mean something before they appear. */
 export function FailureLegend() {
   return (
     <div className="mb-[13px] grid gap-[9px] rounded-xl bg-surface px-4 py-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">

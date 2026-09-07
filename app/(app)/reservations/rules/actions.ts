@@ -23,10 +23,6 @@ const RULES = '/reservations/rules'
 
 const RESERVATIONS = '/reservations'
 
-/**
- * A rule is written and the reservations it owns are settled again behind it,
- * so both lists are read afresh after every write.
- */
 function written(): void {
   revalidatePath(RULES)
   revalidatePath(RESERVATIONS)

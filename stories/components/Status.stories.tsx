@@ -173,7 +173,6 @@ export const 状態バッジの説明: Story = {
   },
 }
 
-/** 受信可 and 未計測 read as themselves, so neither is here. */
 const TIPPED: [string, StateTerm][] = [
   ...Object.entries(RESERVATION_STANDING_TERMS),
   ['終了未定', END_UNDECIDED_TERM],

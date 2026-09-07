@@ -5,10 +5,6 @@ import { Separator as SeparatorPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
-/**
- * Rules are not always solid — a dashed one reads as a lighter break and is
- * what row and section separators use.
- */
 function Separator({
   className,
   orientation = 'horizontal',

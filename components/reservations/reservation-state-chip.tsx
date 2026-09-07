@@ -13,25 +13,6 @@ import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
 
-/**
- * The standing is one chip. Whether the end is settled, whether the service can
- * be received, and whether the recording it came to is still kept are none of
- * them states nor each other's alternatives, so they are marks beside it rather
- * than entries in the same list.
- *
- * The last of the three is what a settled reservation with nothing to open says
- * for itself. The recording ledger is what put `完了` there, and the projection
- * stays after the recording row is thrown away on purpose: the recording having
- * run and the file having been removed afterwards are two different facts, and
- * dropping the first with the second would leave the ledger unable to say what
- * became of a reservation. What was missing was not the standing but the
- * screen — a row reading `完了` with no recording beside it and nothing said
- * about it reads as broken, which is the one thing it is not.
- *
- * The words themselves live in `lib/state-terms` beside what they mean, which
- * is what lets the requirements' vocabulary be held to by a test rather than by
- * whoever reads this file next.
- */
 const STANDING: Record<
   ReservationStanding,
   {

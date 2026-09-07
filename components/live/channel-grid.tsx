@@ -6,45 +6,6 @@ import { ProgressBar } from '@/components/vela/progress'
 import { Tile } from '@/components/vela/surface'
 import { ChannelMark } from '@/components/vela/channel-mark'
 
-/**
- * The channels, as cards laid out across the screen — the whole of what the
- * live screen is before one of them is chosen.
- *
- * The screen used to be the shape of watching before there was anything to
- * watch: an empty 16:9 panel taking seven tenths of the width with nothing
- * under it, and the channels in a 344px column beside it. Choosing is what
- * that screen is for, so the channels are what it is made of.
- *
- * What goes on a card was measured against the products that draw this screen
- * for a living. Commercial live television mostly does not have this screen at
- * all — Plex and Hulu open on a grid of hours, YouTube TV on a list of
- * networks, TVer and ABEMA straight into a picture — and the products that do
- * have it are the ones that face the same aerial this does: KonomiTV lays out
- * `auto-fit` cards of 365px rising to 445px on a wide screen, Chinachu four
- * dense ones. Both put the station on one line and the programme in the line
- * under it, and neither has a picture on the card.
- *
- * What is on the card, and why each one and not another:
- *
- * - **The station**, with the remote-control key it answers to. One line, and
- *   the smaller of the two, because a channel is chosen far more often by what
- *   is on it than by whose it is
- * - **What is on now**, the largest thing on the card. KonomiTV draws the
- *   station bigger and the programme bolder; here the programme takes both,
- *   which is what was asked for and what the card is for
- * - **The hours it runs**, spelled as the two clock times. Every product
- *   measured spells them that way and not one of them counts the minutes left
- * - **What follows it**, on one line. KonomiTV keeps a `NEXT` block; the list
- *   this replaces already had the line, and it is what says whether a channel
- *   is worth going to in ten minutes
- * - **How far in the programme is**, as a bar along the bottom edge. KonomiTV,
- *   Chinachu and EPGStation all draw one. It is a value and not a decoration:
- *   it is the one thing on the card the clock changes
- *
- * What was left off: the genre, which only one of the products carries; the
- * minutes remaining, which none of them do; and any description, which the
- * screen does not take (v3.21).
- */
 export function ChannelGrid({
   channels,
   onSelect,

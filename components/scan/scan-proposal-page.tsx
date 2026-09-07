@@ -160,16 +160,10 @@ function GroupHeading({ title, stat }: { title: string; stat: string }) {
   )
 }
 
-/**
- * A finished run stated as a proposal. Nothing on this page has happened yet;
- * applying is a single explicit act and there is no way to apply half of it,
- * so the page reads as one decision rather than a list of edits.
- */
 export function ScanProposalView({
   result,
   onApply,
 }: {
-  /** A run the API has never heard of is a 404, handled by the route. */
   result: Exclude<ScanProposalScreenResult, { state: 'missing' }>
   onApply: (scanId: string) => Promise<WriteResult>
 }) {

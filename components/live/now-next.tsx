@@ -4,17 +4,10 @@ import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChannelMark } from '@/components/vela/channel-mark'
 
-/**
- * What is on the channel being watched, and how far into it the clock is:
- * the programme, its span, and the minutes it has left.
- */
 export function NowNext({ watching }: { watching: LiveWatching }) {
   const { channel, progressPct, nowLabel, restMin } = watching
   const programme = channel.now
 
-  // The 字 the broadcaster writes into the name says what this badge says.
-  // Both on screen is the same fact told twice, a hand's breadth apart, so the
-  // badge stands only where the name has not already said it.
   const subtitled =
     programme !== undefined &&
     programme.hasSubtitles &&

@@ -15,34 +15,10 @@ import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ProgramCell } from '@/components/guide/program-cell'
 
-/** The hour gutter is the one column of the grid that is not a channel. */
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
 
-/**
- * Every channel takes an equal share of the grid, a service that has split
- * among them.
- *
- * The share has no floor of its own, and does not need one: the grid is laid
- * out on a width of at least a column apiece, so the smallest share it can
- * ever be asked to divide is the floor itself. Saying it a second time here,
- * as a flex basis the column may grow from but not shrink below, would be the
- * same arithmetic written twice — and the copy that was never reached is the
- * copy that gets edited to something else.
- */
 const COLUMN_FLEX = '1 1 0'
 
-/**
- * The shortest band that can say what it is: four full-width glyphs set down
- * the page at the micro step, each carrying its letter-spacing after it.
- *
- * A run shorter than its own name drops the name and is left to the dashed
- * rules at its ends, the way a cell too short for its description drops that.
- * The label is centred in a band that clips, so what it would otherwise lose
- * is a slice off both ends at once — half a 編 above and half a し below,
- * which reads as a fault in the drawing rather than as a run too short to
- * name. Half an hour between two of a split service's own programmes is an
- * ordinary gap, and it is under this.
- */
 const UNSCHEDULED_LABEL_PX = 52
 
 export function GuideGrid({
@@ -71,17 +47,6 @@ export function GuideGrid({
   const openingTop = useRef(openingScrollTopOf(nowMin, HOUR_PX))
   const opened = useRef(false)
 
-  /**
-   * The grid is put where it opens as its node is attached, which is before
-   * the browser has painted anything, and once. A re-read of the page — the
-   * live signal arrives, the panel opens, the reader pages to another day —
-   * hands the same node new contents rather than a new node, so the position
-   * survives it, and a reader who has scrolled since keeps where they were.
-   *
-   * It is the ref rather than an effect that carries this: nothing here is
-   * state to be kept in step with a prop, and the one thing being read is
-   * where the reader is, which only the node knows.
-   */
   const openAtNow = useCallback((node: HTMLDivElement | null) => {
     if (!node || opened.current) {
       return

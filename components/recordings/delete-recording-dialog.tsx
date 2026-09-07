@@ -20,11 +20,6 @@ import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
 
-/**
- * What the size is qualified by: that the file is not there, or when the size
- * was last observed. A recording that says neither is left with the size
- * alone, rather than with an empty pair of brackets after it.
- */
 function observationOf(recording: Recording): string | undefined {
   return recording.fileMissing ? '実ファイルなし' : recording.sizeObservedAt
 }
@@ -58,8 +53,6 @@ export function DeleteRecordingDialog({
         return
       }
 
-      // The reason is the API's own, and it is what says whether the files are
-      // still there, so it stays in front of the reader with the question open.
       setRefusal(
         result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
       )

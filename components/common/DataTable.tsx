@@ -104,16 +104,9 @@ function readStoredVisibility(storageKey: string): VisibilityState | null {
 function writeStoredVisibility(storageKey: string, state: VisibilityState) {
   try {
     localStorage.setItem(STORAGE_PREFIX + storageKey, JSON.stringify(state))
-  } catch {
-    // localStorage full or unavailable — ignore.
-  }
+  } catch {}
 }
 
-/**
- * Derives the initial `VisibilityState` from `columnVisibilityOptions`. Only
- * `defaultVisible: false` columns are added (as `{ [id]: false }`); everything
- * else uses react-table's default (visible).
- */
 function deriveDefaultVisibility(
   options?: ColumnVisibilityOption[],
 ): VisibilityState {
@@ -149,10 +142,6 @@ export default function DataTable<TData>({
   onRowClick,
   emptyText = 'No data',
 }: DataTableProps<TData>) {
-  // 2-pass render to avoid SSR/client hydration mismatch: the first render uses
-  // the SSR-equal defaults, then a post-mount effect swaps in the localStorage
-  // value. `defaultVisibility` is derived from columnVisibilityOptions so the
-  // `defaultVisible` field stays the single source of truth.
   const defaultVisibility = deriveDefaultVisibility(columnVisibilityOptions)
   const [columnVisibility, setColumnVisibility] =
     useState<VisibilityState>(defaultVisibility)
@@ -170,13 +159,9 @@ export default function DataTable<TData>({
     if (stored) {
       setColumnVisibility({ ...defaultVisibility, ...stored })
     }
-    // Hydrate once on mount (storageKey is expected to be a stable const).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Persist on change in an effect (not inside the state updater, which React
-  // may double-invoke in StrictMode). Skip the first run so the SSR-default
-  // render does not overwrite a stored value before hydration applies it.
   const skipFirstWriteRef = useRef(true)
   useEffect(() => {
     if (skipFirstWriteRef.current) {

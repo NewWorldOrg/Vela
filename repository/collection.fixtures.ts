@@ -87,7 +87,6 @@ function row(
   }
 }
 
-/** The ordinary evening: one stream held back, the rest freshly completed. */
 export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
   {
     ...row({
@@ -179,7 +178,6 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
   },
 ])
 
-/** Every stream freshly completed; the sweep is waiting for its next turn. */
 export const COLLECTION_ALL_COMPLETE: CollectionStatus = statusOf(
   COLLECTION_FIXTURES.streams.map((stream) =>
     stream.outcome === 'complete'
@@ -195,7 +193,6 @@ export const COLLECTION_ALL_COMPLETE: CollectionStatus = statusOf(
   ),
 )
 
-/** Backed-off, untunable and interrupted streams side by side. */
 export const COLLECTION_TROUBLED: CollectionStatus = statusOf([
   {
     ...row({

@@ -4,11 +4,6 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-/**
- * Tables are not boxed in: there is no outer frame, the header row is a
- * `surface-2` band and rows are separated by a dashed rule. Numeric columns
- * should be right-aligned with `font-code tabular-nums`.
- */
 function Table({
   className,
   containerClassName,
@@ -17,8 +12,6 @@ function Table({
   return (
     <div
       data-slot="table-container"
-      // The container scrolls when the columns do not fit, so it has to be
-      // reachable by keyboard.
       tabIndex={0}
       className={cn(
         'relative w-full overflow-x-auto outline-none focus-visible:shadow-ring',

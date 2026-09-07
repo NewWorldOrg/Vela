@@ -7,10 +7,6 @@ import { Button } from '@/components/ui/button'
 import { IconButton } from '@/components/vela/icon-button'
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/vela/icons'
 
-/**
- * Day-by-day paging for the programme guide. The date is set in the code face
- * with tabular figures so the digits stay in the same columns as it changes.
- */
 export function DatePager({
   label,
   onPrev,

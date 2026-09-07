@@ -48,8 +48,6 @@ const meta = {
   component: LibraryView,
   parameters: { layout: 'fullscreen' },
   args: { onDelete: throwing },
-  // The screen pins the frame to the window and gives the list what is left,
-  // so it is drawn in the frame that answers the pin.
   decorators: [
     (Story) => (
       <AppFrame>
@@ -69,19 +67,12 @@ export const 通常: Story = {
 
     asked.length = 0
 
-    // Both sides of the same button. A row still being written cannot be
-    // thrown away and says so where the press would have been; a row that is
-    // finished can, and a check that only looked for the disabled one would
-    // pass on a screen where nothing is ever pressable.
     await expect(
       within(
         canvas.getByRole('row', { name: /夜ふかしラジオ倶楽部/ }),
       ).getByRole('button', { name: '削除' }),
     ).toBeDisabled()
 
-    // The level is the one the API graded. This recording dropped nothing and
-    // was written without ever being descrambled; counted from the dropped
-    // packets alone, as the column used to, it read 良好.
     const unwatchable = within(
       canvas.getByRole('row', { name: /波止場のブラスバンド/ }),
     )
@@ -91,11 +82,6 @@ export const 通常: Story = {
       unwatchable.getByText('ドロップ 0 / スクランブル残存 5,042,768'),
     ).toBeVisible()
 
-    // The way to the player is the row's 再生, and it is offered only where
-    // the player would have something to show. A recording that stayed
-    // scrambled has nothing, whatever its outcome says; one graded the same
-    // level for its drops still plays, so the two are not told apart by the
-    // badge.
     await expect(
       unwatchable.getByRole('button', { name: '再生' }),
     ).toBeDisabled()
@@ -117,13 +103,9 @@ export const 通常: Story = {
     await expect(finished).toBeEnabled()
     await userEvent.click(finished)
 
-    // The question names the row it was opened on, so a table that opened one
-    // question over the wrong recording is a table this fails on.
     const dialog = within(await screen.findByRole('alertdialog'))
     await expect(dialog.getByText('/srv/recordings/1274.m2ts')).toBeVisible()
 
-    // What qualifies the size is said in brackets after it. The row this was
-    // opened on carries the moment the size was observed.
     await expect(dialog.getByText(/GB/)).toHaveTextContent(
       '3.4 GB (観測 08/09 23:31)',
     )
@@ -135,11 +117,6 @@ export const 通常: Story = {
   },
 }
 
-/**
- * The API refuses, and the reason it gives is the whole of what the reader has
- * to go on: whether the files are still there is in the wording and nowhere
- * else. The question stays open behind it.
- */
 export const 削除を断られたとき: Story = {
   args: {
     result,
@@ -227,11 +204,6 @@ export const 録画0件: Story = {
   },
 }
 
-/**
- * A recording carries no observation and no missing file, so the size has
- * nothing to be qualified by. The brackets belong to what would have gone in
- * them, and there is nothing to put there.
- */
 export const 観測時刻のない録画の削除: Story = {
   args: {
     result: {
@@ -253,7 +225,6 @@ export const 観測時刻のない録画の削除: Story = {
   },
 }
 
-/** The file is gone, which is what the brackets say instead of a moment. */
 export const 実ファイルのない録画の削除: Story = {
   args: {
     result: {

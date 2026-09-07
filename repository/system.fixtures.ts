@@ -1,10 +1,5 @@
 import type { SystemStatus } from '@/repository/system'
 
-/**
- * The capability set a current driver reports. It is here in full because the
- * length of it is the thing the screen has to hold: a short list would let a
- * layout pass that the real reading breaks.
- */
 export const DRIVER_CAPABILITIES = [
   'recording',
   'live',
@@ -28,7 +23,6 @@ export const DRIVER_CAPABILITIES = [
   'descrambling',
 ]
 
-/** The censuses a system that is running normally answers with. */
 export const SYSTEM_CENSUS = {
   tuners: {
     state: 'ok',

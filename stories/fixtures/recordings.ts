@@ -8,11 +8,6 @@ import {
 } from '@/repository/logos.fixtures'
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
-/**
- * Where a drawn picture is. The repository puts the API's own path here for a
- * recording that has one; the catalogue puts the drawing in `frames` there,
- * for the same reason no fixture carries a broadcast of its own.
- */
 const RECORDINGS: Recording[] = [
   {
     id: '1291',
@@ -254,7 +249,6 @@ export const RECORDING_FIXTURES: Recording[] = RECORDINGS.map((one) =>
   one.thumbnail === 'shot' ? { ...one, thumbnailHref: DRAWN_FRAME } : one,
 )
 
-/** More recordings than a window holds: the finished ones, week after week. */
 export const MORE_RECORDINGS_THAN_FIT: Recording[] = Array.from(
   { length: 5 },
   (_, round) =>

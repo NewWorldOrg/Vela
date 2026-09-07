@@ -5,10 +5,6 @@ import { Switch as SwitchPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
-/**
- * The knob travels on the toy easing, so it overshoots very slightly before it
- * settles.
- */
 function Switch({
   className,
   size = 'default',

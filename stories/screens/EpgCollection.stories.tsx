@@ -81,7 +81,6 @@ export const 全破棄の確認: Story = {
   ),
 }
 
-/** The drawer takes focus once it is open, which is also when it starts listening. */
 const showed = (canvasElement: HTMLElement) =>
   waitFor(() =>
     expect(canvasElement.querySelector('[role="dialog"]')).toHaveFocus(),

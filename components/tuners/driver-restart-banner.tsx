@@ -31,14 +31,9 @@ type Press = 'restart' | 'dismiss' | 'reread'
 interface Face {
   tone: BannerTone
   body: string
-  /** Absent leaves the band with nothing to press. */
   action?: { label: string; press: Press; disabled?: boolean; href?: '/login' }
 }
 
-/**
- * Re-reads the page while an accepted restart is being watched, and closes
- * the watch at the deadline. It fetches nothing itself.
- */
 function useReturnTicker(deadline: number | undefined, onDeadline: () => void) {
   const router = useRouter()
 
@@ -210,27 +205,13 @@ function toFace(
   return notice === undefined ? null : idleFace(notice)
 }
 
-/**
- * The band that carries the restart. The ledger decides whether the button is
- * offered, the driver decides whether the press is honoured, and the band says
- * which of the two turned it down.
- *
- * An accepted restart is a window, not a spinner: the acceptance is recorded
- * server-side, each re-read judges the window against the driver answering
- * now, and this component only keeps the page re-reading until the deadline
- * the driver named. Until a *different* instance answers, the band says the
- * list below is the state from before — and never claims failure while the
- * driver may simply be on its way back.
- */
 export function DriverRestartBanner({
   notice,
   restartWindow,
   onRestart,
   onDismiss,
 }: {
-  /** Absent while nothing is waiting on a restart. */
   notice?: TunerNotice
-  /** The accepted restart being watched, judged server-side. */
   restartWindow?: RestartWindow
   onRestart: () => Promise<DriverRestartResult>
   onDismiss: () => Promise<void>
@@ -278,9 +259,6 @@ export function DriverRestartBanner({
             budgetSeconds: asked.budgetSeconds,
           })
         } catch {
-          // An ask that got no answer is not a failed restart: the driver may
-          // have accepted and gone away, so the band says only that the
-          // answer did not arrive.
           setPhase({ name: 'unreachable' })
         }
       })

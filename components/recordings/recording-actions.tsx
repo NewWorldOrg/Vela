@@ -24,10 +24,6 @@ import {
   ThumbnailButton,
 } from '@/components/recordings/thumbnail-button'
 
-/**
- * What can be done with this recording, as against what can be done with the
- * picture — which is on the bar, over the picture.
- */
 export function RecordingActions({
   recording,
   onDelete,
@@ -35,7 +31,6 @@ export function RecordingActions({
   onTakeTicket,
   onQueueEncode,
   encodeChoices,
-  /** Whether a recording can be handed to something outside the browser. */
   plays,
 }: {
   recording: Recording
@@ -50,8 +45,6 @@ export function RecordingActions({
   const router = useRouter()
   const [asked, setAsked] = useState<Recording | null>(null)
 
-  // The screen stands on the recording that has just gone, so what is left to
-  // read is the list it was in.
   const remove = async (id: string): Promise<RecordingDiscarded> => {
     const result = await onDelete(id)
 

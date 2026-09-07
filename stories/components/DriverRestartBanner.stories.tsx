@@ -17,7 +17,6 @@ const HOLDING: TunerNotice = {
 
 const UNOBSERVED: TunerNotice = { ...NOTICE, restart: {} }
 
-/** Presses the restart button and waits for the band to answer. */
 function press(text: string) {
   return async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement)

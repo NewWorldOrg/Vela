@@ -3,11 +3,6 @@ import type { ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 import { pressable, still, tactile } from '@/components/vela/tactile'
 
-/**
- * A plain grouping of information. No border, no shadow — only the surface
- * colour and whitespace separate it from the page. Borders and shadows are
- * reserved for things you can press.
- */
 export function Surface({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
@@ -31,12 +26,6 @@ const TINT_CLASS: Record<TintName, string> = {
   blush: 'bg-tint-blush',
 }
 
-/**
- * A pastel panel. Sections are separated by colour rather than by a rule; the
- * text stays ink, and the panel gets neither a border nor a shadow because it
- * is not pressable. Use three or four tints per screen at most, each tied to a
- * meaning.
- */
 export function TintPanel({
   tint = 'lavender',
   className,
@@ -56,7 +45,6 @@ export function TintPanel({
   )
 }
 
-/** The metric shown on a tint panel: label, big code-set value, unit. */
 export function TintMetric({
   label,
   value,
@@ -77,11 +65,6 @@ export function TintMetric({
   )
 }
 
-/**
- * A pressable tile — the one kind of "card" the system allows. It gets a
- * hairline, a hard offset shadow and the tactile motion precisely because it
- * can be pressed.
- */
 export function Tile({ className, ...props }: ComponentProps<'button'>) {
   return (
     <button

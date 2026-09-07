@@ -152,9 +152,6 @@ export function EditReservationDialog({
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      {/* Closing empties the form, so a press that lands beside it is treated
-          as a miss rather than as a decision to throw the entry away. The X,
-          キャンセル and Escape all still close it. */}
       <DialogContent onInteractOutside={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>予約を編集</DialogTitle>

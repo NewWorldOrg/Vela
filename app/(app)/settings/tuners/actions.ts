@@ -35,11 +35,6 @@ export async function toggleTuner(
   return result
 }
 
-/**
- * Asks, and on acceptance writes the ticket into a cookie so the window the
- * screen watches survives a reload. The cookie outlives the deadline a little,
- * so a page opened just after the driver returns can still say so.
- */
 export async function askDriverToRestart(): Promise<DriverRestartResult> {
   const result = await restartDriver()
 
@@ -62,7 +57,6 @@ export async function askDriverToRestart(): Promise<DriverRestartResult> {
   return result
 }
 
-/** Closes the window: the ticket is dropped and the screen re-reads. */
 export async function dismissRestartWindow(): Promise<void> {
   const store = await cookies()
 

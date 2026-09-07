@@ -4,33 +4,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
 
-/**
- * Whether the unit suite that ran was the whole of it.
- *
- * `yarn test` names the files by one glob, and a test that falls outside
- * it is not a failing test — it is no test at all, and the run is green
- * without it. That is one rename away: `tests/repository/search.test.ts` to
- * `search.spec.ts` takes every assertion in it out of CI and changes nothing
- * anybody would notice, because nothing anywhere counts what was picked up.
- *
- * So the tree is walked for everything that asks Node for a test runner, and
- * every one of them has to sit where a glob reaches. The count has a floor
- * under it as well, because a walk that found nothing would satisfy the first
- * claim on its own — which is the shape of the hole this is here to close.
- */
-
-/** What `yarn test` is told to run, spelled here so changing it is deliberate. */
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
-/**
- * Every test file there is, named rather than counted.
- *
- * A floor on the count is the obvious thing and it drifts: set to the number
- * that stood when it was written, it stops biting the moment a file is added,
- * because the next deletion only takes the total back to where the floor is.
- * That was measured — a floor of 8 over 9 files let one be deleted in silence.
- * Naming them means an addition is a line here and a removal is a red run.
- */
 const THE_SUITE = [
   'tests/lib/capture-name.test.ts',
   'tests/lib/dismiss.test.ts',
@@ -79,10 +54,8 @@ const THE_SUITE = [
   'tests/storybook/tap-exempt.test.ts',
 ]
 
-/** How a file says it is one of these tests. */
 const ASKS_FOR_THE_RUNNER = "'node:test'"
 
-/** Build output and dependencies, which are not this repository's own source. */
 const NOT_SOURCE = new Set([
   '.git',
   '.next',
@@ -120,7 +93,6 @@ async function sourceFiles(dir: string): Promise<string[]> {
   return found
 }
 
-/** A glob of the one shape used here: everything under a directory, by suffix. */
 function reached(file: string): boolean {
   return TOLD_TO_RUN.some((glob) => {
     const [dir, leaf] = glob.split('/**/')

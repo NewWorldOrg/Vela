@@ -15,8 +15,6 @@ export interface CaptureAsk {
 
 export type TakeCapture = (ask: CaptureAsk) => Promise<Captured>
 
-// Not at once: a browser may not have begun reading the blob when the press
-// returns, and a URL revoked under it hands the viewer nothing.
 const REVOKED_AFTER_MS = 10_000
 
 function readable(context: CanvasRenderingContext2D): boolean {

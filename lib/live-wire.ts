@@ -1,19 +1,3 @@
-/**
- * The wire a live picture arrives on, as the browser reads and writes it.
- *
- * Every message is one frame: a channel byte, a 90 kHz presentation time in
- * eight big-endian bytes, and the payload. The picture channels carry fMP4 —
- * the header is `ftyp`+`moov`, and every frame after it is `moof`+`mdat` with
- * the sound muxed in. The caption channels carry the broadcast's captions as
- * the server drew them: a header naming the canvas, then a picture — placed on
- * that canvas, as a palette PNG — each time the caption changes, and an empty
- * frame when it goes. The control channel carries the few typed messages a
- * wire says about itself, told apart by their length and by nothing else.
- *
- * The numbers here are the API's own enumerations, copied from its source and
- * not inferred from anything seen on the wire.
- */
-
 export const HEADER_LENGTH = 9
 
 export const PTS_HERTZ = 90_000
@@ -38,15 +22,10 @@ const CHANNEL_NAMES = Object.entries(LIVE_CHANNEL) as [
 
 export interface LiveFrame {
   channel: LiveChannelName
-  /** 90 kHz ticks. The wire has room for 64 bits; the clock never leaves 33. */
   pts: number
   payload: Uint8Array
 }
 
-/**
- * One message off the wire. Nothing shorter than a header, and nothing on a
- * channel the wire did not set aside, is a frame.
- */
 export function readFrame(bytes: Uint8Array): LiveFrame | null {
   if (bytes.length < HEADER_LENGTH) {
     return null
@@ -68,7 +47,6 @@ export function readFrame(bytes: Uint8Array): LiveFrame | null {
   }
 }
 
-/** A frame as the wire carries it. */
 export function frameOf(
   channel: LiveChannelName,
   pts: number,
@@ -89,19 +67,13 @@ export function ptsSeconds(pts: number): number {
   return pts / PTS_HERTZ
 }
 
-/** The canvas the captions are drawn on: the broadcast's own picture, in pixels. */
 export interface CaptionCanvas {
   width: number
   height: number
 }
 
-/** Two big-endian bytes a side. */
 export const CAPTION_CANVAS_LENGTH = 4
 
-/**
- * A caption as the server drew it: the part of the canvas it covers, and the
- * palette PNG of that part. The wire places and measures it in two bytes each.
- */
 export interface CaptionPicture {
   left: number
   top: number
@@ -110,7 +82,6 @@ export interface CaptionPicture {
   png: Uint8Array
 }
 
-/** Left, top, width and height, before the PNG. */
 export const CAPTION_PLACEMENT_LENGTH = 8
 
 export type CaptionSaid =
@@ -118,7 +89,6 @@ export type CaptionSaid =
   | { said: 'cleared' }
   | { said: 'unknown' }
 
-/** The canvas the caption header names. Anything but two sides, or a side of nothing, is not one. */
 export function readCaptionCanvas(payload: Uint8Array): CaptionCanvas | null {
   if (payload.length !== CAPTION_CANVAS_LENGTH) {
     return null
@@ -135,7 +105,6 @@ export function readCaptionCanvas(payload: Uint8Array): CaptionCanvas | null {
   return width > 0 && height > 0 ? { width, height } : null
 }
 
-/** A caption header as the wire carries it. */
 export function captionCanvasPayload(canvas: CaptionCanvas): Uint8Array {
   const payload = new Uint8Array(CAPTION_CANVAS_LENGTH)
   const view = new DataView(payload.buffer)
@@ -146,11 +115,6 @@ export function captionCanvasPayload(canvas: CaptionCanvas): Uint8Array {
   return payload
 }
 
-/**
- * What a caption frame says. An empty payload takes the caption off; anything
- * with a placement and a PNG behind it is a caption shown; a placement with
- * nothing behind it, or one that measures nothing, is `unknown`.
- */
 export function readCaption(payload: Uint8Array): CaptionSaid {
   if (payload.length === 0) {
     return { said: 'cleared' }
@@ -184,7 +148,6 @@ export function readCaption(payload: Uint8Array): CaptionSaid {
   }
 }
 
-/** A caption shown, as the wire carries it. */
 export function captionPayload(picture: CaptionPicture): Uint8Array {
   const payload = new Uint8Array(CAPTION_PLACEMENT_LENGTH + picture.png.length)
   const view = new DataView(payload.buffer)
@@ -198,17 +161,14 @@ export function captionPayload(picture: CaptionPicture): Uint8Array {
   return payload
 }
 
-/** The one-byte messages. A viewer may say the last two and nothing else. */
 const CONTROL_BYTE = { ping: 0x01, pong: 0x02, leaving: 0x03 } as const
 
 export type LiveControl = keyof typeof CONTROL_BYTE
 
-/** A control message a viewer sends, ready for the wire. */
 export function controlFrame(said: 'pong' | 'leaving'): Uint8Array {
   return frameOf('control', 0, new Uint8Array([CONTROL_BYTE[said]]))
 }
 
-/** How far a channel has come, in the order it comes. */
 export const STARTUP_SEGMENTS = [
   'tunerSecured',
   'channelLocked',
@@ -219,7 +179,6 @@ export const STARTUP_SEGMENTS = [
 
 export type LiveStartupSegment = (typeof STARTUP_SEGMENTS)[number]
 
-/** Milliseconds from the start of the session at which each segment was reached. */
 export type LiveStartup = Partial<Record<LiveStartupSegment, number>>
 
 const MARK_LENGTH = 5
@@ -241,22 +200,11 @@ export const LIVE_REFUSALS = Object.keys(REFUSAL_BYTE) as LiveRefusal[]
 
 const REFUSAL_LENGTH = 5
 
-/** How many transcoders run and how many may, said with a full-budget refusal. */
 export interface TranscodeCeiling {
   running: number
   atOnce: number
 }
 
-/**
- * The four ways a tuning fails, as the API enumerates them.
- *
- * Only the first of them reaches a viewer: the rest are the scan's readings —
- * a lock that carried nothing, tables that never completed, a stream that was
- * not the one asked for — and the driver does not report them on the path that
- * seats a viewer. They are named here because the byte is the API's own
- * enumeration and reading it as anything else would be a guess; what the
- * screen draws for each is a separate question, answered where it draws.
- */
 const TUNE_FAILURE_BYTE = {
   noLock: 1,
   noData: 2,
@@ -266,7 +214,6 @@ const TUNE_FAILURE_BYTE = {
 
 export type TuneFailure = keyof typeof TUNE_FAILURE_BYTE
 
-/** What has the tuner a viewer was turned away for. */
 const TUNER_HOLDER_BYTE = {
   aRecording: 1,
   anotherViewer: 2,
@@ -274,15 +221,6 @@ const TUNER_HOLDER_BYTE = {
 
 export type LiveTunerHolder = keyof typeof TUNER_HOLDER_BYTE
 
-/**
- * The one thing a refusal adds to its reason, read off the byte beside it.
- *
- * The byte means whatever the reason next to it says it means — the way a
- * tuning failed where the tuning was refused, what holds the tuner where no
- * tuner was free — and nothing at all for every other reason, which send a
- * nought. Absent here is that nought: the API declining to say, which is not
- * the same as any of the things it could have said.
- */
 export type LiveRefusalDetail =
   | { of: 'tuneFailure'; failure: TuneFailure }
   | { of: 'heldBy'; holder: LiveTunerHolder }
@@ -324,11 +262,6 @@ function nameOf<T extends string>(
   return (Object.keys(table) as T[]).find((name) => table[name] === code)
 }
 
-/**
- * What the control channel said, read off the payload's length. A message of
- * a length the wire never sends, or one that names a value the API has no name
- * for, is `unknown` rather than a guess.
- */
 export function readControl(payload: Uint8Array): LiveControlSaid {
   switch (payload.length) {
     case 1: {
@@ -378,13 +311,6 @@ function readRefusal(payload: Uint8Array): LiveControlSaid {
   return { said: 'refusal', refusal, ceiling: { running, atOnce } }
 }
 
-/**
- * The detail byte, read against the reason it arrived with.
- *
- * A nought is the API saying nothing, and a value this reason has no meaning
- * for is not read as one it does: both come back absent, and the screen says
- * what it can say about the reason alone.
- */
 function detailOf(
   refusal: LiveRefusal,
   said: number,
@@ -423,7 +349,6 @@ function readProgress(payload: Uint8Array): LiveControlSaid {
   return { said: 'progress', startup }
 }
 
-/** A progress report as the wire carries it. */
 export function progressPayload(startup: LiveStartup): Uint8Array {
   const payload = new Uint8Array(PROGRESS_LENGTH)
   const view = new DataView(payload.buffer)
@@ -440,12 +365,6 @@ export function progressPayload(startup: LiveStartup): Uint8Array {
   return payload
 }
 
-/**
- * A refusal as the wire carries it.
- *
- * The ceiling and the detail sit on the same bytes, and only one reason takes
- * a ceiling, so nothing that carries one carries the other.
- */
 export function refusalPayload(
   refusal: LiveRefusal,
   over: { ceiling?: TranscodeCeiling; detail?: LiveRefusalDetail } = {},
@@ -472,15 +391,12 @@ export function refusalPayload(
   return payload
 }
 
-/** An ending report as the wire carries it. */
 export function endingPayload(why: LiveSupplyEnd): Uint8Array {
   return new Uint8Array([ENDING_MARK, ENDING_BYTE[why]])
 }
 
-/** The boxes that hold other boxes, down to the sample descriptions. */
 const CONTAINERS = new Set(['moov', 'trak', 'mdia', 'minf', 'stbl'])
 
-/** How far into a sample entry its own boxes begin. */
 const SAMPLE_ENTRY_HEAD: Record<string, number> = {
   avc1: 78,
   avc3: 78,
@@ -542,12 +458,6 @@ function* everyBox(
   }
 }
 
-/**
- * The `codecs` a `SourceBuffer` for this header has to be opened with, read
- * off the header itself: the H.264 profile and level are in its `avcC`, and
- * the sound is there when an `mp4a` entry is. A header with no H.264 in it
- * is not one this player can show, and answers nothing.
- */
 export function codecsOf(init: Uint8Array): string | null {
   let picture: string | null = null
   let sound = false

@@ -28,11 +28,6 @@ import { ChevronRightIcon } from '@/components/vela/icons'
 import { CandidateList } from '@/components/channels/candidate-list'
 import { cn } from '@/lib/utils'
 
-/**
- * The first and last headings carry no visible text in the design — the caret
- * and the attention chip speak for themselves — so they are named for screen
- * readers only.
- */
 const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
   { label: '候補チャンネルの開閉', hidden: true },
   { label: 'サービス' },
@@ -44,7 +39,6 @@ const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
   { label: '状態', hidden: true },
 ]
 
-/** The writes a candidate row offers, carried down to every service table. */
 export interface CandidateActions {
   onSelect: (
     serviceKey: string,
@@ -58,9 +52,7 @@ export interface CandidateActions {
 }
 
 interface Unfolded {
-  /** The service whose candidates are unfolded, at most one for the page. */
   open?: string
-  /** The service still on screen while its candidates fold shut. */
   folding?: string
   toggle: (serviceKey: string) => void
   settle: (serviceKey: string) => void
@@ -68,24 +60,10 @@ interface Unfolded {
 
 const UnfoldedService = createContext<Unfolded | null>(null)
 
-/**
- * Whether the fold is animated at all. A reader who has asked for less motion
- * gets the candidates taken away on the press, so nothing is left waiting on a
- * transition that will never end.
- */
 function foldsGradually() {
   return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-/**
- * Which service has its candidates unfolded. The candidates are already in the
- * payload the list was drawn from, so unfolding one asks the server for
- * nothing and is held here rather than in the URL.
- *
- * A service that is closing is held alongside the open one until its fold has
- * run: the row cannot shrink to nothing if React has already taken it out of
- * the table.
- */
 export function UnfoldingServices({ children }: { children: ReactNode }) {
   const [unfolded, setUnfolded] = useState<{ open?: string; folding?: string }>(
     {},
@@ -140,23 +118,6 @@ function CategoryBadge({ service }: { service: ServiceRow }) {
   )
 }
 
-/**
- * The candidates of one service, in the row beneath it, growing out of the
- * table and folding back into it rather than appearing whole.
- *
- * A row cannot be transitioned to `height: auto`, so the height is carried by
- * a grid whose single track goes `0fr` to `1fr` — the compositor is given a
- * length to interpolate and the browser still measures the content, so the
- * fold works whatever the candidates come to. The cell itself keeps no padding
- * and no rule: both belong to the body inside the clipped track, or they would
- * stand as a gap and a stray dashed line while the row is shut.
- *
- * Opening is a mount, so the starting height has to be stated for the
- * transition to have somewhere to come from; closing is an unmount held back
- * by `UnfoldingServices` until the track reports it has arrived. A browser
- * that interpolates neither still lands on both end states, which is the
- * snap this replaces.
- */
 function UnfoldedCandidates({
   service,
   actions,
@@ -170,13 +131,6 @@ function UnfoldedCandidates({
 }) {
   const fold = useRef<HTMLDivElement>(null)
 
-  /**
-   * A row opened and shut again before the browser has resolved its height has
-   * nothing to interpolate, so no fold begins and none ever ends. Asking for
-   * the height is what resolves it; if that leaves the track at nothing, or
-   * with no fold running, the row is released here instead of waiting for a
-   * transition that is not coming.
-   */
   useEffect(() => {
     const element = fold.current
 

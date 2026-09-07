@@ -35,11 +35,6 @@ async function enumOf(name: string): Promise<string[]> {
   return values.filter((value): value is string => value !== null).sort()
 }
 
-/**
- * Every state the API can answer with has a word and an explanation. Read off
- * the committed OpenAPI document rather than listed here, so a state the
- * contract grows lands as a red run and not as a chip with `undefined` in it.
- */
 test('予約の状態は API の enum を漏れなく説明している', async () => {
   assert.deepEqual(
     Object.keys(RESERVATION_STANDING_TERMS).sort(),
@@ -47,13 +42,6 @@ test('予約の状態は API の enum を漏れなく説明している', async 
   )
 })
 
-/**
- * `RecordingOutcome` is null on the wire while a recording is still being
- * written, and `repository/recordings` spells that null as `recording`. So the
- * screen's set is the document's set with that one word added — and if the
- * repository ever stops adding it, or the document starts sending it, this is
- * the line that says so.
- */
 test('録画の結果は API の enum に「録画中」を足したもの', async () => {
   assert.deepEqual(
     Object.keys(RECORDING_OUTCOME_TERMS).sort(),
@@ -68,14 +56,6 @@ test('予約結果の分類は API の enum を漏れなく説明している', 
   )
 })
 
-/**
- * The words the requirements settled on, tied to the state each one names.
- * They are not the design system's to soften and not this file's to reword:
- * every one of these appears verbatim in the requirements — the recording
- * outcome triple in 録画/requirements.md (complete(完全) / truncated(尻切れ) /
- * failed(失敗)), the reservation chips in 予約・ルール/tasks.md and
- * EPG・番組表/requirements.md, 終了未定 in EPG・番組表/business-rules.md.
- */
 const FROM_THE_REQUIREMENTS = {
   standing: {
     scheduled: 'チューナー確保済み',
@@ -135,13 +115,6 @@ test('要件文書の語がそのまま画面の語になっている', () => {
   assert.equal(RESERVATION_RECEPTION_TERM.label, '受信不可')
 })
 
-/**
- * 受信不可 is one word over two conditions — the reservation has nowhere to
- * tune, the candidate channel would not lock — and the requirements knowingly
- * left it that way. The explanations are therefore the only thing telling the
- * two apart, so folding them into one shared string is the failure this is
- * here to catch.
- */
 test('同じ語の二つの意味は、別々に説明されている', () => {
   assert.equal(CANDIDATE_UNLOCKED_TERM.label, RESERVATION_RECEPTION_TERM.label)
   assert.notEqual(
@@ -165,15 +138,8 @@ const EVERY_TERM: [string, StateTerm][] = [
   ['候補chの受信不可の印', CANDIDATE_UNLOCKED_TERM],
 ]
 
-/** The three marks that are not in either record, counted so a dropped one shows. */
 const MARKS = 3
 
-/**
- * What the copy rules rule out: the system as its own subject saying what it
- * will or will not do, a made-up message quoted back at the reader, and spoken
- * emphasis. Written as the shapes rather than as a list of sentences, so a new
- * explanation written in the old habit is caught the day it is written.
- */
 const SPOKEN = [
   {
     name: '想像上のメッセージの引用',

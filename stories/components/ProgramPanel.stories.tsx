@@ -19,22 +19,14 @@ const relayed = PROGRAM_DETAIL_FIXTURES.relayed.program
 const undecided = PROGRAM_DETAIL_FIXTURES.undecided.program
 const multiline = PROGRAM_DETAIL_FIXTURES.multiline.program
 
-/**
- * A programme the broadcaster said nothing more about than its name and its
- * hour: no synopsis, no extended sections, nothing it is tied to. The surface
- * has to be readable drawn from that alone, and a story that only ever reads a
- * fully described programme never asks it.
- */
 const bare = PROGRAM_DETAIL_FIXTURES.minimal.program
 
-/** The same programme with a seat already held for it. */
 const booked: Program = {
   ...standard,
   booked: true,
   booking: PROGRAM_FIXTURES.find((program) => program.booking)!.booking,
 }
 
-/** A synopsis long enough that the window, not the text, decides the height. */
 const wordy: Program = {
   ...multiline,
   description: Array.from(
@@ -46,12 +38,6 @@ const wordy: Program = {
 const channelOf = (channelId: string) =>
   CHANNEL_FIXTURES.find((channel) => channel.id === channelId)
 
-/**
- * Radix marks the page outside an open layer `aria-hidden` while what is under
- * it stays focusable, which is a fact about a page held open on purpose rather
- * than about what is inside the layer. The a11y context is narrowed to the
- * layer these stories are about.
- */
 const ONLY_THE_OPEN_LAYER = {
   a11y: { context: { include: '[data-slot="dialog-content"]' } },
 }
@@ -73,18 +59,10 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * The width the surface settles at once the window has room for it. SPEC gives
- * a surface that is read a wider step than the one it gives a question, and
- * this is that step, written out here rather than read back off the component:
- * a figure taken from what is being measured moves with it and holds nothing.
- */
 const AT_MOST_ACROSS = 896
 
-/** What is left beside the surface once the window is narrower than that. */
 const BESIDE_IT = 40
 
-/** The share of the window's height the surface takes before it scrolls. */
 const AT_MOST_DOWN = 0.85
 
 const surfaceIn = (canvasElement: HTMLElement): HTMLElement | null =>
@@ -97,7 +75,6 @@ const overlayIn = (canvasElement: HTMLElement): HTMLElement | null =>
     '[data-slot="dialog-overlay"]',
   )
 
-/** The surface, once it is up and has taken focus. */
 async function opened(canvasElement: HTMLElement): Promise<HTMLElement> {
   return waitFor(() => {
     const surface = surfaceIn(canvasElement)
@@ -114,7 +91,6 @@ async function opened(canvasElement: HTMLElement): Promise<HTMLElement> {
   })
 }
 
-/** The reading the layer and the programme's own page are both drawn from. */
 function detailIn(root: ParentNode): HTMLElement {
   const found = root.querySelector<HTMLElement>('[data-program-detail]')
 
@@ -130,22 +106,9 @@ const plain = (text: string): string => text.replace(/\s+/g, ' ').trim()
 const wordsOf = (element: HTMLElement): string =>
   plain(element.textContent ?? '')
 
-/** The one row of the reading that every programme can answer. */
 const subtitlesRowOf = (detail: HTMLElement): string | undefined =>
   detail.querySelector('dl dd')?.textContent ?? undefined
 
-/**
- * What the surface is drawn showing, held against the programme it was given
- * rather than against the fact that something is up. A layer that opens empty
- * answers a test of the opening on its own.
- *
- * The reading itself is asked for, not a way to go and find it: the hour, the
- * service, what the broadcaster wrote, and every extended section the
- * programme carries. And the programme's own address is not among what is
- * drawn — reading a programme in the guide does not send the reader off the
- * guide — which is a claim about an absence, so it is only ever made in the
- * same breath as the reading being there.
- */
 async function reads(surface: HTMLElement, program: Program): Promise<void> {
   const shown = within(surface)
   const detail = detailIn(surface)
@@ -183,12 +146,6 @@ export const 通常: Story = {
   },
 }
 
-/**
- * Nothing beyond the name and the hour. Every part that draws itself from
- * something the broadcaster may not have sent is asked to leave no wreckage
- * behind when it did not: no empty synopsis, no headings with nothing under
- * them, and the one row that is always answerable answered.
- */
 export const 情報最小: Story = {
   args: { program: bare, channel: channelOf(bare.channelId) },
   play: async ({ canvasElement }) => {
@@ -209,12 +166,6 @@ export const 情報最小: Story = {
   },
 }
 
-/**
- * A programme carried on more than one service. The other listing is reached
- * at its own address, which is the one place a programme still opens a page
- * from here — its own address is not, and both are asked for at once so that
- * neither is met by a surface that drew no links at all.
- */
 export const 関連番組あり: Story = {
   args: { program: relayed, channel: channelOf(relayed.channelId) },
   play: async ({ canvasElement }) => {
@@ -237,7 +188,6 @@ export const 関連番組あり: Story = {
   },
 }
 
-/** A programme the broadcaster has not said the end of yet. */
 export const 終了未定: Story = {
   args: { program: undecided, channel: channelOf(undecided.channelId) },
   play: async ({ canvasElement }) => {
@@ -264,7 +214,6 @@ export const 予約済み: Story = {
     await expect(
       shown.getByRole('button', { name: '予約を取り消す' }),
     ).toBeEnabled()
-    // The seat is held, so the way to take one is not offered a second time.
     await expect(shown.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
 }
@@ -276,15 +225,6 @@ export const 改行を含む本文: Story = {
   },
 }
 
-/**
- * The layer and the programme's own page, up at once and drawn from the same
- * programme. What each of them reads has to be the same words in the same
- * order — not each of them separately right, which is what two copies of a
- * screen are while nobody holds them against each other.
- *
- * Both halves are asked for: the reading is held against the programme first,
- * so a pair that agree by both being empty does not answer.
- */
 export const 別ページと同じ中身: Story = {
   args: { program: relayed, channel: channelOf(relayed.channelId) },
   render: (args) => (
@@ -321,10 +261,6 @@ const showing: Story['args'] = {
   channel: channelOf(standard.channelId),
 }
 
-/**
- * Nothing on this surface is written into, so SPEC's exception for a half
- * filled form does not reach it and a press beside it means to leave.
- */
 export const 範囲外を押すと閉じる: Story = {
   args: showing,
   play: async ({ args, canvasElement }) => {
@@ -358,15 +294,8 @@ export const Escで閉じる: Story = {
   },
 }
 
-/** Whether the control that opens a programme heard the press aimed at it. */
 const heard = fn()
 
-/**
- * A press aimed at the control that opens a programme lands on the layer over
- * it instead, so the control never hears it. That is the whole of the change:
- * while a programme is open, the press that used to swap another one in behind
- * the reader closes what is open and stops there.
- */
 export const 開く操作を押しても閉じる: Story = {
   args: showing,
   render: (args) => (
@@ -382,8 +311,6 @@ export const 開く操作を押しても閉じる: Story = {
 
     await opened(canvasElement)
 
-    // Read out of the tree rather than by role: the page under an open layer is
-    // `aria-hidden`, which is where a control this press must not reach lives.
     const another = canvasElement.querySelector<HTMLElement>(
       '[data-opens="program-panel"]',
     )
@@ -406,13 +333,6 @@ export const 開く操作を押しても閉じる: Story = {
   },
 }
 
-/**
- * Editing a reservation puts a second surface over this one, and the one on
- * top answers alone. The form is written into, so SPEC holds it open through a
- * press outside; the programme underneath is covered, so the same press is not
- * its business either. Escape is answered by the top surface only, and the
- * programme is still there to go back to.
- */
 export const 予約の編集が上に重なる: Story = {
   args: { program: booked, channel: channelOf(booked.channelId) },
   play: async ({ args, canvasElement }) => {
@@ -437,8 +357,6 @@ export const 予約の編集が上に重なる: Story = {
     ).toBeVisible()
     await waitFor(() => expect(editing.contains(doc.activeElement)).toBe(true))
 
-    // A press beside both surfaces lands on the layer the form put over the
-    // page, and neither surface takes it.
     const takesIt = doc.elementFromPoint(4, 4)
 
     await expect(takesIt).not.toBeNull()
@@ -458,7 +376,6 @@ export const 予約の編集が上に重なる: Story = {
   },
 }
 
-/** Opens and closes for real, so focus has somewhere to come back to. */
 function PanelWithOpener(args: ComponentProps<typeof ProgramPanel>) {
   const [open, setOpen] = useState(false)
 
@@ -489,30 +406,14 @@ export const 閉じるとフォーカスが戻る: Story = {
   },
 }
 
-/**
- * The window a story is read at, moved for real rather than drawn as a box
- * inside a wider one: what the surface does at a width is decided against the
- * window, and a narrow box in a wide window answers as the wide window.
- */
 const A_NARROW_WINDOW = { width: 460, height: 900 }
 
 const A_WIDE_WINDOW = { width: 1680, height: 1000 }
 
-/**
- * A window barely wider than the surface asks for. The step is wide enough that
- * an ordinary laptop lands here rather than out past it, so this is where a
- * width written as a flat number would run to both edges.
- */
 const A_SNUG_WINDOW = { width: 900, height: 900 }
 
 const A_SHORT_WINDOW = { width: 1280, height: 560 }
 
-/**
- * Across, the surface is a share of the window up to the width SPEC gives a
- * surface that is read, and that width from there on. Every window is read off
- * the same expression, so none of them is met by a surface that is simply one
- * size.
- */
 async function acrossTheWindow(
   canvasElement: HTMLElement,
   asked: number,
@@ -547,7 +448,6 @@ export const 広い窓では読める幅で止まる: Story = {
   },
 }
 
-/** The window the surface almost fills: the guide is still there beside it. */
 export const 幅ぎりぎりの窓でも脇が残る: Story = {
   args: showing,
   parameters: { screen: A_SNUG_WINDOW },
@@ -556,12 +456,6 @@ export const 幅ぎりぎりの窓でも脇が残る: Story = {
   },
 }
 
-/**
- * Down, the window is the ceiling and the content is the floor. A programme
- * whose reading is longer than the window leaves the surface at the ceiling
- * with the reading scrolling inside it, and the title and the way out where
- * they were put.
- */
 export const 長い本文は面の中で送る: Story = {
   args: { program: wordy, channel: channelOf(wordy.channelId) },
   parameters: { screen: A_SHORT_WINDOW },
@@ -592,10 +486,6 @@ export const 長い本文は面の中で送る: Story = {
     await expect(heading.top).toBeGreaterThanOrEqual(box.top)
     await expect(heading.bottom).toBeLessThanOrEqual(box.bottom)
 
-    // The end of the reading is past the bottom of the surface to begin with,
-    // and sending the surface's own reading down is what brings it inside. A
-    // face that is merely cut off at the same place answers the first of those
-    // and not the second: nothing moves, and the end stays out of reach.
     const end = within(surface).getByRole('link', { name: 'この番組名で検索' })
 
     await expect(end.getBoundingClientRect().top).toBeGreaterThan(box.bottom)
@@ -614,7 +504,6 @@ export const 長い本文は面の中で送る: Story = {
   },
 }
 
-/** A short programme in the same window: the content decides, not the ceiling. */
 export const 短い本文では内容ぶんの高さ: Story = {
   args: { program: bare, channel: channelOf(bare.channelId) },
   parameters: { screen: A_SHORT_WINDOW },

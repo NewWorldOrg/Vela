@@ -31,7 +31,6 @@ import { FailureLabel, FailureLegend } from '@/components/scan/failure-mark'
 
 const RESULT_COLUMNS = ['物理ch', '結果', '実測', '所要', '時刻']
 
-/** Re-reads the page while a run is walking. It fetches nothing itself. */
 function useScanTicker(running: boolean) {
   const router = useRouter()
 
@@ -139,15 +138,6 @@ function ScanCounts({ progress }: { progress: ScanRunProgress }) {
   )
 }
 
-/**
- * A run in flight: what it has walked so far, and the way to stop it. The
- * definitions on the page below are untouched until the result is applied, so
- * the panel says so rather than showing a list that is about to move.
- *
- * The detail is a read of its own and can fail while the run keeps walking.
- * The panel then states that much and keeps re-reading, so the run stays on
- * screen and stays cancellable instead of disappearing.
- */
 export function ScanRunPanel({
   running,
   onCancel,

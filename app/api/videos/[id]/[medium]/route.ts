@@ -1,15 +1,5 @@
 export const dynamic = 'force-dynamic'
 
-/**
- * Relays the pictures of a recording so the browser can ask for them
- * same-origin. A deployment that routes `/api` straight to the API answers
- * there before this handler is reached; the relay carries the dev server,
- * where no such routing exists — the same arrangement as the event stream.
- *
- * Only the three read surfaces a page draws are carried, and only the inputs
- * they take. A relay that forwarded whatever it was handed would be a way
- * around the API's own surface rather than a way to reach it.
- */
 const MEDIA = ['play', 'thumbnail', 'scrub'] as const
 
 const INPUTS = ['from', 'profile', 'at']
@@ -20,12 +10,6 @@ function carried(medium: string): medium is Medium {
   return (MEDIA as readonly string[]).includes(medium)
 }
 
-/**
- * What the answer says about itself. The playback headers are what tells a
- * reader which picture arrived — how the recording ended, which route it came
- * by, and whether the stream answers a byte range at all — so they travel on
- * rather than being dropped at the relay.
- */
 const PASSED_ON = [
   'content-type',
   'content-length',

@@ -1,8 +1,3 @@
-/**
- * What the search screen may ask for. The vocabulary and the reading of an
- * address both live in `lib/search-condition`, which reaches nothing at all;
- * this is the name the screen has always imported them under.
- */
 export {
   EMPTY_SEARCH_CONDITION,
   SEARCH_DEFAULT_FIELDS,

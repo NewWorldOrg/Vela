@@ -337,10 +337,6 @@ export const SCAN_PROPOSAL: ScanProposal = {
   ],
 }
 
-/**
- * More services than a window holds, and more runs: the terrestrial group
- * found again and again, and the same two runs walked night after night.
- */
 export const MORE_CHANNELS_THAN_FIT: ChannelsResult = {
   ...CHANNELS,
   unattributed: [],
@@ -373,7 +369,6 @@ export const MORE_CHANNELS_THAN_FIT: ChannelsResult = {
   ).flat(),
 }
 
-/** More attempts than a window holds: the whole UHF band, newest first. */
 export const MORE_ATTEMPTS_THAN_FIT: ScanRunProgress = {
   ...SCAN_RUNNING,
   attempted: 40,

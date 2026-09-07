@@ -3,16 +3,6 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { PLAYER_PALETTE } from '@/components/recordings/player-palette'
 
-/**
- * What stands where the player would be, when there is no picture to draw.
- *
- * Every reason for that is its own notice: a recording still being written, a
- * recording that wrote nothing, a file the API cannot reach and a transcoder
- * that would not start are four different things to do next, and a reader told
- * only "cannot play" is left to guess which one they have. The mark and its
- * tone are what separates them at a glance; the title says what happened, and
- * a body is drawn only where it carries a cause the title does not.
- */
 const TONES = {
   gone: 'border-[rgba(236,154,147,.45)] bg-[rgba(236,154,147,.12)] text-[#EC9A93]',
   waiting:

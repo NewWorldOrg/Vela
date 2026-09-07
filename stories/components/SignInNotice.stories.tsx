@@ -11,17 +11,8 @@ const RATE_LIMITED =
 const UNAVAILABLE =
   'サインインの要求が届きませんでした。時間をおいてもう一度お試しください。'
 
-/** 09:10:30 JST, which the 90 seconds asked for below carry to 09:12. */
 const NOW = Date.parse('2026-01-01T09:10:30+09:00')
 
-/**
- * Puts the login endpoint behind an answer of the story's choosing and holds
- * the clock still. What the screen says is the far end of a chain — a status
- * becomes a `SignInResult`, a result becomes a notice, a notice becomes a
- * sentence — and only a story that sends the form gets to see any of it.
- * Handing the notice in as a prop states the last link and leaves the two
- * before it unwatched.
- */
 function loginAnswering(answer: () => Promise<Response>) {
   return () => {
     const trueFetch = window.fetch
@@ -37,7 +28,6 @@ function loginAnswering(answer: () => Promise<Response>) {
   }
 }
 
-/** Fills the form and sends it, then waits for what the screen makes of it. */
 function signingIn(notice: string) {
   return async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement)

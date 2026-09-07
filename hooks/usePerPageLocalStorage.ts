@@ -3,22 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PAGE_SIZES, type PageSize } from '@/types/dataTable'
 
-/**
- * Persists a list table's per-page value to localStorage under one global key,
- * so changing it on one screen carries to others.
- *
- * - Multiple hook instances on the same page sync via a `CustomEvent`; other
- *   tabs/windows sync via the `storage` event.
- * - Invalid / out-of-range / Storage-exception values fall back to
- *   `defaultPerPage` and emit `console.warn` (never a silent failure).
- *
- * SSR / hydration note: on the server this hook yields `defaultPerPage`
- * (localStorage is unavailable), but on the client the lazy initializer reads
- * the persisted value, which may differ. So the first paint must use the parent
- * Server Component's initial value rather than this hook's `perPage`, to avoid a
- * hydration mismatch. This hook is for the post-mount refetch trigger.
- */
-
 export const STORAGE_PREFIX = 'vela-per-page-'
 export const GLOBAL_STORAGE_KEY = 'global'
 const STORAGE_KEY = STORAGE_PREFIX + GLOBAL_STORAGE_KEY
@@ -35,7 +19,6 @@ function parsePerPage(raw: string | null): PageSize | null {
   if (raw == null) {
     return null
   }
-  // Accept only a canonical positive integer (reject '050', ' 20', '20.5', …).
   if (!/^(0|[1-9]\d*)$/.test(raw)) {
     return null
   }
@@ -70,19 +53,12 @@ function writeStoredPerPage(value: PageSize) {
 }
 
 export interface UsePerPageLocalStorageOptions {
-  /** Value used when localStorage is empty or invalid. */
   defaultPerPage: PageSize
-  /**
-   * Called on mount (or when another instance updates the value) if the stored
-   * value differs from the current React state — e.g. to refetch the table.
-   * A rejected promise is caught and logged. Identity need not be stable.
-   */
   onInitialMismatch?: () => void | Promise<void>
 }
 
 export interface UsePerPageLocalStorageResult {
   perPage: PageSize
-  /** Ref-stable setter (identity is stable like a `useState` setter). */
   setPerPage: (next: PageSize) => void
 }
 
@@ -106,9 +82,6 @@ export function usePerPageLocalStorage(
 
   const [perPage, setPerPageState] = useState<PageSize>(initial.perPage)
 
-  // Mirror of the latest perPage so cross-instance/tab handlers can compare
-  // against the current value without performing side effects inside a state
-  // updater (which React may double-invoke in StrictMode).
   const perPageRef = useRef(perPage)
   useEffect(() => {
     perPageRef.current = perPage
@@ -149,7 +122,6 @@ export function usePerPageLocalStorage(
     }
   }, [])
 
-  // Receive per-page changes from other instances (same window) / tabs (storage).
   useEffect(() => {
     if (typeof window === 'undefined') {
       return
@@ -178,7 +150,6 @@ export function usePerPageLocalStorage(
     }
   }, [])
 
-  // Fire onInitialMismatch once after mount when stored != default.
   const didRunRef = useRef(false)
   useEffect(() => {
     if (didRunRef.current) {

@@ -4,15 +4,6 @@ import { beforeEach, test } from 'node:test'
 
 import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
 
-/**
- * The password change as the screen takes it: the real client, the real
- * `openapi-fetch`, and the real module the action calls, with only what Next
- * owns stood in and the API answering the bytes it was measured answering.
- *
- * Nothing here replaces `@/repository/client/carina`. A stand-in for it would
- * be free to hand a refusal back the way this module hopes for, which is the
- * one thing worth proving and the one thing the client did not do.
- */
 interface Asked {
   cookies: Record<string, string>
   page?: string
@@ -84,7 +75,6 @@ const SESSION_COOKIE = 'carina_session'
 
 const THE_PAGE = '/settings/authentication'
 
-/** What the screen hands over. Neither value is one the API would accept. */
 const TYPED = { currentPassword: 'what was typed', newPassword: 'and the new' }
 
 let sent: Request[] = []
@@ -99,12 +89,6 @@ function apiAnswering(answer: Response) {
   ;(globalThis as { velaAsked?: Asked }).velaAsked = asked
 }
 
-/**
- * The three answers this endpoint was measured giving, byte for byte. The
- * envelope is the API's own and `message` is where every reason is written;
- * the bare 401 is the gate in front of the endpoint, which answers before any
- * handler runs and sends no body at all.
- */
 function envelope(value: unknown, status: number): Response {
   return new Response(JSON.stringify(value), {
     status,
@@ -126,12 +110,6 @@ beforeEach(() => {
   asked.page = THE_PAGE
 })
 
-/**
- * The refusal that started this. The API answers a wrong current password with
- * 401 and a sentence, and the screen has nowhere else to learn what happened:
- * anything that eats the 401 leaves it saying nothing while the password on
- * the account stays as it was.
- */
 test('a wrong current password comes back as a refusal the screen can show', async () => {
   apiAnswering(refusing('The current password is wrong.', 401))
 
@@ -145,7 +123,6 @@ test('a wrong current password comes back as a refusal the screen can show', asy
   assert.equal(new URL(sent[0].url).pathname, '/api/auth/password')
 })
 
-/** The other refusal, which the API answers with 400 rather than 401. */
 test('a new password the API will not take comes back with its reason too', async () => {
   apiAnswering(
     refusing('A password is between 12 and 256 characters long.', 400),
@@ -159,11 +136,6 @@ test('a new password the API will not take comes back with its reason too', asyn
   })
 })
 
-/**
- * The 401 that is a sign-in. The gate answers an unknown session with nothing,
- * and that one still has to end at the login screen holding the page — losing
- * this is how the refusal above stops being distinguishable from a sign-out.
- */
 test('a session the API no longer knows still ends at the login screen', async () => {
   apiAnswering(turnedAway())
 
@@ -184,12 +156,6 @@ test('a change the API takes reports how many other sessions it ended', async ()
   })
 })
 
-/**
- * What the request carries is the API's own CSRF rule, which it applies to
- * everything that changes state: a body typed as JSON, and an `origin` naming
- * the API. Node sends neither on its own, and without them the change is
- * refused before it is read.
- */
 test('the change is sent as the API will accept it, carrying the session', async () => {
   apiAnswering(
     envelope({ status: true, message: '', data: { sessionsEnded: 0 } }, 200),
@@ -209,11 +175,6 @@ test('the change is sent as the API will accept it, carrying the session', async
   assert.deepEqual(await request.json(), TYPED)
 })
 
-/**
- * The list is every session on the system, not the caller's alone, so each
- * row has to carry whose it is — the name the API wrote when the session was
- * made — beside how it signed in. Only the caller's own row is current.
- */
 test('BR-AU-018: every session on the system is listed, each saying whose it is', async () => {
   apiAnswering(
     envelope(

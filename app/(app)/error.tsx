@@ -3,9 +3,6 @@
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
 
-/**
- * A screen that threw. Nothing was written, so the way out is to read again.
- */
 export default function AppError({ reset }: { reset: () => void }) {
   return (
     <EmptyState

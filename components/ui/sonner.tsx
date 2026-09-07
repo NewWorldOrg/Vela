@@ -11,7 +11,6 @@ import { Toaster as Sonner, type ToasterProps } from 'sonner'
 import { useTheme } from '@/components/theme/ThemeProvider'
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Follow the app's resolved theme (light/dark) instead of next-themes.
   const { mode } = useTheme()
 
   return (

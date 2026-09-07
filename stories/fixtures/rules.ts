@@ -31,12 +31,6 @@ export const RULE_CHANNEL_FIXTURES: GuideChannel[] = [
   },
 ]
 
-/**
- * Three rules that differ in the ways the screen has to draw differently: one
- * switched on with a keyword and an exclusion, one switched on that narrows by
- * genre and channel alone, and one switched off. A set that was all switched on
- * would leave the off branch undrawn in every story.
- */
 export const RULE_FIXTURES: Rule[] = [
   {
     id: 'rule-301',

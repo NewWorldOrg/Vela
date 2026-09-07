@@ -13,11 +13,8 @@ type ThemeMode = 'light' | 'dark'
 export type ThemePreference = ThemeMode | 'system'
 
 interface ThemeContextValue {
-  /** The theme currently applied (for `system`, the matchMedia result). */
   mode: ThemeMode
-  /** The user's selected preference (`light` / `dark` / `system`). */
   preference: ThemePreference
-  /** Change the preference explicitly (persisted to a cookie). */
   setPreference: (pref: ThemePreference) => void
 }
 
@@ -56,7 +53,6 @@ export function ThemeProvider({
     initialPreference === 'dark' ? 'dark' : 'light',
   )
 
-  // useEffect exception: browser API (window.matchMedia) + listener cleanup.
   useEffect(() => {
     if (preference !== 'system') {
       return
@@ -81,8 +77,6 @@ export function ThemeProvider({
     writeCookie(next)
 
     if (next === 'system') {
-      // Reflect the current OS theme immediately (the effect also handles this,
-      // but applying here makes the first paint after selection faster).
       const resolved = resolveSystemMode()
       setMode(resolved)
       applyClass(resolved)

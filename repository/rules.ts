@@ -30,12 +30,6 @@ type RuleApplicationResponder =
 type RuleApplicationRefusedResponder =
   components['schemas']['RuleApplicationRefusedResponder']
 
-/**
- * A rule as the screens read it. The API holds the conditions as the query
- * string a programme search carries, which is the one place the two are the
- * same question; the screens hold the conditions the search screen already
- * assembles, so this module is where the two spellings meet.
- */
 export interface Rule {
   id: string
   name: string
@@ -47,7 +41,6 @@ export interface Rule {
   createdAt: string
 }
 
-/** What a rule is written from. Every field is answered; nothing is left as it stands. */
 export interface RuleDraft {
   name: string
   terms: SearchTerms
@@ -62,7 +55,6 @@ export interface RulesResult {
   total: number
 }
 
-/** One programme a draft would take, as the preview rows show it. */
 export interface RuleTake {
   id: string
   whenLabel: string
@@ -73,11 +65,6 @@ export interface RuleTake {
   verdict?: AllocationVerdict
 }
 
-/**
- * What a draft would take from the guide as it stands. `matched` counts the
- * programmes the conditions reach, `making` the ones no reservation is held
- * for yet, and `contended` how many of those would start with no tuner left.
- */
 export interface RulePreview {
   takes: RuleTake[]
   matched: number
@@ -87,13 +74,6 @@ export interface RulePreview {
   excluded: number
 }
 
-/**
- * What the reservations that already stand would come to. `withdrawing` counts
- * the ones a save and the re-application behind it would leave, and `sweeping`
- * the ones deleting the rule would leave: deleting asks neither that the guide
- * be collected for the broadcast nor that the start be far enough off, so the
- * two counts are read by different occasions and are not interchangeable.
- */
 export interface RuleImpact {
   making: number
   withdrawing: number
@@ -102,7 +82,6 @@ export interface RuleImpact {
   excluded: number
 }
 
-/** What one application of the rules read and settled. */
 export interface RuleApplication {
   read: number
   made: number
@@ -146,14 +125,6 @@ const GONE = 'このルールは残っていないため、'
 const CANNOT_COUNT_TUNERS =
   'チューナーの空きを数えられないため、下見できませんでした。時間をおいてからお試しください。'
 
-/**
- * The conditions written the way the API holds them — the query string a
- * programme search carries, without its leading question mark.
- *
- * The span a search may ask for is not written: a rule stands over the whole
- * guide, and a rule pinned to two dates would stop matching once they passed
- * without saying so. The search screen already says the span is not carried.
- */
 export function ruleQueryOf(terms: SearchTerms): string {
   const params = new URLSearchParams()
 
@@ -190,11 +161,6 @@ export function ruleQueryOf(terms: SearchTerms): string {
   return params.toString()
 }
 
-/**
- * The conditions a stored query holds, read back through the same reader the
- * address of the search screen goes through: a value the screen could not have
- * written comes back as the nearest thing it could have.
- */
 export function ruleTermsOf(query: string): SearchTerms {
   const params = new URLSearchParams(query)
 
@@ -267,11 +233,6 @@ export async function listRules(): Promise<RulesResult> {
   }
 }
 
-/**
- * What each rule is called, by its identifier. A reservation carries the
- * identifier of the rule that made it and nothing else, so this is what lets
- * the reservation list name the rule rather than repeat its identifier.
- */
 export async function ruleNames(): Promise<Map<string, string>> {
   const { items } = await listRules()
 
@@ -384,12 +345,6 @@ export async function impactOfRule(
   )
 }
 
-/**
- * Applies the rules now. The identifier says which rule the request is made
- * from and is checked against the rules that exist; the pass itself walks
- * every enabled rule, because which rule takes a programme is settled between
- * the rules and cannot be settled for one of them alone.
- */
 export async function applyRulesNow(
   id: string,
 ): Promise<RuleWrite<RuleApplication>> {
@@ -440,12 +395,6 @@ function bodyOf(draft: RuleDraft) {
   }
 }
 
-/**
- * What a rehearsal is asked about. The name and whether the rule is switched
- * on say nothing about what it would take, so neither is sent; the identifier
- * is, where the draft is an edit of a rule that already stands, so its own
- * reservations are read as its own rather than as somebody else's.
- */
 function draftBodyOf(draft: RuleDraft, id?: string) {
   return {
     ruleId: id,

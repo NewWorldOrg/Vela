@@ -11,16 +11,13 @@ import {
 } from '@/lib/live-wire'
 import { CaptionDrift } from '@/lib/live-caption-drift'
 
-/** What the layer has on it, written on the element for whoever reads the screen. */
 export type CaptionState = 'none' | 'shown' | 'off'
 
-/** A caption with its PNG being turned into something the canvas can draw. */
 interface Decoding {
   picture: CaptionPicture
   bitmap: Promise<ImageBitmap | null>
 }
 
-/** How often the clock is read where the browser cannot say when a frame is shown. */
 const READ_MS = 100
 
 const DRAWN = 'data-drawn'
@@ -31,21 +28,6 @@ function decode(png: Uint8Array): Promise<ImageBitmap | null> {
   ).catch(() => null)
 }
 
-/**
- * The captions, laid over the picture on a canvas of their own.
- *
- * Each caption arrives as a PNG placed on the broadcast's canvas, stamped with
- * the picture's own clock, and is decoded as it arrives; it is shown when the
- * playhead reaches its stamp, which the browser says frame by frame where it
- * can and is asked every tenth of a second where it cannot. The canvas is laid
- * where the picture is shown — not where the element is — and stretched as
- * the picture is, so a caption lands over what it was drawn on. Until the
- * element has a picture, the whole box — 16:9, as the broadcast is shown —
- * stands in for it.
- *
- * Switching the captions off stops the drawing and nothing else: what arrives
- * keeps standing in line, so switching them back on shows what is showing now.
- */
 export class CaptionLayer {
   private readonly queue = new CaptionQueue<Decoding>()
 
@@ -53,7 +35,6 @@ export class CaptionLayer {
 
   private drawnOn: CaptionCanvas | null = null
 
-  /** The caption that stands now, whether or not it is drawn. */
   private current: CaptionCue<Decoding> | null = null
 
   private bitmap: ImageBitmap | null = null
@@ -86,13 +67,11 @@ export class CaptionLayer {
     this.paint()
   }
 
-  /** The canvas the captions are drawn on, which every placement is read against. */
   canvasOf(size: CaptionCanvas): void {
     this.drawnOn = size
     this.paint()
   }
 
-  /** A caption for this stamp on, or nothing for one taken off. */
   offer(picture: CaptionPicture | null, pts: number): void {
     if (this.closed) {
       return

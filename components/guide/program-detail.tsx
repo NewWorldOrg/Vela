@@ -51,23 +51,6 @@ const RELATION_WORDING: Record<
   },
 }
 
-/**
- * Everything a programme is read for, below its name: the service it is on,
- * when it runs, what it says, the listings it is tied to, and the way to
- * reserve it.
- *
- * One part, drawn in both places a programme is read — the layer the guide
- * opens over itself, and the programme's own address. The name is left to the
- * caller because the two hold it differently: a dialog's title is the part
- * that does not scroll away, and a page's is its heading.
- *
- * `reservation` stands in for the reserve controls when a seat is already
- * held, which is a thing only the guide knows and only the guide can undo.
- *
- * `onAir` is the caller's reading of the clock against the programme. While
- * it holds, the way to the live screen is offered, with this channel chosen —
- * the same address a press on the live screen's own list would have made.
- */
 export function ProgramDetailBody({
   program,
   channel,

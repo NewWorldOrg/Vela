@@ -2,7 +2,6 @@ import type { components } from '@/repository/client/schema'
 
 type TuneSystem = components['schemas']['TuneSystem']
 
-/** The three systems a scan can walk. `unspecified` never reaches a screen. */
 export type ScanSystem = Exclude<TuneSystem, 'unspecified'>
 
 export const SYSTEM_LABEL: Record<ScanSystem, string> = {

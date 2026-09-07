@@ -6,15 +6,10 @@ import type { TunerWriteResult } from '@/repository/tuners'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 
-/**
- * The save the difference card offers. A refusal is stated beside the button —
- * the ledger is unchanged when one lands, so the card stays as it was.
- */
 export function DetectionSave({
   devices,
   onSave,
 }: {
-  /** The detected set the card showed, saved as reviewed. */
   devices: string[]
   onSave: (devices: string[]) => Promise<TunerWriteResult>
 }) {

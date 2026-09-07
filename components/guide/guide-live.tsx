@@ -14,20 +14,8 @@ import { Banner } from '@/components/vela/banner'
 
 const DEBOUNCE_MS = 200
 
-/** Exported so a story holds the retry to the same clock the screen uses. */
 export const RECONNECT_MS = 10_000
 
-/**
- * Re-reads the page when the event hub signals that programmes or the
- * collection ledger moved. Signals carry no payload, so a burst of them is
- * debounced into one re-read, held in a transition so the guide on screen
- * stays put while the new one arrives.
- *
- * A dropped stream is retried; the built-in retry only covers network blips,
- * not a refused subscription. A refused session is not retried at all — the
- * stream is closed and the screen says so, rather than looking connected while
- * nothing ever arrives again.
- */
 export function GuideLive() {
   const router = useRouter()
   const pathname = usePathname()
@@ -102,10 +90,6 @@ export function GuideLive() {
   )
 }
 
-/**
- * What is left of the guide once the hub refuses the session: the page on
- * screen is the last one that arrived, and the way back is a fresh sign-in.
- */
 function SessionEndedBanner({ returnPath }: { returnPath: string }) {
   return (
     <Banner
@@ -117,12 +101,6 @@ function SessionEndedBanner({ returnPath }: { returnPath: string }) {
   )
 }
 
-/**
- * `EventSource` reports a failure without a status, so the stream is opened
- * once by hand to read one. Anything other than a refusal is a blip worth
- * retrying. The body is never read — the ask is aborted as soon as the status
- * is known.
- */
 async function sessionRefused(): Promise<boolean> {
   const ask = new AbortController()
 

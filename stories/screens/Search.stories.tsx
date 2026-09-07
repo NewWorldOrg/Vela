@@ -58,10 +58,6 @@ const everyCondition: SearchCondition = {
 
 const channels = SEARCH_CHANNEL_FIXTURES
 
-/**
- * More channels than the store will take, so the ceiling can be stood on. A
- * full scan of terrestrial, BS and CS110 reaches this in real houses.
- */
 const manyChannels: GuideChannel[] = Array.from(
   { length: SEARCH_MOST_CHANNELS + 4 },
   (_, index) => ({
@@ -79,12 +75,6 @@ function arriveAt(href: string): SearchCondition {
   return searchConditionOfQuery(href.split('?')[1] ?? '')
 }
 
-/**
- * The rest of the server's part: an address that narrows nothing is turned away
- * before the store is reached, so a condition emptied on the screen takes the
- * result with it. The fixture answers the question the args put; whether there
- * is a question at all is decided here, by the same reader the server uses.
- */
 function answering(
   result: SearchResult,
   condition: SearchCondition,
@@ -96,13 +86,6 @@ function answering(
   }
 }
 
-/**
- * The part the server plays. The address is the state: what the screen writes
- * there comes back to it as the condition of the next render, so a story that
- * does not answer the navigation cannot be asked what a second choice does —
- * the second choice would be drawn from the args, and the question could not
- * fail.
- */
 function Live({ result }: { result: SearchResult }) {
   const [condition, setCondition] = useState<SearchCondition>(result.condition)
 
@@ -116,15 +99,6 @@ function Live({ result }: { result: SearchResult }) {
   return <SearchView result={answering(result, condition)} />
 }
 
-/**
- * The part the browser plays, for the two buttons no screen draws. Asking is
- * somewhere the reader has been, so it leaves an entry behind; clearing the
- * fields takes the entry they are standing on.
- *
- * The buttons are the story's own furniture and are dressed by hand: they are
- * on the page the probes read, so they carry a press area of their own and
- * their own colours rather than borrowing the screen's.
- */
 const BROWSER_BUTTON = {
   minWidth: '48px',
   minHeight: '48px',
@@ -183,16 +157,6 @@ async function choose(list: string, option: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: option }))
 }
 
-/**
- * The promise the screen used to make in three places, which the store stopped
- * keeping: a period with its start filled in now reaches programmes that have
- * already been broadcast, and only a period left open is the future alone.
- *
- * Held as one string and asked about in every state that could carry it, so
- * that putting it back anywhere is a red run rather than a sentence nobody
- * reads again. Each state is also asked what it does say — an absence with
- * nothing beside it is an absence a screen that drew nothing would pass too.
- */
 const NO_LONGER_KEPT = '放送が終了した番組は結果に出ません'
 
 function saysNothingItCannotKeep(
@@ -204,7 +168,6 @@ function saysNothingItCannotKeep(
   ).toHaveLength(0)
 }
 
-/** A date field takes a date, not a run of letters. */
 function fillDate(field: HTMLElement, date: string): void {
   fireEvent.change(field, { target: { value: date } })
 }
@@ -308,11 +271,6 @@ export const 検索結果: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    /*
-      What this state says, before what it does not. An absence is a claim any
-      screen that drew nothing at all would satisfy, and the result is the one
-      part of this screen that is drawn only here.
-    */
     await expect(
       canvas.getByRole('heading', { name: '検索結果' }),
     ).toBeVisible()
@@ -369,7 +327,6 @@ export const 該当なし: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    /** Said once, at the top; the ways out sit under it. */
     const empty = canvas
       .getByText('該当する番組がありません')
       .closest<HTMLElement>('[data-slot="empty-state"]')
@@ -404,12 +361,6 @@ export const 条件不備: Story = {
   },
 }
 
-/**
- * The complaint this screen was rebuilt for: choosing a genre used to look like
- * it had thrown the previous one away. What the list goes back to saying is
- * "＋ ジャンルを足す"; what was already chosen stays beside it, in the order it
- * was chosen.
- */
 export const ジャンルを2つ選ぶ: Story = {
   args: {
     result: {
@@ -457,9 +408,6 @@ export const ジャンルを2つ選ぶ: Story = {
   },
 }
 
-/**
- * Taking one back leaves the rest, and the list it came from offers it again.
- */
 export const ジャンルを外す: Story = {
   args: {
     result: {
@@ -498,10 +446,6 @@ export const ジャンルを外す: Story = {
   },
 }
 
-/**
- * A keyword is written into the address beside what was already asked for,
- * never in place of it — the address is the whole condition, every time.
- */
 export const キーワードを足して検索: Story = {
   args: {
     result: {
@@ -529,18 +473,6 @@ export const キーワードを足して検索: Story = {
   },
 }
 
-/**
- * The complaint this was written for: every condition is assembled in the
- * fields and asked for in one go, so nothing a reader is halfway through
- * saying is confirmed on their behalf.
- *
- * All seven are answered here, one after another, and each of them is asked
- * whether it went off on its own — one story rather than seven so that an
- * implementation which fires on the fourth condition cannot hide behind six
- * that do not. Then 検索, which has to send every one of them: an
- * implementation that has simply stopped searching is not what was asked for
- * either, and this is where that shows.
- */
 export const 条件は押すまで走らず押すとまとめて走る: Story = {
   args: {
     result: {
@@ -553,7 +485,6 @@ export const 条件は押すまで走らず押すとまとめて走る: Story = 
     const canvas = within(canvasElement)
     const router = getRouter()
 
-    /** Nothing has been touched, so nothing can have been asked for yet. */
     const stillNothingAskedFor = async (after: string) => {
       await expect(
         router.push,
@@ -567,11 +498,6 @@ export const 条件は押すまで走らず押すとまとめて走る: Story = 
 
     await stillNothingAskedFor('drawing the screen')
 
-    /*
-      Typed with the space a reader leaves either side of a word, and none of
-      that space asked for: the words between the spaces are the condition, the
-      spaces are not, and the address 検索 writes says so.
-    */
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'キーワード' }),
       ' 夏 絶景 ',
@@ -618,10 +544,6 @@ export const 条件は押すまで走らず押すとまとめて走る: Story = 
   },
 }
 
-/**
- * Enter in a field is the same act as pressing 検索, and asks for the whole
- * condition rather than for the field it was pressed in.
- */
 export const 欄でEnterを押しても検索が走る: Story = {
   args: {
     result: {
@@ -662,18 +584,6 @@ export const 欄でEnterを押しても検索が走る: Story = {
   },
 }
 
-/**
- * The Enter that settles a conversion does not ask.
- *
- * What is measured is the screen's answer to the keypress, not the browser's:
- * the two are only joined on WebKit, where a conversion's Enter goes on to
- * submit the form and no runner here is a WebKit. Taking the default off that
- * keypress is what stops it there, so that is what is read — the settling Enter
- * comes back cancelled, and the one after it, which is the reader asking, comes
- * back untouched for the browser to act on. An implementation that cancels
- * neither is the fault this guards against; one that cancels both would take
- * Enter away from every reader, and neither of them is green here.
- */
 export const 変換を確定するEnterは検索を頼まない: Story = {
   args: {
     result: {
@@ -709,7 +619,6 @@ export const 変換を確定するEnterは検索を頼まない: Story = {
       true,
     )
 
-    /** And that untouched keypress is the one the browser acts on. */
     await userEvent.type(field, '{enter}')
 
     await waitFor(async () => {
@@ -723,12 +632,6 @@ export const 変換を確定するEnterは検索を頼まない: Story = {
   },
 }
 
-/**
- * How the result is arranged is not a condition: it changes nothing about
- * which programmes come back, there is nothing to assemble, and it takes
- * effect where it is chosen. Measured beside the conditions so that an
- * implementation which made everything wait for 検索 is not green either.
- */
 export const 並び替えと表示件数とページ送りはその場で効く: Story = {
   args: {
     result: {
@@ -782,17 +685,6 @@ export const 並び替えと表示件数とページ送りはその場で効く:
   },
 }
 
-/**
- * The other half of the same complaint: a reader who only meant to sort the
- * rows in front of them used to confirm whatever was half typed in the fields
- * along with it, and the store answered a question nobody had asked.
- *
- * Taken over the round trip, because both halves matter and only one of them
- * can be seen this side of it. That the address the screen writes carries no
- * half-typed word is read from the call; that the word is still in the field
- * afterwards can only be read from a screen that has been handed the new
- * address back and drawn again on it.
- */
 export const 入力中の語は見せ方を変えても確定しない: Story = {
   args: {
     result: {
@@ -831,14 +723,12 @@ export const 入力中の語は見せ方を変えても確定しない: Story = 
       )
     })
 
-    /** The screen has been drawn again on that address, and the sort took. */
     await waitFor(async () => {
       await expect(
         canvas.getByRole('combobox', { name: '並び替え' }),
       ).toHaveTextContent('番組名順')
     })
 
-    /** Still in the field, still unasked. */
     await expect(
       canvas.getByRole('textbox', { name: 'キーワード' }),
     ).toHaveValue('観測所の夏')
@@ -851,11 +741,6 @@ export const 入力中の語は見せ方を変えても確定しない: Story = 
   },
 }
 
-/**
- * What 検索 would do is legible before it is pressed: the count and the line
- * under the fields both follow the fields, not the address, so a reader can
- * see the question they are assembling.
- */
 export const 数と行き先は押す前から手元の条件を映す: Story = {
   args: {
     result: {
@@ -871,10 +756,6 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
     await expect(canvas.getByText('/search')).toBeVisible()
     await expect(canvas.queryByText(/件の条件を指定しています/)).toBeNull()
 
-    // Conditions that narrow nothing are refused as a rule, so the way to one
-    // is not offered yet: a button rather than a link, and no destination to
-    // press. Both halves are checked, here and after a condition is answered,
-    // because only the pair says the offer follows the conditions.
     await expect(
       canvas.queryByRole('link', { name: 'この条件でルールを作る' }),
     ).toBeNull()
@@ -901,8 +782,6 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
       canvas.getByText('/search?q=夏+絶景&genre=movie'),
     ).toBeVisible()
 
-    // Where it lands, and with which conditions: the span a search may carry
-    // is not one a rule keeps, so it is named here rather than counted.
     await expect(
       canvas.getByRole('link', { name: 'この条件でルールを作る' }),
     ).toHaveAttribute(
@@ -915,10 +794,6 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
   },
 }
 
-/**
- * An address opened cold has its conditions in the fields, all seven of them —
- * which is what a link to a search is for.
- */
 export const 開いた住所の条件が欄に入っている: Story = {
   args: {
     result: {
@@ -970,13 +845,6 @@ export const 開いた住所の条件が欄に入っている: Story = {
   },
 }
 
-/**
- * The address is still the state, so the history is still the reader's. Going
- * back to a search brings its conditions back into the fields as well as its
- * result — the fields are seeded from the address rather than kept alongside
- * it, and a screen that kept them alongside would show the question the reader
- * had moved on from.
- */
 export const 戻ると前の条件が欄に戻る: Story = {
   args: {
     result: {
@@ -1022,12 +890,6 @@ export const 戻ると前の条件が欄に戻る: Story = {
   },
 }
 
-/**
- * 条件をすべて消す empties the fields even when the address it is emptying was
- * already bare — which is where a reader stands who typed into a screen they
- * have not searched from yet, and which a screen redrawn on the address alone
- * cannot answer, because the address does not change.
- */
 export const 住所が空でも条件をすべて消すと欄が空になる: Story = {
   args: {
     result: {
@@ -1061,17 +923,6 @@ export const 住所が空でも条件をすべて消すと欄が空になる: St
   },
 }
 
-/**
- * A question put again, and a result arranged again, both start at the first
- * page: fewer rows fit under the new answer than the reader has already walked
- * past, and the page they were standing on may no longer be there. The pager is
- * the one control that means a page, and it still gets the one it asks for.
- *
- * The arrangement, on the other hand, is the reader's and stays theirs: a
- * question put again is answered in the order and the helping they had already
- * chosen. Taken over the round trip, because that is the only way the second
- * choice is made against the first one rather than against the args.
- */
 export const 頼み直すと最初のページから: Story = {
   args: {
     result: {
@@ -1101,13 +952,6 @@ export const 頼み直すと最初のページから: Story = {
       '/search?q=%E8%A6%B3%E6%B8%AC%E6%89%80%E3%81%AE%E5%A4%8F' +
       '&from=2026-08-09&to=2026-08-15'
 
-    /*
-      Each of the three has to be taken from a page the reader is actually
-      standing on, so the pager walks back out to one between them. Taken in a
-      row instead, the first would put them on the first page and the two after
-      it would have no page to leave — which is how the second and third of
-      these came to be measuring nothing at all.
-    */
     const walkOut = async (to: string): Promise<void> => {
       await userEvent.click(canvas.getByRole('button', { name: '4 ページ目' }))
       await waitFor(async () => {
@@ -1117,7 +961,6 @@ export const 頼み直すと最初のページから: Story = {
       })
     }
 
-    /** Standing on the third page, and arranging it does not keep them there. */
     await choose('並び替え', '番組名順')
 
     await waitFor(async () => {
@@ -1129,7 +972,6 @@ export const 頼み直すと最初のページから: Story = {
 
     await walkOut(`${asked}&sort=name.asc&page=4`)
 
-    /** The order just chosen is still theirs while they choose the helping. */
     await choose('表示件数', '50 件ずつ')
 
     await waitFor(async () => {
@@ -1141,7 +983,6 @@ export const 頼み直すと最初のページから: Story = {
 
     await walkOut(`${asked}&sort=name.asc&per_page=50&page=4`)
 
-    /** And a question put again is answered the way they had arranged it. */
     await userEvent.type(
       canvas.getByRole('textbox', { name: 'キーワード' }),
       'の夏',
@@ -1157,11 +998,6 @@ export const 頼み直すと最初のページから: Story = {
   },
 }
 
-/**
- * 種別 narrows what the チャンネル list offers, and widening it back offers
- * the channels the narrower answer left out — which it can only do because the
- * list the screen was handed was never cut down to the 種別 in the address.
- */
 export const 種別を戻すとチャンネルも戻る: Story = {
   args: {
     result: {
@@ -1197,11 +1033,6 @@ export const 種別を戻すとチャンネルも戻る: Story = {
   },
 }
 
-/**
- * 条件をすべて消す empties the fields as well as the address. The fields are
- * uncontrolled between confirmations, so a keyword that was typed and never
- * confirmed used to survive the clear and be shown against a bare address.
- */
 export const 条件をすべて消すと入力欄も空になる: Story = {
   args: {
     result: {
@@ -1244,7 +1075,6 @@ export const 条件をすべて消すと入力欄も空になる: Story = {
       canvas.queryByRole('button', { name: /ジャンル .+ を外す/ }),
     ).toBeNull()
 
-    /** The address goes with the fields, and the answer to it goes too. */
     await expect(router.replace).toHaveBeenLastCalledWith('/search', {
       scroll: false,
     })
@@ -1253,12 +1083,6 @@ export const 条件をすべて消すと入力欄も空になる: Story = {
   },
 }
 
-/**
- * 探す場所 says where a keyword is looked for and narrows nothing on its own,
- * so it is not counted as a condition the reader has specified — counting it
- * promised a search that the screen then turned away as asking for nothing.
- * The way back is still offered, because the fields no longer stand at nothing.
- */
 export const 探す場所だけでは条件に数えない: Story = {
   args: {
     result: {
@@ -1284,11 +1108,6 @@ export const 探す場所だけでは条件に数えない: Story = {
   },
 }
 
-/**
- * At the ceiling the store accepts, the screen stops offering more. Going on
- * offering them would write an address the reader then drops the tail of, so
- * the chip for the extra channel would appear and vanish with nothing said.
- */
 export const チャンネルは上限で足せなくなる: Story = {
   args: {
     result: {

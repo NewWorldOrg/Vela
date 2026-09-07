@@ -262,7 +262,6 @@ export const QUALITY: QualityResult = {
   ],
 }
 
-/** More tuners than a window holds: the four adapters, six cards deep. */
 export const MORE_TUNERS_THAN_FIT: QualityResult = {
   ...QUALITY,
   tuners: Array.from({ length: 6 }, (_, round) =>

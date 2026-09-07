@@ -45,7 +45,6 @@ export default async function RootLayout({
       </head>
       <body suppressHydrationWarning>
         {explicitMode === null && (
-          // Injects a constant no-flash init script (no user input, no XSS risk).
           <script
             id="no-flash-theme-init"
             dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }}

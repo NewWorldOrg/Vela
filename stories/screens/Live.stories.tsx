@@ -37,11 +37,6 @@ import type {
 import { LiveView } from '@/components/live/live-page'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 
-/**
- * A socket a story drives. It opens on the next tick, the way a real one opens
- * after the handlers are set, and then runs the script it was given; what the
- * player sends is kept so a story can read it back.
- */
 class ScriptedSocket implements LiveSocket {
   binaryType: BinaryType = 'blob'
   readyState = 0
@@ -74,7 +69,6 @@ class ScriptedSocket implements LiveSocket {
     this.drop(code)
   }
 
-  /** One frame off the wire, in a buffer of exactly its length. */
   say(frame: Uint8Array) {
     const copy = frame.slice()
 
@@ -91,7 +85,6 @@ class ScriptedSocket implements LiveSocket {
   }
 }
 
-/** The sockets a story opened, in order. */
 const opened: ScriptedSocket[] = []
 
 function scripted(script: (socket: ScriptedSocket) => void): OpenSocket {
@@ -104,29 +97,19 @@ function scripted(script: (socket: ScriptedSocket) => void): OpenSocket {
   }
 }
 
-/** One progress report, as the wire sends one each time a segment is reached. */
 function progress(startup: LiveStartup): Uint8Array {
   return frameOf('control', 0, progressPayload(startup))
 }
 
-/** What the wire has to say by the handshake: the tuner, and the transcoder beside it. */
 const SECURED: LiveStartup = { tunerSecured: 496, transcoderStarted: 511 }
 
-/** The lock, which landed after the transcoder. */
 const LOCKED: LiveStartup = { ...SECURED, channelLocked: 751 }
 
-/**
- * A wire that reports the startup the way a channel comes up on air: what was
- * reached by the handshake at once, the lock as it lands, and then nothing
- * more. The two reports after these come with the header and the picture,
- * which no story here has to send.
- */
 const starting = scripted((socket) => {
   socket.say(progress(SECURED))
   setTimeout(() => socket.say(progress(LOCKED)), 255)
 })
 
-/** A wire heard from once, with the lock still to come. */
 const securing = scripted((socket) => socket.say(progress(SECURED)))
 
 function refusing(
@@ -146,13 +129,8 @@ function ending(why: LiveSupplyEnd) {
   })
 }
 
-/** A wire that closes without a word, as one does when the handshake failed. */
 const dropping = scripted((socket) => socket.drop(1006))
 
-/**
- * A wire that drops once and is then heard from: the first is lost without a
- * word, and the one opened by the press after it says how far it has come.
- */
 const droppingOnce = scripted((socket) => {
   if (opened.length === 1) {
     socket.drop(1006)
@@ -161,11 +139,6 @@ const droppingOnce = scripted((socket) => {
   }
 })
 
-/**
- * A picture frame the wire said before anything the element could be opened
- * for: the moment between the first picture arriving and the first frame
- * drawn, which is also where the playhead stands when the picture stalls.
- */
 const PICTURED = frameOf(
   'picture',
   0,
@@ -177,36 +150,26 @@ const stalling = scripted((socket) => {
   socket.say(PICTURED)
 })
 
-/** The caption canvas, said once before any caption. */
 const CAPTION_CANVAS = frameOf(
   'captionHeader',
   0,
   captionCanvasPayload(CAPTION_CANVAS_FIXTURE),
 )
 
-/**
- * A caption stamped at the start of the clock. The element here has no picture
- * and its clock stands at zero, so a stamp of zero is one the playhead has
- * already reached — the case a viewer joining late is in, handed the caption
- * that is showing now.
- */
 const CAPTION_SHOWN = frameOf(
   'caption',
   0,
   captionPayload(CAPTION_PICTURE_FIXTURE),
 )
 
-/** The caption taken off, as an empty frame. */
 const CAPTION_CLEARED = frameOf('caption', 0, new Uint8Array(0))
 
-/** A wire with a caption showing on it. */
 const captioned = scripted((socket) => {
   socket.say(progress(SECURED))
   socket.say(CAPTION_CANVAS)
   socket.say(CAPTION_SHOWN)
 })
 
-/** A wire whose caption has been taken off. */
 const uncaptioned = scripted((socket) => {
   socket.say(progress(SECURED))
   socket.say(CAPTION_CANVAS)
@@ -214,7 +177,6 @@ const uncaptioned = scripted((socket) => {
   socket.say(CAPTION_CLEARED)
 })
 
-/** A header with no H.264 in it, which no `MediaSource` here can be opened for. */
 const HEADERLESS = frameOf(
   'pictureHeader',
   0,
@@ -231,13 +193,8 @@ const stillSignedIn = async () => false
 
 const signedOut = async () => true
 
-/** An API that has no count to give: the row for it is never drawn. */
 const uncounted: AskBacklog = async () => undefined
 
-/**
- * An API that answers each asking with the next count, and the last one for
- * ever after — the way a session's count only ever climbs.
- */
 function counting(dropped: number[]): AskBacklog {
   let asked = 0
 
@@ -303,12 +260,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * Nothing chosen: the screen is the channels, laid out across it as cards with
- * what is on each. No player stands on it, because there is nothing to put in
- * one. Pressing a card puts the channel in the URL, and nothing is asked of
- * the API until then.
- */
 export const 選局前: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
   parameters: {
@@ -326,23 +277,16 @@ export const 選局前: Story = {
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).toBeVisible()
 
-    // What is on now is the largest thing on a card, and the station the line
-    // above it.
     await expect(canvas.getAllByText('ニュースの視点9')[0]).toBeVisible()
     await expect(canvas.getAllByText('21:00–22:00')[0]).toBeVisible()
     await expect(canvas.getAllByText(/クローズアップ列島/)[0]).toBeVisible()
 
-    // The width the screen is read at is the step, not the whole window: there
-    // is no picture yet to spend the window on.
     await expect(
       canvasElement.querySelector('[data-slot="screen-main"]'),
     ).toHaveAttribute('data-width', 'default')
 
     await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
 
-    // Pushed, not written over: the screen the reader is standing on is the
-    // one back has to come to, and rewriting it sent back out of the live
-    // screen the moment a channel was pressed.
     await expect(getRouter().push).toHaveBeenCalledWith('/live?ch=32737-1032', {
       scroll: false,
     })
@@ -350,11 +294,6 @@ export const 選局前: Story = {
   },
 }
 
-/**
- * The splits are all there by default, repetitions and all: a channel that can
- * be tuned is one whose card can be read, and which of them are repeating
- * changes hour by hour.
- */
 export const 副チャンネルを出している: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
   parameters: {
@@ -375,11 +314,6 @@ export const 副チャンネルを出している: Story = {
   },
 }
 
-/**
- * Folded, the splits showing nothing their station is not showing come out —
- * and the one running a schedule of its own stays, with what only it is
- * showing.
- */
 export const 副チャンネルを畳んでいる: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
   parameters: {
@@ -407,10 +341,6 @@ export const 副チャンネルを畳んでいる: Story = {
   },
 }
 
-/**
- * A line-up with no repetition in it is one the press cannot change, so the
- * press is not drawn.
- */
 export const 畳む先が無いときは出さない: Story = {
   args: {
     screen: {
@@ -433,12 +363,6 @@ export const 畳む先が無いときは出さない: Story = {
   },
 }
 
-/**
- * Watching one channel and choosing another is an entry of its own, so back is
- * the channel before it rather than the screen the reader entered from. The
- * broadcast type goes the same way, as every other list in Vela puts a filter
- * in the history.
- */
 export const 選局は履歴に積む: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -458,12 +382,6 @@ export const 選局は履歴に積む: Story = {
   },
 }
 
-/**
- * Between the press and the picture. The wire has said how far it is, and the
- * rows read what each segment took — from what it waited for, so the lock
- * landing after the transcoder reads its own span rather than a negative one —
- * and how long the one underway has run.
- */
 export const 起動中: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -481,24 +399,14 @@ export const 起動中: Story = {
       'now',
     )
 
-    // The wire was asked for this channel, in the profile the API marks.
     await expect(opened[0].href).toBe(
       '/api/live/ws?network=32736&service=1024&profile=1080p60',
     )
 
-    // Nothing to press yet: the picture has not come.
     await expect(canvas.getByRole('button', { name: '再生' })).toBeDisabled()
   },
 }
 
-/**
- * The sound is answered on the picture here as it is on a recording, with the
- * speaker at its new level and the level in words.
- *
- * Seeking is not answered, because seeking is not taken: the live picture is
- * one edge with nowhere to go back to and nothing to go forward into, so ← →
- * are left to the browser (v3.24) and there is no mark for them.
- */
 export const キーの印: Story = {
   args: { openSocket: stalling },
   play: async ({ canvasElement }) => {
@@ -518,7 +426,6 @@ export const キーの印: Story = {
     press(player, 'm')
     await waitFor(() => expect(said()).toHaveTextContent('95%'))
 
-    // Nothing at the side: there is no seek on the live picture to answer.
     press(player, 'ArrowRight')
     await expect(
       canvasElement.querySelector('[data-slot="player-seek-flash"]'),
@@ -526,11 +433,6 @@ export const キーの印: Story = {
   },
 }
 
-/**
- * The lock and the transcoder run side by side once the tuner is secured. The
- * transcoder has been reached and the lock has not, so the one is done and the
- * other underway, each counting from the tuner.
- */
 export const 起動中_選局を待つ: Story = {
   args: { openSocket: securing },
   play: async ({ canvasElement }) => {
@@ -552,12 +454,6 @@ export const 起動中_選局を待つ: Story = {
   },
 }
 
-/**
- * The picture opens in the profile the API marks as the one it encodes in when
- * the wire asks for none. On a machine with a GPU to hand the encoding to that
- * is the largest of them, and the switch stands on it from the first frame —
- * without a press, and without the screen having a name of its own for it.
- */
 export const 画質は_API_が既定と言うもので開く: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -575,11 +471,6 @@ export const 画質は_API_が既定と言うもので開く: Story = {
   },
 }
 
-/**
- * The same build on a machine with no GPU. The API marks the smallest profile
- * instead, and the screen opens on that — the switch follows the list it was
- * handed, so neither machine needs a build of its own.
- */
 export const 画質は機械が変われば変わる: Story = {
   args: {
     screen: { ...CHOSEN, profiles: LIVE_PROFILE_FIXTURES_SOFTWARE },
@@ -600,11 +491,6 @@ export const 画質は機械が変われば変わる: Story = {
   },
 }
 
-/**
- * A list with nothing on it. There is no profile the API would accept, so no
- * wire is opened and the bar stays away: asking for a name that is not on the
- * list would turn "nothing is offered" into a refusal blaming the tuner.
- */
 export const 画質が一つも無ければ開かない: Story = {
   args: {
     screen: { ...CHOSEN, profiles: [] },
@@ -619,10 +505,6 @@ export const 画質が一つも無ければ開かない: Story = {
   },
 }
 
-/**
- * The profile is part of the session's key: choosing another leaves the wire
- * — saying so, rather than going quiet — and opens a new one in that profile.
- */
 export const 画質を選ぶ: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -645,8 +527,6 @@ export const 画質を選ぶ: Story = {
     await waitFor(() => expect(opened).toHaveLength(2))
     await expect(opened[1].href).toContain('profile=1080p30')
 
-    // The first wire was told the viewer is leaving: a control frame carrying
-    // the one byte that says so.
     await expect(opened[0].sent.map((frame) => [...frame])).toContainEqual([
       0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0x03,
     ])
@@ -654,13 +534,6 @@ export const 画質を選ぶ: Story = {
   },
 }
 
-/**
- * What the session has thrown away, read off the API every two seconds and
- * shown in the gear as a count and nothing else — no line under it saying
- * what a drop is. The count is the session's: every viewer on this channel in
- * this profile is behind the same one, and a viewer who left took nothing
- * off it.
- */
 export const ドロップを数える: Story = {
   args: { openSocket: stalling, askBacklog: counting([18, 19]) },
   play: async ({ canvasElement }) => {
@@ -677,16 +550,10 @@ export const ドロップを数える: Story = {
     await expect(within(gear).getByText('ドロップ')).toBeVisible()
     await expect(within(gear).queryByText(/捨てた/)).toBeNull()
 
-    // The next asking read one more, and the row moved with it.
     await waitFor(() => expect(dropped()).toBe('19 件'), { timeout: 5000 })
   },
 }
 
-/**
- * An API that gives no count — refused, unreachable, or the session not on
- * its list — leaves the row undrawn. A nought the screen has not read would
- * say the session had thrown nothing away, which nobody knows.
- */
 export const ドロップが読めなければ出さない: Story = {
   args: { openSocket: stalling, askBacklog: uncounted },
   play: async ({ canvasElement }) => {
@@ -746,9 +613,6 @@ function refused(
         ).toBeNull()
       }
 
-      // Nothing arrived and nothing will, so the bar that works a picture is
-      // not laid over the face. What is on it — the reason, and the retry —
-      // is the whole of what there is to press.
       for (const control of ['再生', '字幕', '消音', '全画面']) {
         await expect(canvas.queryByRole('button', { name: control })).toBeNull()
       }
@@ -762,43 +626,29 @@ export const 断り_チャンネルなし: Story = refused(
   { retries: false },
 )
 
-/**
- * The wire says nothing about what has the tuner, so neither does the screen.
- */
 export const 断り_チューナー枯渇: Story = refused(
   'noTunerFree',
   '空いているチューナーがありません',
   { looks: true },
 )
 
-/**
- * A recording has it. It comes back at an hour the guide already shows, so the
- * press that asks again is worth drawing.
- */
 export const 断り_チューナー枯渇_録画: Story = refused(
   'noTunerFree',
   'チューナーは録画に使われています',
   { detail: { of: 'heldBy', holder: 'aRecording' }, looks: true },
 )
 
-/** Someone else is watching on it. It comes back when they stop. */
 export const 断り_チューナー枯渇_別の視聴: Story = refused(
   'noTunerFree',
   'チューナーは別の視聴に使われています',
   { detail: { of: 'heldBy', holder: 'anotherViewer' }, looks: true },
 )
 
-/** The wire did not classify the failure, so the screen does not either. */
 export const 断り_選局失敗: Story = refused(
   'wouldNotTune',
   '選局できませんでした',
 )
 
-/**
- * The aerial was reached and never locked on to. Nothing in the system changes
- * between one press and the next, so there is no press: the same ask is
- * refused the same way, and a control that is always refused is not drawn.
- */
 export const 断り_選局失敗_信号を掴めない: Story = refused(
   'wouldNotTune',
   '信号を掴めませんでした',
@@ -877,11 +727,6 @@ export const 撤収_driver消失: Story = ended(
 
 export const 撤収_配信終了: Story = ended('letGo', '配信が終了しました')
 
-/**
- * The wire closed without a word and the session is gone with it. The socket
- * is not reopened: the one way on is to sign in, and the way back is this
- * channel.
- */
 export const セッション切れ: Story = {
   args: { openSocket: dropping, askSignedOut: signedOut },
   play: async ({ canvasElement }) => {
@@ -895,16 +740,10 @@ export const セッション切れ: Story = {
     ).toHaveAttribute('href', '/login?next=%2Flive%3Fch%3D32736-1024')
     await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
 
-    // One wire, and no second one opened behind the reader's back.
     await expect(opened).toHaveLength(1)
   },
 }
 
-/**
- * The wire closed without a word and the session still stands. Nothing is
- * retried on its own; the press that asks again is here, and it opens a new
- * wire.
- */
 export const 接続が切れた: Story = {
   args: { openSocket: dropping },
   play: async ({ canvasElement }) => {
@@ -919,12 +758,6 @@ export const 接続が切れた: Story = {
   },
 }
 
-/**
- * The press after a lost wire opens the next one, and the startup over the
- * picture says it is a reconnection and which one — not the words a channel
- * tuned for the first time gets. Nothing counts down beside it: the wire is
- * reopened by the press and by nothing else.
- */
 export const 再接続中: Story = {
   args: { openSocket: droppingOnce },
   play: async ({ canvasElement }) => {
@@ -942,11 +775,6 @@ export const 再接続中: Story = {
   },
 }
 
-/**
- * The wire has said a picture and the element has nothing to draw yet: the
- * startup plate is down, the channel reads as on air, and the one word over
- * the picture is that it is buffering.
- */
 export const バッファリング: Story = {
   args: { openSocket: stalling },
   play: async ({ canvasElement }) => {
@@ -961,7 +789,6 @@ export const バッファリング: Story = {
   },
 }
 
-/** The canvas the captions are laid on, as the story's canvas element. */
 function captionLayer(canvasElement: HTMLElement): HTMLElement {
   const layer = canvasElement.querySelector('[data-slot="live-captions"]')
 
@@ -972,10 +799,6 @@ function captionLayer(canvasElement: HTMLElement): HTMLElement {
   return layer
 }
 
-/**
- * A caption on the wire, drawn over the picture as soon as the playhead has
- * reached its stamp. The switch on the bar is on, as it starts.
- */
 export const 字幕あり: Story = {
   args: { openSocket: captioned },
   play: async ({ canvasElement }) => {
@@ -994,7 +817,6 @@ export const 字幕あり: Story = {
   },
 }
 
-/** The caption was taken off by an empty frame, and the layer is clear. */
 export const 字幕なし: Story = {
   args: { openSocket: uncaptioned },
   play: async ({ canvasElement }) => {
@@ -1010,10 +832,6 @@ export const 字幕なし: Story = {
   },
 }
 
-/**
- * The switch stops the drawing and nothing else: what is showing is gone from
- * the layer while it is off, and back the moment it is on again.
- */
 export const 字幕を消す: Story = {
   args: { openSocket: captioned },
   play: async ({ canvasElement }) => {
@@ -1044,7 +862,6 @@ export const 字幕を消す: Story = {
   },
 }
 
-/** A header this browser cannot open a buffer for. */
 export const 再生不能: Story = {
   args: { openSocket: undecodable },
   play: async ({ canvasElement }) => {
@@ -1057,12 +874,6 @@ export const 再生不能: Story = {
   },
 }
 
-/**
- * A wire that was neither refused nor closed and never carried a picture. The
- * screen stops waiting on its own rather than holding the startup plate for as
- * long as the reader will look at it, and gives the seat up as it goes: a
- * tuner held by a session that will show nothing is one nobody else can have.
- */
 export const 起動が終わらない: Story = {
   args: { openSocket: securing, startupDeadlineMs: 700 },
   play: async ({ canvasElement }) => {
@@ -1085,12 +896,6 @@ export const 起動が終わらない: Story = {
   },
 }
 
-/**
- * A wire refused at once never carries a picture either, so the clock that
- * waits out a silent startup must not reach past the refusal and rename it.
- * The channel that does not exist is still the channel that does not exist a
- * minute later, and the press it deliberately does not offer stays absent.
- */
 export const 断りは時間で書き換わらない: Story = {
   args: { openSocket: refusing('noSuchChannel'), startupDeadlineMs: 300 },
   play: async ({ canvasElement }) => {
@@ -1108,11 +913,6 @@ export const 断りは時間で書き換わらない: Story = {
   },
 }
 
-/**
- * Nothing anywhere: the aerial has never been scanned, and the way on is the
- * screen that scans it. There is no type bar either — three tabs onto this one
- * panel would be three presses that change nothing.
- */
 export const 空状態: Story = {
   args: {
     screen: { ...UNCHOSEN, kind: 'terrestrial', kinds: [], channels: [] },
@@ -1132,23 +932,12 @@ export const 空状態: Story = {
     ).toHaveAttribute('href', '/settings/channels')
     await expect(canvas.queryByRole('group', { name: '放送の種別' })).toBeNull()
 
-    // Nothing to choose from is one reading, not two: no grid stands beside
-    // the panel saying the same thing a second way.
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).toBeNull()
   },
 }
 
-/**
- * A link named a broadcast type this aerial carries nothing on, while another
- * type carries twenty-seven. Saying there is nothing to watch would be false,
- * and the channel settings are not the way on: the channels are there, and
- * that screen is for adding the ones that are not.
- *
- * The type is answered as the link names it — a URL that says CS110 is not a
- * screen of terrestrial channels — and the way on is the channels there are.
- */
 export const 空状態_この種別にチャンネルが無い: Story = {
   args: {
     screen: {
@@ -1178,8 +967,6 @@ export const 空状態_この種別にチャンネルが無い: Story = {
       canvas.queryByRole('link', { name: 'チャンネル設定へ' }),
     ).toBeNull()
 
-    // The press takes the empty type out of the address, which is what puts
-    // the screen back on the channels there are.
     await userEvent.click(
       canvas.getByRole('button', { name: '地上のチャンネルへ' }),
     )
@@ -1190,10 +977,6 @@ export const 空状態_この種別にチャンネルが無い: Story = {
   },
 }
 
-/**
- * Only one type has channels, so there is nothing to switch between: a lone
- * tab, already pressed, is a press onto the face it is already on.
- */
 export const 種別が1つなら帯を出さない: Story = {
   args: {
     screen: { ...UNCHOSEN, kinds: ['terrestrial'] },
@@ -1212,12 +995,6 @@ export const 種別が1つなら帯を出さない: Story = {
   },
 }
 
-/**
- * No tuner is written down, so nothing on this screen can be watched whichever
- * channel is pressed and whichever broadcast type is looked under. The grid and
- * the type bar both come down: three tabs leading to this same panel would be
- * three presses that change nothing.
- */
 export const 空状態_チューナーなし: Story = {
   args: {
     screen: { ...UNCHOSEN, tuners: 0 },
@@ -1236,8 +1013,6 @@ export const 空状態_チューナーなし: Story = {
       canvas.getByRole('link', { name: 'チューナー設定へ' }),
     ).toHaveAttribute('href', '/settings/tuners')
 
-    // The channels are not offered, and neither is the choice of which ones to
-    // be offered: both would be presses that cannot lead to a picture.
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).toBeNull()
@@ -1245,11 +1020,6 @@ export const 空状態_チューナーなし: Story = {
   },
 }
 
-/**
- * The tuners could not be counted, which is not the same as there being none.
- * A screen that said there were none because it failed to ask would send the
- * reader off to add the tuners they already have.
- */
 export const 空状態_チューナーが数えられない: Story = {
   args: {
     screen: { ...UNCHOSEN, tuners: undefined },
@@ -1270,13 +1040,6 @@ export const 空状態_チューナーが数えられない: Story = {
   },
 }
 
-/**
- * The channels are there and can be tuned; it is the guide behind them that
- * has not been collected. Every card saying it has no programme leaves a reader
- * looking at a screenful of channels that all appear to be broken, so the panel
- * goes under the grid — the channels are still what the screen is for — rather
- * than in place of it.
- */
 export const 空状態_番組情報なし: Story = {
   args: {
     screen: {
@@ -1296,8 +1059,6 @@ export const 空状態_番組情報なし: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // The cards stay, and stay pressable: a channel with no programme listed
-    // is still a channel that tunes.
     await expect(
       canvasElement.querySelectorAll('[data-slot="channel-grid"] > li').length,
     ).toBe(UNCHOSEN.channels.length)
@@ -1312,10 +1073,6 @@ export const 空状態_番組情報なし: Story = {
   },
 }
 
-/**
- * One channel between programmes is that channel's own silence, not the
- * guide's, so the panel is not out.
- */
 export const 番組情報が一部だけ無いときは言わない: Story = {
   args: {
     screen: {
@@ -1334,8 +1091,6 @@ export const 番組情報が一部だけ無いときは言わない: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // Cards with a programme and cards without, standing side by side: this is
-    // the line-up as it comes, not a guide that failed to arrive.
     const silent = canvas.getAllByText('番組情報がありません')
 
     await expect(silent.length).toBeLessThan(UNCHOSEN.channels.length)
@@ -1469,11 +1224,6 @@ function askedForLessMotion(): () => void {
   }
 }
 
-/**
- * Watching, the list folds away on one press and the picture takes the width
- * it leaves. Folded, the types and the rows are out of the page, and the press
- * that brings them back is what is left of the list.
- */
 export const 一覧を畳む: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1527,10 +1277,6 @@ export const 畳んだまま開く: Story = {
   },
 }
 
-/**
- * Before a channel is chosen there is no list beside a picture to fold away,
- * so there is no press for it — whatever an earlier fold said.
- */
 export const 選局前は畳めない: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
   parameters: {
@@ -1722,7 +1468,6 @@ export const 長い一覧でも畳みの長さは変わらない: Story = {
   },
 }
 
-/** The live player, as a press on the picture or a tab into the bar leaves it. */
 function livePlayer(canvasElement: HTMLElement): HTMLElement {
   const found = canvasElement.querySelector('[data-slot="live-player"]')
 
@@ -1733,16 +1478,6 @@ function livePlayer(canvasElement: HTMLElement): HTMLElement {
   return found
 }
 
-/** One press, on the player itself, the way the browser sends one. */
-/**
- * Aiming at the player, which is what a press on the picture does at the
- * moment it goes down.
- *
- * The arrows are the page's until this has happened (v3.37): they scroll, and
- * the screen is scrolled to read the record under the picture. Every story
- * that presses an arrow does this first, because a reader pressing an arrow
- * has done it first.
- */
 function aim(on: HTMLElement) {
   on.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
 }
@@ -1751,7 +1486,6 @@ function press(on: HTMLElement, key: string) {
   on.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
 }
 
-/** The keys the live player shares with the recording one. */
 export const キーで音量と消音: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1773,14 +1507,6 @@ export const キーで音量と消音: Story = {
   },
 }
 
-/**
- * Live has no position, so the arrows that move one are not taken.
- *
- * There is one picture on a live wire and it is the edge: back would leave the
- * seconds the browser is holding and forward has nothing to go into. There is
- * no seek bar on this player for a key to mirror, so the keys are left where
- * they were rather than given a meaning invented for them.
- */
 export const 送りと戻しはライブに無い: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1802,11 +1528,6 @@ export const 送りと戻しはライブに無い: Story = {
   },
 }
 
-/**
- * The press area is over a picture and nowhere else. A wire still coming up
- * has its own plate there, and one that faulted has a press on it that has to
- * be reachable.
- */
 export const 映像の上だけが押せる: Story = {
   args: { openSocket: stalling },
   play: async ({ canvasElement }) => {
@@ -1818,7 +1539,6 @@ export const 映像の上だけが押せる: Story = {
   },
 }
 
-/** Faulted, the press on the notice is the only thing over the face. */
 export const 失敗中は映像を押せない: Story = {
   args: { openSocket: ending('takenForARecording') },
   play: async ({ canvasElement }) => {
@@ -1831,10 +1551,6 @@ export const 失敗中は映像を押せない: Story = {
   },
 }
 
-/**
- * The bar is laid over the picture on a wash, and what is being watched sits
- * on a wash of its own at the top. Neither is a plate.
- */
 export const 操作列は透かしの上: Story = {
   args: { openSocket: stalling },
   play: async ({ canvasElement }) => {
@@ -1848,32 +1564,21 @@ export const 操作列は透かしの上: Story = {
     await expect(getComputedStyle(title as Element).backgroundImage).toContain(
       'linear-gradient',
     )
-    // The title comes and goes with the bar: it is the same statement.
     await expect(title).toHaveAttribute('data-up', 'true')
   },
 }
 
-/** Stopped, the middle carries the mark, and every press is answered there. */
 export const 停止中は中央に印: Story = {
-  // A wire that carries a picture and then stalls: there is something to stop,
-  // which is what the mark in the middle is about. `captioned` sends captions
-  // and no picture, so nothing there is ever pressable.
   args: { openSocket: stalling },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // A press only reaches the picture once there is one, so the press area
-    // is what says the wire has come up. The transport reads 再生 or 一時停止
-    // by what the element is doing; either way it is the control aimed at.
     await waitFor(() =>
       expect(
         canvasElement.querySelector('[data-slot="player-press"]'),
       ).not.toBeNull(),
     )
 
-    // A wire that stalls never reaches playing on its own, so the element is
-    // told what it is doing: what is under test is the rule the phase drives,
-    // not the decoder. Stopped, the middle carries the standing mark.
     const video = canvasElement.querySelector('video') as HTMLVideoElement
 
     video.dispatchEvent(new Event('playing'))
@@ -1885,11 +1590,6 @@ export const 停止中は中央に印: Story = {
       ).not.toBeNull(),
     )
 
-    // And the press that starts it again is answered in the middle too. The
-    // press is the one on the bar: there are two controls named 再生 on a
-    // stopped picture now — the big target in the middle and the small one on
-    // the bar — which is the pair WCAG 2.5.5 allows and every real player
-    // ships (v3.37). This story is about the bar's.
     const bar = canvasElement.querySelector(
       '[data-slot="player-chrome"]',
     ) as HTMLElement
@@ -1905,7 +1605,6 @@ export const 停止中は中央に印: Story = {
   },
 }
 
-/** C presses the caption switch, which is the control on the bar it mirrors. */
 export const 鍵で字幕: Story = {
   args: { openSocket: captioned },
   play: async ({ canvasElement }) => {
@@ -1923,7 +1622,6 @@ export const 鍵で字幕: Story = {
   },
 }
 
-/** Refused, the bar goes with the picture — nothing on it has anything to act on. */
 export const 断られたらバーごと消える: Story = {
   args: { openSocket: ending('takenForARecording') },
   play: async ({ canvasElement }) => {

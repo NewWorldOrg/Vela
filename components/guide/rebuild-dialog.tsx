@@ -15,11 +15,6 @@ import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 import { CheckIcon, RebuildIcon } from '@/components/vela/icons'
 
-/**
- * The confirmation gate in front of the one destructive EPG operation. It
- * spells out what is discarded, how it comes back and what stays, so the
- * press is informed rather than brave.
- */
 export function RebuildEpgDialog({
   open,
   onOpenChange,

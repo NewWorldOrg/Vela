@@ -9,10 +9,6 @@ export interface SegmentedOption {
   label: string
 }
 
-/**
- * The pill-shaped filter switch. Selection is shown with the soft accent
- * surface and a hairline, never with a solid fill.
- */
 export function SegmentedControl({
   options,
   value,
@@ -22,10 +18,8 @@ export function SegmentedControl({
   ...props
 }: Omit<ComponentProps<'div'>, 'onChange' | 'children'> & {
   options: SegmentedOption[]
-  /** Unset selects nothing: the strip states no option rather than a wrong one. */
   value?: string
   onValueChange?: (value: string) => void
-  /** Fades the whole strip and takes it out of the tab order. */
   disabled?: boolean
   'aria-label': string
 }) {

@@ -18,7 +18,6 @@ test('a name carrying no subtitle mark does not say it is subtitled', () => {
 })
 
 test('another broadcast mark is not the subtitle one', () => {
-  // 再 U+1F21E, デ U+1F213, 解 U+1F216, 二 U+1F214 — all marks, none of them 字.
   assert.equal(
     saysSubtitled('ドラマ\u{1F21E}\u{1F213}\u{1F216}\u{1F214}'),
     false,
