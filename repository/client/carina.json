@@ -3587,6 +3587,497 @@
         }
       }
     },
+    "/api/quality/summary": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "getQualitySummary",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualitySummaryResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualitySummaryResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualitySummaryResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quality/channels": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "listQualityChannels",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/QualityMetric"
+              }
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QualityGroupSort"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityChannelListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityChannelListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityChannelListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quality/recordings": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "listQualityRecordings",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/QualityMetric"
+              }
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QualityRecordingSort"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityRecordingListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityRecordingListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityRecordingListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quality/thresholds": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "listQualityThresholds",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityThresholdListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityThresholdListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quality/tuners": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "listQualityTuners",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/QualityMetric"
+              }
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QualityGroupSort"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityTunerListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityTunerListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityTunerListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quality/thresholds/{key}": {
+      "patch": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "reviseQualityThreshold",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReviseQualityThresholdRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReviseQualityThresholdRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityThresholdResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityThresholdResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityThresholdResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityThresholdResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/live/ticket": {
       "post": {
         "tags": [
@@ -6720,6 +7211,162 @@
               },
               {
                 "$ref": "#/components/schemas/ProgrammeSearchResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityChannelListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityChannelListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityRecordingListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityRecordingListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualitySummaryResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualitySummaryResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityThresholdListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityThresholdListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityThresholdResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityThresholdResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityTunerListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityTunerListResponder"
               }
             ]
           }
@@ -10110,6 +10757,127 @@
         ],
         "type": "string"
       },
+      "QualityChannelListResponder": {
+        "required": [
+          "period",
+          "metrics",
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage",
+          "provisional"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/QualityPeriodResponder"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityMetric"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityChannelResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "provisional": {
+            "type": "boolean"
+          }
+        }
+      },
+      "QualityChannelResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "kind",
+          "measures"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "kind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TuneSystem"
+              }
+            ]
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityMeasureResponder"
+            }
+          }
+        }
+      },
+      "QualityGroupSort": {
+        "enum": [
+          "worst",
+          "unmeasured",
+          "subjects",
+          "identity",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
       "QualityLevel": {
         "enum": [
           "good",
@@ -10118,6 +10886,806 @@
           "mayNotBeWatchable"
         ],
         "type": "string"
+      },
+      "QualityMeasureResponder": {
+        "required": [
+          "metric",
+          "reading"
+        ],
+        "type": "object",
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/QualityMetric"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/QualityTallyResponder"
+          }
+        }
+      },
+      "QualityMetric": {
+        "enum": [
+          "packetsLost",
+          "packetsLeftScrambled",
+          "overflows"
+        ],
+        "type": "string"
+      },
+      "QualityPeriodResponder": {
+        "required": [
+          "from",
+          "until"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "QualityReadingResponder": {
+        "required": [
+          "state",
+          "subjects",
+          "measured",
+          "unmeasured",
+          "beyondThreshold"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/QualityState"
+          },
+          "subjects": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "measured": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unmeasured": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "beyondThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "QualityRecordingListResponder": {
+        "required": [
+          "period",
+          "metrics",
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage",
+          "whole",
+          "provisional"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/QualityPeriodResponder"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityMetric"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityRecordingResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "whole": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityMeasureResponder"
+            }
+          },
+          "provisional": {
+            "type": "boolean"
+          }
+        }
+      },
+      "QualityRecordingResponder": {
+        "required": [
+          "id",
+          "networkId",
+          "serviceId",
+          "kind",
+          "tunerDeviceId",
+          "startedAt",
+          "measuredUpdatedAt",
+          "standing",
+          "droppedPackets",
+          "totalPackets",
+          "scrambledPackets",
+          "overflows",
+          "verdicts"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "kind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TuneSystem"
+              }
+            ]
+          },
+          "tunerDeviceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "measuredUpdatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "standing": {
+            "$ref": "#/components/schemas/QualityStanding"
+          },
+          "droppedPackets": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "totalPackets": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "scrambledPackets": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "overflows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "verdicts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityVerdictResponder"
+            }
+          }
+        }
+      },
+      "QualityRecordingSort": {
+        "enum": [
+          "worst",
+          "startedAt",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "QualitySignalResponder": {
+        "required": [
+          "metric",
+          "reading",
+          "lastTakenAt"
+        ],
+        "type": "object",
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/QualityThresholdKey"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/QualityReadingResponder"
+          },
+          "lastTakenAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "QualityStanding": {
+        "enum": [
+          "good",
+          "warning",
+          "mayNotBeWatchable",
+          "unmeasured",
+          "unsupported",
+          "unreachable"
+        ],
+        "type": "string"
+      },
+      "QualityState": {
+        "enum": [
+          "good",
+          "atOrAboveWarning",
+          "unmeasured",
+          "nothingToMeasure",
+          "unsupported",
+          "unreachable"
+        ],
+        "type": "string"
+      },
+      "QualitySummaryResponder": {
+        "required": [
+          "period",
+          "recordings",
+          "measures",
+          "signal",
+          "provisional"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/QualityPeriodResponder"
+          },
+          "recordings": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityMeasureResponder"
+            }
+          },
+          "signal": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualitySignalResponder"
+            }
+          },
+          "provisional": {
+            "type": "boolean"
+          }
+        }
+      },
+      "QualityTallyResponder": {
+        "required": [
+          "state",
+          "subjects",
+          "measured",
+          "unmeasured",
+          "beyondThreshold",
+          "good",
+          "warning",
+          "mayNotBeWatchable",
+          "unsupported",
+          "unreachable",
+          "average",
+          "lowest",
+          "highest"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/QualityState"
+          },
+          "subjects": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "measured": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unmeasured": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "beyondThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "good": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "warning": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "mayNotBeWatchable": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unsupported": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unreachable": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "average": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lowest": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "highest": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "QualityThresholdChangeResponder": {
+        "required": [
+          "previousValue",
+          "nextValue",
+          "changedAt",
+          "changedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "previousValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "nextValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "changedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "QualityThresholdKey": {
+        "enum": [
+          "packetsLostWarning",
+          "packetsLostUnwatchable",
+          "packetsLeftScrambled",
+          "overflows",
+          "lockRate",
+          "carrierToNoiseFloor",
+          "bitErrorRateCeiling",
+          "supplySilence"
+        ],
+        "type": "string"
+      },
+      "QualityThresholdListResponder": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityThresholdResponder"
+            }
+          }
+        }
+      },
+      "QualityThresholdResponder": {
+        "required": [
+          "key",
+          "metric",
+          "sense",
+          "defaultValue",
+          "currentValue",
+          "lowest",
+          "highest",
+          "provisional",
+          "observations",
+          "stored",
+          "updatedAt",
+          "updatedBy",
+          "lastChange"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/QualityThresholdKey"
+          },
+          "metric": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityMetric"
+              }
+            ]
+          },
+          "sense": {
+            "$ref": "#/components/schemas/ThresholdSense"
+          },
+          "defaultValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currentValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lowest": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "highest": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "provisional": {
+            "type": "boolean"
+          },
+          "observations": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "stored": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastChange": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityThresholdChangeResponder"
+              }
+            ]
+          }
+        }
+      },
+      "QualityTunerListResponder": {
+        "required": [
+          "period",
+          "metrics",
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage",
+          "provisional"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/QualityPeriodResponder"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityMetric"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityTunerResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "provisional": {
+            "type": "boolean"
+          }
+        }
+      },
+      "QualityTunerResponder": {
+        "required": [
+          "deviceId",
+          "measures",
+          "signal"
+        ],
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "measures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityMeasureResponder"
+            }
+          },
+          "signal": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualitySignalResponder"
+            }
+          }
+        }
+      },
+      "QualityVerdictResponder": {
+        "required": [
+          "metric",
+          "standing",
+          "observed",
+          "applied",
+          "appliedValue",
+          "provisional",
+          "breached"
+        ],
+        "type": "object",
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/QualityMetric"
+          },
+          "standing": {
+            "$ref": "#/components/schemas/QualityStanding"
+          },
+          "observed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "applied": {
+            "$ref": "#/components/schemas/QualityThresholdKey"
+          },
+          "appliedValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "provisional": {
+            "type": "boolean"
+          },
+          "breached": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityThresholdKey"
+              }
+            ]
+          }
+        }
       },
       "QueueEncodeJobRequest": {
         "type": "object",
@@ -10322,7 +11890,8 @@
           "fileOutOfReach",
           "rootOutOfReach",
           "filesLeftBehind",
-          "oneIsAlreadyBeingDiscarded"
+          "oneIsAlreadyBeingDiscarded",
+          "tookTooLong"
         ],
         "type": "string"
       },
@@ -11280,6 +12849,7 @@
           "kind",
           "tuneFailure",
           "recordingOutcome",
+          "faults",
           "recordedInstead",
           "effectiveStartAt",
           "effectiveEndAt",
@@ -11322,6 +12892,12 @@
                 "$ref": "#/components/schemas/RecordingOutcome"
               }
             ]
+          },
+          "faults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingFault"
+            }
           },
           "recordedInstead": {
             "type": "array",
@@ -11713,6 +13289,23 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "ReviseQualityThresholdRequest": {
+        "required": [
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -13329,6 +14922,13 @@
           }
         }
       },
+      "ThresholdSense": {
+        "enum": [
+          "ceiling",
+          "floor"
+        ],
+        "type": "string"
+      },
       "ThumbnailFault": {
         "enum": [
           "programmeMissing",
@@ -13827,6 +15427,9 @@
     },
     {
       "name": "recordings"
+    },
+    {
+      "name": "quality"
     },
     {
       "name": "live"

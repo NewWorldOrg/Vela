@@ -1,9 +1,15 @@
 import Link from 'next/link'
 
+import type { QualityLevel } from '@/lib/quality'
+import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
 import { cn } from '@/lib/utils'
-import type { QualityLevel, QualityResult } from '@/repository/quality'
+import type {
+  QualityChannel,
+  QualityResult,
+  QualityThresholdKey,
+  QualityWrite,
+} from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -12,7 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Banner } from '@/components/vela/banner'
 import {
   ADMIN_LIST_HEIGHT_CAP,
   Crumb,
@@ -21,7 +26,6 @@ import {
 import { EmptyState } from '@/components/vela/empty-state'
 import {
   ChevronRightIcon,
-  MarkDoubleCircle,
   MarkDots,
   MarkPill,
   MarkSlashes,
@@ -29,10 +33,8 @@ import {
 } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
-import {
-  QUALITY_LEVEL_LABEL,
-  QualityChip,
-} from '@/components/quality/signal-quality-chip'
+import { ChangeThresholdButton } from '@/components/quality/change-threshold-button'
+import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
 
 const HEALTH_COLUMNS = [
@@ -54,7 +56,71 @@ const BAR_TONE: Record<QualityLevel, string> = {
   unreachable: 'bg-transparent',
 }
 
-export function QualityView({ result }: { result: QualityResult }) {
+function ChannelMeters({
+  channels,
+  warnMarkPct,
+}: {
+  channels: QualityChannel[]
+  warnMarkPct?: number
+}) {
+  return (
+    <Surface className="space-y-3">
+      {channels.map((channel) => (
+        <div key={channel.id}>
+          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+            <span className="text-ui font-bold">{channel.name}</span>
+            {channel.no && (
+              <span className="font-code text-note text-ink-3">
+                {channel.no}
+              </span>
+            )}
+            <span className="ml-auto flex items-center gap-2.5">
+              {channel.dropRate && (
+                <b className="font-code text-ui tabular-nums">
+                  {channel.dropRate}
+                </b>
+              )}
+              <QualityChip level={channel.level}>
+                {QUALITY_LEVEL_LABEL[channel.level]}
+              </QualityChip>
+            </span>
+          </div>
+          <div className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
+            {channel.barPct !== undefined && (
+              <div
+                className={cn('h-full rounded-full', BAR_TONE[channel.level])}
+                style={{ width: `${channel.barPct}%` }}
+              />
+            )}
+            {warnMarkPct !== undefined && (
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-0 w-px bg-ink-3/45"
+                style={{ left: `${warnMarkPct}%` }}
+              />
+            )}
+          </div>
+          <p className="mt-1 font-code text-note tabular-nums text-ink-3">
+            {channel.note}
+          </p>
+        </div>
+      ))}
+    </Surface>
+  )
+}
+
+export type QualityReviseThreshold = (
+  key: QualityThresholdKey,
+  amount: number,
+) => Promise<QualityWrite>
+
+export function QualityView({
+  result,
+  onReviseThreshold,
+}: {
+  result: QualityResult
+  onReviseThreshold: QualityReviseThreshold
+}) {
   return (
     <>
       <Crumb>
@@ -63,34 +129,24 @@ export function QualityView({ result }: { result: QualityResult }) {
       <PageHeading
         action={
           <div className="inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]">
-            {result.windowOptions.map((option) => (
-              <span
-                key={option}
+            {result.windows.map((window) => (
+              <Link
+                key={window.label}
+                href={window.href}
+                aria-current={window.current ? 'page' : undefined}
                 className={cn(
-                  'rounded-full px-3.5 py-[5px] text-sub font-medium whitespace-nowrap text-ink-2',
-                  option === result.windowLabel &&
-                    'bg-brand-soft font-bold text-brand',
+                  'tap-target cursor-pointer rounded-full px-3.5 py-[5px] text-sub font-medium whitespace-nowrap text-ink-2 transition-[background-color,color] duration-150 hover:text-ink',
+                  window.current && 'bg-brand-soft font-bold text-brand',
                 )}
               >
-                {option}
-              </span>
+                {window.label}
+              </Link>
             ))}
           </div>
         }
       >
         品質
       </PageHeading>
-
-      {result.supplyOutage && (
-        <Banner
-          tone="danger"
-          className="mt-3.5"
-          actions={[{ label: 'チューナーへ', href: '/settings/tuners' }]}
-        >
-          <b className="block">{result.supplyOutage.title}</b>
-          {result.supplyOutage.body}
-        </Banner>
-      )}
 
       <div className="mt-3.5 grid gap-2.5 min-[720px]:grid-cols-2 min-[1120px]:grid-cols-4">
         {result.stats.map((stat) => (
@@ -147,75 +203,53 @@ export function QualityView({ result }: { result: QualityResult }) {
           <div className="space-y-2">
             {result.thresholds.map((threshold) => (
               <div
-                key={threshold.label}
+                key={threshold.key}
                 className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0"
               >
                 <span className="text-ui font-bold">{threshold.label}</span>
                 <span className="font-code text-ui tabular-nums text-brand">
                   {threshold.value}
                 </span>
-                <Badge variant="mute">暫定</Badge>
+                {threshold.provisional && <Badge variant="mute">暫定</Badge>}
                 <span className="w-full font-code text-note text-ink-3">
                   {threshold.basis}
                 </span>
               </div>
             ))}
           </div>
-          <div className="mt-3 flex justify-end border-t border-dashed border-line pt-3">
-            <Button variant="ghost" size="sm" disabled>
-              閾値を変更
-            </Button>
-          </div>
+          {result.thresholds.length > 0 && (
+            <div className="mt-3 flex justify-end border-t border-dashed border-line pt-3">
+              <ChangeThresholdButton
+                thresholds={result.thresholds}
+                onRevise={onReviseThreshold}
+              />
+            </div>
+          )}
         </Surface>
       </div>
 
       <section className="mt-5">
         <SectionHeading mark={MarkDots}>チャンネル別ドロップ率</SectionHeading>
-        <Surface className="space-y-3">
-          {result.channels.map((channel) => (
-            <div key={channel.no}>
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                <span className="text-ui font-bold">{channel.name}</span>
-                <span className="font-code text-note text-ink-3">
-                  {channel.no}
-                </span>
-                <span className="ml-auto flex items-center gap-2.5">
-                  {channel.dropRate && (
-                    <b className="font-code text-ui tabular-nums">
-                      {channel.dropRate}
-                    </b>
-                  )}
-                  <QualityChip level={channel.level}>
-                    {QUALITY_LEVEL_LABEL[channel.level]}
-                  </QualityChip>
-                </span>
-              </div>
-              <div className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
-                {channel.barPct !== undefined && (
-                  <div
-                    className={cn(
-                      'h-full rounded-full',
-                      BAR_TONE[channel.level],
-                    )}
-                    style={{ width: `${channel.barPct}%` }}
-                  />
-                )}
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-y-0 left-[20%] w-px bg-ink-3/45"
-                />
-              </div>
-              <p className="mt-1 font-code text-note tabular-nums text-ink-3">
-                {channel.note}
-              </p>
-            </div>
-          ))}
-        </Surface>
+        {result.channels.length > 0 ? (
+          <ChannelMeters
+            channels={result.channels}
+            warnMarkPct={result.warnMarkPct}
+          />
+        ) : (
+          <EmptyState spot="antenna" title="対象なし">
+            期間内に地上波の録画がありません。
+          </EmptyState>
+        )}
       </section>
 
       <section className="mt-5">
         <SectionHeading mark={MarkSlashes}>BS / CS のドロップ率</SectionHeading>
-        {result.satelliteMeasured ? null : (
+        {result.satellites.length > 0 ? (
+          <ChannelMeters
+            channels={result.satellites}
+            warnMarkPct={result.warnMarkPct}
+          />
+        ) : (
           <EmptyState spot="antenna" title="対象なし">
             期間内に BS / CS の録画がありません。
           </EmptyState>
@@ -224,45 +258,50 @@ export function QualityView({ result }: { result: QualityResult }) {
 
       <section className="mt-5">
         <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
-        <Table
-          className="min-w-[900px]"
-          containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
-        >
-          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
-            <TableRow>
-              {HEALTH_COLUMNS.map((column) => (
-                <TableHead key={column}>{column}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {result.tuners.map((tuner) => (
-              <TableRow key={tuner.id}>
-                <TableCell className="align-top">
-                  <b className="block text-[13px] font-bold">{tuner.device}</b>
-                  <span className="text-note text-ink-3">{tuner.hardware}</span>
-                </TableCell>
-                <TableCell className="align-top whitespace-normal">
-                  <span className="flex flex-wrap items-center gap-1.5">
+        {result.tuners.length > 0 ? (
+          <Table
+            className="min-w-[900px]"
+            containerClassName={cn(
+              ADMIN_LIST_HEIGHT_CAP,
+              'overflow-y-auto pb-1',
+            )}
+          >
+            <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
+              <TableRow>
+                {HEALTH_COLUMNS.map((column) => (
+                  <TableHead key={column}>{column}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {result.tuners.map((tuner) => (
+                <TableRow key={tuner.id}>
+                  <TableCell className="align-top">
+                    <b className="block text-[13px] font-bold">
+                      {tuner.device}
+                    </b>
+                    <span className="text-note text-ink-3">
+                      {tuner.hardware}
+                    </span>
+                  </TableCell>
+                  <TableCell className="align-top whitespace-normal">
                     <QualityChip level={tuner.state.level}>
                       {tuner.state.label}
                     </QualityChip>
-                    {tuner.state.recap && (
-                      <Badge variant="mute">{tuner.state.recap}</Badge>
-                    )}
-                  </span>
-                  <span className="mt-1 block text-note text-ink-3">
-                    {tuner.state.sub}
-                  </span>
-                </TableCell>
-                <QualityHealthCell cell={tuner.drop} />
-                <QualityHealthCell cell={tuner.lock} />
-                <QualityHealthCell cell={tuner.cnr} />
-                <QualityHealthCell cell={tuner.ber} />
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableCell>
+                  <QualityHealthCell cell={tuner.drop} />
+                  <QualityHealthCell cell={tuner.lock} />
+                  <QualityHealthCell cell={tuner.cnr} />
+                  <QualityHealthCell cell={tuner.ber} />
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <EmptyState spot="antenna" title="対象なし">
+            期間内に録画したチューナーがありません。
+          </EmptyState>
+        )}
         <div className="mt-2.5 flex justify-end">
           <Link
             href="/settings/tuners"
@@ -276,35 +315,43 @@ export function QualityView({ result }: { result: QualityResult }) {
       <div className="mt-5 grid gap-2.5 min-[900px]:grid-cols-2">
         <Surface>
           <SectionHeading mark={MarkDots}>問題のある録画</SectionHeading>
-          <div className="space-y-2">
-            {result.problemRecordings.map((recording) => (
-              <div
-                key={recording.id}
-                className="border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0"
-              >
-                <div className="flex items-center gap-2.5">
-                  <b className="min-w-0 flex-1 text-ui font-bold">
-                    {recording.title}
-                  </b>
-                  <ChevronRightIcon className="size-4 shrink-0 text-ink-3" />
-                </div>
-                <span className="block text-note text-ink-3">
-                  {recording.where}
-                </span>
-                <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                  <span className="font-code text-note tabular-nums text-ink-2">
-                    {recording.drops}
+          {result.problemRecordings.length > 0 ? (
+            <div className="space-y-2">
+              {result.problemRecordings.map((recording) => (
+                <div
+                  key={recording.id}
+                  className="border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <b className="min-w-0 flex-1 text-ui font-bold">
+                      {recording.title}
+                    </b>
+                    <ChevronRightIcon className="size-4 shrink-0 text-ink-3" />
+                  </div>
+                  <span className="block text-note text-ink-3">
+                    {recording.where}
                   </span>
-                  <b className="font-code text-ui tabular-nums">
-                    {recording.pct}
-                  </b>
-                  <QualityChip level={recording.level}>
-                    {QUALITY_LEVEL_LABEL[recording.level]}
-                  </QualityChip>
-                </span>
-              </div>
-            ))}
-          </div>
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                    <span className="font-code text-note tabular-nums text-ink-2">
+                      {recording.drops}
+                    </span>
+                    {recording.pct && (
+                      <b className="font-code text-ui tabular-nums">
+                        {recording.pct}
+                      </b>
+                    )}
+                    <QualityChip level={recording.level}>
+                      {QUALITY_LEVEL_LABEL[recording.level]}
+                    </QualityChip>
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState spot={null} title="対象なし">
+              期間内に警告水準を超えた録画がありません。
+            </EmptyState>
+          )}
           <div className="mt-3 flex justify-end border-t border-dashed border-line pt-3">
             <Link
               href="/library"
@@ -312,49 +359,6 @@ export function QualityView({ result }: { result: QualityResult }) {
             >
               ライブラリで絞り込む
             </Link>
-          </div>
-        </Surface>
-
-        <Surface>
-          <SectionHeading mark={MarkDoubleCircle}>異常一覧</SectionHeading>
-          <div className="-mt-2 mb-3 flex flex-wrap items-center justify-end gap-2.5">
-            <QualityChip level="bad">所有 {result.ownedCount} 件</QualityChip>
-            <Badge variant="mute">再掲 {result.recapCount} 件</Badge>
-          </div>
-          <div className="space-y-2">
-            {result.anomalies.map((anomaly) => (
-              <div
-                key={anomaly.id}
-                className={cn(
-                  'flex flex-wrap items-start gap-x-2.5 gap-y-1.5 border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0',
-                  anomaly.acknowledged &&
-                    '-mx-2.5 rounded-md bg-surface-2 px-2.5 py-2 last:pb-2',
-                )}
-              >
-                <div className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    <b className="text-ui font-bold">{anomaly.title}</b>
-                    {anomaly.recap ? (
-                      <Badge variant="mute">{anomaly.recap}</Badge>
-                    ) : (
-                      <QualityChip level={anomaly.level}>
-                        {anomaly.levelLabel}
-                      </QualityChip>
-                    )}
-                    {anomaly.acknowledged && (
-                      <Badge variant="secondary">確認済み</Badge>
-                    )}
-                  </span>
-                  <p className="mt-0.5 text-note text-ink-2">{anomaly.body}</p>
-                  <span className="text-note text-ink-3">{anomaly.meta}</span>
-                </div>
-                <Button variant="ghost" size="sm" disabled>
-                  {anomaly.acknowledged
-                    ? '確認済みを取り消す'
-                    : '確認済みにする'}
-                </Button>
-              </div>
-            ))}
           </div>
         </Surface>
       </div>
