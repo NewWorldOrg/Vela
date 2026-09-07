@@ -18,21 +18,21 @@
 /**
  * How long one of the wire's pictures is.
  *
- * Measured on the running wire, not assumed: 199 appends over 40 seconds, each
- * carrying 0.200 s of picture, arriving 200 ms apart at the median and 340 ms
- * apart at the worst. It is the floor under everything below — a playhead held
- * closer to the edge than the wire's own granularity is a playhead held where
- * the next picture has not been sent yet.
+ * Measured on the running wire, not assumed: 743 appends over 40 seconds, each
+ * carrying 0.050 s of picture, arriving 53 ms apart at the median and 89 ms
+ * apart at the ninety-fifth. It is the floor under everything below — a
+ * playhead held closer to the edge than the wire's own granularity is a
+ * playhead held where the next picture has not been sent yet.
  */
-export const PART_SECONDS = 0.2
+export const PART_SECONDS = 0.05
 
 /**
  * How far behind the newest picture the playhead is held.
  *
- * Five of the wire's parts. HLS puts the same floor under a live playhead from
- * the other side — `PART-HOLD-BACK` must be at least twice the part and should
- * be at least three times it, "doing so can trigger playback stalls" — and
- * five is above that with room for a part that arrives late.
+ * Twenty of the wire's parts. HLS puts the same floor under a live playhead
+ * from the other side — `PART-HOLD-BACK` must be at least twice the part and
+ * should be at least three times it, "doing so can trigger playback stalls" —
+ * and twenty is well above that with room for a part that arrives late.
  */
 export const TARGET_SECONDS = 1.0
 
