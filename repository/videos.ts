@@ -109,8 +109,7 @@ export const getUnaskedPlaybackProfile = cache(
 
       return PLAYBACK_PROFILES.find((one) => one === named)
     } catch {
-      // Not a fallback: asking for no profile is the unasked request, which is
-      // what the API answers from the machine's own encoder.
+      // Sending no profile is the unasked request, not a fallback.
       return undefined
     }
   },

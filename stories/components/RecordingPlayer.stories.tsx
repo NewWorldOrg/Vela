@@ -295,11 +295,6 @@ export const 読み込み中: Story = {
   },
 }
 
-/**
- * A recording opens at the size the machine encodes at, and the screen keeps
- * no name of its own. The mark moves with the encoder the machine has, so a
- * machine with a card to pass the work to opens at `1080p60`.
- */
 export const 機械が1080p60と答える: Story = {
   args: {
     detail: detail('1266'),
@@ -321,7 +316,6 @@ export const 機械が1080p60と答える: Story = {
   },
 }
 
-/** The same screen on a machine with no card, which answers the smaller one. */
 export const 機械が720p30と答える: Story = {
   args: {
     detail: detail('1266'),
@@ -343,11 +337,6 @@ export const 機械が720p30と答える: Story = {
   },
 }
 
-/**
- * Nothing is named when the machine could not be asked: the picture is asked
- * for without a profile, which is the request the API answers from its own
- * encoder. The panel marks nothing, because nothing here knows what it plays at.
- */
 export const 機械に聞けなければ何も指定しない: Story = {
   args: {
     detail: detail('1266'),
@@ -374,10 +363,6 @@ export const 機械に聞けなければ何も指定しない: Story = {
 /**
  * The profile is an argument the API takes, so choosing one asks for the
  * picture again in it. It used to move its own pill and nothing else.
- *
- * A choice is asked for exactly as it was made, over the machine's own answer:
- * the reader who picks the smaller picture on a machine that opens at the
- * bigger one gets the smaller one.
  */
 export const 画質を選ぶ: Story = {
   args: {
