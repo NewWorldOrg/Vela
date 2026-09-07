@@ -907,6 +907,24 @@ export function AirPlayIcon(props: IconProps) {
   )
 }
 
+export function CaptureIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3.4 7.6h3.7l1.5-2.4h6.8l1.5 2.4h3.7v11.2H3.4Z" />
+      <circle cx="12" cy="12.9" r="3.5" />
+    </Icon>
+  )
+}
+
+export function PictureInPictureIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20.8 12.6V5.9a1.3 1.3 0 0 0-1.3-1.3H4.5a1.3 1.3 0 0 0-1.3 1.3v10.4a1.3 1.3 0 0 0 1.3 1.3h5.2" />
+      <path d="M12.6 13.2h7.1a1.1 1.1 0 0 1 1.1 1.1v4a1.1 1.1 0 0 1-1.1 1.1h-7.1a1.1 1.1 0 0 1-1.1-1.1v-4a1.1 1.1 0 0 1 1.1-1.1Z" />
+    </Icon>
+  )
+}
+
 export function FullscreenIcon({
   leaving,
   ...props

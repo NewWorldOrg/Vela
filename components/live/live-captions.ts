@@ -94,6 +94,27 @@ export class CaptionLayer {
     this.tick()
   }
 
+  drawOn(
+    context: CanvasRenderingContext2D,
+    size: { width: number; height: number },
+  ): void {
+    const drawn = this.current?.picture?.picture
+
+    if (!this.on || !drawn || !this.bitmap || !this.drawnOn || this.closed) {
+      return
+    }
+
+    const place = placedOn({ left: 0, top: 0, ...size }, this.drawnOn, drawn)
+
+    context.drawImage(
+      this.bitmap,
+      place.left,
+      place.top,
+      place.width,
+      place.height,
+    )
+  }
+
   show(on: boolean): void {
     this.on = on
     this.paint()

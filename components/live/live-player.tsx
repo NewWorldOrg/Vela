@@ -18,8 +18,10 @@ import {
 } from '@/lib/live-latency'
 import {
   CaptionsGlyph,
+  CaptureIcon,
   FullscreenIcon,
   PauseGlyph,
+  PictureInPictureIcon,
   PlayGlyph,
   VolumeIcon,
 } from '@/components/vela/icons'
@@ -38,6 +40,14 @@ import {
   PLAYER_SCRIM_TOP,
 } from '@/components/recordings/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
+import {
+  SAID_CAPTURED,
+  SAID_NOT_CAPTURED,
+  takeCapture as takeItNow,
+  type TakeCapture,
+} from '@/components/recordings/player-capture'
+import { capturedName, capturedOn } from '@/lib/player-capture'
+import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
   type PlayerBezel,
@@ -172,6 +182,7 @@ export function LivePlayer({
   askBacklog = askLiveBacklog,
   wireHref = liveWireHref,
   startupDeadlineMs = STARTUP_DEADLINE_MS,
+  takeCapture = takeItNow,
 }: {
   /** The channel chosen. Nothing chosen is a face with no picture on it. */
   channel?: LiveChannel
@@ -187,6 +198,7 @@ export function LivePlayer({
   wireHref?: (networkId: number, serviceId: number, profile: string) => string
   /** How long a silent startup is waited out. A story sets its own and waits. */
   startupDeadlineMs?: number
+  takeCapture?: TakeCapture
 }) {
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -200,6 +212,10 @@ export function LivePlayer({
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
   const [full, setFull] = useState(false)
+  const [said, setSaid] = useState<{
+    text: string
+    tone: 'ok' | 'err'
+  } | null>(null)
 
   const [stirred, setStirred] = useState(false)
   const [onTheBar, setOnTheBar] = useState(false)
@@ -519,10 +535,30 @@ export function LivePlayer({
     setHeld((was) => patch(was && was.key === key ? was : begun(key)))
   }
 
+  const pip = usePictureInPicture(video)
   const hasPicture =
     phase === 'playing' || phase === 'paused' || phase === 'buffering'
   const chromeUp =
-    phase !== 'playing' || stirred || onTheBar || focused || settingsOpen
+    phase !== 'playing' ||
+    stirred ||
+    onTheBar ||
+    focused ||
+    settingsOpen ||
+    pip.out
+
+  const capture = async () => {
+    const got = await takeCapture({
+      video: video.current,
+      name: capturedName(channel?.name ?? '', capturedOn(Date.now())),
+      over: (context, size) => captions.current?.drawOn(context, size),
+    })
+
+    setSaid(
+      got === 'saved'
+        ? { text: SAID_CAPTURED, tone: 'ok' }
+        : { text: SAID_NOT_CAPTURED, tone: 'err' },
+    )
+  }
 
   /**
    * Whether the reader has aimed at this player, as against the screen having
@@ -714,6 +750,10 @@ export function LivePlayer({
     }
   }, [shell, hasPicture])
 
+  useEffect(() => {
+    captions.current?.show(!pip.out && captionsWanted.current)
+  }, [pip.out, key])
+
   const latency = running?.latency
 
   return (
@@ -778,7 +818,7 @@ export function LivePlayer({
             className="pointer-events-none absolute inset-0 size-full"
           />
         </div>
-        {hasPicture && (
+        {hasPicture && !pip.out && (
           // The same press area the recording player has: one press runs or
           // stops the picture, two put it on the whole screen, and the second
           // press of a double undoes the first. The picture answering a press,
@@ -811,7 +851,7 @@ export function LivePlayer({
           // been stopped is as still as any other, and the press that stopped
           // it was made at the bottom edge or on a key.
           <PlayerCenter
-            standing={phase === 'paused' ? 'play' : undefined}
+            standing={!pip.out && phase === 'paused' ? 'play' : undefined}
             /*
               The button goes as soon as the picture runs, and a focused
               element that unmounts drops the focus back to `<body>` — which
@@ -864,7 +904,15 @@ export function LivePlayer({
             reconnecting={reconnecting}
           />
         )}
-        {phase === 'buffering' && (
+        {pip.out && (
+          <p
+            role="status"
+            className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
+          >
+            ピクチャーインピクチャーで再生中
+          </p>
+        )}
+        {!pip.out && phase === 'buffering' && (
           <p
             role="status"
             className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
@@ -925,6 +973,17 @@ export function LivePlayer({
             'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
           )}
         >
+          {said && (
+            <p
+              role="status"
+              className={cn(
+                'mb-2 text-[11px] font-medium',
+                said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
+              )}
+            >
+              {said.text}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
             <button
               type="button"
@@ -993,6 +1052,30 @@ export function LivePlayer({
                 onChooseProfile={setProfile}
                 dropped={running?.dropped}
               />
+              <button
+                type="button"
+                aria-label="キャプチャ"
+                disabled={!hasPicture}
+                onClick={capture}
+                className={PLAYER_GLYPH_BUTTON}
+              >
+                <CaptureIcon />
+              </button>
+              {pip.offered && (
+                <button
+                  type="button"
+                  aria-label="ピクチャーインピクチャー"
+                  aria-pressed={pip.out}
+                  disabled={!hasPicture}
+                  onClick={pip.toggle}
+                  className={cn(
+                    PLAYER_GLYPH_BUTTON,
+                    pip.out && PLAYER_GLYPH_BUTTON_ON,
+                  )}
+                >
+                  <PictureInPictureIcon />
+                </button>
+              )}
               <button
                 type="button"
                 aria-label="全画面"

@@ -35,6 +35,7 @@ import type {
   OpenSocket,
 } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
+import type { TakeCapture } from '@/components/recordings/player-capture'
 
 /**
  * A socket a story drives. It opens on the next tick, the way a real one opens
@@ -1932,5 +1933,162 @@ export const 断られたらバーごと消える: Story = {
     await expect(canvas.queryByRole('button', { name: '全画面' })).toBeNull()
     await expect(canvas.queryByRole('button', { name: '字幕' })).toBeNull()
     await expect(canvas.queryByRole('slider', { name: '音量' })).toBeNull()
+  },
+}
+
+const withAPicture = scripted((socket) => {
+  socket.say(progress(LOCKED))
+  socket.say(CAPTION_CANVAS)
+  socket.say(CAPTION_SHOWN)
+  socket.say(PICTURED)
+})
+
+interface Laid {
+  name: string
+  lit: number
+}
+
+const laid: Laid[] = []
+
+const OVER_A_BROADCAST = { width: 1440, height: 1080 }
+
+const capturing: TakeCapture = async ({ name, over }) => {
+  const plate = document.createElement('canvas')
+
+  plate.width = OVER_A_BROADCAST.width
+  plate.height = OVER_A_BROADCAST.height
+
+  const context = plate.getContext('2d') as CanvasRenderingContext2D
+
+  over?.(context, OVER_A_BROADCAST)
+
+  const pixels = context.getImageData(0, 0, plate.width, plate.height).data
+  let lit = 0
+
+  for (let at = 3; at < pixels.length; at += 4) {
+    if (pixels[at] > 0) {
+      lit += 1
+    }
+  }
+
+  laid.push({ name, lit })
+
+  return 'saved'
+}
+
+const CAPTURED_NAME = /^みなと総合1 \d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.png$/
+
+export const キャプチャは画面のとおり字幕ごと: Story = {
+  args: { openSocket: withAPicture, takeCapture: capturing },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    laid.length = 0
+    await userEvent.click(canvas.getByRole('button', { name: 'キャプチャ' }))
+    await waitFor(() => expect(laid).toHaveLength(1))
+
+    await expect(laid[0].name).toMatch(CAPTURED_NAME)
+    await expect(laid[0].lit).toBeGreaterThan(0)
+    await expect(canvas.getByText('キャプチャを保存しました')).toBeVisible()
+  },
+}
+
+export const 字幕を消したキャプチャに字幕は入らない: Story = {
+  args: { openSocket: withAPicture, takeCapture: capturing },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '字幕' }))
+    await expect(captionLayer(canvasElement)).toHaveAttribute(
+      'data-caption',
+      'off',
+    )
+
+    laid.length = 0
+    await userEvent.click(canvas.getByRole('button', { name: 'キャプチャ' }))
+    await waitFor(() => expect(laid).toHaveLength(1))
+
+    await expect(laid[0].lit).toBe(0)
+  },
+}
+
+export const ピクチャーインピクチャー: Story = {
+  args: { openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+    const control = canvas.getByRole('button', {
+      name: 'ピクチャーインピクチャー',
+    })
+
+    await expect(control).toHaveAttribute('aria-pressed', 'false')
+
+    const outIs = (out: boolean) => {
+      Object.defineProperty(document, 'pictureInPictureElement', {
+        value: out ? picture : null,
+        configurable: true,
+      })
+      picture.dispatchEvent(
+        new Event(out ? 'enterpictureinpicture' : 'leavepictureinpicture', {
+          bubbles: true,
+        }),
+      )
+    }
+
+    try {
+      outIs(true)
+
+      await waitFor(() =>
+        expect(control).toHaveAttribute('aria-pressed', 'true'),
+      )
+      await expect(
+        canvas.getByText('ピクチャーインピクチャーで再生中'),
+      ).toBeVisible()
+      await waitFor(() =>
+        expect(captionLayer(canvasElement)).toHaveAttribute(
+          'data-caption',
+          'off',
+        ),
+      )
+
+      outIs(false)
+
+      await waitFor(() =>
+        expect(control).toHaveAttribute('aria-pressed', 'false'),
+      )
+      await waitFor(() =>
+        expect(captionLayer(canvasElement)).toHaveAttribute(
+          'data-caption',
+          'shown',
+        ),
+      )
+      await expect(
+        canvas.queryByText('ピクチャーインピクチャーで再生中'),
+      ).toBeNull()
+    } finally {
+      Reflect.deleteProperty(document, 'pictureInPictureElement')
+    }
   },
 }

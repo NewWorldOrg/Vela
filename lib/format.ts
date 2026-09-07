@@ -21,7 +21,7 @@ export function formatBytes(bytes: number) {
  * keeps a server and a browser on the same answer, and what keeps a container
  * without `TZ` from quietly serving times nine hours out.
  */
-const DISPLAY_ZONE = 'Asia/Tokyo'
+export const DISPLAY_ZONE = 'Asia/Tokyo'
 
 const CALENDAR = new Intl.DateTimeFormat('en-US', {
   timeZone: DISPLAY_ZONE,
