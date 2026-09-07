@@ -16,6 +16,7 @@ import type {
   EncodeFailure,
   EncodeJobStatus,
   EncodeProfileDraft,
+  EncodeRemoved,
   EncodeResolution,
   EncodeSwerve,
 } from '@/repository/encode-terms'
@@ -41,6 +42,7 @@ export interface EncodeProfile {
   rateFactor: number
   quantiser: number
   definedAt: string
+  retired: boolean
 }
 
 export interface EncodeDestination {
@@ -50,6 +52,7 @@ export interface EncodeDestination {
   defaultProfileId: string
   defaultProfileLabel?: string
   definedAt: string
+  retired: boolean
 }
 
 export interface EncodeHeadway {
@@ -122,6 +125,11 @@ export type EncodeWrite =
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
+export type EncodeRemoval =
+  | { state: 'ok'; removal: EncodeRemoved }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
+
 export interface EncodeChoice {
   id: string
   label: string
@@ -139,6 +147,19 @@ export interface EncodeChoices {
 const JOBS_PER_PAGE = 20
 
 const UNREADABLE = 'エンコードの台帳を読めませんでした'
+
+const PROFILE_UNSAVEABLE = 'この内容ではプロファイルを保存できませんでした。'
+
+const DESTINATION_UNSAVEABLE = 'この内容では保存先を保存できませんでした。'
+
+const ROOT_REFUSED = 'この出力ルートには成果物を置けません。'
+
+const ROOTS_UNREADABLE =
+  '保存先の一覧を確認できないため、保存できませんでした。'
+
+const PROFILE_GONE = 'このプロファイルは残っていないため、'
+
+const DESTINATION_GONE = 'この保存先は残っていないため、'
 
 export async function getEncodeScreen(
   query: EncodeQuery = {},
@@ -192,8 +213,10 @@ export async function listEncodeChoices(): Promise<EncodeChoices> {
   ])
 
   return {
-    profiles: profiles.map((one) => ({ id: one.id, label: one.label })),
-    destinations: destinations.map((one) => ({
+    profiles: profiles
+      .filter(stillOffered)
+      .map((one) => ({ id: one.id, label: one.label })),
+    destinations: destinations.filter(stillOffered).map((one) => ({
       id: one.id,
       label: one.label,
       defaultProfileId: one.defaultProfileId,
@@ -209,8 +232,32 @@ export async function defineProfile(
     { body: draft },
   )
 
+  return toWrite(response, whatItSaid(error), { 400: PROFILE_UNSAVEABLE })
+}
+
+export async function reviseProfile(
+  id: string,
+  draft: EncodeProfileDraft,
+): Promise<EncodeWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/encoding/profiles/{id}',
+    { params: { path: { id } }, body: draft },
+  )
+
   return toWrite(response, whatItSaid(error), {
-    400: 'この内容ではプロファイルを保存できませんでした。',
+    400: PROFILE_UNSAVEABLE,
+    404: `${PROFILE_GONE}変更できませんでした。`,
+  })
+}
+
+export async function removeProfile(id: string): Promise<EncodeRemoval> {
+  const { data, error, response } = await carinaClient().DELETE(
+    '/api/encoding/profiles/{id}',
+    { params: { path: { id } } },
+  )
+
+  return toRemoval(response, data?.data?.removal, whatItSaid(error), {
+    404: `${PROFILE_GONE}撤去できませんでした。`,
   })
 }
 
@@ -223,13 +270,43 @@ export async function defineDestination(
   )
   const said = whatItSaid(error)
 
-  return toWrite(response, said, {
-    400: /outputRoot/.test(said ?? '')
-      ? 'この出力ルートには成果物を置けません。'
-      : 'この内容では保存先を保存できませんでした。',
-    502: '保存先の一覧を確認できないため、保存できませんでした。',
-    503: '保存先の一覧を確認できないため、保存できませんでした。',
+  return toWrite(response, said, destinationRefusals(said, '保存'))
+}
+
+export async function reviseDestination(
+  id: string,
+  draft: EncodeDestinationDraft,
+): Promise<EncodeWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/encoding/destinations/{id}',
+    { params: { path: { id } }, body: draft },
+  )
+  const said = whatItSaid(error)
+
+  return toWrite(response, said, destinationRefusals(said, '変更'))
+}
+
+export async function removeDestination(id: string): Promise<EncodeRemoval> {
+  const { data, error, response } = await carinaClient().DELETE(
+    '/api/encoding/destinations/{id}',
+    { params: { path: { id } } },
+  )
+
+  return toRemoval(response, data?.data?.removal, whatItSaid(error), {
+    404: `${DESTINATION_GONE}撤去できませんでした。`,
   })
+}
+
+function destinationRefusals(
+  said: string | undefined,
+  verb: string,
+): Partial<Record<number, string>> {
+  return {
+    400: /outputRoot/.test(said ?? '') ? ROOT_REFUSED : DESTINATION_UNSAVEABLE,
+    404: `${DESTINATION_GONE}${verb}できませんでした。`,
+    502: ROOTS_UNREADABLE,
+    503: ROOTS_UNREADABLE,
+  }
 }
 
 const QUEUE_REFUSED: [RegExp, string][] = [
@@ -310,12 +387,46 @@ function toWrite(
     return { state: 'ok' }
   }
 
-  return {
-    state: 'rejected',
-    message:
-      refusals[response.status] ??
-      `${said || '保存できませんでした'}(${response.status})。`,
+  return { state: 'rejected', message: refusalOf(response, said, refusals) }
+}
+
+function toRemoval(
+  response: Response,
+  removal: EncodeRemoved | undefined,
+  said: string | undefined,
+  refusals: Partial<Record<number, string>>,
+): EncodeRemoval {
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
   }
+
+  if (response.ok && removal !== undefined) {
+    return { state: 'ok', removal }
+  }
+
+  return { state: 'rejected', message: refusalOf(response, said, refusals) }
+}
+
+function refusalOf(
+  response: Response,
+  said: string | undefined,
+  refusals: Partial<Record<number, string>>,
+): string {
+  const known = refusals[response.status]
+
+  if (known !== undefined) {
+    return known
+  }
+
+  if (response.status === 409 && said) {
+    return said
+  }
+
+  return `${said || '保存できませんでした'}(${response.status})。`
+}
+
+function stillOffered(one: { retiredAt?: string | null }): boolean {
+  return !one.retiredAt
 }
 
 async function fetchProfiles(): Promise<ProfileResponder[]> {
@@ -380,6 +491,7 @@ function toProfile(one: ProfileResponder): EncodeProfile {
     rateFactor: toInt(one.rateFactor),
     quantiser: toInt(one.quantiser),
     definedAt: formatDateTime(one.definedAt),
+    retired: !stillOffered(one),
   }
 }
 
@@ -394,6 +506,7 @@ function toDestination(
     defaultProfileId: one.defaultProfileId,
     defaultProfileLabel: profiles.get(one.defaultProfileId),
     definedAt: formatDateTime(one.definedAt),
+    retired: !stillOffered(one),
   }
 }
 
