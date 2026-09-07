@@ -203,7 +203,6 @@ export function LivePlayer({
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
   const captions = useRef<CaptionLayer | null>(null)
-  const captionsWanted = useRef(true)
   const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
@@ -371,7 +370,6 @@ export function LivePlayer({
       ? new CaptionLayer(overlay.current, element)
       : null
 
-    layer?.show(captionsWanted.current)
     captions.current = layer
 
     const session = openLiveSession(
@@ -536,6 +534,7 @@ export function LivePlayer({
   }
 
   const pip = usePictureInPicture(video)
+  const captionsDrawn = captioned && !pip.out
   const hasPicture =
     phase === 'playing' || phase === 'paused' || phase === 'buffering'
   const chromeUp =
@@ -615,13 +614,7 @@ export function LivePlayer({
     element.pause()
   }
 
-  const toggleCaptions = () => {
-    const next = !captioned
-
-    captionsWanted.current = next
-    setCaptioned(next)
-    captions.current?.show(next)
-  }
+  const toggleCaptions = () => setCaptioned((was) => !was)
 
   const chooseVolume = (next: number) => {
     const element = video.current
@@ -750,10 +743,6 @@ export function LivePlayer({
     }
   }, [shell, hasPicture])
 
-  useEffect(() => {
-    captions.current?.show(!pip.out && captionsWanted.current)
-  }, [pip.out, key])
-
   const latency = running?.latency
 
   return (
@@ -815,6 +804,7 @@ export function LivePlayer({
             ref={overlay}
             aria-hidden="true"
             data-slot="live-captions"
+            data-drawn={captionsDrawn ? 'yes' : 'no'}
             className="pointer-events-none absolute inset-0 size-full"
           />
         </div>

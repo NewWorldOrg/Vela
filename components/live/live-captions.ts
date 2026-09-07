@@ -18,6 +18,8 @@ interface Decoding {
 /** How often the clock is read where the browser cannot say when a frame is shown. */
 const READ_MS = 100
 
+const DRAWN = 'data-drawn'
+
 function decode(png: Uint8Array): Promise<ImageBitmap | null> {
   return createImageBitmap(
     new Blob([png.slice()], { type: 'image/png' }),
@@ -49,8 +51,6 @@ export class CaptionLayer {
 
   private bitmap: ImageBitmap | null = null
 
-  private on = true
-
   private closed = false
 
   private frame: number | null = null
@@ -58,6 +58,8 @@ export class CaptionLayer {
   private reading: ReturnType<typeof setInterval> | null = null
 
   private readonly watching: ResizeObserver | null
+
+  private readonly minding: MutationObserver
 
   private readonly repaint = () => this.paint()
 
@@ -70,6 +72,8 @@ export class CaptionLayer {
         ? null
         : new ResizeObserver(this.repaint)
     this.watching?.observe(canvas)
+    this.minding = new MutationObserver(this.repaint)
+    this.minding.observe(canvas, { attributeFilter: [DRAWN] })
     video.addEventListener('resize', this.repaint)
     this.follow()
     this.paint()
@@ -98,13 +102,19 @@ export class CaptionLayer {
     context: CanvasRenderingContext2D,
     size: { width: number; height: number },
   ): void {
-    const drawn = this.current?.picture?.picture
+    const standing = this.current?.picture?.picture
 
-    if (!this.on || !drawn || !this.bitmap || !this.drawnOn || this.closed) {
+    if (
+      !this.drawn ||
+      !standing ||
+      !this.bitmap ||
+      !this.drawnOn ||
+      this.closed
+    ) {
       return
     }
 
-    const place = placedOn({ left: 0, top: 0, ...size }, this.drawnOn, drawn)
+    const place = placedOn({ left: 0, top: 0, ...size }, this.drawnOn, standing)
 
     context.drawImage(
       this.bitmap,
@@ -115,14 +125,10 @@ export class CaptionLayer {
     )
   }
 
-  show(on: boolean): void {
-    this.on = on
-    this.paint()
-  }
-
   close(): void {
     this.closed = true
     this.watching?.disconnect()
+    this.minding.disconnect()
     this.video.removeEventListener('resize', this.repaint)
 
     if (this.frame !== null && 'cancelVideoFrameCallback' in this.video) {
@@ -208,15 +214,15 @@ export class CaptionLayer {
 
     context.clearRect(0, 0, across, down)
 
-    if (!this.on) {
+    if (!this.drawn) {
       this.state('off')
 
       return
     }
 
-    const drawn = this.current?.picture?.picture
+    const standing = this.current?.picture?.picture
 
-    if (!drawn || !this.bitmap || !this.drawnOn || this.closed) {
+    if (!standing || !this.bitmap || !this.drawnOn || this.closed) {
       this.state('none')
 
       return
@@ -229,7 +235,7 @@ export class CaptionLayer {
             height: this.video.videoHeight,
           })
         : { left: 0, top: 0, ...box }
-    const place = placedOn(shown, this.drawnOn, drawn)
+    const place = placedOn(shown, this.drawnOn, standing)
 
     context.drawImage(
       this.bitmap,
@@ -239,6 +245,10 @@ export class CaptionLayer {
       place.height * ratio,
     )
     this.state('shown')
+  }
+
+  private get drawn(): boolean {
+    return this.canvas.getAttribute(DRAWN) !== 'no'
   }
 
   private state(state: CaptionState): void {
