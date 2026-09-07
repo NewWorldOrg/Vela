@@ -25,6 +25,12 @@ import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 
+const OVER_THE_PICTURE = cn(
+  PLAYER_COLUMN,
+  'max-[1180px]:max-w-none',
+  'min-[1181px]:pointer-events-none min-[1181px]:relative min-[1181px]:col-start-1 min-[1181px]:row-start-1 min-[1181px]:aspect-video',
+)
+
 export function LiveView({
   screen,
   openSocket,
@@ -151,9 +157,14 @@ export function LiveView({
   return (
     <ScreenMain
       width="full"
-      className="flex items-start gap-[26px] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1180px]:flex-col"
+      className="grid grid-cols-1 items-start gap-[26px] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]"
     >
-      <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
+      <div
+        className={cn(
+          'min-w-0 min-[1181px]:col-start-1 min-[1181px]:row-start-1',
+          PLAYER_COLUMN,
+        )}
+      >
         <LivePlayer
           channel={watching.channel}
           profiles={screen.profiles}
@@ -166,26 +177,32 @@ export function LiveView({
         />
         <NowNext watching={watching} />
       </div>
-      <aside
-        aria-label="チャンネル"
-        className={cn(
-          'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
-          foldColumn(away, motion),
-        )}
-      >
-        <ChannelList
-          kind={screen.kind}
-          kinds={screen.kinds}
-          channels={channels}
-          watchingId={watching.channel.id}
-          folded={away}
-          onFold={fold}
-          motion={motion}
-          onKind={kind}
-          onSelect={(channel) => choose(channel.id)}
-          className={motion.shown ? 'w-full min-[1181px]:w-[344px]' : 'w-full'}
-        />
-      </aside>
+      <div className={OVER_THE_PICTURE}>
+        <aside
+          aria-label="チャンネル"
+          className={cn(
+            'absolute top-0 right-0 z-20 flex max-h-[calc(100%-104px)] flex-col items-end overflow-clip [overflow-clip-margin:14px] pointer-events-auto',
+            'min-[1181px]:rounded-xl min-[1181px]:bg-surface min-[1181px]:shadow-pop-xl min-[1181px]:outline-1 min-[1181px]:-outline-offset-1 min-[1181px]:outline-line-strong',
+            'max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+            foldColumn(away, motion),
+          )}
+        >
+          <ChannelList
+            kind={screen.kind}
+            kinds={screen.kinds}
+            channels={channels}
+            watchingId={watching.channel.id}
+            folded={away}
+            onFold={fold}
+            motion={motion}
+            onKind={kind}
+            onSelect={(channel) => choose(channel.id)}
+            className={
+              motion.shown ? 'w-full min-[1181px]:w-[344px]' : 'w-full'
+            }
+          />
+        </aside>
+      </div>
     </ScreenMain>
   )
 }
