@@ -1,18 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * A programme read two ways, with the API standing in for itself.
- *
- * The guide hands back a whole day of programmes and a programme's own address
- * hands back one, and both are now read for the same thing — the layer the
- * guide opens is the reading, not a way through to one. Two readings of the
- * same broadcast that are each correct on their own can still disagree, and
- * nothing about either one on its own would say so. So the same store answers
- * both, and what they produce is held against each other.
- */
-
-/** JST, and the hour a broadcast day turns over: facts about the broadcast. */
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 const DAY_TURNS_AT_HOUR = 4
 
@@ -123,7 +111,6 @@ mock.module('@/repository/client/carina', {
 
 const { getGuide, getProgram } = await import('@/repository/programs')
 
-/** The broadcast day an instant falls in, which is the day the guide opens on. */
 function broadcastDay(at: string): string {
   return new Date(
     new Date(at).getTime() + JST_OFFSET_MS - DAY_TURNS_AT_HOUR * 60 * 60 * 1000,
@@ -132,23 +119,12 @@ function broadcastDay(at: string): string {
     .slice(0, 10)
 }
 
-/** The instant the broadcast day the guide opens on began. */
 const DAY_TURNED = new Date(
   new Date(`${broadcastDay(new Date().toISOString())}T00:00:00Z`).getTime() +
     DAY_TURNS_AT_HOUR * 60 * 60 * 1000 -
     JST_OFFSET_MS,
 )
 
-/**
- * An hour of the broadcast day the guide opens on, in ISO.
- *
- * Counted from the top of that day and not off the clock. Hours counted
- * forward from now leave the window whenever the tests are run in the hours
- * before the day turns — two hours on from one in the morning is past four,
- * which is the next day's window — and a run the guide clips away for part of
- * the day makes every assertion about the column a fact about the hour the
- * tests happened to be run at.
- */
 function hourOfTheDay(hour: number): string {
   return new Date(DAY_TURNED.getTime() + hour * 60 * 60 * 1000).toISOString()
 }
@@ -234,12 +210,6 @@ test('what the broadcaster sent beyond the summary reaches the guide', async () 
   assert.equal(program.durationLabel, '1時間30分')
 })
 
-/**
- * The one that no amount of testing either reading on its own can stand in
- * for. Both are asked for the same broadcast and the answers are held against
- * each other whole — and the reading is held against what was sent first, so a
- * pair that agree by both being empty does not pass for agreement.
- */
 test('the guide and the address answer with the same programme', async () => {
   standing()
 
@@ -251,11 +221,6 @@ test('the guide and the address answer with the same programme', async () => {
   assert.deepEqual(atItsAddress, inTheGuide)
 })
 
-/**
- * A programme the broadcaster said nothing more about. Absent is drawn as
- * nothing, not as a gap: the reading is one part now, so what it is handed for
- * an empty programme is what both places draw.
- */
 test('a programme with nothing extra carries nothing rather than a gap', async () => {
   standing()
 
@@ -268,7 +233,6 @@ test('a programme with nothing extra carries nothing rather than a gap', async (
   assert.deepEqual(atItsAddress, inTheGuide)
 })
 
-/** The service a related listing sits on is named, whichever way it is read. */
 test('the channel a related listing names is resolved at both readings', async () => {
   standing()
 
@@ -282,12 +246,6 @@ test('the channel a related listing names is resolved at both readings', async (
   )
 })
 
-/**
- * The programme's own address carries where now falls in its day, the way the
- * guide does, so what is on air is read from one reading of the clock. A day
- * that is not today has no present in it, and the address says so by carrying
- * nothing.
- */
 test('the address carries where now falls in its day, and nothing on another day', async () => {
   standing()
 
@@ -305,14 +263,6 @@ test('the address carries where now falls in its day, and nothing on another day
   assert.equal(elsewhen.nowMin, undefined)
 })
 
-/**
- * The service a station splits into for part of the day, and carries its
- * broadcast on for the rest of it.
- *
- * The station sends nothing at all on the split for the hours it is not split
- * — those events reach the guide as shadows and are dropped — and says which
- * hours those are on its own event, by naming the split under a share.
- */
 const SPLIT = { networkId: CARRIED.networkId, serviceId: 1522, eventId: 40711 }
 
 function splitting(): void {
@@ -352,12 +302,6 @@ test('a service the line-up hands over is a column of the guide', async () => {
   )
 })
 
-/**
- * The defect this stands against: the hours a split is carrying the station's
- * broadcast read as hours with no schedule, while the hours it has something
- * of its own read normally — so a column showing the same thing as the one
- * beside it looked like a channel that had stopped.
- */
 test('the hours a split is sharing carry what it is sharing', async () => {
   splitting()
 
@@ -372,11 +316,6 @@ test('the hours a split is sharing carry what it is sharing', async () => {
   )
 })
 
-/**
- * What a shared cell opens is the broadcast itself, sitting where it is
- * listed. Reserving it from the split's column and from the station's column
- * is the one reservation, because it is the one broadcast.
- */
 test('a shared cell is the broadcast it shares, not a copy of it', async () => {
   splitting()
 
@@ -394,11 +333,6 @@ test('a shared cell is the broadcast it shares, not a copy of it', async () => {
   )
 })
 
-/**
- * A split says nothing about which column its hours are to be read against:
- * the number in front of it is the station's, and the order the columns
- * arrived in is a sort. The column carries it, so the fold has it.
- */
 test('a split column names the column it split from', async () => {
   splitting()
 
@@ -417,11 +351,6 @@ test('a split column names the column it split from', async () => {
   )
 })
 
-/**
- * A broadcast names the splits it is shared onto and never itself, so read
- * from one of those splits the others are named and the service all of them
- * are carrying is not — which is the one a reader is most likely to be after.
- */
 test('a shared cell names the channel the broadcast is listed under', async () => {
   splitting()
 

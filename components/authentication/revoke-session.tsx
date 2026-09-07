@@ -18,11 +18,6 @@ import { InlineAlert } from '@/components/vela/banner'
 import { CloseIcon } from '@/components/vela/icons'
 import { METHOD_LABEL, revokedHref } from '@/components/authentication/wording'
 
-/**
- * A destructive operation, so it says what is cut off — and whose it is —
- * before it happens. Only another device is ever revoked here, whoever it
- * belongs to; the device reading the page signs itself out instead.
- */
 export function RevokeSession({
   session,
   onRevoke,

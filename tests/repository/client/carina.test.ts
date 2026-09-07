@@ -4,11 +4,6 @@ import { beforeEach, test } from 'node:test'
 
 import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
 
-/**
- * What the browser sent in, for the length of one call. The stood-in
- * `next/headers` reads it, so a test says which session is asking by setting
- * it rather than by reaching into the client.
- */
 interface Asked {
   cookies: Record<string, string>
   page?: string
@@ -16,15 +11,6 @@ interface Asked {
 
 const asked: Asked = { cookies: {} }
 
-/**
- * The client under test is a Server Component's, and reads `next/headers` and
- * `next/navigation`. Neither is resolvable outside Next's own build — the
- * package publishes no export map, so a bare `next/headers` names a file that
- * is not there — and neither is what is being tested here, so both are stood
- * in for. `@/` is pointed at the repository root the way the bundler points
- * it. Everything else the client imports, `openapi-fetch` included, is the
- * real thing, and the client itself is loaded unchanged.
- */
 const STOOD_IN = new Map<string, string>([
   [
     'next/headers',
@@ -81,11 +67,6 @@ registerHooks({
   },
 })
 
-/**
- * Who is asking, for the stood-in `next/headers` to read. Nobody is what the
- * health probe script is: it runs outside a request, where Next has nothing to
- * hand over and saying so is the only honest answer.
- */
 function asking(who: Asked | undefined): void {
   ;(globalThis as { velaAsked?: Asked }).velaAsked = who
 }
@@ -95,10 +76,8 @@ process.env.CARINA_API_BASE_URL = 'http://carina.test'
 const { carinaClient, revalidatingCarinaClient } =
   await import('@/repository/client/carina')
 
-/** Every request that reached the network, in the order it was sent. */
 let sent: Request[] = []
 
-/** What the API answers next, and what it has left to answer after that. */
 let answers: Response[] = []
 
 const SESSION_COOKIE = 'carina_session'
@@ -120,21 +99,10 @@ function body(value: unknown, init?: ResponseInit): Response {
   })
 }
 
-/**
- * What the gate in front of every endpoint answers a session the API no longer
- * knows: a bare 401, no content type and nothing to read. Measured against the
- * running API rather than imagined, because the whole of the difference below
- * is that one 401 carries something and the other does not.
- */
 function turnedAway(): Response {
   return new Response(null, { status: 401 })
 }
 
-/**
- * What an endpoint that ran and refused what the request asked for answers.
- * The envelope is the API's own, and the message is the only place the reason
- * is written down.
- */
 function refusing(message: string): Response {
   return body({ status: false, message, data: null }, { status: 401 })
 }
@@ -163,7 +131,6 @@ test('a write is asked for afresh too', async () => {
   assert.equal(sent[0].cache, 'no-store')
 })
 
-/** A day of the guide, the one read the revalidating client is used for. */
 const A_DAY = {
   params: {
     query: {
@@ -181,12 +148,6 @@ test('a revalidating read is asked for afresh as well', async () => {
   assert.equal(sent[0].cache, 'no-store')
 })
 
-/**
- * A held body is a saving on the wire, not a way of answering. The API is
- * asked every time, and what it answers to the session doing the asking is
- * what that session gets — which is what keeps a body given to one session
- * from being handed to the next one to open the same page.
- */
 test('a held body is still checked with the API before it is used again', async () => {
   const stamped = { etag: '"the-guide-as-it-was"' }
 
@@ -231,12 +192,6 @@ test('a request from no session carries none', async () => {
   assert.equal(sent[0].headers.get('cookie'), null)
 })
 
-/**
- * The other half of carrying a session: one the API no longer knows ends at
- * the login screen holding the page it was refused on, rather than as a screen
- * that failed to read. Without this the refusal is a rejected promise reaching
- * a Server Component, which is a 500 where a sign-in belongs.
- */
 test('a session the API refuses is sent to sign in again, holding the page', async () => {
   asked.page = '/guide?date=2026-08-08'
 
@@ -249,13 +204,6 @@ test('a session the API refuses is sent to sign in again, holding the page', asy
   )
 })
 
-/**
- * The other 401. An endpoint reached its own handler and refused what was
- * asked, which is the caller's to read and answer for: the session in hand is
- * fine, and the sentence the API wrote is the only account of what was wrong.
- * Sending it to sign in instead loses that sentence and leaves the screen
- * looking as though the change went through.
- */
 test('a 401 that names a reason is handed back with the reason, not signed out', async () => {
   asked.page = '/settings/authentication'
 
@@ -271,12 +219,6 @@ test('a 401 that names a reason is handed back with the reason, not signed out',
   assert.equal(error?.message, 'The current password is wrong.')
 })
 
-/**
- * What separates the two is a reason there is something to do with. An
- * envelope with nothing written in it leaves the screen with a refusal it
- * cannot explain, and a sign-in is the better guess at what a 401 saying
- * nothing means — so the empty message is read as the gate, not the endpoint.
- */
 test('a 401 whose envelope names no reason is a sign-in like any other', async () => {
   asked.page = '/settings/authentication'
 
@@ -289,12 +231,6 @@ test('a 401 whose envelope names no reason is a sign-in like any other', async (
   )
 })
 
-/**
- * A call from outside a request — the health probe script is one — has no
- * session to carry and no page to be sent back to, and still goes out. Next
- * signals that by throwing out of `cookies()`, which is not a refusal and must
- * not be read as one.
- */
 test('a call from outside a request carries no session and still goes out', async () => {
   asking(undefined)
 

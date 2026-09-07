@@ -15,7 +15,6 @@ import {
   windowOf,
 } from '@/lib/live-latency'
 
-/** A playhead a given distance behind the edge, on a wire with no holes. */
 function behind(seconds: number, { stalls = 0, rate = 1 } = {}) {
   const at = 0
 
@@ -84,9 +83,6 @@ test('every distance short of the seek is answered, at either rate, so none keep
 })
 
 test('the reported fault: 2.4 s behind at a quickened rate is brought back rather than left', () => {
-  // The screen used to start catching up past 2.5 s and stop under 1.25 s,
-  // with nothing said about the ground between, so a playhead there answered
-  // neither question and kept whatever rate it was carrying.
   assert.deepEqual(holdOf(behind(2.4, { rate: CATCH_UP_RATE })), {
     rate: CATCH_UP_RATE,
   })

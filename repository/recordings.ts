@@ -31,13 +31,6 @@ type Countable = Counted | null
 
 export type RecordingOutcome = 'recording' | 'complete' | 'truncated' | 'failed'
 
-/**
- * How a recording reads as something to watch. The API grades it, weighing the
- * packets lost against the packets left scrambled and keeping whichever is
- * worse, so the level is taken from there rather than counted again here: a
- * reading made from the dropped packets alone calls a recording that never
- * descrambled good.
- */
 export type QualityLevel = Exclude<
   components['schemas']['QualityLevel'],
   'unmeasured'
@@ -52,7 +45,6 @@ export interface RecordingQuality {
 
 export interface Recording {
   id: string
-  /** The reservation this recording was made for, where it was made for one. */
   reservationId?: string
   title: string
   note?: string
@@ -62,7 +54,6 @@ export interface Recording {
   channel: string
   channelNo?: string
   channelLogo?: StationLogo
-  /** The recording's own snapshot of its programme carries no genre. */
   genre?: string
   year: number
   startedAt: string
@@ -71,7 +62,6 @@ export interface Recording {
   recordedRange: string
   lengthSec?: number
   expectedLengthSec?: number
-  /** Unset while the size has not been observed, which is only mid-recording. */
   sizeBytes?: number
   sizeObservedAt?: string
   filePath: string
@@ -79,18 +69,10 @@ export interface Recording {
   outcome: RecordingOutcome
   outcomeDetail?: string
   quality: RecordingQuality
-  /**
-   * The share of the recording's packets that were still scrambled when it was
-   * written, as a fraction of the packets counted. Unset where nothing counted
-   * them. A picture cannot be built out of packets that were never descrambled,
-   * so this is what tells a failed playback apart from one that would come back
-   * on its own — and what keeps the library from offering a way to it.
-   */
   scrambledShare?: number
   encode: EncodeStanding
   thumbnail: ThumbnailState
   thumbnailLabel?: string
-  /** Where the drawn picture is. Unset until one has been drawn. */
   thumbnailHref?: string
 }
 
@@ -185,11 +167,6 @@ export async function listRecordings(
   })
   return { items, total: carried.total, channels, years, genres, filter }
 }
-/**
- * The recording each reservation came to, by reservation. A reservation with
- * no recording is absent rather than held with nothing against it, which is
- * how the reservation screen tells the two apart.
- */
 export async function listRecordingsByReservation(): Promise<
   Map<string, string>
 > {
@@ -231,44 +208,19 @@ export async function listRecordingNames(): Promise<
 export interface QualitySpot {
   at: string
   packets: string
-  /** Seconds from the start of the recording, which is where playing resumes. */
   second: number
 }
 
-/**
- * The marks drawn along the bar that are not read off the recording itself.
- * Where the playhead is, and where the drops fell, are known from the picture
- * and from the counters; a chapter is neither, and nothing upstream carries
- * one yet.
- */
 export interface SeekMarks {
   cmSpans?: { leftPct: number; widthPct: number }[]
   chapterPcts?: number[]
 }
 
 export interface RecordingDetail extends Recording {
-  /** The recording's own snapshot of its programme carries no genre. */
   genres?: string[]
-  /** Unset: nothing upstream describes the video or the audio. */
   avInfo?: string
   synopsis?: string
-  /**
-   * What is left to say about a recording that did not run to the end, in
-   * values. The band this fills is drawn only for 尻切れ and 失敗 (v3.35): for
-   * a recording that ran to its end the picture above says it, and a sentence
-   * repeating it is a manual page over a player.
-   */
   outcomeBody?: string
-  /**
-   * The file, and the length written into it against the length that was
-   * promised.
-   *
-   * No ratio. The two are counted from different instants — the numerator from
-   * the moment the tuner was opened, the denominator from the window that has
-   * the tuning lead cut off its head — so their quotient runs over 100% on a
-   * recording that ran to the end (34:53 / 34:35 = 100.9%, measured). Both
-   * lengths are shown instead, which is what the ratio was standing in for.
-   */
   reconcile?: { size: string; written: string; planned: string }
   interruptions?: { main: string }
   tunerUnit?: { main: string; sub?: string }
@@ -280,7 +232,6 @@ export interface RecordingDetail extends Recording {
   qualityRatio?: string
   qualityTotal?: string
   qualitySpots?: QualitySpot[]
-  /** Unset: nothing upstream carries a chapter or a commercial break. */
   seek?: SeekMarks
   encodePanel?: {
     profile?: string
@@ -334,11 +285,6 @@ export const getRecording = cache(
 
 export type ThumbnailRemake = components['schemas']['ThumbnailRemake']
 
-/**
- * What asking for a picture came to. A 200 is not always a picture: the pass
- * answers `skipped` for a recording it will not illustrate and `failed` for
- * one it could not, and neither is a refusal of the request.
- */
 export type ThumbnailWrite =
   | { state: 'ok'; remake: ThumbnailRemake }
   | { state: 'rejected'; message: string }
@@ -373,22 +319,11 @@ type RecordingRefusal = components['schemas']['RecordingFailure']
 type RecordingDiscardRefused =
   components['schemas']['RecordingDiscardRefusedResponder']
 
-/**
- * What throwing a recording away came to. `filesRemoved` counts the files that
- * went with it, which is nothing when the ledger row outlived files that were
- * already gone.
- */
 export type RecordingDiscarded =
   | { state: 'ok'; filesRemoved: number }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
-/**
- * Each way the API refuses, said in the words of that refusal. The reasons
- * separate what is still being written from what the store cannot be reached
- * for and from a removal that stopped part-way, and those three ask different
- * things of the reader, so none of them is folded into the others.
- */
 const DISCARD_REFUSAL: Record<RecordingRefusal, string> = {
   noSuchRecording: 'この録画は残っていないため、削除できませんでした。',
   stillRecording:
@@ -414,10 +349,6 @@ const DISCARD_REFUSAL: Record<RecordingRefusal, string> = {
 
 const CANNOT_DISCARD = '録画を削除できませんでした'
 
-/**
- * Throws the recording away: the files first and the ledger row last, which is
- * the API's own order and is why a refusal part-way leaves the row standing.
- */
 export async function discardRecording(
   id: string,
 ): Promise<RecordingDiscarded> {
@@ -439,8 +370,6 @@ export async function discardRecording(
     }
   }
 
-  // A refusal arrives as `error`, not as `data`: the generated client hands
-  // back the parsed body under whichever of the two the status calls for.
   const refused = error?.data as RecordingDiscardRefused | null | undefined
 
   return {
@@ -451,11 +380,6 @@ export async function discardRecording(
   }
 }
 
-/**
- * The store answers a page at a time and caps the page at 200, while the
- * screen lists everything it is given and says so. Walking to the last page
- * the store names is what keeps that sentence true.
- */
 const MOST_PER_PAGE = 200
 
 interface EveryRecording {
@@ -605,10 +529,6 @@ function channelOf(
   return known.find((one) => one.id === key)
 }
 
-/**
- * A recording still being written has no outcome yet, and the store says so by
- * leaving it unsaid rather than by naming a fourth one.
- */
 function outcomeOf(r: RecordingResponder): RecordingOutcome {
   return r.outcome ?? 'recording'
 }
@@ -630,9 +550,6 @@ function qualityOf(
   return {
     measured: true,
     level: r.drops.quality,
-    // Both readings, because either can be what decided the level, and a
-    // recording graded on its scrambled packets under a line that counts only
-    // the dropped ones reads as a badge with nothing behind it.
     detail: scrambled
       ? `ドロップ ${grouped(dropped)} / スクランブル残存 ${grouped(scrambled)}`
       : `ドロップ ${grouped(dropped)}`,
@@ -667,24 +584,11 @@ const THUMBNAIL_ROWS: Record<
   skipped: { main: '録画が失敗したため作成されません' },
 }
 
-/**
- * Why a recording stopped, said to the person who wanted to watch it.
- *
- * What the reader is asking is why it ended, not which part of the system
- * ended it, so nothing here names one: `grace`, `driver` and `abort` are the
- * store's words for its own machinery and mean nothing on a screen about a
- * programme. Four of the store's faults are a stop; the rest are either how
- * the recording failed, which the reason beside this one carries, or a reading
- * taken of the finished file, which the outcome carries.
- */
 const STOPS: Partial<Record<Fault, string>> = {
   stoppedByHand: '手動停止',
   tunerContended: '競合により落とされた',
   drainGraceExpired: '終了処理が時間切れ',
   driverLost: 'チューナーとの接続が切れた',
-  // Nothing asked this recording to stop and it stopped anyway, which the
-  // store knows and the screen was saying nothing about: the reason row was
-  // simply absent for the one ending that most wants a reason.
   stoppedUnasked: '予期しない停止',
 }
 
@@ -704,12 +608,6 @@ const FAILURES: Partial<Record<Fault, { title: string; body?: string }>> = {
   },
 }
 
-/**
- * Which of the four a failed tune was. The four are already named for the
- * channel scans, in the words this product uses for them and with the numbers
- * they are always listed by; naming them a second time here in the store's
- * vocabulary gave one classification two spellings.
- */
 const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {
   noLock: NO_LOCK,
   noData: LOCKED_WITHOUT_DATA,
@@ -752,9 +650,6 @@ function stopReasonOf(d: DetailResponder): string | undefined {
     return STOPS[named.fault]
   }
 
-  // Asked to stop, by nothing that left a fault behind: the window this
-  // recording was promised closed and it was stopped at its end. Which part of
-  // the system did the asking is not the question anyone opened this row for.
   return d.recording.abortedAt ? '終了時刻に到達' : undefined
 }
 
@@ -774,18 +669,6 @@ function outcomeBodyOf(
   return `書けた尺 ${written} / 予定 ${planned} · ${formatBytes(base.sizeBytes)}`
 }
 
-/**
- * The file and the two lengths, without the ratio between them.
- *
- * `coverage` is not read. The store counts its numerator from the instant the
- * tuner was opened and its denominator from a window that has the tuning lead
- * — 25 seconds by default — cut off its head, so the quotient is
- * `L / (L - lead)` and stands above 1 on every recording that ran to the end:
- * 34:53 against 34:35 came out as 被覆率 100.8% on the screen. Rounding it down
- * to 100% would make it read as "exactly as asked for", which is a different
- * claim and not one the numbers support. The two lengths say the same thing
- * and can be checked by eye.
- */
 function reconcileOf(
   d: DetailResponder,
   base: Recording,
@@ -827,16 +710,6 @@ function secondsBetween(from: number, to: number): number {
   return Math.max(0, Math.floor((to - from) / 1000))
 }
 
-/**
- * The buckets the store keeps are one second wide, and the screen names a spot
- * by the minute it fell in, so the seconds of one minute are one spot.
- *
- * A spot is named by where it is inside the recording and not by the clock it
- * fell on. The second a bucket carries is counted from the start of the
- * stream, which is the same axis the seek bar is drawn on and the same one
- * `この時間帯を再生` already jumps to — spelled as a time of day it could not
- * be put beside either of them.
- */
 export function spotsOf(buckets: DropBucket[]): QualitySpot[] {
   const byMinute = new Map<number, number>()
 
@@ -869,7 +742,6 @@ export function grouped(value: number): string {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
-/** `1時間54分`, the way the outcome banner spells a span. */
 export function spanLabel(ms: number): string {
   const minutes = Math.round(ms / 60_000)
   const hours = Math.floor(minutes / 60)
@@ -935,10 +807,6 @@ export function clockWithSeconds(at: Date): string {
   return `${spelled.hour}:${spelled.minute}:${spelled.second}`
 }
 
-/**
- * `08/10(日) 23:15`, and the year in front of it once the recording is old
- * enough that the day alone would place it in the wrong one.
- */
 export function recordedAtLabelOf(startedAt: Date, now: Date): string {
   const spelled = jst(startedAt)
   const thisYear = jst(now).year
@@ -964,11 +832,6 @@ function recordedRangeOf(
   return `${from} — ${clockOf(new Date(ended))}`
 }
 
-/**
- * When the size was seen. Only the recording asked for by itself answers with
- * it — the list carries the size alone — so a row of the list leaves it unsaid
- * rather than putting the recording's own clock in its place.
- */
 function observedLabelOf(
   d: DetailResponder,
   outcome: RecordingOutcome,

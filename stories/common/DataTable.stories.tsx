@@ -90,8 +90,6 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   render: () => (
-    // Constrained box (narrower than the columns' total min width and shorter
-    // than the rows) so both horizontal and vertical scrolling are exercised.
     <div className="flex h-[440px] w-[760px] flex-col">
       <DataTable
         title="Users"
@@ -114,17 +112,14 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // Sticky header: every column header is position: sticky.
     const headerCell = canvas.getAllByRole('columnheader')[0]
     await expect(getComputedStyle(headerCell).position).toBe('sticky')
 
-    // Relative widths overflow the container → horizontal scroll.
     const container = canvasElement.querySelector(
       '[data-slot="table-container"]',
     ) as HTMLElement
     await expect(container.scrollWidth).toBeGreaterThan(container.clientWidth)
 
-    // Column-visibility toggle hides the column and persists to localStorage.
     localStorage.removeItem('vela-column-visibility-datatable-demo')
     await userEvent.click(canvas.getByRole('button', { name: 'Columns' }))
     const emailToggle = await within(document.body).findByRole(
@@ -135,15 +130,12 @@ export const Default: Story = {
     await expect(
       canvas.queryByRole('columnheader', { name: 'Email' }),
     ).toBeNull()
-    // The visibility write happens in an effect, so poll for it.
     await waitFor(() =>
       expect(
         localStorage.getItem('vela-column-visibility-datatable-demo'),
       ).toContain('email'),
     )
 
-    // Leave the menu closed: an open Radix overlay marks the story root
-    // aria-hidden while its focusable content is still in the DOM.
     await userEvent.keyboard('{Escape}')
     await waitFor(() =>
       expect(canvasElement.closest('[aria-hidden="true"]')).toBeNull(),

@@ -9,20 +9,10 @@ import {
   type PlaybackProfile,
 } from '@/repository/video-paths'
 
-/**
- * How the recording ended, said by the side that plays it. `whole` and
- * `cutShort` both hand over a picture; the two are not the same recording and
- * are not drawn the same way.
- */
 export type PlaybackStanding = components['schemas']['PlaybackStanding']
 
-/** Where the picture comes from: the file as it is, a transcoder, or nowhere. */
 export type PlaybackRoute = components['schemas']['PlaybackRoute']
 
-/**
- * What choosing a position costs. `byRange` is a byte range the file answers;
- * `byStartingAgain` is a new request and a transcoder built again behind it.
- */
 export type PlaybackSeeking = NonNullable<
   components['schemas']['PlaybackSeeking']
 >
@@ -30,22 +20,14 @@ export type PlaybackSeeking = NonNullable<
 export interface PlaybackPlan {
   standing: PlaybackStanding
   route: PlaybackRoute
-  /** Unset where there is nothing to play, so nothing to seek in either. */
   seeking?: PlaybackSeeking
   canSeek: boolean
   transcodes: boolean
   showsAsAWholeRecording: boolean
   mediaType: string
-  /** Unset while the picture is made as it plays, so its length is unknown. */
   bytes?: number
 }
 
-/**
- * Why the API would not plan a playback. Each of these is a different screen:
- * a recording still being written, one that wrote nothing, and one whose file
- * the API cannot reach are three separate answers, and drawing them alike
- * would leave the reader guessing which one they have.
- */
 export type PlaybackRefusal =
   'stillRecording' | 'nothingToPlay' | 'outOfReach' | 'unreadable'
 
@@ -75,12 +57,6 @@ function toPlan(
   }
 }
 
-/**
- * The plan alone, read before any picture is asked for. Asking for the plan
- * costs a row and no transcoder, which is what lets the screen say how the
- * recording ended, and whether choosing a position rebuilds the stream, before
- * a single frame has been requested.
- */
 export const getPlaybackPlan = cache(
   async (id: string): Promise<PlaybackRead> => {
     const { data, response } = await carinaClient().GET(
@@ -109,17 +85,11 @@ export const getUnaskedPlaybackProfile = cache(
 
       return PLAYBACK_PROFILES.find((one) => one === named)
     } catch {
-      // Sending no profile is the unasked request, not a fallback.
       return undefined
     }
   },
 )
 
-/**
- * A ticket an external player reaches the recording with, and the moment it
- * lapses. It is short-lived on purpose, so it is taken when the button is
- * pressed rather than drawn into the page and left to go stale there.
- */
 export interface PlaybackTicket {
   inTheClear: string
   lapsesAt: string

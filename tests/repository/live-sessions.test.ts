@@ -5,7 +5,6 @@ import { backlogOf, readLiveSessions } from '@/repository/live-sessions'
 
 const SEAT = { networkId: 32736, serviceId: 1024, profile: '1080p60' }
 
-/** The answer as the API writes it, with the numbers spelled the way JSON hands them over. */
 const ANSWER = {
   status: true,
   message: '',

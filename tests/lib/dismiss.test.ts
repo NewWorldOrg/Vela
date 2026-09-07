@@ -4,7 +4,6 @@ import { test } from 'node:test'
 import { escapeDismisses, opensSurface, pressDismisses } from '@/lib/dismiss'
 import type { DismissTarget } from '@/lib/dismiss'
 
-/** A stand-in for a pressed element that answers to the selectors it is given. */
 function pressed(...matches: string[]): DismissTarget {
   const target: DismissTarget = {
     closest: (selectors: string) =>

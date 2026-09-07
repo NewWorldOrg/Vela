@@ -17,21 +17,6 @@ import { pressable } from '@/components/vela/tactile'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 
-/**
- * The channels of one broadcast type, one row each, with what is on air and
- * what follows it. The row is the press: pressing a channel is choosing it.
- *
- * The list scrolls inside itself, under a heading that stays, so that a long
- * list is sent past without the picture beside it moving. Rows sit against one
- * another, so each is at least the height a finger needs rather than being
- * given an area that would reach into its neighbours.
- *
- * Given `onFold`, the list folds away and comes back on one press. The press is
- * at the far edge of the list, where it stands whether the list is open or
- * folded, so that folding does not move the thing that unfolds. Folded, only
- * that press is left; the types and the rows are taken out of the page rather
- * than dimmed, because a list that cannot be read is not a list that is off.
- */
 export function ChannelList({
   kind,
   kinds,
@@ -45,16 +30,12 @@ export function ChannelList({
   className,
 }: {
   kind: ChannelKind
-  /** The types that have a channel, in the order they are listed. */
   kinds: ChannelKind[]
   channels: LiveChannel[]
-  /** The channel being watched, where it is on this list. */
   watchingId?: string
   onKind: (kind: ChannelKind) => void
   onSelect: (channel: LiveChannel) => void
-  /** Folded away, leaving only the press that brings it back. */
   folded?: boolean
-  /** Given, the list can be folded; left out, it cannot. */
   onFold?: (folded: boolean) => void
   motion?: FoldMotion
   className?: string

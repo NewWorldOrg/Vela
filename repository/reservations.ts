@@ -18,11 +18,6 @@ import { whatItSaid } from '@/repository/said'
 
 type ReservationResponder = components['schemas']['ReservationResponder']
 
-/**
- * The eight the screen reads: what the reservation is in, folded together with
- * what the recording behind it came to. `endAtConfirmed` and `reception` are
- * neither: they hold across all of them and are carried beside them.
- */
 export type ReservationStanding = components['schemas']['ReservationStanding']
 export type AllocationVerdict = NonNullable<
   components['schemas']['AllocationVerdict']
@@ -39,7 +34,6 @@ export interface ReservationConflict {
   headline: string
   body: string
   entries: ConflictEntry[]
-  /** The priority that would take the seat from the highest of the entries. */
   raiseTo: number
 }
 
@@ -60,23 +54,11 @@ export interface Reservation {
   marginBeforeSeconds: number
   marginAfterSeconds: number
   conflict?: ReservationConflict
-  /** The recording this reservation came to, where it came to one. */
   recordingId?: string
-  /**
-   * Whether the record of the reservation may be thrown away. Read from the
-   * same conditions the API reads, so the screen offers what the API accepts;
-   * the API is still the one that answers, and refuses what has moved on since
-   * the list was drawn.
-   */
   discardable: boolean
-  /** Whether a cancelled reservation may be brought back, read the same way. */
   restorable: boolean
 }
 
-/**
- * What a revision asks to change. A field left out is left as it stands, and
- * the API refuses a revision that names nothing.
- */
 export interface ReservationRevision {
   priority?: number
   marginBeforeSeconds?: number
@@ -93,12 +75,6 @@ type ReservationRefusal = components['schemas']['ReservationFailure']
 type ReservationDiscardRefused =
   components['schemas']['ReservationDiscardRefusedResponder']
 
-/**
- * The four answers a deletion can be refused with. They all arrive on the same
- * status, so the reason is read off the body: which one it is says whether to
- * cancel first, to wait, or to throw the recording away first, and a single
- * sentence covering all three would say none of them.
- */
 const DISCARD_REFUSAL: Partial<Record<ReservationRefusal, string>> = {
   noSuchReservation: 'この予約は残っていないため、削除できませんでした。',
   stillToBeRecorded:
@@ -115,10 +91,6 @@ export interface ReservationsFilter {
   show?: 'all'
 }
 
-/**
- * `total` is every reservation the API holds, `items` the ones this filter
- * keeps. Both are said on screen so neither number stands for the other.
- */
 export interface ReservationsResult {
   items: Reservation[]
   total: number
@@ -169,11 +141,6 @@ function isSettled(one: ReservationResponder, now: Date): boolean {
   return new Date(one.window.endAt).getTime() <= now.getTime()
 }
 
-/**
- * The programmes a seat is being held for, by programme. Only a reservation
- * that holds one is here: a cancelled or already settled one leaves the
- * programme free to be asked for again.
- */
 export async function listBookings(): Promise<Map<string, ProgramBooking>> {
   const carried = await fetchEveryReservation()
   const bookings = new Map<string, ProgramBooking>()
@@ -304,11 +271,6 @@ export async function reviseReservation(
   )
 }
 
-/**
- * Throws the record of the reservation away. Cancelling keeps the record and
- * is what a reservation still to be recorded is given; this is what removes
- * one that has nothing left to explain.
- */
 export async function discardReservation(
   id: string,
 ): Promise<ReservationWrite> {
@@ -325,8 +287,6 @@ export async function discardReservation(
     return { state: 'ok' }
   }
 
-  // A refusal arrives as `error`, not as `data`: the generated client hands
-  // back the parsed body under whichever of the two the status calls for.
   const refused = error?.data as ReservationDiscardRefused | null | undefined
   const refusal = refused ? DISCARD_REFUSAL[refused.refusal] : undefined
 
@@ -336,11 +296,6 @@ export async function discardReservation(
   }
 }
 
-/**
- * What became of one operation asked for over several reservations. The API takes them one at a
- * time, so this is that many answers folded into one: how many went through before an answer that
- * was not a yes, and what that answer said.
- */
 export type ReservationBatch =
   | { state: 'ok'; done: number }
   | { state: 'unauthenticated'; done: number }
@@ -358,11 +313,6 @@ export function discardReservations(
   return overEach(ids, discardReservation)
 }
 
-/**
- * Stops at the first reservation that answers with anything but a yes. Carrying on would leave the
- * reader with one message standing for several different refusals, and the ones not reached are
- * still selected to ask about again.
- */
 async function overEach(
   ids: readonly string[],
   write: (id: string) => Promise<ReservationWrite>,
@@ -502,13 +452,6 @@ function ruleNameOf(
   return ruleId ? rules.get(ruleId) : undefined
 }
 
-/**
- * Which reservations took the seat this one was refused. The list answers with
- * neither the verdict's counterparts nor the transport stream a seat is shared
- * over, so this is read off the windows themselves: the ones that overlap,
- * still hold a seat, and sit on another network — services of one network
- * share the stream, and so the tuner.
- */
 function conflictOf(
   r: ReservationResponder,
   all: ReservationResponder[],

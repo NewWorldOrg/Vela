@@ -52,21 +52,10 @@ const CONNECTION: Record<
   draining: { label: '停止準備中', tone: 'warn' },
 }
 
-/**
- * What health names when it reports a part of itself as degraded, spelled the
- * way the screen that owns that part spells it. A key with no name here is
- * shown as it arrived — a name invented for it would be worse than the key.
- */
 const DEGRADED_LABEL: Record<string, string> = {
   oidc: 'ID プロバイダ',
 }
 
-/**
- * A part that answers carries no colour of its own — the page reads as settled
- * because only what is wrong is coloured. A part that is degraded or silent
- * takes the band's own palette, so the answer to "is anything wrong" is a
- * colour across the grid rather than a row to be found and read.
- */
 const PANEL_TONE: Record<StatusTone, string> = {
   ok: 'bg-surface',
   warn: 'bg-lemon-soft',
@@ -81,13 +70,6 @@ const HEAD_TONE: Record<StatusTone, string> = {
   off: 'text-ink-2',
 }
 
-/**
- * One part of the system, said the same way whichever part it is: what it is,
- * how it is, and the one fact that changes what to do about it. A part whose
- * own screen can be reached carries a link on the whole panel; a part that has
- * no screen of its own is a plain surface. Nothing else about the two differs,
- * so a grid of them reads as one list.
- */
 function Part({
   name,
   mark: Mark,
@@ -100,7 +82,6 @@ function Part({
   name: string
   mark: ComponentType<IconProps>
   tone: StatusTone
-  /** A state in words, or a figure. A figure is set in the code face. */
   head: ReactNode
   unit?: string
   href?: Route
@@ -146,16 +127,10 @@ function Part({
   )
 }
 
-/** A figure, in the face every other figure on the admin screens is set in. */
 function Figure({ children }: { children: ReactNode }) {
   return <span className="font-code tabular-nums">{children}</span>
 }
 
-/**
- * `ラベル 値`, where the value is either the plain word for none or the names
- * of what is not there. Every part carries one of these, so the parts read as
- * a set rather than as lists of different lengths.
- */
 function Fact({
   label,
   value,
@@ -185,7 +160,6 @@ function Fact({
   )
 }
 
-/** The one shape a census that would not answer takes on the grid. */
 function Unread({
   name,
   mark,

@@ -9,11 +9,6 @@ const ACCENT = 'stroke-brand fill-none [stroke-width:1.5]'
 const FILL = 'fill-tint-lavender stroke-none'
 const FILL_2 = 'fill-tint-butter stroke-none'
 
-/**
- * Small drawings for empty states and section headers, taken from the
- * recording domain (antenna, tuner board, tape, star) rather than a generic
- * box / magnifier.
- */
 export function SpotIllustration({
   name = 'antenna',
   className,

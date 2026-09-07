@@ -2,12 +2,6 @@ import type { ZeroDiagnosis } from '@/repository/services'
 import { numbered } from '@/repository/scan-failures'
 import { DangerIcon } from '@/components/vela/icons'
 
-/**
- * A system with no service at all. The count is the same in every case, so the
- * screen shows which of the four stages every attempt stopped at — that is
- * what separates an aerial problem from a descrambling problem from a
- * programme-information problem.
- */
 export function ZeroDiagnosisPanel({
   label,
   diagnosis,

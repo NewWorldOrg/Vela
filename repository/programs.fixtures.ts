@@ -1,13 +1,11 @@
 import type { GuideDay } from '@/repository/programs'
 
-/** The fixtures all sit on one day of the guide window. */
 export const PROGRAM_DAY: GuideDay = {
   date: '2026-08-08',
   label: '8/8(金)',
   isToday: true,
 }
 
-/** Where "now" sits in the guide window, as minutes from its start. */
 export const NOW_MIN = 124
 export const NOW_LABEL = '21:04'
 
@@ -131,13 +129,6 @@ export const PROGRAM_FIXTURES: Program[] = [
     startLabel: '01:00',
     endLabel: '03:00',
   },
-  /**
-   * What a service that has split really carries: its own programmes for the
-   * hours it has a second thing to show, and nothing at all in between. The
-   * hours in between are not empty listings — they are the hours it is showing
-   * what the whole service is showing, which the guide already has a column
-   * for.
-   */
   {
     id: 'p009',
     channelId: 'ch-152',
@@ -171,11 +162,6 @@ export const PROGRAM_FIXTURES: Program[] = [
     startLabel: '02:00',
     endLabel: '02:50',
   },
-  /**
-   * The narrowest column the guide draws and the shortest cell it draws, in one
-   * programme, carrying the longest genre name there is. Whatever a cell has to
-   * give up when it runs out of room, it gives up here first.
-   */
   {
     id: 'p047',
     channelId: 'ch-152',
@@ -465,11 +451,6 @@ export const PROGRAM_FIXTURES: Program[] = [
       },
     ],
   },
-  /**
-   * A run of short programmes, the kind that fills the turn of the night. They
-   * are what the smallest cell in the guide actually looks like: 10 to 20
-   * minutes, so a tenth to a third of the height an hour is given.
-   */
   {
     id: 'p048',
     channelId: 'ch-171',
@@ -660,13 +641,6 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
 ]
 
-/**
- * A programme in every column of the full line-up, so that a grid drawn at
- * that scale is asked to hold something readable rather than nineteen empty
- * columns. The eight services the programmes above were written for are dealt
- * round the rest of it — main services onto main services and the split one
- * onto the split ones, so that a narrow column gets what a narrow column gets.
- */
 export const AERIAL_PROGRAM_FIXTURES: Program[] =
   AERIAL_CHANNEL_FIXTURES.flatMap((channel, index) => {
     const sources = CHANNEL_FIXTURES.filter(

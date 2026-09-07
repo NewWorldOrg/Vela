@@ -2,26 +2,11 @@
 
 import { cn } from '@/lib/utils'
 
-/**
- * How loud, not merely whether.
- *
- * The chrome carried a speaker that only switched the sound off, under a name
- * that promised a level. The level is the control now; the speaker beside it
- * keeps the one press that silences everything without losing where the level
- * was set.
- *
- * A range is a replaced element, so it lays down no press area of its own and
- * the padding of a wrapping label does not answer a press on its behalf. The
- * range is 44px tall itself instead: its track is transparent and the rail is
- * drawn behind it, so the press area is the drawn control and nothing moves by
- * a pixel. The label around it is what holds the two to the same width.
- */
 export function PlayerVolume({
   level,
   onChoose,
   className,
 }: {
-  /** 0 to 1. */
   level: number
   onChoose: (next: number) => void
   className?: string

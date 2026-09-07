@@ -112,11 +112,6 @@ test('a locked reading without a figure has no figure to draw', () => {
   )
 })
 
-/**
- * An unlocked frontend still answers with a plausible-looking carrier-to-noise
- * figure, so the reading is only a reading once the lock says so. Drawing the
- * number anyway would present "could not be measured" as a measurement.
- */
 test('an unlocked reading is not a figure, however much it looks like one', () => {
   assert.equal(
     measurementOf({
@@ -175,10 +170,6 @@ test('a session holding no tuning names none', () => {
   assert.equal(tuningLabelOf(null), undefined)
 })
 
-/**
- * `unspecified` is the contract's way of carrying nothing, not a fourth
- * system. Reading it as one would put "0ch" on a row.
- */
 test('the absent system is absence, not a system', () => {
   assert.equal(
     tuningLabelOf({
@@ -196,11 +187,6 @@ test('a recording carries the end it was started with', () => {
   assert.equal(promisedEndOf('recording', ENDS_AT), ENDS_AT)
 })
 
-/**
- * Every other purpose is given the driver's own upper bound, which is where it
- * gets cut off rather than when it is expected to finish. Showing it as a
- * planned end would promise something nobody planned.
- */
 test('a purpose with no end of its own promises none', () => {
   assert.equal(promisedEndOf('survey', ENDS_AT), undefined)
   assert.equal(promisedEndOf('surveyNow', ENDS_AT), undefined)

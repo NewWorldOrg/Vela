@@ -9,7 +9,6 @@ const AT_SEVEN = {
   title: 'ニュース',
 }
 
-/** A station with two splits, both carrying what the station is carrying. */
 const REPEATED = [
   { id: 'a-1', now: AT_SEVEN },
   { id: 'a-2', sub: true, whole: 'a-1', now: AT_SEVEN },

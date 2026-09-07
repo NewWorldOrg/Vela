@@ -1,15 +1,10 @@
 import type { CaptionCanvas, CaptionPicture } from '@/lib/live-wire'
 
-/** The canvas of a 1440x1080 broadcast, which is shown 16:9. */
 export const CAPTION_CANVAS_FIXTURE: CaptionCanvas = {
   width: 1440,
   height: 1080,
 }
 
-/**
- * One caption as the server would draw it: a palette PNG (colour type 3) of
- * white text with a dark edge, cropped to the part of the canvas it covers.
- */
 const CAPTION_PNG =
   'iVBORw0KGgoAAAANSUhEUgAAAtAAAABYCAMAAADr9TAyAAAAP1BMVEVfX1/W1tabm5s4ODgAAAAA' +
   'AAD+/v4AAAAAAAAoKCgAAAAAAAC4uLgAAAAAAAAYGBgAAAAAAAAAAAAAAAAAAABZbN7wAAAAEHRS' +
@@ -106,7 +101,6 @@ function bytesOf(base64: string): Uint8Array {
   return bytes
 }
 
-/** A caption on the lower part of the canvas, where a broadcast puts one. */
 export const CAPTION_PICTURE_FIXTURE: CaptionPicture = {
   left: 360,
   top: 940,

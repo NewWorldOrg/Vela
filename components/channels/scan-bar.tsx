@@ -10,12 +10,6 @@ import { InlineAlert } from '@/components/vela/banner'
 import { SearchIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 
-/**
- * The range and the start. A second start is refused by the API with the id of
- * the run already walking; the page is re-read either way, so a refusal lands
- * on that run rather than on a bare failure. What is left to say here is a
- * start the tuners could not take at all.
- */
 export function ScanBar({
   lastScan,
   onStart,

@@ -5,15 +5,6 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 import { pressable, still, tactile } from '@/components/vela/tactile'
 
-/**
- * Buttons are pills. The weight of the action picks the variant:
- * `default` for creating something, `outline` for editing, `ghost` for a minor
- * inline action, `destructive` for removal and `destructiveFill` for the one
- * button that actually carries out a destructive confirmation.
- *
- * Pressable things are lifted with a hard offset shadow, never a blurred one:
- * 2px at rest, 3px plus a 1px lift on hover, gone plus a 1px sink on press.
- */
 const buttonVariants = cva(
   cn(
     "tap-target inline-flex shrink-0 items-center justify-center gap-[7px] rounded-full font-bold whitespace-nowrap outline-none disabled:border-dashed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-pop-none disabled:hover:no-underline [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[15px]",

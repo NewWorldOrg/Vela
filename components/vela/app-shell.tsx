@@ -4,45 +4,11 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 import { SettingsIcon, VelaMark } from '@/components/vela/icons'
 
-/**
- * The top bar's height, and so where anything pinned beneath it begins. Both
- * are written as the class Tailwind needs, so that the number lives once.
- */
 const TOP_BAR_HEIGHT = 'h-[46px]'
 const BELOW_TOP_BAR = 'top-[46px]'
 
-/**
- * The most a list on an admin page may be tall: the window less the top bar
- * and the page's own bottom padding (`AdminMain`), so that a page scrolled to
- * its end shows the list's header row just under the top bar and its last row
- * at the window's edge.
- *
- * A screen that is only a list pins itself to the window and lets the list
- * take what is left (`ScreenMain scroll="within"`). A list that sits under
- * something that is read — a form — cannot: the form takes the window and
- * leaves the list nothing. Such a list is bounded instead: it grows with its
- * rows until it would reach past the window, and from there scrolls inside.
- *
- * A screen with several such lists bounds each one the same: the bound is a
- * list's relation to the window, not to its neighbours, and every list can be
- * brought whole into one position of the page. The search results, under the
- * conditions they answer, take the same bound outside the admin area.
- */
 export const ADMIN_LIST_HEIGHT_CAP = 'max-h-[calc(100dvh-66px)]'
 
-/**
- * The window-filling frame every route inside the shell is drawn in: the top
- * bar, then the screen.
- *
- * The frame is not a scroll container, and neither is the screen inside it.
- * The document scrolls, so the scrollbar is at the edge of the window rather
- * than at the edge of a column narrower than the window, and nothing here is
- * a scroller the browser would let the keyboard land on and draw its focus
- * ring around. The frame is only as tall as the window when the screen asks
- * for that (`ScreenMain scroll="within"`), which is what gives a list inside
- * it a height to fill; otherwise it is at least the window and grows with
- * the page.
- */
 export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
@@ -57,11 +23,6 @@ export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
   )
 }
 
-/**
- * The application frame as a story draws it. Everyday areas — 番組表 / ライブ /
- * ライブラリ / 予約 — live in the top bar. The occasional ones sit behind 設定
- * in an admin area with its own side navigation.
- */
 export function AppShell({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
@@ -172,7 +133,6 @@ export function SettingsLink({
   )
 }
 
-/** The two-column body of the admin area: side navigation plus the page. */
 export function AdminBody({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
@@ -200,19 +160,7 @@ export function AdminSideNav({
       )}
       {...props}
     >
-      {/*
-        The column runs the height of the page so its rule does, while the
-        items stay in view under the top bar as the page scrolls. The padding
-        travels with the items, so they sit where they sat before the scroll.
-      */}
       <div className={cn('sticky py-3.5', BELOW_TOP_BAR)}>
-        {/*
-          The gap under the caption matches the 11px between the rows below it.
-          Widening the rows' gaps to keep their areas apart left the caption at
-          7px, nearer to the first row than the rows are to each other, and a
-          heading that sits closer to what follows than that follows itself
-          reads as one of the rows rather than as the head of them.
-        */}
         {caption && (
           <div className="mb-[11px] px-2.5 font-code text-[9.5px] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
             {caption}
@@ -224,12 +172,6 @@ export function AdminSideNav({
   )
 }
 
-/**
- * The gap under a row is what keeps the 44px areas from reaching into one
- * another, so it follows the row's height: 33px with its label, 26px once the
- * label is dropped at 900px. Both leave a 44px pitch, which is the areas laid
- * edge to edge — no overlap, and no strip between them that answers to nobody.
- */
 export function AdminSideNavItem({
   active,
   asChild,
@@ -268,22 +210,6 @@ export function AdminSideNavItem({
   )
 }
 
-/**
- * How wide a screen is read, in two steps the screen picks by name.
- *
- * Nothing bounded a screen before this, so every one of them was as wide as
- * the window: at 2560 a row of a list ran the whole desk and the eye lost the
- * line between a value and the label it belongs to. The step is held here and
- * chosen by name, the way the width of a surface over the page is — a number
- * written per screen is a number half of them will be missing.
- *
- * `full` is not a screen that happens to be wide. It is a screen whose content
- * is an axis: the guide is hours across and services down, and the live screen,
- * once a channel is chosen, puts a picture beside the list it is chosen from.
- * Bounding either would take away the thing being read rather than tidy it. A
- * screen asks for it while it has that content and not by name alone: live
- * before a channel is chosen has no picture, and takes the step instead.
- */
 const SCREEN_WIDTHS = {
   default: 'mx-auto w-full max-w-[1440px]',
   full: 'w-full',
@@ -291,23 +217,6 @@ const SCREEN_WIDTHS = {
 
 export type ScreenWidth = keyof typeof SCREEN_WIDTHS
 
-/**
- * What scrolls when a screen is taller than the window, chosen by name.
- *
- * `page` is the document: the screen grows with what is on it and the window
- * scrolls, with the scrollbar at its edge. It is every screen that is read.
- *
- * `within` pins the frame to the window and gives the screen exactly what is
- * left under the top bar, so that a list inside it can take the rest and
- * scroll on its own with its header row held. Nothing but the list moves. It
- * is for a screen whose content is the axis being read — the guide — and for
- * a screen that is a list: reservations, the library, the integrity check.
- *
- * Neither makes `<main>` the scroller. A screen that scrolled inside its own
- * column put the scrollbar at the column's edge, inside the window, and made
- * the column a thing the keyboard could land on, ringed in the browser's
- * default blue.
- */
 export type ScreenScroll = 'page' | 'within'
 
 export function ScreenMain({
@@ -337,7 +246,6 @@ export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
   )
 }
 
-/** 設定 / チューナー — the trail above an admin page heading. */
 export function Crumb({ className, children, ...props }: ComponentProps<'p'>) {
   return (
     <p

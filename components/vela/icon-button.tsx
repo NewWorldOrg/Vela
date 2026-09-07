@@ -13,14 +13,12 @@ const iconButtonVariants = cva(
   {
     variants: {
       variant: {
-        /** Pressable and lifted — used for pagers and toolbar actions. */
         pop: cn(
           'border border-edge bg-surface text-ink-2 shadow-pop',
           'hover:text-ink hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
           'disabled:hover:text-ink-2 disabled:hover:shadow-pop',
           tactile,
         ),
-        /** Flat — used inside bars and panel headers; tilts instead of lifting. */
         quiet:
           'border border-edge bg-transparent text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:bg-surface-2 hover:text-ink hover:-rotate-6 focus-visible:shadow-ring disabled:hover:bg-transparent disabled:hover:text-ink-2',
       },
@@ -33,10 +31,6 @@ const iconButtonVariants = cva(
   },
 )
 
-/**
- * A round icon-only control. `aria-label` is required because there is no
- * visible text to name it.
- */
 export function IconButton({
   className,
   variant,

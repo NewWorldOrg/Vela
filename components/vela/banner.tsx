@@ -16,20 +16,12 @@ import {
 
 export type BannerTone = 'info' | 'warn' | 'danger' | 'success'
 
-/** A navigation. Renders as a bold, permanently underlined text link. */
 export interface BannerLinkAction {
   label: string
-  /** Without one the label is a button, and `onClick` carries it instead. */
   href?: Route
   onClick?: () => void
 }
 
-/**
- * A state-changing operation. Renders as a real Button — the colour-surface
- * rule applies to the band, not to a control in its action slot. While
- * unavailable it stays visible, disabled in the band's own colours, and the
- * body carries the reason and when it becomes available.
- */
 export interface BannerButtonAction {
   label: string
   control: 'button'
@@ -39,19 +31,12 @@ export interface BannerButtonAction {
 
 export type BannerAction = BannerLinkAction | BannerButtonAction
 
-/** Two at most. A pair sits at the right edge in source order. */
 export type BannerActions =
   readonly [BannerAction] | readonly [BannerAction, BannerAction]
 
 const ACTION_CLASS =
   'tap-target font-bold whitespace-nowrap text-inherit underline underline-offset-[3px]'
 
-/**
- * Disabled on a band is the same button switched off, drawn from the band's
- * own palette — fill = the band's soft token, border = its line token, text =
- * its state colour, no shadow, no motion. Never the default grey disabled
- * look, which reads as a foreign object on a tint.
- */
 const DISABLED_ON_BAND: Record<BannerTone, string> = {
   info: 'border-sky-line bg-sky-soft text-sky hover:border-sky-line hover:bg-sky-soft',
   warn: 'border-lemon-line bg-lemon-soft text-lemon hover:border-lemon-line hover:bg-lemon-soft',
@@ -61,14 +46,6 @@ const DISABLED_ON_BAND: Record<BannerTone, string> = {
     'border-mint-line bg-mint-soft text-mint hover:border-mint-line hover:bg-mint-soft',
 }
 
-/**
- * A button on a tint does not float, and does not move. The colours above and
- * the shadow here are written as plain `hover:` so that tailwind-merge puts
- * them in place of the variant's own rather than beside them — a more specific
- * rule would also outrank `focus-visible:` and take the focus ring away the
- * moment a pointer arrived. The movement is `still`, shared with every other
- * switched-off control.
- */
 const DISABLED_MOTION = cn(
   still,
   'shadow-pop-none hover:shadow-pop-none active:shadow-pop-none',
@@ -135,16 +112,6 @@ function BannerActionControl({
   )
 }
 
-/**
- * The banner at the top of a page. One at a time: when several things happen
- * at once, keep the most severe and reduce the rest to a count. No border and
- * no blinking — the soft colour surface plus an icon carries it.
- *
- * A navigation action is a bold, permanently underlined text link in the
- * band's own colour. A state-changing action is a real Button, at most one per
- * banner; while unavailable it stays visible, disabled in the band's colours,
- * with the reason in the body.
- */
 export function Banner({
   tone = 'info',
   actions,
@@ -155,7 +122,6 @@ export function Banner({
 }: ComponentProps<'div'> & {
   tone?: BannerTone
   actions?: BannerActions
-  /** 0–100. Renders the static progress track under the message. */
   progress?: number
 }) {
   const ToneIcon = TONE_ICON[tone]
@@ -201,10 +167,6 @@ export function Banner({
   )
 }
 
-/**
- * The small alert that sits directly under the field it is about. Never used
- * together with a page banner.
- */
 export function InlineAlert({
   tone = 'warn',
   className,

@@ -59,14 +59,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * Radix marks everything outside an open layer `aria-hidden` while the trigger
- * under it stays focusable. That is the right thing for it to do and is exactly
- * what `aria-hidden-focus` is for, but it is a fact about a page being held
- * open on purpose, not about what is inside the layer. So the a11y context is
- * narrowed to the layer the story is about, and the rest of the page — checked
- * by every other story, closed — is left out of it.
- */
 const ONLY_THE_OPEN_LAYER = (slot: string) => ({
   a11y: { context: { include: `[data-slot="${slot}"]` } },
 })
@@ -119,8 +111,6 @@ export const ConfirmDialog: Story = {
       canvas.getByRole('button', { name: 'EPG を破棄して再取得' }),
     )
     await expect(await within(document.body).findByRole('dialog')).toBeVisible()
-
-    // Left open on purpose: postVisit measures what is on the page.
   },
 }
 
@@ -158,8 +148,6 @@ export const DeleteRecording: Story = {
     await expect(
       await within(document.body).findByRole('alertdialog'),
     ).toBeVisible()
-
-    // Left open on purpose: postVisit measures what is on the page.
   },
 }
 
@@ -235,15 +223,6 @@ export const BottomSheet: Story = {
   ),
 }
 
-/**
- * A list left open, because the run measures the page as the story leaves it.
- *
- * The rows of an open list went unmeasured for as long as they did partly
- * because they were waived and partly because no story ever ended with a list
- * on the screen: the one story that opened a menu closed it again before the
- * probe looked. Lifting the waiver alone would have changed nothing. This is
- * the story that puts the rows in front of the probe.
- */
 export const OpenList: Story = {
   parameters: ONLY_THE_OPEN_LAYER('select-content'),
   render: () => (
@@ -278,10 +257,6 @@ export const OpenList: Story = {
     const rows = await within(document.body).findAllByRole('option')
     await expect(rows).toHaveLength(4)
 
-    // A row that is off keeps taking pointer events, because that is the only
-    // way it can say `not-allowed` under the pointer. What refuses the press is
-    // the list itself, and this is the assertion that says so: the row is
-    // pressed, and nothing is chosen.
     const off = rows.find((row) => row.hasAttribute('data-disabled'))
     await expect(off).toBeTruthy()
     await userEvent.click(off as HTMLElement)
@@ -289,12 +264,9 @@ export const OpenList: Story = {
     await expect(
       await within(document.body).findByRole('listbox'),
     ).toBeVisible()
-
-    // Left open on purpose: postVisit measures what is on the page.
   },
 }
 
-/** A menu left open, for the same reason and measured the same way. */
 export const OpenMenu: Story = {
   parameters: ONLY_THE_OPEN_LAYER('dropdown-menu-content'),
   render: () => (
@@ -330,9 +302,6 @@ export const OpenMenu: Story = {
     const menu = await within(document.body).findByRole('menu')
     await expect(menu).toBeVisible()
 
-    // The same as the list: the row that is off is pressed, and the menu is
-    // still there afterwards because the menu, not `pointer-events`, is what
-    // refuses it.
     const off = within(menu)
       .getAllByRole('menuitemcheckbox')
       .find((row) => row.hasAttribute('data-disabled'))
@@ -340,7 +309,5 @@ export const OpenMenu: Story = {
     await userEvent.click(off as HTMLElement)
     await expect(menu).toBeVisible()
     await expect(off).toHaveAttribute('aria-checked', 'false')
-
-    // Left open on purpose: postVisit measures what is on the page.
   },
 }

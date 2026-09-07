@@ -20,15 +20,6 @@ import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import { OpenExternally } from '@/components/recordings/external-player'
 
-/**
- * Why the picture asked for never arrived.
- *
- * A recording written without ever being descrambled and a machine already
- * transcoding all it will are both "it would not play", and they are opposite
- * things to do next: one of them never comes back, and the other comes back on
- * its own. One notice for both told the reader to wait for something that does
- * not change, and offered a retry that could not work.
- */
 export type PlaybackFault =
   | 'leftScrambled'
   | 'tooManyAtOnce'
@@ -36,15 +27,6 @@ export type PlaybackFault =
   | 'undecodable'
   | 'transcode'
 
-/**
- * Asks the same picture for its HTTP answer, and reads the reason off it.
- *
- * The element only says that it could not play, which is the same word for
- * every reason there is; the answer carries the status and, where the API
- * would not start a transcoder, the name of the refusal. The body is dropped
- * as soon as the headers are read, so a picture that did start is torn down
- * again rather than left running behind a page that is not drawing it.
- */
 export async function askWhyItWouldNotPlay(
   href: string,
   transcodes: boolean,
@@ -74,12 +56,6 @@ export async function askWhyItWouldNotPlay(
   }
 }
 
-/**
- * The reason a recording would not play, read before the picture is asked for
- * again. A recording whose packets were never descrambled has nothing to
- * decode, and the reading that says so is already on this screen — asking the
- * API a second time would only build another transcoder over the same cipher.
- */
 export function faultOnTheFace(detail: RecordingDetail): PlaybackFault | null {
   return isLeftScrambled(detail) ? 'leftScrambled' : null
 }
@@ -88,11 +64,8 @@ interface Said {
   tone: 'gone' | 'waiting' | 'quiet'
   mark: ReactNode
   title: string
-  /** The cause, where the title alone does not carry it. */
   body?: (detail: RecordingDetail) => string
-  /** Whether asking again can end differently. */
   worthRetrying: boolean
-  /** Whether a player outside the browser reaches what this one could not. */
   worthLeaving: boolean
 }
 
@@ -139,13 +112,6 @@ const SAID: Record<PlaybackFault, Said> = {
   },
 }
 
-/**
- * What stands where the picture would be, once the reason is known.
- *
- * A retry is drawn only where asking again can end differently. A button that
- * will fail every time it is pressed is worse than no button: it reads as "this is nearly
- * working" over a recording that will never play.
- */
 export function PlaybackFaultNotice({
   detail: d,
   fault,

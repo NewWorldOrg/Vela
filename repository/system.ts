@@ -38,24 +38,16 @@ export type DriverStatusResult =
   | { state: 'unreachable' }
   | { state: 'failed'; httpStatus: number }
 
-/**
- * A part the screen asks about but that may not answer. Every reading the
- * system screen takes comes back in this shape, so a part that cannot be read
- * is drawn the same way whichever part it is.
- */
 export type Reading<T> =
   | { state: 'ok'; value: T }
   | { state: 'unauthenticated' }
   | { state: 'unavailable' }
 
 export interface TunerCensus {
-  /** Rows in the ledger. */
   total: number
-  /** Held by a session right now. */
   busy: number
   disabled: number
   faulted: number
-  /** The ledger and what the driver reports disagree. */
   drifted: boolean
 }
 
@@ -63,18 +55,13 @@ export interface StorageCensus {
   roots: number
   freeBytes: number
   totalBytes: number
-  /** Roots that cannot be written to. */
   unwritable: number
-  /** Recordings writing into these roots right now. */
   inFlight: number
-  /** Set when a root is short of what the schedule commits it to. */
   short: boolean
 }
 
 export interface CollectionCensus {
-  /** Transport streams the collector walks. */
   streams: number
-  /** Streams whose last visit did not complete. */
   troubled: number
 }
 
@@ -124,15 +111,6 @@ const UNREADABLE = {
   live: { state: 'unavailable' },
 } as const
 
-/**
- * Every census below reads one endpoint and counts. The counting is here
- * rather than on the screen because it is the same question each time — how
- * many of these are there, and how many of them are not right — and an answer
- * a screen works out for itself is an answer only that screen has.
- *
- * Signed out is not the same as unreadable, so it keeps its own answer: the
- * screen says which, and only one of the two is a fault.
- */
 async function census<T>(take: () => Promise<Reading<T>>): Promise<Reading<T>> {
   try {
     return await take()
@@ -210,7 +188,6 @@ async function readStorage(
   })
 }
 
-/** A visit that ended in any of these left the stream short of a full read. */
 const INCOMPLETE_VISIT: ReadonlySet<string> = new Set([
   'neverVisited',
   'incomplete',

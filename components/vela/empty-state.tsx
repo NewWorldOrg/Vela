@@ -6,15 +6,6 @@ import {
   type SpotName,
 } from '@/components/vela/spot-illustration'
 
-/**
- * Nothing here yet: one small drawing, one line, one way forward. The panel is
- * a surface with a dashed hairline — no shadow.
- *
- * `spot={null}` drops the drawing, for the panels that sit under something
- * rather than in place of it: there the drawing is a second thing to look at
- * beside content the reader is already reading, and the panel is a note on it
- * rather than the whole of what the screen has.
- */
 export function EmptyState({
   spot = 'antenna',
   title,
@@ -26,10 +17,6 @@ export function EmptyState({
 }: ComponentProps<'div'> & {
   spot?: SpotName | null
   title?: string
-  /**
-   * The heading rank, for pages where the panel is not nested under a section
-   * of its own. The look does not change with it.
-   */
   titleLevel?: 2 | 3
   action?: ReactNode
 }) {

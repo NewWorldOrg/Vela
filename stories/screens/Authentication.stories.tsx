@@ -33,11 +33,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * Every session on the system is here, not only this device's, so each row
- * says whose it is. Only the row reading the page signs out; every other row,
- * whoever it belongs to, can be revoked.
- */
 export const 通常: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -60,10 +55,6 @@ export const 通常: Story = {
 
 const A_SUBJECT = 'k3Jr9vQm2LZp8xWc4TnB7yHd0sFq6aUe1oGiRtYlMwK'
 
-/**
- * A long name takes the width the table has to spare: with a window this
- * wide nothing folds and nothing scrolls sideways.
- */
 export const 名前が長いセッション: Story = {
   args: { sessions: LONG_NAMES },
   play: async ({ canvasElement }) => {
@@ -82,12 +73,6 @@ export const 名前が長いセッション: Story = {
   },
 }
 
-/**
- * Down at the table's floor the name folds inside its own column, which stays
- * near its own floor, instead of the column growing to the name's full length
- * and widening the whole table by that much. The width the table does have
- * here is what the other columns, which never fold, ask for.
- */
 export const 狭い幅で名前が長いセッション: Story = {
   args: { sessions: LONG_NAMES },
   parameters: { screen: { width: 768, height: 1024 } },
@@ -157,21 +142,6 @@ export const IDプロバイダに到達できない: Story = {
   args: { oidc: OIDC_OUT_OF_REACH },
 }
 
-/**
- * Pressing the button has to open the dialog, and the fields have to be drawn
- * when it does.
- *
- * Every job was green while this press replaced the screen with an error
- * boundary, because nothing anywhere pressed it: the screen stories drew the
- * button and stopped there, and a button nobody presses cannot say what it
- * opens. So the press is here, and so is what has to be on the other side of
- * it — both fields, masked, and a switch on each that unmasks its own field
- * and leaves the other one alone.
- *
- * The switches are taken as a pair rather than counted, so that a field added
- * here later is a story to extend rather than a number to bump, while a field
- * that loses its switch still fails.
- */
 export const パスワードを変更する対話: Story = {
   args: { sessions: ONLY_THIS_DEVICE, signedIn: SIGNED_IN_LOCALLY },
   play: async ({ canvasElement }) => {
@@ -181,7 +151,6 @@ export const パスワードを変更する対話: Story = {
       canvas.getByRole('button', { name: 'パスワードを変更' }),
     )
 
-    /** Radix hands the dialog to a portal, outside the story's own canvas. */
     const dialog = within(await within(document.body).findByRole('alertdialog'))
 
     const current = await dialog.findByLabelText('いまのパスワード')

@@ -59,8 +59,6 @@ export function ReservationsView({
   const [expanded, setExpanded] = useState<string | null>(
     items.find((r) => r.standing === 'conflict')?.id ?? null,
   )
-  // Read against the list as it stands, so a row that has since gone leaves the
-  // selection with it rather than being asked about again.
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const chosen = items.filter((one) => picked.has(one.id))
   const clear = useCallback(() => setPicked(new Set()), [])
@@ -156,10 +154,6 @@ export function ReservationsView({
           className="min-w-[960px]"
           containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
         >
-          {/* The header is as tall as it is so that the area of the select-all and
-            the area of the first row's checkbox do not reach into one another;
-            the column is as wide as one area so it does not reach the caret
-            beside it either. */}
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[13px]">
             <TableRow>
               <TableHead className="w-11">

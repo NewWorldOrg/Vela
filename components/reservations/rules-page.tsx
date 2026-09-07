@@ -102,7 +102,6 @@ import {
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-/** What the address asks the editor to hold. */
 export type RuleEditing =
   | { state: 'none' }
   | { state: 'new'; terms: SearchTerms }
@@ -125,12 +124,6 @@ interface Named {
   text: string
 }
 
-/**
- * The screen, begun again from nothing whenever the address opens a different
- * rule. That is how the fields come to hold what the address asks for without
- * a `useEffect` watching it, and why moving to another rule leaves nothing of
- * the entry that was being written for the last one.
- */
 export function RulesView({
   result,
   channels,
@@ -155,10 +148,6 @@ export function RulesView({
 
 function keyOf(editing: RuleEditing): string {
   if (editing.state === 'rule') {
-    // Whether the rule is switched on is answered in the list as well as in
-    // the editor, so it is part of what the editor is begun from: a rule
-    // switched off from the list while its editor stood open would otherwise
-    // be switched back on by the next save.
     return `${editing.rule.id}:${editing.rule.enabled}`
   }
 
@@ -387,7 +376,6 @@ function termsOfEntry(entry: Entry): SearchTerms {
   }
 }
 
-/** The rule as it stands, spelled as a draft so it can be weighed again. */
 function draftOf(rule: Rule): RuleDraft {
   return {
     name: rule.name,
@@ -440,10 +428,6 @@ function RuleEditor({
   )
   const channelNameOf = (id: string): string =>
     channels.find((channel) => channel.id === id)?.name || id
-  /**
-   * The same conditions on the search screen, arranged the way that screen
-   * arranges them when nobody has said otherwise.
-   */
   const written = searchQueryOf({
     ...asked,
     sort: SEARCH_DEFAULT_SORT,
@@ -452,7 +436,6 @@ function RuleEditor({
   })
   const searched = (written ? `/search?${written}` : '/search') as Route
 
-  /** The draft the fields hold, or the reason it cannot be one. */
   const drafted = (): RuleDraft | undefined => {
     if (!withinRuleName(entry.name)) {
       setProblem({
@@ -562,8 +545,6 @@ function RuleEditor({
         return
       }
 
-      // Nothing was counted, so there is nothing to confirm: the question
-      // closes and the reason stands under the form where the fields are.
       setConfirming(false)
       setRefusal(
         result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
@@ -587,9 +568,6 @@ function RuleEditor({
         setConfirming(false)
         setRefusal(undefined)
 
-        // A rule that has just been written has an address of its own, and
-        // the editor stands on it: pressing 保存 again is then the same rule
-        // saved again rather than a second one written from the same fields.
         if (!rule) {
           onOpen(result.data.id)
         }
@@ -604,12 +582,6 @@ function RuleEditor({
     })
   }
 
-  /**
-   * What deleting would leave, counted from the rule as it stands rather than
-   * from the fields, which may have been written into since it was opened.
-   * The count reaches the question before the question can be answered, so
-   * pressing through it cannot report a number nobody has.
-   */
   const retire = (): void => {
     if (!rule) {
       return
@@ -1183,7 +1155,6 @@ function Count({ value }: { value: number }) {
   return <b className="font-code font-medium text-ink">{value}</b>
 }
 
-/** One answer to a condition that takes several, spelled as on the search screen. */
 function Pick({
   label,
   spoken,

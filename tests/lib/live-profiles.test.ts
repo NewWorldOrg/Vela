@@ -15,7 +15,6 @@ function profile(name: string, unasked: boolean): LiveProfile {
   }
 }
 
-/** The list as the API sends it on a machine that has a GPU to encode with. */
 const WITH_A_GPU: LiveProfile[] = [
   profile('1080p60', true),
   profile('1080p30', false),
@@ -23,7 +22,6 @@ const WITH_A_GPU: LiveProfile[] = [
   profile('720p30', false),
 ]
 
-/** The same list from a machine that has none. */
 const WITHOUT_ONE: LiveProfile[] = [
   profile('1080p60', false),
   profile('1080p30', false),

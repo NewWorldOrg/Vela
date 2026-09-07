@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The reservation list and the four writes it offers, with the API standing in
- * for itself. Only the module that reaches the network is replaced; naming the
- * channel, spelling the window and reading the refusals all run for real.
- */
-
 interface Sent {
   method: string
   path: string
@@ -213,12 +207,6 @@ mock.module('@/repository/client/carina', {
       },
       POST: write('POST'),
       PATCH: write('PATCH'),
-      /**
-       * The generated client hands the parsed body back as `data` for an
-       * answer it accepts and as `error` for one it does not — the same
-       * either-or the production code has to read, because a stand-in that
-       * always answered `data` would leave the refusal path untried.
-       */
       DELETE: async (path: string, init?: Asking) => {
         sent.push({
           method: 'DELETE',
@@ -287,7 +275,6 @@ function standing(items: unknown[] = [reservation()]): void {
   store.settlement = settlementOf('secured')
 }
 
-/** Ahead of every window the fixtures are written for, so nothing has ended. */
 const BEFORE_THEM_ALL = new Date('2026-08-08T00:00:00Z')
 
 const listed = async (at: Date = BEFORE_THEM_ALL) =>
@@ -303,7 +290,6 @@ const only = async (over: Over = {}) => {
   return rows[0]
 }
 
-/** The one shape of a recording this file reads: which reservation it was for. */
 const madeFor = (id: string, reservationId: string | null) => ({
   id,
   reservationId,
@@ -356,12 +342,6 @@ test('a reservation names the recording it came to', async () => {
   assert.equal(rows[0].recordingId, 'rec-1')
 })
 
-/**
- * The other half of the same claim. A reservation the broadcast is still ahead
- * of came to no recording, and the row is still there saying which state it is
- * in — an absence the screen would show identically if the row had been
- * dropped altogether.
- */
 test('a reservation that came to no recording still stands, naming none', async () => {
   standing([reservation({ id: 'a1' })])
   store.recordings = [madeFor('rec-1', 'other')]
@@ -383,7 +363,6 @@ test('a recording no reservation asked for reaches no reservation', async () => 
   assert.equal(rows[0].recordingId, undefined)
 })
 
-/** Each reservation reads its own, rather than the first one the store held. */
 test('two reservations read the recordings that name them', async () => {
   standing([
     reservation({ id: 'a1', standing: 'complete' }),
@@ -423,10 +402,6 @@ test('the window is spelled in the zone broadcasting runs on', async () => {
   assert.equal(one.whenLabel, '08/08(土) 21:10–22:40')
 })
 
-/**
- * A recording under way is a standing of the reservation like any other, and
- * whether the end is settled holds across every one of them.
- */
 test('a recording under way is read as the standing', async () => {
   const one = await only({
     standing: 'recording',
@@ -454,7 +429,6 @@ test('a settled end says so', async () => {
   assert.equal(one.endAtConfirmed, true)
 })
 
-/** Not a standing: a reservation with no way to tune reads as secured without it. */
 test('a service that cannot be received is marked', async () => {
   const one = await only({
     reception: { unavailable: true, since: '2026-08-07T00:00:00Z' },
@@ -569,11 +543,6 @@ test('every page the store names is walked', async () => {
   )
 })
 
-/**
- * One list holding both kinds of cancellation and the settled standings, so a
- * run that leaves the whole list alone and a run that empties it are both
- * visibly wrong.
- */
 const CANCELLED_EARLY = onNetwork('x1', 141, '取り消した昼の番組', {
   standing: 'cancelled',
   window: window('2026-08-08T02:00:00Z', '2026-08-08T03:00:00Z'),
@@ -684,7 +653,6 @@ test('the standings a recording never settled cleanly stay on', async () => {
   )
 })
 
-/** The end of the window, a second before it and a second after it. */
 test('a second before the end still holds the cancellation in the list', async () => {
   const { items } = await mixedAt('2026-08-08T02:59:59Z')
 
@@ -847,7 +815,6 @@ test('a completed one whose recording was thrown away leaves too', async () => {
   )
 })
 
-/** Nothing is said about when now is, so the clock the screen runs on answers. */
 test('the clock it reads by default is the one running now', async () => {
   const at = Date.now()
 
@@ -1060,11 +1027,6 @@ test('a revision refused because the recording has started says which', async ()
   )
 })
 
-/**
- * A programme is booked only while a reservation is holding a seat for it. A
- * cancelled or already settled one leaves the programme free to ask for again,
- * and the panel that reads this offers the seat rather than the way out of it.
- */
 test('only a reservation still holding a seat books its programme', async () => {
   const held = ['scheduled']
   const settled = [
@@ -1124,12 +1086,6 @@ test('a programme asked for twice is booked by the one that holds the seat', asy
   assert.equal(booking?.priority, 20)
 })
 
-/**
- * The name of the rule a reservation came from. The list answers with the
- * rule's identifier and nothing else, so the name is read off the rules the
- * API holds; both sides are asserted, because a row that named nothing at all
- * would satisfy the absent case on its own.
- */
 const RULE = {
   id: 'e0b5bbef-79a6-44af-b651-510e2715b790',
   name: '深夜アニメを追う',
@@ -1185,13 +1141,6 @@ test('the rule behind a rival is named in the conflict it explains', async () =>
   assert.equal(conflict?.entries.length, 1)
   assert.equal(conflict?.entries[0].ruleName, '深夜アニメを追う')
 })
-
-/**
- * Throwing the record of a reservation away, and what the row says about
- * whether it may be. The refusals all arrive on one status, so a screen that
- * read the status alone would say the same thing to somebody who has to cancel
- * first and to somebody who has to throw a recording away first.
- */
 
 function discarding(status: number, data: unknown): void {
   store.discardStatus = status
@@ -1280,7 +1229,6 @@ test('a session that has run out is not a refusal of the deletion', async () => 
   })
 })
 
-/** Every window the fixtures are written for has ended by this moment. */
 const AFTER_THEM_ALL = new Date('2026-08-09T00:00:00Z')
 
 test('a cancelled reservation may be thrown away, and one still to come may not', async () => {
@@ -1352,12 +1300,6 @@ test('a reservation being recorded may not be thrown away', async () => {
   assert.equal((await listed(AFTER_THEM_ALL))[0].discardable, false)
 })
 
-/**
- * The moment a reservation still holding a seat becomes one that may be thrown
- * away is the end of the margin it would have run on, not the end of the
- * broadcast: the three moments are read separately so a reading taken off the
- * wrong end passes none of them.
- */
 const MARGINED = window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z', {
   marginAfterSeconds: 300,
   effectiveEndAt: '2026-08-08T13:45:00Z',

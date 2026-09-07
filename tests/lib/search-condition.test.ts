@@ -288,12 +288,6 @@ test('the keys the screen clears cover every key it reads', () => {
   }
 })
 
-/**
- * Every condition the screen can hold at once. The round trip is only worth
- * anything if nothing here is left at its default: a key that is written but
- * never read back, or read back but never written, only shows up when both
- * sides of it were asked for.
- */
 const everyCondition: SearchCondition = {
   q: '夏 絶景',
   exclude: '再放送',
@@ -418,14 +412,6 @@ test('a condition of nothing at all is the only one turned away', () => {
   )
 })
 
-/**
- * The two halves of a condition. What the reader is asking for is assembled
- * and confirmed in one go; how the answer is arranged takes effect where it is
- * chosen. Nothing may fall between the two, and nothing may be in both — a key
- * left out of the split is a key the screen would stop being able to hold, and
- * a key in both is a way of showing the answer that would confirm a question
- * nobody put.
- */
 test('every part of a condition is either asked for or a way of showing it', () => {
   const asked = Object.keys(searchTermsOf(everyCondition))
   const shown = Object.keys(searchViewingOf(everyCondition))

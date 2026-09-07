@@ -8,13 +8,6 @@ import type { WriteResult } from '@/repository/services'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 
-/**
- * The decision the page exists for: discard, or apply the whole run. Applying
- * is one press and it stays pressed out while it runs, so it cannot be sent
- * twice. A refusal is stated on its own line — the difference the API holds
- * can be gone by the time the press lands, and the definitions are then
- * exactly as they were.
- */
 export function ApplyScanAction({
   scanId,
   onApply,

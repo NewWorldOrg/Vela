@@ -2,12 +2,6 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-/**
- * A surface, not a box. Cards carry neither a border nor a shadow, because
- * those belong to things that can be pressed. Reach for `Surface` / `TintPanel`
- * for plain groupings and `Tile` when the grouping is pressable; `Card` is the
- * shadcn-compatible shell used by composed components such as `DataTable`.
- */
 function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div

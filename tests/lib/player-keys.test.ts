@@ -10,7 +10,6 @@ import {
   type PlayerCommand,
 } from '@/lib/player-keys'
 
-/** An element as a press sees it, without a document to make one in. */
 function element(
   tagName: string,
   {
@@ -27,7 +26,6 @@ function element(
   }
 }
 
-/** The player itself: what a press lands on once the picture has been clicked. */
 const THE_PLAYER = element('SECTION')
 
 function meaning(key: string, seeks = true): PlayerCommand | null {
@@ -182,7 +180,6 @@ test('J and L move the same way the arrows and the two buttons do', () => {
   assert.equal(playerCommand({ key: 'j' }, { seeks: true }), 'back')
   assert.equal(playerCommand({ key: 'l' }, { seeks: true }), 'forward')
   assert.equal(playerCommand({ key: 'J' }, { seeks: true }), 'back')
-  // Live has no position to move along, so neither is taken there.
   assert.equal(playerCommand({ key: 'j' }, { seeks: false }), null)
   assert.equal(playerCommand({ key: 'l' }, { seeks: false }), null)
 })

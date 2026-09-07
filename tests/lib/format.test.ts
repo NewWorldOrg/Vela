@@ -14,11 +14,6 @@ import {
   formatStamp,
 } from '@/lib/format'
 
-/**
- * Zones far enough apart that a formatter reading the machine instead of
- * naming its own lands on a different day, a different hour and a different
- * month for the instants below.
- */
 const ZONES = ['Etc/UTC', 'Asia/Tokyo', 'America/New_York', 'Pacific/Auckland']
 
 function underZone(zone: string, check: () => void): void {
@@ -37,7 +32,6 @@ function underZone(zone: string, check: () => void): void {
   }
 }
 
-/** Runs the same assertions with the process sitting in each zone in turn. */
 function inEveryZone(name: string, check: () => void): void {
   for (const zone of ZONES) {
     test(`${name} — TZ=${zone}`, () => {
@@ -82,14 +76,6 @@ inEveryZone('formatMonth names the month Japan time is in', () => {
   assert.equal(formatMonth('2026-12-31T15:00:00Z'), '2027/01')
 })
 
-/**
- * Setting `process.env.TZ` above moves the clock the running process reads,
- * but a formatter built at import time has already taken its zone by then, so
- * that sweep on its own would stay green on a machine that happens to sit in
- * Japan. Starting a whole process in a hostile zone closes that door: the same
- * four stamps, spelled by a module that has never seen anything but a zone
- * that is not the one the screens are in.
- */
 const SPELL_OUT = `
 const stamps = await import(${JSON.stringify(new URL('../../lib/format.ts', import.meta.url).href)})
 
@@ -147,8 +133,6 @@ test('formatPlayerTime writes a bar reading, hour only where there is one', () =
 })
 
 test('formatPlayerTime writes each figure at its own width', () => {
-  // The head of a two-hour recording, which is the reading that started this:
-  // the elapsed figure is not padded out to the length's shape.
   assert.equal(
     `${formatPlayerTime(0)} / ${formatPlayerTime(7191)}`,
     '0:00 / 1:59:51',

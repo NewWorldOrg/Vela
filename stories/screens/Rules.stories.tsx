@@ -58,11 +58,6 @@ const PREVIEW: RulePreview = {
   excluded: 2,
 }
 
-/**
- * The two counts differ on purpose. Saving and deleting read the reservations
- * on different terms, so a screen that showed one where the other belongs
- * would be telling the reader a number that is not the one it names.
- */
 const IMPACT: RuleImpact = {
   making: 2,
   withdrawing: 1,
@@ -73,11 +68,6 @@ const IMPACT: RuleImpact = {
 
 const RETIRED: RuleRetirement = { withdrawn: 4, swept: 0 }
 
-/**
- * The actions a story hands the screen, with what the screen asked for kept
- * where the story can read it back. Each story builds its own so one story's
- * presses are never counted as another's.
- */
 function recording(saved: Saved[], turned: [string, boolean][]): RuleActions {
   return {
     onSave: async (id, draft): Promise<RuleWrite<Rule>> => {
@@ -133,15 +123,10 @@ export const 通常: Story = {
 
     listTurned.length = 0
 
-    // Where it lands, not that it can be pressed. A rule is written from the
-    // same conditions a search is, so this goes to the search screen; a check
-    // that only pressed it would stay green through the day it went elsewhere.
     await expect(
       canvas.getByRole('link', { name: '検索から作る' }),
     ).toHaveAttribute('href', '/search')
 
-    // Both sides of the switch are drawn from the fixtures, so neither branch
-    // is left to a default nobody looks at.
     await expect(
       canvas.getByRole('switch', { name: '深夜アニメを追う を有効にする' }),
     ).toBeChecked()
@@ -176,9 +161,6 @@ export const ルールを編集: Story = {
     await expect(canvas.getByLabelText('除外キーワード')).toHaveValue('再放送')
     await expect(canvas.getByLabelText('優先度')).toHaveValue('20')
 
-    // The conditions in the fields are the ones the search screen is handed,
-    // named rather than counted so a link built from the wrong ones is not a
-    // link that still passes.
     await expect(
       canvas.getByRole('link', { name: '番組検索で見る' }),
     ).toHaveAttribute(
@@ -188,8 +170,6 @@ export const ルールを編集: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: '下見する' }))
 
-    // The rows themselves, not how many there are: a preview that answered
-    // with somebody else's programmes would count the same.
     await expect(
       await canvas.findByText('星のさまよいびと 第1話'),
     ).toBeVisible()
@@ -215,8 +195,6 @@ export const ルールを編集: Story = {
 
     await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
 
-    // The whole draft, so a save that dropped the conditions or the margins on
-    // the way out is a save this story fails on.
     await waitFor(() =>
       expect(editSaved).toEqual([
         {
@@ -240,18 +218,12 @@ export const ルールを編集: Story = {
       ]),
     )
 
-    // A rule is not retired by the press that opens the question, and is by
-    // the press that answers it: a check that only pressed 削除 would pass on
-    // a screen that dropped the rule the moment it was pressed.
     retired.length = 0
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
     await expect(await screen.findByRole('alertdialog')).toHaveTextContent(
       'このルールを削除します',
     )
 
-    // The count deleting would leave, which is not the one saving would: the
-    // fixture answers 1 for a save and 5 for a delete, so a question wired to
-    // the save count reads 1 here and this fails.
     await expect(
       await within(screen.getByRole('alertdialog')).findByText(/引っ込む予約/),
     ).toHaveTextContent('引っ込む予約 5 件')
@@ -299,9 +271,6 @@ export const 検索から作る: Story = {
     await expect(canvas.getByLabelText('キーワード')).toHaveValue('特別警報')
     await expect(canvas.getByText('湾岸放送1')).toBeVisible()
 
-    // A rule without a name is refused, and the refusal is what stops it: a
-    // check that only read the message would pass just as well on a screen
-    // that showed the message and saved anyway.
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
     await expect(
       await canvas.findByText('ルール名は 1 〜 128 文字です。'),
@@ -309,8 +278,6 @@ export const 検索から作る: Story = {
     await expect(screen.queryByRole('dialog')).toBeNull()
     await expect(draftSaved).toEqual([])
 
-    // And named, the same press goes through — so the refusal above is the
-    // name and not a save that never worked.
     await userEvent.type(canvas.getByLabelText('ルール名'), '気象・災害特番')
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
@@ -376,8 +343,6 @@ export const 条件のないルール: Story = {
     await expect(screen.queryByRole('dialog')).toBeNull()
     await expect(emptySaved).toEqual([])
 
-    // 探す場所 alone narrows nothing, so answering it leaves the refusal
-    // standing; a keyword lifts it.
     await userEvent.type(canvas.getByLabelText('キーワード'), '台風')
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
@@ -393,11 +358,6 @@ export const 条件のないルール: Story = {
 
 const refusedSaved: Saved[] = []
 
-/**
- * The tuners cannot be counted, so what the save would change cannot be either.
- * The confirmation is what stands between the fields and the API, so it is the
- * refusal that has to reach the screen rather than a question left counting.
- */
 export const 影響を数えられないとき: Story = {
   args: {
     editing: { state: 'rule', rule: RULE_FIXTURES[1] },
@@ -426,8 +386,6 @@ export const 影響を数えられないとき: Story = {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await expect(refusedSaved).toEqual([])
 
-    // Deleting stands behind the same count, so an uncounted delete is refused
-    // the same way rather than asked for over a question showing nothing.
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
     await expect(retired).toEqual([])
@@ -436,11 +394,6 @@ export const 影響を数えられないとき: Story = {
 
 const standingSaved: Saved[] = []
 
-/**
- * The fields may have been written into since the rule was opened, and the
- * question about deleting is not about what they hold: what a delete leaves is
- * read from the rule the list holds.
- */
 export const 削除の件数は保存済みのルールから数える: Story = {
   args: {
     editing: { state: 'rule', rule: RULE_FIXTURES[0] },
@@ -470,8 +423,6 @@ export const 削除の件数は保存済みのルールから数える: Story = 
     await expect(weighed[0].draft.name).toBe('深夜アニメを追う')
     await expect(weighed[0].draft.terms.q).toBe('新番組')
 
-    // The name in the question is the rule's, and the fields keep what was
-    // written into them: neither is quietly replaced by the other.
     await expect(screen.getByRole('alertdialog')).toHaveTextContent(
       '深夜アニメを追う',
     )

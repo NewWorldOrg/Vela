@@ -34,11 +34,6 @@ function toOutcome(
   }
 }
 
-/**
- * The saved state is what the switch shows. While a disable is draining the
- * tuner is already off in the ledger, so the switch reads off and the row says
- * the stop happens once the session releases it.
- */
 export function TunerEnableSwitch({
   deviceId,
   checked,

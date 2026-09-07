@@ -143,12 +143,6 @@ function DeviceName({ session }: { session: SessionRow }) {
   )
 }
 
-/**
- * Whose the session is, over how it signed in. The list holds every session on
- * the system, so a name is given the width the table has to spare and, once
- * the table is down to its floor, folds inside its own column rather than
- * pushing the other columns out of the window.
- */
 function Account({ session }: { session: SessionRow }) {
   return (
     <span className="block min-w-[160px] whitespace-normal wrap-anywhere">

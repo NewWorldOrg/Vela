@@ -18,19 +18,6 @@ import { RecordingThumb } from '@/components/library/recording-thumb'
 const CELL =
   'border-b border-dashed border-line px-3.5 py-3 align-middle text-[13px] group-last:border-b-0 group-hover:border-transparent'
 
-/**
- * A row of the library, which is pressed as a whole to open what it lists.
- * Its 再生 is the other way in: the same page, opened at the start of the
- * picture with playback under way, so that the press that says 再生 plays and
- * the press on the row reads.
- *
- * `data-pressable-row` is how the 44px probe knows that. A row carries no role
- * saying it can be pressed — one that did would stop being a row to a screen
- * reader, and the table would stop being a table — so nothing about the markup
- * tells the probe apart from a row that is only read. Rows sit against one
- * another, so the height is what has to reach 44px, and this is what puts that
- * height in front of the probe.
- */
 export function RecordingRow({
   recording: r,
   onOpen,

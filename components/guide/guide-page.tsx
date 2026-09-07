@@ -59,36 +59,10 @@ export function GuideView({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
-  /**
-   * A station splits into two or three for the hours it has that much to show
-   * and carries the one thing on all of them for the rest of the day, so most
-   * of the grid's width goes on columns whose cells are the cell beside them
-   * printed again. Folded, the hours a column is carrying come out and the
-   * columns left with nothing else in them go with them.
-   *
-   * The fold is the reader's, held in the browser and not in the URL: the day
-   * and the broadcast type are what a second reader opening the link needs,
-   * and how many columns this one is looking at is not.
-   *
-   * It is offered only where it would take a column away. A day whose splits
-   * all have something of their own is a day the press cannot change, and a
-   * press that cannot change anything is not drawn.
-   */
   const [folded, fold] = useSubChannelsFolded()
   const foldable = foldsAColumn(guide.channels, guide.programs)
   const shownGuide =
     folded && foldable ? foldedGuideOf(guide.channels, guide.programs) : guide
-  /**
-   * The panel shows the programme as the guide now has it, not as it was when
-   * it was picked: a reservation taken or dropped from inside the panel
-   * changes the row it was opened from.
-   *
-   * A broadcast a station is putting out on more than one of its channels is
-   * in a cell on each of their columns, so which cell was picked is the
-   * programme and the column together. The panel names the channel the reader
-   * pressed and offers to watch that one, rather than whichever of them the
-   * broadcast happens to be listed under.
-   */
   const shown = selected
     ? (shownGuide.programs.find(
         (one) => one.id === selected.id && one.channelId === selected.channelId,

@@ -4,11 +4,6 @@ import { cn } from '@/lib/utils'
 
 export type IconProps = SVGProps<SVGSVGElement>
 
-/**
- * Every Vela icon is drawn here rather than pulled from a generic icon set.
- * Shared geometry: 24x24, 1.6 stroke, round caps/joins, no fill. Shapes are
- * deliberately a little off-axis so the set keeps a hand-drawn feel.
- */
 function Icon({ className, children, ...props }: IconProps) {
   return (
     <svg
@@ -62,10 +57,6 @@ export function SearchIcon(props: IconProps) {
   )
 }
 
-/**
- * A gear: eight teeth on a ring, and a hub. It was a ring with eight rays,
- * which beside the sun of the theme switch read as a second sun.
- */
 export function SettingsIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -292,7 +283,6 @@ export function ChevronUpIcon(props: IconProps) {
   )
 }
 
-/** Both directions at once — the "sortable, not yet sorted" column marker. */
 export function SortIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -418,7 +408,6 @@ export function SignalIcon(props: IconProps) {
   )
 }
 
-/** Section marks — a different small shape per section, never reused twice. */
 export function MarkStar(props: IconProps) {
   return (
     <Icon {...props}>
@@ -719,9 +708,6 @@ export function MarkDevices(props: IconProps) {
   )
 }
 
-/**
- * The pause the transport reads, drawn here rather than inline in each player.
- */
 export function PauseIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -730,22 +716,6 @@ export function PauseIcon(props: IconProps) {
   )
 }
 
-/**
- * The two transport glyphs, filled — the one place the icon set's outline is
- * put down.
- *
- * Everywhere else in Vela an icon is a 1.6px stroke with no fill, and the
- * player keeps that for the volume, the settings and the fullscreen corners.
- * The transport is different: a triangle drawn as an outline reads as the
- * outline of a triangle, and the shape a reader has learned to press is solid.
- * YouTube, Netflix, Prime Video, Vimeo and Plyr all draw these two solid and
- * none of them draws them hollow — it is the most recognisable pair of shapes
- * on any player, and a version nobody else has is not more recognisable for
- * being ours.
- *
- * The same two shapes serve the bar and the mark in the middle of the picture,
- * which is why they take their size from the box they are put in.
- */
 export function PlayGlyph({ className, ...props }: IconProps) {
   return (
     <svg
@@ -778,14 +748,6 @@ export function PauseGlyph({ className, ...props }: IconProps) {
   )
 }
 
-/**
- * The two skip buttons every player that is not live carries on its bar.
- *
- * A circular arrow with the number of seconds inside it — the shape Netflix,
- * Prime Video and Apple TV all use, and the one a reader has already met
- * somewhere else. The numeral is a glyph and not a stroked shape: at the size
- * the bar draws an icon, a 10 built out of 1.6px strokes is a smudge.
- */
 function SkipIcon({
   seconds,
   back,
@@ -834,19 +796,7 @@ export function SkipForwardIcon({
   return <SkipIcon seconds={seconds} {...props} />
 }
 
-/**
- * The speaker, drawn at the level it is carrying.
- *
- * Silent is the speaker with a cross and no wave; above that the waves come on
- * one at a time, so that a level near the top is drawn differently from a
- * level near the bottom. One wave at every level is the icon saying the sound
- * is turned down whatever the slider beside it reads — which is what it was
- * doing.
- */
-export function VolumeIcon({
-  level,
-  ...props
-}: IconProps & { /** 0 to 1. */ level: number }) {
+export function VolumeIcon({ level, ...props }: IconProps & { level: number }) {
   const waves = level <= 0 ? 0 : level < 1 / 3 ? 1 : level < 2 / 3 ? 2 : 3
 
   return (
@@ -860,13 +810,6 @@ export function VolumeIcon({
   )
 }
 
-/**
- * The caption switch: the rounded box with two lines in it that every player
- * draws, and that a reader has met on a television remote before meeting it
- * here. Filled rather than stroked for the same reason the transport is —
- * at 24px the box and the two lines inside it are three strokes crowding each
- * other, and the shape is read by its silhouette.
- */
 export function CaptionsGlyph({ className, ...props }: IconProps) {
   return (
     <svg
@@ -887,17 +830,6 @@ export function CaptionsGlyph({ className, ...props }: IconProps) {
   )
 }
 
-/** The corners the fullscreen switch reads in, pointing out and then back in. */
-/**
- * AirPlay: a screen open at its foot with a triangle standing in the gap.
- *
- * The mark is Apple's and every player that offers the picker draws this same
- * shape, so it is not redrawn into this set's idiom past the stroke weight —
- * a screen and a triangle that were not these proportions would not be read as
- * AirPlay at all. The triangle is filled because it is filled everywhere it
- * appears; the play glyph is the other exception in this file for the same
- * reason.
- */
 export function AirPlayIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -929,7 +861,7 @@ export function FullscreenIcon({
   leaving,
   ...props
 }: IconProps & {
-  /** Already full screen, so the press leaves it. */ leaving?: boolean
+  leaving?: boolean
 }) {
   return (
     <Icon {...props}>

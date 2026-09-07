@@ -56,12 +56,6 @@ import {
 } from '@/components/vela/icons'
 import { ADMIN_LIST_HEIGHT_CAP, ScreenMain } from '@/components/vela/app-shell'
 
-/**
- * The 種別 row's neutral choice. Every other row says "not asked for" by being
- * empty, but a list has to have something selected to say it, and a Radix item
- * cannot carry an empty value. It is spelled here so it never reaches the
- * address: the writer is handed `undefined`, not this.
- */
 const EVERY_KIND = 'all'
 
 const GENRE_CLASS: Record<string, string> = {
@@ -77,17 +71,6 @@ const GENRE_CLASS: Record<string, string> = {
   other: 'bg-genre-other border-genre-other-line',
 }
 
-/**
- * The screen, begun again from nothing whenever the conditions in the address
- * change.
- *
- * That is how the fields come to hold what the address asks for without a
- * `useEffect` watching it: the key is the conditions the address carries, so an
- * address the reader did not type into the fields — a link opened cold, the
- * back button, 条件をすべて消す — arrives as a new screen whose fields start at
- * what it says. An address that differs only in how the result is arranged is
- * the same key, and leaves a half-written condition exactly where it was.
- */
 export function SearchView({ result }: { result: SearchResult }) {
   return (
     <SearchScreen key={searchTermsQueryOf(result.condition)} result={result} />
@@ -102,11 +85,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
   )
   const { condition, channels, outcome } = result
 
-  /**
-   * The conditions as the fields hold them, which is not what was asked for
-   * until 検索 is pressed. Started from the address, and started again from it
-   * every time the address answers a different question.
-   */
   const [draft, setDraft] = useState<SearchDraft>(() =>
     draftOf(searchTermsOf(condition)),
   )
@@ -121,24 +99,12 @@ function SearchScreen({ result }: { result: SearchResult }) {
     [router, pathname],
   )
 
-  /** Answers one condition differently. Nothing is asked for, and nothing moves. */
   const amend = (part: Partial<SearchDraft>): void =>
     setDraft((previous) => ({ ...previous, ...part }))
 
-  /**
-   * Arranges what was already asked for. The conditions come from the address
-   * rather than from the fields, so a keyword still being typed is not
-   * confirmed by a reader who only meant to sort the rows they have.
-   */
   const show = (part: Partial<SearchViewing>, push = false): void =>
     go({ ...condition, ...part }, push)
 
-  /**
-   * Empties the fields as well as the address. Emptying the address is usually
-   * enough — the screen begins again on a key that has changed — but a reader
-   * who typed into an address that was already bare would change no key, and
-   * would watch the button do nothing to the field under their hands.
-   */
   const clear = (): void => {
     setDraft(draftOf(searchTermsOf(EMPTY_SEARCH_CONDITION)))
     go(EMPTY_SEARCH_CONDITION)
@@ -146,28 +112,12 @@ function SearchScreen({ result }: { result: SearchResult }) {
 
   const terms: SearchTerms = termsOf(draft)
 
-  /**
-   * The address 検索 would write: the conditions in the fields, arranged the way
-   * the reader is already reading, from the first page — a condition just
-   * assembled has fewer pages than the one they were standing on.
-   *
-   * It is what the line under the fields shows and what the copy button copies,
-   * so what pressing 検索 does is legible before it is pressed. Asking leaves an
-   * entry behind, because a question the reader put is somewhere they have been
-   * and the back button is how they get to it.
-   */
   const asking: SearchCondition = {
     ...terms,
     ...searchViewingOf(condition),
     page: 1,
   }
 
-  /**
-   * The conditions that narrow, which is what `narrowsAnything` counts and so
-   * what the reader is told about. 探す場所 is not among them: it only says
-   * where a keyword is looked for, so counting it would promise a search that
-   * the store then turns away as asking for nothing.
-   */
   const askedCount: number = [
     Boolean(terms.q),
     Boolean(terms.exclude),
@@ -179,28 +129,18 @@ function SearchScreen({ result }: { result: SearchResult }) {
   const found = outcome.state === 'searched' ? outcome.found : undefined
   const written: string = searchQueryOf(asking)
   const href: string = written ? `${pathname}?${written}` : pathname
-  /**
-   * Whether the conditions narrow the guide, which is what a rule is refused
-   * for not doing. The span is not among them: a rule does not carry one.
-   */
   const narrowing: boolean = ruleNarrowsAnything(terms)
   const ruleHref =
     `/reservations/rules?rule=new&${searchTermsQueryOf(terms)}` as Route
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !draft.genres.includes(option.value),
   )
-  /**
-   * The channels the 種別 in the fields leaves standing. Narrowed here rather
-   * than by the store, which only ever hears the 種別 that was asked for: a
-   * reader widening it back would otherwise be offered the narrower list.
-   */
   const unusedChannels = channels.filter(
     (channel) =>
       (!draft.kind || channel.kind === draft.kind) &&
       !draft.channels.includes(channel.id),
   )
 
-  /** A channel chosen under one 種別 keeps its spelling if the list narrows. */
   const channelNameOf = (id: string): string =>
     channels.find((channel) => channel.id === id)?.name || id
 
@@ -235,23 +175,9 @@ function SearchScreen({ result }: { result: SearchResult }) {
           )}
         </div>
 
-        {/*
-          Every condition is answered in here and asked for by submitting, which
-          is the 検索 button and — because the browser submits a form of its own
-          accord from a field the reader presses Enter in — Enter in any of the
-          fields.
-        */}
         <form
           className="mt-2.5"
-          /*
-            The Enter that settles a conversion is not the Enter that asks.
-            Typing Japanese ends every word with one, and WebKit — which is
-            every browser on the iPad — lets that keypress go on to submit the
-            form, so a reader picking the characters of their first word would
-            have the half of it they had settled asked for and the rest left in
-            the field. Chromium and Gecko hold it back themselves; taking the
-            default off the keypress is what holds it back everywhere.
-          */
+          // WebKit lets the Enter that settles an IME conversion submit the form; Chromium and Gecko hold it back themselves.
           onKeyDown={(event) => {
             if (event.key === 'Enter' && event.nativeEvent.isComposing) {
               event.preventDefault()
@@ -390,14 +316,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 }
               />
             ))}
-            {/*
-              The reader keeps the first `SEARCH_MOST_CHANNELS` and drops the
-              rest, so a screen that went on offering them would write an
-              address it could not read back: the extra channel would be in the
-              URL, gone from the condition that came back, and the chip for it
-              would vanish with nothing said. Stop offering at the ceiling and
-              say why instead.
-            */}
             {unusedChannels.length > 0 &&
               draft.channels.length < SEARCH_MOST_CHANNELS && (
                 <Select
@@ -471,14 +389,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
           <code className="min-w-0 truncate font-code text-note text-ink-3">
             {decodeURIComponent(href)}
           </code>
-          {/*
-            The clipboard is not there to be written to unless the page came
-            over a trusted origin, and a recording server on a house network is
-            reached by name over plain http as often as not. Saying so is the
-            point: the address is on the line to the left either way, and a
-            button that quietly did nothing would send the reader away thinking
-            they had the URL.
-          */}
           <button
             type="button"
             onClick={async () => {
@@ -638,14 +548,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
               />
             ) : (
               <>
-                {/*
-                  The conditions above are read, so the results are bounded
-                  the way an admin list under a form is, and to the same
-                  height: a list is one height wherever it sits.
-                */}
                 <div
                   data-slot="table-container"
-                  // The container scrolls, so it has to be reachable by keyboard.
                   tabIndex={0}
                   className={cn(
                     ADMIN_LIST_HEIGHT_CAP,
@@ -735,13 +639,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
   )
 }
 
-/**
- * The conditions as the fields hold them.
- *
- * The two text fields keep what was typed, the spaces around it included: a
- * value trimmed as it is typed is a value that cannot be typed a space into,
- * and the words either side of one are the whole point of the field.
- */
 interface SearchDraft extends Omit<SearchTerms, 'q' | 'exclude'> {
   q: string
   exclude: string
@@ -759,14 +656,6 @@ function termsOf(draft: SearchDraft): SearchTerms {
   }
 }
 
-/**
- * One condition, one line: what it is on the left, what it is set to on the
- * right. What the row holds is the answer being assembled; it counts once 検索
- * has been pressed on it.
- *
- * Narrow enough and the heading sits above its row instead of beside it, which
- * is the only way a 300px field and a 92px heading both fit.
- */
 function ConditionRow({
   label,
   children,
@@ -779,14 +668,6 @@ function ConditionRow({
       <span className="text-note font-bold text-ink-3 min-[701px]:w-[92px] min-[701px]:shrink-0 min-[701px]:pt-2">
         {label}
       </span>
-      {/*
-        Chips are 26px tall and each carries a 44px press area, so on one line
-        they have room and on two they take each other's presses: half of the
-        26 + gap between two lines is all either of them gets. 18px of gap is
-        what makes that half 22, and 22 + 22 the 44 the gate asks for. Only the
-        space between wrapped lines changes; a row that fits on one line is
-        drawn exactly as before.
-      */}
       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-[18px]">
         {children}
       </span>
@@ -798,11 +679,6 @@ function Hint({ children }: { children: ReactNode }) {
   return <span className="text-note text-ink-3">{children}</span>
 }
 
-/**
- * One answer to a condition that takes several. It sits beside the list it was
- * chosen from rather than in a row of its own, so choosing another one leaves
- * every earlier answer where it was.
- */
 function Pick({
   label,
   spoken,

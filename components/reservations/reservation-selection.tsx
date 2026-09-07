@@ -24,12 +24,6 @@ export interface ReservationBulkActions {
 
 const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
 
-/**
- * The bar the list grows when rows are chosen. It offers what a single row
- * offers and nothing more, and each of those is offered only while every chosen
- * row would take it — a button that acts on some of the selection and refuses
- * the rest leaves the reader working out which.
- */
 export function ReservationSelection({
   chosen,
   onClear,

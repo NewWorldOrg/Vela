@@ -23,11 +23,6 @@ export const metadata: Metadata = { title: 'ルール' }
 
 type Asked = Record<string, string | string[] | undefined>
 
-/**
- * Which rule the address opens. A new one starts from the conditions the
- * address carries, spelled the way the search screen spells them, which is
- * what lets 「この条件でルールを作る」 be a link and nothing more.
- */
 function editingOf(params: Asked, rules: Rule[]): RuleEditing {
   const asked = params[RULE_PARAM]
 

@@ -1,16 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The banner over the guide, read from what the collector says about the
- * streams and from the line-up it visited them for.
- *
- * A visit is made to a transport stream, and how it went is a fact about the
- * stream. What the reader has in front of them is columns, so the two are held
- * together here: the judgement is the stream's, and every channel it carries is
- * named by it.
- */
-
 const STREAM = { networkId: 32701, transportStreamId: 32701 }
 
 const service = (serviceId: number, name: string, category = 'television') => ({
@@ -106,12 +96,6 @@ test('a stream freshly collected puts nothing over the guide', async () => {
   )
 })
 
-/**
- * The defect this stands against: the judgement was the stream's and the name
- * was its lead service's, so a stream failing on all three of its channels
- * named the one channel whose column was full — and the sentence read as a
- * claim about that channel that the screen beside it contradicted.
- */
 test('a stream in trouble names every channel it carries, not its lead', async () => {
   standing({ outcome: 'incomplete', consecutiveIncomplete: 9 })
 
@@ -124,7 +108,6 @@ test('a stream in trouble names every channel it carries, not its lead', async (
   )
 })
 
-/** A stream last collected long enough ago that what it left is not coverage. */
 test('a stream whose last collection has gone stale is named as well', async () => {
   standing({
     lastCompletedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
@@ -136,7 +119,6 @@ test('a stream whose last collection has gone stale is named as well', async () 
   )
 })
 
-/** Only the channels are named. The one-segment service is not one of them. */
 test('a channel the guide never draws is not one the banner names', async () => {
   standing({ outcome: 'incomplete', consecutiveIncomplete: 9 })
 
@@ -145,7 +127,6 @@ test('a channel the guide never draws is not one the banner names', async () => 
   assert.ok(!warning?.emphasis.includes('ワンセグ'))
 })
 
-/** A stream the service list no longer names still has to be namable. */
 test('a stream with no channel left to name falls back to the stream', async () => {
   standing({ outcome: 'incomplete', consecutiveIncomplete: 9 })
   store.services = []

@@ -17,8 +17,6 @@ const meta = {
   component: IntegrityView,
   parameters: { layout: 'fullscreen' },
   args: { onRun: swept },
-  // The screen pins the frame to the window and gives the list what is left,
-  // so it is drawn in the frame that answers the pin.
   decorators: [
     (Story) => (
       <AppFrame>

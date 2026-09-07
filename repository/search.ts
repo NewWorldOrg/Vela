@@ -37,7 +37,6 @@ export interface SearchHit {
   description?: string
   genre: Genre
   genreLabel: string
-  /** 予約・ルールのドメインが埋める枠。いまは何も設定しない */
   booked?: boolean
 }
 
@@ -58,14 +57,6 @@ export type SearchOutcome =
 
 export interface SearchResult {
   condition: SearchCondition
-  /**
-   * チャンネル条件に出せるチャンネルの全部。
-   *
-   * Not narrowed to the broadcast type the address asks for: the type is a
-   * condition the reader assembles before asking, so widening it back has to
-   * offer the channels the narrower type left out, and a list that had already
-   * been cut down could not.
-   */
   channels: GuideChannel[]
   outcome: SearchOutcome
 }

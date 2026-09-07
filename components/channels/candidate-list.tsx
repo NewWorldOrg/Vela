@@ -26,13 +26,6 @@ import { ProgressBar } from '@/components/vela/progress'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { TermTip } from '@/components/vela/term-tip'
 
-/**
- * The three the requirements name — locked, not locked, never measured — said
- * as the chip the design system carries for them. The state is on every row,
- * whether or not a figure came with it: a candidate that answered with a
- * carrier-to-noise reading it had no lock for would otherwise show a meter and
- * nothing to say the frontend never locked.
- */
 const RECEPTION_BADGE: Record<
   CandidateRow['reception'],
   { variant: 'ok' | 'err' | 'mute'; label: string }
@@ -42,19 +35,12 @@ const RECEPTION_BADGE: Record<
   unread: { variant: 'mute', label: '未計測' },
 }
 
-/** The chip says which state it is; this says what that meant for the figure. */
 const RECEPTION_WITHOUT_FIGURE: Record<CandidateRow['reception'], string> = {
   locked: '品質の数値はこのチューナーから取れません',
   unlocked: '同調しないため測定できていません',
   unread: 'まだ測定していません',
 }
 
-/**
- * 受信不可 is the one of the three that says less than it looks like it says:
- * it is this candidate failing to lock, not the service being off the air, and
- * the same word on the reservation screen means something else again. The
- * other two read as themselves and carry nothing.
- */
 function ReceptionBadge({
   reception,
 }: {
@@ -97,11 +83,6 @@ function CandidateMeter({ candidate }: { candidate: CandidateRow }) {
   )
 }
 
-/**
- * The API removes a candidate whether or not it is the selected one, and a
- * service with nothing selected has no way to be tuned. That is said before
- * the press, not discovered after it.
- */
 function DeleteCandidateDialog({
   candidate,
   onOpenChange,
@@ -147,11 +128,6 @@ function DeleteCandidateDialog({
   )
 }
 
-/**
- * The candidates behind one service. Which one is selected is stated on the
- * row itself, and every other row carries the switch to it — so moving the
- * selection is a decision made in one place, not a side effect of a scan.
- */
 export function CandidateList({
   serviceKey,
   serviceName,

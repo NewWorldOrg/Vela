@@ -28,12 +28,6 @@ function detail(id: string) {
   return found
 }
 
-/**
- * The plan the API answers with before any picture is asked for. The recording
- * this system has is transcoded as it plays, so seeking is a restart; the
- * `direct` plan below is what an encoded artefact the browser can decode
- * answers with instead.
- */
 function planned(over: Partial<PlaybackPlan> = {}): PlaybackRead {
   return {
     state: 'planned',
@@ -62,7 +56,6 @@ async function remade(id: string): Promise<ThumbnailWrite> {
   return { state: 'ok', remake: 'drawn' }
 }
 
-/** A press the API has not answered yet, so the button can be read mid-press. */
 function stillDrawing(): Promise<ThumbnailWrite> {
   return new Promise(() => {})
 }
@@ -74,7 +67,6 @@ async function outOfReach(): Promise<ThumbnailWrite> {
   }
 }
 
-/** A finished pass that drew nothing: a 200, and no picture behind it. */
 async function drewNothing(): Promise<ThumbnailWrite> {
   return { state: 'ok', remake: 'failed' }
 }
@@ -146,17 +138,10 @@ export const 完全: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // The row it lands on, not the top of the list. A link naming only the
-    // screen would pass a check that pressed it and left the reader to find
-    // the reservation among the rest.
     await expect(
       canvas.getByRole('link', { name: 'この録画の予約' }),
     ).toHaveAttribute('href', '/reservations?show=all#reservation-r-309')
 
-    // 完全 is not on the screen at all: the picture plays to its end and says
-    // so, and a band above it repeating the word made the two outcomes that do
-    // change what can be watched read like the one that does not (v3.35). It
-    // is kept, as the first value in the record.
     const record = canvasElement.querySelector('details')
 
     await expect(record).not.toHaveAttribute('open')
@@ -166,14 +151,10 @@ export const 完全: Story = {
     await expect(canvas.getByText('完全')).toBeVisible()
     await expect(canvas.getByText('完了')).toBeVisible()
 
-    // The names on the left are the reader's, and no ratio is drawn from two
-    // clocks that start at different instants.
     await expect(canvas.getByText('取りこぼし')).toBeVisible()
     await expect(canvas.queryByText(/被覆率/)).toBeNull()
     await expect(canvas.queryByText(/EOVERFLOW/)).toBeNull()
 
-    // Nothing is asked for until the play button is pressed, so no transcoder
-    // is started for a reader who came to read the record.
     await expect(
       canvasElement.querySelector('video')?.getAttribute('src'),
     ).toBeNull()
@@ -199,8 +180,6 @@ export const 警告水準: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // The bar carries the whole recording, and the drops sit on it where they
-    // fell. Choosing one sends the reader to the second it fell at.
     const bar = canvas.getByRole('slider', { name: '再生位置' })
 
     await expect(bar).toHaveAttribute('aria-valuemax', '15158')
@@ -221,9 +200,6 @@ export const 尻切れ: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // On the band above the picture, which is where a reader about to watch
-    // half a programme has to meet it — not somewhere further down the page.
-    // Values and not a sentence: the lengths it is short by are the whole of it.
     const band = within(
       canvasElement.querySelector(
         '[data-slot="recording-outcome"]',
@@ -233,19 +209,11 @@ export const 尻切れ: Story = {
     await expect(band.getByText('尻切れ')).toBeVisible()
     await expect(band.getByText(/書けた尺 36:12 \/ 予定 54:00/)).toBeVisible()
 
-    // And said once. The record carries the outcome only where the screen has
-    // not already said it, which is 完全 and nothing else.
     await userEvent.click(canvas.getByText('録画の記録'))
     await expect(canvas.getAllByText('尻切れ')).toHaveLength(1)
     await expect(canvas.queryByText('結果')).toBeNull()
   },
 }
-/**
- * Nothing was dropped and the whole stream stayed scrambled, which is a
- * recording that cannot be watched and reads as one. The count is on the
- * record below under スクランブル残存, which is where the notice sends anyone
- * who presses play.
- */
 export const スクランブル残存: Story = {
   args: { detail: detail('0906') },
   play: async ({ canvasElement }) => {
@@ -302,8 +270,6 @@ export const 録画中: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // A recording still being written is not thrown away, and the reason is on
-    // the button rather than left for the API to say after the press.
     const remove = canvas.getByRole('button', { name: '削除' })
 
     await expect(remove).toBeDisabled()
@@ -317,14 +283,11 @@ export const 未計測: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // A recording no reservation asked for. The rest of the line of values is
-    // still there, so what is missing is one value and not the line.
     await expect(canvas.getByText('湾岸放送1')).toBeVisible()
     await expect(
       canvas.queryByRole('link', { name: 'この録画の予約' }),
     ).toBeNull()
 
-    // Nothing was measured, and the record says so rather than saying 0.
     await userEvent.click(canvas.getByText('録画の記録'))
     await expect(canvas.getAllByText('未計測').length).toBeGreaterThan(0)
   },
@@ -361,10 +324,6 @@ export const Range直配信: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // The source reading marks the encoded artefact as the one in use, and
-    // that is all the page says about it: what a seek costs is not written.
-    // It is a reading and not a control, so it stands in the record rather
-    // than on a band under the picture (v3.35).
     await userEvent.click(canvas.getByText('録画の記録'))
 
     const source = canvas.getByRole('group', { name: '再生ソース' })
@@ -376,11 +335,6 @@ export const Range直配信: Story = {
   },
 }
 
-/**
- * The picture of a recording is drawn again from the recording itself, one at a
- * time, and the press stands with the other things done with this recording.
- * The four states it can be read in are below.
- */
 export const サムネイルを作り直す: Story = {
   args: { detail: detail('1274') },
   play: async ({ canvasElement }) => {
@@ -388,30 +342,22 @@ export const サムネイルを作り直す: Story = {
 
     redrawn.length = 0
 
-    // With the other things done with the recording, and not inside the
-    // record, which is shut: one press for it, in one place.
     const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
 
     await expect(redraw).toBeEnabled()
     await userEvent.click(redraw)
     await waitFor(() => expect(redrawn).toEqual(['1274']))
 
-    // The picture changes where it is drawn, and the press says what it came
-    // to as well: the poster is only on screen before the first play.
     await expect(
       await canvas.findByText('サムネイルを作り直しました。'),
     ).toBeVisible()
 
-    // Asked for as it stands after the press. Without the moment on it the
-    // browser answers the poster out of the minute it is holding the picture
-    // the press has just replaced for.
     await waitFor(() =>
       expect(
         canvasElement.querySelector('video')?.getAttribute('poster'),
       ).toMatch(/redrawn=\d+$/),
     )
 
-    // And the record carries the reading only, with no second button on it.
     await userEvent.click(canvas.getByText('録画の記録'))
     await expect(canvas.getByText('生成済み')).toBeVisible()
     await expect(
@@ -419,7 +365,6 @@ export const サムネイルを作り直す: Story = {
     ).toHaveLength(1)
   },
 }
-/** Pressed, and the pass has not answered. It cannot be pressed again. */
 export const サムネイルを作り直している最中: Story = {
   args: { detail: detail('1274'), onRemakeThumbnail: stillDrawing },
   play: async ({ canvasElement }) => {
@@ -431,15 +376,6 @@ export const サムネイルを作り直している最中: Story = {
     await waitFor(() => expect(redraw).toHaveAttribute('aria-disabled', 'true'))
   },
 }
-/**
- * The three states that refuse the press, and the one that is never offered it.
- *
- * A recording being written, a file that is not there and a recording nothing
- * was written into all leave the state they are in, so the button stands with
- * the reason on it. A failed recording never gets a picture — the pass answers
- * `skipped` for it and always will — so no button is drawn, and the band over
- * the picture and the record both already say why.
- */
 export const サムネイルを作り直せない: Story = {
   args: { detail: detail('1291'), playback: refused('stillRecording') },
   play: async ({ canvasElement }) => {
@@ -486,11 +422,6 @@ export const 作り直しの操作子を出さない: Story = {
     ).toBeNull()
   },
 }
-/**
- * The two ways a press comes back with no picture behind it: a refusal read off
- * the status, and a finished pass that drew nothing, which is a 200. Either way
- * the press says so rather than leaving the screen unchanged and silent.
- */
 export const サムネイルを作り直せなかった: Story = {
   args: { detail: detail('1266'), onRemakeThumbnail: outOfReach },
   play: async ({ canvasElement }) => {
@@ -507,9 +438,6 @@ export const サムネイルを作り直せなかった: Story = {
     ).toBeVisible()
   },
 }
-// A recording of its own, because a picture redrawn is remembered for the tab
-// and a screen standing on the recording the story above redrew would carry the
-// moment of that press.
 export const 作り直しても絵が取れなかった: Story = {
   args: { detail: detail('0412'), onRemakeThumbnail: drewNothing },
   play: async ({ canvasElement }) => {
@@ -523,7 +451,6 @@ export const 作り直しても絵が取れなかった: Story = {
       await canvas.findByText('サムネイルを作り直せませんでした。'),
     ).toBeVisible()
 
-    // Nothing was drawn, so nothing asks the browser for a new picture.
     await expect(
       canvasElement.querySelector('video')?.getAttribute('poster'),
     ).not.toMatch(/redrawn=/)

@@ -8,8 +8,7 @@ export interface PictureInPicture {
   toggle: () => void
 }
 
-// Heard on the way down: a leave the viewer makes from the browser's own
-// window is not guaranteed to bubble.
+// Heard on the way down: a leave the viewer makes from the browser's own window is not guaranteed to bubble.
 function subscribe(onChange: () => void) {
   document.addEventListener('enterpictureinpicture', onChange, true)
   document.addEventListener('leavepictureinpicture', onChange, true)

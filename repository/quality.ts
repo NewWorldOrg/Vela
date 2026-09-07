@@ -33,7 +33,6 @@ export interface QualityChannel {
   name: string
   no: string
   dropRate?: string
-  /** 0–100. The bar tops out at the "unwatchable" threshold. */
   barPct?: number
   level: QualityLevel
   note: string

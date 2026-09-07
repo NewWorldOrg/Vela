@@ -2,9 +2,7 @@ export type DeviceKind =
   'デスクトップ' | 'タブレット' | 'スマートフォン' | '外部プレイヤー'
 
 export interface Device {
-  /** What the device is called on screen, e.g. `Chrome / Windows`. */
   name: string
-  /** Absent when the string says nothing about what kind of thing it is. */
   kind?: DeviceKind
 }
 
@@ -15,13 +13,6 @@ interface Platform {
   kind: DeviceKind
 }
 
-/**
- * A session is labelled with the `User-Agent` the browser sent, which is the
- * only thing the API keeps about the device. It is turned into a name and a
- * kind here, and a version number is only spelled where the string honestly
- * carries one — Windows reports the same build for 10 and 11, and Safari on
- * macOS has reported the same version for years.
- */
 export function describeDevice(label: string): Device {
   const agent = label.trim()
 
@@ -90,7 +81,6 @@ function appleVersionOf(agent: string): string {
 
 interface Browser {
   name: string
-  /** A player or a script gets no device kind — it is called what it is. */
   aBrowser: boolean
 }
 

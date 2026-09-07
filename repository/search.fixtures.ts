@@ -288,7 +288,6 @@ export const SEARCH_CHANNEL_FIXTURES: GuideChannel[] = [
   ],
 }))
 
-/** A page of fifty hits, which is more than a window holds. */
 export const MORE_HITS_THAN_FIT: SearchHit[] = [
   ...SEARCH_HIT_FIXTURES,
   ...SEARCH_HIT_FIXTURES.map((hit) => ({ ...hit, id: `${hit.id}-again` })),

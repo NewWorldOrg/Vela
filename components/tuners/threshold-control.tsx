@@ -20,8 +20,6 @@ export function ThresholdControl({
       <Button variant="ghost" size="xs" onClick={() => setEditing(true)}>
         変更
       </Button>
-      {/* Mounted only while it is open, so each opening reads the threshold as
-          it stands. */}
       {editing && (
         <ThresholdDialog
           hours={hours}

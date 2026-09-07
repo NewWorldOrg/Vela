@@ -33,11 +33,6 @@ export type Genre =
   | 'doc'
   | 'other'
 
-/**
- * The reservation standing behind a programme, when one holds a seat for it.
- * It is handed in rather than read here: the module that reads reservations
- * reads this one, and the guide would close the circle by reaching back.
- */
 export interface ProgramBooking {
   id: string
   priority: number
@@ -52,7 +47,6 @@ export interface Program {
   description?: string
   genre: Genre
   genreLabel: string
-  /** 番組表の窓の開始からの分 */
   startMin: number
   durationMin: number
   dateLabel?: string
@@ -62,13 +56,6 @@ export interface Program {
   booked?: boolean
   booking?: ProgramBooking
   endUndecided?: boolean
-  /**
-   * The extended description the broadcaster sends alongside the summary, and
-   * the other listings this one is tied to. They arrive with every programme
-   * the guide reads, and are kept rather than dropped so that a programme read
-   * from the grid and the same programme read at its own address are the same
-   * reading rather than two readings that agree by hand.
-   */
   items?: ProgramItem[]
   related?: RelatedProgram[]
   durationLabel?: string
@@ -110,11 +97,6 @@ export interface ProgramDetail {
   program: Program
   day: GuideDay
   channel?: Channel
-  /**
-   * Where now falls in the programme's day, the way the guide carries it, and
-   * absent when the day is not today. What is on air is read from this rather
-   * than from a second reading of the clock.
-   */
   nowMin?: number
 }
 
@@ -243,7 +225,6 @@ export async function getProgram(
   }
 }
 
-/** Whether the broadcast is the named service's own. */
 function isOf(broadcast: GuideService, service: GuideService): boolean {
   return (
     broadcast.networkId === service.networkId &&
@@ -300,11 +281,6 @@ export function withRelatedSettled(
   return settled
 }
 
-/**
- * The channels a condition may name, in the order a reader picks them out of a
- * list: the same order the guide draws them in, so a screen that offers them
- * and a screen that draws them agree.
- */
 export async function listPickableChannels(): Promise<GuideChannel[]> {
   const carried = await fetchServiceChannels()
 
@@ -391,16 +367,6 @@ function columnsOf(
     .sort(compareChannels)
 }
 
-/**
- * A programme as one column draws it.
- *
- * Which column it is drawn in is handed in rather than read off the programme:
- * an hour a service is sharing is the broadcast of the service it split from,
- * and that broadcast is what the column shows. What the cell opens — the
- * listing, and the reservation taken from it — stays the broadcast's own, so
- * the same hour reserved from any of the columns carrying it is the one
- * reservation it is.
- */
 function toProgram(
   programme: Programme,
   windowStart: Date,
@@ -456,14 +422,6 @@ function toProgram(
   }
 }
 
-/**
- * The service a broadcast is listed under, where the column drawing it is not
- * that service.
- *
- * A broadcast names the splits it is shared onto and never itself. Read from
- * one of those splits, the others are named and the service they are all
- * carrying is not — which is the one a reader is most likely to be after.
- */
 function alsoCarryingIt(
   programme: Programme,
   on: GuideService,

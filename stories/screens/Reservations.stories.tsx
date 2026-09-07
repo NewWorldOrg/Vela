@@ -58,7 +58,6 @@ const shown = (
   ...over,
 })
 
-/** The bar the chosen rows are acted on from, told apart from the rows themselves. */
 function chosenBar(canvas: ReturnType<typeof within>): HTMLElement {
   return canvas.getByRole('group', { name: '選択した予約の操作' })
 }
@@ -97,10 +96,6 @@ export const 通常: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // Where it lands, not that it can be pressed. A reservation is made by
-    // picking a programme, so this goes to the guide and there is no second
-    // screen for picking one; a check that only pressed it would stay green
-    // through the day somebody points it somewhere else.
     await expect(
       canvas.getByRole('link', { name: '予約を追加' }),
     ).toHaveAttribute('href', '/guide')
@@ -124,18 +119,12 @@ export const 終わった予約: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // Which recordings, in which order, and not merely that something can be
-    // pressed: a link pointing at the wrong recording passes every check that
-    // only presses it.
     await expect(
       canvas
         .getAllByRole('link', { name: 'この予約の録画' })
         .map((one) => one.getAttribute('href')),
     ).toEqual(['/recordings/1247', '/recordings/1274'])
 
-    // The rows that came to no recording, each said by the state it is in
-    // rather than by the absence of a link — an absence a row that was never
-    // drawn would satisfy just as well.
     for (const [title, state] of [
       ['朝のニュース', '取消済み'],
       ['山あいの町から', 'チューナー確保済み'],
@@ -149,9 +138,6 @@ export const 終わった予約: Story = {
       ).toBeNull()
     }
 
-    // The row whose recording was thrown away afterwards: still `完了`,
-    // because that is what the recording left it in, and marked beside it so
-    // the reader is not left with a settled row that opens nothing.
     const removed = rowFor(canvas.getByText('真昼の博物誌'))
 
     await expect(within(removed).getByText('完了')).toBeInTheDocument()
@@ -160,23 +146,16 @@ export const 終わった予約: Story = {
       within(removed).queryByRole('link', { name: 'この予約の録画' }),
     ).toBeNull()
 
-    // And not on the rows that still have theirs, which a check that only
-    // looked at the row above would pass on a screen that marked every one.
     for (const title of ['週末キッチンの手帖', '真夜中の音楽室']) {
       await expect(
         within(rowFor(canvas.getByText(title))).queryByText('録画削除済み'),
       ).toBeNull()
     }
 
-    // The anchor the recording screen sends the reader back to. Spelled here
-    // rather than read off the row, so the two spellings have to agree.
     await expect(
       rowFor(canvas.getByText('週末キッチンの手帖')),
     ).toHaveAttribute('id', 'reservation-r-309')
 
-    // Both sides of the same button, named row by row. A check that only
-    // looked for the rows without it would pass on a screen that offers it
-    // nowhere at all.
     for (const title of ['朝のニュース', '午後のロードショー']) {
       await expect(
         within(rowFor(canvas.getByText(title))).getByRole('button', {
@@ -206,8 +185,6 @@ export const 終わった予約: Story = {
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
-    // The question names the row it was opened on, and a cancelled row says
-    // what its record was holding off.
     await expect(dialog.getByText('朝のニュース')).toBeVisible()
     await expect(screen.getByRole('alertdialog')).toHaveTextContent(
       'ふたたびルールの対象になります',
@@ -219,24 +196,11 @@ export const 終わった予約: Story = {
   },
 }
 
-/**
- * The recordings these reservations came to have been thrown away since. The
- * standing is left as the recording left it — the recording having run and the
- * file having been removed afterwards are two different facts, and the ledger
- * keeps the first after the second — so the row carries the mark rather than a
- * different word, and every standing a recording can leave behind takes it.
- */
 export const 録画が削除された予約: Story = {
   args: {
     result: shown(
       SETTLED_RESERVATION_FIXTURES.map(({ recordingId, ...rest }) =>
-        recordingId === undefined
-          ? rest
-          : // What the row is once the recording is gone, and not only in the
-            // one badge: the recording was the thing holding the record of the
-            // reservation in place, so throwing it away is what makes the
-            // record itself something that can be thrown away too.
-            { ...rest, discardable: true },
+        recordingId === undefined ? rest : { ...rest, discardable: true },
       ),
       { filter: { show: 'all' } },
     ),
@@ -255,26 +219,18 @@ export const 録画が削除された予約: Story = {
       await expect(within(row).getByText('録画削除済み')).toBeInTheDocument()
     }
 
-    // Not on the ones a recording was never made of, which are already saying
-    // what became of them.
     for (const title of ['朝のニュース', '午後のロードショー']) {
       await expect(
         within(rowFor(canvas.getByText(title))).queryByText('録画削除済み'),
       ).toBeNull()
     }
 
-    // Nothing to open on any of them, and no button offering to.
     await expect(
       canvas.queryAllByRole('link', { name: 'この予約の録画' }),
     ).toEqual([])
   },
 }
 
-/**
- * The API refuses, because what the row was drawn from has moved on since. The
- * reason it gives is what says which way to go about it, so it reaches the row
- * rather than being folded into a failure.
- */
 export const 予約の削除を断られたとき: Story = {
   args: {
     result: shown(SETTLED_RESERVATION_FIXTURES, {
@@ -416,11 +372,6 @@ export const すべての予約を出している: Story = {
   },
 }
 
-/**
- * Several rows chosen at once. What the bar offers is what a row offers, and it
- * offers each only while every chosen row would take it: a settled reservation
- * has nothing left to cancel, so choosing one puts 取り消す out of reach.
- */
 export const 一括で選んで削除する: Story = {
   args: {
     result: shown(SETTLED_RESERVATION_FIXTURES, {
@@ -456,12 +407,6 @@ export const 一括で選んで削除する: Story = {
   },
 }
 
-/**
- * The head of the list takes the whole page at once. This page holds a
- * reservation being recorded, which is neither cancelled nor thrown away, so
- * taking all of it leaves both operations out of reach until the selection is
- * narrowed to rows that would all take one.
- */
 export const 一括で選んで取り消す: Story = {
   args: {
     result: shown(RESERVATION_FIXTURES),

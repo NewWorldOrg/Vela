@@ -1,4 +1,3 @@
-// The generated client puts a refusal's body under `error`, not `data`.
 export function whatItSaid(error: unknown, data?: unknown): string | undefined {
   return sentenceIn(error) ?? sentenceIn(data)
 }

@@ -104,7 +104,6 @@ export const DETECTION: DetectionResult = {
   ],
 }
 
-/** Only the observation disagrees: nothing a save could write differently. */
 export const DETECTION_MISMATCH_ONLY: DetectionResult = {
   detected: ['adapter0', 'adapter1', 'adapter2', 'adapter3'],
   changes: false,

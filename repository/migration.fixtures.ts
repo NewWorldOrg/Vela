@@ -383,7 +383,6 @@ export const MIGRATION: MigrationResult = {
   ],
 }
 
-/** More rows than a window holds: every group's rows, one per hour of the night. */
 export const MORE_NOT_TAKEN_THAN_FIT: MigrationResult = {
   ...MIGRATION,
   notTakenGroups: MIGRATION.notTakenGroups.map((group) => ({

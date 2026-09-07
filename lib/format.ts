@@ -14,13 +14,6 @@ export function formatBytes(bytes: number) {
   return `${Math.ceil(bytes / 1024)} KB`
 }
 
-/**
- * The zone every stamp below is spelled in. Broadcasting runs on Japan
- * Standard Time, so that is what a screen means by a date and an hour — never
- * the zone of whichever machine happens to render it. Naming it here is what
- * keeps a server and a browser on the same answer, and what keeps a container
- * without `TZ` from quietly serving times nine hours out.
- */
 export const DISPLAY_ZONE = 'Asia/Tokyo'
 
 const CALENDAR = new Intl.DateTimeFormat('en-US', {
@@ -55,28 +48,24 @@ function stampOf(at: string | number): Stamp {
   }
 }
 
-/** `MM/DD HH:mm`. */
 export function formatStamp(iso: string) {
   const at = stampOf(iso)
 
   return `${at.month}/${at.day} ${at.hour}:${at.minute}`
 }
 
-/** `YYYY/MM/DD HH:mm` — the stamp an admin screen spells out in full. */
 export function formatDateTime(iso: string) {
   const at = stampOf(iso)
 
   return `${at.year}/${at.month}/${at.day} ${at.hour}:${at.minute}`
 }
 
-/** `HH:mm` — a moment close enough that the day of it says nothing. */
 export function formatClock(at: number) {
   const moment = stampOf(at)
 
   return `${moment.hour}:${moment.minute}`
 }
 
-/** `YYYY/MM` — for a date old enough that the day of it says nothing. */
 export function formatMonth(iso: string) {
   const at = stampOf(iso)
 
@@ -92,12 +81,6 @@ export function formatLength(sec: number) {
   return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`
 }
 
-/** `6分32秒`, the way an elapsed span is spelled on the admin screens. */
-/**
- * The playhead, which always carries its hour. A reading that drops the hour
- * changes width as playing passes an hour, and the figure beside it — the
- * length of the recording — keeps its own, so the two would stop lining up.
- */
 export function formatPlayhead(sec: number) {
   const whole = Math.max(0, Math.floor(sec))
   const h = Math.floor(whole / 3600)
@@ -106,24 +89,6 @@ export function formatPlayhead(sec: number) {
   return `${h}:${m}:${s}`
 }
 
-/**
- * The reading on a player's own bar: `4:31`, or `1:04:15` where there is an
- * hour to carry.
- *
- * Not `formatPlayhead`, which always writes the hour. That form is right where
- * it is used — the rows of a quality breakdown, which stand in a column and
- * have to line up with each other — and wrong on a bar, where `0:04:31` is a
- * shape no player has ever shown and reads as a clock rather than as a
- * position. YouTube, Netflix, Vimeo and Plyr all drop the empty hour.
- *
- * Each figure carries only the hour it has itself, so the head of a two-hour
- * recording reads `0:00 / 1:59:51` and not `0:00:00 / 1:59:51`. Padding the
- * elapsed figure out to the length's shape was tried first and is wrong: it is
- * the padded form that was the complaint, it is not what any player does, and
- * the pair it produces at the head of a long recording is exactly the reading
- * that started this. The figure grows a field as playing crosses the hour,
- * which is what YouTube's does.
- */
 export function formatPlayerTime(sec: number) {
   const whole = Math.max(0, Math.floor(sec))
   const h = Math.floor(whole / 3600)
@@ -145,21 +110,18 @@ const WEEKDAY = new Intl.DateTimeFormat('ja-JP', {
   weekday: 'short',
 })
 
-/** `08/08(金) 21:10` — the moment a broadcast is announced for. */
 export function formatBroadcastStart(iso: string) {
   const at = stampOf(iso)
 
   return `${at.month}/${at.day}(${WEEKDAY.format(new Date(iso))}) ${at.hour}:${at.minute}`
 }
 
-/** `08/08(金) 21:10–22:40` — the span a broadcast covers. */
 export function formatBroadcastSpan(startIso: string, endIso: string) {
   const to = stampOf(endIso)
 
   return `${formatBroadcastStart(startIso)}–${to.hour}:${to.minute}`
 }
 
-/** `21:10–22:40` — the same span where the day has already been said. */
 export function formatClockSpan(startIso: string, endIso: string) {
   const from = stampOf(startIso)
   const to = stampOf(endIso)
@@ -171,7 +133,6 @@ const ORIGIN_LABEL = { byHand: '手動', byRule: 'ルール' } as const
 
 export type OriginLabel = (typeof ORIGIN_LABEL)[keyof typeof ORIGIN_LABEL]
 
-/** Which side asked for a reservation, as the screens name it. */
 export function formatReservationOrigin(
   origin: keyof typeof ORIGIN_LABEL,
 ): OriginLabel {

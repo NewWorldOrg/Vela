@@ -1,14 +1,4 @@
-/**
- * The point of the domain: a scan that gets nowhere is four different
- * problems, and which one it is says where to go looking. The numbers are
- * the operator's shorthand and are shown beside every one of them.
- *
- * They are named on screen as often as they are counted from a scan, so they
- * sit apart from the reading: a Client Component may hold them, and nothing
- * that reaches the API comes with them.
- */
 export interface FailureClass {
-  /** 1–4, the order the four are always listed in. */
   no: 1 | 2 | 3 | 4
   label: string
 }
@@ -35,7 +25,6 @@ export const UNEXPECTED_STREAM: FailureClass = {
 
 const CIRCLED = { 1: '①', 2: '②', 3: '③', 4: '④' } as const
 
-/** `① 信号を掴めない` — the class with the number it is always listed by. */
 export function numbered(failure: FailureClass): string {
   return `${CIRCLED[failure.no]} ${failure.label}`
 }

@@ -82,7 +82,6 @@ function DetectionCard({
   children,
   footer,
 }: {
-  /** Only stated where a save is actually offered. */
   lede?: string
   children: React.ReactNode
   footer: React.ReactNode
@@ -109,10 +108,6 @@ function CancelDetection() {
   )
 }
 
-/**
- * What the driver receives, against what the ledger keeps. The comparison is
- * only made when it is asked for, so the card is absent until then.
- */
 function DetectionPanel({
   detection,
   onSave,
@@ -150,10 +145,6 @@ function DetectionPanel({
   const removes = rows.some((row) => row.kind === 'del')
   const mismatches = rows.some((row) => row.kind === 'kind')
 
-  // The ledger holds no kind, so a difference the save cannot act on — kind
-  // mismatches, or devices that cannot be saved — offers no save. A mismatch
-  // is between the live observation and a fresh probe; the restart takes the
-  // observation again, and that is the remedy stated.
   const notes = changes
     ? []
     : [!mismatches && '保存できる変更がないため、保存はありません。']
@@ -210,9 +201,6 @@ export function TunersView({
   onSaveThreshold: (hours: number) => Promise<TunerWriteResult>
 }) {
   if (result.state !== 'ok') {
-    // While an accepted restart is in its window the driver is away on
-    // purpose, so an unreadable list is expected — the window banner keeps
-    // re-reading and the screen must not call it a failure.
     const restarting = result.state === 'unavailable' && restartWindow
 
     return (

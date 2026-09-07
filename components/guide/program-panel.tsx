@@ -37,7 +37,6 @@ export function ProgramPanel({
   program: Program
   channel?: Channel
   dayLabel: string
-  /** Whether the programme is on air as the guide reads the clock. */
   onAir?: boolean
   open: boolean
   onClose: () => void
@@ -82,11 +81,6 @@ export function ProgramPanel({
         }
       }}
     >
-      {/* Nothing here is written into, so a press beside the surface is a
-          decision to leave rather than a miss that would cost an entry — which
-          is the one case SPEC holds a surface open through. A cell of the grid
-          is beside it like anything else, so the first press on one shuts this
-          and the programme underneath is not swapped in behind the reader. */}
       <DialogContent size="reading" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="pr-[30px]">{program.title}</DialogTitle>
@@ -132,8 +126,6 @@ export function ProgramPanel({
                       </span>
                     )}
                   </div>
-                  {/* Mounted only while it is open, so each opening reads the
-                      reservation as it stands. */}
                   {editing && (
                     <EditReservationDialog
                       booking={{ ...booking, title: program.title }}

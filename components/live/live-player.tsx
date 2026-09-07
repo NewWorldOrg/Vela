@@ -67,65 +67,30 @@ import { LiveFaultNotice, type LiveFault } from '@/components/live/live-notice'
 import { LiveSettings } from '@/components/live/live-settings'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
-/** How long the bar stays after the pointer last said anything, while playing. */
 const RESTS = 3000
 
 const TICK_MS = 250
 
-/**
- * How often the API is asked what the session has thrown away. It is a
- * count that moves while the picture plays and is on no frame of the wire,
- * so it is read on the clock; two seconds is ten of the wire's pictures, and
- * a count read that often is never far behind the one the API holds.
- */
 const BACKLOG_EVERY_MS = 2000
 
-/**
- * How long the startup is given before the screen stops waiting for it.
- *
- * A wire that is refused says so and a wire that drops closes, and both put
- * something on the screen the reader can act on. A wire that does neither —
- * open, silent, and carrying no picture — leaves the startup plate spinning
- * with nothing that will ever take it off, and a reader watching that has no
- * way to tell it from a channel that is merely slow.
- *
- * The bound is set well past a slow one rather than near a quick one: the
- * design's own worked example has a transcoder still starting at 18.7 seconds
- * against a median of 22.3, so a startup of half a minute is ordinary and only
- * one much longer than that is stuck.
- */
 const STARTUP_DEADLINE_MS = 45000
 
 type Phase = 'starting' | 'buffering' | 'playing' | 'paused' | 'faulted'
 
-/**
- * The retries pressed on one channel in one profile, and what the last wire
- * had come to when the press was made. Held against the channel so that a
- * press on one is not carried to the next: a channel chosen afresh begins at
- * its first attempt, however many the last one took.
- */
 interface Retries {
   of: string
   count: number
   after: LiveFault['kind']
 }
 
-/**
- * One session, as the screen sees it. Keyed by the channel, the profile and
- * the attempt, so that what one wire said is never read as the next one's:
- * a key the render does not recognise is a session that has just begun.
- */
 interface Running {
   key: string
   phase: Phase
   fault: LiveFault | null
   startup: LiveStartup
-  /** Since the wire was opened, on the browser's own clock. */
   elapsedMs: number
-  /** How far behind the newest picture the playhead is, once it is playing. */
   latency?: number
   catchingUp: boolean
-  /** Pictures the session has thrown away, as last read off the API. */
   dropped?: number
 }
 
@@ -140,7 +105,6 @@ function begun(key: string): Running {
   }
 }
 
-/** What the delay reads as, by how far behind the edge the playhead is. */
 function latencyTone(seconds: number): 'ok' | 'warn' | 'err' {
   if (seconds >= SEEK_FROM_SECONDS) {
     return 'err'
@@ -155,25 +119,6 @@ const LATENCY_TONE = {
   err: 'border-[rgba(236,154,147,.5)] bg-[rgba(236,154,147,.14)] text-[#EC9A93]',
 } as const
 
-/**
- * The channel, watched.
- *
- * The picture arrives on a socket as fMP4 and is handed to the element through
- * a `MediaSource`; nothing is asked for until a channel is chosen, and choosing
- * another — or another profile — is a new socket, with the old one told that
- * the viewer is leaving so the server frees the seat at once. The chrome is the
- * recording player's: over the picture, down while it plays, back for the
- * pointer or the keyboard.
- *
- * The playhead is held about a second behind the newest picture. Fallen further
- * behind, it runs slightly fast to catch up; fallen far behind, it is moved to
- * the edge. How far behind it is, the bar reads out.
- *
- * The captions come on the same wire as pictures the server drew, and are laid
- * over the element on a canvas of their own as the playhead reaches each one's
- * stamp. The switch on the bar stops the drawing, not the receiving, so what is
- * showing now comes back the moment it is switched on again.
- */
 export function LivePlayer({
   channel,
   profiles,
@@ -185,19 +130,13 @@ export function LivePlayer({
   startupDeadlineMs = STARTUP_DEADLINE_MS,
   takeCapture = takeItNow,
 }: {
-  /** The channel chosen. Nothing chosen is a face with no picture on it. */
   channel?: LiveChannel
   profiles: LiveProfile[]
-  /** Where a sign-in comes back to. */
   returnPath: string
-  /** How the wire is opened. The screen opens a `WebSocket`; a story hands in its own. */
   openSocket?: OpenSocket
-  /** How a wire that dropped is asked whether the session went with it. */
   askSignedOut?: () => Promise<boolean>
-  /** How the session's backlog is read. The screen asks the API; a story hands in its own. */
   askBacklog?: AskBacklog
   wireHref?: (networkId: number, serviceId: number, profile: string) => string
-  /** How long a silent startup is waited out. A story sets its own and waits. */
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
 }) {
@@ -220,26 +159,12 @@ export function LivePlayer({
   const [stirred, setStirred] = useState(false)
   const [onTheBar, setOnTheBar] = useState(false)
   const [focused, setFocused] = useState(false)
-  /**
-   * The mark that answers a press in the middle of the picture, and which
-   * press it answers. The recording player's, unchanged: a live picture is
-   * still a picture that stops when it is told to.
-   */
   const [bezel, setBezel] = useState<(PlayerBezel & { nth: number }) | null>(
     null,
   )
-  /** Whether the settings surface is open, which holds the bar up. */
   const [settingsOpen, setSettingsOpen] = useState(false)
-  /** Whether that surface was open when the press began — see the recording player. */
   const dismissing = useRef(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
-  /**
-   * The times this session's picture has run out of ground to play. It is what
-   * moves the figure the playhead is held at: a target is a claim about what
-   * this wire and this machine can hold, and a stall is that claim being
-   * wrong. Held against the session, so a wire that opens afresh begins by
-   * believing the figure again.
-   */
   const stalls = useRef(0)
 
   const networkId = channel?.networkId
@@ -252,28 +177,16 @@ export function LivePlayer({
   const attempt = retried?.count ?? 0
   const key = seat === null ? null : `${seat}:${attempt}`
 
-  /**
-   * A retry after a wire that was open and then lost — dropped, or ended by
-   * the server — is a reconnection, and the startup says so; one after a
-   * refusal is a fresh tune, because no wire ever carried anything.
-   */
   const reconnecting =
     retried && (retried.after === 'dropped' || retried.after === 'ended')
       ? retried.count
       : undefined
 
-  /**
-   * The session on screen, derived rather than reset: a key the held state
-   * does not carry is a session that has just begun, whatever the last one
-   * was doing when it was left.
-   */
   const running: Running | null =
     key === null ? null : held && held.key === key ? held : begun(key)
   const phase = running?.phase
   const fault = running?.fault ?? null
 
-  // useEffect exception: browser API (the document's fullscreen element) +
-  // listener cleanup, the same as the recording player.
   useEffect(() => {
     const read = () => setFull(document.fullscreenElement === shell)
 
@@ -282,7 +195,6 @@ export function LivePlayer({
     return () => document.removeEventListener('fullscreenchange', read)
   }, [shell])
 
-  // useEffect exception: clearing a timer on unmount.
   useEffect(
     () => () => {
       if (settling.current) {
@@ -292,11 +204,6 @@ export function LivePlayer({
     [],
   )
 
-  // useEffect exception: a socket and a MediaSource are browser resources
-  // with a lifetime, and this is where they are opened and closed. One session
-  // per channel, profile and attempt: any of the three changing leaves the
-  // wire it had and opens the next. Nothing is set here directly — every
-  // change of state below is the wire, the element or the clock speaking.
   useEffect(() => {
     const element = video.current
 
@@ -313,18 +220,8 @@ export function LivePlayer({
     const change = (patch: (was: Running) => Running) =>
       setHeld((was) => patch(was && was.key === key ? was : begun(key)))
 
-    /**
-     * The session is over, and this is why. Said once: the first answer is the
-     * true one, and the clock below must not talk over it — a wire refused at
-     * once is a wire that never carried a picture, and left on the screen it
-     * would otherwise reach the startup deadline and have its reason replaced
-     * by one that reads as a slow start.
-     */
     let settled = false
 
-    // The element outlives the wire, and the rate is the element's. A session
-    // that opened while the last one was still catching up would otherwise
-    // begin quickened, on ground it has not lost.
     element.playbackRate = 1
     stalls.current = 0
 
@@ -393,7 +290,6 @@ export function LivePlayer({
         },
         onCaptionCanvas: (canvas) => layer?.canvasOf(canvas),
         onCaption: (picture, pts) => layer?.offer(picture, pts),
-        // The wire's own times outrank the ones read off the browser's clock.
         onProgress: (reported) =>
           change((was) => ({
             ...was,
@@ -420,10 +316,6 @@ export function LivePlayer({
 
       const elapsedMs = performance.now() - openedAt
 
-      // Nothing has come and nothing is going to. The seat is given up here
-      // rather than held until the socket is closed for us: a tuner kept by a
-      // session that will never show a picture is one no other viewer, and no
-      // recording, can have.
       if (!pictured && elapsedMs >= startupDeadlineMs) {
         clearInterval(ticking)
         session.leave()
@@ -434,8 +326,6 @@ export function LivePlayer({
 
       change((was) => (was.phase === 'starting' ? { ...was, elapsedMs } : was))
 
-      // One question in flight at a time, and the answer kept only while this
-      // is still the session it was asked about.
       if (!asking && elapsedMs - askedAt >= BACKLOG_EVERY_MS) {
         asking = true
         askedAt = elapsedMs
@@ -525,7 +415,6 @@ export function LivePlayer({
     startupDeadlineMs,
   ])
 
-  /** The element said something about this session. */
   const heard = (patch: (was: Running) => Running) => {
     if (key === null) {
       return
@@ -560,22 +449,6 @@ export function LivePlayer({
     )
   }
 
-  /**
-   * Whether the reader has aimed at this player, as against the screen having
-   * handed it the focus when the picture came up.
-   *
-   * Only the arrows read it, and on live only the two that move the volume.
-   * They are the page's way down a page before they are anyone's, and the
-   * channel list sits beside this picture. video.js does not give the arrows
-   * to the player at all — its sliders own them — and Shaka passes them only
-   * when the seek bar has the focus or the picture is full screen.
-   *
-   * Pressing the picture is aiming. Tabbing into the bar is aiming. The
-   * picture arriving is not.
-   *
-   * A ref and not state: nothing is drawn from it, and a press in the same
-   * tick as the aim would read a value React has not re-rendered yet.
-   */
   const aimed = useRef(false)
 
   const stir = () => {
@@ -587,11 +460,6 @@ export function LivePlayer({
     settling.current = setTimeout(() => setStirred(false), RESTS)
   }
 
-  /*
-    The sound is answered here as it is on a recording. Seeking is not: the
-    live picture is one edge and there is nowhere to go, so ← → are not taken
-    at all (v3.24) and there is nothing to answer.
-  */
   const answer = (what: PlayerBezel) =>
     setBezel((last) => ({ ...what, nth: (last?.nth ?? 0) + 1 }))
 
@@ -629,11 +497,6 @@ export function LivePlayer({
     }
   }
 
-  /**
-   * The level the bar is showing, read off the element rather than the state,
-   * so that a run of presses arriving faster than React draws steps once per
-   * press. Silent reads as nought whatever level the mute is holding.
-   */
   const showing = () => {
     const element = video.current
 
@@ -644,7 +507,6 @@ export function LivePlayer({
     return element.muted ? 0 : element.volume
   }
 
-  /** Louder or quieter by a step. */
   const stepVolume = (by: number) => {
     const next =
       Math.min(100, Math.max(0, Math.round(showing() * 100) + by)) / 100
@@ -668,9 +530,6 @@ export function LivePlayer({
   }
 
   const toggleFullscreen = () => {
-    // Refused either way, nothing is drawn from the call: what the bar reads
-    // comes from the `fullscreenchange` listener, which says nothing after a
-    // refusal because nothing changed.
     if (document.fullscreenElement) {
       void document.exitFullscreen().catch(() => undefined)
 
@@ -680,16 +539,6 @@ export function LivePlayer({
     void shell?.requestFullscreen?.().catch(() => undefined)
   }
 
-  /**
-   * The keys, the recording player's set less the two that move a position.
-   *
-   * There is one picture on a live wire and it is the edge: back would leave
-   * the few seconds the browser is holding, and forward has nothing to go
-   * into. So the arrows are not taken — not disabled, not given a meaning of
-   * their own — and the browser keeps whatever it would have done with them.
-   * An assignment with no control on the bar to mirror it would be an
-   * invention, and the bar has no seek.
-   */
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const command = playerCommand(event, {
       seeks: false,
@@ -701,8 +550,6 @@ export function LivePlayer({
       return
     }
 
-    // Only now: a press the player did not take must not raise the bar, or
-    // reading the channel list would flash chrome over the picture.
     stir()
     event.preventDefault()
 
@@ -730,14 +577,6 @@ export function LivePlayer({
     }
   }
 
-  /*
-    useEffect exception: a browser API when the picture arrives. The keys are
-    the player's while it has the focus (WCAG 2.1.4), so the player takes the
-    focus as soon as there is a picture to press keys at — otherwise the focus
-    is left wherever choosing the channel put it and Space does nothing.
-
-    `preventScroll`, so the page does not jump under the hand.
-  */
   useEffect(() => {
     if (hasPicture) {
       shell?.focus({ preventScroll: true })
@@ -810,12 +649,6 @@ export function LivePlayer({
           />
         </div>
         {hasPicture && !pip.out && (
-          // The same press area the recording player has: one press runs or
-          // stops the picture, two put it on the whole screen, and the second
-          // press of a double undoes the first. The picture answering a press,
-          // not a control — the one that says 再生 is on the bar. Only over a
-          // picture: a wire still starting, or one that faulted, has its own
-          // plate there, and the one on a fault is pressed.
           <div
             data-slot="player-press"
             onMouseDown={(event) => {
@@ -838,17 +671,8 @@ export function LivePlayer({
           />
         )}
         {hasPicture && (
-          // The recording player's middle, unchanged. A live picture that has
-          // been stopped is as still as any other, and the press that stopped
-          // it was made at the bottom edge or on a key.
           <PlayerCenter
             standing={!pip.out && phase === 'paused' ? 'play' : undefined}
-            /*
-              The button goes as soon as the picture runs, and a focused
-              element that unmounts drops the focus back to `<body>` — which
-              is where the keys were dead to begin with. So the press hands the
-              focus to the player before the button leaves.
-            */
             onStanding={() => {
               shell?.focus({ preventScroll: true })
               toggle()
@@ -857,13 +681,6 @@ export function LivePlayer({
           />
         )}
         {channel && running && phase !== 'faulted' && (
-          /*
-            What is being watched, at the top of the picture, on a wash of its
-            own — the place and the treatment YouTube and Netflix both give a
-            title over video. It comes and goes with the bar, because it is the
-            same statement: a reader who has stopped moving is watching, and a
-            reader who moves is looking for the controls and for what this is.
-          */
           <div
             data-slot="live-title"
             data-up={chromeUp ? 'true' : undefined}
@@ -923,20 +740,6 @@ export function LivePlayer({
             className="absolute inset-0 flex flex-col items-center justify-center"
           />
         )}
-        {/*
-          A wire that faulted takes the bar with it. Its plate is on the face —
-          the reason, and the retry — and that is the whole of what there is to
-          do: no picture is coming, so 字幕 has nothing to draw over, the
-          volume has nothing to make louder, 設定 has no session to reopen in
-          another profile and 全画面 has nothing to fill the screen with. Left
-          laid out, as it was, only 再生 came up disabled and the other four
-          stayed live and answered a press by doing nothing.
-
-          A wire still starting keeps it. There the picture is on its way, the
-          levels set now are the ones it arrives at, and the profile it arrives
-          in can still be changed — which is a press that only exists on this
-          bar.
-        */}
         <div
           data-slot="player-chrome"
           hidden={key === null || phase === 'faulted'}

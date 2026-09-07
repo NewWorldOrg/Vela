@@ -57,12 +57,6 @@ const meta = {
       </AppFrame>
     ),
   ],
-  /**
-   * The fold is remembered per browser, and every story here is rendered into
-   * the one browser. Left alone, a story that folds would decide what the
-   * story after it opens on, and the run would only pass in the order it was
-   * written in.
-   */
   beforeEach: () => {
     try {
       window.localStorage.removeItem(SUB_CHANNELS_FOLDED_KEY)
@@ -75,24 +69,12 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * The order the grid lays cells out in: a column per channel, and inside a
- * column the programmes in the order they were given. Knowing it lets each cell
- * be held against the programme it was drawn from rather than against whichever
- * cell happens to contain a matching run of text.
- */
 const IN_GRID_ORDER = CHANNEL_FIXTURES.flatMap((channel) =>
   PROGRAM_FIXTURES.filter((program) => program.channelId === channel.id),
 )
 
 export const 通常: Story = {
   args: { guide: base },
-  /**
-   * A cell says what its genre is in words, not only in the colour it is
-   * filled with. Every cell in the grid, including the ten-minute one in the
-   * narrowest column, where words are the first thing a cell runs out of room
-   * for.
-   */
   play: async ({ canvasElement }) => {
     const cells = Array.from(
       canvasElement.querySelectorAll<HTMLElement>(
@@ -109,16 +91,6 @@ export const 通常: Story = {
   },
 }
 
-/**
- * What tells a programme that has ended from one still to come, held against
- * the paint the browser resolved rather than against a class name.
- *
- * Three things are asked of it. Every ended cell is drawn on the same face, so
- * the elapsed part of the grid reads as one thing rather than as ten weakened
- * tints. That face is not a tint any cell is given while it is still to come.
- * And a cell keeps the hairline of its genre either way, so what is given up
- * in order to say a programme has ended is not what says what it is.
- */
 export const 放送済み: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
@@ -163,12 +135,6 @@ export const 放送済み: Story = {
   },
 }
 
-/**
- * The window the guide is really drawn on: a whole broadcast day, four in the
- * morning to four in the morning, which is taller than any screen. The
- * fixtures are written for one evening of it, so they are placed at the hour
- * they belong to rather than at the top.
- */
 const EVENING_MIN = (19 - 4) * 60
 
 const day = {
@@ -182,11 +148,6 @@ const day = {
   })),
 }
 
-/**
- * A height the day cannot fit into, fixed rather than taken from whichever
- * screen the story is run on, so that what is asked of the scroll position is
- * asked of the same layout every time.
- */
 const shorterThanADay: Decorator = (Story) => (
   <div className="flex h-[720px] flex-col overflow-hidden">
     <Story />
@@ -203,13 +164,6 @@ function partOf(canvasElement: HTMLElement, selector: string): HTMLElement {
   return part
 }
 
-/**
- * Where a day that holds the present opens: half an hour above the line, so
- * that the programme on air is on screen the moment the guide is, with the end
- * of the one before it still in view. A day is a screen and a half of grid or
- * more, and the top of it is four in the morning — of no use to someone
- * opening the guide in the evening to see what is on.
- */
 export const 現在時刻の位置で開く: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
@@ -230,7 +184,6 @@ export const 現在時刻の位置で開く: Story = {
   },
 }
 
-/** The minutes a re-read of the page moves the present on by. */
 const A_WHILE_MIN = 6
 
 function clockAt(windowStartHour: number, min: number): string {
@@ -239,15 +192,6 @@ function clockAt(windowStartHour: number, min: number): string {
   return `${String(Math.floor(at / 60) % 24).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`
 }
 
-/**
- * A page re-read while it is being looked at, which is what the live signal
- * does to the guide: the same screen arrives again, a while later and as a
- * fresh set of objects, without the grid being taken down and put back up.
- *
- * The reader has scrolled somewhere of their own by then, and that is where
- * they stay. The opening position is where the guide opens, not somewhere it
- * returns to.
- */
 export const 読み直しても動かない: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
@@ -294,18 +238,12 @@ export const 読み直しても動かない: Story = {
   },
 }
 
-/**
- * A window of a fixed size, so that what is asked of the column widths is
- * asked of the same layout wherever the story is run. 1400 is the width the
- * screens are drawn at, and the width the guide has to stay readable at.
- */
 const aScreenWide: Decorator = (Story) => (
   <div className="flex h-[720px] w-[1400px] flex-col overflow-hidden">
     <Story />
   </div>
 )
 
-/** The four services of a line-up small enough to leave room to spare. */
 const FEW_SERVICES = CHANNEL_FIXTURES.filter((channel) => !channel.sub).slice(
   0,
   4,
@@ -315,12 +253,6 @@ function widthOf(part: HTMLElement): number {
   return part.getBoundingClientRect().width
 }
 
-/**
- * Few enough channels for the screen they are read on: the columns share the
- * width that is there and the grid does not run off the side. The floor a
- * column is given is a floor and not a width — a guide of four services is not
- * drawn as four narrow columns with the rest of the screen left empty.
- */
 export const 列が余れば分け合う: Story = {
   args: {
     guide: {
@@ -354,21 +286,8 @@ export const 列が余れば分け合う: Story = {
   },
 }
 
-/** Four services of a line-up, one of which has split. */
 const SERVICES_ONE_OF_THEM_SPLIT = CHANNEL_FIXTURES.slice(0, 4)
 
-/**
- * A service that has split is a service, and its column is a column. It shares
- * the width the others do, its name is set the same size on the same one line
- * with the number in front of it, and the programmes it carries are read the
- * way any other column's are.
- *
- * It was drawn narrow once, on the reading that a split is an hour borrowed
- * from the service it split from. It is not: a split service runs a schedule
- * of its own all day, and a column too narrow for a name breaks that schedule
- * down the page a character at a time. The hours it carries nothing are blank
- * hours, which is not a reason to take the width away from the hours it does.
- */
 export const 副チャンネルも同じ列: Story = {
   args: {
     guide: {
@@ -424,7 +343,6 @@ export const 副チャンネルも同じ列: Story = {
   },
 }
 
-/** A whole day of the line-up an aerial really hands over: 27 services. */
 const aerial = {
   ...day,
   channels: AERIAL_CHANNEL_FIXTURES,
@@ -434,27 +352,11 @@ const aerial = {
   })),
 }
 
-/**
- * The hours the split service has nothing of its own, read off the fixtures it
- * is given: it carries programmes over 19:00–21:00, 22:30–23:30 and
- * 02:00–03:00, and the two runs between them are the rest of the window.
- *
- * Written out rather than worked out, so that what the column is held against
- * is the schedule someone can read here and not a second run of the arithmetic
- * the column was drawn with.
- */
 const UNSCHEDULED = [
   { startMin: 120, durationMin: 90 },
   { startMin: 270, durationMin: 150 },
 ]
 
-/**
- * An hour the guide has no listing for, on a service that has not split.
- *
- * It leaves the same hole in the column and it does not mean the same thing:
- * that service is on air, and what is missing is the listing. Only a service
- * that has split says anything by carrying nothing.
- */
 const A_LISTING_THAT_DID_NOT_ARRIVE = 'p014'
 
 const SPLIT_LINE_UP = PROGRAM_FIXTURES.filter(
@@ -464,17 +366,6 @@ const SPLIT_LINE_UP = PROGRAM_FIXTURES.filter(
     ) && program.id !== A_LISTING_THAT_DID_NOT_ARRIVE,
 )
 
-/**
- * A column stands for a service all day, and a service that has split is only
- * showing something of its own for part of it. The hours it is not are the
- * hours it is carrying what the whole service is carrying, and a cell drawn
- * for them is the same programme printed twice, side by side.
- *
- * So those hours are said to be what they are — 編成なし — and the cells are
- * kept for the hours there really is a second programme. The column stays
- * either way: taking it out for part of a day would move every column to the
- * right of it, and what a reader is doing with a grid is reading across it.
- */
 export const 副チャンネルは別番組の時間帯だけ: Story = {
   args: {
     guide: {
@@ -558,17 +449,6 @@ export const 副チャンネルは別番組の時間帯だけ: Story = {
   },
 }
 
-/**
- * A split service back on the whole service's programme for half an hour
- * between two of its own, which is an ordinary way for one to run.
- *
- * The band is 48px and its name, set down the page, is longer than that. Given
- * the name anyway it would lose a slice off each end at once — the label is
- * centred and the band clips — and half a 編 above a half a し reads as a
- * fault in the drawing. So a run too short to be named is left to the dashed
- * rules at its ends, the way a cell too short for its description is left to
- * its title.
- */
 const A_SHORT_RETURN = [
   {
     id: 'q001',
@@ -634,18 +514,6 @@ export const 編成なしの短い帯は名前を落とす: Story = {
   },
 }
 
-/**
- * The line-up an aerial really hands over, on the same screen. There is no
- * width in which 27 columns are all readable at once, so they stop sharing:
- * each is drawn at the floor and the grid runs off the side, where the reader
- * can send it sideways. Every one of the 27 is at the floor, the services that
- * have split included, so the total is the count times the floor and nothing
- * else — which is what the line-up is held against here.
- *
- * That the sideways is inside the grid, and that nothing else moves with it,
- * is asked of every width it has to hold at — here and at the two an iPad is
- * read at — so it is asked in one place.
- */
 export const 列が多ければ横に流れる: Story = {
   args: { guide: aerial },
   decorators: [aScreenWide],
@@ -681,11 +549,6 @@ export const 列が多ければ横に流れる: Story = {
   },
 }
 
-/**
- * A stream the collector is not getting through, said as the columns it costs.
- * The judgement is the stream's, so every channel it carries is named by it —
- * naming the first of them alone points at the fullest column on the screen.
- */
 export const 健全性バナー: Story = {
   args: {
     guide: {
@@ -698,16 +561,6 @@ export const 健全性バナー: Story = {
   },
 }
 
-/**
- * A day the present is not in. There is no line to open half an hour above, so
- * the guide opens where the broadcast day does — and the way back to today is
- * offered, which is a thing only a day that is not today has to offer. It asks
- * for the guide with no day on it rather than for today by date: today is
- * whichever day it is when the address is opened, not the one it was when the
- * button was drawn.
- *
- * It is the last day the guide holds, so there is no day after it to page to.
- */
 export const 別の日: Story = {
   args: {
     guide: {
@@ -746,12 +599,6 @@ export const 番組情報が不足: Story = {
   },
 }
 
-/**
- * The first cell the grid is showing whole, and the programme it was drawn
- * from. A cell half off the edge is no use for pressing: the browser brings
- * what it focuses into view, and a scroll the browser did would be read here
- * as a scroll the guide did.
- */
 function onScreenCells(
   canvasElement: HTMLElement,
   scroller: HTMLElement,
@@ -789,17 +636,6 @@ function onScreenIn(
   return first
 }
 
-/**
- * What the surface is drawn showing for the programme it was opened from: the
- * hour, the genre, whatever the broadcaster wrote, and every extended section
- * that programme carries. Reading it here rather than reading a way to go and
- * find it, because there is no longer a way — pressing a cell in the guide
- * puts the whole of the programme on the layer, and never sends the reader off
- * the guide to its own page.
- *
- * The absence is claimed alongside the reading, never on its own: a run where
- * nothing opened satisfies "no link to the page" without opening anything.
- */
 async function readsInFull(
   surface: HTMLElement,
   program: Program,
@@ -835,7 +671,6 @@ async function readsInFull(
   ).toBeNull()
 }
 
-/** The surface a programme opens onto, once it is up and holding focus. */
 async function openedPanel(canvasElement: HTMLElement): Promise<HTMLElement> {
   const doc = canvasElement.ownerDocument
 
@@ -856,7 +691,6 @@ async function openedPanel(canvasElement: HTMLElement): Promise<HTMLElement> {
   })
 }
 
-/** The layer the surface lays over the guide, and where a press outside lands. */
 const overlayOver = (canvasElement: HTMLElement): Element | null =>
   canvasElement.ownerDocument.querySelector('[data-slot="dialog-overlay"]')
 
@@ -866,17 +700,6 @@ const middleOf = (element: Element): [number, number] => {
   return [at.left + at.width / 2, at.top + at.height / 2]
 }
 
-/**
- * Reading a programme does not cost the place in the guide it was read from.
- * The panel is a layer over the grid, not a page in front of it, so the hour
- * the reader had scrolled to is still the hour on screen behind it — an hour
- * they scrolled to themselves, away from where the guide opened, because a
- * grid put back where it opens would be indistinguishable from one left alone
- * if the two were the same place.
- *
- * The panel is also the whole of the reading: what used to be a way through to
- * a separate page is the page's own content, drawn on the layer.
- */
 export const 番組を開いても場所は動かない: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
@@ -901,21 +724,6 @@ export const 番組を開いても場所は動かない: Story = {
   },
 }
 
-/**
- * A programme is read on a layer over the guide, and the grid underneath is out
- * of reach while it is up. A press on a cell is a press outside, so what it
- * does is shut what is open — the programme it landed on is opened by the press
- * after that, not by the one that closed.
- *
- * Which is the difference from the surface that stood here before: that one
- * swapped the new programme in under the reader, so a press meant to put the
- * reading down changed what was being read instead.
- *
- * Both halves are asked for. A run where nothing ever opened would satisfy the
- * shutting on its own, so the surface is read for the programme it was opened
- * from first; and a run where the presses landed nowhere would satisfy it too,
- * so the second press has to open the programme the first one was aimed at.
- */
 export const 別の番組を押すとまず閉じる: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
@@ -956,12 +764,6 @@ export const 別の番組を押すとまず閉じる: Story = {
   },
 }
 
-/**
- * A programme the broadcaster sent more about than a synopsis, opened from the
- * grid. Every extended section it carries is on the layer, and the listing it
- * is tied to is reachable at that listing's own address — the one address a
- * programme still opens a page from. Its own is not among them.
- */
 export const 番組の詳細が層の中に出る: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
@@ -1010,13 +812,6 @@ export const 番組の詳細が層の中に出る: Story = {
   },
 }
 
-/**
- * The way from the guide to the live screen. A programme on air as the guide
- * reads the clock offers it, with its channel chosen in the address; the one
- * after it does not, and nothing on a day that is not today does either. The
- * address is the live screen's own, so a second reader opening it lands on the
- * same channel.
- */
 export const 放送中の番組からライブへ: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
@@ -1069,12 +864,6 @@ export const 放送中の番組からライブへ: Story = {
   },
 }
 
-/**
- * Paging the guide a day at a time. The day is state a second reader opening
- * the link has to arrive at, so what a pager press does is ask for an address
- * — and the ends of the window are ends: there is no day before the first one
- * the guide holds to page back to.
- */
 export const 日を送る: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
@@ -1099,26 +888,10 @@ export const 日を送る: Story = {
   },
 }
 
-/**
- * The two sizes an iPad is read at, portrait and landscape. The browser itself
- * is put at them rather than a box inside it: what the screen does at a width
- * is decided by media queries against the viewport, so a 768px box in a
- * desktop-wide window lays out as the desktop and would answer for the iPad
- * without ever having been one. `.storybook/test-runner.ts` moves the viewport
- * for a story that asks.
- */
 const AN_IPAD = { width: 768, height: 1024 }
 
 const AN_IPAD_TURNED = { width: 1024, height: 768 }
 
-/**
- * What a width too narrow for the line-up does to the screen. The grid runs
- * off its own right edge and is sent sideways from inside; the page does not
- * move, so the toolbar, the day and the buttons stay where they were. The two
- * things that say where you are looking stay too — the hour gutter against
- * the left edge and the channel at the top of its column — and how far down
- * the day the reader is is not touched by how far along it they are.
- */
 async function sidewaysInsideTheGrid(
   canvasElement: HTMLElement,
 ): Promise<void> {
@@ -1180,16 +953,6 @@ export const iPadを横にした幅: Story = {
   },
 }
 
-/**
- * A station and the three services it splits into: the one it splits from, a
- * split with a schedule of its own for part of the evening, and a split
- * showing nothing all evening that the station is not showing. Beside them a
- * station that has not split.
- *
- * It is the shape one aerial really hands over. Measured on a real line-up:
- * 27 columns, of which 15 draw nothing all day that the column they split from
- * is not drawing.
- */
 const A_STATION_AND_ITS_SPLITS = [
   CHANNEL_FIXTURES[0],
   CHANNEL_FIXTURES[1],
@@ -1211,19 +974,9 @@ const SPLIT_REPEATING_IT = A_STATION_AND_ITS_SPLITS[2]
 const drawnOn = (channelId: string) =>
   PROGRAM_FIXTURES.filter((program) => program.channelId === channelId)
 
-/**
- * The same broadcast drawn on a column that is not the one it is listed under.
- * The id is the broadcast's own, the way the guide draws a carried hour: what
- * the cell opens is the one broadcast, whichever of the columns it was pressed
- * on.
- */
 const repeatedOnto = (channelId: string, from: Program[]) =>
   from.map((program) => ({ ...program, channelId }))
 
-/**
- * The hours the split with a schedule of its own is not using it, which are
- * the hours it repeats the station.
- */
 const BETWEEN_ITS_OWN = drawnOn(STATION.id).filter((program) =>
   drawnOn(SPLIT_WITH_ITS_OWN.id).every(
     (mine) =>
@@ -1252,11 +1005,6 @@ function columnsOf(canvasElement: HTMLElement): string[] {
   ).map((heading) => heading.textContent ?? '')
 }
 
-/**
- * Every column the station hands over, which is what the guide draws until it
- * is asked not to. A split is a channel that can be tuned, and a channel that
- * can be tuned is a channel whose evening can be read.
- */
 export const 副チャンネルを出している: Story = {
   args: { guide: SPLIT_LINE_UP_GUIDE },
   decorators: [aScreenWide],
@@ -1274,13 +1022,6 @@ export const 副チャンネルを出している: Story = {
   },
 }
 
-/**
- * Pressed, the hours a split is repeating the station come out, and the
- * columns left with nothing else in them come out with them. What a split has
- * of its own stays — a reader folding away a repetition has not asked to stop
- * being shown what is only on that channel — and the hours it was repeating
- * become the blank hours they already are on any other day.
- */
 export const 副チャンネルを畳んでいる: Story = {
   args: { guide: SPLIT_LINE_UP_GUIDE },
   decorators: [aScreenWide],
@@ -1317,10 +1058,6 @@ export const 副チャンネルを畳んでいる: Story = {
   },
 }
 
-/**
- * A line-up the press cannot change is a line-up it is not offered on: every
- * split here has a schedule of its own, so folding would take no column away.
- */
 export const 畳む先が無ければ操作子を出さない: Story = {
   args: {
     guide: {

@@ -104,13 +104,6 @@ function SelectLabel({
   )
 }
 
-/**
- * A row of an open list is 44px tall, and that is its drawn height rather than
- * an invisible area over it. Rows sit against one another with nothing between,
- * so an area grown past a row's edges would reach into the row above and the
- * row below and take their presses — the list would be no easier to hit, only
- * wronger about which choice was made. The height is what has to give.
- */
 function SelectItem({
   className,
   children,

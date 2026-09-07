@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The integrity list and the walk it can be asked for, with the API standing in
- * for itself. Only the module that reaches the network is replaced; naming a
- * fault, weighing a file and reading a refusal all run for real.
- */
-
 interface Sent {
   method: string
   path: string
@@ -233,10 +227,6 @@ test('a file that is empty is weighed, and reads as zero rather than as nothing'
   assert.equal(one.size, '0 B')
 })
 
-/**
- * The API hands a finding a fresh id on every walk, so a row is keyed by where
- * the file is instead. Two walks over the same file agree on the key.
- */
 test('a row is keyed by where the file is, not by the id the walk gave it', async () => {
   const first = await only({ id: 'aaaaaaaa-0000-4000-8000-000000000001' })
   const again = await only({ id: 'bbbbbbbb-0000-4000-8000-000000000002' })

@@ -1,16 +1,5 @@
 import { expect, waitFor, within } from 'storybook/test'
 
-/**
- * A list bounded by the window rather than the page by the list: it stops
- * short of the window's height and sends the rest inside, with the header row
- * held at its top while the rows go by under it. Every list whose header row
- * carries the column named is taken, so a screen with two lists of one shape
- * is held to it twice.
- *
- * A screen that is only a list pins the page and gives the list what is left
- * (`pageStays`); a list under something that is read leaves the page free to
- * scroll for that, and is only held to the window itself.
- */
 export async function scrollsInsideWithItsHeaderHeld(
   canvasElement: HTMLElement,
   column: string,

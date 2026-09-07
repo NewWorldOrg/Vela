@@ -25,10 +25,6 @@ import {
 } from '@/components/vela/field'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 
-/**
- * What each system will take. The API refuses anything outside these with its
- * own English prose, so the form holds the same rule and says why in Japanese.
- */
 const CHANNEL_RANGE: Record<
   ScanSystem,
   { hint: string; ts: boolean; accepts: (channel: number) => boolean }
@@ -62,10 +58,6 @@ function toNumber(value: string): number | undefined {
   return trimmed !== '' && /^\d+$/.test(trimmed) ? Number(trimmed) : undefined
 }
 
-/**
- * A candidate added by hand. A BS slot carries several streams so it names the
- * one it wants; the other two filter no stream and naming one is refused.
- */
 export function AddCandidateDialog({
   serviceKey,
   serviceName,
@@ -166,9 +158,6 @@ export function AddCandidateDialog({
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      {/* Closing empties the form, so a press that lands beside it is treated
-          as a miss rather than as a decision to throw the entry away. The X,
-          キャンセル and Escape all still close it. */}
       <DialogContent onInteractOutside={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>候補チャンネルを手動追加</DialogTitle>

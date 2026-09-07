@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-/**
- * The playback plan and the ticket, with the API standing in for itself. Only
- * the module that reaches the network is replaced; reading the plan, naming
- * the refusal and wording it all run for real.
- */
-
 interface Sent {
   method: string
   path: string
@@ -122,11 +116,6 @@ test('the plan is asked for as the plan, not as the picture', async () => {
   })
 })
 
-/**
- * A recording handed over as it is carries its size, and the size is spelled
- * as a string where it would not survive as a number. It is read back into one
- * so nothing downstream compares a numeral against a string.
- */
 test('a stream that answers a byte range carries its length', async () => {
   store.planStatus = 200
   store.plan = {
@@ -147,11 +136,6 @@ test('a stream that answers a byte range carries its length', async () => {
   assert.equal(read.state === 'planned' && read.plan.standing, 'cutShort')
 })
 
-/**
- * Four refusals, four answers. A recording still being written, one that wrote
- * nothing and a file out of reach are different things to do next, so they are
- * not collapsed into one.
- */
 test('each refusal keeps its own name', async () => {
   const named: Record<number, string> = {}
 

@@ -8,15 +8,6 @@ type ListVars = CSSProperties & {
   '--data-list-min'?: string
 }
 
-/**
- * A list that is not boxed in. The outer frame is dropped entirely: the header
- * row gets `surface-2`, rows are separated by a dashed rule, and when the
- * columns need more room the list scrolls inside itself instead of pushing the
- * page sideways.
- *
- * `columns` is any `grid-template-columns` value and is shared by the header
- * and every row.
- */
 export function DataList({
   columns,
   minWidth,
@@ -79,7 +70,6 @@ export function DataListRow({
   )
 }
 
-/** The panel revealed under an expanded row — a tint surface, indented. */
 export function DataListExpansion({
   className,
   ...props

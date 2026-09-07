@@ -21,16 +21,8 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/**
- * The screen a programme's own address opens, drawn from the programme alone.
- * Nothing of the guide is handed to it — no day being read, no line-up, no
- * scroll position — so the address opened cold gives the same screen as the
- * address opened from anywhere else: the programme, the service it is on, when
- * it runs, what it says, and the way back to the guide.
- */
 const standard = PROGRAM_DETAIL_FIXTURES.standard
 
-/** Everything the page is asked to draw for a programme it was handed. */
 async function reads(
   canvasElement: HTMLElement,
   detail: ProgramDetail,
@@ -105,11 +97,6 @@ export const 終了未定: Story = {
   },
 }
 
-/**
- * A programme the broadcaster said nothing more about than its name and its
- * hour. The page is drawn from that alone, and the one row every programme can
- * answer is still answered.
- */
 export const 情報最小: Story = {
   args: { detail: PROGRAM_DETAIL_FIXTURES.minimal },
   play: async ({ canvasElement }) => {
@@ -134,12 +121,6 @@ export const 改行を含む本文: Story = {
   },
 }
 
-/**
- * The programme is on air as the page reads the clock, so the way to the live
- * screen is offered, with this channel chosen — the address the live screen's
- * own list would have made. Off the air it is not there at all: a way into a
- * picture that is not being broadcast leads nowhere.
- */
 export const 放送中: Story = {
   args: { detail: { ...standard, nowMin: NOW_MIN } },
   play: async ({ canvasElement, args }) => {

@@ -156,11 +156,6 @@ test('a refusal detail is read against the reason beside it', () => {
   )
 })
 
-/**
- * The three refusals seen coming off the real API, read as the bytes that
- * arrived rather than as the bytes this file writes. A reader that agrees with
- * its own writer and with nothing else is not a reader.
- */
 test('the bytes the API was measured sending are read as what was measured', () => {
   assert.deepEqual(readControl(new Uint8Array([3, 1, 0, 0, 0])), {
     said: 'refusal',
@@ -180,22 +175,16 @@ test('the bytes the API was measured sending are read as what was measured', () 
 })
 
 test('a detail the reason has no meaning for is not read as one it does', () => {
-  // The same byte says a different thing beside each reason, and nothing at
-  // all beside the rest: 1 is a lock that never came under `wouldNotTune` and
-  // a recording under `noTunerFree`, and neither under `driverUnavailable`.
   assert.deepEqual(readControl(new Uint8Array([4, 1, 0, 0, 0])), {
     said: 'refusal',
     refusal: 'driverUnavailable',
   })
 
-  // A nought is the API saying nothing, not one of the things it can say.
   assert.deepEqual(readControl(refusalPayload('wouldNotTune')), {
     said: 'refusal',
     refusal: 'wouldNotTune',
   })
 
-  // A value outside the enumeration is read as nothing said, rather than as
-  // whichever name happens to sit next to it.
   assert.deepEqual(readControl(new Uint8Array([2, 9, 0, 0, 0])), {
     said: 'refusal',
     refusal: 'noTunerFree',
@@ -211,8 +200,6 @@ test('the refusal numbers are the API’s own', () => {
     said: 'unknown',
   })
 
-  // The four ways a tuning fails, and the two things that hold a tuner, are
-  // the API's numbers too.
   assert.deepEqual(
     (['noLock', 'noData', 'incompletePsi', 'streamMismatch'] as const).map(
       (failure) =>
@@ -258,7 +245,6 @@ test('a control message of a length the wire never sends is unknown', () => {
   assert.deepEqual(readControl(new Uint8Array(0)), { said: 'unknown' })
 })
 
-/** A box: its size, its type and its payload. */
 function box(type: string, ...payload: (Uint8Array | number[])[]): Uint8Array {
   const parts = payload.map((part) =>
     part instanceof Uint8Array ? part : new Uint8Array(part),
@@ -283,7 +269,6 @@ function box(type: string, ...payload: (Uint8Array | number[])[]): Uint8Array {
   return bytes
 }
 
-/** A header the way the API's muxer writes one: video and sound in one moov. */
 function header(withSound: boolean): Uint8Array {
   const avcC = box('avcC', [1, 0x64, 0x00, 0x1f, 0xff])
   const avc1 = box('avc1', new Uint8Array(78), avcC)

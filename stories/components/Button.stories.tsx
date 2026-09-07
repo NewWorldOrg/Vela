@@ -5,11 +5,6 @@ import { Surface } from '@/components/vela/surface'
 import { Spinner } from '@/components/vela/progress'
 import { PlusIcon, TrashIcon } from '@/components/vela/icons'
 
-/**
- * A button that is busy keeps its own colours, so it says it is off with
- * `aria-disabled` rather than with the attribute — and then has to refuse the
- * press itself. The banner's held actions are the same shape.
- */
 function hold(event: React.MouseEvent) {
   event.preventDefault()
   event.stopPropagation()
@@ -91,12 +86,10 @@ export const Variants: Story = {
   ),
 }
 
-/** hover / 押下 は静止画でも伝わるよう、その状態を固定したサンプルで並べる。 */
 const HOVER = '-translate-x-px -translate-y-px shadow-pop-lg'
 const PRESS = 'translate-x-px translate-y-px shadow-pop-none'
 const FOCUS = 'shadow-pop-ring'
 
-/** ghost は影を持たないので、固定サンプルでも影のクラスは当てない。 */
 const QUIET: Record<string, string> = {
   [HOVER]: '-translate-y-px bg-surface-2 text-ink',
   [PRESS]: 'bg-surface-2 text-ink',

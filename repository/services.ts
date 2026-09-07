@@ -30,7 +30,6 @@ type ScanServiceChangeResponder =
 type ScanTargetResponder = components['schemas']['ScanTargetResponder']
 type ServiceCategory = components['schemas']['ServiceCategory']
 
-/** Also the order the breakdown beside a group heading is listed in. */
 const CATEGORY_LABEL: Record<ServiceCategory, string> = {
   television: 'TV',
   oneSeg: 'ワンセグ',
@@ -40,7 +39,6 @@ const CATEGORY_LABEL: Record<ServiceCategory, string> = {
   other: 'その他',
 }
 
-/** Which of the four a stopped attempt turned out to be. */
 const FAILURE_CLASS: Record<
   Exclude<ScanAttemptOutcome, 'succeeded'>,
   FailureClass
@@ -57,74 +55,36 @@ export interface CandidateRow {
   id: string
   channel: string
   selected: boolean
-  /** Absent when the tuner gave no carrier-to-noise figure for the last attempt. */
   measurement?: Measurement
-  /**
-   * What the last attempt observed, apart from any figure: a tuner can hold a
-   * lock and still report no carrier-to-noise, and saying it never tuned in
-   * would be untrue.
-   */
   reception: Reception
-  /**
-   * The tuner ledger has been saved since this candidate last received
-   * anything, so what is known about it was measured under a configuration
-   * that no longer holds and has to be proven again.
-   */
   needsRevalidation: boolean
-  /**
-   * Set once the candidate has fallen out of normal rotation. `dropped` means
-   * it is no longer tried at all until someone looks at it.
-   */
   rotation?: { dropped: boolean; label: string; note: string }
   discovered: string
   lastSeen: string
 }
 
 export interface ServiceRow {
-  /** `{networkId}-{serviceId}`, the identifier the API addresses it by. */
   key: string
   name: string
   sid: string
   category: string
-  /** A category that carries no programmes reads quieter in the list. */
   minorCategory: boolean
-  /**
-   * Absent means no candidate is selected: there is no way to tune the
-   * service right now. It is a state of its own, not a missing value.
-   */
   currentChannel?: string
-  /**
-   * The channel the measurements favour, named only when it is not the one
-   * selected. Nothing switches to it: the list says so and the operator
-   * decides.
-   */
   betterChannel?: string
-  /**
-   * Whether the service counts as a reservation target by default. The list
-   * calls it 有効; nothing writes it yet.
-   */
   enabled: boolean
   candidateCount: number
-  /** Candidates that have left rotation and need someone to look. */
   needsAttentionCount: number
   lastSeen: string
   candidates: CandidateRow[]
 }
 
-/** Why a system holds no service, read off the last scan that walked it. */
 export interface ZeroDiagnosis {
   scannedAt: string
   attempted: number
   counts: { class: FailureClass; count: number }[]
-  /** Only stated when one class accounts for every attempt. */
   verdict?: string
 }
 
-/**
- * Whether any scan has walked this system. `unknown` is a read that failed:
- * the screen says the history could not be read rather than that nothing was
- * ever scanned.
- */
 export type SystemWalk = 'walked' | 'never' | 'unknown'
 
 export interface ServiceGroup {
@@ -132,21 +92,16 @@ export interface ServiceGroup {
   label: string
   services: ServiceRow[]
   stat: string
-  /** Present only while the group holds no service at all. */
   diagnosis?: ZeroDiagnosis
   walk: SystemWalk
 }
 
 export interface ScanAttemptRow {
-  /** Unique within the run: attempts carry no identifier of their own. */
   id: string
   channel: string
-  /** Absent on a successful attempt. */
   failure?: FailureClass
-  /** The one detail the contract carries in numbers rather than in prose. */
   streamMismatch?: string
   measurement?: Measurement
-  /** Absent while the attempt is still running. */
   took?: string
   at: string
 }
@@ -176,19 +131,11 @@ export interface ScanRunProgress {
   attempted: number
   succeeded: number
   failed: number
-  /** Newest first. */
   attempts: ScanAttemptRow[]
-  /** The systems the run has touched so far. Empty until the first attempt. */
   systems: ScanSystem[]
-  /** Since the run started, as of this read. */
   elapsed: string
 }
 
-/**
- * A run the ledger says is walking. Its detail is a second read, so it can
- * fail on its own: the run is still stated as running, because a run that
- * cannot be read is not a run that ended.
- */
 export type RunningScan =
   | { state: 'read'; progress: ScanRunProgress }
   | { state: 'unreadable'; run: ScanRun; message: string }
@@ -222,60 +169,37 @@ export interface ScanProposal {
   leftRotation: RotationDeparture[]
   failures: ScanAttemptRow[]
   succeeded: number
-  /** Nothing at all would change: apply is offered but says so. */
   empty: boolean
 }
 
 export interface ChannelsResult {
   groups: ServiceGroup[]
-  /**
-   * Services the contract gives no system for: with no candidate channel left
-   * there is nothing that says which way they were received. They are listed
-   * apart rather than dropped — a service going quiet is the thing the screen
-   * exists to show.
-   */
   unattributed: ServiceRow[]
-  /** The run that is walking right now, if one is. */
   running?: RunningScan
-  /** A finished run whose difference has not been applied yet. */
   proposal?: ScanProposal
-  /** Newest first, the running one included. */
   history: ScanRun[]
 }
 
-/**
- * The app is only reachable through the proxy, so a 401 means the proxy was
- * bypassed rather than that the screen has a signed-out state of its own.
- */
 export type ChannelsScreenResult =
   | { state: 'ok'; result: ChannelsResult }
   | { state: 'unauthenticated' }
   | { state: 'unavailable'; message: string }
 
-/** A scan refused because one is already walking carries that run's id. */
 export type StartScanResult =
   | { state: 'started'; scanId: string }
   | { state: 'refused'; scanId?: string; message: string }
   | { state: 'rejected'; message: string }
 
-/**
- * A write the screen offers. Refusals are the ordinary outcome here — the
- * page re-reads itself every few seconds while a scan walks, so what is on
- * screen can already have ended by the time the press lands.
- */
 export type WriteResult =
   | { state: 'ok' }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
-/** The result of one scan, as its own page reads it. */
 export type ScanProposalScreenResult =
   | { state: 'ok'; proposal: ScanProposal }
   | { state: 'unauthenticated' }
-  /** The run exists but holds no difference: still walking, or applied. */
   | { state: 'gone' }
   | { state: 'unavailable'; message: string }
-  /** No run of that id was ever started here. */
   | { state: 'missing' }
 
 function toInt(value: number | string): number {
@@ -410,9 +334,6 @@ function toAttempt(
       attempt.outcome === 'succeeded'
         ? undefined
         : FAILURE_CLASS[attempt.outcome],
-    // `detail` is the driver's own English operator prose and the screen is
-    // written in Japanese, so only the part the contract carries as numbers
-    // is shown.
     streamMismatch:
       attempt.outcome === 'unexpectedStream' && observed !== null
         ? `期待 TSID ${expected === null ? '—' : toInt(expected)} / 受信 TSID ${toInt(observed)}`
@@ -536,7 +457,6 @@ function toDiagnosis(
   }
 }
 
-/** One scan read on its own. Every way it can fail is a state of its own. */
 type ProgressRead =
   | { state: 'ok'; progress: ScanProgressResponder }
   | { state: 'unauthenticated' }
@@ -570,11 +490,6 @@ async function getProgress(scanId: string): Promise<ProgressRead> {
   return { state: 'ok', progress }
 }
 
-/**
- * How far back the history is read for the state of each system. The API
- * answers with the most recent runs only, and a system's last walk is
- * normally the newest run or the one before it.
- */
 const HISTORY_DEPTH = 8
 
 interface ReadRun {
@@ -598,7 +513,6 @@ function walkOf(system: ScanSystem, history: ReadRun[]): SystemWalk {
   return history.every(({ read }) => read.state === 'ok') ? 'never' : 'unknown'
 }
 
-/** The newest finished run that walked the system: the one to diagnose from. */
 function lastWalkOf(
   system: ScanSystem,
   history: ReadRun[],
@@ -616,11 +530,6 @@ function lastWalkOf(
   return undefined
 }
 
-/**
- * The difference the API still holds. It is dropped once applied, and a later
- * run that proposed nothing does not take the place of an earlier one that
- * did, so the outstanding decision is the newest run still holding one.
- */
 function outstandingProposal(history: ReadRun[]): ScanProposal | undefined {
   for (const { run, read } of history) {
     if (
@@ -778,8 +687,6 @@ export async function startScan(
     { body: { systems } },
   )
 
-  // The API answers in its own English operator prose and the screen is
-  // written in Japanese, so what the refusal means is said here instead.
   if (response.status === 409) {
     return {
       state: 'refused',
@@ -813,11 +720,6 @@ export async function startScan(
   return { state: 'started', scanId }
 }
 
-/**
- * The API answers in its own English operator prose, so what a refusal means
- * is said here instead. Anything the screen has no reading for keeps the
- * status beside it — it is the one thing that says where to look.
- */
 function toWriteResult(
   response: Response,
   refusals: Partial<Record<number, string>>,
@@ -871,11 +773,6 @@ export async function applyScan(scanId: string): Promise<WriteResult> {
   )
 }
 
-/**
- * What a manually added candidate names. A BS slot carries several streams so
- * it names the one it wants; the other two systems filter no stream, and
- * naming one there is refused.
- */
 export interface CandidateTuning {
   system: ScanSystem
   physicalChannel: number
@@ -915,11 +812,6 @@ export async function addCandidateChannel(
   )
 }
 
-/**
- * The API removes the candidate whether or not it is the selected one, and a
- * service left with no candidate selected has no way to be tuned. The screen
- * says so before the press rather than after.
- */
 export async function deleteCandidateChannel(
   key: string,
   candidateChannelId: string,

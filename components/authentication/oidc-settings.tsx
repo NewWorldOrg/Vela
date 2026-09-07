@@ -16,12 +16,6 @@ import { Field, FieldHint, FieldLabel } from '@/components/vela/field'
 import { KeyIcon, SuccessIcon } from '@/components/vela/icons'
 import { RedirectUri } from '@/components/authentication/redirect-uri'
 
-/**
- * The identity provider is optional, so this form is allowed to be empty. The
- * client secret is write-only — the API answers whether it holds one and never
- * what it is — so the field starts blank and is sent only when something was
- * typed into it.
- */
 export function OidcSettings({
   config,
   onSave,

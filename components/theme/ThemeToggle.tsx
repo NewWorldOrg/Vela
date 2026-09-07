@@ -23,11 +23,8 @@ import {
 } from '@/components/vela/icons'
 
 interface ThemeToggleProps {
-  /** Extra classes for the trigger button (color tweaks). */
   className?: string
-  /** Trigger button variant (default: ghost). */
   variant?: React.ComponentProps<typeof Button>['variant']
-  /** Trigger button size (default: icon-sm). */
   size?: React.ComponentProps<typeof Button>['size']
 }
 
@@ -47,12 +44,6 @@ const MODE_LABELS: Record<ThemePreference, string> = {
   system: 'System',
 }
 
-/**
- * Theme switcher. Three choices: Light / Dark / System.
- *
- * - `mode`: the theme actually applied (for `system`, the matchMedia result).
- * - `preference`: the user's selection, surfaced via the trigger icon.
- */
 export function ThemeToggle({
   className,
   variant = 'ghost',
@@ -60,8 +51,6 @@ export function ThemeToggle({
 }: ThemeToggleProps) {
   const { mode, preference, setPreference } = useTheme()
 
-  // The trigger icon follows `preference` (Laptop when `system` is selected).
-  // Using `mode` would show Sun/Moon even for `system`, hiding the selection.
   const TriggerIcon =
     preference === 'light'
       ? SunIcon

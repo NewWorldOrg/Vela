@@ -20,15 +20,10 @@ import { LockIcon } from '@/components/vela/icons'
 import { PasswordInput } from '@/components/vela/password-input'
 import { passwordChangedHref } from '@/components/authentication/wording'
 
-/**
- * The one way to end every other session at once, which is why it sits with
- * the band that says so rather than beside a session of its own.
- */
 export function ChangePassword({
   username,
   onChangePassword,
 }: {
-  /** Known only while the session in hand is a local one. */
   username?: string
   onChangePassword: (change: PasswordChange) => Promise<PasswordResult>
 }) {

@@ -3,10 +3,6 @@ import type { ComponentProps, ComponentType } from 'react'
 import { cn } from '@/lib/utils'
 import { MarkStar, type IconProps } from '@/components/vela/icons'
 
-/**
- * A section title preceded by a small hand-drawn mark and trailed by a dashed
- * rule. Vary the mark per section rather than reusing one shape.
- */
 export function SectionHeading({
   mark: Mark = MarkStar,
   level = 2,
@@ -38,7 +34,6 @@ export function SectionHeading({
   )
 }
 
-/** The page heading of an admin screen: title plus one line of description. */
 export function PageHeading({
   description,
   action,

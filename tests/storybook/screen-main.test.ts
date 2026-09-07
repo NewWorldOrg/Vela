@@ -4,29 +4,13 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
 
-/**
- * How wide a screen is read is a step held by one shared part, and a screen
- * picks it by name. A screen that opens its own `<main>` picks nothing, so it
- * is as wide as the window — which is what every screen was until the step
- * existed, and what the next screen written from an old one would be again.
- *
- * Beside the two waiver scans for the same reason they are here: a rule the
- * run cannot measure is a rule the source has to be read for. The 44px probe
- * cannot see a control it was waived off, and no probe can see a screen that
- * never asked for a width.
- */
 const OPENS_ITS_OWN = [
-  // The step itself.
   'components/vela/app-shell.tsx',
-  // Signed out, and outside the shell: a card in the middle of the window,
-  // with no top bar and no column to be a share of.
   'components/login/login-page.tsx',
   'components/login/logged-out-page.tsx',
-  // This file, which names the tag without opening one.
   'tests/storybook/screen-main.test.ts',
 ]
 
-/** Build output and dependencies, which are not this repository's own source. */
 const NOT_SOURCE = new Set([
   '.git',
   '.next',
@@ -87,13 +71,6 @@ test('a screen takes its width from the shared part, not from a <main> of its ow
   )
 })
 
-/**
- * The document scrolls; the screen does not scroll inside its own column. A
- * screen that did put the scrollbar at the column's edge, inside the window,
- * and made the column a scroller the keyboard could land on and the browser
- * ring. A list that is taller than the window scrolls inside the list, which
- * is the list's own container and never `<main>`.
- */
 test('a screen does not make its <main> the scroller', async () => {
   const files = await sourceFiles('.')
   const scrolls: string[] = []

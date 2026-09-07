@@ -4,16 +4,6 @@ import type { LiveStartup } from '@/lib/live-wire'
 import { CheckIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 
-/**
- * The plate over the picture while the channel is being brought up: what has
- * been reached, what is underway, and how long each has taken.
- *
- * A wire opened again after one was lost is the same startup with a different
- * name over it — 再接続中, and which attempt this is — so that a reader who
- * pressed 再試行 can tell the picture coming back from a channel being tuned
- * for the first time. Nothing here counts down: the wire is only ever reopened
- * by a press, so there is no next attempt to say the time until.
- */
 export function LiveStartupSteps({
   startup,
   elapsedMs,
@@ -21,9 +11,7 @@ export function LiveStartupSteps({
   className,
 }: {
   startup: LiveStartup
-  /** Since the wire was opened, on the browser's own clock. */
   elapsedMs: number
-  /** Which retry this is, when the wire before it was lost. */
   reconnecting?: number
   className?: string
 }) {

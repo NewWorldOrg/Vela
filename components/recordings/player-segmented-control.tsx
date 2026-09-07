@@ -3,14 +3,6 @@
 import { cn } from '@/lib/utils'
 import { pressable, still } from '@/components/vela/tactile'
 
-/**
- * The pill switch used on the dark player chrome (quality, audio, latency).
- *
- * A switch the API takes no argument for is drawn switched off rather than
- * left pressable: a control that moves its own pill and changes nothing behind
- * it is the worst of the three states it could be in. `value` may be unset,
- * which is what a switch that cannot say which option is in force looks like.
- */
 export function PlayerSegmentedControl({
   label,
   options,
@@ -25,7 +17,6 @@ export function PlayerSegmentedControl({
   value?: string
   onChange: (next: string) => void
   numeric?: boolean
-  /** Switched off, because nothing behind it would answer. */
   off?: boolean
   title?: string
 }) {

@@ -68,13 +68,6 @@ export const CHANNEL_FIXTURES: Channel[] = [
   },
 ]
 
-/**
- * The scale one aerial reaches: 27 television services, once the one-segment,
- * temporary and data services that never take a column of their own are left
- * out. It is the count a grid has to stay readable at, and the eight above are
- * the head of it, so a screen drawn from this list still holds the programmes
- * written for them.
- */
 export const AERIAL_CHANNEL_FIXTURES: Channel[] = [
   ...CHANNEL_FIXTURES,
   {

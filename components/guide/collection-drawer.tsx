@@ -293,12 +293,6 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
   )
 }
 
-/**
- * The screen-side view of the visit ledger: what the collector did per
- * transport stream, the way to bring a visit forward, and the gate to the one
- * destructive operation. The API answers for a press — the drawer shows the
- * refusal and its reason rather than guessing at the collector's state.
- */
 export function CollectionDrawer({
   status,
   open,
