@@ -20,6 +20,11 @@ import type {
   EncodeResolution,
   EncodeSwerve,
 } from '@/repository/encode-terms'
+import {
+  LABEL_LONGEST,
+  RATE_CONTROL_COARSEST,
+  RATE_CONTROL_FINEST,
+} from '@/repository/encode-terms'
 import { toInt } from '@/repository/programmes'
 import {
   clockWithSeconds,
@@ -148,19 +153,6 @@ const JOBS_PER_PAGE = 20
 
 const UNREADABLE = 'エンコードの台帳を読めませんでした'
 
-const PROFILE_UNSAVEABLE = 'この内容ではプロファイルを保存できませんでした。'
-
-const DESTINATION_UNSAVEABLE = 'この内容では保存先を保存できませんでした。'
-
-const ROOT_REFUSED = 'この出力ルートには成果物を置けません。'
-
-const ROOTS_UNREADABLE =
-  '保存先の一覧を確認できないため、保存できませんでした。'
-
-const PROFILE_GONE = 'このプロファイルは残っていないため、'
-
-const DESTINATION_GONE = 'この保存先は残っていないため、'
-
 export async function getEncodeScreen(
   query: EncodeQuery = {},
   now: Date = new Date(),
@@ -224,6 +216,155 @@ export async function listEncodeChoices(): Promise<EncodeChoices> {
   }
 }
 
+export interface EncodeAsking {
+  did: string
+  fell: string
+  throughDriver?: boolean
+}
+
+export const WHEN_QUEUEING: EncodeAsking = {
+  did: 'エンコード',
+  fell: 'エンコードを登録できませんでした',
+}
+
+export const WHEN_CALLING_OFF: EncodeAsking = {
+  did: '中止',
+  fell: 'このジョブを中止できませんでした',
+}
+
+export const WHEN_SAVING_A_PROFILE: EncodeAsking = {
+  did: '保存',
+  fell: 'プロファイルを保存できませんでした',
+}
+
+export const WHEN_CHANGING_A_PROFILE: EncodeAsking = {
+  did: '変更',
+  fell: 'プロファイルを変更できませんでした',
+}
+
+export const WHEN_REMOVING_A_PROFILE: EncodeAsking = {
+  did: '撤去',
+  fell: 'プロファイルを撤去できませんでした',
+}
+
+export const WHEN_SAVING_A_DESTINATION: EncodeAsking = {
+  did: '保存',
+  fell: '保存先を保存できませんでした',
+  throughDriver: true,
+}
+
+export const WHEN_CHANGING_A_DESTINATION: EncodeAsking = {
+  did: '変更',
+  fell: '保存先を変更できませんでした',
+  throughDriver: true,
+}
+
+export const WHEN_REMOVING_A_DESTINATION: EncodeAsking = {
+  did: '撤去',
+  fell: '保存先を撤去できませんでした',
+}
+
+const DRIVER_OUT_OF_REACH = 'driver に接続できないため、'
+
+const REFUSAL_SAYINGS: [RegExp, string][] = [
+  [
+    /failed, so there is nothing to encode/i,
+    'この録画は失敗しているため、エンコードするものがありません。',
+  ],
+  [/already has job/i, 'この録画のエンコードはすでに待機中か実行中です。'],
+  [
+    /already encoded with profile/i,
+    'この録画はこのプロファイルですでにエンコード済みです。',
+  ],
+]
+
+const REFUSED_FIELDS: [RegExp, string][] = [
+  [/\blabel: a name a person reads/i, '名称が入力されていない'],
+  [/\blabel: at most/i, `名称が ${LABEL_LONGEST} 文字を超えている`],
+  [/\bcodec:/i, 'コーデックの指定が正しくない'],
+  [/\bresolution:/i, '解像度の指定が正しくない'],
+  [/\bdeinterlace:/i, 'インタレース解除の指定が正しくない'],
+  [
+    /\brateFactor:/i,
+    `品質(CRF)が ${RATE_CONTROL_FINEST} 〜 ${RATE_CONTROL_COARSEST} の範囲にない`,
+  ],
+  [
+    /\bquantiser:/i,
+    `品質(QP)が ${RATE_CONTROL_FINEST} 〜 ${RATE_CONTROL_COARSEST} の範囲にない`,
+  ],
+  [/\boutputRoot: the name of a root/i, 'この出力ルートは残っていない'],
+  [
+    /\boutputRoot: a root this process holds/i,
+    'この出力ルートには成果物を置けない',
+  ],
+  [/\bdefaultProfileId:/i, '既定のプロファイルが選ばれていない'],
+]
+
+const REFUSAL_REASONS: [RegExp, string][] = [
+  [/holds no recording/i, 'この録画は残っていないため、'],
+  [/still being written/i, 'この録画はまだ書き込み中のため、'],
+  [/no destination \S+ is defined/i, 'この保存先は残っていないため、'],
+  [/no profile \S+ is defined/i, 'このプロファイルは残っていないため、'],
+  [/holds no job/i, 'このジョブは残っていないため、'],
+  [/^destination \S+ was retired/i, 'この保存先は退役しているため、'],
+  [/^profile \S+ was retired/i, 'このプロファイルは退役しているため、'],
+  [
+    /^destination \S+ is what job/i,
+    'この保存先を使うジョブが実行中か待機中のため、',
+  ],
+  [
+    /^profile \S+ is what job/i,
+    'このプロファイルを使うジョブが実行中か待機中のため、',
+  ],
+  [
+    /is what destination \S+ encodes with/i,
+    'このプロファイルを既定にしている保存先があるため、',
+  ],
+  [/is the only one left/i, 'この保存先は最後の 1 つのため、'],
+  [/already ended as/i, 'このジョブはすでに終わっているため、'],
+  [/moved in the ledger/i, 'このジョブは中止の途中で状態が変わったため、'],
+  [/the driver does not answer/i, DRIVER_OUT_OF_REACH],
+  [/a profile is defined by/i, 'プロファイルの内容が揃っていないため、'],
+  [/a destination is defined by/i, '保存先の内容が揃っていないため、'],
+  [
+    /is named by a UUID|is named by the thirty-two hexadecimal digits/i,
+    '対象を正しく指定できていないため、',
+  ],
+]
+
+export function whyItRefused(
+  asking: EncodeAsking,
+  status: number,
+  said: string | undefined,
+): string {
+  const heard = said ?? ''
+  const saying = REFUSAL_SAYINGS.find(([reads]) => reads.test(heard))
+
+  if (saying) {
+    return saying[1]
+  }
+
+  const fields = REFUSED_FIELDS.filter(([reads]) => reads.test(heard))
+
+  if (fields.length > 0) {
+    const why = fields.map(([, reason]) => reason).join('、')
+
+    return `${why}ため、${asking.did}できませんでした。`
+  }
+
+  const reason = REFUSAL_REASONS.find(([reads]) => reads.test(heard))
+
+  if (reason) {
+    return `${reason[1]}${asking.did}できませんでした。`
+  }
+
+  if (asking.throughDriver && (status === 502 || status === 503)) {
+    return `${DRIVER_OUT_OF_REACH}${asking.did}できませんでした。`
+  }
+
+  return `${asking.fell}(${status})。`
+}
+
 export async function defineProfile(
   draft: EncodeProfileDraft,
 ): Promise<EncodeWrite> {
@@ -232,7 +373,7 @@ export async function defineProfile(
     { body: draft },
   )
 
-  return toWrite(response, whatItSaid(error), { 400: PROFILE_UNSAVEABLE })
+  return toWrite(response, whatItSaid(error), WHEN_SAVING_A_PROFILE)
 }
 
 export async function reviseProfile(
@@ -244,10 +385,7 @@ export async function reviseProfile(
     { params: { path: { id } }, body: draft },
   )
 
-  return toWrite(response, whatItSaid(error), {
-    400: PROFILE_UNSAVEABLE,
-    404: `${PROFILE_GONE}変更できませんでした。`,
-  })
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_PROFILE)
 }
 
 export async function removeProfile(id: string): Promise<EncodeRemoval> {
@@ -256,9 +394,12 @@ export async function removeProfile(id: string): Promise<EncodeRemoval> {
     { params: { path: { id } } },
   )
 
-  return toRemoval(response, data?.data?.removal, whatItSaid(error), {
-    404: `${PROFILE_GONE}撤去できませんでした。`,
-  })
+  return toRemoval(
+    response,
+    data?.data?.removal,
+    whatItSaid(error),
+    WHEN_REMOVING_A_PROFILE,
+  )
 }
 
 export async function defineDestination(
@@ -268,9 +409,8 @@ export async function defineDestination(
     '/api/encoding/destinations',
     { body: draft },
   )
-  const said = whatItSaid(error)
 
-  return toWrite(response, said, destinationRefusals(said, '保存'))
+  return toWrite(response, whatItSaid(error), WHEN_SAVING_A_DESTINATION)
 }
 
 export async function reviseDestination(
@@ -281,9 +421,8 @@ export async function reviseDestination(
     '/api/encoding/destinations/{id}',
     { params: { path: { id } }, body: draft },
   )
-  const said = whatItSaid(error)
 
-  return toWrite(response, said, destinationRefusals(said, '変更'))
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
 }
 
 export async function removeDestination(id: string): Promise<EncodeRemoval> {
@@ -292,47 +431,13 @@ export async function removeDestination(id: string): Promise<EncodeRemoval> {
     { params: { path: { id } } },
   )
 
-  return toRemoval(response, data?.data?.removal, whatItSaid(error), {
-    404: `${DESTINATION_GONE}撤去できませんでした。`,
-  })
+  return toRemoval(
+    response,
+    data?.data?.removal,
+    whatItSaid(error),
+    WHEN_REMOVING_A_DESTINATION,
+  )
 }
-
-function destinationRefusals(
-  said: string | undefined,
-  verb: string,
-): Partial<Record<number, string>> {
-  return {
-    400: /outputRoot/.test(said ?? '') ? ROOT_REFUSED : DESTINATION_UNSAVEABLE,
-    404: `${DESTINATION_GONE}${verb}できませんでした。`,
-    502: ROOTS_UNREADABLE,
-    503: ROOTS_UNREADABLE,
-  }
-}
-
-const QUEUE_REFUSED: [RegExp, string][] = [
-  [/no recording/i, 'この録画は残っていないため、エンコードできませんでした。'],
-  [
-    /no destination/i,
-    'この保存先は残っていないため、エンコードできませんでした。',
-  ],
-  [
-    /no profile/i,
-    'このプロファイルは残っていないため、エンコードできませんでした。',
-  ],
-  [
-    /still being written/i,
-    'この録画はまだ書き込み中のため、エンコードできませんでした。',
-  ],
-  [
-    /failed, so/i,
-    'この録画は失敗しているため、エンコードするものがありません。',
-  ],
-  [/already has job/i, 'この録画のエンコードはすでに待機中か実行中です。'],
-  [
-    /already encoded/i,
-    'この録画はこのプロファイルですでにエンコード済みです。',
-  ],
-]
 
 export async function queueEncode(
   recordingId: string,
@@ -343,23 +448,7 @@ export async function queueEncode(
     body: { recordingId, destinationId, profileId: profileId ?? null },
   })
 
-  if (response.status === 401) {
-    return { state: 'unauthenticated' }
-  }
-
-  if (response.ok) {
-    return { state: 'ok' }
-  }
-
-  const said = whatItSaid(error) ?? ''
-  const known = QUEUE_REFUSED.find(([reads]) => reads.test(said))
-
-  return {
-    state: 'rejected',
-    message: known
-      ? known[1]
-      : `エンコードを登録できませんでした(${response.status})。`,
-  }
+  return toWrite(response, whatItSaid(error), WHEN_QUEUEING)
 }
 
 export async function callOffEncode(id: string): Promise<EncodeWrite> {
@@ -368,16 +457,13 @@ export async function callOffEncode(id: string): Promise<EncodeWrite> {
     { params: { path: { id } } },
   )
 
-  return toWrite(response, whatItSaid(error), {
-    404: 'このジョブは残っていないため、中止できませんでした。',
-    409: 'このジョブはすでに終わっているため、中止できませんでした。',
-  })
+  return toWrite(response, whatItSaid(error), WHEN_CALLING_OFF)
 }
 
 function toWrite(
   response: Response,
   said: string | undefined,
-  refusals: Partial<Record<number, string>>,
+  asking: EncodeAsking,
 ): EncodeWrite {
   if (response.status === 401) {
     return { state: 'unauthenticated' }
@@ -387,14 +473,17 @@ function toWrite(
     return { state: 'ok' }
   }
 
-  return { state: 'rejected', message: refusalOf(response, said, refusals) }
+  return {
+    state: 'rejected',
+    message: whyItRefused(asking, response.status, said),
+  }
 }
 
 function toRemoval(
   response: Response,
   removal: EncodeRemoved | undefined,
   said: string | undefined,
-  refusals: Partial<Record<number, string>>,
+  asking: EncodeAsking,
 ): EncodeRemoval {
   if (response.status === 401) {
     return { state: 'unauthenticated' }
@@ -404,25 +493,10 @@ function toRemoval(
     return { state: 'ok', removal }
   }
 
-  return { state: 'rejected', message: refusalOf(response, said, refusals) }
-}
-
-function refusalOf(
-  response: Response,
-  said: string | undefined,
-  refusals: Partial<Record<number, string>>,
-): string {
-  const known = refusals[response.status]
-
-  if (known !== undefined) {
-    return known
+  return {
+    state: 'rejected',
+    message: whyItRefused(asking, response.status, said),
   }
-
-  if (response.status === 409 && said) {
-    return said
-  }
-
-  return `${said || '保存できませんでした'}(${response.status})。`
 }
 
 function stillOffered(one: { retiredAt?: string | null }): boolean {

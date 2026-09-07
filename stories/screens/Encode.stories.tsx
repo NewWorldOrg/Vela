@@ -54,16 +54,14 @@ const ACTIONS: EncodeActions = {
 }
 
 const HELD_BY_A_JOB =
-  'Profile 0f1e2d3c4b5a49688776655443322110 is what job 9e8d7c6b5a494837a62514f3e2d1c0b9 is waiting to run with, and it stands still until that job has ended or been called off.'
+  'このプロファイルを使うジョブが実行中か待機中のため、変更できませんでした。'
 
-const ALREADY_RETIRED =
-  'Destination 1a2b3c4d5e6f4a8b9c0d1e2f3a4b5c6d was retired at 2026-09-07T02:14:51.0000000Z; a retired definition stands as it was so that what was encoded with it still reads.'
+const ALREADY_RETIRED = 'この保存先は退役しているため、変更できませんでした。'
 
 const STILL_THE_DEFAULT =
-  'Profile 0f1e2d3c4b5a49688776655443322110 is what destination 1a2b3c4d5e6f4a8b9c0d1e2f3a4b5c6d encodes with unless another is asked for; point that destination at another profile first.'
+  'このプロファイルを既定にしている保存先があるため、撤去できませんでした。'
 
-const THE_LAST_ONE =
-  'Destination 1a2b3c4d5e6f4a8b9c0d1e2f3a4b5c6d is the only one left, and a machine with nowhere to put an artefact encodes nothing; define the one that replaces it first.'
+const THE_LAST_ONE = 'この保存先は最後の 1 つのため、撤去できませんでした。'
 
 const meta = {
   title: 'Screens/設定・エンコード',
@@ -246,6 +244,40 @@ export const 実行中の中止を断られる: Story = {
   },
 }
 
+export const 中止が入れ違う: Story = {
+  args: {
+    screen: screenWith(RUNNING_JOB),
+    actions: {
+      ...ACTIONS,
+      onCallOff: async () =>
+        ({
+          state: 'rejected',
+          message:
+            'このジョブは中止の途中で状態が変わったため、中止できませんでした。',
+        }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      runningCard(canvasElement).getByRole('button', { name: '中止' }),
+    )
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'このエンコードを中止します',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '中止する' }),
+    )
+
+    await expect(
+      await within(dialog).findByText(
+        'このジョブは中止の途中で状態が変わったため、中止できませんでした。',
+      ),
+    ).toBeVisible()
+  },
+}
+
 export const 停滞: Story = {
   args: { screen: screenWith(STALLED_JOB) },
   play: async ({ canvasElement }) => {
@@ -394,7 +426,8 @@ export const 保存先の追加を断られる: Story = {
       onDefineDestination: async () =>
         ({
           state: 'rejected',
-          message: 'この出力ルートには成果物を置けません。',
+          message:
+            'この出力ルートには成果物を置けないため、保存できませんでした。',
         }) as const,
     },
   },
@@ -411,7 +444,40 @@ export const 保存先の追加を断られる: Story = {
     )
 
     await expect(
-      await within(dialog).findByText('この出力ルートには成果物を置けません。'),
+      await within(dialog).findByText(
+        'この出力ルートには成果物を置けないため、保存できませんでした。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const 保存先の追加をdriverが断る: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onDefineDestination: async () =>
+        ({
+          state: 'rejected',
+          message: 'driver に接続できないため、保存できませんでした。',
+        }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '保存先を追加' }))
+
+    const dialog = await screen.findByRole('dialog', { name: '保存先を追加' })
+
+    await userEvent.type(within(dialog).getByLabelText(/名称/), '書庫')
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '追加する' }),
+    )
+
+    await expect(
+      await within(dialog).findByText(
+        'driver に接続できないため、保存できませんでした。',
+      ),
     ).toBeVisible()
   },
 }
