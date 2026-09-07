@@ -1483,7 +1483,7 @@ const config: TestRunnerConfig = {
           '`data-cursor-exempt`, so every waived control has silently ' +
           'rejoined the run. Fix measureCursors in ' +
           '.storybook/test-runner.ts, or take the waiver out of ' +
-          '.storybook/cursor-exempt.test.ts as well.',
+          'tests/storybook/cursor-exempt.test.ts as well.',
       )
     }
 
