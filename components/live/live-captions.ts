@@ -4,7 +4,12 @@ import {
   placedOn,
   type CaptionCue,
 } from '@/lib/live-captions'
-import type { CaptionCanvas, CaptionPicture } from '@/lib/live-wire'
+import {
+  ptsSeconds,
+  type CaptionCanvas,
+  type CaptionPicture,
+} from '@/lib/live-wire'
+import { CaptionDrift } from '@/lib/live-caption-drift'
 
 /** What the layer has on it, written on the element for whoever reads the screen. */
 export type CaptionState = 'none' | 'shown' | 'off'
@@ -43,6 +48,8 @@ function decode(png: Uint8Array): Promise<ImageBitmap | null> {
  */
 export class CaptionLayer {
   private readonly queue = new CaptionQueue<Decoding>()
+
+  private readonly drift = new CaptionDrift()
 
   private drawnOn: CaptionCanvas | null = null
 
@@ -89,6 +96,12 @@ export class CaptionLayer {
   offer(picture: CaptionPicture | null, pts: number): void {
     if (this.closed) {
       return
+    }
+
+    const edge = this.edge()
+
+    if (edge !== null) {
+      this.drift.saw(ptsSeconds(pts), edge)
     }
 
     this.queue.offer({
@@ -161,11 +174,22 @@ export class CaptionLayer {
     this.reading = setInterval(() => this.tick(), READ_MS)
   }
 
+  private edge(): number | null {
+    const held = this.video.buffered
+
+    return held.length > 0 ? held.end(held.length - 1) : null
+  }
+
   private tick(): void {
-    const due = this.queue.take(this.video.currentTime)
+    if (!this.current?.picture) {
+      this.drift.adopt()
+    }
+
+    const due = this.queue.take(this.video.currentTime + this.drift.showEarlyBy)
 
     if (due) {
       this.stand(due)
+      this.drift.adopt()
     }
   }
 

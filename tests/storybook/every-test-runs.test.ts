@@ -37,6 +37,7 @@ const THE_SUITE = [
   'tests/lib/encode.test.ts',
   'tests/lib/format.test.ts',
   'tests/lib/guide.test.ts',
+  'tests/lib/live-caption-drift.test.ts',
   'tests/lib/live-captions.test.ts',
   'tests/lib/live-fold.test.ts',
   'tests/lib/live-latency.test.ts',
