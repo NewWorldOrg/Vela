@@ -44,6 +44,18 @@ export type PlayerCommand =
   | 'fullscreen'
   | 'captions'
 
+/** One cap per command, never two: Space and K, and the arrows and J / L, are the same call spelled twice. */
+export const KEY_CAP: Record<PlayerCommand, string> = {
+  toggle: 'Space',
+  back: '←',
+  forward: '→',
+  louder: '↑',
+  quieter: '↓',
+  mute: 'M',
+  fullscreen: 'F',
+  captions: 'C',
+}
+
 /** Just enough of the element a press landed on to say who answers it. */
 export interface PressedOn {
   tagName: string

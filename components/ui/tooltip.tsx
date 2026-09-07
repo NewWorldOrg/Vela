@@ -39,11 +39,15 @@ function TooltipTrigger({
 function TooltipContent({
   className,
   sideOffset = 6,
+  container,
   children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+}: React.ComponentProps<typeof TooltipPrimitive.Content> & {
+  /** The body is not drawn while something inside it is fullscreen, so a bubble portalled there goes up where nobody can see it. */
+  container?: React.ComponentProps<typeof TooltipPrimitive.Portal>['container']
+}) {
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={container}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

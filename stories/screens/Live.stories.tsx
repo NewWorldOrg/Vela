@@ -2092,3 +2092,69 @@ export const ピクチャーインピクチャー: Story = {
     }
   },
 }
+
+function liveTipOf(
+  canvasElement: HTMLElement,
+  name: string | RegExp,
+): HTMLElement {
+  const bar = canvasElement.querySelector('[data-slot="player-chrome"]')
+
+  if (!(bar instanceof HTMLElement)) {
+    throw new Error('the bar is not on the screen')
+  }
+
+  const control = within(bar).getByRole('button', { name })
+  const held = control.closest('[data-slot="player-tip"]')
+
+  if (!(held instanceof HTMLElement)) {
+    throw new Error(`${name} is not held by anything that names it`)
+  }
+
+  return held
+}
+
+function liveNamed(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector('[data-slot="player-tip-name"]')
+}
+
+function liveCapsOn(said: HTMLElement): string[] {
+  return [...said.querySelectorAll('kbd')].map((cap) => cap.textContent ?? '')
+}
+
+async function liveRestOn(canvasElement: HTMLElement, name: string | RegExp) {
+  await userEvent.hover(liveTipOf(canvasElement, name))
+  await waitFor(() => expect(liveNamed(canvasElement)).not.toBeNull(), {
+    timeout: 3000,
+  })
+
+  return liveNamed(canvasElement) as HTMLElement
+}
+
+export const 操作子の名前が出る: Story = {
+  args: { openSocket: captioned },
+  play: async ({ canvasElement }) => {
+    const captions = await liveRestOn(canvasElement, '字幕')
+
+    await expect(captions).toHaveTextContent('字幕')
+    await expect(liveCapsOn(captions)).toEqual(['C'])
+
+    await userEvent.unhover(liveTipOf(canvasElement, '字幕'))
+    await waitFor(() => expect(liveNamed(canvasElement)).toBeNull())
+
+    const capture = await liveRestOn(canvasElement, 'キャプチャ')
+
+    await expect(capture).toHaveTextContent('キャプチャ')
+    await expect(liveCapsOn(capture)).toEqual([])
+  },
+}
+
+export const 送り戻しの鍵は名前にも出ない: Story = {
+  args: { openSocket: captioned },
+  play: async ({ canvasElement }) => {
+    const said = await liveRestOn(canvasElement, /^(再生|一時停止)$/)
+
+    await expect(liveCapsOn(said)).toEqual(['Space'])
+    await expect(said).not.toHaveTextContent('←')
+    await expect(said).not.toHaveTextContent('→')
+  },
+}

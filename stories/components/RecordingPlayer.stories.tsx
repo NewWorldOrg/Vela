@@ -1429,3 +1429,111 @@ export const ピクチャーインピクチャーを断るブラウザ: Story = 
     ).toBeVisible()
   },
 }
+
+function tipOf(canvasElement: HTMLElement, name: string | RegExp): HTMLElement {
+  const bar = canvasElement.querySelector('[data-slot="player-chrome"]')
+
+  if (!(bar instanceof HTMLElement)) {
+    throw new Error('the bar is not on the screen')
+  }
+
+  const control = within(bar).getByRole('button', { name })
+  const held = control.closest('[data-slot="player-tip"]')
+
+  if (!(held instanceof HTMLElement)) {
+    throw new Error(`${name} is not held by anything that names it`)
+  }
+
+  return held
+}
+
+function named(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector('[data-slot="player-tip-name"]')
+}
+
+function capsOn(said: HTMLElement): string[] {
+  return [...said.querySelectorAll('kbd')].map((cap) => cap.textContent ?? '')
+}
+
+async function restOn(canvasElement: HTMLElement, name: string | RegExp) {
+  await userEvent.hover(tipOf(canvasElement, name))
+  await waitFor(() => expect(named(canvasElement)).not.toBeNull(), {
+    timeout: 3000,
+  })
+
+  return named(canvasElement) as HTMLElement
+}
+
+export const 操作子の名前は待ってから出る: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(tipOf(canvasElement, '再生'))
+    await expect(named(canvasElement)).toBeNull()
+
+    await waitFor(() => expect(named(canvasElement)).not.toBeNull(), {
+      timeout: 3000,
+    })
+
+    const said = named(canvasElement) as HTMLElement
+
+    await expect(said).toHaveTextContent('再生')
+    await expect(capsOn(said)).toEqual(['Space'])
+
+    const bubble = said.getBoundingClientRect()
+    const on = tipOf(canvasElement, '再生').getBoundingClientRect()
+    const board = (
+      canvasElement.querySelector('[data-slot="player"]') as HTMLElement
+    ).getBoundingClientRect()
+
+    await expect(bubble.bottom).toBeLessThanOrEqual(on.top)
+    await expect(bubble.top).toBeGreaterThanOrEqual(board.top)
+    await expect(bubble.left).toBeGreaterThanOrEqual(board.left)
+    await expect(bubble.right).toBeLessThanOrEqual(board.right)
+  },
+}
+
+export const 鍵を持たない操作子は名前だけ: Story = {
+  play: async ({ canvasElement }) => {
+    const said = await restOn(canvasElement, 'キャプチャ')
+
+    await expect(said).toHaveTextContent('キャプチャ')
+    await expect(capsOn(said)).toEqual([])
+  },
+}
+
+export const 押せない操作子にも名前は出る: Story = {
+  args: { detail: detail('1266') },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', { name: '字幕' }),
+    ).toBeDisabled()
+
+    const said = await restOn(canvasElement, '字幕')
+
+    await expect(said).toHaveTextContent('字幕')
+    await expect(capsOn(said)).toEqual([])
+    await expect(said).not.toHaveTextContent('これから')
+  },
+}
+
+export const 隣へ移ってもまた待つ: Story = {
+  play: async ({ canvasElement }) => {
+    const full = await restOn(canvasElement, '全画面')
+
+    await expect(capsOn(full)).toEqual(['F'])
+
+    await userEvent.unhover(tipOf(canvasElement, '全画面'))
+    await waitFor(() => expect(named(canvasElement)).toBeNull())
+
+    await userEvent.hover(tipOf(canvasElement, '消音'))
+    await expect(named(canvasElement)).toBeNull()
+
+    await waitFor(() => expect(named(canvasElement)).not.toBeNull(), {
+      timeout: 3000,
+    })
+
+    const said = named(canvasElement) as HTMLElement
+
+    await expect(said).toHaveTextContent('消音')
+    await expect(capsOn(said)).toEqual(['M'])
+  },
+}

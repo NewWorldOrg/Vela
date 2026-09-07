@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
 import { liveWireHref } from '@/repository/live-paths'
-import { playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import { KEY_CAP, playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
 import {
   CATCH_UP_RATE,
@@ -975,28 +976,45 @@ export function LivePlayer({
             </p>
           )}
           <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
-            <button
-              type="button"
-              aria-label={phase === 'playing' ? '一時停止' : '再生'}
-              disabled={!hasPicture}
-              onClick={toggle}
-              className={PLAYER_GLYPH_BUTTON}
+            <PlayerTip
+              name={phase === 'playing' ? '一時停止' : '再生'}
+              keys={[KEY_CAP.toggle]}
+              container={shell}
             >
-              {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
-            </button>
-            <button
-              type="button"
-              aria-label="消音"
-              aria-pressed={muted}
-              onClick={() => mute(!muted)}
-              className={cn(
-                PLAYER_GLYPH_BUTTON,
-                muted && PLAYER_GLYPH_BUTTON_ON,
-              )}
+              <button
+                type="button"
+                aria-label={phase === 'playing' ? '一時停止' : '再生'}
+                disabled={!hasPicture}
+                onClick={toggle}
+                className={PLAYER_GLYPH_BUTTON}
+              >
+                {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
+              </button>
+            </PlayerTip>
+            <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
+              <button
+                type="button"
+                aria-label="消音"
+                aria-pressed={muted}
+                onClick={() => mute(!muted)}
+                className={cn(
+                  PLAYER_GLYPH_BUTTON,
+                  muted && PLAYER_GLYPH_BUTTON_ON,
+                )}
+              >
+                <VolumeIcon level={muted ? 0 : volume} />
+              </button>
+            </PlayerTip>
+            <PlayerTip
+              name="音量"
+              keys={[KEY_CAP.louder, KEY_CAP.quieter]}
+              container={shell}
             >
-              <VolumeIcon level={muted ? 0 : volume} />
-            </button>
-            <PlayerVolume level={muted ? 0 : volume} onChoose={chooseVolume} />
+              <PlayerVolume
+                level={muted ? 0 : volume}
+                onChoose={chooseVolume}
+              />
+            </PlayerTip>
             {latency !== undefined && (
               <span
                 data-slot="live-latency"
@@ -1022,59 +1040,77 @@ export function LivePlayer({
               </span>
             )}
             <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
-              <button
-                type="button"
-                aria-label="字幕"
-                aria-pressed={captioned}
-                onClick={toggleCaptions}
-                className={cn(
-                  PLAYER_GLYPH_BUTTON,
-                  captioned && PLAYER_GLYPH_BUTTON_ON,
-                )}
-              >
-                <CaptionsGlyph />
-              </button>
-              <LiveSettings
+              <PlayerTip
+                name="字幕"
+                keys={[KEY_CAP.captions]}
                 container={shell}
-                onOpenChange={setSettingsOpen}
-                profiles={profiles}
-                profile={profile}
-                onChooseProfile={setProfile}
-                dropped={running?.dropped}
-              />
-              <button
-                type="button"
-                aria-label="キャプチャ"
-                disabled={!hasPicture}
-                onClick={capture}
-                className={PLAYER_GLYPH_BUTTON}
               >
-                <CaptureIcon />
-              </button>
-              {pip.offered && (
                 <button
                   type="button"
-                  aria-label="ピクチャーインピクチャー"
-                  aria-pressed={pip.out}
-                  disabled={!hasPicture}
-                  onClick={pip.toggle}
+                  aria-label="字幕"
+                  aria-pressed={captioned}
+                  onClick={toggleCaptions}
                   className={cn(
                     PLAYER_GLYPH_BUTTON,
-                    pip.out && PLAYER_GLYPH_BUTTON_ON,
+                    captioned && PLAYER_GLYPH_BUTTON_ON,
                   )}
                 >
-                  <PictureInPictureIcon />
+                  <CaptionsGlyph />
                 </button>
+              </PlayerTip>
+              <PlayerTip name="設定" container={shell}>
+                <LiveSettings
+                  container={shell}
+                  onOpenChange={setSettingsOpen}
+                  profiles={profiles}
+                  profile={profile}
+                  onChooseProfile={setProfile}
+                  dropped={running?.dropped}
+                />
+              </PlayerTip>
+              <PlayerTip name="キャプチャ" container={shell}>
+                <button
+                  type="button"
+                  aria-label="キャプチャ"
+                  disabled={!hasPicture}
+                  onClick={capture}
+                  className={PLAYER_GLYPH_BUTTON}
+                >
+                  <CaptureIcon />
+                </button>
+              </PlayerTip>
+              {pip.offered && (
+                <PlayerTip name="ピクチャーインピクチャー" container={shell}>
+                  <button
+                    type="button"
+                    aria-label="ピクチャーインピクチャー"
+                    aria-pressed={pip.out}
+                    disabled={!hasPicture}
+                    onClick={pip.toggle}
+                    className={cn(
+                      PLAYER_GLYPH_BUTTON,
+                      pip.out && PLAYER_GLYPH_BUTTON_ON,
+                    )}
+                  >
+                    <PictureInPictureIcon />
+                  </button>
+                </PlayerTip>
               )}
-              <button
-                type="button"
-                aria-label="全画面"
-                aria-pressed={full}
-                onClick={toggleFullscreen}
-                className={PLAYER_GLYPH_BUTTON}
+              <PlayerTip
+                name="全画面"
+                keys={[KEY_CAP.fullscreen]}
+                container={shell}
               >
-                <FullscreenIcon leaving={full} />
-              </button>
+                <button
+                  type="button"
+                  aria-label="全画面"
+                  aria-pressed={full}
+                  onClick={toggleFullscreen}
+                  className={PLAYER_GLYPH_BUTTON}
+                >
+                  <FullscreenIcon leaving={full} />
+                </button>
+              </PlayerTip>
             </div>
           </div>
         </div>
