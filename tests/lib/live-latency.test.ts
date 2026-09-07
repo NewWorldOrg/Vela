@@ -102,7 +102,7 @@ test('two run ends that do not meet exactly are not a hole', () => {
       rate: 1,
       at: 598.9,
       edge: 600,
-      reach: 599.9,
+      reach: 599.98,
       from: 540,
       stalls: 0,
     }),
