@@ -345,6 +345,8 @@ const DISCARD_REFUSAL: Record<RecordingRefusal, string> = {
     'この録画は書き込み中ではないため、削除できませんでした。最新の状態を読み直してください。',
   nowhereToPutPictures:
     'サムネイルの保存先に到達できないため、削除を実行していません。録画ファイルは残っています。',
+  tookTooLong:
+    '保存先の確認に時間がかかりすぎたため、削除を実行していません。録画ファイルは残っています。',
 }
 
 const CANNOT_DISCARD = '録画を削除できませんでした'

@@ -632,6 +632,102 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/quality/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getQualitySummary']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/quality/channels': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listQualityChannels']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/quality/recordings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listQualityRecordings']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/quality/thresholds': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listQualityThresholds']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/quality/tuners': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listQualityTuners']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/quality/thresholds/{key}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['reviseQualityThreshold']
+    trace?: never
+  }
   '/api/live/ticket': {
     parameters: {
       query?: never
@@ -1259,6 +1355,36 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['ProgrammeSearchResponder']
+    }
+    BaseResponderOfQualityChannelListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityChannelListResponder']
+    }
+    BaseResponderOfQualityRecordingListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityRecordingListResponder']
+    }
+    BaseResponderOfQualitySummaryResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualitySummaryResponder']
+    }
+    BaseResponderOfQualityThresholdListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityThresholdListResponder']
+    }
+    BaseResponderOfQualityThresholdResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityThresholdResponder']
+    }
+    BaseResponderOfQualityTunerListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityTunerListResponder']
     }
     BaseResponderOfRecordingDetailResponder: {
       status: boolean
@@ -2028,8 +2154,226 @@ export interface components {
     }
     /** @enum {string} */
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
+    QualityChannelListResponder: {
+      period: components['schemas']['QualityPeriodResponder']
+      metrics: components['schemas']['QualityMetric'][]
+      items: components['schemas']['QualityChannelResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+      provisional: boolean
+    }
+    QualityChannelResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      kind: null | components['schemas']['TuneSystem']
+      measures: components['schemas']['QualityMeasureResponder'][]
+    }
+    /** @enum {null|string} */
+    QualityGroupSort: 'worst' | 'unmeasured' | 'subjects' | 'identity' | null
     /** @enum {string} */
     QualityLevel: 'good' | 'unmeasured' | 'warning' | 'mayNotBeWatchable'
+    QualityMeasureResponder: {
+      metric: components['schemas']['QualityMetric']
+      reading: components['schemas']['QualityTallyResponder']
+    }
+    /** @enum {string} */
+    QualityMetric: 'packetsLost' | 'packetsLeftScrambled' | 'overflows'
+    QualityPeriodResponder: {
+      /** Format: date-time */
+      from: string
+      /** Format: date-time */
+      until: string
+    }
+    QualityReadingResponder: {
+      state: components['schemas']['QualityState']
+      /** Format: int32 */
+      subjects: number | string
+      /** Format: int32 */
+      measured: number | string
+      /** Format: int32 */
+      unmeasured: number | string
+      /** Format: int32 */
+      beyondThreshold: number | string
+    }
+    QualityRecordingListResponder: {
+      period: components['schemas']['QualityPeriodResponder']
+      metrics: components['schemas']['QualityMetric'][]
+      items: components['schemas']['QualityRecordingResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+      whole: components['schemas']['QualityMeasureResponder'][]
+      provisional: boolean
+    }
+    QualityRecordingResponder: {
+      id: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      kind: null | components['schemas']['TuneSystem']
+      tunerDeviceId: null | string
+      /** Format: date-time */
+      startedAt: string
+      /** Format: date-time */
+      measuredUpdatedAt: null | string
+      standing: components['schemas']['QualityStanding']
+      /** Format: int64 */
+      droppedPackets: null | number | string
+      /** Format: int64 */
+      totalPackets: null | number | string
+      /** Format: int64 */
+      scrambledPackets: null | number | string
+      /** Format: int64 */
+      overflows: number | string
+      verdicts: components['schemas']['QualityVerdictResponder'][]
+    }
+    /** @enum {null|string} */
+    QualityRecordingSort: 'worst' | 'startedAt' | null
+    QualitySignalResponder: {
+      metric: components['schemas']['QualityThresholdKey']
+      reading: components['schemas']['QualityReadingResponder']
+      /** Format: date-time */
+      lastTakenAt: null | string
+    }
+    /** @enum {string} */
+    QualityStanding:
+      | 'good'
+      | 'warning'
+      | 'mayNotBeWatchable'
+      | 'unmeasured'
+      | 'unsupported'
+      | 'unreachable'
+    /** @enum {string} */
+    QualityState:
+      | 'good'
+      | 'atOrAboveWarning'
+      | 'unmeasured'
+      | 'nothingToMeasure'
+      | 'unsupported'
+      | 'unreachable'
+    QualitySummaryResponder: {
+      period: components['schemas']['QualityPeriodResponder']
+      /** Format: int32 */
+      recordings: number | string
+      measures: components['schemas']['QualityMeasureResponder'][]
+      signal: components['schemas']['QualitySignalResponder'][]
+      provisional: boolean
+    }
+    QualityTallyResponder: {
+      state: components['schemas']['QualityState']
+      /** Format: int32 */
+      subjects: number | string
+      /** Format: int32 */
+      measured: number | string
+      /** Format: int32 */
+      unmeasured: number | string
+      /** Format: int32 */
+      beyondThreshold: number | string
+      /** Format: int32 */
+      good: number | string
+      /** Format: int32 */
+      warning: number | string
+      /** Format: int32 */
+      mayNotBeWatchable: number | string
+      /** Format: int32 */
+      unsupported: number | string
+      /** Format: int32 */
+      unreachable: number | string
+      /** Format: double */
+      average: null | number | string
+      /** Format: double */
+      lowest: null | number | string
+      /** Format: double */
+      highest: null | number | string
+    }
+    QualityThresholdChangeResponder: {
+      /** Format: double */
+      previousValue: number | string
+      /** Format: double */
+      nextValue: number | string
+      /** Format: date-time */
+      changedAt: string
+      changedBy: null | string
+    }
+    /** @enum {string} */
+    QualityThresholdKey:
+      | 'packetsLostWarning'
+      | 'packetsLostUnwatchable'
+      | 'packetsLeftScrambled'
+      | 'overflows'
+      | 'lockRate'
+      | 'carrierToNoiseFloor'
+      | 'bitErrorRateCeiling'
+      | 'supplySilence'
+    QualityThresholdListResponder: {
+      items: components['schemas']['QualityThresholdResponder'][]
+    }
+    QualityThresholdResponder: {
+      key: components['schemas']['QualityThresholdKey']
+      metric: null | components['schemas']['QualityMetric']
+      sense: components['schemas']['ThresholdSense']
+      /** Format: double */
+      defaultValue: number | string
+      /** Format: double */
+      currentValue: number | string
+      /** Format: double */
+      lowest: number | string
+      /** Format: double */
+      highest: number | string
+      provisional: boolean
+      /** Format: int64 */
+      observations: number | string
+      stored: boolean
+      /** Format: date-time */
+      updatedAt: null | string
+      updatedBy: null | string
+      lastChange:
+        null | components['schemas']['QualityThresholdChangeResponder']
+    }
+    QualityTunerListResponder: {
+      period: components['schemas']['QualityPeriodResponder']
+      metrics: components['schemas']['QualityMetric'][]
+      items: components['schemas']['QualityTunerResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+      provisional: boolean
+    }
+    QualityTunerResponder: {
+      deviceId: null | string
+      measures: components['schemas']['QualityMeasureResponder'][]
+      signal: components['schemas']['QualitySignalResponder'][]
+    }
+    QualityVerdictResponder: {
+      metric: components['schemas']['QualityMetric']
+      standing: components['schemas']['QualityStanding']
+      /** Format: double */
+      observed: null | number | string
+      applied: components['schemas']['QualityThresholdKey']
+      /** Format: double */
+      appliedValue: number | string
+      provisional: boolean
+      breached: null | components['schemas']['QualityThresholdKey']
+    }
     QueueEncodeJobRequest: {
       recordingId?: null | string
       /** Format: uuid */
@@ -2090,6 +2434,7 @@ export interface components {
       | 'rootOutOfReach'
       | 'filesLeftBehind'
       | 'oneIsAlreadyBeingDiscarded'
+      | 'tookTooLong'
     /** @enum {string} */
     RecordingFault:
       | 'tuneFailed'
@@ -2348,6 +2693,7 @@ export interface components {
       kind: components['schemas']['ReservationOutcomeKind']
       tuneFailure: null | components['schemas']['TuneFailureKind']
       recordingOutcome: null | components['schemas']['RecordingOutcome']
+      faults: components['schemas']['RecordingFault'][]
       recordedInstead: string[]
       /** Format: date-time */
       effectiveStartAt: string
@@ -2451,6 +2797,10 @@ export interface components {
       rateFactor?: null | number | string
       /** Format: int32 */
       quantiser?: null | number | string
+    }
+    ReviseQualityThresholdRequest: {
+      /** Format: double */
+      value: null | number | string
     }
     ReviseReservationRequest: {
       /** Format: int32 */
@@ -2855,6 +3205,8 @@ export interface components {
       /** Format: date-time */
       lastSeenAt: null | string
     }
+    /** @enum {string} */
+    ThresholdSense: 'ceiling' | 'floor'
     /** @enum {null|string} */
     ThumbnailFault:
       | 'programmeMissing'
@@ -5722,6 +6074,309 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+    }
+  }
+  getQualitySummary: {
+    parameters: {
+      query?: {
+        from?: string
+        until?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualitySummaryResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualitySummaryResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualitySummaryResponder']
+        }
+      }
+    }
+  }
+  listQualityChannels: {
+    parameters: {
+      query?: {
+        from?: string
+        until?: string
+        metric?: components['schemas']['QualityMetric'][]
+        sort?: components['schemas']['QualityGroupSort']
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityChannelListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityChannelListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityChannelListResponder']
+        }
+      }
+    }
+  }
+  listQualityRecordings: {
+    parameters: {
+      query?: {
+        from?: string
+        until?: string
+        metric?: components['schemas']['QualityMetric'][]
+        sort?: components['schemas']['QualityRecordingSort']
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityRecordingListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityRecordingListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityRecordingListResponder']
+        }
+      }
+    }
+  }
+  listQualityThresholds: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityThresholdListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityThresholdListResponder']
+        }
+      }
+    }
+  }
+  listQualityTuners: {
+    parameters: {
+      query?: {
+        from?: string
+        until?: string
+        metric?: components['schemas']['QualityMetric'][]
+        sort?: components['schemas']['QualityGroupSort']
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityTunerListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityTunerListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityTunerListResponder']
+        }
+      }
+    }
+  }
+  reviseQualityThreshold: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        key: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ReviseQualityThresholdRequest']
+        'application/*+json':
+          null | components['schemas']['ReviseQualityThresholdRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityThresholdResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityThresholdResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityThresholdResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityThresholdResponder']
         }
       }
     }

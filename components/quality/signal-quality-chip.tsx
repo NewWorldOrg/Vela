@@ -1,17 +1,8 @@
-import type { QualityLevel } from '@/repository/quality'
+import type { QualityLevel } from '@/lib/quality'
+import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
 import { Badge } from '@/components/ui/badge'
 import { CloseIcon } from '@/components/vela/icons'
 import { ChipDot } from '@/components/vela/status'
-
-export const QUALITY_LEVEL_LABEL: Record<QualityLevel, string> = {
-  good: '良好',
-  warn: '警告水準',
-  bad: '視聴不可の恐れ',
-  unmeasured: '未計測',
-  nodata: '対象なし',
-  unsupported: '非対応',
-  unreachable: '取得できず',
-}
 
 export function QualityChip({
   level,
