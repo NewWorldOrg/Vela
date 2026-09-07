@@ -12,7 +12,7 @@ import { Player } from '@/components/recordings/player'
 import {
   drawCapture,
   type TakeCapture,
-} from '@/components/recordings/player-capture'
+} from '@/components/recordings/take-capture'
 import { ScreenMain } from '@/components/vela/app-shell'
 import type { PlaybackFault } from '@/components/recordings/playback-fault'
 

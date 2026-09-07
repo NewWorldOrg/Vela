@@ -6,7 +6,7 @@ import {
   capturedName,
   capturedOn,
   inAFileName,
-} from '@/lib/player-capture'
+} from '@/lib/capture-name'
 
 test('the position is the recording own time, with the hour only where there is one', () => {
   assert.equal(capturedAt(1572), '26-12')

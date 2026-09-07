@@ -35,7 +35,7 @@ import type {
   OpenSocket,
 } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
-import type { TakeCapture } from '@/components/recordings/player-capture'
+import type { TakeCapture } from '@/components/recordings/take-capture'
 
 /**
  * A socket a story drives. It opens on the next tick, the way a real one opens

@@ -22,7 +22,7 @@ import { ChannelList } from '@/components/live/channel-list'
 import { useFoldingChannels } from '@/components/live/channel-fold'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
-import type { TakeCapture } from '@/components/recordings/player-capture'
+import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 
 /**

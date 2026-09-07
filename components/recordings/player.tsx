@@ -59,8 +59,8 @@ import {
   SAID_NOT_CAPTURED,
   takeCapture as takeItNow,
   type TakeCapture,
-} from '@/components/recordings/player-capture'
-import { capturedAt, capturedName } from '@/lib/player-capture'
+} from '@/components/recordings/take-capture'
+import { capturedAt, capturedName } from '@/lib/capture-name'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { AirPlayButton } from '@/components/recordings/external-player'
 import {
