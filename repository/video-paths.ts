@@ -32,16 +32,6 @@ export const PLAYBACK_PROFILES: readonly PlaybackProfile[] = [
 ]
 
 /**
- * The profile a picture is made in when none is asked for.
- *
- * The live endpoint marks its own on the list it hands back; this one hands
- * back no list, and says what it falls to only as the parameter's default in
- * the document. So the value is copied here, and the test beside this module
- * reads the document back to keep the copy honest.
- */
-export const PLAYBACK_PROFILE_UNASKED: PlaybackProfile = '720p30'
-
-/**
  * The header the API names its refusal in when it will not start a picture.
  * The status alone does not separate the machine being full from a transcoder
  * that would not run — both are 503 — and those are not the same thing to do

@@ -248,7 +248,7 @@ async function fetchLiveChannels(): Promise<LiveChannel[]> {
   return data.data.items.map(toChannel)
 }
 
-async function fetchLiveProfiles(): Promise<LiveProfile[]> {
+export async function fetchLiveProfiles(): Promise<LiveProfile[]> {
   const { data, error } = await carinaClient().GET('/api/live/profiles')
 
   if (error || !data?.data) {

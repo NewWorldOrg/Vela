@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { listEncodeChoices } from '@/repository/encode'
 import { getRecording } from '@/repository/recordings'
-import { getPlaybackPlan } from '@/repository/videos'
+import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
 import { queueEncoding, redrawThumbnail, takeTicket } from './actions'
@@ -40,9 +40,10 @@ export default async function Page({
 }) {
   const { id } = await params
   const { at } = await searchParams
-  const [detail, playback, encodeChoices] = await Promise.all([
+  const [detail, playback, unaskedProfile, encodeChoices] = await Promise.all([
     getRecording(id),
     getPlaybackPlan(id),
+    getUnaskedPlaybackProfile(),
     listEncodeChoices(),
   ])
 
@@ -54,6 +55,7 @@ export default async function Page({
     <RecordingDetailView
       detail={detail}
       playback={playback}
+      unaskedProfile={unaskedProfile}
       startAt={secondsIn(at)}
       onRemakeThumbnail={redrawThumbnail}
       onDelete={throwRecordingAway}

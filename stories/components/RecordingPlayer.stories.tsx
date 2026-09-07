@@ -108,6 +108,7 @@ const meta = {
   args: {
     detail: detail('1266'),
     plan: ON_THE_FLY,
+    unaskedProfile: '1080p60',
     onTakeTicket: ticketed,
     frameHref: drawnFrame,
   },
@@ -295,11 +296,96 @@ export const 読み込み中: Story = {
 }
 
 /**
+ * A recording opens at the size the machine encodes at, and the screen keeps
+ * no name of its own. The mark moves with the encoder the machine has, so a
+ * machine with a card to pass the work to opens at `1080p60`.
+ */
+export const 機械が1080p60と答える: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked.at(-1)).toBe('0/1080p60'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
+
+    await expect(
+      within(quality).getByRole('button', { name: '1080p60' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+/** The same screen on a machine with no card, which answers the smaller one. */
+export const 機械が720p30と答える: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    unaskedProfile: '720p30',
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked.at(-1)).toBe('0/720p30'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
+
+    await expect(
+      within(quality).getByRole('button', { name: '720p30' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+/**
+ * Nothing is named when the machine could not be asked: the picture is asked
+ * for without a profile, which is the request the API answers from its own
+ * encoder. The panel marks nothing, because nothing here knows what it plays at.
+ */
+export const 機械に聞けなければ何も指定しない: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    unaskedProfile: undefined,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked.at(-1)).toBe('0/—'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
+
+    await expect(
+      within(quality)
+        .getAllByRole('button')
+        .map((one) => one.getAttribute('aria-pressed')),
+    ).toEqual(['false', 'false', 'false', 'false'])
+  },
+}
+
+/**
  * The profile is an argument the API takes, so choosing one asks for the
  * picture again in it. It used to move its own pill and nothing else.
+ *
+ * A choice is asked for exactly as it was made, over the machine's own answer:
+ * the reader who picks the smaller picture on a machine that opens at the
+ * bigger one gets the smaller one.
  */
 export const 画質を選ぶ: Story = {
-  args: { detail: detail('1266'), startAt: 0, pictureHref: keeping },
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: keeping,
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -315,19 +401,19 @@ export const 画質を選ぶ: Story = {
         .map((one) => one.textContent),
     ).toEqual(['1080p60', '1080p30', '720p60', '720p30'])
     await expect(
-      within(quality).getByRole('button', { name: '720p30' }),
+      within(quality).getByRole('button', { name: '1080p60' }),
     ).toHaveAttribute('aria-pressed', 'true')
 
     asked.length = 0
     await userEvent.click(
-      within(quality).getByRole('button', { name: '1080p30' }),
+      within(quality).getByRole('button', { name: '720p60' }),
     )
 
     // Choosing one asks for the picture again in it. The pill used to move on
     // its own over a stream nobody had asked to change.
-    await waitFor(() => expect(asked).toEqual(['0/1080p30']))
+    await waitFor(() => expect(asked).toEqual(['0/720p60']))
     await expect(
-      within(quality).getByRole('button', { name: '1080p30' }),
+      within(quality).getByRole('button', { name: '720p60' }),
     ).toHaveAttribute('aria-pressed', 'true')
   },
 }
@@ -537,11 +623,13 @@ export const 送りを続けても要求は一度: Story = {
     ).toHaveAttribute('aria-valuenow', '50')
 
     // One request, for where the presses left off.
-    await waitFor(() => expect(asked).toEqual(['50/720p30']), { timeout: 3000 })
+    await waitFor(() => expect(asked).toEqual(['50/1080p60']), {
+      timeout: 3000,
+    })
 
     // And no second one behind it.
     await new Promise((rest) => setTimeout(rest, 800))
-    await expect(asked).toEqual(['50/720p30'])
+    await expect(asked).toEqual(['50/1080p60'])
   },
 }
 
@@ -569,10 +657,12 @@ export const 送りのボタンも要求は一度: Story = {
       expect(canvas.getByText('0:50 / 4:12:38')).toBeVisible(),
     )
 
-    await waitFor(() => expect(asked).toEqual(['50/720p30']), { timeout: 3000 })
+    await waitFor(() => expect(asked).toEqual(['50/1080p60']), {
+      timeout: 3000,
+    })
 
     await new Promise((rest) => setTimeout(rest, 800))
-    await expect(asked).toEqual(['50/720p30'])
+    await expect(asked).toEqual(['50/1080p60'])
 
     // Back the same way, and the mark comes back with it.
     await userEvent.click(canvas.getByRole('button', { name: '10秒戻る' }))
@@ -599,7 +689,7 @@ export const 戻しは頭で止まる: Story = {
     await waitFor(() =>
       expect(canvas.getByText('0:00 / 4:12:38')).toBeVisible(),
     )
-    await waitFor(() => expect(asked).toEqual(['0/720p30']), { timeout: 3000 })
+    await waitFor(() => expect(asked).toEqual(['0/1080p60']), { timeout: 3000 })
   },
 }
 
@@ -615,7 +705,7 @@ export const 映像を押して再生: Story = {
 
     asked.length = 0
     await userEvent.click(area as HTMLElement)
-    await waitFor(() => expect(asked).toEqual(['0/720p30']))
+    await waitFor(() => expect(asked).toEqual(['0/1080p60']))
 
     // Two presses: the picture goes on the whole screen and is not asked for
     // again — the second press of the double is the undo of the first.

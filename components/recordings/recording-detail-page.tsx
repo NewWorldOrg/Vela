@@ -16,6 +16,7 @@ import type {
   PlaybackRefusal,
   TicketWrite,
 } from '@/repository/videos'
+import type { PlaybackProfile } from '@/repository/video-paths'
 import type { EncodeChoices } from '@/repository/encode'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
@@ -114,6 +115,7 @@ function Dot() {
 export function RecordingDetailView({
   detail: d,
   playback,
+  unaskedProfile,
   onRemakeThumbnail,
   onDelete,
   onTakeTicket,
@@ -123,6 +125,7 @@ export function RecordingDetailView({
 }: {
   detail: RecordingDetail
   playback: PlaybackRead
+  unaskedProfile?: PlaybackProfile
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onTakeTicket: (id: string) => Promise<TicketWrite>
@@ -261,6 +264,7 @@ export function RecordingDetailView({
           key={`${d.id}:${startAt ?? ''}`}
           detail={d}
           plan={playback.plan}
+          unaskedProfile={unaskedProfile}
           onTakeTicket={onTakeTicket}
           startAt={startAt}
         />
