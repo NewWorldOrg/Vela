@@ -8,6 +8,7 @@ export type Deinterlace = components['schemas']['Deinterlace']
 export type EncodeEncoder = components['schemas']['EncodeEncoder']
 export type EncodeSwerve = NonNullable<components['schemas']['EncodeSwerve']>
 export type EncodeFailure = components['schemas']['EncodeFailure']
+export type EncodeRemoved = components['schemas']['EncodeRemoval']
 
 export const ENCODE_JOB_STATUSES: EncodeJobStatus[] = [
   'queued',
@@ -72,6 +73,13 @@ export const FAILURE_LABEL: Record<EncodeFailure, string> = {
 }
 
 export const STALLED_LABEL = '停滞'
+
+export const RETIRED_LABEL = '退役'
+
+export const REMOVAL_LABEL: Record<EncodeRemoved, string> = {
+  deleted: '削除しました',
+  retired: '退役させました',
+}
 
 export const RECORDING_REMOVED_LABEL = '録画削除済み'
 

@@ -16,6 +16,18 @@ export const VIEWING_PROFILE: EncodeProfile = {
   rateFactor: 22,
   quantiser: 24,
   definedAt: '2026/08/09 14:30',
+  retired: false,
+}
+
+export const ARCHIVE_PROFILE: EncodeProfile = {
+  ...VIEWING_PROFILE,
+  id: 'pf-2',
+  label: '保管用',
+  codec: 'h265',
+  rateFactor: 20,
+  quantiser: 22,
+  definedAt: '2026/08/09 14:33',
+  retired: true,
 }
 
 export const SHELF_DESTINATION: EncodeDestination = {
@@ -25,6 +37,17 @@ export const SHELF_DESTINATION: EncodeDestination = {
   defaultProfileId: VIEWING_PROFILE.id,
   defaultProfileLabel: VIEWING_PROFILE.label,
   definedAt: '2026/08/09 14:31',
+  retired: false,
+}
+
+export const OLD_SHELF_DESTINATION: EncodeDestination = {
+  ...SHELF_DESTINATION,
+  id: 'ds-2',
+  label: '旧棚',
+  defaultProfileId: ARCHIVE_PROFILE.id,
+  defaultProfileLabel: ARCHIVE_PROFILE.label,
+  definedAt: '2026/08/09 14:34',
+  retired: true,
 }
 
 export const ENCODE_CHOICES: EncodeChoices = {
@@ -198,6 +221,12 @@ export function screenWith(
     failed: job.status === 'failed' ? 1 : 0,
     ...over,
   }
+}
+
+export const RETIRED_DEFINITIONS: EncodeScreen = {
+  ...ENCODE_SCREEN,
+  profiles: [VIEWING_PROFILE, ARCHIVE_PROFILE],
+  destinations: [SHELF_DESTINATION, OLD_SHELF_DESTINATION],
 }
 
 export const MORE_JOBS_THAN_FIT: EncodeScreen = {

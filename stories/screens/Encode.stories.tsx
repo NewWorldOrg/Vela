@@ -9,28 +9,65 @@ import {
   FAILED_JOB,
   MORE_JOBS_THAN_FIT,
   QUEUED_JOB,
+  RETIRED_DEFINITIONS,
   RUNNING_JOB,
   STALLED_JOB,
   jobsPage,
   screenWith,
 } from '@/repository/encode.fixtures'
+import type { EncodeActions } from '@/components/encode/encode-page'
 import { EncodeView } from '@/components/encode/encode-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const callOff = fn(async () => ({ state: 'ok' }) as const)
 
+const reviseProfile = fn<EncodeActions['onReviseProfile']>(async () => ({
+  state: 'ok',
+}))
+
+const reviseDestination = fn<EncodeActions['onReviseDestination']>(
+  async () => ({
+    state: 'ok',
+  }),
+)
+
+const removeProfile = fn<EncodeActions['onRemoveProfile']>(async () => ({
+  state: 'ok',
+  removal: 'deleted',
+}))
+
+const removeDestination = fn<EncodeActions['onRemoveDestination']>(
+  async () => ({
+    state: 'ok',
+    removal: 'deleted',
+  }),
+)
+
+const ACTIONS: EncodeActions = {
+  onDefineProfile: async () => ({ state: 'ok' }) as const,
+  onReviseProfile: reviseProfile,
+  onRemoveProfile: removeProfile,
+  onDefineDestination: async () => ({ state: 'ok' }) as const,
+  onReviseDestination: reviseDestination,
+  onRemoveDestination: removeDestination,
+  onCallOff: callOff,
+}
+
+const HELD_BY_A_JOB =
+  'このプロファイルを使うジョブが実行中か待機中のため、変更できませんでした。'
+
+const ALREADY_RETIRED = 'この保存先は退役しているため、変更できませんでした。'
+
+const STILL_THE_DEFAULT =
+  'このプロファイルを既定にしている保存先があるため、撤去できませんでした。'
+
+const THE_LAST_ONE = 'この保存先は最後の 1 つのため、撤去できませんでした。'
+
 const meta = {
   title: 'Screens/設定・エンコード',
   component: EncodeView,
   parameters: { layout: 'fullscreen' },
-  args: {
-    screen: ENCODE_SCREEN,
-    actions: {
-      onDefineProfile: async () => ({ state: 'ok' }) as const,
-      onDefineDestination: async () => ({ state: 'ok' }) as const,
-      onCallOff: callOff,
-    },
-  },
+  args: { screen: ENCODE_SCREEN, actions: ACTIONS },
 } satisfies Meta<typeof EncodeView>
 
 export default meta
@@ -178,8 +215,7 @@ export const 実行中の中止を断られる: Story = {
   args: {
     screen: screenWith(RUNNING_JOB),
     actions: {
-      onDefineProfile: async () => ({ state: 'ok' }) as const,
-      onDefineDestination: async () => ({ state: 'ok' }) as const,
+      ...ACTIONS,
       onCallOff: async () =>
         ({
           state: 'rejected',
@@ -212,8 +248,7 @@ export const 中止が入れ違う: Story = {
   args: {
     screen: screenWith(RUNNING_JOB),
     actions: {
-      onDefineProfile: async () => ({ state: 'ok' }) as const,
-      onDefineDestination: async () => ({ state: 'ok' }) as const,
+      ...ACTIONS,
       onCallOff: async () =>
         ({
           state: 'rejected',
@@ -387,14 +422,13 @@ export const 保存先を追加する: Story = {
 export const 保存先の追加を断られる: Story = {
   args: {
     actions: {
-      onDefineProfile: async () => ({ state: 'ok' }) as const,
+      ...ACTIONS,
       onDefineDestination: async () =>
         ({
           state: 'rejected',
           message:
             'この出力ルートには成果物を置けないため、保存できませんでした。',
         }) as const,
-      onCallOff: callOff,
     },
   },
   play: async ({ canvasElement }) => {
@@ -420,13 +454,12 @@ export const 保存先の追加を断られる: Story = {
 export const 保存先の追加をdriverが断る: Story = {
   args: {
     actions: {
-      onDefineProfile: async () => ({ state: 'ok' }) as const,
+      ...ACTIONS,
       onDefineDestination: async () =>
         ({
           state: 'rejected',
           message: 'driver に接続できないため、保存できませんでした。',
         }) as const,
-      onCallOff: callOff,
     },
   },
   play: async ({ canvasElement }) => {
@@ -446,5 +479,253 @@ export const 保存先の追加をdriverが断る: Story = {
         'driver に接続できないため、保存できませんでした。',
       ),
     ).toBeVisible()
+  },
+}
+
+export const プロファイルを変更する: Story = {
+  play: async ({ canvasElement }) => {
+    reviseProfile.mockClear()
+
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '録画再生用 を変更' }),
+    )
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'プロファイルを変更',
+    })
+    const rateFactor = within(dialog).getByLabelText('品質(CRF)')
+
+    await expect(within(dialog).getByLabelText(/名称/)).toHaveValue(
+      '録画再生用',
+    )
+    await expect(rateFactor).toHaveValue('22')
+
+    await userEvent.clear(rateFactor)
+    await userEvent.type(rateFactor, '20')
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '変更する' }),
+    )
+
+    await waitFor(() =>
+      expect(reviseProfile).toHaveBeenCalledWith('pf-1', {
+        label: '録画再生用',
+        codec: 'h264',
+        resolution: 'asSource',
+        deinterlace: 'everyFrame',
+        rateFactor: 20,
+        quantiser: 24,
+      }),
+    )
+  },
+}
+
+export const 保存先を変更する: Story = {
+  play: async ({ canvasElement }) => {
+    reviseDestination.mockClear()
+
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '棚 を変更' }))
+
+    const dialog = await screen.findByRole('dialog', { name: '保存先を変更' })
+    const label = within(dialog).getByLabelText(/名称/)
+
+    await expect(label).toHaveValue('棚')
+    await expect(within(dialog).getByText('encodes')).toBeVisible()
+    await expect(within(dialog).getByText('録画再生用')).toBeVisible()
+
+    await userEvent.clear(label)
+    await userEvent.type(label, '書庫')
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '変更する' }),
+    )
+
+    await waitFor(() =>
+      expect(reviseDestination).toHaveBeenCalledWith('ds-1', {
+        label: '書庫',
+        outputRoot: 'encodes',
+        defaultProfileId: 'pf-1',
+      }),
+    )
+  },
+}
+
+export const 撤去して消える: Story = {
+  play: async ({ canvasElement }) => {
+    removeProfile.mockClear()
+
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '録画再生用 を撤去' }),
+    )
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'このプロファイルを撤去します',
+    })
+
+    await expect(within(dialog).getByText('録画再生用')).toBeVisible()
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '撤去する' }),
+    )
+
+    await waitFor(() => expect(removeProfile).toHaveBeenCalledWith('pf-1'))
+    await expect(
+      await canvas.findByText('を削除しました。', { exact: false }),
+    ).toBeVisible()
+  },
+}
+
+export const 撤去して退役する: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onRemoveDestination: async () =>
+        ({ state: 'ok', removal: 'retired' }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '棚 を撤去' }))
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'この保存先を撤去します',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '撤去する' }),
+    )
+
+    await expect(
+      await canvas.findByText('を退役させました。', { exact: false }),
+    ).toBeVisible()
+  },
+}
+
+export const 退役した定義: Story = {
+  args: { screen: RETIRED_DEFINITIONS },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getAllByText('退役')).toHaveLength(2)
+    await expect(
+      canvas.getByRole('button', { name: '録画再生用 を変更' }),
+    ).toBeVisible()
+    await expect(
+      canvas.queryByRole('button', { name: '保管用 を変更' }),
+    ).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '保管用 を撤去' }),
+    ).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '旧棚 を変更' }),
+    ).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '旧棚 を撤去' }),
+    ).toBeNull()
+  },
+}
+
+export const 使用中のため変更を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onReviseProfile: async () =>
+        ({ state: 'rejected', message: HELD_BY_A_JOB }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '録画再生用 を変更' }),
+    )
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'プロファイルを変更',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '変更する' }),
+    )
+
+    await expect(await within(dialog).findByText(HELD_BY_A_JOB)).toBeVisible()
+  },
+}
+
+export const 退役済みのため変更を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onReviseDestination: async () =>
+        ({ state: 'rejected', message: ALREADY_RETIRED }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '棚 を変更' }),
+    )
+
+    const dialog = await screen.findByRole('dialog', { name: '保存先を変更' })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '変更する' }),
+    )
+
+    await expect(await within(dialog).findByText(ALREADY_RETIRED)).toBeVisible()
+  },
+}
+
+export const 既定に指名されているため撤去を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onRemoveProfile: async () =>
+        ({ state: 'rejected', message: STILL_THE_DEFAULT }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '録画再生用 を撤去' }),
+    )
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'このプロファイルを撤去します',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '撤去する' }),
+    )
+
+    await expect(
+      await within(dialog).findByText(STILL_THE_DEFAULT),
+    ).toBeVisible()
+  },
+}
+
+export const 最後の保存先のため撤去を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onRemoveDestination: async () =>
+        ({ state: 'rejected', message: THE_LAST_ONE }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '棚 を撤去' }),
+    )
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'この保存先を撤去します',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '撤去する' }),
+    )
+
+    await expect(await within(dialog).findByText(THE_LAST_ONE)).toBeVisible()
   },
 }

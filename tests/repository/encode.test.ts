@@ -20,6 +20,7 @@ const store: {
   readMessage: string
   writeStatus: number
   writeMessage: string
+  removal: string
 } = {
   profiles: [],
   destinations: [],
@@ -30,6 +31,7 @@ const store: {
   readMessage: '',
   writeStatus: 201,
   writeMessage: '',
+  removal: 'deleted',
 }
 
 const answered = (status: number) => ({ status, ok: status < 400 })
@@ -53,6 +55,7 @@ const PROFILE = {
   rateFactor: 22,
   quantiser: '24',
   definedAt: '2026-09-05T11:33:06.372061Z',
+  retiredAt: null,
 }
 
 const DESTINATION = {
@@ -61,6 +64,21 @@ const DESTINATION = {
   outputRoot: 'encodes',
   defaultProfileId: PROFILE.id,
   definedAt: '2026-09-05T11:33:06.697339Z',
+  retiredAt: null,
+}
+
+const RETIRED_PROFILE = {
+  ...PROFILE,
+  id: '2b3c4d5e-6f70-4812-9345-67890abcdef1',
+  label: 'Archive',
+  retiredAt: '2026-09-07T02:14:51.113118Z',
+}
+
+const RETIRED_DESTINATION = {
+  ...DESTINATION,
+  id: '3c4d5e6f-7081-4923-a456-7890abcdef12',
+  label: 'Old shelf',
+  retiredAt: '2026-09-07T02:15:02.884201Z',
 }
 
 const RECORDING = {
@@ -166,14 +184,42 @@ const client = () => ({
   ) => {
     sent.push({ method: 'POST', path, body: options?.body })
 
-    return store.writeStatus < 400
-      ? {
-          data: { status: true, message: store.writeMessage, data: null },
-          response: answered(store.writeStatus),
-        }
-      : refusal(store.writeStatus, store.writeMessage)
+    return written()
+  },
+  PATCH: async (
+    path: string,
+    options?: {
+      params?: { path?: Record<string, string> }
+      body?: Record<string, unknown>
+    },
+  ) => {
+    sent.push({
+      method: 'PATCH',
+      path,
+      query: options?.params?.path,
+      body: options?.body,
+    })
+
+    return written()
+  },
+  DELETE: async (
+    path: string,
+    options?: { params?: { path?: Record<string, string> } },
+  ) => {
+    sent.push({ method: 'DELETE', path, query: options?.params?.path })
+
+    return written({ id: 'x', removal: store.removal, retiredAt: null })
   },
 })
+
+function written(data: unknown = null) {
+  return store.writeStatus < 400
+    ? {
+        data: { status: true, message: store.writeMessage, data },
+        response: answered(store.writeStatus),
+      }
+    : refusal(store.writeStatus, store.writeMessage)
+}
 
 mock.module('@/repository/client/carina', {
   namedExports: { carinaClient: client, revalidatingCarinaClient: client },
@@ -194,6 +240,10 @@ const {
   getEncodeScreen,
   listEncodeChoices,
   queueEncode,
+  removeDestination,
+  removeProfile,
+  reviseDestination,
+  reviseProfile,
   whyItRefused,
 } = await import('@/repository/encode')
 
@@ -210,6 +260,7 @@ beforeEach(() => {
   store.readMessage = ''
   store.writeStatus = 201
   store.writeMessage = ''
+  store.removal = 'deleted'
 })
 
 test('the screen reads the ledger into names, values and counts', async () => {
@@ -288,6 +339,91 @@ test('the choices a recording is queued with are every destination and every pro
       { id: DESTINATION.id, label: 'Shelf', defaultProfileId: PROFILE.id },
     ],
   })
+})
+
+test('a retired definition stays on the settings list and leaves the choices a job is queued with', async () => {
+  store.profiles = [PROFILE, RETIRED_PROFILE]
+  store.destinations = [DESTINATION, RETIRED_DESTINATION]
+
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.deepEqual(
+    screen.profiles.map((one) => [one.label, one.retired]),
+    [
+      ['Viewing', false],
+      ['Archive', true],
+    ],
+  )
+  assert.deepEqual(
+    screen.destinations.map((one) => [one.label, one.retired]),
+    [
+      ['Shelf', false],
+      ['Old shelf', true],
+    ],
+  )
+
+  const choices = await listEncodeChoices()
+
+  assert.deepEqual(
+    choices.profiles.map((one) => one.label),
+    ['Viewing'],
+  )
+  assert.deepEqual(
+    choices.destinations.map((one) => one.label),
+    ['Shelf'],
+  )
+})
+
+test('a change carries every field to the definition it names', async () => {
+  store.writeStatus = 200
+
+  const draft = {
+    label: 'Viewing',
+    codec: 'h265' as const,
+    resolution: 'fullHd' as const,
+    deinterlace: 'everyField' as const,
+    rateFactor: 20,
+    quantiser: 22,
+  }
+
+  assert.deepEqual(await reviseProfile(PROFILE.id, draft), { state: 'ok' })
+  assert.equal(sent[0].method, 'PATCH')
+  assert.equal(sent[0].path, '/api/encoding/profiles/{id}')
+  assert.deepEqual(sent[0].query, { id: PROFILE.id })
+  assert.deepEqual(sent[0].body, draft)
+
+  const destination = {
+    label: 'Shelf',
+    outputRoot: 'encodes',
+    defaultProfileId: PROFILE.id,
+  }
+
+  assert.deepEqual(await reviseDestination(DESTINATION.id, destination), {
+    state: 'ok',
+  })
+  assert.equal(sent[1].method, 'PATCH')
+  assert.equal(sent[1].path, '/api/encoding/destinations/{id}')
+  assert.deepEqual(sent[1].query, { id: DESTINATION.id })
+  assert.deepEqual(sent[1].body, destination)
+})
+
+test('a removal names which of the two it was', async () => {
+  store.writeStatus = 200
+
+  assert.deepEqual(await removeProfile(PROFILE.id), {
+    state: 'ok',
+    removal: 'deleted',
+  })
+  assert.equal(sent[0].method, 'DELETE')
+  assert.equal(sent[0].path, '/api/encoding/profiles/{id}')
+  assert.deepEqual(sent[0].query, { id: PROFILE.id })
+
+  store.removal = 'retired'
+  assert.deepEqual(await removeDestination(DESTINATION.id), {
+    state: 'ok',
+    removal: 'retired',
+  })
+  assert.equal(sent[1].path, '/api/encoding/destinations/{id}')
 })
 
 test('a queue names the recording and the destination, and the profile only when chosen', async () => {
@@ -467,6 +603,12 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
   ],
   [
     WHEN_CHANGING_A_PROFILE,
+    400,
+    `quantiser: a constant quantiser ${RANGE}`,
+    '品質(QP)が 0 〜 51 の範囲にないため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_PROFILE,
     404,
     `No profile ${PROFILE.id} is defined.`,
     'このプロファイルは残っていないため、変更できませんでした。',
@@ -482,6 +624,12 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     409,
     `Profile ${PROFILE.id} is what job ${RUNNING.id} is running with, and it stands still until that job has ended or been called off.`,
     'このプロファイルを使うジョブが実行中か待機中のため、変更できませんでした。',
+  ],
+  [
+    WHEN_REMOVING_A_PROFILE,
+    404,
+    `No profile ${PROFILE.id} is defined.`,
+    'このプロファイルは残っていないため、撤去できませんでした。',
   ],
   [
     WHEN_REMOVING_A_PROFILE,
@@ -545,6 +693,12 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
   ],
   [
     WHEN_CHANGING_A_DESTINATION,
+    400,
+    'outputRoot: a root this process holds for writing; the roots the recordings are read from take no artefact.',
+    'この出力ルートには成果物を置けないため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_DESTINATION,
     404,
     `No destination ${DESTINATION.id} is defined.`,
     'この保存先は残っていないため、変更できませんでした。',
@@ -560,6 +714,12 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     409,
     `Destination ${DESTINATION.id} is what job ${RUNNING.id} is running with, and it stands still until that job has ended or been called off.`,
     'この保存先を使うジョブが実行中か待機中のため、変更できませんでした。',
+  ],
+  [
+    WHEN_REMOVING_A_DESTINATION,
+    404,
+    `No destination ${DESTINATION.id} is defined.`,
+    'この保存先は残っていないため、撤去できませんでした。',
   ],
   [
     WHEN_REMOVING_A_DESTINATION,
@@ -642,6 +802,49 @@ test('each refusal of a queue is read from the sentence the API answers with', a
   assert.deepEqual(await queueEncode(RECORDING.id, DESTINATION.id), {
     state: 'unauthenticated',
   })
+})
+
+test('each refusal of a change or a removal is read from the sentence the API answers with', async () => {
+  const draft = {
+    label: 'Viewing',
+    codec: 'h265' as const,
+    resolution: 'fullHd' as const,
+    deinterlace: 'everyField' as const,
+    rateFactor: 20,
+    quantiser: 22,
+  }
+
+  const destination = {
+    label: 'Shelf',
+    outputRoot: 'encodes',
+    defaultProfileId: PROFILE.id,
+  }
+
+  const asked: [typeof WHEN_QUEUEING, () => Promise<unknown>][] = [
+    [WHEN_CHANGING_A_PROFILE, () => reviseProfile(PROFILE.id, draft)],
+    [WHEN_REMOVING_A_PROFILE, () => removeProfile(PROFILE.id)],
+    [
+      WHEN_CHANGING_A_DESTINATION,
+      () => reviseDestination(DESTINATION.id, destination),
+    ],
+    [WHEN_REMOVING_A_DESTINATION, () => removeDestination(DESTINATION.id)],
+  ]
+
+  for (const [surface, ask] of asked) {
+    for (const [asking, status, said, message] of REFUSED) {
+      if (asking !== surface) {
+        continue
+      }
+
+      store.writeStatus = status
+      store.writeMessage = said
+
+      assert.deepEqual(await ask(), { state: 'rejected', message })
+    }
+
+    store.writeStatus = 401
+    assert.deepEqual(await ask(), { state: 'unauthenticated' })
+  }
 })
 
 test('calling a job off is refused once it has ended', async () => {

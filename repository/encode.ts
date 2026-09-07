@@ -16,6 +16,7 @@ import type {
   EncodeFailure,
   EncodeJobStatus,
   EncodeProfileDraft,
+  EncodeRemoved,
   EncodeResolution,
   EncodeSwerve,
 } from '@/repository/encode-terms'
@@ -46,6 +47,7 @@ export interface EncodeProfile {
   rateFactor: number
   quantiser: number
   definedAt: string
+  retired: boolean
 }
 
 export interface EncodeDestination {
@@ -55,6 +57,7 @@ export interface EncodeDestination {
   defaultProfileId: string
   defaultProfileLabel?: string
   definedAt: string
+  retired: boolean
 }
 
 export interface EncodeHeadway {
@@ -124,6 +127,11 @@ export interface EncodeQuery {
 
 export type EncodeWrite =
   | { state: 'ok' }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
+
+export type EncodeRemoval =
+  | { state: 'ok'; removal: EncodeRemoved }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
@@ -197,8 +205,10 @@ export async function listEncodeChoices(): Promise<EncodeChoices> {
   ])
 
   return {
-    profiles: profiles.map((one) => ({ id: one.id, label: one.label })),
-    destinations: destinations.map((one) => ({
+    profiles: profiles
+      .filter(stillOffered)
+      .map((one) => ({ id: one.id, label: one.label })),
+    destinations: destinations.filter(stillOffered).map((one) => ({
       id: one.id,
       label: one.label,
       defaultProfileId: one.defaultProfileId,
@@ -366,6 +376,32 @@ export async function defineProfile(
   return toWrite(response, whatItSaid(error), WHEN_SAVING_A_PROFILE)
 }
 
+export async function reviseProfile(
+  id: string,
+  draft: EncodeProfileDraft,
+): Promise<EncodeWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/encoding/profiles/{id}',
+    { params: { path: { id } }, body: draft },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_PROFILE)
+}
+
+export async function removeProfile(id: string): Promise<EncodeRemoval> {
+  const { data, error, response } = await carinaClient().DELETE(
+    '/api/encoding/profiles/{id}',
+    { params: { path: { id } } },
+  )
+
+  return toRemoval(
+    response,
+    data?.data?.removal,
+    whatItSaid(error),
+    WHEN_REMOVING_A_PROFILE,
+  )
+}
+
 export async function defineDestination(
   draft: EncodeDestinationDraft,
 ): Promise<EncodeWrite> {
@@ -375,6 +411,32 @@ export async function defineDestination(
   )
 
   return toWrite(response, whatItSaid(error), WHEN_SAVING_A_DESTINATION)
+}
+
+export async function reviseDestination(
+  id: string,
+  draft: EncodeDestinationDraft,
+): Promise<EncodeWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/encoding/destinations/{id}',
+    { params: { path: { id } }, body: draft },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
+}
+
+export async function removeDestination(id: string): Promise<EncodeRemoval> {
+  const { data, error, response } = await carinaClient().DELETE(
+    '/api/encoding/destinations/{id}',
+    { params: { path: { id } } },
+  )
+
+  return toRemoval(
+    response,
+    data?.data?.removal,
+    whatItSaid(error),
+    WHEN_REMOVING_A_DESTINATION,
+  )
 }
 
 export async function queueEncode(
@@ -415,6 +477,30 @@ function toWrite(
     state: 'rejected',
     message: whyItRefused(asking, response.status, said),
   }
+}
+
+function toRemoval(
+  response: Response,
+  removal: EncodeRemoved | undefined,
+  said: string | undefined,
+  asking: EncodeAsking,
+): EncodeRemoval {
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok && removal !== undefined) {
+    return { state: 'ok', removal }
+  }
+
+  return {
+    state: 'rejected',
+    message: whyItRefused(asking, response.status, said),
+  }
+}
+
+function stillOffered(one: { retiredAt?: string | null }): boolean {
+  return !one.retiredAt
 }
 
 async function fetchProfiles(): Promise<ProfileResponder[]> {
@@ -479,6 +565,7 @@ function toProfile(one: ProfileResponder): EncodeProfile {
     rateFactor: toInt(one.rateFactor),
     quantiser: toInt(one.quantiser),
     definedAt: formatDateTime(one.definedAt),
+    retired: !stillOffered(one),
   }
 }
 
@@ -493,6 +580,7 @@ function toDestination(
     defaultProfileId: one.defaultProfileId,
     defaultProfileLabel: profiles.get(one.defaultProfileId),
     definedAt: formatDateTime(one.definedAt),
+    retired: !stillOffered(one),
   }
 }
 
