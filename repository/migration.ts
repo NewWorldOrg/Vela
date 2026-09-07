@@ -1,7 +1,5 @@
 import type { Route } from 'next'
 
-import { MIGRATION } from '@/repository/migration.fixtures'
-
 export interface MigrationPopulation {
   name: string
   source: string
@@ -60,5 +58,5 @@ export interface MigrationResult {
 }
 
 export async function getMigration(): Promise<MigrationResult | null> {
-  return MIGRATION
+  return null
 }
