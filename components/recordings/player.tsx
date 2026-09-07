@@ -37,11 +37,13 @@ import {
   PLAYER_SCRIM,
 } from '@/components/recordings/player-palette'
 import {
+  KEY_CAP,
   playerCommand,
   SEEK_FLASH_LASTS,
   SEEK_STEP_SECONDS,
   VOLUME_STEP_PERCENT,
 } from '@/lib/player-keys'
+import { PlayerTip } from '@/components/recordings/player-tip'
 import { PlayerVolume } from '@/components/recordings/player-volume'
 import { PlayerSeek } from '@/components/recordings/player-seek'
 import {
@@ -69,17 +71,6 @@ import {
   type PlaybackFault,
 } from '@/components/recordings/playback-fault'
 import { still } from '@/components/vela/tactile'
-
-/**
- * What has no argument on the API yet. The control stays on the bar, drawn
- * switched off: taken away it would be missed, and left pressable it would
- * move its own pill over a picture that never changed. Why is in the gear,
- * beside the two tracks it is the same answer for.
- */
-const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
-
-/** What the chapter marks cannot be jumped along yet. */
-const NOT_YET = '再生はこれから実装されます'
 
 /**
  * How long the bar stays after the pointer last said anything, while the
@@ -1035,14 +1026,20 @@ export function Player({
               between the two rows leaves 5px of clear air, so neither answers
               a press meant for the other. */}
             <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-2">
-              <button
-                type="button"
-                aria-label={phase === 'playing' ? '一時停止' : '再生'}
-                onClick={toggle}
-                className={PLAYER_GLYPH_BUTTON}
+              <PlayerTip
+                name={phase === 'playing' ? '一時停止' : '再生'}
+                keys={[KEY_CAP.toggle]}
+                container={shell}
               >
-                {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
-              </button>
+                <button
+                  type="button"
+                  aria-label={phase === 'playing' ? '一時停止' : '再生'}
+                  onClick={toggle}
+                  className={PLAYER_GLYPH_BUTTON}
+                >
+                  {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
+                </button>
+              </PlayerTip>
               {/*
                 The two skips, beside the transport and in the order every
                 player that is not live puts them: back, then forward, then
@@ -1061,22 +1058,34 @@ export function Player({
               */}
               {duration > 0 && (
                 <>
-                  <button
-                    type="button"
-                    aria-label={`${SEEK_STEP_SECONDS}秒戻る`}
-                    onClick={() => step(-SEEK_STEP_SECONDS)}
-                    className={PLAYER_GLYPH_BUTTON}
+                  <PlayerTip
+                    name={`${SEEK_STEP_SECONDS}秒戻る`}
+                    keys={[KEY_CAP.back]}
+                    container={shell}
                   >
-                    <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`${SEEK_STEP_SECONDS}秒進む`}
-                    onClick={() => step(SEEK_STEP_SECONDS)}
-                    className={PLAYER_GLYPH_BUTTON}
+                    <button
+                      type="button"
+                      aria-label={`${SEEK_STEP_SECONDS}秒戻る`}
+                      onClick={() => step(-SEEK_STEP_SECONDS)}
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
+                    </button>
+                  </PlayerTip>
+                  <PlayerTip
+                    name={`${SEEK_STEP_SECONDS}秒進む`}
+                    keys={[KEY_CAP.forward]}
+                    container={shell}
                   >
-                    <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
-                  </button>
+                    <button
+                      type="button"
+                      aria-label={`${SEEK_STEP_SECONDS}秒進む`}
+                      onClick={() => step(SEEK_STEP_SECONDS)}
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
+                    </button>
+                  </PlayerTip>
                 </>
               )}
               {/*
@@ -1087,22 +1096,30 @@ export function Player({
                 speaker before the level, so that the switch is the thing the
                 hand lands on first and the level is what it slides into.
               */}
-              <button
-                type="button"
-                aria-label="消音"
-                aria-pressed={muted}
-                onClick={() => mute(!muted)}
-                className={cn(
-                  PLAYER_GLYPH_BUTTON,
-                  muted && PLAYER_GLYPH_BUTTON_ON,
-                )}
+              <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
+                <button
+                  type="button"
+                  aria-label="消音"
+                  aria-pressed={muted}
+                  onClick={() => mute(!muted)}
+                  className={cn(
+                    PLAYER_GLYPH_BUTTON,
+                    muted && PLAYER_GLYPH_BUTTON_ON,
+                  )}
+                >
+                  <VolumeIcon level={muted ? 0 : volume} />
+                </button>
+              </PlayerTip>
+              <PlayerTip
+                name="音量"
+                keys={[KEY_CAP.louder, KEY_CAP.quieter]}
+                container={shell}
               >
-                <VolumeIcon level={muted ? 0 : volume} />
-              </button>
-              <PlayerVolume
-                level={muted ? 0 : volume}
-                onChoose={chooseVolume}
-              />
+                <PlayerVolume
+                  level={muted ? 0 : volume}
+                  onChoose={chooseVolume}
+                />
+              </PlayerTip>
               {/*
                 The reading, beside the transport as every player puts it, and
                 spelled the way every player spells it: `26:12 / 1:54:03`, with
@@ -1120,12 +1137,7 @@ export function Player({
                 the reader's behalf, so there has to be a press.
               */}
               {d.seek?.chapterPcts && (
-                <button
-                  type="button"
-                  disabled
-                  title={NOT_YET}
-                  className={PLAYER_BUTTON}
-                >
+                <button type="button" disabled className={PLAYER_BUTTON}>
                   次のチャプターへ
                   <span className="ml-1.5 inline-block rounded border border-white/20 px-1 font-code text-[11px] leading-normal text-(--pl-ink-3)">
                     →
@@ -1140,66 +1152,81 @@ export function Player({
                   only the bar has. It used to stand on a band under the picture
                   (v3.35).
                 */}
-                <AirPlayButton
-                  id={d.id}
-                  onTakeTicket={onTakeTicket}
-                  video={video}
-                  onRefused={(message) =>
-                    setSaid({ text: message, tone: 'err' })
-                  }
-                />
-                <button
-                  type="button"
-                  disabled
-                  aria-label="字幕"
-                  aria-pressed={false}
-                  title={NOT_WIRED}
-                  className={PLAYER_GLYPH_BUTTON}
-                >
-                  <CaptionsGlyph />
-                </button>
-                <PlayerSettings
-                  container={shell}
-                  onOpenChange={setSettingsOpen}
-                  profile={profile}
-                  onChooseProfile={chooseProfile}
-                  onTheFly={onTheFly}
-                  speed={speed}
-                  onChooseSpeed={chooseSpeed}
-                />
-                <button
-                  type="button"
-                  aria-label="キャプチャ"
-                  disabled={!framed}
-                  onClick={capture}
-                  className={PLAYER_GLYPH_BUTTON}
-                >
-                  <CaptureIcon />
-                </button>
-                {pip.offered && (
+                <PlayerTip name="AirPlay" container={shell}>
+                  <AirPlayButton
+                    id={d.id}
+                    onTakeTicket={onTakeTicket}
+                    video={video}
+                    onRefused={(message) =>
+                      setSaid({ text: message, tone: 'err' })
+                    }
+                  />
+                </PlayerTip>
+                <PlayerTip name="字幕" container={shell}>
                   <button
                     type="button"
-                    aria-label="ピクチャーインピクチャー"
-                    aria-pressed={pip.out}
-                    disabled={!framed}
-                    onClick={pip.toggle}
-                    className={cn(
-                      PLAYER_GLYPH_BUTTON,
-                      pip.out && PLAYER_GLYPH_BUTTON_ON,
-                    )}
+                    disabled
+                    aria-label="字幕"
+                    aria-pressed={false}
+                    className={PLAYER_GLYPH_BUTTON}
                   >
-                    <PictureInPictureIcon />
+                    <CaptionsGlyph />
                   </button>
+                </PlayerTip>
+                <PlayerTip name="設定" container={shell}>
+                  <PlayerSettings
+                    container={shell}
+                    onOpenChange={setSettingsOpen}
+                    profile={profile}
+                    onChooseProfile={chooseProfile}
+                    onTheFly={onTheFly}
+                    speed={speed}
+                    onChooseSpeed={chooseSpeed}
+                  />
+                </PlayerTip>
+                <PlayerTip name="キャプチャ" container={shell}>
+                  <button
+                    type="button"
+                    aria-label="キャプチャ"
+                    disabled={!framed}
+                    onClick={capture}
+                    className={PLAYER_GLYPH_BUTTON}
+                  >
+                    <CaptureIcon />
+                  </button>
+                </PlayerTip>
+                {pip.offered && (
+                  <PlayerTip name="ピクチャーインピクチャー" container={shell}>
+                    <button
+                      type="button"
+                      aria-label="ピクチャーインピクチャー"
+                      aria-pressed={pip.out}
+                      disabled={!framed}
+                      onClick={pip.toggle}
+                      className={cn(
+                        PLAYER_GLYPH_BUTTON,
+                        pip.out && PLAYER_GLYPH_BUTTON_ON,
+                      )}
+                    >
+                      <PictureInPictureIcon />
+                    </button>
+                  </PlayerTip>
                 )}
-                <button
-                  type="button"
-                  aria-label="全画面"
-                  aria-pressed={full}
-                  onClick={toggleFullscreen}
-                  className={PLAYER_GLYPH_BUTTON}
+                <PlayerTip
+                  name="全画面"
+                  keys={[KEY_CAP.fullscreen]}
+                  container={shell}
                 >
-                  <FullscreenIcon leaving={full} />
-                </button>
+                  <button
+                    type="button"
+                    aria-label="全画面"
+                    aria-pressed={full}
+                    onClick={toggleFullscreen}
+                    className={PLAYER_GLYPH_BUTTON}
+                  >
+                    <FullscreenIcon leaving={full} />
+                  </button>
+                </PlayerTip>
               </div>
             </div>
           </div>

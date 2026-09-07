@@ -190,7 +190,6 @@ export function AirPlayButton({
       onClick={pick}
       aria-disabled={taking}
       aria-label="AirPlay"
-      title="AirPlay"
       className={PLAYER_GLYPH_BUTTON}
     >
       {taking ? <Spinner className="size-5" /> : <AirPlayIcon />}

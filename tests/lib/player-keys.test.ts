@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import {
   answersItself,
+  KEY_CAP,
   playerCommand,
   pressedOn,
   typingIn,
@@ -192,4 +193,47 @@ test('C is only taken where a caption switch exists to press', () => {
     'captions',
   )
   assert.equal(playerCommand({ key: 'c' }, { seeks: true }), null)
+})
+
+const PRESSED: Record<string, string> = {
+  Space: ' ',
+  '←': 'ArrowLeft',
+  '→': 'ArrowRight',
+  '↑': 'ArrowUp',
+  '↓': 'ArrowDown',
+  M: 'm',
+  F: 'f',
+  C: 'c',
+}
+
+test('every cap a bubble prints is a key the player really takes', () => {
+  for (const [command, cap] of Object.entries(KEY_CAP)) {
+    const key = PRESSED[cap]
+
+    assert.ok(key !== undefined, `${cap} is not a key anybody could press`)
+    assert.equal(
+      playerCommand(
+        { key, target: THE_PLAYER },
+        { seeks: true, captions: true },
+      ),
+      command,
+      `${cap} does not call ${command}`,
+    )
+  }
+})
+
+test('a command with no cap would print nothing, so every one has one', () => {
+  const COMMANDS: PlayerCommand[] = [
+    'toggle',
+    'back',
+    'forward',
+    'louder',
+    'quieter',
+    'mute',
+    'fullscreen',
+    'captions',
+  ]
+
+  assert.deepEqual(Object.keys(KEY_CAP).sort(), [...COMMANDS].sort())
+  assert.equal(new Set(Object.values(KEY_CAP)).size, COMMANDS.length)
 })
