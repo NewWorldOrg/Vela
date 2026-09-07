@@ -36,6 +36,7 @@ const THE_SUITE = [
   'tests/repository/integrity.test.ts',
   'tests/repository/live-sessions.test.ts',
   'tests/repository/live.test.ts',
+  'tests/repository/migration.test.ts',
   'tests/repository/programs.test.ts',
   'tests/repository/recordings.test.ts',
   'tests/repository/reservation-outcomes.test.ts',
