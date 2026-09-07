@@ -10,20 +10,22 @@ import {
   RESERVATION_STANDING_TERMS,
 } from '@/lib/state-terms'
 import { Badge } from '@/components/ui/badge'
+import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
 
+type SettledStanding = Exclude<ReservationStanding, 'recording'>
+
 const STANDING: Record<
-  ReservationStanding,
+  SettledStanding,
   {
-    variant: 'ok' | 'err' | 'warn' | 'mute' | 'recording'
+    variant: 'ok' | 'err' | 'warn' | 'mute'
     dot?: boolean
     bold?: boolean
   }
 > = {
   scheduled: { variant: 'ok', dot: true, bold: true },
   conflict: { variant: 'err', dot: true, bold: true },
-  recording: { variant: 'recording', dot: true },
   cancelled: { variant: 'mute' },
   missed: { variant: 'err' },
   complete: { variant: 'ok' },
@@ -31,13 +33,28 @@ const STANDING: Record<
   failed: { variant: 'err' },
 }
 
+function StandingChip({ standing }: { standing: SettledStanding }) {
+  const chip = STANDING[standing]
+  const term = RESERVATION_STANDING_TERMS[standing]
+
+  return (
+    <TermTip term={term}>
+      <Badge
+        variant={chip.variant}
+        className={chip.bold ? 'font-bold' : undefined}
+      >
+        {chip.dot && <ChipDot />}
+        {term.label}
+      </Badge>
+    </TermTip>
+  )
+}
+
 export function ReservationStateChip({
   reservation,
 }: {
   reservation: Reservation
 }) {
-  const chip = STANDING[reservation.standing]
-  const term = RESERVATION_STANDING_TERMS[reservation.standing]
   const removed = recordingWasRemoved({
     standing: reservation.standing,
     recorded: reservation.recordingId !== undefined,
@@ -45,15 +62,11 @@ export function ReservationStateChip({
 
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
-      <TermTip term={term}>
-        <Badge
-          variant={chip.variant}
-          className={chip.bold ? 'font-bold' : undefined}
-        >
-          {chip.dot && <ChipDot />}
-          {term.label}
-        </Badge>
-      </TermTip>
+      {reservation.standing === 'recording' ? (
+        <RecordingInProgressChip />
+      ) : (
+        <StandingChip standing={reservation.standing} />
+      )}
       {!reservation.endAtConfirmed && (
         <TermTip term={END_UNDECIDED_TERM}>
           <Badge variant="warn">{END_UNDECIDED_TERM.label}</Badge>

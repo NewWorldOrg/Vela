@@ -4,6 +4,7 @@ import { expect, screen, userEvent, within } from 'storybook/test'
 import {
   CANDIDATE_UNLOCKED_TERM,
   END_UNDECIDED_TERM,
+  RECORDING_IN_PROGRESS_TERM,
   RECORDING_OUTCOME_TERMS,
   RESERVATION_RECEPTION_TERM,
   RESERVATION_STANDING_TERMS,
@@ -13,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { ChipDot, StatusDot, StatusText } from '@/components/vela/status'
+import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { MarkDots, MarkPill, SignalIcon } from '@/components/vela/icons'
 import { TermTip } from '@/components/vela/term-tip'
 
@@ -95,6 +97,41 @@ export const Chips: Story = {
       </p>
     </div>
   ),
+}
+
+export const 録画中: Story = {
+  render: () => (
+    <div className="mx-auto max-w-[620px] p-6">
+      <SectionHeading mark={MarkPill}>録画中</SectionHeading>
+      <div className="flex flex-wrap items-center gap-2">
+        <RecordingInProgressChip />
+        <RecordingInProgressChip mark="ledger" />
+      </div>
+      <p className="mt-[9px] text-note text-ink-3">
+        ライブラリ・予約一覧・録画詳細はこの一つを使う。録画詳細だけが台帳の印を伴う。
+      </p>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const chips = canvas.getAllByText(RECORDING_IN_PROGRESS_TERM.label, {
+      selector: '[data-slot="badge"]',
+    })
+
+    await expect(chips).toHaveLength(2)
+
+    for (const chip of chips) {
+      await expect(chip.closest('[data-slot="badge"]')).toHaveAttribute(
+        'data-variant',
+        'recording',
+      )
+    }
+
+    await userEvent.hover(chips[0])
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      RECORDING_IN_PROGRESS_TERM.explanation,
+    )
+  },
 }
 
 export const InUse: Story = {

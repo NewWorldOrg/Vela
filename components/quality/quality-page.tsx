@@ -171,10 +171,6 @@ export function QualityView({ result }: { result: QualityResult }) {
 
       <section className="mt-5">
         <SectionHeading mark={MarkDots}>チャンネル別ドロップ率</SectionHeading>
-        <p className="-mt-1.5 mb-3 text-note text-ink-2">
-          バーは 0.1%(視聴不可の恐れ)を上限に表示し、破線は
-          0.02%(警告水準)。いずれも暫定。
-        </p>
         <Surface className="space-y-3">
           {result.channels.map((channel) => (
             <div key={channel.no}>
