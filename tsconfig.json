@@ -19,7 +19,7 @@
         "name": "next"
       }
     ],
-    "target": "ES2017",
+    "target": "ES2018",
     "paths": {
       "@/*": ["./*"]
     }

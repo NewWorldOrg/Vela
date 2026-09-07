@@ -55,6 +55,9 @@ lib/                        Pure functions, no React: display formatting, path
 hooks/                      useListUrlState / usePerPageLocalStorage / useDismissable
 types/                      DataTable types
 stories/{foundations,components,screens,common,theme}/
+tests/                      Every test. tests/lib/ and tests/repository/ mirror the
+                            path of what they test; tests/storybook/ holds the four
+                            that read the source tree instead of importing a module
 ```
 
 A screen is layered `app/` (a Server Component fetches) → `components/{domain}/`
@@ -75,6 +78,15 @@ design side had deliberately changed.
 
 Stories live under `stories/`, never beside the component. A change to a
 component comes with the change to its story.
+
+Tests live under `tests/`, never beside the code. `tests/lib/` and
+`tests/repository/` mirror the path of what they test, and a test reaches it
+by `@/` rather than by climbing back out. `tests/storybook/` holds the four
+that read the source tree as text rather than importing a module — the waiver
+lists the browser probes cannot police, the `<main>` every screen goes
+through, and the manifest that keeps the suite whole. That directory has no
+leading dot because `tests/**/*.test.ts` does not match one, and those four
+would go missing without a word.
 
 ## Data access
 
@@ -149,7 +161,7 @@ Everything runs inside the `app` service.
 ```bash
 docker compose exec app yarn lint             # eslint + prettier:check
 docker compose exec app yarn typecheck        # tsc --noEmit
-docker compose exec app yarn test             # node --test over lib/**/*.test.ts
+docker compose exec app yarn test             # node --test over tests/**/*.test.ts
 docker compose exec app yarn build            # next build
 docker compose exec app yarn build-storybook  # a static Storybook
 task test:stories                             # build + test-runner, a11y included
@@ -158,10 +170,11 @@ task test:stories                             # build + test-runner, a11y includ
 `yarn test` is Node's own runner over the TypeScript sources, so there is no test
 framework to install. A module under `repository/` is tested by standing in for
 `repository/client/carina` with `mock.module` and letting everything between it
-and the screen run for real; `scripts/test-alias.mjs` is what makes `@/` resolve
-outside the bundler. `task test:stories` runs the Storybook test-runner in a
-Playwright image against a statically served build, which is where every story is
-rendered in a real browser and checked for a11y violations.
+and the screen run for real; every test names what it tests by `@/`, and
+`scripts/test-alias.mjs` is what makes that resolve outside the bundler.
+`task test:stories` runs the Storybook test-runner in a Playwright image
+against a statically served build, which is where every story is rendered in a
+real browser and checked for a11y violations.
 
 GitHub Actions runs lint, typecheck, the unit tests, the codegen check, the
 build and the story run, on push and pull request to `master`. The story job
