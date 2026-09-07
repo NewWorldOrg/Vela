@@ -208,6 +208,41 @@ export const 実行中の中止を断られる: Story = {
   },
 }
 
+export const 中止が入れ違う: Story = {
+  args: {
+    screen: screenWith(RUNNING_JOB),
+    actions: {
+      onDefineProfile: async () => ({ state: 'ok' }) as const,
+      onDefineDestination: async () => ({ state: 'ok' }) as const,
+      onCallOff: async () =>
+        ({
+          state: 'rejected',
+          message:
+            'このジョブは中止の途中で状態が変わったため、中止できませんでした。',
+        }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      runningCard(canvasElement).getByRole('button', { name: '中止' }),
+    )
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'このエンコードを中止します',
+    })
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '中止する' }),
+    )
+
+    await expect(
+      await within(dialog).findByText(
+        'このジョブは中止の途中で状態が変わったため、中止できませんでした。',
+      ),
+    ).toBeVisible()
+  },
+}
+
 export const 停滞: Story = {
   args: { screen: screenWith(STALLED_JOB) },
   play: async ({ canvasElement }) => {
@@ -356,7 +391,8 @@ export const 保存先の追加を断られる: Story = {
       onDefineDestination: async () =>
         ({
           state: 'rejected',
-          message: 'この出力ルートには成果物を置けません。',
+          message:
+            'この出力ルートには成果物を置けないため、保存できませんでした。',
         }) as const,
       onCallOff: callOff,
     },
@@ -374,7 +410,41 @@ export const 保存先の追加を断られる: Story = {
     )
 
     await expect(
-      await within(dialog).findByText('この出力ルートには成果物を置けません。'),
+      await within(dialog).findByText(
+        'この出力ルートには成果物を置けないため、保存できませんでした。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const 保存先の追加をdriverが断る: Story = {
+  args: {
+    actions: {
+      onDefineProfile: async () => ({ state: 'ok' }) as const,
+      onDefineDestination: async () =>
+        ({
+          state: 'rejected',
+          message: 'driver に接続できないため、保存できませんでした。',
+        }) as const,
+      onCallOff: callOff,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '保存先を追加' }))
+
+    const dialog = await screen.findByRole('dialog', { name: '保存先を追加' })
+
+    await userEvent.type(within(dialog).getByLabelText(/名称/), '書庫')
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '追加する' }),
+    )
+
+    await expect(
+      await within(dialog).findByText(
+        'driver に接続できないため、保存できませんでした。',
+      ),
     ).toBeVisible()
   },
 }

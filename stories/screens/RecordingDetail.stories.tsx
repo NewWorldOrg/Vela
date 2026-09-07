@@ -100,6 +100,13 @@ async function alreadyEncoded(): Promise<EncodeWrite> {
   }
 }
 
+async function profileRetired(): Promise<EncodeWrite> {
+  return {
+    state: 'rejected',
+    message: 'このプロファイルは退役しているため、エンコードできませんでした。',
+  }
+}
+
 async function throwing(id: string): Promise<RecordingDiscarded> {
   asked.push(id)
 
@@ -569,6 +576,20 @@ export const エンコードを断られた: Story = {
     await expect(
       await canvas.findByText(
         'この録画はこのプロファイルですでにエンコード済みです。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const 退役したプロファイルでエンコードを断られた: Story = {
+  args: { detail: detail('1274'), onQueueEncode: profileRetired },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: 'エンコード' }))
+    await expect(
+      await canvas.findByText(
+        'このプロファイルは退役しているため、エンコードできませんでした。',
       ),
     ).toBeVisible()
   },
