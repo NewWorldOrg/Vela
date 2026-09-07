@@ -180,12 +180,21 @@ mock.module('@/repository/client/carina', {
 })
 
 const {
+  WHEN_CALLING_OFF,
+  WHEN_CHANGING_A_DESTINATION,
+  WHEN_CHANGING_A_PROFILE,
+  WHEN_QUEUEING,
+  WHEN_REMOVING_A_DESTINATION,
+  WHEN_REMOVING_A_PROFILE,
+  WHEN_SAVING_A_DESTINATION,
+  WHEN_SAVING_A_PROFILE,
   callOffEncode,
   defineDestination,
   defineProfile,
   getEncodeScreen,
   listEncodeChoices,
   queueEncode,
+  whyItRefused,
 } = await import('./encode.ts')
 
 const NOW = new Date('2026-09-05T11:53:34Z')
@@ -292,36 +301,334 @@ test('a queue names the recording and the destination, and the profile only when
   })
 })
 
-test('each refusal of a queue is read from the sentence the API answers with', async () => {
-  const refused: [number, string, string][] = [
-    [
-      404,
-      'The ledger holds no recording x.',
-      'この録画は残っていないため、エンコードできませんでした。',
-    ],
-    [
-      409,
-      'Recording x is still being written, and is encoded once it has ended.',
-      'この録画はまだ書き込み中のため、エンコードできませんでした。',
-    ],
-    [
-      409,
-      'Recording x failed, so there is nothing to encode.',
-      'この録画は失敗しているため、エンコードするものがありません。',
-    ],
-    [
-      409,
-      'Recording x already has job y running; it is not queued twice.',
-      'この録画のエンコードはすでに待機中か実行中です。',
-    ],
-    [
-      409,
-      'Recording x was already encoded with profile p by job y, and a second artefact would only collide with the first.',
-      'この録画はこのプロファイルですでにエンコード済みです。',
-    ],
-  ]
+const RETIRED_AT = '2026-09-07T02:14:51.0000000Z'
 
-  for (const [status, said, message] of refused) {
+const NAMED_BY_A_UUID =
+  'A profile, a destination or a job is named by a UUID, and never by one that is all zeroes.'
+
+const RANGE = 'between 0 and 51.'
+
+const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
+  [
+    WHEN_QUEUEING,
+    400,
+    'recordingId: A recording is named by the thirty-two hexadecimal digits the ledger holds, without separators.',
+    '対象を正しく指定できていないため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    400,
+    `destinationId: ${NAMED_BY_A_UUID}`,
+    '対象を正しく指定できていないため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    400,
+    `profileId: ${NAMED_BY_A_UUID}`,
+    '対象を正しく指定できていないため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    404,
+    `No destination ${DESTINATION.id} is defined.`,
+    'この保存先は残っていないため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    409,
+    `Destination ${DESTINATION.id} was retired at ${RETIRED_AT} and takes nothing new.`,
+    'この保存先は退役しているため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    404,
+    `No profile ${PROFILE.id} is defined.`,
+    'このプロファイルは残っていないため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    409,
+    `Profile ${PROFILE.id} was retired at ${RETIRED_AT} and nothing is encoded with it again.`,
+    'このプロファイルは退役しているため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    404,
+    `The ledger holds no recording ${RECORDING.id}.`,
+    'この録画は残っていないため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    409,
+    `Recording ${RECORDING.id} is still being written, and is encoded once it has ended.`,
+    'この録画はまだ書き込み中のため、エンコードできませんでした。',
+  ],
+  [
+    WHEN_QUEUEING,
+    409,
+    `Recording ${RECORDING.id} failed, so there is nothing to encode.`,
+    'この録画は失敗しているため、エンコードするものがありません。',
+  ],
+  [
+    WHEN_QUEUEING,
+    409,
+    `Recording ${RECORDING.id} already has job ${RUNNING.id} running; it is not queued twice.`,
+    'この録画のエンコードはすでに待機中か実行中です。',
+  ],
+  [
+    WHEN_QUEUEING,
+    409,
+    `Recording ${RECORDING.id} already has job ${RUNNING.id} waiting; it is not queued twice.`,
+    'この録画のエンコードはすでに待機中か実行中です。',
+  ],
+  [
+    WHEN_QUEUEING,
+    409,
+    `Recording ${RECORDING.id} was already encoded with profile ${PROFILE.id} by job ${COMPLETED.id}, and a second artefact would only collide with the first.`,
+    'この録画はこのプロファイルですでにエンコード済みです。',
+  ],
+  [
+    WHEN_CALLING_OFF,
+    400,
+    NAMED_BY_A_UUID,
+    '対象を正しく指定できていないため、中止できませんでした。',
+  ],
+  [
+    WHEN_CALLING_OFF,
+    404,
+    `The ledger holds no job ${COMPLETED.id}.`,
+    'このジョブは残っていないため、中止できませんでした。',
+  ],
+  [
+    WHEN_CALLING_OFF,
+    409,
+    `Job ${COMPLETED.id} already ended as Completed, and cannot be called off.`,
+    'このジョブはすでに終わっているため、中止できませんでした。',
+  ],
+  [
+    WHEN_CALLING_OFF,
+    409,
+    `Job ${RUNNING.id} moved in the ledger while it was being called off; read it again.`,
+    'このジョブは中止の途中で状態が変わったため、中止できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    'A profile is defined by label, codec, resolution, deinterlace, rateFactor and quantiser, and every one of them is given.',
+    'プロファイルの内容が揃っていないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    'label: a name a person reads, and not an empty one.',
+    '名称が入力されていないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    'label: at most 64 characters.',
+    '名称が 64 文字を超えているため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    'codec: one of H264, H265.',
+    'コーデックの指定が正しくないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    'resolution: one of AsSource, FullHd, Hd.',
+    '解像度の指定が正しくないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    'deinterlace: one of Leave, EveryFrame, EveryField.',
+    'インタレース解除の指定が正しくないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    `rateFactor: a constant rate factor ${RANGE}`,
+    '品質(CRF)が 0 〜 51 の範囲にないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_PROFILE,
+    400,
+    `quantiser: a constant quantiser ${RANGE}`,
+    '品質(QP)が 0 〜 51 の範囲にないため、保存できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_PROFILE,
+    400,
+    'A profile is defined by label, codec, resolution, deinterlace, rateFactor and quantiser, and a change carries every one of them rather than the ones that moved.',
+    'プロファイルの内容が揃っていないため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_PROFILE,
+    404,
+    `No profile ${PROFILE.id} is defined.`,
+    'このプロファイルは残っていないため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_PROFILE,
+    409,
+    `Profile ${PROFILE.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
+    'このプロファイルは退役しているため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_PROFILE,
+    409,
+    `Profile ${PROFILE.id} is what job ${RUNNING.id} is running with, and it stands still until that job has ended or been called off.`,
+    'このプロファイルを使うジョブが実行中か待機中のため、変更できませんでした。',
+  ],
+  [
+    WHEN_REMOVING_A_PROFILE,
+    409,
+    `Profile ${PROFILE.id} is what job ${RUNNING.id} is waiting to run with, and it stands still until that job has ended or been called off.`,
+    'このプロファイルを使うジョブが実行中か待機中のため、撤去できませんでした。',
+  ],
+  [
+    WHEN_REMOVING_A_PROFILE,
+    409,
+    `Profile ${PROFILE.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
+    'このプロファイルは退役しているため、撤去できませんでした。',
+  ],
+  [
+    WHEN_REMOVING_A_PROFILE,
+    409,
+    `Profile ${PROFILE.id} is what destination ${DESTINATION.id} encodes with unless another is asked for; point that destination at another profile first.`,
+    'このプロファイルを既定にしている保存先があるため、撤去できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_DESTINATION,
+    400,
+    'A destination is defined by label, outputRoot and defaultProfileId.',
+    '保存先の内容が揃っていないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_DESTINATION,
+    400,
+    'outputRoot: the name of a root the storage surface declares.',
+    'この出力ルートは残っていないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_DESTINATION,
+    400,
+    'outputRoot: a root this process holds for writing; the roots the recordings are read from take no artefact.',
+    'この出力ルートには成果物を置けないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_DESTINATION,
+    400,
+    'defaultProfileId: the id of a profile that is defined and still offered.',
+    '既定のプロファイルが選ばれていないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_DESTINATION,
+    503,
+    "The set of output roots cannot be read while the driver does not answer, so no destination is saved: The driver's socket could not be reached (ConnectionRefused).",
+    'driver に接続できないため、保存できませんでした。',
+  ],
+  [
+    WHEN_SAVING_A_DESTINATION,
+    502,
+    'The set of output roots cannot be read while the driver does not answer, so no destination is saved: the driver answered without saying anything.',
+    'driver に接続できないため、保存できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_DESTINATION,
+    400,
+    'A destination is defined by label, outputRoot and defaultProfileId, and a change carries every one of them rather than the ones that moved.',
+    '保存先の内容が揃っていないため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_DESTINATION,
+    404,
+    `No destination ${DESTINATION.id} is defined.`,
+    'この保存先は残っていないため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_DESTINATION,
+    409,
+    `Destination ${DESTINATION.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
+    'この保存先は退役しているため、変更できませんでした。',
+  ],
+  [
+    WHEN_CHANGING_A_DESTINATION,
+    409,
+    `Destination ${DESTINATION.id} is what job ${RUNNING.id} is running with, and it stands still until that job has ended or been called off.`,
+    'この保存先を使うジョブが実行中か待機中のため、変更できませんでした。',
+  ],
+  [
+    WHEN_REMOVING_A_DESTINATION,
+    409,
+    `Destination ${DESTINATION.id} is the only one left, and a machine with nowhere to put an artefact encodes nothing; define the one that replaces it first.`,
+    'この保存先は最後の 1 つのため、撤去できませんでした。',
+  ],
+  [
+    WHEN_REMOVING_A_DESTINATION,
+    409,
+    `Destination ${DESTINATION.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
+    'この保存先は退役しているため、撤去できませんでした。',
+  ],
+]
+
+test('every sentence the encode endpoints refuse with, as Carina writes it, is read into one Japanese one', () => {
+  for (const [asking, status, said, message] of REFUSED) {
+    assert.equal(whyItRefused(asking, status, said), message)
+    assert.doesNotMatch(whyItRefused(asking, status, said), /\(\d{3}\)。$/)
+  }
+})
+
+test('a refusal that names several fields at once names them in one sentence', () => {
+  assert.equal(
+    whyItRefused(
+      WHEN_SAVING_A_PROFILE,
+      400,
+      'label: a name a person reads, and not an empty one. codec: one of H264, H265. quantiser: a constant quantiser between 0 and 51.',
+    ),
+    '名称が入力されていない、コーデックの指定が正しくない、品質(QP)が 0 〜 51 の範囲にないため、保存できませんでした。',
+  )
+})
+
+test('a destination the driver could not vouch for says so with nothing but the status to read', () => {
+  assert.equal(
+    whyItRefused(WHEN_SAVING_A_DESTINATION, 503, undefined),
+    'driver に接続できないため、保存できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(WHEN_CHANGING_A_DESTINATION, 502, undefined),
+    'driver に接続できないため、変更できませんでした。',
+  )
+})
+
+test('a refusal nothing accounts for is a number, and never the sentence the API sent', () => {
+  assert.equal(
+    whyItRefused(
+      WHEN_SAVING_A_PROFILE,
+      500,
+      'The ledger would not take the profile.',
+    ),
+    'プロファイルを保存できませんでした(500)。',
+  )
+  assert.equal(
+    whyItRefused(WHEN_QUEUEING, 500, undefined),
+    'エンコードを登録できませんでした(500)。',
+  )
+  assert.equal(
+    whyItRefused(WHEN_REMOVING_A_DESTINATION, 502, 'Bad Gateway'),
+    '保存先を撤去できませんでした(502)。',
+  )
+})
+
+test('each refusal of a queue is read from the sentence the API answers with', async () => {
+  for (const [asking, status, said, message] of REFUSED) {
+    if (asking !== WHEN_QUEUEING) {
+      continue
+    }
+
     store.writeStatus = status
     store.writeMessage = said
 
@@ -343,6 +650,7 @@ test('calling a job off is refused once it has ended', async () => {
   assert.equal(sent[0].path, '/api/encoding/jobs/{id}/cancel')
 
   store.writeStatus = 409
+  store.writeMessage = `Job ${COMPLETED.id} already ended as Completed, and cannot be called off.`
   assert.deepEqual(await callOffEncode(COMPLETED.id), {
     state: 'rejected',
     message: 'このジョブはすでに終わっているため、中止できませんでした。',
@@ -361,17 +669,19 @@ test('a destination refused for its root says so, and one the driver cannot vouc
     'outputRoot: a root this process holds for writing; the roots the recordings are read from take no artefact.'
   assert.deepEqual(await defineDestination(draft), {
     state: 'rejected',
-    message: 'この出力ルートには成果物を置けません。',
+    message: 'この出力ルートには成果物を置けないため、保存できませんでした。',
   })
 
   store.writeStatus = 503
+  store.writeMessage =
+    "The set of output roots cannot be read while the driver does not answer, so no destination is saved: The driver's socket could not be reached (ConnectionRefused)."
   assert.deepEqual(await defineDestination(draft), {
     state: 'rejected',
-    message: '保存先の一覧を確認できないため、保存できませんでした。',
+    message: 'driver に接続できないため、保存できませんでした。',
   })
 })
 
-test('a profile refused in words of its own keeps the reading for its status', async () => {
+test('a profile refused for a value out of range names the field, and an unaccounted refusal is a number', async () => {
   const draft = {
     label: 'Viewing',
     codec: 'h264' as const,
@@ -385,21 +695,21 @@ test('a profile refused in words of its own keeps the reading for its status', a
   store.writeMessage = 'quantiser: a constant quantiser between 0 and 51.'
   assert.deepEqual(await defineProfile(draft), {
     state: 'rejected',
-    message: 'この内容ではプロファイルを保存できませんでした。',
+    message: '品質(QP)が 0 〜 51 の範囲にないため、保存できませんでした。',
   })
 
   store.writeStatus = 500
   store.writeMessage = 'The ledger would not take the profile.'
   assert.deepEqual(await defineProfile(draft), {
     state: 'rejected',
-    message: 'The ledger would not take the profile.(500)。',
+    message: 'プロファイルを保存できませんでした(500)。',
   })
 
   store.writeStatus = 401
   assert.deepEqual(await defineProfile(draft), { state: 'unauthenticated' })
 })
 
-test('a destination refused for anything but its root says the general thing', async () => {
+test('a destination refused for its default profile names that field', async () => {
   const draft = {
     label: 'Shelf',
     outputRoot: 'encodes',
@@ -407,10 +717,11 @@ test('a destination refused for anything but its root says the general thing', a
   }
 
   store.writeStatus = 400
-  store.writeMessage = 'defaultProfileId: the id of a profile that is defined.'
+  store.writeMessage =
+    'defaultProfileId: the id of a profile that is defined and still offered.'
   assert.deepEqual(await defineDestination(draft), {
     state: 'rejected',
-    message: 'この内容では保存先を保存できませんでした。',
+    message: '既定のプロファイルが選ばれていないため、保存できませんでした。',
   })
 })
 
@@ -426,7 +737,7 @@ test('a job the ledger no longer holds cannot be called off, and says so', async
   store.writeMessage = 'The ledger would not take the cancellation.'
   assert.deepEqual(await callOffEncode(RUNNING.id), {
     state: 'rejected',
-    message: 'The ledger would not take the cancellation.(500)。',
+    message: 'このジョブを中止できませんでした(500)。',
   })
 
   store.writeStatus = 401
