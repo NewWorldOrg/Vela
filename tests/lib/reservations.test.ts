@@ -1,0 +1,163 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+
+import type { ReservationStanding } from '@/repository/reservations'
+import {
+  isDiscardable,
+  recordingWasRemoved,
+  reservationAnchor,
+  reservationHref,
+} from '@/lib/reservations'
+
+/**
+ * The anchor a reservation's row carries and the link the recording screen
+ * sends the reader in on. Both are spelled out here rather than one derived
+ * from the other, so a change to either spelling has to be a change here too:
+ * building the expected link out of `reservationAnchor` would move the
+ * goalposts with it and hold nothing.
+ */
+test('予約の行の錨は、その予約の id から綴られる', () => {
+  assert.equal(reservationAnchor('r-309'), 'reservation-r-309')
+})
+
+test('録画から入るリンクは、その錨を名指す', () => {
+  assert.equal(
+    reservationHref('r-309'),
+    '/reservations?show=all#reservation-r-309',
+  )
+})
+
+test('録画から入るリンクは、既定で隠れる予約にも届く', () => {
+  assert.match(reservationHref('r-309'), /\?show=all#/)
+})
+
+/**
+ * 予約を消せるかどうかの判定。8 つの立ち位置すべてを表に並べ、表全体を一度に
+ * 突き合わせる。「消せないものは false」だけを見ると、常に false を返す実装で
+ * も緑になるため、消せる側と消せない側の両方を同じ表で押さえる。
+ *
+ * 表は `Record<ReservationStanding, …>` なので、立ち位置が増えたときは型が先に
+ * 落ちる。
+ */
+
+const STANDINGS: ReservationStanding[] = [
+  'scheduled',
+  'conflict',
+  'cancelled',
+  'missed',
+  'recording',
+  'complete',
+  'truncated',
+  'failed',
+]
+
+function table(
+  recorded: boolean,
+  windowClosed: boolean,
+): Record<string, boolean> {
+  return Object.fromEntries(
+    STANDINGS.map((standing) => [
+      standing,
+      isDiscardable({ standing, recorded, windowClosed }),
+    ]),
+  )
+}
+
+const EVERY_STANDING: Record<ReservationStanding, true> = {
+  scheduled: true,
+  conflict: true,
+  cancelled: true,
+  missed: true,
+  recording: true,
+  complete: true,
+  truncated: true,
+  failed: true,
+}
+
+test('表は立ち位置を 1 つ残らず並べている', () => {
+  assert.deepEqual([...STANDINGS].sort(), Object.keys(EVERY_STANDING).sort())
+})
+
+test('放送がまだ終わっていないとき、消せるのは録画に至らず立っていないものだけ', () => {
+  assert.deepEqual(table(false, false), {
+    scheduled: false,
+    conflict: false,
+    cancelled: true,
+    missed: true,
+    recording: false,
+    complete: true,
+    truncated: true,
+    failed: true,
+  })
+})
+
+test('放送が終わったあとは、競合で負けたものと予定のままのものも消せる', () => {
+  assert.deepEqual(table(false, true), {
+    scheduled: true,
+    conflict: true,
+    cancelled: true,
+    missed: true,
+    recording: false,
+    complete: true,
+    truncated: true,
+    failed: true,
+  })
+})
+
+test('録画が残っている予約は、放送が終わっていても消せない', () => {
+  for (const windowClosed of [false, true]) {
+    assert.deepEqual(
+      table(true, windowClosed),
+      Object.fromEntries(STANDINGS.map((standing) => [standing, false])),
+      `windowClosed=${windowClosed}`,
+    )
+  }
+})
+
+test('録画中は、放送の終わりを過ぎていても消せない', () => {
+  assert.equal(
+    isDiscardable({
+      standing: 'recording',
+      recorded: false,
+      windowClosed: true,
+    }),
+    false,
+  )
+})
+
+/**
+ * The standings a recording is what put on the reservation. Reaching one of
+ * them with no recording written down means the recording was thrown away after
+ * it ran, because the outcome cannot be reached any other way — which is what
+ * lets the row say so rather than reading as broken.
+ */
+test('録画から来た状態なのに録画が無ければ、その録画は削除されている', () => {
+  for (const standing of ['complete', 'truncated', 'failed'] as const) {
+    assert.equal(
+      recordingWasRemoved({ standing, recorded: false }),
+      true,
+      standing,
+    )
+    assert.equal(
+      recordingWasRemoved({ standing, recorded: true }),
+      false,
+      standing,
+    )
+  }
+})
+
+test('録画がまだ無くて当たり前の状態では、削除されたとは言わない', () => {
+  for (const standing of [
+    'scheduled',
+    'conflict',
+    'recording',
+    'cancelled',
+    'missed',
+  ] as const) {
+    assert.equal(
+      recordingWasRemoved({ standing, recorded: false }),
+      false,
+      standing,
+    )
+  }
+})
