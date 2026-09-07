@@ -1,4 +1,4 @@
-import { CAPTURED_TYPE } from '@/lib/player-capture'
+import { CAPTURED_TYPE } from '@/lib/capture-name'
 
 export type Captured = 'saved' | 'refused'
 

@@ -45,8 +45,8 @@ import {
   SAID_NOT_CAPTURED,
   takeCapture as takeItNow,
   type TakeCapture,
-} from '@/components/recordings/player-capture'
-import { capturedName, capturedOn } from '@/lib/player-capture'
+} from '@/components/recordings/take-capture'
+import { capturedName, capturedOn } from '@/lib/capture-name'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
