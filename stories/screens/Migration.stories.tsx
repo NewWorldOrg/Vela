@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import {
   MIGRATION,
+  MIGRATION_REHEARSAL,
   MORE_NOT_TAKEN_THAN_FIT,
 } from '@/repository/migration.fixtures'
 import { MigrationView } from '@/components/migration/migration-page'
@@ -19,6 +20,8 @@ type Story = StoryObj<typeof meta>
 export const 通常: Story = { args: { result: MIGRATION } }
 
 export const 記録なし: Story = { args: { result: null } }
+
+export const 下見: Story = { args: { result: MIGRATION_REHEARSAL } }
 
 export const 収まらないほどの明細: Story = {
   args: { result: MORE_NOT_TAKEN_THAN_FIT },

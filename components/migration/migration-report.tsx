@@ -24,7 +24,7 @@ import { Surface } from '@/components/vela/surface'
 import { MigrationCountCell } from '@/components/migration/migration-count-cell'
 import { MigrationRunRow } from '@/components/migration/migration-run-row'
 
-const NOT_TAKEN_COLUMNS = ['対象', '母集団', '記録した事実', '該当行へ飛ぶ']
+const NOT_TAKEN_COLUMNS = ['対象', '母集団', '記録した事実']
 
 export function MigrationReport({ result }: { result: MigrationResult }) {
   const { run } = result
@@ -37,7 +37,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           <div className="flex flex-wrap items-center gap-2.5">
             <b className="text-ui font-bold">{run.heading}</b>
             <Badge variant="selected">{run.kind}</Badge>
-            <Badge variant="mute">{run.dryRuns}</Badge>
+            <Badge variant="mute">{run.rehearsals}</Badge>
           </div>
           <dl className="mt-3 space-y-2.5">
             <MigrationRunRow label="実行日時">
@@ -47,10 +47,9 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               完了({run.duration})
             </MigrationRunRow>
             <MigrationRunRow label="移行元の識別">{run.source}</MigrationRunRow>
-            <MigrationRunRow label="下見・本番の別">
-              {run.dryRunNote}
+            <MigrationRunRow label="直前の下見">
+              {run.lastRehearsal}
             </MigrationRunRow>
-            <MigrationRunRow label="取り込み先">{run.output}</MigrationRunRow>
           </dl>
         </Surface>
       </section>
@@ -95,17 +94,13 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                   value={population.unclassified}
                   unit={population.unit}
                 />
-                {population.link ? (
+                {population.link && (
                   <Link
                     href={population.link.href}
                     className="tap-target ml-auto text-note font-bold text-brand underline-offset-[3px] hover:underline"
                   >
                     {population.link.label}
                   </Link>
-                ) : (
-                  <span className="ml-auto text-note text-ink-3">
-                    {population.note}
-                  </span>
                 )}
               </div>
             </Surface>
@@ -144,7 +139,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           {result.notTakenGroups.map((group) => (
             <TableBody key={group.name}>
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={4} className="border-b-0 pt-3.5 pb-1.5">
+                <TableCell colSpan={3} className="border-b-0 pt-3.5 pb-1.5">
                   <span className="flex flex-wrap items-baseline gap-2.5">
                     <b className="text-ui font-bold">{group.name}</b>
                     <span className="font-code text-ui tabular-nums text-brand">
@@ -159,13 +154,8 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               {group.rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="w-[260px] align-top">
-                    {row.target && (
-                      <b className="block text-[13px] font-bold">
-                        {row.target}
-                      </b>
-                    )}
                     <span className="font-code text-note text-ink-3">
-                      {row.file}
+                      {row.subject}
                     </span>
                   </TableCell>
                   <TableCell className="align-top text-ink-2">
@@ -173,17 +163,10 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                   </TableCell>
                   <TableCell className="align-top whitespace-normal text-ink-2">
                     {row.fact}
-                  </TableCell>
-                  <TableCell className="align-top">
-                    {row.link ? (
-                      <Link
-                        href={row.link.href}
-                        className="tap-target font-bold text-brand underline-offset-[3px] hover:underline"
-                      >
-                        {row.link.label}
-                      </Link>
-                    ) : (
-                      <span className="text-ink-3">—</span>
+                    {row.size && (
+                      <span className="mt-0.5 block font-code text-note tabular-nums text-ink-3">
+                        {row.size}
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -191,7 +174,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               {group.empty && (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={3}
                     className="whitespace-normal text-ink-3"
                   >
                     {group.empty}
@@ -214,23 +197,17 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               <Badge variant="mute" className="mt-px">
                 {omission.tag}
               </Badge>
-              <div className="min-w-0 flex-1">
-                <b className="text-ui font-bold">
-                  {omission.title}
-                  {omission.code && (
-                    <span className="ml-1.5 font-code text-note font-medium text-ink-3">
-                      {omission.code}
-                    </span>
-                  )}
-                </b>
-                <p className="mt-0.5 text-note text-ink-2">{omission.body}</p>
-              </div>
-              <span className="font-code text-ui font-medium tabular-nums">
-                {omission.count}
-                <em className="ml-0.5 font-sans text-note not-italic text-ink-3">
-                  {omission.unit}
-                </em>
-              </span>
+              <b className="min-w-0 flex-1 text-ui font-bold">
+                {omission.title}
+              </b>
+              {omission.count && (
+                <span className="font-code text-ui font-medium tabular-nums">
+                  {omission.count}
+                  <em className="ml-0.5 font-sans text-note not-italic text-ink-3">
+                    {omission.unit}
+                  </em>
+                </span>
+              )}
             </Surface>
           ))}
         </div>

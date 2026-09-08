@@ -728,6 +728,22 @@ export interface paths {
     patch: operations['reviseQualityThreshold']
     trace?: never
   }
+  '/api/migration/record': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getMigrationRecord']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/live/ticket': {
     parameters: {
       query?: never
@@ -1325,6 +1341,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['MeResponder']
+    }
+    BaseResponderOfMigrationRecordResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['MigrationRecordResponder']
     }
     BaseResponderOfOidcConfigResponder: {
       status: boolean
@@ -2051,6 +2072,99 @@ export interface components {
     MeResponder: {
       subject: string
       method: components['schemas']['AuthMethod']
+    }
+    MigrationDetailResponder: {
+      /** Format: uuid */
+      id: string
+      population: components['schemas']['MigrationPopulation']
+      refusal: components['schemas']['MigrationRefusal']
+      subject: string
+      note: string
+      /** Format: int64 */
+      claimed: null | number | string
+      /** Format: int64 */
+      observed: null | number | string
+    }
+    /** @enum {string} */
+    MigrationOmissionGround: 'notMigratedByDesign' | 'nothingToCarry'
+    MigrationOmissionResponder: {
+      subject: components['schemas']['MigrationOmissionSubject']
+      ground: components['schemas']['MigrationOmissionGround']
+      /** Format: int32 */
+      affected: null | number | string
+    }
+    /** @enum {string} */
+    MigrationOmissionSubject:
+      | 'programmeGuide'
+      | 'duplicateAvoidance'
+      | 'qualityTimeSeries'
+      | 'recordingHistory'
+      | 'enclosedCharacters'
+    /** @enum {string} */
+    MigrationPass: 'rehearsal' | 'forReal'
+    /** @enum {string} */
+    MigrationPopulation:
+      | 'recordings'
+      | 'recordingFiles'
+      | 'rules'
+      | 'reservations'
+      | 'channelDefinitions'
+      | 'programmeGuide'
+    MigrationPopulationResponder: {
+      population: components['schemas']['MigrationPopulation']
+      /** Format: int32 */
+      offered: number | string
+      /** Format: int32 */
+      carried: number | string
+      /** Format: int32 */
+      notCarried: number | string
+      /** Format: int32 */
+      unclassified: number | string
+    }
+    MigrationRecordResponder: {
+      run: null | components['schemas']['MigrationRunResponder']
+      populations: components['schemas']['MigrationPopulationResponder'][]
+      /** Format: int32 */
+      unclassified: number | string
+      refusals: components['schemas']['MigrationRefusalResponder'][]
+      omissions: components['schemas']['MigrationOmissionResponder'][]
+      items: components['schemas']['MigrationDetailResponder'][]
+      /** Format: int32 */
+      total: number | string
+      /** Format: int32 */
+      currentPage: number | string
+      /** Format: int32 */
+      lastPage: number | string
+      /** Format: int32 */
+      perPage: number | string
+    }
+    /** @enum {string} */
+    MigrationRefusal:
+      | 'reallyEmpty'
+      | 'fileMissing'
+      | 'orphan'
+      | 'unidentifiable'
+      | 'inexpressible'
+      | 'noSuchFeature'
+      | 'outOfScope'
+    MigrationRefusalResponder: {
+      refusal: components['schemas']['MigrationRefusal']
+      /** Format: int32 */
+      count: number | string
+    }
+    MigrationRunResponder: {
+      /** Format: uuid */
+      id: string
+      source: string
+      pass: components['schemas']['MigrationPass']
+      /** Format: date-time */
+      startedAt: string
+      /** Format: date-time */
+      finishedAt: string
+      /** Format: int32 */
+      rehearsals: number | string
+      /** Format: date-time */
+      lastRehearsalFinishedAt: null | string
     }
     OidcConfigRequest: {
       discoveryUrl?: null | string
@@ -6377,6 +6491,54 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfQualityThresholdResponder']
+        }
+      }
+    }
+  }
+  getMigrationRecord: {
+    parameters: {
+      query?: {
+        page?: number | string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMigrationRecordResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMigrationRecordResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfMigrationRecordResponder']
         }
       }
     }
