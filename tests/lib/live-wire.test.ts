@@ -229,6 +229,7 @@ test('an ending report is the mark and the reason', () => {
       [0xe0, 5],
       [0xe0, 6],
       [0xe0, 7],
+      [0xe0, 8],
     ],
   )
 
@@ -237,7 +238,7 @@ test('an ending report is the mark and the reason', () => {
   }
 
   assert.deepEqual(readControl(new Uint8Array([0xe1, 2])), { said: 'unknown' })
-  assert.deepEqual(readControl(new Uint8Array([0xe0, 8])), { said: 'unknown' })
+  assert.deepEqual(readControl(new Uint8Array([0xe0, 9])), { said: 'unknown' })
 })
 
 test('a control message of a length the wire never sends is unknown', () => {

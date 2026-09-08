@@ -159,6 +159,12 @@ const ENDED: Record<LiveSupplyEnd, Said> = {
     title: 'チューナーとの接続が切れました',
     worthRetrying: true,
   },
+  wentQuiet: {
+    tone: 'gone',
+    mark: <SignalIcon className="size-[22px]" />,
+    title: '映像が届かなくなりました',
+    worthRetrying: true,
+  },
 }
 
 const DROPPED: Said = {
