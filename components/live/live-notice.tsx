@@ -40,6 +40,7 @@ export type LiveFault =
   | { kind: 'dropped' }
   | { kind: 'signedOut' }
   | { kind: 'unsupported' }
+  | { kind: 'appendFailed' }
   | { kind: 'tookTooLong' }
 
 interface Said {
@@ -182,6 +183,13 @@ const TOOK_TOO_LONG: Said = {
   worthLooking: true,
 }
 
+const APPEND_FAILED: Said = {
+  tone: 'gone',
+  mark: <PlayIcon className="size-[22px]" />,
+  title: '映像を再生できなくなりました',
+  worthRetrying: true,
+}
+
 const UNSUPPORTED: Said = {
   tone: 'gone',
   mark: <DisplayIcon className="size-[22px]" />,
@@ -226,6 +234,8 @@ function saidOf(fault: LiveFault): Said {
       return SIGNED_OUT
     case 'unsupported':
       return UNSUPPORTED
+    case 'appendFailed':
+      return APPEND_FAILED
     case 'tookTooLong':
       return TOOK_TOO_LONG
   }

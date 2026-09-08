@@ -3,13 +3,18 @@ import { test } from 'node:test'
 
 import {
   CATCH_UP_RATE,
+  NOT_GAINING_AFTER_SECONDS,
   PART_SECONDS,
   SEEK_FROM_SECONDS,
   STALL_ALLOWANCE_CAP_SECONDS,
   STALL_ALLOWANCE_SECONDS,
+  SUPPLY_GRACE_SECONDS,
   TARGET_SECONDS,
   TOLERANCE_SECONDS,
+  delayOf,
   holdOf,
+  latencyTone,
+  losingGround,
   reachOf,
   targetOf,
   windowOf,
@@ -169,4 +174,65 @@ test('the reach is where the run holding the playhead ends', () => {
 test('a playhead in a hole reaches no further than itself', () => {
   assert.equal(reachOf([{ from: 12, to: 30 }], 11), 11)
   assert.equal(reachOf([], 4), 4)
+})
+
+test('the figure is the distance to the edge while the pictures keep arriving', () => {
+  assert.equal(delayOf({ behind: 0.62, stalledFor: 0 }), 0.62)
+  assert.equal(delayOf({ behind: 0.62, stalledFor: 0.25 }), 0.62)
+  assert.equal(
+    delayOf({ behind: 0.62, stalledFor: SUPPLY_GRACE_SECONDS }),
+    0.62,
+  )
+})
+
+test('a supply that has stopped is counted into the figure, so a frozen picture does not read as near the edge', () => {
+  const frozen = (seconds: number) =>
+    delayOf({ behind: 0.06, stalledFor: seconds })
+
+  assert.ok(frozen(SUPPLY_GRACE_SECONDS + 1) > windowOf(0).start)
+  assert.equal(latencyTone(frozen(SUPPLY_GRACE_SECONDS + 1), false), 'warn')
+  assert.equal(latencyTone(frozen(SUPPLY_GRACE_SECONDS + 30), false), 'err')
+})
+
+test('a frozen picture never reads as healthy for longer than the grace the supply is given', () => {
+  for (let step = 0; step < 400; step += 1) {
+    const seconds = SUPPLY_GRACE_SECONDS + 1 + step / 10
+
+    assert.notEqual(
+      latencyTone(delayOf({ behind: 0.06, stalledFor: seconds }), false),
+      'ok',
+      `${seconds.toFixed(1)} s with nothing arriving`,
+    )
+  }
+})
+
+test('a quickened picture that is closing the gap is left alone', () => {
+  assert.equal(losingGround(null), false)
+  assert.equal(
+    losingGround({
+      forSeconds: NOT_GAINING_AFTER_SECONDS + 60,
+      gapWas: 2.7,
+      gapIs: 2.69,
+    }),
+    false,
+  )
+})
+
+test('a quickened picture that has not closed the gap in a minute is losing ground', () => {
+  const run = { forSeconds: NOT_GAINING_AFTER_SECONDS, gapWas: 1, gapIs: 2.7 }
+
+  assert.equal(losingGround(run), true)
+  assert.equal(
+    losingGround({ ...run, forSeconds: NOT_GAINING_AFTER_SECONDS - 1 }),
+    false,
+  )
+  assert.equal(losingGround({ ...run, gapIs: run.gapWas }), true)
+})
+
+test('a figure that is not being closed on is not shown as a healthy reading, whatever it says', () => {
+  assert.equal(latencyTone(0.6, false), 'ok')
+  assert.equal(latencyTone(0.6, true), 'err')
+  assert.equal(latencyTone(windowOf(0).start, false), 'ok')
+  assert.equal(latencyTone(windowOf(0).start + PART_SECONDS, false), 'warn')
+  assert.equal(latencyTone(SEEK_FROM_SECONDS, false), 'err')
 })

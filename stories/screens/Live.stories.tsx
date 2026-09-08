@@ -185,11 +185,75 @@ const HEADERLESS = frameOf(
 
 const undecodable = scripted((socket) => socket.say(HEADERLESS))
 
+function box(type: string, ...payload: (Uint8Array | number[])[]): Uint8Array {
+  const parts = payload.map((part) =>
+    part instanceof Uint8Array ? part : new Uint8Array(part),
+  )
+  const bytes = new Uint8Array(
+    8 + parts.reduce((sum, part) => sum + part.length, 0),
+  )
+
+  new DataView(bytes.buffer).setUint32(0, bytes.length)
+  bytes.set(
+    [...type].map((char) => char.charCodeAt(0)),
+    4,
+  )
+
+  let at = 8
+
+  for (const part of parts) {
+    bytes.set(part, at)
+    at += part.length
+  }
+
+  return bytes
+}
+
+const CODECS_BUT_NO_TRACK = frameOf(
+  'pictureHeader',
+  0,
+  box(
+    'moov',
+    box(
+      'trak',
+      box(
+        'mdia',
+        box(
+          'minf',
+          box(
+            'stbl',
+            box(
+              'stsd',
+              [0, 0, 0, 0, 0, 0, 0, 1],
+              box('avc1', new Uint8Array(78), box('avcC', [1, 0x64, 0, 0x1f])),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ),
+)
+
+const unappendable = scripted((socket) => {
+  socket.say(progress(SECURED))
+  socket.say(CODECS_BUT_NO_TRACK)
+})
+
+const closingCleanly = scripted((socket) => socket.drop(1000))
+
 const nothingToWatch = () => {
   throw new Error('no channel was chosen, so no wire is opened')
 }
 
 const stillSignedIn = async () => false
+
+const probed: string[] = []
+
+const probing = async () => {
+  probed.push('whether the session is still ours')
+
+  return false
+}
 
 const signedOut = async () => true
 
@@ -252,6 +316,7 @@ const meta = {
   ],
   beforeEach: () => {
     opened.length = 0
+    probed.length = 0
     window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
     window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
   },
@@ -871,6 +936,62 @@ export const 再生不能: Story = {
       await canvas.findByText('このブラウザでは再生できません'),
     ).toBeVisible()
     await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
+  },
+}
+
+export const 映像を受け付けられない: Story = {
+  args: { openSocket: unappendable },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      await canvas.findByText('映像を再生できなくなりました'),
+    ).toBeVisible()
+    await expect(
+      canvas.queryByText('このブラウザでは再生できません'),
+    ).toBeNull()
+    await expect(canvas.getByRole('button', { name: '再試行' })).toBeEnabled()
+    await waitFor(() => expect(opened[0]?.readyState).toBe(3))
+  },
+}
+
+export const 何も言わずに閉じた: Story = {
+  args: { openSocket: closingCleanly, askSignedOut: probing },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(await canvas.findByText('配信が終了しました')).toBeVisible()
+    await expect(canvas.queryByText('接続が切れました')).toBeNull()
+    await expect(canvas.getByRole('button', { name: '再試行' })).toBeEnabled()
+    await expect(probed).toHaveLength(0)
+  },
+}
+
+export const 失敗すれば字幕は残らない: Story = {
+  args: { openSocket: captioned },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    opened[0].say(frameOf('control', 0, endingPayload('takenForARecording')))
+    opened[0].drop(1000)
+
+    await expect(
+      await canvas.findByText('録画のために切れました'),
+    ).toBeVisible()
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute('data-drawn', 'no'),
+    )
+    await expect(captionLayer(canvasElement)).toHaveAttribute(
+      'data-caption',
+      'off',
+    )
   },
 }
 

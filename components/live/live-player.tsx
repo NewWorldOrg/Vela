@@ -11,11 +11,12 @@ import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
 import {
   CATCH_UP_RATE,
+  delayOf,
   holdOf,
+  latencyTone,
+  losingGround,
   reachOf,
-  SEEK_FROM_SECONDS,
   targetOf,
-  windowOf,
 } from '@/lib/live-latency'
 import {
   CaptionsGlyph,
@@ -91,6 +92,7 @@ interface Running {
   elapsedMs: number
   latency?: number
   catchingUp: boolean
+  losing: boolean
   dropped?: number
 }
 
@@ -102,15 +104,8 @@ function begun(key: string): Running {
     startup: {},
     elapsedMs: 0,
     catchingUp: false,
+    losing: false,
   }
-}
-
-function latencyTone(seconds: number): 'ok' | 'warn' | 'err' {
-  if (seconds >= SEEK_FROM_SECONDS) {
-    return 'err'
-  }
-
-  return seconds > windowOf(0).start ? 'warn' : 'ok'
 }
 
 const LATENCY_TONE = {
@@ -244,6 +239,10 @@ export function LivePlayer({
     let pictured = false
     let everPlayed = false
     let gone = false
+    let edge = -1
+    let edgeMovedAt = performance.now()
+    let quickenedSince: number | null = null
+    let gapWhenQuickened = 0
     const openedAt = performance.now()
     const seated = { networkId, serviceId, profile }
     let askedAt = -BACKLOG_EVERY_MS
@@ -259,9 +258,9 @@ export function LivePlayer({
       )
     }
 
-    const feed = new LiveFeed(element, () => {
+    const feed = new LiveFeed(element, (why) => {
       session.leave()
-      fail({ kind: 'unsupported' })
+      fail({ kind: why })
     })
 
     const layer = overlay.current
@@ -314,7 +313,8 @@ export function LivePlayer({
         return
       }
 
-      const elapsedMs = performance.now() - openedAt
+      const now = performance.now()
+      const elapsedMs = now - openedAt
 
       if (!pictured && elapsedMs >= startupDeadlineMs) {
         clearInterval(ticking)
@@ -353,6 +353,11 @@ export function LivePlayer({
         return
       }
 
+      if (end > edge) {
+        edge = end
+        edgeMovedAt = now
+      }
+
       if (!everPlayed) {
         if (end - start >= targetOf(0)) {
           everPlayed = true
@@ -388,10 +393,33 @@ export function LivePlayer({
 
       const catchingUp = element.playbackRate > 1
 
+      if (!catchingUp) {
+        quickenedSince = null
+      } else if (quickenedSince === null) {
+        quickenedSince = now
+        gapWhenQuickened = behind
+      }
+
+      const latency = delayOf({
+        behind,
+        stalledFor: (now - edgeMovedAt) / 1000,
+      })
+      const losing = losingGround(
+        quickenedSince === null
+          ? null
+          : {
+              forSeconds: (now - quickenedSince) / 1000,
+              gapWas: gapWhenQuickened,
+              gapIs: behind,
+            },
+      )
+
       change((was) =>
-        was.latency === behind && was.catchingUp === catchingUp
+        was.latency === latency &&
+        was.catchingUp === catchingUp &&
+        was.losing === losing
           ? was
-          : { ...was, latency: behind, catchingUp },
+          : { ...was, latency, catchingUp, losing },
       )
     }, TICK_MS)
 
@@ -424,7 +452,7 @@ export function LivePlayer({
   }
 
   const pip = usePictureInPicture(video)
-  const captionsDrawn = captioned && !pip.out
+  const captionsDrawn = captioned && !pip.out && phase !== 'faulted'
   const hasPicture =
     phase === 'playing' || phase === 'paused' || phase === 'buffering'
   const chromeUp =
@@ -584,6 +612,7 @@ export function LivePlayer({
   }, [shell, hasPicture])
 
   const latency = running?.latency
+  const losing = running?.losing ?? false
 
   return (
     <section
@@ -821,10 +850,10 @@ export function LivePlayer({
             {latency !== undefined && (
               <span
                 data-slot="live-latency"
-                data-tone={latencyTone(latency)}
+                data-tone={latencyTone(latency, losing)}
                 className={cn(
                   'inline-flex items-center gap-[7px] rounded-full border px-3 py-[3px] text-[11.5px] font-medium whitespace-nowrap',
-                  LATENCY_TONE[latencyTone(latency)],
+                  LATENCY_TONE[latencyTone(latency, losing)],
                 )}
               >
                 <i
