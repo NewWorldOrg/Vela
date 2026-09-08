@@ -790,6 +790,11 @@ export const 撤収_driver消失: Story = ended(
   'チューナーとの接続が切れました',
 )
 
+export const 撤収_映像が届かない: Story = ended(
+  'wentQuiet',
+  '映像が届かなくなりました',
+)
+
 export const 撤収_配信終了: Story = ended('letGo', '配信が終了しました')
 
 export const セッション切れ: Story = {

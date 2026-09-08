@@ -233,6 +233,7 @@ const ENDING_BYTE = {
   tunerFailed: 5,
   stoppedByAnother: 6,
   driverLost: 7,
+  wentQuiet: 8,
 } as const
 
 export type LiveSupplyEnd = keyof typeof ENDING_BYTE
