@@ -29,6 +29,10 @@ function decode(png: Uint8Array): Promise<ImageBitmap | null> {
 }
 
 export class CaptionLayer {
+  private readonly canvas: HTMLCanvasElement
+
+  private readonly video: HTMLVideoElement
+
   private readonly queue = new CaptionQueue<Decoding>()
 
   private readonly drift = new CaptionDrift()
@@ -45,16 +49,17 @@ export class CaptionLayer {
 
   private reading: ReturnType<typeof setInterval> | null = null
 
+  private framed = false
+
   private readonly watching: ResizeObserver | null
 
   private readonly minding: MutationObserver
 
   private readonly repaint = () => this.paint()
 
-  constructor(
-    private readonly canvas: HTMLCanvasElement,
-    private readonly video: HTMLVideoElement,
-  ) {
+  constructor(canvas: HTMLCanvasElement, video: HTMLVideoElement) {
+    this.canvas = canvas
+    this.video = video
     this.watching =
       typeof ResizeObserver === 'undefined'
         ? null
@@ -140,17 +145,29 @@ export class CaptionLayer {
   private follow(): void {
     if ('requestVideoFrameCallback' in this.video) {
       this.frame = this.video.requestVideoFrameCallback(() => {
+        this.framed = true
         this.tick()
 
         if (!this.closed) {
           this.follow()
         }
       })
+    }
+
+    // A backgrounded tab gets no requestVideoFrameCallback; the sound plays on.
+    if (this.reading === null) {
+      this.reading = setInterval(() => this.carry(), READ_MS)
+    }
+  }
+
+  private carry(): void {
+    if (this.framed) {
+      this.framed = false
 
       return
     }
 
-    this.reading = setInterval(() => this.tick(), READ_MS)
+    this.tick()
   }
 
   private edge(): number | null {
