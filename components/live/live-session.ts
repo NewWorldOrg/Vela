@@ -56,6 +56,8 @@ export interface LiveSession {
 
 const OPEN = 1
 
+const CLOSED_CLEANLY = 1000
+
 function socketUrl(href: string): string {
   const url = new URL(href, window.location.href)
 
@@ -126,6 +128,13 @@ export function openLiveSession(
       return
     }
 
+    if (event.code === CLOSED_CLEANLY) {
+      said = 'ending'
+      events.onEnding('letGo')
+
+      return
+    }
+
     events.onDropped(event.code)
   }
 
@@ -166,7 +175,7 @@ export function openLiveSession(
           socket.send(controlFrame('leaving'))
         }
 
-        socket.close(1000)
+        socket.close(CLOSED_CLEANLY)
       } catch {}
     },
   }

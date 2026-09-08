@@ -73,3 +73,41 @@ export function reachOf(runs: readonly LiveRun[], at: number): number {
 
   return holding ? holding.to : at
 }
+
+export const SUPPLY_GRACE_SECONDS = 0.5
+
+export const NOT_GAINING_AFTER_SECONDS = 60
+
+export interface LiveReading {
+  behind: number
+  stalledFor: number
+}
+
+export function delayOf(reading: LiveReading): number {
+  return reading.behind + Math.max(0, reading.stalledFor - SUPPLY_GRACE_SECONDS)
+}
+
+export interface LiveCatchUp {
+  forSeconds: number
+  gapWas: number
+  gapIs: number
+}
+
+export function losingGround(run: LiveCatchUp | null): boolean {
+  return (
+    run !== null &&
+    run.forSeconds >= NOT_GAINING_AFTER_SECONDS &&
+    run.gapIs >= run.gapWas
+  )
+}
+
+export function latencyTone(
+  seconds: number,
+  losing: boolean,
+): 'ok' | 'warn' | 'err' {
+  if (losing || seconds >= SEEK_FROM_SECONDS) {
+    return 'err'
+  }
+
+  return seconds > windowOf(0).start ? 'warn' : 'ok'
+}
