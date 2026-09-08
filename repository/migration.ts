@@ -1,6 +1,35 @@
 import type { Route } from 'next'
 
-export interface MigrationPopulation {
+import { formatDateTime, formatSpan } from '@/lib/format'
+import { carinaClient } from '@/repository/client/carina'
+import type { components } from '@/repository/client/schema'
+import { toInt } from '@/repository/programmes'
+import { grouped } from '@/repository/recordings'
+import { whatItSaid } from '@/repository/said'
+
+type RecordResponder = components['schemas']['MigrationRecordResponder']
+type RunResponder = components['schemas']['MigrationRunResponder']
+type PopulationResponder = components['schemas']['MigrationPopulationResponder']
+type RefusalResponder = components['schemas']['MigrationRefusalResponder']
+type OmissionResponder = components['schemas']['MigrationOmissionResponder']
+type DetailResponder = components['schemas']['MigrationDetailResponder']
+type Population = components['schemas']['MigrationPopulation']
+type Refusal = components['schemas']['MigrationRefusal']
+type OmissionSubject = components['schemas']['MigrationOmissionSubject']
+type OmissionGround = components['schemas']['MigrationOmissionGround']
+
+export interface MigrationRun {
+  heading: string
+  kind: string
+  rehearsals: string
+  startedAt: string
+  finishedAt: string
+  duration: string
+  source: string
+  lastRehearsal: string
+}
+
+export interface MigrationPopulationRow {
   name: string
   source: string
   total: string
@@ -9,16 +38,14 @@ export interface MigrationPopulation {
   notTaken: string
   unclassified: string
   link?: { href: Route; label: string }
-  note?: string
 }
 
 export interface MigrationNotTakenRow {
   id: string
-  target?: string
-  file: string
+  subject: string
   population: string
   fact: string
-  link?: { href: Route; label: string }
+  size?: string
 }
 
 export interface MigrationNotTakenGroup {
@@ -33,30 +60,227 @@ export interface MigrationOmission {
   id: string
   tag: string
   title: string
-  code?: string
-  body: string
-  count: string
-  unit: string
+  count?: string
+  unit?: string
 }
 
 export interface MigrationResult {
-  run: {
-    heading: string
-    kind: string
-    dryRuns: string
-    startedAt: string
-    finishedAt: string
-    duration: string
-    source: string
-    dryRunNote: string
-    output: string
-  }
-  populations: MigrationPopulation[]
+  run: MigrationRun
+  populations: MigrationPopulationRow[]
   unclassified: string
   notTakenGroups: MigrationNotTakenGroup[]
   omissions: MigrationOmission[]
 }
 
+const UNREADABLE = '移行記録を読めませんでした'
+
+const MOST_PER_PAGE = 500
+
+const NOTHING_IN_THIS_GROUP = '該当なし'
+
+const NO_REHEARSAL = '—'
+
+interface PopulationShape {
+  name: string
+  source: string
+  unit: string
+  link?: { href: Route; label: string }
+}
+
+const POPULATION_SHAPES: Record<Population, PopulationShape> = {
+  recordings: {
+    name: '録画',
+    source: 'recorded',
+    unit: '本',
+    link: { href: '/library', label: 'ライブラリへ' },
+  },
+  recordingFiles: {
+    name: '録画ファイル',
+    source: 'video_file + 出力ディレクトリ',
+    unit: '件',
+  },
+  rules: {
+    name: 'ルール',
+    source: 'rule',
+    unit: '件',
+    link: { href: '/reservations/rules', label: 'ルール一覧へ' },
+  },
+  reservations: { name: '予約', source: 'reserve', unit: '件' },
+  channelDefinitions: { name: 'チャンネル定義', source: 'channel', unit: '件' },
+  programmeGuide: { name: '番組表', source: 'program', unit: '行' },
+}
+
+const REFUSAL_LABEL: Record<Refusal, string> = {
+  reallyEmpty: '実 0 バイト',
+  fileMissing: 'ファイル不在',
+  orphan: '孤児',
+  unidentifiable: '同定不能',
+  inexpressible: '型として表現不能',
+  noSuchFeature: '本システムに機能が無い',
+  outOfScope: '対象外',
+}
+
+const OMISSION_GROUND_LABEL: Record<OmissionGround, string> = {
+  notMigratedByDesign: '移行しない',
+  nothingToCarry: '対象が存在しない',
+}
+
+interface OmissionShape {
+  title: string
+  unit: string
+}
+
+const OMISSION_SHAPES: Record<OmissionSubject, OmissionShape> = {
+  programmeGuide: { title: '番組表', unit: '行' },
+  duplicateAvoidance: { title: 'ルールの重複録画防止', unit: '件' },
+  qualityTimeSeries: { title: '品質時系列', unit: '行' },
+  recordingHistory: { title: '重複録画防止の履歴', unit: '行' },
+  enclosedCharacters: { title: '番組名の囲み文字の置換', unit: '本' },
+}
+
 export async function getMigration(): Promise<MigrationResult | null> {
-  return null
+  const record = await fetchEveryDetail()
+
+  if (!record.run) {
+    return null
+  }
+
+  return {
+    run: toRun(record.run),
+    populations: record.populations.map(toPopulation),
+    unclassified: grouped(toInt(record.unclassified)),
+    notTakenGroups: record.refusals.map((refusal) =>
+      toGroup(refusal, record.items),
+    ),
+    omissions: record.omissions.map(toOmission),
+  }
+}
+
+export async function hasMigrationRecord(): Promise<boolean> {
+  return (await fetchPage(1, 1)).run !== null
+}
+
+async function fetchEveryDetail(): Promise<RecordResponder> {
+  const first = await fetchPage(1, MOST_PER_PAGE)
+  const items = [...first.items]
+  const lastPage = toInt(first.lastPage)
+
+  for (let page = 2; page <= lastPage; page += 1) {
+    const next = await fetchPage(page, MOST_PER_PAGE)
+
+    items.push(...next.items)
+  }
+
+  return { ...first, items }
+}
+
+async function fetchPage(
+  page: number,
+  perPage: number,
+): Promise<RecordResponder> {
+  const { data, error } = await carinaClient().GET('/api/migration/record', {
+    params: { query: { page, perPage } },
+  })
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data
+}
+
+function toRun(run: RunResponder): MigrationRun {
+  const rehearsals = toInt(run.rehearsals)
+
+  return {
+    heading: `${formatDateTime(run.startedAt)} の実行`,
+    kind: run.pass === 'forReal' ? '本番' : '下見',
+    rehearsals: rehearsals === 0 ? '下見なし' : `下見 ${rehearsals} 回`,
+    startedAt: formatDateTime(run.startedAt),
+    finishedAt: formatDateTime(run.finishedAt),
+    duration: `所要 ${formatSpan(secondsBetween(run.startedAt, run.finishedAt))}`,
+    source: run.source,
+    lastRehearsal: run.lastRehearsalFinishedAt
+      ? formatDateTime(run.lastRehearsalFinishedAt)
+      : NO_REHEARSAL,
+  }
+}
+
+function secondsBetween(from: string, until: string): number {
+  return Math.max(
+    0,
+    Math.round((new Date(until).getTime() - new Date(from).getTime()) / 1000),
+  )
+}
+
+function toPopulation(one: PopulationResponder): MigrationPopulationRow {
+  const shape = POPULATION_SHAPES[one.population]
+
+  return {
+    name: shape.name,
+    source: shape.source,
+    unit: shape.unit,
+    total: grouped(toInt(one.offered)),
+    taken: grouped(toInt(one.carried)),
+    notTaken: grouped(toInt(one.notCarried)),
+    unclassified: grouped(toInt(one.unclassified)),
+    link: shape.link,
+  }
+}
+
+function toGroup(
+  one: RefusalResponder,
+  items: DetailResponder[],
+): MigrationNotTakenGroup {
+  const rows = items.filter((item) => item.refusal === one.refusal)
+
+  return {
+    name: REFUSAL_LABEL[one.refusal],
+    count: grouped(toInt(one.count)),
+    unit: '件',
+    rows: rows.map(toDetail),
+    empty: rows.length === 0 ? NOTHING_IN_THIS_GROUP : undefined,
+  }
+}
+
+function toDetail(one: DetailResponder): MigrationNotTakenRow {
+  return {
+    id: one.id,
+    subject: one.subject,
+    population: POPULATION_SHAPES[one.population].name,
+    fact: one.note,
+    size: sizeOf(one),
+  }
+}
+
+function sizeOf(one: DetailResponder): string | undefined {
+  const claimed = counted(one.claimed)
+  const observed = counted(one.observed)
+
+  if (observed !== undefined && claimed !== undefined) {
+    return `${grouped(observed)} B(記録上 ${grouped(claimed)} B)`
+  }
+
+  if (observed !== undefined) {
+    return `${grouped(observed)} B`
+  }
+
+  return claimed === undefined ? undefined : `記録上 ${grouped(claimed)} B`
+}
+
+function counted(value: number | string | null): number | undefined {
+  return value == null ? undefined : toInt(value)
+}
+
+function toOmission(one: OmissionResponder): MigrationOmission {
+  const shape = OMISSION_SHAPES[one.subject]
+  const affected = counted(one.affected)
+
+  return {
+    id: one.subject,
+    tag: OMISSION_GROUND_LABEL[one.ground],
+    title: shape.title,
+    count: affected === undefined ? undefined : grouped(affected),
+    unit: affected === undefined ? undefined : shape.unit,
+  }
 }

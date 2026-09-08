@@ -4078,6 +4078,75 @@
         }
       }
     },
+    "/api/migration/record": {
+      "get": {
+        "tags": [
+          "migration"
+        ],
+        "operationId": "getMigrationRecord",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMigrationRecordResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMigrationRecordResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfMigrationRecordResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/live/ticket": {
       "post": {
         "tags": [
@@ -7055,6 +7124,32 @@
               },
               {
                 "$ref": "#/components/schemas/MeResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfMigrationRecordResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MigrationRecordResponder"
               }
             ]
           }
@@ -10297,6 +10392,331 @@
           },
           "method": {
             "$ref": "#/components/schemas/AuthMethod"
+          }
+        }
+      },
+      "MigrationDetailResponder": {
+        "required": [
+          "id",
+          "population",
+          "refusal",
+          "subject",
+          "note",
+          "claimed",
+          "observed"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "population": {
+            "$ref": "#/components/schemas/MigrationPopulation"
+          },
+          "refusal": {
+            "$ref": "#/components/schemas/MigrationRefusal"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "claimed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "observed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "MigrationOmissionGround": {
+        "enum": [
+          "notMigratedByDesign",
+          "nothingToCarry"
+        ],
+        "type": "string"
+      },
+      "MigrationOmissionResponder": {
+        "required": [
+          "subject",
+          "ground",
+          "affected"
+        ],
+        "type": "object",
+        "properties": {
+          "subject": {
+            "$ref": "#/components/schemas/MigrationOmissionSubject"
+          },
+          "ground": {
+            "$ref": "#/components/schemas/MigrationOmissionGround"
+          },
+          "affected": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MigrationOmissionSubject": {
+        "enum": [
+          "programmeGuide",
+          "duplicateAvoidance",
+          "qualityTimeSeries",
+          "recordingHistory",
+          "enclosedCharacters"
+        ],
+        "type": "string"
+      },
+      "MigrationPass": {
+        "enum": [
+          "rehearsal",
+          "forReal"
+        ],
+        "type": "string"
+      },
+      "MigrationPopulation": {
+        "enum": [
+          "recordings",
+          "recordingFiles",
+          "rules",
+          "reservations",
+          "channelDefinitions",
+          "programmeGuide"
+        ],
+        "type": "string"
+      },
+      "MigrationPopulationResponder": {
+        "required": [
+          "population",
+          "offered",
+          "carried",
+          "notCarried",
+          "unclassified"
+        ],
+        "type": "object",
+        "properties": {
+          "population": {
+            "$ref": "#/components/schemas/MigrationPopulation"
+          },
+          "offered": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "carried": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notCarried": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unclassified": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MigrationRecordResponder": {
+        "required": [
+          "run",
+          "populations",
+          "unclassified",
+          "refusals",
+          "omissions",
+          "items",
+          "total",
+          "currentPage",
+          "lastPage",
+          "perPage"
+        ],
+        "type": "object",
+        "properties": {
+          "run": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MigrationRunResponder"
+              }
+            ]
+          },
+          "populations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MigrationPopulationResponder"
+            }
+          },
+          "unclassified": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "refusals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MigrationRefusalResponder"
+            }
+          },
+          "omissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MigrationOmissionResponder"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MigrationDetailResponder"
+            }
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "perPage": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MigrationRefusal": {
+        "enum": [
+          "reallyEmpty",
+          "fileMissing",
+          "orphan",
+          "unidentifiable",
+          "inexpressible",
+          "noSuchFeature",
+          "outOfScope"
+        ],
+        "type": "string"
+      },
+      "MigrationRefusalResponder": {
+        "required": [
+          "refusal",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/MigrationRefusal"
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MigrationRunResponder": {
+        "required": [
+          "id",
+          "source",
+          "pass",
+          "startedAt",
+          "finishedAt",
+          "rehearsals",
+          "lastRehearsalFinishedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source": {
+            "type": "string"
+          },
+          "pass": {
+            "$ref": "#/components/schemas/MigrationPass"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rehearsals": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastRehearsalFinishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -15430,6 +15850,9 @@
     },
     {
       "name": "quality"
+    },
+    {
+      "name": "migration"
     },
     {
       "name": "live"
