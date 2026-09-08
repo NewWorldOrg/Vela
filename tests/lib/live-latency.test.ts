@@ -3,6 +3,8 @@ import { test } from 'node:test'
 
 import {
   CATCH_UP_RATE,
+  EASE_OFF_RATE,
+  NEAR_TOLERANCE_SECONDS,
   NOT_GAINING_AFTER_SECONDS,
   PART_SECONDS,
   SEEK_FROM_SECONDS,
@@ -15,6 +17,7 @@ import {
   holdOf,
   latencyTone,
   losingGround,
+  nearWindowOf,
   reachOf,
   targetOf,
   windowOf,
@@ -35,9 +38,11 @@ function behind(seconds: number, { stalls = 0, rate = 1 } = {}) {
 
 test('at the figure it is held at, the picture is played at the ordinary rate', () => {
   const window = windowOf(0)
+  const near = nearWindowOf(0)
 
   assert.deepEqual(holdOf(behind(window.stop)), { rate: 1 })
-  assert.deepEqual(holdOf(behind(window.stop / 2)), { rate: 1 })
+  assert.deepEqual(holdOf(behind((near.start + window.start) / 2)), { rate: 1 })
+  assert.deepEqual(holdOf(behind(near.start)), { rate: 1 })
   assert.deepEqual(holdOf(behind(window.start)), { rate: 1 })
 })
 
@@ -65,26 +70,107 @@ test('a picture already being quickened is brought all the way to the figure, no
     rate: CATCH_UP_RATE,
   })
   assert.deepEqual(holdOf(behind(window.stop, quickened)), { rate: 1 })
-  assert.deepEqual(holdOf(behind(window.stop / 2, quickened)), { rate: 1 })
+  assert.deepEqual(
+    holdOf(behind((nearWindowOf(0).start + window.stop) / 2, quickened)),
+    { rate: 1 },
+  )
 })
 
-test('every distance short of the seek is answered, at either rate, so none keeps the rate it arrived with', () => {
+test('too close to the edge, the picture is played a little slow', () => {
+  const near = nearWindowOf(0)
+
+  assert.deepEqual(holdOf(behind(near.start - PART_SECONDS)), {
+    rate: EASE_OFF_RATE,
+  })
+  assert.deepEqual(holdOf(behind(0.358)), { rate: EASE_OFF_RATE })
+  assert.deepEqual(holdOf(behind(0)), { rate: EASE_OFF_RATE })
+})
+
+test('a picture already being eased is brought all the way to the figure, not to the edge of the window', () => {
+  const eased = { rate: EASE_OFF_RATE }
+  const near = nearWindowOf(0)
+
+  assert.deepEqual(holdOf(behind((near.start + near.stop) / 2, eased)), {
+    rate: EASE_OFF_RATE,
+  })
+  assert.deepEqual(holdOf(behind(near.stop - PART_SECONDS, eased)), {
+    rate: EASE_OFF_RATE,
+  })
+  assert.deepEqual(holdOf(behind(near.stop, eased)), { rate: 1 })
+  assert.deepEqual(holdOf(behind(windowOf(0).start, eased)), { rate: 1 })
+})
+
+test('the picture is eased by the amount it is quickened by, which is as much as goes unheard', () => {
+  assert.ok(EASE_OFF_RATE < 1)
+  assert.ok(Math.abs(1 - EASE_OFF_RATE - (CATCH_UP_RATE - 1)) < 1e-9)
+})
+
+test('every distance short of the seek is answered, at any rate, so none keeps the rate it arrived with', () => {
   const window = windowOf(0)
+  const near = nearWindowOf(0)
+  const slowIf = (held: boolean) => (held ? EASE_OFF_RATE : 1)
 
   for (let step = 0; step < 160; step += 1) {
     const seconds = step / 20
 
     assert.deepEqual(
       holdOf(behind(seconds)),
-      { rate: seconds > window.start ? CATCH_UP_RATE : 1 },
+      {
+        rate:
+          seconds > window.start ? CATCH_UP_RATE : slowIf(seconds < near.start),
+      },
       `${seconds.toFixed(2)} s behind, at the ordinary rate`,
     )
     assert.deepEqual(
       holdOf(behind(seconds, { rate: CATCH_UP_RATE })),
-      { rate: seconds > window.stop ? CATCH_UP_RATE : 1 },
+      {
+        rate:
+          seconds > window.stop ? CATCH_UP_RATE : slowIf(seconds < near.start),
+      },
       `${seconds.toFixed(2)} s behind, being quickened`,
     )
+    assert.deepEqual(
+      holdOf(behind(seconds, { rate: EASE_OFF_RATE })),
+      {
+        rate:
+          seconds > window.start ? CATCH_UP_RATE : slowIf(seconds < near.stop),
+      },
+      `${seconds.toFixed(2)} s behind, being eased`,
+    )
   }
+})
+
+test('a settled playhead is left alone: nothing is quickened, eased or moved while the wire holds', () => {
+  const jitter = [0, 0.04, -0.03, 0.07, -0.05, 0.02, 0.09, -0.02, 0.05, -0.06]
+  let rate = 1
+
+  for (let step = 0; step < 200; step += 1) {
+    const seconds = targetOf(0) + jitter[step % jitter.length]
+    const hold = holdOf(behind(seconds, { rate }))
+
+    assert.deepEqual(hold, { rate: 1 }, `${seconds.toFixed(2)} s behind`)
+    rate = hold.rate
+  }
+})
+
+test('a playhead that has drifted in front of the figure is walked back to it and then let be', () => {
+  const STEP_SECONDS = 0.1
+  let rate = 1
+  let at = 0
+  let edge = 0.358
+
+  for (let step = 0; step < 200; step += 1) {
+    const hold = holdOf({ rate, at, edge, reach: edge, from: -60, stalls: 0 })
+
+    assert.equal(hold.seekTo, undefined)
+    rate = hold.rate
+    at += STEP_SECONDS * rate
+    edge += STEP_SECONDS
+  }
+
+  assert.equal(rate, 1)
+  assert.ok(edge - at >= targetOf(0))
+  assert.ok(edge - at < targetOf(0) + PART_SECONDS)
 })
 
 test('the reported fault: 2.4 s behind at a quickened rate is brought back rather than left', () => {
@@ -154,6 +240,23 @@ test('the window is the figure, and the figure with the drift allowed on top', (
     start: TARGET_SECONDS + TOLERANCE_SECONDS,
     stop: TARGET_SECONDS,
   })
+})
+
+test('the near window is the figure, and the figure with the drift allowed underneath', () => {
+  assert.deepEqual(nearWindowOf(0), {
+    start: TARGET_SECONDS - NEAR_TOLERANCE_SECONDS,
+    stop: TARGET_SECONDS,
+  })
+  assert.deepEqual(nearWindowOf(1), {
+    start: targetOf(1) - NEAR_TOLERANCE_SECONDS,
+    stop: targetOf(1),
+  })
+})
+
+test('there is less room underneath the figure than above it, and what is left outlasts the gaps the wire sends', () => {
+  assert.ok(NEAR_TOLERANCE_SECONDS < TOLERANCE_SECONDS)
+  assert.ok(nearWindowOf(0).start > PART_SECONDS * 5)
+  assert.ok(nearWindowOf(0).start < TARGET_SECONDS)
 })
 
 test('the whole window sits inside a second, and no nearer the edge than the wire sends', () => {
