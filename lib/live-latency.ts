@@ -4,7 +4,11 @@ export const TARGET_SECONDS = 0.6
 
 export const TOLERANCE_SECONDS = 0.4
 
+export const NEAR_TOLERANCE_SECONDS = 0.2
+
 export const CATCH_UP_RATE = 1.05
+
+export const EASE_OFF_RATE = 0.95
 
 export const SEEK_FROM_SECONDS = 8
 
@@ -39,10 +43,17 @@ export function windowOf(stalls: number): { start: number; stop: number } {
   return { start: target + TOLERANCE_SECONDS, stop: target }
 }
 
+export function nearWindowOf(stalls: number): { start: number; stop: number } {
+  const target = targetOf(stalls)
+
+  return { start: target - NEAR_TOLERANCE_SECONDS, stop: target }
+}
+
 export function holdOf(playhead: LivePlayhead): LiveHold {
   const { at, edge, reach, from, stalls, rate } = playhead
   const behind = Math.max(0, edge - at)
   const window = windowOf(stalls)
+  const near = nearWindowOf(stalls)
   const toTheEdge = {
     rate: 1,
     seekTo: Math.max(from, edge - targetOf(stalls)),
@@ -58,6 +69,10 @@ export function holdOf(playhead: LivePlayhead): LiveHold {
 
   if (behind > window.start || (rate > 1 && behind > window.stop)) {
     return { rate: CATCH_UP_RATE }
+  }
+
+  if (behind < near.start || (rate < 1 && behind < near.stop)) {
+    return { rate: EASE_OFF_RATE }
   }
 
   return { rate: 1 }
