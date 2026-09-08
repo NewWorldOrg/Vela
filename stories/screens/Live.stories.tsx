@@ -1297,6 +1297,62 @@ export const 選局前は畳めない: Story = {
   },
 }
 
+function boxOf(canvasElement: HTMLElement, slot: string): DOMRect | null {
+  return (
+    canvasElement
+      .querySelector(`[data-slot="${slot}"]`)
+      ?.getBoundingClientRect() ?? null
+  )
+}
+
+function pictureBox(canvasElement: HTMLElement): string {
+  const box = boxOf(canvasElement, 'live-player')
+
+  if (box === null) {
+    return 'no picture'
+  }
+
+  return [box.x, box.y, box.width, box.height]
+    .map((one) => Math.round(one * 10) / 10)
+    .join(' ')
+}
+
+export const 一覧は映像の上に浮く: Story = {
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+    const picture = boxOf(canvasElement, 'live-player')
+    const aside = canvasElement.querySelector('main aside')
+    const bar = boxOf(canvasElement, 'player-chrome')
+    const open = pictureBox(canvasElement)
+
+    if (picture === null || aside === null || bar === null) {
+      throw new Error('the player, the list and the bar all have to be drawn')
+    }
+
+    const over = aside.getBoundingClientRect()
+
+    await expect(over.right).toBeLessThanOrEqual(Math.ceil(picture.right))
+    await expect(over.left).toBeGreaterThan(picture.left)
+    await expect(over.bottom).toBeLessThanOrEqual(Math.ceil(bar.top))
+
+    await userEvent.click(fold)
+
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+      await expect(pictureBox(canvasElement)).toBe(open)
+    })
+
+    await userEvent.click(fold)
+
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+      await expect(pictureBox(canvasElement)).toBe(open)
+    })
+  },
+}
+
 export const 一覧を開いたまま: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
