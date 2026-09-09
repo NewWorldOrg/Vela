@@ -6,9 +6,11 @@ import {
   readSearchCondition,
   searchTermsOf,
 } from '@/lib/search-condition'
+import { RULES_EVENT } from '@/repository/events'
 import { listPickableChannels } from '@/repository/programs'
 import type { Rule } from '@/repository/rules'
 import { listRules } from '@/repository/rules'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import type { RuleEditing } from '@/components/reservations/rules-page'
 import { RulesView } from '@/components/reservations/rules-page'
 import {
@@ -54,17 +56,20 @@ export default async function Page({
   ])
 
   return (
-    <RulesView
-      result={result}
-      channels={channels}
-      editing={editingOf(params, result.items)}
-      actions={{
-        onSave: saveRule,
-        onDelete: dropRule,
-        onSwitch: turnRule,
-        onPreview: rehearseRule,
-        onImpact: weighRule,
-      }}
-    />
+    <>
+      <RefreshOnSignal events={[RULES_EVENT]} />
+      <RulesView
+        result={result}
+        channels={channels}
+        editing={editingOf(params, result.items)}
+        actions={{
+          onSave: saveRule,
+          onDelete: dropRule,
+          onSwitch: turnRule,
+          onPreview: rehearseRule,
+          onImpact: weighRule,
+        }}
+      />
+    </>
   )
 }

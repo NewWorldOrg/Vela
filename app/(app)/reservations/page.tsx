@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 
+import { RESERVATIONS_EVENT } from '@/repository/events'
 import { listReservations } from '@/repository/reservations'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { ReservationsView } from '@/components/reservations/reservations-page'
 import {
   bringBackReservation,
@@ -25,19 +27,22 @@ export default async function Page({
   })
 
   return (
-    <ReservationsView
-      result={result}
-      actions={{
-        onCancel: dropReservation,
-        onRestore: bringBackReservation,
-        onRaise: raiseReservationPriority,
-        onRevise: reviseReservationDetails,
-        onDiscard: throwReservationAway,
-      }}
-      bulk={{
-        onCancelAll: dropReservations,
-        onDiscardAll: throwReservationsAway,
-      }}
-    />
+    <>
+      <RefreshOnSignal events={[RESERVATIONS_EVENT]} />
+      <ReservationsView
+        result={result}
+        actions={{
+          onCancel: dropReservation,
+          onRestore: bringBackReservation,
+          onRaise: raiseReservationPriority,
+          onRevise: reviseReservationDetails,
+          onDiscard: throwReservationAway,
+        }}
+        bulk={{
+          onCancelAll: dropReservations,
+          onDiscardAll: throwReservationsAway,
+        }}
+      />
+    </>
   )
 }

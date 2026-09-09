@@ -3,7 +3,12 @@ import type { Metadata } from 'next'
 import { getGuide } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
 import { coverageWarningOf, getCollectionStatus } from '@/repository/collection'
-import { GuideLive } from '@/components/guide/guide-live'
+import {
+  EPG_COLLECTION_EVENT,
+  PROGRAMS_EVENT,
+  RESERVATIONS_EVENT,
+} from '@/repository/events'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { GuideView } from '@/components/guide/guide-page'
 import {
   boostCollection,
@@ -33,7 +38,9 @@ export default async function Page({
 
   return (
     <>
-      <GuideLive />
+      <RefreshOnSignal
+        events={[PROGRAMS_EVENT, EPG_COLLECTION_EVENT, RESERVATIONS_EVENT]}
+      />
       <GuideView
         guide={{
           ...guide,

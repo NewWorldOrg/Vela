@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
 
+import {
+  ENCODE_JOBS_EVENT,
+  QUALITY_EVENT,
+  RECORDINGS_EVENT,
+} from '@/repository/events'
 import { listRecordings, type RecordingsFilter } from '@/repository/recordings'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { LibraryView } from '@/components/library/library-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
 
@@ -22,10 +28,15 @@ export default async function Page({
   const result = await listRecordings(filter)
 
   return (
-    <LibraryView
-      result={result}
-      filter={result.filter}
-      onDelete={throwRecordingAway}
-    />
+    <>
+      <RefreshOnSignal
+        events={[RECORDINGS_EVENT, ENCODE_JOBS_EVENT, QUALITY_EVENT]}
+      />
+      <LibraryView
+        result={result}
+        filter={result.filter}
+        onDelete={throwRecordingAway}
+      />
+    </>
   )
 }
