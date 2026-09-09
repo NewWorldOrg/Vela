@@ -66,6 +66,7 @@ export const MIGRATION: MigrationResult = {
       name: '実 0 バイト',
       count: '2',
       unit: '件',
+      reason: '記録されたサイズに対して実ファイルが空',
       rows: [
         {
           id: 'nt-1',
@@ -85,6 +86,7 @@ export const MIGRATION: MigrationResult = {
       name: 'ファイル不在',
       count: '1',
       unit: '件',
+      reason: '台帳に行があるが実ファイルが無い',
       rows: [
         {
           id: 'nt-3',
@@ -98,6 +100,7 @@ export const MIGRATION: MigrationResult = {
       name: '孤児',
       count: '4',
       unit: '件',
+      reason: '対応する台帳の行が無い',
       rows: [
         {
           id: 'nt-4',
@@ -129,6 +132,7 @@ export const MIGRATION: MigrationResult = {
       name: '同定不能',
       count: '2',
       unit: '件',
+      reason: '再スキャン結果と対応が付かない',
       rows: [
         {
           id: 'nt-8',
@@ -148,6 +152,7 @@ export const MIGRATION: MigrationResult = {
       name: '型として表現不能',
       count: '3',
       unit: '件',
+      reason: 'この種別は本システムの型に存在しない',
       rows: [
         {
           id: 'nt-10',
@@ -180,6 +185,7 @@ export const MIGRATION: MigrationResult = {
       name: '対象外',
       count: '9',
       unit: '件',
+      reason: 'ルール由来のため移行しない',
       rows: Array.from({ length: 9 }, (_, index) => ({
         id: `nt-${13 + index}`,
         subject: `週末キッチンの手帖　第${index + 1}回`,

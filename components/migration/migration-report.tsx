@@ -150,6 +150,11 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                         {group.unit}
                       </em>
                     </span>
+                    {group.reason && (
+                      <span className="text-note text-ink-3">
+                        {group.reason}
+                      </span>
+                    )}
                   </span>
                 </TableCell>
               </TableRow>

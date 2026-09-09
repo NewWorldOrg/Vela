@@ -56,6 +56,7 @@ export interface MigrationNotTakenGroup {
   name: string
   count: string
   unit: string
+  reason?: string
   rows: MigrationNotTakenRow[]
   empty?: string
 }
@@ -128,6 +129,18 @@ const REFUSAL_LABEL: Record<Refusal, string> = {
   inexpressible: '型として表現不能',
   noSuchFeature: '本システムに機能が無い',
   outOfScope: '対象外',
+}
+
+const THE_NAME_IS_ALREADY_THE_REASON = null
+
+const REFUSAL_REASON: Record<Refusal, string | null> = {
+  reallyEmpty: '記録されたサイズに対して実ファイルが空',
+  fileMissing: '台帳に行があるが実ファイルが無い',
+  orphan: '対応する台帳の行が無い',
+  unidentifiable: '再スキャン結果と対応が付かない',
+  inexpressible: 'この種別は本システムの型に存在しない',
+  noSuchFeature: THE_NAME_IS_ALREADY_THE_REASON,
+  outOfScope: 'ルール由来のため移行しない',
 }
 
 const SOURCE_SAYINGS: [RegExp, string][] = [
@@ -269,6 +282,9 @@ function toGroup(
     name: wordFor(REFUSAL_LABEL, one.refusal),
     count: grouped(toInt(one.count)),
     unit: '件',
+    reason:
+      shapeFor(REFUSAL_REASON, one.refusal, THE_NAME_IS_ALREADY_THE_REASON) ??
+      undefined,
     rows: rows.map(toDetail),
     empty: rows.length === 0 ? NOTHING_IN_THIS_GROUP : undefined,
   }

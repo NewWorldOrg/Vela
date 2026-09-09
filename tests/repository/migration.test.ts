@@ -239,6 +239,63 @@ test('a group is counted by the record, not by the rows that reached the page', 
   assert.equal(group.count, '2,048')
 })
 
+test('a group says once, in its heading, what fell under it', async () => {
+  standing([page([detail(), detail({ id: 'b' })])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const group = result.notTakenGroups.find((one) => one.name === '実 0 バイト')
+
+  assert.ok(group)
+  assert.equal(group.reason, '記録されたサイズに対して実ファイルが空')
+  assert.deepEqual(
+    group.rows.filter((row) => row.fact.includes('実ファイルが空')),
+    [],
+  )
+})
+
+test('a group nothing fell under still says what it is for', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const group = result.notTakenGroups.find((one) => one.name === '対象外')
+
+  assert.ok(group)
+  assert.equal(group.rows.length, 0)
+  assert.equal(group.reason, 'ルール由来のため移行しない')
+})
+
+test('the one refusal whose name already reads as the reason adds nothing to it', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const group = result.notTakenGroups.find(
+    (one) => one.name === '本システムに機能が無い',
+  )
+
+  assert.ok(group)
+  assert.equal(group.reason, undefined)
+})
+
+test('every other group is given a reason to stand under its name', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.deepEqual(
+    result.notTakenGroups
+      .filter((one) => one.reason === undefined)
+      .map((one) => one.name),
+    ['本システムに機能が無い'],
+  )
+})
+
 test('a row is named by the name a person reads, not by the row it came from', async () => {
   standing([page([detail()])])
 
@@ -439,6 +496,7 @@ test('この版が知らない値が記録に混じっても、画面は落ち�
   assert.ok(result)
   assert.equal(result.populations[0].name, NOT_YET_IN_THIS_BUILD)
   assert.equal(result.notTakenGroups[0].name, NOT_YET_IN_THIS_BUILD)
+  assert.equal(result.notTakenGroups[0].reason, undefined)
   assert.equal(
     result.notTakenGroups[0].rows[0].population,
     NOT_YET_IN_THIS_BUILD,
