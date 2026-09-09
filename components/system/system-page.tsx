@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { formatBytes, formatDateTime } from '@/lib/format'
+import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import type {
   ApiHealthResult,
   CollectionCensus,
@@ -50,6 +51,11 @@ const CONNECTION: Record<
   connected: { label: '接続中', tone: 'ok' },
   notConnected: { label: '未接続', tone: 'err' },
   draining: { label: '停止準備中', tone: 'warn' },
+}
+
+const NOT_YET_KNOWN_CONNECTION: (typeof CONNECTION)[DriverConnection] = {
+  label: NOT_YET_IN_THIS_BUILD,
+  tone: 'off',
 }
 
 const DEGRADED_LABEL: Record<string, string> = {
@@ -338,7 +344,11 @@ function DriverPart({ result }: { result: DriverStatusResult }) {
 }
 
 function DriverReading({ status }: { status: DriverStatus }) {
-  const connection = CONNECTION[status.connection]
+  const connection = shapeFor(
+    CONNECTION,
+    status.connection,
+    NOT_YET_KNOWN_CONNECTION,
+  )
   const missing = status.missingCapabilities.map((key) => ({
     key,
     label: capabilityLabel(key),
