@@ -3,8 +3,10 @@ import type {
   ReservationStanding,
 } from '@/repository/reservations'
 import { recordingWasRemoved } from '@/lib/reservations'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import {
   END_UNDECIDED_TERM,
+  NOT_YET_IN_THIS_BUILD_TERM,
   RESERVATION_RECEPTION_TERM,
   RESERVATION_RECORDING_REMOVED_TERM,
   RESERVATION_STANDING_TERMS,
@@ -33,9 +35,17 @@ const STANDING: Record<
   failed: { variant: 'err' },
 }
 
+const NOT_YET_KNOWN_CHIP: (typeof STANDING)[SettledStanding] = {
+  variant: 'mute',
+}
+
 function StandingChip({ standing }: { standing: SettledStanding }) {
-  const chip = STANDING[standing]
-  const term = RESERVATION_STANDING_TERMS[standing]
+  const chip = shapeFor(STANDING, standing, NOT_YET_KNOWN_CHIP)
+  const term = shapeFor(
+    RESERVATION_STANDING_TERMS,
+    standing,
+    NOT_YET_IN_THIS_BUILD_TERM,
+  )
 
   return (
     <TermTip term={term}>

@@ -2,6 +2,7 @@ import { cache } from 'react'
 
 import { formatBytes, formatLength, formatPlayhead } from '@/lib/format'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
+import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import {
   INCOMPLETE_TABLES,
   LOCKED_WITHOUT_DATA,
@@ -373,12 +374,13 @@ export async function discardRecording(
   }
 
   const refused = error?.data as RecordingDiscardRefused | null | undefined
+  const refusal = refused
+    ? shapeFor(DISCARD_REFUSAL, refused.refusal, undefined)
+    : undefined
 
   return {
     state: 'rejected',
-    message: refused
-      ? DISCARD_REFUSAL[refused.refusal]
-      : `${CANNOT_DISCARD}(${response.status})。`,
+    message: refusal ?? `${CANNOT_DISCARD}(${response.status})。`,
   }
 }
 
@@ -508,7 +510,11 @@ function toDetail(
             body: bodyOf(failure, fault, r.outcomeDetail),
           }
         : undefined,
-    thumbnailState: THUMBNAIL_ROWS[r.thumbnail.state],
+    thumbnailState: shapeFor(
+      THUMBNAIL_ROWS,
+      r.thumbnail.state,
+      THUMBNAIL_ROW_NOT_YET_KNOWN,
+    ),
     qualityTotal: measured ? grouped(dropped) : undefined,
     qualityRatio: measured
       ? ratioOf(dropped, totalPackets).toFixed(4)
@@ -572,8 +578,13 @@ const THUMBNAILS: Record<
   skipped: { state: 'none', label: '作成されません' },
 }
 
+const THUMBNAIL_NOT_YET_KNOWN: { state: ThumbnailState; label?: string } = {
+  state: 'none',
+  label: NOT_YET_IN_THIS_BUILD,
+}
+
 function thumbnailOf(r: RecordingResponder) {
-  return THUMBNAILS[r.thumbnail.state]
+  return shapeFor(THUMBNAILS, r.thumbnail.state, THUMBNAIL_NOT_YET_KNOWN)
 }
 
 const THUMBNAIL_ROWS: Record<
@@ -584,6 +595,10 @@ const THUMBNAIL_ROWS: Record<
   pending: { main: '未生成' },
   failed: { main: '生成失敗' },
   skipped: { main: '録画が失敗したため作成されません' },
+}
+
+const THUMBNAIL_ROW_NOT_YET_KNOWN: { main: string; sub?: string } = {
+  main: NOT_YET_IN_THIS_BUILD,
 }
 
 const STOPS: Partial<Record<Fault, string>> = {
@@ -642,7 +657,9 @@ function bodyOf(
     return undefined
   }
 
-  return numbered(TUNE_FAILURES[kind])
+  const classed = shapeFor(TUNE_FAILURES, kind, undefined)
+
+  return classed ? numbered(classed) : NOT_YET_IN_THIS_BUILD
 }
 
 function stopReasonOf(d: DetailResponder): string | undefined {

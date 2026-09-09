@@ -11,6 +11,7 @@ import type {
 } from '@/repository/services'
 import { SCAN_SYSTEMS, SYSTEM_LABEL } from '@/repository/scan-systems'
 import { cn } from '@/lib/utils'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InlineAlert } from '@/components/vela/banner'
 import { Button } from '@/components/ui/button'
@@ -182,7 +183,7 @@ export function ScanRunPanel({
                 : progress.systems.length === 0
                   ? '走査開始を待っています'
                   : progress.systems
-                      .map((system) => SYSTEM_LABEL[system])
+                      .map((system) => wordFor(SYSTEM_LABEL, system))
                       .join(' · ')}
             </h2>
           </div>

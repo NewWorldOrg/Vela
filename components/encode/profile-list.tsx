@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import type {
   EncodeProfile,
   EncodeRemoval,
@@ -102,16 +103,20 @@ export function ProfileList({
                 />
               </TableCell>
               <TableCell className="font-code">
-                {CODEC_LABEL[profile.codec]}
+                {wordFor(CODEC_LABEL, profile.codec)}
               </TableCell>
-              <TableCell>{RESOLUTION_LABEL[profile.resolution]}</TableCell>
+              <TableCell>
+                {wordFor(RESOLUTION_LABEL, profile.resolution)}
+              </TableCell>
               <TableCell className="font-code tabular-nums">
                 {profile.rateFactor}
               </TableCell>
               <TableCell className="font-code tabular-nums">
                 {profile.quantiser}
               </TableCell>
-              <TableCell>{DEINTERLACE_LABEL[profile.deinterlace]}</TableCell>
+              <TableCell>
+                {wordFor(DEINTERLACE_LABEL, profile.deinterlace)}
+              </TableCell>
               <TableCell className={STAMP}>{profile.definedAt}</TableCell>
               <TableCell className="text-right">
                 {!profile.retired && (

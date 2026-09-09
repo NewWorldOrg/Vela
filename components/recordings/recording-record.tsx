@@ -5,6 +5,7 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatBytes } from '@/lib/format'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan } from '@/repository/videos'
 import { Badge } from '@/components/ui/badge'
@@ -154,7 +155,7 @@ export function RecordingRecord({
         {plan && <SourceRow detail={d} plan={plan} />}
         <DetailKeyRow
           label="エンコード"
-          main={STANDING_LABEL[d.encode]}
+          main={wordFor(STANDING_LABEL, d.encode)}
           plain
         />
         {d.thumbnailState && (

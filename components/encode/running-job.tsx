@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 
 import { formatLength, formatSpan } from '@/lib/format'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
   ENCODER_LABEL,
@@ -68,8 +69,11 @@ export function RunningJob({
         {job.route && (
           <span>
             {job.route.swerved
-              ? `${ENCODER_LABEL[job.route.asked]} → ${ENCODER_LABEL[job.route.ran]}(${SWERVE_LABEL[job.route.swerved]})`
-              : ENCODER_LABEL[job.route.ran]}
+              ? `${wordFor(ENCODER_LABEL, job.route.asked)} → ${wordFor(
+                  ENCODER_LABEL,
+                  job.route.ran,
+                )}(${wordFor(SWERVE_LABEL, job.route.swerved)})`
+              : wordFor(ENCODER_LABEL, job.route.ran)}
           </span>
         )}
       </div>

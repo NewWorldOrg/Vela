@@ -24,6 +24,7 @@ import {
   RequiredMark,
 } from '@/components/vela/field'
 import { SegmentedControl } from '@/components/vela/segmented-control'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 
 const CHANNEL_RANGE: Record<
   ScanSystem,
@@ -109,7 +110,7 @@ export function AddCandidateDialog({
     if (!CHANNEL_RANGE[system].accepts(physicalChannel)) {
       setProblem({
         field: 'channel',
-        text: `${SYSTEM_LABEL[system]}の物理チャンネルは ${CHANNEL_RANGE[system].hint} です。`,
+        text: `${wordFor(SYSTEM_LABEL, system)}の物理チャンネルは ${CHANNEL_RANGE[system].hint} です。`,
       })
 
       return

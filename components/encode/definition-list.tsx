@@ -1,5 +1,6 @@
 import type { EncodeRemoved } from '@/repository/encode-terms'
 import { REMOVAL_LABEL, RETIRED_LABEL } from '@/repository/encode-terms'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import { Badge } from '@/components/ui/badge'
 
 export const STICKY_HEAD = '[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10'
@@ -36,7 +37,7 @@ export function RemovalNotice({
       {removed && (
         <span className="text-note text-mint">
           <b className="font-bold">{removed.label}</b> を
-          {REMOVAL_LABEL[removed.removal]}。
+          {wordFor(REMOVAL_LABEL, removed.removal)}。
         </span>
       )}
     </span>

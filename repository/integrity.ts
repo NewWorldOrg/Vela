@@ -1,4 +1,5 @@
 import { formatStamp } from '@/lib/format'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -155,7 +156,7 @@ function toFinding(finding: FindingResponder): IntegrityFinding {
   return {
     key: `${finding.outputRoot}/${finding.path}`,
     fault: finding.fault,
-    reason: REASON[finding.fault],
+    reason: wordFor(REASON, finding.fault),
     root: finding.outputRoot,
     path: finding.path,
     recordingId: finding.recordingId ?? undefined,
