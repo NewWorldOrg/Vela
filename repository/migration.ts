@@ -1,6 +1,6 @@
 import type { Route } from 'next'
 
-import { formatDateTime, formatSpan } from '@/lib/format'
+import { formatDateTime, formatSpanToTheMillisecond } from '@/lib/format'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -199,7 +199,7 @@ function toRun(run: RunResponder): MigrationRun {
     rehearsals: rehearsals === 0 ? '下見なし' : `下見 ${rehearsals} 回`,
     startedAt: formatDateTime(run.startedAt),
     finishedAt: formatDateTime(run.finishedAt),
-    duration: `所要 ${formatSpan(secondsBetween(run.startedAt, run.finishedAt))}`,
+    duration: `所要 ${formatSpanToTheMillisecond(millisecondsBetween(run.startedAt, run.finishedAt))}`,
     source: run.source,
     lastRehearsal: run.lastRehearsalFinishedAt
       ? formatDateTime(run.lastRehearsalFinishedAt)
@@ -207,11 +207,8 @@ function toRun(run: RunResponder): MigrationRun {
   }
 }
 
-function secondsBetween(from: string, until: string): number {
-  return Math.max(
-    0,
-    Math.round((new Date(until).getTime() - new Date(from).getTime()) / 1000),
-  )
+function millisecondsBetween(from: string, until: string): number {
+  return Math.max(0, new Date(until).getTime() - new Date(from).getTime())
 }
 
 function toPopulation(one: PopulationResponder): MigrationPopulationRow {

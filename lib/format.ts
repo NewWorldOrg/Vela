@@ -105,6 +105,15 @@ export function formatSpan(sec: number) {
   return m > 0 ? `${m}分${s}秒` : `${s}秒`
 }
 
+export function formatSpanToTheMillisecond(ms: number) {
+  const whole = Math.floor(ms / 1000)
+  const m = Math.floor(whole / 60)
+  const s = whole % 60
+  const rest = String(ms % 1000).padStart(3, '0')
+
+  return m > 0 ? `${m}分${s}.${rest}秒` : `${s}.${rest}秒`
+}
+
 const WEEKDAY = new Intl.DateTimeFormat('ja-JP', {
   timeZone: DISPLAY_ZONE,
   weekday: 'short',
