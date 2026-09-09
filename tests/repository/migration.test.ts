@@ -157,7 +157,7 @@ test('the run is spelled out of the instants and the pass it is given', async ()
   assert.equal(result.run.heading, '2026/08/10 03:12 の実行')
   assert.equal(result.run.kind, '本番')
   assert.equal(result.run.rehearsals, '下見 4 回')
-  assert.equal(result.run.duration, '所要 6分42秒')
+  assert.equal(result.run.duration, '所要 6分42.000秒')
   assert.equal(result.run.lastRehearsal, '2026/08/09 22:41')
 })
 

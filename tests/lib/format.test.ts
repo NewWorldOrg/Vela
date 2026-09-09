@@ -11,6 +11,7 @@ import {
   formatPlayerTime,
   formatMonth,
   formatSpan,
+  formatSpanToTheMillisecond,
   formatStamp,
 } from '@/lib/format'
 
@@ -100,6 +101,16 @@ for (const zone of ZONES) {
     assert.equal(spoken, '2026/08/20 20:50|08/20 20:50|00:00|2026/08')
   })
 }
+
+test('a span shown to the millisecond keeps the three digits it was given', () => {
+  assert.equal(formatSpanToTheMillisecond(0), '0.000秒')
+  assert.equal(formatSpanToTheMillisecond(7), '0.007秒')
+  assert.equal(formatSpanToTheMillisecond(482), '0.482秒')
+  assert.equal(formatSpanToTheMillisecond(1000), '1.000秒')
+  assert.equal(formatSpanToTheMillisecond(59999), '59.999秒')
+  assert.equal(formatSpanToTheMillisecond(60000), '1分0.000秒')
+  assert.equal(formatSpanToTheMillisecond(402000 + 250), '6分42.250秒')
+})
 
 test('the summer of a zone that keeps daylight saving does not shift it', () => {
   underZone('America/New_York', () => {
