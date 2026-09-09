@@ -202,35 +202,16 @@ export const MIGRATION: MigrationResult = {
       })),
     },
   ],
-  omissions: [
-    {
-      id: 'programmeGuide',
-      tag: '移行しない',
-      title: '番組表',
-      count: '3,557',
-      unit: '行',
-    },
+  losses: [
     {
       id: 'duplicateAvoidance',
-      tag: '移行しない',
-      title: 'ルールの重複録画防止',
-    },
-    {
-      id: 'qualityTimeSeries',
-      tag: '対象が存在しない',
-      title: '品質時系列',
-    },
-    {
-      id: 'recordingHistory',
-      tag: '移行しない',
-      title: '重複録画防止の履歴',
+      subject: 'ルールの重複録画防止',
+      fact: '運んだ 17 件のルールがこの設定を失った',
     },
     {
       id: 'enclosedCharacters',
-      tag: '移行しない',
-      title: '番組名の囲み文字の置換',
-      count: '38',
-      unit: '本',
+      subject: '番組名の囲み文字',
+      fact: '運んだ 56 本の題名が元の文字に戻せない',
     },
   ],
 }
@@ -258,4 +239,9 @@ export const MORE_NOT_TAKEN_THAN_FIT: MigrationResult = {
       })),
     ).flat(),
   })),
+}
+
+export const NOTHING_LOST: MigrationResult = {
+  ...MIGRATION,
+  losses: [],
 }

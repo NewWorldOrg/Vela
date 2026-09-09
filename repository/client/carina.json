@@ -10472,31 +10472,19 @@
           }
         }
       },
-      "MigrationOmissionGround": {
-        "enum": [
-          "notMigratedByDesign",
-          "nothingToCarry"
-        ],
-        "type": "string"
-      },
-      "MigrationOmissionResponder": {
+      "MigrationLossResponder": {
         "required": [
           "subject",
-          "ground",
           "affected"
         ],
         "type": "object",
         "properties": {
           "subject": {
-            "$ref": "#/components/schemas/MigrationOmissionSubject"
-          },
-          "ground": {
-            "$ref": "#/components/schemas/MigrationOmissionGround"
+            "$ref": "#/components/schemas/MigrationLossSubject"
           },
           "affected": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
-              "null",
               "integer",
               "string"
             ],
@@ -10504,14 +10492,10 @@
           }
         }
       },
-      "MigrationOmissionSubject": {
+      "MigrationLossSubject": {
         "enum": [
-          "programmeGuide",
           "duplicateAvoidance",
-          "qualityTimeSeries",
-          "recordingHistory",
-          "enclosedCharacters",
-          "thumbnails"
+          "enclosedCharacters"
         ],
         "type": "string"
       },
@@ -10586,7 +10570,7 @@
           "populations",
           "unclassified",
           "refusals",
-          "omissions",
+          "losses",
           "items",
           "total",
           "currentPage",
@@ -10625,10 +10609,10 @@
               "$ref": "#/components/schemas/MigrationRefusalResponder"
             }
           },
-          "omissions": {
+          "losses": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MigrationOmissionResponder"
+              "$ref": "#/components/schemas/MigrationLossResponder"
             }
           },
           "items": {

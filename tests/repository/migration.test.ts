@@ -64,10 +64,9 @@ const detail = (over: Over = {}) => ({
   ...over,
 })
 
-const omission = (over: Over = {}) => ({
-  subject: 'programmeGuide',
-  ground: 'notMigratedByDesign',
-  affected: 3557,
+const loss = (over: Over = {}) => ({
+  subject: 'duplicateAvoidance',
+  affected: 17,
   ...over,
 })
 
@@ -76,7 +75,7 @@ const page = (items: unknown[], over: Over = {}) => ({
   populations: [population()],
   unclassified: 0,
   refusals: refusals({ reallyEmpty: items.length }),
-  omissions: [omission()],
+  losses: [loss()],
   items,
   total: items.length,
   currentPage: 1,
@@ -294,37 +293,35 @@ test('every detail row is read, not only the first page', async () => {
   )
 })
 
-test('an omission with no count of its own is left without one', async () => {
+test('a loss is said as what it was and how many it took with it', async () => {
   standing([
     page([detail()], {
-      omissions: [
-        omission(),
-        omission({
-          subject: 'qualityTimeSeries',
-          ground: 'nothingToCarry',
-          affected: null,
-        }),
-      ],
+      losses: [loss(), loss({ subject: 'enclosedCharacters', affected: 1056 })],
     }),
   ])
 
   const result = await getMigration()
 
   assert.ok(result)
-  assert.deepEqual(result.omissions[0], {
-    id: 'programmeGuide',
-    tag: '移行しない',
-    title: '番組表',
-    count: '3,557',
-    unit: '行',
+  assert.deepEqual(result.losses[0], {
+    id: 'duplicateAvoidance',
+    subject: 'ルールの重複録画防止',
+    fact: '運んだ 17 件のルールがこの設定を失った',
   })
-  assert.deepEqual(result.omissions[1], {
-    id: 'qualityTimeSeries',
-    tag: '対象が存在しない',
-    title: '品質時系列',
-    count: undefined,
-    unit: undefined,
+  assert.deepEqual(result.losses[1], {
+    id: 'enclosedCharacters',
+    subject: '番組名の囲み文字',
+    fact: '運んだ 1,056 本の題名が元の文字に戻せない',
   })
+})
+
+test('a record that carries no loss is left with none', async () => {
+  standing([page([detail()], { losses: [] })])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.deepEqual(result.losses, [])
 })
 
 test('a record that cannot be read is raised, not passed off as no record', async () => {
