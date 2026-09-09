@@ -10247,6 +10247,8 @@
           "viewers",
           "dropped",
           "queued",
+          "chunksDroppedSinceTheSupplyOpened",
+          "watching",
           "startup"
         ],
         "type": "object",
@@ -10293,6 +10295,21 @@
               "string"
             ],
             "format": "int32"
+          },
+          "chunksDroppedSinceTheSupplyOpened": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "watching": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiveViewerResponder"
+            }
           },
           "startup": {
             "$ref": "#/components/schemas/LiveStartupResponder"
@@ -10385,6 +10402,31 @@
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LiveViewerResponder": {
+        "required": [
+          "droppedSinceTheyJoined",
+          "queued"
+        ],
+        "type": "object",
+        "properties": {
+          "droppedSinceTheyJoined": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "queued": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
               "integer",
               "string"
             ],
@@ -10495,7 +10537,8 @@
       "MigrationLossSubject": {
         "enum": [
           "duplicateAvoidance",
-          "enclosedCharacters"
+          "enclosedCharacters",
+          "dayBoundary"
         ],
         "type": "string"
       },

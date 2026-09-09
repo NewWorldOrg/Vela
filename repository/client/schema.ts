@@ -2038,6 +2038,9 @@ export interface components {
       dropped: number | string
       /** Format: int32 */
       queued: number | string
+      /** Format: int64 */
+      chunksDroppedSinceTheSupplyOpened: null | number | string
+      watching: components['schemas']['LiveViewerResponder'][]
       startup: components['schemas']['LiveStartupResponder']
     }
     LiveStartupMarkResponder: {
@@ -2065,6 +2068,12 @@ export interface components {
       /** Format: int32 */
       serviceId?: null | number | string
     }
+    LiveViewerResponder: {
+      /** Format: int64 */
+      droppedSinceTheyJoined: number | string
+      /** Format: int32 */
+      queued: number | string
+    }
     LoginRequest: {
       username?: null | string
       password?: null | string
@@ -2091,7 +2100,8 @@ export interface components {
       affected: number | string
     }
     /** @enum {string} */
-    MigrationLossSubject: 'duplicateAvoidance' | 'enclosedCharacters'
+    MigrationLossSubject:
+      'duplicateAvoidance' | 'enclosedCharacters' | 'dayBoundary'
     /** @enum {string} */
     MigrationPass: 'rehearsal' | 'forReal'
     /** @enum {string} */
