@@ -1,4 +1,5 @@
 import type { DeviceKind } from '@/lib/device'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import { cn } from '@/lib/utils'
 import type { AuthMethod } from '@/repository/auth'
 import type { RevokeResult, SessionRow } from '@/repository/sessions'
@@ -148,7 +149,7 @@ function Account({ session }: { session: SessionRow }) {
     <span className="block min-w-[160px] whitespace-normal wrap-anywhere">
       <b className="heading block text-ui">{session.displayName}</b>
       <small className="block text-cap text-ink-3">
-        {METHOD_LABEL[session.method]}
+        {wordFor(METHOD_LABEL, session.method)}
       </small>
     </span>
   )

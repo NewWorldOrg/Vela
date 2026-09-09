@@ -11,6 +11,11 @@ import type {
 } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
 import { liveScreenHref } from '@/repository/live-paths'
+import {
+  NOT_YET_IN_THIS_BUILD,
+  NOT_YET_IN_THIS_BUILD_SAYING,
+  shapeFor,
+} from '@/lib/not-yet-in-this-build'
 import { mainTitleOf } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -49,6 +54,11 @@ const RELATION_WORDING: Record<
         : '別のチャンネルでも同時に放送されます。',
     link: '同時放送を見る',
   },
+}
+
+const NOT_YET_KNOWN_RELATION: (typeof RELATION_WORDING)[RelationKind] = {
+  lead: () => NOT_YET_IN_THIS_BUILD_SAYING,
+  link: NOT_YET_IN_THIS_BUILD,
 }
 
 export function ProgramDetailBody({
@@ -168,7 +178,11 @@ export function ProgramDetailBody({
 }
 
 function RelatedNotice({ related }: { related: RelatedProgram }) {
-  const wording = RELATION_WORDING[related.kind]
+  const wording = shapeFor(
+    RELATION_WORDING,
+    related.kind,
+    NOT_YET_KNOWN_RELATION,
+  )
 
   return (
     <div className="mb-[22px] flex items-start gap-[11px] rounded-lg bg-sky-soft px-4 py-[13px] text-ui leading-[1.75] text-sky max-[700px]:flex-wrap">

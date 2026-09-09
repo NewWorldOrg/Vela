@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { RevokeResult, SessionRow } from '@/repository/sessions'
 import {
   AlertDialog,
@@ -81,7 +82,7 @@ export function RevokeSession({
             <dt className="text-sub text-ink-3">アカウント</dt>
             <dd className="min-w-0 wrap-anywhere">{session.displayName}</dd>
             <dt className="text-sub text-ink-3">認証方式</dt>
-            <dd>{METHOD_LABEL[session.method]}</dd>
+            <dd>{wordFor(METHOD_LABEL, session.method)}</dd>
             <dt className="text-sub text-ink-3">作成</dt>
             <dd className="font-code tabular-nums">{session.createdAt}</dd>
             <dt className="text-sub text-ink-3">最終利用</dt>
