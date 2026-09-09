@@ -12,6 +12,7 @@ const sent: Sent[] = []
 const store: {
   ledger: unknown
   ledgerStatus: number
+  driver: unknown
   health: unknown
   healthStatus: number
   writeStatus: number
@@ -19,6 +20,7 @@ const store: {
 } = {
   ledger: undefined,
   ledgerStatus: 200,
+  driver: null,
   health: undefined,
   healthStatus: 200,
   writeStatus: 200,
@@ -67,7 +69,7 @@ mock.module('@/repository/client/carina', {
 
         if (path === '/api/driver/status') {
           return {
-            data: { status: true, message: '', data: null },
+            data: { status: true, message: '', data: store.driver },
             response: answered(200),
           }
         }
@@ -100,6 +102,7 @@ function standing(hoursOfSilence: number | string = 24): void {
   sent.length = 0
   store.ledger = ledger()
   store.ledgerStatus = 200
+  store.driver = null
   store.health = health(hoursOfSilence)
   store.healthStatus = 200
   store.writeStatus = 200
@@ -175,4 +178,43 @@ test('a session that is gone is told apart from a threshold that was refused', a
   store.writeStatus = 401
 
   assert.deepEqual(await setHoursOfSilence(36), { state: 'unauthenticated' })
+})
+
+test('a driver connection this build has no case for leaves the link unknown', async () => {
+  standing()
+  store.driver = {
+    connection: 'somethingTheApiAddedLater',
+    hello: null,
+    appProtocolVersion: 1,
+    missingCapabilities: [],
+    driverUpdateRequired: false,
+    observedAt: '2026-08-08T18:10:00Z',
+  }
+
+  const answer = await getTuners()
+
+  assert.equal(answer.state, 'ok')
+  assert.equal(
+    answer.state === 'ok' ? answer.result.connection : undefined,
+    'unknown',
+  )
+})
+
+test('a driver connection this build does know is still read as it always was', async () => {
+  standing()
+  store.driver = {
+    connection: 'connected',
+    hello: { instanceId: 'i-1', draining: false },
+    appProtocolVersion: 1,
+    missingCapabilities: [],
+    driverUpdateRequired: false,
+    observedAt: '2026-08-08T18:10:00Z',
+  }
+
+  const answer = await getTuners()
+
+  assert.equal(
+    answer.state === 'ok' ? answer.result.connection : undefined,
+    'connected',
+  )
 })

@@ -586,6 +586,8 @@ function toDriver(envelope: DriverStatusEnvelope | undefined): DriverState {
       return status.hello?.draining
         ? { connection: 'draining', instanceId }
         : { connection: 'connected', instanceId }
+    default:
+      return { connection: 'unknown' }
   }
 }
 

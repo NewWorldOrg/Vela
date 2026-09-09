@@ -139,3 +139,15 @@ test('録画がまだ無くて当たり前の状態では、削除されたと�
     )
   }
 })
+
+test('この版が知らない状態の予約は、破棄できるものとして数えない', () => {
+  const unknown = 'somethingTheApiAddedLater' as ReservationStanding
+
+  for (const windowClosed of [true, false]) {
+    assert.equal(
+      isDiscardable({ standing: unknown, recorded: false, windowClosed }),
+      false,
+      String(windowClosed),
+    )
+  }
+})

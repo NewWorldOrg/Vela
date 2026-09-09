@@ -53,6 +53,8 @@ export function isDiscardable(reservation: Discardable): boolean {
     case 'truncated':
     case 'failed':
       return true
+    default:
+      return false
   }
 }
 
