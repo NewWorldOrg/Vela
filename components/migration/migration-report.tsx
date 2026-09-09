@@ -26,6 +26,8 @@ import { MigrationRunRow } from '@/components/migration/migration-run-row'
 
 const NOT_TAKEN_COLUMNS = ['対象', '母集団', '記録した事実']
 
+const NO_LOSSES = '該当なし'
+
 export function MigrationReport({ result }: { result: MigrationResult }) {
   const { run } = result
 
@@ -187,29 +189,19 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkSlashes}>やらなかったこと</SectionHeading>
+        <SectionHeading mark={MarkSlashes}>
+          運んだものに残った欠け
+        </SectionHeading>
         <div className="space-y-2">
-          {result.omissions.map((omission) => (
-            <Surface
-              key={omission.id}
-              className="flex flex-wrap items-start gap-3"
-            >
-              <Badge variant="mute" className="mt-px">
-                {omission.tag}
-              </Badge>
-              <b className="min-w-0 flex-1 text-ui font-bold">
-                {omission.title}
-              </b>
-              {omission.count && (
-                <span className="font-code text-ui font-medium tabular-nums">
-                  {omission.count}
-                  <em className="ml-0.5 font-sans text-note not-italic text-ink-3">
-                    {omission.unit}
-                  </em>
-                </span>
-              )}
+          {result.losses.map((loss) => (
+            <Surface key={loss.id} className="text-ui">
+              <b className="font-bold">{loss.subject}</b>
+              <span className="text-ink-2"> — {loss.fact}</span>
             </Surface>
           ))}
+          {result.losses.length === 0 && (
+            <Surface className="text-ui text-ink-3">{NO_LOSSES}</Surface>
+          )}
         </div>
       </section>
     </>

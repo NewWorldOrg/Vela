@@ -2085,22 +2085,13 @@ export interface components {
       /** Format: int64 */
       observed: null | number | string
     }
-    /** @enum {string} */
-    MigrationOmissionGround: 'notMigratedByDesign' | 'nothingToCarry'
-    MigrationOmissionResponder: {
-      subject: components['schemas']['MigrationOmissionSubject']
-      ground: components['schemas']['MigrationOmissionGround']
+    MigrationLossResponder: {
+      subject: components['schemas']['MigrationLossSubject']
       /** Format: int32 */
-      affected: null | number | string
+      affected: number | string
     }
     /** @enum {string} */
-    MigrationOmissionSubject:
-      | 'programmeGuide'
-      | 'duplicateAvoidance'
-      | 'qualityTimeSeries'
-      | 'recordingHistory'
-      | 'enclosedCharacters'
-      | 'thumbnails'
+    MigrationLossSubject: 'duplicateAvoidance' | 'enclosedCharacters'
     /** @enum {string} */
     MigrationPass: 'rehearsal' | 'forReal'
     /** @enum {string} */
@@ -2128,7 +2119,7 @@ export interface components {
       /** Format: int32 */
       unclassified: number | string
       refusals: components['schemas']['MigrationRefusalResponder'][]
-      omissions: components['schemas']['MigrationOmissionResponder'][]
+      losses: components['schemas']['MigrationLossResponder'][]
       items: components['schemas']['MigrationDetailResponder'][]
       /** Format: int32 */
       total: number | string

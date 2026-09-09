@@ -4,6 +4,7 @@ import {
   MIGRATION,
   MIGRATION_REHEARSAL,
   MORE_NOT_TAKEN_THAN_FIT,
+  NOTHING_LOST,
 } from '@/repository/migration.fixtures'
 import { MigrationView } from '@/components/migration/migration-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
@@ -22,6 +23,8 @@ export const 通常: Story = { args: { result: MIGRATION } }
 export const 記録なし: Story = { args: { result: null } }
 
 export const 下見: Story = { args: { result: MIGRATION_REHEARSAL } }
+
+export const 欠けなし: Story = { args: { result: NOTHING_LOST } }
 
 export const 収まらないほどの明細: Story = {
   args: { result: MORE_NOT_TAKEN_THAN_FIT },

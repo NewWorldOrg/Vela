@@ -11,12 +11,11 @@ type RecordResponder = components['schemas']['MigrationRecordResponder']
 type RunResponder = components['schemas']['MigrationRunResponder']
 type PopulationResponder = components['schemas']['MigrationPopulationResponder']
 type RefusalResponder = components['schemas']['MigrationRefusalResponder']
-type OmissionResponder = components['schemas']['MigrationOmissionResponder']
+type LossResponder = components['schemas']['MigrationLossResponder']
 type DetailResponder = components['schemas']['MigrationDetailResponder']
 type Population = components['schemas']['MigrationPopulation']
 type Refusal = components['schemas']['MigrationRefusal']
-type OmissionSubject = components['schemas']['MigrationOmissionSubject']
-type OmissionGround = components['schemas']['MigrationOmissionGround']
+type LossSubject = components['schemas']['MigrationLossSubject']
 
 export interface MigrationRun {
   heading: string
@@ -56,12 +55,10 @@ export interface MigrationNotTakenGroup {
   empty?: string
 }
 
-export interface MigrationOmission {
+export interface MigrationLoss {
   id: string
-  tag: string
-  title: string
-  count?: string
-  unit?: string
+  subject: string
+  fact: string
 }
 
 export interface MigrationResult {
@@ -69,7 +66,7 @@ export interface MigrationResult {
   populations: MigrationPopulationRow[]
   unclassified: string
   notTakenGroups: MigrationNotTakenGroup[]
-  omissions: MigrationOmission[]
+  losses: MigrationLoss[]
 }
 
 const UNREADABLE = '移行記録を読めませんでした'
@@ -120,23 +117,20 @@ const REFUSAL_LABEL: Record<Refusal, string> = {
   outOfScope: '対象外',
 }
 
-const OMISSION_GROUND_LABEL: Record<OmissionGround, string> = {
-  notMigratedByDesign: '移行しない',
-  nothingToCarry: '対象が存在しない',
+interface LossShape {
+  subject: string
+  fact: (affected: string) => string
 }
 
-interface OmissionShape {
-  title: string
-  unit: string
-}
-
-const OMISSION_SHAPES: Record<OmissionSubject, OmissionShape> = {
-  programmeGuide: { title: '番組表', unit: '行' },
-  duplicateAvoidance: { title: 'ルールの重複録画防止', unit: '件' },
-  qualityTimeSeries: { title: '品質時系列', unit: '行' },
-  recordingHistory: { title: '重複録画防止の履歴', unit: '行' },
-  enclosedCharacters: { title: '番組名の囲み文字の置換', unit: '本' },
-  thumbnails: { title: 'サムネイル', unit: '枚' },
+const LOSS_SHAPES: Record<LossSubject, LossShape> = {
+  duplicateAvoidance: {
+    subject: 'ルールの重複録画防止',
+    fact: (affected) => `運んだ ${affected} 件のルールがこの設定を失った`,
+  },
+  enclosedCharacters: {
+    subject: '番組名の囲み文字',
+    fact: (affected) => `運んだ ${affected} 本の題名が元の文字に戻せない`,
+  },
 }
 
 export async function getMigration(): Promise<MigrationResult | null> {
@@ -153,7 +147,7 @@ export async function getMigration(): Promise<MigrationResult | null> {
     notTakenGroups: record.refusals.map((refusal) =>
       toGroup(refusal, record.items),
     ),
-    omissions: record.omissions.map(toOmission),
+    losses: record.losses.map(toLoss),
   }
 }
 
@@ -270,15 +264,12 @@ function counted(value: number | string | null): number | undefined {
   return value == null ? undefined : toInt(value)
 }
 
-function toOmission(one: OmissionResponder): MigrationOmission {
-  const shape = OMISSION_SHAPES[one.subject]
-  const affected = counted(one.affected)
+function toLoss(one: LossResponder): MigrationLoss {
+  const shape = LOSS_SHAPES[one.subject]
 
   return {
     id: one.subject,
-    tag: OMISSION_GROUND_LABEL[one.ground],
-    title: shape.title,
-    count: affected === undefined ? undefined : grouped(affected),
-    unit: affected === undefined ? undefined : shape.unit,
+    subject: shape.subject,
+    fact: shape.fact(grouped(toInt(one.affected))),
   }
 }
