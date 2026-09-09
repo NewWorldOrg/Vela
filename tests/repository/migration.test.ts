@@ -57,9 +57,9 @@ const detail = (over: Over = {}) => ({
   id: '9a1e5d3c-7b40-42f8-8e6a-1c95b207f4d8',
   population: 'recordings',
   refusal: 'reallyEmpty',
-  subject: 'row 118',
+  subject: 'row 7',
   note: 'the size on record is not the size on disk',
-  claimed: 17171113480,
+  claimed: 3000000000,
   observed: 0,
   ...over,
 })
@@ -242,9 +242,9 @@ test('a row carries what was claimed beside what was found', async () => {
   assert.ok(result)
   const row = result.notTakenGroups.flatMap((one) => one.rows)[0]
 
-  assert.equal(row.subject, 'row 118')
+  assert.equal(row.subject, 'row 7')
   assert.equal(row.population, '録画')
-  assert.equal(row.size, '0 B(記録上 17,171,113,480 B)')
+  assert.equal(row.size, '0 B(記録上 3,000,000,000 B)')
 })
 
 test('a row with only one of the two sizes says only that one', async () => {
