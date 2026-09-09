@@ -335,6 +335,23 @@ test('a loss is said as what it was and how many it took with it', async () => {
   })
 })
 
+test('the day boundary is said as the rules whose day slid by one', async () => {
+  standing([
+    page([detail()], {
+      losses: [loss({ subject: 'dayBoundary', affected: 41 })],
+    }),
+  ])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.deepEqual(result.losses[0], {
+    id: 'dayBoundary',
+    subject: '曜日で絞ったルール',
+    fact: '運んだ 41 件のルールで、深夜 0 時から 4 時の番組の曜日が 1 日ずれる',
+  })
+})
+
 test('a record that carries no loss is left with none', async () => {
   standing([page([detail()], { losses: [] })])
 
