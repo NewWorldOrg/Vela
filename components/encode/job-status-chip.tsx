@@ -1,3 +1,4 @@
+import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import type { EncodeJobStatus } from '@/repository/encode-terms'
 import { STALLED_LABEL, STATUS_LABEL } from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
@@ -44,5 +45,7 @@ export function JobStatusChip({
       )
     case 'cancelled':
       return <Badge variant="mute">{STATUS_LABEL.cancelled}</Badge>
+    default:
+      return <Badge variant="mute">{NOT_YET_IN_THIS_BUILD}</Badge>
   }
 }

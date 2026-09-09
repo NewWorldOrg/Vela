@@ -56,7 +56,7 @@ hooks/                      useListUrlState / usePerPageLocalStorage / useDismis
 types/                      DataTable types
 stories/{foundations,components,screens,common,theme}/
 tests/                      Every test. tests/lib/ and tests/repository/ mirror the
-                            path of what they test; tests/storybook/ holds the five
+                            path of what they test; tests/storybook/ holds the six
                             that read the source tree instead of importing a module
 ```
 
@@ -81,13 +81,14 @@ component comes with the change to its story.
 
 Tests live under `tests/`, never beside the code. `tests/lib/` and
 `tests/repository/` mirror the path of what they test, and a test reaches it
-by `@/` rather than by climbing back out. `tests/storybook/` holds the five
+by `@/` rather than by climbing back out. `tests/storybook/` holds the six
 that read the source tree as text rather than importing a module — the waiver
 lists the browser probes cannot police, the `<main>` every screen goes
-through, the manifest that keeps the suite whole, and the tables keyed by an
-enum the API owns, which have to be read through a fallback. That directory has no
-leading dot because `tests/**/*.test.ts` does not match one, and those four
-would go missing without a word.
+through, the manifest that keeps the suite whole, the tables keyed by an
+enum the API owns, which have to be read through a fallback, and the switches
+over such an enum, which have to say what to do with the rest. That directory
+has no leading dot because `tests/**/*.test.ts` does not match one, and those
+six would go missing without a word.
 
 ## Data access
 
