@@ -47,7 +47,7 @@ export function RecordingRow({
             <b className="block overflow-hidden text-[13.5px] leading-normal font-bold text-ellipsis whitespace-nowrap [font-feature-settings:'palt']">
               {r.title}
             </b>
-            <span className={cn('text-note', subTone)}>
+            <span className={cn('block truncate text-note', subTone)}>
               {r.segments && (
                 <span className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[9px] text-[10.5px] font-bold text-ink-2">
                   {r.segments} セグメント

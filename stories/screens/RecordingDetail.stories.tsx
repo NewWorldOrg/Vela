@@ -228,6 +228,45 @@ export const スクランブル残存: Story = {
 }
 export const 失敗: Story = { args: { detail: detail('1239') } }
 
+function failed(title: string, body?: string): Story {
+  return {
+    args: {
+      detail: {
+        ...detail('1239'),
+        stopReason: undefined,
+        scramble: undefined,
+        failureReason: { title, body },
+      },
+    },
+    play: async ({ canvasElement }) => {
+      await expect(within(canvasElement).getByText(title)).toBeVisible()
+    },
+  }
+}
+
+export const 予定に届かなかった失敗: Story =
+  failed('書けた尺が予定に届かなかった')
+
+export const 何も残らなかった失敗: Story = failed(
+  '0 バイトで終わった',
+  '録画ファイルは残っていますが、中身がありません。',
+)
+
+export const 大きさを観測できなかった失敗: Story = failed(
+  'ファイルの大きさを観測できなかった',
+  '録画ファイルの大きさを確かめられないまま終わりました。',
+)
+
+export const 尺のわりに小さい失敗: Story = failed(
+  'ファイルが尺のわりに小さい',
+  '書けた尺から見込まれる大きさに届きません。',
+)
+
+export const 尺のわりに大きい失敗: Story = failed(
+  'ファイルが尺のわりに大きい',
+  '書けた尺から見込まれる大きさを超えています。',
+)
+
 function watchMeta(canvasElement: HTMLElement) {
   return canvasElement.querySelector('[data-slot="watch-meta"]') as HTMLElement
 }

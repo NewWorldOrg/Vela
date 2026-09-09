@@ -1,7 +1,9 @@
 import { cache } from 'react'
 
 import { formatBytes, formatLength, formatPlayhead } from '@/lib/format'
+import { castInExtended, leadOfExtended } from '@/lib/programme-extended'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
+import { genreLabelOfKind } from '@/lib/search-condition'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import {
   INCOMPLETE_TABLES,
@@ -128,7 +130,10 @@ export async function listRecordings(
     fetchServiceChannels(),
   ])
   const now = new Date()
-  const all = carried.items.map((one) => toRecording(one, known, now))
+  const grouped = broadcastGroupSizes(carried.items)
+  const all = carried.items.map((one) =>
+    toRecording(one, known, now, segmentsOf(one, grouped)),
+  )
   const channels = [...new Set(all.map((r) => r.channel))]
   const years = [...new Set(all.map((r) => r.year))].sort((a, b) => b - a)
   const genres = [
@@ -426,6 +431,7 @@ export function toRecording(
   r: RecordingResponder,
   known: GuideChannel[],
   now: Date,
+  segments?: number,
 ): Recording {
   const channel = channelOf(r, known)
   const outcome = outcomeOf(r)
@@ -436,12 +442,17 @@ export function toRecording(
   const thumbnail = thumbnailOf(r)
   const totalPackets = counted(r.drops.ccTotalPackets) ?? 0
   const scrambled = counted(r.drops.scrambledPackets)
+  const cast = castInExtended(r.programme.extended)
 
   return {
     id: r.id,
     reservationId: r.reservationId ?? undefined,
     title: r.programme.name,
+    note: leadOfExtended(r.programme.extended),
     description: r.programme.summary || undefined,
+    cast: cast.length > 0 ? cast : undefined,
+    segments,
+    genre: genresOf(r)[0],
     channel: channel?.name || serviceKeyOf(r),
     channelNo: channel?.no,
     channelLogo: channel?.logo,
@@ -486,9 +497,11 @@ function toDetail(
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
   const totalPackets = counted(r.drops.ccTotalPackets) ?? 0
   const scrambled = counted(r.drops.scrambledPackets)
+  const genres = genresOf(r)
 
   return {
     ...base,
+    genres: genres.length > 0 ? genres : undefined,
     sizeObservedAt: observedLabelOf(d, base.outcome),
     synopsis: r.programme.summary || undefined,
     outcomeBody: outcomeBodyOf(r, base),
@@ -503,13 +516,12 @@ function toDetail(
         ? undefined
         : { main: `${grouped(scrambled)} パケット` },
     stopReason: stopReasonOf(d),
-    failureReason:
-      base.outcome === 'failed' && failure
-        ? {
-            title: failure.title,
-            body: bodyOf(failure, fault, r.outcomeDetail),
-          }
-        : undefined,
+    failureReason: failureReasonOf(
+      base.outcome,
+      failure,
+      fault,
+      r.outcomeDetail,
+    ),
     thumbnailState: shapeFor(
       THUMBNAIL_ROWS,
       r.thumbnail.state,
@@ -522,6 +534,44 @@ function toDetail(
     qualitySpots: spotsOf(d.positions.buckets),
     live: base.outcome === 'recording' ? liveOf(d, base, now) : undefined,
   }
+}
+
+function genresOf(r: RecordingResponder): string[] {
+  const named: string[] = []
+
+  for (const genre of r.programme.genres) {
+    const label = genreLabelOfKind(toInt(genre.kind))
+
+    if (!named.includes(label)) {
+      named.push(label)
+    }
+  }
+
+  return named
+}
+
+function broadcastGroupSizes(items: RecordingResponder[]): Map<string, number> {
+  const sizes = new Map<string, number>()
+
+  for (const one of items) {
+    const key = one.broadcastGroup.key
+
+    if (key) {
+      sizes.set(key, (sizes.get(key) ?? 0) + 1)
+    }
+  }
+
+  return sizes
+}
+
+function segmentsOf(
+  r: RecordingResponder,
+  sizes: Map<string, number>,
+): number | undefined {
+  const key = r.broadcastGroup.key
+  const size = key ? sizes.get(key) : undefined
+
+  return size !== undefined && size > 1 ? size : undefined
 }
 
 function serviceKeyOf(r: RecordingResponder): string {
@@ -623,6 +673,25 @@ const FAILURES: Partial<Record<Fault, { title: string; body?: string }>> = {
     title: 'スクランブル解除失敗',
     body: '閾値を超えた残存パケットを検出しました。',
   },
+  nothingLanded: {
+    title: '0 バイトで終わった',
+    body: '録画ファイルは残っていますが、中身がありません。',
+  },
+  sizeUnobserved: {
+    title: 'ファイルの大きさを観測できなかった',
+    body: '録画ファイルの大きさを確かめられないまま終わりました。',
+  },
+  shortOfTheWindow: {
+    title: '書けた尺が予定に届かなかった',
+  },
+  lighterThanTheStream: {
+    title: 'ファイルが尺のわりに小さい',
+    body: '書けた尺から見込まれる大きさに届きません。',
+  },
+  heavierThanTheStream: {
+    title: 'ファイルが尺のわりに大きい',
+    body: '書けた尺から見込まれる大きさを超えています。',
+  },
 }
 
 const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {
@@ -660,6 +729,23 @@ function bodyOf(
   const classed = shapeFor(TUNE_FAILURES, kind, undefined)
 
   return classed ? numbered(classed) : NOT_YET_IN_THIS_BUILD
+}
+
+function failureReasonOf(
+  outcome: RecordingOutcome,
+  failure: { title: string; body?: string } | undefined,
+  fault: Fault | undefined,
+  detail: FaultResponder[],
+): { title: string; body?: string } | undefined {
+  if (outcome !== 'failed') {
+    return undefined
+  }
+
+  if (!failure) {
+    return detail.length > 0 ? { title: NOT_YET_IN_THIS_BUILD } : undefined
+  }
+
+  return { title: failure.title, body: bodyOf(failure, fault, detail) }
 }
 
 function stopReasonOf(d: DetailResponder): string | undefined {
