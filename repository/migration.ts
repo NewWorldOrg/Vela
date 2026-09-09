@@ -117,6 +117,12 @@ const REFUSAL_LABEL: Record<Refusal, string> = {
   outOfScope: '対象外',
 }
 
+const SOURCE_SAYINGS: [RegExp, string][] = [
+  [/^the recording system being replaced$/i, '現行の録画システム'],
+]
+
+const SOURCE_NOT_SAID = '名前を引けない移行元'
+
 interface LossShape {
   subject: string
   fact: (affected: string) => string
@@ -194,11 +200,17 @@ function toRun(run: RunResponder): MigrationRun {
     startedAt: formatDateTime(run.startedAt),
     finishedAt: formatDateTime(run.finishedAt),
     duration: `所要 ${formatSpanToTheMillisecond(millisecondsBetween(run.startedAt, run.finishedAt))}`,
-    source: run.source,
+    source: whatItCameFrom(run.source),
     lastRehearsal: run.lastRehearsalFinishedAt
       ? formatDateTime(run.lastRehearsalFinishedAt)
       : NO_REHEARSAL,
   }
+}
+
+function whatItCameFrom(source: string): string {
+  const saying = SOURCE_SAYINGS.find(([reads]) => reads.test(source))
+
+  return saying ? saying[1] : SOURCE_NOT_SAID
 }
 
 function millisecondsBetween(from: string, until: string): number {
