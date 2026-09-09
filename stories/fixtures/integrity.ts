@@ -32,7 +32,7 @@ export const INTEGRITY_FIXTURE: IntegrityResult = {
       reason: '録画の記録に対応する行が無い',
       root: 'primary',
       path: 'recording-4812.m2ts.tmp',
-      size: '2,514,911,344 B',
+      size: '2,000,000,000 B',
       noticedAt: '08/08 03:10',
     },
     {
