@@ -22,7 +22,7 @@ const answered = (status: number) => ({ status, ok: status < 400 })
 
 const run = (over: Over = {}) => ({
   id: '3f6c9b41-8e02-4d7a-9c15-2b8d40f7e6a3',
-  source: 'the ledger of the system being replaced',
+  source: 'the recording system being replaced',
   pass: 'forReal',
   startedAt: '2026-08-10T03:12:04+09:00',
   finishedAt: '2026-08-10T03:18:46+09:00',
@@ -158,6 +158,26 @@ test('the run is spelled out of the instants and the pass it is given', async ()
   assert.equal(result.run.rehearsals, '下見 4 回')
   assert.equal(result.run.duration, '所要 6分42.000秒')
   assert.equal(result.run.lastRehearsal, '2026/08/09 22:41')
+})
+
+test('the source is said in Japanese, not in the words the record keeps it in', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.equal(result.run.source, '現行の録画システム')
+})
+
+test('a source no saying is held for is not passed through to the screen', async () => {
+  standing([
+    page([detail()], { run: run({ source: 'a system nobody named' }) }),
+  ])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.doesNotMatch(result.run.source, /[A-Za-z]/)
 })
 
 test('a rehearsal says so, and a run with no rehearsal before it says that', async () => {
