@@ -1,5 +1,9 @@
 import type { Recording, RecordingOutcome } from '@/repository/recordings'
-import { RECORDING_OUTCOME_TERMS } from '@/lib/state-terms'
+import {
+  NOT_YET_IN_THIS_BUILD_TERM,
+  RECORDING_OUTCOME_TERMS,
+} from '@/lib/state-terms'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { Badge } from '@/components/ui/badge'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
@@ -18,11 +22,18 @@ export function OutcomeChip({ recording: r }: { recording: Recording }) {
     return <RecordingInProgressChip />
   }
 
-  const term = RECORDING_OUTCOME_TERMS[r.outcome]
+  const term = shapeFor(
+    RECORDING_OUTCOME_TERMS,
+    r.outcome,
+    NOT_YET_IN_THIS_BUILD_TERM,
+  )
 
   return (
     <TermTip term={term}>
-      <Badge variant={VARIANT[r.outcome]} className="font-bold">
+      <Badge
+        variant={shapeFor(VARIANT, r.outcome, 'mute')}
+        className="font-bold"
+      >
         <ChipDot />
         {term.label}
       </Badge>

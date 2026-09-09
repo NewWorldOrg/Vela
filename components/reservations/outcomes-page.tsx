@@ -8,7 +8,11 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { OutcomeLedgerResult } from '@/repository/reservation-outcomes'
 import { cn } from '@/lib/utils'
 import { OUTCOME_KINDS, OUTCOME_SPANS } from '@/lib/reservation-outcomes'
-import { RESERVATION_OUTCOME_KIND_TERMS } from '@/lib/state-terms'
+import {
+  NOT_YET_IN_THIS_BUILD_TERM,
+  RESERVATION_OUTCOME_KIND_TERMS,
+} from '@/lib/state-terms'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -42,7 +46,11 @@ const KIND_OPTIONS = [
   { value: EVERY, label: 'すべて' },
   ...OUTCOME_KINDS.map((kind) => ({
     value: kind,
-    label: RESERVATION_OUTCOME_KIND_TERMS[kind].label,
+    label: shapeFor(
+      RESERVATION_OUTCOME_KIND_TERMS,
+      kind,
+      NOT_YET_IN_THIS_BUILD_TERM,
+    ).label,
   })),
 ]
 

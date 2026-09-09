@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 
+import { shapeFor } from '@/lib/not-yet-in-this-build'
+
 import type {
   IntegrityFault,
   IntegrityResult,
@@ -162,7 +164,9 @@ export function IntegrityView({
                   <span className="text-note text-ink-3">{finding.root}</span>
                 </TableCell>
                 <TableCell className="align-top">
-                  <Badge variant={REASON_VARIANT[finding.fault]}>
+                  <Badge
+                    variant={shapeFor(REASON_VARIANT, finding.fault, 'mute')}
+                  >
                     {finding.reason}
                   </Badge>
                 </TableCell>

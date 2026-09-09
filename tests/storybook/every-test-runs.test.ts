@@ -21,6 +21,7 @@ const THE_SUITE = [
   'tests/lib/live-profiles.test.ts',
   'tests/lib/live-startup.test.ts',
   'tests/lib/live-wire.test.ts',
+  'tests/lib/not-yet-in-this-build.test.ts',
   'tests/lib/player-keys.test.ts',
   'tests/lib/program-title.test.ts',
   'tests/lib/quality.test.ts',
@@ -34,6 +35,7 @@ const THE_SUITE = [
   'tests/repository/client/carina.test.ts',
   'tests/repository/collection.test.ts',
   'tests/repository/driver-capabilities.test.ts',
+  'tests/repository/encode-terms.test.ts',
   'tests/repository/encode.test.ts',
   'tests/repository/integrity.test.ts',
   'tests/repository/live-sessions.test.ts',
@@ -46,6 +48,7 @@ const THE_SUITE = [
   'tests/repository/reservations.test.ts',
   'tests/repository/rules.test.ts',
   'tests/repository/said.test.ts',
+  'tests/repository/scan-systems.test.ts',
   'tests/repository/search.test.ts',
   'tests/repository/sessions.test.ts',
   'tests/repository/tuners.test.ts',
@@ -55,6 +58,7 @@ const THE_SUITE = [
   'tests/storybook/cursor-exempt.test.ts',
   'tests/storybook/every-test-runs.test.ts',
   'tests/storybook/screen-main.test.ts',
+  'tests/storybook/tables-keyed-by-the-api.test.ts',
   'tests/storybook/tap-exempt.test.ts',
 ]
 

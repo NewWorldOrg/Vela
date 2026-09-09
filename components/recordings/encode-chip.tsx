@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import type { Recording } from '@/repository/recordings'
 import { STANDING_LABEL, type EncodeStanding } from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
@@ -19,12 +20,12 @@ export function EncodeChip({
   recording: Recording
   subTone?: string
 }) {
-  const tone = TONE[r.encode]
+  const tone = shapeFor(TONE, r.encode, undefined)
 
   if (!tone) {
     return (
       <Badge variant="outline" className={cn('border-line', subTone)}>
-        {STANDING_LABEL[r.encode]}
+        {wordFor(STANDING_LABEL, r.encode)}
       </Badge>
     )
   }
@@ -32,7 +33,7 @@ export function EncodeChip({
   return (
     <Badge variant={tone} className="font-bold">
       <ChipDot />
-      {STANDING_LABEL[r.encode]}
+      {wordFor(STANDING_LABEL, r.encode)}
     </Badge>
   )
 }

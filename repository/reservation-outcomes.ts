@@ -2,6 +2,7 @@ import type { OriginLabel } from '@/lib/format'
 import { formatDateTime, formatReservationOrigin } from '@/lib/format'
 import type { OutcomeChoice } from '@/lib/reservation-outcomes'
 import { OUTCOME_KINDS, OUTCOME_SPANS } from '@/lib/reservation-outcomes'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -189,7 +190,9 @@ function toOutcome(
     ruleName: one.ruleId ? rules.get(one.ruleId) : undefined,
     priority: toInt(one.priority),
     kind: one.kind,
-    tuneFailure: one.tuneFailure ? TUNE_FAILURES[one.tuneFailure] : undefined,
+    tuneFailure: one.tuneFailure
+      ? shapeFor(TUNE_FAILURES, one.tuneFailure, undefined)
+      : undefined,
     recordingResult: one.recordingOutcome ?? undefined,
     instead: one.recordedInstead.map((id) => named.get(id) ?? { key: id }),
     occurredLabel: formatDateTime(one.occurredAt),

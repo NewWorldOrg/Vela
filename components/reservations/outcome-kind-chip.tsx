@@ -1,5 +1,7 @@
 import type { ReservationOutcome } from '@/repository/reservation-outcomes'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import {
+  NOT_YET_IN_THIS_BUILD_TERM,
   RECORDING_OUTCOME_TERMS,
   RESERVATION_OUTCOME_KIND_TERMS,
 } from '@/lib/state-terms'
@@ -8,11 +10,19 @@ import { Badge } from '@/components/ui/badge'
 import { TermTip } from '@/components/vela/term-tip'
 
 export function OutcomeKindChip({ outcome }: { outcome: ReservationOutcome }) {
-  const term = RESERVATION_OUTCOME_KIND_TERMS[outcome.kind]
+  const term = shapeFor(
+    RESERVATION_OUTCOME_KIND_TERMS,
+    outcome.kind,
+    NOT_YET_IN_THIS_BUILD_TERM,
+  )
   const alsoSaidByTheKind = outcome.recordingResult === 'failed'
   const result =
     outcome.recordingResult && !alsoSaidByTheKind
-      ? RECORDING_OUTCOME_TERMS[outcome.recordingResult]
+      ? shapeFor(
+          RECORDING_OUTCOME_TERMS,
+          outcome.recordingResult,
+          NOT_YET_IN_THIS_BUILD_TERM,
+        )
       : undefined
 
   return (

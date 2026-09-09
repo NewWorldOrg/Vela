@@ -13,6 +13,7 @@ import { SCAN_SYSTEMS } from '@/repository/scan-systems'
 import type { Measurement, Reception } from '@/repository/tuning'
 import { channelLabel, measurementOf, receptionOf } from '@/repository/tuning'
 import { formatMonth, formatSpan, formatStamp } from '@/lib/format'
+import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 
 type BroadcastServiceResponder =
   components['schemas']['BroadcastServiceResponder']
@@ -255,7 +256,7 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
     key: `${toInt(service.networkId)}-${toInt(service.serviceId)}`,
     name: service.name,
     sid: `sid ${toInt(service.serviceId)}`,
-    category: CATEGORY_LABEL[service.category],
+    category: wordFor(CATEGORY_LABEL, service.category),
     minorCategory: service.category !== 'television',
     currentChannel:
       service.selectedChannel === null
@@ -306,7 +307,7 @@ function toRun(run: ScanRunResponder): ScanRun {
   return {
     id: run.scanId,
     state: run.state,
-    stateLabel: STATE_LABEL[run.state],
+    stateLabel: wordFor(STATE_LABEL, run.state),
     startedAt: formatStamp(run.startedAt),
     finishedAt: finished === null ? undefined : formatStamp(finished),
     took:
@@ -333,7 +334,7 @@ function toAttempt(
     failure:
       attempt.outcome === 'succeeded'
         ? undefined
-        : FAILURE_CLASS[attempt.outcome],
+        : shapeFor(FAILURE_CLASS, attempt.outcome, undefined),
     streamMismatch:
       attempt.outcome === 'unexpectedStream' && observed !== null
         ? `期待 TSID ${expected === null ? '—' : toInt(expected)} / 受信 TSID ${toInt(observed)}`
@@ -379,7 +380,7 @@ function toProposalService(
     key: `${toInt(change.networkId)}-${toInt(change.serviceId)}`,
     name: change.name,
     sid: `sid ${toInt(change.serviceId)}`,
-    category: CATEGORY_LABEL[change.category],
+    category: wordFor(CATEGORY_LABEL, change.category),
     channels: change.channels.map((channel) => ({
       kind: channel.kind,
       channel: channelLabel(channel.target),
@@ -442,7 +443,7 @@ function toDiagnosis(
     count: attempts.filter(
       (attempt) =>
         attempt.outcome !== 'succeeded' &&
-        FAILURE_CLASS[attempt.outcome].no === failure.no,
+        shapeFor(FAILURE_CLASS, attempt.outcome, undefined)?.no === failure.no,
     ).length,
   }))
   const only = counts.find(({ count }) => count === attempts.length)

@@ -1,10 +1,19 @@
 import type { RecordingOutcome } from '@/repository/recordings'
 import type { ReservationOutcomeKind } from '@/repository/reservation-outcomes'
 import type { ReservationStanding } from '@/repository/reservations'
+import {
+  NOT_YET_IN_THIS_BUILD,
+  NOT_YET_IN_THIS_BUILD_SAYING,
+} from '@/lib/not-yet-in-this-build'
 
 export interface StateTerm {
   label: string
   explanation: string
+}
+
+export const NOT_YET_IN_THIS_BUILD_TERM: StateTerm = {
+  label: NOT_YET_IN_THIS_BUILD,
+  explanation: NOT_YET_IN_THIS_BUILD_SAYING,
 }
 
 const FILLED_THE_WINDOW = '録画するはずだった時間を満たして録画が終わった状態。'

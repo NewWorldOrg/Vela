@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
+import {
+  NOT_YET_IN_THIS_BUILD,
+  NOT_YET_IN_THIS_BUILD_SAYING,
+} from '@/lib/not-yet-in-this-build'
+
 interface Sent {
   path: string
   query: Record<string, unknown>
@@ -372,4 +377,30 @@ test('a record that cannot be read is raised, not passed off as no record', asyn
   await assert.rejects(hasMigrationRecord(), {
     message: 'The migration ledger is out of reach.',
   })
+})
+
+test('この版が知らない値が記録に混じっても、画面は落ちずに日本語で閉じる', async () => {
+  const later = 'somethingTheApiAddedLater'
+
+  standing([
+    page([detail({ population: later, refusal: later })], {
+      populations: [population({ population: later })],
+      refusals: [{ refusal: later, count: 1 }],
+      losses: [loss({ subject: later })],
+    }),
+  ])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.equal(result.populations[0].name, NOT_YET_IN_THIS_BUILD)
+  assert.equal(result.notTakenGroups[0].name, NOT_YET_IN_THIS_BUILD)
+  assert.equal(
+    result.notTakenGroups[0].rows[0].population,
+    NOT_YET_IN_THIS_BUILD,
+  )
+  assert.equal(result.losses[0].subject, NOT_YET_IN_THIS_BUILD)
+  assert.equal(result.losses[0].fact, NOT_YET_IN_THIS_BUILD_SAYING)
+  assert.doesNotMatch(result.populations[0].name, /somethingTheApiAddedLater/)
+  assert.doesNotMatch(result.losses[0].fact, /somethingTheApiAddedLater/)
 })

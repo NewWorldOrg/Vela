@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
+import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
+
 interface Sent {
   method: string
   path: string
@@ -367,4 +369,11 @@ test('a refusal that says nothing falls back to the status it answered with', as
 
   assert.equal(result.state, 'refused')
   assert.match(result.state === 'refused' ? result.message : '', /\(500\)/)
+})
+
+test('この版が知らない不備が届いても、行は日本語の理由を持って残る', async () => {
+  const one = await only({ fault: 'somethingTheApiAddedLater' })
+
+  assert.equal(one.reason, NOT_YET_IN_THIS_BUILD)
+  assert.doesNotMatch(one.reason, /somethingTheApiAddedLater/)
 })

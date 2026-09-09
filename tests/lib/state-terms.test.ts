@@ -7,12 +7,14 @@ import { test } from 'node:test'
 import {
   CANDIDATE_UNLOCKED_TERM,
   END_UNDECIDED_TERM,
+  NOT_YET_IN_THIS_BUILD_TERM,
   RECORDING_OUTCOME_TERMS,
   RESERVATION_OUTCOME_KIND_TERMS,
   RESERVATION_RECEPTION_TERM,
   RESERVATION_STANDING_TERMS,
   type StateTerm,
 } from '@/lib/state-terms'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DOCUMENT = path.join(
@@ -183,4 +185,37 @@ test('説明は状態と条件を述べ、話し言葉の癖を持たない', as
       )
     }
   }
+})
+
+test('この版が知らない状態が届いても、語と説明の代わりが返る', () => {
+  const later = 'somethingTheApiAddedLater' as string
+
+  assert.deepEqual(
+    shapeFor(
+      RESERVATION_STANDING_TERMS,
+      later as keyof typeof RESERVATION_STANDING_TERMS,
+      NOT_YET_IN_THIS_BUILD_TERM,
+    ),
+    NOT_YET_IN_THIS_BUILD_TERM,
+  )
+  assert.deepEqual(
+    shapeFor(
+      RECORDING_OUTCOME_TERMS,
+      later as keyof typeof RECORDING_OUTCOME_TERMS,
+      NOT_YET_IN_THIS_BUILD_TERM,
+    ),
+    NOT_YET_IN_THIS_BUILD_TERM,
+  )
+  assert.deepEqual(
+    shapeFor(
+      RESERVATION_OUTCOME_KIND_TERMS,
+      later as keyof typeof RESERVATION_OUTCOME_KIND_TERMS,
+      NOT_YET_IN_THIS_BUILD_TERM,
+    ),
+    NOT_YET_IN_THIS_BUILD_TERM,
+  )
+  assert.doesNotMatch(
+    NOT_YET_IN_THIS_BUILD_TERM.label,
+    /somethingTheApiAddedLater/,
+  )
 })

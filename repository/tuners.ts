@@ -2,6 +2,7 @@ import type { Route } from 'next'
 
 import { formatStamp } from '@/lib/format'
 import { SILENCE_RANGE } from '@/lib/tuners'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import { SESSION_PURPOSE_LABEL } from '@/repository/driver-capabilities'
 import type { components } from '@/repository/client/schema'
@@ -531,7 +532,10 @@ function toDetection(detected: DetectedTunersResponder): DetectionResult {
         tag: '新規',
         device: deviceId,
         note: unsavable.has(deviceId)
-          ? UNSAVABLE_NOTE[devices.get(deviceId)?.detection ?? 'unspecified']
+          ? wordFor(
+              UNSAVABLE_NOTE,
+              devices.get(deviceId)?.detection ?? 'unspecified',
+            )
           : toAddedNote(devices.get(deviceId)),
       })),
       ...detected.missing.map((deviceId) => ({
@@ -544,8 +548,8 @@ function toDetection(detected: DetectedTunersResponder): DetectionResult {
         kind: 'kind' as const,
         tag: '種別相違',
         device: mismatch.deviceId,
-        note: `一覧は ${KIND_TEXT[mismatch.observed]} / 検出は ${mismatch.detected
-          .map((kind) => KIND_TEXT[kind])
+        note: `一覧は ${wordFor(KIND_TEXT, mismatch.observed)} / 検出は ${mismatch.detected
+          .map((kind) => wordFor(KIND_TEXT, kind))
           .join('・')}`,
       })),
     ],
@@ -557,11 +561,11 @@ function toAddedNote(device: DetectedDeviceResponder | undefined): string {
     return '新しく検出されました'
   }
 
-  const kinds = device.kinds.map((kind) => KIND_TEXT[kind]).join('・')
+  const kinds = device.kinds.map((kind) => wordFor(KIND_TEXT, kind)).join('・')
 
   return kinds !== ''
     ? `${kinds}として検出されました`
-    : DETECTION_NOTE[device.detection]
+    : wordFor(DETECTION_NOTE, device.detection)
 }
 
 function toDriver(envelope: DriverStatusEnvelope | undefined): DriverState {
@@ -690,7 +694,7 @@ function toSession(
   )
 
   return {
-    label: SESSION_LABEL[observation.sessionPurpose],
+    label: wordFor(SESSION_LABEL, observation.sessionPurpose),
     tone: observation.sessionPurpose === 'recording' ? 'recording' : 'epg',
     code: tuningLabelOf(observation.sessionTuning),
     endsAt: endsAt === undefined ? undefined : formatStamp(endsAt),

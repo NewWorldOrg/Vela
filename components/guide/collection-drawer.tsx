@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { useDismissable } from '@/hooks/useDismissable'
 import { streamLabel } from '@/lib/collection'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import { cn } from '@/lib/utils'
 import type {
   CollectNowResult,
@@ -107,7 +108,7 @@ function OutcomeChip({ outcome }: { outcome: StreamVisitRow['outcome'] }) {
   return (
     <Badge variant={variant}>
       <ChipDot />
-      {OUTCOME_LABEL[outcome]}
+      {wordFor(OUTCOME_LABEL, outcome)}
     </Badge>
   )
 }
@@ -225,7 +226,7 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
       </b>
       <span className="mt-0.5 flex flex-wrap gap-x-3.5 text-note leading-[1.7] text-ink-2">
         <span>
-          結果 {OUTCOME_LABEL[latest.outcome]}
+          結果 {wordFor(OUTCOME_LABEL, latest.outcome)}
           {latest.lastAttemptedLabel && (
             <>
               ・<Figure>{latest.lastAttemptedLabel}</Figure>

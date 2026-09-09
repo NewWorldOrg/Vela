@@ -3,6 +3,11 @@ import type { Route } from 'next'
 import { formatStamp } from '@/lib/format'
 import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
+import {
+  NOT_YET_IN_THIS_BUILD,
+  shapeFor,
+  wordFor,
+} from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -188,6 +193,12 @@ const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
   supplySilence: { label: '供給途絶の判定', unit: '分', scale: 60 },
 }
 
+const THRESHOLD_NOT_YET_SHAPED: ThresholdShape = {
+  label: NOT_YET_IN_THIS_BUILD,
+  unit: '',
+  scale: 1,
+}
+
 const SATELLITE_SYSTEMS = ['isdbSBs', 'isdbSCs110']
 
 const METRIC_DROPS: Record<QualityMetric, string> = {
@@ -278,7 +289,12 @@ export async function reviseThreshold(
     '/api/quality/thresholds/{key}',
     {
       params: { path: { key } },
-      body: { value: stored(amount, THRESHOLD_SHAPES[key].scale) },
+      body: {
+        value: stored(
+          amount,
+          shapeFor(THRESHOLD_SHAPES, key, THRESHOLD_NOT_YET_SHAPED).scale,
+        ),
+      },
     },
   )
 
@@ -552,7 +568,7 @@ function signalCell(
   }
 
   return {
-    level: LEVEL_OF_STATE[found.reading.state],
+    level: shapeFor(LEVEL_OF_STATE, found.reading.state, 'unsupported'),
     sub: found.lastTakenAt
       ? `${formatStamp(found.lastTakenAt)} 取得`
       : undefined,
@@ -588,8 +604,8 @@ function toProblemRecording(
     where: `${channel?.name || id} · ${formatStamp(one.startedAt)}`,
     drops:
       packets === undefined
-        ? METRIC_DROPS[metric]
-        : `${METRIC_DROPS[metric]} ${grouped(packets)}`,
+        ? wordFor(METRIC_DROPS, metric)
+        : `${wordFor(METRIC_DROPS, metric)} ${grouped(packets)}`,
     pct:
       metric === 'overflows' || observed === undefined
         ? undefined
@@ -599,7 +615,7 @@ function toProblemRecording(
 }
 
 function toThreshold(one: ThresholdResponder): QualityThreshold {
-  const shape = THRESHOLD_SHAPES[one.key]
+  const shape = shapeFor(THRESHOLD_SHAPES, one.key, THRESHOLD_NOT_YET_SHAPED)
   const current = shown(toRatio(one.currentValue), shape.scale)
   const shipped = spelled(shown(toRatio(one.defaultValue), shape.scale), shape)
 
@@ -626,7 +642,7 @@ function readingOf(
 
 function levelOfTally(reading: TallyResponder): QualityLevel {
   if (reading.state !== 'atOrAboveWarning') {
-    return LEVEL_OF_STATE[reading.state]
+    return shapeFor(LEVEL_OF_STATE, reading.state, 'unsupported')
   }
 
   return toInt(reading.mayNotBeWatchable) > 0 ? 'bad' : 'warn'
@@ -638,8 +654,10 @@ function worstOfMeasures(measures: MeasureResponder[]): QualityLevel {
 
 function worstOfVerdicts(one: RecordingResponder): QualityLevel {
   return worst([
-    LEVEL_OF_STANDING[one.standing],
-    ...one.verdicts.map((each) => LEVEL_OF_STANDING[each.standing]),
+    shapeFor(LEVEL_OF_STANDING, one.standing, 'unsupported'),
+    ...one.verdicts.map((each) =>
+      shapeFor(LEVEL_OF_STANDING, each.standing, 'unsupported'),
+    ),
   ])
 }
 

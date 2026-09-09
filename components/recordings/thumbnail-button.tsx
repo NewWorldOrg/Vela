@@ -3,6 +3,10 @@
 import { useState, useTransition } from 'react'
 
 import { cn } from '@/lib/utils'
+import {
+  NOT_YET_IN_THIS_BUILD_SAYING,
+  shapeFor,
+} from '@/lib/not-yet-in-this-build'
 import { noteThumbnailRedrawn } from '@/hooks/useRedrawnThumbnail'
 import type {
   Recording,
@@ -23,6 +27,8 @@ const DREW: Record<ThumbnailRemake, { drew: boolean; text: string }> = {
   },
   outOfReach: { drew: false, text: '録画ファイルに到達できません。' },
 }
+
+const NOT_YET_DREW = { drew: false, text: NOT_YET_IN_THIS_BUILD_SAYING }
 
 function refusing(recording: Recording): string | undefined {
   if (recording.outcome === 'recording') {
@@ -67,7 +73,7 @@ export function ThumbnailButton({
       const said =
         result.state === 'rejected'
           ? { drew: false, text: result.message }
-          : DREW[result.remake]
+          : shapeFor(DREW, result.remake, NOT_YET_DREW)
 
       if (said.drew) {
         noteThumbnailRedrawn(recording.id)

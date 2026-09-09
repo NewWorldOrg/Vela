@@ -3,6 +3,7 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatLength, formatSpan } from '@/lib/format'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
   ENCODER_LABEL,
@@ -79,7 +80,7 @@ export function JobTable({
                   className="mt-[3px] block max-w-[240px] truncate text-[10.5px] leading-relaxed text-ink-3"
                   title={job.failure.note || undefined}
                 >
-                  {FAILURE_LABEL[job.failure.failure]}
+                  {wordFor(FAILURE_LABEL, job.failure.failure)}
                 </span>
               )}
               {job.attempt > 1 && (
@@ -174,12 +175,15 @@ function RouteCell({ job }: { job: EncodeJob }) {
     <>
       <span className="block whitespace-nowrap">
         {job.route.swerved
-          ? `${ENCODER_LABEL[job.route.asked]} → ${ENCODER_LABEL[job.route.ran]}`
-          : ENCODER_LABEL[job.route.ran]}
+          ? `${wordFor(ENCODER_LABEL, job.route.asked)} → ${wordFor(
+              ENCODER_LABEL,
+              job.route.ran,
+            )}`
+          : wordFor(ENCODER_LABEL, job.route.ran)}
       </span>
       {job.route.swerved && (
         <small className="block text-[10.5px] text-ink-3">
-          {SWERVE_LABEL[job.route.swerved]}
+          {wordFor(SWERVE_LABEL, job.route.swerved)}
         </small>
       )}
     </>

@@ -1,6 +1,12 @@
 import type { Route } from 'next'
 
 import { formatDateTime, formatSpanToTheMillisecond } from '@/lib/format'
+import {
+  NOT_YET_IN_THIS_BUILD,
+  NOT_YET_IN_THIS_BUILD_SAYING,
+  shapeFor,
+  wordFor,
+} from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -107,6 +113,12 @@ const POPULATION_SHAPES: Record<Population, PopulationShape> = {
   programmeGuide: { name: '番組表', source: 'program', unit: '行' },
 }
 
+const POPULATION_NOT_YET_SHAPED: PopulationShape = {
+  name: NOT_YET_IN_THIS_BUILD,
+  source: '—',
+  unit: '件',
+}
+
 const REFUSAL_LABEL: Record<Refusal, string> = {
   reallyEmpty: '実 0 バイト',
   fileMissing: 'ファイル不在',
@@ -142,6 +154,11 @@ const LOSS_SHAPES: Record<LossSubject, LossShape> = {
     fact: (affected) =>
       `運んだ ${affected} 件のルールで、深夜 0 時から 4 時の番組の曜日が 1 日ずれる`,
   },
+}
+
+const LOSS_NOT_YET_SHAPED: LossShape = {
+  subject: NOT_YET_IN_THIS_BUILD,
+  fact: () => NOT_YET_IN_THIS_BUILD_SAYING,
 }
 
 export async function getMigration(): Promise<MigrationResult | null> {
@@ -223,7 +240,11 @@ function millisecondsBetween(from: string, until: string): number {
 }
 
 function toPopulation(one: PopulationResponder): MigrationPopulationRow {
-  const shape = POPULATION_SHAPES[one.population]
+  const shape = shapeFor(
+    POPULATION_SHAPES,
+    one.population,
+    POPULATION_NOT_YET_SHAPED,
+  )
 
   return {
     name: shape.name,
@@ -244,7 +265,7 @@ function toGroup(
   const rows = items.filter((item) => item.refusal === one.refusal)
 
   return {
-    name: REFUSAL_LABEL[one.refusal],
+    name: wordFor(REFUSAL_LABEL, one.refusal),
     count: grouped(toInt(one.count)),
     unit: '件',
     rows: rows.map(toDetail),
@@ -256,7 +277,11 @@ function toDetail(one: DetailResponder): MigrationNotTakenRow {
   return {
     id: one.id,
     subject: one.subject,
-    population: POPULATION_SHAPES[one.population].name,
+    population: shapeFor(
+      POPULATION_SHAPES,
+      one.population,
+      POPULATION_NOT_YET_SHAPED,
+    ).name,
     fact: one.note,
     size: sizeOf(one),
   }
@@ -282,7 +307,7 @@ function counted(value: number | string | null): number | undefined {
 }
 
 function toLoss(one: LossResponder): MigrationLoss {
-  const shape = LOSS_SHAPES[one.subject]
+  const shape = shapeFor(LOSS_SHAPES, one.subject, LOSS_NOT_YET_SHAPED)
 
   return {
     id: one.subject,
