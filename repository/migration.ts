@@ -50,7 +50,6 @@ export interface MigrationNotTakenRow {
   subject: string
   population: string
   fact: string
-  size?: string
 }
 
 export interface MigrationNotTakenGroup {
@@ -82,6 +81,8 @@ const MOST_PER_PAGE = 500
 const NOTHING_IN_THIS_GROUP = '該当なし'
 
 const NO_REHEARSAL = '—'
+
+const NOTHING_WAS_MEASURED = '—'
 
 interface PopulationShape {
   name: string
@@ -276,14 +277,13 @@ function toGroup(
 function toDetail(one: DetailResponder): MigrationNotTakenRow {
   return {
     id: one.id,
-    subject: one.subject,
+    subject: one.note,
     population: shapeFor(
       POPULATION_SHAPES,
       one.population,
       POPULATION_NOT_YET_SHAPED,
     ).name,
-    fact: one.note,
-    size: sizeOf(one),
+    fact: sizeOf(one) ?? NOTHING_WAS_MEASURED,
   }
 }
 
