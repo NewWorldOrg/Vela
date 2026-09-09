@@ -8,6 +8,7 @@ import {
   SEARCH_DEFAULT_SORT,
   SEARCH_MOST_CHANNELS,
   SEARCH_QUERY_KEYS,
+  genreLabelOfKind,
   narrowsAnything,
   readSearchCondition,
   searchConditionOfQuery,
@@ -489,4 +490,14 @@ test('each condition on its own reaches the address of the conditions', () => {
 
 test('a condition asking for nothing has a bare address of its own', () => {
   assert.equal(searchTermsQueryOf(EMPTY_SEARCH_CONDITION), '')
+})
+
+test('a genre kind the broadcast names is spelled the way the search spells it', () => {
+  assert.equal(genreLabelOfKind(0), 'ニュース/報道')
+  assert.equal(genreLabelOfKind(8), 'ドキュメンタリー/教養')
+  assert.equal(genreLabelOfKind(15), 'その他')
+})
+
+test('a genre kind nothing in this build names falls back to その他', () => {
+  assert.equal(genreLabelOfKind(13), 'その他')
 })

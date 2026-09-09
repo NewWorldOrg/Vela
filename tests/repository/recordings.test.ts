@@ -80,6 +80,8 @@ const recording = (over: Over = {}) => ({
     startsAt: '2026-08-09T14:00:00Z',
     name: '週末キッチンの手帖',
     summary: '旬の野菜だけで組み立てる仕込みと保存',
+    extended: '',
+    genres: [],
     capturedAt: '2026-08-09T13:00:00Z',
   },
   standing: 'ended',
@@ -101,7 +103,13 @@ const recording = (over: Over = {}) => ({
   tunerDeviceId: 'adapter1/frontend0',
   drops: drops(),
   thumbnail: { state: 'ready', fault: null, showsAnUnfinishedRecording: false },
+  broadcastGroup: { key: null, role: 'standalone' },
   encode: { standing: 'notEncoded' },
+  ...over,
+})
+
+const programme = (over: Over = {}) => ({
+  ...recording().programme,
   ...over,
 })
 
@@ -563,13 +571,159 @@ test('a channel that is offered narrows to it', async () => {
   assert.deepEqual(result.channels, ['中央テレビ1', '東都テレビ1'])
 })
 
-test('the genres on offer are empty, because a recording carries none', async () => {
-  standing()
+test('the genres on offer are the ones the recordings name', async () => {
+  standing([
+    recording({
+      id: 'a1',
+      programme: programme({ genres: [{ kind: 5, sort: 3 }] }),
+    }),
+    recording({
+      id: 'a2',
+      programme: programme({
+        genres: [
+          { kind: 8, sort: 0 },
+          { kind: 0, sort: 8 },
+        ],
+      }),
+    }),
+  ])
 
   const result = await listRecordings({})
 
-  assert.deepEqual(result.genres, [])
-  assert.equal(result.items[0].genre, undefined)
+  assert.deepEqual(result.genres, ['バラエティ', 'ドキュメンタリー/教養'])
+  assert.equal(result.items[0].genre, 'バラエティ')
+})
+
+test('a genre that is offered narrows to it', async () => {
+  standing([
+    recording({
+      id: 'a1',
+      programme: programme({ genres: [{ kind: 5, sort: 3 }] }),
+    }),
+    recording({
+      id: 'a2',
+      programme: programme({ genres: [{ kind: 8, sort: 0 }] }),
+    }),
+  ])
+
+  const result = await listRecordings({ genre: 'ドキュメンタリー/教養' })
+
+  assert.deepEqual(
+    result.items.map((one) => one.id),
+    ['a2'],
+  )
+})
+
+test('a recording that names no genre offers none', async () => {
+  const one = await only()
+
+  assert.equal(one.genre, undefined)
+})
+
+test('a genre kind this build has no name for is called その他', async () => {
+  const one = await only([
+    recording({ programme: programme({ genres: [{ kind: 13, sort: 0 }] }) }),
+  ])
+
+  assert.equal(one.genre, 'その他')
+})
+
+test('the genres a recording detail carries are named in full', async () => {
+  standing([
+    recording({
+      programme: programme({
+        genres: [
+          { kind: 5, sort: 3 },
+          { kind: 5, sort: 2 },
+          { kind: 2, sort: 3 },
+        ],
+      }),
+    }),
+  ])
+
+  const detail = await getRecording('d1')
+
+  assert.deepEqual(detail?.genres, ['バラエティ', '情報/ワイドショー'])
+})
+
+test('the cast the extended detail names is carried, and searches', async () => {
+  standing([
+    recording({
+      id: 'a1',
+      programme: programme({
+        extended:
+          '◇番組内容\n海辺の町の朝を追う\n\n◇出演者\n宇津木 千歳\n\nゲスト\n真名瀬 湊\n\n◇おしらせ\n再放送は翌週です',
+      }),
+    }),
+    recording({ id: 'a2' }),
+  ])
+
+  const result = await listRecordings({})
+
+  assert.deepEqual(result.items[0].cast, ['宇津木 千歳', '真名瀬 湊'])
+
+  const byCast = await listRecordings({ q: '真名瀬' })
+
+  assert.deepEqual(
+    byCast.items.map((one) => one.id),
+    ['a1'],
+  )
+})
+
+test('a staff heading is not read as cast', async () => {
+  const one = await only([
+    recording({
+      programme: programme({
+        extended: '◇番組内容\n海辺の町の朝を追う\n\nスタッフ\n演出 岬 早苗',
+      }),
+    }),
+  ])
+
+  assert.equal(one.cast, undefined)
+})
+
+test('the lead of the extended detail becomes the sub line of the row', async () => {
+  const one = await only([
+    recording({
+      programme: programme({
+        extended: '◇番組内容\n海辺の町の朝を\n追う\n\n◇出演者\n宇津木 千歳',
+      }),
+    }),
+  ])
+
+  assert.equal(one.note, '海辺の町の朝を 追う')
+})
+
+test('a recording whose extended detail is empty carries no sub line', async () => {
+  const one = await only()
+
+  assert.equal(one.note, undefined)
+  assert.equal(one.cast, undefined)
+})
+
+test('recordings of one broadcast group count each other as segments', async () => {
+  standing([
+    recording({
+      id: 'a1',
+      broadcastGroup: { key: 'g-1', role: 'relaySegment' },
+    }),
+    recording({
+      id: 'a2',
+      broadcastGroup: { key: 'g-1', role: 'relaySegment' },
+    }),
+    recording({
+      id: 'a3',
+      broadcastGroup: { key: 'g-2', role: 'movementPrimary' },
+    }),
+    recording({ id: 'a4' }),
+  ])
+
+  const result = await listRecordings({})
+
+  assert.deepEqual(
+    result.items.map((one) => one.segments),
+    [2, 2, undefined, undefined],
+  )
 })
 
 test('a year that was recorded in is offered, and narrows to it', async () => {
@@ -631,6 +785,65 @@ test('a tuning that failed says which of the four ways it failed', async () => {
 
   assert.equal(detail?.failureReason?.title, '選局失敗')
   assert.equal(detail?.failureReason?.body, '③ 情報が揃わない')
+})
+
+test('each way a recording can be judged a failure names itself', async () => {
+  const said: Record<string, string> = {
+    shortOfTheWindow: '書けた尺が予定に届かなかった',
+    nothingLanded: '0 バイトで終わった',
+    sizeUnobserved: 'ファイルの大きさを観測できなかった',
+    lighterThanTheStream: 'ファイルが尺のわりに小さい',
+    heavierThanTheStream: 'ファイルが尺のわりに大きい',
+  }
+
+  for (const [fault, title] of Object.entries(said)) {
+    const failed = recording({
+      outcome: 'failed',
+      outcomeDetail: [
+        {
+          fault,
+          tuneFailure: null,
+          note: '',
+          noticedAt: '2026-08-09T14:20:00Z',
+        },
+      ],
+    })
+    standing([failed])
+    store.detail = detailOf(failed)
+
+    const detail = await getRecording('d-fault')
+
+    assert.equal(detail?.failureReason?.title, title)
+  }
+})
+
+test('a failure this build has no name for is still said out loud', async () => {
+  const failed = recording({
+    outcome: 'failed',
+    outcomeDetail: [
+      {
+        fault: 'somethingElseEntirely',
+        tuneFailure: null,
+        note: '',
+        noticedAt: '2026-08-09T14:20:00Z',
+      },
+    ],
+  })
+  standing([failed])
+  store.detail = detailOf(failed)
+
+  assert.equal(
+    (await getRecording('d-unknown'))?.failureReason?.title,
+    'この版がまだ知らない値',
+  )
+})
+
+test('a failure with nothing recorded against it says nothing', async () => {
+  const failed = recording({ outcome: 'failed', outcomeDetail: [] })
+  standing([failed])
+  store.detail = detailOf(failed)
+
+  assert.equal((await getRecording('d-quiet'))?.failureReason, undefined)
 })
 
 test('a stop somebody asked for is not read as the clock running out', async () => {

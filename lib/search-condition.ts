@@ -340,6 +340,13 @@ export function genreLabelOf(genre: SearchGenre): string {
   )
 }
 
+export function genreLabelOfKind(kind: number): string {
+  return (
+    SEARCH_GENRE_OPTIONS.find((option) => option.kind === kind)?.label ??
+    genreLabelOf('other')
+  )
+}
+
 export function genreKindsOf(asked: SearchGenre[]): number[] {
   return SEARCH_GENRE_OPTIONS.filter((option) =>
     asked.includes(option.value),
