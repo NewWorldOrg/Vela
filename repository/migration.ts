@@ -50,13 +50,13 @@ export interface MigrationNotTakenRow {
   subject: string
   population: string
   fact: string
-  size?: string
 }
 
 export interface MigrationNotTakenGroup {
   name: string
   count: string
   unit: string
+  reason?: string
   rows: MigrationNotTakenRow[]
   empty?: string
 }
@@ -82,6 +82,8 @@ const MOST_PER_PAGE = 500
 const NOTHING_IN_THIS_GROUP = '該当なし'
 
 const NO_REHEARSAL = '—'
+
+const NOTHING_WAS_MEASURED = '—'
 
 interface PopulationShape {
   name: string
@@ -127,6 +129,18 @@ const REFUSAL_LABEL: Record<Refusal, string> = {
   inexpressible: '型として表現不能',
   noSuchFeature: '本システムに機能が無い',
   outOfScope: '対象外',
+}
+
+const THE_NAME_IS_ALREADY_THE_REASON = null
+
+const REFUSAL_REASON: Record<Refusal, string | null> = {
+  reallyEmpty: '記録されたサイズに対して実ファイルが空',
+  fileMissing: '台帳に行があるが実ファイルが無い',
+  orphan: '対応する台帳の行が無い',
+  unidentifiable: '再スキャン結果と対応が付かない',
+  inexpressible: 'この種別は本システムの型に存在しない',
+  noSuchFeature: THE_NAME_IS_ALREADY_THE_REASON,
+  outOfScope: 'ルール由来のため移行しない',
 }
 
 const SOURCE_SAYINGS: [RegExp, string][] = [
@@ -268,6 +282,9 @@ function toGroup(
     name: wordFor(REFUSAL_LABEL, one.refusal),
     count: grouped(toInt(one.count)),
     unit: '件',
+    reason:
+      shapeFor(REFUSAL_REASON, one.refusal, THE_NAME_IS_ALREADY_THE_REASON) ??
+      undefined,
     rows: rows.map(toDetail),
     empty: rows.length === 0 ? NOTHING_IN_THIS_GROUP : undefined,
   }
@@ -276,14 +293,13 @@ function toGroup(
 function toDetail(one: DetailResponder): MigrationNotTakenRow {
   return {
     id: one.id,
-    subject: one.subject,
+    subject: one.note,
     population: shapeFor(
       POPULATION_SHAPES,
       one.population,
       POPULATION_NOT_YET_SHAPED,
     ).name,
-    fact: one.note,
-    size: sizeOf(one),
+    fact: sizeOf(one) ?? NOTHING_WAS_MEASURED,
   }
 }
 

@@ -150,26 +150,28 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                         {group.unit}
                       </em>
                     </span>
+                    {group.reason && (
+                      <span className="text-note text-ink-3">
+                        {group.reason}
+                      </span>
+                    )}
                   </span>
                 </TableCell>
               </TableRow>
               {group.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="w-[260px] align-top">
-                    <span className="font-code text-note text-ink-3">
+                  <TableCell className="w-[260px] align-top whitespace-normal">
+                    <b className="text-ui font-bold wrap-anywhere">
                       {row.subject}
-                    </span>
+                    </b>
                   </TableCell>
                   <TableCell className="align-top text-ink-2">
                     {row.population}
                   </TableCell>
-                  <TableCell className="align-top whitespace-normal text-ink-2">
-                    {row.fact}
-                    {row.size && (
-                      <span className="mt-0.5 block font-code text-note tabular-nums text-ink-3">
-                        {row.size}
-                      </span>
-                    )}
+                  <TableCell className="align-top whitespace-normal">
+                    <span className="font-code text-note tabular-nums text-ink-2">
+                      {row.fact}
+                    </span>
                   </TableCell>
                 </TableRow>
               ))}

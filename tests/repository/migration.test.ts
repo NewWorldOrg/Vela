@@ -62,8 +62,8 @@ const detail = (over: Over = {}) => ({
   id: '9a1e5d3c-7b40-42f8-8e6a-1c95b207f4d8',
   population: 'recordings',
   refusal: 'reallyEmpty',
-  subject: 'row 7',
-  note: 'the size on record is not the size on disk',
+  subject: '7',
+  note: '真夜中の音楽室',
   claimed: 3000000000,
   observed: 0,
   ...over,
@@ -239,7 +239,64 @@ test('a group is counted by the record, not by the rows that reached the page', 
   assert.equal(group.count, '2,048')
 })
 
-test('a row carries what was claimed beside what was found', async () => {
+test('a group says once, in its heading, what fell under it', async () => {
+  standing([page([detail(), detail({ id: 'b' })])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const group = result.notTakenGroups.find((one) => one.name === '実 0 バイト')
+
+  assert.ok(group)
+  assert.equal(group.reason, '記録されたサイズに対して実ファイルが空')
+  assert.deepEqual(
+    group.rows.filter((row) => row.fact.includes('実ファイルが空')),
+    [],
+  )
+})
+
+test('a group nothing fell under still says what it is for', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const group = result.notTakenGroups.find((one) => one.name === '対象外')
+
+  assert.ok(group)
+  assert.equal(group.rows.length, 0)
+  assert.equal(group.reason, 'ルール由来のため移行しない')
+})
+
+test('the one refusal whose name already reads as the reason adds nothing to it', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const group = result.notTakenGroups.find(
+    (one) => one.name === '本システムに機能が無い',
+  )
+
+  assert.ok(group)
+  assert.equal(group.reason, undefined)
+})
+
+test('every other group is given a reason to stand under its name', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.deepEqual(
+    result.notTakenGroups
+      .filter((one) => one.reason === undefined)
+      .map((one) => one.name),
+    ['本システムに機能が無い'],
+  )
+})
+
+test('a row is named by the name a person reads, not by the row it came from', async () => {
   standing([page([detail()])])
 
   const result = await getMigration()
@@ -247,9 +304,56 @@ test('a row carries what was claimed beside what was found', async () => {
   assert.ok(result)
   const row = result.notTakenGroups.flatMap((one) => one.rows)[0]
 
-  assert.equal(row.subject, 'row 7')
+  assert.equal(row.subject, '真夜中の音楽室')
   assert.equal(row.population, '録画')
-  assert.equal(row.size, '0 B(記録上 3,000,000,000 B)')
+})
+
+test('the number the source ledger kept a row under never reaches the screen', async () => {
+  standing([page([detail({ subject: '4821' })])])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const row = result.notTakenGroups.flatMap((one) => one.rows)[0]
+
+  assert.doesNotMatch(row.subject, /4821/)
+  assert.doesNotMatch(row.fact, /4821/)
+})
+
+test('a row whose name and note are the same word does not say it twice', async () => {
+  const named = '2026年04月06日22時00分00秒-真夜中の音楽室.m2ts'
+
+  standing([
+    page([
+      detail({
+        population: 'recordingFiles',
+        subject: named,
+        note: named,
+        claimed: null,
+        observed: 0,
+      }),
+    ]),
+  ])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  const row = result.notTakenGroups.flatMap((one) => one.rows)[0]
+
+  assert.equal(row.subject, named)
+  assert.equal(row.fact, '0 B')
+  assert.doesNotMatch(row.fact, /真夜中の音楽室/)
+})
+
+test('a row carries what was claimed beside what was found', async () => {
+  standing([page([detail()])])
+
+  const result = await getMigration()
+
+  assert.equal(
+    result?.notTakenGroups.flatMap((one) => one.rows)[0].fact,
+    '0 B(記録上 3,000,000,000 B)',
+  )
 })
 
 test('a row with only one of the two sizes says only that one', async () => {
@@ -258,7 +362,7 @@ test('a row with only one of the two sizes says only that one', async () => {
   const found = await getMigration()
 
   assert.equal(
-    found?.notTakenGroups.flatMap((one) => one.rows)[0].size,
+    found?.notTakenGroups.flatMap((one) => one.rows)[0].fact,
     '539 B',
   )
 
@@ -267,36 +371,33 @@ test('a row with only one of the two sizes says only that one', async () => {
   const other = await getMigration()
 
   assert.equal(
-    other?.notTakenGroups.flatMap((one) => one.rows)[0].size,
+    other?.notTakenGroups.flatMap((one) => one.rows)[0].fact,
     '記録上 12 B',
   )
 })
 
-test('a row with neither size says nothing about size', async () => {
+test('a row nothing was measured on leaves the fact standing as a dash', async () => {
   standing([page([detail({ claimed: null, observed: null })])])
 
   const result = await getMigration()
 
-  assert.equal(
-    result?.notTakenGroups.flatMap((one) => one.rows)[0].size,
-    undefined,
-  )
+  assert.equal(result?.notTakenGroups.flatMap((one) => one.rows)[0].fact, '—')
 })
 
 test('every detail row is read, not only the first page', async () => {
-  const first = page([detail({ id: 'a', subject: 'row 1' })], {
+  const first = page([detail({ id: 'a', note: '一つめ' })], {
     total: 3,
     currentPage: 1,
     lastPage: 3,
     refusals: refusals({ reallyEmpty: 3 }),
   })
-  const second = page([detail({ id: 'b', subject: 'row 2' })], {
+  const second = page([detail({ id: 'b', note: '二つめ' })], {
     total: 3,
     currentPage: 2,
     lastPage: 3,
     refusals: refusals({ reallyEmpty: 3 }),
   })
-  const third = page([detail({ id: 'c', subject: 'row 3' })], {
+  const third = page([detail({ id: 'c', note: '三つめ' })], {
     total: 3,
     currentPage: 3,
     lastPage: 3,
@@ -310,7 +411,7 @@ test('every detail row is read, not only the first page', async () => {
   assert.ok(result)
   assert.deepEqual(
     result.notTakenGroups.flatMap((one) => one.rows).map((one) => one.subject),
-    ['row 1', 'row 2', 'row 3'],
+    ['一つめ', '二つめ', '三つめ'],
   )
   assert.deepEqual(
     sent.map((one) => one.query.page),
@@ -395,6 +496,7 @@ test('この版が知らない値が記録に混じっても、画面は落ち�
   assert.ok(result)
   assert.equal(result.populations[0].name, NOT_YET_IN_THIS_BUILD)
   assert.equal(result.notTakenGroups[0].name, NOT_YET_IN_THIS_BUILD)
+  assert.equal(result.notTakenGroups[0].reason, undefined)
   assert.equal(
     result.notTakenGroups[0].rows[0].population,
     NOT_YET_IN_THIS_BUILD,
