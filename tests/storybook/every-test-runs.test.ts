@@ -8,6 +8,7 @@ const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
   'tests/components/live/live-captions.test.ts',
+  'tests/lib/app-signals.test.ts',
   'tests/lib/capture-name.test.ts',
   'tests/lib/dismiss.test.ts',
   'tests/lib/encode.test.ts',

@@ -2,8 +2,14 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { listEncodeChoices } from '@/repository/encode'
+import {
+  ENCODE_JOBS_EVENT,
+  QUALITY_EVENT,
+  RECORDINGS_EVENT,
+} from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
 import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
 import { queueEncoding, redrawThumbnail, takeTicket } from './actions'
@@ -45,16 +51,21 @@ export default async function Page({
   }
 
   return (
-    <RecordingDetailView
-      detail={detail}
-      playback={playback}
-      unaskedProfile={unaskedProfile}
-      startAt={secondsIn(at)}
-      onRemakeThumbnail={redrawThumbnail}
-      onDelete={throwRecordingAway}
-      onTakeTicket={takeTicket}
-      onQueueEncode={queueEncoding}
-      encodeChoices={encodeChoices}
-    />
+    <>
+      <RefreshOnSignal
+        events={[RECORDINGS_EVENT, ENCODE_JOBS_EVENT, QUALITY_EVENT]}
+      />
+      <RecordingDetailView
+        detail={detail}
+        playback={playback}
+        unaskedProfile={unaskedProfile}
+        startAt={secondsIn(at)}
+        onRemakeThumbnail={redrawThumbnail}
+        onDelete={throwRecordingAway}
+        onTakeTicket={takeTicket}
+        onQueueEncode={queueEncoding}
+        encodeChoices={encodeChoices}
+      />
+    </>
   )
 }

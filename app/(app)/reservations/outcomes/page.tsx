@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 
+import { RESERVATIONS_EVENT } from '@/repository/events'
 import type { ReservationOutcomeKind } from '@/repository/reservation-outcomes'
 import { listReservationOutcomes } from '@/repository/reservation-outcomes'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
 
 export const metadata: Metadata = { title: '予約結果台帳' }
@@ -25,5 +27,10 @@ export default async function Page({
     page: Number.isSafeInteger(page) && page >= 1 ? page : undefined,
   })
 
-  return <OutcomeLedgerView result={result} />
+  return (
+    <>
+      <RefreshOnSignal events={[RESERVATIONS_EVENT]} />
+      <OutcomeLedgerView result={result} />
+    </>
+  )
 }

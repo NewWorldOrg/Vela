@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, waitFor, within } from 'storybook/test'
 
-import { GuideLive, RECONNECT_MS } from '@/components/guide/guide-live'
+import { RECONNECT_MS } from '@/lib/app-signals'
+import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 
 const ENDED = 'セッションが切れました。'
 
@@ -78,7 +80,8 @@ async function theStream(): Promise<TestStream> {
 
 const meta = {
   title: 'Components/セッション切れ',
-  component: GuideLive,
+  component: RefreshOnSignal,
+  args: { events: [PROGRAMS_EVENT, EPG_COLLECTION_EVENT] },
   parameters: {
     layout: 'fullscreen',
     nextjs: { appDirectory: true, navigation: { pathname: '/guide' } },
@@ -90,7 +93,7 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof GuideLive>
+} satisfies Meta<typeof RefreshOnSignal>
 
 export default meta
 type Story = StoryObj<typeof meta>

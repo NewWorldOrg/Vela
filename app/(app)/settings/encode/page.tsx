@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 
 import { getEncodeScreen } from '@/repository/encode'
+import { ENCODE_JOBS_EVENT } from '@/repository/events'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { EncodeView } from '@/components/encode/encode-page'
 import {
   addDestination,
@@ -23,17 +25,20 @@ export default async function Page({
   const screen = await getEncodeScreen({ status, page })
 
   return (
-    <EncodeView
-      screen={screen}
-      actions={{
-        onDefineProfile: addProfile,
-        onReviseProfile: changeProfile,
-        onRemoveProfile: dropProfile,
-        onDefineDestination: addDestination,
-        onReviseDestination: changeDestination,
-        onRemoveDestination: dropDestination,
-        onCallOff: callOffJob,
-      }}
-    />
+    <>
+      <RefreshOnSignal events={[ENCODE_JOBS_EVENT]} />
+      <EncodeView
+        screen={screen}
+        actions={{
+          onDefineProfile: addProfile,
+          onReviseProfile: changeProfile,
+          onRemoveProfile: dropProfile,
+          onDefineDestination: addDestination,
+          onReviseDestination: changeDestination,
+          onRemoveDestination: dropDestination,
+          onCallOff: callOffJob,
+        }}
+      />
+    </>
   )
 }
