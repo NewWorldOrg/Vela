@@ -2100,6 +2100,7 @@ export interface components {
       | 'qualityTimeSeries'
       | 'recordingHistory'
       | 'enclosedCharacters'
+      | 'thumbnails'
     /** @enum {string} */
     MigrationPass: 'rehearsal' | 'forReal'
     /** @enum {string} */
@@ -7080,6 +7081,16 @@ export interface operations {
         exclude?: string
         fields?: ('Title' | 'Description')[]
         genre?: number[]
+        subgenre?: string[]
+        day?: (
+          | 'Sunday'
+          | 'Monday'
+          | 'Tuesday'
+          | 'Wednesday'
+          | 'Thursday'
+          | 'Friday'
+          | 'Saturday'
+        )[]
         type?: 'Unspecified' | 'IsdbT' | 'IsdbSBs' | 'IsdbSCs110'
         channel?: string[]
         from?: string
