@@ -137,6 +137,11 @@ const LOSS_SHAPES: Record<LossSubject, LossShape> = {
     subject: '番組名の囲み文字',
     fact: (affected) => `運んだ ${affected} 本の題名が元の文字に戻せない`,
   },
+  dayBoundary: {
+    subject: '曜日で絞ったルール',
+    fact: (affected) =>
+      `運んだ ${affected} 件のルールで、深夜 0 時から 4 時の番組の曜日が 1 日ずれる`,
+  },
 }
 
 export async function getMigration(): Promise<MigrationResult | null> {
