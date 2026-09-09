@@ -136,6 +136,7 @@ const OMISSION_SHAPES: Record<OmissionSubject, OmissionShape> = {
   qualityTimeSeries: { title: '品質時系列', unit: '行' },
   recordingHistory: { title: '重複録画防止の履歴', unit: '行' },
   enclosedCharacters: { title: '番組名の囲み文字の置換', unit: '本' },
+  thumbnails: { title: 'サムネイル', unit: '枚' },
 }
 
 export async function getMigration(): Promise<MigrationResult | null> {

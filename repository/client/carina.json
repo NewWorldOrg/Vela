@@ -4856,6 +4856,35 @@
             }
           },
           {
+            "name": "subgenre",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "day",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday"
+                ],
+                "type": "string"
+              }
+            }
+          },
+          {
             "name": "type",
             "in": "query",
             "schema": {
@@ -10481,7 +10510,8 @@
           "duplicateAvoidance",
           "qualityTimeSeries",
           "recordingHistory",
-          "enclosedCharacters"
+          "enclosedCharacters",
+          "thumbnails"
         ],
         "type": "string"
       },
