@@ -115,6 +115,7 @@ function programme(
     summary: '',
     isShadow: false,
     hasSubtitles: false,
+    sounds: 1,
     source: 'eit',
     revision: 1,
     isArchived: false,
@@ -273,6 +274,21 @@ test('a programme with no end said runs half an hour, and a shadow is not on air
   assert.equal(later.next, undefined)
 })
 
+test('how many sounds a programme announces reaches the channel it is on', async () => {
+  const at = (minutes: number) =>
+    new Date(NOW.getTime() + minutes * 60_000).toISOString()
+
+  const open = [
+    programme(32736, 1024, 'ふたつの音声', at(-20), at(40), { sounds: 2 }),
+    programme(32736, 1024, 'ひとつの音声', at(50), at(80)),
+  ].map((one) => ({ ...one, endsAt: one.endsAt ?? undefined }))
+
+  const read = nowNextOf(open as never, NOW)
+
+  assert.equal(read.now?.sounds, 2)
+  assert.equal(read.next?.sounds, 1)
+})
+
 test('a split carries what the whole is carrying, on air and next', async () => {
   store.channels = [
     listed(32736, 1024, '総合1'),
@@ -399,7 +415,7 @@ test('a channel with no programme known stands at nought, and one with no end ha
       startsAt: '2026-08-08T11:50:00Z',
       startLabel: '20:50',
       hasSubtitles: false,
-      audio: 'stereo' as const,
+      sounds: 1,
       genreLabel: 'その他',
     },
   }

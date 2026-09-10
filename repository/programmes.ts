@@ -67,6 +67,7 @@ export interface Programme {
   isShadow: boolean
   hasSubtitles: boolean
   audio: AudioMode
+  sounds: number
   isArchived: boolean
   genres: ProgrammeGenre[]
   items: ProgrammeItem[]
@@ -216,6 +217,7 @@ function toProgramme(programme: ProgrammeResponder): Programme {
     isShadow: programme.isShadow,
     hasSubtitles: programme.hasSubtitles,
     audio: programme.audio,
+    sounds: toInt(programme.sounds),
     isArchived: programme.isArchived,
     genres: (programme.genres ?? []).map((genre) => ({
       kind: toInt(genre.kind),

@@ -2252,6 +2252,8 @@ export interface components {
       isShadow: boolean
       hasSubtitles: boolean
       audio: components['schemas']['AudioMode']
+      /** Format: int32 */
+      sounds: number | string
       source: components['schemas']['ProgrammeSource']
       /** Format: int64 */
       revision: number | string

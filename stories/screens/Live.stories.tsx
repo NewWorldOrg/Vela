@@ -293,7 +293,7 @@ const IN_TWO_LANGUAGES: LiveScreen = {
     ...CHOSEN.watching!,
     channel: {
       ...CHOSEN.watching!.channel,
-      now: { ...CHOSEN.watching!.channel.now!, audio: 'dualMono' },
+      now: { ...CHOSEN.watching!.channel.now!, sounds: 2 },
     },
   },
 }

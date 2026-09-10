@@ -14,6 +14,10 @@ export const BOTH_SOUNDS: readonly SoundTrack[] = Object.keys(
 
 export const MAIN_SOUND: SoundTrack = 'main'
 
+export function soundsAnnounced(count: number): readonly SoundTrack[] {
+  return BOTH_SOUNDS.slice(0, Math.max(0, count))
+}
+
 export function soundLabel(track: SoundTrack): string {
   return wordFor(SOUND_LABEL, track)
 }

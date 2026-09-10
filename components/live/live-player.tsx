@@ -5,7 +5,11 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
-import { BOTH_SOUNDS, MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
+import {
+  MAIN_SOUND,
+  soundsAnnounced,
+  type SoundTrack,
+} from '@/repository/sounds'
 import { liveWireHref } from '@/repository/live-paths'
 import { KEY_CAP, playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import { PlayerTip } from '@/components/recordings/player-tip'
@@ -176,8 +180,9 @@ export function LivePlayer({
 
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
-  const sounds: readonly SoundTrack[] =
-    channel?.now?.audio === 'dualMono' ? BOTH_SOUNDS : []
+  const sounds: readonly SoundTrack[] = soundsAnnounced(
+    channel?.now?.sounds ?? 0,
+  )
   const sound =
     sounds.length > 1 && chosenSound !== null && chosenSound.of === channel?.id
       ? chosenSound.track
