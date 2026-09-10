@@ -22,6 +22,7 @@ import {
   listPickableChannels,
   genreDisplayOf,
 } from '@/repository/programs'
+import { listBookings } from '@/repository/reservations'
 
 export type { RawSearchCondition, SearchCondition }
 
@@ -68,7 +69,11 @@ function dayEndOf(date: string): Date {
   return new Date(windowStartOf(date).getTime() + 24 * 60 * 60 * 1000)
 }
 
-function toHit(programme: Programme, channels: GuideChannel[]): SearchHit {
+function toHit(
+  programme: Programme,
+  channels: GuideChannel[],
+  booked: boolean,
+): SearchHit {
   const channelId = `${programme.networkId}-${programme.serviceId}`
   const channel = channels.find((c) => c.id === channelId)
   const startsAt = new Date(programme.startsAt)
@@ -88,6 +93,7 @@ function toHit(programme: Programme, channels: GuideChannel[]): SearchHit {
     description: programme.summary || undefined,
     genre: genre.slug,
     genreLabel: genre.label,
+    booked: booked || undefined,
   }
 }
 
@@ -101,23 +107,28 @@ export async function searchPrograms(
     return { condition, channels, outcome: { state: 'idle' } }
   }
 
-  const search = await searchProgrammes({
-    keyword: condition.q,
-    exclude: condition.exclude,
-    fields:
-      condition.fields === 'title,description'
-        ? undefined
-        : SEARCH_FIELDS_OF[condition.fields],
-    genres: genreKindsOf(condition.genres),
-    system: condition.kind ? SEARCH_SYSTEM_OF_KIND[condition.kind] : undefined,
-    channels: condition.channels,
-    from: condition.from ? windowStartOf(condition.from) : undefined,
-    to: condition.to ? dayEndOf(condition.to) : undefined,
-    sort: condition.sort === 'name.asc' ? 'Name' : 'StartsAt',
-    descending: condition.sort === 'start_at.desc' ? true : undefined,
-    page: condition.page,
-    perPage: condition.perPage,
-  })
+  const [search, bookings] = await Promise.all([
+    searchProgrammes({
+      keyword: condition.q,
+      exclude: condition.exclude,
+      fields:
+        condition.fields === 'title,description'
+          ? undefined
+          : SEARCH_FIELDS_OF[condition.fields],
+      genres: genreKindsOf(condition.genres),
+      system: condition.kind
+        ? SEARCH_SYSTEM_OF_KIND[condition.kind]
+        : undefined,
+      channels: condition.channels,
+      from: condition.from ? windowStartOf(condition.from) : undefined,
+      to: condition.to ? dayEndOf(condition.to) : undefined,
+      sort: condition.sort === 'name.asc' ? 'Name' : 'StartsAt',
+      descending: condition.sort === 'start_at.desc' ? true : undefined,
+      page: condition.page,
+      perPage: condition.perPage,
+    }),
+    listBookings(),
+  ])
 
   if (search.state === 'refused') {
     return {
@@ -135,7 +146,9 @@ export async function searchPrograms(
     outcome: {
       state: 'searched',
       found: {
-        hits: page.items.map((programme) => toHit(programme, channels)),
+        hits: page.items.map((programme) =>
+          toHit(programme, channels, bookings.has(programme.id)),
+        ),
         total: page.total,
         page: page.currentPage,
         lastPage: page.lastPage,

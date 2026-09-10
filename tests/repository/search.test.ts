@@ -19,11 +19,13 @@ const asked: Asked[] = []
 const store: {
   services: unknown[]
   page: StorePage
+  reservations: unknown[]
   refuses: boolean
   unreadable?: { status: number; message: string }
 } = {
   services: [],
   page: { items: [], total: 0, currentPage: 1, lastPage: 1, perPage: 20 },
+  reservations: [],
   refuses: false,
 }
 
@@ -68,6 +70,46 @@ const programme = (
   related: [],
 })
 
+const reserved = (programmeId: string) => ({
+  id: `r-${programmeId}`,
+  programme: {
+    id: programmeId,
+    networkId: 131,
+    serviceId: 1310,
+    eventId: 40001,
+    startsAt: '2026-08-09T10:30:00Z',
+    name: '',
+    summary: '',
+    extended: '',
+    genres: [],
+    capturedAt: '2026-08-09T09:00:00Z',
+  },
+  origin: 'byHand',
+  ruleId: null,
+  priority: 10,
+  window: {
+    startAt: '2026-08-09T10:30:00Z',
+    endAt: '2026-08-09T11:15:00Z',
+    endAtConfirmed: true,
+    marginBeforeSeconds: 0,
+    marginAfterSeconds: 0,
+    effectiveStartAt: '2026-08-09T10:30:00Z',
+    effectiveEndAt: '2026-08-09T11:15:00Z',
+  },
+  standing: 'scheduled',
+  startedAt: null,
+  recordingOutcome: null,
+  reception: { unavailable: false, since: null },
+  epg: {
+    diverged: false,
+    detail: [],
+    programmeMissing: false,
+    acknowledgedAt: null,
+  },
+  broadcastGroup: { key: null, role: 'standalone' },
+  createdAt: '2026-08-09T09:00:00Z',
+})
+
 mock.module('@/repository/client/carina', {
   namedExports: {
     carinaClient: () => ({
@@ -79,6 +121,21 @@ mock.module('@/repository/client/carina', {
 
         if (path === '/api/services') {
           return { data: { data: store.services }, response: { status: 200 } }
+        }
+
+        if (path === '/api/reservations') {
+          return {
+            data: {
+              data: {
+                items: store.reservations,
+                total: store.reservations.length,
+                currentPage: 1,
+                lastPage: 1,
+                perPage: 200,
+              },
+            },
+            response: { status: 200 },
+          }
         }
 
         if (store.refuses) {
@@ -112,6 +169,7 @@ function standing(): void {
   asked.length = 0
   store.refuses = false
   store.unreadable = undefined
+  store.reservations = []
   store.page = { items: [], total: 0, currentPage: 1, lastPage: 1, perPage: 20 }
   store.services = [
     service(131, 1310, '中央テレビ1', 'isdbT', 'television', 1),
@@ -230,6 +288,7 @@ test('a programme comes back spelled the way the screen shows it', async () => {
         description: '上空からたどる岬と灯台',
         genre: 'doc',
         genreLabel: 'ドキュメンタリー/教養',
+        booked: undefined,
       },
       {
         id: '999-9990-40002',
@@ -243,6 +302,7 @@ test('a programme comes back spelled the way the screen shows it', async () => {
         description: undefined,
         genre: 'other',
         genreLabel: 'その他',
+        booked: undefined,
       },
     ],
   )
@@ -328,5 +388,57 @@ test('a search the store cannot answer throws what the API said about it', async
   await assert.rejects(
     () => searchPrograms({ q: '料理' }),
     /番組を探せませんでした/,
+  )
+})
+
+test('a hit already reserved is marked, and the hit beside it is not', async () => {
+  standing()
+  store.reservations = [reserved('131-1310-40001')]
+  store.page = {
+    items: [
+      programme(131, 1310, 40001, '空から見る港町の夏', '2026-08-09T10:30:00Z'),
+      programme(131, 1310, 40002, '真夜中の水槽通信', '2026-08-09T15:00:00Z'),
+    ],
+    total: 2,
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 20,
+  }
+
+  const result = await searchPrograms({ q: '観測所' })
+
+  assert.deepEqual(
+    result.outcome.state === 'searched'
+      ? result.outcome.found.hits.map((hit) => [hit.id, hit.booked])
+      : [],
+    [
+      ['131-1310-40001', true],
+      ['131-1310-40002', undefined],
+    ],
+  )
+})
+
+test('a reservation that is no longer standing marks nothing', async () => {
+  standing()
+  store.reservations = [
+    { ...reserved('131-1310-40001'), standing: 'cancelled' },
+  ]
+  store.page = {
+    items: [
+      programme(131, 1310, 40001, '空から見る港町の夏', '2026-08-09T10:30:00Z'),
+    ],
+    total: 1,
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 20,
+  }
+
+  const result = await searchPrograms({ q: '観測所' })
+
+  assert.deepEqual(
+    result.outcome.state === 'searched'
+      ? result.outcome.found.hits.map((hit) => hit.booked)
+      : [],
+    [undefined],
   )
 })
