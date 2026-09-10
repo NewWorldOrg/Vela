@@ -229,19 +229,13 @@ export interface QualitySpot {
   second: number
 }
 
-export interface SeekMarks {
-  cmSpans?: { leftPct: number; widthPct: number }[]
-  chapterPcts?: number[]
-}
-
 export interface RecordingDetail extends Recording {
   genres?: string[]
-  avInfo?: string
   synopsis?: string
   outcomeBody?: string
   reconcile?: { size: string; written: string; planned: string }
   interruptions?: { main: string }
-  tunerUnit?: { main: string; sub?: string }
+  tunerUnit?: { main: string }
   eoverflow?: string
   scramble?: { main: string }
   stopReason?: string
@@ -250,31 +244,12 @@ export interface RecordingDetail extends Recording {
   qualityRatio?: string
   qualityTotal?: string
   qualitySpots?: QualitySpot[]
-  seek?: SeekMarks
-  encodePanel?: {
-    profile?: string
-    doneSub?: string
-    sourceSize?: string
-    outSize?: string
-    savings?: string
-    queueSub?: string
-    registeredAt?: string
-    progressPct?: number
-    progressSub?: string
-    attempts?: string
-  }
   live?: {
     elapsed: string
     written: string
     drops: string
     rest: string
     updatedAt: string
-    extension?: {
-      plannedEnd: string
-      currentEnd: string
-      delta: string
-      followedAt: string
-    }
   }
 }
 

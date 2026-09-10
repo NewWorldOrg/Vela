@@ -326,16 +326,9 @@ export function TunersView({
               <TableCell>
                 <span className="flex items-center gap-2.5">
                   <DeviceIcon row={row} />
-                  <span>
-                    <b className="block font-code text-[13px] leading-[1.4] font-medium">
-                      {row.device}
-                    </b>
-                    {row.hardware && (
-                      <span className="text-note text-ink-3">
-                        {row.hardware}
-                      </span>
-                    )}
-                  </span>
+                  <b className="font-code text-[13px] leading-[1.4] font-medium">
+                    {row.device}
+                  </b>
                 </span>
               </TableCell>
               <TableCell>

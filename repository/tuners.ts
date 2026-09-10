@@ -43,7 +43,6 @@ export interface TunerSession {
 export interface TunerRow {
   id: string
   device: string
-  hardware?: string
   kind?: '地上波' | '衛星'
   enabled: boolean
   session?: TunerSession
@@ -79,16 +78,8 @@ export interface NoticeLinkAction {
   href?: Route
 }
 
-export interface NoticeButtonAction {
-  label: string
-  control: 'button'
-  disabled?: boolean
-}
-
-export type NoticeAction = NoticeLinkAction | NoticeButtonAction
-
 export type NoticeActions =
-  readonly [NoticeAction] | readonly [NoticeAction, NoticeAction]
+  readonly [NoticeLinkAction] | readonly [NoticeLinkAction, NoticeLinkAction]
 
 export interface TunerNotice {
   tone: 'danger' | 'warn'

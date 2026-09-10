@@ -130,11 +130,6 @@ export function ReservationRow({
         </TableCell>
         <TableCell className="align-top font-code text-ink-2">
           {reservation.whenLabel}
-          {reservation.whenNote && (
-            <small className="block font-sans text-[10.5px] text-ink-3">
-              {reservation.whenNote}
-            </small>
-          )}
         </TableCell>
         <TableCell className="align-top">
           {reservation.ruleName ? (

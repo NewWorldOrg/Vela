@@ -62,7 +62,6 @@ export interface Reservation {
   channelName: string
   channelNo?: string
   whenLabel: string
-  whenNote?: string
   origin: OriginLabel
   ruleName?: string
   standing: ReservationStanding

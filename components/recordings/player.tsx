@@ -28,7 +28,6 @@ import {
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
-  PLAYER_BUTTON,
   PLAYER_CHROME_FADE,
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
@@ -663,7 +662,6 @@ export function Player({
                 position={position}
                 buffered={buffered}
                 drops={drops}
-                marks={d.seek}
                 onChoose={choose}
                 onScrubbing={setScrubbingAt}
                 frameHref={frameHref}
@@ -755,14 +753,6 @@ export function Player({
                 {formatPlayerTime(scrubbingAt ?? position)} /{' '}
                 {formatPlayerTime(duration)}
               </span>
-              {d.seek?.chapterPcts && (
-                <button type="button" disabled className={PLAYER_BUTTON}>
-                  次のチャプターへ
-                  <span className="ml-1.5 inline-block rounded border border-white/20 px-1 font-code text-[11px] leading-normal text-(--pl-ink-3)">
-                    →
-                  </span>
-                </button>
-              )}
               <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
                 <PlayerTip name="AirPlay" container={shell}>
                   <AirPlayButton

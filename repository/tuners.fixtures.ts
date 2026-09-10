@@ -29,7 +29,6 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter1',
       device: 'adapter1',
-      hardware: 'PT3 / frontend0',
       kind: '地上波',
       enabled: true,
       session: {
@@ -45,7 +44,6 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter3',
       device: 'adapter3',
-      hardware: 'PT3 / frontend0',
       kind: '地上波',
       enabled: false,
       draining: true,
@@ -57,7 +55,6 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter0',
       device: 'adapter0',
-      hardware: 'PT3 / frontend0',
       kind: '衛星',
       enabled: true,
       idleLabel: 'アイドル',
@@ -70,7 +67,6 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter2',
       device: 'adapter2',
-      hardware: 'PT3 / frontend0',
       kind: '地上波',
       enabled: true,
       idleLabel: '割当停止中',

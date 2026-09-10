@@ -131,11 +131,7 @@ export function RecordingRecord({
         )}
         {d.eoverflow && <DetailKeyRow label="取りこぼし" main={d.eoverflow} />}
         {d.tunerUnit && (
-          <DetailKeyRow
-            label="使ったチューナー"
-            main={d.tunerUnit.main}
-            sub={d.tunerUnit.sub}
-          />
+          <DetailKeyRow label="使ったチューナー" main={d.tunerUnit.main} />
         )}
 
         <Caption>
@@ -190,8 +186,6 @@ function SourceRow({
     )
   }
 
-  const encodedLabel = `H.264 ${d.encodePanel?.outSize ?? ''}`.trim()
-
   return (
     <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[9px] text-ui last:border-b-0">
       <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-3 max-[900px]:w-[130px] max-[700px]:w-full">
@@ -202,7 +196,7 @@ function SourceRow({
         aria-label="再生ソース"
         className="inline-flex gap-1 rounded-full border border-line p-0.5"
       >
-        {[encodedLabel, tsLabel].map((label, index) => {
+        {['H.264', tsLabel].map((label, index) => {
           const inUse = index === (plan.transcodes ? 1 : 0)
 
           return (

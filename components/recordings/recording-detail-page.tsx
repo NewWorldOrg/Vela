@@ -18,8 +18,6 @@ import type {
 } from '@/repository/videos'
 import type { PlaybackProfile } from '@/repository/video-paths'
 import type { EncodeChoices } from '@/repository/encode'
-import { Badge } from '@/components/ui/badge'
-import { ChipDot } from '@/components/vela/status'
 import {
   ChevronLeftIcon,
   ListIcon,
@@ -36,7 +34,6 @@ import {
   PLAYER_COLUMN,
 } from '@/components/recordings/player-palette'
 import { Player } from '@/components/recordings/player'
-import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import type { QueueEncode } from '@/components/recordings/encode-button'
@@ -178,29 +175,6 @@ export function RecordingDetailView({
                   最終更新 <span className="font-code">{d.live.updatedAt}</span>
                 </p>
               </section>
-              {d.live.extension && (
-                <section className="rounded-xl bg-surface px-[19px] py-[17px]">
-                  <div className="mb-2.5">
-                    <Badge variant="info" className="font-bold">
-                      <ChipDot />
-                      延長に追従しました
-                    </Badge>
-                  </div>
-                  <DetailKeyRow
-                    label="当初の終了予定"
-                    main={d.live.extension.plannedEnd}
-                  />
-                  <DetailKeyRow
-                    label="現在の終了予定"
-                    main={d.live.extension.currentEnd}
-                    sub={d.live.extension.delta}
-                  />
-                  <DetailKeyRow
-                    label="最終追従"
-                    main={d.live.extension.followedAt}
-                  />
-                </section>
-              )}
             </div>
           )}
 
@@ -259,12 +233,6 @@ export function RecordingDetailView({
               <>
                 <Dot />
                 <span className="font-code">{formatLength(d.lengthSec)}</span>
-              </>
-            )}
-            {d.avInfo && (
-              <>
-                <Dot />
-                <span>{d.avInfo}</span>
               </>
             )}
             {d.reservationId && (
