@@ -399,6 +399,7 @@ test('a channel with no programme known stands at nought, and one with no end ha
       startsAt: '2026-08-08T11:50:00Z',
       startLabel: '20:50',
       hasSubtitles: false,
+      audio: 'stereo' as const,
       genreLabel: 'その他',
     },
   }

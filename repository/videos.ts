@@ -4,6 +4,7 @@ import { unaskedIn } from '@/lib/live-profiles'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { fetchLiveProfiles } from '@/repository/live'
+import type { SoundTrack } from '@/repository/sounds'
 import {
   PLAYBACK_PROFILES,
   type PlaybackProfile,
@@ -26,6 +27,7 @@ export interface PlaybackPlan {
   showsAsAWholeRecording: boolean
   mediaType: string
   bytes?: number
+  sounds: SoundTrack[]
 }
 
 export type PlaybackRefusal =
@@ -54,6 +56,7 @@ function toPlan(
     showsAsAWholeRecording: data.showsAsAWholeRecording,
     mediaType: data.mediaType,
     bytes: data.bytes == null ? undefined : Number(data.bytes),
+    sounds: Array.isArray(data.sounds) ? [...data.sounds] : [],
   }
 }
 

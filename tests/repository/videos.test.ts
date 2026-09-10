@@ -90,6 +90,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
     showsAsAWholeRecording: true,
     mediaType: 'video/mp4',
     bytes: null,
+    sounds: ['main', 'secondary'],
   }
 
   const read = await getPlaybackPlan('1266')
@@ -112,8 +113,27 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       showsAsAWholeRecording: true,
       mediaType: 'video/mp4',
       bytes: undefined,
+      sounds: ['main', 'secondary'],
     },
   })
+})
+
+test('a plan from a build that never named the sounds offers none to choose', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.deepEqual(read.state === 'planned' && read.plan.sounds, [])
 })
 
 test('a stream that answers a byte range carries its length', async () => {
@@ -127,6 +147,7 @@ test('a stream that answers a byte range carries its length', async () => {
     showsAsAWholeRecording: false,
     mediaType: 'video/mp4',
     bytes: '3490550128',
+    sounds: [],
   }
 
   const read = await getPlaybackPlan('1247')

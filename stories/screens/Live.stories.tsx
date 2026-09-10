@@ -287,6 +287,17 @@ const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
 
 const UNCHOSEN: LiveScreen = { ...LIVE_SCREEN_FIXTURE, watching: undefined }
 
+const IN_TWO_LANGUAGES: LiveScreen = {
+  ...CHOSEN,
+  watching: {
+    ...CHOSEN.watching!,
+    channel: {
+      ...CHOSEN.watching!.channel,
+      now: { ...CHOSEN.watching!.channel.now!, audio: 'dualMono' },
+    },
+  },
+}
+
 const MANY: LiveScreen = {
   ...LIVE_SCREEN_FIXTURE,
   channels: Array.from({ length: 34 }, (unused, nth) => ({
@@ -576,6 +587,68 @@ export const 画質が一つも無ければ開かない: Story = {
     await expect(livePlayer(canvasElement)).toBeVisible()
     await expect(opened).toHaveLength(0)
     await expect(canvas.queryByRole('button', { name: '設定' })).toBeNull()
+  },
+}
+
+export const 二重音声の番組は音声を選べる: Story = {
+  args: { screen: IN_TWO_LANGUAGES },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await expect(opened[0].href).toContain('sound=main')
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    await expect(
+      within(sounds)
+        .getAllByRole('button')
+        .map((one) => one.textContent),
+    ).toEqual(['主音声', '副音声'])
+    await expect(
+      within(sounds).getByRole('button', { name: '主音声' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 副音声を選ぶと副音声で開き直す: Story = {
+  args: { screen: IN_TWO_LANGUAGES },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await expect(opened[1].href).toContain('sound=secondary')
+    await expect(
+      within(await screen.findByRole('group', { name: '音声' })).getByRole(
+        'button',
+        { name: '副音声' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 二重音声でない番組に音声の行は無い: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await expect(opened[0].href).toContain('sound=main')
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await screen.findByRole('group', { name: '画質' })
+
+    await expect(screen.queryByRole('group', { name: '音声' })).toBeNull()
   },
 }
 

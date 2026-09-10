@@ -3,7 +3,12 @@ import { test } from 'node:test'
 
 import { backlogOf, readLiveSessions } from '@/repository/live-sessions'
 
-const SEAT = { networkId: 32736, serviceId: 1024, profile: '1080p60' }
+const SEAT = {
+  networkId: 32736,
+  serviceId: 1024,
+  profile: '1080p60',
+  sound: 'main',
+} as const
 
 const ANSWER = {
   status: true,
@@ -13,6 +18,7 @@ const ANSWER = {
       networkId: 32736,
       serviceId: 1024,
       profile: '1080p60',
+      sound: 'main',
       viewers: 2,
       dropped: '18',
       queued: 3,
@@ -27,12 +33,25 @@ const ANSWER = {
       networkId: 32736,
       serviceId: 1024,
       profile: '720p30',
+      sound: 'main',
       viewers: 1,
       dropped: 0,
       queued: 0,
       chunksDroppedSinceTheSupplyOpened: null,
       watching: [],
       startup: { inProgress: true, marks: [] },
+    },
+    {
+      networkId: 32736,
+      serviceId: 1024,
+      profile: '1080p60',
+      sound: 'secondary',
+      viewers: 1,
+      dropped: 4,
+      queued: 1,
+      chunksDroppedSinceTheSupplyOpened: 9,
+      watching: [{ droppedSinceTheyJoined: 4, queued: 1 }],
+      startup: { inProgress: false, marks: [] },
     },
   ],
 }
@@ -43,6 +62,7 @@ test('the sessions are read with their counts as numbers, however JSON spelled t
       networkId: 32736,
       serviceId: 1024,
       profile: '1080p60',
+      sound: 'main',
       viewers: 2,
       dropped: 18,
       queued: 3,
@@ -53,11 +73,23 @@ test('the sessions are read with their counts as numbers, however JSON spelled t
       networkId: 32736,
       serviceId: 1024,
       profile: '720p30',
+      sound: 'main',
       viewers: 1,
       dropped: 0,
       queued: 0,
       droppedByThoseStillWatching: 0,
       lostOnTheWayIn: undefined,
+    },
+    {
+      networkId: 32736,
+      serviceId: 1024,
+      profile: '1080p60',
+      sound: 'secondary',
+      viewers: 1,
+      dropped: 4,
+      queued: 1,
+      droppedByThoseStillWatching: 4,
+      lostOnTheWayIn: 9,
     },
   ])
 })
@@ -99,6 +131,17 @@ test('the backlog is the seat’s own: the same channel in another profile is an
   assert.equal(backlogOf([], SEAT), undefined)
 })
 
+test('the same channel in the same profile carrying the other sound is another session', () => {
+  const sessions = readLiveSessions(ANSWER)!
+
+  assert.deepEqual(backlogOf(sessions, { ...SEAT, sound: 'secondary' }), {
+    dropped: 4,
+    queued: 1,
+    droppedByThoseStillWatching: 4,
+    lostOnTheWayIn: 9,
+  })
+})
+
 test('what the driver never said is not read as none of it', () => {
   const sessions = readLiveSessions({
     status: true,
@@ -118,4 +161,5 @@ test('what the driver never said is not read as none of it', () => {
 
   assert.equal(sessions[0].lostOnTheWayIn, undefined)
   assert.equal(sessions[0].droppedByThoseStillWatching, undefined)
+  assert.equal(sessions[0].sound, 'main')
 })

@@ -1,4 +1,5 @@
 import type { components } from '@/repository/client/schema'
+import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 
 type LiveSessionResponder = components['schemas']['LiveSessionResponder']
 type LiveViewerResponder = components['schemas']['LiveViewerResponder']
@@ -9,6 +10,7 @@ export interface LiveSessionReading {
   networkId: number
   serviceId: number
   profile: string
+  sound: SoundTrack
   viewers: number
   dropped: number
   queued: number
@@ -27,6 +29,7 @@ export interface LiveSeat {
   networkId: number
   serviceId: number
   profile: string
+  sound: SoundTrack
 }
 
 function count(value: number | string): number {
@@ -85,6 +88,7 @@ function toReading(session: LiveSessionResponder): LiveSessionReading {
     networkId: count(session.networkId),
     serviceId: count(session.serviceId),
     profile: session.profile,
+    sound: session.sound ?? MAIN_SOUND,
     viewers: count(session.viewers),
     dropped: count(session.dropped),
     queued: count(session.queued),
@@ -115,7 +119,8 @@ export function backlogOf(
     (session) =>
       session.networkId === seat.networkId &&
       session.serviceId === seat.serviceId &&
-      session.profile === seat.profile,
+      session.profile === seat.profile &&
+      session.sound === seat.sound,
   )
 
   return (

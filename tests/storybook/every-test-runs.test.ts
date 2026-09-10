@@ -55,6 +55,7 @@ const THE_SUITE = [
   'tests/repository/scan-systems.test.ts',
   'tests/repository/search.test.ts',
   'tests/repository/sessions.test.ts',
+  'tests/repository/sounds.test.ts',
   'tests/repository/tuners.test.ts',
   'tests/repository/tuning.test.ts',
   'tests/repository/video-paths.test.ts',

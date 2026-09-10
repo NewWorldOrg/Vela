@@ -39,6 +39,7 @@ function planned(over: Partial<PlaybackPlan> = {}): PlaybackRead {
       transcodes: true,
       showsAsAWholeRecording: true,
       mediaType: 'video/mp4',
+      sounds: ['main'],
       ...over,
     },
   }
