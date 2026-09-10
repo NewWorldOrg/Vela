@@ -5,7 +5,14 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
-import type { ReservationsResult } from '@/repository/reservations'
+import type {
+  EpgDriftKind,
+  ReservationsResult,
+} from '@/repository/reservations'
+import {
+  RESERVATION_EPG_DIVERGED_TERM,
+  RESERVATION_EPG_MISSING_TERM,
+} from '@/lib/state-terms'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -37,6 +44,8 @@ const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
 
 const SHOW_PARAM = 'show'
 
+const EPG_PARAM = 'epg'
+
 const UNSETTLED = 'unsettled'
 
 const EVERY = 'all'
@@ -45,6 +54,32 @@ const SHOW_OPTIONS = [
   { value: UNSETTLED, label: '未完了' },
   { value: EVERY, label: 'すべて' },
 ]
+
+function DriftButton({
+  label,
+  count,
+  pressed,
+  onClick,
+}: {
+  label: string
+  count: number
+  pressed: boolean
+  onClick: () => void
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={
+        pressed ? 'border-brand bg-brand-soft font-bold text-brand' : undefined
+      }
+    >
+      {label} <b className="font-code font-medium tabular-nums">{count}</b> 件
+    </Button>
+  )
+}
 
 export function ReservationsView({
   result,
@@ -55,7 +90,7 @@ export function ReservationsView({
   actions: ReservationActions
   bulk: ReservationBulkActions
 }) {
-  const { items, total, filter } = result
+  const { items, total, drift, filter } = result
   const [expanded, setExpanded] = useState<string | null>(
     items.find((r) => r.standing === 'conflict')?.id ?? null,
   )
@@ -65,14 +100,16 @@ export function ReservationsView({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const onShowChange = useCallback(
-    (next: string) => {
+  const go = useCallback(
+    (taken: [string, string | undefined][]) => {
       const params = new URLSearchParams(searchParams.toString())
 
-      if (next === EVERY) {
-        params.set(SHOW_PARAM, EVERY)
-      } else {
-        params.delete(SHOW_PARAM)
+      for (const [key, value] of taken) {
+        if (value === undefined) {
+          params.delete(key)
+        } else {
+          params.set(key, value)
+        }
       }
 
       const qs = params.toString()
@@ -83,6 +120,24 @@ export function ReservationsView({
     },
     [router, pathname, searchParams],
   )
+  const onShowChange = useCallback(
+    (next: string) => {
+      go([[SHOW_PARAM, next === EVERY ? EVERY : undefined]])
+    },
+    [go],
+  )
+  const onDriftPick = useCallback(
+    (kind: EpgDriftKind) => {
+      go([[EPG_PARAM, filter.epg === kind ? undefined : kind]])
+    },
+    [go, filter.epg],
+  )
+  const onClearFilters = useCallback(() => {
+    go([
+      [SHOW_PARAM, EVERY],
+      [EPG_PARAM, undefined],
+    ])
+  }, [go])
 
   return (
     <ScreenMain
@@ -111,6 +166,23 @@ export function ReservationsView({
           value={filter.show === EVERY ? EVERY : UNSETTLED}
           onValueChange={onShowChange}
         />
+        {drift.diverged > 0 && (
+          <DriftButton
+            label={RESERVATION_EPG_DIVERGED_TERM.label}
+            count={drift.diverged}
+            pressed={filter.epg === 'diverged'}
+            onClick={() => onDriftPick('diverged')}
+          />
+        )}
+        {drift.missing > 0 && (
+          <DriftButton
+            label={RESERVATION_EPG_MISSING_TERM.label}
+            count={drift.missing}
+            pressed={filter.epg === 'missing'}
+            onClick={() => onDriftPick('missing')}
+          />
+        )}
+
         <span className="ml-auto text-sub whitespace-nowrap text-ink-2 max-[900px]:ml-0">
           {items.length === total ? (
             <>
@@ -139,11 +211,7 @@ export function ReservationsView({
           className="mx-auto mt-10 max-w-[560px]"
           action={
             total === 0 ? undefined : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onShowChange(EVERY)}
-              >
+              <Button variant="ghost" size="sm" onClick={onClearFilters}>
                 絞り込みを解除
               </Button>
             )

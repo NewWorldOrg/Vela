@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { RESERVATIONS_EVENT } from '@/repository/events'
+import type { EpgDriftKind } from '@/repository/reservations'
 import { listReservations } from '@/repository/reservations'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { ReservationsView } from '@/components/reservations/reservations-page'
@@ -24,6 +25,7 @@ export default async function Page({
   const params = await searchParams
   const result = await listReservations({
     show: params.show === 'all' ? 'all' : undefined,
+    epg: driftAsked(params.epg),
   })
 
   return (
@@ -45,4 +47,14 @@ export default async function Page({
       />
     </>
   )
+}
+
+function driftAsked(
+  asked: string | string[] | undefined,
+): EpgDriftKind | undefined {
+  if (asked === 'diverged' || asked === 'missing') {
+    return asked
+  }
+
+  return undefined
 }

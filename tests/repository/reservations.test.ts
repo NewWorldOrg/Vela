@@ -444,6 +444,120 @@ test('a service that can be received is not marked', async () => {
   assert.equal(one.receptionUnavailable, false)
 })
 
+const DIVERGED = {
+  diverged: true,
+  detail: [
+    {
+      field: 'startAt',
+      before: '2026-08-08T12:10:00Z',
+      after: '2026-08-08T12:40:00Z',
+      detectedAt: '2026-08-07T22:05:00Z',
+    },
+    {
+      field: 'name',
+      before: '週末キッチンの手帖',
+      after: '週末キッチンの手帖 特別編',
+      detectedAt: '2026-08-07T23:15:00Z',
+    },
+  ],
+  programmeMissing: false,
+  acknowledgedAt: null,
+}
+
+const GONE = {
+  diverged: false,
+  detail: [],
+  programmeMissing: true,
+  acknowledgedAt: null,
+}
+
+test('a programme the guide has moved is marked, and says what moved', async () => {
+  const one = await only({ epg: DIVERGED })
+
+  assert.equal(one.epg?.diverged, true)
+  assert.equal(one.epg?.programmeMissing, false)
+  assert.deepEqual(one.epg?.changes, [
+    { field: '開始', before: '08/08 21:10', after: '08/08 21:40' },
+    {
+      field: '番組名',
+      before: '週末キッチンの手帖',
+      after: '週末キッチンの手帖 特別編',
+    },
+  ])
+  assert.equal(one.epg?.noticedAt, '08/08 08:15')
+})
+
+test('a programme the guide has dropped is marked as gone, not as moved', async () => {
+  const one = await only({ epg: GONE })
+
+  assert.equal(one.epg?.programmeMissing, true)
+  assert.equal(one.epg?.diverged, false)
+  assert.deepEqual(one.epg?.changes, [])
+  assert.equal(one.epg?.noticedAt, undefined)
+})
+
+test('a programme the guide still agrees with carries no mark at all', async () => {
+  assert.equal((await only()).epg, undefined)
+})
+
+test('a field the guide moved that this build cannot name is still said out loud', async () => {
+  const one = await only({
+    epg: {
+      diverged: true,
+      detail: [
+        {
+          field: 'somethingElseEntirely',
+          before: null,
+          after: 'あとの値',
+          detectedAt: '2026-08-07T22:05:00Z',
+        },
+      ],
+      programmeMissing: false,
+      acknowledgedAt: null,
+    },
+  })
+
+  assert.deepEqual(one.epg?.changes, [
+    { field: 'この版がまだ知らない値', before: '—', after: 'あとの値' },
+  ])
+})
+
+test('the screen is told how many of the listed reservations the guide has moved', async () => {
+  standing([
+    reservation({ id: 'a1', epg: DIVERGED }),
+    reservation({ id: 'b2', epg: GONE }),
+    reservation({ id: 'c3' }),
+  ])
+
+  const result = await listReservations({}, BEFORE_THEM_ALL)
+
+  assert.deepEqual(result.drift, { diverged: 1, missing: 1 })
+  assert.equal(result.items.length, 3)
+})
+
+test('asking for only what the guide moved leaves the count of the rest standing', async () => {
+  standing([
+    reservation({ id: 'a1', epg: DIVERGED }),
+    reservation({ id: 'b2', epg: GONE }),
+    reservation({ id: 'c3' }),
+  ])
+
+  const moved = await listReservations({ epg: 'diverged' }, BEFORE_THEM_ALL)
+
+  assert.deepEqual(
+    moved.items.map((one) => one.id),
+    ['a1'],
+  )
+  assert.deepEqual(moved.drift, { diverged: 1, missing: 1 })
+
+  const gone = await listReservations({ epg: 'missing' }, BEFORE_THEM_ALL)
+
+  assert.deepEqual(
+    gone.items.map((one) => one.id),
+    ['b2'],
+  )
+})
+
 test('the priority the API carries reaches the screen', async () => {
   const one = await only({ priority: 25 })
 
