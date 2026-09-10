@@ -8,15 +8,28 @@
 
 Next.js の App Router。
 画面はサーバコンポーネントが取得し、クライアントへ渡す。
+**URL がそのまま状態**で、絞り込み・ページ・並び順はすべて URL に載る。
 
-| | 役割 |
-| --- | --- |
-| `app/` | 画面。URL がそのまま状態 |
-| `components/` | 画面を組む部品 |
-| `repository/` | データ取得。API と話すのはここだけ |
-| `repository/client/` | OpenAPI 文書と、そこから生成したクライアント |
+```
+app/                画面。ルーティングと、取得を行うサーバコンポーネント
+components/{領域}/  その領域の画面と、画面を組む部品
+components/vela/    このプロジェクト固有の部品とアイコン
+components/ui/      素の UI 部品
+repository/         データ取得。API と話すのはここだけ
+repository/client/  OpenAPI 文書と、そこから生成したクライアント
+lib/                React に依らない純粋な関数
+hooks/              画面をまたいで使うフック
+stories/            Storybook
+tests/              テスト。lib と repository は対象のパスをそのまま写す
+scripts/            生成物の検証、疎通確認
+types/              共通の型
+```
 
-文書と生成物はどちらもコミットするので、バックエンドの契約が動いたことは `git diff` に出る。
+画面は `app/` → `components/{領域}/` → `repository/` → `repository/client/` の順に重なる。
+**API と話すのは `repository/` だけ**で、その外から生成クライアントを import することは eslint が禁じている。
+
+バックエンドの OpenAPI 文書と、そこから生成したクライアントは**どちらもコミットする**。
+契約が動いたことが `git diff` に出る。
 
 ## 必要なもの
 
