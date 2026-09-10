@@ -774,10 +774,11 @@ function toLastService(
   }
 
   const seen = reach
-    .filter(
-      (one) => served.includes(one.system) && one.lastSeenAt !== undefined,
+    .flatMap((one) =>
+      served.includes(one.system) && one.lastSeenAt !== undefined
+        ? [one.lastSeenAt]
+        : [],
     )
-    .map((one) => one.lastSeenAt as string)
     .sort((a, b) => Date.parse(a) - Date.parse(b))
     .at(-1)
 
