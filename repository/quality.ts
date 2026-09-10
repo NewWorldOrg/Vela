@@ -396,9 +396,6 @@ function statsOf(
 ): QualityStat[] {
   const drop = readingOf(summary.measures, 'packetsLost')
   const scramble = readingOf(summary.measures, 'packetsLeftScrambled')
-  const healthy = tuners.items.filter(
-    (one) => worstOfMeasures(one.measures) === 'good',
-  ).length
   const worstProblem = recordings.items[0]
 
   return [
@@ -426,17 +423,32 @@ function statsOf(
       ...shareStat(scramble),
       aside: scramble && countedIn(scramble),
     },
-    {
-      key: 'health',
-      label: 'チューナーヘルス',
-      value: `${healthy} / ${tuners.items.length}`,
-      unit: HEALTHY,
-      link: { href: '/settings/tuners', label: 'チューナーへ' },
-      foot: everySignalUnmeasured(summary.signal)
-        ? '信号品質 未計測'
-        : undefined,
-    },
+    healthStat(tuners.items, summary.signal),
   ]
+}
+
+function healthStat(
+  tuners: TunerResponder[],
+  signal: SignalResponder[],
+): QualityStat {
+  const levels = tuners.map((one) => worstOfMeasures(one.measures))
+  const measured = levels.filter((level) => level !== 'nodata')
+  const healthy = measured.filter((level) => level === 'good').length
+  const nothingToMeasure = levels.length - measured.length
+
+  return {
+    key: 'health',
+    label: 'チューナーヘルス',
+    ...(measured.length === 0
+      ? { level: 'nodata', levelLabel: QUALITY_LEVEL_LABEL.nodata }
+      : { value: `${healthy} / ${measured.length}`, unit: HEALTHY }),
+    aside:
+      measured.length > 0 && nothingToMeasure > 0
+        ? `${QUALITY_LEVEL_LABEL.nodata} ${nothingToMeasure} 台`
+        : undefined,
+    link: { href: '/settings/tuners', label: 'チューナーへ' },
+    foot: everySignalUnmeasured(signal) ? '信号品質 未計測' : undefined,
+  }
 }
 
 function shareStat(reading: TallyResponder | undefined): Partial<QualityStat> {

@@ -53,6 +53,9 @@ const measures = (over: Record<string, unknown> = {}) => [
   { metric: 'overflows', reading: tally() },
 ]
 
+const everyMeasure = (over: Record<string, unknown> = {}) =>
+  measures().map((one) => ({ metric: one.metric, reading: tally(over) }))
+
 const signal = () =>
   ['lockRate', 'carrierToNoiseFloor', 'bitErrorRateCeiling'].map((metric) => ({
     metric,
@@ -255,6 +258,66 @@ test('信号品質は、良好ではなく未計測のまま出る', async () =>
     result.stats.find((one) => one.key === 'health')?.foot,
     '信号品質 未計測',
   )
+})
+
+test('測るものが無いチューナーは、健全でないほうに数えない', async () => {
+  standing()
+  store.tuners = [
+    {
+      deviceId: 'adapter0.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+    },
+  ]
+
+  const result = await getQuality()
+  const health = result.stats.find((one) => one.key === 'health')
+
+  assert.equal(result.tuners[0].state.label, '対象なし')
+  assert.equal(health?.value, undefined)
+  assert.equal(health?.levelLabel, '対象なし')
+  assert.equal(health?.aside, undefined)
+})
+
+test('測れたチューナーだけを数え、測るものが無かった台数は横に添える', async () => {
+  standing()
+  store.tuners = [
+    { deviceId: 'adapter1.frontend0', measures: measures(), signal: signal() },
+    {
+      deviceId: 'adapter0.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+    },
+  ]
+
+  const result = await getQuality()
+  const health = result.stats.find((one) => one.key === 'health')
+
+  assert.equal(health?.value, '1 / 1')
+  assert.equal(health?.unit, '健全')
+  assert.equal(health?.aside, '対象なし 1 台')
+})
+
+test('未計測のチューナーは数のうちに残り、良好には数えない', async () => {
+  standing()
+  store.tuners = [
+    {
+      deviceId: 'adapter1.frontend0',
+      measures: everyMeasure({
+        state: 'unmeasured',
+        measured: 0,
+        unmeasured: 3,
+      }),
+      signal: signal(),
+    },
+  ]
+
+  const result = await getQuality()
+  const health = result.stats.find((one) => one.key === 'health')
+
+  assert.equal(result.tuners[0].state.label, '未計測')
+  assert.equal(health?.value, '0 / 1')
+  assert.equal(health?.aside, undefined)
 })
 
 test('期間は URL が持ち、押された幅がそのまま口に渡る', async () => {

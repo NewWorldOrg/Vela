@@ -312,8 +312,8 @@ export const NOTHING_MEASURED: QualityResult = {
     {
       key: 'health',
       label: 'チューナーヘルス',
-      value: '0 / 0',
-      unit: '健全',
+      level: 'nodata',
+      levelLabel: '対象なし',
       link: { href: '/settings/tuners', label: 'チューナーへ' },
       foot: '信号品質 未計測',
     },
