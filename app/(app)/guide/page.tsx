@@ -2,7 +2,11 @@ import type { Metadata } from 'next'
 
 import { getGuide } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
-import { coverageWarningOf, getCollectionStatus } from '@/repository/collection'
+import {
+  coverageDaysOf,
+  coverageWarningOf,
+  getCollectionStatus,
+} from '@/repository/collection'
 import {
   EPG_COLLECTION_EVENT,
   PROGRAMS_EVENT,
@@ -45,6 +49,7 @@ export default async function Page({
         guide={{
           ...guide,
           coverageWarning: coverageWarningOf(collection, guide.kind),
+          coverageDays: coverageDaysOf(collection, guide.kind),
         }}
         collection={collection}
         onCollectNow={boostCollection}

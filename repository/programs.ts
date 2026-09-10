@@ -77,7 +77,12 @@ export interface GuideResult {
   nowLabel?: string
   channels: Channel[]
   programs: Program[]
-  coverageWarning?: { emphasis: string }
+  coverageWarning?: {
+    tone: 'warn' | 'danger'
+    emphasis: string
+    detail?: string
+  }
+  coverageDays?: number
 }
 
 export interface ProgramItem {

@@ -1,12 +1,14 @@
 import type { Route } from 'next'
 
 import { formatStamp } from '@/lib/format'
-import { SILENCE_RANGE } from '@/lib/tuners'
+import { SILENCE_RANGE, reachAgo } from '@/lib/tuners'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import { SESSION_PURPOSE_LABEL } from '@/repository/driver-capabilities'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
+import type { ScanSystem } from '@/repository/scan-systems'
+import { SYSTEM_LABEL } from '@/repository/scan-systems'
 import { promisedEndOf, tuningLabelOf } from '@/repository/tuning'
 
 type TunerLedgerResponder = components['schemas']['TunerLedgerResponder']
@@ -20,6 +22,16 @@ type TunerKind = components['schemas']['TunerKind']
 type DeviceDetection = components['schemas']['DeviceDetection']
 type DetectedTunersResponder = components['schemas']['DetectedTunersResponder']
 type DetectedDeviceResponder = components['schemas']['DetectedDeviceResponder']
+type TunerHealthResponder = components['schemas']['TunerHealthResponder']
+type ServiceReachLevel = components['schemas']['ServiceReachLevel']
+
+export interface SystemReach {
+  system: ScanSystem
+  label: string
+  level: ServiceReachLevel
+  services: number
+  lastSeenAt?: string
+}
 
 export interface TunerSession {
   label: string
@@ -100,6 +112,7 @@ interface DriverState {
 export interface TunerResult extends DriverState {
   notices: TunerNotice[]
   thresholdHours: number
+  reach: SystemReach[]
   rows: TunerRow[]
 }
 
@@ -148,6 +161,16 @@ const SESSION_LABEL = SESSION_PURPOSE_LABEL
 
 const THRESHOLD_HOURS = 24
 
+const SYSTEMS_OF: Partial<Record<TunerKind, ScanSystem[]>> = {
+  terrestrial: ['isdbT'],
+  satellite: ['isdbSBs', 'isdbSCs110'],
+}
+
+const OUT_OF_REACH: ReadonlySet<ServiceReachLevel> = new Set([
+  'silent',
+  'missing',
+])
+
 const MIN_BUDGET_SECONDS = 10
 
 const MAX_BUDGET_SECONDS = 60
@@ -178,16 +201,33 @@ export async function getTuners(): Promise<TunerScreenResult> {
     }
   }
 
-  const hours = health.data?.data?.hoursOfSilence
+  const reported = health.data?.data ?? undefined
 
   return {
     state: 'ok',
     result: toResult(
       body.data,
       toDriver(driver.data),
-      hours == null ? THRESHOLD_HOURS : toInt(hours),
+      reported == null ? THRESHOLD_HOURS : toInt(reported.hoursOfSilence),
+      toReach(reported),
     ),
   }
+}
+
+function toReach(health: TunerHealthResponder | undefined): SystemReach[] {
+  return (health?.systems ?? []).flatMap((system) =>
+    system.system === 'unspecified'
+      ? []
+      : [
+          {
+            system: system.system,
+            label: wordFor(SYSTEM_LABEL, system.system),
+            level: system.level,
+            services: toInt(system.services),
+            lastSeenAt: system.lastSeenAt ?? undefined,
+          },
+        ],
+  )
 }
 
 export async function setHoursOfSilence(
@@ -595,24 +635,32 @@ function toResult(
   ledger: TunerLedgerResponder,
   driver: DriverState,
   thresholdHours: number,
+  reach: SystemReach[],
 ): TunerResult {
   const observed = new Map(
     (ledger.observed ?? []).map((entry) => [entry.deviceId, entry]),
   )
 
+  const now = Date.now()
+
   const rows = ledger.desired.map((entry) =>
-    toRow(entry, observed.get(entry.deviceId)),
+    toRow(entry, observed.get(entry.deviceId), reach, now),
   )
 
   return {
     ...driver,
-    notices: toNotices(ledger),
+    notices: toNotices(ledger, reach, thresholdHours),
     thresholdHours,
+    reach,
     rows,
   }
 }
 
-function toNotices(ledger: TunerLedgerResponder): TunerNotice[] {
+function toNotices(
+  ledger: TunerLedgerResponder,
+  reach: SystemReach[],
+  thresholdHours: number,
+): TunerNotice[] {
   const notices: TunerNotice[] = []
 
   if (ledger.observationFailure) {
@@ -622,11 +670,39 @@ function toNotices(ledger: TunerLedgerResponder): TunerNotice[] {
     })
   }
 
+  for (const system of reach.filter((one) => OUT_OF_REACH.has(one.level))) {
+    notices.push(toReachNotice(system, thresholdHours))
+  }
+
   if (ledger.drifted) {
     notices.push(toDriftNotice(ledger.observed))
   }
 
   return notices
+}
+
+function toReachNotice(
+  system: SystemReach,
+  thresholdHours: number,
+): TunerNotice {
+  const lastSeen =
+    system.lastSeenAt === undefined
+      ? ''
+      : `最後に受信したのは ${formatStamp(system.lastSeenAt)} です。`
+
+  return {
+    tone: system.level === 'missing' ? 'danger' : 'warn',
+    body:
+      system.level === 'missing'
+        ? `${system.label}のサービスを ${thresholdHours} 時間以上受信していません。${lastSeen}`
+        : `${system.label}のサービスをいま受信できていません。${lastSeen}`,
+    actions: [
+      {
+        label: '切り分けを見る',
+        href: `/settings/channels#system-${system.system}` as Route,
+      },
+    ],
+  }
 }
 
 function toDriftNotice(
@@ -661,6 +737,8 @@ function toDriftNotice(
 function toRow(
   entry: TunerEntryResponder,
   observation: TunerObservationResponder | undefined,
+  reach: SystemReach[],
+  now: number,
 ): TunerRow {
   const kind = observation && KIND_LABEL[observation.kind]
 
@@ -679,8 +757,34 @@ function toRow(
     session: toSession(observation),
     idleLabel: toIdleLabel(observation),
     lnb: kind === '衛星' ? toLnb(observation) : undefined,
+    lastService: toLastService(observation, reach, now),
     ...toState(observation),
   }
+}
+
+function toLastService(
+  observation: TunerObservationResponder | undefined,
+  reach: SystemReach[],
+  now: number,
+): TunerRow['lastService'] {
+  const served = observation && SYSTEMS_OF[observation.kind]
+
+  if (served === undefined) {
+    return undefined
+  }
+
+  const seen = reach
+    .flatMap((one) =>
+      served.includes(one.system) && one.lastSeenAt !== undefined
+        ? [one.lastSeenAt]
+        : [],
+    )
+    .sort((a, b) => Date.parse(a) - Date.parse(b))
+    .at(-1)
+
+  return seen === undefined
+    ? undefined
+    : { at: formatStamp(seen), ago: reachAgo(seen, now) }
 }
 
 function toSession(

@@ -47,10 +47,55 @@ const ledger = () => ({
 })
 
 const health = (hoursOfSilence: number | string) => ({
-  systems: [],
+  systems: [] as unknown[],
   hoursOfSilence,
-  undetermined: [],
+  undetermined: [] as string[],
 })
+
+const reaching = (
+  system: string,
+  level: string,
+  lastSeenAt: string | null,
+  services = 27,
+) => ({ system, level, services, lastSeenAt })
+
+const SEEN_AT = '2026-08-08T18:00:00Z'
+
+function observing(kind: string): void {
+  store.ledger = {
+    ...(ledger() as Record<string, unknown>),
+    observed: [
+      {
+        deviceId: 'adapter0.frontend0',
+        kind,
+        state: 'idle',
+        detail: null,
+        health: 'healthy',
+        disablePending: false,
+        lnbPowered: false,
+        healthDetail: null,
+        healthChangedAt: null,
+        sessionId: null,
+        sessionPurpose: 'unspecified',
+        sessionStartedAt: null,
+        sessionEndsAt: null,
+        sessionTuning: null,
+      },
+    ],
+  }
+}
+
+async function screen() {
+  const answer = await getTuners()
+
+  assert.equal(answer.state, 'ok')
+
+  if (answer.state !== 'ok') {
+    throw new Error('the tuner screen did not open')
+  }
+
+  return answer.result
+}
 
 mock.module('@/repository/client/carina', {
   namedExports: {
@@ -217,4 +262,118 @@ test('a driver connection this build does know is still read as it always was', 
     answer.state === 'ok' ? answer.result.connection : undefined,
     'connected',
   )
+})
+
+test('the last service a tuner saw is the one the API reports for its system', async () => {
+  standing()
+  observing('terrestrial')
+  store.health = {
+    ...health(24),
+    systems: [reaching('isdbT', 'reaching', SEEN_AT)],
+  }
+
+  assert.equal((await screen()).rows[0]?.lastService?.at, '08/09 03:00')
+})
+
+test('how long ago it was seen is counted from the moment it was read', async () => {
+  standing()
+  observing('terrestrial')
+  store.health = {
+    ...health(24),
+    systems: [
+      reaching(
+        'isdbT',
+        'reaching',
+        new Date(Date.now() - 7200000).toISOString(),
+      ),
+    ],
+  }
+
+  assert.equal((await screen()).rows[0]?.lastService?.ago, '2 時間前')
+})
+
+test('a system the API calls silent is put on the screen as the API judged it', async () => {
+  standing()
+  observing('terrestrial')
+  store.health = {
+    ...health(24),
+    systems: [reaching('isdbT', 'silent', SEEN_AT, 0)],
+  }
+
+  assert.deepEqual((await screen()).notices, [
+    {
+      tone: 'warn',
+      body: '地上波のサービスをいま受信できていません。最後に受信したのは 08/09 03:00 です。',
+      actions: [
+        { label: '切り分けを見る', href: '/settings/channels#system-isdbT' },
+      ],
+    },
+  ])
+})
+
+test('a system silent for longer than the threshold is said to be the graver one', async () => {
+  standing(48)
+  observing('satellite')
+  store.health = {
+    ...health(48),
+    systems: [reaching('isdbSBs', 'missing', SEEN_AT, 0)],
+  }
+
+  const notices = (await screen()).notices
+
+  assert.equal(notices[0]?.tone, 'danger')
+  assert.match(
+    notices[0]?.body ?? '',
+    /BSのサービスを 48 時間以上受信していません。/,
+  )
+})
+
+test('a system that is reaching leaves the screen quiet', async () => {
+  standing()
+  observing('terrestrial')
+  store.health = {
+    ...health(24),
+    systems: [reaching('isdbT', 'reaching', SEEN_AT)],
+  }
+
+  assert.deepEqual((await screen()).notices, [])
+})
+
+test('a satellite tuner the API says nothing about is left without an answer', async () => {
+  standing()
+  observing('satellite')
+  store.health = {
+    ...health(24),
+    systems: [reaching('isdbT', 'reaching', SEEN_AT)],
+  }
+
+  const result = await screen()
+
+  assert.equal(result.rows[0]?.lastService, undefined)
+  assert.deepEqual(result.notices, [])
+})
+
+test('a system named in a way this build has no case for is left out', async () => {
+  standing()
+  observing('terrestrial')
+  store.health = {
+    ...health(24),
+    systems: [reaching('unspecified', 'missing', SEEN_AT, 0)],
+  }
+
+  const result = await screen()
+
+  assert.deepEqual(result.reach, [])
+  assert.deepEqual(result.notices, [])
+})
+
+test('a health the API will not answer leaves the last service blank, not guessed', async () => {
+  standing()
+  observing('terrestrial')
+  store.healthStatus = 503
+
+  const result = await screen()
+
+  assert.equal(result.rows[0]?.lastService, undefined)
+  assert.deepEqual(result.reach, [])
 })

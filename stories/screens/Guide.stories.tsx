@@ -554,8 +554,21 @@ export const 健全性バナー: Story = {
     guide: {
       ...base,
       coverageWarning: {
-        emphasis:
-          '湾岸放送1・湾岸放送2 ほか 1 チャンネル の番組情報が不足しています。',
+        tone: 'warn',
+        emphasis: '3 チャンネルの番組情報が 8 日先まで届いていません。',
+      },
+    },
+  },
+}
+
+export const 一度も取れていないバナー: Story = {
+  args: {
+    guide: {
+      ...base,
+      coverageWarning: {
+        tone: 'danger',
+        emphasis: '2 チャンネルの番組情報がまだ一度も取れていません。',
+        detail: 'ほかに 1 チャンネルが 8 日先まで届いていません。',
       },
     },
   },
