@@ -485,7 +485,7 @@ export const 起動中: Story = {
     )
 
     await expect(opened[0].href).toBe(
-      '/api/live/ws?network=32736&service=1024&profile=1080p60',
+      '/api/live/ws?network=32736&service=1024&profile=1080p60&sound=main',
     )
 
     await expect(canvas.getByRole('button', { name: '再生' })).toBeDisabled()
