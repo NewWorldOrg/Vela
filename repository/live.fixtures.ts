@@ -29,7 +29,7 @@ function programme(
     startLabel: start,
     endLabel: end,
     hasSubtitles: false,
-    audio: 'stereo',
+    sounds: 1,
     genreLabel: 'その他',
     ...over,
   }

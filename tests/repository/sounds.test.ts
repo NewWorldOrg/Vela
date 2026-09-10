@@ -8,6 +8,7 @@ import {
   BOTH_SOUNDS,
   MAIN_SOUND,
   soundLabel,
+  soundsAnnounced,
   type SoundTrack,
 } from '@/repository/sounds'
 import { videoPictureHref } from '@/repository/video-paths'
@@ -48,6 +49,22 @@ test('the sounds offered are the ones the endpoint accepts', () => {
 
 test('the sound a request that names none carries is the one held as the main', () => {
   assert.equal(soundParameter.schema.default, MAIN_SOUND)
+})
+
+test('a programme carried on two sounds offers both of them', () => {
+  assert.deepEqual([...soundsAnnounced(2)], [...BOTH_SOUNDS])
+})
+
+test('a programme carried on one sound offers nothing to choose between', () => {
+  assert.deepEqual([...soundsAnnounced(1)], [MAIN_SOUND])
+})
+
+test('a programme that announced no sound at all offers none', () => {
+  assert.deepEqual([...soundsAnnounced(0)], [])
+})
+
+test('a count larger than the sounds this build names offers only the ones it names', () => {
+  assert.deepEqual([...soundsAnnounced(5)], [...BOTH_SOUNDS])
 })
 
 test('each sound is named in Japanese', () => {

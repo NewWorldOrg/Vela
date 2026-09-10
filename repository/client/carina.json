@@ -11108,6 +11108,7 @@
           "isShadow",
           "hasSubtitles",
           "audio",
+          "sounds",
           "source",
           "revision",
           "isArchived",
@@ -11169,6 +11170,14 @@
           },
           "audio": {
             "$ref": "#/components/schemas/AudioMode"
+          },
+          "sounds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "source": {
             "$ref": "#/components/schemas/ProgrammeSource"
