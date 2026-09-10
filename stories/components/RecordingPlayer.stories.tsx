@@ -32,6 +32,12 @@ const ON_THE_FLY: PlaybackPlan = {
   transcodes: true,
   showsAsAWholeRecording: true,
   mediaType: 'video/mp4',
+  sounds: ['main'],
+}
+
+const IN_TWO_LANGUAGES: PlaybackPlan = {
+  ...ON_THE_FLY,
+  sounds: ['main', 'secondary'],
 }
 
 async function ticketed(): Promise<TicketWrite> {
@@ -60,6 +66,12 @@ const asked: string[] = []
 
 function keeping(id: string, from: number, profile?: string) {
   asked.push(`${from}/${profile ?? '—'}`)
+
+  return stalling()
+}
+
+function carrying(id: string, from: number, profile?: string, sound?: string) {
+  asked.push(`${from}/${profile ?? '—'}/${sound ?? '—'}`)
 
   return stalling()
 }
@@ -183,7 +195,7 @@ export const 再生できない_スクランブル残存: Story = {
     detail: detail('0906'),
     startAt: 0,
     pictureHref: noPicture,
-    askWhy: answering('transcode'),
+    askWhy: answering({ kind: 'transcode' }),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -204,7 +216,7 @@ export const 再生できない_同時視聴の上限: Story = {
     detail: detail('1266'),
     startAt: 0,
     pictureHref: noPicture,
-    askWhy: answering('tooManyAtOnce'),
+    askWhy: answering({ kind: 'tooManyAtOnce' }),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -223,7 +235,7 @@ export const 再生できない_トランスコード失敗: Story = {
     detail: detail('1266'),
     startAt: 0,
     pictureHref: noPicture,
-    askWhy: answering('transcode'),
+    askWhy: answering({ kind: 'transcode' }),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -363,16 +375,99 @@ export const 効かない操作子: Story = {
     await expect(subtitles).toHaveAttribute('aria-pressed', 'false')
 
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
-
-    for (const track of within(
-      await screen.findByRole('group', { name: '音声' }),
-    ).getAllByRole('button')) {
-      await expect(track).toBeDisabled()
-    }
+    await screen.findByRole('group', { name: '画質' })
 
     await expect(
-      screen.getAllByText('字幕と音声の選択はこれから実装されます'),
+      screen.getAllByText('字幕の選択はこれから実装されます'),
     ).toHaveLength(1)
+  },
+}
+
+export const 音声が一つの録画に音声の行は無い: Story = {
+  args: { detail: detail('1266'), startAt: 0, pictureHref: carrying },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await screen.findByRole('group', { name: '画質' })
+
+    await expect(screen.queryByRole('group', { name: '音声' })).toBeNull()
+  },
+}
+
+export const 二つの音声を持つ録画は音声を選べる: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: IN_TWO_LANGUAGES,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked.at(-1)).toBe('0/1080p60/main'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    await expect(
+      within(sounds)
+        .getAllByRole('button')
+        .map((one) => one.textContent),
+    ).toEqual(['主音声', '副音声'])
+    await expect(
+      within(sounds).getByRole('button', { name: '主音声' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 副音声を選ぶと副音声で再生し直す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: IN_TWO_LANGUAGES,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    asked.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(asked).toEqual(['0/1080p60/secondary']))
+    await expect(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 再生できない_持っていない音声を頼んだ: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: IN_TWO_LANGUAGES,
+    startAt: 0,
+    pictureHref: noPicture,
+    askWhy: answering({
+      kind: 'refused',
+      said: 'この録画のもとになった放送は音声を 1 つしか運んでいないため、副音声を再生できません。',
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(canvas.getByText('再生を開始できませんでした')).toBeVisible(),
+    )
+    await expect(canvas.getByText(/副音声を再生できません/)).toBeVisible()
+    await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
   },
 }
 
@@ -940,7 +1035,7 @@ export const 立て直しに失敗したらコマごと断りに変わる: Story
     startAt: 0,
     pictureHref: (_id: string, from: number) =>
       from === 0 ? DRAWN_PICTURE : noPicture(),
-    askWhy: answering('transcode'),
+    askWhy: answering({ kind: 'transcode' }),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)

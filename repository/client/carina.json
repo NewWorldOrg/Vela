@@ -50,6 +50,19 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "name": "sound",
+            "in": "query",
+            "description": "The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with.",
+            "schema": {
+              "enum": [
+                "main",
+                "secondary"
+              ],
+              "type": "string",
+              "default": "main"
+            }
           }
         ],
         "responses": {
@@ -10244,6 +10257,7 @@
           "networkId",
           "serviceId",
           "profile",
+          "sound",
           "viewers",
           "dropped",
           "queued",
@@ -10271,6 +10285,9 @@
           },
           "profile": {
             "type": "string"
+          },
+          "sound": {
+            "$ref": "#/components/schemas/SoundTrack"
           },
           "viewers": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -10944,7 +10961,8 @@
           "transcodes",
           "showsAsAWholeRecording",
           "mediaType",
-          "bytes"
+          "bytes",
+          "sounds"
         ],
         "type": "object",
         "properties": {
@@ -10984,6 +11002,12 @@
               "string"
             ],
             "format": "int64"
+          },
+          "sounds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SoundTrack"
+            }
           }
         }
       },
@@ -11083,6 +11107,7 @@
           "summary",
           "isShadow",
           "hasSubtitles",
+          "audio",
           "source",
           "revision",
           "isArchived",
@@ -11141,6 +11166,9 @@
           },
           "hasSubtitles": {
             "type": "boolean"
+          },
+          "audio": {
+            "$ref": "#/components/schemas/AudioMode"
           },
           "source": {
             "$ref": "#/components/schemas/ProgrammeSource"
@@ -15880,6 +15908,23 @@
             "format": "int32"
           }
         }
+      },
+      "SoundTrack": {
+        "enum": [
+          "main",
+          "secondary"
+        ],
+        "type": "string"
+      },
+      "AudioMode": {
+        "enum": [
+          "undetermined",
+          "mono",
+          "stereo",
+          "dualMono",
+          "surround"
+        ],
+        "type": "string"
       }
     }
   },

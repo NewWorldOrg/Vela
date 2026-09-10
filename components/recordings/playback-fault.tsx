@@ -4,10 +4,13 @@ import type { ReactNode } from 'react'
 
 import { isLeftScrambled, scrambledPercent } from '@/lib/recordings'
 import type { RecordingDetail } from '@/repository/recordings'
+import { whatItSaid } from '@/repository/said'
 import type { TicketWrite } from '@/repository/videos'
 import {
   PLAYBACK_REFUSAL_HEADER,
   PLAYBACK_REFUSAL_TOO_MANY,
+  WHEN_CARRYING_A_SOUND,
+  whyItRefused,
 } from '@/repository/video-paths'
 import {
   ClockIcon,
@@ -20,12 +23,27 @@ import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import { OpenExternally } from '@/components/recordings/external-player'
 
-export type PlaybackFault =
+type PlainFault =
   | 'leftScrambled'
   | 'tooManyAtOnce'
   | 'nothingToPlay'
   | 'undecodable'
   | 'transcode'
+
+export type PlaybackFault =
+  { kind: PlainFault } | { kind: 'refused'; said: string }
+
+async function refusalIn(answer: Response): Promise<string> {
+  try {
+    return whyItRefused(
+      WHEN_CARRYING_A_SOUND,
+      answer.status,
+      whatItSaid(undefined, await answer.json()),
+    )
+  } catch {
+    return whyItRefused(WHEN_CARRYING_A_SOUND, answer.status, undefined)
+  }
+}
 
 export async function askWhyItWouldNotPlay(
   href: string,
@@ -34,30 +52,36 @@ export async function askWhyItWouldNotPlay(
   try {
     const answer = await fetch(href, { cache: 'no-store' })
 
-    void answer.body?.cancel()
-
     if (
       answer.headers.get(PLAYBACK_REFUSAL_HEADER) === PLAYBACK_REFUSAL_TOO_MANY
     ) {
-      return 'tooManyAtOnce'
+      void answer.body?.cancel()
+
+      return { kind: 'tooManyAtOnce' }
     }
 
+    if (answer.status === 400) {
+      return { kind: 'refused', said: await refusalIn(answer) }
+    }
+
+    void answer.body?.cancel()
+
     if (answer.status === 404) {
-      return 'nothingToPlay'
+      return { kind: 'nothingToPlay' }
     }
 
     if (answer.ok && !transcodes) {
-      return 'undecodable'
+      return { kind: 'undecodable' }
     }
 
-    return 'transcode'
+    return { kind: 'transcode' }
   } catch {
-    return 'transcode'
+    return { kind: 'transcode' }
   }
 }
 
 export function faultOnTheFace(detail: RecordingDetail): PlaybackFault | null {
-  return isLeftScrambled(detail) ? 'leftScrambled' : null
+  return isLeftScrambled(detail) ? { kind: 'leftScrambled' } : null
 }
 
 interface Said {
@@ -69,7 +93,7 @@ interface Said {
   worthLeaving: boolean
 }
 
-const SAID: Record<PlaybackFault, Said> = {
+const SAID: Record<PlainFault, Said> = {
   leftScrambled: {
     tone: 'gone',
     mark: <DangerIcon className="size-[22px]" />,
@@ -112,6 +136,14 @@ const SAID: Record<PlaybackFault, Said> = {
   },
 }
 
+const REFUSED: Said = {
+  tone: 'gone',
+  mark: <WarningIcon className="size-[22px]" />,
+  title: '再生を開始できませんでした',
+  worthRetrying: false,
+  worthLeaving: true,
+}
+
 export function PlaybackFaultNotice({
   detail: d,
   fault,
@@ -123,14 +155,15 @@ export function PlaybackFaultNotice({
   onRetry: () => void
   onTakeTicket: (id: string) => Promise<TicketWrite>
 }) {
-  const said = SAID[fault]
+  const said = fault.kind === 'refused' ? REFUSED : SAID[fault.kind]
+  const body = fault.kind === 'refused' ? fault.said : said.body?.(d)
 
   return (
     <PlaybackNotice
       tone={said.tone}
       mark={said.mark}
       title={said.title}
-      body={said.body?.(d)}
+      body={body}
     >
       {said.worthRetrying && (
         <button type="button" onClick={onRetry} className={PLAYER_BUTTON}>

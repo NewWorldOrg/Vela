@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
+import { BOTH_SOUNDS, MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import { liveWireHref } from '@/repository/live-paths'
 import { KEY_CAP, playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import { PlayerTip } from '@/components/recordings/player-tip'
@@ -133,7 +134,12 @@ export function LivePlayer({
   openSocket?: OpenSocket
   askSignedOut?: () => Promise<boolean>
   askBacklog?: AskBacklog
-  wireHref?: (networkId: number, serviceId: number, profile: string) => string
+  wireHref?: (
+    networkId: number,
+    serviceId: number,
+    profile: string,
+    sound: SoundTrack,
+  ) => string
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
 }) {
@@ -143,6 +149,10 @@ export function LivePlayer({
   const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
+  const [chosenSound, setChosenSound] = useState<{
+    of: string
+    track: SoundTrack
+  } | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
   const [muted, setMuted] = useState(false)
@@ -166,10 +176,16 @@ export function LivePlayer({
 
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
+  const sounds: readonly SoundTrack[] =
+    channel?.now?.audio === 'dualMono' ? BOTH_SOUNDS : []
+  const sound =
+    sounds.length > 1 && chosenSound !== null && chosenSound.of === channel?.id
+      ? chosenSound.track
+      : MAIN_SOUND
   const seat =
     networkId === undefined || serviceId === undefined || profile === undefined
       ? null
-      : `${networkId}:${serviceId}:${profile}`
+      : `${networkId}:${serviceId}:${profile}:${sound}`
   const retried = retries && retries.of === seat ? retries : null
   const attempt = retried?.count ?? 0
   const key = seat === null ? null : `${seat}:${attempt}`
@@ -246,7 +262,7 @@ export function LivePlayer({
     let quickenedSince: number | null = null
     let gapWhenQuickened = 0
     const openedAt = performance.now()
-    const seated = { networkId, serviceId, profile }
+    const seated = { networkId, serviceId, profile, sound }
     let askedAt = -BACKLOG_EVERY_MS
     let asking = false
 
@@ -272,7 +288,7 @@ export function LivePlayer({
     captions.current = layer
 
     const session = openLiveSession(
-      wireHref(networkId, serviceId, profile),
+      wireHref(networkId, serviceId, profile, sound),
       {
         onHeader: (init) => {
           feed.header(init)
@@ -446,6 +462,7 @@ export function LivePlayer({
     networkId,
     serviceId,
     profile,
+    sound,
     openSocket,
     askSignedOut,
     askBacklog,
@@ -907,6 +924,13 @@ export function LivePlayer({
                   profiles={profiles}
                   profile={profile}
                   onChooseProfile={setProfile}
+                  sounds={sounds}
+                  sound={sound}
+                  onChooseSound={(next) => {
+                    if (channel) {
+                      setChosenSound({ of: channel.id, track: next })
+                    }
+                  }}
                   dropped={running?.dropped}
                   droppedByThoseStillWatching={
                     running?.droppedByThoseStillWatching

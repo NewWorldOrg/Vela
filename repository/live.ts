@@ -6,7 +6,7 @@ import {
   type ChannelKind,
   type StationLogo,
 } from '@/repository/channels'
-import type { Programme } from '@/repository/programmes'
+import type { AudioMode, Programme } from '@/repository/programmes'
 import { fetchGuide, toInt } from '@/repository/programmes'
 import {
   clockLabel,
@@ -48,6 +48,7 @@ export interface LiveProgramme {
   startLabel: string
   endLabel?: string
   hasSubtitles: boolean
+  audio: AudioMode
   genreLabel: string
 }
 
@@ -296,6 +297,7 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
       ? clockLabel(new Date(programme.endsAt))
       : undefined,
     hasSubtitles: programme.hasSubtitles,
+    audio: programme.audio,
     genreLabel: genreDisplayOf(programme).label,
   }
 }

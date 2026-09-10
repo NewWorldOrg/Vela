@@ -2032,6 +2032,7 @@ export interface components {
       /** Format: int32 */
       serviceId: number | string
       profile: string
+      sound: components['schemas']['SoundTrack']
       /** Format: int32 */
       viewers: number | string
       /** Format: int64 */
@@ -2211,6 +2212,7 @@ export interface components {
       mediaType: string
       /** Format: int64 */
       bytes: null | number | string
+      sounds: components['schemas']['SoundTrack'][]
     }
     /** @enum {string} */
     PlaybackRoute: 'direct' | 'onTheFly' | 'nothing'
@@ -2249,6 +2251,7 @@ export interface components {
       summary: string
       isShadow: boolean
       hasSubtitles: boolean
+      audio: components['schemas']['AudioMode']
       source: components['schemas']['ProgrammeSource']
       /** Format: int64 */
       revision: number | string
@@ -3441,6 +3444,10 @@ export interface components {
       /** Format: int32 */
       versionChanges: number | string
     }
+    /** @enum {string} */
+    SoundTrack: 'main' | 'secondary'
+    /** @enum {string} */
+    AudioMode: 'undetermined' | 'mono' | 'stereo' | 'dualMono' | 'surround'
   }
   responses: never
   parameters: never
@@ -3457,6 +3464,8 @@ export interface operations {
         from?: number
         /** @description The profile the picture is encoded in while it is transcoded as it plays. Asking for none opens at what this machine encodes at, which depends on the encoder it has and so has no fixed default here; GET /api/live/profiles names it, marked as the unasked one, and the answer is the same for a recording as it is for a live channel. */
         profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
+        /** @description The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with. */
+        sound?: 'main' | 'secondary'
       }
       header?: never
       path: {

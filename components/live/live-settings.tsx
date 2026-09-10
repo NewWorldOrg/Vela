@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react'
 
 import type { LiveProfile } from '@/repository/live'
+import { soundLabel, type SoundTrack } from '@/repository/sounds'
 import { SettingsIcon } from '@/components/vela/icons'
 import {
   Popover,
@@ -12,8 +13,6 @@ import {
 import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-settings'
-
-const SOUND_NOT_WIRED = '音声の選択はこれから実装されます'
 
 function Figure({ children }: { children: ReactNode }) {
   return (
@@ -28,6 +27,9 @@ export function LiveSettings({
   profiles,
   profile,
   onChooseProfile,
+  sounds,
+  sound,
+  onChooseSound,
   dropped,
   droppedByThoseStillWatching,
   lostOnTheWayIn,
@@ -37,6 +39,9 @@ export function LiveSettings({
   profiles: LiveProfile[]
   profile?: string
   onChooseProfile: (next: string) => void
+  sounds: readonly SoundTrack[]
+  sound: SoundTrack
+  onChooseSound: (next: SoundTrack) => void
   dropped?: number
   droppedByThoseStillWatching?: number
   lostOnTheWayIn?: number
@@ -71,15 +76,17 @@ export function LiveSettings({
             numeric
           />
         </Setting>
-        <Setting label="音声" reason={SOUND_NOT_WIRED}>
-          <PlayerSegmentedControl
-            label="音声"
-            options={['主音声', '副音声']}
-            onChange={() => {}}
-            off
-            title={SOUND_NOT_WIRED}
-          />
-        </Setting>
+        {sounds.length > 1 && (
+          <Setting label="音声">
+            <PlayerSegmentedControl
+              label="音声"
+              options={sounds}
+              value={sound}
+              onChange={onChooseSound}
+              nameOf={soundLabel}
+            />
+          </Setting>
+        )}
         {dropped !== undefined && (
           <Setting label="ドロップ">
             <span

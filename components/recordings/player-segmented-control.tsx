@@ -3,19 +3,21 @@
 import { cn } from '@/lib/utils'
 import { pressable, still } from '@/components/vela/tactile'
 
-export function PlayerSegmentedControl({
+export function PlayerSegmentedControl<T extends string>({
   label,
   options,
   value,
   onChange,
+  nameOf,
   numeric,
   off,
   title,
 }: {
   label: string
-  options: readonly string[]
-  value?: string
-  onChange: (next: string) => void
+  options: readonly T[]
+  value?: T
+  onChange: (next: T) => void
+  nameOf?: (option: T) => string
   numeric?: boolean
   off?: boolean
   title?: string
@@ -47,7 +49,7 @@ export function PlayerSegmentedControl({
               'bg-[rgba(150,187,180,.24)] font-bold text-[#C0D8D3]',
           )}
         >
-          {option}
+          {nameOf ? nameOf(option) : option}
         </button>
       ))}
     </div>

@@ -1,3 +1,5 @@
+import type { SoundTrack } from '@/repository/sounds'
+
 const LIVE_WIRE_PATH = '/api/live/ws'
 
 export const LIVE_SESSION_PROBE_PATH = '/api/live/profiles'
@@ -21,11 +23,13 @@ export function liveWireHref(
   networkId: number,
   serviceId: number,
   profile: string,
+  sound: SoundTrack,
 ): string {
   const asked = new URLSearchParams({
     network: String(networkId),
     service: String(serviceId),
     profile,
+    sound,
   })
 
   return `${LIVE_WIRE_PATH}?${asked.toString()}`

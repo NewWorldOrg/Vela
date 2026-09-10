@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 
+import { soundLabel, type SoundTrack } from '@/repository/sounds'
 import {
   PLAYBACK_PROFILES,
   type PlaybackProfile,
@@ -19,7 +20,7 @@ export const PLAYBACK_SPEEDS = ['0.5', '1.0', '1.25', '1.5', '2.0'] as const
 
 const ONLY_ON_THE_FLY = 'オンザフライ再生のときだけ選べます'
 
-const NOT_WIRED = '字幕と音声の選択はこれから実装されます'
+const NOT_WIRED = '字幕の選択はこれから実装されます'
 
 export function Setting({
   label,
@@ -52,6 +53,9 @@ export function PlayerSettings({
   onTheFly,
   speed,
   onChooseSpeed,
+  sounds,
+  sound,
+  onChooseSound,
   onOpenChange,
 }: {
   container: HTMLElement | null
@@ -60,6 +64,9 @@ export function PlayerSettings({
   onTheFly: boolean
   speed: string
   onChooseSpeed: (next: string) => void
+  sounds: readonly SoundTrack[]
+  sound: SoundTrack
+  onChooseSound: (next: SoundTrack) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -102,15 +109,17 @@ export function PlayerSettings({
             numeric
           />
         </Setting>
-        <Setting label="音声">
-          <PlayerSegmentedControl
-            label="音声"
-            options={['主音声', '副音声']}
-            onChange={() => {}}
-            off
-            title={NOT_WIRED}
-          />
-        </Setting>
+        {sounds.length > 1 && (
+          <Setting label="音声">
+            <PlayerSegmentedControl
+              label="音声"
+              options={sounds}
+              value={sound}
+              onChange={onChooseSound}
+              nameOf={soundLabel}
+            />
+          </Setting>
+        )}
         <Setting label="字幕" reason={NOT_WIRED} />
       </PopoverContent>
     </Popover>

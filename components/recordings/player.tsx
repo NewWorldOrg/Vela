@@ -8,6 +8,7 @@ import { redrawnHref } from '@/lib/thumbnail-redraw'
 import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
+import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,
   videoFrameHref,
@@ -99,7 +100,12 @@ export function Player({
   onTakeTicket: (id: string) => Promise<TicketWrite>
   startAt?: number
   frameHref?: (id: string, at: number) => string
-  pictureHref?: (id: string, from: number, profile?: PlaybackProfile) => string
+  pictureHref?: (
+    id: string,
+    from: number,
+    profile?: PlaybackProfile,
+    sound?: SoundTrack,
+  ) => string
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
   takeCapture?: TakeCapture
 }) {
@@ -111,10 +117,11 @@ export function Player({
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
     unaskedProfile,
   )
+  const [sound, setSound] = useState<SoundTrack>(MAIN_SOUND)
   const [phase, setPhase] = useState<Phase>(
     startAt === undefined ? 'idle' : 'waiting',
   )
-  const [fault, setFault] = useState<PlaybackFault>('transcode')
+  const [fault, setFault] = useState<PlaybackFault>({ kind: 'transcode' })
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
   const [full, setFull] = useState(false)
@@ -124,7 +131,12 @@ export function Player({
   const [source, setSource] = useState(() =>
     startAt === undefined
       ? undefined
-      : pictureHref(d.id, startAt, onTheFly ? unaskedProfile : undefined),
+      : pictureHref(
+          d.id,
+          startAt,
+          onTheFly ? unaskedProfile : undefined,
+          onTheFly ? MAIN_SOUND : undefined,
+        ),
   )
 
   const poster =
@@ -241,6 +253,7 @@ export function Player({
   const play = (
     second: number,
     asked: PlaybackProfile | undefined = profile,
+    carrying: SoundTrack = sound,
   ) => {
     if (asking.current) {
       clearTimeout(asking.current)
@@ -253,8 +266,16 @@ export function Player({
     setFrom(second)
     setPosition(second)
     setProfile(asked)
+    setSound(carrying)
     setPhase('waiting')
-    setSource(pictureHref(d.id, second, onTheFly ? asked : undefined))
+    setSource(
+      pictureHref(
+        d.id,
+        second,
+        onTheFly ? asked : undefined,
+        onTheFly ? carrying : undefined,
+      ),
+    )
   }
 
   const stumbled = () => {
@@ -262,7 +283,7 @@ export function Player({
     const onTheFace = faultOnTheFace(d)
 
     if (onTheFace || !source) {
-      setFault(onTheFace ?? 'transcode')
+      setFault(onTheFace ?? { kind: 'transcode' })
       setPhase('broken')
 
       return
@@ -353,6 +374,16 @@ export function Player({
     }
 
     play(position, asked)
+  }
+
+  const chooseSound = (next: SoundTrack) => {
+    if (phase === 'idle') {
+      setSound(next)
+
+      return
+    }
+
+    play(position, profile, next)
   }
 
   const chooseSpeed = (next: string) => {
@@ -763,6 +794,9 @@ export function Player({
                     onTheFly={onTheFly}
                     speed={speed}
                     onChooseSpeed={chooseSpeed}
+                    sounds={plan.sounds}
+                    sound={sound}
+                    onChooseSound={chooseSound}
                   />
                 </PlayerTip>
                 <PlayerTip name="キャプチャ" container={shell}>

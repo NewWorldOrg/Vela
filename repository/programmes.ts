@@ -14,6 +14,8 @@ type ProgrammeSearchResponder =
   components['schemas']['ProgrammeSearchResponder']
 type TuneSystem = components['schemas']['TuneSystem']
 
+export type AudioMode = components['schemas']['AudioMode']
+
 type SearchParams = NonNullable<
   paths['/api/programs/search']['get']['parameters']['query']
 >
@@ -64,6 +66,7 @@ export interface Programme {
   summary: string
   isShadow: boolean
   hasSubtitles: boolean
+  audio: AudioMode
   isArchived: boolean
   genres: ProgrammeGenre[]
   items: ProgrammeItem[]
@@ -212,6 +215,7 @@ function toProgramme(programme: ProgrammeResponder): Programme {
     summary: programme.summary ?? '',
     isShadow: programme.isShadow,
     hasSubtitles: programme.hasSubtitles,
+    audio: programme.audio,
     isArchived: programme.isArchived,
     genres: (programme.genres ?? []).map((genre) => ({
       kind: toInt(genre.kind),
