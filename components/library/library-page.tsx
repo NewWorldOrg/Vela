@@ -150,7 +150,7 @@ export function LibraryView({
           spot="tape"
           title="条件に合う録画がありません"
           titleLevel={2}
-          className="mx-auto mt-10 max-w-[560px]"
+          className="mt-10 max-w-[560px]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
               <Button
@@ -193,7 +193,7 @@ export function LibraryView({
           spot="antenna"
           title="まだ録画がありません"
           titleLevel={2}
-          className="mx-auto mt-10 max-w-[560px]"
+          className="mt-10 max-w-[560px]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
               <Button variant="default" size="sm" asChild>

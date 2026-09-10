@@ -26,7 +26,7 @@ export function EmptyState({
     <div
       data-slot="empty-state"
       className={cn(
-        'rounded-xl border border-dashed border-line-strong bg-surface px-5 py-[26px] text-center',
+        'mx-auto w-full rounded-xl border border-dashed border-line-strong bg-surface px-5 py-[26px] text-center',
         className,
       )}
       {...props}

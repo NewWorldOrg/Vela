@@ -208,7 +208,7 @@ export function ReservationsView({
           spot={total === 0 ? 'antenna' : 'star'}
           title={total === 0 ? '予約はありません' : '未完了の予約はありません'}
           titleLevel={2}
-          className="mx-auto mt-10 max-w-[560px]"
+          className="mt-10 max-w-[560px]"
           action={
             total === 0 ? undefined : (
               <Button variant="ghost" size="sm" onClick={onClearFilters}>

@@ -239,7 +239,7 @@ export function ScanProposalView({
       <Summary proposal={proposal} />
 
       {proposal.empty ? (
-        <EmptyState spot="antenna" className="mx-auto max-w-[520px]">
+        <EmptyState spot="antenna" className="max-w-[520px]">
           今回の走査で変わるものはありませんでした。
         </EmptyState>
       ) : (

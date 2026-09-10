@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect } from 'storybook/test'
 
 import {
   Surface,
@@ -86,4 +87,23 @@ export const EmptyStates: Story = {
       <EmptyState spot="star">予約はまだありません。</EmptyState>
     </div>
   ),
+}
+
+export const EmptyStateInAColumn: Story = {
+  render: () => (
+    <div className="flex w-[900px] flex-col p-6">
+      <EmptyState
+        spot="tape"
+        title="条件に合う録画がありません"
+        className="max-w-[560px]"
+      >
+        絞り込みを解除すると、すべての録画が表示されます。
+      </EmptyState>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('[data-slot="empty-state"]')
+
+    await expect(box?.getBoundingClientRect().width).toBe(560)
+  },
 }
