@@ -182,6 +182,8 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
     failureReason: {
       title: 'スクランブル解除失敗',
       body: '閾値を超えた残存パケットを検出しました。',
+      note: 'covered 0.9812 of the window',
+      noticedAt: '08/02 00:15',
     },
     thumbnailState: { main: '録画が失敗したため作成されません' },
   },

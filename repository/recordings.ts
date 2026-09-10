@@ -1,6 +1,11 @@
 import { cache } from 'react'
 
-import { formatBytes, formatLength, formatPlayhead } from '@/lib/format'
+import {
+  formatBytes,
+  formatLength,
+  formatPlayhead,
+  formatStamp,
+} from '@/lib/format'
 import { castInExtended, leadOfExtended } from '@/lib/programme-extended'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { genreLabelOfKind } from '@/lib/search-condition'
@@ -39,6 +44,13 @@ export type QualityLevel = Exclude<
   'unmeasured'
 >
 export type ThumbnailState = 'shot' | 'pending' | 'none' | 'error'
+
+export interface FailureReason {
+  title: string
+  body?: string
+  note?: string
+  noticedAt?: string
+}
 
 export interface RecordingQuality {
   measured: boolean
@@ -233,7 +245,7 @@ export interface RecordingDetail extends Recording {
   eoverflow?: string
   scramble?: { main: string }
   stopReason?: string
-  failureReason?: { title: string; body?: string }
+  failureReason?: FailureReason
   thumbnailState?: { main: string; sub?: string }
   qualityRatio?: string
   qualityTotal?: string
@@ -491,8 +503,7 @@ function toDetail(
 ): RecordingDetail {
   const r = d.recording
   const base = toRecording(r, known, now)
-  const fault = leadingFault(r.outcomeDetail)
-  const failure = fault ? FAILURES[fault] : undefined
+  const named = leadingFault(r.outcomeDetail)
   const measured = r.drops.ccMeasured
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
   const totalPackets = counted(r.drops.ccTotalPackets) ?? 0
@@ -516,12 +527,7 @@ function toDetail(
         ? undefined
         : { main: `${grouped(scrambled)} パケット` },
     stopReason: stopReasonOf(d),
-    failureReason: failureReasonOf(
-      base.outcome,
-      failure,
-      fault,
-      r.outcomeDetail,
-    ),
+    failureReason: failureReasonOf(base.outcome, named, r.outcomeDetail),
     thumbnailState: shapeFor(
       THUMBNAIL_ROWS,
       r.thumbnail.state,
@@ -701,14 +707,14 @@ const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {
   streamMismatch: UNEXPECTED_STREAM,
 }
 
-function leadingFault(detail: FaultResponder[]): Fault | undefined {
-  return detail.find((one) => FAILURES[one.fault])?.fault
+function leadingFault(detail: FaultResponder[]): FaultResponder | undefined {
+  return detail.find((one) => FAILURES[one.fault])
 }
 
 function faultTitleOf(detail: FaultResponder[]): string | undefined {
-  const fault = leadingFault(detail)
+  const named = leadingFault(detail)
 
-  return fault ? FAILURES[fault]?.title : undefined
+  return named ? FAILURES[named.fault]?.title : undefined
 }
 
 function bodyOf(
@@ -733,19 +739,39 @@ function bodyOf(
 
 function failureReasonOf(
   outcome: RecordingOutcome,
-  failure: { title: string; body?: string } | undefined,
-  fault: Fault | undefined,
+  named: FaultResponder | undefined,
   detail: FaultResponder[],
-): { title: string; body?: string } | undefined {
+): FailureReason | undefined {
   if (outcome !== 'failed') {
     return undefined
   }
 
+  const failure = named ? FAILURES[named.fault] : undefined
+
   if (!failure) {
-    return detail.length > 0 ? { title: NOT_YET_IN_THIS_BUILD } : undefined
+    const first = detail.at(0)
+
+    return first
+      ? { title: NOT_YET_IN_THIS_BUILD, ...saidOf(first) }
+      : undefined
   }
 
-  return { title: failure.title, body: bodyOf(failure, fault, detail) }
+  return {
+    title: failure.title,
+    body: bodyOf(failure, named?.fault, detail),
+    ...saidOf(named),
+  }
+}
+
+function saidOf(named: FaultResponder | undefined): {
+  note?: string
+  noticedAt?: string
+} {
+  if (named === undefined || !named.note) {
+    return {}
+  }
+
+  return { note: named.note, noticedAt: formatStamp(named.noticedAt) }
 }
 
 function stopReasonOf(d: DetailResponder): string | undefined {

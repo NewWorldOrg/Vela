@@ -90,6 +90,17 @@ export const RESERVATION_RECEPTION_TERM: StateTerm = {
   explanation: 'このサービスに選局先がないため、録画できない状態。',
 }
 
+export const RESERVATION_EPG_DIVERGED_TERM: StateTerm = {
+  label: '番組変更',
+  explanation: '予約したあとに番組表が変わり、予約の内容とずれている状態。',
+}
+
+export const RESERVATION_EPG_MISSING_TERM: StateTerm = {
+  label: '番組消失',
+  explanation:
+    '予約した番組が番組表から無くなった状態。番組表に戻れば予約も戻ります。',
+}
+
 export const RESERVATION_RECORDING_REMOVED_TERM: StateTerm = {
   label: '録画削除済み',
   explanation: 'この予約からできた録画が、あとから削除された状態。',

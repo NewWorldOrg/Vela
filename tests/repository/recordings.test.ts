@@ -838,6 +838,79 @@ test('a failure this build has no name for is still said out loud', async () => 
   )
 })
 
+test('the sentence the recorder wrote about the failure reaches the screen', async () => {
+  const failed = recording({
+    outcome: 'failed',
+    outcomeDetail: [
+      {
+        fault: 'scramblingUnresolved',
+        tuneFailure: null,
+        note: 'covered 0.9812 of the window',
+        noticedAt: '2026-08-09T14:20:00Z',
+      },
+    ],
+  })
+  standing([failed])
+  store.detail = detailOf(failed)
+
+  const detail = await getRecording('d-note')
+
+  assert.equal(detail?.failureReason?.title, 'スクランブル解除失敗')
+  assert.equal(
+    detail?.failureReason?.body,
+    '閾値を超えた残存パケットを検出しました。',
+  )
+  assert.equal(detail?.failureReason?.note, 'covered 0.9812 of the window')
+  assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
+})
+
+test('a failure this build has no name for still carries what was written about it', async () => {
+  const failed = recording({
+    outcome: 'failed',
+    outcomeDetail: [
+      {
+        fault: 'somethingElseEntirely',
+        tuneFailure: null,
+        note: 'the recorder said this much about it',
+        noticedAt: '2026-08-09T14:20:00Z',
+      },
+    ],
+  })
+  standing([failed])
+  store.detail = detailOf(failed)
+
+  const detail = await getRecording('d-unknown-note')
+
+  assert.equal(detail?.failureReason?.title, 'この版がまだ知らない値')
+  assert.equal(
+    detail?.failureReason?.note,
+    'the recorder said this much about it',
+  )
+  assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
+})
+
+test('a failure the recorder wrote nothing about carries no sentence', async () => {
+  const failed = recording({
+    outcome: 'failed',
+    outcomeDetail: [
+      {
+        fault: 'nothingLanded',
+        tuneFailure: null,
+        note: '',
+        noticedAt: '2026-08-09T14:20:00Z',
+      },
+    ],
+  })
+  standing([failed])
+  store.detail = detailOf(failed)
+
+  const detail = await getRecording('d-no-note')
+
+  assert.equal(detail?.failureReason?.title, '0 バイトで終わった')
+  assert.equal(detail?.failureReason?.note, undefined)
+  assert.equal(detail?.failureReason?.noticedAt, undefined)
+})
+
 test('a failure with nothing recorded against it says nothing', async () => {
   const failed = recording({ outcome: 'failed', outcomeDetail: [] })
   standing([failed])

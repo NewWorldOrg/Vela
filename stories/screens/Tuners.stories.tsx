@@ -143,3 +143,50 @@ export const 状態を取得できない: Story = {
     },
   },
 }
+
+const TURNED_OFF_WHILE_HELD =
+  'This device was turned off and comes out of service as soon as the session it holds ends.'
+
+const NOTHING_CAME_BACK = 'The last three tunes on this device timed out.'
+
+export const 異常と警告はdriverの一文を添えて出る: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...TUNERS,
+        notices: [],
+        rows: [
+          {
+            ...TUNERS.rows[0],
+            id: 'adapter4',
+            device: 'adapter4',
+            session: undefined,
+            idleLabel: '割当停止中',
+            state: 'faulted',
+            stateLabel: '異常',
+            stateSub: NOTHING_CAME_BACK,
+          },
+          {
+            ...TUNERS.rows[0],
+            id: 'adapter5',
+            device: 'adapter5',
+            session: undefined,
+            idleLabel: 'アイドル',
+            state: 'warn',
+            stateLabel: '警告',
+            stateSub: TURNED_OFF_WHILE_HELD,
+          },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('異常')).toBeVisible()
+    await expect(canvas.getByText(NOTHING_CAME_BACK)).toBeVisible()
+    await expect(canvas.getByText('警告')).toBeVisible()
+    await expect(canvas.getByText(TURNED_OFF_WHILE_HELD)).toBeVisible()
+  },
+}

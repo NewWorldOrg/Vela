@@ -168,12 +168,11 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the reservation screens show what was asked for and how it ended; what the guide has said about the programme since, and what was taken in its place, have no part of a screen drawn for them yet',
+      'the reservation screens show what was asked for and how it ended; the rest of what the guide said about the programme, and what was taken in its place, have no part of a screen drawn for them yet',
     fields: [
       'ReservationProgrammeResponder.extended',
       'ReservationProgrammeResponder.genres',
       'ReservationResponder.broadcastGroup',
-      'ReservationResponder.epg',
       'ReservationResponder.recordingOutcome',
       'ReservationSettlementResponder.instead',
       'ReservationSettlementResponder.reservation',
@@ -187,8 +186,6 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
     fields: [
       'DropBucketResponder.scrambled',
       'RecordingBroadcastGroupResponder.role',
-      'RecordingFaultResponder.note',
-      'RecordingFaultResponder.noticedAt',
       'RecordingInterruptionResponder.fault',
       'RecordingInterruptionResponder.occurredAt',
       'RecordingInterruptionResponder.resumedAt',
@@ -225,13 +222,17 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   {
     because:
       'the row shows the state the driver put it in; the sentence the driver writes beside that state has no place drawn for it yet',
-    fields: [
-      'DetectedDeviceResponder.detail',
-      'ScanAttemptResponder.detail',
-      'TunerObservationResponder.detail',
-      'TunerObservationResponder.healthChangedAt',
-      'TunerObservationResponder.healthDetail',
-    ],
+    fields: ['DetectedDeviceResponder.detail', 'ScanAttemptResponder.detail'],
+  },
+  {
+    because:
+      'the row marks what the guide has moved and what has gone, and nothing on any screen takes such a mark as read, so when it was taken as read is never asked',
+    fields: ['ReservationDivergenceResponder.acknowledgedAt'],
+  },
+  {
+    because:
+      'the row says how the driver is finding the device and, where that is not well, why; when it last came to that verdict has no place drawn for it yet',
+    fields: ['TunerObservationResponder.healthChangedAt'],
   },
   {
     because:

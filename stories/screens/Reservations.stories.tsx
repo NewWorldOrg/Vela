@@ -8,6 +8,7 @@ import type {
   ReservationWrite,
 } from '@/repository/reservations'
 import {
+  EPG_DRIFT_FIXTURES,
   EVERY_STANDING_FIXTURES,
   RESERVATION_FIXTURES,
   SETTLED_RESERVATION_FIXTURES,
@@ -54,6 +55,10 @@ const shown = (
 ): ReservationsResult => ({
   items,
   total: items.length,
+  drift: {
+    diverged: items.filter((one) => one.epg?.diverged).length,
+    missing: items.filter((one) => one.epg?.programmeMissing).length,
+  },
   filter: {},
   ...over,
 })
@@ -439,5 +444,77 @@ export const 一括で選んで取り消す: Story = {
 
     await userEvent.click(some.getByRole('button', { name: '取り消す' }))
     await waitFor(() => expect(cancelledTogether).toEqual(['r-301', 'r-302']))
+  },
+}
+
+export const 番組表が動いた予約: Story = {
+  args: { result: shown(EPG_DRIFT_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    for (const title of ['海辺の図書室', '灯台守の一日']) {
+      await expect(
+        within(rowFor(canvas.getByText(title))).getByText('番組変更'),
+      ).toBeVisible()
+    }
+
+    const gone = rowFor(canvas.getByText('真夜中の音楽室'))
+
+    await expect(within(gone).getByText('番組消失')).toBeVisible()
+    await expect(within(gone).queryByText('番組変更')).toBeNull()
+    await expect(
+      within(rowFor(canvas.getByText('週末キッチンの手帖'))).queryByText(
+        '番組変更',
+      ),
+    ).toBeNull()
+
+    await expect(
+      canvas.getByRole('button', { name: '番組変更 2 件' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    await expect(
+      canvas.getByRole('button', { name: '番組消失 1 件' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+  },
+}
+
+export const 番組変更だけに絞ったとき: Story = {
+  args: {
+    result: shown(
+      EPG_DRIFT_FIXTURES.filter((one) => one.epg?.diverged),
+      {
+        total: EPG_DRIFT_FIXTURES.length,
+        drift: { diverged: 2, missing: 1 },
+        filter: { epg: 'diverged' },
+      },
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: '番組変更 2 件' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      canvas.getByRole('button', { name: '番組消失 1 件' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    await expect(canvas.queryByText('番組消失')).toBeNull()
+    await expect(canvas.getAllByText('番組変更')).toHaveLength(2)
+  },
+}
+
+export const 番組表が動いた予約はどこが動いたかを言う: Story = {
+  args: { result: shown(EPG_DRIFT_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.hover(
+      within(rowFor(canvas.getByText('海辺の図書室'))).getByText('番組変更'),
+    )
+
+    const said = await screen.findByRole('tooltip')
+
+    await expect(said).toHaveTextContent('開始 08/12 20:00 → 08/12 20:30')
+    await expect(said).toHaveTextContent('終了 08/12 20:45 → 08/12 21:15')
+    await expect(said).toHaveTextContent('08/11 06:20 に検出')
   },
 }

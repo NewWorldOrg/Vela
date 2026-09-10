@@ -4,8 +4,10 @@ import {
   formatBroadcastStart,
   formatClockSpan,
   formatReservationOrigin,
+  formatStamp,
 } from '@/lib/format'
 import { isDiscardable, isRestorable } from '@/lib/reservations'
+import { wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -17,6 +19,9 @@ import { ruleNames } from '@/repository/rules'
 import { whatItSaid } from '@/repository/said'
 
 type ReservationResponder = components['schemas']['ReservationResponder']
+type DivergenceResponder =
+  components['schemas']['ReservationDivergenceResponder']
+type DivergedField = components['schemas']['DivergedField']
 
 export type ReservationStanding = components['schemas']['ReservationStanding']
 export type AllocationVerdict = NonNullable<
@@ -37,6 +42,19 @@ export interface ReservationConflict {
   raiseTo: number
 }
 
+export interface EpgChange {
+  field: string
+  before: string
+  after: string
+}
+
+export interface EpgDrift {
+  diverged: boolean
+  programmeMissing: boolean
+  changes: EpgChange[]
+  noticedAt?: string
+}
+
 export interface Reservation {
   id: string
   title: string
@@ -50,6 +68,7 @@ export interface Reservation {
   standing: ReservationStanding
   endAtConfirmed: boolean
   receptionUnavailable: boolean
+  epg?: EpgDrift
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number
@@ -87,13 +106,22 @@ const DISCARD_REFUSAL: Partial<Record<ReservationRefusal, string>> = {
 
 const CANNOT_DISCARD = '予約を削除できませんでした'
 
+export type EpgDriftKind = 'diverged' | 'missing'
+
 export interface ReservationsFilter {
   show?: 'all'
+  epg?: EpgDriftKind
+}
+
+export interface EpgDriftTally {
+  diverged: number
+  missing: number
 }
 
 export interface ReservationsResult {
   items: Reservation[]
   total: number
+  drift: EpgDriftTally
   filter: ReservationsFilter
 }
 
@@ -123,14 +151,30 @@ export async function listReservations(
     filter.show === 'all'
       ? carried.items
       : carried.items.filter((one) => !isSettled(one, now))
+  const shaped = kept.map((one) =>
+    toReservation(one, carried.items, known, recordings, rules, now),
+  )
+  const drift: EpgDriftTally = {
+    diverged: shaped.filter((one) => one.epg?.diverged).length,
+    missing: shaped.filter((one) => one.epg?.programmeMissing).length,
+  }
+  const wanted = filter.epg
 
   return {
-    items: kept.map((one) =>
-      toReservation(one, carried.items, known, recordings, rules, now),
-    ),
+    items:
+      wanted === undefined
+        ? shaped
+        : shaped.filter((one) => drifted(one, wanted)),
     total: carried.total,
+    drift,
     filter,
   }
+}
+
+function drifted(one: Reservation, kind: EpgDriftKind): boolean {
+  return kind === 'missing'
+    ? one.epg?.programmeMissing === true
+    : one.epg?.diverged === true
 }
 
 function isSettled(one: ReservationResponder, now: Date): boolean {
@@ -422,6 +466,7 @@ export function toReservation(
     standing: r.standing,
     endAtConfirmed,
     receptionUnavailable: r.reception.unavailable,
+    epg: toEpgDrift(r.epg),
     priority: toInt(r.priority),
     marginBeforeSeconds: toInt(r.window.marginBeforeSeconds),
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
@@ -515,4 +560,45 @@ function toConflictEntry(
     origin: formatReservationOrigin(one.origin),
     ruleName: ruleNameOf(one.ruleId, rules),
   }
+}
+
+const DIVERGED_FIELD: Record<DivergedField, string> = {
+  name: '番組名',
+  startAt: '開始',
+  endAt: '終了',
+  service: 'チャンネル',
+}
+
+const MOVES_A_CLOCK: DivergedField[] = ['startAt', 'endAt']
+
+const UNSAID = '—'
+
+function toEpgDrift(epg: DivergenceResponder): EpgDrift | undefined {
+  if (!epg.diverged && !epg.programmeMissing) {
+    return undefined
+  }
+
+  const noticed = epg.detail
+    .map((one) => one.detectedAt)
+    .sort((a, b) => Date.parse(a) - Date.parse(b))
+    .at(-1)
+
+  return {
+    diverged: epg.diverged,
+    programmeMissing: epg.programmeMissing,
+    changes: epg.detail.map((one) => ({
+      field: wordFor(DIVERGED_FIELD, one.field),
+      before: asSaid(one.field, one.before),
+      after: asSaid(one.field, one.after),
+    })),
+    noticedAt: noticed === undefined ? undefined : formatStamp(noticed),
+  }
+}
+
+function asSaid(field: DivergedField, said: string | null): string {
+  if (!said) {
+    return UNSAID
+  }
+
+  return MOVES_A_CLOCK.includes(field) ? formatStamp(said) : said
 }

@@ -1,12 +1,16 @@
 import type {
+  EpgDrift,
   Reservation,
   ReservationStanding,
 } from '@/repository/reservations'
 import { recordingWasRemoved } from '@/lib/reservations'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
+import type { StateTerm } from '@/lib/state-terms'
 import {
   END_UNDECIDED_TERM,
   NOT_YET_IN_THIS_BUILD_TERM,
+  RESERVATION_EPG_DIVERGED_TERM,
+  RESERVATION_EPG_MISSING_TERM,
   RESERVATION_RECEPTION_TERM,
   RESERVATION_RECORDING_REMOVED_TERM,
   RESERVATION_STANDING_TERMS,
@@ -60,6 +64,24 @@ function StandingChip({ standing }: { standing: SettledStanding }) {
   )
 }
 
+function divergedTerm(drift: EpgDrift): StateTerm {
+  const moved = drift.changes.map(
+    (one) => `${one.field} ${one.before} → ${one.after}`,
+  )
+  const noticed = drift.noticedAt ? `${drift.noticedAt} に検出。` : undefined
+
+  return {
+    label: RESERVATION_EPG_DIVERGED_TERM.label,
+    explanation: [
+      RESERVATION_EPG_DIVERGED_TERM.explanation,
+      moved.length > 0 ? `${moved.join('、')}。` : undefined,
+      noticed,
+    ]
+      .filter((one) => one !== undefined)
+      .join(''),
+  }
+}
+
 export function ReservationStateChip({
   reservation,
 }: {
@@ -85,6 +107,16 @@ export function ReservationStateChip({
       {reservation.receptionUnavailable && (
         <TermTip term={RESERVATION_RECEPTION_TERM}>
           <Badge variant="err">{RESERVATION_RECEPTION_TERM.label}</Badge>
+        </TermTip>
+      )}
+      {reservation.epg?.programmeMissing && (
+        <TermTip term={RESERVATION_EPG_MISSING_TERM}>
+          <Badge variant="err">{RESERVATION_EPG_MISSING_TERM.label}</Badge>
+        </TermTip>
+      )}
+      {reservation.epg?.diverged && (
+        <TermTip term={divergedTerm(reservation.epg)}>
+          <Badge variant="warn">{RESERVATION_EPG_DIVERGED_TERM.label}</Badge>
         </TermTip>
       )}
       {removed && (

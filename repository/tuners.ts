@@ -839,12 +839,31 @@ function toState(
   }
 
   if (observation.state === 'faulted' || observation.health === 'faulted') {
-    return { state: 'faulted', stateLabel: '異常' }
+    return {
+      state: 'faulted',
+      stateLabel: '異常',
+      stateSub: whatTheDriverSaid(observation),
+    }
   }
 
   if (observation.health === 'degraded') {
-    return { state: 'warn', stateLabel: '警告' }
+    return {
+      state: 'warn',
+      stateLabel: '警告',
+      stateSub: whatTheDriverSaid(observation),
+    }
   }
 
   return { state: 'ok', stateLabel: '正常' }
+}
+
+function whatTheDriverSaid(
+  observation: TunerObservationResponder,
+): string | undefined {
+  const said =
+    observation.state === 'faulted' && observation.detail
+      ? observation.detail
+      : observation.healthDetail
+
+  return said || undefined
 }
