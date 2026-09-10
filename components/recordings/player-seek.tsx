@@ -3,7 +3,6 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 
 import { formatPlayhead, formatPlayerTime } from '@/lib/format'
-import type { SeekMarks } from '@/repository/recordings'
 import { videoFrameHref } from '@/repository/video-paths'
 
 const SETTLES = 140
@@ -18,7 +17,6 @@ export function PlayerSeek({
   position,
   buffered,
   drops,
-  marks,
   onChoose,
   onScrubbing,
   frameHref = videoFrameHref,
@@ -28,7 +26,6 @@ export function PlayerSeek({
   position: number
   buffered?: number
   drops?: number[]
-  marks?: SeekMarks
   onChoose: (second: number) => void
   onScrubbing?: (at: number | null) => void
   frameHref?: (id: string, at: number) => string
@@ -207,24 +204,7 @@ export function PlayerSeek({
           className="absolute inset-y-0 left-0 rounded-full bg-(--pl-accent)"
           style={{ width: `${playedPct}%` }}
         />
-        {marks?.cmSpans?.map((span) => (
-          <span
-            key={span.leftPct}
-            aria-hidden="true"
-            title="CM と判定された区間"
-            className="absolute inset-y-0 rounded-full [background:repeating-linear-gradient(115deg,rgba(215,172,94,.62)_0_4px,rgba(215,172,94,.26)_4px_8px)]"
-            style={{ left: `${span.leftPct}%`, width: `${span.widthPct}%` }}
-          />
-        ))}
       </div>
-      {marks?.chapterPcts?.map((pct) => (
-        <span
-          key={pct}
-          aria-hidden="true"
-          className="absolute top-1/2 -ml-px h-[9px] w-0.5 -translate-y-1/2 rounded-[1px] bg-(--pl-lemon) opacity-85 transition-[height] duration-100 ease-out group-hover:h-[11px] group-data-[wanted]:h-[11px]"
-          style={{ left: `${pct}%` }}
-        />
-      ))}
       {duration > 0 &&
         drops?.map((second) => (
           <span
