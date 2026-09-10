@@ -11,7 +11,7 @@ export function ScreenPlaceholder({
 }) {
   return (
     <ScreenMain className="flex items-center justify-center p-8">
-      <EmptyState spot={spot} className="w-full max-w-[420px]">
+      <EmptyState spot={spot} className="max-w-[420px]">
         {children}
       </EmptyState>
     </ScreenMain>

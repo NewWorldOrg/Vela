@@ -441,13 +441,13 @@ function SearchScreen({ result }: { result: SearchResult }) {
         <EmptyState
           spot="antenna"
           title="まだ検索していません"
-          className="mx-auto mt-10 max-w-[560px]"
+          className="mt-10 max-w-[560px]"
         />
       ) : outcome.state === 'refused' ? (
         <EmptyState
           spot="antenna"
           title="この条件では検索できません"
-          className="mx-auto mt-10 max-w-[560px]"
+          className="mt-10 max-w-[560px]"
         >
           {outcome.message}
         </EmptyState>
@@ -534,7 +534,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
               <EmptyState
                 spot="antenna"
                 title="該当する番組がありません"
-                className="mx-auto mt-6 max-w-[560px]"
+                className="mt-6 max-w-[560px]"
                 action={
                   <div className="flex flex-wrap justify-center gap-2">
                     <Button size="sm" variant="outline" onClick={clear}>

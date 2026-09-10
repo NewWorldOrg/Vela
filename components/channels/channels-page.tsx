@@ -65,7 +65,7 @@ function ServiceGroupSection({
         group.diagnosis ? (
           <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
         ) : (
-          <EmptyState spot="antenna" className="mx-auto max-w-[520px]">
+          <EmptyState spot="antenna" className="max-w-[520px]">
             {group.walk === 'never'
               ? `${group.label}はまだスキャンされていません。`
               : group.walk === 'unknown'

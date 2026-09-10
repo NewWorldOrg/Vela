@@ -199,7 +199,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           spot="tape"
           title="条件に合う記録がありません"
           titleLevel={2}
-          className="mx-auto mt-10 max-w-[560px]"
+          className="mt-10 max-w-[560px]"
           action={
             <Button
               variant="default"
@@ -217,7 +217,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           spot="star"
           title="録れなかった予約はありません"
           titleLevel={2}
-          className="mx-auto mt-10 max-w-[560px]"
+          className="mt-10 max-w-[560px]"
           action={
             <Button variant="ghost" size="sm" asChild>
               <Link href="/reservations">予約一覧へ</Link>
