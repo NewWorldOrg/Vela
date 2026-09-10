@@ -325,6 +325,16 @@ export function RecordingDetailView({
                     {d.failureReason.body}
                   </p>
                 )}
+                {d.failureReason.note && (
+                  <p className="mt-1 text-note leading-relaxed text-ink-3">
+                    {d.failureReason.noticedAt && (
+                      <span className="mr-1.5 font-code tabular-nums">
+                        {d.failureReason.noticedAt}
+                      </span>
+                    )}
+                    {d.failureReason.note}
+                  </p>
+                )}
               </div>
             </div>
           )}

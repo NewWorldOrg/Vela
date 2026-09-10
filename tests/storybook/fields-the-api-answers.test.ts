@@ -187,8 +187,6 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
     fields: [
       'DropBucketResponder.scrambled',
       'RecordingBroadcastGroupResponder.role',
-      'RecordingFaultResponder.note',
-      'RecordingFaultResponder.noticedAt',
       'RecordingInterruptionResponder.fault',
       'RecordingInterruptionResponder.occurredAt',
       'RecordingInterruptionResponder.resumedAt',
