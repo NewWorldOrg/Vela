@@ -377,3 +377,72 @@ test('a health the API will not answer leaves the last service blank, not guesse
   assert.equal(result.rows[0]?.lastService, undefined)
   assert.deepEqual(result.reach, [])
 })
+
+function observedAs(over: Record<string, unknown>): void {
+  observing('terrestrial')
+  store.ledger = {
+    ...(store.ledger as Record<string, unknown>),
+    observed: [
+      {
+        ...((store.ledger as { observed: Record<string, unknown>[] })
+          .observed[0] ?? {}),
+        ...over,
+      },
+    ],
+  }
+}
+
+const A_DEVICE_TURNED_OFF =
+  'This device was turned off and comes out of service as soon as the session it holds ends.'
+
+const NOTHING_CAME_BACK = 'The last three tunes on this device timed out.'
+
+test('a tuner the driver calls faulted carries the sentence the driver wrote beside it', async () => {
+  standing()
+  observedAs({ state: 'faulted', detail: NOTHING_CAME_BACK })
+
+  const row = (await screen()).rows[0]
+
+  assert.equal(row?.stateLabel, '異常')
+  assert.equal(row?.stateSub, NOTHING_CAME_BACK)
+})
+
+test('a tuner faulted on its health alone reads the sentence written beside the health', async () => {
+  standing()
+  observedAs({ health: 'faulted', healthDetail: A_DEVICE_TURNED_OFF })
+
+  const row = (await screen()).rows[0]
+
+  assert.equal(row?.stateLabel, '異常')
+  assert.equal(row?.stateSub, A_DEVICE_TURNED_OFF)
+})
+
+test('a tuner the driver only warns about carries the sentence too', async () => {
+  standing()
+  observedAs({ health: 'degraded', healthDetail: A_DEVICE_TURNED_OFF })
+
+  const row = (await screen()).rows[0]
+
+  assert.equal(row?.stateLabel, '警告')
+  assert.equal(row?.stateSub, A_DEVICE_TURNED_OFF)
+})
+
+test('a tuner the driver wrote nothing about is left without a sentence', async () => {
+  standing()
+  observedAs({ state: 'faulted', detail: null, healthDetail: null })
+
+  const row = (await screen()).rows[0]
+
+  assert.equal(row?.stateLabel, '異常')
+  assert.equal(row?.stateSub, undefined)
+})
+
+test('a healthy tuner is not given a sentence it has no state to explain', async () => {
+  standing()
+  observedAs({ healthDetail: A_DEVICE_TURNED_OFF })
+
+  const row = (await screen()).rows[0]
+
+  assert.equal(row?.stateLabel, '正常')
+  assert.equal(row?.stateSub, undefined)
+})
