@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import type { LiveProfile } from '@/repository/live'
 import { SettingsIcon } from '@/components/vela/icons'
@@ -15,12 +15,22 @@ import { Setting } from '@/components/recordings/player-settings'
 
 const SOUND_NOT_WIRED = '音声の選択はこれから実装されます'
 
+function Figure({ children }: { children: ReactNode }) {
+  return (
+    <span className="font-code text-[15px] font-medium text-(--pl-ink)">
+      {children}
+    </span>
+  )
+}
+
 export function LiveSettings({
   container,
   profiles,
   profile,
   onChooseProfile,
   dropped,
+  droppedByThoseStillWatching,
+  lostOnTheWayIn,
   onOpenChange,
 }: {
   container: HTMLElement | null
@@ -28,6 +38,8 @@ export function LiveSettings({
   profile?: string
   onChooseProfile: (next: string) => void
   dropped?: number
+  droppedByThoseStillWatching?: number
+  lostOnTheWayIn?: number
   onOpenChange?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -74,10 +86,26 @@ export function LiveSettings({
               data-slot="live-dropped"
               className="text-[12px] text-(--pl-ink-2)"
             >
-              <span className="font-code text-[15px] font-medium text-(--pl-ink)">
-                {dropped}
-              </span>{' '}
-              件
+              <Figure>{dropped}</Figure> 件
+            </span>
+            {droppedByThoseStillWatching !== undefined &&
+              droppedByThoseStillWatching !== dropped && (
+                <span
+                  data-slot="live-dropped-still-watching"
+                  className="text-[12px] text-(--pl-ink-3)"
+                >
+                  視聴中 <Figure>{droppedByThoseStillWatching}</Figure> 件
+                </span>
+              )}
+          </Setting>
+        )}
+        {lostOnTheWayIn !== undefined && (
+          <Setting label="受信">
+            <span
+              data-slot="live-lost-on-the-way-in"
+              className="text-[12px] text-(--pl-ink-2)"
+            >
+              取りこぼし <Figure>{lostOnTheWayIn}</Figure> 件
             </span>
           </Setting>
         )}

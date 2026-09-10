@@ -16,6 +16,11 @@ const ANSWER = {
       viewers: 2,
       dropped: '18',
       queued: 3,
+      chunksDroppedSinceTheSupplyOpened: '328',
+      watching: [
+        { droppedSinceTheyJoined: '7', queued: 3 },
+        { droppedSinceTheyJoined: 5, queued: 1 },
+      ],
       startup: { inProgress: false, marks: [] },
     },
     {
@@ -25,6 +30,8 @@ const ANSWER = {
       viewers: 1,
       dropped: 0,
       queued: 0,
+      chunksDroppedSinceTheSupplyOpened: null,
+      watching: [],
       startup: { inProgress: true, marks: [] },
     },
   ],
@@ -39,6 +46,8 @@ test('the sessions are read with their counts as numbers, however JSON spelled t
       viewers: 2,
       dropped: 18,
       queued: 3,
+      droppedByThoseStillWatching: 12,
+      lostOnTheWayIn: 328,
     },
     {
       networkId: 32736,
@@ -47,6 +56,8 @@ test('the sessions are read with their counts as numbers, however JSON spelled t
       viewers: 1,
       dropped: 0,
       queued: 0,
+      droppedByThoseStillWatching: 0,
+      lostOnTheWayIn: undefined,
     },
   ])
 })
@@ -72,11 +83,39 @@ test('a body that is not the answer reads as nothing at all', () => {
 test('the backlog is the seat’s own: the same channel in another profile is another session', () => {
   const sessions = readLiveSessions(ANSWER)!
 
-  assert.deepEqual(backlogOf(sessions, SEAT), { dropped: 18, queued: 3 })
+  assert.deepEqual(backlogOf(sessions, SEAT), {
+    dropped: 18,
+    queued: 3,
+    droppedByThoseStillWatching: 12,
+    lostOnTheWayIn: 328,
+  })
   assert.deepEqual(backlogOf(sessions, { ...SEAT, profile: '720p30' }), {
     dropped: 0,
     queued: 0,
+    droppedByThoseStillWatching: 0,
+    lostOnTheWayIn: undefined,
   })
   assert.equal(backlogOf(sessions, { ...SEAT, serviceId: 1025 }), undefined)
   assert.equal(backlogOf([], SEAT), undefined)
+})
+
+test('what the driver never said is not read as none of it', () => {
+  const sessions = readLiveSessions({
+    status: true,
+    message: '',
+    data: [
+      {
+        networkId: 32736,
+        serviceId: 1024,
+        profile: '1080p60',
+        viewers: 1,
+        dropped: 4,
+        queued: 0,
+        startup: { inProgress: false, marks: [] },
+      },
+    ],
+  })!
+
+  assert.equal(sessions[0].lostOnTheWayIn, undefined)
+  assert.equal(sessions[0].droppedByThoseStillWatching, undefined)
 })

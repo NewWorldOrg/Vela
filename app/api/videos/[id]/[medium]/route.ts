@@ -10,9 +10,12 @@ function carried(medium: string): medium is Medium {
   return (MEDIA as readonly string[]).includes(medium)
 }
 
+const CARRIED_UP = ['accept', 'range', 'cookie']
+
 const PASSED_ON = [
   'content-type',
   'content-length',
+  'content-range',
   'accept-ranges',
   'cache-control',
 ]
@@ -49,14 +52,18 @@ export async function GET(
     }
   }
 
-  const session = request.headers.get('cookie')
-  const accept = request.headers.get('accept')
+  const carriedUp = new Headers()
+
+  for (const name of CARRIED_UP) {
+    const value = request.headers.get(name)
+
+    if (value !== null) {
+      carriedUp.set(name, value)
+    }
+  }
 
   const upstream = await fetch(upstreamUrl, {
-    headers: {
-      ...(accept ? { accept } : {}),
-      ...(session ? { cookie: session } : {}),
-    },
+    headers: carriedUp,
     cache: 'no-store',
     signal: request.signal,
   })

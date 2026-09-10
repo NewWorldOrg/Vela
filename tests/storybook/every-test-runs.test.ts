@@ -7,6 +7,7 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/api/videos/route.test.ts',
   'tests/components/live/live-captions.test.ts',
   'tests/lib/app-signals.test.ts',
   'tests/lib/capture-name.test.ts',
