@@ -259,6 +259,15 @@ const signedOut = async () => true
 
 const uncounted: AskBacklog = async () => undefined
 
+function losing(lostOnTheWayIn: number): AskBacklog {
+  return async () => ({
+    dropped: 18,
+    queued: 0,
+    droppedByThoseStillWatching: 12,
+    lostOnTheWayIn,
+  })
+}
+
 function counting(dropped: number[]): AskBacklog {
   let asked = 0
 
@@ -614,8 +623,52 @@ export const ドロップを数える: Story = {
     await waitFor(() => expect(dropped()).toBe('18 件'))
     await expect(within(gear).getByText('ドロップ')).toBeVisible()
     await expect(within(gear).queryByText(/捨てた/)).toBeNull()
+    await expect(within(gear).queryByText('受信')).toBeNull()
+    await expect(
+      gear.querySelector('[data-slot="live-dropped-still-watching"]'),
+    ).toBeNull()
 
     await waitFor(() => expect(dropped()).toBe('19 件'), { timeout: 5000 })
+  },
+}
+
+export const 受信で取りこぼした分を出す: Story = {
+  args: { openSocket: stalling, askBacklog: losing(328) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const gear = await screen.findByRole('dialog', { name: '設定' })
+    const seen = (slot: string) =>
+      gear.querySelector(`[data-slot="${slot}"]`)?.textContent
+
+    await waitFor(() =>
+      expect(seen('live-lost-on-the-way-in')).toBe('取りこぼし 328 件'),
+    )
+    await expect(within(gear).getByText('受信')).toBeVisible()
+    await expect(seen('live-dropped')).toBe('18 件')
+    await expect(seen('live-dropped-still-watching')).toBe('視聴中 12 件')
+  },
+}
+
+export const 受信で何も落ちていなくても出す: Story = {
+  args: { openSocket: stalling, askBacklog: losing(0) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const gear = await screen.findByRole('dialog', { name: '設定' })
+
+    await waitFor(() =>
+      expect(
+        gear.querySelector('[data-slot="live-lost-on-the-way-in"]')
+          ?.textContent,
+      ).toBe('取りこぼし 0 件'),
+    )
   },
 }
 

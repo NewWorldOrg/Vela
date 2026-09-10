@@ -94,6 +94,8 @@ interface Running {
   catchingUp: boolean
   losing: boolean
   dropped?: number
+  droppedByThoseStillWatching?: number
+  lostOnTheWayIn?: number
 }
 
 function begun(key: string): Running {
@@ -338,9 +340,17 @@ export function LivePlayer({
           }
 
           change((was) =>
-            was.dropped === read.dropped
+            was.dropped === read.dropped &&
+            was.droppedByThoseStillWatching ===
+              read.droppedByThoseStillWatching &&
+            was.lostOnTheWayIn === read.lostOnTheWayIn
               ? was
-              : { ...was, dropped: read.dropped },
+              : {
+                  ...was,
+                  dropped: read.dropped,
+                  droppedByThoseStillWatching: read.droppedByThoseStillWatching,
+                  lostOnTheWayIn: read.lostOnTheWayIn,
+                },
           )
         })
       }
@@ -898,6 +908,10 @@ export function LivePlayer({
                   profile={profile}
                   onChooseProfile={setProfile}
                   dropped={running?.dropped}
+                  droppedByThoseStillWatching={
+                    running?.droppedByThoseStillWatching
+                  }
+                  lostOnTheWayIn={running?.lostOnTheWayIn}
                 />
               </PlayerTip>
               <PlayerTip name="キャプチャ" container={shell}>

@@ -1,6 +1,7 @@
 import type { components } from '@/repository/client/schema'
 
 type LiveSessionResponder = components['schemas']['LiveSessionResponder']
+type LiveViewerResponder = components['schemas']['LiveViewerResponder']
 type LiveSessionsAnswer =
   components['schemas']['BaseResponderOfIReadOnlyListOfLiveSessionResponder']
 
@@ -11,11 +12,15 @@ export interface LiveSessionReading {
   viewers: number
   dropped: number
   queued: number
+  droppedByThoseStillWatching?: number
+  lostOnTheWayIn?: number
 }
 
 export interface LiveBacklog {
   dropped: number
   queued: number
+  droppedByThoseStillWatching?: number
+  lostOnTheWayIn?: number
 }
 
 export interface LiveSeat {
@@ -50,6 +55,31 @@ function isSession(item: unknown): item is LiveSessionResponder {
   )
 }
 
+function isViewer(item: unknown): item is LiveViewerResponder {
+  return isRecord(item) && item.droppedSinceTheyJoined !== undefined
+}
+
+function droppedByThoseStillWatching(
+  session: LiveSessionResponder,
+): number | undefined {
+  const watching: unknown = session.watching
+
+  if (!Array.isArray(watching) || !watching.every(isViewer)) {
+    return undefined
+  }
+
+  return watching.reduce(
+    (total, viewer) => total + count(viewer.droppedSinceTheyJoined),
+    0,
+  )
+}
+
+function lostOnTheWayIn(session: LiveSessionResponder): number | undefined {
+  const lost = session.chunksDroppedSinceTheSupplyOpened
+
+  return lost === null || lost === undefined ? undefined : count(lost)
+}
+
 function toReading(session: LiveSessionResponder): LiveSessionReading {
   return {
     networkId: count(session.networkId),
@@ -58,6 +88,8 @@ function toReading(session: LiveSessionResponder): LiveSessionReading {
     viewers: count(session.viewers),
     dropped: count(session.dropped),
     queued: count(session.queued),
+    droppedByThoseStillWatching: droppedByThoseStillWatching(session),
+    lostOnTheWayIn: lostOnTheWayIn(session),
   }
 }
 
@@ -86,5 +118,12 @@ export function backlogOf(
       session.profile === seat.profile,
   )
 
-  return own && { dropped: own.dropped, queued: own.queued }
+  return (
+    own && {
+      dropped: own.dropped,
+      queued: own.queued,
+      droppedByThoseStillWatching: own.droppedByThoseStillWatching,
+      lostOnTheWayIn: own.lostOnTheWayIn,
+    }
+  )
 }
