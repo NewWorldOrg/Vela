@@ -62,6 +62,7 @@ const THE_SUITE = [
   'tests/repository/videos.test.ts',
   'tests/storybook/cursor-exempt.test.ts',
   'tests/storybook/every-test-runs.test.ts',
+  'tests/storybook/fields-nothing-fills.test.ts',
   'tests/storybook/fields-the-api-answers.test.ts',
   'tests/storybook/screen-main.test.ts',
   'tests/storybook/switches-over-the-api.test.ts',
