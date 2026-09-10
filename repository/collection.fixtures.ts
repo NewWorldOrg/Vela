@@ -2,6 +2,7 @@ import type { CollectionStatus, StreamVisitRow } from '@/repository/collection'
 
 function statusOf(streams: StreamVisitRow[]): CollectionStatus {
   return {
+    wantedCoverageHours: 192,
     streams,
     kindCounts: [
       { kind: 'terrestrial', label: '地上波', count: streams.length },
@@ -82,7 +83,8 @@ function row(
       (_, carried) => `${fixture.name}${carried + 1}`,
     ),
     consecutiveIncomplete: 0,
-    stale: false,
+    neverCovered: 0,
+    shortOfWanted: 0,
     ...fixture,
   }
 }

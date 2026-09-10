@@ -189,7 +189,7 @@ export function GuideView({
 
       {guide.coverageWarning && (
         <Banner
-          tone="warn"
+          tone={guide.coverageWarning.tone}
           className="mb-3"
           data-opens="collection"
           actions={[
@@ -200,13 +200,14 @@ export function GuideView({
           ]}
         >
           <b className="block font-bold">{guide.coverageWarning.emphasis}</b>
+          {guide.coverageWarning.detail}
         </Banner>
       )}
 
       {shownGuide.channels.length === 0 ? (
         <EmptyState
           spot="antenna"
-          title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ 0 日)`}
+          title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
           action={
             <Button variant="default" size="sm" asChild>
               <Link href="/settings/channels">チャンネル設定へ</Link>

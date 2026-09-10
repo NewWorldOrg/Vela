@@ -1,4 +1,3 @@
-import { streamLabel } from '@/lib/collection'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -12,6 +11,8 @@ import {
 } from '@/repository/programs'
 import { whatItSaid } from '@/repository/said'
 
+type CollectionStatusResponder =
+  components['schemas']['CollectionStatusResponder']
 type ServiceResponder = components['schemas']['BroadcastServiceResponder']
 type StreamResponder = components['schemas']['StreamCollectionStatusResponder']
 type TargetResponder = components['schemas']['ScanTargetResponder']
@@ -37,7 +38,9 @@ export interface StreamVisitRow {
   durationLabel?: string
   consecutiveIncomplete: number
   notBeforeLabel?: string
-  stale: boolean
+  neverCovered: number
+  shortOfWanted: number
+  coveredUntil?: string
 }
 
 export interface CollectTarget {
@@ -49,6 +52,7 @@ export interface CollectTarget {
 }
 
 export interface CollectionStatus {
+  wantedCoverageHours: number
   streams: StreamVisitRow[]
   kindCounts: { kind: ChannelKind; label: string; count: number }[]
   troubledCount: number
@@ -58,7 +62,9 @@ export interface CollectionStatus {
 }
 
 export interface CoverageWarning {
+  tone: 'warn' | 'danger'
   emphasis: string
+  detail?: string
 }
 
 export type CollectScope = {
@@ -88,9 +94,7 @@ const KIND_LABEL: Record<ChannelKind, string> = {
 
 const KIND_ORDER: ChannelKind[] = ['terrestrial', 'bs', 'cs110']
 
-const STALE_AFTER_MS = 24 * 60 * 60 * 1000
-
-const STRUGGLING_STREAK = 2
+const DAY_MS = 24 * 60 * 60 * 1000
 
 const REBUILD_CONFIRMATION = 'discard-everything'
 
@@ -114,7 +118,7 @@ export async function getCollectionStatus(): Promise<CollectionStatus> {
     )
   }
 
-  return toCollectionStatus(status.data.data.streams, services.data.data)
+  return toCollectionStatus(status.data.data, services.data.data)
 }
 
 export function coverageWarningOf(
@@ -122,33 +126,56 @@ export function coverageWarningOf(
   kind: ChannelKind,
 ): CoverageWarning | undefined {
   const rows = status.streams.filter((row) => row.kind === kind)
-  const struggling = rows.filter(
-    (row) =>
-      row.outcome === 'incomplete' &&
-      row.consecutiveIncomplete >= STRUGGLING_STREAK,
-  )
-  const uncovered = rows.filter(
-    (row) => row.lastCompletedLabel === undefined || row.stale,
-  )
+  const never = rows.reduce((sum, row) => sum + row.neverCovered, 0)
+  const short = rows.reduce((sum, row) => sum + row.shortOfWanted, 0)
 
-  const named = [
-    ...struggling,
-    ...uncovered.filter((row) => !struggling.includes(row)),
-  ]
-
-  if (named.length === 0) {
+  if (short === 0) {
     return undefined
   }
 
-  const names = named.flatMap((row) =>
-    row.channelNames.length > 0 ? row.channelNames : [streamLabel(row)],
-  )
-  const shown = names.slice(0, 2).join('・')
-  const rest = names.length - 2
+  const reach = reachLabel(status.wantedCoverageHours)
+
+  if (never === 0) {
+    return {
+      tone: 'warn',
+      emphasis: `${short} チャンネルの番組情報が ${reach}まで届いていません。`,
+    }
+  }
 
   return {
-    emphasis: `${shown}${rest > 0 ? ` ほか ${rest} チャンネル` : ''} の番組情報が不足しています。`,
+    tone: 'danger',
+    emphasis: `${never} チャンネルの番組情報がまだ一度も取れていません。`,
+    detail:
+      short > never
+        ? `ほかに ${short - never} チャンネルが ${reach}まで届いていません。`
+        : undefined,
   }
+}
+
+export function coverageDaysOf(
+  status: CollectionStatus,
+  kind: ChannelKind,
+  now: Date = new Date(),
+): number {
+  const reaches = status.streams
+    .filter((row) => row.kind === kind)
+    .flatMap((row) =>
+      row.coveredUntil === undefined ? [] : [Date.parse(row.coveredUntil)],
+    )
+    .filter((at) => Number.isFinite(at))
+
+  if (reaches.length === 0) {
+    return 0
+  }
+
+  return Math.max(
+    0,
+    Math.floor((Math.max(...reaches) - now.getTime()) / DAY_MS),
+  )
+}
+
+function reachLabel(hours: number): string {
+  return hours % 24 === 0 ? `${hours / 24} 日先` : `${hours} 時間先`
 }
 
 export async function collectNow(
@@ -235,9 +262,10 @@ interface ServiceOnAir {
 }
 
 function toCollectionStatus(
-  streams: StreamResponder[],
+  status: CollectionStatusResponder,
   services: ServiceResponder[],
 ): CollectionStatus {
+  const streams = status.streams
   const now = new Date()
   const onAir = services.map(toServiceOnAir)
 
@@ -268,6 +296,7 @@ function toCollectionStatus(
   )
 
   return {
+    wantedCoverageHours: toInt(status.wantedCoverageHours),
     streams: rows,
     kindCounts,
     troubledCount: rows.filter((row) => row.outcome === 'incomplete').length,
@@ -315,6 +344,15 @@ function toRow(
     )
     .sort((a, b) => a.serviceId - b.serviceId)
   const televised = carried.filter((service) => service.television)
+  const drawn = new Set(televised.map((service) => service.serviceId))
+  const coverage = stream.coverage.filter((entry) =>
+    drawn.has(toInt(entry.serviceId)),
+  )
+  const reached = coverage
+    .map((entry) => entry.coveredUntil)
+    .filter((until) => until !== null)
+    .sort((a, b) => Date.parse(a) - Date.parse(b))
+    .at(-1)
   const lead = televised[0] ?? carried[0]
   const completedAt = stream.lastCompletedAt
     ? new Date(stream.lastCompletedAt)
@@ -343,9 +381,11 @@ function toRow(
       stream.notBefore && new Date(stream.notBefore) > now
         ? timeLabel(new Date(stream.notBefore), now)
         : undefined,
-    stale:
-      completedAt !== undefined &&
-      now.getTime() - completedAt.getTime() > STALE_AFTER_MS,
+    neverCovered: coverage.filter((entry) => entry.coveredUntil === null)
+      .length,
+    shortOfWanted: coverage.filter((entry) => !entry.meetsWantedCoverage)
+      .length,
+    coveredUntil: reached,
   }
 }
 
