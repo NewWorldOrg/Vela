@@ -16,6 +16,15 @@ export const TUNERS: TunerResult = {
     },
   ],
   thresholdHours: 24,
+  reach: [
+    {
+      system: 'isdbT',
+      label: '地上波',
+      level: 'reaching',
+      services: 27,
+      lastSeenAt: '2026-08-07T11:58:00.000Z',
+    },
+  ],
   rows: [
     {
       id: 'adapter1',
