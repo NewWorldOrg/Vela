@@ -838,7 +838,7 @@ test('a failure this build has no name for is still said out loud', async () => 
   )
 })
 
-test('the sentence the recorder wrote about the failure reaches the screen', async () => {
+test('nothing the server wrote about the failure reaches the screen', async () => {
   const failed = recording({
     outcome: 'failed',
     outcomeDetail: [
@@ -860,11 +860,15 @@ test('the sentence the recorder wrote about the failure reaches the screen', asy
     detail?.failureReason?.body,
     '閾値を超えた残存パケットを検出しました。',
   )
-  assert.equal(detail?.failureReason?.note, 'covered 0.9812 of the window')
   assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
+  assert.deepEqual(Object.keys(detail?.failureReason ?? {}).sort(), [
+    'body',
+    'noticedAt',
+    'title',
+  ])
 })
 
-test('a failure this build has no name for still carries what was written about it', async () => {
+test('a failure this build has no name for still says when it was noticed', async () => {
   const failed = recording({
     outcome: 'failed',
     outcomeDetail: [
@@ -882,14 +886,14 @@ test('a failure this build has no name for still carries what was written about 
   const detail = await getRecording('d-unknown-note')
 
   assert.equal(detail?.failureReason?.title, 'この版がまだ知らない値')
-  assert.equal(
-    detail?.failureReason?.note,
-    'the recorder said this much about it',
-  )
   assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
+  assert.deepEqual(Object.keys(detail?.failureReason ?? {}).sort(), [
+    'noticedAt',
+    'title',
+  ])
 })
 
-test('a failure the recorder wrote nothing about carries no sentence', async () => {
+test('a failure the server wrote nothing about still says when it was noticed', async () => {
   const failed = recording({
     outcome: 'failed',
     outcomeDetail: [
@@ -907,8 +911,7 @@ test('a failure the recorder wrote nothing about carries no sentence', async () 
   const detail = await getRecording('d-no-note')
 
   assert.equal(detail?.failureReason?.title, '0 バイトで終わった')
-  assert.equal(detail?.failureReason?.note, undefined)
-  assert.equal(detail?.failureReason?.noticedAt, undefined)
+  assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
 })
 
 test('a failure with nothing recorded against it says nothing', async () => {

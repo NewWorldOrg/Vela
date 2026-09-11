@@ -226,6 +226,11 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
+      'the ledger keeps there whatever a person wrote when they stopped a recording by hand, and nothing else; why a recording failed is said on screen from the fault and the figures beside it, never by repeating a sentence the server wrote',
+    fields: ['RecordingFaultResponder.note'],
+  },
+  {
+    because:
       'the row marks what the guide has moved and what has gone, and nothing on any screen takes such a mark as read, so when it was taken as read is never asked',
     fields: ['ReservationDivergenceResponder.acknowledgedAt'],
   },

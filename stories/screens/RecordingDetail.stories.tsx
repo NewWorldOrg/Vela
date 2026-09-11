@@ -229,7 +229,7 @@ export const スクランブル残存: Story = {
 }
 export const 失敗: Story = { args: { detail: detail('1239') } }
 
-export const 失敗の理由はサーバの文まで出る: Story = {
+export const 失敗の理由は分類と気づいた時刻で出る: Story = {
   args: { detail: detail('1239') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -238,7 +238,6 @@ export const 失敗の理由はサーバの文まで出る: Story = {
     await expect(
       canvas.getByText('閾値を超えた残存パケットを検出しました。'),
     ).toBeVisible()
-    await expect(canvas.getByText('covered 0.9812 of the window')).toBeVisible()
     await expect(canvas.getByText('08/02 00:15')).toBeVisible()
   },
 }
