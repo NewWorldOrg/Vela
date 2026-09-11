@@ -48,7 +48,6 @@ export type ThumbnailState = 'shot' | 'pending' | 'none' | 'error'
 export interface FailureReason {
   title: string
   body?: string
-  note?: string
   noticedAt?: string
 }
 
@@ -727,26 +726,21 @@ function failureReasonOf(
     const first = detail.at(0)
 
     return first
-      ? { title: NOT_YET_IN_THIS_BUILD, ...saidOf(first) }
+      ? { title: NOT_YET_IN_THIS_BUILD, ...whenItWasNoticed(first) }
       : undefined
   }
 
   return {
     title: failure.title,
     body: bodyOf(failure, named?.fault, detail),
-    ...saidOf(named),
+    ...whenItWasNoticed(named),
   }
 }
 
-function saidOf(named: FaultResponder | undefined): {
-  note?: string
+function whenItWasNoticed(named: FaultResponder | undefined): {
   noticedAt?: string
 } {
-  if (named === undefined || !named.note) {
-    return {}
-  }
-
-  return { note: named.note, noticedAt: formatStamp(named.noticedAt) }
+  return named === undefined ? {} : { noticedAt: formatStamp(named.noticedAt) }
 }
 
 function stopReasonOf(d: DetailResponder): string | undefined {
