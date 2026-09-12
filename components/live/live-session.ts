@@ -78,7 +78,7 @@ export function openLiveSession(
   events: LiveSessionEvents,
   openSocket: OpenSocket = openWebSocket,
 ): LiveSession {
-  let said: 'nothing' | 'refusal' | 'ending' = 'nothing'
+  let said: 'nothing' | 'refusal' | 'ending' | 'dropped' = 'nothing'
   let leaving = false
   let headerGiven = false
   let lastPicturePts = -1
@@ -117,12 +117,13 @@ export function openLiveSession(
       }
 
       if (event.code === CLOSED_CLEANLY) {
-        said = 'ending'
+        over('ending')
         events.onEnding('letGo')
 
         return
       }
 
+      over('dropped')
       events.onDropped(event.code)
     }
   }
@@ -199,19 +200,40 @@ export function openLiveSession(
           break
         }
 
-        said = 'refusal'
+        over('refusal')
         events.onRefusal(control.refusal, {
           ceiling: control.ceiling,
           detail: control.detail,
         })
         break
       case 'ending':
-        said = 'ending'
+        over('ending')
         events.onEnding(control.why)
         break
       default:
         break
     }
+  }
+
+  function over(how: 'refusal' | 'ending' | 'dropped') {
+    said = how
+    letEveryWireGo()
+  }
+
+  function letEveryWireGo() {
+    if (laid !== null) {
+      clearTimeout(laid)
+      laid = null
+    }
+
+    if (laying) {
+      const stale = laying
+
+      laying = null
+      letGo(stale)
+    }
+
+    letGo(carrying)
   }
 
   function carry() {
@@ -275,20 +297,7 @@ export function openLiveSession(
   return {
     leave: () => {
       leaving = true
-
-      if (laid !== null) {
-        clearTimeout(laid)
-        laid = null
-      }
-
-      if (laying) {
-        const stale = laying
-
-        laying = null
-        letGo(stale)
-      }
-
-      letGo(carrying)
+      letEveryWireGo()
     },
   }
 }

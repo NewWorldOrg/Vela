@@ -362,6 +362,94 @@ test('the supply ending on a fresh wire ends the session', (context) => {
   wires[1].control(endingPayload('windowClosed'))
 
   assert.deepEqual(heard.endings, ['windowClosed'])
+  assert.equal(wires[0].closedWith, CLOSED_CLEANLY)
+  assert.equal(wires[1].closedWith, CLOSED_CLEANLY)
+})
+
+test('the supply ending lets go of a fresh wire that was in the air', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+
+  wires[0].control(endingPayload('letGo'))
+
+  assert.deepEqual(heard.endings, ['letGo'])
+  assert.equal(wires[0].closedWith, CLOSED_CLEANLY)
+  assert.equal(wires[1].closedWith, CLOSED_CLEANLY)
+
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS * 3)
+
+  assert.equal(wires.length, 2)
+})
+
+test('a refusal on the wire being carried lets go of a fresh wire that was in the air', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+
+  wires[0].control(refusalPayload('driverUnavailable'))
+
+  assert.equal(heard.refusals, 1)
+  assert.equal(wires[0].closedWith, CLOSED_CLEANLY)
+  assert.equal(wires[1].closedWith, CLOSED_CLEANLY)
+
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS * 3)
+
+  assert.equal(wires.length, 2)
+})
+
+test('a drop leaves nothing armed, so no wire is laid behind the fault', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+
+  wires[0].drop(NO_GOODBYE)
+
+  assert.deepEqual(heard.drops, [NO_GOODBYE])
+
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS * 3)
+
+  assert.equal(wires.length, 1)
+  assert.deepEqual(heard.drops, [NO_GOODBYE])
+})
+
+test('a drop while a fresh wire is in the air lets that wire go as well', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+
+  wires[0].drop(NO_GOODBYE)
+
+  assert.deepEqual(heard.drops, [NO_GOODBYE])
+  assert.equal(wires[1].closedWith, CLOSED_CLEANLY)
+
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS * 3)
+
+  assert.equal(wires.length, 2)
+})
+
+test('a clean close lets go of a fresh wire that was in the air', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+
+  wires[0].drop(CLOSED_CLEANLY)
+
+  assert.deepEqual(heard.endings, ['letGo'])
+  assert.equal(wires[1].closedWith, CLOSED_CLEANLY)
+
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS * 3)
+
+  assert.equal(wires.length, 2)
 })
 
 test('no more wires are laid once the supply has ended', (context) => {
