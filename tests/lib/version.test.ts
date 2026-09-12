@@ -24,20 +24,26 @@ test('the version is the one the build was handed', () => {
   assert.equal(velaVersion(), '2.4.1')
 })
 
-test('a build that was handed no version says nothing rather than an empty string', () => {
+test('a build that was handed no version is refused rather than answered as blank', () => {
   delete process.env.VELA_VERSION
 
-  assert.equal(velaVersion(), null)
+  assert.throws(() => velaVersion())
 
   process.env.VELA_VERSION = '   '
 
-  assert.equal(velaVersion(), null)
+  assert.throws(() => velaVersion())
 })
 
-test('the build takes the version from package.json and nowhere else', async () => {
+test('the build hands over the version package.json carries and spells none of its own', async () => {
   const { default: config } = await import('@/next.config')
 
+  const source = readFileSync(
+    new URL('../../next.config.ts', import.meta.url),
+    'utf8',
+  )
+
   assert.equal(config.env?.VELA_VERSION, packaged)
+  assert.equal(source.includes(packaged), false)
 })
 
 test('the versions the Storybook screens are drawn with are the declared one', async () => {
@@ -45,5 +51,5 @@ test('the versions the Storybook screens are drawn with are the declared one', a
     await import('@/repository/system.fixtures')
 
   assert.equal(VELA_VERSION, packaged)
-  assert.equal(SYSTEM_CENSUS.carinaVersion.value, packaged)
+  assert.equal(SYSTEM_CENSUS.carinaVersion, packaged)
 })

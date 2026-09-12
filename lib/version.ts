@@ -1,7 +1,9 @@
-export function velaVersion(): string | null {
+export function velaVersion(): string {
   const declared: string | undefined = process.env.VELA_VERSION
 
-  return declared !== undefined && declared.trim().length > 0
-    ? declared.trim()
-    : null
+  if (declared === undefined || declared.trim().length === 0) {
+    throw new Error('This build was handed no version.')
+  }
+
+  return declared.trim()
 }
