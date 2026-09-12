@@ -25,7 +25,7 @@ import { withRelatedSettled } from '@/repository/programs'
 export const PROGRAM_FIXTURES: Program[] = [
   {
     id: 'p001',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: 'みなと ニュース7',
     description: '列島の記録的暑さ 夜間も熱中症に警戒を',
     genre: 'news',
@@ -37,7 +37,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p002',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: 'くらしの窓口',
     description: '夏の停電にそなえる',
     genre: 'info',
@@ -49,7 +49,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p003',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: 'ヘッドラインニュース',
     genre: 'news',
     genreLabel: 'ニュース/報道',
@@ -60,7 +60,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p004',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: 'ニュースの視点9',
     description: '電力需給対策のポイントを担当記者が解説',
     genre: 'news',
@@ -84,7 +84,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p005',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: '土曜ドラマ「灯台のある町」',
     description: '第5話 帰ってきた同級生',
     genre: 'drama',
@@ -96,7 +96,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p006',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: '手仕事の地図',
     description: '町工場の職人たち',
     genre: 'doc',
@@ -108,7 +108,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p007',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: '深夜のニュース',
     genre: 'news',
     genreLabel: 'ニュース/報道',
@@ -119,7 +119,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p008',
-    channelId: 'ch-151',
+    channelId: '151-1511',
     title: '真夜中の音楽室',
     description: '夏の弦楽四重奏',
     genre: 'music',
@@ -131,7 +131,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p009',
-    channelId: 'ch-152',
+    channelId: '151-1521',
     title: '高校野球ダイジェスト',
     genre: 'sports',
     genreLabel: 'スポーツ',
@@ -142,7 +142,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p010',
-    channelId: 'ch-152',
+    channelId: '151-1521',
     title: 'データ気象台',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
@@ -153,7 +153,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p011',
-    channelId: 'ch-152',
+    channelId: '151-1521',
     title: '自然のしくみ 再放送',
     genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
@@ -164,7 +164,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p047',
-    channelId: 'ch-152',
+    channelId: '151-1521',
     title: '五分間の科学',
     genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
@@ -175,7 +175,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p012',
-    channelId: 'ch-191',
+    channelId: '191-1911',
     title: 'はじめての天文学',
     description: '夏の大三角をさがす',
     genre: 'doc',
@@ -187,7 +187,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p013',
-    channelId: 'ch-191',
+    channelId: '191-1911',
     title: '手話ニュース',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
@@ -198,7 +198,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p014',
-    channelId: 'ch-191',
+    channelId: '191-1911',
     title: 'クラシックの時間',
     description: '夏の管弦楽',
     genre: 'music',
@@ -210,7 +210,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p015',
-    channelId: 'ch-191',
+    channelId: '191-1911',
     title: '世界の街かど',
     description: '港町をあるく',
     genre: 'doc',
@@ -222,7 +222,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p016',
-    channelId: 'ch-191',
+    channelId: '191-1911',
     title: 'ETV 特集「記録する人々」',
     genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
@@ -234,7 +234,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p017',
-    channelId: 'ch-191',
+    channelId: '191-1911',
     title: '深夜アニメ劇場',
     genre: 'anime',
     genreLabel: 'アニメ/特撮',
@@ -245,7 +245,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p018',
-    channelId: 'ch-131',
+    channelId: '131-1311',
     title: '夕方いちばん',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
@@ -256,7 +256,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p019',
-    channelId: 'ch-131',
+    channelId: '131-1311',
     title: '週末クイズ研究所',
     description: '新春スペシャルの予告編つき',
     genre: 'variety',
@@ -268,7 +268,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p020',
-    channelId: 'ch-131',
+    channelId: '131-1311',
     title: '夜ふかしラジオ倶楽部',
     description: '街で見つけた小さな話',
     genre: 'variety',
@@ -280,7 +280,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p021',
-    channelId: 'ch-131',
+    channelId: '131-1311',
     title: '水曜ドラマ「約束の丘」',
     description: '最終回',
     genre: 'drama',
@@ -293,7 +293,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p022',
-    channelId: 'ch-131',
+    channelId: '131-1311',
     title: '深夜の商店街をあるく',
     description: 'シャッター街の日曜',
     genre: 'variety',
@@ -305,7 +305,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p023',
-    channelId: 'ch-131',
+    channelId: '131-1311',
     title: '深夜シネマ「遠い汽笛」',
     genre: 'movie',
     genreLabel: '映画',
@@ -316,7 +316,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p024',
-    channelId: 'ch-181',
+    channelId: '181-1811',
     title: '第一ニュース',
     genre: 'news',
     genreLabel: 'ニュース/報道',
@@ -327,7 +327,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p025',
-    channelId: 'ch-181',
+    channelId: '181-1811',
     title: '都市対抗クイズ選手権 準決勝',
     description: '近似値クイズと早押しの二本立て',
     genre: 'sports',
@@ -339,7 +339,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p026',
-    channelId: 'ch-181',
+    channelId: '181-1811',
     title: '金曜シネマ「星の渡り鳥」',
     description: '岬の観測小屋を舞台にしたひと夏の物語',
     genre: 'movie',
@@ -359,7 +359,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p027',
-    channelId: 'ch-181',
+    channelId: '181-1811',
     title: 'となりの発明王',
     genre: 'variety',
     genreLabel: 'バラエティ',
@@ -370,7 +370,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p028',
-    channelId: 'ch-181',
+    channelId: '181-1811',
     title: '夜のショッピング',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
@@ -381,7 +381,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p029',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: '湾岸ワイド',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
@@ -392,7 +392,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p030',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: '連続ドラマ「潮風の食卓」',
     description: '第3話',
     genre: 'drama',
@@ -404,7 +404,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p031',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: '週末キッチンの手帖',
     description: '夏野菜の作り置き',
     genre: 'variety',
@@ -416,7 +416,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p032',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: '情熱の現場',
     genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
@@ -427,7 +427,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p033',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: 'ナイター中継 延長あり',
     description: '延長の可能性あり',
     genre: 'sports',
@@ -453,7 +453,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p048',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: '深夜の気象情報',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
@@ -464,7 +464,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p049',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: 'ミニ紀行 灯台のある町',
     genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
@@ -475,7 +475,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p050',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: '深夜スポーツ',
     genre: 'sports',
     genreLabel: 'スポーツ',
@@ -486,7 +486,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p051',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: 'ショートアニメ さかなの街',
     genre: 'anime',
     genreLabel: 'アニメ/特撮',
@@ -497,7 +497,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p034',
-    channelId: 'ch-171',
+    channelId: '171-1711',
     title: '通販の時間',
     genre: 'info',
     genreLabel: '情報/ワイドショー',
@@ -508,7 +508,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p035',
-    channelId: 'ch-161',
+    channelId: '161-1611',
     title: 'コメット急行 #103',
     genre: 'anime',
     genreLabel: 'アニメ/特撮',
@@ -520,7 +520,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p036',
-    channelId: 'ch-161',
+    channelId: '161-1611',
     title: 'ロボットくらぶ',
     genre: 'anime',
     genreLabel: 'アニメ/特撮',
@@ -531,7 +531,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p037',
-    channelId: 'ch-161',
+    channelId: '161-1611',
     title: '東都バラエティ',
     genre: 'variety',
     genreLabel: 'バラエティ',
@@ -542,7 +542,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p038',
-    channelId: 'ch-161',
+    channelId: '161-1611',
     title: '夜のドラマ「渡し船」',
     genre: 'drama',
     genreLabel: 'ドラマ',
@@ -553,7 +553,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p039',
-    channelId: 'ch-161',
+    channelId: '161-1611',
     title: '東都ニュース',
     genre: 'news',
     genreLabel: 'ニュース/報道',
@@ -564,7 +564,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p040',
-    channelId: 'ch-161',
+    channelId: '161-1611',
     title: '深夜アニメ枠',
     genre: 'anime',
     genreLabel: 'アニメ/特撮',
@@ -575,7 +575,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p041',
-    channelId: 'ch-141',
+    channelId: '141-1411',
     title: '夕方アニメ劇場',
     genre: 'anime',
     genreLabel: 'アニメ/特撮',
@@ -586,7 +586,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p042',
-    channelId: 'ch-141',
+    channelId: '141-1411',
     title: 'シティニュース',
     genre: 'news',
     genreLabel: 'ニュース/報道',
@@ -597,7 +597,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p043',
-    channelId: 'ch-141',
+    channelId: '141-1411',
     title: 'バスケットボール中継',
     genre: 'sports',
     genreLabel: 'スポーツ',
@@ -608,7 +608,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p044',
-    channelId: 'ch-141',
+    channelId: '141-1411',
     title: 'ライブハウスの夜',
     genre: 'music',
     genreLabel: '音楽',
@@ -619,7 +619,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p045',
-    channelId: 'ch-141',
+    channelId: '141-1411',
     title: 'アニメ「星の渡り鳥」外伝',
     genre: 'anime',
     genreLabel: 'アニメ/特撮',
@@ -630,7 +630,7 @@ export const PROGRAM_FIXTURES: Program[] = [
   },
   {
     id: 'p046',
-    channelId: 'ch-141',
+    channelId: '141-1411',
     title: '真夜中のトーク',
     genre: 'variety',
     genreLabel: 'バラエティ',
@@ -664,7 +664,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
   standard: {
     program: {
       id: '33221-1521-40613',
-      channelId: 'ch-151',
+      channelId: '151-1511',
       title: '第58回 全都選抜クイズ選手権 決勝🈑',
       description:
         '海浜公園アリーナから決勝の模様を生中継。全 128 校の頂点をかけて、早押しと近似値クイズの二本立てで争う。',
@@ -694,7 +694,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
   relayed: {
     program: {
       id: '33221-1521-40621',
-      channelId: 'ch-151',
+      channelId: '151-1511',
       title: '第58回 全都選抜クイズ選手権 準決勝 第二試合🈑',
       description:
         '海浜公園アリーナから準決勝の第二試合を中継。試合の展開によっては放送時間を延長してお伝えします。',
@@ -730,7 +730,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
   simulcast: {
     program: {
       id: '33221-1521-40641',
-      channelId: 'ch-151',
+      channelId: '151-1511',
       title: 'みなと ニュース7🈑',
       description:
         '列島の記録的暑さと各地の備えを 30 分でまとめてお伝えします。',
@@ -780,7 +780,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
   undecided: {
     program: {
       id: '33241-1561-40711',
-      channelId: 'ch-171',
+      channelId: '171-1711',
       title: 'プロ野球「湾岸マリンズ×東都スターズ」',
       description: '本拠地スタジアムから第 18 回戦を実況生中継。',
       genre: 'sports',
@@ -804,7 +804,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
   multiline: {
     program: {
       id: '33221-1521-40615',
-      channelId: 'ch-151',
+      channelId: '151-1511',
       title: '入り江のアトリエ 夏の三日間🈑',
       description:
         '入り江の小さな工房を三日にわたってたずねる。\n初日は道具の手入れ、二日目は窯入れ、最終日は仕上げまでを追う。\n\n※天候により内容を変更する場合があります。',
@@ -834,7 +834,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
   minimal: {
     program: {
       id: '33261-1571-40801',
-      channelId: 'ch-141',
+      channelId: '141-1411',
       title: '夜のショッピング',
       genre: 'info',
       genreLabel: '情報/ワイドショー',

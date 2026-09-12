@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
+import { newRuleHref, seriesTermsOf } from '@/lib/rules'
+import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type {
   Rule,
   RuleDraft,
@@ -308,6 +310,47 @@ export const 検索から作る: Story = {
         },
       ]),
     )
+  },
+}
+
+const seriesSaved: Saved[] = []
+
+const HANDED_OVER = searchTermsOf(
+  searchConditionOfQuery(
+    newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101')!).split(
+      '?',
+    )[1],
+  ),
+)
+
+export const 番組詳細から作る: Story = {
+  args: {
+    editing: { state: 'new', terms: HANDED_OVER },
+    actions: recording(seriesSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    seriesSaved.length = 0
+
+    await expect(canvas.getByLabelText('キーワード')).toHaveValue(
+      '星のさまよいびと',
+    )
+    await expect(canvas.getByLabelText('対象フィールド')).toHaveTextContent(
+      '番組名だけ',
+    )
+    await expect(canvas.getByText('衛星第一')).toBeVisible()
+
+    await userEvent.type(canvas.getByLabelText('ルール名'), '星のさまよいびと')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+    await userEvent.click(
+      await dialog.findByRole('button', { name: '保存する' }),
+    )
+
+    await waitFor(() => expect(seriesSaved).toHaveLength(1))
+    await expect(seriesSaved[0].draft.terms).toEqual(HANDED_OVER)
   },
 }
 

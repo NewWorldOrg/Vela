@@ -17,6 +17,7 @@ import {
   shapeFor,
 } from '@/lib/not-yet-in-this-build'
 import { mainTitleOf } from '@/lib/program-title'
+import { newRuleHref, seriesTermsOf } from '@/lib/rules'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -78,6 +79,7 @@ export function ProgramDetailBody({
 }) {
   const related = program.related ?? []
   const items = program.items ?? []
+  const series = seriesTermsOf(program.title, program.channelId)
 
   return (
     <div data-program-detail>
@@ -161,14 +163,23 @@ export function ProgramDetailBody({
                 <RecordIcon />
                 録画予約
               </ReserveButton>
-              <Button
-                variant="ghost"
-                disabled
-                title="シリーズ予約はこれから実装されます"
-              >
-                <ListIcon />
-                シリーズで予約
-              </Button>
+              {series ? (
+                <Button variant="ghost" asChild>
+                  <Link href={newRuleHref(series)}>
+                    <ListIcon />
+                    シリーズで予約
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  disabled
+                  title="番組名が読み取れないため、シリーズのルールにできません。"
+                >
+                  <ListIcon />
+                  シリーズで予約
+                </Button>
+              )}
             </div>
           </>
         )}

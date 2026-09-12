@@ -2,10 +2,15 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import type { SearchTerms } from '@/lib/search-condition'
+import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import {
+  NEW_RULE,
   RULE_NAME_LONGEST,
+  RULE_PARAM,
+  newRuleHref,
   ruleConditionParts,
   ruleNarrowsAnything,
+  seriesTermsOf,
   withinRuleName,
 } from '@/lib/rules'
 
@@ -17,6 +22,8 @@ const NOTHING: SearchTerms = {
 
 const named = (id: string) =>
   ({ '131-1310': '中央テレビ1', '4-101': '衛星第一' })[id] ?? id
+
+const A_SERIES: SearchTerms = seriesTermsOf('星のさまよいびと 第1話', '4-101')!
 
 test('a name is asked for, and is not longer than the API keeps', () => {
   assert.equal(withinRuleName('深夜アニメを追う'), true)
@@ -85,5 +92,54 @@ test('the channels are named one by one until there are too many to read', () =>
       named,
     ).at(-1),
     '2 チャンネル',
+  )
+})
+
+test('a series is asked for by the main title on the channel it came from', () => {
+  assert.deepEqual(seriesTermsOf('星のさまよいびと 第1話', '4-101'), {
+    q: '星のさまよいびと',
+    exclude: undefined,
+    fields: 'title',
+    genres: [],
+    kind: undefined,
+    channels: ['4-101'],
+  })
+})
+
+test('a series drops the marks and the trailing labels the title carries', () => {
+  assert.equal(
+    seriesTermsOf('【新】未明のレイライン▽第1話🈑', '131-1310')?.q,
+    '未明のレイライン',
+  )
+})
+
+test('a channel on its own passes the gate, so a nameless programme hands nothing over', () => {
+  assert.equal(ruleNarrowsAnything({ ...NOTHING, channels: ['4-101'] }), true)
+  assert.equal(seriesTermsOf('', '4-101'), undefined)
+  assert.equal(seriesTermsOf('　  ', '4-101'), undefined)
+})
+
+test('a draft is opened on the rules screen, which is where the impact is shown', () => {
+  const href = newRuleHref(A_SERIES)
+  const [path, query] = href.split('?')
+
+  assert.equal(path, '/reservations/rules')
+  assert.equal(new URLSearchParams(query).get(RULE_PARAM), NEW_RULE)
+})
+
+test('the draft the rules screen reads back is the one that was handed over', () => {
+  const query = newRuleHref(A_SERIES).split('?')[1]
+
+  assert.deepEqual(searchTermsOf(searchConditionOfQuery(query)), {
+    ...A_SERIES,
+    from: undefined,
+    to: undefined,
+  })
+})
+
+test('a draft that narrows nothing still opens the rules screen', () => {
+  assert.equal(
+    newRuleHref(NOTHING),
+    `/reservations/rules?${RULE_PARAM}=${NEW_RULE}`,
   )
 })

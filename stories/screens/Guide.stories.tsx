@@ -452,7 +452,7 @@ export const 副チャンネルは別番組の時間帯だけ: Story = {
 const A_SHORT_RETURN = [
   {
     id: 'q001',
-    channelId: 'ch-152',
+    channelId: '151-1521',
     title: '夕方の実況',
     genre: 'sports' as const,
     genreLabel: 'スポーツ',
@@ -463,7 +463,7 @@ const A_SHORT_RETURN = [
   },
   {
     id: 'q002',
-    channelId: 'ch-152',
+    channelId: '151-1521',
     title: '第二試合',
     genre: 'sports' as const,
     genreLabel: 'スポーツ',
@@ -474,7 +474,7 @@ const A_SHORT_RETURN = [
   },
   {
     id: 'q003',
-    channelId: 'ch-152',
+    channelId: '151-1521',
     title: '深夜の再放送',
     genre: 'doc' as const,
     genreLabel: 'ドキュメンタリー/教養',
@@ -970,12 +970,12 @@ const A_STATION_AND_ITS_SPLITS = [
   CHANNEL_FIXTURES[0],
   CHANNEL_FIXTURES[1],
   {
-    id: 'ch-153',
+    id: '151-1531',
     no: '153',
     name: 'みなと総合3',
     kind: 'terrestrial' as const,
     sub: true,
-    whole: 'ch-151',
+    whole: '151-1511',
   },
   CHANNEL_FIXTURES[2],
 ]

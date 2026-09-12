@@ -37,6 +37,7 @@ const THE_SUITE = [
   'tests/lib/state-terms.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',
   'tests/lib/version.test.ts',
+  'tests/repository/channel-ids.test.ts',
   'tests/repository/client/carina.test.ts',
   'tests/repository/collection.test.ts',
   'tests/repository/driver-capabilities.test.ts',
