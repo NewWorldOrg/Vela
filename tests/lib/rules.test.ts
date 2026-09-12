@@ -23,6 +23,8 @@ const NOTHING: SearchTerms = {
 const named = (id: string) =>
   ({ '131-1310': '中央テレビ1', '4-101': '衛星第一' })[id] ?? id
 
+const A_SERIES: SearchTerms = seriesTermsOf('星のさまよいびと 第1話', '4-101')!
+
 test('a name is asked for, and is not longer than the API keeps', () => {
   assert.equal(withinRuleName('深夜アニメを追う'), true)
   assert.equal(withinRuleName(''), false)
@@ -106,13 +108,19 @@ test('a series is asked for by the main title on the channel it came from', () =
 
 test('a series drops the marks and the trailing labels the title carries', () => {
   assert.equal(
-    seriesTermsOf('【新】未明のレイライン▽第1話🈑', '131-1310').q,
+    seriesTermsOf('【新】未明のレイライン▽第1話🈑', '131-1310')?.q,
     '未明のレイライン',
   )
 })
 
+test('a channel on its own passes the gate, so a nameless programme hands nothing over', () => {
+  assert.equal(ruleNarrowsAnything({ ...NOTHING, channels: ['4-101'] }), true)
+  assert.equal(seriesTermsOf('', '4-101'), undefined)
+  assert.equal(seriesTermsOf('　  ', '4-101'), undefined)
+})
+
 test('a draft is opened on the rules screen, which is where the impact is shown', () => {
-  const href = newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101'))
+  const href = newRuleHref(A_SERIES)
   const [path, query] = href.split('?')
 
   assert.equal(path, '/reservations/rules')
@@ -120,11 +128,10 @@ test('a draft is opened on the rules screen, which is where the impact is shown'
 })
 
 test('the draft the rules screen reads back is the one that was handed over', () => {
-  const terms = seriesTermsOf('星のさまよいびと 第1話', '4-101')
-  const query = newRuleHref(terms).split('?')[1]
+  const query = newRuleHref(A_SERIES).split('?')[1]
 
   assert.deepEqual(searchTermsOf(searchConditionOfQuery(query)), {
-    ...terms,
+    ...A_SERIES,
     from: undefined,
     to: undefined,
   })

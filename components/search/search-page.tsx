@@ -130,7 +130,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
   const written: string = searchQueryOf(asking)
   const href: string = written ? `${pathname}?${written}` : pathname
   const narrowing: boolean = ruleNarrowsAnything(terms)
-  const ruleHref = newRuleHref(terms) as Route
+  const ruleHref = newRuleHref(terms)
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !draft.genres.includes(option.value),
   )

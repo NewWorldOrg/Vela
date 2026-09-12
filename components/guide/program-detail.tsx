@@ -79,6 +79,7 @@ export function ProgramDetailBody({
 }) {
   const related = program.related ?? []
   const items = program.items ?? []
+  const series = seriesTermsOf(program.title, program.channelId)
 
   return (
     <div data-program-detail>
@@ -162,18 +163,23 @@ export function ProgramDetailBody({
                 <RecordIcon />
                 録画予約
               </ReserveButton>
-              <Button variant="ghost" asChild>
-                <Link
-                  href={
-                    newRuleHref(
-                      seriesTermsOf(program.title, program.channelId),
-                    ) as Route
-                  }
+              {series ? (
+                <Button variant="ghost" asChild>
+                  <Link href={newRuleHref(series)}>
+                    <ListIcon />
+                    シリーズで予約
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  disabled
+                  title="番組名が読み取れないため、シリーズのルールにできません。"
                 >
                   <ListIcon />
                   シリーズで予約
-                </Link>
-              </Button>
+                </Button>
+              )}
             </div>
           </>
         )}

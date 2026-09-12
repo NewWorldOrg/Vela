@@ -101,6 +101,26 @@ export const シリーズはルールの下書きへ渡す: Story = {
   },
 }
 
+const nameless: ProgramDetail = {
+  ...standard,
+  program: { ...standard.program, title: '' },
+}
+
+export const 名前の無い番組はシリーズにできない: Story = {
+  args: { detail: nameless },
+  parameters: { a11y: { context: { include: '[data-program-detail]' } } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByRole('link', { name: 'シリーズで予約' }),
+    ).toBeNull()
+    await expect(
+      canvas.getByRole('button', { name: 'シリーズで予約' }),
+    ).toBeDisabled()
+  },
+}
+
 export const リレーあり: Story = {
   args: { detail: PROGRAM_DETAIL_FIXTURES.relayed },
   play: async ({ canvasElement }) => {

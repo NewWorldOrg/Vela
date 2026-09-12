@@ -1,3 +1,5 @@
+import type { Route } from 'next'
+
 import { mainTitleOf } from '@/lib/program-title'
 import type { SearchTerms } from '@/lib/search-condition'
 import {
@@ -18,18 +20,27 @@ export const RULE_DEFAULT_PRIORITY = 10
 
 export const RULE_TAKES_SHOWN = 20
 
-export const RULES_PATH = '/reservations/rules'
+const RULES_PATH = '/reservations/rules'
 
-export function newRuleHref(terms: SearchTerms): string {
+export function newRuleHref(terms: SearchTerms): Route {
   const opening = `${RULES_PATH}?${RULE_PARAM}=${NEW_RULE}`
   const query = searchTermsQueryOf(terms)
 
-  return query ? `${opening}&${query}` : opening
+  return (query ? `${opening}&${query}` : opening) as Route
 }
 
-export function seriesTermsOf(title: string, channelId: string): SearchTerms {
+export function seriesTermsOf(
+  title: string,
+  channelId: string,
+): SearchTerms | undefined {
+  const main = mainTitleOf(title)
+
+  if (!main) {
+    return undefined
+  }
+
   return {
-    q: mainTitleOf(title),
+    q: main,
     exclude: undefined,
     fields: 'title',
     genres: [],
