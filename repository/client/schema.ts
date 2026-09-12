@@ -88,6 +88,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/version': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getVersion']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/tuners/detected': {
     parameters: {
       query?: never
@@ -1566,6 +1582,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['TunerObservationResponder']
+    }
+    BaseResponderOfVersionResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['VersionResponder']
     }
     /** @enum {string} */
     BoostRefusal: 'none' | 'oneIsAlreadyRunning' | 'tooSoonAfterTheLastOne'
@@ -3426,6 +3447,9 @@ export interface components {
       /** Format: int32 */
       transportStreamId?: null | number | string
     }
+    VersionResponder: {
+      version: string
+    }
     /** @enum {string} */
     VideoCodec: 'h264'
     VisitTallyResponder: {
@@ -3673,6 +3697,42 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+    }
+  }
+  getVersion: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfVersionResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfVersionResponder']
         }
       }
     }

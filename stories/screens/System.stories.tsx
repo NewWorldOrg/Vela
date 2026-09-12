@@ -11,6 +11,7 @@ const meta = {
   title: 'Screens/設定・システム',
   component: SystemView,
   parameters: { layout: 'fullscreen' },
+  args: { velaVersion: '0.1.0' },
 } satisfies Meta<typeof SystemView>
 
 export default meta
@@ -138,6 +139,7 @@ export const API接続なし: Story = {
     status: {
       api: { state: 'unreachable' },
       driver: { state: 'unreachable' },
+      carinaVersion: { state: 'unavailable' },
       tuners: { state: 'unavailable' },
       storage: { state: 'unavailable' },
       collection: { state: 'unavailable' },

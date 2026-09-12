@@ -284,6 +284,39 @@
         }
       }
     },
+    "/api/version": {
+      "get": {
+        "tags": [
+          "version"
+        ],
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfVersionResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfVersionResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tuners/detected": {
       "get": {
         "tags": [
@@ -8337,6 +8370,32 @@
           }
         }
       },
+      "BaseResponderOfVersionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VersionResponder"
+              }
+            ]
+          }
+        }
+      },
       "BoostRefusal": {
         "enum": [
           "none",
@@ -15833,6 +15892,17 @@
           }
         }
       },
+      "VersionResponder": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        }
+      },
       "VideoCodec": {
         "enum": [
           "h264"
@@ -15943,6 +16013,9 @@
     },
     {
       "name": "services"
+    },
+    {
+      "name": "version"
     },
     {
       "name": "tuners"
