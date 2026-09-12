@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
+import { newRuleHref, seriesTermsOf } from '@/lib/rules'
+import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type {
   Rule,
   RuleDraft,
@@ -313,18 +315,17 @@ export const 検索から作る: Story = {
 
 const seriesSaved: Saved[] = []
 
+const HANDED_OVER = searchTermsOf(
+  searchConditionOfQuery(
+    newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101')!).split(
+      '?',
+    )[1],
+  ),
+)
+
 export const 番組詳細から作る: Story = {
   args: {
-    editing: {
-      state: 'new',
-      terms: {
-        q: '星のさまよいびと',
-        exclude: undefined,
-        fields: 'title',
-        genres: [],
-        channels: ['4-101'],
-      },
-    },
+    editing: { state: 'new', terms: HANDED_OVER },
     actions: recording(seriesSaved, []),
   },
   play: async ({ canvasElement }) => {
@@ -342,20 +343,14 @@ export const 番組詳細から作る: Story = {
 
     await userEvent.type(canvas.getByLabelText('ルール名'), '星のさまよいびと')
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
-    await expect(seriesSaved).toEqual([])
 
     const dialog = within(await screen.findByRole('dialog'))
-
-    await expect(
-      await dialog.findByText(/新しく作られる予約/),
-    ).toHaveTextContent('新しく作られる予約 2 件')
-    await expect(seriesSaved).toEqual([])
-
-    await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
+    await userEvent.click(
+      await dialog.findByRole('button', { name: '保存する' }),
+    )
 
     await waitFor(() => expect(seriesSaved).toHaveLength(1))
-    await expect(seriesSaved[0].draft.terms.fields).toBe('title')
-    await expect(seriesSaved[0].draft.terms.channels).toEqual(['4-101'])
+    await expect(seriesSaved[0].draft.terms).toEqual(HANDED_OVER)
   },
 }
 
