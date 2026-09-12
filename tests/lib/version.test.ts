@@ -6,6 +6,10 @@ import { velaVersion } from '@/lib/version'
 
 const declared = process.env.VELA_VERSION
 
+const { version: packaged } = JSON.parse(
+  readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+) as { version: string }
+
 test.afterEach(() => {
   if (declared === undefined) {
     delete process.env.VELA_VERSION
@@ -32,9 +36,14 @@ test('a build that was handed no version says nothing rather than an empty strin
 
 test('the build takes the version from package.json and nowhere else', async () => {
   const { default: config } = await import('@/next.config')
-  const { version } = JSON.parse(
-    readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
-  ) as { version: string }
 
-  assert.equal(config.env?.VELA_VERSION, version)
+  assert.equal(config.env?.VELA_VERSION, packaged)
+})
+
+test('the versions the Storybook screens are drawn with are the declared one', async () => {
+  const { SYSTEM_CENSUS, VELA_VERSION } =
+    await import('@/repository/system.fixtures')
+
+  assert.equal(VELA_VERSION, packaged)
+  assert.equal(SYSTEM_CENSUS.carinaVersion.value, packaged)
 })

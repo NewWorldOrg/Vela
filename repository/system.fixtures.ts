@@ -23,6 +23,8 @@ export const DRIVER_CAPABILITIES = [
   'descrambling',
 ]
 
+export const VELA_VERSION = '0.1.0'
+
 export const SYSTEM_CENSUS = {
   carinaVersion: { state: 'ok', value: '0.1.0' },
   tuners: {

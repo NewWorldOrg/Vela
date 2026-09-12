@@ -4,6 +4,7 @@ import {
   DRIVER_CAPABILITIES,
   SYSTEM_CENSUS,
   SYSTEM_STATUS,
+  VELA_VERSION,
 } from '@/repository/system.fixtures'
 import { SystemView } from '@/components/system/system-page'
 
@@ -11,7 +12,7 @@ const meta = {
   title: 'Screens/設定・システム',
   component: SystemView,
   parameters: { layout: 'fullscreen' },
-  args: { velaVersion: '0.1.0' },
+  args: { velaVersion: VELA_VERSION },
 } satisfies Meta<typeof SystemView>
 
 export default meta
