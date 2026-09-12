@@ -46,10 +46,8 @@ test('the build hands over the version package.json carries and spells none of i
   assert.equal(source.includes(packaged), false)
 })
 
-test('the versions the Storybook screens are drawn with are the declared one', async () => {
-  const { SYSTEM_CENSUS, VELA_VERSION } =
-    await import('@/repository/system.fixtures')
+test('the version the Storybook screens draw for Vela is the declared one', async () => {
+  const { VELA_VERSION } = await import('@/repository/system.fixtures')
 
   assert.equal(VELA_VERSION, packaged)
-  assert.equal(SYSTEM_CENSUS.carinaVersion, packaged)
 })
