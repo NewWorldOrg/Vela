@@ -2,10 +2,15 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import type { SearchTerms } from '@/lib/search-condition'
+import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import {
+  NEW_RULE,
   RULE_NAME_LONGEST,
+  RULE_PARAM,
+  newRuleHref,
   ruleConditionParts,
   ruleNarrowsAnything,
+  seriesTermsOf,
   withinRuleName,
 } from '@/lib/rules'
 
@@ -85,5 +90,49 @@ test('the channels are named one by one until there are too many to read', () =>
       named,
     ).at(-1),
     '2 チャンネル',
+  )
+})
+
+test('a series is asked for by the main title on the channel it came from', () => {
+  assert.deepEqual(seriesTermsOf('星のさまよいびと 第1話', '4-101'), {
+    q: '星のさまよいびと',
+    exclude: undefined,
+    fields: 'title',
+    genres: [],
+    kind: undefined,
+    channels: ['4-101'],
+  })
+})
+
+test('a series drops the marks and the trailing labels the title carries', () => {
+  assert.equal(
+    seriesTermsOf('【新】未明のレイライン▽第1話🈑', '131-1310').q,
+    '未明のレイライン',
+  )
+})
+
+test('a draft is opened on the rules screen, which is where the impact is shown', () => {
+  const href = newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101'))
+  const [path, query] = href.split('?')
+
+  assert.equal(path, '/reservations/rules')
+  assert.equal(new URLSearchParams(query).get(RULE_PARAM), NEW_RULE)
+})
+
+test('the draft the rules screen reads back is the one that was handed over', () => {
+  const terms = seriesTermsOf('星のさまよいびと 第1話', '4-101')
+  const query = newRuleHref(terms).split('?')[1]
+
+  assert.deepEqual(searchTermsOf(searchConditionOfQuery(query)), {
+    ...terms,
+    from: undefined,
+    to: undefined,
+  })
+})
+
+test('a draft that narrows nothing still opens the rules screen', () => {
+  assert.equal(
+    newRuleHref(NOTHING),
+    `/reservations/rules?${RULE_PARAM}=${NEW_RULE}`,
   )
 })

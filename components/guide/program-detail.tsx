@@ -17,6 +17,7 @@ import {
   shapeFor,
 } from '@/lib/not-yet-in-this-build'
 import { mainTitleOf } from '@/lib/program-title'
+import { newRuleHref, seriesTermsOf } from '@/lib/rules'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -161,13 +162,17 @@ export function ProgramDetailBody({
                 <RecordIcon />
                 録画予約
               </ReserveButton>
-              <Button
-                variant="ghost"
-                disabled
-                title="シリーズ予約はこれから実装されます"
-              >
-                <ListIcon />
-                シリーズで予約
+              <Button variant="ghost" asChild>
+                <Link
+                  href={
+                    newRuleHref(
+                      seriesTermsOf(program.title, program.channelId),
+                    ) as Route
+                  }
+                >
+                  <ListIcon />
+                  シリーズで予約
+                </Link>
               </Button>
             </div>
           </>

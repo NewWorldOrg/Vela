@@ -311,6 +311,54 @@ export const 検索から作る: Story = {
   },
 }
 
+const seriesSaved: Saved[] = []
+
+export const 番組詳細から作る: Story = {
+  args: {
+    editing: {
+      state: 'new',
+      terms: {
+        q: '星のさまよいびと',
+        exclude: undefined,
+        fields: 'title',
+        genres: [],
+        channels: ['4-101'],
+      },
+    },
+    actions: recording(seriesSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    seriesSaved.length = 0
+
+    await expect(canvas.getByLabelText('キーワード')).toHaveValue(
+      '星のさまよいびと',
+    )
+    await expect(canvas.getByLabelText('対象フィールド')).toHaveTextContent(
+      '番組名だけ',
+    )
+    await expect(canvas.getByText('衛星第一')).toBeVisible()
+
+    await userEvent.type(canvas.getByLabelText('ルール名'), '星のさまよいびと')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+    await expect(seriesSaved).toEqual([])
+
+    const dialog = within(await screen.findByRole('dialog'))
+
+    await expect(
+      await dialog.findByText(/新しく作られる予約/),
+    ).toHaveTextContent('新しく作られる予約 2 件')
+    await expect(seriesSaved).toEqual([])
+
+    await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
+
+    await waitFor(() => expect(seriesSaved).toHaveLength(1))
+    await expect(seriesSaved[0].draft.terms.fields).toBe('title')
+    await expect(seriesSaved[0].draft.terms.channels).toEqual(['4-101'])
+  },
+}
+
 const emptySaved: Saved[] = []
 
 export const 条件のないルール: Story = {

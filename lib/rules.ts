@@ -1,9 +1,11 @@
+import { mainTitleOf } from '@/lib/program-title'
 import type { SearchTerms } from '@/lib/search-condition'
 import {
   SEARCH_DEFAULT_FIELDS,
   SEARCH_FIELD_OPTIONS,
   SEARCH_KIND_OPTIONS,
   genreLabelOf,
+  searchTermsQueryOf,
 } from '@/lib/search-condition'
 
 export const RULE_NAME_LONGEST = 128
@@ -15,6 +17,26 @@ export const NEW_RULE = 'new'
 export const RULE_DEFAULT_PRIORITY = 10
 
 export const RULE_TAKES_SHOWN = 20
+
+export const RULES_PATH = '/reservations/rules'
+
+export function newRuleHref(terms: SearchTerms): string {
+  const opening = `${RULES_PATH}?${RULE_PARAM}=${NEW_RULE}`
+  const query = searchTermsQueryOf(terms)
+
+  return query ? `${opening}&${query}` : opening
+}
+
+export function seriesTermsOf(title: string, channelId: string): SearchTerms {
+  return {
+    q: mainTitleOf(title),
+    exclude: undefined,
+    fields: 'title',
+    genres: [],
+    kind: undefined,
+    channels: [channelId],
+  }
+}
 
 export function withinRuleName(value: string): boolean {
   const named = value.trim()

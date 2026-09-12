@@ -73,6 +73,31 @@ export const 通常: Story = {
   },
 }
 
+export const シリーズはルールの下書きへ渡す: Story = {
+  args: { detail: standard },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const asked = new URL(
+      canvas
+        .getByRole('link', { name: 'シリーズで予約' })
+        .getAttribute('href')!,
+      'http://vela.invalid',
+    )
+
+    await expect(asked.pathname).toBe('/reservations/rules')
+    await expect(asked.searchParams.get('rule')).toBe('new')
+    await expect(asked.searchParams.get('q')).toBe('第58回')
+    await expect(asked.searchParams.get('fields')).toBe('title')
+    await expect(asked.searchParams.get('channel')).toBe(
+      standard.program.channelId,
+    )
+
+    await expect(
+      canvas.queryByRole('button', { name: 'シリーズで予約' }),
+    ).toBeNull()
+  },
+}
+
 export const リレーあり: Story = {
   args: { detail: PROGRAM_DETAIL_FIXTURES.relayed },
   play: async ({ canvasElement }) => {
