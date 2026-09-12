@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
+import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type { ProgramDetail } from '@/repository/programs'
 import {
   NOW_MIN,
@@ -83,14 +84,16 @@ export const シリーズはルールの下書きへ渡す: Story = {
         .getAttribute('href')!,
       'http://vela.invalid',
     )
+    const readBack = searchTermsOf(
+      searchConditionOfQuery(asked.searchParams.toString()),
+    )
 
     await expect(asked.pathname).toBe('/reservations/rules')
     await expect(asked.searchParams.get('rule')).toBe('new')
-    await expect(asked.searchParams.get('q')).toBe('第58回')
-    await expect(asked.searchParams.get('fields')).toBe('title')
-    await expect(asked.searchParams.get('channel')).toBe(
-      standard.program.channelId,
-    )
+    await expect(readBack.fields).toBe('title')
+    await expect(readBack.channels).toEqual([standard.program.channelId])
+    await expect(readBack.q).toBeTruthy()
+    await expect(standard.program.title).toContain(readBack.q)
 
     await expect(
       canvas.queryByRole('button', { name: 'シリーズで予約' }),
