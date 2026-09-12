@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { velaVersion } from '@/lib/version'
 import { getSystemStatus } from '@/repository/system'
 import { SystemView } from '@/components/system/system-page'
 
@@ -9,5 +10,5 @@ export const dynamic = 'force-dynamic'
 export default async function Page() {
   const status = await getSystemStatus()
 
-  return <SystemView status={status} />
+  return <SystemView status={status} velaVersion={velaVersion()} />
 }

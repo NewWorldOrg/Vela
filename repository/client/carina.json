@@ -3,7 +3,7 @@
   "info": {
     "title": "Carina",
     "description": "The HTTP surface of the app process. Five contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through, and the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists; a viewer that is refused is told why on the control channel before the wire is closed.",
-    "version": "1.0.0"
+    "version": "0.1.0"
   },
   "servers": [
     {
@@ -277,6 +277,39 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/version": {
+      "get": {
+        "tags": [
+          "version"
+        ],
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfVersionResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfVersionResponder"
                 }
               }
             }
@@ -8337,6 +8370,32 @@
           }
         }
       },
+      "BaseResponderOfVersionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VersionResponder"
+              }
+            ]
+          }
+        }
+      },
       "BoostRefusal": {
         "enum": [
           "none",
@@ -15833,6 +15892,17 @@
           }
         }
       },
+      "VersionResponder": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        }
+      },
       "VideoCodec": {
         "enum": [
           "h264"
@@ -15943,6 +16013,9 @@
     },
     {
       "name": "services"
+    },
+    {
+      "name": "version"
     },
     {
       "name": "tuners"

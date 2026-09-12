@@ -23,7 +23,10 @@ export const DRIVER_CAPABILITIES = [
   'descrambling',
 ]
 
+export const VELA_VERSION = '0.1.0'
+
 export const SYSTEM_CENSUS = {
+  carinaVersion: '0.1.0',
   tuners: {
     state: 'ok',
     value: { total: 4, busy: 1, disabled: 0, faulted: 0, drifted: false },
@@ -41,7 +44,10 @@ export const SYSTEM_CENSUS = {
   },
   collection: { state: 'ok', value: { streams: 34, troubled: 0 } },
   live: { state: 'ok', value: { sessions: 0, viewers: 0 } },
-} satisfies Pick<SystemStatus, 'tuners' | 'storage' | 'collection' | 'live'>
+} satisfies Pick<
+  SystemStatus,
+  'carinaVersion' | 'tuners' | 'storage' | 'collection' | 'live'
+>
 
 export const SYSTEM_STATUS: SystemStatus = {
   ...SYSTEM_CENSUS,

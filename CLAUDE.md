@@ -157,6 +157,9 @@ The canon is "a small digital toy". What that means in the code:
   `shadcn add`
 - Import primitives from the unified `radix-ui` package
 - `curly` is an error: a branch always has braces
+- The version is `package.json`'s. `next.config.ts` hands it to the build as
+  `VELA_VERSION` and `lib/version.ts` is what reads it, so it is not written
+  down a second time
 
 ## Commands
 

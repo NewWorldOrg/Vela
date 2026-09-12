@@ -73,6 +73,7 @@ export interface LiveCensus {
 export interface SystemStatus {
   api: ApiHealthResult
   driver: DriverStatusResult
+  carinaVersion: string | null
   tuners: Reading<TunerCensus>
   storage: Reading<StorageCensus>
   collection: Reading<CollectionCensus>
@@ -92,19 +93,22 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     }
   }
 
-  const [api, driver, tuners, storage, collection, live] = await Promise.all([
-    readHealth(client),
-    readDriverStatus(client),
-    readTuners(client),
-    readStorage(client),
-    readCollection(client),
-    readLive(client),
-  ])
+  const [api, driver, carinaVersion, tuners, storage, collection, live] =
+    await Promise.all([
+      readHealth(client),
+      readDriverStatus(client),
+      readVersion(client),
+      readTuners(client),
+      readStorage(client),
+      readCollection(client),
+      readLive(client),
+    ])
 
-  return { api, driver, tuners, storage, collection, live }
+  return { api, driver, carinaVersion, tuners, storage, collection, live }
 }
 
 const UNREADABLE = {
+  carinaVersion: null,
   tuners: { state: 'unavailable' },
   storage: { state: 'unavailable' },
   collection: { state: 'unavailable' },
@@ -118,6 +122,18 @@ async function census<T>(take: () => Promise<Reading<T>>): Promise<Reading<T>> {
     unstable_rethrow(error)
 
     return { state: 'unavailable' }
+  }
+}
+
+async function readVersion(client: CarinaClient): Promise<string | null> {
+  try {
+    const { data } = await client.GET('/api/version')
+
+    return data?.data?.version ?? null
+  } catch (error) {
+    unstable_rethrow(error)
+
+    return null
   }
 }
 

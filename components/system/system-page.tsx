@@ -206,7 +206,13 @@ function DetailRow({
 
 const NOTHING = <span className="text-ink-3">—</span>
 
-export function SystemView({ status }: { status: SystemStatus }) {
+export function SystemView({
+  status,
+  velaVersion,
+}: {
+  status: SystemStatus
+  velaVersion: string
+}) {
   const { api, driver } = status
   const trouble = api.state === 'ok' ? null : API_TROUBLE[api.state]
   const reading = driver.state === 'ok' ? driver.status : null
@@ -280,6 +286,11 @@ export function SystemView({ status }: { status: SystemStatus }) {
               ) : (
                 NOTHING
               )}
+            </DetailRow>
+            <DetailRow label="版">
+              <span className="font-code text-ink-2">
+                Carina {status.carinaVersion ?? '—'} / Vela {velaVersion}
+              </span>
             </DetailRow>
             <DetailRow label="プロトコル版数">
               <span className="font-code text-ink-2">
