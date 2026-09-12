@@ -33,23 +33,17 @@ const OPTIONS: {
   label: string
   Icon: ComponentType<IconProps>
 }[] = [
-  { value: 'light', label: 'Light', Icon: SunIcon },
-  { value: 'dark', label: 'Dark', Icon: MoonIcon },
-  { value: 'system', label: 'System', Icon: DisplayIcon },
+  { value: 'light', label: 'ライト', Icon: SunIcon },
+  { value: 'dark', label: 'ダーク', Icon: MoonIcon },
+  { value: 'system', label: 'システム', Icon: DisplayIcon },
 ]
-
-const MODE_LABELS: Record<ThemePreference, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  system: 'System',
-}
 
 export function ThemeToggle({
   className,
   variant = 'ghost',
   size = 'icon-sm',
 }: ThemeToggleProps) {
-  const { mode, preference, setPreference } = useTheme()
+  const { preference, setPreference } = useTheme()
 
   const TriggerIcon =
     preference === 'light'
@@ -64,18 +58,14 @@ export function ThemeToggle({
         <Button
           variant={variant}
           size={size}
-          aria-label="Toggle theme"
+          aria-label="テーマ"
           className={className}
         >
           <TriggerIcon className="size-4" />
-          <span className="sr-only">
-            Current theme: {MODE_LABELS[preference]} (showing{' '}
-            {MODE_LABELS[mode]})
-          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuLabel>Theme</DropdownMenuLabel>
+        <DropdownMenuLabel>テーマ</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {OPTIONS.map(({ value, label, Icon }) => {
           const selected = preference === value
