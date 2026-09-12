@@ -25,9 +25,8 @@ registerHooks({
 
 const store: {
   version: unknown
-  status: number
   throwing: boolean
-} = { version: { version: '2.4.1' }, status: 200, throwing: false }
+} = { version: { version: '2.4.1' }, throwing: false }
 
 const answer = async (path: string) => {
   if (path !== '/api/version') {
@@ -38,7 +37,7 @@ const answer = async (path: string) => {
     throw new Error('the API is not there')
   }
 
-  return { data: { data: store.version }, response: { status: store.status } }
+  return { data: { data: store.version }, response: { status: 200 } }
 }
 
 mock.module('@/repository/client/carina', {
@@ -52,7 +51,6 @@ const { getSystemStatus } = await import('@/repository/system')
 
 function standing(over: Partial<typeof store> = {}): void {
   store.version = { version: '2.4.1' }
-  store.status = 200
   store.throwing = false
   Object.assign(store, over)
 }
@@ -60,32 +58,17 @@ function standing(over: Partial<typeof store> = {}): void {
 test('the version the API answers with is what the screen is given', async () => {
   standing()
 
-  assert.deepEqual((await getSystemStatus()).carinaVersion, {
-    state: 'ok',
-    value: '2.4.1',
-  })
+  assert.equal((await getSystemStatus()).carinaVersion, '2.4.1')
 })
 
-test('a caller the API does not know is told to sign in, not that there is no version', async () => {
-  standing({ status: 401, version: null })
-
-  assert.deepEqual((await getSystemStatus()).carinaVersion, {
-    state: 'unauthenticated',
-  })
-})
-
-test('an API that answers without a version leaves the version unread', async () => {
+test('an API that answers without a version leaves the row with nothing to show', async () => {
   standing({ version: null })
 
-  assert.deepEqual((await getSystemStatus()).carinaVersion, {
-    state: 'unavailable',
-  })
+  assert.equal((await getSystemStatus()).carinaVersion, null)
 })
 
-test('an API that cannot be reached leaves the version unread', async () => {
+test('an API that cannot be reached leaves the row with nothing to show', async () => {
   standing({ throwing: true })
 
-  assert.deepEqual((await getSystemStatus()).carinaVersion, {
-    state: 'unavailable',
-  })
+  assert.equal((await getSystemStatus()).carinaVersion, null)
 })

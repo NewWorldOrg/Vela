@@ -140,7 +140,7 @@ export const API接続なし: Story = {
     status: {
       api: { state: 'unreachable' },
       driver: { state: 'unreachable' },
-      carinaVersion: { state: 'unavailable' },
+      carinaVersion: null,
       tuners: { state: 'unavailable' },
       storage: { state: 'unavailable' },
       collection: { state: 'unavailable' },

@@ -26,7 +26,7 @@ export const DRIVER_CAPABILITIES = [
 export const VELA_VERSION = '0.1.0'
 
 export const SYSTEM_CENSUS = {
-  carinaVersion: { state: 'ok', value: '0.1.0' },
+  carinaVersion: '0.1.0',
   tuners: {
     state: 'ok',
     value: { total: 4, busy: 1, disabled: 0, faulted: 0, drifted: false },

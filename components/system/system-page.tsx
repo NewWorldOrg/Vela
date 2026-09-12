@@ -211,11 +211,9 @@ export function SystemView({
   velaVersion,
 }: {
   status: SystemStatus
-  velaVersion: string | null
+  velaVersion: string
 }) {
   const { api, driver } = status
-  const carina =
-    status.carinaVersion.state === 'ok' ? status.carinaVersion.value : null
   const trouble = api.state === 'ok' ? null : API_TROUBLE[api.state]
   const reading = driver.state === 'ok' ? driver.status : null
   const degraded =
@@ -291,7 +289,7 @@ export function SystemView({
             </DetailRow>
             <DetailRow label="版">
               <span className="font-code text-ink-2">
-                Carina {carina ?? '—'} / Vela {velaVersion ?? '—'}
+                Carina {status.carinaVersion ?? '—'} / Vela {velaVersion}
               </span>
             </DetailRow>
             <DetailRow label="プロトコル版数">
