@@ -6,6 +6,7 @@ import {
   readFrame,
   type CaptionCanvas,
   type CaptionPicture,
+  type LiveFrame,
   type LiveRefusal,
   type LiveRefusalDetail,
   type LiveStartup,
@@ -58,6 +59,10 @@ const OPEN = 1
 
 const CLOSED_CLEANLY = 1000
 
+export const FRESH_WIRE_EVERY_MS = 15 * 60 * 1000
+
+export const FRESH_WIRE_AGAIN_AFTER_MS = 30 * 1000
+
 function socketUrl(href: string): string {
   const url = new URL(href, window.location.href)
 
@@ -73,29 +78,73 @@ export function openLiveSession(
   events: LiveSessionEvents,
   openSocket: OpenSocket = openWebSocket,
 ): LiveSession {
-  const socket = openSocket(href)
-  let said: 'nothing' | 'refusal' | 'ending' = 'nothing'
+  let said: 'nothing' | 'refusal' | 'ending' | 'dropped' = 'nothing'
   let leaving = false
+  let headerGiven = false
+  let lastPicturePts = -1
+  let lastCaptionPts = -1
+  let laying: LiveSocket | null = null
+  let laid: ReturnType<typeof setTimeout> | null = null
+  let carrying: LiveSocket = openSocket(href)
 
-  socket.binaryType = 'arraybuffer'
+  attach(carrying)
+  arm(FRESH_WIRE_EVERY_MS)
 
-  socket.onmessage = (event) => {
-    if (!(event.data instanceof ArrayBuffer)) {
-      return
+  function attach(socket: LiveSocket) {
+    socket.binaryType = 'arraybuffer'
+
+    socket.onmessage = (event) => {
+      if (!(event.data instanceof ArrayBuffer)) {
+        return
+      }
+
+      const frame = readFrame(new Uint8Array(event.data))
+
+      if (frame) {
+        took(socket, frame)
+      }
     }
 
-    const frame = readFrame(new Uint8Array(event.data))
+    socket.onclose = (event) => {
+      if (leaving || said !== 'nothing') {
+        return
+      }
 
-    if (!frame) {
-      return
+      if (socket === laying) {
+        laying = null
+
+        return
+      }
+
+      if (event.code === CLOSED_CLEANLY) {
+        over('ending')
+        events.onEnding('letGo')
+
+        return
+      }
+
+      over('dropped')
+      events.onDropped(event.code)
     }
+  }
 
+  function took(socket: LiveSocket, frame: LiveFrame) {
     switch (frame.channel) {
       case 'pictureHeader':
-        events.onHeader(frame.payload)
+        if (!headerGiven) {
+          headerGiven = true
+          events.onHeader(frame.payload)
+        }
         break
       case 'picture':
-        events.onPicture(frame.payload, frame.pts)
+        if (frame.pts > lastPicturePts) {
+          lastPicturePts = frame.pts
+          events.onPicture(frame.payload, frame.pts)
+        }
+
+        if (socket === laying) {
+          carry()
+        }
         break
       case 'captionHeader': {
         const canvas = readCaptionCanvas(frame.payload)
@@ -106,6 +155,12 @@ export function openLiveSession(
         break
       }
       case 'caption': {
+        if (frame.pts <= lastCaptionPts) {
+          break
+        }
+
+        lastCaptionPts = frame.pts
+
         const caption = readCaption(frame.payload)
 
         if (caption.said === 'shown') {
@@ -116,29 +171,14 @@ export function openLiveSession(
         break
       }
       case 'control':
-        heard(frame.payload)
+        heard(socket, frame.payload)
         break
       default:
         break
     }
   }
 
-  socket.onclose = (event) => {
-    if (leaving || said !== 'nothing') {
-      return
-    }
-
-    if (event.code === CLOSED_CLEANLY) {
-      said = 'ending'
-      events.onEnding('letGo')
-
-      return
-    }
-
-    events.onDropped(event.code)
-  }
-
-  function heard(payload: Uint8Array) {
+  function heard(socket: LiveSocket, payload: Uint8Array) {
     const control = readControl(payload)
 
     switch (control.said) {
@@ -148,17 +188,26 @@ export function openLiveSession(
         }
         break
       case 'progress':
-        events.onProgress(control.startup)
+        if (socket === carrying) {
+          events.onProgress(control.startup)
+        }
         break
       case 'refusal':
-        said = 'refusal'
+        if (socket === laying) {
+          laying = null
+          letGo(socket)
+
+          break
+        }
+
+        over('refusal')
         events.onRefusal(control.refusal, {
           ceiling: control.ceiling,
           detail: control.detail,
         })
         break
       case 'ending':
-        said = 'ending'
+        over('ending')
         events.onEnding(control.why)
         break
       default:
@@ -166,17 +215,89 @@ export function openLiveSession(
     }
   }
 
+  function over(how: 'refusal' | 'ending' | 'dropped') {
+    said = how
+    letEveryWireGo()
+  }
+
+  function letEveryWireGo() {
+    if (laid !== null) {
+      clearTimeout(laid)
+      laid = null
+    }
+
+    if (laying) {
+      const stale = laying
+
+      laying = null
+      letGo(stale)
+    }
+
+    letGo(carrying)
+  }
+
+  function carry() {
+    const fresh = laying
+
+    if (!fresh) {
+      return
+    }
+
+    const worn = carrying
+
+    laying = null
+    carrying = fresh
+    letGo(worn)
+    arm(FRESH_WIRE_EVERY_MS)
+  }
+
+  function lay() {
+    laid = null
+
+    if (leaving || said !== 'nothing') {
+      return
+    }
+
+    if (laying) {
+      const stale = laying
+
+      laying = null
+      letGo(stale)
+    }
+
+    const fresh = openSocket(href)
+
+    laying = fresh
+    attach(fresh)
+    arm(FRESH_WIRE_AGAIN_AFTER_MS)
+  }
+
+  function arm(after: number) {
+    if (laid !== null) {
+      clearTimeout(laid)
+    }
+
+    laid = setTimeout(lay, after)
+  }
+
+  function letGo(socket: LiveSocket) {
+    socket.onmessage = null
+    socket.onclose = null
+    socket.onerror = null
+
+    try {
+      if (socket.readyState === OPEN) {
+        socket.send(controlFrame('leaving'))
+      }
+
+      socket.close(CLOSED_CLEANLY)
+    } catch {}
+  }
+
   return {
     leave: () => {
       leaving = true
-
-      try {
-        if (socket.readyState === OPEN) {
-          socket.send(controlFrame('leaving'))
-        }
-
-        socket.close(CLOSED_CLEANLY)
-      } catch {}
+      letEveryWireGo()
     },
   }
 }
