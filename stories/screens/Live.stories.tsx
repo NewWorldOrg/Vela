@@ -1,5 +1,5 @@
 import type { ComponentProps, CSSProperties } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { SearchParamsContext } from 'next/dist/shared/lib/hooks-client-context.shared-runtime'
@@ -298,6 +298,21 @@ const IN_TWO_LANGUAGES: LiveScreen = {
     channel: {
       ...CHOSEN.watching!.channel,
       now: { ...CHOSEN.watching!.channel.now!, sounds: 2 },
+    },
+  },
+}
+
+const IN_ONE_LANGUAGE_NEXT: LiveScreen = {
+  ...IN_TWO_LANGUAGES,
+  watching: {
+    ...IN_TWO_LANGUAGES.watching!,
+    channel: {
+      ...IN_TWO_LANGUAGES.watching!.channel,
+      now: {
+        ...IN_TWO_LANGUAGES.watching!.channel.now!,
+        id: `${IN_TWO_LANGUAGES.watching!.channel.now!.id}-after`,
+        sounds: 1,
+      },
     },
   },
 }
@@ -844,6 +859,57 @@ export const 副音声を選ぶと副音声で開き直す: Story = {
         { name: '副音声' },
       ),
     ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+const THE_PROGRAMME_CHANGES = 'live-story-the-programme-changes'
+
+function WhenTheProgrammeChanges(args: ComponentProps<typeof LiveView>) {
+  const [screen, setScreen] = useState(args.screen)
+
+  useEffect(() => {
+    const change = () => setScreen(IN_ONE_LANGUAGE_NEXT)
+
+    window.addEventListener(THE_PROGRAMME_CHANGES, change)
+
+    return () => window.removeEventListener(THE_PROGRAMME_CHANGES, change)
+  }, [])
+
+  return <LiveView {...args} screen={screen} />
+}
+
+export const 番組が変わっても副音声の線は張り直さない: Story = {
+  args: { screen: IN_TWO_LANGUAGES },
+  render: (args) => <WhenTheProgrammeChanges {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    await userEvent.click(
+      within(await screen.findByRole('group', { name: '音声' })).getByRole(
+        'button',
+        { name: '副音声' },
+      ),
+    )
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await expect(opened[1].href).toContain('sound=secondary')
+
+    window.dispatchEvent(new Event(THE_PROGRAMME_CHANGES))
+
+    await waitFor(async () =>
+      expect(
+        within(await screen.findByRole('group', { name: '音声' })).getByRole(
+          'button',
+          { name: '副音声' },
+        ),
+      ).toHaveAttribute('aria-pressed', 'true'),
+    )
+
+    await expect(opened).toHaveLength(2)
+    await expect(opened[1].readyState).toBe(1)
   },
 }
 

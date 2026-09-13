@@ -26,6 +26,7 @@ const THE_SUITE = [
   'tests/lib/live-latency.test.ts',
   'tests/lib/live-lineup.test.ts',
   'tests/lib/live-profiles.test.ts',
+  'tests/lib/live-seat.test.ts',
   'tests/lib/live-startup.test.ts',
   'tests/lib/live-wire.test.ts',
   'tests/lib/not-yet-in-this-build.test.ts',
