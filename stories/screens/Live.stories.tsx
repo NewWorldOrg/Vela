@@ -22,6 +22,7 @@ import type { LiveScreen } from '@/repository/live'
 import type { LiveBacklog } from '@/repository/live-sessions'
 import {
   LIVE_CHANNEL_FIXTURES,
+  LIVE_NOW_FIXTURE,
   LIVE_PROFILE_FIXTURES_SOFTWARE,
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
@@ -395,6 +396,7 @@ const meta = {
   },
   args: {
     screen: CHOSEN,
+    clockHeldAt: new Date(LIVE_NOW_FIXTURE),
     openSocket: starting,
     askSignedOut: stillSignedIn,
     askBacklog: uncounted,
@@ -623,6 +625,54 @@ export const 答えに従い古い選択は蘇らない: Story = {
 
     await userEvent.click(back)
     await expect(marked()).toEqual([watched().textContent])
+  },
+}
+
+const FIFTY_MINUTES_IN = new Date('2026-08-08T12:50:00Z')
+
+export const 時計が進めば進行と残りが動く: Story = {
+  args: { clockHeldAt: FIFTY_MINUTES_IN },
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector('[data-slot="now-next"]')
+
+    await expect(panel).toBeVisible()
+
+    const shown = within(panel as HTMLElement)
+
+    await expect(shown.getByText('21:50')).toBeVisible()
+    await expect(shown.getByText(/残り\s*10\s*分/)).toBeVisible()
+    await expect(
+      shown.getByRole('progressbar', { name: '番組の進行' }),
+    ).toHaveAttribute('aria-valuenow', '83')
+  },
+}
+
+export const 選局前も時計で進行が動く: Story = {
+  args: {
+    screen: UNCHOSEN,
+    openSocket: nothingToWatch,
+    clockHeldAt: FIFTY_MINUTES_IN,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const gauges = Array.from(
+      canvasElement.querySelectorAll(
+        '[data-slot="channel-grid"] [role="progressbar"]',
+      ),
+    ).map((one) => one.getAttribute('aria-valuenow'))
+
+    await expect(gauges).toEqual([
+      '83',
+      '83',
+      '100',
+      '85',
+      '71',
+      '83',
+      '83',
+      '89',
+    ])
   },
 }
 
