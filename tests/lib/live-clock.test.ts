@@ -237,3 +237,61 @@ test('nothing still to come asks for no further reading', () => {
     undefined,
   )
 })
+
+test('a start already gone by is not asked for again either', () => {
+  const screen = screenOf([
+    channel('1-1', {
+      now: programme('19:00', '20:00'),
+      next: programme('20:00', '20:30'),
+    }),
+    channel('1-2', { now: programme('21:00', '22:00') }),
+  ])
+
+  assert.equal(
+    nextProgrammeChangeAt(screen, NOW),
+    Date.parse('2026-08-08T22:00:00+09:00'),
+  )
+})
+
+test('a mark that is exactly now has already arrived, so the one after it is asked for', () => {
+  const screen = screenOf([
+    channel('1-1', { now: programme('20:34', '21:04') }),
+    channel('1-2', { now: programme('20:00', '21:30') }),
+  ])
+
+  assert.equal(
+    nextProgrammeChangeAt(screen, NOW),
+    Date.parse('2026-08-08T21:30:00+09:00'),
+  )
+})
+
+test('a mark that is exactly now on the only channel there is asks for nothing', () => {
+  assert.equal(
+    nextProgrammeChangeAt(
+      screenOf([channel('1-1', { now: programme('20:34', '21:04') })]),
+      NOW,
+    ),
+    undefined,
+  )
+})
+
+test('the counts read again on their own land on the channels and on the one being watched', () => {
+  const screen = screenOf(
+    [channel('1-1', { now: programme('21:00', '22:00'), viewers: 0 })],
+    channel('4-1', { now: programme('21:00', '22:00'), viewers: 0 }),
+  )
+
+  const counted = screenAsOf(screen, NOW, { '1-1': 3, '4-1': 5 })
+
+  assert.equal(counted.channels[0].viewers, 3)
+  assert.equal(counted.watching?.channel.viewers, 5)
+})
+
+test('a channel the light read did not mention keeps the count the page was drawn with', () => {
+  const screen = screenOf([
+    channel('1-1', { now: programme('21:00', '22:00'), viewers: 2 }),
+  ])
+
+  assert.equal(screenAsOf(screen, NOW, { '9-9': 7 }).channels[0].viewers, 2)
+  assert.equal(screenAsOf(screen, NOW).channels[0].viewers, 2)
+})

@@ -5,6 +5,7 @@ import type {
   LiveScreen,
   LiveWatching,
 } from '@/repository/live'
+import type { LiveViewerCounts } from '@/repository/live-viewers'
 
 export function progressOf(
   programme: LiveProgramme | undefined,
@@ -40,13 +41,17 @@ export function watchingOf(channel: LiveChannel, now: Date): LiveWatching {
   }
 }
 
-export function screenAsOf(screen: LiveScreen, now: Date): LiveScreen {
+export function screenAsOf(
+  screen: LiveScreen,
+  now: Date,
+  viewers?: LiveViewerCounts,
+): LiveScreen {
   const watched = screen.watching
 
   return {
     ...screen,
-    channels: screen.channels.map((channel) => asOf(channel, now)),
-    watching: watched && watchingOf(asOf(watched.channel, now), now),
+    channels: screen.channels.map((channel) => asOf(channel, now, viewers)),
+    watching: watched && watchingOf(asOf(watched.channel, now, viewers), now),
   }
 }
 
@@ -69,6 +74,16 @@ function listedWithTheOneWatched(screen: LiveScreen): LiveChannel[] {
   return watched ? [...screen.channels, watched.channel] : [...screen.channels]
 }
 
-function asOf(channel: LiveChannel, now: Date): LiveChannel {
-  return { ...channel, progressPct: progressOf(channel.now, now) }
+function asOf(
+  channel: LiveChannel,
+  now: Date,
+  viewers?: LiveViewerCounts,
+): LiveChannel {
+  const counted = viewers?.[channel.id]
+
+  return {
+    ...channel,
+    progressPct: progressOf(channel.now, now),
+    viewers: counted ?? channel.viewers,
+  }
 }

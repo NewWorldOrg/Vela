@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -16,6 +16,7 @@ import {
 } from '@/lib/live-choice'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
 import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
+import { useLiveViewers } from '@/hooks/useLiveViewers'
 import { useNow } from '@/hooks/useNow'
 import { useReadAgain } from '@/hooks/useReadAgain'
 import type { LiveScreen } from '@/repository/live'
@@ -35,7 +36,7 @@ import { NowNext } from '@/components/live/now-next'
 
 const TICK_MS = 30_000
 
-const READ_EVERY_MS = 60_000
+const COUNT_EVERY_MS = 60_000
 
 export function LiveView({
   screen: given,
@@ -54,16 +55,23 @@ export function LiveView({
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
 }) {
+  const router = useRouter()
+  const [, startTransition] = useTransition()
   const clock = useNow(TICK_MS, clockHeldAt)
-  const screen = clock ? screenAsOf(given, clock) : given
   const changesAt = useMemo(
     () => (clockHeldAt ? undefined : nextProgrammeChangeAt(given, new Date())),
     [given, clockHeldAt],
   )
+  const readTheWholeScreenAgain = useCallback(
+    () => startTransition(() => router.refresh()),
+    [router],
+  )
 
-  useReadAgain(changesAt, clockHeldAt ? undefined : READ_EVERY_MS)
+  useReadAgain(changesAt, undefined, readTheWholeScreenAgain)
 
-  const router = useRouter()
+  const viewers = useLiveViewers(clockHeldAt ? undefined : COUNT_EVERY_MS)
+  const screen = clock ? screenAsOf(given, clock, viewers) : given
+
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const query = searchParams.toString()
