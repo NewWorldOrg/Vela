@@ -1,0 +1,121 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+
+import {
+  soundToAsk,
+  whatTheSoundBecomes,
+  whereItStarts,
+} from '@/lib/playback-sound'
+import { THE_SOUNDS_COULD_NOT_BE_READ } from '@/repository/video-paths'
+import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
+
+const TRANSCODED: PlaybackPlan = {
+  standing: 'whole',
+  route: 'onTheFly',
+  seeking: 'byStartingAgain',
+  canSeek: false,
+  transcodes: true,
+  showsAsAWholeRecording: true,
+  mediaType: 'video/mp4',
+  sounds: ['main', 'secondary'],
+}
+
+const HANDED_OVER: PlaybackPlan = {
+  ...TRANSCODED,
+  route: 'direct',
+  seeking: 'byRange',
+  canSeek: true,
+  transcodes: false,
+  bytes: 3_490_550_128,
+}
+
+const planned = (plan: PlaybackPlan): PlaybackRead => ({
+  state: 'planned',
+  plan,
+})
+
+test('a recording that offers two sounds names the one being heard', () => {
+  assert.equal(soundToAsk(['main', 'secondary'], 'main'), 'main')
+  assert.equal(soundToAsk(['main', 'secondary'], 'secondary'), 'secondary')
+})
+
+test('a recording with one sound to offer names none, so the URL stays as it was', () => {
+  assert.equal(soundToAsk(['main'], 'main'), undefined)
+  assert.equal(soundToAsk([], 'main'), undefined)
+})
+
+test('the sound is named on the route that hands the artefact over, not only on the one that transcodes', () => {
+  assert.equal(soundToAsk(HANDED_OVER.sounds, 'main'), 'main')
+})
+
+test('a plan that still offers the sound asked for is the one played under', () => {
+  const became = whatTheSoundBecomes(
+    HANDED_OVER,
+    'secondary',
+    planned(TRANSCODED),
+  )
+
+  assert.deepEqual(became, { plan: TRANSCODED, sound: 'secondary' })
+})
+
+test('seeking follows the plan that came back, not the one the page opened with', () => {
+  assert.equal(
+    whatTheSoundBecomes(HANDED_OVER, 'secondary', planned(TRANSCODED)).plan
+      .seeking,
+    'byStartingAgain',
+  )
+  assert.equal(
+    whatTheSoundBecomes(TRANSCODED, 'main', planned(HANDED_OVER)).plan.canSeek,
+    true,
+  )
+})
+
+test('a plan narrowed to the main sound falls back to it, and says so in Japanese', () => {
+  const narrowed: PlaybackPlan = { ...HANDED_OVER, sounds: ['main'] }
+  const became = whatTheSoundBecomes(
+    HANDED_OVER,
+    'secondary',
+    planned(narrowed),
+  )
+
+  assert.deepEqual(became, {
+    plan: narrowed,
+    sound: 'main',
+    said: THE_SOUNDS_COULD_NOT_BE_READ,
+  })
+  assert.doesNotMatch(became.said ?? '', /[A-Za-z]/)
+})
+
+test('a refused ask leaves the recording playing under the plan it had', () => {
+  const became = whatTheSoundBecomes(HANDED_OVER, 'secondary', {
+    state: 'refused',
+    refusal: 'outOfReach',
+  })
+
+  assert.deepEqual(became, {
+    plan: HANDED_OVER,
+    sound: 'main',
+    said: THE_SOUNDS_COULD_NOT_BE_READ,
+  })
+})
+
+test('a plan that names no sound at all still plays its main sound', () => {
+  const quiet: PlaybackPlan = { ...HANDED_OVER, sounds: [] }
+
+  assert.deepEqual(whatTheSoundBecomes(TRANSCODED, 'main', planned(quiet)), {
+    plan: quiet,
+    sound: 'main',
+  })
+})
+
+test('a picture that is transcoded starts where it is asked to', () => {
+  assert.deepEqual(whereItStarts(TRANSCODED, 1200), { from: 1200, land: null })
+})
+
+test('an artefact handed over is opened whole and moved to the second by range', () => {
+  assert.deepEqual(whereItStarts(HANDED_OVER, 1200), { from: 0, land: 1200 })
+})
+
+test('nothing is landed on when the recording opens at its beginning', () => {
+  assert.deepEqual(whereItStarts(HANDED_OVER, 0), { from: 0, land: null })
+})

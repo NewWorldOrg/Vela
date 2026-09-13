@@ -12,7 +12,12 @@ import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
-import { queueEncoding, redrawThumbnail, takeTicket } from './actions'
+import {
+  askForTheSound,
+  queueEncoding,
+  redrawThumbnail,
+  takeTicket,
+} from './actions'
 
 export async function generateMetadata({
   params,
@@ -63,6 +68,7 @@ export default async function Page({
         onRemakeThumbnail={redrawThumbnail}
         onDelete={throwRecordingAway}
         onTakeTicket={takeTicket}
+        onAskForTheSound={askForTheSound}
         onQueueEncode={queueEncoding}
         encodeChoices={encodeChoices}
       />

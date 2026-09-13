@@ -16,6 +16,7 @@ import type {
   PlaybackRefusal,
   TicketWrite,
 } from '@/repository/videos'
+import type { SoundTrack } from '@/repository/sounds'
 import type { PlaybackProfile } from '@/repository/video-paths'
 import type { EncodeChoices } from '@/repository/encode'
 import {
@@ -99,6 +100,7 @@ export function RecordingDetailView({
   onRemakeThumbnail,
   onDelete,
   onTakeTicket,
+  onAskForTheSound,
   onQueueEncode,
   encodeChoices,
   startAt,
@@ -109,6 +111,7 @@ export function RecordingDetailView({
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onTakeTicket: (id: string) => Promise<TicketWrite>
+  onAskForTheSound: (id: string, sound: SoundTrack) => Promise<PlaybackRead>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
   startAt?: number
@@ -212,6 +215,7 @@ export function RecordingDetailView({
           plan={playback.plan}
           unaskedProfile={unaskedProfile}
           onTakeTicket={onTakeTicket}
+          onAskForTheSound={onAskForTheSound}
           startAt={startAt}
         />
       )}

@@ -6,8 +6,9 @@ import type { EncodeWrite } from '@/repository/encode'
 import { queueEncode } from '@/repository/encode'
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
-import type { TicketWrite } from '@/repository/videos'
-import { takePlaybackTicket } from '@/repository/videos'
+import type { SoundTrack } from '@/repository/sounds'
+import type { PlaybackRead, TicketWrite } from '@/repository/videos'
+import { getPlaybackPlan, takePlaybackTicket } from '@/repository/videos'
 
 export async function redrawThumbnail(id: string): Promise<ThumbnailWrite> {
   const result = await remakeThumbnail(id)
@@ -22,6 +23,13 @@ export async function redrawThumbnail(id: string): Promise<ThumbnailWrite> {
 
 export async function takeTicket(id: string): Promise<TicketWrite> {
   return takePlaybackTicket(id)
+}
+
+export async function askForTheSound(
+  id: string,
+  sound: SoundTrack,
+): Promise<PlaybackRead> {
+  return getPlaybackPlan(id, sound)
 }
 
 export async function queueEncoding(

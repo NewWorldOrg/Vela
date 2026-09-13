@@ -106,6 +106,10 @@ async function throwing(id: string): Promise<RecordingDiscarded> {
   return { state: 'ok', filesRemoved: 1 }
 }
 
+async function askingForTheSound(): Promise<PlaybackRead> {
+  return planned({ sounds: ['main', 'secondary'] })
+}
+
 async function ticketed(): Promise<TicketWrite> {
   return {
     state: 'ok',
@@ -124,6 +128,7 @@ const meta = {
     onRemakeThumbnail: remade,
     onDelete: throwing,
     onTakeTicket: ticketed,
+    onAskForTheSound: askingForTheSound,
     onQueueEncode: queuing,
     encodeChoices: ENCODE_CHOICES,
     playback: planned(),

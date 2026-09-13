@@ -4,6 +4,7 @@ import { test } from 'node:test'
 
 import {
   PLAYBACK_PROFILES,
+  videoPictureHref,
   WHEN_CARRYING_A_SOUND,
   whyItRefused,
 } from '@/repository/video-paths'
@@ -88,4 +89,25 @@ test('a reason this build has never heard is still said in Japanese, with the st
 
   assert.equal(said, '再生を開始できませんでした(418)。')
   assert.doesNotMatch(said, /teapot/)
+})
+
+test('a picture transcoded as it plays carries the profile and the sound', () => {
+  assert.equal(
+    videoPictureHref('1266', 90, '720p60', 'secondary'),
+    '/api/videos/1266/play?from=90&profile=720p60&sound=secondary',
+  )
+})
+
+test('an artefact handed over as it is carries the sound too, with no profile', () => {
+  assert.equal(
+    videoPictureHref('1266', 0, undefined, 'main'),
+    '/api/videos/1266/play?from=0&sound=main',
+  )
+})
+
+test('a recording with one sound to play asks for the picture as it always did', () => {
+  assert.equal(
+    videoPictureHref('1266', 0, '720p60'),
+    '/api/videos/1266/play?from=0&profile=720p60',
+  )
 })

@@ -61,11 +61,11 @@ function toPlan(
 }
 
 export const getPlaybackPlan = cache(
-  async (id: string): Promise<PlaybackRead> => {
+  async (id: string, sound?: SoundTrack): Promise<PlaybackRead> => {
     const { data, response } = await carinaClient().GET(
       '/api/videos/{id}/play',
       {
-        params: { path: { id } },
+        params: { path: { id }, query: { sound } },
         headers: { accept: 'application/json' },
       },
     )

@@ -5,6 +5,7 @@ interface Sent {
   method: string
   path: string
   accept?: string
+  sound?: string
 }
 
 const sent: Sent[] = []
@@ -30,8 +31,19 @@ const answered = (status: number) => ({ status, ok: status < 400 })
 mock.module('@/repository/client/carina', {
   namedExports: {
     carinaClient: () => ({
-      GET: async (path: string, init?: { headers?: { accept?: string } }) => {
-        sent.push({ method: 'GET', path, accept: init?.headers?.accept })
+      GET: async (
+        path: string,
+        init?: {
+          headers?: { accept?: string }
+          params?: { query?: { sound?: string } }
+        },
+      ) => {
+        sent.push({
+          method: 'GET',
+          path,
+          accept: init?.headers?.accept,
+          sound: init?.params?.query?.sound,
+        })
 
         if (path === '/api/live/profiles') {
           return store.profilesStatus === 200
@@ -100,6 +112,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       method: 'GET',
       path: '/api/videos/{id}/play',
       accept: 'application/json',
+      sound: undefined,
     },
   ])
   assert.deepEqual(read, {
@@ -116,6 +129,59 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       sounds: ['main', 'secondary'],
     },
   })
+})
+
+test('the plan for a sound is asked for by naming it', async () => {
+  sent.length = 0
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+    sounds: ['main', 'secondary'],
+  }
+
+  const read = await getPlaybackPlan('1266', 'secondary')
+
+  assert.deepEqual(sent, [
+    {
+      method: 'GET',
+      path: '/api/videos/{id}/play',
+      accept: 'application/json',
+      sound: 'secondary',
+    },
+  ])
+  assert.equal(read.state === 'planned' && read.plan.seeking, 'byStartingAgain')
+})
+
+test('the plan for the sound that is handed over names it as well', async () => {
+  sent.length = 0
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'direct',
+    seeking: 'byRange',
+    canSeek: true,
+    transcodes: false,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: '3490550128',
+    sounds: ['main', 'secondary'],
+  }
+
+  const read = await getPlaybackPlan('1266', 'main')
+
+  assert.deepEqual(sent.at(0)?.sound, 'main')
+  assert.equal(read.state === 'planned' && read.plan.canSeek, true)
+  assert.deepEqual(read.state === 'planned' && read.plan.sounds, [
+    'main',
+    'secondary',
+  ])
 })
 
 test('a plan from a build that never named the sounds offers none to choose', async () => {

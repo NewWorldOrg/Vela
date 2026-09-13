@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
+import type {
+  PlaybackPlan,
+  PlaybackRead,
+  TicketWrite,
+} from '@/repository/videos'
+import type { SoundTrack } from '@/repository/sounds'
+import { THE_SOUNDS_COULD_NOT_BE_READ } from '@/repository/video-paths'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import {
   DRAWN_PICTURE,
@@ -38,6 +44,30 @@ const ON_THE_FLY: PlaybackPlan = {
 const IN_TWO_LANGUAGES: PlaybackPlan = {
   ...ON_THE_FLY,
   sounds: ['main', 'secondary'],
+}
+
+const HANDED_OVER: PlaybackPlan = {
+  ...ON_THE_FLY,
+  route: 'direct',
+  seeking: 'byRange',
+  canSeek: true,
+  transcodes: false,
+  bytes: 3_490_550_128,
+}
+
+const HANDED_OVER_IN_TWO_LANGUAGES: PlaybackPlan = {
+  ...HANDED_OVER,
+  sounds: ['main', 'secondary'],
+}
+
+const reasked: SoundTrack[] = []
+
+function planning(answer: PlaybackPlan) {
+  return async (id: string, sound: SoundTrack): Promise<PlaybackRead> => {
+    reasked.push(sound)
+
+    return { state: 'planned', plan: answer }
+  }
 }
 
 async function ticketed(): Promise<TicketWrite> {
@@ -107,6 +137,7 @@ const meta = {
     plan: ON_THE_FLY,
     unaskedProfile: '1080p60',
     onTakeTicket: ticketed,
+    onAskForTheSound: planning(ON_THE_FLY),
     frameHref: drawnFrame,
   },
   decorators: [
@@ -402,6 +433,7 @@ export const 二つの音声を持つ録画は音声を選べる: Story = {
     startAt: 0,
     unaskedProfile: '1080p60',
     pictureHref: carrying,
+    onAskForTheSound: planning(IN_TWO_LANGUAGES),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -429,6 +461,7 @@ export const 副音声を選ぶと副音声で再生し直す: Story = {
     startAt: 0,
     unaskedProfile: '1080p60',
     pictureHref: carrying,
+    onAskForTheSound: planning(IN_TWO_LANGUAGES),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -438,14 +471,82 @@ export const 副音声を選ぶと副音声で再生し直す: Story = {
     const sounds = await screen.findByRole('group', { name: '音声' })
 
     asked.length = 0
+    reasked.length = 0
     await userEvent.click(
       within(sounds).getByRole('button', { name: '副音声' }),
     )
 
+    await waitFor(() => expect(reasked).toEqual(['secondary']))
     await waitFor(() => expect(asked).toEqual(['0/1080p60/secondary']))
     await expect(
       within(sounds).getByRole('button', { name: '副音声' }),
     ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 成果物を直に渡す録画でも音声を選べる: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: HANDED_OVER_IN_TWO_LANGUAGES,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+    onAskForTheSound: planning(IN_TWO_LANGUAGES),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked.at(-1)).toBe('0/—/main'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    await expect(
+      within(sounds).getByRole('button', { name: '主音声' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    asked.length = 0
+    reasked.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(reasked).toEqual(['secondary']))
+    await waitFor(() => expect(asked).toEqual(['0/1080p60/secondary']))
+    await expect(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 素材に届かない録画は副音声を諦めて主音声に戻る: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: HANDED_OVER_IN_TWO_LANGUAGES,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+    onAskForTheSound: planning(HANDED_OVER),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    asked.length = 0
+    reasked.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(reasked).toEqual(['secondary']))
+    await waitFor(() =>
+      expect(screen.queryByRole('group', { name: '音声' })).toBeNull(),
+    )
+    await expect(canvas.getByText(THE_SOUNDS_COULD_NOT_BE_READ)).toBeVisible()
+    await expect(asked).toEqual([])
   },
 }
 
