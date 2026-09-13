@@ -1,5 +1,6 @@
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { components } from '@/repository/client/schema'
+import { soundsAnnounced } from '@/repository/sounds'
 
 export type AudioMode = components['schemas']['AudioMode']
 
@@ -30,8 +31,6 @@ const VIDEO_SAYINGS: Record<VideoMode, string> = {
 
 const A_SECOND_SOUND = '副音声あり'
 
-const SOUNDS_A_SECOND_ONE_NEEDS = 2
-
 export function audioSaying(audio: AudioMode | undefined): string | undefined {
   return audio === undefined
     ? undefined
@@ -47,7 +46,7 @@ export function videoSaying(video: VideoMode | undefined): string | undefined {
 export function secondSoundSaying(
   sounds: number | undefined,
 ): string | undefined {
-  return sounds !== undefined && sounds >= SOUNDS_A_SECOND_ONE_NEEDS
+  return sounds !== undefined && soundsAnnounced(sounds).length > 1
     ? A_SECOND_SOUND
     : undefined
 }
