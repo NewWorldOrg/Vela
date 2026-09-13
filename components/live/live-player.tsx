@@ -5,11 +5,14 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
+import { soundsAnnounced, type SoundTrack } from '@/repository/sounds'
 import {
-  MAIN_SOUND,
-  soundsAnnounced,
-  type SoundTrack,
-} from '@/repository/sounds'
+  liveSeat,
+  soundBeingHeard,
+  soundChoiceStillStands,
+  wireKey,
+  type SoundChoice,
+} from '@/lib/live-seat'
 import { liveWireHref } from '@/repository/live-paths'
 import { KEY_CAP, playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import { PlayerTip } from '@/components/recordings/player-tip'
@@ -153,10 +156,7 @@ export function LivePlayer({
   const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
-  const [chosenSound, setChosenSound] = useState<{
-    of: string
-    track: SoundTrack
-  } | null>(null)
+  const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
   const [muted, setMuted] = useState(false)
@@ -183,17 +183,17 @@ export function LivePlayer({
   const sounds: readonly SoundTrack[] = soundsAnnounced(
     channel?.now?.sounds ?? 0,
   )
-  const sound =
-    sounds.length > 1 && chosenSound !== null && chosenSound.of === channel?.id
-      ? chosenSound.track
-      : MAIN_SOUND
-  const seat =
-    networkId === undefined || serviceId === undefined || profile === undefined
-      ? null
-      : `${networkId}:${serviceId}:${profile}:${sound}`
+  const standing = soundChoiceStillStands(chosenSound, channel?.id, sounds)
+
+  if (standing !== chosenSound) {
+    setChosenSound(standing)
+  }
+
+  const sound = soundBeingHeard(standing)
+  const seat = liveSeat(networkId, serviceId, profile, sound)
   const retried = retries && retries.of === seat ? retries : null
   const attempt = retried?.count ?? 0
-  const key = seat === null ? null : `${seat}:${attempt}`
+  const key = wireKey(seat, attempt)
 
   const reconnecting =
     retried && (retried.after === 'dropped' || retried.after === 'ended')

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 
+import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
 import { getLiveScreen } from '@/repository/live'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { LiveView } from '@/components/live/live-page'
 
 export const metadata: Metadata = { title: 'ライブ' }
@@ -17,5 +19,10 @@ export default async function Page({
   const params = await searchParams
   const screen = await getLiveScreen(one(params.kind), one(params.ch))
 
-  return <LiveView screen={screen} />
+  return (
+    <>
+      <RefreshOnSignal events={[PROGRAMS_EVENT, EPG_COLLECTION_EVENT]} />
+      <LiveView screen={screen} />
+    </>
+  )
 }

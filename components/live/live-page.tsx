@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { foldedLineupOf, foldsAChannel } from '@/lib/live-lineup'
 import { foldColumn } from '@/lib/live-fold'
+import { nextProgrammeChangeAt, screenAsOf } from '@/lib/live-clock'
 import {
   channelBeingWatched,
   choiceStillStands,
@@ -15,6 +16,9 @@ import {
 } from '@/lib/live-choice'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
 import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
+import { useLiveViewers } from '@/hooks/useLiveViewers'
+import { useNow } from '@/hooks/useNow'
+import { useReadAgain } from '@/hooks/useReadAgain'
 import type { LiveScreen } from '@/repository/live'
 import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/app-shell'
@@ -30,8 +34,13 @@ import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 
+const TICK_MS = 30_000
+
+const COUNT_EVERY_MS = 60_000
+
 export function LiveView({
-  screen,
+  screen: given,
+  clockHeldAt,
   openSocket,
   askSignedOut,
   askBacklog,
@@ -39,6 +48,7 @@ export function LiveView({
   takeCapture,
 }: {
   screen: LiveScreen
+  clockHeldAt?: Date
   openSocket?: OpenSocket
   askSignedOut?: () => Promise<boolean>
   askBacklog?: AskBacklog
@@ -46,6 +56,22 @@ export function LiveView({
   takeCapture?: TakeCapture
 }) {
   const router = useRouter()
+  const [, startTransition] = useTransition()
+  const clock = useNow(TICK_MS, clockHeldAt)
+  const changesAt = useMemo(
+    () => (clockHeldAt ? undefined : nextProgrammeChangeAt(given, new Date())),
+    [given, clockHeldAt],
+  )
+  const readTheWholeScreenAgain = useCallback(
+    () => startTransition(() => router.refresh()),
+    [router],
+  )
+
+  useReadAgain(changesAt, undefined, readTheWholeScreenAgain)
+
+  const viewers = useLiveViewers(clockHeldAt ? undefined : COUNT_EVERY_MS)
+  const screen = clock ? screenAsOf(given, clock, viewers) : given
+
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const query = searchParams.toString()

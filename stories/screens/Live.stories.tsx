@@ -1,5 +1,5 @@
 import type { ComponentProps, CSSProperties } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { SearchParamsContext } from 'next/dist/shared/lib/hooks-client-context.shared-runtime'
@@ -22,6 +22,7 @@ import type { LiveScreen } from '@/repository/live'
 import type { LiveBacklog } from '@/repository/live-sessions'
 import {
   LIVE_CHANNEL_FIXTURES,
+  LIVE_NOW_FIXTURE,
   LIVE_PROFILE_FIXTURES_SOFTWARE,
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
@@ -301,6 +302,23 @@ const IN_TWO_LANGUAGES: LiveScreen = {
   },
 }
 
+function following(nth: number, sounds: number): LiveScreen {
+  return {
+    ...IN_TWO_LANGUAGES,
+    watching: {
+      ...IN_TWO_LANGUAGES.watching!,
+      channel: {
+        ...IN_TWO_LANGUAGES.watching!.channel,
+        now: {
+          ...IN_TWO_LANGUAGES.watching!.channel.now!,
+          id: `${IN_TWO_LANGUAGES.watching!.channel.now!.id}-${nth}`,
+          sounds,
+        },
+      },
+    },
+  }
+}
+
 const MANY: LiveScreen = {
   ...LIVE_SCREEN_FIXTURE,
   channels: Array.from({ length: 34 }, (unused, nth) => ({
@@ -395,6 +413,7 @@ const meta = {
   },
   args: {
     screen: CHOSEN,
+    clockHeldAt: new Date(LIVE_NOW_FIXTURE),
     openSocket: starting,
     askSignedOut: stillSignedIn,
     askBacklog: uncounted,
@@ -626,6 +645,54 @@ export const 答えに従い古い選択は蘇らない: Story = {
   },
 }
 
+const FIFTY_MINUTES_IN = new Date('2026-08-08T12:50:00Z')
+
+export const 時計が進めば進行と残りが動く: Story = {
+  args: { clockHeldAt: FIFTY_MINUTES_IN },
+  play: async ({ canvasElement }) => {
+    const panel = canvasElement.querySelector('[data-slot="now-next"]')
+
+    await expect(panel).toBeVisible()
+
+    const shown = within(panel as HTMLElement)
+
+    await expect(shown.getByText('21:50')).toBeVisible()
+    await expect(shown.getByText(/残り\s*10\s*分/)).toBeVisible()
+    await expect(
+      shown.getByRole('progressbar', { name: '番組の進行' }),
+    ).toHaveAttribute('aria-valuenow', '83')
+  },
+}
+
+export const 選局前も時計で進行が動く: Story = {
+  args: {
+    screen: UNCHOSEN,
+    openSocket: nothingToWatch,
+    clockHeldAt: FIFTY_MINUTES_IN,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const gauges = Array.from(
+      canvasElement.querySelectorAll(
+        '[data-slot="channel-grid"] [role="progressbar"]',
+      ),
+    ).map((one) => one.getAttribute('aria-valuenow'))
+
+    await expect(gauges).toEqual([
+      '83',
+      '83',
+      '100',
+      '85',
+      '71',
+      '83',
+      '83',
+      '89',
+    ])
+  },
+}
+
 export const 起動中: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -794,6 +861,102 @@ export const 副音声を選ぶと副音声で開き直す: Story = {
         { name: '副音声' },
       ),
     ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+const THE_PROGRAMME_CHANGES = 'live-story-the-programme-changes'
+
+function WhenTheProgrammeChanges({
+  following: coming,
+  ...args
+}: ComponentProps<typeof LiveView> & { following: LiveScreen[] }) {
+  const [nth, setNth] = useState(0)
+
+  useEffect(() => {
+    const change = () => setNth((was) => Math.min(was + 1, coming.length))
+
+    window.addEventListener(THE_PROGRAMME_CHANGES, change)
+
+    return () => window.removeEventListener(THE_PROGRAMME_CHANGES, change)
+  }, [coming.length])
+
+  return (
+    <LiveView {...args} screen={nth === 0 ? args.screen : coming[nth - 1]} />
+  )
+}
+
+async function chooseTheSecondSound(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+
+  await canvas.findByText('チャンネルを準備しています')
+  await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+  await userEvent.click(
+    within(await screen.findByRole('group', { name: '音声' })).getByRole(
+      'button',
+      { name: '副音声' },
+    ),
+  )
+  await waitFor(() => expect(opened).toHaveLength(2))
+  await expect(opened[1].href).toContain('sound=secondary')
+}
+
+function theProgrammeChanges() {
+  window.dispatchEvent(new Event(THE_PROGRAMME_CHANGES))
+}
+
+export const 二重音声が続く限り副音声の線は張り直さない: Story = {
+  args: { screen: IN_TWO_LANGUAGES },
+  render: (args) => (
+    <WhenTheProgrammeChanges {...args} following={[following(1, 2)]} />
+  ),
+  play: async ({ canvasElement }) => {
+    await chooseTheSecondSound(canvasElement)
+
+    theProgrammeChanges()
+
+    await waitFor(async () =>
+      expect(
+        within(await screen.findByRole('group', { name: '音声' })).getByRole(
+          'button',
+          { name: '副音声' },
+        ),
+      ).toHaveAttribute('aria-pressed', 'true'),
+    )
+
+    await expect(opened).toHaveLength(2)
+    await expect(opened[1].readyState).toBe(1)
+  },
+}
+
+export const 副音声を運ばない番組に変わったら主音声へ戻り蘇らない: Story = {
+  args: { screen: IN_TWO_LANGUAGES },
+  render: (args) => (
+    <WhenTheProgrammeChanges
+      {...args}
+      following={[following(1, 1), following(2, 2)]}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await chooseTheSecondSound(canvasElement)
+
+    theProgrammeChanges()
+
+    await waitFor(() => expect(opened).toHaveLength(3))
+    await expect(opened[2].href).toContain('sound=main')
+    await expect(screen.queryByRole('group', { name: '音声' })).toBeNull()
+
+    theProgrammeChanges()
+
+    await waitFor(async () =>
+      expect(
+        within(await screen.findByRole('group', { name: '音声' })).getByRole(
+          'button',
+          { name: '主音声' },
+        ),
+      ).toHaveAttribute('aria-pressed', 'true'),
+    )
+
+    await expect(opened).toHaveLength(3)
   },
 }
 

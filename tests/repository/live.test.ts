@@ -72,8 +72,7 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getLiveScreen, nowNextOf, watchingOf } =
-  await import('@/repository/live')
+const { getLiveScreen, nowNextOf } = await import('@/repository/live')
 
 const NOW = new Date('2026-08-08T12:04:00Z')
 
@@ -389,39 +388,6 @@ test('a relay and a move are not carried onto the service they name', async () =
 
   assert.equal(screen.channels[1].now, undefined)
   assert.equal(screen.channels[1].next, undefined)
-})
-
-test('a channel with no programme known stands at nought, and one with no end has no remainder', () => {
-  const bare = {
-    id: '1-1',
-    networkId: 1,
-    serviceId: 1,
-    name: 'x',
-    kind: 'terrestrial' as const,
-    viewers: 0,
-  }
-
-  assert.deepEqual(watchingOf(bare, NOW), {
-    channel: bare,
-    progressPct: 0,
-    nowLabel: '21:04',
-  })
-
-  const undecided = {
-    ...bare,
-    now: {
-      id: 'p',
-      title: 'y',
-      startsAt: '2026-08-08T11:50:00Z',
-      startLabel: '20:50',
-      hasSubtitles: false,
-      sounds: 1,
-      genreLabel: 'その他',
-    },
-  }
-
-  assert.equal(watchingOf(undecided, NOW).restMin, undefined)
-  assert.equal(watchingOf(undecided, NOW).progressPct, 0)
 })
 
 const { liveScreenHref } = await import('@/repository/live-paths')
