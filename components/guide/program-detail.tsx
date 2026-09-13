@@ -112,8 +112,8 @@ export function ProgramDetailBody({
             字幕あり
           </Badge>
         )}
-        {announcedOf(program).map((saying) => (
-          <Badge key={saying} variant="secondary" className="font-bold">
+        {announcedOf(program).map(({ from, saying }) => (
+          <Badge key={from} variant="secondary" className="font-bold">
             {saying}
           </Badge>
         ))}
@@ -198,12 +198,24 @@ export function ProgramDetailBody({
   )
 }
 
-function announcedOf(program: Program): string[] {
-  return [
-    videoSaying(program.video),
-    audioSaying(program.audio),
-    secondSoundSaying(program.sounds),
-  ].filter((saying): saying is string => saying !== undefined)
+interface Announced {
+  from: 'video' | 'audio' | 'sounds'
+  saying: string
+}
+
+function announcedOf(program: Program): Announced[] {
+  const said: Announced[] = [
+    { from: 'video', saying: videoSaying(program.video) },
+    { from: 'audio', saying: audioSaying(program.audio) },
+    { from: 'sounds', saying: secondSoundSaying(program.sounds) },
+  ].filter((one): one is Announced => one.saying !== undefined)
+  const firstUnknown = said.findIndex(
+    (one) => one.saying === NOT_YET_IN_THIS_BUILD,
+  )
+
+  return said.filter(
+    (one, at) => one.saying !== NOT_YET_IN_THIS_BUILD || at === firstUnknown,
+  )
 }
 
 function RelatedNotice({ related }: { related: RelatedProgram }) {
