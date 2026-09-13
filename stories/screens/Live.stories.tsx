@@ -1,5 +1,8 @@
+import type { ComponentProps, CSSProperties } from 'react'
+import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
+import { SearchParamsContext } from 'next/dist/shared/lib/hooks-client-context.shared-runtime'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
@@ -311,6 +314,75 @@ const MANY: LiveScreen = {
   })),
 }
 
+const CENTRAL = LIVE_CHANNEL_FIXTURES[3]
+
+const ANSWERS: Record<string, LiveScreen> = {
+  [CHOSEN.watching!.channel.id]: CHOSEN,
+  [CENTRAL.id]: {
+    ...CHOSEN,
+    watching: { ...CHOSEN.watching!, channel: CENTRAL },
+  },
+}
+
+const HARNESS_BUTTON: CSSProperties = {
+  minWidth: '48px',
+  minHeight: '48px',
+  padding: '0 12px',
+  background: '#ffffff',
+  color: '#111111',
+  border: '1px solid #111111',
+  borderRadius: '4px',
+}
+
+function harnessButton(shut: boolean): CSSProperties {
+  return { ...HARNESS_BUTTON, cursor: shut ? 'not-allowed' : 'pointer' }
+}
+
+function Wandering(args: ComponentProps<typeof LiveView>) {
+  const [visited, setVisited] = useState<string[]>([
+    CHOSEN.watching!.channel.id,
+  ])
+  const [at, setAt] = useState(0)
+  const [answered, setAnswered] = useState(CHOSEN.watching!.channel.id)
+
+  getRouter().push.mockImplementation((href: string) => {
+    const ch = new URLSearchParams(href.slice(href.indexOf('?') + 1)).get('ch')
+
+    if (ch === null) {
+      return
+    }
+
+    setVisited((kept) => [...kept.slice(0, at + 1), ch])
+    setAt((standing) => standing + 1)
+  })
+
+  return (
+    <SearchParamsContext.Provider
+      value={new URLSearchParams({ ch: visited[at] })}
+    >
+      <div style={{ display: 'flex', gap: '12px', padding: '16px' }}>
+        <button
+          type="button"
+          style={harnessButton(at === 0)}
+          disabled={at === 0}
+          onClick={() => setAt((standing) => standing - 1)}
+        >
+          ブラウザの戻る
+        </button>
+        <button
+          type="button"
+          style={harnessButton(answered === visited[at])}
+          disabled={answered === visited[at]}
+          onClick={() => setAnswered(visited[at])}
+        >
+          答えが届く
+        </button>
+      </div>
+      <LiveView {...args} screen={ANSWERS[answered]} />
+    </SearchParamsContext.Provider>
+  )
+}
+
 const meta = {
   title: 'Screens/ライブ',
   component: LiveView,
@@ -516,6 +588,41 @@ export const 印は視聴者の数ではない: Story = {
       crowded.querySelector('[data-slot="watching-mark"]'),
     ).toBeNull()
     await expect(rows.queryByLabelText(/^視聴者 /)).toBeNull()
+  },
+}
+
+export const 答えに従い古い選択は蘇らない: Story = {
+  render: (args) => <Wandering {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const list = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-list"]',
+    )!
+    const rows = within(list)
+    const marked = () =>
+      [...list.querySelectorAll('[data-slot="watching-mark"]')].map(
+        (mark) => mark.closest('button')?.textContent,
+      )
+    const watched = () => rows.getByRole('button', { name: /みなと総合1/ })
+    const other = () => rows.getByRole('button', { name: /中央テレビ1/ })
+    const back = canvas.getByRole('button', { name: 'ブラウザの戻る' })
+    const answer = canvas.getByRole('button', { name: '答えが届く' })
+
+    await expect(marked()).toEqual([watched().textContent])
+
+    await userEvent.click(other())
+    await expect(marked()).toEqual([other().textContent])
+
+    await userEvent.click(back)
+    await expect(marked()).toEqual([watched().textContent])
+
+    await userEvent.click(other())
+    await userEvent.click(answer)
+    await expect(marked()).toEqual([other().textContent])
+    await expect(other()).toHaveAttribute('aria-pressed', 'true')
+
+    await userEvent.click(back)
+    await expect(marked()).toEqual([watched().textContent])
   },
 }
 

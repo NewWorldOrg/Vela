@@ -1,13 +1,13 @@
 export interface ChannelChoice {
-  answered: string | undefined
+  asked: string | undefined
   chosen: string
 }
 
 export function choiceStillStands(
   choice: ChannelChoice | undefined,
-  answered: string | undefined,
+  asked: string | undefined,
 ): ChannelChoice | undefined {
-  if (choice === undefined || choice.answered !== answered) {
+  if (choice === undefined || choice.asked !== asked) {
     return undefined
   }
 
@@ -16,7 +16,8 @@ export function choiceStillStands(
 
 export function channelBeingWatched(
   choice: ChannelChoice | undefined,
+  asked: string | undefined,
   answered: string | undefined,
 ): string | undefined {
-  return choiceStillStands(choice, answered)?.chosen ?? answered
+  return choiceStillStands(choice, asked)?.chosen ?? asked ?? answered
 }

@@ -83,17 +83,18 @@ export function LiveView({
 
   const nothingIsOn =
     channels.length > 0 && channels.every((one) => one.now === undefined)
+  const asked = searchParams.get('ch') ?? undefined
   const answered = watching?.channel.id
   const [choice, setChoice] = useState<ChannelChoice>()
-  const standing = choiceStillStands(choice, answered)
+  const standing = choiceStillStands(choice, asked)
 
   if (standing !== choice) {
     setChoice(standing)
   }
 
-  const watchingId = channelBeingWatched(standing, answered)
+  const watchingId = channelBeingWatched(standing, asked, answered)
   const choose = (id: string) => {
-    setChoice({ answered, chosen: id })
+    setChoice({ asked, chosen: id })
     patch({ ch: id })
   }
   const kind = (value: string) =>
