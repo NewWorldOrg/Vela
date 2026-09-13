@@ -78,6 +78,20 @@ export const RESERVATION_OUTCOME_KIND_TERMS: Record<
     label: '録画失敗',
     explanation: '録画は始まったが、録画から失敗が報告された予約。',
   },
+  programmeMoved: {
+    label: '番組追従',
+    explanation:
+      '番組表で番組の時刻が動いたため、録画する時間をその番組に合わせた予約。',
+  },
+  programmeGone: {
+    label: '番組消失',
+    explanation: '予約した番組が番組表から無くなったため、取り消された予約。',
+  },
+  programmeReturned: {
+    label: '番組復帰',
+    explanation:
+      '番組表から無くなっていた番組が戻ったため、取り消しから戻された予約。',
+  },
 }
 
 export const END_UNDECIDED_TERM: StateTerm = {

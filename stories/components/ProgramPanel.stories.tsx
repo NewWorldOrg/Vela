@@ -27,6 +27,18 @@ const booked: Program = {
   booking: PROGRAM_FIXTURES.find((program) => program.booking)!.booking,
 }
 
+const twoLanguages: Program = {
+  ...standard,
+  audio: 'dualMono',
+  sounds: 1,
+}
+
+const aSecondSound: Program = {
+  ...standard,
+  audio: 'stereo',
+  sounds: 2,
+}
+
 const wordy: Program = {
   ...multiline,
   description: Array.from(
@@ -142,7 +154,16 @@ async function reads(surface: HTMLElement, program: Program): Promise<void> {
 export const 通常: Story = {
   args: { program: standard, channel: channelOf(standard.channelId) },
   play: async ({ canvasElement }) => {
-    await reads(await opened(canvasElement), standard)
+    const surface = await opened(canvasElement)
+
+    await reads(surface, standard)
+
+    const shown = within(surface)
+
+    await expect(shown.getByText('1080i')).toBeVisible()
+    await expect(shown.getByText('ステレオ')).toBeVisible()
+    await expect(shown.queryByText('副音声あり')).toBeNull()
+    await expect(shown.queryByText('二か国語')).toBeNull()
   },
 }
 
@@ -158,11 +179,51 @@ export const 情報最小: Story = {
     await expect(bare.items ?? []).toHaveLength(0)
     await expect(bare.related ?? []).toHaveLength(0)
     await expect(bare.description).toBeUndefined()
+    await expect(shown.queryByText('ステレオ')).toBeNull()
+    await expect(shown.queryByText('1080i')).toBeNull()
+    await expect(shown.queryByText('副音声あり')).toBeNull()
     await expect(detailIn(surface).querySelectorAll('h2')).toHaveLength(0)
     await expect(
       surface.querySelectorAll('a[href^="/guide/programs/"]'),
     ).toHaveLength(0)
     await expect(shown.getByRole('button', { name: '録画予約' })).toBeEnabled()
+  },
+}
+
+export const 二か国語の告知: Story = {
+  args: {
+    program: twoLanguages,
+    channel: channelOf(twoLanguages.channelId),
+  },
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, twoLanguages)
+
+    const shown = within(surface)
+
+    await expect(shown.getByText('1080i')).toBeVisible()
+    await expect(shown.getByText('二か国語')).toBeVisible()
+    await expect(shown.queryByText('副音声あり')).toBeNull()
+  },
+}
+
+export const 副音声の告知: Story = {
+  args: {
+    program: aSecondSound,
+    channel: channelOf(aSecondSound.channelId),
+  },
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, aSecondSound)
+
+    const shown = within(surface)
+
+    await expect(shown.getByText('1080i')).toBeVisible()
+    await expect(shown.getByText('ステレオ')).toBeVisible()
+    await expect(shown.getByText('副音声あり')).toBeVisible()
+    await expect(shown.queryByText('二か国語')).toBeNull()
   },
 }
 

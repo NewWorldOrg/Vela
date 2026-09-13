@@ -675,6 +675,9 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       startLabel: '21:00',
       endLabel: '23:25',
       subtitled: true,
+      audio: 'stereo',
+      sounds: 1,
+      video: 'interlaced1080',
       items: [
         {
           heading: '番組内容',
@@ -842,6 +845,9 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       durationMin: 60,
       startLabel: '01:00',
       endLabel: '02:00',
+      audio: 'undetermined',
+      sounds: 0,
+      video: 'undetermined',
       items: [],
       related: [],
       durationLabel: '1時間',

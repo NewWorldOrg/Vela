@@ -13,6 +13,7 @@ import {
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { Channel, ChannelKind, StationLogo } from '@/repository/channels'
+import type { AudioMode, VideoMode } from '@/repository/announced'
 import type { Programme } from '@/repository/programmes'
 import { fetchGuide, fetchProgramme, toInt } from '@/repository/programmes'
 import { whatItSaid } from '@/repository/said'
@@ -53,6 +54,9 @@ export interface Program {
   startLabel: string
   endLabel: string
   subtitled?: boolean
+  audio?: AudioMode
+  sounds?: number
+  video?: VideoMode
   booked?: boolean
   booking?: ProgramBooking
   endUndecided?: boolean
@@ -408,6 +412,9 @@ function toProgram(
     startLabel: clockLabel(startsAt),
     endLabel: endsAt ? clockLabel(endsAt) : '未定',
     subtitled: programme.hasSubtitles || undefined,
+    audio: programme.audio,
+    sounds: programme.sounds,
+    video: programme.video,
     endUndecided: endsAt ? undefined : true,
     items: programme.items,
     related: withRelatedSettled(

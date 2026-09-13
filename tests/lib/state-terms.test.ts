@@ -9,6 +9,7 @@ import {
   END_UNDECIDED_TERM,
   NOT_YET_IN_THIS_BUILD_TERM,
   RECORDING_OUTCOME_TERMS,
+  RESERVATION_EPG_MISSING_TERM,
   RESERVATION_OUTCOME_KIND_TERMS,
   RESERVATION_RECEPTION_TERM,
   RESERVATION_STANDING_TERMS,
@@ -122,6 +123,15 @@ test('同じ語の二つの意味は、別々に説明されている', () => {
   assert.notEqual(
     CANDIDATE_UNLOCKED_TERM.explanation,
     RESERVATION_RECEPTION_TERM.explanation,
+  )
+
+  assert.equal(
+    RESERVATION_EPG_MISSING_TERM.label,
+    RESERVATION_OUTCOME_KIND_TERMS.programmeGone.label,
+  )
+  assert.notEqual(
+    RESERVATION_EPG_MISSING_TERM.explanation,
+    RESERVATION_OUTCOME_KIND_TERMS.programmeGone.explanation,
   )
 })
 

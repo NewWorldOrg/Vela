@@ -792,6 +792,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/live/departures': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listLiveDepartures']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/live/profiles': {
     parameters: {
       query?: never
@@ -1222,6 +1238,15 @@ export interface components {
       forgotten: number | string
     }
     /** @enum {string} */
+    AspectRatio:
+      | 'undetermined'
+      | 'fourByThree'
+      | 'sixteenByNineWithPanVector'
+      | 'sixteenByNine'
+      | 'widerThanSixteenByNine'
+    /** @enum {string} */
+    AudioMode: 'undetermined' | 'mono' | 'stereo' | 'dualMono' | 'surround'
+    /** @enum {string} */
     AuthMethod: 'local' | 'oidc'
     BaseResponderOfArchiveForgottenResponder: {
       status: boolean
@@ -1352,6 +1377,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['LiveChannelListResponder']
+    }
+    BaseResponderOfLiveDepartureTallyResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['LiveDepartureTallyResponder']
     }
     BaseResponderOfMeResponder: {
       status: boolean
@@ -1839,6 +1869,7 @@ export interface components {
       /** Format: int32 */
       quietForSeconds: null | number | string
       stalled: boolean
+      waitingForAViewer: boolean
       failure: null | components['schemas']['EncodeFailureResponder']
       artefactName: null | string
       timeline: null | components['schemas']['EncodeTimelineResponder']
@@ -2027,6 +2058,32 @@ export interface components {
     }
     /** @enum {string} */
     LiveChannelSort: 'remoteControlKey' | 'name' | 'viewers'
+    /** @enum {string} */
+    LiveDeparture:
+      | 'viewerLeft'
+      | 'sourceEnded'
+      | 'sourceBroke'
+      | 'viewerStoppedReading'
+      | 'saidSomethingUnknown'
+      | 'saidMoreThanTheWireTakes'
+      | 'serverStopping'
+      | 'sourceWentQuiet'
+    LiveDepartureResponder: {
+      departure: components['schemas']['LiveDeparture']
+      /** Format: int64 */
+      times: number | string
+      /** Format: date-time */
+      lastAt: null | string
+      /** Format: double */
+      shortestSeconds: null | number | string
+      /** Format: double */
+      longestSeconds: null | number | string
+    }
+    LiveDepartureTallyResponder: {
+      /** Format: date-time */
+      since: string
+      departures: components['schemas']['LiveDepartureResponder'][]
+    }
     LiveFrameRateResponder: {
       /** Format: int32 */
       numerator: number | string
@@ -2275,6 +2332,8 @@ export interface components {
       audio: components['schemas']['AudioMode']
       /** Format: int32 */
       sounds: number | string
+      video: components['schemas']['VideoMode']
+      aspect: components['schemas']['AspectRatio']
       source: components['schemas']['ProgrammeSource']
       /** Format: int64 */
       revision: number | string
@@ -2639,6 +2698,9 @@ export interface components {
       name: string
       summary: string
       extended: string
+      audio: components['schemas']['AudioMode']
+      /** Format: int32 */
+      sounds: number | string
       genres: components['schemas']['ProgrammeGenreResponder'][]
       /** Format: date-time */
       capturedAt: string
@@ -2802,7 +2864,13 @@ export interface components {
     ReservationOrigin: 'byHand' | 'byRule'
     /** @enum {string} */
     ReservationOutcomeKind:
-      'competing' | 'missed' | 'tuneFailure' | 'recordingFailure'
+      | 'competing'
+      | 'missed'
+      | 'tuneFailure'
+      | 'recordingFailure'
+      | 'programmeMoved'
+      | 'programmeGone'
+      | 'programmeReturned'
     ReservationOutcomeListResponder: {
       items: components['schemas']['ReservationOutcomeResponder'][]
       /** Format: int32 */
@@ -3259,6 +3327,8 @@ export interface components {
       providerName: null | string
       reach: components['schemas']['OidcReach']
     }
+    /** @enum {string} */
+    SoundTrack: 'main' | 'secondary'
     StartScanRequest: {
       systems?: null | components['schemas']['TuneSystem'][]
       channels?: null | components['schemas']['TuningParametersRequest'][]
@@ -3452,6 +3522,18 @@ export interface components {
     }
     /** @enum {string} */
     VideoCodec: 'h264'
+    /** @enum {string} */
+    VideoMode:
+      | 'undetermined'
+      | 'progressive180'
+      | 'progressive240'
+      | 'interlaced480'
+      | 'progressive480'
+      | 'progressive720'
+      | 'interlaced1080'
+      | 'progressive1080'
+      | 'progressive2160'
+      | 'progressive4320'
     VisitTallyResponder: {
       /** Format: int32 */
       serviceId: number | string
@@ -3470,10 +3552,6 @@ export interface components {
       /** Format: int32 */
       versionChanges: number | string
     }
-    /** @enum {string} */
-    SoundTrack: 'main' | 'secondary'
-    /** @enum {string} */
-    AudioMode: 'undetermined' | 'mono' | 'stereo' | 'dualMono' | 'surround'
   }
   responses: never
   parameters: never
@@ -6003,6 +6081,7 @@ export interface operations {
   listRecordings: {
     parameters: {
       query?: {
+        keyword?: string
         standing?: components['schemas']['RecordingStanding']
         outcome?: components['schemas']['RecordingOutcome'][]
         drops?: components['schemas']['DropReading']
@@ -6732,6 +6811,42 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfLiveChannelListResponder']
+        }
+      }
+    }
+  }
+  listLiveDepartures: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfLiveDepartureTallyResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfLiveDepartureTallyResponder']
         }
       }
     }

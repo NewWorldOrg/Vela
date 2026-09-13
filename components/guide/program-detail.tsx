@@ -10,6 +10,11 @@ import type {
   RelationKind,
 } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
+import {
+  audioSaying,
+  secondSoundSaying,
+  videoSaying,
+} from '@/repository/announced'
 import { liveScreenHref } from '@/repository/live-paths'
 import {
   NOT_YET_IN_THIS_BUILD,
@@ -107,6 +112,11 @@ export function ProgramDetailBody({
             字幕あり
           </Badge>
         )}
+        {announcedOf(program).map(({ from, saying }) => (
+          <Badge key={from} variant="secondary" className="font-bold">
+            {saying}
+          </Badge>
+        ))}
       </div>
 
       <div className="mt-5 border-t border-dashed border-line pt-5">
@@ -185,6 +195,26 @@ export function ProgramDetailBody({
         )}
       </div>
     </div>
+  )
+}
+
+interface Announced {
+  from: 'video' | 'audio' | 'sounds'
+  saying: string
+}
+
+function announcedOf(program: Program): Announced[] {
+  const said: Announced[] = [
+    { from: 'video', saying: videoSaying(program.video) },
+    { from: 'audio', saying: audioSaying(program.audio) },
+    { from: 'sounds', saying: secondSoundSaying(program.sounds) },
+  ].filter((one): one is Announced => one.saying !== undefined)
+  const firstUnknown = said.findIndex(
+    (one) => one.saying === NOT_YET_IN_THIS_BUILD,
+  )
+
+  return said.filter(
+    (one, at) => one.saying !== NOT_YET_IN_THIS_BUILD || at === firstUnknown,
   )
 }
 
