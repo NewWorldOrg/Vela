@@ -16,6 +16,7 @@ const THE_SUITE = [
   'tests/lib/app-signals.test.ts',
   'tests/lib/capture-name.test.ts',
   'tests/lib/clock.test.ts',
+  'tests/lib/collection.test.ts',
   'tests/lib/dismiss.test.ts',
   'tests/lib/encode.test.ts',
   'tests/lib/format.test.ts',

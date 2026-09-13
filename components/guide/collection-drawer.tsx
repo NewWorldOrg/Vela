@@ -4,7 +4,7 @@ import { useEffect, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 
 import { useDismissable } from '@/hooks/useDismissable'
-import { streamLabel } from '@/lib/collection'
+import { STREAM_OUTCOME_LABEL, streamLabel } from '@/lib/collection'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import { cn } from '@/lib/utils'
 import type {
@@ -45,16 +45,6 @@ const RANGE_OPTIONS = [
   { value: 'stream', label: 'TS 指定' },
   { value: 'service', label: 'サービス指定' },
 ]
-
-const OUTCOME_LABEL: Record<StreamVisitRow['outcome'], string> = {
-  neverVisited: '未収集',
-  complete: 'Complete',
-  basicOnly: 'BasicOnly',
-  incomplete: 'Incomplete',
-  interrupted: '中断',
-  noLock: '選局失敗',
-  noBytes: '選局失敗',
-}
 
 function SectionCap({
   icon: CapIcon,
@@ -108,7 +98,7 @@ function OutcomeChip({ outcome }: { outcome: StreamVisitRow['outcome'] }) {
   return (
     <Badge variant={variant}>
       <ChipDot />
-      {wordFor(OUTCOME_LABEL, outcome)}
+      {wordFor(STREAM_OUTCOME_LABEL, outcome)}
     </Badge>
   )
 }
@@ -174,7 +164,7 @@ function VisitDetail({ row }: { row: StreamVisitRow }) {
         </span>
       )}
       {row.outcome === 'basicOnly' && (
-        <span className="text-ink-3">extended は次回持ち越し</span>
+        <span className="text-ink-3">詳細は次回に持ち越し</span>
       )}
     </>
   )
@@ -195,7 +185,8 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
             巡回は完了しています
           </b>
           <span className="block text-note leading-[1.7] text-ink-2">
-            全 <Figure>{rows.length}</Figure> TS が Complete。
+            全 <Figure>{rows.length}</Figure> TS が
+            {STREAM_OUTCOME_LABEL.complete}。
           </span>
         </div>
       </div>
@@ -226,7 +217,7 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
       </b>
       <span className="mt-0.5 flex flex-wrap gap-x-3.5 text-note leading-[1.7] text-ink-2">
         <span>
-          結果 {wordFor(OUTCOME_LABEL, latest.outcome)}
+          結果 {wordFor(STREAM_OUTCOME_LABEL, latest.outcome)}
           {latest.lastAttemptedLabel && (
             <>
               ・<Figure>{latest.lastAttemptedLabel}</Figure>

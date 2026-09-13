@@ -37,14 +37,37 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = {}
+const NOTHING_IN_ENGLISH = /Complete|BasicOnly|Incomplete|extended/
+
+export const 通常: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getAllByText('完了').length).toBeGreaterThan(0)
+    await expect(canvas.getByText('基本のみ')).toBeVisible()
+    await expect(canvas.getByText('詳細は次回に持ち越し')).toBeVisible()
+    await expect(canvasElement).not.toHaveTextContent(NOTHING_IN_ENGLISH)
+  },
+}
 
 export const 全完了: Story = {
   args: { status: COLLECTION_ALL_COMPLETE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText(/TS が完了。/)).toBeVisible()
+    await expect(canvasElement).not.toHaveTextContent(NOTHING_IN_ENGLISH)
+  },
 }
 
 export const 収集不調: Story = {
   args: { status: COLLECTION_TROUBLED },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getAllByText('不調').length).toBeGreaterThan(0)
+    await expect(canvasElement).not.toHaveTextContent(NOTHING_IN_ENGLISH)
+  },
 }
 
 const pressCollect =
