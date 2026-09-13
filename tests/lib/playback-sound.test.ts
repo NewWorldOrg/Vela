@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import {
   soundToAsk,
+  theLandingIsStillAhead,
   whatIsStillSaid,
   whatTheSoundBecomes,
   whereItStarts,
@@ -120,6 +121,26 @@ test('an artefact handed over is opened whole and moved to the second by range',
 
 test('nothing is landed on when the recording opens at its beginning', () => {
   assert.deepEqual(whereItStarts(HANDED_OVER, 0), { from: 0, land: null })
+})
+
+test('the clock waits while the picture is still at the head of the artefact', () => {
+  assert.equal(theLandingIsStillAhead(600, 0), true)
+  assert.equal(theLandingIsStillAhead(600, 0.9), true)
+})
+
+test('the clock follows again once the picture has moved off the head', () => {
+  assert.equal(theLandingIsStillAhead(600, 600), false)
+  assert.equal(theLandingIsStillAhead(600, 1), false)
+  assert.equal(theLandingIsStillAhead(600, 9.9), false)
+})
+
+test('a landing close to the head is waited for no longer than itself', () => {
+  assert.equal(theLandingIsStillAhead(0.4, 0.3), true)
+  assert.equal(theLandingIsStillAhead(0.4, 0.4), false)
+})
+
+test('nothing is waited for when the recording opens where it lies', () => {
+  assert.equal(theLandingIsStillAhead(null, 0), false)
 })
 
 const CAPTURED: PlayerSaying = { text: '画面を保存しました', tone: 'ok' }
