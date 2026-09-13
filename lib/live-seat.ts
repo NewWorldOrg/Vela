@@ -1,22 +1,28 @@
-import { BOTH_SOUNDS, MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
+import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 
 export interface SoundChoice {
   of: string
   track: SoundTrack
 }
 
-export function soundBeingHeard(
+export function soundChoiceStillStands(
   choice: SoundChoice | null,
   channelId: string | undefined,
-): SoundTrack {
-  return choice !== null && choice.of === channelId ? choice.track : MAIN_SOUND
+  announced: readonly SoundTrack[],
+): SoundChoice | null {
+  if (
+    choice === null ||
+    choice.of !== channelId ||
+    !announced.includes(choice.track)
+  ) {
+    return null
+  }
+
+  return choice
 }
 
-export function soundsToOffer(
-  announced: readonly SoundTrack[],
-  heard: SoundTrack,
-): readonly SoundTrack[] {
-  return heard === MAIN_SOUND ? announced : BOTH_SOUNDS
+export function soundBeingHeard(choice: SoundChoice | null): SoundTrack {
+  return choice?.track ?? MAIN_SOUND
 }
 
 export function liveSeat(

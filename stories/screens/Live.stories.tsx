@@ -302,19 +302,21 @@ const IN_TWO_LANGUAGES: LiveScreen = {
   },
 }
 
-const IN_ONE_LANGUAGE_NEXT: LiveScreen = {
-  ...IN_TWO_LANGUAGES,
-  watching: {
-    ...IN_TWO_LANGUAGES.watching!,
-    channel: {
-      ...IN_TWO_LANGUAGES.watching!.channel,
-      now: {
-        ...IN_TWO_LANGUAGES.watching!.channel.now!,
-        id: `${IN_TWO_LANGUAGES.watching!.channel.now!.id}-after`,
-        sounds: 1,
+function following(nth: number, sounds: number): LiveScreen {
+  return {
+    ...IN_TWO_LANGUAGES,
+    watching: {
+      ...IN_TWO_LANGUAGES.watching!,
+      channel: {
+        ...IN_TWO_LANGUAGES.watching!.channel,
+        now: {
+          ...IN_TWO_LANGUAGES.watching!.channel.now!,
+          id: `${IN_TWO_LANGUAGES.watching!.channel.now!.id}-${nth}`,
+          sounds,
+        },
       },
     },
-  },
+  }
 }
 
 const MANY: LiveScreen = {
@@ -864,40 +866,53 @@ export const 副音声を選ぶと副音声で開き直す: Story = {
 
 const THE_PROGRAMME_CHANGES = 'live-story-the-programme-changes'
 
-function WhenTheProgrammeChanges(args: ComponentProps<typeof LiveView>) {
-  const [screen, setScreen] = useState(args.screen)
+function WhenTheProgrammeChanges({
+  following: coming,
+  ...args
+}: ComponentProps<typeof LiveView> & { following: LiveScreen[] }) {
+  const [nth, setNth] = useState(0)
 
   useEffect(() => {
-    const change = () => setScreen(IN_ONE_LANGUAGE_NEXT)
+    const change = () => setNth((was) => Math.min(was + 1, coming.length))
 
     window.addEventListener(THE_PROGRAMME_CHANGES, change)
 
     return () => window.removeEventListener(THE_PROGRAMME_CHANGES, change)
-  }, [])
+  }, [coming.length])
 
-  return <LiveView {...args} screen={screen} />
+  return (
+    <LiveView {...args} screen={nth === 0 ? args.screen : coming[nth - 1]} />
+  )
 }
 
-export const 番組が変わっても副音声の線は張り直さない: Story = {
+async function chooseTheSecondSound(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+
+  await canvas.findByText('チャンネルを準備しています')
+  await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+  await userEvent.click(
+    within(await screen.findByRole('group', { name: '音声' })).getByRole(
+      'button',
+      { name: '副音声' },
+    ),
+  )
+  await waitFor(() => expect(opened).toHaveLength(2))
+  await expect(opened[1].href).toContain('sound=secondary')
+}
+
+function theProgrammeChanges() {
+  window.dispatchEvent(new Event(THE_PROGRAMME_CHANGES))
+}
+
+export const 二重音声が続く限り副音声の線は張り直さない: Story = {
   args: { screen: IN_TWO_LANGUAGES },
-  render: (args) => <WhenTheProgrammeChanges {...args} />,
+  render: (args) => (
+    <WhenTheProgrammeChanges {...args} following={[following(1, 2)]} />
+  ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    await chooseTheSecondSound(canvasElement)
 
-    await canvas.findByText('チャンネルを準備しています')
-    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
-
-    await userEvent.click(
-      within(await screen.findByRole('group', { name: '音声' })).getByRole(
-        'button',
-        { name: '副音声' },
-      ),
-    )
-
-    await waitFor(() => expect(opened).toHaveLength(2))
-    await expect(opened[1].href).toContain('sound=secondary')
-
-    window.dispatchEvent(new Event(THE_PROGRAMME_CHANGES))
+    theProgrammeChanges()
 
     await waitFor(async () =>
       expect(
@@ -910,6 +925,38 @@ export const 番組が変わっても副音声の線は張り直さない: Story
 
     await expect(opened).toHaveLength(2)
     await expect(opened[1].readyState).toBe(1)
+  },
+}
+
+export const 副音声を運ばない番組に変わったら主音声へ戻り蘇らない: Story = {
+  args: { screen: IN_TWO_LANGUAGES },
+  render: (args) => (
+    <WhenTheProgrammeChanges
+      {...args}
+      following={[following(1, 1), following(2, 2)]}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await chooseTheSecondSound(canvasElement)
+
+    theProgrammeChanges()
+
+    await waitFor(() => expect(opened).toHaveLength(3))
+    await expect(opened[2].href).toContain('sound=main')
+    await expect(screen.queryByRole('group', { name: '音声' })).toBeNull()
+
+    theProgrammeChanges()
+
+    await waitFor(async () =>
+      expect(
+        within(await screen.findByRole('group', { name: '音声' })).getByRole(
+          'button',
+          { name: '主音声' },
+        ),
+      ).toHaveAttribute('aria-pressed', 'true'),
+    )
+
+    await expect(opened).toHaveLength(3)
   },
 }
 

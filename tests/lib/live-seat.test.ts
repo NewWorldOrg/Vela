@@ -4,11 +4,11 @@ import { test } from 'node:test'
 import {
   liveSeat,
   soundBeingHeard,
-  soundsToOffer,
+  soundChoiceStillStands,
   wireKey,
   type SoundChoice,
 } from '@/lib/live-seat'
-import { BOTH_SOUNDS, MAIN_SOUND, soundsAnnounced } from '@/repository/sounds'
+import { MAIN_SOUND, soundsAnnounced } from '@/repository/sounds'
 
 const A_CHANNEL = 'a-channel'
 
@@ -23,69 +23,60 @@ const ON_THE_SECOND_SOUND: SoundChoice = {
 
 function playing(announces: number, chosen: SoundChoice | null) {
   const announced = soundsAnnounced(announces)
-  const heard = soundBeingHeard(chosen, A_CHANNEL)
-  const seat = liveSeat(1, 2, A_PROFILE, heard)
+  const standing = soundChoiceStillStands(chosen, A_CHANNEL, announced)
+  const seat = liveSeat(1, 2, A_PROFILE, soundBeingHeard(standing))
 
-  return {
-    heard,
-    seat,
-    key: wireKey(seat, 0),
-    offered: [...soundsToOffer(announced, heard)],
-  }
+  return { standing, seat, key: wireKey(seat, 0) }
 }
 
 test('a viewer who has chosen nothing hears the main sound', () => {
-  assert.equal(soundBeingHeard(null, A_CHANNEL), MAIN_SOUND)
+  assert.equal(soundBeingHeard(null), MAIN_SOUND)
 })
 
-test('a choice made for this channel is what is heard', () => {
-  assert.equal(soundBeingHeard(ON_THE_SECOND_SOUND, A_CHANNEL), 'secondary')
+test('a choice the programme still carries goes on standing', () => {
+  assert.equal(
+    soundChoiceStillStands(ON_THE_SECOND_SOUND, A_CHANNEL, soundsAnnounced(2)),
+    ON_THE_SECOND_SOUND,
+  )
 })
 
 test('a choice made for another channel is not carried over to this one', () => {
   assert.equal(
-    soundBeingHeard(ON_THE_SECOND_SOUND, ANOTHER_CHANNEL),
-    MAIN_SOUND,
+    soundChoiceStillStands(
+      ON_THE_SECOND_SOUND,
+      ANOTHER_CHANNEL,
+      soundsAnnounced(2),
+    ),
+    null,
   )
 })
 
-test('the seat a viewer holds does not move when the programme that follows announces a different number of tracks', () => {
-  const whileTwoAreAnnounced = playing(2, ON_THE_SECOND_SOUND)
-  const whileOneIsAnnounced = playing(1, ON_THE_SECOND_SOUND)
-  const whileNoneAreAnnounced = playing(0, ON_THE_SECOND_SOUND)
+test('the seat a viewer holds does not move while the programme goes on carrying the sound they chose', () => {
+  const before = playing(2, ON_THE_SECOND_SOUND)
+  const afterTheProgrammeChanges = playing(2, ON_THE_SECOND_SOUND)
 
-  assert.equal(whileTwoAreAnnounced.seat, `1:2:${A_PROFILE}:secondary`)
-  assert.equal(whileOneIsAnnounced.seat, whileTwoAreAnnounced.seat)
-  assert.equal(whileNoneAreAnnounced.seat, whileTwoAreAnnounced.seat)
+  assert.equal(before.seat, `1:2:${A_PROFILE}:secondary`)
+  assert.equal(afterTheProgrammeChanges.seat, before.seat)
+  assert.equal(afterTheProgrammeChanges.key, before.key)
 })
 
-test('the key the wire is opened under does not move with the announced count either', () => {
-  assert.equal(
-    playing(2, ON_THE_SECOND_SOUND).key,
-    `1:2:${A_PROFILE}:secondary:0`,
-  )
-  assert.equal(
-    playing(1, ON_THE_SECOND_SOUND).key,
-    playing(2, ON_THE_SECOND_SOUND).key,
-  )
-  assert.equal(
-    playing(0, ON_THE_SECOND_SOUND).key,
-    playing(2, ON_THE_SECOND_SOUND).key,
-  )
+test('a programme that stops carrying the second sound spends the choice, and the seat goes back to the main sound', () => {
+  const gone = playing(1, ON_THE_SECOND_SOUND)
+
+  assert.equal(gone.standing, null)
+  assert.equal(gone.seat, `1:2:${A_PROFILE}:main`)
 })
 
-test('what the programme announces is spent on the buttons, not on the wire', () => {
-  assert.deepEqual(playing(2, ON_THE_SECOND_SOUND).offered, [...BOTH_SOUNDS])
-  assert.deepEqual(playing(1, null).offered, [MAIN_SOUND])
-  assert.deepEqual(playing(0, null).offered, [])
+test('a programme carrying no sound at all spends the choice too', () => {
+  assert.equal(playing(0, ON_THE_SECOND_SOUND).standing, null)
 })
 
-test('a viewer already on the second sound is still offered the way back, whatever the programme announces', () => {
-  for (const announces of [0, 1, 2]) {
-    assert.deepEqual(playing(announces, ON_THE_SECOND_SOUND).offered, [
-      ...BOTH_SOUNDS,
-    ])
-  }
+test('a spent choice does not come back when a later programme carries two sounds again', () => {
+  const spent = playing(1, ON_THE_SECOND_SOUND).standing
+  const twoAgain = playing(2, spent)
+
+  assert.equal(twoAgain.standing, null)
+  assert.equal(twoAgain.seat, `1:2:${A_PROFILE}:main`)
 })
 
 test('a retry is what moves the key, not the programme', () => {

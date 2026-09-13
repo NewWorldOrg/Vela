@@ -9,7 +9,7 @@ import { soundsAnnounced, type SoundTrack } from '@/repository/sounds'
 import {
   liveSeat,
   soundBeingHeard,
-  soundsToOffer,
+  soundChoiceStillStands,
   wireKey,
   type SoundChoice,
 } from '@/lib/live-seat'
@@ -180,11 +180,16 @@ export function LivePlayer({
 
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
-  const sound = soundBeingHeard(chosenSound, channel?.id)
-  const sounds: readonly SoundTrack[] = soundsToOffer(
-    soundsAnnounced(channel?.now?.sounds ?? 0),
-    sound,
+  const sounds: readonly SoundTrack[] = soundsAnnounced(
+    channel?.now?.sounds ?? 0,
   )
+  const standing = soundChoiceStillStands(chosenSound, channel?.id, sounds)
+
+  if (standing !== chosenSound) {
+    setChosenSound(standing)
+  }
+
+  const sound = soundBeingHeard(standing)
   const seat = liveSeat(networkId, serviceId, profile, sound)
   const retried = retries && retries.of === seat ? retries : null
   const attempt = retried?.count ?? 0
