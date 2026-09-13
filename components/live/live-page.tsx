@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -8,6 +8,11 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { foldedLineupOf, foldsAChannel } from '@/lib/live-lineup'
 import { foldColumn } from '@/lib/live-fold'
+import {
+  channelBeingWatched,
+  choiceStillStands,
+  type ChannelChoice,
+} from '@/lib/live-choice'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
 import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
 import type { LiveScreen } from '@/repository/live'
@@ -78,7 +83,19 @@ export function LiveView({
 
   const nothingIsOn =
     channels.length > 0 && channels.every((one) => one.now === undefined)
-  const choose = (id: string) => patch({ ch: id })
+  const answered = watching?.channel.id
+  const [choice, setChoice] = useState<ChannelChoice>()
+  const standing = choiceStillStands(choice, answered)
+
+  if (standing !== choice) {
+    setChoice(standing)
+  }
+
+  const watchingId = channelBeingWatched(standing, answered)
+  const choose = (id: string) => {
+    setChoice({ answered, chosen: id })
+    patch({ ch: id })
+  }
   const kind = (value: string) =>
     patch({ kind: value === 'terrestrial' ? null : value })
 
@@ -177,7 +194,7 @@ export function LiveView({
           kind={screen.kind}
           kinds={screen.kinds}
           channels={channels}
-          watchingId={watching.channel.id}
+          watchingId={watchingId}
           folded={away}
           onFold={fold}
           motion={motion}

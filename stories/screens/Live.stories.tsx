@@ -467,6 +467,58 @@ export const 選局は履歴に積む: Story = {
   },
 }
 
+export const 観ているチャンネルの印は押した瞬間に移る: Story = {
+  play: async ({ canvasElement }) => {
+    const list = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-list"]',
+    )!
+    const rows = within(list)
+    const marked = () =>
+      [...list.querySelectorAll('[data-slot="watching-mark"]')].map(
+        (mark) => mark.closest('button')?.textContent,
+      )
+
+    const watched = rows.getByRole('button', { name: /みなと総合1/ })
+    const other = rows.getByRole('button', { name: /中央テレビ1/ })
+
+    await expect(watched).toHaveAttribute('aria-pressed', 'true')
+    await expect(marked()).toEqual([watched.textContent])
+
+    await userEvent.click(other)
+
+    await expect(other).toHaveAttribute('aria-pressed', 'true')
+    await expect(watched).toHaveAttribute('aria-pressed', 'false')
+    await expect(marked()).toEqual([other.textContent])
+  },
+}
+
+export const 印は視聴者の数ではない: Story = {
+  play: async ({ canvasElement }) => {
+    const list = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-list"]',
+    )!
+    const rows = within(list)
+    const watched = rows.getByRole('button', { name: /みなと総合1/ })
+    const crowded = rows.getByRole('button', { name: /中央テレビ1/ })
+
+    await expect(
+      CHOSEN.channels.find((channel) => channel.name === '中央テレビ1')!
+        .viewers,
+    ).toBeGreaterThan(
+      CHOSEN.channels.find((channel) => channel.name === 'みなと総合1')!
+        .viewers,
+    )
+
+    await expect(
+      watched.querySelector('[data-slot="watching-mark"]'),
+    ).not.toBeNull()
+    await expect(
+      crowded.querySelector('[data-slot="watching-mark"]'),
+    ).toBeNull()
+    await expect(rows.queryByLabelText(/^視聴者 /)).toBeNull()
+  },
+}
+
 export const 起動中: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
