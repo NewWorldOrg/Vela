@@ -1,4 +1,9 @@
-import type { ReservationOutcome } from '@/repository/reservation-outcomes'
+import type { ComponentProps } from 'react'
+
+import type {
+  ReservationOutcome,
+  ReservationOutcomeKind,
+} from '@/repository/reservation-outcomes'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import {
   NOT_YET_IN_THIS_BUILD_TERM,
@@ -9,12 +14,27 @@ import { numbered } from '@/repository/scan-failures'
 import { Badge } from '@/components/ui/badge'
 import { TermTip } from '@/components/vela/term-tip'
 
+type BadgeTone = ComponentProps<typeof Badge>['variant']
+
+const KIND_TONE: Record<ReservationOutcomeKind, BadgeTone> = {
+  competing: 'err',
+  missed: 'err',
+  tuneFailure: 'err',
+  recordingFailure: 'err',
+  programmeMoved: 'sky',
+  programmeGone: 'warn',
+  programmeReturned: 'ok',
+}
+
+const NOT_YET_KNOWN_TONE: BadgeTone = 'mute'
+
 export function OutcomeKindChip({ outcome }: { outcome: ReservationOutcome }) {
   const term = shapeFor(
     RESERVATION_OUTCOME_KIND_TERMS,
     outcome.kind,
     NOT_YET_IN_THIS_BUILD_TERM,
   )
+  const tone = shapeFor(KIND_TONE, outcome.kind, NOT_YET_KNOWN_TONE)
   const alsoSaidByTheKind = outcome.recordingResult === 'failed'
   const result =
     outcome.recordingResult && !alsoSaidByTheKind
@@ -28,7 +48,7 @@ export function OutcomeKindChip({ outcome }: { outcome: ReservationOutcome }) {
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
       <TermTip term={term}>
-        <Badge variant="err" className="font-bold">
+        <Badge variant={tone} className="font-bold">
           {term.label}
         </Badge>
       </TermTip>

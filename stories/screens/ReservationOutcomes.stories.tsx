@@ -18,6 +18,13 @@ function rowFor(cell: HTMLElement): HTMLElement {
   return row
 }
 
+const FAILURES: [string, string][] = [
+  ['金曜シネマ「星の渡り鳥」', '競合'],
+  ['午後のロードショー', '撮り逃し'],
+  ['朝のニュース', '選局失敗'],
+  ['山あいの町から', '録画失敗'],
+]
+
 const meta = {
   title: 'Screens/予約結果台帳',
   component: OutcomeLedgerView,
@@ -56,9 +63,27 @@ export const 分類がそろう: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    for (const word of ['競合', '撮り逃し', '選局失敗', '録画失敗']) {
-      await expect(canvas.getAllByText(word).length).toBeGreaterThan(0)
+    for (const [title, word] of FAILURES) {
+      await expect(
+        within(rowFor(canvas.getByText(title)))
+          .getByText(word)
+          .getAttribute('data-variant'),
+      ).toBe('err')
     }
+
+    const moved = rowFor(canvas.getByText('夕暮れの図書室'))
+    const gone = rowFor(canvas.getAllByText('海辺の紀行')[0])
+    const returned = rowFor(canvas.getAllByText('海辺の紀行')[1])
+
+    await expect(
+      within(moved).getByText('番組追従').getAttribute('data-variant'),
+    ).toBe('sky')
+    await expect(
+      within(gone).getByText('番組消失').getAttribute('data-variant'),
+    ).toBe('warn')
+    await expect(
+      within(returned).getByText('番組復帰').getAttribute('data-variant'),
+    ).toBe('ok')
 
     const noLock = rowFor(canvas.getByText('朝のニュース'))
     const psi = rowFor(canvas.getAllByText('真夜中の音楽室')[0])
