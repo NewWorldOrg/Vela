@@ -570,6 +570,84 @@ export const 素材に届かない録画は副音声を諦めて主音声に戻�
   },
 }
 
+const METADATA_IS_ALREADY_IN = 1
+
+function aPictureAlreadyRead(): () => void {
+  const own = {
+    readyState: Object.getOwnPropertyDescriptor(
+      HTMLMediaElement.prototype,
+      'readyState',
+    ),
+    currentTime: Object.getOwnPropertyDescriptor(
+      HTMLMediaElement.prototype,
+      'currentTime',
+    ),
+  }
+  const stood = { at: 0 }
+
+  Object.defineProperty(HTMLMediaElement.prototype, 'readyState', {
+    configurable: true,
+    get: () => METADATA_IS_ALREADY_IN,
+  })
+  Object.defineProperty(HTMLMediaElement.prototype, 'currentTime', {
+    configurable: true,
+    get: () => stood.at,
+    set: (second: number) => {
+      stood.at = second
+    },
+  })
+
+  return () => {
+    if (own.readyState) {
+      Object.defineProperty(
+        HTMLMediaElement.prototype,
+        'readyState',
+        own.readyState,
+      )
+    }
+
+    if (own.currentTime) {
+      Object.defineProperty(
+        HTMLMediaElement.prototype,
+        'currentTime',
+        own.currentTime,
+      )
+    }
+  }
+}
+
+export const 途中から開いた録画は読み込みを見逃しても頭出しする: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: HANDED_OVER,
+    startAt: 600,
+    pictureHref: carrying,
+  },
+  play: async ({ canvasElement, mount }) => {
+    const asItWas = aPictureAlreadyRead()
+
+    try {
+      await mount()
+
+      const canvas = within(canvasElement)
+      const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+      await waitFor(() => expect(asked.at(-1)).toBe('0/—/—'))
+      await waitFor(() => expect(picture.currentTime).toBe(600))
+      await expect(canvas.getByText('10:00 / 4:12:38')).toBeVisible()
+
+      picture.currentTime = 601
+      picture.dispatchEvent(new Event('timeupdate'))
+
+      await waitFor(() =>
+        expect(canvas.getByText('10:01 / 4:12:38')).toBeVisible(),
+      )
+    } finally {
+      asItWas()
+    }
+  },
+}
+
 export const 途中から観ている録画は音声を替えても位置を保つ: Story = {
   args: {
     detail: detail('1266'),

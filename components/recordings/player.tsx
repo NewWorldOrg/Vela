@@ -8,6 +8,7 @@ import { redrawnHref } from '@/lib/thumbnail-redraw'
 import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import {
   soundToAsk,
+  theLandingIsStillAhead,
   whatIsStillSaid,
   whatTheSoundBecomes,
   whereItStarts,
@@ -247,6 +248,33 @@ export function Player({
     [],
   )
 
+  useEffect(() => {
+    const element = video.current
+
+    if (!element || source === undefined) {
+      return
+    }
+
+    const land = () => {
+      if (landing.current === null) {
+        return
+      }
+
+      element.currentTime = landing.current
+      landing.current = null
+    }
+
+    if (element.readyState >= element.HAVE_METADATA) {
+      land()
+
+      return
+    }
+
+    element.addEventListener('loadedmetadata', land)
+
+    return () => element.removeEventListener('loadedmetadata', land)
+  }, [source])
+
   const aimed = useRef(false)
 
   const stir = () => {
@@ -386,6 +414,7 @@ export function Player({
     setPosition(at)
 
     if (plan.seeking === 'byRange' && video.current && source) {
+      landing.current = null
       video.current.currentTime = at
 
       return
@@ -618,11 +647,9 @@ export function Player({
               event.currentTarget.playbackRate = Number(speed)
               event.currentTarget.volume = volume
               event.currentTarget.muted = muted
-
-              if (landing.current !== null) {
-                event.currentTarget.currentTime = landing.current
-                landing.current = null
-              }
+            }}
+            onSeeked={() => {
+              landing.current = null
             }}
             onLoadedData={() =>
               setPhase((was) =>
@@ -648,12 +675,19 @@ export function Player({
               )
             }}
             onTimeUpdate={(event) => {
-              if (asking.current || landing.current !== null) {
+              if (asking.current) {
                 return
               }
 
+              const at = event.currentTarget.currentTime
+
+              if (theLandingIsStillAhead(landing.current, at)) {
+                return
+              }
+
+              landing.current = null
               wanted.current = null
-              setPosition(from + event.currentTarget.currentTime)
+              setPosition(from + at)
             }}
             className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
           />

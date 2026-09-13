@@ -58,6 +58,18 @@ export function whereItStarts(
     : { from: second, land: null }
 }
 
+const LANDS_BEFORE_A_SECOND_HAS_PASSED = 1
+
+export function theLandingIsStillAhead(
+  land: number | null,
+  currentTime: number,
+): boolean {
+  return (
+    land !== null &&
+    currentTime < Math.min(LANDS_BEFORE_A_SECOND_HAS_PASSED, land)
+  )
+}
+
 export function whatIsStillSaid(
   standing: PlayerSaying | null,
   said: string | undefined,
