@@ -605,20 +605,36 @@ export const サービスが0件のバナー: Story = {
   args: {
     guide: {
       ...base,
+      kind: 'bs',
+      channels: [],
+      programs: [],
       health: {
         tone: 'warn',
         facts: [
           {
             subject: 'noServices',
-            emphasis: 'チューナー側で BS / CS110 のサービスが 0 件です。',
+            emphasis: 'チューナー側で BS のサービスが 0 件です。',
           },
         ],
       },
     },
   },
+  play: async ({ canvasElement }) => {
+    const banner = partOf(canvasElement, '[data-slot="banner"]')
+    const lines = Array.from(
+      banner.querySelectorAll<HTMLElement>('[data-health-fact]'),
+    )
+
+    await expect(lines.map((line) => line.dataset.healthFact)).toEqual([
+      'noServices',
+    ])
+    await expect(lines[0]).toHaveTextContent(
+      'チューナー側で BS のサービスが 0 件です。',
+    )
+  },
 }
 
-export const 健全性バナー3項目: Story = {
+export const 健全性バナー2項目: Story = {
   args: {
     guide: {
       ...base,
@@ -633,10 +649,6 @@ export const 健全性バナー3項目: Story = {
           {
             subject: 'trouble',
             emphasis: '2 TS の収集が連続して揃っていません。',
-          },
-          {
-            subject: 'noServices',
-            emphasis: 'チューナー側で BS / CS110 のサービスが 0 件です。',
           },
         ],
       },
@@ -653,7 +665,6 @@ export const 健全性バナー3項目: Story = {
     await expect(lines.map((line) => line.dataset.healthFact)).toEqual([
       'coverage',
       'trouble',
-      'noServices',
     ])
     await expect(lines[0]).toHaveTextContent(
       'ほかに 1 チャンネルが 8 日先まで届いていません。',

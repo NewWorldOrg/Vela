@@ -140,7 +140,7 @@ export function epgHealthOf(
   const told = [
     coverageTold(status, kind),
     troubleTold(status, kind),
-    noServicesTold(status),
+    noServicesTold(status, kind),
   ].flatMap((one) => (one === undefined ? [] : [one]))
 
   if (told.length === 0) {
@@ -211,18 +211,21 @@ function troubleTold(
   }
 }
 
-function noServicesTold(status: CollectionStatus): Told | undefined {
-  if (status.zeroServiceKinds.length === 0) {
+function noServicesTold(
+  status: CollectionStatus,
+  kind: ChannelKind,
+): Told | undefined {
+  const shown = status.zeroServiceKinds.find((one) => one.kind === kind)
+
+  if (shown === undefined) {
     return undefined
   }
-
-  const kinds = status.zeroServiceKinds.map((one) => one.label).join(' / ')
 
   return {
     tone: 'warn',
     fact: {
       subject: 'noServices',
-      emphasis: `チューナー側で ${kinds} のサービスが 0 件です。`,
+      emphasis: `チューナー側で ${shown.label} のサービスが 0 件です。`,
     },
   }
 }

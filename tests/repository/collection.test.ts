@@ -238,7 +238,7 @@ test('a kind with no stream of its own is left out of the banner', async () => {
   assert.equal(epgHealthOf(await getCollectionStatus(), 'bs'), undefined)
 })
 
-test('a kind the tuner side answers no service for is headlined as its own fact', async () => {
+test('the tuner side is said about the kind being shown and no other', async () => {
   standing({
     coverage: [
       covers(101, REACHED),
@@ -248,12 +248,27 @@ test('a kind the tuner side answers no service for is headlined as its own fact'
   })
   whereNoSatelliteAnswers()
 
-  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'terrestrial'), {
+  assert.equal(
+    epgHealthOf(await getCollectionStatus(), 'terrestrial'),
+    undefined,
+  )
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'bs'), {
     tone: 'warn',
     facts: [
       {
         subject: 'noServices',
-        emphasis: 'チューナー側で BS / CS110 のサービスが 0 件です。',
+        emphasis: 'チューナー側で BS のサービスが 0 件です。',
+      },
+    ],
+  })
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'cs110'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'noServices',
+        emphasis: 'チューナー側で CS110 のサービスが 0 件です。',
       },
     ],
   })
@@ -322,7 +337,7 @@ test('the trouble headlined is the trouble of the kind being shown', async () =>
   })
 })
 
-test('all three facts are headlined at once, coverage first and the tuner side last', async () => {
+test('every fact of the shown kind is headlined at once, coverage before collection', async () => {
   standing({
     outcome: 'incomplete',
     consecutiveIncomplete: 2,
@@ -342,9 +357,40 @@ test('all three facts are headlined at once, coverage first and the tuner side l
         subject: 'trouble',
         emphasis: '1 TS の収集が連続して揃っていません。',
       },
+    ],
+  })
+})
+
+test('the tuner side stacks under the collection trouble of the same kind', async () => {
+  standing(
+    {
+      coverage: [
+        covers(101, REACHED),
+        covers(102, REACHED),
+        covers(103, REACHED),
+      ],
+    },
+    {
+      networkId: 4,
+      transportStreamId: 16625,
+      serviceIds: [201],
+      outcome: 'incomplete',
+      consecutiveIncomplete: 4,
+      coverage: [covers(201, REACHED)],
+    },
+  )
+  whereNoSatelliteAnswers()
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'bs'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'trouble',
+        emphasis: '1 TS の収集が連続して揃っていません。',
+      },
       {
         subject: 'noServices',
-        emphasis: 'チューナー側で BS / CS110 のサービスが 0 件です。',
+        emphasis: 'チューナー側で BS のサービスが 0 件です。',
       },
     ],
   })
