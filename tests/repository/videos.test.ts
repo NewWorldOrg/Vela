@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
+import type { SoundTrack } from '@/repository/sounds'
+
 interface Sent {
   method: string
   path: string
@@ -157,6 +159,16 @@ test('the plan for a sound is asked for by naming it', async () => {
     },
   ])
   assert.equal(read.state === 'planned' && read.plan.seeking, 'byStartingAgain')
+})
+
+test('a sound this build does not offer is refused here, and never asked of the endpoint', async () => {
+  sent.length = 0
+  store.planStatus = 200
+
+  const read = await getPlaybackPlan('1266', 'surround' as SoundTrack)
+
+  assert.deepEqual(read, { state: 'refused', refusal: 'nothingToPlay' })
+  assert.deepEqual(sent, [])
 })
 
 test('the plan for the sound that is handed over names it as well', async () => {

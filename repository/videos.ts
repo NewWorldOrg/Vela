@@ -4,7 +4,7 @@ import { unaskedIn } from '@/lib/live-profiles'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { fetchLiveProfiles } from '@/repository/live'
-import type { SoundTrack } from '@/repository/sounds'
+import { BOTH_SOUNDS, type SoundTrack } from '@/repository/sounds'
 import {
   PLAYBACK_PROFILES,
   type PlaybackProfile,
@@ -62,6 +62,10 @@ function toPlan(
 
 export const getPlaybackPlan = cache(
   async (id: string, sound?: SoundTrack): Promise<PlaybackRead> => {
+    if (sound !== undefined && !BOTH_SOUNDS.includes(sound)) {
+      return { state: 'refused', refusal: 'nothingToPlay' }
+    }
+
     const { data, response } = await carinaClient().GET(
       '/api/videos/{id}/play',
       {
