@@ -36,3 +36,11 @@ export function liveWireHref(
 }
 
 export const LIVE_SESSIONS_PATH = '/api/live/sessions'
+
+const LIVE_CHANNELS_PATH = '/api/live/channels'
+
+const EVERY_CHANNEL = 200
+
+export function liveChannelsHref(): string {
+  return `${LIVE_CHANNELS_PATH}?perPage=${EVERY_CHANNEL}`
+}
