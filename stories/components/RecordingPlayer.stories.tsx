@@ -70,6 +70,25 @@ function planning(answer: PlaybackPlan) {
   }
 }
 
+const theAnswer: { lands?: (read: PlaybackRead) => void } = {}
+
+function heldOpen(id: string, sound: SoundTrack): Promise<PlaybackRead> {
+  reasked.push(sound)
+
+  return new Promise<PlaybackRead>((settle) => {
+    theAnswer.lands = settle
+  })
+}
+
+async function throwingOnTheSound(
+  id: string,
+  sound: SoundTrack,
+): Promise<PlaybackRead> {
+  reasked.push(sound)
+
+  throw new Error('the plan could not be asked for')
+}
+
 async function ticketed(): Promise<TicketWrite> {
   return {
     state: 'ok',
@@ -419,6 +438,7 @@ export const 音声が一つの録画に音声の行は無い: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    await waitFor(() => expect(asked.at(-1)).toBe('0/1080p60/—'))
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
     await screen.findByRole('group', { name: '画質' })
 
@@ -547,6 +567,154 @@ export const 素材に届かない録画は副音声を諦めて主音声に戻�
     )
     await expect(canvas.getByText(THE_SOUNDS_COULD_NOT_BE_READ)).toBeVisible()
     await expect(asked).toEqual([])
+  },
+}
+
+export const 途中から観ている録画は音声を替えても位置を保つ: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: IN_TWO_LANGUAGES,
+    startAt: 1200,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+    onAskForTheSound: planning(HANDED_OVER_IN_TWO_LANGUAGES),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked.at(-1)).toBe('1200/1080p60/main'))
+    await expect(canvas.getByText('20:00 / 4:12:38')).toBeVisible()
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    asked.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(asked).toEqual(['0/—/secondary']))
+    await expect(canvas.getByText('20:00 / 4:12:38')).toBeVisible()
+
+    asked.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '主音声' }),
+    )
+
+    await waitFor(() => expect(asked).toEqual(['0/—/main']))
+    await expect(canvas.getByText('20:00 / 4:12:38')).toBeVisible()
+  },
+}
+
+export const 音声は諦めても経路が変わったら開き直す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: IN_TWO_LANGUAGES,
+    startAt: 1200,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+    onAskForTheSound: planning(HANDED_OVER),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked.at(-1)).toBe('1200/1080p60/main'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    asked.length = 0
+    reasked.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(reasked).toEqual(['secondary']))
+    await waitFor(() => expect(asked).toEqual(['0/—/—']))
+    await expect(canvas.getByText(THE_SOUNDS_COULD_NOT_BE_READ)).toBeVisible()
+    await expect(canvas.getByText('20:00 / 4:12:38')).toBeVisible()
+    await waitFor(() =>
+      expect(screen.queryByRole('group', { name: '音声' })).toBeNull(),
+    )
+  },
+}
+
+export const 音声を訊き直せなかったら断りを出す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: IN_TWO_LANGUAGES,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+    onAskForTheSound: throwingOnTheSound,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    asked.length = 0
+    reasked.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(reasked).toEqual(['secondary']))
+    await waitFor(() =>
+      expect(canvas.getByText(THE_SOUNDS_COULD_NOT_BE_READ)).toBeVisible(),
+    )
+    await expect(asked).toEqual([])
+    await waitFor(() =>
+      expect(
+        within(sounds).getByRole('button', { name: '主音声' }),
+      ).toHaveAttribute('aria-pressed', 'true'),
+    )
+  },
+}
+
+export const 答えが届く前に戻したら主音声のままになる: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: IN_TWO_LANGUAGES,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carrying,
+    onAskForTheSound: heldOpen,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+    const main = within(sounds).getByRole('button', { name: '主音声' })
+    const secondary = within(sounds).getByRole('button', { name: '副音声' })
+
+    asked.length = 0
+    reasked.length = 0
+
+    await userEvent.click(secondary)
+
+    await waitFor(() => expect(reasked).toEqual(['secondary']))
+    await waitFor(() =>
+      expect(secondary).toHaveAttribute('aria-pressed', 'true'),
+    )
+
+    await userEvent.click(main)
+
+    await waitFor(() => expect(main).toHaveAttribute('aria-pressed', 'true'))
+    await expect(reasked).toEqual(['secondary'])
+
+    theAnswer.lands?.({ state: 'planned', plan: IN_TWO_LANGUAGES })
+
+    await new Promise((rest) => setTimeout(rest, 300))
+
+    await expect(asked).toEqual([])
+    await expect(main).toHaveAttribute('aria-pressed', 'true')
+    await expect(secondary).toHaveAttribute('aria-pressed', 'false')
   },
 }
 

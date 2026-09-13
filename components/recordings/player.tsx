@@ -8,8 +8,10 @@ import { redrawnHref } from '@/lib/thumbnail-redraw'
 import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import {
   soundToAsk,
+  whatIsStillSaid,
   whatTheSoundBecomes,
   whereItStarts,
+  type PlayerSaying,
 } from '@/lib/playback-sound'
 import type { RecordingDetail } from '@/repository/recordings'
 import type {
@@ -21,6 +23,7 @@ import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,
   videoFrameHref,
+  THE_SOUNDS_COULD_NOT_BE_READ,
   type PlaybackProfile,
 } from '@/repository/video-paths'
 import {
@@ -170,10 +173,7 @@ export function Player({
   const [flash, setFlash] = useState<SeekFlash | null>(null)
   const flashedAt = useRef(0)
   const [buffered, setBuffered] = useState(0)
-  const [said, setSaid] = useState<{
-    text: string
-    tone: 'ok' | 'err'
-  } | null>(null)
+  const [said, setSaid] = useState<PlayerSaying | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const dismissing = useRef(false)
   const [held, setHeld] = useState(false)
@@ -182,8 +182,19 @@ export function Player({
   const wanted = useRef<number | null>(null)
   const asking = useRef<ReturnType<typeof setTimeout> | null>(null)
   const asked = useRef(0)
+  const pending = useRef<SoundTrack | null>(null)
+  const [pendingSound, setPendingSound] = useState<SoundTrack | null>(null)
+  const shownUnder = useRef<PlaybackPlan | null>(
+    startAt === undefined ? null : opened,
+  )
 
   const attempt = useRef(0)
+
+  const asItStands = useRef({ position, profile, plan, sound })
+
+  useEffect(() => {
+    asItStands.current = { position, profile, plan, sound }
+  })
 
   const pip = usePictureInPicture(video)
   const duration = d.lengthSec ?? 0
@@ -266,6 +277,11 @@ export function Player({
     setHolding(true)
   }
 
+  const nowAsking = (next: SoundTrack | null) => {
+    pending.current = next
+    setPendingSound(next)
+  }
+
   const play = (
     second: number,
     quality: PlaybackProfile | undefined = profile,
@@ -282,7 +298,10 @@ export function Player({
     hold()
     wanted.current = null
     attempt.current += 1
+    asked.current += 1
     landing.current = starts.land
+    shownUnder.current = under
+    nowAsking(null)
     setFrom(starts.from)
     setPosition(second)
     setProfile(quality)
@@ -397,32 +416,59 @@ export function Player({
   }
 
   const chooseSound = (next: SoundTrack) => {
+    if (next === pending.current) {
+      return
+    }
+
     if (next === sound) {
+      if (pending.current !== null) {
+        asked.current += 1
+        nowAsking(null)
+      }
+
       return
     }
 
     const mine = (asked.current += 1)
-    const at = position
-    const standing = phase
 
-    void onAskForTheSound(d.id, next).then((answer) => {
-      if (asked.current !== mine) {
-        return
-      }
+    nowAsking(next)
 
-      const became = whatTheSoundBecomes(plan, next, answer)
+    void onAskForTheSound(d.id, next)
+      .then((answer) => {
+        if (asked.current !== mine) {
+          return
+        }
 
-      setPlan(became.plan)
-      setSaid(became.said ? { text: became.said, tone: 'err' } : null)
+        nowAsking(null)
 
-      if (standing === 'idle' || became.sound === sound) {
-        setSound(became.sound)
+        const under = shownUnder.current
+        const standing = asItStands.current
+        const became = whatTheSoundBecomes(standing.plan, next, answer)
 
-        return
-      }
+        setPlan(became.plan)
+        setSaid((was) => whatIsStillSaid(was, became.said))
 
-      play(at, profile, became.sound, became.plan)
-    })
+        if (
+          !under ||
+          (became.sound === standing.sound &&
+            became.plan.route === under.route &&
+            became.plan.seeking === under.seeking)
+        ) {
+          setSound(became.sound)
+
+          return
+        }
+
+        play(standing.position, standing.profile, became.sound, became.plan)
+      })
+      .catch(() => {
+        if (asked.current !== mine) {
+          return
+        }
+
+        nowAsking(null)
+        setSaid({ text: THE_SOUNDS_COULD_NOT_BE_READ, tone: 'err' })
+      })
   }
 
   const chooseSpeed = (next: string) => {
@@ -602,7 +648,7 @@ export function Player({
               )
             }}
             onTimeUpdate={(event) => {
-              if (asking.current) {
+              if (asking.current || landing.current !== null) {
                 return
               }
 
@@ -830,7 +876,7 @@ export function Player({
                     speed={speed}
                     onChooseSpeed={chooseSpeed}
                     sounds={plan.sounds}
-                    sound={sound}
+                    sound={pendingSound ?? sound}
                     onChooseSound={chooseSound}
                   />
                 </PlayerTip>

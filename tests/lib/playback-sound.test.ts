@@ -3,8 +3,10 @@ import { test } from 'node:test'
 
 import {
   soundToAsk,
+  whatIsStillSaid,
   whatTheSoundBecomes,
   whereItStarts,
+  type PlayerSaying,
 } from '@/lib/playback-sound'
 import { THE_SOUNDS_COULD_NOT_BE_READ } from '@/repository/video-paths'
 import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
@@ -118,4 +120,31 @@ test('an artefact handed over is opened whole and moved to the second by range',
 
 test('nothing is landed on when the recording opens at its beginning', () => {
   assert.deepEqual(whereItStarts(HANDED_OVER, 0), { from: 0, land: null })
+})
+
+const CAPTURED: PlayerSaying = { text: '画面を保存しました', tone: 'ok' }
+
+test('the message this feature put up is taken down once the sound settles', () => {
+  assert.equal(
+    whatIsStillSaid(
+      { text: THE_SOUNDS_COULD_NOT_BE_READ, tone: 'err' },
+      undefined,
+    ),
+    null,
+  )
+})
+
+test('a message the rest of the player put up outlives a sound that settles', () => {
+  assert.equal(whatIsStillSaid(CAPTURED, undefined), CAPTURED)
+})
+
+test('a sound that settles with nothing standing leaves nothing standing', () => {
+  assert.equal(whatIsStillSaid(null, undefined), null)
+})
+
+test('a refusal takes the place of whatever was standing', () => {
+  assert.deepEqual(whatIsStillSaid(CAPTURED, THE_SOUNDS_COULD_NOT_BE_READ), {
+    text: THE_SOUNDS_COULD_NOT_BE_READ,
+    tone: 'err',
+  })
 })

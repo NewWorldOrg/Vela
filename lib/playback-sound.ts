@@ -13,6 +13,11 @@ export interface WhereItStarts {
   land: number | null
 }
 
+export interface PlayerSaying {
+  text: string
+  tone: 'ok' | 'err'
+}
+
 export function soundToAsk(
   sounds: readonly SoundTrack[],
   sound: SoundTrack,
@@ -51,4 +56,15 @@ export function whereItStarts(
   return plan.seeking === 'byRange'
     ? { from: 0, land: second > 0 ? second : null }
     : { from: second, land: null }
+}
+
+export function whatIsStillSaid(
+  standing: PlayerSaying | null,
+  said: string | undefined,
+): PlayerSaying | null {
+  if (said) {
+    return { text: said, tone: 'err' }
+  }
+
+  return standing?.text === THE_SOUNDS_COULD_NOT_BE_READ ? null : standing
 }
