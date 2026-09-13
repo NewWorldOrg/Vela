@@ -61,10 +61,22 @@ export interface CollectionStatus {
   serviceTargets: CollectTarget[]
 }
 
-export interface CoverageWarning {
-  tone: 'warn' | 'danger'
+export type HealthSubject = 'coverage' | 'trouble' | 'noServices'
+
+export interface HealthFact {
+  subject: HealthSubject
   emphasis: string
   detail?: string
+}
+
+export interface EpgHealth {
+  tone: 'warn' | 'danger'
+  facts: HealthFact[]
+}
+
+interface Told {
+  tone: 'warn' | 'danger'
+  fact: HealthFact
 }
 
 export type CollectScope = {
@@ -121,10 +133,30 @@ export async function getCollectionStatus(): Promise<CollectionStatus> {
   return toCollectionStatus(status.data.data, services.data.data)
 }
 
-export function coverageWarningOf(
+export function epgHealthOf(
   status: CollectionStatus,
   kind: ChannelKind,
-): CoverageWarning | undefined {
+): EpgHealth | undefined {
+  const told = [
+    coverageTold(status, kind),
+    troubleTold(status, kind),
+    noServicesTold(status),
+  ].flatMap((one) => (one === undefined ? [] : [one]))
+
+  if (told.length === 0) {
+    return undefined
+  }
+
+  return {
+    tone: told.some((one) => one.tone === 'danger') ? 'danger' : 'warn',
+    facts: told.map((one) => one.fact),
+  }
+}
+
+function coverageTold(
+  status: CollectionStatus,
+  kind: ChannelKind,
+): Told | undefined {
   const rows = status.streams.filter((row) => row.kind === kind)
   const never = rows.reduce((sum, row) => sum + row.neverCovered, 0)
   const short = rows.reduce((sum, row) => sum + row.shortOfWanted, 0)
@@ -138,17 +170,60 @@ export function coverageWarningOf(
   if (never === 0) {
     return {
       tone: 'warn',
-      emphasis: `${short} チャンネルの番組情報が ${reach}まで届いていません。`,
+      fact: {
+        subject: 'coverage',
+        emphasis: `${short} チャンネルの番組情報が ${reach}まで届いていません。`,
+      },
     }
   }
 
   return {
     tone: 'danger',
-    emphasis: `${never} チャンネルの番組情報がまだ一度も取れていません。`,
-    detail:
-      short > never
-        ? `ほかに ${short - never} チャンネルが ${reach}まで届いていません。`
-        : undefined,
+    fact: {
+      subject: 'coverage',
+      emphasis: `${never} チャンネルの番組情報がまだ一度も取れていません。`,
+      detail:
+        short > never
+          ? `ほかに ${short - never} チャンネルが ${reach}まで届いていません。`
+          : undefined,
+    },
+  }
+}
+
+function troubleTold(
+  status: CollectionStatus,
+  kind: ChannelKind,
+): Told | undefined {
+  const unsettled = status.streams.filter(
+    (row) => row.kind === kind && row.consecutiveIncomplete > 0,
+  ).length
+
+  if (unsettled === 0) {
+    return undefined
+  }
+
+  return {
+    tone: 'warn',
+    fact: {
+      subject: 'trouble',
+      emphasis: `${unsettled} TS の収集が連続して揃っていません。`,
+    },
+  }
+}
+
+function noServicesTold(status: CollectionStatus): Told | undefined {
+  if (status.zeroServiceKinds.length === 0) {
+    return undefined
+  }
+
+  const kinds = status.zeroServiceKinds.map((one) => one.label).join(' / ')
+
+  return {
+    tone: 'warn',
+    fact: {
+      subject: 'noServices',
+      emphasis: `チューナー側で ${kinds} のサービスが 0 件です。`,
+    },
   }
 }
 

@@ -187,9 +187,9 @@ export function GuideView({
         </Link>
       </div>
 
-      {guide.coverageWarning && (
+      {guide.health && (
         <Banner
-          tone={guide.coverageWarning.tone}
+          tone={guide.health.tone}
           className="mb-3"
           data-opens="collection"
           actions={[
@@ -199,8 +199,12 @@ export function GuideView({
             },
           ]}
         >
-          <b className="block font-bold">{guide.coverageWarning.emphasis}</b>
-          {guide.coverageWarning.detail}
+          {guide.health.facts.map((fact) => (
+            <p key={fact.subject} data-health-fact={fact.subject}>
+              <b className="font-bold">{fact.emphasis}</b>
+              {fact.detail}
+            </p>
+          ))}
         </Banner>
       )}
 

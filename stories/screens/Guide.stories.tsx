@@ -553,9 +553,14 @@ export const 健全性バナー: Story = {
   args: {
     guide: {
       ...base,
-      coverageWarning: {
+      health: {
         tone: 'warn',
-        emphasis: '3 チャンネルの番組情報が 8 日先まで届いていません。',
+        facts: [
+          {
+            subject: 'coverage',
+            emphasis: '3 チャンネルの番組情報が 8 日先まで届いていません。',
+          },
+        ],
       },
     },
   },
@@ -565,12 +570,104 @@ export const 一度も取れていないバナー: Story = {
   args: {
     guide: {
       ...base,
-      coverageWarning: {
+      health: {
         tone: 'danger',
-        emphasis: '2 チャンネルの番組情報がまだ一度も取れていません。',
-        detail: 'ほかに 1 チャンネルが 8 日先まで届いていません。',
+        facts: [
+          {
+            subject: 'coverage',
+            emphasis: '2 チャンネルの番組情報がまだ一度も取れていません。',
+            detail: 'ほかに 1 チャンネルが 8 日先まで届いていません。',
+          },
+        ],
       },
     },
+  },
+}
+
+export const 収集不調のバナー: Story = {
+  args: {
+    guide: {
+      ...base,
+      health: {
+        tone: 'warn',
+        facts: [
+          {
+            subject: 'trouble',
+            emphasis: '2 TS の収集が連続して揃っていません。',
+          },
+        ],
+      },
+    },
+  },
+}
+
+export const サービスが0件のバナー: Story = {
+  args: {
+    guide: {
+      ...base,
+      health: {
+        tone: 'warn',
+        facts: [
+          {
+            subject: 'noServices',
+            emphasis: 'チューナー側で BS / CS110 のサービスが 0 件です。',
+          },
+        ],
+      },
+    },
+  },
+}
+
+export const 健全性バナー3項目: Story = {
+  args: {
+    guide: {
+      ...base,
+      health: {
+        tone: 'danger',
+        facts: [
+          {
+            subject: 'coverage',
+            emphasis: '2 チャンネルの番組情報がまだ一度も取れていません。',
+            detail: 'ほかに 1 チャンネルが 8 日先まで届いていません。',
+          },
+          {
+            subject: 'trouble',
+            emphasis: '2 TS の収集が連続して揃っていません。',
+          },
+          {
+            subject: 'noServices',
+            emphasis: 'チューナー側で BS / CS110 のサービスが 0 件です。',
+          },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const banner = partOf(canvasElement, '[data-slot="banner"]')
+    const lines = Array.from(
+      banner.querySelectorAll<HTMLElement>('[data-health-fact]'),
+    )
+
+    await expect(banner).toHaveAttribute('data-tone', 'danger')
+    await expect(lines.map((line) => line.dataset.healthFact)).toEqual([
+      'coverage',
+      'trouble',
+      'noServices',
+    ])
+    await expect(lines[0]).toHaveTextContent(
+      'ほかに 1 チャンネルが 8 日先まで届いていません。',
+    )
+    await expect(
+      canvas.getByRole('button', { name: '収集状態を見る' }),
+    ).toBeInTheDocument()
+  },
+}
+
+export const バナーの無い番組表: Story = {
+  args: { guide: base },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('[data-slot="banner"]')).toBeNull()
   },
 }
 
