@@ -13,6 +13,7 @@ import {
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { Channel, ChannelKind, StationLogo } from '@/repository/channels'
+import type { EpgHealth } from '@/repository/collection'
 import type { AudioMode, VideoMode } from '@/repository/announced'
 import type { Programme } from '@/repository/programmes'
 import { fetchGuide, fetchProgramme, toInt } from '@/repository/programmes'
@@ -81,11 +82,7 @@ export interface GuideResult {
   nowLabel?: string
   channels: Channel[]
   programs: Program[]
-  coverageWarning?: {
-    tone: 'warn' | 'danger'
-    emphasis: string
-    detail?: string
-  }
+  health?: EpgHealth
   coverageDays?: number
 }
 

@@ -3,13 +3,19 @@ import { mock, test } from 'node:test'
 
 const STREAM = { networkId: 32701, transportStreamId: 32701 }
 
-const service = (serviceId: number, name: string, category = 'television') => ({
-  networkId: STREAM.networkId,
+const service = (
+  serviceId: number,
+  name: string,
+  category = 'television',
+  networkId = STREAM.networkId,
+  system = 'isdbT',
+) => ({
+  networkId,
   serviceId,
   name,
   category,
   remoteControlKeyId: 3,
-  selectedChannel: { system: 'isdbT', physicalChannel: 30 },
+  selectedChannel: { system, physicalChannel: 30 },
   candidates: [],
 })
 
@@ -92,19 +98,32 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { coverageDaysOf, coverageWarningOf, getCollectionStatus } =
+const { coverageDaysOf, epgHealthOf, getCollectionStatus } =
   await import('@/repository/collection')
 
-function standing(over: Record<string, unknown> = {}): void {
+const AERIAL_SERVICES = [
+  service(101, '海辺テレビ1'),
+  service(102, '海辺テレビ2'),
+  service(103, '海辺テレビ3'),
+  service(108, '海辺ワンセグ', 'oneSeg'),
+]
+
+const SATELLITE_SERVICES = [
+  service(201, '波の上ビーエス', 'television', 4, 'isdbSBs'),
+  service(301, '波の上シーエス', 'television', 6, 'isdbSCs110'),
+]
+
+function standing(...overs: Record<string, unknown>[]): void {
   store.refusing = undefined
   store.wantedCoverageHours = 192
-  store.streams = [stream(over)]
-  store.services = [
-    service(101, '海辺テレビ1'),
-    service(102, '海辺テレビ2'),
-    service(103, '海辺テレビ3'),
-    service(108, '海辺ワンセグ', 'oneSeg'),
-  ]
+  store.streams = (overs.length === 0 ? [{}] : overs).map((over) =>
+    stream(over),
+  )
+  store.services = [...AERIAL_SERVICES, ...SATELLITE_SERVICES]
+}
+
+function whereNoSatelliteAnswers(): void {
+  store.services = [...AERIAL_SERVICES]
 }
 
 test('a stream whose channels all reach the wanted coverage says nothing', async () => {
@@ -118,12 +137,12 @@ test('a stream whose channels all reach the wanted coverage says nothing', async
   })
 
   assert.equal(
-    coverageWarningOf(await getCollectionStatus(), 'terrestrial'),
+    epgHealthOf(await getCollectionStatus(), 'terrestrial'),
     undefined,
   )
 })
 
-test('a stream that keeps failing says nothing while the server calls it covered', async () => {
+test('a stream that keeps failing is headlined as collection, never in the words of coverage', async () => {
   standing({
     outcome: 'incomplete',
     consecutiveIncomplete: 9,
@@ -135,10 +154,15 @@ test('a stream that keeps failing says nothing while the server calls it covered
     ],
   })
 
-  assert.equal(
-    coverageWarningOf(await getCollectionStatus(), 'terrestrial'),
-    undefined,
-  )
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'terrestrial'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'trouble',
+        emphasis: '1 TS の収集が連続して揃っていません。',
+      },
+    ],
+  })
 })
 
 test('the banner counts the channels the server judged short of what it wants', async () => {
@@ -146,13 +170,15 @@ test('the banner counts the channels the server judged short of what it wants', 
     coverage: [covers(101, SHORT), covers(102, SHORT), covers(103, REACHED)],
   })
 
-  assert.deepEqual(
-    coverageWarningOf(await getCollectionStatus(), 'terrestrial'),
-    {
-      tone: 'warn',
-      emphasis: '2 チャンネルの番組情報が 8 日先まで届いていません。',
-    },
-  )
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'terrestrial'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'coverage',
+        emphasis: '2 チャンネルの番組情報が 8 日先まで届いていません。',
+      },
+    ],
+  })
 })
 
 test('a channel never collected at all is the heavier of the two things said', async () => {
@@ -160,34 +186,38 @@ test('a channel never collected at all is the heavier of the two things said', a
     coverage: [covers(101, null), covers(102, null), covers(103, SHORT)],
   })
 
-  assert.deepEqual(
-    coverageWarningOf(await getCollectionStatus(), 'terrestrial'),
-    {
-      tone: 'danger',
-      emphasis: '2 チャンネルの番組情報がまだ一度も取れていません。',
-      detail: 'ほかに 1 チャンネルが 8 日先まで届いていません。',
-    },
-  )
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'terrestrial'), {
+    tone: 'danger',
+    facts: [
+      {
+        subject: 'coverage',
+        emphasis: '2 チャンネルの番組情報がまだ一度も取れていません。',
+        detail: 'ほかに 1 チャンネルが 8 日先まで届いていません。',
+      },
+    ],
+  })
 })
 
 test('nothing is said about the rest when every short channel was never collected', async () => {
   standing({ coverage: [covers(101, null), covers(102, REACHED)] })
 
-  assert.deepEqual(
-    coverageWarningOf(await getCollectionStatus(), 'terrestrial'),
-    {
-      tone: 'danger',
-      emphasis: '1 チャンネルの番組情報がまだ一度も取れていません。',
-      detail: undefined,
-    },
-  )
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'terrestrial'), {
+    tone: 'danger',
+    facts: [
+      {
+        subject: 'coverage',
+        emphasis: '1 チャンネルの番組情報がまだ一度も取れていません。',
+        detail: undefined,
+      },
+    ],
+  })
 })
 
 test('a channel the guide never draws is not one the banner counts', async () => {
   standing({ coverage: [covers(101, REACHED), covers(108, null)] })
 
   assert.equal(
-    coverageWarningOf(await getCollectionStatus(), 'terrestrial'),
+    epgHealthOf(await getCollectionStatus(), 'terrestrial'),
     undefined,
   )
 })
@@ -197,7 +227,7 @@ test('a wanted coverage that is not whole days is said in the hours it was set t
   store.wantedCoverageHours = 100
 
   assert.equal(
-    coverageWarningOf(await getCollectionStatus(), 'terrestrial')?.emphasis,
+    epgHealthOf(await getCollectionStatus(), 'terrestrial')?.facts[0].emphasis,
     '1 チャンネルの番組情報が 100 時間先まで届いていません。',
   )
 })
@@ -205,7 +235,165 @@ test('a wanted coverage that is not whole days is said in the hours it was set t
 test('a kind with no stream of its own is left out of the banner', async () => {
   standing({ coverage: [covers(101, null)] })
 
-  assert.equal(coverageWarningOf(await getCollectionStatus(), 'bs'), undefined)
+  assert.equal(epgHealthOf(await getCollectionStatus(), 'bs'), undefined)
+})
+
+test('the tuner side is said about the kind being shown and no other', async () => {
+  standing({
+    coverage: [
+      covers(101, REACHED),
+      covers(102, REACHED),
+      covers(103, REACHED),
+    ],
+  })
+  whereNoSatelliteAnswers()
+
+  assert.equal(
+    epgHealthOf(await getCollectionStatus(), 'terrestrial'),
+    undefined,
+  )
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'bs'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'noServices',
+        emphasis: 'チューナー側で BS のサービスが 0 件です。',
+      },
+    ],
+  })
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'cs110'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'noServices',
+        emphasis: 'チューナー側で CS110 のサービスが 0 件です。',
+      },
+    ],
+  })
+})
+
+test('the run of incomplete visits is what the server counted, not what the last visit ended as', async () => {
+  standing(
+    {
+      serviceIds: [101],
+      outcome: 'interrupted',
+      consecutiveIncomplete: 3,
+      coverage: [covers(101, REACHED)],
+    },
+    {
+      transportStreamId: 32702,
+      serviceIds: [102],
+      outcome: 'incomplete',
+      consecutiveIncomplete: 0,
+      coverage: [covers(102, REACHED)],
+    },
+  )
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'terrestrial'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'trouble',
+        emphasis: '1 TS の収集が連続して揃っていません。',
+      },
+    ],
+  })
+})
+
+test('the trouble headlined is the trouble of the kind being shown', async () => {
+  standing(
+    {
+      coverage: [
+        covers(101, REACHED),
+        covers(102, REACHED),
+        covers(103, REACHED),
+      ],
+    },
+    {
+      networkId: 4,
+      transportStreamId: 16625,
+      serviceIds: [201],
+      outcome: 'incomplete',
+      consecutiveIncomplete: 4,
+      coverage: [covers(201, REACHED)],
+    },
+  )
+
+  assert.equal(
+    epgHealthOf(await getCollectionStatus(), 'terrestrial'),
+    undefined,
+  )
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'bs'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'trouble',
+        emphasis: '1 TS の収集が連続して揃っていません。',
+      },
+    ],
+  })
+})
+
+test('every fact of the shown kind is headlined at once, coverage before collection', async () => {
+  standing({
+    outcome: 'incomplete',
+    consecutiveIncomplete: 2,
+    coverage: [covers(101, null), covers(102, SHORT), covers(103, REACHED)],
+  })
+  whereNoSatelliteAnswers()
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'terrestrial'), {
+    tone: 'danger',
+    facts: [
+      {
+        subject: 'coverage',
+        emphasis: '1 チャンネルの番組情報がまだ一度も取れていません。',
+        detail: 'ほかに 1 チャンネルが 8 日先まで届いていません。',
+      },
+      {
+        subject: 'trouble',
+        emphasis: '1 TS の収集が連続して揃っていません。',
+      },
+    ],
+  })
+})
+
+test('the tuner side stacks under the collection trouble of the same kind', async () => {
+  standing(
+    {
+      coverage: [
+        covers(101, REACHED),
+        covers(102, REACHED),
+        covers(103, REACHED),
+      ],
+    },
+    {
+      networkId: 4,
+      transportStreamId: 16625,
+      serviceIds: [201],
+      outcome: 'incomplete',
+      consecutiveIncomplete: 4,
+      coverage: [covers(201, REACHED)],
+    },
+  )
+  whereNoSatelliteAnswers()
+
+  assert.deepEqual(epgHealthOf(await getCollectionStatus(), 'bs'), {
+    tone: 'warn',
+    facts: [
+      {
+        subject: 'trouble',
+        emphasis: '1 TS の収集が連続して揃っていません。',
+      },
+      {
+        subject: 'noServices',
+        emphasis: 'チューナー側で BS のサービスが 0 件です。',
+      },
+    ],
+  })
 })
 
 test('how far the guide reaches is the farthest the server says it covers', async () => {

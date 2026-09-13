@@ -4,7 +4,7 @@ import { getGuide } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
 import {
   coverageDaysOf,
-  coverageWarningOf,
+  epgHealthOf,
   getCollectionStatus,
 } from '@/repository/collection'
 import {
@@ -48,7 +48,7 @@ export default async function Page({
       <GuideView
         guide={{
           ...guide,
-          coverageWarning: coverageWarningOf(collection, guide.kind),
+          health: epgHealthOf(collection, guide.kind),
           coverageDays: coverageDaysOf(collection, guide.kind),
         }}
         collection={collection}
