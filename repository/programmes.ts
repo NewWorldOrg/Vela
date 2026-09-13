@@ -6,6 +6,7 @@ import {
 import type { components, paths } from '@/repository/client/schema'
 import type { SearchField } from '@/lib/search-condition'
 import type { ChannelKind } from '@/repository/channels'
+import type { AudioMode, VideoMode } from '@/repository/announced'
 import { whatItSaid } from '@/repository/said'
 
 type GuideResponder = components['schemas']['GuideResponder']
@@ -14,7 +15,7 @@ type ProgrammeSearchResponder =
   components['schemas']['ProgrammeSearchResponder']
 type TuneSystem = components['schemas']['TuneSystem']
 
-export type AudioMode = components['schemas']['AudioMode']
+export type AspectRatio = components['schemas']['AspectRatio']
 
 type SearchParams = NonNullable<
   paths['/api/programs/search']['get']['parameters']['query']
@@ -68,6 +69,8 @@ export interface Programme {
   hasSubtitles: boolean
   audio: AudioMode
   sounds: number
+  video: VideoMode
+  aspect: AspectRatio
   isArchived: boolean
   genres: ProgrammeGenre[]
   items: ProgrammeItem[]
@@ -218,6 +221,8 @@ function toProgramme(programme: ProgrammeResponder): Programme {
     hasSubtitles: programme.hasSubtitles,
     audio: programme.audio,
     sounds: toInt(programme.sounds),
+    video: programme.video,
+    aspect: programme.aspect,
     isArchived: programme.isArchived,
     genres: (programme.genres ?? []).map((genre) => ({
       kind: toInt(genre.kind),

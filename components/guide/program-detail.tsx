@@ -10,6 +10,11 @@ import type {
   RelationKind,
 } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
+import {
+  audioSaying,
+  secondSoundSaying,
+  videoSaying,
+} from '@/repository/announced'
 import { liveScreenHref } from '@/repository/live-paths'
 import {
   NOT_YET_IN_THIS_BUILD,
@@ -107,6 +112,11 @@ export function ProgramDetailBody({
             字幕あり
           </Badge>
         )}
+        {announcedOf(program).map((saying) => (
+          <Badge key={saying} variant="secondary" className="font-bold">
+            {saying}
+          </Badge>
+        ))}
       </div>
 
       <div className="mt-5 border-t border-dashed border-line pt-5">
@@ -186,6 +196,14 @@ export function ProgramDetailBody({
       </div>
     </div>
   )
+}
+
+function announcedOf(program: Program): string[] {
+  return [
+    videoSaying(program.video),
+    audioSaying(program.audio),
+    secondSoundSaying(program.sounds),
+  ].filter((saying): saying is string => saying !== undefined)
 }
 
 function RelatedNotice({ related }: { related: RelatedProgram }) {

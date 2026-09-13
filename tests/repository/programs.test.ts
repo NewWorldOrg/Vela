@@ -27,6 +27,10 @@ const service = (
 
 interface Extra {
   summary?: string
+  audio?: string
+  sounds?: number
+  video?: string
+  aspect?: string
   items?: { heading: string; text: string }[]
   related?: {
     networkId: number
@@ -55,6 +59,10 @@ const programme = (
   summary: extra.summary ?? '',
   isShadow: false,
   hasSubtitles: true,
+  audio: extra.audio ?? 'undetermined',
+  sounds: extra.sounds ?? 0,
+  video: extra.video ?? 'undetermined',
+  aspect: extra.aspect ?? 'undetermined',
   isArchived: false,
   genres: [{ kind: 1, sort: 0 }],
   items: extra.items ?? [],
@@ -208,6 +216,44 @@ test('what the broadcaster sent beyond the summary reaches the guide', async () 
     { key: idOf(ELSEWHERE), kind: 'relayed', channelLabel: '9 みなと教育1' },
   ])
   assert.equal(program.durationLabel, '1時間30分')
+})
+
+test('what the broadcast announced about its sound and picture reaches the guide', async () => {
+  standing()
+  store.programmes = [
+    programme(
+      CARRIED.networkId,
+      CARRIED.serviceId,
+      CARRIED.eventId,
+      'クイズ選手権',
+      STARTS,
+      ENDS,
+      {
+        audio: 'dualMono',
+        sounds: 2,
+        video: 'interlaced1080',
+        aspect: 'sixteenByNine',
+      },
+    ),
+  ]
+
+  const inTheGuide = await fromTheGuide(idOf(CARRIED))
+  const atItsAddress = await fromItsOwnAddress(idOf(CARRIED))
+
+  assert.equal(inTheGuide.audio, 'dualMono')
+  assert.equal(inTheGuide.sounds, 2)
+  assert.equal(inTheGuide.video, 'interlaced1080')
+  assert.deepEqual(atItsAddress, inTheGuide)
+})
+
+test('a broadcast that announced neither sound nor picture says undetermined rather than nothing', async () => {
+  standing()
+
+  const program = await fromItsOwnAddress(idOf(ELSEWHERE))
+
+  assert.equal(program.audio, 'undetermined')
+  assert.equal(program.video, 'undetermined')
+  assert.equal(program.sounds, 0)
 })
 
 test('the guide and the address answer with the same programme', async () => {

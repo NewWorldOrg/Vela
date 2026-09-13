@@ -6500,6 +6500,26 @@
           }
         }
       },
+      "AspectRatio": {
+        "enum": [
+          "undetermined",
+          "fourByThree",
+          "sixteenByNineWithPanVector",
+          "sixteenByNine",
+          "widerThanSixteenByNine"
+        ],
+        "type": "string"
+      },
+      "AudioMode": {
+        "enum": [
+          "undetermined",
+          "mono",
+          "stereo",
+          "dualMono",
+          "surround"
+        ],
+        "type": "string"
+      },
       "AuthMethod": {
         "enum": [
           "local",
@@ -11168,6 +11188,8 @@
           "hasSubtitles",
           "audio",
           "sounds",
+          "video",
+          "aspect",
           "source",
           "revision",
           "isArchived",
@@ -11237,6 +11259,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "video": {
+            "$ref": "#/components/schemas/VideoMode"
+          },
+          "aspect": {
+            "$ref": "#/components/schemas/AspectRatio"
           },
           "source": {
             "$ref": "#/components/schemas/ProgrammeSource"
@@ -15137,6 +15165,13 @@
           }
         }
       },
+      "SoundTrack": {
+        "enum": [
+          "main",
+          "secondary"
+        ],
+        "type": "string"
+      },
       "StartScanRequest": {
         "type": "object",
         "properties": {
@@ -15909,6 +15944,21 @@
         ],
         "type": "string"
       },
+      "VideoMode": {
+        "enum": [
+          "undetermined",
+          "progressive180",
+          "progressive240",
+          "interlaced480",
+          "progressive480",
+          "progressive720",
+          "interlaced1080",
+          "progressive1080",
+          "progressive2160",
+          "progressive4320"
+        ],
+        "type": "string"
+      },
       "VisitTallyResponder": {
         "required": [
           "serviceId",
@@ -15987,23 +16037,6 @@
             "format": "int32"
           }
         }
-      },
-      "SoundTrack": {
-        "enum": [
-          "main",
-          "secondary"
-        ],
-        "type": "string"
-      },
-      "AudioMode": {
-        "enum": [
-          "undetermined",
-          "mono",
-          "stereo",
-          "dualMono",
-          "surround"
-        ],
-        "type": "string"
       }
     }
   },
