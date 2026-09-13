@@ -190,17 +190,12 @@ export function ChannelList({
                           </span>
                         )}
                       </span>
-                      {channel.viewers > 0 && (
-                        <span
-                          aria-label={`視聴者 ${channel.viewers}`}
-                          className="mt-[7px] inline-flex shrink-0 items-center gap-1.5 font-code text-note text-coral"
-                        >
-                          <i
-                            aria-hidden="true"
-                            className="size-[7px] rounded-full bg-coral"
-                          />
-                          {channel.viewers}
-                        </span>
+                      {on && (
+                        <i
+                          data-slot="watching-mark"
+                          aria-hidden="true"
+                          className="mt-2 size-[7px] shrink-0 rounded-full bg-coral"
+                        />
                       )}
                     </button>
                   </li>
