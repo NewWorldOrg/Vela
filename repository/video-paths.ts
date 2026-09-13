@@ -26,6 +26,9 @@ export const WHEN_CARRYING_A_SOUND: PlaybackAsking = {
   fell: '再生を開始できませんでした',
 }
 
+export const THE_SOUNDS_COULD_NOT_BE_READ =
+  'この録画が運んでいる音声を読み取れなかったため、副音声を再生できません。'
+
 const REFUSAL_SAYINGS: [RegExp, string][] = [
   [
     /has no secondary sound/i,
@@ -41,7 +44,7 @@ const REFUSAL_SAYINGS: [RegExp, string][] = [
   ],
   [
     /sounds this recording carries could not be read/i,
-    'この録画が運んでいる音声を読み取れなかったため、副音声を再生できません。',
+    THE_SOUNDS_COULD_NOT_BE_READ,
   ],
 ]
 

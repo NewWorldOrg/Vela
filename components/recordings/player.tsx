@@ -6,12 +6,24 @@ import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
 import { redrawnHref } from '@/lib/thumbnail-redraw'
 import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
+import {
+  soundToAsk,
+  whatIsStillSaid,
+  whatTheSoundBecomes,
+  whereItStarts,
+  type PlayerSaying,
+} from '@/lib/playback-sound'
 import type { RecordingDetail } from '@/repository/recordings'
-import type { PlaybackPlan, TicketWrite } from '@/repository/videos'
+import type {
+  PlaybackPlan,
+  PlaybackRead,
+  TicketWrite,
+} from '@/repository/videos'
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,
   videoFrameHref,
+  THE_SOUNDS_COULD_NOT_BE_READ,
   type PlaybackProfile,
 } from '@/repository/video-paths'
 import {
@@ -84,9 +96,10 @@ const WAITING_ON: Partial<Record<Phase, string>> = {
 
 export function Player({
   detail: d,
-  plan,
+  plan: opened,
   unaskedProfile,
   onTakeTicket,
+  onAskForTheSound,
   startAt,
   frameHref = videoFrameHref,
   pictureHref = videoPictureHref,
@@ -97,6 +110,7 @@ export function Player({
   plan: PlaybackPlan
   unaskedProfile?: PlaybackProfile
   onTakeTicket: (id: string) => Promise<TicketWrite>
+  onAskForTheSound: (id: string, sound: SoundTrack) => Promise<PlaybackRead>
   startAt?: number
   frameHref?: (id: string, at: number) => string
   pictureHref?: (
@@ -116,6 +130,7 @@ export function Player({
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
     unaskedProfile,
   )
+  const [plan, setPlan] = useState<PlaybackPlan>(opened)
   const [sound, setSound] = useState<SoundTrack>(MAIN_SOUND)
   const [phase, setPhase] = useState<Phase>(
     startAt === undefined ? 'idle' : 'waiting',
@@ -124,7 +139,11 @@ export function Player({
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
   const [full, setFull] = useState(false)
-  const [from, setFrom] = useState(startAt ?? 0)
+  const opening = whereItStarts(opened, startAt ?? 0)
+  const landing = useRef<number | null>(
+    startAt === undefined ? null : opening.land,
+  )
+  const [from, setFrom] = useState(startAt === undefined ? 0 : opening.from)
   const [position, setPosition] = useState(startAt ?? 0)
   const onTheFly = plan.transcodes
   const [source, setSource] = useState(() =>
@@ -132,9 +151,9 @@ export function Player({
       ? undefined
       : pictureHref(
           d.id,
-          startAt,
-          onTheFly ? unaskedProfile : undefined,
-          onTheFly ? MAIN_SOUND : undefined,
+          opening.from,
+          opened.transcodes ? unaskedProfile : undefined,
+          soundToAsk(opened.sounds, MAIN_SOUND),
         ),
   )
 
@@ -154,10 +173,7 @@ export function Player({
   const [flash, setFlash] = useState<SeekFlash | null>(null)
   const flashedAt = useRef(0)
   const [buffered, setBuffered] = useState(0)
-  const [said, setSaid] = useState<{
-    text: string
-    tone: 'ok' | 'err'
-  } | null>(null)
+  const [said, setSaid] = useState<PlayerSaying | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const dismissing = useRef(false)
   const [held, setHeld] = useState(false)
@@ -165,8 +181,20 @@ export function Player({
 
   const wanted = useRef<number | null>(null)
   const asking = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const asked = useRef(0)
+  const pending = useRef<SoundTrack | null>(null)
+  const [pendingSound, setPendingSound] = useState<SoundTrack | null>(null)
+  const shownUnder = useRef<PlaybackPlan | null>(
+    startAt === undefined ? null : opened,
+  )
 
   const attempt = useRef(0)
+
+  const asItStands = useRef({ position, profile, plan, sound })
+
+  useEffect(() => {
+    asItStands.current = { position, profile, plan, sound }
+  })
 
   const pip = usePictureInPicture(video)
   const duration = d.lengthSec ?? 0
@@ -249,30 +277,42 @@ export function Player({
     setHolding(true)
   }
 
+  const nowAsking = (next: SoundTrack | null) => {
+    pending.current = next
+    setPendingSound(next)
+  }
+
   const play = (
     second: number,
-    asked: PlaybackProfile | undefined = profile,
+    quality: PlaybackProfile | undefined = profile,
     carrying: SoundTrack = sound,
+    under: PlaybackPlan = plan,
   ) => {
     if (asking.current) {
       clearTimeout(asking.current)
       asking.current = null
     }
 
+    const starts = whereItStarts(under, second)
+
     hold()
     wanted.current = null
     attempt.current += 1
-    setFrom(second)
+    asked.current += 1
+    landing.current = starts.land
+    shownUnder.current = under
+    nowAsking(null)
+    setFrom(starts.from)
     setPosition(second)
-    setProfile(asked)
+    setProfile(quality)
     setSound(carrying)
     setPhase('waiting')
     setSource(
       pictureHref(
         d.id,
-        second,
-        onTheFly ? asked : undefined,
-        onTheFly ? carrying : undefined,
+        starts.from,
+        under.transcodes ? quality : undefined,
+        soundToAsk(under.sounds, carrying),
       ),
     )
   }
@@ -364,25 +404,71 @@ export function Player({
   }
 
   const chooseProfile = (next: string) => {
-    const asked = next as PlaybackProfile
+    const quality = next as PlaybackProfile
 
     if (phase === 'idle') {
-      setProfile(asked)
+      setProfile(quality)
 
       return
     }
 
-    play(position, asked)
+    play(position, quality)
   }
 
   const chooseSound = (next: SoundTrack) => {
-    if (phase === 'idle') {
-      setSound(next)
+    if (next === pending.current) {
+      return
+    }
+
+    if (next === sound) {
+      if (pending.current !== null) {
+        asked.current += 1
+        nowAsking(null)
+      }
 
       return
     }
 
-    play(position, profile, next)
+    const mine = (asked.current += 1)
+
+    nowAsking(next)
+
+    void onAskForTheSound(d.id, next)
+      .then((answer) => {
+        if (asked.current !== mine) {
+          return
+        }
+
+        nowAsking(null)
+
+        const under = shownUnder.current
+        const standing = asItStands.current
+        const became = whatTheSoundBecomes(standing.plan, next, answer)
+
+        setPlan(became.plan)
+        setSaid((was) => whatIsStillSaid(was, became.said))
+
+        if (
+          !under ||
+          (became.sound === standing.sound &&
+            became.plan.route === under.route &&
+            became.plan.seeking === under.seeking)
+        ) {
+          setSound(became.sound)
+
+          return
+        }
+
+        play(standing.position, standing.profile, became.sound, became.plan)
+      })
+      .catch(() => {
+        if (asked.current !== mine) {
+          return
+        }
+
+        nowAsking(null)
+        setSaid({ text: THE_SOUNDS_COULD_NOT_BE_READ, tone: 'err' })
+      })
   }
 
   const chooseSpeed = (next: string) => {
@@ -532,6 +618,11 @@ export function Player({
               event.currentTarget.playbackRate = Number(speed)
               event.currentTarget.volume = volume
               event.currentTarget.muted = muted
+
+              if (landing.current !== null) {
+                event.currentTarget.currentTime = landing.current
+                landing.current = null
+              }
             }}
             onLoadedData={() =>
               setPhase((was) =>
@@ -557,7 +648,7 @@ export function Player({
               )
             }}
             onTimeUpdate={(event) => {
-              if (asking.current) {
+              if (asking.current || landing.current !== null) {
                 return
               }
 
@@ -785,7 +876,7 @@ export function Player({
                     speed={speed}
                     onChooseSpeed={chooseSpeed}
                     sounds={plan.sounds}
-                    sound={sound}
+                    sound={pendingSound ?? sound}
                     onChooseSound={chooseSound}
                   />
                 </PlayerTip>
