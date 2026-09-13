@@ -10,6 +10,9 @@ export const OUTCOME_KINDS: ReservationOutcomeKind[] = [
   'missed',
   'tuneFailure',
   'recordingFailure',
+  'programmeMoved',
+  'programmeGone',
+  'programmeReturned',
 ]
 
 export const OUTCOME_SPANS: OutcomeChoice[] = [
