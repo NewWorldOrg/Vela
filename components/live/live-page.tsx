@@ -19,11 +19,13 @@ import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
 import { useLiveViewers } from '@/hooks/useLiveViewers'
 import { useNow } from '@/hooks/useNow'
 import { useReadAgain } from '@/hooks/useReadAgain'
-import type { LiveScreen } from '@/repository/live'
+import { liveHandover } from '@/lib/external-player'
+import type { LiveScreen, TakeLiveTicket } from '@/repository/live'
 import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
+import { OpenExternally } from '@/components/recordings/external-player'
 import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
@@ -40,6 +42,7 @@ const COUNT_EVERY_MS = 60_000
 
 export function LiveView({
   screen: given,
+  onTakeTicket,
   clockHeldAt,
   openSocket,
   askSignedOut,
@@ -48,6 +51,7 @@ export function LiveView({
   takeCapture,
 }: {
   screen: LiveScreen
+  onTakeTicket: TakeLiveTicket
   clockHeldAt?: Date
   openSocket?: OpenSocket
   askSignedOut?: () => Promise<boolean>
@@ -200,6 +204,7 @@ export function LiveView({
       <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
         <LivePlayer
           channel={watching.channel}
+          onTakeTicket={onTakeTicket}
           profiles={screen.profiles}
           returnPath={query ? `${pathname}?${query}` : pathname}
           openSocket={openSocket}
@@ -209,6 +214,15 @@ export function LiveView({
           takeCapture={takeCapture}
         />
         <NowNext watching={watching} />
+        <div className="mt-[18px] flex flex-wrap items-start gap-[9px]">
+          <OpenExternally
+            handover={liveHandover(
+              watching.channel.networkId,
+              watching.channel.serviceId,
+              onTakeTicket,
+            )}
+          />
+        </div>
       </div>
       <aside
         aria-label="チャンネル"

@@ -19,6 +19,7 @@ import {
   type TranscodeCeiling,
 } from '@/lib/live-wire'
 import type { LiveScreen } from '@/repository/live'
+import type { TicketWrite } from '@/repository/videos'
 import type { LiveBacklog } from '@/repository/live-sessions'
 import {
   LIVE_CHANNEL_FIXTURES,
@@ -287,6 +288,23 @@ function counting(dropped: number[]): AskBacklog {
   }
 }
 
+const A_TICKET = 'Kk3Zq7Xm-a-ticket-that-lapses-in-thirty-secs'
+
+async function ticketed(): Promise<TicketWrite> {
+  return {
+    state: 'ok',
+    ticket: { inTheClear: A_TICKET, lapsesAt: '2026-08-08T12:04:30Z' },
+  }
+}
+
+async function refusingTheTicket(): Promise<TicketWrite> {
+  return {
+    state: 'refused',
+    message:
+      'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+  }
+}
+
 const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
 
 const UNCHOSEN: LiveScreen = { ...LIVE_SCREEN_FIXTURE, watching: undefined }
@@ -413,6 +431,7 @@ const meta = {
   },
   args: {
     screen: CHOSEN,
+    onTakeTicket: ticketed,
     clockHeldAt: new Date(LIVE_NOW_FIXTURE),
     openSocket: starting,
     askSignedOut: stillSignedIn,
@@ -449,6 +468,10 @@ export const 選局前: Story = {
     await expect(
       canvasElement.querySelector('[data-slot="live-player"]'),
     ).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '外部プレイヤーで開く' }),
+    ).toBeNull()
+    await expect(canvas.queryByRole('button', { name: 'AirPlay' })).toBeNull()
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).toBeVisible()
@@ -2428,5 +2451,66 @@ export const 送り戻しの鍵は名前にも出ない: Story = {
     await expect(liveCapsOn(said)).toEqual(['Space'])
     await expect(said).not.toHaveTextContent('←')
     await expect(said).not.toHaveTextContent('→')
+  },
+}
+
+export const 外部プレイヤーへ渡す: Story = {
+  args: { openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const opened: string[] = []
+    const wasOpen = window.open
+
+    window.open = ((href?: string | URL) => {
+      opened.push(String(href))
+
+      return null
+    }) as typeof window.open
+
+    try {
+      await userEvent.click(
+        canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+      )
+      await waitFor(() => expect(opened).toHaveLength(1))
+    } finally {
+      window.open = wasOpen
+    }
+
+    await expect(opened[0]).toMatch(
+      new RegExp(`^https?://:${A_TICKET}@[^/]+/api/live/32736-1024/stream$`),
+    )
+    await expect(
+      canvas.getByRole('button', { name: 'AirPlay' }),
+    ).toBeInTheDocument()
+  },
+}
+
+export const 外部プレイヤーの札を断られたらその場で言う: Story = {
+  args: { openSocket: withAPicture, onTakeTicket: refusingTheTicket },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+    )
+
+    await expect(
+      await canvas.findByText(
+        'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const AirPlay_を持たないブラウザはそう言う: Story = {
+  args: { openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: 'AirPlay' }))
+
+    await expect(
+      await canvas.findByText('このブラウザは AirPlay に対応していません。'),
+    ).toBeVisible()
   },
 }

@@ -14,6 +14,8 @@ import {
   type SoundChoice,
 } from '@/lib/live-seat'
 import { liveWireHref } from '@/repository/live-paths'
+import type { TakeLiveTicket } from '@/repository/live'
+import { liveHandover } from '@/lib/external-player'
 import { KEY_CAP, playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
@@ -50,6 +52,7 @@ import {
   PLAYER_SCRIM_TOP,
 } from '@/components/recordings/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
+import { AirPlayButton } from '@/components/recordings/external-player'
 import {
   SAID_CAPTURED,
   SAID_NOT_CAPTURED,
@@ -126,6 +129,7 @@ const LATENCY_TONE = {
 
 export function LivePlayer({
   channel,
+  onTakeTicket,
   profiles,
   returnPath,
   openSocket,
@@ -136,6 +140,7 @@ export function LivePlayer({
   takeCapture = takeItNow,
 }: {
   channel?: LiveChannel
+  onTakeTicket: TakeLiveTicket
   profiles: LiveProfile[]
   returnPath: string
   openSocket?: OpenSocket
@@ -904,6 +909,17 @@ export function LivePlayer({
               </span>
             )}
             <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+              {networkId !== undefined && serviceId !== undefined && (
+                <PlayerTip name="AirPlay" container={shell}>
+                  <AirPlayButton
+                    handover={liveHandover(networkId, serviceId, onTakeTicket)}
+                    video={video}
+                    onRefused={(message) =>
+                      setSaid({ text: message, tone: 'err' })
+                    }
+                  />
+                </PlayerTip>
+              )}
               <PlayerTip
                 name="字幕"
                 keys={[KEY_CAP.captions]}

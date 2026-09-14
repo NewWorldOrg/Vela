@@ -19,6 +19,7 @@ const THE_SUITE = [
   'tests/lib/collection.test.ts',
   'tests/lib/dismiss.test.ts',
   'tests/lib/encode.test.ts',
+  'tests/lib/external-player.test.ts',
   'tests/lib/format.test.ts',
   'tests/lib/guide.test.ts',
   'tests/lib/live-caption-drift.test.ts',
