@@ -471,7 +471,6 @@ export const 選局前: Story = {
     await expect(
       canvas.queryByRole('button', { name: '外部プレイヤーで開く' }),
     ).toBeNull()
-    await expect(canvas.queryByRole('button', { name: 'AirPlay' })).toBeNull()
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).toBeVisible()
@@ -2479,9 +2478,6 @@ export const 外部プレイヤーへ渡す: Story = {
     await expect(opened[0]).toMatch(
       new RegExp(`^https?://:${A_TICKET}@[^/]+/api/live/32736-1024/stream$`),
     )
-    await expect(
-      canvas.getByRole('button', { name: 'AirPlay' }),
-    ).toBeInTheDocument()
   },
 }
 
@@ -2502,15 +2498,17 @@ export const 外部プレイヤーの札を断られたらその場で言う: St
   },
 }
 
-export const AirPlay_を持たないブラウザはそう言う: Story = {
+export const AirPlay_はライブに描かない: Story = {
   args: { openSocket: withAPicture },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: 'AirPlay' }))
-
     await expect(
-      await canvas.findByText('このブラウザは AirPlay に対応していません。'),
+      canvasElement.querySelector('[data-slot="live-player"]'),
+    ).toBeVisible()
+    await expect(canvas.queryByRole('button', { name: 'AirPlay' })).toBeNull()
+    await expect(
+      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
     ).toBeVisible()
   },
 }

@@ -204,7 +204,6 @@ export function LiveView({
       <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
         <LivePlayer
           channel={watching.channel}
-          onTakeTicket={onTakeTicket}
           profiles={screen.profiles}
           returnPath={query ? `${pathname}?${query}` : pathname}
           openSocket={openSocket}
