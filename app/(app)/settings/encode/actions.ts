@@ -11,6 +11,7 @@ import {
   removeProfile,
   reviseDestination,
   reviseProfile,
+  settleAutoRun,
 } from '@/repository/encode'
 import type {
   EncodeDestinationDraft,
@@ -79,6 +80,17 @@ export async function dropDestination(id: string): Promise<EncodeRemoval> {
 
 export async function callOffJob(id: string): Promise<EncodeWrite> {
   const result = await callOffEncode(id)
+
+  revalidatePath(ENCODE)
+
+  return result
+}
+
+export async function settleTheAutoRun(
+  automatically: boolean,
+  mostCores: number,
+): Promise<EncodeWrite> {
+  const result = await settleAutoRun(automatically, mostCores)
 
   revalidatePath(ENCODE)
 

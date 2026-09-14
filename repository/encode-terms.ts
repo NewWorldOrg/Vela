@@ -9,6 +9,9 @@ export type EncodeEncoder = components['schemas']['EncodeEncoder']
 export type EncodeSwerve = NonNullable<components['schemas']['EncodeSwerve']>
 export type EncodeFailure = components['schemas']['EncodeFailure']
 export type EncodeRemoved = components['schemas']['EncodeRemoval']
+export type EncodeSubject = NonNullable<
+  components['schemas']['RecordingOutcome']
+>
 
 export const ENCODE_JOB_STATUSES: EncodeJobStatus[] = [
   'queued',
@@ -88,6 +91,8 @@ export const LABEL_LONGEST = 64
 export const RATE_CONTROL_FINEST = 0
 
 export const RATE_CONTROL_COARSEST = 51
+
+export const FEWEST_CORES = 1
 
 function options<K extends string>(
   labels: Record<K, string>,

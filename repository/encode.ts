@@ -18,6 +18,7 @@ import type {
   EncodeProfileDraft,
   EncodeRemoved,
   EncodeResolution,
+  EncodeSubject,
   EncodeSwerve,
 } from '@/repository/encode-terms'
 import {
@@ -37,6 +38,8 @@ type ProfileResponder = components['schemas']['EncodeProfileResponder']
 type DestinationResponder = components['schemas']['EncodeDestinationResponder']
 type JobResponder = components['schemas']['EncodeJobResponder']
 type JobPageResponder = components['schemas']['EncodeJobListResponder']
+type DurationsResponder = components['schemas']['EncodeDurationsResponder']
+type AutoRunResponder = components['schemas']['EncodeAutoRunResponder']
 
 export interface EncodeProfile {
   id: string
@@ -110,6 +113,23 @@ export interface EncodeJobsPage {
   status?: EncodeJobStatus
 }
 
+export interface EncodeSpells {
+  jobs: number
+  fewestToAverage: number
+  averageSeconds?: number
+  from?: string
+  to?: string
+}
+
+export interface EncodeAutoRun {
+  automatically: boolean
+  mostCores: number
+  coresThisMachineHas: number
+  subject: EncodeSubject[]
+  stored: boolean
+  updatedAt?: string
+}
+
 export interface EncodeScreen {
   profiles: EncodeProfile[]
   destinations: EncodeDestination[]
@@ -118,6 +138,8 @@ export interface EncodeScreen {
   running: EncodeJob | null
   waiting: number
   failed: number
+  spells: EncodeSpells
+  autoRun: EncodeAutoRun
 }
 
 export interface EncodeQuery {
@@ -159,17 +181,29 @@ export async function getEncodeScreen(
 ): Promise<EncodeScreen> {
   const status = jobStatusIn(query.status)
   const page = pageIn(query.page)
-  const [profiles, destinations, roots, names, jobs, running, waiting, failed] =
-    await Promise.all([
-      fetchProfiles(),
-      fetchDestinations(),
-      fetchRoots(),
-      listRecordingNames(),
-      fetchJobs({ status, page, perPage: JOBS_PER_PAGE }),
-      fetchJobs({ status: 'running', page: 1, perPage: 1 }),
-      fetchJobs({ status: 'queued', page: 1, perPage: 1 }),
-      fetchJobs({ status: 'failed', page: 1, perPage: 1 }),
-    ])
+  const [
+    profiles,
+    destinations,
+    roots,
+    names,
+    jobs,
+    running,
+    waiting,
+    failed,
+    spells,
+    autoRun,
+  ] = await Promise.all([
+    fetchProfiles(),
+    fetchDestinations(),
+    fetchRoots(),
+    listRecordingNames(),
+    fetchJobs({ status, page, perPage: JOBS_PER_PAGE }),
+    fetchJobs({ status: 'running', page: 1, perPage: 1 }),
+    fetchJobs({ status: 'queued', page: 1, perPage: 1 }),
+    fetchJobs({ status: 'failed', page: 1, perPage: 1 }),
+    fetchDurations(),
+    fetchAutoRun(),
+  ])
   const named = {
     profiles: new Map(profiles.map((one) => [one.id, one.label])),
     destinations: new Map(destinations.map((one) => [one.id, one.label])),
@@ -195,6 +229,8 @@ export async function getEncodeScreen(
     running: running.items[0] ? toJob(running.items[0]) : null,
     waiting: toInt(waiting.total),
     failed: toInt(failed.total),
+    spells: toSpells(spells),
+    autoRun: toAutoRun(autoRun),
   }
 }
 
@@ -264,6 +300,11 @@ export const WHEN_REMOVING_A_DESTINATION: EncodeAsking = {
   fell: '保存先を撤去できませんでした',
 }
 
+export const WHEN_SETTLING_THE_AUTO_RUN: EncodeAsking = {
+  did: '保存',
+  fell: '自動実行の設定を保存できませんでした',
+}
+
 const DRIVER_OUT_OF_REACH = 'driver に接続できないため、'
 
 const REFUSAL_SAYINGS: [RegExp, string][] = [
@@ -298,6 +339,12 @@ const REFUSED_FIELDS: [RegExp, string][] = [
     'この出力ルートには成果物を置けない',
   ],
   [/\bdefaultProfileId:/i, '既定のプロファイルが選ばれていない'],
+  [/\bautomatically:/i, '自動実行の指定が入っていない'],
+  [/\bmostCores: expected how many/i, '使用コア数の上限が入っていない'],
+  [
+    /\bmostCores: expected a whole number/i,
+    '使用コア数の上限がこの機械のコア数の範囲にない',
+  ],
 ]
 
 const REFUSAL_REASONS: [RegExp, string][] = [
@@ -460,6 +507,18 @@ export async function callOffEncode(id: string): Promise<EncodeWrite> {
   return toWrite(response, whatItSaid(error), WHEN_CALLING_OFF)
 }
 
+export async function settleAutoRun(
+  automatically: boolean,
+  mostCores: number,
+): Promise<EncodeWrite> {
+  const { error, response } = await carinaClient().PUT(
+    '/api/encoding/settings',
+    { body: { automatically, mostCores } },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_SETTLING_THE_AUTO_RUN)
+}
+
 function toWrite(
   response: Response,
   said: string | undefined,
@@ -553,6 +612,52 @@ async function fetchJobs(query: {
   }
 
   return data.data
+}
+
+async function fetchDurations(): Promise<DurationsResponder> {
+  const { data, error } = await carinaClient().GET(
+    '/api/encoding/jobs/durations',
+  )
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data
+}
+
+async function fetchAutoRun(): Promise<AutoRunResponder> {
+  const { data, error } = await carinaClient().GET('/api/encoding/settings')
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data
+}
+
+function toSpells(one: DurationsResponder): EncodeSpells {
+  return {
+    jobs: toInt(one.jobs),
+    fewestToAverage: toInt(one.fewestToAverage),
+    averageSeconds:
+      one.averageSeconds === null
+        ? undefined
+        : Math.round(Number(one.averageSeconds)),
+    from: one.from ? formatDateTime(one.from) : undefined,
+    to: one.to ? formatDateTime(one.to) : undefined,
+  }
+}
+
+function toAutoRun(one: AutoRunResponder): EncodeAutoRun {
+  return {
+    automatically: one.automatically,
+    mostCores: toInt(one.mostCores),
+    coresThisMachineHas: toInt(one.coresThisMachineHas),
+    subject: one.subject.filter((each): each is EncodeSubject => each !== null),
+    stored: one.stored,
+    updatedAt: one.updatedAt ? formatDateTime(one.updatedAt) : undefined,
+  }
 }
 
 function toProfile(one: ProfileResponder): EncodeProfile {

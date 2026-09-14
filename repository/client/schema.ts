@@ -1016,6 +1016,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/encoding/jobs/durations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getEncodeDurations']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/encoding/settings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getEncodeSettings']
+    put: operations['putEncodeSettings']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/encoding/jobs': {
     parameters: {
       query?: never
@@ -1288,6 +1320,11 @@ export interface components {
       message: string
       data: null | components['schemas']['DriverStatusResponder']
     }
+    BaseResponderOfEncodeAutoRunResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeAutoRunResponder']
+    }
     BaseResponderOfEncodeDestinationListResponder: {
       status: boolean
       message: string
@@ -1297,6 +1334,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['EncodeDestinationResponder']
+    }
+    BaseResponderOfEncodeDurationsResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeDurationsResponder']
     }
     BaseResponderOfEncodeJobListResponder: {
       status: boolean
@@ -1793,6 +1835,17 @@ export interface components {
     }
     /** @enum {null|string} */
     DropReading: 'dropped' | 'clean' | 'unmeasured' | null
+    EncodeAutoRunResponder: {
+      automatically: boolean
+      /** Format: int32 */
+      mostCores: number | string
+      /** Format: int32 */
+      coresThisMachineHas: number | string
+      subject: components['schemas']['RecordingOutcome'][]
+      stored: boolean
+      /** Format: date-time */
+      updatedAt: null | string
+    }
     /** @enum {string} */
     EncodeCodec: 'h264' | 'h265'
     EncodeDestinationListResponder: {
@@ -1809,6 +1862,20 @@ export interface components {
       definedAt: string
       /** Format: date-time */
       retiredAt: null | string
+    }
+    EncodeDurationsResponder: {
+      /** Format: int32 */
+      jobs: number | string
+      /** Format: int32 */
+      fewestToAverage: number | string
+      /** Format: int32 */
+      lookedAtAtMost: number | string
+      /** Format: double */
+      averageSeconds: null | number | string
+      /** Format: date-time */
+      from: null | string
+      /** Format: date-time */
+      to: null | string
     }
     /** @enum {string} */
     EncodeEncoder: 'software' | 'vaapi'
@@ -2355,6 +2422,11 @@ export interface components {
     }
     /** @enum {string} */
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
+    PutEncodeSettingsRequest: {
+      automatically?: null | boolean
+      /** Format: int32 */
+      mostCores?: null | number | string
+    }
     QualityChannelListResponder: {
       period: components['schemas']['QualityPeriodResponder']
       metrics: components['schemas']['QualityMetric'][]
@@ -7587,6 +7659,130 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+    }
+  }
+  getEncodeDurations: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDurationsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeDurationsResponder']
+        }
+      }
+    }
+  }
+  getEncodeSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeAutoRunResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeAutoRunResponder']
+        }
+      }
+    }
+  }
+  putEncodeSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['PutEncodeSettingsRequest']
+        'application/*+json':
+          null | components['schemas']['PutEncodeSettingsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeAutoRunResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeAutoRunResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeAutoRunResponder']
         }
       }
     }

@@ -13,16 +13,23 @@ import type {
 import { Button } from '@/components/ui/button'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
-import { MarkDots, MarkPanel, MarkSplit } from '@/components/vela/icons'
+import {
+  MarkDots,
+  MarkPanel,
+  MarkPill,
+  MarkSplit,
+} from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'
 import { AddProfileDialog } from '@/components/encode/add-profile-dialog'
+import { AutoRunPanel } from '@/components/encode/auto-run-panel'
 import { DestinationList } from '@/components/encode/destination-list'
 import { EncodeTicker } from '@/components/encode/encode-ticker'
 import { JobCounts } from '@/components/encode/job-counts'
 import { JobTable } from '@/components/encode/job-table'
 import { JobsFilter, JobsPager } from '@/components/encode/jobs-navigation'
 import { ProfileList } from '@/components/encode/profile-list'
+import { RecentSpells } from '@/components/encode/recent-spells'
 import { RunningJob } from '@/components/encode/running-job'
 
 export interface EncodeActions {
@@ -39,6 +46,10 @@ export interface EncodeActions {
   ) => Promise<EncodeWrite>
   onRemoveDestination: (id: string) => Promise<EncodeRemoval>
   onCallOff: (id: string) => Promise<EncodeWrite>
+  onSettleAutoRun: (
+    automatically: boolean,
+    mostCores: number,
+  ) => Promise<EncodeWrite>
 }
 
 export function EncodeView({
@@ -73,6 +84,8 @@ export function EncodeView({
           )}
         />
 
+        <RecentSpells spells={screen.spells} className="mt-2.5" />
+
         <div className="mt-3.5">
           <JobsFilter jobs={jobs} />
           {jobs.items.length > 0 ? (
@@ -94,6 +107,14 @@ export function EncodeView({
             />
           )}
         </div>
+      </section>
+
+      <section className="mt-9">
+        <SectionHeading mark={MarkPill}>自動実行</SectionHeading>
+        <AutoRunPanel
+          autoRun={screen.autoRun}
+          onSettle={actions.onSettleAutoRun}
+        />
       </section>
 
       <section className="mt-9">

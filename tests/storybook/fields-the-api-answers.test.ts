@@ -211,6 +211,11 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
+      'the screen says how many finished jobs the average was made of and over what window they ran; how far back the ledger was read to find them is how the figure was arrived at, which is a note on the method rather than anything the screen reports',
+    fields: ['EncodeDurationsResponder.lookedAtAtMost'],
+  },
+  {
+    because:
       'the guide says what a broadcast announced about its sound on the programme it announced it for; the recording screens name a recording by what came of it, and have no place drawn for that announcement yet',
     fields: [
       'RecordingProgrammeResponder.audio',
