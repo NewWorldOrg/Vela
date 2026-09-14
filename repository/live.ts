@@ -16,6 +16,7 @@ import {
   kindOfNetwork,
 } from '@/repository/programs'
 import { whatItSaid } from '@/repository/said'
+import type { TicketWrite } from '@/repository/videos'
 
 type LiveChannelResponder = components['schemas']['LiveChannelResponder']
 type LiveProfileResponder = components['schemas']['LiveProfileResponder']
@@ -300,5 +301,36 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
     hasSubtitles: programme.hasSubtitles,
     sounds: programme.sounds,
     genreLabel: genreDisplayOf(programme).label,
+  }
+}
+
+const TICKET_REFUSAL: Partial<Record<number, string>> = {
+  400: 'このチャンネルの指定が正しくないため、外部プレイヤーの札を発行できませんでした。',
+  404: 'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+  429: '発行の上限に達しています。しばらく待つと発行できます。',
+}
+
+export type TakeLiveTicket = (
+  networkId: number,
+  serviceId: number,
+) => Promise<TicketWrite>
+
+export async function takeLiveTicket(
+  networkId: number,
+  serviceId: number,
+): Promise<TicketWrite> {
+  const { data, response } = await carinaClient().POST('/api/live/ticket', {
+    body: { networkId, serviceId },
+  })
+
+  if (response.ok && data?.data) {
+    return { state: 'ok', ticket: data.data }
+  }
+
+  return {
+    state: 'refused',
+    message:
+      TICKET_REFUSAL[response.status] ??
+      `外部プレイヤーの札を発行できませんでした(${response.status})。`,
   }
 }

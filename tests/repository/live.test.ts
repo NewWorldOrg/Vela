@@ -15,7 +15,17 @@ const store: {
   services: unknown[]
   tuners?: unknown[]
   refusing?: { path: string; status: number; message: string }
-} = { channels: [], profiles: [], programmes: [], services: [], tuners: [] }
+  ticket: unknown
+  ticketStatus: number
+} = {
+  channels: [],
+  profiles: [],
+  programmes: [],
+  services: [],
+  tuners: [],
+  ticket: undefined,
+  ticketStatus: 200,
+}
 
 const answering = (data: unknown) => ({
   data: { status: true, message: '', data },
@@ -65,14 +75,25 @@ const GET = async (
   }
 }
 
+const posted: { path: string; body: unknown }[] = []
+
+const POST = async (path: string, init?: { body?: unknown }) => {
+  posted.push({ path, body: init?.body })
+
+  return store.ticketStatus === 200
+    ? answering(store.ticket)
+    : refusing(store.ticketStatus, '')
+}
+
 mock.module('@/repository/client/carina', {
   namedExports: {
-    carinaClient: () => ({ GET }),
+    carinaClient: () => ({ GET, POST }),
     revalidatingCarinaClient: () => ({ GET }),
   },
 })
 
-const { getLiveScreen, nowNextOf } = await import('@/repository/live')
+const { getLiveScreen, nowNextOf, takeLiveTicket } =
+  await import('@/repository/live')
 
 const NOW = new Date('2026-08-08T12:04:00Z')
 
@@ -559,4 +580,60 @@ test('the station logo reaches a live channel from the service ledger', async ()
   })
 
   store.services = []
+})
+
+test('a ticket for a live channel is asked for by the pair that names it', async () => {
+  posted.length = 0
+  store.ticketStatus = 200
+  store.ticket = {
+    inTheClear: 'a-ticket-that-lapses',
+    lapsesAt: '2026-08-08T12:04:30Z',
+  }
+
+  const write = await takeLiveTicket(32736, 1024)
+
+  assert.deepEqual(posted, [
+    { path: '/api/live/ticket', body: { networkId: 32736, serviceId: 1024 } },
+  ])
+  assert.deepEqual(write, {
+    state: 'ok',
+    ticket: {
+      inTheClear: 'a-ticket-that-lapses',
+      lapsesAt: '2026-08-08T12:04:30Z',
+    },
+  })
+})
+
+test('a channel that cannot be tuned is refused in Japanese', async () => {
+  store.ticketStatus = 404
+
+  const write = await takeLiveTicket(32736, 1024)
+
+  assert.deepEqual(write, {
+    state: 'refused',
+    message:
+      'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+  })
+})
+
+test('asking for too many tickets is refused in Japanese', async () => {
+  store.ticketStatus = 429
+
+  const write = await takeLiveTicket(32736, 1024)
+
+  assert.equal(
+    write.state === 'refused' && write.message,
+    '発行の上限に達しています。しばらく待つと発行できます。',
+  )
+})
+
+test('a refusal with no saying of its own still says what happened', async () => {
+  store.ticketStatus = 503
+
+  const write = await takeLiveTicket(32736, 1024)
+
+  assert.equal(
+    write.state === 'refused' && write.message,
+    '外部プレイヤーの札を発行できませんでした(503)。',
+  )
 })

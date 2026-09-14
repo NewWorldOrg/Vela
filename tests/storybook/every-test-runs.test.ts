@@ -54,6 +54,7 @@ const THE_SUITE = [
   'tests/repository/encode-terms.test.ts',
   'tests/repository/encode.test.ts',
   'tests/repository/integrity.test.ts',
+  'tests/repository/live-paths.test.ts',
   'tests/repository/live-sessions.test.ts',
   'tests/repository/live-viewers.test.ts',
   'tests/repository/live.test.ts',
