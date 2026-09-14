@@ -1,10 +1,12 @@
 import type {
+  EncodeAutoRun,
   EncodeChoices,
   EncodeDestination,
   EncodeJob,
   EncodeJobsPage,
   EncodeProfile,
   EncodeScreen,
+  EncodeSpells,
 } from '@/repository/encode'
 
 export const VIEWING_PROFILE: EncodeProfile = {
@@ -189,6 +191,45 @@ export function jobsPage(
   }
 }
 
+export const SPELLS_AVERAGED: EncodeSpells = {
+  jobs: 5,
+  fewestToAverage: 3,
+  lookedAtAtMost: 20,
+  averageSeconds: 1523,
+  from: '2026/08/07 23:13',
+  to: '2026/08/10 22:49',
+}
+
+export const SPELLS_TOO_FEW: EncodeSpells = {
+  jobs: 2,
+  fewestToAverage: 3,
+  lookedAtAtMost: 20,
+  from: '2026/08/09 20:19',
+  to: '2026/08/10 22:49',
+}
+
+export const SPELLS_NONE: EncodeSpells = {
+  jobs: 0,
+  fewestToAverage: 3,
+  lookedAtAtMost: 20,
+}
+
+export const AUTO_RUN_AS_DEPLOYED: EncodeAutoRun = {
+  automatically: true,
+  mostCores: 2,
+  coresThisMachineHas: 6,
+  subject: ['complete', 'truncated'],
+  stored: false,
+}
+
+export const AUTO_RUN_SETTLED: EncodeAutoRun = {
+  ...AUTO_RUN_AS_DEPLOYED,
+  automatically: false,
+  mostCores: 4,
+  stored: true,
+  updatedAt: '2026/08/10 22:52',
+}
+
 export const ENCODE_SCREEN: EncodeScreen = {
   profiles: [VIEWING_PROFILE],
   destinations: [SHELF_DESTINATION],
@@ -197,6 +238,8 @@ export const ENCODE_SCREEN: EncodeScreen = {
   running: RUNNING_JOB,
   waiting: 1,
   failed: 1,
+  spells: SPELLS_AVERAGED,
+  autoRun: AUTO_RUN_AS_DEPLOYED,
 }
 
 export const EMPTY_ENCODE_SCREEN: EncodeScreen = {
@@ -207,6 +250,8 @@ export const EMPTY_ENCODE_SCREEN: EncodeScreen = {
   running: null,
   waiting: 0,
   failed: 0,
+  spells: SPELLS_NONE,
+  autoRun: AUTO_RUN_AS_DEPLOYED,
 }
 
 export function screenWith(

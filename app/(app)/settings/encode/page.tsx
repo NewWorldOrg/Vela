@@ -12,6 +12,7 @@ import {
   changeProfile,
   dropDestination,
   dropProfile,
+  settleTheAutoRun,
 } from './actions'
 
 export const metadata: Metadata = { title: 'エンコード' }
@@ -37,6 +38,7 @@ export default async function Page({
           onReviseDestination: changeDestination,
           onRemoveDestination: dropDestination,
           onCallOff: callOffJob,
+          onSettleAutoRun: settleTheAutoRun,
         }}
       />
     </>

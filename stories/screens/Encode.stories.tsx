@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
+  AUTO_RUN_AS_DEPLOYED,
+  AUTO_RUN_SETTLED,
   CANCELLED_JOB,
   COMPLETED_JOB,
   EMPTY_ENCODE_SCREEN,
@@ -11,6 +13,8 @@ import {
   QUEUED_JOB,
   RETIRED_DEFINITIONS,
   RUNNING_JOB,
+  SPELLS_NONE,
+  SPELLS_TOO_FEW,
   STALLED_JOB,
   jobsPage,
   screenWith,
@@ -20,6 +24,10 @@ import { EncodeView } from '@/components/encode/encode-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const callOff = fn(async () => ({ state: 'ok' }) as const)
+
+const settleAutoRun = fn<EncodeActions['onSettleAutoRun']>(async () => ({
+  state: 'ok',
+}))
 
 const reviseProfile = fn<EncodeActions['onReviseProfile']>(async () => ({
   state: 'ok',
@@ -51,6 +59,7 @@ const ACTIONS: EncodeActions = {
   onReviseDestination: reviseDestination,
   onRemoveDestination: removeDestination,
   onCallOff: callOff,
+  onSettleAutoRun: settleAutoRun,
 }
 
 const HELD_BY_A_JOB =
@@ -80,6 +89,18 @@ async function counts(
 ) {
   await expect(canvas.getByText(`待機 ${waiting} 本`)).toBeVisible()
   await expect(canvas.getByText(`失敗 ${failed} 本`)).toBeVisible()
+}
+
+function spellsLine(canvasElement: HTMLElement) {
+  const line = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="recent-spells"]',
+  )
+
+  if (!line) {
+    throw new Error('the recent spells are not on the screen')
+  }
+
+  return within(line)
 }
 
 function runningCard(canvasElement: HTMLElement) {
@@ -727,5 +748,147 @@ export const 最後の保存先のため撤去を断られる: Story = {
     )
 
     await expect(await within(dialog).findByText(THE_LAST_ONE)).toBeVisible()
+  },
+}
+
+export const 所要の平均: Story = {
+  play: async ({ canvasElement }) => {
+    const spells = spellsLine(canvasElement)
+
+    await expect(spells.getByText('直近の所要')).toBeVisible()
+    await expect(spells.getByText('平均 25:23')).toBeVisible()
+    await expect(spells.getByText('完了 5 本')).toBeVisible()
+    await expect(spells.getByText('直近 20 本まで')).toBeVisible()
+    await expect(
+      spells.getByText('2026/08/07 23:13 〜 2026/08/10 22:49'),
+    ).toBeVisible()
+  },
+}
+
+export const 所要がまだ言えない: Story = {
+  args: { screen: { ...ENCODE_SCREEN, spells: SPELLS_TOO_FEW } },
+  play: async ({ canvasElement }) => {
+    const spells = spellsLine(canvasElement)
+
+    await expect(spells.getByText('まだ 3 本に届いていません')).toBeVisible()
+    await expect(spells.getByText('完了 2 本')).toBeVisible()
+  },
+}
+
+export const 完了したジョブがない: Story = {
+  args: { screen: { ...ENCODE_SCREEN, spells: SPELLS_NONE } },
+  play: async ({ canvasElement }) => {
+    const spells = spellsLine(canvasElement)
+
+    await expect(spells.getByText('まだ 3 本に届いていません')).toBeVisible()
+    await expect(spells.getByText('完了 0 本')).toBeVisible()
+    await expect(spells.queryByText(/〜/)).toBeNull()
+  },
+}
+
+export const 自動実行は既定のまま: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('switch', { name: '自動実行' })).toBeChecked()
+    await expect(canvas.getByText('既定のまま')).toBeVisible()
+
+    const cores = canvas.getByRole('combobox', { name: '使用コア数の上限' })
+
+    await expect(cores).toHaveTextContent('2(既定)')
+
+    await userEvent.click(cores)
+
+    const listbox = await screen.findByRole('listbox')
+
+    await expect(within(listbox).getAllByRole('option')).toHaveLength(
+      AUTO_RUN_AS_DEPLOYED.coresThisMachineHas,
+    )
+    await expect(
+      within(listbox).getByRole('option', { name: '6' }),
+    ).toBeVisible()
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull())
+  },
+}
+
+export const 自動実行が設定済み: Story = {
+  args: { screen: { ...ENCODE_SCREEN, autoRun: AUTO_RUN_SETTLED } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('switch', { name: '自動実行' }),
+    ).not.toBeChecked()
+    await expect(
+      canvas.getByRole('combobox', { name: '使用コア数の上限' }),
+    ).toHaveTextContent('4')
+    await expect(canvas.getByText('2026/08/10 22:52 更新')).toBeVisible()
+    await expect(canvas.getByText('完全・尻切れ')).toBeVisible()
+  },
+}
+
+export const 使用コア数の上限を変える: Story = {
+  play: async ({ canvasElement }) => {
+    settleAutoRun.mockClear()
+
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('combobox', { name: '使用コア数の上限' }),
+    )
+
+    const listbox = await screen.findByRole('listbox')
+
+    await userEvent.click(within(listbox).getByRole('option', { name: '3' }))
+
+    await waitFor(() => expect(settleAutoRun).toHaveBeenCalledWith(true, 3))
+  },
+}
+
+export const 自動実行を切る: Story = {
+  play: async ({ canvasElement }) => {
+    settleAutoRun.mockClear()
+
+    await userEvent.click(
+      within(canvasElement).getByRole('switch', { name: '自動実行' }),
+    )
+
+    await waitFor(() => expect(settleAutoRun).toHaveBeenCalledWith(false, 2))
+  },
+}
+
+export const 自動実行の保存を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onSettleAutoRun: async () =>
+        ({
+          state: 'rejected',
+          message:
+            '使用コア数の上限がこの機械のコア数の範囲にないため、保存できませんでした。',
+        }) as const,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('combobox', { name: '使用コア数の上限' }),
+    )
+
+    const listbox = await screen.findByRole('listbox')
+
+    await userEvent.click(within(listbox).getByRole('option', { name: '5' }))
+
+    await expect(
+      await canvas.findByText(
+        '使用コア数の上限がこの機械のコア数の範囲にないため、保存できませんでした。',
+      ),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('combobox', { name: '使用コア数の上限' }),
+    ).toHaveTextContent('2(既定)')
   },
 }

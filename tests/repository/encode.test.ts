@@ -16,6 +16,8 @@ const store: {
   roots: unknown[]
   recordings: unknown[]
   jobs: unknown[]
+  durations: unknown
+  autoRun: unknown
   readStatus: number
   readMessage: string
   writeStatus: number
@@ -27,6 +29,8 @@ const store: {
   roots: [],
   recordings: [],
   jobs: [],
+  durations: null,
+  autoRun: null,
   readStatus: 200,
   readMessage: '',
   writeStatus: 201,
@@ -79,6 +83,24 @@ const RETIRED_DESTINATION = {
   id: '3c4d5e6f-7081-4923-a456-7890abcdef12',
   label: 'Old shelf',
   retiredAt: '2026-09-07T02:15:02.884201Z',
+}
+
+const DURATIONS = {
+  jobs: 5,
+  fewestToAverage: 3,
+  lookedAtAtMost: 20,
+  averageSeconds: 1523.4567,
+  from: '2026-09-05T11:33:19.921264Z',
+  to: '2026-09-09T02:10:44.001122Z',
+}
+
+const AUTO_RUN = {
+  automatically: true,
+  mostCores: 2,
+  coresThisMachineHas: 6,
+  subject: ['complete', 'truncated'],
+  stored: false,
+  updatedAt: null,
 }
 
 const RECORDING = {
@@ -161,6 +183,10 @@ const client = () => ({
           lastPage: 1,
           perPage: 200,
         })
+      case '/api/encoding/jobs/durations':
+        return envelope(store.durations)
+      case '/api/encoding/settings':
+        return envelope(store.autoRun)
       case '/api/encoding/jobs': {
         const asked = query?.status as string[] | undefined
         const kept = asked
@@ -185,6 +211,11 @@ const client = () => ({
     sent.push({ method: 'POST', path, body: options?.body })
 
     return written()
+  },
+  PUT: async (path: string, options?: { body?: Record<string, unknown> }) => {
+    sent.push({ method: 'PUT', path, body: options?.body })
+
+    return written(store.autoRun)
   },
   PATCH: async (
     path: string,
@@ -234,6 +265,7 @@ const {
   WHEN_REMOVING_A_PROFILE,
   WHEN_SAVING_A_DESTINATION,
   WHEN_SAVING_A_PROFILE,
+  WHEN_SETTLING_THE_AUTO_RUN,
   callOffEncode,
   defineDestination,
   defineProfile,
@@ -244,6 +276,7 @@ const {
   removeProfile,
   reviseDestination,
   reviseProfile,
+  settleAutoRun,
   whyItRefused,
 } = await import('@/repository/encode')
 
@@ -256,6 +289,8 @@ beforeEach(() => {
   store.roots = [{ name: 'primary' }, { name: 'encodes' }]
   store.recordings = [RECORDING]
   store.jobs = [RUNNING, COMPLETED]
+  store.durations = DURATIONS
+  store.autoRun = AUTO_RUN
   store.readStatus = 200
   store.readMessage = ''
   store.writeStatus = 201
@@ -962,5 +997,125 @@ test('a ledger that cannot be read throws what the API said about it', async () 
   await assert.rejects(
     () => listEncodeChoices(),
     /エンコードの台帳を読めませんでした/,
+  )
+})
+
+test('the screen says how long the jobs that finished took, and over what window', async () => {
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.deepEqual(screen.spells, {
+    jobs: 5,
+    fewestToAverage: 3,
+    lookedAtAtMost: 20,
+    averageSeconds: 1523,
+    from: '2026/09/05 20:33',
+    to: '2026/09/09 11:10',
+  })
+})
+
+test('an average is not made of fewer jobs than it takes, and an empty ledger is not nought seconds', async () => {
+  store.durations = { ...DURATIONS, jobs: 2, averageSeconds: null }
+
+  const few = await getEncodeScreen({}, NOW)
+
+  assert.equal(few.spells.jobs, 2)
+  assert.equal(few.spells.averageSeconds, undefined)
+  assert.equal(few.spells.fewestToAverage, 3)
+  assert.equal(few.spells.from, '2026/09/05 20:33')
+
+  store.durations = {
+    ...DURATIONS,
+    jobs: 0,
+    averageSeconds: null,
+    from: null,
+    to: null,
+  }
+
+  const none = await getEncodeScreen({}, NOW)
+
+  assert.equal(none.spells.jobs, 0)
+  assert.equal(none.spells.averageSeconds, undefined)
+  assert.equal(none.spells.from, undefined)
+  assert.equal(none.spells.to, undefined)
+})
+
+test('how the queue runs when nobody asked comes back with what the machine has', async () => {
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.deepEqual(screen.autoRun, {
+    automatically: true,
+    mostCores: 2,
+    coresThisMachineHas: 6,
+    subject: ['complete', 'truncated'],
+    stored: false,
+    updatedAt: undefined,
+  })
+})
+
+test('a settled row says when somebody settled it', async () => {
+  store.autoRun = {
+    ...AUTO_RUN,
+    automatically: false,
+    mostCores: 4,
+    stored: true,
+    updatedAt: '2026-09-09T02:11:07.552314Z',
+  }
+
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.equal(screen.autoRun.automatically, false)
+  assert.equal(screen.autoRun.mostCores, 4)
+  assert.equal(screen.autoRun.stored, true)
+  assert.equal(screen.autoRun.updatedAt, '2026/09/09 11:11')
+})
+
+test('a subject this build cannot name is left out rather than drawn as a blank', async () => {
+  store.autoRun = { ...AUTO_RUN, subject: ['complete', null, 'truncated'] }
+
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.deepEqual(screen.autoRun.subject, ['complete', 'truncated'])
+})
+
+test('settling the auto-run sends both values together', async () => {
+  store.writeStatus = 200
+
+  assert.deepEqual(await settleAutoRun(false, 4), { state: 'ok' })
+  assert.equal(sent[0].method, 'PUT')
+  assert.equal(sent[0].path, '/api/encoding/settings')
+  assert.deepEqual(sent[0].body, { automatically: false, mostCores: 4 })
+
+  store.writeStatus = 401
+  assert.deepEqual(await settleAutoRun(true, 2), { state: 'unauthenticated' })
+})
+
+test('the auto-run refused for a field names that field in Japanese', () => {
+  assert.equal(
+    whyItRefused(
+      WHEN_SETTLING_THE_AUTO_RUN,
+      400,
+      'automatically: expected whether a recording that ends is queued for encoding without anyone asking.',
+    ),
+    '自動実行の指定が入っていないため、保存できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(
+      WHEN_SETTLING_THE_AUTO_RUN,
+      400,
+      "mostCores: expected how many of this machine's cores a run may take.",
+    ),
+    '使用コア数の上限が入っていないため、保存できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(
+      WHEN_SETTLING_THE_AUTO_RUN,
+      400,
+      'mostCores: expected a whole number of cores from 1 to 6, which is how many this machine has.',
+    ),
+    '使用コア数の上限がこの機械のコア数の範囲にないため、保存できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(WHEN_SETTLING_THE_AUTO_RUN, 500, 'Something else entirely.'),
+    '自動実行の設定を保存できませんでした(500)。',
   )
 })
