@@ -3,7 +3,10 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 
 import { formatPlayhead, formatPlayerTime } from '@/lib/format'
+import { chapterBoundaries } from '@/lib/player-chapters'
+import { PLAYER_BREAK_BAND } from '@/components/recordings/player-palette'
 import { videoFrameHref } from '@/repository/video-paths'
+import type { PlaybackChapter } from '@/repository/videos'
 
 const SETTLES = 140
 
@@ -17,6 +20,7 @@ export function PlayerSeek({
   position,
   buffered,
   drops,
+  chapters,
   onChoose,
   onScrubbing,
   frameHref = videoFrameHref,
@@ -26,6 +30,7 @@ export function PlayerSeek({
   position: number
   buffered?: number
   drops?: number[]
+  chapters?: PlaybackChapter[]
   onChoose: (second: number) => void
   onScrubbing?: (at: number | null) => void
   frameHref?: (id: string, at: number) => string
@@ -170,6 +175,10 @@ export function PlayerSeek({
   }
 
   const wanted = hover !== null || dragging !== null
+  const breaks = (chapters ?? []).filter((one) => one.kind === 'break')
+  const boundaries = chapterBoundaries(chapters ?? [])
+  const share = (second: number) =>
+    Math.min(100, Math.max(0, (second / duration) * 100))
 
   return (
     <div
@@ -204,7 +213,31 @@ export function PlayerSeek({
           className="absolute inset-y-0 left-0 rounded-full bg-(--pl-accent)"
           style={{ width: `${playedPct}%` }}
         />
+        {duration > 0 &&
+          breaks.map((one) => (
+            <span
+              key={one.startsAtSec}
+              aria-hidden="true"
+              title="CM と判定した区間"
+              className="absolute inset-y-0 rounded-full"
+              style={{
+                left: `${share(one.startsAtSec)}%`,
+                width: `${share(one.endsAtSec) - share(one.startsAtSec)}%`,
+                backgroundImage: PLAYER_BREAK_BAND,
+              }}
+            />
+          ))}
       </div>
+      {duration > 0 &&
+        boundaries.map((second) => (
+          <span
+            key={second}
+            aria-hidden="true"
+            title="チャプターの区切り"
+            className="absolute top-1/2 -ml-px h-[9px] w-[2px] -translate-y-1/2 rounded-[1px] bg-(--pl-lemon) opacity-85 transition-[height] duration-100 ease-out group-hover:h-[11px] group-focus-visible:h-[11px] group-data-[wanted]:h-[11px]"
+            style={{ left: `${share(second)}%` }}
+          />
+        ))}
       {duration > 0 &&
         drops?.map((second) => (
           <span

@@ -105,6 +105,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
     mediaType: 'video/mp4',
     bytes: null,
     sounds: ['main', 'secondary'],
+    chapters: [],
   }
 
   const read = await getPlaybackPlan('1266')
@@ -129,6 +130,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       mediaType: 'video/mp4',
       bytes: undefined,
       sounds: ['main', 'secondary'],
+      chapters: [],
     },
   })
 })
@@ -253,6 +255,99 @@ test('each refusal keeps its own name', async () => {
     503: 'outOfReach',
     500: 'unreadable',
   })
+})
+
+test('the breaks a recording was marked with come back as they were read', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'direct',
+    seeking: 'byRange',
+    canSeek: true,
+    transcodes: false,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: '3490550128',
+    sounds: ['main'],
+    chapters: [
+      { startsAtSec: 0, endsAtSec: '212.5', kind: 'programme' },
+      { startsAtSec: '212.5', endsAtSec: 272.5, kind: 'break' },
+      { startsAtSec: 272.5, endsAtSec: 1800, kind: 'programme' },
+    ],
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.deepEqual(read.state === 'planned' && read.plan.chapters, [
+    { startsAtSec: 0, endsAtSec: 212.5, kind: 'programme' },
+    { startsAtSec: 212.5, endsAtSec: 272.5, kind: 'break' },
+    { startsAtSec: 272.5, endsAtSec: 1800, kind: 'programme' },
+  ])
+})
+
+test('a recording nobody marked is handed over with no chapters at all', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+    sounds: ['main'],
+    chapters: [],
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.deepEqual(read.state === 'planned' && read.plan.chapters, [])
+})
+
+test('a plan from a build that never named the chapters offers none to jump to', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+    sounds: ['main'],
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.deepEqual(read.state === 'planned' && read.plan.chapters, [])
+})
+
+test('a kind this build has never heard of is still carried, and named as unknown', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'direct',
+    seeking: 'byRange',
+    canSeek: true,
+    transcodes: false,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: '3490550128',
+    sounds: ['main'],
+    chapters: [
+      { startsAtSec: 0, endsAtSec: 300, kind: 'programme' },
+      { startsAtSec: 300, endsAtSec: 360, kind: 'trailer' },
+    ],
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.deepEqual(read.state === 'planned' && read.plan.chapters, [
+    { startsAtSec: 0, endsAtSec: 300, kind: 'programme' },
+    { startsAtSec: 300, endsAtSec: 360, kind: 'unknown' },
+  ])
 })
 
 test('a ticket comes back with the moment it lapses', async () => {

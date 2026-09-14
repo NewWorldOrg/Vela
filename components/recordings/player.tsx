@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
+import { nextBoundaryAfter } from '@/lib/player-chapters'
 import { redrawnHref } from '@/lib/thumbnail-redraw'
 import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import {
@@ -38,6 +39,7 @@ import {
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
+  PLAYER_BUTTON,
   PLAYER_CHROME_FADE,
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
@@ -198,6 +200,8 @@ export function Player({
   const pip = usePictureInPicture(video)
   const duration = d.lengthSec ?? 0
   const drops = d.qualitySpots?.map((spot) => spot.second)
+  const chapters = plan.chapters
+  const nextChapterAt = nextBoundaryAfter(position, chapters)
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
@@ -785,6 +789,7 @@ export function Player({
                 position={position}
                 buffered={buffered}
                 drops={drops}
+                chapters={chapters}
                 onChoose={choose}
                 onScrubbing={setScrubbingAt}
                 frameHref={frameHref}
@@ -876,6 +881,18 @@ export function Player({
                 {formatPlayerTime(scrubbingAt ?? position)} /{' '}
                 {formatPlayerTime(duration)}
               </span>
+              {chapters.length > 0 && (
+                <button
+                  type="button"
+                  disabled={nextChapterAt === undefined}
+                  onClick={() =>
+                    nextChapterAt !== undefined && choose(nextChapterAt)
+                  }
+                  className={cn(PLAYER_BUTTON, 'ml-2')}
+                >
+                  次のチャプターへ
+                </button>
+              )}
               <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
                 <PlayerTip name="AirPlay" container={shell}>
                   <AirPlayButton

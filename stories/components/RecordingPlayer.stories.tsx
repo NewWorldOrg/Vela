@@ -36,6 +36,7 @@ const ON_THE_FLY: PlaybackPlan = {
   showsAsAWholeRecording: true,
   mediaType: 'video/mp4',
   sounds: ['main'],
+  chapters: [],
 }
 
 const IN_TWO_LANGUAGES: PlaybackPlan = {
@@ -55,6 +56,23 @@ const HANDED_OVER: PlaybackPlan = {
 const HANDED_OVER_IN_TWO_LANGUAGES: PlaybackPlan = {
   ...HANDED_OVER,
   sounds: ['main', 'secondary'],
+}
+
+const MARKED: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: [
+    { startsAtSec: 0, endsAtSec: 1200, kind: 'programme' },
+    { startsAtSec: 1200, endsAtSec: 1320, kind: 'break' },
+    { startsAtSec: 1320, endsAtSec: 3600, kind: 'programme' },
+    { startsAtSec: 3600, endsAtSec: 3750, kind: 'break' },
+    { startsAtSec: 3750, endsAtSec: 15158, kind: 'programme' },
+  ],
+}
+
+const NEXT_CHAPTER = '次のチャプターへ'
+
+function marksOn(canvasElement: HTMLElement, named: string) {
+  return canvasElement.querySelectorAll(`[title="${named}"]`).length
 }
 
 const reasked: SoundTrack[] = []
@@ -1720,5 +1738,84 @@ export const 隣へ移ってもまた待つ: Story = {
 
     await expect(said).toHaveTextContent('消音')
     await expect(capsOn(said)).toEqual(['M'])
+  },
+}
+
+export const チャプターを持たない録画: Story = {
+  args: { detail: detail('1266'), plan: HANDED_OVER, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByRole('button', { name: NEXT_CHAPTER }),
+    ).toBeNull()
+    await expect(marksOn(canvasElement, 'CM と判定した区間')).toBe(0)
+    await expect(marksOn(canvasElement, 'チャプターの区切り')).toBe(0)
+  },
+}
+
+export const CM区間の印: Story = {
+  args: { detail: detail('1266'), plan: MARKED, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(marksOn(canvasElement, 'CM と判定した区間')).toBe(2)
+    await expect(marksOn(canvasElement, 'チャプターの区切り')).toBe(4)
+    await expect(
+      canvas.getByRole('button', { name: NEXT_CHAPTER }),
+    ).toBeEnabled()
+  },
+}
+
+export const 最後の区切りより後: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 14000,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: NEXT_CHAPTER }),
+    ).toBeDisabled()
+    await expect(marksOn(canvasElement, 'チャプターの区切り')).toBe(4)
+  },
+}
+
+export const 押すと次の区切りへ飛ぶ: Story = {
+  args: { detail: detail('1266'), plan: MARKED, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('0:00 / 4:12:38')).toBeVisible()
+
+    await userEvent.click(canvas.getByRole('button', { name: NEXT_CHAPTER }))
+
+    await waitFor(() =>
+      expect(canvas.getByText('20:00 / 4:12:38')).toBeVisible(),
+    )
+  },
+}
+
+export const 放っておいても飛ばされない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('20:50 / 4:12:38')).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: NEXT_CHAPTER }),
+    ).toBeEnabled()
+
+    await new Promise((rest) => setTimeout(rest, 800))
+
+    await expect(canvas.getByText('20:50 / 4:12:38')).toBeVisible()
   },
 }
