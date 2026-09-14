@@ -1,6 +1,10 @@
 import type { Route } from 'next'
 
-import type { QualityResult, QualityThreshold } from '@/repository/quality'
+import type {
+  QualityAnomaly,
+  QualityResult,
+  QualityThreshold,
+} from '@/repository/quality'
 
 const WINDOWS = [
   { label: '24 時間', days: 1 },
@@ -115,6 +119,59 @@ const THRESHOLDS: QualityThreshold[] = [
 ]
 
 const NOT_SAMPLED = { level: 'unmeasured' } as const
+
+const ANOMALIES: QualityAnomaly[] = [
+  {
+    id: 'anomaly-1',
+    title: 'ドロップ率が視聴不可の恐れを超過',
+    subject: 'みなと総合1',
+    observed: '観測 0.152%',
+    applied: '適用閾値 0.1%(暫定)',
+    level: 'bad',
+    levelLabel: '視聴不可の恐れ',
+    when: '08/09 21:00 発生 · 継続中',
+    acknowledged: false,
+    asks: true,
+  },
+  {
+    id: 'anomaly-2',
+    title: '信号品質の供給途絶',
+    subject: 'adapter0.frontend0',
+    observed: '途絶 10分',
+    applied: '適用閾値 5分(暫定)',
+    level: 'unreachable',
+    levelLabel: '取得できず',
+    when: '08/10 09:34 発生 · 継続中',
+    acknowledged: false,
+    asks: true,
+  },
+  {
+    id: 'anomaly-3',
+    title: 'lock 率が下限を下回った',
+    subject: 'adapter2.frontend0',
+    observed: '観測 62%',
+    applied: '適用閾値 99%(暫定)',
+    level: 'warn',
+    levelLabel: '警告水準',
+    restatedBy: '再掲 · チューナー',
+    classification: '① 信号を掴めない',
+    when: '08/09 18:41 発生 · 継続中',
+    acknowledged: false,
+    asks: false,
+  },
+  {
+    id: 'anomaly-4',
+    title: 'ドロップ率が警告水準を超過',
+    subject: '中央テレビ1',
+    observed: '観測 0.024%',
+    applied: '適用閾値 0.02%(暫定)',
+    level: 'warn',
+    levelLabel: '警告水準',
+    when: '08/09 20:10 発生 · 08/09 22:04 確認済み · carina',
+    acknowledged: true,
+    asks: false,
+  },
+]
 
 export const QUALITY: QualityResult = {
   windows: windows('24 時間'),
@@ -282,6 +339,23 @@ export const QUALITY: QualityResult = {
       level: 'warn',
     },
   ],
+  supplies: {
+    read: true,
+    quiet: [
+      {
+        key: 'signalSamples',
+        supply: '信号品質',
+        note: '見ている 2 件のうち 1 件が途絶',
+      },
+    ],
+  },
+  anomalies: {
+    items: ANOMALIES.filter((one) => !one.acknowledged),
+    owned: 2,
+    restated: 1,
+    showsAcknowledged: false,
+    href: '/settings/quality?days=1&acknowledged=true' as Route,
+  },
 }
 
 export const NOTHING_MEASURED: QualityResult = {
@@ -327,6 +401,25 @@ export const NOTHING_MEASURED: QualityResult = {
   satellites: [],
   tuners: [],
   problemRecordings: [],
+  supplies: { read: false, quiet: [] },
+  anomalies: {
+    items: [],
+    owned: 0,
+    restated: 0,
+    showsAcknowledged: false,
+    href: '/settings/quality?days=30&acknowledged=true' as Route,
+  },
+}
+
+export const ACKNOWLEDGED_SHOWN: QualityResult = {
+  ...QUALITY,
+  anomalies: {
+    items: ANOMALIES,
+    owned: 3,
+    restated: 1,
+    showsAcknowledged: true,
+    href: '/settings/quality?days=1' as Route,
+  },
 }
 
 export const MORE_TUNERS_THAN_FIT: QualityResult = {

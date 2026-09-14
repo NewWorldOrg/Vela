@@ -18,7 +18,12 @@ const store: {
   thresholds: unknown[]
   services: unknown[]
   ledger: unknown[]
+  incidents: unknown[]
+  owned: number
+  restated: number
+  supplies: unknown[] | undefined
   refusal?: { status: number; message: string }
+  askedFor: unknown
 } = {
   summary: null,
   channels: [],
@@ -28,6 +33,11 @@ const store: {
   thresholds: [],
   services: [],
   ledger: [],
+  incidents: [],
+  owned: 0,
+  restated: 0,
+  supplies: [],
+  askedFor: undefined,
 }
 
 const tally = (over: Record<string, unknown> = {}) => ({
@@ -152,6 +162,43 @@ mock.module('@/repository/client/carina', {
           }
         }
 
+        if (path === '/api/quality/incidents') {
+          store.askedFor = init?.params?.query?.includeAcknowledged
+
+          return {
+            data: {
+              data: {
+                items: store.incidents,
+                owned: store.owned,
+                restated: store.restated,
+              },
+            },
+            response: answered(200),
+          }
+        }
+
+        if (path === '/api/quality/supply-health') {
+          if (store.supplies === undefined) {
+            return {
+              error: { message: 'The supply watch has not read anything yet.' },
+              response: answered(503),
+            }
+          }
+
+          return {
+            data: {
+              data: {
+                readAt: '2026-09-08T00:00:00Z',
+                appliedValue: 300,
+                appliedProvisional: true,
+                tunersWereAsked: true,
+                supplies: store.supplies,
+              },
+            },
+            response: answered(200),
+          }
+        }
+
         if (path === '/api/quality/summary') {
           return { data: { data: store.summary }, response: answered(200) }
         }
@@ -182,6 +229,21 @@ mock.module('@/repository/client/carina', {
           response: answered(200),
         }
       },
+      POST: async (path: string, init?: Asking) => {
+        sent.push({
+          path: path.replace('{id}', String(init?.params?.path?.id)),
+          query: {},
+        })
+
+        if (store.refusal) {
+          return {
+            error: { message: store.refusal.message },
+            response: answered(store.refusal.status),
+          }
+        }
+
+        return { data: { data: {} }, response: answered(200) }
+      },
       PATCH: async (path: string, init?: Asking) => {
         sent.push({
           path: path.replace('{key}', String(init?.params?.path?.key)),
@@ -202,7 +264,8 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getQuality, reviseThreshold } = await import('@/repository/quality')
+const { acknowledgeAnomaly, getQuality, reviseThreshold } =
+  await import('@/repository/quality')
 
 const service = (networkId: number, serviceId: number, name: string) => ({
   networkId,
@@ -227,6 +290,11 @@ function standing() {
     { deviceId: 'adapter3.frontend0', measures: measures(), signal: signal() },
   ]
   store.recordings = []
+  store.incidents = []
+  store.owned = 0
+  store.restated = 0
+  store.supplies = []
+  store.askedFor = undefined
   store.whole = measures()
   store.summary = {
     period: { from: '2026-09-07T00:00:00Z', until: '2026-09-08T00:00:00Z' },
@@ -418,4 +486,248 @@ test('BS / CS の録画が無ければ衛星の面は空のまま', async () => 
   assert.equal(result.channels[0].name, '湾岸放送1')
   assert.equal(result.satellites.length, 0)
   assert.equal(result.problemRecordings.length, 0)
+})
+
+const incident = (over: Record<string, unknown> = {}) => ({
+  id: 'one',
+  detectedAt: '2026-09-07T12:00:00Z',
+  breached: 'packetsLostUnwatchable',
+  silence: null,
+  subjectKind: 'channel',
+  subjectKey: '32736-1024',
+  observed: 0.00152,
+  appliedValue: 0.001,
+  appliedProvisional: true,
+  owner: 'quality',
+  restated: false,
+  classification: null,
+  state: 'notified',
+  notifiedAt: '2026-09-07T12:01:00Z',
+  acknowledgedAt: null,
+  acknowledgedBy: null,
+  resolvedAt: null,
+  ...over,
+})
+
+const supply = (over: Record<string, unknown> = {}) => ({
+  silence: 'signalSamples',
+  watched: 2,
+  quiet: 0,
+  state: 'good',
+  ...over,
+})
+
+test('異常は、破った閾値から題を取り、観測と適用閾値を並べる', async () => {
+  standing()
+  store.incidents = [incident()]
+  store.owned = 1
+
+  const result = await getQuality()
+  const anomaly = result.anomalies.items[0]
+
+  assert.equal(anomaly.title, 'ドロップ率が視聴不可の恐れを超過')
+  assert.equal(anomaly.subject, '湾岸放送1')
+  assert.equal(anomaly.observed, '観測 0.152%')
+  assert.equal(anomaly.applied, '適用閾値 0.1%(暫定)')
+  assert.equal(anomaly.levelLabel, '視聴不可の恐れ')
+  assert.equal(anomaly.restatedBy, undefined)
+  assert.equal(anomaly.when, '09/07 21:00 発生 · 継続中')
+  assert.equal(anomaly.acknowledged, false)
+  assert.equal(anomaly.asks, true)
+  assert.equal(result.anomalies.owned, 1)
+})
+
+test('供給途絶の異常は、どの供給が黙ったかを題に持つ', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      breached: 'supplySilence',
+      silence: 'signalSamples',
+      subjectKind: 'tuner',
+      subjectKey: 'adapter3.frontend0',
+      observed: 720,
+      appliedValue: 300,
+    }),
+  ]
+
+  const anomaly = (await getQuality()).anomalies.items[0]
+
+  assert.equal(anomaly.title, '信号品質の供給途絶')
+  assert.equal(anomaly.subject, 'adapter3.frontend0')
+  assert.equal(anomaly.observed, '途絶 12分')
+  assert.equal(anomaly.applied, '適用閾値 5分(暫定)')
+  assert.equal(anomaly.levelLabel, '取得できず')
+})
+
+test('他のドメインが持つ異常は、再掲として所有者と分類を出す', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      breached: 'lockRate',
+      owner: 'tuner',
+      restated: true,
+      classification: '① 信号を掴めない',
+      subjectKind: 'tuner',
+      subjectKey: 'adapter0.frontend0',
+      observed: 0.62,
+      appliedValue: 0.99,
+      state: 'detected',
+      notifiedAt: null,
+    }),
+  ]
+  store.restated = 1
+
+  const anomaly = (await getQuality()).anomalies.items[0]
+
+  assert.equal(anomaly.restatedBy, '再掲 · チューナー')
+  assert.equal(anomaly.classification, '① 信号を掴めない')
+  assert.equal(anomaly.asks, false)
+})
+
+test('確認済みの行は後ろに回り、いつ誰が確認したかを言う', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      id: 'settled',
+      state: 'acknowledged',
+      acknowledgedAt: '2026-09-07T13:04:00Z',
+      acknowledgedBy: 'carina',
+    }),
+    incident({ id: 'standing' }),
+  ]
+
+  const result = await getQuality('1', true)
+
+  assert.deepEqual(
+    result.anomalies.items.map((one) => one.id),
+    ['standing', 'settled'],
+  )
+  assert.equal(result.anomalies.items[1].acknowledged, true)
+  assert.equal(result.anomalies.items[1].asks, false)
+  assert.equal(
+    result.anomalies.items[1].when,
+    '09/07 21:00 発生 · 09/07 22:04 確認済み · carina',
+  )
+  assert.equal(store.askedFor, true)
+  assert.equal(result.anomalies.showsAcknowledged, true)
+  assert.equal(result.anomalies.href, '/settings/quality?days=1')
+})
+
+test('この版が知らない供給や状態でも、行は落ちずに出る', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      breached: 'supplySilence',
+      silence: 'somethingThisBuildHasNeverHeardOf',
+      subjectKind: 'guide',
+      subjectKey: 'visits',
+      observed: 900,
+      appliedValue: 300,
+      state: 'somethingElseEntirely',
+    }),
+  ]
+
+  const anomaly = (await getQuality()).anomalies.items[0]
+
+  assert.equal(anomaly.title, 'この版がまだ知らない値の供給途絶')
+  assert.equal(anomaly.subject, '番組表')
+  assert.equal(anomaly.acknowledged, false)
+  assert.equal(anomaly.asks, false)
+})
+
+test('黙った供給だけが帯に出て、聞こえているものは出ない', async () => {
+  standing()
+  store.supplies = [
+    supply(),
+    supply({
+      silence: 'guideVisits',
+      watched: 3,
+      quiet: 1,
+      state: 'unreachable',
+    }),
+    supply({
+      silence: 'recordingProgress',
+      watched: 0,
+      state: 'nothingToMeasure',
+    }),
+  ]
+
+  const result = await getQuality()
+
+  assert.equal(result.supplies.read, true)
+  assert.deepEqual(result.supplies.quiet, [
+    {
+      key: 'guideVisits',
+      supply: '番組表の巡回',
+      note: '見ている 3 件のうち 1 件が途絶',
+    },
+  ])
+})
+
+test('数えられない供給は、途絶の件数ではなく訊けなかったことを言う', async () => {
+  standing()
+  store.supplies = [supply({ quiet: 0, state: 'unreachable' })]
+
+  const result = await getQuality()
+
+  assert.equal(result.supplies.quiet[0].supply, '信号品質')
+  assert.equal(result.supplies.quiet[0].note, '供給元に訊けていません')
+})
+
+test('見張りがまだ通っていなければ、読んでいないと答える', async () => {
+  standing()
+  store.supplies = undefined
+
+  const result = await getQuality()
+
+  assert.equal(result.supplies.read, false)
+  assert.deepEqual(result.supplies.quiet, [])
+})
+
+test('確認済みにできないときの断りは日本語の一文になる', async () => {
+  standing()
+  store.refusal = {
+    status: 409,
+    message:
+      'This anomaly has been resolved, and acknowledging is for one that still stands; the same condition coming back is kept as a new occurrence with its own acknowledgement.',
+  }
+
+  assert.deepEqual(await acknowledgeAnomaly('one'), {
+    state: 'rejected',
+    message: 'この異常はすでに解消しているため、確認済みにできませんでした。',
+  })
+
+  store.refusal = {
+    status: 409,
+    message:
+      'This anomaly has not been told about yet, and acknowledging follows being told; the next pass of the supply watch tells about it.',
+  }
+
+  assert.deepEqual(await acknowledgeAnomaly('one'), {
+    state: 'rejected',
+    message: 'この異常はまだ知らされていないため、確認済みにできませんでした。',
+  })
+
+  store.refusal = {
+    status: 404,
+    message:
+      'An anomaly is asked for by the identifier the ledger gave it, and nothing is kept under this one.',
+  }
+
+  assert.deepEqual(await acknowledgeAnomaly('one'), {
+    state: 'rejected',
+    message: 'この異常は残っていないため、確認済みにできませんでした。',
+  })
+})
+
+test('確認済みにする頼みは、その行を名指して一度だけ送る', async () => {
+  standing()
+
+  assert.deepEqual(await acknowledgeAnomaly('one'), { state: 'ok' })
+  assert.deepEqual(
+    sent
+      .filter((each) => each.path.includes('acknowledge'))
+      .map((each) => each.path),
+    ['/api/quality/incidents/one/acknowledge'],
+  )
 })

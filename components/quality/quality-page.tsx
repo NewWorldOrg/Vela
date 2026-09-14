@@ -10,6 +10,7 @@ import type {
   QualityWrite,
 } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
+import { Banner } from '@/components/vela/banner'
 import {
   Table,
   TableBody,
@@ -34,8 +35,16 @@ import {
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { ChangeThresholdButton } from '@/components/quality/change-threshold-button'
+import type { QualityAcknowledge } from '@/components/quality/anomaly-list'
+import { AnomalyList } from '@/components/quality/anomaly-list'
 import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
+
+const SUPPLY_GONE_QUIET = '計測の供給が途絶しています'
+
+const WATCH_HAS_NOT_PASSED = '供給の見張りはまだ通っていません'
+
+const TO_THE_TUNERS = 'チューナーへ'
 
 const HEALTH_COLUMNS = [
   'チューナー',
@@ -117,9 +126,11 @@ export type QualityReviseThreshold = (
 export function QualityView({
   result,
   onReviseThreshold,
+  onAcknowledge,
 }: {
   result: QualityResult
   onReviseThreshold: QualityReviseThreshold
+  onAcknowledge: QualityAcknowledge
 }) {
   return (
     <>
@@ -147,6 +158,25 @@ export function QualityView({
       >
         品質
       </PageHeading>
+
+      {!result.supplies.read && (
+        <Banner className="mt-3.5">{WATCH_HAS_NOT_PASSED}</Banner>
+      )}
+
+      {result.supplies.quiet.length > 0 && (
+        <Banner
+          tone="danger"
+          className="mt-3.5"
+          actions={[{ label: TO_THE_TUNERS, href: '/settings/tuners' }]}
+        >
+          <b className="heading block text-ui">{SUPPLY_GONE_QUIET}</b>
+          {result.supplies.quiet.map((supply) => (
+            <span key={supply.key} className="block">
+              {supply.supply} · {supply.note}
+            </span>
+          ))}
+        </Banner>
+      )}
 
       <div className="mt-3.5 grid gap-2.5 min-[720px]:grid-cols-2 min-[1120px]:grid-cols-4">
         {result.stats.map((stat) => (
@@ -361,6 +391,11 @@ export function QualityView({
             </Link>
           </div>
         </Surface>
+
+        <AnomalyList
+          anomalies={result.anomalies}
+          onAcknowledge={onAcknowledge}
+        />
       </div>
     </>
   )

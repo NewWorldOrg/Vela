@@ -672,6 +672,10 @@ const FAILURES: Partial<Record<Fault, { title: string; body?: string }>> = {
     title: 'ファイルが尺のわりに大きい',
     body: '書けた尺から見込まれる大きさを超えています。',
   },
+  endStillUndecided: {
+    title: '終わりが決まらないまま時間切れになった',
+    body: '番組表が終わりを決めないまま、待てる時間を過ぎました。',
+  },
 }
 
 const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {

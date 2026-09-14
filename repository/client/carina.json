@@ -3640,6 +3640,69 @@
         }
       }
     },
+    "/api/quality/incidents/{id}/acknowledge": {
+      "post": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "acknowledgeQualityIncident",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/quality/summary": {
       "get": {
         "tags": [
@@ -3694,6 +3757,49 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfQualitySummaryResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quality/supply-health": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "getQualitySupplyHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualitySupplyHealthResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualitySupplyHealthResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualitySupplyHealthResponder"
                 }
               }
             }
@@ -3796,6 +3902,48 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfQualityChannelListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/quality/incidents": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "listQualityIncidents",
+        "parameters": [
+          {
+            "name": "includeAcknowledged",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentListResponder"
                 }
               }
             }
@@ -7685,6 +7833,58 @@
           }
         }
       },
+      "BaseResponderOfQualityIncidentListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityIncidentListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityIncidentResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityIncidentResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfQualityRecordingListResponder": {
         "required": [
           "status",
@@ -7732,6 +7932,32 @@
               },
               {
                 "$ref": "#/components/schemas/QualitySummaryResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualitySupplyHealthResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualitySupplyHealthResponder"
               }
             ]
           }
@@ -11987,6 +12213,168 @@
           "string"
         ]
       },
+      "QualityIncidentListResponder": {
+        "required": [
+          "items",
+          "owned",
+          "restated"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityIncidentResponder"
+            }
+          },
+          "owned": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "restated": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "QualityIncidentOwner": {
+        "enum": [
+          "quality",
+          "tuner",
+          "guide",
+          "reservation",
+          "recording"
+        ],
+        "type": "string"
+      },
+      "QualityIncidentResponder": {
+        "required": [
+          "id",
+          "detectedAt",
+          "breached",
+          "silence",
+          "subjectKind",
+          "subjectKey",
+          "observed",
+          "appliedValue",
+          "appliedProvisional",
+          "owner",
+          "restated",
+          "classification",
+          "state",
+          "notifiedAt",
+          "acknowledgedAt",
+          "acknowledgedBy",
+          "resolvedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "detectedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "breached": {
+            "$ref": "#/components/schemas/QualityThresholdKey"
+          },
+          "silence": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SupplySilence"
+              }
+            ]
+          },
+          "subjectKind": {
+            "$ref": "#/components/schemas/QualitySubjectKind"
+          },
+          "subjectKey": {
+            "type": "string"
+          },
+          "observed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "appliedValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "appliedProvisional": {
+            "type": "boolean"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/QualityIncidentOwner"
+          },
+          "restated": {
+            "type": "boolean"
+          },
+          "classification": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/QualityIncidentState"
+          },
+          "notifiedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "acknowledgedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "acknowledgedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolvedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "QualityIncidentState": {
+        "enum": [
+          "detected",
+          "notified",
+          "acknowledged",
+          "resolved"
+        ],
+        "type": "string"
+      },
       "QualityLevel": {
         "enum": [
           "good",
@@ -12321,6 +12709,16 @@
         ],
         "type": "string"
       },
+      "QualitySubjectKind": {
+        "enum": [
+          "tuner",
+          "channel",
+          "recording",
+          "transportStream",
+          "guide"
+        ],
+        "type": "string"
+      },
       "QualitySummaryResponder": {
         "required": [
           "period",
@@ -12356,6 +12754,75 @@
           },
           "provisional": {
             "type": "boolean"
+          }
+        }
+      },
+      "QualitySupplyHealthResponder": {
+        "required": [
+          "readAt",
+          "appliedValue",
+          "appliedProvisional",
+          "tunersWereAsked",
+          "supplies"
+        ],
+        "type": "object",
+        "properties": {
+          "readAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "appliedValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "appliedProvisional": {
+            "type": "boolean"
+          },
+          "tunersWereAsked": {
+            "type": "boolean"
+          },
+          "supplies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualitySupplyResponder"
+            }
+          }
+        }
+      },
+      "QualitySupplyResponder": {
+        "required": [
+          "silence",
+          "watched",
+          "quiet",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "silence": {
+            "$ref": "#/components/schemas/SupplySilence"
+          },
+          "watched": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "quiet": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/QualityState"
           }
         }
       },
@@ -13020,7 +13487,9 @@
           "stoppedUnasked",
           "lighterThanTheStream",
           "heavierThanTheStream",
-          "endStillUndecided"
+          "endStillUndecided",
+          "leftRunningUnwatched",
+          "driverReplaced"
         ],
         "type": "string"
       },
@@ -16014,6 +16483,19 @@
             "format": "int32"
           }
         }
+      },
+      "SupplySilence": {
+        "enum": [
+          "recordingProgress",
+          "recordingMeasurement",
+          "signalSamples",
+          "guideVisits",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
       },
       "SweepRefusal": {
         "enum": [
