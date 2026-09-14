@@ -5,6 +5,7 @@ import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { fetchLiveProfiles } from '@/repository/live'
 import { BOTH_SOUNDS, type SoundTrack } from '@/repository/sounds'
+import { whyNoTicket, type TicketWrite } from '@/repository/tickets'
 import {
   PLAYBACK_PROFILES,
   type PlaybackProfile,
@@ -97,20 +98,10 @@ export const getUnaskedPlaybackProfile = cache(
   },
 )
 
-export interface PlaybackTicket {
-  inTheClear: string
-  lapsesAt: string
-}
-
-export type TicketWrite =
-  | { state: 'ok'; ticket: PlaybackTicket }
-  | { state: 'refused'; message: string }
-
 const TICKET_REFUSAL: Partial<Record<number, string>> = {
   400: 'この録画の指定が正しくないため、外部プレイヤーの札を発行できませんでした。',
   404: 'この録画は残っていないため、外部プレイヤーの札を発行できませんでした。',
   409: 'この録画はまだ書き込み中のため、外部プレイヤーの札を発行できません。',
-  429: '発行の上限に達しています。しばらく待つと発行できます。',
 }
 
 export async function takePlaybackTicket(id: string): Promise<TicketWrite> {
@@ -123,10 +114,5 @@ export async function takePlaybackTicket(id: string): Promise<TicketWrite> {
     return { state: 'ok', ticket: data.data }
   }
 
-  return {
-    state: 'refused',
-    message:
-      TICKET_REFUSAL[response.status] ??
-      `外部プレイヤーの札を発行できませんでした(${response.status})。`,
-  }
+  return whyNoTicket(response.status, TICKET_REFUSAL)
 }

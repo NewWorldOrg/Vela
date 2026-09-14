@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { isLeftScrambled, scrambledPercent } from '@/lib/recordings'
 import type { RecordingDetail } from '@/repository/recordings'
 import { whatItSaid } from '@/repository/said'
-import type { TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import {
   PLAYBACK_REFUSAL_HEADER,
   PLAYBACK_REFUSAL_TOO_MANY,
@@ -21,6 +21,7 @@ import {
 } from '@/components/vela/icons'
 import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
+import { recordingHandover } from '@/lib/external-player'
 import { OpenExternally } from '@/components/recordings/external-player'
 
 type PlainFault =
@@ -171,7 +172,10 @@ export function PlaybackFaultNotice({
         </button>
       )}
       {said.worthLeaving && (
-        <OpenExternally id={d.id} onTakeTicket={onTakeTicket} tone="player" />
+        <OpenExternally
+          handover={recordingHandover(d.id, onTakeTicket)}
+          tone="player"
+        />
       )}
     </PlaybackNotice>
   )

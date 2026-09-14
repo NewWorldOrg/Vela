@@ -3,8 +3,7 @@
 import { useState, type RefObject } from 'react'
 
 import { cn } from '@/lib/utils'
-import { videoFileHref } from '@/repository/video-paths'
-import type { TicketWrite } from '@/repository/videos'
+import { ticketedHref, type Handover } from '@/lib/external-player'
 import { Spinner } from '@/components/vela/progress'
 import { Button } from '@/components/ui/button'
 import { AirPlayIcon } from '@/components/vela/icons'
@@ -17,35 +16,33 @@ type Picker = { webkitShowPlaybackTargetPicker?: () => void }
 
 const NO_AIRPLAY = 'このブラウザは AirPlay に対応していません。'
 
-function ticketed(id: string, inTheClear: string) {
-  const url = new URL(videoFileHref(id), window.location.href)
-  url.username = 'ticket'
-  url.password = inTheClear
-
-  return url.toString()
-}
+const SIGNED_OUT =
+  'サインインが切れているため、外部プレイヤーの札を発行できませんでした。'
 
 async function ticket(
-  id: string,
-  onTakeTicket: (id: string) => Promise<TicketWrite>,
+  handover: Handover,
 ): Promise<{ href: string } | { refused: string }> {
-  const write = await onTakeTicket(id)
+  const write = await handover.take()
 
-  if (write.state !== 'ok') {
+  if (write.state === 'unauthenticated') {
+    return { refused: SIGNED_OUT }
+  }
+
+  if (write.state === 'refused') {
     return { refused: write.message }
   }
 
-  return { href: ticketed(id, write.ticket.inTheClear) }
+  return {
+    href: ticketedHref(handover, window.location.href, write.ticket.inTheClear),
+  }
 }
 
 export function OpenExternally({
-  id,
-  onTakeTicket,
+  handover,
   tone = 'page',
   className,
 }: {
-  id: string
-  onTakeTicket: (id: string) => Promise<TicketWrite>
+  handover: Handover
   tone?: 'page' | 'player'
   className?: string
 }) {
@@ -57,7 +54,7 @@ export function OpenExternally({
     setTaking(true)
 
     try {
-      const got = await ticket(id, onTakeTicket)
+      const got = await ticket(handover)
 
       if ('refused' in got) {
         setRefused(got.refused)
@@ -105,13 +102,11 @@ export function OpenExternally({
 }
 
 export function AirPlayButton({
-  id,
-  onTakeTicket,
+  handover,
   video,
   onRefused,
 }: {
-  id: string
-  onTakeTicket: (id: string) => Promise<TicketWrite>
+  handover: Handover
   video: RefObject<HTMLVideoElement | null>
   onRefused: (message: string) => void
 }) {
@@ -131,7 +126,7 @@ export function AirPlayButton({
         return
       }
 
-      const got = await ticket(id, onTakeTicket)
+      const got = await ticket(handover)
 
       if ('refused' in got) {
         onRefused(got.refused)

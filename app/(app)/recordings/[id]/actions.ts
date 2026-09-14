@@ -7,7 +7,8 @@ import { queueEncode } from '@/repository/encode'
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
 import type { SoundTrack } from '@/repository/sounds'
-import type { PlaybackRead, TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
+import type { PlaybackRead } from '@/repository/videos'
 import { getPlaybackPlan, takePlaybackTicket } from '@/repository/videos'
 
 export async function redrawThumbnail(id: string): Promise<ThumbnailWrite> {

@@ -1,11 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import type {
-  PlaybackPlan,
-  PlaybackRead,
-  TicketWrite,
-} from '@/repository/videos'
+import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import type { SoundTrack } from '@/repository/sounds'
 import { THE_SOUNDS_COULD_NOT_BE_READ } from '@/repository/video-paths'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'

@@ -44,3 +44,9 @@ const EVERY_CHANNEL = 200
 export function liveChannelsHref(): string {
   return `${LIVE_CHANNELS_PATH}?perPage=${EVERY_CHANNEL}`
 }
+
+const LIVE_STREAM_PATH = '/api/live'
+
+export function liveStreamHref(networkId: number, serviceId: number): string {
+  return `${LIVE_STREAM_PATH}/${networkId}-${serviceId}/stream`
+}
