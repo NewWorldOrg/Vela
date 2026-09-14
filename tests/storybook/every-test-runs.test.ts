@@ -35,6 +35,7 @@ const THE_SUITE = [
   'tests/lib/live-wire.test.ts',
   'tests/lib/not-yet-in-this-build.test.ts',
   'tests/lib/playback-sound.test.ts',
+  'tests/lib/player-chapters.test.ts',
   'tests/lib/player-keys.test.ts',
   'tests/lib/program-title.test.ts',
   'tests/lib/programme-extended.test.ts',

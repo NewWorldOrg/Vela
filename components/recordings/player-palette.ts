@@ -20,6 +20,9 @@ export const PLAYER_SCRIM =
 export const PLAYER_CHROME_FADE =
   'transition-[opacity,translate] duration-100 ease-[cubic-bezier(.4,0,1,1)] data-[up]:duration-[250ms] data-[up]:ease-[cubic-bezier(0,0,.2,1)]'
 
+export const PLAYER_BREAK_BAND =
+  'repeating-linear-gradient(115deg, rgba(215,172,94,.62) 0 4px, rgba(215,172,94,.26) 4px 8px)'
+
 export const PLAYER_SCRIM_TOP =
   'linear-gradient(to bottom, rgba(6,5,9,.78) 0%, rgba(6,5,9,.42) 52%, rgba(6,5,9,0) 100%)'
 

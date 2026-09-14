@@ -8973,6 +8973,13 @@
           }
         }
       },
+      "ChapterKind": {
+        "enum": [
+          "programme",
+          "break"
+        ],
+        "type": "string"
+      },
       "CollectionStatusResponder": {
         "required": [
           "wantedCoverageHours",
@@ -11476,6 +11483,35 @@
           }
         }
       },
+      "PlaybackChapterResponder": {
+        "required": [
+          "startsAtSec",
+          "endsAtSec",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "startsAtSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "endsAtSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ChapterKind"
+          }
+        }
+      },
       "PlaybackPlanResponder": {
         "required": [
           "standing",
@@ -11486,7 +11522,8 @@
           "showsAsAWholeRecording",
           "mediaType",
           "bytes",
-          "sounds"
+          "sounds",
+          "chapters"
         ],
         "type": "object",
         "properties": {
@@ -11531,6 +11568,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SoundTrack"
+            }
+          },
+          "chapters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlaybackChapterResponder"
             }
           }
         }
@@ -12976,7 +13019,8 @@
           "sizeUnobserved",
           "stoppedUnasked",
           "lighterThanTheStream",
-          "heavierThanTheStream"
+          "heavierThanTheStream",
+          "endStillUndecided"
         ],
         "type": "string"
       },

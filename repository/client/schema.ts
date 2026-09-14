@@ -1730,6 +1730,8 @@ export interface components {
       currentPassword?: null | string
       newPassword?: null | string
     }
+    /** @enum {string} */
+    ChapterKind: 'programme' | 'break'
     CollectionStatusResponder: {
       /** Format: int32 */
       wantedCoverageHours: number | string
@@ -2347,6 +2349,13 @@ export interface components {
       /** Format: int64 */
       after: number | string
     }
+    PlaybackChapterResponder: {
+      /** Format: double */
+      startsAtSec: number | string
+      /** Format: double */
+      endsAtSec: number | string
+      kind: components['schemas']['ChapterKind']
+    }
     PlaybackPlanResponder: {
       standing: components['schemas']['PlaybackStanding']
       route: components['schemas']['PlaybackRoute']
@@ -2358,6 +2367,7 @@ export interface components {
       /** Format: int64 */
       bytes: null | number | string
       sounds: components['schemas']['SoundTrack'][]
+      chapters: components['schemas']['PlaybackChapterResponder'][]
     }
     /** @enum {string} */
     PlaybackRoute: 'direct' | 'onTheFly' | 'nothing'
@@ -2724,6 +2734,7 @@ export interface components {
       | 'stoppedUnasked'
       | 'lighterThanTheStream'
       | 'heavierThanTheStream'
+      | 'endStillUndecided'
     RecordingFaultResponder: {
       fault: components['schemas']['RecordingFault']
       tuneFailure: null | components['schemas']['TuneFailureKind']
