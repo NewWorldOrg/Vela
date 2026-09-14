@@ -28,6 +28,14 @@ type RecordingResponder = components['schemas']['QualityRecordingResponder']
 type ThresholdResponder = components['schemas']['QualityThresholdResponder']
 type State = components['schemas']['QualityState']
 type Standing = components['schemas']['QualityStanding']
+type IncidentResponder = components['schemas']['QualityIncidentResponder']
+type IncidentState = components['schemas']['QualityIncidentState']
+type IncidentOwner = components['schemas']['QualityIncidentOwner']
+type SubjectKind = components['schemas']['QualitySubjectKind']
+type SupplyResponder = components['schemas']['QualitySupplyResponder']
+type SupplyHealthResponder =
+  components['schemas']['QualitySupplyHealthResponder']
+type Silence = NonNullable<components['schemas']['SupplySilence']>
 
 export type QualityMetric = components['schemas']['QualityMetric']
 export type QualityThresholdKey = components['schemas']['QualityThresholdKey']
@@ -102,6 +110,40 @@ export interface QualityProblemRecording {
   level: Extract<QualityLevel, 'warn' | 'bad'>
 }
 
+export interface QualityQuietSupply {
+  key: string
+  supply: string
+  note: string
+}
+
+export interface QualitySupplyWatch {
+  read: boolean
+  quiet: QualityQuietSupply[]
+}
+
+export interface QualityAnomaly {
+  id: string
+  title: string
+  subject: string
+  observed: string
+  applied: string
+  level: QualityLevel
+  levelLabel: string
+  restatedBy?: string
+  classification?: string
+  when: string
+  acknowledged: boolean
+  asks: boolean
+}
+
+export interface QualityAnomalies {
+  items: QualityAnomaly[]
+  owned: number
+  restated: number
+  showsAcknowledged: boolean
+  href: Route
+}
+
 export interface QualityResult {
   windows: QualityWindow[]
   stats: QualityStat[]
@@ -111,6 +153,8 @@ export interface QualityResult {
   satellites: QualityChannel[]
   tuners: QualityTuner[]
   problemRecordings: QualityProblemRecording[]
+  supplies: QualitySupplyWatch
+  anomalies: QualityAnomalies
 }
 
 export type QualityWrite =
@@ -199,6 +243,74 @@ const THRESHOLD_NOT_YET_SHAPED: ThresholdShape = {
   scale: 1,
 }
 
+const SUPPLY_NAMES: Record<Silence, string> = {
+  recordingProgress: '録画の進み',
+  recordingMeasurement: '録画の計測',
+  signalSamples: '信号品質',
+  guideVisits: '番組表の巡回',
+}
+
+const BREACH_TITLES: Record<QualityThresholdKey, string> = {
+  packetsLostWarning: 'ドロップ率が警告水準を超過',
+  packetsLostUnwatchable: 'ドロップ率が視聴不可の恐れを超過',
+  packetsLeftScrambled: 'スクランブル残存率が上限を超過',
+  overflows: '取りこぼしが上限を超過',
+  lockRate: 'lock 率が下限を下回った',
+  carrierToNoiseFloor: 'CNR が下限を下回った',
+  bitErrorRateCeiling: 'post-Viterbi ビット誤り率が上限を超過',
+  supplySilence: '供給が途絶',
+}
+
+const BREACH_LEVELS: Record<QualityThresholdKey, QualityLevel> = {
+  packetsLostWarning: 'warn',
+  packetsLostUnwatchable: 'bad',
+  packetsLeftScrambled: 'warn',
+  overflows: 'warn',
+  lockRate: 'warn',
+  carrierToNoiseFloor: 'warn',
+  bitErrorRateCeiling: 'warn',
+  supplySilence: 'unreachable',
+}
+
+const OWNERS: Record<IncidentOwner, string> = {
+  quality: '品質',
+  tuner: 'チューナー',
+  guide: '番組表',
+  reservation: '予約',
+  recording: '録画',
+}
+
+const SUBJECT_KINDS: Record<SubjectKind, string> = {
+  tuner: 'チューナー',
+  channel: 'チャンネル',
+  recording: '録画',
+  transportStream: '多重',
+  guide: '番組表',
+}
+
+interface IncidentStanding {
+  acknowledged: boolean
+  asks: boolean
+}
+
+const STANDINGS: Record<IncidentState, IncidentStanding> = {
+  detected: { acknowledged: false, asks: false },
+  notified: { acknowledged: false, asks: true },
+  acknowledged: { acknowledged: true, asks: false },
+  resolved: { acknowledged: true, asks: false },
+}
+
+const STANDING_NOT_YET_KNOWN: IncidentStanding = {
+  acknowledged: false,
+  asks: false,
+}
+
+const SUPPLY_SILENCE = 'supplySilence'
+
+const STILL_STANDING = '継続中'
+
+const NOTHING_ANSWERS = '供給元に訊けていません'
+
 const SATELLITE_SYSTEMS = ['isdbSBs', 'isdbSCs110']
 
 const METRIC_DROPS: Record<QualityMetric, string> = {
@@ -217,6 +329,11 @@ export const WHEN_CHANGING_A_THRESHOLD: QualityAsking = {
   fell: '閾値を変更できませんでした',
 }
 
+export const WHEN_ACKNOWLEDGING: QualityAsking = {
+  did: '確認済みに',
+  fell: '確認済みにできませんでした',
+}
+
 const REFUSAL_REASONS: [RegExp, string][] = [
   [/lies between .+ and .+/i, '指定できる範囲の外の値のため、'],
   [
@@ -228,6 +345,9 @@ const REFUSAL_REASONS: [RegExp, string][] = [
     /moved by naming the value it moves to/i,
     '変更後の値が指定されていないため、',
   ],
+  [/nothing is kept under this one/i, 'この異常は残っていないため、'],
+  [/has been resolved/i, 'この異常はすでに解消しているため、'],
+  [/has not been told about yet/i, 'この異常はまだ知らされていないため、'],
 ]
 
 export function whyItRefused(
@@ -244,29 +364,44 @@ export function whyItRefused(
   return `${asking.fell}(${status})。`
 }
 
-export async function getQuality(days?: string): Promise<QualityResult> {
+export async function getQuality(
+  days?: string,
+  showAcknowledged = false,
+): Promise<QualityResult> {
   const span = SPANS.find((one) => String(one.days) === days) ?? SPANS[0]
   const until = new Date()
   const from = new Date(until.getTime() - span.days * A_DAY)
   const period = { from: from.toISOString(), until: until.toISOString() }
 
-  const [summary, channels, tuners, recordings, thresholds, known, names] =
-    await Promise.all([
-      fetchSummary(period),
-      fetchChannels(period),
-      fetchTuners(period),
-      fetchRecordings(period),
-      fetchThresholds(),
-      fetchServiceChannels(),
-      listRecordingNames(),
-    ])
+  const [
+    summary,
+    channels,
+    tuners,
+    recordings,
+    thresholds,
+    known,
+    names,
+    supplies,
+    anomalies,
+  ] = await Promise.all([
+    fetchSummary(period),
+    fetchChannels(period),
+    fetchTuners(period),
+    fetchRecordings(period),
+    fetchThresholds(),
+    fetchServiceChannels(),
+    listRecordingNames(),
+    fetchSupplyHealth(),
+    fetchAnomalies(showAcknowledged),
+  ])
 
   const drawn = channels.items.map((one) => toChannel(one, known, thresholds))
+  const shown = showAcknowledged ? '&acknowledged=true' : ''
 
   return {
     windows: SPANS.map((one) => ({
       label: one.label,
-      href: `/settings/quality?days=${one.days}` as Route,
+      href: `/settings/quality?days=${one.days}${shown}` as Route,
       current: one.days === span.days,
     })),
     stats: statsOf(span.label, summary, tuners, recordings),
@@ -277,6 +412,45 @@ export async function getQuality(days?: string): Promise<QualityResult> {
     tuners: tuners.items.map(toTuner),
     problemRecordings: recordings.items.map((one) =>
       toProblemRecording(one, known, names),
+    ),
+    supplies: {
+      read: supplies !== undefined,
+      quiet: supplies ? quietOf(supplies.supplies) : [],
+    },
+    anomalies: {
+      items: anomalies.items
+        .map((one) => toAnomaly(one, known, names))
+        .sort(settledLast),
+      owned: anomalies.owned,
+      restated: anomalies.restated,
+      showsAcknowledged: showAcknowledged,
+      href: `/settings/quality?days=${span.days}${
+        showAcknowledged ? '' : '&acknowledged=true'
+      }` as Route,
+    },
+  }
+}
+
+export async function acknowledgeAnomaly(id: string): Promise<QualityWrite> {
+  const { error, response } = await carinaClient().POST(
+    '/api/quality/incidents/{id}/acknowledge',
+    { params: { path: { id } } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok) {
+    return { state: 'ok' }
+  }
+
+  return {
+    state: 'rejected',
+    message: whyItRefused(
+      WHEN_ACKNOWLEDGING,
+      response.status,
+      whatItSaid(error),
     ),
   }
 }
@@ -376,6 +550,156 @@ async function fetchRecordings(period: Period): Promise<ProblemRecordings> {
   }
 
   return { items: data.data.items, total: toInt(data.data.total) }
+}
+
+async function fetchSupplyHealth(): Promise<SupplyHealthResponder | undefined> {
+  const { data, error, response } = await carinaClient().GET(
+    '/api/quality/supply-health',
+  )
+
+  if (response.status === 503) {
+    return undefined
+  }
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data
+}
+
+interface Anomalies {
+  items: IncidentResponder[]
+  owned: number
+  restated: number
+}
+
+async function fetchAnomalies(
+  includeAcknowledged: boolean,
+): Promise<Anomalies> {
+  const { data, error } = await carinaClient().GET('/api/quality/incidents', {
+    params: { query: { includeAcknowledged } },
+  })
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return {
+    items: data.data.items,
+    owned: toInt(data.data.owned),
+    restated: toInt(data.data.restated),
+  }
+}
+
+function supplyName(silence: Silence | null): string {
+  return silence === null
+    ? NOT_YET_IN_THIS_BUILD
+    : wordFor(SUPPLY_NAMES, silence)
+}
+
+function quietOf(supplies: SupplyResponder[]): QualityQuietSupply[] {
+  return supplies
+    .filter(
+      (one) =>
+        shapeFor(LEVEL_OF_STATE, one.state, 'unsupported') === 'unreachable',
+    )
+    .map((one) => {
+      const quiet = toInt(one.quiet)
+
+      return {
+        key: one.silence ?? NOT_YET_IN_THIS_BUILD,
+        supply: supplyName(one.silence),
+        note:
+          quiet > 0
+            ? `見ている ${toInt(one.watched)} 件のうち ${quiet} 件が途絶`
+            : NOTHING_ANSWERS,
+      }
+    })
+}
+
+function toAnomaly(
+  one: IncidentResponder,
+  known: GuideChannel[],
+  names: ReadonlyMap<string, RecordingName>,
+): QualityAnomaly {
+  const standing = shapeFor(STANDINGS, one.state, STANDING_NOT_YET_KNOWN)
+  const level = shapeFor(BREACH_LEVELS, one.breached, 'unsupported')
+  const applied = measured(one.appliedValue, one.breached)
+
+  return {
+    id: one.id,
+    title: titleOf(one),
+    subject: subjectOf(one, known, names),
+    observed: `${one.breached === SUPPLY_SILENCE ? '途絶' : '観測'} ${measured(
+      one.observed,
+      one.breached,
+    )}`,
+    applied: `適用閾値 ${applied}${one.appliedProvisional ? '(暫定)' : ''}`,
+    level,
+    levelLabel: QUALITY_LEVEL_LABEL[level],
+    restatedBy: one.restated
+      ? `再掲 · ${wordFor(OWNERS, one.owner)}`
+      : undefined,
+    classification: one.classification ?? undefined,
+    when: whenOf(one, standing.acknowledged),
+    acknowledged: standing.acknowledged,
+    asks: standing.asks,
+  }
+}
+
+function titleOf(one: IncidentResponder): string {
+  const silence = one.silence
+
+  return one.breached === SUPPLY_SILENCE && silence !== null
+    ? `${wordFor(SUPPLY_NAMES, silence)}の供給途絶`
+    : wordFor(BREACH_TITLES, one.breached)
+}
+
+function subjectOf(
+  one: IncidentResponder,
+  known: GuideChannel[],
+  names: ReadonlyMap<string, RecordingName>,
+): string {
+  const named = wordFor(SUBJECT_KINDS, one.subjectKind)
+
+  if (one.subjectKind === 'tuner') {
+    return one.subjectKey || named
+  }
+
+  if (one.subjectKind === 'recording') {
+    return names.get(one.subjectKey)?.title || named
+  }
+
+  if (one.subjectKind === 'channel') {
+    return known.find((each) => each.id === one.subjectKey)?.name || named
+  }
+
+  return named
+}
+
+function whenOf(one: IncidentResponder, acknowledged: boolean): string {
+  const detected = `${formatStamp(one.detectedAt)} 発生`
+
+  if (!acknowledged || !one.acknowledgedAt) {
+    return `${detected} · ${STILL_STANDING}`
+  }
+
+  const who = one.acknowledgedBy
+
+  return `${detected} · ${formatStamp(one.acknowledgedAt)} 確認済み${
+    who ? ` · ${who}` : ''
+  }`
+}
+
+function settledLast(before: QualityAnomaly, after: QualityAnomaly): number {
+  return Number(before.acknowledged) - Number(after.acknowledged)
+}
+
+function measured(value: number | string, key: QualityThresholdKey): string {
+  const shape = shapeFor(THRESHOLD_SHAPES, key, THRESHOLD_NOT_YET_SHAPED)
+
+  return spelled(shown(toRatio(value), shape.scale), shape)
 }
 
 async function fetchThresholds(): Promise<ThresholdResponder[]> {

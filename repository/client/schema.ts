@@ -648,6 +648,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/quality/incidents/{id}/acknowledge': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['acknowledgeQualityIncident']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/quality/summary': {
     parameters: {
       query?: never
@@ -664,6 +680,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/quality/supply-health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getQualitySupplyHealth']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/quality/channels': {
     parameters: {
       query?: never
@@ -672,6 +704,22 @@ export interface paths {
       cookie?: never
     }
     get: operations['listQualityChannels']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/quality/incidents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listQualityIncidents']
     put?: never
     post?: never
     delete?: never
@@ -1470,6 +1518,16 @@ export interface components {
       message: string
       data: null | components['schemas']['QualityChannelListResponder']
     }
+    BaseResponderOfQualityIncidentListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityIncidentListResponder']
+    }
+    BaseResponderOfQualityIncidentResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityIncidentResponder']
+    }
     BaseResponderOfQualityRecordingListResponder: {
       status: boolean
       message: string
@@ -1479,6 +1537,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['QualitySummaryResponder']
+    }
+    BaseResponderOfQualitySupplyHealthResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualitySupplyHealthResponder']
     }
     BaseResponderOfQualityThresholdListResponder: {
       status: boolean
@@ -2461,6 +2524,43 @@ export interface components {
     }
     /** @enum {null|string} */
     QualityGroupSort: 'worst' | 'unmeasured' | 'subjects' | 'identity' | null
+    QualityIncidentListResponder: {
+      items: components['schemas']['QualityIncidentResponder'][]
+      /** Format: int32 */
+      owned: number | string
+      /** Format: int32 */
+      restated: number | string
+    }
+    /** @enum {string} */
+    QualityIncidentOwner:
+      'quality' | 'tuner' | 'guide' | 'reservation' | 'recording'
+    QualityIncidentResponder: {
+      id: string
+      /** Format: date-time */
+      detectedAt: string
+      breached: components['schemas']['QualityThresholdKey']
+      silence: null | components['schemas']['SupplySilence']
+      subjectKind: components['schemas']['QualitySubjectKind']
+      subjectKey: string
+      /** Format: double */
+      observed: number | string
+      /** Format: double */
+      appliedValue: number | string
+      appliedProvisional: boolean
+      owner: components['schemas']['QualityIncidentOwner']
+      restated: boolean
+      classification: null | string
+      state: components['schemas']['QualityIncidentState']
+      /** Format: date-time */
+      notifiedAt: null | string
+      /** Format: date-time */
+      acknowledgedAt: null | string
+      acknowledgedBy: null | string
+      /** Format: date-time */
+      resolvedAt: null | string
+    }
+    /** @enum {string} */
+    QualityIncidentState: 'detected' | 'notified' | 'acknowledged' | 'resolved'
     /** @enum {string} */
     QualityLevel: 'good' | 'unmeasured' | 'warning' | 'mayNotBeWatchable'
     QualityMeasureResponder: {
@@ -2548,6 +2648,9 @@ export interface components {
       | 'nothingToMeasure'
       | 'unsupported'
       | 'unreachable'
+    /** @enum {string} */
+    QualitySubjectKind:
+      'tuner' | 'channel' | 'recording' | 'transportStream' | 'guide'
     QualitySummaryResponder: {
       period: components['schemas']['QualityPeriodResponder']
       /** Format: int32 */
@@ -2555,6 +2658,23 @@ export interface components {
       measures: components['schemas']['QualityMeasureResponder'][]
       signal: components['schemas']['QualitySignalResponder'][]
       provisional: boolean
+    }
+    QualitySupplyHealthResponder: {
+      /** Format: date-time */
+      readAt: string
+      /** Format: double */
+      appliedValue: number | string
+      appliedProvisional: boolean
+      tunersWereAsked: boolean
+      supplies: components['schemas']['QualitySupplyResponder'][]
+    }
+    QualitySupplyResponder: {
+      silence: components['schemas']['SupplySilence']
+      /** Format: int32 */
+      watched: number | string
+      /** Format: int32 */
+      quiet: number | string
+      state: components['schemas']['QualityState']
     }
     QualityTallyResponder: {
       state: components['schemas']['QualityState']
@@ -2735,6 +2855,8 @@ export interface components {
       | 'lighterThanTheStream'
       | 'heavierThanTheStream'
       | 'endStillUndecided'
+      | 'leftRunningUnwatched'
+      | 'driverReplaced'
     RecordingFaultResponder: {
       fault: components['schemas']['RecordingFault']
       tuneFailure: null | components['schemas']['TuneFailureKind']
@@ -3490,6 +3612,13 @@ export interface components {
       /** Format: int32 */
       transportStreamId: null | number | string
     }
+    /** @enum {null|string} */
+    SupplySilence:
+      | 'recordingProgress'
+      | 'recordingMeasurement'
+      | 'signalSamples'
+      | 'guideVisits'
+      | null
     /** @enum {string} */
     SweepRefusal: 'none' | 'oneIsAlreadyRunning' | 'tooSoonAfterTheLastOne'
     SystemReachResponder: {
@@ -6427,6 +6556,62 @@ export interface operations {
       }
     }
   }
+  acknowledgeQualityIncident: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
+        }
+      }
+    }
+  }
   getQualitySummary: {
     parameters: {
       query?: {
@@ -6471,6 +6656,51 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfQualitySummaryResponder']
+        }
+      }
+    }
+  }
+  getQualitySupplyHealth: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualitySupplyHealthResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualitySupplyHealthResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualitySupplyHealthResponder']
         }
       }
     }
@@ -6523,6 +6753,44 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfQualityChannelListResponder']
+        }
+      }
+    }
+  }
+  listQualityIncidents: {
+    parameters: {
+      query?: {
+        includeAcknowledged?: boolean
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityIncidentListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityIncidentListResponder']
         }
       }
     }

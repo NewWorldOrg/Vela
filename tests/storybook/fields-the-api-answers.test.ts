@@ -28,6 +28,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'BaseResponderOfEncodeDestinationResponder.data',
       'BaseResponderOfEncodeJobResponder.data',
       'BaseResponderOfEncodeProfileResponder.data',
+      'BaseResponderOfQualityIncidentResponder.data',
       'BaseResponderOfQualityThresholdResponder.data',
       'BaseResponderOfScanApplicationResponder.data',
       'BaseResponderOfScanRefusedResponder.data',
@@ -159,6 +160,24 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'QualityVerdictResponder.appliedValue',
       'QualityVerdictResponder.breached',
       'QualityVerdictResponder.provisional',
+    ],
+  },
+  {
+    because:
+      'the band names the supplies that have gone quiet and how many of each; the level that decides quiet is spelt on the thresholds of the same screen, whether the driver could be asked is what makes a supply unreachable and is read as that state, and when the watch last passed is not a time anybody acts on',
+    fields: [
+      'QualitySupplyHealthResponder.appliedProvisional',
+      'QualitySupplyHealthResponder.appliedValue',
+      'QualitySupplyHealthResponder.readAt',
+      'QualitySupplyHealthResponder.tunersWereAsked',
+    ],
+  },
+  {
+    because:
+      'an anomaly is offered for acknowledging only where it stands ready for one, which is what having been told about amounts to, and the row draws that control or does not; the list answers with what still stands, so nothing on it carries a time it was resolved',
+    fields: [
+      'QualityIncidentResponder.notifiedAt',
+      'QualityIncidentResponder.resolvedAt',
     ],
   },
   {
