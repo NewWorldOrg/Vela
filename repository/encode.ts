@@ -116,7 +116,6 @@ export interface EncodeJobsPage {
 export interface EncodeSpells {
   jobs: number
   fewestToAverage: number
-  lookedAtAtMost: number
   averageSeconds?: number
   from?: string
   to?: string
@@ -641,7 +640,6 @@ function toSpells(one: DurationsResponder): EncodeSpells {
   return {
     jobs: toInt(one.jobs),
     fewestToAverage: toInt(one.fewestToAverage),
-    lookedAtAtMost: toInt(one.lookedAtAtMost),
     averageSeconds:
       one.averageSeconds === null
         ? undefined

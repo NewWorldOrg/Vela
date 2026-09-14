@@ -1,3 +1,4 @@
+import type { EncodeSubject } from '@/repository/encode-terms'
 import type {
   EncodeAutoRun,
   EncodeChoices,
@@ -194,7 +195,6 @@ export function jobsPage(
 export const SPELLS_AVERAGED: EncodeSpells = {
   jobs: 5,
   fewestToAverage: 3,
-  lookedAtAtMost: 20,
   averageSeconds: 1523,
   from: '2026/08/07 23:13',
   to: '2026/08/10 22:49',
@@ -203,7 +203,6 @@ export const SPELLS_AVERAGED: EncodeSpells = {
 export const SPELLS_TOO_FEW: EncodeSpells = {
   jobs: 2,
   fewestToAverage: 3,
-  lookedAtAtMost: 20,
   from: '2026/08/09 20:19',
   to: '2026/08/10 22:49',
 }
@@ -211,7 +210,6 @@ export const SPELLS_TOO_FEW: EncodeSpells = {
 export const SPELLS_NONE: EncodeSpells = {
   jobs: 0,
   fewestToAverage: 3,
-  lookedAtAtMost: 20,
 }
 
 export const AUTO_RUN_AS_DEPLOYED: EncodeAutoRun = {
@@ -220,6 +218,19 @@ export const AUTO_RUN_AS_DEPLOYED: EncodeAutoRun = {
   coresThisMachineHas: 6,
   subject: ['complete', 'truncated'],
   stored: false,
+}
+
+export const AUTO_RUN_ON_A_LATER_BUILD: EncodeAutoRun = {
+  ...AUTO_RUN_AS_DEPLOYED,
+  subject: [
+    'complete',
+    'anOutcomeThisBuildHasNeverSeen' as unknown as EncodeSubject,
+  ],
+}
+
+export const AUTO_RUN_WITH_NOTHING_NAMED: EncodeAutoRun = {
+  ...AUTO_RUN_AS_DEPLOYED,
+  subject: [],
 }
 
 export const AUTO_RUN_SETTLED: EncodeAutoRun = {

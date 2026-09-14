@@ -2,7 +2,7 @@
 
 import { useOptimistic, useState, useTransition } from 'react'
 
-import { shapeFor } from '@/lib/not-yet-in-this-build'
+import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import {
   NOT_YET_IN_THIS_BUILD_TERM,
   RECORDING_OUTCOME_TERMS,
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { InlineAlert } from '@/components/vela/banner'
+import { FieldHint, FieldLabel } from '@/components/vela/field'
 import { Surface } from '@/components/vela/surface'
 
 const SIGNED_OUT = 'サインインが切れているため、保存できませんでした。'
@@ -32,11 +33,31 @@ const STILL_AS_DEPLOYED = '既定のまま'
 
 const THE_DEFAULT = '既定'
 
-const LABEL = 'heading self-start pt-1 text-ui text-ink'
+const RUNS_ITSELF_ID = 'auto-run-runs-itself'
+
+const MOST_CORES_ID = 'auto-run-most-cores'
+
+const NAME = 'self-start pt-1 text-ui text-ink-3'
+
+const VALUE = 'self-start pt-1 text-ui text-ink-2'
 
 interface Settled {
   automatically: boolean
   mostCores: number
+}
+
+function subjectSaying(subject: EncodeAutoRun['subject']): string {
+  if (subject.length === 0) {
+    return NOT_YET_IN_THIS_BUILD
+  }
+
+  return subject
+    .map(
+      (one) =>
+        shapeFor(RECORDING_OUTCOME_TERMS, one, NOT_YET_IN_THIS_BUILD_TERM)
+          .label,
+    )
+    .join('・')
 }
 
 export function AutoRunPanel({
@@ -86,26 +107,26 @@ export function AutoRunPanel({
 
   return (
     <Surface data-slot="auto-run">
-      <div className="grid gap-x-5 gap-y-3.5 sm:grid-cols-[minmax(0,180px)_1fr]">
-        <span id="auto-run-runs-itself" className={LABEL}>
-          {RUNS_ITSELF}
-        </span>
-        <div>
+      <dl className="grid gap-x-5 gap-y-3.5 sm:grid-cols-[minmax(0,180px)_1fr]">
+        <dt className="self-start">
+          <FieldLabel htmlFor={RUNS_ITSELF_ID}>{RUNS_ITSELF}</FieldLabel>
+        </dt>
+        <dd className="self-start">
           <Switch
+            id={RUNS_ITSELF_ID}
             checked={shown.automatically}
-            aria-labelledby="auto-run-runs-itself"
             aria-disabled={pending}
             className="aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
             onCheckedChange={(next) =>
               settle({ ...shown, automatically: next })
             }
           />
-        </div>
+        </dd>
 
-        <span id="auto-run-most-cores" className={LABEL}>
-          {MOST_CORES}
-        </span>
-        <div>
+        <dt className="self-start pt-1">
+          <FieldLabel htmlFor={MOST_CORES_ID}>{MOST_CORES}</FieldLabel>
+        </dt>
+        <dd className="self-start">
           <Select
             value={String(shown.mostCores)}
             onValueChange={(next) =>
@@ -113,8 +134,8 @@ export function AutoRunPanel({
             }
           >
             <SelectTrigger
+              id={MOST_CORES_ID}
               size="sm"
-              aria-labelledby="auto-run-most-cores"
               aria-disabled={pending}
               className="w-fit min-w-[150px] font-code tabular-nums"
             >
@@ -128,29 +149,20 @@ export function AutoRunPanel({
                   className="font-code tabular-nums"
                 >
                   {count}
-                  {!autoRun.stored &&
-                    count === autoRun.mostCores &&
-                    `(${THE_DEFAULT})`}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
+          {!autoRun.stored && (
+            <FieldHint className="mt-1.5 font-code tabular-nums">
+              {THE_DEFAULT} {autoRun.mostCores}
+            </FieldHint>
+          )}
+        </dd>
 
-        <span className={LABEL}>{SUBJECT}</span>
-        <span className="self-start pt-1 text-ui text-ink">
-          {autoRun.subject
-            .map(
-              (one) =>
-                shapeFor(
-                  RECORDING_OUTCOME_TERMS,
-                  one,
-                  NOT_YET_IN_THIS_BUILD_TERM,
-                ).label,
-            )
-            .join('・')}
-        </span>
-      </div>
+        <dt className={NAME}>{SUBJECT}</dt>
+        <dd className={VALUE}>{subjectSaying(autoRun.subject)}</dd>
+      </dl>
 
       <p className="mt-3.5 font-code text-note tabular-nums text-ink-3">
         {autoRun.stored && autoRun.updatedAt
@@ -158,11 +170,13 @@ export function AutoRunPanel({
           : STILL_AS_DEPLOYED}
       </p>
 
-      {refusal && (
-        <InlineAlert tone="warn" className="mt-3">
-          {refusal}
-        </InlineAlert>
-      )}
+      <span aria-live="polite">
+        {refusal && (
+          <InlineAlert tone="warn" className="mt-3">
+            {refusal}
+          </InlineAlert>
+        )}
+      </span>
     </Surface>
   )
 }

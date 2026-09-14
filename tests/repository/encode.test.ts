@@ -1006,7 +1006,6 @@ test('the screen says how long the jobs that finished took, and over what window
   assert.deepEqual(screen.spells, {
     jobs: 5,
     fewestToAverage: 3,
-    lookedAtAtMost: 20,
     averageSeconds: 1523,
     from: '2026/09/05 20:33',
     to: '2026/09/09 11:10',
