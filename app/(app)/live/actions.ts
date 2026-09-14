@@ -1,7 +1,7 @@
 'use server'
 
 import { takeLiveTicket } from '@/repository/live'
-import type { TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 
 export async function takeTicket(
   networkId: number,

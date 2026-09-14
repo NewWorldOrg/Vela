@@ -9,8 +9,8 @@ import type {
   PlaybackPlan,
   PlaybackRead,
   PlaybackRefusal,
-  TicketWrite,
 } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import type { EncodeWrite } from '@/repository/encode'
 import {
   ENCODE_CHOICES,

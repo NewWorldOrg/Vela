@@ -9,7 +9,7 @@ import type {
   ThumbnailWrite,
 } from '@/repository/recordings'
 import type { EncodeChoices } from '@/repository/encode'
-import type { TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import { Button } from '@/components/ui/button'
 import { TrashIcon } from '@/components/vela/icons'
 import { recordingHandover } from '@/lib/external-player'

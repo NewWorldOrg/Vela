@@ -604,7 +604,7 @@ test('a ticket for a live channel is asked for by the pair that names it', async
   })
 })
 
-test('a channel that cannot be tuned is refused in Japanese', async () => {
+test('a channel the lineup does not carry is refused in Japanese', async () => {
   store.ticketStatus = 404
 
   const write = await takeLiveTicket(32736, 1024)
@@ -612,8 +612,16 @@ test('a channel that cannot be tuned is refused in Japanese', async () => {
   assert.deepEqual(write, {
     state: 'refused',
     message:
-      'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+      'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
   })
+})
+
+test('a lapsed session is answered as that, not as a sentence with a number in it', async () => {
+  store.ticketStatus = 401
+
+  const write = await takeLiveTicket(32736, 1024)
+
+  assert.deepEqual(write, { state: 'unauthenticated' })
 })
 
 test('asking for too many tickets is refused in Japanese', async () => {

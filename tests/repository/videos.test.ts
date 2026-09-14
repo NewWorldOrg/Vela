@@ -287,6 +287,14 @@ test('a refused ticket is worded, and the status is not left to speak', async ()
   )
 })
 
+test('a lapsed session is answered as that, not as a sentence with a number in it', async () => {
+  store.ticketStatus = 401
+
+  const write = await takePlaybackTicket('1266')
+
+  assert.deepEqual(write, { state: 'unauthenticated' })
+})
+
 test('a status nobody worded still says something', async () => {
   store.ticketStatus = 418
 

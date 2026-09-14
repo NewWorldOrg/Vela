@@ -16,12 +16,19 @@ type Picker = { webkitShowPlaybackTargetPicker?: () => void }
 
 const NO_AIRPLAY = 'このブラウザは AirPlay に対応していません。'
 
+const SIGNED_OUT =
+  'サインインが切れているため、外部プレイヤーの札を発行できませんでした。'
+
 async function ticket(
   handover: Handover,
 ): Promise<{ href: string } | { refused: string }> {
   const write = await handover.take()
 
-  if (write.state !== 'ok') {
+  if (write.state === 'unauthenticated') {
+    return { refused: SIGNED_OUT }
+  }
+
+  if (write.state === 'refused') {
     return { refused: write.message }
   }
 

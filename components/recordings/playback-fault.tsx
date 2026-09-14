@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { isLeftScrambled, scrambledPercent } from '@/lib/recordings'
 import type { RecordingDetail } from '@/repository/recordings'
 import { whatItSaid } from '@/repository/said'
-import type { TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import {
   PLAYBACK_REFUSAL_HEADER,
   PLAYBACK_REFUSAL_TOO_MANY,

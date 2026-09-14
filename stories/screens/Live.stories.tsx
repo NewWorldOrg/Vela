@@ -19,7 +19,7 @@ import {
   type TranscodeCeiling,
 } from '@/lib/live-wire'
 import type { LiveScreen } from '@/repository/live'
-import type { TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
 import {
   LIVE_CHANNEL_FIXTURES,
@@ -301,8 +301,12 @@ async function refusingTheTicket(): Promise<TicketWrite> {
   return {
     state: 'refused',
     message:
-      'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+      'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
   }
+}
+
+async function noLongerSignedIn(): Promise<TicketWrite> {
+  return { state: 'unauthenticated' }
 }
 
 const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
@@ -2492,7 +2496,24 @@ export const 外部プレイヤーの札を断られたらその場で言う: St
 
     await expect(
       await canvas.findByText(
-        'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+        'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const 札を頼んだらサインインが切れていた: Story = {
+  args: { openSocket: withAPicture, onTakeTicket: noLongerSignedIn },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+    )
+
+    await expect(
+      await canvas.findByText(
+        'サインインが切れているため、外部プレイヤーの札を発行できませんでした。',
       ),
     ).toBeVisible()
   },

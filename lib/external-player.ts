@@ -1,7 +1,7 @@
 import { liveStreamHref } from '@/repository/live-paths'
 import type { TakeLiveTicket } from '@/repository/live'
 import { videoFileHref } from '@/repository/video-paths'
-import type { TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 
 export interface Handover {
   path: string

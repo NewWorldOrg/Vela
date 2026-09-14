@@ -15,11 +15,8 @@ import {
   type PlayerSaying,
 } from '@/lib/playback-sound'
 import type { RecordingDetail } from '@/repository/recordings'
-import type {
-  PlaybackPlan,
-  PlaybackRead,
-  TicketWrite,
-} from '@/repository/videos'
+import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,

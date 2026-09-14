@@ -11,11 +11,8 @@ import type {
   RecordingDiscarded,
   ThumbnailWrite,
 } from '@/repository/recordings'
-import type {
-  PlaybackRead,
-  PlaybackRefusal,
-  TicketWrite,
-} from '@/repository/videos'
+import type { PlaybackRead, PlaybackRefusal } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 import type { SoundTrack } from '@/repository/sounds'
 import type { PlaybackProfile } from '@/repository/video-paths'
 import type { EncodeChoices } from '@/repository/encode'

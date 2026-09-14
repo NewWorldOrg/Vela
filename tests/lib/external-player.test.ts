@@ -6,11 +6,14 @@ import {
   recordingHandover,
   ticketedHref,
 } from '@/lib/external-player'
-import type { TicketWrite } from '@/repository/videos'
+import type { TicketWrite } from '@/repository/tickets'
 
 const WATCHING = 'https://vela.example/live?ch=32736-1024'
 
 const TICKET = 'Kk3Zq7Xm-a-ticket-that-lapses-in-thirty-secs'
+
+const NOT_IN_THE_LINEUP =
+  'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。'
 
 async function issued(): Promise<TicketWrite> {
   return {
@@ -75,14 +78,46 @@ test('the channel being watched is what the ticket is asked for', async () => {
   assert.equal(write.state === 'ok' && write.ticket.inTheClear, TICKET)
 })
 
+test('a port the scheme does not imply follows the channel to the player', () => {
+  assert.equal(
+    ticketedHref(
+      liveHandover(32736, 1024, issued),
+      'https://vela.example:8443/live?ch=32736-1024',
+      TICKET,
+    ),
+    `https://:${TICKET}@vela.example:8443/api/live/32736-1024/stream`,
+  )
+})
+
 test('a refusal is carried back as it was said, and no URL is built', async () => {
+  const built: string[] = []
   const handover = liveHandover(32736, 1024, async () => ({
     state: 'refused',
-    message:
-      'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
+    message: NOT_IN_THE_LINEUP,
   }))
 
   const write = await handover.take()
 
-  assert.equal(write.state, 'refused')
+  if (write.state === 'ok') {
+    built.push(ticketedHref(handover, WATCHING, write.ticket.inTheClear))
+  }
+
+  assert.equal(write.state === 'refused' && write.message, NOT_IN_THE_LINEUP)
+  assert.deepEqual(built, [])
+})
+
+test('a session that has lapsed carries no saying, and builds no URL either', async () => {
+  const built: string[] = []
+  const handover = liveHandover(32736, 1024, async () => ({
+    state: 'unauthenticated',
+  }))
+
+  const write = await handover.take()
+
+  if (write.state === 'ok') {
+    built.push(ticketedHref(handover, WATCHING, write.ticket.inTheClear))
+  }
+
+  assert.deepEqual(write, { state: 'unauthenticated' })
+  assert.deepEqual(built, [])
 })

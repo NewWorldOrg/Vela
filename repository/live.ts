@@ -16,7 +16,7 @@ import {
   kindOfNetwork,
 } from '@/repository/programs'
 import { whatItSaid } from '@/repository/said'
-import type { TicketWrite } from '@/repository/videos'
+import { whyNoTicket, type TicketWrite } from '@/repository/tickets'
 
 type LiveChannelResponder = components['schemas']['LiveChannelResponder']
 type LiveProfileResponder = components['schemas']['LiveProfileResponder']
@@ -306,8 +306,7 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
 
 const TICKET_REFUSAL: Partial<Record<number, string>> = {
   400: 'このチャンネルの指定が正しくないため、外部プレイヤーの札を発行できませんでした。',
-  404: 'このチャンネルは選局できないため、外部プレイヤーの札を発行できませんでした。',
-  429: '発行の上限に達しています。しばらく待つと発行できます。',
+  404: 'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
 }
 
 export type TakeLiveTicket = (
@@ -327,10 +326,5 @@ export async function takeLiveTicket(
     return { state: 'ok', ticket: data.data }
   }
 
-  return {
-    state: 'refused',
-    message:
-      TICKET_REFUSAL[response.status] ??
-      `外部プレイヤーの札を発行できませんでした(${response.status})。`,
-  }
+  return whyNoTicket(response.status, TICKET_REFUSAL)
 }
