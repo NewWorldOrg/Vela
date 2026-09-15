@@ -39,7 +39,6 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'BaseResponderOfEncodeDestinationResponder.data',
       'BaseResponderOfEncodeJobResponder.data',
       'BaseResponderOfEncodeProfileResponder.data',
-      'BaseResponderOfQualityIncidentResponder.data',
       'BaseResponderOfQualityThresholdResponder.data',
       'BaseResponderOfScanApplicationResponder.data',
       'BaseResponderOfScanRefusedResponder.data',
@@ -185,10 +184,13 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'an anomaly is offered for acknowledging only where it stands ready for one, which is what having been told about amounts to, and the row draws that control or does not; the list answers with what still stands, so nothing on it carries a time it was resolved',
+      'the list answers with every anomaly that still stands and draws each row the same way, so where one has got to on its way to being resolved, when it was told about or taken as read and by whom, and when it was resolved, are not asked',
     fields: [
+      'QualityIncidentResponder.acknowledgedAt',
+      'QualityIncidentResponder.acknowledgedBy',
       'QualityIncidentResponder.notifiedAt',
       'QualityIncidentResponder.resolvedAt',
+      'QualityIncidentResponder.state',
     ],
   },
   {

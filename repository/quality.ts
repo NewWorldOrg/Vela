@@ -29,7 +29,6 @@ type ThresholdResponder = components['schemas']['QualityThresholdResponder']
 type State = components['schemas']['QualityState']
 type Standing = components['schemas']['QualityStanding']
 type IncidentResponder = components['schemas']['QualityIncidentResponder']
-type IncidentState = components['schemas']['QualityIncidentState']
 type IncidentOwner = components['schemas']['QualityIncidentOwner']
 type SubjectKind = components['schemas']['QualitySubjectKind']
 type SupplyResponder = components['schemas']['QualitySupplyResponder']
@@ -138,16 +137,12 @@ export interface QualityAnomaly {
   restatedBy?: string
   classification?: string
   when: string
-  acknowledged: boolean
-  asks: boolean
 }
 
 export interface QualityAnomalies {
   items: QualityAnomaly[]
   owned: number
   restated: number
-  showsAcknowledged: boolean
-  href: Route
 }
 
 export interface QualityTrendBucket {
@@ -346,23 +341,6 @@ const SUBJECT_KINDS: Record<SubjectKind, string> = {
   guide: '番組表',
 }
 
-interface IncidentStanding {
-  acknowledged: boolean
-  asks: boolean
-}
-
-const STANDINGS: Record<IncidentState, IncidentStanding> = {
-  detected: { acknowledged: false, asks: false },
-  notified: { acknowledged: false, asks: true },
-  acknowledged: { acknowledged: true, asks: false },
-  resolved: { acknowledged: true, asks: false },
-}
-
-const STANDING_NOT_YET_KNOWN: IncidentStanding = {
-  acknowledged: false,
-  asks: false,
-}
-
 const SUPPLY_SILENCE = 'supplySilence'
 
 const STILL_STANDING = '継続中'
@@ -387,11 +365,6 @@ export const WHEN_CHANGING_A_THRESHOLD: QualityAsking = {
   fell: '閾値を変更できませんでした',
 }
 
-export const WHEN_ACKNOWLEDGING: QualityAsking = {
-  did: '確認済みに',
-  fell: '確認済みにできませんでした',
-}
-
 const REFUSAL_REASONS: [RegExp, string][] = [
   [/lies between .+ and .+/i, '指定できる範囲の外の値のため、'],
   [
@@ -403,9 +376,6 @@ const REFUSAL_REASONS: [RegExp, string][] = [
     /moved by naming the value it moves to/i,
     '変更後の値が指定されていないため、',
   ],
-  [/nothing is kept under this one/i, 'この異常は残っていないため、'],
-  [/has been resolved/i, 'この異常はすでに解消しているため、'],
-  [/has not been told about yet/i, 'この異常はまだ知らされていないため、'],
 ]
 
 export function whyItRefused(
@@ -424,7 +394,6 @@ export function whyItRefused(
 
 export async function getQuality(
   days?: string,
-  showAcknowledged = false,
   subject?: string,
 ): Promise<QualityResult> {
   const span = SPANS.find((one) => String(one.days) === days) ?? SPANS[0]
@@ -454,24 +423,23 @@ export async function getQuality(
     fetchServiceChannels(),
     listRecordingNames(),
     fetchSupplyHealth(),
-    fetchAnomalies(showAcknowledged),
+    fetchAnomalies(),
     fetchTrend(span.days, following.subject),
   ])
 
   const drawn = channels.items.map((one) => toChannel(one, known, thresholds))
-  const shown = showAcknowledged ? '&acknowledged=true' : ''
   const followed = subjectQuery(following)
 
   return {
     windows: SPANS.map((one) => ({
       label: one.label,
-      href: `/settings/quality?days=${one.days}${followed}${shown}` as Route,
+      href: `/settings/quality?days=${one.days}${followed}` as Route,
       current: one.days === span.days,
     })),
     trend: {
       subjects: TREND_SUBJECTS.map((one) => ({
         label: one.label,
-        href: `/settings/quality?days=${span.days}${subjectQuery(one)}${shown}` as Route,
+        href: `/settings/quality?days=${span.days}${subjectQuery(one)}` as Route,
         current: one.subject === following.subject,
       })),
       rows: trend.series.map((series) => ({
@@ -499,40 +467,10 @@ export async function getQuality(
       quiet: supplies ? quietOf(supplies.supplies) : [],
     },
     anomalies: {
-      items: anomalies.items
-        .map((one) => toAnomaly(one, known, names))
-        .sort(settledLast),
+      items: anomalies.items.map((one) => toAnomaly(one, known, names)),
       owned: anomalies.owned,
       restated: anomalies.restated,
-      showsAcknowledged: showAcknowledged,
-      href: `/settings/quality?days=${span.days}${
-        showAcknowledged ? '' : '&acknowledged=true'
-      }` as Route,
     },
-  }
-}
-
-export async function acknowledgeAnomaly(id: string): Promise<QualityWrite> {
-  const { error, response } = await carinaClient().POST(
-    '/api/quality/incidents/{id}/acknowledge',
-    { params: { path: { id } } },
-  )
-
-  if (response.status === 401) {
-    return { state: 'unauthenticated' }
-  }
-
-  if (response.ok) {
-    return { state: 'ok' }
-  }
-
-  return {
-    state: 'rejected',
-    message: whyItRefused(
-      WHEN_ACKNOWLEDGING,
-      response.status,
-      whatItSaid(error),
-    ),
   }
 }
 
@@ -655,12 +593,8 @@ interface Anomalies {
   restated: number
 }
 
-async function fetchAnomalies(
-  includeAcknowledged: boolean,
-): Promise<Anomalies> {
-  const { data, error } = await carinaClient().GET('/api/quality/incidents', {
-    params: { query: { includeAcknowledged } },
-  })
+async function fetchAnomalies(): Promise<Anomalies> {
+  const { data, error } = await carinaClient().GET('/api/quality/incidents')
 
   if (error || !data?.data) {
     throw new Error(whatItSaid(error, data) || UNREADABLE)
@@ -704,7 +638,6 @@ function toAnomaly(
   known: GuideChannel[],
   names: ReadonlyMap<string, RecordingName>,
 ): QualityAnomaly {
-  const standing = shapeFor(STANDINGS, one.state, STANDING_NOT_YET_KNOWN)
   const level = shapeFor(BREACH_LEVELS, one.breached, 'unsupported')
   const applied = measured(one.appliedValue, one.breached)
 
@@ -723,9 +656,7 @@ function toAnomaly(
       ? `再掲 · ${wordFor(OWNERS, one.owner)}`
       : undefined,
     classification: one.classification ?? undefined,
-    when: whenOf(one, standing.acknowledged),
-    acknowledged: standing.acknowledged,
-    asks: standing.asks,
+    when: `${formatStamp(one.detectedAt)} 発生 · ${STILL_STANDING}`,
   }
 }
 
@@ -757,24 +688,6 @@ function subjectOf(
   }
 
   return named
-}
-
-function whenOf(one: IncidentResponder, acknowledged: boolean): string {
-  const detected = `${formatStamp(one.detectedAt)} 発生`
-
-  if (!acknowledged || !one.acknowledgedAt) {
-    return `${detected} · ${STILL_STANDING}`
-  }
-
-  const who = one.acknowledgedBy
-
-  return `${detected} · ${formatStamp(one.acknowledgedAt)} 確認済み${
-    who ? ` · ${who}` : ''
-  }`
-}
-
-function settledLast(before: QualityAnomaly, after: QualityAnomaly): number {
-  return Number(before.acknowledged) - Number(after.acknowledged)
 }
 
 function measured(value: number | string, key: QualityThresholdKey): string {

@@ -2,12 +2,10 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
-  ACKNOWLEDGED_SHOWN,
   MORE_TUNERS_THAN_FIT,
   NOTHING_MEASURED,
   QUALITY,
 } from '@/repository/quality.fixtures'
-import type { QualityAcknowledge } from '@/components/quality/anomaly-list'
 import type { QualityReviseThreshold } from '@/components/quality/quality-page'
 import { QualityView } from '@/components/quality/quality-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
@@ -24,21 +22,11 @@ const refusesTheThreshold = fn<QualityReviseThreshold>(async () => ({
   message: REFUSED,
 }))
 
-const REFUSES_TO_ACKNOWLEDGE =
-  'この異常はすでに解消しているため、確認済みにできませんでした。'
-
-const acknowledge = fn<QualityAcknowledge>(async () => ({ state: 'ok' }))
-
-const refusesToAcknowledge = fn<QualityAcknowledge>(async () => ({
-  state: 'rejected',
-  message: REFUSES_TO_ACKNOWLEDGE,
-}))
-
 const meta = {
   title: 'Screens/設定・品質',
   component: QualityView,
   parameters: { layout: 'fullscreen' },
-  args: { onReviseThreshold: reviseThreshold, onAcknowledge: acknowledge },
+  args: { onReviseThreshold: reviseThreshold },
 } satisfies Meta<typeof QualityView>
 
 export default meta
@@ -48,6 +36,13 @@ export const 通常: Story = { args: { result: QUALITY } }
 
 export const 何も計測されていない: Story = {
   args: { result: NOTHING_MEASURED },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText('解消していない異常はありません。'),
+    ).toBeVisible()
+  },
 }
 
 export const 閾値を変更: Story = {
@@ -93,8 +88,6 @@ export const 狭い幅で収まらないほどのチューナー: Story = {
   },
 }
 
-export const 確認済みも表示: Story = { args: { result: ACKNOWLEDGED_SHOWN } }
-
 export const 推移: Story = {
   args: { result: QUALITY },
   play: async ({ canvasElement }) => {
@@ -113,32 +106,6 @@ export const 推移: Story = {
     await expect(quiet.querySelector('[data-level="good"]')).toBeNull()
     await expect(quiet.querySelectorAll('[data-level="nodata"]').length).toBe(
       24,
-    )
-  },
-}
-
-export const 異常を確認済みにする: Story = {
-  args: { result: QUALITY },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(
-      canvas.getAllByRole('button', { name: '確認済みにする' })[0],
-    )
-    await waitFor(() => expect(acknowledge).toHaveBeenCalled())
-  },
-}
-
-export const 確認済みにするのを断られる: Story = {
-  args: { result: QUALITY, onAcknowledge: refusesToAcknowledge },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(
-      canvas.getAllByRole('button', { name: '確認済みにする' })[0],
-    )
-    await waitFor(() =>
-      expect(canvas.getByText(REFUSES_TO_ACKNOWLEDGE)).toBeVisible(),
     )
   },
 }
