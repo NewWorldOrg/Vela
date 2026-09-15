@@ -190,6 +190,7 @@ const RECORDINGS: Recording[] = [
       level: 'mayNotBeWatchable',
       detail: 'ドロップ 0 / スクランブル残存 5,042,768',
     },
+    scrambleQuality: 'mayNotBeWatchable',
     scrambledShare: 5_042_768 / 5_302_549,
     encode: 'notEncoded',
     thumbnail: 'shot',

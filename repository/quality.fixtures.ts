@@ -61,6 +61,18 @@ const THRESHOLDS: QualityThreshold[] = [
     highest: 100,
   },
   {
+    key: 'packetsLeftScrambledUnwatchable',
+    label: 'スクランブル残存率の視聴不可の恐れ',
+    value: '1%',
+    basis: '既定 1% · 根拠 4,320 件',
+    shipped: '1%',
+    provisional: true,
+    amount: '1',
+    unit: '%',
+    lowest: 0,
+    highest: 100,
+  },
+  {
     key: 'overflows',
     label: '取りこぼしの上限',
     value: '1回',

@@ -13084,7 +13084,8 @@
           "lockRate",
           "carrierToNoiseFloor",
           "bitErrorRateCeiling",
-          "supplySilence"
+          "supplySilence",
+          "packetsLeftScrambledUnwatchable"
         ],
         "type": "string"
       },
@@ -13689,6 +13690,7 @@
       "RecordingDropsResponder": {
         "required": [
           "quality",
+          "scrambleQuality",
           "ccMeasured",
           "ccDroppedPackets",
           "ccTotalPackets",
@@ -13699,6 +13701,9 @@
         "type": "object",
         "properties": {
           "quality": {
+            "$ref": "#/components/schemas/QualityLevel"
+          },
+          "scrambleQuality": {
             "$ref": "#/components/schemas/QualityLevel"
           },
           "ccMeasured": {

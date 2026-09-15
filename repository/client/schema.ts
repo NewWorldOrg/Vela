@@ -2743,6 +2743,7 @@ export interface components {
       | 'carrierToNoiseFloor'
       | 'bitErrorRateCeiling'
       | 'supplySilence'
+      | 'packetsLeftScrambledUnwatchable'
     QualityThresholdListResponder: {
       items: components['schemas']['QualityThresholdResponder'][]
     }
@@ -2881,6 +2882,7 @@ export interface components {
     }
     RecordingDropsResponder: {
       quality: components['schemas']['QualityLevel']
+      scrambleQuality: components['schemas']['QualityLevel']
       ccMeasured: boolean
       /** Format: int64 */
       ccDroppedPackets: null | number | string
