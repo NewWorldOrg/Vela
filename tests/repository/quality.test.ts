@@ -106,6 +106,7 @@ const SHIPPED = [
   threshold('packetsLostWarning', 0.0002),
   threshold('packetsLostUnwatchable', 0.001),
   threshold('packetsLeftScrambled', 0.0005),
+  threshold('packetsLeftScrambledUnwatchable', 0.01),
   threshold('overflows', 1, { lowest: 0, highest: 1000000 }),
   threshold('lockRate', 0.99, { sense: 'floor' }),
   threshold('carrierToNoiseFloor', 15000, {
@@ -450,12 +451,60 @@ test('閾値は現在値・既定・根拠件数を口から取り、暫定の�
   )
   const silence = result.thresholds.find((one) => one.key === 'supplySilence')
 
-  assert.equal(result.thresholds.length, 8)
+  assert.equal(result.thresholds.length, 9)
   assert.equal(warning?.value, '0.02%')
   assert.equal(warning?.basis, '既定 0.02% · 根拠 0 件')
   assert.equal(warning?.provisional, true)
   assert.equal(silence?.value, '5分')
   assert.equal(result.warnMarkPct, 20)
+})
+
+test('スクランブル残存率の視聴不可の恐れは名前を持ち、暫定のまま百分率で出る', async () => {
+  standing()
+
+  const result = await getQuality()
+  const scrambled = result.thresholds.find(
+    (one) => one.key === 'packetsLeftScrambledUnwatchable',
+  )
+
+  assert.equal(scrambled?.label, 'スクランブル残存率の視聴不可の恐れ')
+  assert.equal(scrambled?.value, '1%')
+  assert.equal(scrambled?.amount, '1')
+  assert.equal(scrambled?.unit, '%')
+  assert.equal(scrambled?.lowest, 0)
+  assert.equal(scrambled?.highest, 100)
+  assert.equal(scrambled?.provisional, true)
+})
+
+test('スクランブル残存率の視聴不可の恐れは、画面の単位で受けて口の単位で送る', async () => {
+  standing()
+
+  const write = await reviseThreshold('packetsLeftScrambledUnwatchable', 2)
+  const asked = sent.find(
+    (one) =>
+      one.path === '/api/quality/thresholds/packetsLeftScrambledUnwatchable',
+  )
+
+  assert.deepEqual(write, { state: 'ok' })
+  assert.deepEqual(asked?.body, { value: 0.02 })
+})
+
+test('スクランブル残存率の視聴不可の恐れを警告水準より下げる断りも日本語の一文になる', async () => {
+  standing()
+  store.refusal = {
+    status: 400,
+    message:
+      'A reading passes the warning level before it passes the unwatchable one, so PacketsLeftScrambledUnwatchable cannot be moved past the level beside it.',
+  }
+
+  assert.deepEqual(
+    await reviseThreshold('packetsLeftScrambledUnwatchable', 0.01),
+    {
+      state: 'rejected',
+      message:
+        '警告水準が視聴不可の恐れを越えてしまうため、変更できませんでした。',
+    },
+  )
 })
 
 test('閾値の変更は、画面の単位で受けて口の単位で送る', async () => {
