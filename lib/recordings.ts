@@ -38,6 +38,15 @@ export function recordingQualityShapeOf(
     : shapeFor(RECORDING_QUALITY_SHAPES, level, RECORDING_QUALITY_NOT_YET_KNOWN)
 }
 
+export function inProgressFirst<T extends Pick<Recording, 'outcome'>>(
+  recordings: readonly T[],
+): T[] {
+  return [
+    ...recordings.filter((one) => one.outcome === 'recording'),
+    ...recordings.filter((one) => one.outcome !== 'recording'),
+  ]
+}
+
 export function isLeftScrambled(recording: Pick<Recording, 'scrambledShare'>) {
   return (recording.scrambledShare ?? 0) >= SCRAMBLED_BEYOND_WATCHING
 }

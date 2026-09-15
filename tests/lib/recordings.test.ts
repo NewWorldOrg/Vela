@@ -8,6 +8,7 @@ import type {
 } from '@/repository/recordings'
 import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import {
+  inProgressFirst,
   isLeftScrambled,
   minutesMovedLater,
   playsInBrowser,
@@ -37,6 +38,39 @@ test('a level this build has no name for is not read as the worst one', () => {
       label: NOT_YET_IN_THIS_BUILD,
     })
   }
+})
+
+function listed(id: string, outcome: Recording['outcome']) {
+  return { id, outcome }
+}
+
+test('recordings still being written come first, and each side keeps the order it came in', () => {
+  const rows = [
+    listed('a1', 'complete'),
+    listed('a2', 'recording'),
+    listed('a3', 'failed'),
+    listed('a4', 'truncated'),
+    listed('a5', 'recording'),
+  ]
+
+  assert.deepEqual(
+    inProgressFirst(rows).map((one) => one.id),
+    ['a2', 'a5', 'a1', 'a3', 'a4'],
+  )
+  assert.deepEqual(
+    rows.map((one) => one.id),
+    ['a1', 'a2', 'a3', 'a4', 'a5'],
+  )
+})
+
+test('a list with nothing being written keeps its order', () => {
+  const rows = [listed('a1', 'complete'), listed('a2', 'failed')]
+
+  assert.deepEqual(
+    inProgressFirst(rows).map((one) => one.id),
+    ['a1', 'a2'],
+  )
+  assert.deepEqual(inProgressFirst([]), [])
 })
 
 test('an end the follower moved later is counted in whole minutes, rounded up', () => {

@@ -7,7 +7,11 @@ import {
   formatStamp,
 } from '@/lib/format'
 import { castInExtended, leadOfExtended } from '@/lib/programme-extended'
-import { minutesMovedLater, RECORDING_STATE_FILTERS } from '@/lib/recordings'
+import {
+  inProgressFirst,
+  minutesMovedLater,
+  RECORDING_STATE_FILTERS,
+} from '@/lib/recordings'
 import { genreLabelOfKind } from '@/lib/search-condition'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import {
@@ -164,24 +168,26 @@ export async function listRecordings(
   const tokens = filter.q
     ? normalize(filter.q).split(/\s+/).filter(Boolean)
     : []
-  const items = all.filter((r) => {
-    if (tokens.length > 0 && !matchesQuery(r, tokens)) {
-      return false
-    }
-    if (filter.year && String(r.year) !== filter.year) {
-      return false
-    }
-    if (filter.genre && r.genre !== filter.genre) {
-      return false
-    }
-    if (filter.state && !matchesState(r, filter.state)) {
-      return false
-    }
-    if (filter.ch && r.channel !== filter.ch) {
-      return false
-    }
-    return true
-  })
+  const items = inProgressFirst(
+    all.filter((r) => {
+      if (tokens.length > 0 && !matchesQuery(r, tokens)) {
+        return false
+      }
+      if (filter.year && String(r.year) !== filter.year) {
+        return false
+      }
+      if (filter.genre && r.genre !== filter.genre) {
+        return false
+      }
+      if (filter.state && !matchesState(r, filter.state)) {
+        return false
+      }
+      if (filter.ch && r.channel !== filter.ch) {
+        return false
+      }
+      return true
+    }),
+  )
   return { items, total: carried.total, channels, years, genres, filter }
 }
 export async function listRecordingsByReservation(): Promise<

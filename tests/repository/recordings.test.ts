@@ -561,6 +561,69 @@ test('every page the store names is walked, not only the first', async () => {
   )
 })
 
+test('a recording still being written comes first, however long ago it started', async () => {
+  standing()
+  store.pages = [
+    page(
+      [
+        recording({ id: 'a1', startedAt: '2026-08-10T14:00:00Z' }),
+        recording({ id: 'a2', startedAt: '2026-08-10T13:00:00Z' }),
+      ],
+      { total: 3, currentPage: 1, lastPage: 2 },
+    ),
+    page(
+      [
+        recording({
+          id: 'a3',
+          startedAt: '2026-08-10T11:00:00Z',
+          standing: 'inFlight',
+          outcome: null,
+          stoppedAt: null,
+        }),
+      ],
+      { total: 3, currentPage: 2, lastPage: 2 },
+    ),
+  ]
+
+  const result = await listRecordings({})
+
+  assert.deepEqual(
+    result.items.map((one) => one.id),
+    ['a3', 'a1', 'a2'],
+  )
+  assert.equal(result.total, 3)
+})
+
+test('a filter narrows before the rows being written are lifted', async () => {
+  const writing = {
+    standing: 'inFlight',
+    outcome: null,
+    stoppedAt: null,
+    drops: drops({ quality: 'unmeasured' }),
+  }
+
+  standing([
+    recording({ id: 'a1', drops: drops({ quality: 'unmeasured' }) }),
+    recording({ id: 'a2', outcome: 'failed' }),
+    recording({ id: 'a3', ...writing }),
+  ])
+
+  const unmeasured = await listRecordings({ state: '未計測' })
+
+  assert.deepEqual(
+    unmeasured.items.map((one) => one.id),
+    ['a3', 'a1'],
+  )
+
+  const cutShort = await listRecordings({ state: '尻切れ・失敗' })
+
+  assert.deepEqual(
+    cutShort.items.map((one) => one.id),
+    ['a2'],
+  )
+  assert.equal(cutShort.total, 3)
+})
+
 test('the total counts the library, not the rows a filter left', async () => {
   standing([
     recording({ id: 'a1', outcome: 'complete' }),

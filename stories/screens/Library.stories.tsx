@@ -7,6 +7,7 @@ import {
   MORE_RECORDINGS_THAN_FIT,
   RECORDING_FIXTURES,
 } from '@/stories/fixtures/recordings'
+import { inProgressFirst } from '@/lib/recordings'
 import { AppFrame } from '@/components/vela/app-shell'
 import { LibraryView } from '@/components/library/library-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
@@ -22,10 +23,12 @@ async function throwing(id: string): Promise<RecordingDiscarded> {
 const STILL_RECORDING =
   'この録画はまだ書き込み中です。録画を止めてから削除してください。'
 
-const all = [...RECORDING_FIXTURES].sort(
-  (a, b) =>
-    (b.startedAt ?? '').localeCompare(a.startedAt ?? '') ||
-    b.id.localeCompare(a.id, undefined, { numeric: true }),
+const all = inProgressFirst(
+  [...RECORDING_FIXTURES].sort(
+    (a, b) =>
+      (b.startedAt ?? '').localeCompare(a.startedAt ?? '') ||
+      b.id.localeCompare(a.id, undefined, { numeric: true }),
+  ),
 )
 
 function resultOf(items: Recording[]) {
