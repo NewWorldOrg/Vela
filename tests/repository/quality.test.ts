@@ -569,8 +569,6 @@ const incident = (over: Record<string, unknown> = {}) => ({
   classification: null,
   state: 'notified',
   notifiedAt: '2026-09-07T12:01:00Z',
-  acknowledgedAt: null,
-  acknowledgedBy: null,
   resolvedAt: null,
   ...over,
 })

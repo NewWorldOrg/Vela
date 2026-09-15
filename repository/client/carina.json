@@ -3028,6 +3028,99 @@
         }
       }
     },
+    "/api/recordings/integrity/findings/{findingId}/delete": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "deleteIntegrityFinding",
+        "parameters": [
+          {
+            "name": "findingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recordings/{id}": {
       "delete": {
         "tags": [
@@ -3507,99 +3600,6 @@
         }
       }
     },
-    "/api/recordings/integrity/findings/{findingId}/delete": {
-      "post": {
-        "tags": [
-          "recordings"
-        ],
-        "operationId": "deleteIntegrityFinding",
-        "parameters": [
-          {
-            "name": "findingId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "Bad Gateway",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
-          },
-          "500": {
-            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/recordings/{id}/stop": {
       "post": {
         "tags": [
@@ -3726,69 +3726,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/quality/incidents/{id}/acknowledge": {
-      "post": {
-        "tags": [
-          "quality"
-        ],
-        "operationId": "acknowledgeQualityIncident",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
-          },
-          "500": {
-            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfQualityIncidentResponder"
                 }
               }
             }
@@ -4072,15 +4009,6 @@
           "quality"
         ],
         "operationId": "listQualityIncidents",
-        "parameters": [
-          {
-            "name": "includeAcknowledged",
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -7501,32 +7429,6 @@
           }
         }
       },
-      "BaseResponderOfIntegrityListResponder": {
-        "required": [
-          "status",
-          "message",
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/IntegrityListResponder"
-              }
-            ]
-          }
-        }
-      },
       "BaseResponderOfIntegrityFindingRefusedResponder": {
         "required": [
           "status",
@@ -7574,6 +7476,32 @@
               },
               {
                 "$ref": "#/components/schemas/IntegrityFindingThrownAwayResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfIntegrityListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityListResponder"
               }
             ]
           }
@@ -8063,32 +7991,6 @@
               },
               {
                 "$ref": "#/components/schemas/QualityIncidentListResponder"
-              }
-            ]
-          }
-        }
-      },
-      "BaseResponderOfQualityIncidentResponder": {
-        "required": [
-          "status",
-          "message",
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/QualityIncidentResponder"
               }
             ]
           }
@@ -10587,6 +10489,24 @@
           }
         }
       },
+      "FindingDisposalFailure": {
+        "enum": [
+          "noSuchFinding",
+          "namesARecording",
+          "nothingOnTheDisk",
+          "alreadyThrownAway",
+          "noTimeWasTaken",
+          "oneIsAlreadyBeingThrownAway",
+          "rootOutOfReach",
+          "fileChanged",
+          "stillBeingWritten",
+          "filesLeftBehind",
+          "driverUnreachable",
+          "driverRefused",
+          "tookTooLong"
+        ],
+        "type": "string"
+      },
       "ForgetArchivedServiceRequest": {
         "type": "object",
         "properties": {
@@ -10778,23 +10698,21 @@
         ],
         "type": "string"
       },
-      "FindingDisposalFailure": {
-        "enum": [
-          "noSuchFinding",
-          "namesARecording",
-          "nothingOnTheDisk",
-          "alreadyThrownAway",
-          "noTimeWasTaken",
-          "oneIsAlreadyBeingThrownAway",
-          "rootOutOfReach",
-          "fileChanged",
-          "stillBeingWritten",
-          "filesLeftBehind",
-          "driverUnreachable",
-          "driverRefused",
-          "tookTooLong"
+      "IntegrityFindingRefusedResponder": {
+        "required": [
+          "findingId",
+          "refusal"
         ],
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "findingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "refusal": {
+            "$ref": "#/components/schemas/FindingDisposalFailure"
+          }
+        }
       },
       "IntegrityFindingResponder": {
         "required": [
@@ -10849,22 +10767,6 @@
           "noticedAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "IntegrityFindingRefusedResponder": {
-        "required": [
-          "findingId",
-          "refusal"
-        ],
-        "type": "object",
-        "properties": {
-          "findingId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "refusal": {
-            "$ref": "#/components/schemas/FindingDisposalFailure"
           }
         }
       },
@@ -12574,8 +12476,6 @@
           "classification",
           "state",
           "notifiedAt",
-          "acknowledgedAt",
-          "acknowledgedBy",
           "resolvedAt"
         ],
         "type": "object",
@@ -12647,19 +12547,6 @@
             ],
             "format": "date-time"
           },
-          "acknowledgedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "acknowledgedBy": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "resolvedAt": {
             "type": [
               "null",
@@ -12673,7 +12560,6 @@
         "enum": [
           "detected",
           "notified",
-          "acknowledged",
           "resolved"
         ],
         "type": "string"
@@ -17108,13 +16994,9 @@
           "recordingProgress",
           "recordingMeasurement",
           "signalSamples",
-          "guideVisits",
-          null
+          "guideVisits"
         ],
-        "type": [
-          "null",
-          "string"
-        ]
+        "type": "string"
       },
       "SweepRefusal": {
         "enum": [

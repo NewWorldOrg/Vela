@@ -189,10 +189,8 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the list answers with every anomaly that still stands and draws each row the same way, so where one has got to on its way to being resolved, when it was told about or taken as read and by whom, and when it was resolved, are not asked',
+      'the list answers with every anomaly that still stands and draws each row the same way, so where one has got to on its way to being resolved, when it was told about, and when it was resolved, are not asked',
     fields: [
-      'QualityIncidentResponder.acknowledgedAt',
-      'QualityIncidentResponder.acknowledgedBy',
       'QualityIncidentResponder.notifiedAt',
       'QualityIncidentResponder.resolvedAt',
       'QualityIncidentResponder.state',
