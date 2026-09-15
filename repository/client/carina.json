@@ -3807,6 +3807,70 @@
         }
       }
     },
+    "/api/quality/trends": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "getQualityTrends",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "subject",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QualityTrendSubject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityTrendResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityTrendResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityTrendResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/quality/channels": {
       "get": {
         "tags": [
@@ -8010,6 +8074,32 @@
               },
               {
                 "$ref": "#/components/schemas/QualityThresholdResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityTrendResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityTrendResponder"
               }
             ]
           }
@@ -13117,6 +13207,221 @@
           }
         }
       },
+      "QualityTrendChannelResponder": {
+        "required": [
+          "networkId",
+          "serviceId",
+          "transportStreamId",
+          "kind",
+          "serviceIds"
+        ],
+        "type": "object",
+        "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "transportStreamId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "kind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TuneSystem"
+              }
+            ]
+          },
+          "serviceIds": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "QualityTrendLayerResponder": {
+        "required": [
+          "layer",
+          "highest"
+        ],
+        "type": "object",
+        "properties": {
+          "layer": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "highest": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "QualityTrendPointResponder": {
+        "required": [
+          "from",
+          "until",
+          "reading",
+          "worst",
+          "level",
+          "layers"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/QualityReadingResponder"
+          },
+          "worst": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "level": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "layers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityTrendLayerResponder"
+            }
+          }
+        }
+      },
+      "QualityTrendResponder": {
+        "required": [
+          "period",
+          "subject",
+          "step",
+          "mostPoints",
+          "series",
+          "provisional"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/QualityPeriodResponder"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/QualityTrendSubject"
+          },
+          "step": {
+            "$ref": "#/components/schemas/QualityTrendStep"
+          },
+          "mostPoints": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityTrendSeriesResponder"
+            }
+          },
+          "provisional": {
+            "type": "boolean"
+          }
+        }
+      },
+      "QualityTrendSeriesResponder": {
+        "required": [
+          "channel",
+          "points"
+        ],
+        "type": "object",
+        "properties": {
+          "channel": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityTrendChannelResponder"
+              }
+            ]
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityTrendPointResponder"
+            }
+          }
+        }
+      },
+      "QualityTrendStep": {
+        "enum": [
+          "hour",
+          "threeHours",
+          "sixHours",
+          "twelveHours",
+          "day",
+          "twoDays"
+        ],
+        "type": "string"
+      },
+      "QualityTrendSubject": {
+        "enum": [
+          "packetsLost",
+          "packetsLeftScrambled",
+          "lockRate",
+          "carrierToNoise",
+          "bitErrorRate"
+        ],
+        "type": "string"
+      },
       "QualityTunerListResponder": {
         "required": [
           "period",
@@ -14348,7 +14653,9 @@
           "recordingFailure",
           "programmeMoved",
           "programmeGone",
-          "programmeReturned"
+          "programmeReturned",
+          "retried",
+          "gaveUpRetrying"
         ],
         "type": "string"
       },
@@ -14463,7 +14770,9 @@
           "effectiveEndAt",
           "priority",
           "ruleId",
-          "occurredAt"
+          "occurredAt",
+          "retryResult",
+          "gaveUpBecause"
         ],
         "type": "object",
         "properties": {
@@ -14540,6 +14849,26 @@
           "occurredAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "retryResult": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RetryResult"
+              }
+            ]
+          },
+          "gaveUpBecause": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RetryGiveUp"
+              }
+            ]
           }
         }
       },
@@ -14816,6 +15145,32 @@
             "format": "date-time"
           }
         }
+      },
+      "RetryGiveUp": {
+        "enum": [
+          "notTransient",
+          "precheckFailed",
+          "candidateNeedsAttention",
+          "broadcastOver",
+          "attemptsSpent",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "RetryResult": {
+        "enum": [
+          "started",
+          "refusedAgain",
+          "noAnswer",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
       },
       "ReviseEncodeDestinationRequest": {
         "type": "object",

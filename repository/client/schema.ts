@@ -696,6 +696,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/quality/trends': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getQualityTrends']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/quality/channels': {
     parameters: {
       query?: never
@@ -1552,6 +1568,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['QualityThresholdResponder']
+    }
+    BaseResponderOfQualityTrendResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityTrendResponder']
     }
     BaseResponderOfQualityTunerListResponder: {
       status: boolean
@@ -2747,6 +2768,57 @@ export interface components {
       lastChange:
         null | components['schemas']['QualityThresholdChangeResponder']
     }
+    QualityTrendChannelResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      transportStreamId: null | number | string
+      kind: null | components['schemas']['TuneSystem']
+      serviceIds: (number | string)[]
+    }
+    QualityTrendLayerResponder: {
+      /** Format: int32 */
+      layer: number | string
+      /** Format: double */
+      highest: number | string
+    }
+    QualityTrendPointResponder: {
+      /** Format: date-time */
+      from: string
+      /** Format: date-time */
+      until: string
+      reading: components['schemas']['QualityReadingResponder']
+      /** Format: double */
+      worst: null | number | string
+      /** Format: double */
+      level: number | string
+      layers: components['schemas']['QualityTrendLayerResponder'][]
+    }
+    QualityTrendResponder: {
+      period: components['schemas']['QualityPeriodResponder']
+      subject: components['schemas']['QualityTrendSubject']
+      step: components['schemas']['QualityTrendStep']
+      /** Format: int32 */
+      mostPoints: number | string
+      series: components['schemas']['QualityTrendSeriesResponder'][]
+      provisional: boolean
+    }
+    QualityTrendSeriesResponder: {
+      channel: null | components['schemas']['QualityTrendChannelResponder']
+      points: components['schemas']['QualityTrendPointResponder'][]
+    }
+    /** @enum {string} */
+    QualityTrendStep:
+      'hour' | 'threeHours' | 'sixHours' | 'twelveHours' | 'day' | 'twoDays'
+    /** @enum {string} */
+    QualityTrendSubject:
+      | 'packetsLost'
+      | 'packetsLeftScrambled'
+      | 'lockRate'
+      | 'carrierToNoise'
+      | 'bitErrorRate'
     QualityTunerListResponder: {
       period: components['schemas']['QualityPeriodResponder']
       metrics: components['schemas']['QualityMetric'][]
@@ -3080,6 +3152,8 @@ export interface components {
       | 'programmeMoved'
       | 'programmeGone'
       | 'programmeReturned'
+      | 'retried'
+      | 'gaveUpRetrying'
     ReservationOutcomeListResponder: {
       items: components['schemas']['ReservationOutcomeResponder'][]
       /** Format: int32 */
@@ -3124,6 +3198,8 @@ export interface components {
       ruleId: null | string
       /** Format: date-time */
       occurredAt: string
+      retryResult: null | components['schemas']['RetryResult']
+      gaveUpBecause: null | components['schemas']['RetryGiveUp']
     }
     ReservationProgrammeResponder: {
       id: string
@@ -3201,6 +3277,16 @@ export interface components {
       /** Format: date-time */
       effectiveEndAt: string
     }
+    /** @enum {null|string} */
+    RetryGiveUp:
+      | 'notTransient'
+      | 'precheckFailed'
+      | 'candidateNeedsAttention'
+      | 'broadcastOver'
+      | 'attemptsSpent'
+      | null
+    /** @enum {null|string} */
+    RetryResult: 'started' | 'refusedAgain' | 'noAnswer' | null
     ReviseEncodeDestinationRequest: {
       label?: null | string
       outputRoot?: null | string
@@ -6705,6 +6791,54 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfQualitySupplyHealthResponder']
+        }
+      }
+    }
+  }
+  getQualityTrends: {
+    parameters: {
+      query?: {
+        days?: number | string
+        subject?: components['schemas']['QualityTrendSubject']
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityTrendResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityTrendResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityTrendResponder']
         }
       }
     }

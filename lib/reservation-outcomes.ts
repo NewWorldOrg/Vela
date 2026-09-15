@@ -13,6 +13,8 @@ export const OUTCOME_KINDS: ReservationOutcomeKind[] = [
   'programmeMoved',
   'programmeGone',
   'programmeReturned',
+  'retried',
+  'gaveUpRetrying',
 ]
 
 export const OUTCOME_SPANS: OutcomeChoice[] = [

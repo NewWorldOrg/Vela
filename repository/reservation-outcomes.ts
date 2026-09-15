@@ -2,7 +2,7 @@ import type { OriginLabel } from '@/lib/format'
 import { formatDateTime, formatReservationOrigin } from '@/lib/format'
 import type { OutcomeChoice } from '@/lib/reservation-outcomes'
 import { OUTCOME_KINDS, OUTCOME_SPANS } from '@/lib/reservation-outcomes'
-import { shapeFor } from '@/lib/not-yet-in-this-build'
+import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -26,6 +26,10 @@ export type ReservationOutcomeKind =
 
 type TuneFailure = NonNullable<components['schemas']['TuneFailureKind']>
 
+type RetryResult = NonNullable<components['schemas']['RetryResult']>
+
+type RetryGiveUp = NonNullable<components['schemas']['RetryGiveUp']>
+
 export type RecordingResult = NonNullable<
   components['schemas']['RecordingOutcome']
 >
@@ -48,6 +52,7 @@ export interface ReservationOutcome {
   kind: ReservationOutcomeKind
   tuneFailure?: FailureClass
   recordingResult?: RecordingResult
+  retry?: string
   instead: RecordedInstead[]
   occurredLabel: string
 }
@@ -84,6 +89,20 @@ const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {
   noData: LOCKED_WITHOUT_DATA,
   incompletePsi: INCOMPLETE_TABLES,
   streamMismatch: UNEXPECTED_STREAM,
+}
+
+const RETRY_RESULTS: Record<RetryResult, string> = {
+  started: '録画開始',
+  refusedAgain: '再び失敗',
+  noAnswer: '応答なし',
+}
+
+const GIVE_UP_REASONS: Record<RetryGiveUp, string> = {
+  notTransient: '一時的な失敗ではない',
+  precheckFailed: '事前の確認で不可',
+  candidateNeedsAttention: '選局先に対処が必要',
+  broadcastOver: '放送が終了',
+  attemptsSpent: '試行の上限',
 }
 
 export async function listReservationOutcomes(
@@ -194,9 +213,22 @@ function toOutcome(
       ? shapeFor(TUNE_FAILURES, one.tuneFailure, undefined)
       : undefined,
     recordingResult: one.recordingOutcome ?? undefined,
+    retry: retryOf(one),
     instead: one.recordedInstead.map((id) => named.get(id) ?? { key: id }),
     occurredLabel: formatDateTime(one.occurredAt),
   }
+}
+
+function retryOf(one: OutcomeResponder): string | undefined {
+  if (one.retryResult) {
+    return wordFor(RETRY_RESULTS, one.retryResult)
+  }
+
+  if (one.gaveUpBecause) {
+    return wordFor(GIVE_UP_REASONS, one.gaveUpBecause)
+  }
+
+  return undefined
 }
 
 function serviceKeyOf(one: OutcomeResponder): string {

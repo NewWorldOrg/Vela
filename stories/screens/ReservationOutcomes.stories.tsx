@@ -85,6 +85,23 @@ export const 分類がそろう: Story = {
       within(returned).getByText('番組復帰').getAttribute('data-variant'),
     ).toBe('ok')
 
+    const refusedAgain = rowFor(canvas.getAllByText('深夜の天気図')[0])
+    const startedAgain = rowFor(canvas.getByText('朝焼けの港'))
+    const gaveUp = rowFor(canvas.getAllByText('深夜の天気図')[1])
+
+    await expect(
+      within(refusedAgain).getByText('始め直し').getAttribute('data-variant'),
+    ).toBe('sky')
+    await expect(within(refusedAgain).getByText('再び失敗')).toBeInTheDocument()
+    await expect(
+      within(refusedAgain).getByText('① 信号を掴めない'),
+    ).toBeInTheDocument()
+    await expect(within(startedAgain).getByText('録画開始')).toBeInTheDocument()
+    await expect(
+      within(gaveUp).getByText('始め直しを断念').getAttribute('data-variant'),
+    ).toBe('err')
+    await expect(within(gaveUp).getByText('試行の上限')).toBeInTheDocument()
+
     const noLock = rowFor(canvas.getByText('朝のニュース'))
     const psi = rowFor(canvas.getAllByText('真夜中の音楽室')[0])
 
