@@ -23,6 +23,15 @@ export function playsInBrowser(
   )
 }
 
+export function minutesMovedLater(
+  promisedEnd: string,
+  currentEnd: string,
+): number | undefined {
+  const moved = new Date(currentEnd).getTime() - new Date(promisedEnd).getTime()
+
+  return moved > 0 ? Math.ceil(moved / 60_000) : undefined
+}
+
 export function scrambledPercent(detail: RecordingDetail) {
   return ((detail.scrambledShare ?? 0) * 100).toFixed(1)
 }

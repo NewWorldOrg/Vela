@@ -95,8 +95,10 @@ const recording = (over: Over = {}) => ({
     end: '2026-08-09T14:30:00Z',
     durationMs: 1_800_000,
   },
+  promisedWindowEnd: '2026-08-09T14:30:00Z',
   writtenDurationMs: 1_804_000,
   resumeCount: 0,
+  observedAt: '2026-08-09T14:31:00Z',
   fileSizeBytes: 3_650_722_201,
   outputRoot: '/srv/recordings',
   fileName: 'a1.m2ts',
@@ -362,6 +364,75 @@ test('a size that was observed comes through as the number it is', async () => {
   const one = await only()
 
   assert.equal(one.sizeBytes, 3_650_722_201)
+})
+
+test('a row of the library says when its file was last seen, in the words the detail uses', async () => {
+  const ended = await only()
+
+  assert.equal(ended.sizeObservedAt, '観測 08/09 23:31')
+
+  const writing = await only([
+    recording({
+      standing: 'inFlight',
+      outcome: null,
+      stoppedAt: null,
+      observedAt: '2026-08-09T14:12:00Z',
+    }),
+  ])
+
+  assert.equal(writing.sizeObservedAt, '観測 23:12')
+})
+
+test('a row whose file was never measured says nothing about when', async () => {
+  const one = await only([recording({ observedAt: null })])
+
+  assert.equal(one.sizeObservedAt, undefined)
+})
+
+test('an ended recording whose end was followed later says how far it moved', async () => {
+  const moved = await only([
+    recording({
+      stoppedAt: '2026-08-09T14:40:04Z',
+      expectedWindow: {
+        start: '2026-08-09T14:00:00Z',
+        end: '2026-08-09T14:40:00Z',
+        durationMs: 2_400_000,
+      },
+    }),
+  ])
+
+  assert.equal(moved.recordedRange, '2026/08/09(日) 23:00 — 23:40(延長 +10 分)')
+
+  const kept = await only()
+
+  assert.equal(kept.recordedRange, '2026/08/09(日) 23:00 — 23:30')
+})
+
+test('a recording still being written whose end moved says until when', async () => {
+  const writing = {
+    standing: 'inFlight',
+    outcome: null,
+    stoppedAt: null,
+  }
+  const moved = await only([
+    recording({
+      ...writing,
+      expectedWindow: {
+        start: '2026-08-09T14:00:00Z',
+        end: '2026-08-09T14:45:00Z',
+        durationMs: 2_700_000,
+      },
+    }),
+  ])
+
+  assert.equal(
+    moved.recordedRange,
+    '2026/08/09(日) 23:00 — 23:45 まで(延長 +15 分)',
+  )
+
+  const kept = await only([recording(writing)])
+
+  assert.equal(kept.recordedRange, '2026/08/09(日) 23:00 — 進行中')
 })
 
 test('a recording nothing measured is not good, it is unmeasured', async () => {

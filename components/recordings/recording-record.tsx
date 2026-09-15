@@ -5,13 +5,14 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatBytes } from '@/lib/format'
-import { wordFor } from '@/lib/not-yet-in-this-build'
+import { encodeRowOf } from '@/lib/encode'
 import type { RecordingDetail } from '@/repository/recordings'
+import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import type { PlaybackPlan } from '@/repository/videos'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 import { ChevronRightIcon, QualityIcon } from '@/components/vela/icons'
-import { STANDING_LABEL } from '@/repository/encode-terms'
+import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { QualityChip } from '@/components/recordings/quality-chip'
@@ -38,11 +39,16 @@ function Caption({
 export function RecordingRecord({
   detail: d,
   plan,
+  encodeJob,
+  onCallOffEncode,
 }: {
   detail: RecordingDetail
   plan?: PlaybackPlan
+  encodeJob?: EncodeJob
+  onCallOffEncode: (id: string) => Promise<EncodeWrite>
 }) {
   const spots = d.qualitySpots ?? []
+  const encode = encodeRowOf(encodeJob, d.encode)
 
   return (
     <details className="group mt-[22px] rounded-xl bg-surface px-[22px]">
@@ -151,8 +157,22 @@ export function RecordingRecord({
         {plan && <SourceRow detail={d} plan={plan} />}
         <DetailKeyRow
           label="エンコード"
-          main={wordFor(STANDING_LABEL, d.encode)}
+          main={encode.main}
+          sub={encode.sub}
           plain
+          action={
+            encodeJob &&
+            encode.cancels && (
+              <CancelJobButton
+                job={{
+                  id: encodeJob.id,
+                  title: d.title,
+                  status: encodeJob.status,
+                }}
+                onCallOff={onCallOffEncode}
+              />
+            )
+          }
         />
         {d.thumbnailState && (
           <DetailKeyRow

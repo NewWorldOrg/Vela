@@ -221,12 +221,8 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the encoding screens show a job by where it has got to; how the picture lined up against the recording it came from, which settings have been retired, and whether a job is standing aside while someone is watching, have no part of a screen drawn for them yet',
-    fields: [
-      'EncodeJobResponder.timeline',
-      'EncodeJobResponder.waitingForAViewer',
-      'EncodeRemovalResponder.retiredAt',
-    ],
+      'the encoding screens show a job by where it has got to; how the picture lined up against the recording it came from, and which settings have been retired, have no part of a screen drawn for them yet',
+    fields: ['EncodeJobResponder.timeline', 'EncodeRemovalResponder.retiredAt'],
   },
   {
     because:

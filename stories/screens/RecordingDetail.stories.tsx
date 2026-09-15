@@ -11,12 +11,17 @@ import type {
   PlaybackRefusal,
 } from '@/repository/videos'
 import type { TicketWrite } from '@/repository/tickets'
-import type { EncodeWrite } from '@/repository/encode'
+import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
+  CANCELLED_JOB,
   ENCODE_CHOICES,
+  FAILED_JOB,
   MANY_ENCODE_CHOICES,
   NO_ENCODE_CHOICES,
+  RUNNING_JOB,
+  WAITING_FOR_A_VIEWER_JOB,
 } from '@/repository/encode.fixtures'
+import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 
@@ -101,6 +106,14 @@ async function profileRetired(): Promise<EncodeWrite> {
   }
 }
 
+const calledOff: string[] = []
+
+async function callingOff(id: string): Promise<EncodeWrite> {
+  calledOff.push(id)
+
+  return { state: 'ok' }
+}
+
 async function throwing(id: string): Promise<RecordingDiscarded> {
   asked.push(id)
 
@@ -131,6 +144,7 @@ const meta = {
     onTakeTicket: ticketed,
     onAskForTheSound: askingForTheSound,
     onQueueEncode: queuing,
+    onCallOffEncode: callingOff,
     encodeChoices: ENCODE_CHOICES,
     playback: planned(),
     unaskedProfile: '1080p60',
@@ -608,6 +622,116 @@ export const 録画中はエンコードできない: Story = {
       'title',
       '録画中はエンコードできません',
     )
+  },
+}
+
+function encodeRow(canvasElement: HTMLElement) {
+  const label = within(canvasElement).getByText('エンコード', {
+    selector: 'span',
+  })
+
+  return within(label.parentElement as HTMLElement)
+}
+
+function encodeRowStory(
+  standing: EncodeStanding,
+  job: EncodeJob,
+  main: string,
+  sub: string | undefined,
+  cancels: boolean,
+): Story {
+  return {
+    args: { detail: { ...detail('1274'), encode: standing }, encodeJob: job },
+    play: async ({ canvasElement }) => {
+      await userEvent.click(within(canvasElement).getByText('録画の記録'))
+
+      const row = encodeRow(canvasElement)
+
+      await expect(row.getByText(main)).toBeVisible()
+
+      if (sub) {
+        await expect(row.getByText(sub)).toBeVisible()
+      }
+
+      if (cancels) {
+        await expect(row.getByRole('button', { name: '中止' })).toBeVisible()
+      } else {
+        await expect(row.queryByRole('button', { name: '中止' })).toBeNull()
+      }
+
+      await expect(
+        canvasElement.querySelector('[role="progressbar"]'),
+      ).toBeNull()
+    },
+  }
+}
+
+export const エンコードの行は視聴者を待つジョブを言う: Story = encodeRowStory(
+  'queued',
+  WAITING_FOR_A_VIEWER_JOB,
+  '待機中',
+  '視聴者待ち',
+  true,
+)
+
+export const エンコードの行は失敗の分類を言う: Story = encodeRowStory(
+  'failed',
+  FAILED_JOB,
+  '失敗',
+  'ffmpeg 非0終了',
+  false,
+)
+
+export const エンコードの行は中止されたジョブを言う: Story = encodeRowStory(
+  'notEncoded',
+  CANCELLED_JOB,
+  '中止',
+  undefined,
+  false,
+)
+
+export const 完了のあとに中止したジョブがあっても完了と言う: Story =
+  encodeRowStory('completed', CANCELLED_JOB, '完了', undefined, false)
+
+export const エンコードの行から実行中のジョブを中止する: Story = {
+  args: {
+    detail: { ...detail('1274'), encode: 'running' },
+    encodeJob: RUNNING_JOB,
+  },
+  play: async ({ canvasElement }) => {
+    calledOff.length = 0
+
+    await userEvent.click(within(canvasElement).getByText('録画の記録'))
+
+    const row = encodeRow(canvasElement)
+
+    await expect(row.getByText('実行中')).toBeVisible()
+    await expect(row.queryByText(/%/)).toBeNull()
+    await userEvent.click(row.getByRole('button', { name: '中止' }))
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+
+    await expect(dialog.getByText('週末キッチンの手帖')).toBeVisible()
+    await expect(calledOff).toEqual([])
+    await userEvent.click(dialog.getByRole('button', { name: '中止する' }))
+    await waitFor(() => expect(calledOff).toEqual([RUNNING_JOB.id]))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+  },
+}
+
+export const 延長された録画: Story = {
+  args: {
+    detail: {
+      ...detail('1274'),
+      recordedRange: '2026/08/09(土) 23:00 — 23:40(延長 +10 分)',
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(watchMeta(canvasElement)).getByText(
+        '2026/08/09(土) 23:00 — 23:40(延長 +10 分)',
+      ),
+    ).toBeVisible()
   },
 }
 

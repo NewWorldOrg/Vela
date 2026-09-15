@@ -2938,12 +2938,16 @@ export interface components {
       /** Format: date-time */
       abortedAt: null | string
       expectedWindow: components['schemas']['RecordingWindowResponder']
+      /** Format: date-time */
+      promisedWindowEnd: string
       /** Format: int64 */
       writtenDurationMs: number | string
       /** Format: int32 */
       resumeCount: number | string
       /** Format: int64 */
       fileSizeBytes: null | number | string
+      /** Format: date-time */
+      observedAt: null | string
       outputRoot: string
       fileName: string
       tunerDeviceId: null | string
