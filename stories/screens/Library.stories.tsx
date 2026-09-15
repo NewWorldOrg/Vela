@@ -190,6 +190,37 @@ export const エンコードのない一覧: Story = {
   },
 }
 
+const QUALITY_COLUMN = 6
+
+export const 全件未計測: Story = {
+  args: {
+    result: resultOf(
+      all
+        .filter((r) => r.outcome !== 'recording')
+        .map((r) => ({
+          ...r,
+          quality: { measured: false },
+          encode: 'queued' as EncodeStanding,
+        })),
+    ),
+    filter: {},
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const rows = canvas.getAllByRole('row').slice(1)
+
+    await expect(rows.length).toBeGreaterThan(1)
+
+    for (const row of rows) {
+      await expect(
+        within(row).getAllByRole('cell')[QUALITY_COLUMN],
+      ).toHaveTextContent('未計測')
+    }
+
+    await expect(canvas.queryByRole('alert')).toBeNull()
+  },
+}
+
 export const 検索0件: Story = {
   args: {
     result: { ...result, items: [], filter: { q: '該当なし' } },
