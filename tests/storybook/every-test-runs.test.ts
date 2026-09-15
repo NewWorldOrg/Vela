@@ -83,6 +83,7 @@ const THE_SUITE = [
   'tests/storybook/fields-nothing-fills.test.ts',
   'tests/storybook/fields-the-api-answers.test.ts',
   'tests/storybook/screen-main.test.ts',
+  'tests/storybook/share-lines-the-api-keeps.test.ts',
   'tests/storybook/switches-over-the-api.test.ts',
   'tests/storybook/tables-keyed-by-the-api.test.ts',
   'tests/storybook/tap-exempt.test.ts',
