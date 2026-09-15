@@ -61,6 +61,7 @@ interface Over {
 
 const drops = (over: Over = {}) => ({
   quality: 'good',
+  scrambleQuality: 'good',
   ccMeasured: true,
   ccDroppedPackets: 0,
   ccTotalPackets: 1_000_000,
@@ -494,6 +495,26 @@ test('the reading under the badge names the scrambled packets where there are an
 
   assert.equal(one.quality.detail, 'ドロップ 0 / スクランブル残存 5,042,768')
   assert.equal(one.scrambledShare, 5_042_768 / 5_302_549)
+})
+
+test('the scramble level is the one the API graded, carried beside the overall one', async () => {
+  const scrambled = await only([
+    recording({
+      drops: drops({
+        quality: 'mayNotBeWatchable',
+        scrambleQuality: 'mayNotBeWatchable',
+      }),
+    }),
+  ])
+  const droppedOnly = await only([
+    recording({
+      drops: drops({ quality: 'mayNotBeWatchable', scrambleQuality: 'good' }),
+    }),
+  ])
+
+  assert.equal(scrambled.scrambleQuality, 'mayNotBeWatchable')
+  assert.equal(droppedOnly.quality.level, 'mayNotBeWatchable')
+  assert.equal(droppedOnly.scrambleQuality, 'good')
 })
 
 test('a recording nothing counted carries no scrambled share', async () => {

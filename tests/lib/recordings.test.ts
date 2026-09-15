@@ -95,28 +95,47 @@ test('an end that did not move, or moved earlier, has moved nowhere', () => {
   )
 })
 
-function detail(scrambledShare?: number) {
-  return { scrambledShare } as RecordingDetail
+function detail(over: Partial<RecordingDetail> = {}) {
+  return over as RecordingDetail
 }
 
-test('a recording whose packets stayed scrambled is one that will not play', () => {
-  assert.equal(isLeftScrambled(detail(5_042_768 / 5_302_549)), true)
-  assert.equal(isLeftScrambled(detail(13_934_536 / 16_187_058)), true)
+test('a recording the API graded as scrambled beyond watching is one that will not play', () => {
+  assert.equal(
+    isLeftScrambled(detail({ scrambleQuality: 'mayNotBeWatchable' })),
+    true,
+  )
 })
 
-test('a recording that descrambled is not one of them', () => {
-  assert.equal(isLeftScrambled(detail(0)), false)
-  assert.equal(isLeftScrambled(detail()), false)
+test('a scramble level below that, unmeasured, unknown or absent is not one of them', () => {
+  for (const level of [
+    'good',
+    'warning',
+    'unmeasured',
+    'unreachable' as RecordingDetail['scrambleQuality'],
+    undefined,
+  ] as const) {
+    assert.equal(isLeftScrambled(detail({ scrambleQuality: level })), false)
+  }
 })
 
-test('the line is the one the API grades at, and it is inclusive', () => {
-  assert.equal(isLeftScrambled(detail(0.0099)), false)
-  assert.equal(isLeftScrambled(detail(0.01)), true)
+test('the share of scrambled packets is never the judge, however large it is', () => {
+  assert.equal(
+    isLeftScrambled(
+      detail({
+        scrambledShare: 5_042_768 / 5_302_549,
+        scrambleQuality: 'good',
+      }),
+    ),
+    false,
+  )
 })
 
 test('the share is spelled to one place, as the notice reads it', () => {
-  assert.equal(scrambledPercent(detail(5_042_768 / 5_302_549)), '95.1')
-  assert.equal(scrambledPercent(detail(0)), '0.0')
+  assert.equal(
+    scrambledPercent(detail({ scrambledShare: 5_042_768 / 5_302_549 })),
+    '95.1',
+  )
+  assert.equal(scrambledPercent(detail({ scrambledShare: 0 })), '0.0')
 })
 
 function row(over: Partial<Recording>) {
@@ -127,7 +146,7 @@ test('a whole or cut-short recording with a file plays in the browser', () => {
   assert.equal(playsInBrowser(row({ outcome: 'complete' })), true)
   assert.equal(playsInBrowser(row({ outcome: 'truncated' })), true)
   assert.equal(
-    playsInBrowser(row({ outcome: 'complete', scrambledShare: 0 })),
+    playsInBrowser(row({ outcome: 'complete', scrambleQuality: 'good' })),
     true,
   )
 })
@@ -138,9 +157,41 @@ test('a recording still being written, one that failed, or one whose file is gon
   assert.equal(playsInBrowser(row({ fileMissing: true })), false)
 })
 
-test('a recording that stayed scrambled does not, whatever its outcome says', () => {
+test('a recording whose scramble level may not be watchable does not, whatever its outcome says', () => {
   assert.equal(
-    playsInBrowser(row({ scrambledShare: 5_042_768 / 5_302_549 })),
+    playsInBrowser(
+      row({
+        scrambleQuality: 'mayNotBeWatchable',
+        quality: { measured: true, level: 'mayNotBeWatchable' },
+      }),
+    ),
     false,
   )
+})
+
+test('a recording graded unwatchable by its drops alone still plays', () => {
+  assert.equal(
+    playsInBrowser(
+      row({
+        scrambleQuality: 'good',
+        quality: { measured: true, level: 'mayNotBeWatchable' },
+        scrambledShare: 0,
+      }),
+    ),
+    true,
+  )
+})
+
+test('a scramble level not measured, or one this build has no name for, does not stop playback', () => {
+  assert.equal(playsInBrowser(row({ scrambleQuality: 'unmeasured' })), true)
+  assert.equal(
+    playsInBrowser(
+      row({
+        scrambleQuality: 'unreachable' as Recording['scrambleQuality'],
+        scrambledShare: 5_042_768 / 5_302_549,
+      }),
+    ),
+    true,
+  )
+  assert.equal(playsInBrowser(row({})), true)
 })

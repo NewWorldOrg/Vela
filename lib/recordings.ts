@@ -28,8 +28,6 @@ const RECORDING_QUALITY_NOT_YET_KNOWN: RecordingQualityShape = {
   label: NOT_YET_IN_THIS_BUILD,
 }
 
-const SCRAMBLED_BEYOND_WATCHING = 0.01
-
 export function recordingQualityShapeOf(
   level: QualityLevel | undefined,
 ): RecordingQualityShape {
@@ -47,12 +45,12 @@ export function inProgressFirst<T extends Pick<Recording, 'outcome'>>(
   ]
 }
 
-export function isLeftScrambled(recording: Pick<Recording, 'scrambledShare'>) {
-  return (recording.scrambledShare ?? 0) >= SCRAMBLED_BEYOND_WATCHING
+export function isLeftScrambled(recording: Pick<Recording, 'scrambleQuality'>) {
+  return recording.scrambleQuality === 'mayNotBeWatchable'
 }
 
 export function playsInBrowser(
-  recording: Pick<Recording, 'outcome' | 'fileMissing' | 'scrambledShare'>,
+  recording: Pick<Recording, 'outcome' | 'fileMissing' | 'scrambleQuality'>,
 ) {
   return (
     recording.outcome !== 'failed' &&
