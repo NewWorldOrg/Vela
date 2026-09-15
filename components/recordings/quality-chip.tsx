@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { recordingQualityShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
@@ -29,23 +30,13 @@ export function QualityChip({
       </>
     )
   }
-  const variant =
-    r.quality.level === 'good'
-      ? 'ok'
-      : r.quality.level === 'warning'
-        ? 'warn'
-        : 'err'
-  const label =
-    r.quality.level === 'good'
-      ? '良好'
-      : r.quality.level === 'warning'
-        ? '警告水準'
-        : '視聴不可の恐れ'
+  const shape = recordingQualityShapeOf(r.quality.level)
+
   return (
     <>
-      <Badge variant={variant} className="font-bold">
+      <Badge variant={shape.variant} className="font-bold">
         <ChipDot />
-        {label}
+        {shape.label}
       </Badge>
       {withDetail && r.quality.detail && (
         <span

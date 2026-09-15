@@ -1,13 +1,77 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import type { Recording, RecordingDetail } from '@/repository/recordings'
+import type {
+  QualityLevel,
+  Recording,
+  RecordingDetail,
+} from '@/repository/recordings'
+import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import {
+  inProgressFirst,
   isLeftScrambled,
   minutesMovedLater,
   playsInBrowser,
+  recordingQualityShapeOf,
   scrambledPercent,
 } from '@/lib/recordings'
+
+test('each level the API grades a recording at has its own badge', () => {
+  assert.deepEqual(recordingQualityShapeOf('good'), {
+    variant: 'ok',
+    label: '良好',
+  })
+  assert.deepEqual(recordingQualityShapeOf('warning'), {
+    variant: 'warn',
+    label: '警告水準',
+  })
+  assert.deepEqual(recordingQualityShapeOf('mayNotBeWatchable'), {
+    variant: 'err',
+    label: '視聴不可の恐れ',
+  })
+})
+
+test('a level this build has no name for is not read as the worst one', () => {
+  for (const level of ['unreachable' as QualityLevel, undefined]) {
+    assert.deepEqual(recordingQualityShapeOf(level), {
+      variant: 'mute',
+      label: NOT_YET_IN_THIS_BUILD,
+    })
+  }
+})
+
+function listed(id: string, outcome: Recording['outcome']) {
+  return { id, outcome }
+}
+
+test('recordings still being written come first, and each side keeps the order it came in', () => {
+  const rows = [
+    listed('a1', 'complete'),
+    listed('a2', 'recording'),
+    listed('a3', 'failed'),
+    listed('a4', 'truncated'),
+    listed('a5', 'recording'),
+  ]
+
+  assert.deepEqual(
+    inProgressFirst(rows).map((one) => one.id),
+    ['a2', 'a5', 'a1', 'a3', 'a4'],
+  )
+  assert.deepEqual(
+    rows.map((one) => one.id),
+    ['a1', 'a2', 'a3', 'a4', 'a5'],
+  )
+})
+
+test('a list with nothing being written keeps its order', () => {
+  const rows = [listed('a1', 'complete'), listed('a2', 'failed')]
+
+  assert.deepEqual(
+    inProgressFirst(rows).map((one) => one.id),
+    ['a1', 'a2'],
+  )
+  assert.deepEqual(inProgressFirst([]), [])
+})
 
 test('an end the follower moved later is counted in whole minutes, rounded up', () => {
   assert.equal(
