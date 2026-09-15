@@ -15,6 +15,7 @@ import { TrashIcon } from '@/components/vela/icons'
 import { recordingHandover } from '@/lib/external-player'
 import { OpenExternally } from '@/components/recordings/external-player'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
+import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
 import {
   EncodeButton,
   encodes,
@@ -74,16 +75,20 @@ export function RecordingActions({
             onQueue={onQueueEncode}
           />
         )}
-        <Button
-          variant="destructive"
-          className="ml-auto"
-          disabled={!deletable}
-          title={deletable ? undefined : '録画中は削除できません'}
-          onClick={() => setAsked(recording)}
-        >
-          <TrashIcon />
-          削除
-        </Button>
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-[9px]">
+          <span className="text-right">
+            <UnfinishedDeletionChip recording={recording} className="mt-0" />
+          </span>
+          <Button
+            variant="destructive"
+            disabled={!deletable}
+            title={deletable ? undefined : '録画中は削除できません'}
+            onClick={() => setAsked(recording)}
+          >
+            <TrashIcon />
+            削除
+          </Button>
+        </div>
       </div>
       <DeleteRecordingDialog
         recording={asked}

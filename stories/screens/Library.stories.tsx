@@ -193,6 +193,37 @@ export const エンコードのない一覧: Story = {
   },
 }
 
+const OUTCOME_COLUMN = 5
+
+const ENDED = all.filter((r) => r.outcome !== 'recording')
+
+export const 削除未完了の録画: Story = {
+  args: {
+    result: resultOf([
+      { ...ENDED[0], unfinishedDeletion: undefined },
+      { ...ENDED[1], unfinishedDeletion: {} },
+      { ...ENDED[2], unfinishedDeletion: { filesLeft: 2 } },
+    ]),
+    filter: {},
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByRole('row').slice(1)
+    const outcomeOf = (row: HTMLElement) =>
+      within(row).getAllByRole('cell')[OUTCOME_COLUMN]
+
+    await expect(outcomeOf(rows[0])).not.toHaveTextContent('削除未完了')
+
+    await expect(outcomeOf(rows[1])).toHaveTextContent('削除未完了')
+    await expect(outcomeOf(rows[1])).not.toHaveTextContent('残り')
+
+    await expect(outcomeOf(rows[2])).toHaveTextContent('削除未完了')
+    await expect(outcomeOf(rows[2])).toHaveTextContent('残り 2 ファイル')
+    await expect(
+      within(rows[2]).getByRole('button', { name: '削除' }),
+    ).toBeEnabled()
+  },
+}
+
 const QUALITY_COLUMN = 6
 
 export const 全件未計測: Story = {

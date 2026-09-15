@@ -12,6 +12,7 @@ import { EncodeChip } from '@/components/recordings/encode-chip'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
+import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 
@@ -104,6 +105,7 @@ export function RecordingRow({
       <td className={CELL}>
         <OutcomeChip recording={r} />
         {r.fileMissing && <FileMissingChip />}
+        <UnfinishedDeletionChip recording={r} />
         {r.outcomeDetail && (
           <span className="mt-[3px] block text-[10.5px] leading-relaxed text-ink-3">
             {r.outcomeDetail}

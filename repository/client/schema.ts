@@ -632,6 +632,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/recordings/integrity/findings/{findingId}/delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['deleteIntegrityFinding']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings/{id}/stop': {
     parameters: {
       query?: never
@@ -1444,6 +1460,16 @@ export interface components {
       message: string
       data: null | components['schemas']['IntegrityListResponder']
     }
+    BaseResponderOfIntegrityFindingRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['IntegrityFindingRefusedResponder']
+    }
+    BaseResponderOfIntegrityFindingThrownAwayResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['IntegrityFindingThrownAwayResponder']
+    }
     BaseResponderOfIntegritySweepRefusedResponder: {
       status: boolean
       message: string
@@ -2144,6 +2170,21 @@ export interface components {
       | 'fileMissing'
       | 'fileEmpty'
       | 'emptyThoughComplete'
+    /** @enum {string} */
+    FindingDisposalFailure:
+      | 'noSuchFinding'
+      | 'namesARecording'
+      | 'nothingOnTheDisk'
+      | 'alreadyThrownAway'
+      | 'noTimeWasTaken'
+      | 'oneIsAlreadyBeingThrownAway'
+      | 'rootOutOfReach'
+      | 'fileChanged'
+      | 'stillBeingWritten'
+      | 'filesLeftBehind'
+      | 'driverUnreachable'
+      | 'driverRefused'
+      | 'tookTooLong'
     IntegrityFindingResponder: {
       /** Format: uuid */
       id: string
@@ -2157,6 +2198,20 @@ export interface components {
       observedSize: null | number | string
       /** Format: date-time */
       noticedAt: string
+    }
+    IntegrityFindingRefusedResponder: {
+      /** Format: uuid */
+      findingId: string
+      refusal: components['schemas']['FindingDisposalFailure']
+    }
+    IntegrityFindingThrownAwayResponder: {
+      /** Format: uuid */
+      findingId: string
+      outputRoot: string
+      path: string
+      /** Format: int64 */
+      sizeBytes: null | number | string
+      fileRemoved: boolean
     }
     IntegrityListResponder: {
       check: null | components['schemas']['IntegrityCheckResponder']
@@ -3029,6 +3084,8 @@ export interface components {
       thumbnail: components['schemas']['RecordingThumbnailResponder']
       broadcastGroup: components['schemas']['RecordingBroadcastGroupResponder']
       encode: components['schemas']['RecordingEncodeResponder']
+      unfinishedDeletion:
+        null | components['schemas']['RecordingUnfinishedDeletionResponder']
     }
     /** @enum {string} */
     RecordingSort: 'startedAt' | 'programmeStartsAt'
@@ -3046,6 +3103,12 @@ export interface components {
       state: components['schemas']['ThumbnailState']
       fault: null | components['schemas']['ThumbnailFault']
       showsAnUnfinishedRecording: boolean
+    }
+    RecordingUnfinishedDeletionResponder: {
+      /** Format: date-time */
+      leftBehindAt: string
+      /** Format: int32 */
+      filesLeft: null | number | string
     }
     RecordingWindowResponder: {
       /** Format: date-time */
@@ -6554,6 +6617,89 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfIntegritySweepResponder']
+        }
+      }
+    }
+  }
+  deleteIntegrityFinding: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        findingId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
         }
       }
     }

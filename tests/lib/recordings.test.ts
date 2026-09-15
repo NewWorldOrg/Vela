@@ -14,6 +14,7 @@ import {
   playsInBrowser,
   recordingQualityShapeOf,
   scrambledPercent,
+  unfinishedDeletionShapeOf,
 } from '@/lib/recordings'
 
 test('each level the API grades a recording at has its own badge', () => {
@@ -194,4 +195,26 @@ test('a scramble level not measured, or one this build has no name for, does not
     true,
   )
   assert.equal(playsInBrowser(row({})), true)
+})
+
+test('a recording no deletion has stopped short on carries no badge for it', () => {
+  assert.equal(unfinishedDeletionShapeOf({}), undefined)
+  assert.equal(
+    unfinishedDeletionShapeOf({ unfinishedDeletion: undefined }),
+    undefined,
+  )
+})
+
+test('a deletion that left files behind says so, without a count it was not given', () => {
+  assert.deepEqual(unfinishedDeletionShapeOf({ unfinishedDeletion: {} }), {
+    label: '削除未完了',
+    detail: undefined,
+  })
+})
+
+test('a deletion that left a known number of files behind names how many', () => {
+  assert.deepEqual(
+    unfinishedDeletionShapeOf({ unfinishedDeletion: { filesLeft: 2 } }),
+    { label: '削除未完了', detail: '残り 2 ファイル' },
+  )
 })
