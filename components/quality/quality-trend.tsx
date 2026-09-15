@@ -126,7 +126,7 @@ export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
         className="mb-3 flex-wrap rounded-[18px]"
       />
       {trend.rows.length > 0 ? (
-        <div className="grid grid-cols-[minmax(0,8.5rem)_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5">
+        <div className="grid grid-cols-[minmax(0,min(8.5rem,30%))_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5">
           {trend.rows.map((row) => (
             <Fragment key={row.key}>
               <span className="truncate text-note text-ink-2">{row.name}</span>
@@ -134,9 +134,9 @@ export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
             </Fragment>
           ))}
           <span aria-hidden="true" />
-          <span className="flex justify-between gap-3 font-code text-note tabular-nums text-ink-3">
-            <span>{trend.from}</span>
-            <span>{trend.until}</span>
+          <span className="flex flex-wrap justify-between gap-x-3 font-code text-note tabular-nums text-ink-3">
+            <span className="whitespace-nowrap">{trend.from}</span>
+            <span className="whitespace-nowrap">{trend.until}</span>
           </span>
         </div>
       ) : (
