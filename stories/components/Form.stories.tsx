@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, within } from 'storybook/test'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   Field,
@@ -298,4 +298,77 @@ export const Toggles: Story = {
       </p>
     </div>
   ),
+}
+
+const SWITCH_STATES = [
+  { id: 'switch-off', label: '切', checked: false, size: 'default' },
+  { id: 'switch-on', label: '入', checked: true, size: 'default' },
+  { id: 'switch-sm-off', label: 'sm 切', checked: false, size: 'sm' },
+  { id: 'switch-sm-on', label: 'sm 入', checked: true, size: 'sm' },
+] as const
+
+const DISTINCT_ENOUGH = 3
+
+function luminance(painted: string): number {
+  const [red, green, blue] = (painted.match(/[\d.]+/g) ?? [])
+    .slice(0, 3)
+    .map((channel) => Number(channel) / 255)
+    .map((channel) =>
+      channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4,
+    )
+
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+}
+
+function knobStandsOut(control: HTMLElement): void {
+  const thumb = control.querySelector('[data-slot="switch-thumb"]')
+
+  if (thumb === null) {
+    throw new Error('a switch is drawn without its knob')
+  }
+
+  const knob = luminance(getComputedStyle(thumb).backgroundColor)
+  const track = luminance(getComputedStyle(control).backgroundColor)
+
+  if (control.getAttribute('aria-checked') === 'true') {
+    expect(
+      (Math.max(knob, track) + 0.05) / (Math.min(knob, track) + 0.05),
+    ).toBeGreaterThanOrEqual(DISTINCT_ENOUGH)
+  } else {
+    expect(knob).toBeGreaterThan(track)
+  }
+}
+
+export const スイッチの入と切: Story = {
+  render: () => (
+    <div className="mx-auto max-w-[720px] p-6">
+      <Surface>
+        <div className="flex flex-col items-start gap-[26px]">
+          {SWITCH_STATES.map((one) => (
+            <div key={one.id} className="flex items-center gap-[11px]">
+              <Switch
+                id={one.id}
+                size={one.size}
+                defaultChecked={one.checked}
+              />
+              <Label htmlFor={one.id}>{one.label}</Label>
+            </div>
+          ))}
+        </div>
+      </Surface>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    for (const control of canvas.getAllByRole('switch')) {
+      knobStandsOut(control)
+    }
+
+    const off = canvas.getByRole('switch', { name: '切' })
+
+    await userEvent.click(off)
+    await waitFor(() => expect(off).toHaveAttribute('aria-checked', 'true'))
+    await waitFor(() => knobStandsOut(off))
+  },
 }
