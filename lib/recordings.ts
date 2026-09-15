@@ -1,4 +1,10 @@
-import type { Recording, RecordingDetail } from '@/repository/recordings'
+import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
+import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
+import type {
+  QualityLevel,
+  Recording,
+  RecordingDetail,
+} from '@/repository/recordings'
 
 export const RECORDING_STATE_FILTERS = [
   '問題のある録画',
@@ -6,7 +12,31 @@ export const RECORDING_STATE_FILTERS = [
   '未計測',
 ] as const
 
+export interface RecordingQualityShape {
+  variant: 'ok' | 'warn' | 'err' | 'mute'
+  label: string
+}
+
+const RECORDING_QUALITY_SHAPES: Record<QualityLevel, RecordingQualityShape> = {
+  good: { variant: 'ok', label: QUALITY_LEVEL_LABEL.good },
+  warning: { variant: 'warn', label: QUALITY_LEVEL_LABEL.warn },
+  mayNotBeWatchable: { variant: 'err', label: QUALITY_LEVEL_LABEL.bad },
+}
+
+const RECORDING_QUALITY_NOT_YET_KNOWN: RecordingQualityShape = {
+  variant: 'mute',
+  label: NOT_YET_IN_THIS_BUILD,
+}
+
 const SCRAMBLED_BEYOND_WATCHING = 0.01
+
+export function recordingQualityShapeOf(
+  level: QualityLevel | undefined,
+): RecordingQualityShape {
+  return level === undefined
+    ? RECORDING_QUALITY_NOT_YET_KNOWN
+    : shapeFor(RECORDING_QUALITY_SHAPES, level, RECORDING_QUALITY_NOT_YET_KNOWN)
+}
 
 export function isLeftScrambled(recording: Pick<Recording, 'scrambledShare'>) {
   return (recording.scrambledShare ?? 0) >= SCRAMBLED_BEYOND_WATCHING
