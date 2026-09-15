@@ -35,7 +35,6 @@ import {
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { ChangeThresholdButton } from '@/components/quality/change-threshold-button'
-import type { QualityAcknowledge } from '@/components/quality/anomaly-list'
 import { AnomalyList } from '@/components/quality/anomaly-list'
 import { LinkSegments } from '@/components/quality/link-segments'
 import { QualityTrendPanel } from '@/components/quality/quality-trend'
@@ -130,11 +129,9 @@ export type QualityReviseThreshold = (
 export function QualityView({
   result,
   onReviseThreshold,
-  onAcknowledge,
 }: {
   result: QualityResult
   onReviseThreshold: QualityReviseThreshold
-  onAcknowledge: QualityAcknowledge
 }) {
   return (
     <>
@@ -382,10 +379,7 @@ export function QualityView({
           </div>
         </Surface>
 
-        <AnomalyList
-          anomalies={result.anomalies}
-          onAcknowledge={onAcknowledge}
-        />
+        <AnomalyList anomalies={result.anomalies} />
       </div>
     </>
   )

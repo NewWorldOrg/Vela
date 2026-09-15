@@ -32,6 +32,7 @@ function Switch({
           'pointer-events-none block rounded-full border border-line-strong bg-surface transition-transform duration-150 ease-toy',
           'group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3.5',
           'data-[state=unchecked]:translate-x-0 group-data-[size=default]/switch:data-[state=checked]:translate-x-5 group-data-[size=sm]/switch:data-[state=checked]:translate-x-3.5',
+          'dark:data-[state=unchecked]:border-edge dark:data-[state=unchecked]:bg-edge',
           'data-[state=checked]:border-brand-hover data-[state=checked]:bg-on-brand',
         )}
       />

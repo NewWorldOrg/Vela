@@ -192,7 +192,7 @@ mock.module('@/repository/client/carina', {
         }
 
         if (path === '/api/quality/incidents') {
-          store.askedFor = init?.params?.query?.includeAcknowledged
+          store.askedFor = init?.params?.query
 
           return {
             data: {
@@ -262,21 +262,6 @@ mock.module('@/repository/client/carina', {
           response: answered(200),
         }
       },
-      POST: async (path: string, init?: Asking) => {
-        sent.push({
-          path: path.replace('{id}', String(init?.params?.path?.id)),
-          query: {},
-        })
-
-        if (store.refusal) {
-          return {
-            error: { message: store.refusal.message },
-            response: answered(store.refusal.status),
-          }
-        }
-
-        return { data: { data: {} }, response: answered(200) }
-      },
       PATCH: async (path: string, init?: Asking) => {
         sent.push({
           path: path.replace('{key}', String(init?.params?.path?.key)),
@@ -297,8 +282,7 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { acknowledgeAnomaly, getQuality, reviseThreshold } =
-  await import('@/repository/quality')
+const { getQuality, reviseThreshold } = await import('@/repository/quality')
 
 const service = (networkId: number, serviceId: number, name: string) => ({
   networkId,
@@ -614,8 +598,6 @@ test('異常は、破った閾値から題を取り、観測と適用閾値を�
   assert.equal(anomaly.levelLabel, '視聴不可の恐れ')
   assert.equal(anomaly.restatedBy, undefined)
   assert.equal(anomaly.when, '09/07 21:00 発生 · 継続中')
-  assert.equal(anomaly.acknowledged, false)
-  assert.equal(anomaly.asks, true)
   assert.equal(result.anomalies.owned, 1)
 })
 
@@ -663,36 +645,25 @@ test('他のドメインが持つ異常は、再掲として所有者と分類�
 
   assert.equal(anomaly.restatedBy, '再掲 · チューナー')
   assert.equal(anomaly.classification, '① 信号を掴めない')
-  assert.equal(anomaly.asks, false)
 })
 
-test('確認済みの行は後ろに回り、いつ誰が確認したかを言う', async () => {
+test('解消していない異常は、口が並べた順のまま、どれも継続中として出る', async () => {
   standing()
   store.incidents = [
-    incident({
-      id: 'settled',
-      state: 'acknowledged',
-      acknowledgedAt: '2026-09-07T13:04:00Z',
-      acknowledgedBy: 'carina',
-    }),
-    incident({ id: 'standing' }),
+    incident({ id: 'first', state: 'detected', notifiedAt: null }),
+    incident({ id: 'second', detectedAt: '2026-09-07T13:04:00Z' }),
   ]
 
-  const result = await getQuality('1', true)
+  const result = await getQuality('1')
 
+  assert.equal(store.askedFor, undefined)
   assert.deepEqual(
-    result.anomalies.items.map((one) => one.id),
-    ['standing', 'settled'],
+    result.anomalies.items.map((one) => [one.id, one.when]),
+    [
+      ['first', '09/07 21:00 発生 · 継続中'],
+      ['second', '09/07 22:04 発生 · 継続中'],
+    ],
   )
-  assert.equal(result.anomalies.items[1].acknowledged, true)
-  assert.equal(result.anomalies.items[1].asks, false)
-  assert.equal(
-    result.anomalies.items[1].when,
-    '09/07 21:00 発生 · 09/07 22:04 確認済み · carina',
-  )
-  assert.equal(store.askedFor, true)
-  assert.equal(result.anomalies.showsAcknowledged, true)
-  assert.equal(result.anomalies.href, '/settings/quality?days=1')
 })
 
 test('この版が知らない供給や状態でも、行は落ちずに出る', async () => {
@@ -713,8 +684,6 @@ test('この版が知らない供給や状態でも、行は落ちずに出る',
 
   assert.equal(anomaly.title, 'この版がまだ知らない値の供給途絶')
   assert.equal(anomaly.subject, '番組表')
-  assert.equal(anomaly.acknowledged, false)
-  assert.equal(anomaly.asks, false)
 })
 
 test('黙った供給だけが帯に出て、聞こえているものは出ない', async () => {
@@ -766,46 +735,10 @@ test('見張りがまだ通っていなければ、読んでいないと答え�
   assert.deepEqual(result.supplies.quiet, [])
 })
 
-test('確認済みにできないときの断りは日本語の一文になる', async () => {
-  standing()
-  store.refusal = {
-    status: 409,
-    message:
-      'This anomaly has been resolved, and acknowledging is for one that still stands; the same condition coming back is kept as a new occurrence with its own acknowledgement.',
-  }
-
-  assert.deepEqual(await acknowledgeAnomaly('one'), {
-    state: 'rejected',
-    message: 'この異常はすでに解消しているため、確認済みにできませんでした。',
-  })
-
-  store.refusal = {
-    status: 409,
-    message:
-      'This anomaly has not been told about yet, and acknowledging follows being told; the next pass of the supply watch tells about it.',
-  }
-
-  assert.deepEqual(await acknowledgeAnomaly('one'), {
-    state: 'rejected',
-    message: 'この異常はまだ知らされていないため、確認済みにできませんでした。',
-  })
-
-  store.refusal = {
-    status: 404,
-    message:
-      'An anomaly is asked for by the identifier the ledger gave it, and nothing is kept under this one.',
-  }
-
-  assert.deepEqual(await acknowledgeAnomaly('one'), {
-    state: 'rejected',
-    message: 'この異常は残っていないため、確認済みにできませんでした。',
-  })
-})
-
 test('推移は期間と対象を口に渡し、ほかの押しもその対象を連れて回る', async () => {
   standing()
 
-  const result = await getQuality('7', true, 'bitErrorRate')
+  const result = await getQuality('7', 'bitErrorRate')
   const asked = sent.find((one) => one.path === '/api/quality/trends')
 
   assert.deepEqual(asked?.query, { days: 7, subject: 'bitErrorRate' })
@@ -815,18 +748,15 @@ test('推移は期間と対象を口に渡し、ほかの押しもその対象�
   )
   assert.equal(
     result.windows[0].href,
-    '/settings/quality?days=1&subject=bitErrorRate&acknowledged=true',
+    '/settings/quality?days=1&subject=bitErrorRate',
   )
-  assert.equal(
-    result.trend.subjects[0].href,
-    '/settings/quality?days=7&acknowledged=true',
-  )
+  assert.equal(result.trend.subjects[0].href, '/settings/quality?days=7')
 })
 
 test('知らない対象は既定のドロップ率として読み、URL に対象を書かない', async () => {
   standing()
 
-  const result = await getQuality('1', false, 'somethingElse')
+  const result = await getQuality('1', 'somethingElse')
   const asked = sent.find((one) => one.path === '/api/quality/trends')
 
   assert.equal(asked?.query.subject, 'packetsLost')
@@ -927,8 +857,7 @@ test('ビット誤り率の刻みは、階層ごとの最大を並べる', async
     { subject: 'bitErrorRate' },
   )
 
-  const [bucket] = (await getQuality('1', false, 'bitErrorRate')).trend.rows[0]
-    .buckets
+  const [bucket] = (await getQuality('1', 'bitErrorRate')).trend.rows[0].buckets
 
   assert.equal(bucket.level, 'warn')
   assert.match(bucket.says, /最悪 3\.0e-4/)
@@ -963,23 +892,11 @@ test('電波ごとの系列は、運んでいる局の名前で呼ばれる', as
     },
   ])
 
-  const rows = (await getQuality('1', false, 'lockRate')).trend.rows
+  const rows = (await getQuality('1', 'lockRate')).trend.rows
 
   assert.deepEqual(
     rows.map((one) => one.name),
     ['全体', '湾岸放送2', 'チャンネル'],
   )
   assert.equal(new Set(rows.map((one) => one.key)).size, rows.length)
-})
-
-test('確認済みにする頼みは、その行を名指して一度だけ送る', async () => {
-  standing()
-
-  assert.deepEqual(await acknowledgeAnomaly('one'), { state: 'ok' })
-  assert.deepEqual(
-    sent
-      .filter((each) => each.path.includes('acknowledge'))
-      .map((each) => each.path),
-    ['/api/quality/incidents/one/acknowledge'],
-  )
 })

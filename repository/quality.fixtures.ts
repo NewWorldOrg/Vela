@@ -146,8 +146,6 @@ const ANOMALIES: QualityAnomaly[] = [
     level: 'bad',
     levelLabel: '視聴不可の恐れ',
     when: '08/09 21:00 発生 · 継続中',
-    acknowledged: false,
-    asks: true,
   },
   {
     id: 'anomaly-2',
@@ -158,8 +156,6 @@ const ANOMALIES: QualityAnomaly[] = [
     level: 'unreachable',
     levelLabel: '取得できず',
     when: '08/10 09:34 発生 · 継続中',
-    acknowledged: false,
-    asks: true,
   },
   {
     id: 'anomaly-3',
@@ -172,20 +168,6 @@ const ANOMALIES: QualityAnomaly[] = [
     restatedBy: '再掲 · チューナー',
     classification: '① 信号を掴めない',
     when: '08/09 18:41 発生 · 継続中',
-    acknowledged: false,
-    asks: false,
-  },
-  {
-    id: 'anomaly-4',
-    title: 'ドロップ率が警告水準を超過',
-    subject: '中央テレビ1',
-    observed: '観測 0.024%',
-    applied: '適用閾値 0.02%(暫定)',
-    level: 'warn',
-    levelLabel: '警告水準',
-    when: '08/09 20:10 発生 · 08/09 22:04 確認済み · carina',
-    acknowledged: true,
-    asks: false,
   },
 ]
 
@@ -440,11 +422,9 @@ export const QUALITY: QualityResult = {
     ],
   },
   anomalies: {
-    items: ANOMALIES.filter((one) => !one.acknowledged),
+    items: ANOMALIES,
     owned: 2,
     restated: 1,
-    showsAcknowledged: false,
-    href: '/settings/quality?days=1&acknowledged=true' as Route,
   },
 }
 
@@ -509,19 +489,6 @@ export const NOTHING_MEASURED: QualityResult = {
     items: [],
     owned: 0,
     restated: 0,
-    showsAcknowledged: false,
-    href: '/settings/quality?days=30&acknowledged=true' as Route,
-  },
-}
-
-export const ACKNOWLEDGED_SHOWN: QualityResult = {
-  ...QUALITY,
-  anomalies: {
-    items: ANOMALIES,
-    owned: 3,
-    restated: 1,
-    showsAcknowledged: true,
-    href: '/settings/quality?days=1' as Route,
   },
 }
 
