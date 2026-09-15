@@ -552,6 +552,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/recordings/integrity/findings/{findingId}/delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['deleteIntegrityFinding']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings/{id}': {
     parameters: {
       query?: never
@@ -632,22 +648,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/recordings/integrity/findings/{findingId}/delete': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post: operations['deleteIntegrityFinding']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/api/recordings/{id}/stop': {
     parameters: {
       query?: never
@@ -658,22 +658,6 @@ export interface paths {
     get?: never
     put?: never
     post: operations['stopRecording']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/quality/incidents/{id}/acknowledge': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post: operations['acknowledgeQualityIncident']
     delete?: never
     options?: never
     head?: never
@@ -1455,11 +1439,6 @@ export interface components {
       message: string
       data: null | components['schemas']['GuideResponder']
     }
-    BaseResponderOfIntegrityListResponder: {
-      status: boolean
-      message: string
-      data: null | components['schemas']['IntegrityListResponder']
-    }
     BaseResponderOfIntegrityFindingRefusedResponder: {
       status: boolean
       message: string
@@ -1469,6 +1448,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['IntegrityFindingThrownAwayResponder']
+    }
+    BaseResponderOfIntegrityListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['IntegrityListResponder']
     }
     BaseResponderOfIntegritySweepRefusedResponder: {
       status: boolean
@@ -1564,11 +1548,6 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['QualityIncidentListResponder']
-    }
-    BaseResponderOfQualityIncidentResponder: {
-      status: boolean
-      message: string
-      data: null | components['schemas']['QualityIncidentResponder']
     }
     BaseResponderOfQualityRecordingListResponder: {
       status: boolean
@@ -2119,6 +2098,21 @@ export interface components {
       /** Format: int32 */
       generation: number | string
     }
+    /** @enum {string} */
+    FindingDisposalFailure:
+      | 'noSuchFinding'
+      | 'namesARecording'
+      | 'nothingOnTheDisk'
+      | 'alreadyThrownAway'
+      | 'noTimeWasTaken'
+      | 'oneIsAlreadyBeingThrownAway'
+      | 'rootOutOfReach'
+      | 'fileChanged'
+      | 'stillBeingWritten'
+      | 'filesLeftBehind'
+      | 'driverUnreachable'
+      | 'driverRefused'
+      | 'tookTooLong'
     ForgetArchivedServiceRequest: {
       /** Format: int32 */
       networkId?: null | number | string
@@ -2170,21 +2164,11 @@ export interface components {
       | 'fileMissing'
       | 'fileEmpty'
       | 'emptyThoughComplete'
-    /** @enum {string} */
-    FindingDisposalFailure:
-      | 'noSuchFinding'
-      | 'namesARecording'
-      | 'nothingOnTheDisk'
-      | 'alreadyThrownAway'
-      | 'noTimeWasTaken'
-      | 'oneIsAlreadyBeingThrownAway'
-      | 'rootOutOfReach'
-      | 'fileChanged'
-      | 'stillBeingWritten'
-      | 'filesLeftBehind'
-      | 'driverUnreachable'
-      | 'driverRefused'
-      | 'tookTooLong'
+    IntegrityFindingRefusedResponder: {
+      /** Format: uuid */
+      findingId: string
+      refusal: components['schemas']['FindingDisposalFailure']
+    }
     IntegrityFindingResponder: {
       /** Format: uuid */
       id: string
@@ -2198,11 +2182,6 @@ export interface components {
       observedSize: null | number | string
       /** Format: date-time */
       noticedAt: string
-    }
-    IntegrityFindingRefusedResponder: {
-      /** Format: uuid */
-      findingId: string
-      refusal: components['schemas']['FindingDisposalFailure']
     }
     IntegrityFindingThrownAwayResponder: {
       /** Format: uuid */
@@ -2630,13 +2609,10 @@ export interface components {
       /** Format: date-time */
       notifiedAt: null | string
       /** Format: date-time */
-      acknowledgedAt: null | string
-      acknowledgedBy: null | string
-      /** Format: date-time */
       resolvedAt: null | string
     }
     /** @enum {string} */
-    QualityIncidentState: 'detected' | 'notified' | 'acknowledged' | 'resolved'
+    QualityIncidentState: 'detected' | 'notified' | 'resolved'
     /** @enum {string} */
     QualityLevel: 'good' | 'unmeasured' | 'warning' | 'mayNotBeWatchable'
     QualityMeasureResponder: {
@@ -3767,13 +3743,12 @@ export interface components {
       /** Format: int32 */
       transportStreamId: null | number | string
     }
-    /** @enum {null|string} */
+    /** @enum {string} */
     SupplySilence:
       | 'recordingProgress'
       | 'recordingMeasurement'
       | 'signalSamples'
       | 'guideVisits'
-      | null
     /** @enum {string} */
     SweepRefusal: 'none' | 'oneIsAlreadyRunning' | 'tooSoonAfterTheLastOne'
     SystemReachResponder: {
@@ -6267,6 +6242,89 @@ export interface operations {
       }
     }
   }
+  deleteIntegrityFinding: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        findingId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
+        }
+      }
+    }
+  }
   getRecording: {
     parameters: {
       query?: never
@@ -6621,89 +6679,6 @@ export interface operations {
       }
     }
   }
-  deleteIntegrityFinding: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        findingId: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
-        }
-      }
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
-        }
-      }
-      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
-        }
-      }
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
-        }
-      }
-      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfIntegrityFindingThrownAwayResponder']
-        }
-      }
-      /** @description Bad Gateway */
-      502: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
-        }
-      }
-      /** @description Service Unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfIntegrityFindingRefusedResponder']
-        }
-      }
-    }
-  }
   stopRecording: {
     parameters: {
       query?: never
@@ -6790,62 +6765,6 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
-        }
-      }
-    }
-  }
-  acknowledgeQualityIncident: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
-        }
-      }
-      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
-        }
-      }
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
-        }
-      }
-      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfQualityIncidentResponder']
         }
       }
     }
@@ -7045,9 +6964,7 @@ export interface operations {
   }
   listQualityIncidents: {
     parameters: {
-      query?: {
-        includeAcknowledged?: boolean
-      }
+      query?: never
       header?: never
       path?: never
       cookie?: never
