@@ -28,6 +28,7 @@ export const INTEGRITY_FIXTURE: IntegrityResult = {
   findings: [
     {
       key: 'primary/recording-4812.m2ts.tmp',
+      id: '00000000-0000-4000-8000-000000000001',
       fault: 'noLedgerRow',
       reason: '録画の記録に対応する行が無い',
       root: 'primary',
@@ -37,6 +38,7 @@ export const INTEGRITY_FIXTURE: IntegrityResult = {
     },
     {
       key: 'primary/recording-4790.m2ts',
+      id: '00000000-0000-4000-8000-000000000002',
       fault: 'sizeDisagrees',
       reason: '録画の記録とサイズが食い違う',
       root: 'primary',
@@ -48,6 +50,7 @@ export const INTEGRITY_FIXTURE: IntegrityResult = {
     },
     {
       key: 'primary/recording-4771.m2ts',
+      id: '00000000-0000-4000-8000-000000000003',
       fault: 'fileEmpty',
       reason: '0 バイト',
       root: 'primary',
@@ -59,6 +62,7 @@ export const INTEGRITY_FIXTURE: IntegrityResult = {
     },
     {
       key: 'primary/recording-4768.m2ts',
+      id: '00000000-0000-4000-8000-000000000004',
       fault: 'emptyThoughComplete',
       reason: '0 バイト(録画は完走している)',
       root: 'primary',
@@ -70,6 +74,7 @@ export const INTEGRITY_FIXTURE: IntegrityResult = {
     },
     {
       key: 'secondary/recording-4702.m2ts',
+      id: '00000000-0000-4000-8000-000000000005',
       fault: 'fileMissing',
       reason: '録画の記録に行があるが実ファイルが無い',
       root: 'secondary',

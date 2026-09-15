@@ -1,5 +1,5 @@
 import { formatStamp } from '@/lib/format'
-import { wordFor } from '@/lib/not-yet-in-this-build'
+import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -14,6 +14,7 @@ export type IntegrityFault = components['schemas']['IntegrityFault']
 
 export interface IntegrityFinding {
   key: string
+  id: string
   fault: IntegrityFault
   reason: string
   root: string
@@ -53,6 +54,11 @@ export interface IntegrityResult {
 
 export type SweepWrite =
   { state: 'ok'; findings: number } | { state: 'refused'; message: string }
+
+export type FindingDiscarded =
+  | { state: 'ok' }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
 
 const UNREADABLE = '整合性チェックの結果を読めませんでした'
 
@@ -136,6 +142,59 @@ function refusalOf(
   return `整合性チェックを実行できませんでした(${response.status})。`
 }
 
+type FindingRefusal = components['schemas']['FindingDisposalFailure']
+
+type FindingRefused = components['schemas']['IntegrityFindingRefusedResponder']
+
+const RUN_AGAIN = '整合性チェックをもう一度実行してください。'
+
+const DISCARD_REFUSAL: Record<FindingRefusal, string> = {
+  noSuchFinding: `この検出結果はもう残っていません。${RUN_AGAIN}`,
+  namesARecording:
+    'このファイルは録画の記録に結び付いています。録画のほうを削除してください。',
+  nothingOnTheDisk: 'このファイルはもう保存先にありません。',
+  alreadyThrownAway: 'このファイルはすでに削除されています。',
+  noTimeWasTaken: `検出した時刻を記録する前のチェックの結果のため、削除していません。${RUN_AGAIN}`,
+  oneIsAlreadyBeingThrownAway:
+    '別のファイルを削除しています。終わってからもう一度お試しください。',
+  rootOutOfReach: '保存先に到達できないため、削除していません。',
+  fileChanged: `検出の後にファイルが変わったため、削除していません。${RUN_AGAIN}`,
+  stillBeingWritten: 'このファイルは書き込み中のため、削除していません。',
+  filesLeftBehind: 'ファイルを削除しきれませんでした。もう一度お試しください。',
+  driverUnreachable: '保存先の一覧を確認できないため、削除していません。',
+  driverRefused: '保存先の一覧の確認を断られたため、削除していません。',
+  tookTooLong: '保存先の確認に時間がかかりすぎたため、削除していません。',
+}
+
+const CANNOT_DISCARD = 'ファイルを削除できませんでした'
+
+export async function discardIntegrityFinding(
+  findingId: string,
+): Promise<FindingDiscarded> {
+  const { error, response } = await carinaClient().POST(
+    '/api/recordings/integrity/findings/{findingId}/delete',
+    { params: { path: { findingId } } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok) {
+    return { state: 'ok' }
+  }
+
+  const refused = error?.data as FindingRefused | null | undefined
+  const refusal = refused
+    ? shapeFor(DISCARD_REFUSAL, refused.refusal, undefined)
+    : undefined
+
+  return {
+    state: 'rejected',
+    message: refusal ?? `${CANNOT_DISCARD}(${response.status})。`,
+  }
+}
+
 function toCheck(check: CheckResponder): IntegrityCheck {
   return {
     ranAt: formatStamp(check.finishedAt),
@@ -155,6 +214,7 @@ function toFinding(finding: FindingResponder): IntegrityFinding {
 
   return {
     key: `${finding.outputRoot}/${finding.path}`,
+    id: finding.id,
     fault: finding.fault,
     reason: wordFor(REASON, finding.fault),
     root: finding.outputRoot,
