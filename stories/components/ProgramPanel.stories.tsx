@@ -2,6 +2,7 @@ import { useState, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
+import { relationDestinationOf } from '@/lib/guide'
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import type { Program } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
@@ -239,13 +240,49 @@ export const 関連番組あり: Story = {
     await expect(elsewhere.length).toBeGreaterThan(0)
 
     for (const other of elsewhere) {
+      const destination = relationDestinationOf(other, false)
+
+      if (destination.to !== 'programme') {
+        await expect(
+          surface.querySelector(`a[href="/guide/programs/${other.key}"]`),
+        ).toBeNull()
+        continue
+      }
+
       const to = surface.querySelector<HTMLElement>(
-        `a[href="/guide/programs/${other.key}"]`,
+        `a[href="/guide/programs/${destination.key}"]`,
       )
 
       await expect(to).not.toBeNull()
       await expect(to!).toBeVisible()
     }
+  },
+}
+
+const beingRecorded: Program = {
+  ...booked,
+  booking: { ...booked.booking!, standing: 'recording' },
+}
+
+export const 録画中: Story = {
+  args: {
+    program: beingRecorded,
+    channel: channelOf(beingRecorded.channelId),
+  },
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, beingRecorded)
+
+    const shown = within(surface)
+
+    await expect(shown.getByText('録画中')).toBeVisible()
+    await expect(shown.queryByText('チューナー確保済み')).toBeNull()
+    await expect(
+      shown.queryByRole('button', { name: '予約を取り消す' }),
+    ).toBeNull()
+    await expect(shown.queryByRole('button', { name: '予約を編集' })).toBeNull()
+    await expect(shown.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
 }
 

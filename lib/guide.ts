@@ -264,6 +264,62 @@ export function foldsAColumn<C extends FoldableColumn, P extends FoldableCell>(
   return foldedGuideOf(channels, programs).channels.length < channels.length
 }
 
+export type BookingMark = 'booked' | 'recording'
+
+export function bookingMarkOf(
+  booking: { standing: string } | undefined,
+): BookingMark | undefined {
+  if (booking === undefined) {
+    return undefined
+  }
+
+  return booking.standing === 'recording' ? 'recording' : 'booked'
+}
+
+export interface GuideRelated {
+  key: string
+  kind: GuideRelationKind
+  channelId: string
+  shadow: boolean
+}
+
+export type RelationDestination =
+  | { to: 'programme'; key: string }
+  | { to: 'live'; channelId: string }
+  | { to: 'nowhere' }
+
+export function relationDestinationOf(
+  related: GuideRelated,
+  onAir: boolean,
+): RelationDestination {
+  if (related.kind !== 'shared' && !related.shadow) {
+    return { to: 'programme', key: related.key }
+  }
+
+  return onAir
+    ? { to: 'live', channelId: related.channelId }
+    : { to: 'nowhere' }
+}
+
+export function primaryKeyOfShadow(
+  shadow: { related: readonly (GuideRelation & { eventId: number })[] },
+  isShadow: (key: string) => boolean | undefined,
+): string | undefined {
+  for (const relation of shadow.related) {
+    if (relation.kind !== 'shared') {
+      continue
+    }
+
+    const key = `${relation.networkId}-${relation.serviceId}-${relation.eventId}`
+
+    if (isShadow(key) === false) {
+      return key
+    }
+  }
+
+  return undefined
+}
+
 export const GUTTER_PX = 46
 
 export const COLUMN_MIN_PX = 200

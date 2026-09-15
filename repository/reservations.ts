@@ -189,12 +189,13 @@ export async function listBookings(): Promise<Map<string, ProgramBooking>> {
   const bookings = new Map<string, ProgramBooking>()
 
   for (const one of carried.items) {
-    if (one.standing !== 'scheduled') {
+    if (one.standing !== 'scheduled' && one.standing !== 'recording') {
       continue
     }
 
     bookings.set(one.programme.id, {
       id: one.id,
+      standing: one.standing,
       priority: toInt(one.priority),
       marginBeforeSeconds: toInt(one.window.marginBeforeSeconds),
       marginAfterSeconds: toInt(one.window.marginAfterSeconds),

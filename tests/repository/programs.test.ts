@@ -38,6 +38,7 @@ interface Extra {
     eventId: number
     kind: string
   }[]
+  shadow?: boolean
 }
 
 const programme = (
@@ -57,7 +58,7 @@ const programme = (
   endsAt,
   name,
   summary: extra.summary ?? '',
-  isShadow: false,
+  isShadow: extra.shadow ?? false,
   hasSubtitles: true,
   audio: extra.audio ?? 'undetermined',
   sounds: extra.sounds ?? 0,
@@ -117,7 +118,8 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getGuide, getProgram } = await import('@/repository/programs')
+const { getGuide, getProgram, primaryProgramKeyOf } =
+  await import('@/repository/programs')
 
 function broadcastDay(at: string): string {
   return new Date(
@@ -213,7 +215,14 @@ test('what the broadcaster sent beyond the summary reaches the guide', async () 
 
   assert.deepEqual(program.items, ITEMS)
   assert.deepEqual(program.related, [
-    { key: idOf(ELSEWHERE), kind: 'relayed', channelLabel: '9 みなと教育1' },
+    {
+      key: idOf(ELSEWHERE),
+      kind: 'relayed',
+      channelId: `${ELSEWHERE.networkId}-${ELSEWHERE.serviceId}`,
+      channelKind: 'terrestrial',
+      shadow: false,
+      channelLabel: '9 みなと教育1',
+    },
   ])
   assert.equal(program.durationLabel, '1時間30分')
 })
@@ -406,11 +415,129 @@ test('a shared cell names the channel the broadcast is listed under', async () =
   )
 
   assert.deepEqual(listed.related, [
-    { key: idOf(SPLIT), kind: 'shared', channelLabel: '1 みなと総合2' },
+    {
+      key: idOf(SPLIT),
+      kind: 'shared',
+      channelId: `${SPLIT.networkId}-${SPLIT.serviceId}`,
+      channelKind: 'terrestrial',
+      shadow: false,
+      channelLabel: '1 みなと総合2',
+    },
   ])
   assert.deepEqual(shared.related, [
-    { key: idOf(CARRIED), kind: 'shared', channelLabel: '1 みなと総合1' },
+    {
+      key: idOf(CARRIED),
+      kind: 'shared',
+      channelId: `${CARRIED.networkId}-${CARRIED.serviceId}`,
+      channelKind: 'terrestrial',
+      shadow: false,
+      channelLabel: '1 みなと総合1',
+    },
   ])
+})
+
+const COPY = { networkId: CARRIED.networkId, serviceId: 1522, eventId: 40613 }
+
+function copying(): void {
+  store.services = [
+    service(CARRIED.networkId, CARRIED.serviceId, 'みなと総合1', 1),
+    service(COPY.networkId, COPY.serviceId, 'みなと総合2', 1),
+    service(ELSEWHERE.networkId, ELSEWHERE.serviceId, 'みなと教育1', 9),
+  ]
+  store.programmes = [
+    programme(
+      CARRIED.networkId,
+      CARRIED.serviceId,
+      CARRIED.eventId,
+      '入り江のアトリエ 夏の三日間',
+      STARTS,
+      ENDS,
+      {
+        related: [
+          { ...COPY, kind: 'shared' },
+          { ...ELSEWHERE, kind: 'relayed' },
+        ],
+      },
+    ),
+    programme(COPY.networkId, COPY.serviceId, COPY.eventId, '', STARTS, ENDS, {
+      shadow: true,
+      related: [{ ...CARRIED, kind: 'shared' }],
+    }),
+    programme(
+      ELSEWHERE.networkId,
+      ELSEWHERE.serviceId,
+      ELSEWHERE.eventId,
+      '',
+      ENDS,
+      hourOfTheDay(10),
+      { shadow: true },
+    ),
+  ]
+}
+
+test('a simulcast names the channel it goes out on, so the screen can open it live', async () => {
+  copying()
+
+  const related = (await fromItsOwnAddress(idOf(CARRIED))).related ?? []
+  const shared = related.find((one) => one.kind === 'shared')
+
+  assert.equal(shared?.channelId, `${COPY.networkId}-${COPY.serviceId}`)
+  assert.equal(shared?.channelKind, 'terrestrial')
+})
+
+test('a relay to a copy is known as a copy at both readings', async () => {
+  copying()
+
+  const inTheGuide = await fromTheGuide(idOf(CARRIED))
+  const atItsAddress = await fromItsOwnAddress(idOf(CARRIED))
+  const relayOf = (program: {
+    related?: { kind: string; shadow: boolean }[]
+  }) => program.related?.find((one) => one.kind === 'relayed')
+
+  assert.equal(relayOf(inTheGuide)?.shadow, true)
+  assert.equal(relayOf(atItsAddress)?.shadow, true)
+})
+
+test('a relay to a named programme is not taken for a copy', async () => {
+  standing()
+
+  const atItsAddress = await fromItsOwnAddress(idOf(CARRIED))
+
+  assert.equal(
+    atItsAddress.related?.find((one) => one.kind === 'relayed')?.shadow,
+    false,
+  )
+})
+
+test('a copy has no page of its own', async () => {
+  copying()
+
+  assert.equal(await getProgram(idOf(COPY)), undefined)
+})
+
+test('a copy leads back to the programme it copies', async () => {
+  copying()
+
+  assert.equal(await primaryProgramKeyOf(idOf(COPY)), idOf(CARRIED))
+})
+
+test('a programme that is not a copy leads back to nothing', async () => {
+  copying()
+
+  assert.equal(await primaryProgramKeyOf(idOf(CARRIED)), undefined)
+})
+
+test('a copy whose programme is no longer held leads back to nothing', async () => {
+  copying()
+  store.programmes = store.programmes.filter((one) => one.id !== idOf(CARRIED))
+
+  assert.equal(await primaryProgramKeyOf(idOf(COPY)), undefined)
+})
+
+test('an address nobody holds leads back to nothing', async () => {
+  copying()
+
+  assert.equal(await primaryProgramKeyOf('1-2-3'), undefined)
 })
 
 test('a guide that will not be read throws what the API said about it', async () => {

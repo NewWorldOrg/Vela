@@ -3,13 +3,18 @@ import type { Decorator, Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
-import { COLUMN_MIN_PX, gridMinWidthOf, isOnAir } from '@/lib/guide'
+import {
+  COLUMN_MIN_PX,
+  bookingMarkOf,
+  gridMinWidthOf,
+  isOnAir,
+} from '@/lib/guide'
 import {
   AERIAL_CHANNEL_FIXTURES,
   CHANNEL_FIXTURES,
 } from '@/repository/channels.fixtures'
 import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
-import type { Program } from '@/repository/programs'
+import type { BookingStanding, Program } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
 import {
   AERIAL_PROGRAM_FIXTURES,
@@ -132,6 +137,136 @@ export const 放送済み: Story = {
         )
       }
     }
+  },
+}
+
+type CellSize = 'md' | 's' | 'xs'
+
+const cellSizeOf = (program: Program): CellSize => {
+  const height = (program.durationMin / 60) * HOUR_PX
+
+  return height < 40 ? 'xs' : height < 72 ? 's' : 'md'
+}
+
+const endsAt = (program: Program) => program.startMin + program.durationMin
+
+function firstCell(
+  where: string,
+  matches: (program: Program) => boolean,
+): Program {
+  const found = PROGRAM_FIXTURES.find(
+    (program) => !program.booking && matches(program),
+  )
+
+  if (!found) {
+    throw new Error(`the fixtures hold no ${where} cell`)
+  }
+
+  return found
+}
+
+const BOOKED_CELLS: { program: Program; standing: BookingStanding }[] = [
+  {
+    program: firstCell(
+      'upcoming md',
+      (p) => p.startMin > NOW_MIN && cellSizeOf(p) === 'md',
+    ),
+    standing: 'scheduled',
+  },
+  {
+    program: firstCell(
+      'upcoming s',
+      (p) => p.startMin > NOW_MIN && cellSizeOf(p) === 's',
+    ),
+    standing: 'scheduled',
+  },
+  {
+    program: firstCell(
+      'upcoming xs',
+      (p) => p.startMin > NOW_MIN && cellSizeOf(p) === 'xs',
+    ),
+    standing: 'scheduled',
+  },
+  {
+    program: firstCell(
+      'on-air',
+      (p) => p.startMin <= NOW_MIN && NOW_MIN < endsAt(p),
+    ),
+    standing: 'recording',
+  },
+  {
+    program: firstCell('ended', (p) => !p.endUndecided && endsAt(p) <= NOW_MIN),
+    standing: 'recording',
+  },
+]
+
+const withBookings = PROGRAM_FIXTURES.map((program) => {
+  const booked = BOOKED_CELLS.find((one) => one.program.id === program.id)
+
+  return booked
+    ? {
+        ...program,
+        booked: true,
+        booking: {
+          id: `booking-${program.id}`,
+          standing: booked.standing,
+          priority: 0,
+          marginBeforeSeconds: 0,
+          marginAfterSeconds: 0,
+        },
+      }
+    : program
+})
+
+export const 予約の印: Story = {
+  args: { guide: { ...base, programs: withBookings } },
+  play: async ({ canvasElement }) => {
+    const cells = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]',
+      ),
+    )
+    const inOrder = CHANNEL_FIXTURES.flatMap((channel) =>
+      withBookings.filter((program) => program.channelId === channel.id),
+    )
+
+    await expect(cells).toHaveLength(inOrder.length)
+
+    const colourOf: Partial<Record<string, string>> = {}
+    const sizesMarked = new Set<string>()
+
+    for (const [index, program] of inOrder.entries()) {
+      const cell = cells[index]
+      const mark = cell.querySelector<HTMLElement>('[data-booking-mark]')
+      const expected = bookingMarkOf(program.booking)
+
+      if (expected === undefined) {
+        await expect(mark).toBeNull()
+        continue
+      }
+
+      await expect(mark).not.toBeNull()
+      await expect(mark!.dataset.bookingMark).toBe(expected)
+
+      const drawn = mark!.getBoundingClientRect()
+      const room = cell.getBoundingClientRect()
+
+      await expect(drawn.width).toBeGreaterThan(0)
+      await expect(drawn.top).toBeGreaterThanOrEqual(room.top)
+      await expect(drawn.bottom).toBeLessThanOrEqual(room.bottom)
+      await expect(drawn.left).toBeGreaterThanOrEqual(room.left)
+
+      const colour = getComputedStyle(mark!).color
+      colourOf[expected] ??= colour
+      await expect(colour).toBe(colourOf[expected])
+
+      sizesMarked.add(cell.dataset.cellSize ?? '')
+    }
+
+    await expect(colourOf.booked).toBeDefined()
+    await expect(colourOf.recording).toBeDefined()
+    await expect(colourOf.booked).not.toBe(colourOf.recording)
+    await expect([...sizesMarked].sort()).toEqual(['md', 's', 'xs'])
   },
 }
 

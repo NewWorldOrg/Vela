@@ -16,6 +16,7 @@ import {
   videoSaying,
 } from '@/repository/announced'
 import { liveScreenHref } from '@/repository/live-paths'
+import { relationDestinationOf } from '@/lib/guide'
 import {
   NOT_YET_IN_THIS_BUILD,
   NOT_YET_IN_THIS_BUILD_SAYING,
@@ -126,7 +127,11 @@ export function ProgramDetailBody({
           </p>
         )}
         {related.map((item) => (
-          <RelatedNotice key={`${item.kind}-${item.key}`} related={item} />
+          <RelatedNotice
+            key={`${item.kind}-${item.key}`}
+            related={item}
+            onAir={onAir}
+          />
         ))}
         {items.map((item, index) => (
           <ExtendedSection key={index} item={item} />
@@ -218,12 +223,36 @@ function announcedOf(program: Program): Announced[] {
   )
 }
 
-function RelatedNotice({ related }: { related: RelatedProgram }) {
+function relatedHrefOf(
+  related: RelatedProgram,
+  onAir: boolean,
+): string | undefined {
+  const destination = relationDestinationOf(related, onAir)
+
+  if (destination.to === 'programme') {
+    return `/guide/programs/${destination.key}`
+  }
+
+  if (destination.to === 'live') {
+    return liveScreenHref(destination.channelId, related.channelKind)
+  }
+
+  return undefined
+}
+
+function RelatedNotice({
+  related,
+  onAir,
+}: {
+  related: RelatedProgram
+  onAir: boolean
+}) {
   const wording = shapeFor(
     RELATION_WORDING,
     related.kind,
     NOT_YET_KNOWN_RELATION,
   )
+  const href = relatedHrefOf(related, onAir)
 
   return (
     <div className="mb-[22px] flex items-start gap-[11px] rounded-lg bg-sky-soft px-4 py-[13px] text-ui leading-[1.75] text-sky max-[700px]:flex-wrap">
@@ -231,12 +260,14 @@ function RelatedNotice({ related }: { related: RelatedProgram }) {
       <p className="min-w-0 flex-1 font-bold">
         {wording.lead(related.channelLabel)}
       </p>
-      <Link
-        href={`/guide/programs/${related.key}`}
-        className="tap-target ml-auto pl-[13px] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
-      >
-        {wording.link}
-      </Link>
+      {href !== undefined && (
+        <Link
+          href={href as Route}
+          className="tap-target ml-auto pl-[13px] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
+        >
+          {wording.link}
+        </Link>
+      )}
     </div>
   )
 }

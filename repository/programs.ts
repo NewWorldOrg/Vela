@@ -7,6 +7,7 @@ import {
   WINDOW_HOURS,
   broadcastDateOf,
   nowMinOf,
+  primaryKeyOfShadow,
   servicesSettled,
   windowStartOf,
 } from '@/lib/guide'
@@ -35,8 +36,11 @@ export type Genre =
   | 'doc'
   | 'other'
 
+export type BookingStanding = 'scheduled' | 'recording'
+
 export interface ProgramBooking {
   id: string
+  standing: BookingStanding
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number
@@ -96,6 +100,9 @@ export type RelationKind = GuideRelationKind
 export interface RelatedProgram {
   key: string
   kind: RelationKind
+  channelId: string
+  channelKind: ChannelKind
+  shadow: boolean
   channelLabel?: string
 }
 
@@ -176,6 +183,11 @@ export async function getGuide(
     }),
   ])
 
+  const shadows = new Set(
+    guide.programmes
+      .filter((programme) => programme.isShadow)
+      .map((programme) => programme.id),
+  )
   const settled = servicesSettled(
     columnsOf(services, kind),
     guide.programmes.filter((programme) => !programme.isShadow),
@@ -197,7 +209,7 @@ export async function getGuide(
     ),
     programs: settled.carried
       .map(({ service, broadcast }) =>
-        toProgram(broadcast, windowStart, services, service),
+        toProgram(broadcast, windowStart, services, shadows, service),
       )
       .filter((program): program is Program => program !== null)
       .map((program) => booked(program, bookings.get(program.id))),
@@ -210,14 +222,21 @@ export async function getProgram(
 ): Promise<ProgramDetail | undefined> {
   const programme = await fetchProgramme(id)
 
-  if (!programme) {
+  if (!programme || programme.isShadow) {
     return undefined
   }
 
   const day = dayOf(new Date(programme.startsAt))
   const windowStart = windowStartOf(day.date)
-  const services = await fetchServiceChannels()
-  const program = toProgram(programme, windowStart, services)
+  const [services, shadows] = await Promise.all([
+    fetchServiceChannels(),
+    shadowsAmong(
+      programme.related
+        .filter((related) => related.kind !== 'shared')
+        .map(keyOfRelated),
+    ),
+  ])
+  const program = toProgram(programme, windowStart, services, shadows)
 
   if (!program) {
     return undefined
@@ -377,6 +396,7 @@ function toProgram(
   programme: Programme,
   windowStart: Date,
   services: GuideChannel[],
+  shadows: ReadonlySet<string>,
   on: GuideService = programme,
 ): Program | null {
   const startsAt = new Date(programme.startsAt)
@@ -417,13 +437,15 @@ function toProgram(
     related: withRelatedSettled(
       [
         ...alsoCarryingIt(programme, on, services),
-        ...programme.related.map((related) => ({
-          key: `${related.networkId}-${related.serviceId}-${related.eventId}`,
-          kind: related.kind,
-          channelLabel: channelLabelOf(
-            serviceOf(services, related.networkId, related.serviceId),
+        ...programme.related.map((related) =>
+          relatedOf(
+            keyOfRelated(related),
+            related.kind,
+            related,
+            services,
+            shadows,
           ),
-        })),
+        ),
       ],
       service,
     ),
@@ -440,15 +462,67 @@ function alsoCarryingIt(
     return []
   }
 
-  return [
-    {
-      key: programme.id,
-      kind: 'shared',
-      channelLabel: channelLabelOf(
-        serviceOf(services, programme.networkId, programme.serviceId),
-      ),
-    },
-  ]
+  return [relatedOf(programme.id, 'shared', programme, services, new Set())]
+}
+
+function relatedOf(
+  key: string,
+  kind: RelationKind,
+  on: GuideService,
+  services: GuideChannel[],
+  shadows: ReadonlySet<string>,
+): RelatedProgram {
+  const channel = serviceOf(services, on.networkId, on.serviceId)
+
+  return {
+    key,
+    kind,
+    channelId: `${on.networkId}-${on.serviceId}`,
+    channelKind: channel?.kind ?? kindOfNetwork(on.networkId),
+    shadow: shadows.has(key),
+    channelLabel: channelLabelOf(channel),
+  }
+}
+
+function keyOfRelated(related: {
+  networkId: number
+  serviceId: number
+  eventId: number
+}): string {
+  return `${related.networkId}-${related.serviceId}-${related.eventId}`
+}
+
+async function shadowsAmong(keys: readonly string[]): Promise<Set<string>> {
+  const read = await Promise.all(keys.map((key) => fetchProgramme(key)))
+
+  return new Set(
+    read
+      .filter((one): one is Programme => one?.isShadow === true)
+      .map((one) => one.id),
+  )
+}
+
+export async function primaryProgramKeyOf(
+  id: string,
+): Promise<string | undefined> {
+  const programme = await fetchProgramme(id)
+
+  if (!programme?.isShadow) {
+    return undefined
+  }
+
+  const partners = await Promise.all(
+    programme.related
+      .filter((related) => related.kind === 'shared')
+      .map((related) => fetchProgramme(keyOfRelated(related))),
+  )
+  const held = new Map(
+    partners
+      .filter((one): one is Programme => one !== null)
+      .map((one) => [one.id, one.isShadow]),
+  )
+
+  return primaryKeyOfShadow(programme, (key) => held.get(key))
 }
 
 function booked(
