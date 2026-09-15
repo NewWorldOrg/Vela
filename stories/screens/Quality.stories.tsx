@@ -95,6 +95,28 @@ export const 狭い幅で収まらないほどのチューナー: Story = {
 
 export const 確認済みも表示: Story = { args: { result: ACKNOWLEDGED_SHOWN } }
 
+export const 推移: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const subjects = canvas.getByRole('group', { name: '対象' })
+
+    await expect(
+      within(subjects).getByRole('link', { name: 'CNR' }),
+    ).toHaveAttribute('aria-current', 'page')
+    await expect(
+      canvas.getByRole('img', { name: '全体の推移' }),
+    ).toBeInTheDocument()
+
+    const quiet = canvas.getByRole('img', { name: 'みなと教育1の推移' })
+
+    await expect(quiet.querySelector('[data-level="good"]')).toBeNull()
+    await expect(quiet.querySelectorAll('[data-level="nodata"]').length).toBe(
+      24,
+    )
+  },
+}
+
 export const 異常を確認済みにする: Story = {
   args: { result: QUALITY },
   play: async ({ canvasElement }) => {

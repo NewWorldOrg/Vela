@@ -24,6 +24,8 @@ const KIND_TONE: Record<ReservationOutcomeKind, BadgeTone> = {
   programmeMoved: 'sky',
   programmeGone: 'warn',
   programmeReturned: 'ok',
+  retried: 'sky',
+  gaveUpRetrying: 'err',
 }
 
 const NOT_YET_KNOWN_TONE: BadgeTone = 'mute'
@@ -52,6 +54,7 @@ export function OutcomeKindChip({ outcome }: { outcome: ReservationOutcome }) {
           {term.label}
         </Badge>
       </TermTip>
+      {outcome.retry && <Badge variant="outline">{outcome.retry}</Badge>}
       {outcome.tuneFailure && (
         <Badge variant="outline" className="font-code">
           {numbered(outcome.tuneFailure)}

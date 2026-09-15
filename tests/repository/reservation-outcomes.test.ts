@@ -327,6 +327,60 @@ test('誰も代わりに録っていない台帳では、予約一覧を読み�
   assert.equal(askedFor('/api/reservations'), undefined)
 })
 
+test('始め直しの行は、その試みがどうなったかと選局失敗の分類を持つ', async () => {
+  standing([
+    outcome({
+      kind: 'retried',
+      recordingOutcome: null,
+      retryResult: 'refusedAgain',
+      tuneFailure: 'noLock',
+    }),
+    outcome({
+      id: 'o-2',
+      kind: 'retried',
+      recordingOutcome: null,
+      retryResult: 'started',
+    }),
+  ])
+
+  const [refused, started] = (await listReservationOutcomes({}, NOW)).items
+
+  assert.equal(refused.kind, 'retried')
+  assert.equal(refused.retry, '再び失敗')
+  assert.equal(refused.tuneFailure?.no, 1)
+  assert.equal(started.retry, '録画開始')
+  assert.equal(started.tuneFailure, undefined)
+})
+
+test('始め直しを断念した行は、打ち切った理由を持つ', async () => {
+  standing([
+    outcome({
+      kind: 'gaveUpRetrying',
+      recordingOutcome: null,
+      gaveUpBecause: 'attemptsSpent',
+    }),
+  ])
+
+  const [row] = (await listReservationOutcomes({}, NOW)).items
+
+  assert.equal(row.kind, 'gaveUpRetrying')
+  assert.equal(row.retry, '試行の上限')
+})
+
+test('この版が知らない始め直しの結果や理由でも、行は落ちずに出る', async () => {
+  standing([
+    outcome({ kind: 'retried', retryResult: 'somethingNew' }),
+    outcome({ id: 'o-2', kind: 'gaveUpRetrying', gaveUpBecause: 'another' }),
+    outcome({ id: 'o-3' }),
+  ])
+
+  const [result, reason, plain] = (await listReservationOutcomes({}, NOW)).items
+
+  assert.equal(result.retry, 'この版がまだ知らない値')
+  assert.equal(reason.retry, 'この版がまだ知らない値')
+  assert.equal(plain.retry, undefined)
+})
+
 test('空の台帳は、読めなかったことにはならない', async () => {
   standing([])
 

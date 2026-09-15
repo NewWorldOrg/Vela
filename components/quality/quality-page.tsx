@@ -37,6 +37,8 @@ import { Surface } from '@/components/vela/surface'
 import { ChangeThresholdButton } from '@/components/quality/change-threshold-button'
 import type { QualityAcknowledge } from '@/components/quality/anomaly-list'
 import { AnomalyList } from '@/components/quality/anomaly-list'
+import { LinkSegments } from '@/components/quality/link-segments'
+import { QualityTrendPanel } from '@/components/quality/quality-trend'
 import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
 
@@ -45,6 +47,8 @@ const SUPPLY_GONE_QUIET = '計測の供給が途絶しています'
 const WATCH_HAS_NOT_PASSED = '供給の見張りはまだ通っていません'
 
 const TO_THE_TUNERS = 'チューナーへ'
+
+const PERIOD = '期間'
 
 const HEALTH_COLUMNS = [
   'チューナー',
@@ -138,23 +142,7 @@ export function QualityView({
         設定 / <CrumbCurrent>品質</CrumbCurrent>
       </Crumb>
       <PageHeading
-        action={
-          <div className="inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]">
-            {result.windows.map((window) => (
-              <Link
-                key={window.label}
-                href={window.href}
-                aria-current={window.current ? 'page' : undefined}
-                className={cn(
-                  'tap-target cursor-pointer rounded-full px-3.5 py-[5px] text-sub font-medium whitespace-nowrap text-ink-2 transition-[background-color,color] duration-150 hover:text-ink',
-                  window.current && 'bg-brand-soft font-bold text-brand',
-                )}
-              >
-                {window.label}
-              </Link>
-            ))}
-          </div>
-        }
+        action={<LinkSegments label={PERIOD} items={result.windows} />}
       >
         品質
       </PageHeading>
@@ -256,6 +244,8 @@ export function QualityView({
             </div>
           )}
         </Surface>
+
+        <QualityTrendPanel trend={result.trend} />
       </div>
 
       <section className="mt-5">

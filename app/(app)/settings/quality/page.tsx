@@ -15,10 +15,11 @@ export default async function Page({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { days, acknowledged } = await searchParams
+  const { days, acknowledged, subject } = await searchParams
   const result = await getQuality(
     typeof days === 'string' ? days : undefined,
     acknowledged === ACKNOWLEDGED_SHOWN,
+    typeof subject === 'string' ? subject : undefined,
   )
 
   return (

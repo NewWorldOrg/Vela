@@ -92,6 +92,14 @@ export const RESERVATION_OUTCOME_KIND_TERMS: Record<
     explanation:
       '番組表から無くなっていた番組が戻ったため、取り消しから戻された予約。',
   },
+  retried: {
+    label: '始め直し',
+    explanation: '録画が始まらなかったあと、録画を始め直した一回ぶんの試み。',
+  },
+  gaveUpRetrying: {
+    label: '始め直しを断念',
+    explanation: '録画を始め直す試みが打ち切られた予約。',
+  },
 }
 
 export const END_UNDECIDED_TERM: StateTerm = {

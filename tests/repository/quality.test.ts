@@ -22,9 +22,11 @@ const store: {
   owned: number
   restated: number
   supplies: unknown[] | undefined
+  trend: unknown
   refusal?: { status: number; message: string }
   askedFor: unknown
 } = {
+  trend: null,
   summary: null,
   channels: [],
   tuners: [],
@@ -129,6 +131,32 @@ const paged = (items: unknown[], over: Record<string, unknown> = {}) => ({
   ...over,
 })
 
+const point = (over: Record<string, unknown> = {}) => ({
+  from: '2026-09-07T00:00:00Z',
+  until: '2026-09-07T01:00:00Z',
+  reading: {
+    state: 'good',
+    subjects: 1,
+    measured: 1,
+    unmeasured: 0,
+    beyondThreshold: 0,
+  },
+  worst: 0.0001,
+  level: 0.0002,
+  layers: [],
+  ...over,
+})
+
+const trendOf = (series: unknown[], over: Record<string, unknown> = {}) => ({
+  period: { from: '2026-09-07T00:00:00Z', until: '2026-09-08T00:00:00Z' },
+  subject: 'packetsLost',
+  step: 'hour',
+  mostPoints: 200,
+  series,
+  provisional: true,
+  ...over,
+})
+
 interface Asking {
   params?: { query?: Record<string, unknown>; path?: Record<string, unknown> }
   body?: unknown
@@ -197,6 +225,10 @@ mock.module('@/repository/client/carina', {
             },
             response: answered(200),
           }
+        }
+
+        if (path === '/api/quality/trends') {
+          return { data: { data: store.trend }, response: answered(200) }
         }
 
         if (path === '/api/quality/summary') {
@@ -296,6 +328,7 @@ function standing() {
   store.supplies = []
   store.askedFor = undefined
   store.whole = measures()
+  store.trend = trendOf([{ channel: null, points: [point()] }])
   store.summary = {
     period: { from: '2026-09-07T00:00:00Z', until: '2026-09-08T00:00:00Z' },
     recordings: 3,
@@ -718,6 +751,176 @@ test('確認済みにできないときの断りは日本語の一文になる',
     state: 'rejected',
     message: 'この異常は残っていないため、確認済みにできませんでした。',
   })
+})
+
+test('推移は期間と対象を口に渡し、ほかの押しもその対象を連れて回る', async () => {
+  standing()
+
+  const result = await getQuality('7', true, 'bitErrorRate')
+  const asked = sent.find((one) => one.path === '/api/quality/trends')
+
+  assert.deepEqual(asked?.query, { days: 7, subject: 'bitErrorRate' })
+  assert.equal(
+    result.trend.subjects.find((one) => one.current)?.label,
+    'post-Viterbi ビット誤り率',
+  )
+  assert.equal(
+    result.windows[0].href,
+    '/settings/quality?days=1&subject=bitErrorRate&acknowledged=true',
+  )
+  assert.equal(
+    result.trend.subjects[0].href,
+    '/settings/quality?days=7&acknowledged=true',
+  )
+})
+
+test('知らない対象は既定のドロップ率として読み、URL に対象を書かない', async () => {
+  standing()
+
+  const result = await getQuality('1', false, 'somethingElse')
+  const asked = sent.find((one) => one.path === '/api/quality/trends')
+
+  assert.equal(asked?.query.subject, 'packetsLost')
+  assert.equal(result.windows[1].href, '/settings/quality?days=7')
+})
+
+test('何も測っていない刻みは、良好でも 0 でもなく対象なしのまま出る', async () => {
+  standing()
+  store.trend = trendOf([
+    {
+      channel: null,
+      points: [
+        point({
+          reading: {
+            state: 'nothingToMeasure',
+            subjects: 0,
+            measured: 0,
+            unmeasured: 0,
+            beyondThreshold: 0,
+          },
+          worst: null,
+        }),
+        point({
+          reading: {
+            state: 'unmeasured',
+            subjects: 2,
+            measured: 0,
+            unmeasured: 2,
+            beyondThreshold: 0,
+          },
+          worst: null,
+        }),
+      ],
+    },
+  ])
+
+  const [row] = (await getQuality()).trend.rows
+  const [empty, unmeasured] = row.buckets
+
+  assert.equal(row.name, '全体')
+  assert.equal(empty.level, 'nodata')
+  assert.match(empty.says, /対象なし/)
+  assert.doesNotMatch(empty.says, /最悪|良好|0\.000/)
+  assert.equal(unmeasured.level, 'unmeasured')
+  assert.doesNotMatch(unmeasured.says, /最悪|良好/)
+})
+
+test('この版が知らない状態の刻みは、良好に倒れない', async () => {
+  standing()
+  store.trend = trendOf([
+    {
+      channel: null,
+      points: [
+        point({
+          reading: {
+            state: 'somethingTheApiAddedLater',
+            subjects: 1,
+            measured: 1,
+            unmeasured: 0,
+            beyondThreshold: 0,
+          },
+        }),
+      ],
+    },
+  ])
+
+  const [bucket] = (await getQuality()).trend.rows[0].buckets
+
+  assert.equal(bucket.level, 'unsupported')
+  assert.doesNotMatch(bucket.says, /良好/)
+})
+
+test('ビット誤り率の刻みは、階層ごとの最大を並べる', async () => {
+  standing()
+  store.trend = trendOf(
+    [
+      {
+        channel: null,
+        points: [
+          point({
+            reading: {
+              state: 'atOrAboveWarning',
+              subjects: 1,
+              measured: 1,
+              unmeasured: 0,
+              beyondThreshold: 1,
+            },
+            worst: 0.0003,
+            level: 0.0001,
+            layers: [
+              { layer: 0, highest: 0.0003 },
+              { layer: 1, highest: '0.00002' },
+            ],
+          }),
+        ],
+      },
+    ],
+    { subject: 'bitErrorRate' },
+  )
+
+  const [bucket] = (await getQuality('1', false, 'bitErrorRate')).trend.rows[0]
+    .buckets
+
+  assert.equal(bucket.level, 'warn')
+  assert.match(bucket.says, /最悪 3\.0e-4/)
+  assert.match(bucket.says, /階層 0 3\.0e-4 · 階層 1 2\.0e-5/)
+  assert.match(bucket.says, /適用閾値 1\.0e-4/)
+})
+
+test('電波ごとの系列は、運んでいる局の名前で呼ばれる', async () => {
+  standing()
+  store.services = [service(32736, 1025, '湾岸放送2')]
+  store.trend = trendOf([
+    { channel: null, points: [point()] },
+    {
+      channel: {
+        networkId: 32736,
+        serviceId: 1024,
+        transportStreamId: 32736,
+        kind: 'isdbT',
+        serviceIds: [1024, 1025],
+      },
+      points: [point()],
+    },
+    {
+      channel: {
+        networkId: 1,
+        serviceId: 2,
+        transportStreamId: null,
+        kind: null,
+        serviceIds: [2],
+      },
+      points: [point()],
+    },
+  ])
+
+  const rows = (await getQuality('1', false, 'lockRate')).trend.rows
+
+  assert.deepEqual(
+    rows.map((one) => one.name),
+    ['全体', '湾岸放送2', 'チャンネル'],
+  )
+  assert.equal(new Set(rows.map((one) => one.key)).size, rows.length)
 })
 
 test('確認済みにする頼みは、その行を名指して一度だけ送る', async () => {
