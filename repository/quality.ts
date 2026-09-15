@@ -36,6 +36,12 @@ type SupplyResponder = components['schemas']['QualitySupplyResponder']
 type SupplyHealthResponder =
   components['schemas']['QualitySupplyHealthResponder']
 type Silence = NonNullable<components['schemas']['SupplySilence']>
+type TrendResponder = components['schemas']['QualityTrendResponder']
+type TrendChannelResponder =
+  components['schemas']['QualityTrendChannelResponder']
+type TrendPointResponder = components['schemas']['QualityTrendPointResponder']
+
+export type QualityTrendSubject = components['schemas']['QualityTrendSubject']
 
 export type QualityMetric = components['schemas']['QualityMetric']
 export type QualityThresholdKey = components['schemas']['QualityThresholdKey']
@@ -144,8 +150,29 @@ export interface QualityAnomalies {
   href: Route
 }
 
+export interface QualityTrendBucket {
+  key: string
+  level: QualityLevel
+  says: string
+}
+
+export interface QualityTrendRow {
+  key: string
+  name: string
+  buckets: QualityTrendBucket[]
+}
+
+export interface QualityTrend {
+  subjects: QualityWindow[]
+  rows: QualityTrendRow[]
+  from: string
+  until: string
+  provisional: boolean
+}
+
 export interface QualityResult {
   windows: QualityWindow[]
+  trend: QualityTrend
   stats: QualityStat[]
   thresholds: QualityThreshold[]
   warnMarkPct?: number
@@ -171,6 +198,30 @@ const SPANS = [
   { days: 7, label: '7 日' },
   { days: 30, label: '30 日' },
 ]
+
+interface TrendSubjectShape {
+  subject: QualityTrendSubject
+  label: string
+  key: QualityThresholdKey
+}
+
+const TREND_SUBJECTS: TrendSubjectShape[] = [
+  { subject: 'packetsLost', label: 'ドロップ率', key: 'packetsLostWarning' },
+  {
+    subject: 'packetsLeftScrambled',
+    label: 'スクランブル残存率',
+    key: 'packetsLeftScrambled',
+  },
+  { subject: 'lockRate', label: 'lock 率', key: 'lockRate' },
+  { subject: 'carrierToNoise', label: 'CNR', key: 'carrierToNoiseFloor' },
+  {
+    subject: 'bitErrorRate',
+    label: 'post-Viterbi ビット誤り率',
+    key: 'bitErrorRateCeiling',
+  },
+]
+
+const WHOLE = '全体'
 
 const HEALTHY = '健全'
 
@@ -367,8 +418,11 @@ export function whyItRefused(
 export async function getQuality(
   days?: string,
   showAcknowledged = false,
+  subject?: string,
 ): Promise<QualityResult> {
   const span = SPANS.find((one) => String(one.days) === days) ?? SPANS[0]
+  const following =
+    TREND_SUBJECTS.find((one) => one.subject === subject) ?? TREND_SUBJECTS[0]
   const until = new Date()
   const from = new Date(until.getTime() - span.days * A_DAY)
   const period = { from: from.toISOString(), until: until.toISOString() }
@@ -383,6 +437,7 @@ export async function getQuality(
     names,
     supplies,
     anomalies,
+    trend,
   ] = await Promise.all([
     fetchSummary(period),
     fetchChannels(period),
@@ -393,17 +448,36 @@ export async function getQuality(
     listRecordingNames(),
     fetchSupplyHealth(),
     fetchAnomalies(showAcknowledged),
+    fetchTrend(span.days, following.subject),
   ])
 
   const drawn = channels.items.map((one) => toChannel(one, known, thresholds))
   const shown = showAcknowledged ? '&acknowledged=true' : ''
+  const followed = subjectQuery(following)
 
   return {
     windows: SPANS.map((one) => ({
       label: one.label,
-      href: `/settings/quality?days=${one.days}${shown}` as Route,
+      href: `/settings/quality?days=${one.days}${followed}${shown}` as Route,
       current: one.days === span.days,
     })),
+    trend: {
+      subjects: TREND_SUBJECTS.map((one) => ({
+        label: one.label,
+        href: `/settings/quality?days=${span.days}${subjectQuery(one)}${shown}` as Route,
+        current: one.subject === following.subject,
+      })),
+      rows: trend.series.map((series) => ({
+        key: series.channel ? channelKeyOf(series.channel) : WHOLE,
+        name: series.channel ? channelNameOf(series.channel, known) : WHOLE,
+        buckets: series.points.map((point) =>
+          toTrendBucket(point, following.key),
+        ),
+      })),
+      from: formatStamp(trend.period.from),
+      until: formatStamp(trend.period.until),
+      provisional: trend.provisional,
+    },
     stats: statsOf(span.label, summary, tuners, recordings),
     thresholds: thresholds.map(toThreshold),
     warnMarkPct: warnMarkOf(thresholds),
@@ -1036,4 +1110,66 @@ function spelled(value: number, shape: ThresholdShape): string {
 
 function trimmed(value: number): string {
   return String(Number(value.toFixed(6)))
+}
+
+async function fetchTrend(
+  days: number,
+  subject: QualityTrendSubject,
+): Promise<TrendResponder> {
+  const { data, error } = await carinaClient().GET('/api/quality/trends', {
+    params: { query: { days, subject } },
+  })
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data
+}
+
+function subjectQuery(shape: TrendSubjectShape): string {
+  return shape === TREND_SUBJECTS[0] ? '' : `&subject=${shape.subject}`
+}
+
+function channelKeyOf(channel: TrendChannelResponder): string {
+  return `${toInt(channel.networkId)}-${toInt(channel.serviceId)}`
+}
+
+function channelNameOf(
+  channel: TrendChannelResponder,
+  known: GuideChannel[],
+): string {
+  const network = toInt(channel.networkId)
+  const carried = [channel.serviceId, ...channel.serviceIds].map(
+    (service) => `${network}-${toInt(service)}`,
+  )
+  const found = carried
+    .map((id) => known.find((each) => each.id === id))
+    .find((each) => each?.name)
+
+  return found?.name || wordFor(SUBJECT_KINDS, 'channel')
+}
+
+function toTrendBucket(
+  point: TrendPointResponder,
+  key: QualityThresholdKey,
+): QualityTrendBucket {
+  const level = shapeFor(LEVEL_OF_STATE, point.reading.state, 'unsupported')
+  const worst =
+    point.worst == null ? [] : [`最悪 ${measured(point.worst, key)}`]
+  const layers = point.layers.map(
+    (one) => `階層 ${toInt(one.layer)} ${measured(one.highest, key)}`,
+  )
+
+  return {
+    key: point.from,
+    level,
+    says: [
+      `${formatStamp(point.from)}〜${formatStamp(point.until)}`,
+      QUALITY_LEVEL_LABEL[level],
+      ...worst,
+      ...layers,
+      `適用閾値 ${measured(point.level, key)}`,
+    ].join(' · '),
+  }
 }

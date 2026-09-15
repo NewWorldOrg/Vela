@@ -1,9 +1,13 @@
 import type { Route } from 'next'
 
+import type { QualityLevel } from '@/lib/quality'
+import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
 import type {
   QualityAnomaly,
   QualityResult,
   QualityThreshold,
+  QualityTrend,
+  QualityTrendBucket,
 } from '@/repository/quality'
 
 const WINDOWS = [
@@ -173,8 +177,82 @@ const ANOMALIES: QualityAnomaly[] = [
   },
 ]
 
+const TREND_SUBJECTS = [
+  { label: 'ドロップ率', subject: 'packetsLost' },
+  { label: 'スクランブル残存率', subject: 'packetsLeftScrambled' },
+  { label: 'lock 率', subject: 'lockRate' },
+  { label: 'CNR', subject: 'carrierToNoise' },
+  { label: 'post-Viterbi ビット誤り率', subject: 'bitErrorRate' },
+]
+
+const trendSubjects = (current: string) =>
+  TREND_SUBJECTS.map((one) => ({
+    label: one.label,
+    href: `/settings/quality?days=1&subject=${one.subject}` as Route,
+    current: one.label === current,
+  }))
+
+const hour = (at: number) => `09/08 ${String(at).padStart(2, '0')}:00`
+
+const hours = (
+  levels: QualityLevel[],
+  worst: (at: number) => string,
+): QualityTrendBucket[] =>
+  levels.map((level, at) => ({
+    key: hour(at),
+    level,
+    says: [
+      `${hour(at)}〜${hour(at + 1)}`,
+      QUALITY_LEVEL_LABEL[level],
+      ...(level === 'good' || level === 'warn' ? [`最悪 ${worst(at)}`] : []),
+    ].join(' · '),
+  }))
+
+const spread = (pattern: string): QualityLevel[] =>
+  [...pattern].map((one) =>
+    one === 'g'
+      ? 'good'
+      : one === 'w'
+        ? 'warn'
+        : one === 'x'
+          ? 'unreachable'
+          : 'nodata',
+  )
+
+const cnr = (at: number) => `${30 + (at % 4)}dB`
+
+export const SIGNAL_TREND: QualityTrend = {
+  subjects: trendSubjects('CNR'),
+  rows: [
+    {
+      key: 'whole',
+      name: '全体',
+      buckets: hours(spread('ggggww..ggggggxgggggg...'), cnr),
+    },
+    {
+      key: '32736-1024',
+      name: 'みなと総合1',
+      buckets: hours(spread('gg..ww....gggg.x....gg..'), cnr),
+    },
+    {
+      key: '32737-1032',
+      name: '中央テレビ1',
+      buckets: hours(spread('..gg......gg....gggg....'), cnr),
+    },
+    {
+      key: '32738-1040',
+      name: 'みなと教育1',
+      buckets: hours(spread('........................'), cnr),
+    },
+  ],
+  from: '09/08 00:00',
+  until: '09/09 00:00',
+  provisional: true,
+}
+
 export const QUALITY: QualityResult = {
   windows: windows('24 時間'),
+  trend: SIGNAL_TREND,
   stats: [
     {
       key: 'drop',
@@ -360,6 +438,19 @@ export const QUALITY: QualityResult = {
 
 export const NOTHING_MEASURED: QualityResult = {
   windows: windows('30 日'),
+  trend: {
+    subjects: trendSubjects('ドロップ率'),
+    rows: [
+      {
+        key: 'whole',
+        name: '全体',
+        buckets: hours(spread('..............................'), cnr),
+      },
+    ],
+    from: '08/10 04:00',
+    until: '09/09 04:00',
+    provisional: true,
+  },
   stats: [
     {
       key: 'drop',

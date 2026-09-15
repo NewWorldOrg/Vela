@@ -22,6 +22,17 @@ const WHAT_THE_ENDPOINT_ANSWERS = 'data'
 const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   {
     because:
+      'a trend is drawn bucket by bucket from the times each point carries, over the subject the URL asked for, and a multiplex is named by the services it carries rather than by numbers of its own',
+    fields: [
+      'QualityTrendChannelResponder.kind',
+      'QualityTrendChannelResponder.transportStreamId',
+      'QualityTrendResponder.mostPoints',
+      'QualityTrendResponder.step',
+      'QualityTrendResponder.subject',
+    ],
+  },
+  {
+    because:
       'the call is made to know whether it worked, and what it lists is asked for again afterwards, so the answer handed straight back is not what the screen draws',
     fields: [
       'BaseResponderOfBroadcastServiceResponder.data',
