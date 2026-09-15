@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
-import { getProgram } from '@/repository/programs'
+import { getProgram, primaryProgramKeyOf } from '@/repository/programs'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 import { reserveProgramme } from '@/app/(app)/guide/actions'
 
@@ -23,6 +23,12 @@ export default async function Page({
   const { programKey } = await params
   const detail = await getProgram(programKey)
   if (!detail) {
+    const primary = await primaryProgramKeyOf(programKey)
+
+    if (primary !== undefined) {
+      redirect(`/guide/programs/${primary}`)
+    }
+
     notFound()
   }
 

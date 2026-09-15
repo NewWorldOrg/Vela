@@ -11,6 +11,8 @@ import {
   isOnAir,
   nowMinOf,
   openingScrollTopOf,
+  primaryKeyOfShadow,
+  relationDestinationOf,
   sharesWith,
   servicesSettled,
   unscheduledSpansOf,
@@ -92,6 +94,109 @@ test('a booking still waiting for its hour is marked as booked', () => {
 
 test('a booking whose programme is being recorded is marked as recording', () => {
   assert.equal(bookingMarkOf({ standing: 'recording' }), 'recording')
+})
+
+const RELATED = {
+  key: '33221-1522-40641',
+  channelId: '33221-1522',
+  shadow: false,
+}
+
+test('a simulcast opens its channel live while the programme is on air', () => {
+  assert.deepEqual(
+    relationDestinationOf({ ...RELATED, kind: 'shared' }, true),
+    { to: 'live', channelId: '33221-1522' },
+  )
+})
+
+test('a simulcast leads nowhere before or after the programme is on air', () => {
+  assert.deepEqual(
+    relationDestinationOf({ ...RELATED, kind: 'shared' }, false),
+    { to: 'nowhere' },
+  )
+})
+
+test('a simulcast never leads to the copy the broadcaster keeps on that channel', () => {
+  for (const onAir of [true, false]) {
+    assert.notEqual(
+      relationDestinationOf({ ...RELATED, kind: 'shared', shadow: true }, onAir)
+        .to,
+      'programme',
+    )
+  }
+})
+
+test('a relay or a move leads to the programme it names, on air or not', () => {
+  for (const kind of ['relayed', 'moved'] as const) {
+    for (const onAir of [true, false]) {
+      assert.deepEqual(relationDestinationOf({ ...RELATED, kind }, onAir), {
+        to: 'programme',
+        key: '33221-1522-40641',
+      })
+    }
+  }
+})
+
+test('a relay or a move to a copy falls back the way a simulcast does', () => {
+  for (const kind of ['relayed', 'moved'] as const) {
+    assert.deepEqual(
+      relationDestinationOf({ ...RELATED, kind, shadow: true }, true),
+      { to: 'live', channelId: '33221-1522' },
+    )
+    assert.deepEqual(
+      relationDestinationOf({ ...RELATED, kind, shadow: true }, false),
+      { to: 'nowhere' },
+    )
+  }
+})
+
+const COPY = {
+  related: [
+    { networkId: 33221, serviceId: 1521, eventId: 40641, kind: 'shared' },
+  ] as const,
+}
+
+test('a copy leads back to the programme it shares a broadcast with', () => {
+  assert.equal(
+    primaryKeyOfShadow(COPY, (key) =>
+      key === '33221-1521-40641' ? false : undefined,
+    ),
+    '33221-1521-40641',
+  )
+})
+
+test('a copy that only shares with other copies leads nowhere', () => {
+  assert.equal(
+    primaryKeyOfShadow(COPY, () => true),
+    undefined,
+  )
+})
+
+test('a copy whose partner is no longer held leads nowhere', () => {
+  assert.equal(
+    primaryKeyOfShadow(COPY, () => undefined),
+    undefined,
+  )
+})
+
+test('a copy does not follow a relay back, only a shared broadcast', () => {
+  assert.equal(
+    primaryKeyOfShadow(
+      {
+        related: [
+          {
+            networkId: 33221,
+            serviceId: 1531,
+            eventId: 40622,
+            kind: 'relayed',
+          },
+          { networkId: 33221, serviceId: 1521, eventId: 40641, kind: 'shared' },
+        ],
+      },
+      () => false,
+    ),
+    '33221-1521-40641',
+  )
 })
 
 const TELEVISION_SERVICES = 27

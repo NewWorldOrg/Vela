@@ -2,6 +2,7 @@ import { useState, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
+import { relationDestinationOf } from '@/lib/guide'
 import { CHANNEL_FIXTURES } from '@/repository/channels.fixtures'
 import type { Program } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
@@ -239,8 +240,17 @@ export const 関連番組あり: Story = {
     await expect(elsewhere.length).toBeGreaterThan(0)
 
     for (const other of elsewhere) {
+      const destination = relationDestinationOf(other, false)
+
+      if (destination.to !== 'programme') {
+        await expect(
+          surface.querySelector(`a[href="/guide/programs/${other.key}"]`),
+        ).toBeNull()
+        continue
+      }
+
       const to = surface.querySelector<HTMLElement>(
-        `a[href="/guide/programs/${other.key}"]`,
+        `a[href="/guide/programs/${destination.key}"]`,
       )
 
       await expect(to).not.toBeNull()

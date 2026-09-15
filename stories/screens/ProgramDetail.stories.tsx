@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
+import { isOnAir, relationDestinationOf } from '@/lib/guide'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type { ProgramDetail } from '@/repository/programs'
 import {
@@ -56,10 +57,117 @@ async function reads(
   }
 
   for (const other of program.related ?? []) {
-    await expect(
-      canvasElement.querySelector(`a[href="/guide/programs/${other.key}"]`),
-    ).not.toBeNull()
+    const destination = relationDestinationOf(
+      other,
+      isOnAir(program, detail.nowMin),
+    )
+
+    if (destination.to === 'programme') {
+      await expect(
+        canvasElement.querySelector(
+          `a[href="/guide/programs/${destination.key}"]`,
+        ),
+      ).not.toBeNull()
+    }
+
+    if (destination.to === 'live') {
+      await expect(
+        canvasElement.querySelector(
+          `a[href^="/live?ch=${destination.channelId}"]`,
+        ),
+      ).not.toBeNull()
+    }
   }
+}
+
+const simulcast = PROGRAM_DETAIL_FIXTURES.simulcast
+
+const simulcastElsewhere = (simulcast.program.related ?? []).filter(
+  (other) => other.kind === 'shared',
+)
+
+export const 同時放送は放送中ならライブへ: Story = {
+  args: {
+    detail: { ...simulcast, nowMin: simulcast.program.startMin + 1 },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+
+    await reads(canvasElement, args.detail)
+    await expect(simulcastElsewhere.length).toBeGreaterThan(0)
+
+    const links = canvas.getAllByRole('link', { name: '同時放送を見る' })
+
+    await expect(links).toHaveLength(simulcastElsewhere.length)
+
+    for (const [index, other] of simulcastElsewhere.entries()) {
+      await expect(links[index]).toHaveAttribute(
+        'href',
+        `/live?ch=${other.channelId}`,
+      )
+    }
+
+    await expect(
+      canvasElement.querySelector('a[href^="/guide/programs/"]'),
+    ).toBeNull()
+  },
+}
+
+export const 同時放送は放送前なら案内だけ: Story = {
+  args: {
+    detail: { ...simulcast, nowMin: simulcast.program.startMin - 1 },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getAllByText(/でも同時に放送されます。/).length,
+    ).toBeGreaterThan(0)
+    await expect(
+      canvas.queryByRole('link', { name: '同時放送を見る' }),
+    ).toBeNull()
+  },
+}
+
+export const 同時放送は放送後なら案内だけ: Story = {
+  args: {
+    detail: {
+      ...simulcast,
+      nowMin: simulcast.program.startMin + simulcast.program.durationMin,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getAllByText(/でも同時に放送されます。/).length,
+    ).toBeGreaterThan(0)
+    await expect(
+      canvas.queryByRole('link', { name: '同時放送を見る' }),
+    ).toBeNull()
+  },
+}
+
+const relayedToACopy: ProgramDetail = {
+  ...PROGRAM_DETAIL_FIXTURES.relayed,
+  program: {
+    ...PROGRAM_DETAIL_FIXTURES.relayed.program,
+    related: (PROGRAM_DETAIL_FIXTURES.relayed.program.related ?? []).map(
+      (other) => ({ ...other, shadow: other.kind === 'relayed' }),
+    ),
+  },
+}
+
+export const 継続先が写しなら番組の詳細へは送らない: Story = {
+  args: { detail: relayedToACopy },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText(/で継続されます。/)).toBeVisible()
+    await expect(
+      canvas.queryByRole('link', { name: '継続先を見る' }),
+    ).toBeNull()
+  },
 }
 
 export const 通常: Story = {
