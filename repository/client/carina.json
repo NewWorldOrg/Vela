@@ -13788,9 +13788,11 @@
           "stoppedAt",
           "abortedAt",
           "expectedWindow",
+          "promisedWindowEnd",
           "writtenDurationMs",
           "resumeCount",
           "fileSizeBytes",
+          "observedAt",
           "outputRoot",
           "fileName",
           "tunerDeviceId",
@@ -13854,6 +13856,10 @@
           "expectedWindow": {
             "$ref": "#/components/schemas/RecordingWindowResponder"
           },
+          "promisedWindowEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
           "writtenDurationMs": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -13878,6 +13884,13 @@
               "string"
             ],
             "format": "int64"
+          },
+          "observedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           },
           "outputRoot": {
             "type": "string"
