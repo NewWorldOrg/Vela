@@ -98,6 +98,7 @@ export interface EncodeJob {
   headway?: EncodeHeadway
   quietForSeconds?: number
   stalled: boolean
+  waitingForAViewer: boolean
   route?: EncodeRoute
   failure?: EncodeFailureDetail
   artefactName?: string
@@ -250,6 +251,23 @@ export async function listEncodeChoices(): Promise<EncodeChoices> {
       defaultProfileId: one.defaultProfileId,
     })),
   }
+}
+
+const NAMED_NOTHING: Named = {
+  profiles: new Map(),
+  destinations: new Map(),
+  recordings: new Map(),
+}
+
+export async function getLatestEncodeJob(
+  recordingId: string,
+  now: Date = new Date(),
+): Promise<EncodeJob | undefined> {
+  const latest = await fetchJobs({ recordingId, page: 1, perPage: 1 })
+
+  return latest.items[0]
+    ? toEncodeJob(latest.items[0], NAMED_NOTHING, now)
+    : undefined
 }
 
 export interface EncodeAsking {
@@ -594,6 +612,7 @@ async function fetchRoots(): Promise<string[]> {
 
 async function fetchJobs(query: {
   status?: EncodeJobStatus
+  recordingId?: string
   page: number
   perPage: number
 }): Promise<JobPageResponder> {
@@ -601,6 +620,7 @@ async function fetchJobs(query: {
     params: {
       query: {
         ...(query.status ? { status: [query.status] } : {}),
+        ...(query.recordingId ? { recordingId: query.recordingId } : {}),
         page: query.page,
         perPage: query.perPage,
       },
@@ -734,6 +754,7 @@ export function toEncodeJob(
     quietForSeconds:
       one.quietForSeconds === null ? undefined : toInt(one.quietForSeconds),
     stalled: one.stalled,
+    waitingForAViewer: one.waitingForAViewer,
     route: one.route
       ? {
           asked: one.route.asked,

@@ -125,6 +125,7 @@ const COMPLETED = {
   headway: { portion: 1, leftSeconds: 0, at: '2026-09-05T12:08:14.191111Z' },
   quietForSeconds: null,
   stalled: false,
+  waitingForAViewer: false,
   failure: null,
   artefactName: '0123456789abcdef0123456789abcdef.0f1e2d3c.mp4',
 }
@@ -189,11 +190,16 @@ const client = () => ({
         return envelope(store.autoRun)
       case '/api/encoding/jobs': {
         const asked = query?.status as string[] | undefined
-        const kept = asked
-          ? store.jobs.filter((one) =>
-              asked.includes((one as { status: string }).status),
-            )
-          : store.jobs
+        const of = query?.recordingId as string | undefined
+        const kept = store.jobs
+          .filter(
+            (one) =>
+              !asked || asked.includes((one as { status: string }).status),
+          )
+          .filter(
+            (one) => !of || (one as { recordingId: string }).recordingId === of,
+          )
+          .slice(0, Number(query?.perPage ?? store.jobs.length))
 
         return envelope(pageOf(kept))
       }
@@ -270,6 +276,7 @@ const {
   defineDestination,
   defineProfile,
   getEncodeScreen,
+  getLatestEncodeJob,
   listEncodeChoices,
   queueEncode,
   removeDestination,
@@ -296,6 +303,31 @@ beforeEach(() => {
   store.writeStatus = 201
   store.writeMessage = ''
   store.removal = 'deleted'
+})
+
+test('a recording asks the ledger for its one latest job and nothing more', async () => {
+  store.jobs = [
+    { ...COMPLETED, waitingForAViewer: true, status: 'queued', endedAt: null },
+    RUNNING,
+  ]
+
+  const latest = await getLatestEncodeJob(RECORDING.id, NOW)
+
+  assert.deepEqual(sent.at(-1), {
+    method: 'GET',
+    path: '/api/encoding/jobs',
+    query: { recordingId: RECORDING.id, page: 1, perPage: 1 },
+  })
+  assert.equal(latest?.recordingId, RECORDING.id)
+  assert.equal(latest?.status, 'queued')
+  assert.equal(latest?.waitingForAViewer, true)
+  assert.equal(latest?.cancellable, true)
+})
+
+test('a recording nothing was ever queued for has no latest job', async () => {
+  store.jobs = [RUNNING]
+
+  assert.equal(await getLatestEncodeJob(RECORDING.id, NOW), undefined)
 })
 
 test('the screen reads the ledger into names, values and counts', async () => {

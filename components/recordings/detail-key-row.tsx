@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { cn } from '@/lib/utils'
 
 export function DetailKeyRow({
@@ -5,11 +7,13 @@ export function DetailKeyRow({
   main,
   sub,
   plain,
+  action,
 }: {
   label: string
   main: string
   sub?: string
   plain?: boolean
+  action?: ReactNode
 }) {
   return (
     <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[9px] text-ui last:border-b-0">
@@ -24,6 +28,7 @@ export function DetailKeyRow({
           </small>
         )}
       </span>
+      {action}
     </div>
   )
 }

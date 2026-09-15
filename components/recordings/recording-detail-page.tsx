@@ -15,7 +15,7 @@ import type { PlaybackRead, PlaybackRefusal } from '@/repository/videos'
 import type { TicketWrite } from '@/repository/tickets'
 import type { SoundTrack } from '@/repository/sounds'
 import type { PlaybackProfile } from '@/repository/video-paths'
-import type { EncodeChoices } from '@/repository/encode'
+import type { EncodeChoices, EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
   ChevronLeftIcon,
   ListIcon,
@@ -100,6 +100,8 @@ export function RecordingDetailView({
   onAskForTheSound,
   onQueueEncode,
   encodeChoices,
+  encodeJob,
+  onCallOffEncode,
   startAt,
 }: {
   detail: RecordingDetail
@@ -111,6 +113,8 @@ export function RecordingDetailView({
   onAskForTheSound: (id: string, sound: SoundTrack) => Promise<PlaybackRead>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
+  encodeJob?: EncodeJob
+  onCallOffEncode: (id: string) => Promise<EncodeWrite>
   startAt?: number
 }) {
   const plays =
@@ -306,6 +310,8 @@ export function RecordingDetailView({
           <RecordingRecord
             detail={d}
             plan={playback.state === 'planned' ? playback.plan : undefined}
+            encodeJob={encodeJob}
+            onCallOffEncode={onCallOffEncode}
           />
         </div>
       </div>

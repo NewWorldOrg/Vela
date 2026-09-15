@@ -86,6 +86,7 @@ const ROW = {
   outputRoot: 'encodes',
   attempt: 1,
   stalled: false,
+  waitingForAViewer: false,
   cancellable: false,
 } as const
 
@@ -98,6 +99,12 @@ export const QUEUED_JOB: EncodeJob = {
   status: 'queued',
   queuedAt: '2026/08/10 22:31',
   cancellable: true,
+}
+
+export const WAITING_FOR_A_VIEWER_JOB: EncodeJob = {
+  ...QUEUED_JOB,
+  id: 'job-w',
+  waitingForAViewer: true,
 }
 
 export const RUNNING_JOB: EncodeJob = {

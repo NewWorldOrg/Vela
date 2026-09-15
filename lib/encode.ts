@@ -1,12 +1,72 @@
+import { wordFor } from '@/lib/not-yet-in-this-build'
+import type { EncodeJob } from '@/repository/encode'
 import {
   ENCODE_JOB_STATUSES,
+  FAILURE_LABEL,
   LABEL_LONGEST,
   RATE_CONTROL_COARSEST,
   RATE_CONTROL_FINEST,
+  STALLED_LABEL,
+  STANDING_LABEL,
+  STATUS_LABEL,
   type EncodeJobStatus,
+  type EncodeStanding,
 } from '@/repository/encode-terms'
 
 type Asked = string | string[] | undefined
+
+export const WAITING_FOR_A_VIEWER_LABEL = '視聴者待ち'
+
+export interface EncodeRowWords {
+  main: string
+  sub?: string
+  cancels: boolean
+}
+
+export function encodeRowOf(
+  job:
+    | Pick<EncodeJob, 'status' | 'failure' | 'stalled' | 'waitingForAViewer'>
+    | undefined,
+  standing: EncodeStanding,
+): EncodeRowWords {
+  const folded: EncodeRowWords = {
+    main: wordFor(STANDING_LABEL, standing),
+    cancels: false,
+  }
+
+  if (!job) {
+    return folded
+  }
+
+  if (job.status === 'cancelled') {
+    return standing === 'notEncoded'
+      ? { main: STATUS_LABEL.cancelled, cancels: false }
+      : folded
+  }
+
+  if (job.status !== standing) {
+    return folded
+  }
+
+  const told: EncodeRowWords = {
+    main: wordFor(STATUS_LABEL, job.status),
+    cancels: callsOff(job.status),
+  }
+
+  if (job.failure) {
+    return { ...told, sub: wordFor(FAILURE_LABEL, job.failure.failure) }
+  }
+
+  if (job.waitingForAViewer) {
+    return { ...told, sub: WAITING_FOR_A_VIEWER_LABEL }
+  }
+
+  if (job.stalled) {
+    return { ...told, sub: STALLED_LABEL }
+  }
+
+  return told
+}
 
 function onlyOne(asked: Asked): string | undefined {
   return Array.isArray(asked) ? asked[0] : asked

@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   asksBeforeCallingOff,
   callsOff,
+  encodeRowOf,
   headwayPercent,
   jobStatusIn,
   labelProblem,
@@ -11,6 +12,117 @@ import {
   rateControlProblem,
   secondsBetween,
 } from '@/lib/encode'
+import type { EncodeJob } from '@/repository/encode'
+
+type Standing = Pick<
+  EncodeJob,
+  'status' | 'failure' | 'stalled' | 'waitingForAViewer'
+>
+
+const job = (over: Partial<Standing> = {}): Standing => ({
+  status: 'queued',
+  stalled: false,
+  waitingForAViewer: false,
+  ...over,
+})
+
+test('a recording with no job says the one word the API folded', () => {
+  assert.deepEqual(encodeRowOf(undefined, 'notEncoded'), {
+    main: '未エンコード',
+    cancels: false,
+  })
+  assert.deepEqual(encodeRowOf(undefined, 'completed'), {
+    main: '完了',
+    cancels: false,
+  })
+})
+
+test('the latest job says where it stands, and why when it is held', () => {
+  assert.deepEqual(encodeRowOf(job(), 'queued'), {
+    main: '待機中',
+    cancels: true,
+  })
+  assert.deepEqual(encodeRowOf(job({ waitingForAViewer: true }), 'queued'), {
+    main: '待機中',
+    sub: '視聴者待ち',
+    cancels: true,
+  })
+  assert.deepEqual(
+    encodeRowOf(job({ status: 'running', stalled: true }), 'running'),
+    { main: '実行中', sub: '停滞', cancels: true },
+  )
+})
+
+test('a job called off on a recording nothing was encoded for says so', () => {
+  assert.deepEqual(encodeRowOf(job({ status: 'cancelled' }), 'notEncoded'), {
+    main: '中止',
+    cancels: false,
+  })
+})
+
+test('a job called off after one that finished does not unsay the finished one', () => {
+  assert.deepEqual(encodeRowOf(job({ status: 'cancelled' }), 'completed'), {
+    main: '完了',
+    cancels: false,
+  })
+})
+
+test('a job that is not the one the standing was folded from adds nothing', () => {
+  assert.deepEqual(
+    encodeRowOf(job({ status: 'queued', waitingForAViewer: true }), 'running'),
+    { main: '実行中', cancels: false },
+  )
+})
+
+test('a failed job names the class it failed in', () => {
+  assert.deepEqual(
+    encodeRowOf(
+      job({
+        status: 'failed',
+        failure: {
+          failure: 'notEnoughRoom',
+          note: 'No space left on device',
+          noticedAt: '2026/08/07 23:13',
+        },
+      }),
+      'failed',
+    ),
+    { main: '失敗', sub: '容量不足', cancels: false },
+  )
+})
+
+test('a failure class this build does not know is still said', () => {
+  assert.deepEqual(
+    encodeRowOf(
+      job({
+        status: 'failed',
+        failure: {
+          failure: 'aNewWayToFail' as NonNullable<
+            EncodeJob['failure']
+          >['failure'],
+          note: '',
+          noticedAt: '2026/08/07 23:13',
+        },
+      }),
+      'failed',
+    ),
+    { main: '失敗', sub: 'この版がまだ知らない値', cancels: false },
+  )
+})
+
+test('a status or a standing this build does not know is still said', () => {
+  assert.deepEqual(
+    encodeRowOf(
+      job({ status: 'somewhereNew' as EncodeJob['status'] }),
+      'failed',
+    ),
+    { main: '失敗', cancels: false },
+  )
+  assert.deepEqual(
+    encodeRowOf(undefined, 'somethingNew' as Parameters<typeof encodeRowOf>[1]),
+    { main: 'この版がまだ知らない値', cancels: false },
+  )
+})
 
 test('a status in the address is one of the five, or nothing', () => {
   assert.equal(jobStatusIn('queued'), 'queued')

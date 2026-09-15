@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { listEncodeChoices } from '@/repository/encode'
+import { getLatestEncodeJob, listEncodeChoices } from '@/repository/encode'
 import {
   ENCODE_JOBS_EVENT,
   QUALITY_EVENT,
@@ -12,6 +12,7 @@ import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
+import { callOffJob } from '@/app/(app)/settings/encode/actions'
 import {
   askForTheSound,
   queueEncoding,
@@ -44,12 +45,14 @@ export default async function Page({
 }) {
   const { id } = await params
   const { at } = await searchParams
-  const [detail, playback, unaskedProfile, encodeChoices] = await Promise.all([
-    getRecording(id),
-    getPlaybackPlan(id),
-    getUnaskedPlaybackProfile(),
-    listEncodeChoices(),
-  ])
+  const [detail, playback, unaskedProfile, encodeChoices, encodeJob] =
+    await Promise.all([
+      getRecording(id),
+      getPlaybackPlan(id),
+      getUnaskedPlaybackProfile(),
+      listEncodeChoices(),
+      getLatestEncodeJob(id),
+    ])
 
   if (!detail) {
     notFound()
@@ -71,6 +74,8 @@ export default async function Page({
         onAskForTheSound={askForTheSound}
         onQueueEncode={queueEncoding}
         encodeChoices={encodeChoices}
+        encodeJob={encodeJob}
+        onCallOffEncode={callOffJob}
       />
     </>
   )
