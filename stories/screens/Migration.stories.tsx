@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect } from 'storybook/test'
 
 import {
   MIGRATION,
@@ -39,4 +40,40 @@ export const 狭い幅で収まらないほどの明細: Story = {
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, '対象')
   },
+}
+
+async function staysWithinTheWindow(canvasElement: HTMLElement): Promise<void> {
+  const page = document.documentElement
+
+  await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
+
+  for (const section of canvasElement.querySelectorAll<HTMLElement>(
+    'section',
+  )) {
+    await expect(section.scrollWidth).toBeLessThanOrEqual(section.clientWidth)
+  }
+}
+
+export const 幅1400: Story = {
+  args: { result: MIGRATION },
+  parameters: { screen: { width: 1400, height: 900 } },
+  play: async ({ canvasElement }) => staysWithinTheWindow(canvasElement),
+}
+
+export const 幅1000: Story = {
+  args: { result: MIGRATION },
+  parameters: { screen: { width: 1000, height: 900 } },
+  play: async ({ canvasElement }) => staysWithinTheWindow(canvasElement),
+}
+
+export const 幅840: Story = {
+  args: { result: MIGRATION },
+  parameters: { screen: { width: 840, height: 900 } },
+  play: async ({ canvasElement }) => staysWithinTheWindow(canvasElement),
+}
+
+export const 幅700: Story = {
+  args: { result: MIGRATION },
+  parameters: { screen: { width: 700, height: 900 } },
+  play: async ({ canvasElement }) => staysWithinTheWindow(canvasElement),
 }
