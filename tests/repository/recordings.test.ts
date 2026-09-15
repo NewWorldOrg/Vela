@@ -108,6 +108,7 @@ const recording = (over: Over = {}) => ({
   thumbnail: { state: 'ready', fault: null, showsAnUnfinishedRecording: false },
   broadcastGroup: { key: null, role: 'standalone' },
   encode: { standing: 'notEncoded' },
+  unfinishedDeletion: null,
   ...over,
 })
 
@@ -515,6 +516,34 @@ test('the scramble level is the one the API graded, carried beside the overall o
   assert.equal(scrambled.scrambleQuality, 'mayNotBeWatchable')
   assert.equal(droppedOnly.quality.level, 'mayNotBeWatchable')
   assert.equal(droppedOnly.scrambleQuality, 'good')
+})
+
+test('a recording no deletion has stopped short on carries no unfinished deletion', async () => {
+  const one = await only([recording()])
+
+  assert.equal(one.unfinishedDeletion, undefined)
+})
+
+test('a deletion that left files behind is carried, with the count when the API gave one', async () => {
+  const counted = await only([
+    recording({
+      unfinishedDeletion: {
+        leftBehindAt: '2026-08-10T03:00:00Z',
+        filesLeft: '2',
+      },
+    }),
+  ])
+  const uncounted = await only([
+    recording({
+      unfinishedDeletion: {
+        leftBehindAt: '2026-08-10T03:00:00Z',
+        filesLeft: null,
+      },
+    }),
+  ])
+
+  assert.deepEqual(counted.unfinishedDeletion, { filesLeft: 2 })
+  assert.deepEqual(uncounted.unfinishedDeletion, { filesLeft: undefined })
 })
 
 test('a recording nothing counted carries no scrambled share', async () => {

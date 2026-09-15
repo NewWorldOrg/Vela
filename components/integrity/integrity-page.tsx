@@ -1,15 +1,19 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 
 import type {
+  FindingDiscarded,
   IntegrityFault,
+  IntegrityFinding,
   IntegrityResult,
   SweepWrite,
 } from '@/repository/integrity'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -20,13 +24,26 @@ import {
 } from '@/components/ui/table'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
-import { ChevronLeftIcon, QualityIcon } from '@/components/vela/icons'
+import {
+  ChevronLeftIcon,
+  QualityIcon,
+  TrashIcon,
+} from '@/components/vela/icons'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
+import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialog'
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const COLUMNS = ['ファイル', '理由', 'サイズ', '検出']
+const COLUMNS: { label: string; hidden?: boolean }[] = [
+  { label: 'ファイル' },
+  { label: '理由' },
+  { label: 'サイズ' },
+  { label: '検出' },
+  { label: '操作', hidden: true },
+]
+
+const OWNED_BY_NO_RECORDING: readonly IntegrityFault[] = ['noLedgerRow']
 
 const REASON_VARIANT: Record<IntegrityFault, 'mute' | 'warn' | 'err'> = {
   noLedgerRow: 'mute',
@@ -39,11 +56,14 @@ const REASON_VARIANT: Record<IntegrityFault, 'mute' | 'warn' | 'err'> = {
 export function IntegrityView({
   result,
   onRun,
+  onDelete,
 }: {
   result: IntegrityResult
   onRun: () => Promise<SweepWrite>
+  onDelete: (findingId: string) => Promise<FindingDiscarded>
 }) {
   const { check, findings, roots } = result
+  const [asked, setAsked] = useState<IntegrityFinding | null>(null)
 
   return (
     <ScreenMain
@@ -144,13 +164,19 @@ export function IntegrityView({
         />
       ) : (
         <Table
-          className="min-w-[720px]"
+          className="min-w-[760px]"
           containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
         >
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {COLUMNS.map((column) => (
-                <TableHead key={column}>{column}</TableHead>
+                <TableHead key={column.label}>
+                  {column.hidden ? (
+                    <span className="sr-only">{column.label}</span>
+                  ) : (
+                    column.label
+                  )}
+                </TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -181,11 +207,29 @@ export function IntegrityView({
                 <TableCell className="align-top text-right font-code tabular-nums text-ink-2">
                   {finding.noticedAt}
                 </TableCell>
+                <TableCell className="align-top text-right">
+                  {OWNED_BY_NO_RECORDING.includes(finding.fault) && (
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      aria-label="削除"
+                      title="削除"
+                      onClick={() => setAsked(finding)}
+                    >
+                      <TrashIcon />
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       )}
+      <DeleteFindingDialog
+        finding={asked}
+        onOpenChange={(open) => !open && setAsked(null)}
+        onDelete={onDelete}
+      />
     </ScreenMain>
   )
 }

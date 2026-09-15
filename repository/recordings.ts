@@ -61,6 +61,10 @@ export interface RecordingQuality {
   detail?: string
 }
 
+export interface UnfinishedDeletion {
+  filesLeft?: number
+}
+
 export interface Recording {
   id: string
   reservationId?: string
@@ -84,6 +88,7 @@ export interface Recording {
   sizeObservedAt?: string
   filePath: string
   fileMissing?: boolean
+  unfinishedDeletion?: UnfinishedDeletion
   outcome: RecordingOutcome
   outcomeDetail?: string
   quality: RecordingQuality
@@ -463,6 +468,9 @@ export function toRecording(
     sizeBytes,
     sizeObservedAt: observedLabelOf(r.observedAt, outcome),
     filePath: `${r.outputRoot.replace(/\/+$/, '')}/${r.fileName}`,
+    unfinishedDeletion: r.unfinishedDeletion
+      ? { filesLeft: counted(r.unfinishedDeletion.filesLeft) }
+      : undefined,
     outcome,
     outcomeDetail: faultTitleOf(r.outcomeDetail),
     quality,

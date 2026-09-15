@@ -196,6 +196,26 @@ export const 完全: Story = {
     await waitFor(() => expect(asked).toEqual(['1274']))
   },
 }
+
+export const 削除未完了: Story = {
+  args: { detail: { ...detail('1274'), unfinishedDeletion: { filesLeft: 2 } } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('削除未完了')).toBeVisible()
+    await expect(canvas.getByText('残り 2 ファイル')).toBeVisible()
+
+    asked.length = 0
+
+    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+
+    await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
+    await waitFor(() => expect(asked).toEqual(['1274']))
+  },
+}
+
 export const 警告水準: Story = {
   args: { detail: detail('1266') },
   play: async ({ canvasElement }) => {

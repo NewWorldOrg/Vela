@@ -20,6 +20,8 @@ const store: {
   sweep: unknown
   sweepError: unknown
   sweepStatus: number
+  discarded: unknown
+  discardStatus: number
 } = {
   listing: undefined,
   listingStatus: 200,
@@ -29,7 +31,11 @@ const store: {
   sweep: undefined,
   sweepError: undefined,
   sweepStatus: 200,
+  discarded: undefined,
+  discardStatus: 200,
 }
+
+const DISCARD = '/api/recordings/integrity/findings/{findingId}/delete'
 
 interface Over {
   [key: string]: unknown
@@ -118,8 +124,22 @@ mock.module('@/repository/client/carina', {
               response: answered(store.listingStatus),
             }
       },
-      POST: async (path: string) => {
-        sent.push({ method: 'POST', path, query: {} })
+      POST: async (path: string, init?: { params?: { path?: object } }) => {
+        sent.push({
+          method: 'POST',
+          path,
+          query: (init?.params?.path ?? {}) as Record<string, unknown>,
+        })
+
+        if (path === DISCARD) {
+          const ok = store.discardStatus < 400
+          const body = { status: ok, message: '', data: store.discarded }
+
+          return {
+            ...(ok ? { data: body } : { error: body }),
+            response: answered(store.discardStatus),
+          }
+        }
 
         return store.sweepStatus === 200
           ? {
@@ -139,7 +159,7 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getIntegrity, runIntegrityCheck } =
+const { discardIntegrityFinding, getIntegrity, runIntegrityCheck } =
   await import('@/repository/integrity')
 
 function standing(items: unknown[] = [finding()], over: Over = {}): void {
@@ -152,6 +172,14 @@ function standing(items: unknown[] = [finding()], over: Over = {}): void {
   store.sweep = { check: check(), findings: items.length }
   store.sweepError = undefined
   store.sweepStatus = 200
+  store.discarded = undefined
+  store.discardStatus = 200
+}
+
+function discarding(status: number, data: unknown): void {
+  standing()
+  store.discardStatus = status
+  store.discarded = data
 }
 
 const only = async (over: Over = {}) => {
@@ -369,6 +397,110 @@ test('a refusal that says nothing falls back to the status it answered with', as
 
   assert.equal(result.state, 'refused')
   assert.match(result.state === 'refused' ? result.message : '', /\(500\)/)
+})
+
+test('a finding carries the id the check gave it, so it can be thrown away by name', async () => {
+  const one = await only({ id: 'c3a1e0f2-7b44-4e19-8d2a-60f5b9c7e218' })
+
+  assert.equal(one.id, 'c3a1e0f2-7b44-4e19-8d2a-60f5b9c7e218')
+})
+
+const STRAY_ID = 'c3a1e0f2-7b44-4e19-8d2a-60f5b9c7e218'
+
+test('a stray thrown away answers ok, having named the finding it was asked about', async () => {
+  discarding(200, {
+    findingId: STRAY_ID,
+    outputRoot: 'primary',
+    path: 'recording-4812.m2ts.tmp',
+    sizeBytes: 2000000000,
+    fileRemoved: true,
+  })
+
+  assert.deepEqual(await discardIntegrityFinding(STRAY_ID), { state: 'ok' })
+  assert.deepEqual(
+    sent.filter((one) => one.path === DISCARD),
+    [{ method: 'POST', path: DISCARD, query: { findingId: STRAY_ID } }],
+  )
+})
+
+const REFUSALS = [
+  ['noSuchFinding', 404],
+  ['namesARecording', 409],
+  ['nothingOnTheDisk', 409],
+  ['fileChanged', 409],
+  ['alreadyThrownAway', 409],
+  ['noTimeWasTaken', 409],
+  ['oneIsAlreadyBeingThrownAway', 409],
+  ['rootOutOfReach', 409],
+  ['stillBeingWritten', 409],
+  ['tookTooLong', 409],
+  ['filesLeftBehind', 503],
+  ['driverUnreachable', 503],
+  ['driverRefused', 502],
+] as const
+
+test('each refusal to throw a stray away is told in Japanese words of its own', async () => {
+  const messages = new Set<string>()
+
+  for (const [refusal, status] of REFUSALS) {
+    discarding(status, { findingId: STRAY_ID, refusal })
+
+    const result = await discardIntegrityFinding(STRAY_ID)
+
+    assert.equal(result.state, 'rejected')
+
+    const message = result.state === 'rejected' ? result.message : ''
+
+    assert.match(message, /[ぁ-んァ-ヶ一-龠]/)
+    assert.doesNotMatch(message, new RegExp(refusal))
+    assert.doesNotMatch(message, /\(\d{3}\)/)
+    messages.add(message)
+  }
+
+  assert.equal(messages.size, REFUSALS.length)
+})
+
+test('a finding about a recording sends the reader to the recording', async () => {
+  discarding(409, { findingId: STRAY_ID, refusal: 'namesARecording' })
+
+  const result = await discardIntegrityFinding(STRAY_ID)
+
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /録画のほうを削除/,
+  )
+})
+
+test('a finding from a check that took no time asks for the check to run again', async () => {
+  discarding(409, { findingId: STRAY_ID, refusal: 'noTimeWasTaken' })
+
+  const result = await discardIntegrityFinding(STRAY_ID)
+
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /整合性チェックをもう一度実行/,
+  )
+})
+
+test('a refusal this build does not know falls back to the status it answered with', async () => {
+  discarding(409, { findingId: STRAY_ID, refusal: 'somethingTheApiAddedLater' })
+
+  const result = await discardIntegrityFinding(STRAY_ID)
+
+  assert.equal(result.state, 'rejected')
+  assert.match(result.state === 'rejected' ? result.message : '', /\(409\)/)
+  assert.doesNotMatch(
+    result.state === 'rejected' ? result.message : '',
+    /somethingTheApiAddedLater/,
+  )
+})
+
+test('a throw-away asked for without a session says so rather than refusing', async () => {
+  discarding(401, null)
+
+  assert.deepEqual(await discardIntegrityFinding(STRAY_ID), {
+    state: 'unauthenticated',
+  })
 })
 
 test('この版が知らない不備が届いても、行は日本語の理由を持って残る', async () => {

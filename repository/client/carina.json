@@ -3507,6 +3507,99 @@
         }
       }
     },
+    "/api/recordings/integrity/findings/{findingId}/delete": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "deleteIntegrityFinding",
+        "parameters": [
+          {
+            "name": "findingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingRefusedResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfIntegrityFindingThrownAwayResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recordings/{id}/stop": {
       "post": {
         "tags": [
@@ -7434,6 +7527,58 @@
           }
         }
       },
+      "BaseResponderOfIntegrityFindingRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityFindingRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfIntegrityFindingThrownAwayResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityFindingThrownAwayResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfIntegritySweepRefusedResponder": {
         "required": [
           "status",
@@ -10633,6 +10778,24 @@
         ],
         "type": "string"
       },
+      "FindingDisposalFailure": {
+        "enum": [
+          "noSuchFinding",
+          "namesARecording",
+          "nothingOnTheDisk",
+          "alreadyThrownAway",
+          "noTimeWasTaken",
+          "oneIsAlreadyBeingThrownAway",
+          "rootOutOfReach",
+          "fileChanged",
+          "stillBeingWritten",
+          "filesLeftBehind",
+          "driverUnreachable",
+          "driverRefused",
+          "tookTooLong"
+        ],
+        "type": "string"
+      },
       "IntegrityFindingResponder": {
         "required": [
           "id",
@@ -10686,6 +10849,56 @@
           "noticedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "IntegrityFindingRefusedResponder": {
+        "required": [
+          "findingId",
+          "refusal"
+        ],
+        "type": "object",
+        "properties": {
+          "findingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "refusal": {
+            "$ref": "#/components/schemas/FindingDisposalFailure"
+          }
+        }
+      },
+      "IntegrityFindingThrownAwayResponder": {
+        "required": [
+          "findingId",
+          "outputRoot",
+          "path",
+          "sizeBytes",
+          "fileRemoved"
+        ],
+        "type": "object",
+        "properties": {
+          "findingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outputRoot": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "fileRemoved": {
+            "type": "boolean"
           }
         }
       },
@@ -14109,7 +14322,8 @@
           "drops",
           "thumbnail",
           "broadcastGroup",
-          "encode"
+          "encode",
+          "unfinishedDeletion"
         ],
         "type": "object",
         "properties": {
@@ -14225,6 +14439,16 @@
           },
           "encode": {
             "$ref": "#/components/schemas/RecordingEncodeResponder"
+          },
+          "unfinishedDeletion": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingUnfinishedDeletionResponder"
+              }
+            ]
           }
         }
       },
@@ -14293,6 +14517,28 @@
           },
           "showsAnUnfinishedRecording": {
             "type": "boolean"
+          }
+        }
+      },
+      "RecordingUnfinishedDeletionResponder": {
+        "required": [
+          "leftBehindAt",
+          "filesLeft"
+        ],
+        "type": "object",
+        "properties": {
+          "leftBehindAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "filesLeft": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

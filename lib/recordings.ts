@@ -36,6 +36,29 @@ export function recordingQualityShapeOf(
     : shapeFor(RECORDING_QUALITY_SHAPES, level, RECORDING_QUALITY_NOT_YET_KNOWN)
 }
 
+export interface UnfinishedDeletionShape {
+  label: string
+  detail?: string
+}
+
+export function unfinishedDeletionShapeOf(
+  recording: Pick<Recording, 'unfinishedDeletion'>,
+): UnfinishedDeletionShape | undefined {
+  const left = recording.unfinishedDeletion
+
+  if (left === undefined) {
+    return undefined
+  }
+
+  return {
+    label: '削除未完了',
+    detail:
+      left.filesLeft === undefined
+        ? undefined
+        : `残り ${left.filesLeft} ファイル`,
+  }
+}
+
 export function inProgressFirst<T extends Pick<Recording, 'outcome'>>(
   recordings: readonly T[],
 ): T[] {

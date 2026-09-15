@@ -45,6 +45,10 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'BaseResponderOfServiceReachSettingsResponder.data',
       'BaseResponderOfTunerObservationResponder.data',
       'BaseResponderOfstring.data',
+      'IntegrityFindingThrownAwayResponder.fileRemoved',
+      'IntegrityFindingThrownAwayResponder.outputRoot',
+      'IntegrityFindingThrownAwayResponder.path',
+      'IntegrityFindingThrownAwayResponder.sizeBytes',
     ],
   },
   {
@@ -86,7 +90,8 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'BoostRefusedResponder.runningBoostId',
       'BoostStartedResponder.boostId',
       'EncodeRemovalResponder.id',
-      'IntegrityFindingResponder.id',
+      'IntegrityFindingRefusedResponder.findingId',
+      'IntegrityFindingThrownAwayResponder.findingId',
       'IntegritySweepRefusedResponder.runningCheckId',
       'MigrationRunResponder.id',
       'RecordingDiscardRefusedResponder.recordingId',
@@ -231,6 +236,11 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'RecordingThumbnailResponder.showsAnUnfinishedRecording',
       'ThumbnailRemakeResponder.thumbnail',
     ],
+  },
+  {
+    because:
+      'the badge says a deletion stopped short and how many files it left; deleting again is the one thing to do about it, so when it stopped is not a time anybody acts on',
+    fields: ['RecordingUnfinishedDeletionResponder.leftBehindAt'],
   },
   {
     because:
