@@ -4,9 +4,32 @@ import { test } from 'node:test'
 import type { Recording, RecordingDetail } from '@/repository/recordings'
 import {
   isLeftScrambled,
+  minutesMovedLater,
   playsInBrowser,
   scrambledPercent,
 } from '@/lib/recordings'
+
+test('an end the follower moved later is counted in whole minutes, rounded up', () => {
+  assert.equal(
+    minutesMovedLater('2026-08-09T14:30:00Z', '2026-08-09T14:40:00Z'),
+    10,
+  )
+  assert.equal(
+    minutesMovedLater('2026-08-09T14:30:00Z', '2026-08-09T14:30:20Z'),
+    1,
+  )
+})
+
+test('an end that did not move, or moved earlier, has moved nowhere', () => {
+  assert.equal(
+    minutesMovedLater('2026-08-09T14:30:00Z', '2026-08-09T14:30:00Z'),
+    undefined,
+  )
+  assert.equal(
+    minutesMovedLater('2026-08-09T14:30:00Z', '2026-08-09T14:20:00Z'),
+    undefined,
+  )
+})
 
 function detail(scrambledShare?: number) {
   return { scrambledShare } as RecordingDetail

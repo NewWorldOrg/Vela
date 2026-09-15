@@ -7,7 +7,7 @@ import {
   formatStamp,
 } from '@/lib/format'
 import { castInExtended, leadOfExtended } from '@/lib/programme-extended'
-import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
+import { minutesMovedLater, RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { genreLabelOfKind } from '@/lib/search-condition'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import {
@@ -454,6 +454,7 @@ export function toRecording(
         ? Math.round(toInt(r.expectedWindow.durationMs) / 1000)
         : undefined,
     sizeBytes,
+    sizeObservedAt: observedLabelOf(r.observedAt, outcome),
     filePath: `${r.outputRoot.replace(/\/+$/, '')}/${r.fileName}`,
     outcome,
     outcomeDetail: faultTitleOf(r.outcomeDetail),
@@ -487,7 +488,9 @@ function toDetail(
   return {
     ...base,
     genres: genres.length > 0 ? genres : undefined,
-    sizeObservedAt: observedLabelOf(d, base.outcome),
+    sizeObservedAt:
+      observedLabelOf(d.reconciliation.observedAt, base.outcome) ??
+      base.sizeObservedAt,
     synopsis: r.programme.summary || undefined,
     outcomeBody: outcomeBodyOf(r, base),
     reconcile: reconcileOf(d, base),
@@ -926,25 +929,29 @@ function recordedRangeOf(
   const startedAt = new Date(r.startedAt)
   const spelled = jst(startedAt)
   const from = `${spelled.year}/${dayOf(startedAt)} ${spelled.hour}:${spelled.minute}`
+  const moved = minutesMovedLater(r.promisedWindowEnd, r.expectedWindow.end)
+  const extended = moved === undefined ? '' : `(延長 +${moved} 分)`
 
   if (outcome === 'recording') {
-    return `${from} — 進行中`
+    return moved === undefined
+      ? `${from} — 進行中`
+      : `${from} — ${clockOf(new Date(r.expectedWindow.end))} まで${extended}`
   }
 
   const ended = r.stoppedAt ?? r.expectedWindow.end
 
-  return `${from} — ${clockOf(new Date(ended))}`
+  return `${from} — ${clockOf(new Date(ended))}${extended}`
 }
 
 function observedLabelOf(
-  d: DetailResponder,
+  observedAt: string | null | undefined,
   outcome: RecordingOutcome,
 ): string | undefined {
-  if (!d.reconciliation.observedAt) {
+  if (!observedAt) {
     return undefined
   }
 
-  const at = new Date(d.reconciliation.observedAt)
+  const at = new Date(observedAt)
   const spelled = jst(at)
 
   return outcome === 'recording'
