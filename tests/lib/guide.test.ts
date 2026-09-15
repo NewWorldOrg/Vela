@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import type { GuideRelationKind } from '@/lib/guide'
 import {
+  bookingMarkOf,
   broadcastDateOf,
   foldedGuideOf,
   foldsAColumn,
@@ -79,6 +80,18 @@ test('the first half hour of a day opens at the top, not above it', () => {
 
 test('a minute past the lead opens a minute in', () => {
   assert.equal(openingScrollTopOf(31, HOUR_PX), HOUR_PX / 60)
+})
+
+test('a programme nobody booked carries no mark', () => {
+  assert.equal(bookingMarkOf(undefined), undefined)
+})
+
+test('a booking still waiting for its hour is marked as booked', () => {
+  assert.equal(bookingMarkOf({ standing: 'scheduled' }), 'booked')
+})
+
+test('a booking whose programme is being recorded is marked as recording', () => {
+  assert.equal(bookingMarkOf({ standing: 'recording' }), 'recording')
 })
 
 const TELEVISION_SERVICES = 27

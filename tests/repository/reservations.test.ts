@@ -1142,12 +1142,11 @@ test('a revision refused because the recording has started says which', async ()
 })
 
 test('only a reservation still holding a seat books its programme', async () => {
-  const held = ['scheduled']
+  const held = ['scheduled', 'recording']
   const settled = [
     'cancelled',
     'missed',
     'conflict',
-    'recording',
     'complete',
     'truncated',
     'failed',
@@ -1182,10 +1181,24 @@ test('a booking carries what the edit form has to fill itself with', async () =>
 
   assert.deepEqual(booking, {
     id: 'c3',
+    standing: 'scheduled',
     priority: 12,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
   })
+})
+
+test('a booking says whether its programme is being recorded now', async () => {
+  for (const [state, said] of [
+    ['scheduled', 'scheduled'],
+    ['recording', 'recording'],
+  ]) {
+    standing([reservation({ standing: state })])
+
+    const booking = (await listBookings()).get('131-1310-40001')
+
+    assert.equal(booking?.standing, said, `standing ${state}`)
+  }
 })
 
 test('a programme asked for twice is booked by the one that holds the seat', async () => {

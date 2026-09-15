@@ -352,6 +352,7 @@ export const PROGRAM_FIXTURES: Program[] = [
     booked: true,
     booking: {
       id: '2f6c1a90-8d47-4e15-b3c2-0a5e7d914b68',
+      standing: 'scheduled',
       priority: 10,
       marginBeforeSeconds: 10,
       marginAfterSeconds: 30,

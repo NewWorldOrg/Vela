@@ -16,7 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { SuccessIcon } from '@/components/vela/icons'
+import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
+import { RecordIcon, SuccessIcon } from '@/components/vela/icons'
 import { InlineAlert } from '@/components/vela/banner'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
@@ -93,7 +94,23 @@ export function ProgramPanel({
             onAir={onAir}
             onReserve={onReserve}
             reservation={
-              booking && (
+              booking &&
+              (booking.standing === 'recording' ? (
+                <div
+                  data-booking="recording"
+                  className="rounded-lg bg-coral-soft px-3.5 py-3"
+                >
+                  <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
+                    <RecordIcon className="size-4" />
+                    {RECORDING_IN_PROGRESS_TERM.label}
+                  </div>
+                  {channel && (
+                    <p className="mt-1 text-sub leading-relaxed text-ink-2">
+                      <b>{CHANNEL_KIND_LABEL[channel.kind]}</b>のチューナー 1 本
+                    </p>
+                  )}
+                </div>
+              ) : (
                 <div className="rounded-lg bg-mint-soft px-3.5 py-3">
                   <div className="flex items-center gap-1.5 text-ui font-bold text-mint">
                     <SuccessIcon className="size-4" />
@@ -135,7 +152,7 @@ export function ProgramPanel({
                     />
                   )}
                 </div>
-              )
+              ))
             }
           />
         </div>

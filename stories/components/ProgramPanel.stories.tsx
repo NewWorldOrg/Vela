@@ -249,6 +249,33 @@ export const 関連番組あり: Story = {
   },
 }
 
+const beingRecorded: Program = {
+  ...booked,
+  booking: { ...booked.booking!, standing: 'recording' },
+}
+
+export const 録画中: Story = {
+  args: {
+    program: beingRecorded,
+    channel: channelOf(beingRecorded.channelId),
+  },
+  play: async ({ canvasElement }) => {
+    const surface = await opened(canvasElement)
+
+    await reads(surface, beingRecorded)
+
+    const shown = within(surface)
+
+    await expect(shown.getByText('録画中')).toBeVisible()
+    await expect(shown.queryByText('チューナー確保済み')).toBeNull()
+    await expect(
+      shown.queryByRole('button', { name: '予約を取り消す' }),
+    ).toBeNull()
+    await expect(shown.queryByRole('button', { name: '予約を編集' })).toBeNull()
+    await expect(shown.queryByRole('button', { name: '録画予約' })).toBeNull()
+  },
+}
+
 export const 終了未定: Story = {
   args: { program: undecided, channel: channelOf(undecided.channelId) },
   play: async ({ canvasElement }) => {

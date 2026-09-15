@@ -35,8 +35,11 @@ export type Genre =
   | 'doc'
   | 'other'
 
+export type BookingStanding = 'scheduled' | 'recording'
+
 export interface ProgramBooking {
   id: string
+  standing: BookingStanding
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number

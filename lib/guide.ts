@@ -264,6 +264,18 @@ export function foldsAColumn<C extends FoldableColumn, P extends FoldableCell>(
   return foldedGuideOf(channels, programs).channels.length < channels.length
 }
 
+export type BookingMark = 'booked' | 'recording'
+
+export function bookingMarkOf(
+  booking: { standing: string } | undefined,
+): BookingMark | undefined {
+  if (booking === undefined) {
+    return undefined
+  }
+
+  return booking.standing === 'recording' ? 'recording' : 'booked'
+}
+
 export const GUTTER_PX = 46
 
 export const COLUMN_MIN_PX = 200
