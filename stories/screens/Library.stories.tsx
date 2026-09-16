@@ -255,6 +255,80 @@ export const 全件未計測: Story = {
   },
 }
 
+const LENGTH_COLUMN = 3
+
+const SIZE_COLUMN = 4
+
+const ENDED_BADLY = all.filter(
+  (r) => r.outcome === 'truncated' || r.outcome === 'failed',
+)
+
+export const 尻切れと失敗の録画: Story = {
+  args: { result: resultOf(ENDED_BADLY), filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const truncated = within(
+      canvas.getByRole('row', { name: /深夜の商店街をあるく/ }),
+    )
+
+    await expect(
+      truncated.getAllByRole('cell')[OUTCOME_COLUMN],
+    ).toHaveTextContent('尻切れ')
+    await expect(
+      truncated.getAllByRole('cell')[LENGTH_COLUMN],
+    ).toHaveTextContent('36:12 / 54:00')
+
+    const failed = within(canvas.getByRole('row', { name: /となりの発明王/ }))
+    const outcome = failed.getAllByRole('cell')[OUTCOME_COLUMN]
+
+    await expect(outcome).toHaveTextContent('失敗')
+    await expect(outcome).toHaveTextContent('スクランブル解除できず')
+    await expect(failed.getAllByRole('cell')[SIZE_COLUMN]).toHaveTextContent(
+      '0 B',
+    )
+
+    const quality = failed.getAllByRole('cell')[QUALITY_COLUMN]
+
+    await expect(quality).toHaveTextContent('未計測')
+    await expect(quality).not.toHaveTextContent('良好')
+    await expect(quality).not.toHaveTextContent('ドロップ')
+
+    await expect(failed.getByRole('button', { name: '再生' })).toBeDisabled()
+    await expect(failed.getByRole('button', { name: '削除' })).toBeEnabled()
+  },
+}
+
+const KEPT = all.filter((r) => r.outcome === 'complete' && !r.fileMissing)
+
+const GONE = all.filter((r) => r.fileMissing)
+
+export const ファイル不在の録画: Story = {
+  args: { result: resultOf([KEPT[0], ...GONE]), filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const gone = within(canvas.getByRole('row', { name: /朝のバードウォッチ/ }))
+
+    await expect(gone.getAllByRole('cell')[OUTCOME_COLUMN]).toHaveTextContent(
+      'ファイル不在',
+    )
+
+    const size = gone.getAllByRole('cell')[SIZE_COLUMN]
+
+    await expect(size).toHaveTextContent('3.6 GB')
+    await expect(size).toHaveTextContent('実ファイルなし')
+    await expect(size).not.toHaveTextContent('観測')
+
+    await expect(gone.getByRole('button', { name: '再生' })).toBeDisabled()
+    await expect(gone.getByRole('button', { name: '削除' })).toBeEnabled()
+
+    await expect(
+      within(
+        canvas.getByRole('row', { name: /週末キッチンの手帖/ }),
+      ).getAllByRole('cell')[SIZE_COLUMN],
+    ).toHaveTextContent('観測')
+  },
+}
+
 export const 検索0件: Story = {
   args: {
     result: { ...result, items: [], filter: { q: '該当なし' } },
