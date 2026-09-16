@@ -14,8 +14,8 @@ const CHECK = {
 const ROOTS = [
   {
     name: 'primary',
-    free: '127,048,298,496 B',
-    total: '481,493,131,264 B',
+    free: '118.3 GB',
+    total: '448.4 GB',
     writable: true,
     recordingsInFlight: 1,
   },

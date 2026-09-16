@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
@@ -24,6 +25,14 @@ async function throwing(findingId: string): Promise<FindingDiscarded> {
 const STILL_BEING_WRITTEN = 'このファイルは書き込み中のため、削除していません。'
 
 const STRAY = INTEGRITY_FIXTURE.findings[0]
+
+const TOO_SOON =
+  '直前の整合性チェックから間がないため、まだ実行できません。次に実行できるのは 08/08 03:15 です。'
+
+const tooSoon = async (): Promise<SweepWrite> => ({
+  state: 'refused',
+  message: TOO_SOON,
+})
 
 const meta = {
   title: 'Screens/整合性チェック',
@@ -138,5 +147,57 @@ export const 狭い幅で収まらないほどの食い違い: Story = {
     await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
       pageStays: true,
     })
+  },
+}
+
+export const 保存先の空きは丸めて出す: Story = {
+  args: { result: INTEGRITY_FIXTURE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('118.3 GB')).toBeVisible()
+    await expect(canvas.getByText('448.4 GB')).toBeVisible()
+    await expect(canvas.queryByText(/\d{10,} B/)).toBeNull()
+  },
+}
+
+function SweepRefusedThenAStrayThrownAway() {
+  const [result, setResult] = useState(INTEGRITY_FIXTURE)
+
+  return (
+    <IntegrityView
+      result={result}
+      onRun={tooSoon}
+      onDelete={async (findingId): Promise<FindingDiscarded> => {
+        setResult((held) => ({
+          ...held,
+          findings: held.findings.filter((one) => one.id !== findingId),
+        }))
+
+        return { state: 'ok' }
+      }}
+    />
+  )
+}
+
+export const 断りは片付いたあとまで残らない: Story = {
+  args: { result: INTEGRITY_FIXTURE },
+  render: () => <SweepRefusedThenAStrayThrownAway />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: 'いま実行する' }))
+    await expect(await canvas.findByText(TOO_SOON)).toBeVisible()
+
+    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+
+    await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
+
+    await waitFor(() => expect(canvas.queryByText(TOO_SOON)).toBeNull())
+    await expect(
+      canvas.getByText(`${STRAY.path} を削除しました。`),
+    ).toBeVisible()
   },
 }

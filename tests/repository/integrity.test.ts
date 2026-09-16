@@ -305,12 +305,21 @@ test('the roots are read beside the findings', async () => {
   assert.deepEqual(roots, [
     {
       name: 'primary',
-      free: '127,048,298,496 B',
-      total: '481,493,131,264 B',
+      free: '118.3 GB',
+      total: '448.4 GB',
       writable: true,
       recordingsInFlight: 1,
     },
   ])
+})
+
+test('a root is weighed in the units the screens use, not in raw bytes', async () => {
+  standing()
+
+  const [only] = (await getIntegrity()).roots
+
+  assert.doesNotMatch(only.free, /\d{6,}|,/)
+  assert.doesNotMatch(only.total, /\d{6,}|,/)
 })
 
 test('roots that will not be read do not take the findings down with them', async () => {
