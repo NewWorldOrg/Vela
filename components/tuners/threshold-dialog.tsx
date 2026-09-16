@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import { SILENCE_RANGE, withinSilence } from '@/lib/tuners'
 import type { TunerWriteResult } from '@/repository/tuners'
 import { Button } from '@/components/ui/button'
@@ -22,7 +23,7 @@ import {
   FieldLabel,
 } from '@/components/vela/field'
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 const OUT_OF_RANGE = `しきい値は ${SILENCE_RANGE.least} 〜 ${SILENCE_RANGE.most} 時間の半角数字です。`
 

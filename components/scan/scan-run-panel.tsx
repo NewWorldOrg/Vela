@@ -12,6 +12,7 @@ import type {
 import { SCAN_SYSTEMS, SYSTEM_LABEL } from '@/repository/scan-systems'
 import { cn } from '@/lib/utils'
 import { wordFor } from '@/lib/not-yet-in-this-build'
+import { signedOut } from '@/lib/signed-out'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InlineAlert } from '@/components/vela/banner'
 import { Button } from '@/components/ui/button'
@@ -199,7 +200,7 @@ export function ScanRunPanel({
 
                 setRefusal(
                   result.state === 'unauthenticated'
-                    ? 'サインインが切れているため、キャンセルできませんでした。'
+                    ? signedOut('キャンセル')
                     : result.state === 'rejected'
                       ? result.message
                       : undefined,

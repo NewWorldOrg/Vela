@@ -2,6 +2,7 @@
 
 import { useState, type RefObject } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import { ticketedHref, type Handover } from '@/lib/external-player'
 import { Spinner } from '@/components/vela/progress'
@@ -16,8 +17,7 @@ type Picker = { webkitShowPlaybackTargetPicker?: () => void }
 
 const NO_AIRPLAY = 'このブラウザは AirPlay に対応していません。'
 
-const SIGNED_OUT =
-  'サインインが切れているため、外部プレイヤーの札を発行できませんでした。'
+const SIGNED_OUT = signedOut('外部プレイヤーの札を発行')
 
 async function ticket(
   handover: Handover,

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { CollectionStatus, RebuildResult } from '@/repository/collection'
 import {
   AlertDialog,
@@ -45,9 +46,7 @@ export function RebuildEpgDialog({
       }
 
       setRefusal(
-        result.state === 'unauthenticated'
-          ? 'サインインが切れているため、実行できませんでした。'
-          : result.message,
+        result.state === 'unauthenticated' ? signedOut('実行') : result.message,
       )
     })
 

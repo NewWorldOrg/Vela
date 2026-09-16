@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import type { EncodeChoices, EncodeWrite } from '@/repository/encode'
 import type { Recording } from '@/repository/recordings'
@@ -81,7 +82,7 @@ export function EncodeButton({
           : result.state === 'unauthenticated'
             ? {
                 queued: false,
-                text: 'サインインが切れているため、登録できませんでした。',
+                text: signedOut('登録'),
               }
             : { queued: false, text: result.message },
       )

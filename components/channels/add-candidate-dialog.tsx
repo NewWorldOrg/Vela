@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { CandidateTuning, WriteResult } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { SCAN_SYSTEMS, SYSTEM_LABEL } from '@/repository/scan-systems'
@@ -150,9 +151,7 @@ export function AddCandidateDialog({
       }
 
       setRefusal(
-        result.state === 'unauthenticated'
-          ? 'サインインが切れているため、追加できませんでした。'
-          : result.message,
+        result.state === 'unauthenticated' ? signedOut('追加') : result.message,
       )
     })
   }

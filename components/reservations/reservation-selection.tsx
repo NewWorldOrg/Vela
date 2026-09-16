@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { Reservation, ReservationBatch } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,7 +23,7 @@ export interface ReservationBulkActions {
   onDiscardAll: (ids: string[]) => Promise<ReservationBatch>
 }
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 export function ReservationSelection({
   chosen,

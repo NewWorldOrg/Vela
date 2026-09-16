@@ -11,6 +11,7 @@ import type {
   TunerToggleResult,
   TunerWriteResult,
 } from '@/repository/tuners'
+import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -121,7 +122,7 @@ function DetectionPanel({
         <div className="px-[19px] py-[13px]">
           <InlineAlert tone="warn">
             {detection.state === 'unauthenticated'
-              ? 'サインインが切れているため、デバイスを検出できませんでした。'
+              ? signedOut('デバイスを検出')
               : `デバイスを検出できませんでした。${detection.message}`}
           </InlineAlert>
         </div>

@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 
 import { cn } from '@/lib/utils'
 import { reservationAnchor } from '@/lib/reservations'
+import { signedOut } from '@/lib/signed-out'
 import type {
   Reservation,
   ReservationRevision,
@@ -45,7 +46,7 @@ export interface ReservationActions {
   onDiscard: (id: string) => Promise<ReservationWrite>
 }
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 export function ReservationRow({
   reservation,

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { FindingDiscarded, IntegrityFinding } from '@/repository/integrity'
 import {
   AlertDialog,
@@ -16,7 +17,7 @@ import {
 import { InlineAlert } from '@/components/vela/banner'
 import { TrashIcon, WarningIcon } from '@/components/vela/icons'
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 export function DeleteFindingDialog({
   finding,

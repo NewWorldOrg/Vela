@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 
 import type { TunerToggleResult } from '@/repository/tuners'
+import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 
@@ -24,7 +25,7 @@ function toOutcome(
     case 'unauthenticated':
       return {
         failed: true,
-        text: `サインインが切れているため、${asked}できませんでした。`,
+        text: signedOut(asked),
       }
     case 'unavailable':
       return {

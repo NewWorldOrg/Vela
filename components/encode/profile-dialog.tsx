@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 
 import { labelProblem, rateControlProblem } from '@/lib/encode'
+import { signedOut } from '@/lib/signed-out'
 import type { EncodeProfile, EncodeWrite } from '@/repository/encode'
 import type {
   Deinterlace,
@@ -126,9 +127,7 @@ export function ProfileDialog({
       }
 
       setRefusal(
-        result.state === 'unauthenticated'
-          ? `サインインが切れているため、${verb}できませんでした。`
-          : result.message,
+        result.state === 'unauthenticated' ? signedOut(verb) : result.message,
       )
     })
   }
