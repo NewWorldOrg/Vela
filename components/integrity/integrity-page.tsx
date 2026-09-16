@@ -64,6 +64,26 @@ export function IntegrityView({
 }) {
   const { check, findings, roots } = result
   const [asked, setAsked] = useState<IntegrityFinding | null>(null)
+  const ranAt = check?.ranAt ?? ''
+  const [thrownAway, setThrownAway] = useState<{
+    ranAt: string
+    path: string
+  }>()
+  const discarded = thrownAway?.ranAt === ranAt ? thrownAway.path : undefined
+
+  const throwAway = async (findingId: string): Promise<FindingDiscarded> => {
+    const thrown = await onDelete(findingId)
+
+    if (thrown.state === 'ok') {
+      const gone = findings.find((one) => one.id === findingId)
+
+      if (gone) {
+        setThrownAway({ ranAt, path: gone.path })
+      }
+    }
+
+    return thrown
+  }
 
   return (
     <ScreenMain
@@ -86,7 +106,7 @@ export function IntegrityView({
           整合性チェック
         </h1>
         <span className="ml-auto">
-          <RunCheckButton onRun={onRun} />
+          <RunCheckButton asOf={`${ranAt}/${findings.length}`} onRun={onRun} />
         </span>
       </div>
 
@@ -154,6 +174,12 @@ export function IntegrityView({
             </div>
           ))}
         </section>
+      )}
+
+      {discarded !== undefined && (
+        <Banner tone="success" className="mb-3.5">
+          {discarded} を削除しました。
+        </Banner>
       )}
 
       {findings.length === 0 ? (
@@ -228,7 +254,7 @@ export function IntegrityView({
       <DeleteFindingDialog
         finding={asked}
         onOpenChange={(open) => !open && setAsked(null)}
-        onDelete={onDelete}
+        onDelete={throwAway}
       />
     </ScreenMain>
   )

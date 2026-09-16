@@ -1,4 +1,4 @@
-import { formatStamp } from '@/lib/format'
+import { formatBytes, formatStamp } from '@/lib/format'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
@@ -230,8 +230,8 @@ function toFinding(finding: FindingResponder): IntegrityFinding {
 function toRoot(root: RootResponder): StorageRoot {
   return {
     name: root.name,
-    free: `${grouped(toInt(root.freeBytes))} B`,
-    total: `${grouped(toInt(root.totalBytes))} B`,
+    free: formatBytes(toInt(root.freeBytes)),
+    total: formatBytes(toInt(root.totalBytes)),
     writable: root.writable,
     recordingsInFlight: toInt(root.recordingsInFlight),
   }

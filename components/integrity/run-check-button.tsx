@@ -8,13 +8,16 @@ import { InlineAlert } from '@/components/vela/banner'
 import { SearchIcon } from '@/components/vela/icons'
 
 export function RunCheckButton({
+  asOf,
   onRun,
 }: {
+  asOf: string
   onRun: () => Promise<SweepWrite>
 }) {
   const [pending, startTransition] = useTransition()
-  const [refusal, setRefusal] = useState<string>()
+  const [refused, setRefused] = useState<{ asOf: string; message: string }>()
   const [found, setFound] = useState<number>()
+  const refusal = refused?.asOf === asOf ? refused.message : undefined
 
   return (
     <>
@@ -23,13 +26,13 @@ export function RunCheckButton({
         disabled={pending}
         onClick={() =>
           startTransition(async () => {
-            setRefusal(undefined)
+            setRefused(undefined)
             setFound(undefined)
 
             const result = await onRun()
 
             if (result.state === 'refused') {
-              setRefusal(result.message)
+              setRefused({ asOf, message: result.message })
 
               return
             }
