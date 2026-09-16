@@ -383,6 +383,7 @@ export const 未計測: Story = {
 
     await userEvent.click(canvas.getByText('録画の記録'))
     await expect(canvas.getAllByText('未計測').length).toBeGreaterThan(0)
+    await expect(canvas.queryByText('取りこぼし')).toBeNull()
   },
 }
 export const 到達できないファイル: Story = {

@@ -327,6 +327,14 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
 ]
 
+const NOT_ASKED_FOR_ON_PURPOSE: { because: string; routes: string[] }[] = [
+  {
+    because:
+      'the candidate rows of the scan screens carry the last measurement the API puts on them, so a tally of the same measurements is not drawn anywhere',
+    routes: ['GET /api/quality/candidate-scores'],
+  },
+]
+
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -492,6 +500,7 @@ function isEnvelope(schema: string, type: ts.TypeNode): boolean {
 interface Reading {
   files: string[]
   asked: string[]
+  declared: string[]
   roots: string[]
   fields: number
   read: number
@@ -787,6 +796,7 @@ function readTheTree(files: string[]): Reading {
   return {
     files,
     asked: [...asked].sort(),
+    declared: [...routes.keys()].sort(),
     roots: [...roots].sort(),
     fields: named.size,
     read: read.size,
@@ -873,5 +883,25 @@ test('every field this test lets through is still one it would otherwise catch',
       'this repository asks for, so the exception stands for nothing and ' +
       'would go on letting through whatever later takes that name. Take it ' +
       'off the list.',
+  )
+})
+
+test('a route this test lets go unasked is still one the client declares and nothing asks for', async () => {
+  const { asked, declared } = await theReading()
+
+  const declares = new Set(declared)
+  const askedFor = new Set(asked)
+
+  assert.deepEqual(
+    NOT_ASKED_FOR_ON_PURPOSE.flatMap((one) =>
+      one.routes
+        .filter((route) => !declares.has(route) || askedFor.has(route))
+        .map((route) => `${route} — ${one.because}`),
+    ),
+    [],
+    'A route named here is asked for after all, or is no longer one the ' +
+      'generated client declares, so the reason nothing reads its answer ' +
+      'stands for nothing and would go on excusing whatever later takes that ' +
+      'name. Take it off the list.',
   )
 })

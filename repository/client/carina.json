@@ -3901,6 +3901,39 @@
         }
       }
     },
+    "/api/quality/candidate-scores": {
+      "get": {
+        "tags": [
+          "quality"
+        ],
+        "operationId": "listQualityCandidateScores",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityCandidateScoreListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfQualityCandidateScoreListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/quality/channels": {
       "get": {
         "tags": [
@@ -7939,6 +7972,32 @@
               },
               {
                 "$ref": "#/components/schemas/ProgrammeSearchResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfQualityCandidateScoreListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityCandidateScoreListResponder"
               }
             ]
           }
@@ -12297,6 +12356,132 @@
           }
         }
       },
+      "QualityCandidateMeasuredResponder": {
+        "required": [
+          "lockRate",
+          "carrierToNoiseLowestMilliDecibels",
+          "bitErrorRateHighest",
+          "samples",
+          "measuredFrom",
+          "measuredUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "lockRate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "carrierToNoiseLowestMilliDecibels": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "bitErrorRateHighest": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "samples": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "measuredFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "measuredUntil": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "QualityCandidateScoreListResponder": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QualityCandidateScoreResponder"
+            }
+          }
+        }
+      },
+      "QualityCandidateScoreResponder": {
+        "required": [
+          "candidateId",
+          "networkId",
+          "serviceId",
+          "target",
+          "isSelected",
+          "score",
+          "evaluatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ScanTargetResponder"
+          },
+          "isSelected": {
+            "type": "boolean"
+          },
+          "score": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityCandidateMeasuredResponder"
+              }
+            ]
+          },
+          "evaluatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "QualityChannelListResponder": {
         "required": [
           "period",
@@ -13838,6 +14023,7 @@
           "eovfCount": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "null",
               "integer",
               "string"
             ],

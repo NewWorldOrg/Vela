@@ -499,6 +499,7 @@ function toDetail(
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
   const totalPackets = counted(r.drops.ccTotalPackets) ?? 0
   const scrambled = counted(r.drops.scrambledPackets)
+  const overflows = counted(r.drops.eovfCount)
   const genres = genresOf(r)
 
   return {
@@ -514,7 +515,7 @@ function toDetail(
       main: `中断 ${d.interruptions.length} 回 / 再開 ${toInt(r.resumeCount)} 回`,
     },
     tunerUnit: r.tunerDeviceId ? { main: r.tunerDeviceId } : undefined,
-    eoverflow: `${grouped(toInt(r.drops.eovfCount))} 回`,
+    eoverflow: overflows == null ? undefined : `${grouped(overflows)} 回`,
     scramble:
       scrambled == null
         ? undefined

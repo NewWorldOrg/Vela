@@ -712,6 +712,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/quality/candidate-scores': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listQualityCandidateScores']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/quality/channels': {
     parameters: {
       query?: never
@@ -1538,6 +1554,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['ProgrammeSearchResponder']
+    }
+    BaseResponderOfQualityCandidateScoreListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['QualityCandidateScoreListResponder']
     }
     BaseResponderOfQualityChannelListResponder: {
       status: boolean
@@ -2555,6 +2576,36 @@ export interface components {
       /** Format: int32 */
       mostCores?: null | number | string
     }
+    QualityCandidateMeasuredResponder: {
+      /** Format: double */
+      lockRate: number | string
+      /** Format: int32 */
+      carrierToNoiseLowestMilliDecibels: null | number | string
+      /** Format: double */
+      bitErrorRateHighest: null | number | string
+      /** Format: int64 */
+      samples: number | string
+      /** Format: date-time */
+      measuredFrom: string
+      /** Format: date-time */
+      measuredUntil: string
+    }
+    QualityCandidateScoreListResponder: {
+      items: components['schemas']['QualityCandidateScoreResponder'][]
+    }
+    QualityCandidateScoreResponder: {
+      /** Format: uuid */
+      candidateId: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      target: components['schemas']['ScanTargetResponder']
+      isSelected: boolean
+      score: null | components['schemas']['QualityCandidateMeasuredResponder']
+      /** Format: date-time */
+      evaluatedAt: null | string
+    }
     QualityChannelListResponder: {
       period: components['schemas']['QualityPeriodResponder']
       metrics: components['schemas']['QualityMetric'][]
@@ -2922,7 +2973,7 @@ export interface components {
       /** Format: int64 */
       scrambledPackets: null | number | string
       /** Format: int64 */
-      eovfCount: number | string
+      eovfCount: null | number | string
       /** Format: date-time */
       measuredUpdatedAt: null | string
     }
@@ -6906,6 +6957,42 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfQualityTrendResponder']
+        }
+      }
+    }
+  }
+  listQualityCandidateScores: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityCandidateScoreListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfQualityCandidateScoreListResponder']
         }
       }
     }
