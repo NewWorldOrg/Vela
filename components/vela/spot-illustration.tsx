@@ -2,7 +2,7 @@ import type { SVGProps } from 'react'
 
 import { cn } from '@/lib/utils'
 
-export type SpotName = 'antenna' | 'tuner' | 'tape' | 'star' | 'device'
+export type SpotName = 'antenna' | 'dish' | 'tuner' | 'tape' | 'star' | 'device'
 
 const LINE = 'stroke-ink-3 fill-none [stroke-width:1.5]'
 const ACCENT = 'stroke-brand fill-none [stroke-width:1.5]'
@@ -36,6 +36,23 @@ export function SpotIllustration({
             d="M40 13.5a10 10 0 0 1 0 13M44.5 9a16 16 0 0 1 0 22"
           />
           <path className={ACCENT} d="M16 13.5a10 10 0 0 0 0 13" />
+        </>
+      )}
+      {name === 'dish' && (
+        <>
+          <ellipse className={FILL} cx="27" cy="48" rx="15" ry="3.6" />
+          <path className={LINE} d="M27 48v-9M22 48h10" />
+          <g transform="rotate(-32 25 26)">
+            <ellipse className={FILL_2} cx="25" cy="26" rx="13.5" ry="8" />
+            <ellipse className={LINE} cx="25" cy="26" rx="13.5" ry="8" />
+          </g>
+          <path className={LINE} d="M25.6 27.4 33 18.2" />
+          <circle className={LINE} cx="33.8" cy="17.2" r="2.1" />
+          <path className={LINE} d="M27.5 33.6 27 39" />
+          <path
+            className={ACCENT}
+            d="M41 12.4a11 11 0 0 1 2.6 8.2M46 9a17 17 0 0 1 3.4 12.6"
+          />
         </>
       )}
       {name === 'tuner' && (

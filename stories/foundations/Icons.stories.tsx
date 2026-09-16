@@ -105,7 +105,7 @@ function IconGrid({ items }: { items: [string, ComponentType<IconProps>][] }) {
   )
 }
 
-const SPOTS: SpotName[] = ['antenna', 'tuner', 'tape', 'star', 'device']
+const SPOTS: SpotName[] = ['antenna', 'dish', 'tuner', 'tape', 'star', 'device']
 
 export const IconSet: Story = {
   render: () => (
