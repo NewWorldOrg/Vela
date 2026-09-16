@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 
 import { labelProblem } from '@/lib/encode'
+import { signedOut } from '@/lib/signed-out'
 import type {
   EncodeDestination,
   EncodeProfile,
@@ -113,9 +114,7 @@ export function DestinationDialog({
       }
 
       setRefusal(
-        result.state === 'unauthenticated'
-          ? `サインインが切れているため、${verb}できませんでした。`
-          : result.message,
+        result.state === 'unauthenticated' ? signedOut(verb) : result.message,
       )
     })
   }

@@ -7,6 +7,7 @@ import {
   NOT_YET_IN_THIS_BUILD_TERM,
   RECORDING_OUTCOME_TERMS,
 } from '@/lib/state-terms'
+import { signedOut } from '@/lib/signed-out'
 import type { EncodeAutoRun, EncodeWrite } from '@/repository/encode'
 import { FEWEST_CORES } from '@/repository/encode-terms'
 import {
@@ -21,7 +22,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import { FieldHint, FieldLabel } from '@/components/vela/field'
 import { Surface } from '@/components/vela/surface'
 
-const SIGNED_OUT = 'サインインが切れているため、保存できませんでした。'
+const SIGNED_OUT = signedOut('保存')
 
 const RUNS_ITSELF = '自動実行'
 

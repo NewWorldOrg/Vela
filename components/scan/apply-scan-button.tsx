@@ -4,6 +4,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { WriteResult } from '@/repository/services'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
@@ -35,7 +36,7 @@ export function ApplyScanAction({
 
               setRefusal(
                 result.state === 'unauthenticated'
-                  ? 'サインインが切れているため、保存できませんでした。'
+                  ? signedOut('保存')
                   : result.state === 'rejected'
                     ? result.message
                     : undefined,

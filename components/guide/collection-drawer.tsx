@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useDismissable } from '@/hooks/useDismissable'
 import { STREAM_OUTCOME_LABEL, streamLabel } from '@/lib/collection'
 import { wordFor } from '@/lib/not-yet-in-this-build'
+import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import type {
   CollectNowResult,
@@ -272,7 +273,7 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
         </b>
       </span>
     ) : outcome.state === 'unauthenticated' ? (
-      <span>サインインが切れているため、受け付けられませんでした。</span>
+      <span>{signedOut('受け付け')}</span>
     ) : (
       <span>{outcome.message}</span>
     )

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 
 import { formatBytes } from '@/lib/format'
+import { signedOut } from '@/lib/signed-out'
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import {
   AlertDialog,
@@ -24,7 +25,7 @@ function observationOf(recording: Recording): string | undefined {
   return recording.fileMissing ? '実ファイルなし' : recording.sizeObservedAt
 }
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 export function DeleteRecordingDialog({
   recording,

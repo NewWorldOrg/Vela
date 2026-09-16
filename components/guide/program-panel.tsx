@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { Channel } from '@/repository/channels'
 import { CHANNEL_KIND_LABEL } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
@@ -22,7 +23,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 export function ProgramPanel({
   program,

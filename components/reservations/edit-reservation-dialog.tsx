@@ -9,6 +9,7 @@ import {
   withinMargin,
   withinPriority,
 } from '@/lib/reservations'
+import { signedOut } from '@/lib/signed-out'
 import type {
   ReservationRevision,
   ReservationWrite,
@@ -33,7 +34,7 @@ import {
 
 type Named = 'priority' | 'before' | 'after'
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 const NOTHING_CHANGED = '変える値がありません。どれかを書き換えてください。'
 

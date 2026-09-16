@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 import { formatDateTime } from '@/lib/format'
+import { signedOut } from '@/lib/signed-out'
 import {
   MARGIN_RANGE,
   PRIORITY_RANGE,
@@ -117,7 +118,7 @@ export interface RuleActions {
 
 const EVERY_KIND = 'all'
 
-const SIGNED_OUT = 'サインインが切れているため、操作できませんでした。'
+const SIGNED_OUT = signedOut('操作')
 
 interface Named {
   field: 'name' | 'terms' | 'priority' | 'before' | 'after'

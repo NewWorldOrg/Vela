@@ -7,6 +7,7 @@ import type {
   CandidateTuning,
   WriteResult,
 } from '@/repository/services'
+import { signedOut } from '@/lib/signed-out'
 import { CANDIDATE_UNLOCKED_TERM } from '@/lib/state-terms'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -156,7 +157,7 @@ export function CandidateList({
 
   const toRefusal = (result: WriteResult, verb: string) =>
     result.state === 'unauthenticated'
-      ? `サインインが切れているため、${verb}できませんでした。`
+      ? signedOut(verb)
       : result.state === 'rejected'
         ? result.message
         : undefined

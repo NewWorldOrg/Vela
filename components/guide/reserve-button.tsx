@@ -3,11 +3,12 @@
 import type { ReactNode } from 'react'
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 
-const SIGNED_OUT = 'サインインが切れているため、予約できませんでした。'
+const SIGNED_OUT = signedOut('予約')
 
 const CONTENDED =
   'チューナーに空きがないため、この予約は競合として登録されました。'

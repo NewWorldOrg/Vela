@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 
 import { asksBeforeCallingOff } from '@/lib/encode'
+import { signedOut } from '@/lib/signed-out'
 import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import { RECORDING_REMOVED_LABEL } from '@/repository/encode-terms'
 import {
@@ -19,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 import { Spinner } from '@/components/vela/progress'
 
-const SIGNED_OUT = 'サインインが切れているため、中止できませんでした。'
+const SIGNED_OUT = signedOut('中止')
 
 export function CancelJobButton({
   job,

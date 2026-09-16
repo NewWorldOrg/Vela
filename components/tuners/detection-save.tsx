@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { TunerWriteResult } from '@/repository/tuners'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
@@ -29,7 +30,7 @@ export function DetectionSave({
 
             setRefusal(
               result.state === 'unauthenticated'
-                ? 'サインインが切れているため、保存できませんでした。'
+                ? signedOut('保存')
                 : result.state === 'rejected'
                   ? result.message
                   : undefined,

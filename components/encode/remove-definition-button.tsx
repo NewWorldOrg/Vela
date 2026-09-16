@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { signedOut } from '@/lib/signed-out'
 import type { EncodeRemoval } from '@/repository/encode'
 import type { EncodeRemoved } from '@/repository/encode-terms'
 import {
@@ -19,7 +20,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import { TrashIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 
-const SIGNED_OUT = 'サインインが切れているため、撤去できませんでした。'
+const SIGNED_OUT = signedOut('撤去')
 
 export function RemoveDefinitionButton({
   kind,

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { signedOut } from '@/lib/signed-out'
+
 import type {
   DriverRestartResult,
   RestartWindow,
@@ -77,7 +79,7 @@ function refusalFace(refusal: Refusal): Face {
     case 'unauthenticated':
       return {
         tone: 'danger',
-        body: 'サインインが切れているため、再起動を要求できませんでした。',
+        body: signedOut('再起動を要求'),
         action: { label: 'サインインへ', press: 'restart', href: '/login' },
       }
     case 'disconnected':
