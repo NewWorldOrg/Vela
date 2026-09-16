@@ -559,6 +559,18 @@ test('a recording nothing counted carries no scrambled share', async () => {
   assert.equal(one.scrambledShare, undefined)
 })
 
+test('the times the recorder overflowed are spelled with their thousands apart', async () => {
+  standing([recording({ drops: drops({ eovfCount: 12_400 }) })])
+
+  assert.equal((await getRecording('d1'))?.eoverflow, '12,400 回')
+})
+
+test('a recording nothing counted the overflows on carries none, not a count of zero', async () => {
+  standing([recording({ drops: drops({ eovfCount: null }) })])
+
+  assert.equal((await getRecording('d1'))?.eoverflow, undefined)
+})
+
 test('the encode standing is the one the API folded, not one read again here', async () => {
   const running = await only([recording({ encode: { standing: 'running' } })])
 
