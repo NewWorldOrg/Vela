@@ -68,6 +68,16 @@ const BAR_TONE: Record<QualityLevel, string> = {
   unreachable: 'bg-transparent',
 }
 
+const BAR_TRACK: Record<QualityLevel, string> = {
+  good: 'bg-surface-3',
+  warn: 'bg-surface-3',
+  bad: 'bg-surface-3',
+  unmeasured: 'border border-dashed border-line-strong',
+  nodata: 'border border-line',
+  unsupported: 'border border-line',
+  unreachable: 'border border-line',
+}
+
 function ChannelMeters({
   channels,
   warnMarkPct,
@@ -78,7 +88,7 @@ function ChannelMeters({
   return (
     <Surface className="space-y-3">
       {channels.map((channel) => (
-        <div key={channel.id}>
+        <div key={channel.id} data-slot="meter" data-level={channel.level}>
           <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
             <span className="text-ui font-bold">{channel.name}</span>
             {channel.no && (
@@ -97,14 +107,20 @@ function ChannelMeters({
               </QualityChip>
             </span>
           </div>
-          <div className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
+          <div
+            className={cn(
+              'relative mt-1.5 h-1.5 overflow-hidden rounded-full',
+              BAR_TRACK[channel.level],
+            )}
+          >
             {channel.barPct !== undefined && (
               <div
+                data-slot="meter-fill"
                 className={cn('h-full rounded-full', BAR_TONE[channel.level])}
                 style={{ width: `${channel.barPct}%` }}
               />
             )}
-            {warnMarkPct !== undefined && (
+            {channel.barPct !== undefined && warnMarkPct !== undefined && (
               <span
                 aria-hidden="true"
                 className="absolute inset-y-0 w-px bg-ink-3/45"
@@ -267,7 +283,7 @@ export function QualityView({
             warnMarkPct={result.warnMarkPct}
           />
         ) : (
-          <EmptyState spot="antenna" title="対象なし">
+          <EmptyState spot="dish" title="対象なし">
             期間内に BS / CS の録画がありません。
           </EmptyState>
         )}
@@ -315,7 +331,7 @@ export function QualityView({
             </TableBody>
           </Table>
         ) : (
-          <EmptyState spot="antenna" title="対象なし">
+          <EmptyState spot="tuner" title="対象なし">
             期間内に録画したチューナーがありません。
           </EmptyState>
         )}

@@ -4,10 +4,12 @@ import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
 import type {
   QualityAnomaly,
+  QualityChannel,
   QualityResult,
   QualityThreshold,
   QualityTrend,
   QualityTrendBucket,
+  QualityTuner,
 } from '@/repository/quality'
 
 const WINDOWS = [
@@ -210,7 +212,9 @@ const spread = (pattern: string): QualityLevel[] =>
         ? 'warn'
         : one === 'x'
           ? 'unreachable'
-          : 'nodata',
+          : one === 'u'
+            ? 'unmeasured'
+            : 'nodata',
   )
 
 const cnr = (at: number) => `${30 + (at % 4)}dB`
@@ -485,6 +489,112 @@ export const NOTHING_MEASURED: QualityResult = {
   tuners: [],
   problemRecordings: [],
   supplies: { read: false, quiet: [] },
+  anomalies: {
+    items: [],
+    owned: 0,
+    restated: 0,
+  },
+}
+
+const UNMEASURED_CHANNELS: QualityChannel[] = [
+  { id: '32736-1024', name: 'みなと総合1', no: '151', recordings: 9 },
+  { id: '32737-1032', name: '中央テレビ1', no: '131', recordings: 8 },
+  { id: '32738-1040', name: 'みなと教育1', no: '191', recordings: 7 },
+  { id: '32739-1048', name: '東都テレビ1', no: '161', recordings: 6 },
+].map(({ recordings, ...channel }): QualityChannel => ({
+  ...channel,
+  level: 'unmeasured',
+  note: `録画 ${recordings} 本 / うち未計測 ${recordings} 本`,
+}))
+
+const UNMEASURED_SATELLITES: QualityChannel[] = [
+  { id: '4-16400', name: 'みなと BS1', no: '211', recordings: 4 },
+  { id: '4-16401', name: '東都 BS1', no: '231', recordings: 2 },
+].map(({ recordings, ...channel }): QualityChannel => ({
+  ...channel,
+  level: 'unmeasured',
+  note: `録画 ${recordings} 本 / うち未計測 ${recordings} 本`,
+}))
+
+const UNMEASURED_TUNERS: QualityTuner[] = [
+  { device: 'adapter1.frontend0', recordings: 9 },
+  { device: 'adapter1.frontend1', recordings: 8 },
+  { device: 'adapter3.frontend0', recordings: 7 },
+  { device: 'adapter3.frontend1', recordings: 12 },
+].map(({ device, recordings }): QualityTuner => ({
+  id: device,
+  device,
+  hardware: `録画 ${recordings} 本 / うち未計測 ${recordings} 本`,
+  state: { level: 'unmeasured', label: '未計測' },
+  drop: NOT_SAMPLED,
+  lock: NOT_SAMPLED,
+  cnr: NOT_SAMPLED,
+  ber: NOT_SAMPLED,
+}))
+
+export const EVERY_ROW_UNMEASURED: QualityResult = {
+  windows: windows('24 時間'),
+  trend: {
+    subjects: trendSubjects('ドロップ率'),
+    rows: [
+      {
+        key: 'whole',
+        name: '全体',
+        buckets: hours(spread('uuuuuuuuuuuuuuuuuuuuuuuu'), cnr),
+      },
+      {
+        key: '32736-1024',
+        name: 'みなと総合1',
+        buckets: hours(spread('uuuuuuuuuuuuuuuuuuuuuuuu'), cnr),
+      },
+    ],
+    from: '09/08 00:00',
+    until: '09/09 00:00',
+    provisional: true,
+  },
+  stats: [
+    {
+      key: 'drop',
+      label: '直近 24 時間のドロップ率',
+      level: 'unmeasured',
+      levelLabel: '未計測',
+      aside: '閾値は暫定',
+      foot: '録画 36 本 / うち未計測 36 本',
+    },
+    {
+      key: 'problem',
+      label: '問題のある録画',
+      level: 'unmeasured',
+      levelLabel: '未計測',
+      link: { href: '/library', label: 'ライブラリで絞り込む' },
+      foot: '録画 36 本 / うち未計測 36 本',
+    },
+    {
+      key: 'scramble',
+      label: 'スクランブル残存率',
+      level: 'unmeasured',
+      levelLabel: '未計測',
+      aside: '録画 36 本 / うち未計測 36 本',
+    },
+    {
+      key: 'health',
+      label: 'チューナーヘルス',
+      level: 'unmeasured',
+      levelLabel: '未計測',
+      link: { href: '/settings/tuners', label: 'チューナーへ' },
+      foot: '信号品質 未計測',
+    },
+  ],
+  thresholds: THRESHOLDS.map((one) => ({
+    ...one,
+    basis: one.basis.replace(/根拠 [\d,]+ 件/, '根拠 0 件'),
+  })),
+  warnMarkPct: 20,
+  channels: UNMEASURED_CHANNELS,
+  satellites: UNMEASURED_SATELLITES,
+  tuners: UNMEASURED_TUNERS,
+  problemRecordings: [],
+  supplies: { read: true, quiet: [] },
   anomalies: {
     items: [],
     owned: 0,

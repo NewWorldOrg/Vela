@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
+  EVERY_ROW_UNMEASURED,
   MORE_TUNERS_THAN_FIT,
   NOTHING_MEASURED,
   QUALITY,
@@ -42,6 +43,85 @@ export const 何も計測されていない: Story = {
     await expect(
       canvas.getByText('解消していない異常はありません。'),
     ).toBeVisible()
+    await expect(
+      canvas.getByText('期間内に地上波の録画がありません。'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByText('期間内に BS / CS の録画がありません。'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByText('期間内に録画したチューナーがありません。'),
+    ).toBeVisible()
+
+    const spots = [
+      ...canvasElement.querySelectorAll('[data-slot="empty-state"] svg'),
+    ].map((one) => one.innerHTML)
+
+    await expect(spots.length).toBe(3)
+    await expect(new Set(spots).size).toBe(spots.length)
+  },
+}
+
+export const 移行直後で全面未計測: Story = {
+  args: { result: EVERY_ROW_UNMEASURED },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    for (const label of [
+      '直近 24 時間のドロップ率',
+      '問題のある録画',
+      'スクランブル残存率',
+      'チューナーヘルス',
+    ]) {
+      const tile = canvas
+        .getAllByText(label)
+        .find((one) => one.closest('[data-slot="section-heading"]') === null)
+
+      await expect(tile?.closest('[data-slot="surface"]')).toHaveTextContent(
+        '未計測',
+      )
+    }
+
+    await expect(canvas.queryByText('良好')).toBeNull()
+    await expect(canvas.queryByText('警告水準')).toBeNull()
+    await expect(canvas.queryByText('0')).toBeNull()
+
+    const meters = [...canvasElement.querySelectorAll('[data-slot="meter"]')]
+
+    await expect(meters.length).toBe(6)
+    await expect(
+      meters.every((one) => one.getAttribute('data-level') === 'unmeasured'),
+    ).toBe(true)
+    await expect(
+      canvasElement.querySelectorAll('[data-slot="meter-fill"]').length,
+    ).toBe(0)
+
+    await expect(canvas.getAllByRole('row').length).toBe(5)
+    await expect(
+      canvas.queryByText('期間内に録画したチューナーがありません。'),
+    ).toBeNull()
+
+    const whole = canvas.getByRole('img', { name: '全体の推移' })
+
+    await expect(whole.querySelector('[data-level="good"]')).toBeNull()
+    await expect(
+      whole.querySelectorAll('[data-level="unmeasured"]').length,
+    ).toBe(24)
+  },
+}
+
+export const 一部だけ未計測: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('計測の供給が途絶しています')).toBeVisible()
+    await expect(canvas.getByText('録画 11 本を計測')).toBeVisible()
+    await expect(canvas.getAllByText('良好').length).toBeGreaterThan(0)
+    await expect(canvas.getAllByText('未計測').length).toBeGreaterThan(0)
+    await expect(
+      canvasElement.querySelectorAll('[data-slot="meter-fill"]').length,
+    ).toBeGreaterThan(0)
   },
 }
 
