@@ -240,3 +240,22 @@ test('a call from outside a request carries no session and still goes out', asyn
   assert.equal(sent[0].cache, 'no-store')
   assert.equal(sent[0].headers.get('cookie'), null)
 })
+
+test('a write with nothing of its own to say still says it is json, so the API is not left to refuse the type', async () => {
+  await carinaClient().POST('/api/recordings/{id}/thumbnail', {
+    params: { path: { id: '7e7a14cf' } },
+  })
+
+  assert.equal(sent.length, 1)
+  assert.equal(sent[0].headers.get('content-type'), 'application/json')
+  assert.equal(await sent[0].text(), '{}')
+})
+
+test('a write that carries a body of its own keeps it, and the type it came with', async () => {
+  await carinaClient().POST('/api/epg/rebuild', {
+    body: { confirm: 'REBUILD' },
+  })
+
+  assert.match(sent[0].headers.get('content-type') ?? '', /application\/json/)
+  assert.deepEqual(await sent[0].json(), { confirm: 'REBUILD' })
+})
