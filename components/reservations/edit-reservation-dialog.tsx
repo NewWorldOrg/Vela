@@ -31,6 +31,7 @@ import {
   FieldError,
   FieldHint,
   FieldLabel,
+  RequiredMark,
 } from '@/components/vela/field'
 
 type Named = 'priority' | 'before' | 'after'
@@ -172,7 +173,10 @@ export function EditReservationDialog({
           className="flex min-h-0 flex-col gap-4 overflow-y-auto"
         >
           <Field>
-            <FieldLabel htmlFor="reservation-priority">優先度</FieldLabel>
+            <FieldLabel htmlFor="reservation-priority">
+              優先度
+              <RequiredMark />
+            </FieldLabel>
             <Input
               id="reservation-priority"
               inputMode="numeric"
@@ -200,6 +204,7 @@ export function EditReservationDialog({
           <Field>
             <FieldLabel htmlFor="reservation-margin-before">
               前マージン(秒)
+              <RequiredMark />
             </FieldLabel>
             <Input
               id="reservation-margin-before"
@@ -228,6 +233,7 @@ export function EditReservationDialog({
           <Field>
             <FieldLabel htmlFor="reservation-margin-after">
               後マージン(秒)
+              <RequiredMark />
             </FieldLabel>
             <Input
               id="reservation-margin-after"
