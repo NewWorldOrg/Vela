@@ -37,6 +37,7 @@ export interface PlaybackPlan {
   showsAsAWholeRecording: boolean
   mediaType: string
   bytes?: number
+  resumeAtSec?: number
   sounds: SoundTrack[]
   chapters: PlaybackChapter[]
 }
@@ -83,6 +84,8 @@ function toPlan(
     showsAsAWholeRecording: data.showsAsAWholeRecording,
     mediaType: data.mediaType,
     bytes: data.bytes == null ? undefined : Number(data.bytes),
+    resumeAtSec:
+      data.resumeAtSec == null ? undefined : Number(data.resumeAtSec),
     sounds: Array.isArray(data.sounds) ? [...data.sounds] : [],
     chapters: Array.isArray(data.chapters) ? data.chapters.map(toChapter) : [],
   }
@@ -142,4 +145,18 @@ export async function takePlaybackTicket(id: string): Promise<TicketWrite> {
   }
 
   return whyNoTicket(response.status, TICKET_REFUSAL)
+}
+
+export type PositionWrite = { state: 'ok' } | { state: 'notKept' }
+
+export async function keepPlaybackPosition(
+  id: string,
+  positionSec: number,
+): Promise<PositionWrite> {
+  const { response } = await carinaClient().PUT('/api/videos/{id}/position', {
+    params: { path: { id } },
+    body: { positionSec },
+  })
+
+  return response.ok ? { state: 'ok' } : { state: 'notKept' }
 }

@@ -15,6 +15,7 @@ import { throwRecordingAway } from '@/app/(app)/library/actions'
 import { callOffJob } from '@/app/(app)/settings/encode/actions'
 import {
   askForTheSound,
+  keepThePosition,
   queueEncoding,
   redrawThumbnail,
   takeTicket,
@@ -72,6 +73,7 @@ export default async function Page({
         onDelete={throwRecordingAway}
         onTakeTicket={takeTicket}
         onAskForTheSound={askForTheSound}
+        onKeepPosition={keepThePosition}
         onQueueEncode={queueEncoding}
         encodeChoices={encodeChoices}
         encodeJob={encodeJob}

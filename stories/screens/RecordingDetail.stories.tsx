@@ -139,6 +139,10 @@ async function ticketed(): Promise<TicketWrite> {
   }
 }
 
+async function keepingThePosition() {
+  return { state: 'ok' as const }
+}
+
 const meta = {
   title: 'Screens/録画詳細',
   component: RecordingDetailView,
@@ -148,6 +152,7 @@ const meta = {
     onDelete: throwing,
     onTakeTicket: ticketed,
     onAskForTheSound: askingForTheSound,
+    onKeepPosition: keepingThePosition,
     onQueueEncode: queuing,
     onCallOffEncode: callingOff,
     encodeChoices: ENCODE_CHOICES,

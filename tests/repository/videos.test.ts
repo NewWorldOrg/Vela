@@ -8,6 +8,7 @@ interface Sent {
   path: string
   accept?: string
   sound?: string
+  positionSec?: number
 }
 
 const sent: Sent[] = []
@@ -19,6 +20,7 @@ const store: {
   ticketStatus: number
   profiles: unknown[]
   profilesStatus: number
+  positionStatus: number
 } = {
   plan: undefined,
   planStatus: 200,
@@ -26,6 +28,7 @@ const store: {
   ticketStatus: 200,
   profiles: [],
   profilesStatus: 200,
+  positionStatus: 200,
 }
 
 const answered = (status: number) => ({ status, ok: status < 400 })
@@ -82,6 +85,23 @@ mock.module('@/repository/client/carina', {
               response: answered(store.ticketStatus),
             }
       },
+      PUT: async (path: string, init?: { body?: { positionSec?: number } }) => {
+        sent.push({
+          method: 'PUT',
+          path,
+          positionSec: init?.body?.positionSec,
+        })
+
+        return store.positionStatus === 200
+          ? {
+              data: { status: true, message: '', data: null },
+              response: answered(200),
+            }
+          : {
+              data: { status: false, message: '', data: null },
+              response: answered(store.positionStatus),
+            }
+      },
     }),
     revalidatingCarinaClient: () => {
       throw new Error('a playback plan is never held')
@@ -89,8 +109,12 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getPlaybackPlan, getUnaskedPlaybackProfile, takePlaybackTicket } =
-  await import('@/repository/videos')
+const {
+  getPlaybackPlan,
+  getUnaskedPlaybackProfile,
+  keepPlaybackPosition,
+  takePlaybackTicket,
+} = await import('@/repository/videos')
 
 test('the plan is asked for as the plan, not as the picture', async () => {
   sent.length = 0
@@ -129,6 +153,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       showsAsAWholeRecording: true,
       mediaType: 'video/mp4',
       bytes: undefined,
+      resumeAtSec: undefined,
       sounds: ['main', 'secondary'],
       chapters: [],
     },
@@ -443,4 +468,66 @@ test('a name the play endpoint would refuse is not asked for', async () => {
   store.profiles = [profile('480p30', true)]
 
   assert.equal(await getUnaskedPlaybackProfile(), undefined)
+})
+
+const WATCHED_IN_PART = {
+  standing: 'whole',
+  route: 'onTheFly',
+  seeking: 'byStartingAgain',
+  canSeek: false,
+  transcodes: true,
+  showsAsAWholeRecording: true,
+  mediaType: 'video/mp4',
+  bytes: null,
+  sounds: ['main'],
+  chapters: [],
+}
+
+test('the plan says where this reader last left the recording', async () => {
+  store.planStatus = 200
+  store.plan = { ...WATCHED_IN_PART, resumeAtSec: '612.5' }
+
+  const read = await getPlaybackPlan('r-left-off')
+
+  assert.equal(read.state === 'planned' && read.plan.resumeAtSec, 612.5)
+})
+
+test('a recording this reader has never watched is left with no position at all', async () => {
+  store.planStatus = 200
+  store.plan = { ...WATCHED_IN_PART, resumeAtSec: null }
+
+  const read = await getPlaybackPlan('r-never-watched')
+
+  assert.equal(read.state === 'planned' && read.plan.resumeAtSec, undefined)
+})
+
+test('a plan from a build that never said where a reader left off leaves it unsaid', async () => {
+  store.planStatus = 200
+  store.plan = { ...WATCHED_IN_PART }
+
+  const read = await getPlaybackPlan('r-older-build')
+
+  assert.equal(read.state === 'planned' && read.plan.resumeAtSec, undefined)
+})
+
+test('the position a reader reached is written to the recording it belongs to', async () => {
+  sent.length = 0
+  store.positionStatus = 200
+
+  const write = await keepPlaybackPosition('1266', 612)
+
+  assert.deepEqual(sent, [
+    { method: 'PUT', path: '/api/videos/{id}/position', positionSec: 612 },
+  ])
+  assert.deepEqual(write, { state: 'ok' })
+})
+
+test('a position the endpoint would not take is answered as that, and never as kept', async () => {
+  for (const status of [400, 404, 409, 500]) {
+    store.positionStatus = status
+
+    assert.deepEqual(await keepPlaybackPosition('1266', 612), {
+      state: 'notKept',
+    })
+  }
 })

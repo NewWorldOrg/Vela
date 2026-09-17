@@ -8,8 +8,12 @@ import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
 import type { SoundTrack } from '@/repository/sounds'
 import type { TicketWrite } from '@/repository/tickets'
-import type { PlaybackRead } from '@/repository/videos'
-import { getPlaybackPlan, takePlaybackTicket } from '@/repository/videos'
+import type { PlaybackRead, PositionWrite } from '@/repository/videos'
+import {
+  getPlaybackPlan,
+  keepPlaybackPosition,
+  takePlaybackTicket,
+} from '@/repository/videos'
 
 export async function redrawThumbnail(id: string): Promise<ThumbnailWrite> {
   const result = await remakeThumbnail(id)
@@ -24,6 +28,13 @@ export async function redrawThumbnail(id: string): Promise<ThumbnailWrite> {
 
 export async function takeTicket(id: string): Promise<TicketWrite> {
   return takePlaybackTicket(id)
+}
+
+export async function keepThePosition(
+  id: string,
+  positionSec: number,
+): Promise<PositionWrite> {
+  return keepPlaybackPosition(id, positionSec)
 }
 
 export async function askForTheSound(

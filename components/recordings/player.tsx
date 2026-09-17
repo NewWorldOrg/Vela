@@ -16,7 +16,12 @@ import {
   type PlayerSaying,
 } from '@/lib/playback-sound'
 import type { RecordingDetail } from '@/repository/recordings'
-import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
+import type {
+  PlaybackPlan,
+  PlaybackRead,
+  PositionWrite,
+} from '@/repository/videos'
+import { useKeptPosition } from '@/hooks/useKeptPosition'
 import type { TicketWrite } from '@/repository/tickets'
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
@@ -101,7 +106,9 @@ export function Player({
   unaskedProfile,
   onTakeTicket,
   onAskForTheSound,
+  onKeepPosition,
   startAt,
+  playsAtOnce = true,
   frameHref = videoFrameHref,
   pictureHref = videoPictureHref,
   askWhy = askWhyItWouldNotPlay,
@@ -112,7 +119,9 @@ export function Player({
   unaskedProfile?: PlaybackProfile
   onTakeTicket: (id: string) => Promise<TicketWrite>
   onAskForTheSound: (id: string, sound: SoundTrack) => Promise<PlaybackRead>
+  onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   startAt?: number
+  playsAtOnce?: boolean
   frameHref?: (id: string, at: number) => string
   pictureHref?: (
     id: string,
@@ -133,29 +142,26 @@ export function Player({
   )
   const [plan, setPlan] = useState<PlaybackPlan>(opened)
   const [sound, setSound] = useState<SoundTrack>(MAIN_SOUND)
-  const [phase, setPhase] = useState<Phase>(
-    startAt === undefined ? 'idle' : 'waiting',
-  )
+  const opensPlaying = startAt !== undefined && playsAtOnce
+  const [phase, setPhase] = useState<Phase>(opensPlaying ? 'waiting' : 'idle')
   const [fault, setFault] = useState<PlaybackFault>({ kind: 'transcode' })
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
   const [full, setFull] = useState(false)
   const opening = whereItStarts(opened, startAt ?? 0)
-  const landing = useRef<number | null>(
-    startAt === undefined ? null : opening.land,
-  )
-  const [from, setFrom] = useState(startAt === undefined ? 0 : opening.from)
+  const landing = useRef<number | null>(opensPlaying ? opening.land : null)
+  const [from, setFrom] = useState(opensPlaying ? opening.from : 0)
   const [position, setPosition] = useState(startAt ?? 0)
   const onTheFly = plan.transcodes
   const [source, setSource] = useState(() =>
-    startAt === undefined
-      ? undefined
-      : pictureHref(
+    opensPlaying
+      ? pictureHref(
           d.id,
           opening.from,
           opened.transcodes ? unaskedProfile : undefined,
           soundToAsk(opened.sounds, MAIN_SOUND),
-        ),
+        )
+      : undefined,
   )
 
   const poster =
@@ -185,9 +191,7 @@ export function Player({
   const asked = useRef(0)
   const pending = useRef<SoundTrack | null>(null)
   const [pendingSound, setPendingSound] = useState<SoundTrack | null>(null)
-  const shownUnder = useRef<PlaybackPlan | null>(
-    startAt === undefined ? null : opened,
-  )
+  const shownUnder = useRef<PlaybackPlan | null>(opensPlaying ? opened : null)
 
   const attempt = useRef(0)
 
@@ -196,6 +200,26 @@ export function Player({
   useEffect(() => {
     asItStands.current = { position, profile, plan, sound }
   })
+
+  useKeptPosition(
+    phase === 'playing',
+    () => asItStands.current.position,
+    (at) => {
+      void onKeepPosition(d.id, at)
+        .then((kept) => {
+          if (kept.state !== 'ok') {
+            console.warn('[player] the position reached was not kept', d.id)
+          }
+        })
+        .catch((error) => {
+          console.warn(
+            '[player] the position reached was not sent',
+            d.id,
+            error,
+          )
+        })
+    },
+  )
 
   const pip = usePictureInPicture(video)
   const duration = d.lengthSec ?? 0
