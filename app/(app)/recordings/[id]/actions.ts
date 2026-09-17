@@ -37,10 +37,17 @@ export async function queueEncoding(
   recordingId: string,
   destinationId: string,
   profileId?: string,
+  makeItAgain?: boolean,
 ): Promise<EncodeWrite> {
-  const result = await queueEncode(recordingId, destinationId, profileId)
+  const result = await queueEncode(
+    recordingId,
+    destinationId,
+    profileId,
+    makeItAgain,
+  )
 
   if (result.state === 'ok') {
+    revalidatePath(`/recordings/${recordingId}`)
     revalidatePath('/settings/encode')
   }
 

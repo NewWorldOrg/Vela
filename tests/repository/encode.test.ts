@@ -501,7 +501,25 @@ test('a queue names the recording and the destination, and the profile only when
     recordingId: RECORDING.id,
     destinationId: DESTINATION.id,
     profileId: null,
+    makeItAgain: false,
   })
+})
+
+test('a queue asked to make the artefact again says so, and one that was not says that too', async () => {
+  assert.deepEqual(
+    await queueEncode(RECORDING.id, DESTINATION.id, PROFILE.id, true),
+    { state: 'ok' },
+  )
+  assert.deepEqual(sent[0].body, {
+    recordingId: RECORDING.id,
+    destinationId: DESTINATION.id,
+    profileId: PROFILE.id,
+    makeItAgain: true,
+  })
+
+  await queueEncode(RECORDING.id, DESTINATION.id, PROFILE.id)
+
+  assert.equal(sent[1].body?.makeItAgain, false)
 })
 
 const RETIRED_AT = '2026-09-07T02:14:51.0000000Z'

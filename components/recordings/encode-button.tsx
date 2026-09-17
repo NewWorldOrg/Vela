@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { InlineAlert } from '@/components/vela/banner'
 import { Field, FieldLabel } from '@/components/vela/field'
 import { EncodeIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
@@ -30,7 +31,16 @@ export type QueueEncode = (
   recordingId: string,
   destinationId: string,
   profileId?: string,
+  makeItAgain?: boolean,
 ) => Promise<EncodeWrite>
+
+const ENCODE = 'エンコード'
+
+const AGAIN = '作り直す'
+
+const MAKING_IT_AGAIN = '成果物を作り直す'
+
+const WHAT_IT_REPLACES = 'いまの成果物は新しいものに置き換わります。'
 
 function refusing(
   recording: Recording,
@@ -51,6 +61,10 @@ export function encodes(recording: Recording): boolean {
   return recording.outcome !== 'failed'
 }
 
+export function makesItAgain(recording: Recording): boolean {
+  return recording.encode === 'completed'
+}
+
 export function EncodeButton({
   recording,
   choices,
@@ -68,17 +82,23 @@ export function EncodeButton({
   )
   const [profileId, setProfileId] = useState<string>('')
   const refused = refusing(recording, choices)
+  const again = makesItAgain(recording)
   const chooses = choices.destinations.length > 1 || choices.profiles.length > 1
 
   const queue = (destination: string, profile?: string) => {
     startTransition(async () => {
       setNotice(undefined)
 
-      const result = await onQueue(recording.id, destination, profile)
+      const result = await onQueue(recording.id, destination, profile, again)
 
       setNotice(
         result.state === 'ok'
-          ? { queued: true, text: 'エンコードを登録しました。' }
+          ? {
+              queued: true,
+              text: again
+                ? '作り直しを登録しました。'
+                : 'エンコードを登録しました。',
+            }
           : result.state === 'unauthenticated'
             ? {
                 queued: false,
@@ -95,7 +115,7 @@ export function EncodeButton({
       return
     }
 
-    if (chooses) {
+    if (again || chooses) {
       setOpen(true)
 
       return
@@ -114,7 +134,7 @@ export function EncodeButton({
         onClick={press}
       >
         {pending ? <Spinner className="size-3.5" /> : <EncodeIcon />}
-        エンコード
+        {again ? AGAIN : ENCODE}
       </Button>
       {notice && (
         <p
@@ -131,11 +151,13 @@ export function EncodeButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>エンコード</DialogTitle>
+            <DialogTitle>{again ? MAKING_IT_AGAIN : ENCODE}</DialogTitle>
             <DialogDescription className="min-w-0 truncate">
               {recording.title}
             </DialogDescription>
           </DialogHeader>
+
+          {again && <InlineAlert tone="warn">{WHAT_IT_REPLACES}</InlineAlert>}
 
           <div className="grid gap-4 min-[701px]:grid-cols-2">
             <Field>
@@ -190,7 +212,7 @@ export function EncodeButton({
               onClick={() => queue(destinationId, profileId || undefined)}
             >
               <EncodeIcon />
-              エンコード
+              {again ? AGAIN : ENCODE}
             </Button>
           </DialogFooter>
         </DialogContent>

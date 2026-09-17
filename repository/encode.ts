@@ -508,9 +508,15 @@ export async function queueEncode(
   recordingId: string,
   destinationId: string,
   profileId?: string,
+  makeItAgain = false,
 ): Promise<EncodeWrite> {
   const { error, response } = await carinaClient().POST('/api/encoding/jobs', {
-    body: { recordingId, destinationId, profileId: profileId ?? null },
+    body: {
+      recordingId,
+      destinationId,
+      profileId: profileId ?? null,
+      makeItAgain,
+    },
   })
 
   return toWrite(response, whatItSaid(error), WHEN_QUEUEING)

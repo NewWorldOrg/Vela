@@ -33,6 +33,10 @@ function detail(id: string) {
   return found
 }
 
+function withoutAnArtefact(id: string) {
+  return { ...detail(id), encode: 'notEncoded' as const }
+}
+
 function planned(over: Partial<PlaybackPlan> = {}): PlaybackRead {
   return {
     state: 'planned',
@@ -80,14 +84,15 @@ async function drewNothing(): Promise<ThumbnailWrite> {
 
 const asked: string[] = []
 
-const queued: [string, string, string | undefined][] = []
+const queued: [string, string, string | undefined, boolean | undefined][] = []
 
 async function queuing(
   recordingId: string,
   destinationId: string,
   profileId?: string,
+  makeItAgain?: boolean,
 ): Promise<EncodeWrite> {
-  queued.push([recordingId, destinationId, profileId])
+  queued.push([recordingId, destinationId, profileId, makeItAgain])
 
   return { state: 'ok' }
 }
@@ -552,7 +557,7 @@ export const 作り直しても絵が取れなかった: Story = {
 }
 
 export const エンコードを登録する: Story = {
-  args: { detail: detail('1274') },
+  args: { detail: withoutAnArtefact('1274') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -562,7 +567,9 @@ export const エンコードを登録する: Story = {
 
     await expect(encode).toBeEnabled()
     await userEvent.click(encode)
-    await waitFor(() => expect(queued).toEqual([['1274', 'ds-1', undefined]]))
+    await waitFor(() =>
+      expect(queued).toEqual([['1274', 'ds-1', undefined, false]]),
+    )
     await expect(
       await canvas.findByText('エンコードを登録しました。'),
     ).toBeVisible()
@@ -570,7 +577,10 @@ export const エンコードを登録する: Story = {
 }
 
 export const エンコードの保存先を選ぶ: Story = {
-  args: { detail: detail('1274'), encodeChoices: MANY_ENCODE_CHOICES },
+  args: {
+    detail: withoutAnArtefact('1274'),
+    encodeChoices: MANY_ENCODE_CHOICES,
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -584,12 +594,14 @@ export const エンコードの保存先を選ぶ: Story = {
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'エンコード' }),
     )
-    await waitFor(() => expect(queued).toEqual([['1274', 'ds-1', undefined]]))
+    await waitFor(() =>
+      expect(queued).toEqual([['1274', 'ds-1', undefined, false]]),
+    )
   },
 }
 
 export const エンコードを断られた: Story = {
-  args: { detail: detail('1274'), onQueueEncode: alreadyEncoded },
+  args: { detail: withoutAnArtefact('1274'), onQueueEncode: alreadyEncoded },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -603,7 +615,7 @@ export const エンコードを断られた: Story = {
 }
 
 export const 退役したプロファイルでエンコードを断られた: Story = {
-  args: { detail: detail('1274'), onQueueEncode: profileRetired },
+  args: { detail: withoutAnArtefact('1274'), onQueueEncode: profileRetired },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -617,7 +629,7 @@ export const 退役したプロファイルでエンコードを断られた: St
 }
 
 export const エンコードの保存先がない: Story = {
-  args: { detail: detail('1274'), encodeChoices: NO_ENCODE_CHOICES },
+  args: { detail: withoutAnArtefact('1274'), encodeChoices: NO_ENCODE_CHOICES },
   play: async ({ canvasElement }) => {
     const encode = within(canvasElement).getByRole('button', {
       name: 'エンコード',
@@ -762,5 +774,56 @@ export const 失敗した録画にエンコードの操作子を出さない: St
     await expect(
       within(canvasElement).queryByRole('button', { name: 'エンコード' }),
     ).toBeNull()
+  },
+}
+
+export const 成果物がある録画は作り直すと言う: Story = {
+  args: { detail: detail('1274') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    queued.length = 0
+
+    await expect(
+      canvas.queryByRole('button', { name: 'エンコード' }),
+    ).toBeNull()
+    await userEvent.click(canvas.getByRole('button', { name: '作り直す' }))
+
+    const dialog = await screen.findByRole('dialog', {
+      name: '成果物を作り直す',
+    })
+
+    await expect(
+      within(dialog).getByText('いまの成果物は新しいものに置き換わります。'),
+    ).toBeVisible()
+    await expect(queued).toEqual([])
+
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '作り直す' }),
+    )
+    await waitFor(() =>
+      expect(queued).toEqual([['1274', 'ds-1', undefined, true]]),
+    )
+    await expect(
+      await canvas.findByText('作り直しを登録しました。'),
+    ).toBeVisible()
+  },
+}
+
+export const 成果物がない録画はこれまでどおり登録する: Story = {
+  args: { detail: withoutAnArtefact('1274') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    queued.length = 0
+
+    await userEvent.click(canvas.getByRole('button', { name: 'エンコード' }))
+    await waitFor(() =>
+      expect(queued).toEqual([['1274', 'ds-1', undefined, false]]),
+    )
+    await expect(screen.queryByRole('dialog')).toBeNull()
+    await expect(
+      await canvas.findByText('エンコードを登録しました。'),
+    ).toBeVisible()
   },
 }
