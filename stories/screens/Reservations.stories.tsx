@@ -89,6 +89,17 @@ function rowFor(cell: HTMLElement): HTMLElement {
   return row
 }
 
+const MARKED_REQUIRED = ['優先度', '前マージン(秒)', '後マージン(秒)']
+
+function whatIsMarkedRequired(dialog: HTMLElement): string[] {
+  return [...dialog.querySelectorAll('[data-slot="required-mark"]')].map(
+    (mark) =>
+      (mark.parentElement?.textContent ?? '')
+        .replace(mark.textContent ?? '', '')
+        .trim(),
+  )
+}
+
 const meta = {
   title: 'Screens/予約',
   component: ReservationsView,
@@ -582,5 +593,64 @@ export const 予約ごとにエンコードを切り替える: Story = {
         { id: 'r-302', revision: { encodeWhenRecorded: true } },
       ]),
     )
+  },
+}
+
+export const 必須の欄は印が付いていて空では保存できない: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    actions: {
+      onCancel: accept,
+      onRestore: accept,
+      onRaise: accept,
+      onRevise: revising,
+      onDiscard: throwing,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    revised.length = 0
+
+    await userEvent.click(
+      within(rowFor(canvas.getByText('深夜アニメ劇場'))).getByRole('button', {
+        name: '編集',
+      }),
+    )
+
+    const opened = await screen.findByRole('dialog')
+    const dialog = within(opened)
+
+    await expect(whatIsMarkedRequired(opened)).toEqual(MARKED_REQUIRED)
+
+    const save = dialog.getByRole('button', { name: '保存する' })
+    const priority = dialog.getByLabelText(/優先度/)
+    const before = dialog.getByLabelText(/前マージン/)
+    const after = dialog.getByLabelText(/後マージン/)
+
+    await userEvent.clear(priority)
+    await userEvent.click(save)
+
+    await expect(
+      dialog.getByText('優先度は 1 〜 99 の半角数字です。'),
+    ).toBeVisible()
+
+    await userEvent.type(priority, '10')
+    await userEvent.clear(before)
+    await userEvent.click(save)
+
+    await expect(
+      dialog.getByText('マージンは 0 〜 3600 秒の半角数字です。'),
+    ).toBeVisible()
+
+    await userEvent.type(before, '10')
+    await userEvent.clear(after)
+    await userEvent.click(save)
+
+    await expect(
+      dialog.getByText('マージンは 0 〜 3600 秒の半角数字です。'),
+    ).toBeVisible()
+
+    await expect(revised).toEqual([])
   },
 }
