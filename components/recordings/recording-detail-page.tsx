@@ -11,7 +11,12 @@ import type {
   RecordingDiscarded,
   ThumbnailWrite,
 } from '@/repository/recordings'
-import type { PlaybackRead, PlaybackRefusal } from '@/repository/videos'
+import type {
+  PlaybackRead,
+  PlaybackRefusal,
+  PositionWrite,
+} from '@/repository/videos'
+import { howThePlayerOpens } from '@/lib/playback-resume'
 import type { TicketWrite } from '@/repository/tickets'
 import type { SoundTrack } from '@/repository/sounds'
 import type { PlaybackProfile } from '@/repository/video-paths'
@@ -98,6 +103,7 @@ export function RecordingDetailView({
   onDelete,
   onTakeTicket,
   onAskForTheSound,
+  onKeepPosition,
   onQueueEncode,
   encodeChoices,
   encodeJob,
@@ -111,6 +117,7 @@ export function RecordingDetailView({
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onTakeTicket: (id: string) => Promise<TicketWrite>
   onAskForTheSound: (id: string, sound: SoundTrack) => Promise<PlaybackRead>
+  onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
   encodeJob?: EncodeJob
@@ -124,6 +131,12 @@ export function RecordingDetailView({
     playback.plan.route !== 'nothing'
 
   const watching = plays && playback.state === 'planned'
+
+  const opens = howThePlayerOpens(
+    startAt,
+    playback.state === 'planned' ? playback.plan.resumeAtSec : undefined,
+    d.lengthSec,
+  )
 
   const alarming: 'truncated' | 'failed' | null =
     d.outcome === 'truncated' || d.outcome === 'failed' ? d.outcome : null
@@ -211,13 +224,15 @@ export function RecordingDetailView({
 
       {watching && (
         <Player
-          key={`${d.id}:${startAt ?? ''}`}
+          key={`${d.id}:${opens.at ?? ''}`}
           detail={d}
           plan={playback.plan}
           unaskedProfile={unaskedProfile}
           onTakeTicket={onTakeTicket}
           onAskForTheSound={onAskForTheSound}
-          startAt={startAt}
+          onKeepPosition={onKeepPosition}
+          startAt={opens.at}
+          playsAtOnce={opens.playing}
         />
       )}
 

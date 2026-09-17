@@ -9,14 +9,15 @@ import {
   whyItRefused,
 } from '@/repository/video-paths'
 
-const profileParameter = (() => {
+const playParameters = (() => {
   const document: unknown = JSON.parse(
     readFileSync(
       new URL('../../repository/client/carina.json', import.meta.url),
       'utf8',
     ),
   )
-  const found = (
+
+  return (
     document as {
       paths: Record<
         string,
@@ -31,14 +32,20 @@ const profileParameter = (() => {
         }
       >
     }
-  ).paths['/api/videos/{id}/play'].get.parameters.find(
-    (one) => one.name === 'profile',
-  )
+  ).paths['/api/videos/{id}/play'].get.parameters
+})()
 
-  assert.ok(found, 'the endpoint that plays a recording takes a profile')
+function parameterOfPlay(named: string) {
+  const found = playParameters.find((one) => one.name === named)
+
+  assert.ok(found, `the endpoint that plays a recording takes ${named}`)
 
   return found
-})()
+}
+
+const profileParameter = parameterOfPlay('profile')
+
+const fromParameter = parameterOfPlay('from')
 
 test('the profiles offered are the ones the endpoint accepts', () => {
   assert.deepEqual([...PLAYBACK_PROFILES], profileParameter.schema.enum)
@@ -110,4 +117,28 @@ test('a recording with one sound to play asks for the picture as it always did',
     videoPictureHref('1266', 0, '720p60'),
     '/api/videos/1266/play?from=0&profile=720p60',
   )
+})
+
+test('naming no second is what the endpoint answers from the position it remembers', () => {
+  assert.match(
+    fromParameter.description ?? '',
+    /Asking for none starts where this reader last left this recording/,
+  )
+})
+
+test('naming zero is what the endpoint takes as the beginning, whatever it remembers', () => {
+  assert.match(
+    fromParameter.description ?? '',
+    /asking for zero starts at the beginning whatever was left/,
+  )
+})
+
+test('every picture asked for names the second it starts at, so the remembered position never moves it', () => {
+  for (const href of [
+    videoPictureHref('1266'),
+    videoPictureHref('1266', 0),
+    videoPictureHref('1266', 612, '720p60', 'main'),
+  ]) {
+    assert.match(href, /[?&]from=\d/)
+  }
 })

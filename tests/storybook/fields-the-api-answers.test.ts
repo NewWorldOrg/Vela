@@ -53,6 +53,11 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
+      'the position a reader reached is written so that it comes back on the plan the next time the recording is opened, and what the write hands straight back is read by nothing',
+    fields: ['BaseResponderOfPlaybackPositionResponder.data'],
+  },
+  {
+    because:
       'the screen pages from what the URL holds and counts the rows it was handed, so the counters that come back with a page repeat the ask',
     fields: [
       'IntegrityListResponder.currentPage',

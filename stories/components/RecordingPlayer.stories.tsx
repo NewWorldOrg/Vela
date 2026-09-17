@@ -162,6 +162,14 @@ function scrub(canvasElement: HTMLElement, share: number) {
 
 const READING = /^\d+:\d\d(:\d\d)?$/
 
+const kept: number[] = []
+
+async function keepingThePosition(id: string, positionSec: number) {
+  kept.push(positionSec)
+
+  return { state: 'ok' as const }
+}
+
 const meta = {
   title: 'Components/録画プレイヤー',
   component: Player,
@@ -172,6 +180,7 @@ const meta = {
     unaskedProfile: '1080p60',
     onTakeTicket: ticketed,
     onAskForTheSound: planning(ON_THE_FLY),
+    onKeepPosition: keepingThePosition,
     frameHref: drawnFrame,
   },
   decorators: [
@@ -1817,5 +1826,70 @@ export const 放っておいても飛ばされない: Story = {
     await new Promise((rest) => setTimeout(rest, 800))
 
     await expect(canvas.getByText('20:50 / 4:12:38')).toBeVisible()
+  },
+}
+
+export const 続きの位置で待っている: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    playsAtOnce: false,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const picture = canvasElement.querySelector('video')
+
+    await expect(picture?.getAttribute('src')).toBeNull()
+    await expect(canvas.getByText('20:50 / 4:12:38')).toBeVisible()
+    await expect(
+      canvas.getAllByRole('button', { name: '再生' }).length,
+    ).toBeGreaterThan(0)
+  },
+}
+
+export const アドレスで名指しされた位置から再生する: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const picture = canvasElement.querySelector('video')
+
+    await expect(picture?.getAttribute('src')).not.toBeNull()
+    await expect(canvas.getByText('20:50 / 4:12:38')).toBeVisible()
+  },
+}
+
+export const 見ていた位置を覚える: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    kept.length = 0
+
+    const canvas = within(canvasElement)
+    const picture = canvasElement.querySelector('video')
+
+    if (!picture) {
+      throw new Error('the player is drawn without a picture to play')
+    }
+
+    picture.dispatchEvent(new Event('playing'))
+
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '一時停止' })).toBeEnabled(),
+    )
+
+    picture.dispatchEvent(new Event('pause'))
+
+    await waitFor(() => expect(kept).toEqual([1250]))
   },
 }
