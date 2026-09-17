@@ -4,6 +4,7 @@ import {
   ENCODE_JOB_STATUSES,
   FAILURE_LABEL,
   LABEL_LONGEST,
+  NOT_ASKED_FOR_LABEL,
   RATE_CONTROL_COARSEST,
   RATE_CONTROL_FINEST,
   STALLED_LABEL,
@@ -23,14 +24,24 @@ export interface EncodeRowWords {
   cancels: boolean
 }
 
+export function standingWordOf(
+  standing: EncodeStanding,
+  whenRecorded: boolean,
+): string {
+  return standing === 'notEncoded' && !whenRecorded
+    ? NOT_ASKED_FOR_LABEL
+    : wordFor(STANDING_LABEL, standing)
+}
+
 export function encodeRowOf(
   job:
     | Pick<EncodeJob, 'status' | 'failure' | 'stalled' | 'waitingForAViewer'>
     | undefined,
   standing: EncodeStanding,
+  whenRecorded: boolean,
 ): EncodeRowWords {
   const folded: EncodeRowWords = {
-    main: wordFor(STANDING_LABEL, standing),
+    main: standingWordOf(standing, whenRecorded),
     cancels: false,
   }
 

@@ -48,7 +48,7 @@ export function RecordingRecord({
   onCallOffEncode: (id: string) => Promise<EncodeWrite>
 }) {
   const spots = d.qualitySpots ?? []
-  const encode = encodeRowOf(encodeJob, d.encode)
+  const encode = encodeRowOf(encodeJob, d.encode, d.encodeWhenRecorded)
 
   return (
     <details className="group mt-[22px] rounded-xl bg-surface px-[22px]">
