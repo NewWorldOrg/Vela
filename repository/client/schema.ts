@@ -88,6 +88,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/videos/{id}/position': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['putPlaybackPosition']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/version': {
     parameters: {
       query?: never
@@ -1540,6 +1556,11 @@ export interface components {
       message: string
       data: null | components['schemas']['PlaybackPlanResponder']
     }
+    BaseResponderOfPlaybackPositionResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['PlaybackPositionResponder']
+    }
     BaseResponderOfPlaybackTicketResponder: {
       status: boolean
       message: string
@@ -2505,8 +2526,17 @@ export interface components {
       mediaType: string
       /** Format: int64 */
       bytes: null | number | string
+      /** Format: double */
+      resumeAtSec: null | number | string
       sounds: components['schemas']['SoundTrack'][]
       chapters: components['schemas']['PlaybackChapterResponder'][]
+    }
+    PlaybackPositionResponder: {
+      recordingId: string
+      /** Format: double */
+      positionSec: number | string
+      /** Format: date-time */
+      updatedAt: string
     }
     /** @enum {string} */
     PlaybackRoute: 'direct' | 'onTheFly' | 'nothing'
@@ -2575,6 +2605,10 @@ export interface components {
       automatically?: null | boolean
       /** Format: int32 */
       mostCores?: null | number | string
+    }
+    PutPlaybackPositionRequest: {
+      /** Format: double */
+      positionSec: null | number | string
     }
     QualityCandidateMeasuredResponder: {
       /** Format: double */
@@ -2938,6 +2972,7 @@ export interface components {
       profileId?: null | string
       /** Format: uuid */
       destinationId?: null | string
+      makeItAgain?: null | boolean
     }
     RebuildEpgRequest: {
       confirm?: null | string
@@ -3957,7 +3992,7 @@ export interface operations {
   playVideo: {
     parameters: {
       query?: {
-        /** @description The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional, and asking for none starts at the beginning. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range. */
+        /** @description The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional. Asking for none starts where this reader last left this recording, and at the beginning where they have not watched it before; asking for zero starts at the beginning whatever was left. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range, and the plan says where the watching got to so that a player can seek there itself. */
         from?: number
         /** @description The profile the picture is encoded in while it is transcoded as it plays. Asking for none opens at what this machine encodes at, which depends on the encoder it has and so has no fixed default here; GET /api/live/profiles names it, marked as the unasked one, and the answer is the same for a recording as it is for a live channel. */
         profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
@@ -4168,6 +4203,78 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfPlaybackTicketResponder']
+        }
+      }
+    }
+  }
+  putPlaybackPosition: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['PutPlaybackPositionRequest']
+        'application/*+json':
+          null | components['schemas']['PutPlaybackPositionRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackPositionResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackPositionResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackPositionResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackPositionResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPlaybackPositionResponder']
         }
       }
     }

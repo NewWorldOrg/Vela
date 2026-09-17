@@ -30,11 +30,10 @@
           {
             "name": "from",
             "in": "query",
-            "description": "The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional, and asking for none starts at the beginning. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range.",
+            "description": "The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional. Asking for none starts where this reader last left this recording, and at the beginning where they have not watched it before; asking for zero starts at the beginning whatever was left. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range, and the plan says where the watching got to so that a player can seek there itself.",
             "schema": {
               "type": "number",
-              "format": "double",
-              "default": 0
+              "format": "double"
             }
           },
           {
@@ -277,6 +276,107 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfPlaybackTicketResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/videos/{id}/position": {
+      "put": {
+        "tags": [
+          "videos"
+        ],
+        "operationId": "putPlaybackPosition",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PutPlaybackPositionRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PutPlaybackPositionRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackPositionResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackPositionResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackPositionResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackPositionResponder"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfPlaybackPositionResponder"
                 }
               }
             }
@@ -7899,6 +7999,32 @@
           }
         }
       },
+      "BaseResponderOfPlaybackPositionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlaybackPositionResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfPlaybackTicketResponder": {
         "required": [
           "status",
@@ -12012,6 +12138,7 @@
           "showsAsAWholeRecording",
           "mediaType",
           "bytes",
+          "resumeAtSec",
           "sounds",
           "chapters"
         ],
@@ -12054,6 +12181,15 @@
             ],
             "format": "int64"
           },
+          "resumeAtSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
           "sounds": {
             "type": "array",
             "items": {
@@ -12065,6 +12201,31 @@
             "items": {
               "$ref": "#/components/schemas/PlaybackChapterResponder"
             }
+          }
+        }
+      },
+      "PlaybackPositionResponder": {
+        "required": [
+          "recordingId",
+          "positionSec",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "recordingId": {
+            "type": "string"
+          },
+          "positionSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -12353,6 +12514,23 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "PutPlaybackPositionRequest": {
+        "required": [
+          "positionSec"
+        ],
+        "type": "object",
+        "properties": {
+          "positionSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -13875,6 +14053,12 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "makeItAgain": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
