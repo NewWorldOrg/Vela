@@ -193,6 +193,30 @@ export const エンコードのない一覧: Story = {
   },
 }
 
+export const 自動実行が飛ばした録画: Story = {
+  args: {
+    result: resultOf([
+      { ...all[1], encode: 'notEncoded', encodeWhenRecorded: false },
+      { ...all[2], encode: 'notEncoded', encodeWhenRecorded: true },
+      { ...all[3], encode: 'queued', encodeWhenRecorded: false },
+    ]),
+    filter: {},
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByRole('row').slice(1)
+    const encodeOf = (row: HTMLElement) =>
+      within(row).getAllByRole('cell')[ENCODE_COLUMN]
+
+    await expect(encodeOf(rows[0])).toHaveTextContent('自動実行の対象外')
+    await expect(encodeOf(rows[0])).not.toHaveTextContent('未エンコード')
+
+    await expect(encodeOf(rows[1])).toHaveTextContent('未エンコード')
+    await expect(encodeOf(rows[1])).not.toHaveTextContent('自動実行')
+
+    await expect(encodeOf(rows[2])).toHaveTextContent('待機中')
+  },
+}
+
 const OUTCOME_COLUMN = 5
 
 const ENDED = all.filter((r) => r.outcome !== 'recording')

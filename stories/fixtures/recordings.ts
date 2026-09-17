@@ -28,6 +28,7 @@ const RECORDINGS: Recording[] = [
     outcome: 'recording',
     quality: { measured: false, detail: '録画の完了時に確定します' },
     encode: 'notEncoded',
+    encodeWhenRecorded: true,
     thumbnail: 'pending',
     thumbnailLabel: '未生成',
   },
@@ -53,6 +54,7 @@ const RECORDINGS: Recording[] = [
     outcome: 'complete',
     quality: { measured: true, level: 'good', detail: 'ドロップ 0' },
     encode: 'completed',
+    encodeWhenRecorded: true,
     thumbnail: 'shot',
   },
   {
@@ -74,6 +76,7 @@ const RECORDINGS: Recording[] = [
     outcome: 'complete',
     quality: { measured: true, level: 'good', detail: 'ドロップ 0' },
     encode: 'running',
+    encodeWhenRecorded: true,
     thumbnail: 'shot',
   },
   {
@@ -100,6 +103,7 @@ const RECORDINGS: Recording[] = [
       detail: 'ドロップ 38,412 · 2 か所',
     },
     encode: 'completed',
+    encodeWhenRecorded: true,
     thumbnail: 'shot',
   },
   {
@@ -122,6 +126,7 @@ const RECORDINGS: Recording[] = [
     outcome: 'truncated',
     quality: { measured: true, level: 'good', detail: 'ドロップ 0' },
     encode: 'queued',
+    encodeWhenRecorded: true,
     thumbnail: 'shot',
   },
   {
@@ -143,6 +148,7 @@ const RECORDINGS: Recording[] = [
     outcomeDetail: 'スクランブル解除できず',
     quality: { measured: false },
     encode: 'notEncoded',
+    encodeWhenRecorded: true,
     thumbnail: 'none',
     thumbnailLabel: '作成されません',
   },
@@ -166,6 +172,7 @@ const RECORDINGS: Recording[] = [
     outcome: 'complete',
     quality: { measured: false },
     encode: 'queued',
+    encodeWhenRecorded: true,
     thumbnail: 'shot',
   },
   {
@@ -193,6 +200,7 @@ const RECORDINGS: Recording[] = [
     scrambleQuality: 'mayNotBeWatchable',
     scrambledShare: 5_042_768 / 5_302_549,
     encode: 'notEncoded',
+    encodeWhenRecorded: true,
     thumbnail: 'shot',
   },
   {
@@ -215,6 +223,7 @@ const RECORDINGS: Recording[] = [
     outcome: 'complete',
     quality: { measured: false },
     encode: 'notEncoded',
+    encodeWhenRecorded: true,
     thumbnail: 'pending',
     thumbnailLabel: '未生成',
   },
@@ -241,6 +250,7 @@ const RECORDINGS: Recording[] = [
       detail: 'ドロップ 178,530 · 21:41 に集中',
     },
     encode: 'failed',
+    encodeWhenRecorded: true,
     thumbnail: 'error',
     thumbnailLabel: '生成失敗',
   },
