@@ -122,6 +122,7 @@ const held = (over: Record<string, unknown> = {}) => ({
   enabled: true,
   marginBeforeSeconds: 10,
   marginAfterSeconds: 30,
+  encodeWhenRecorded: true,
   createdAt: '2026-08-01T02:00:00Z',
   ...over,
 })
@@ -142,6 +143,7 @@ const draft = (over: Record<string, unknown> = {}) => ({
   enabled: true,
   marginBeforeSeconds: 10,
   marginAfterSeconds: 30,
+  encodeWhenRecorded: true,
   ...over,
 })
 
@@ -272,6 +274,7 @@ test('a new rule is sent as its name, its query and what it books with', async (
     enabled: true,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   })
 })
 
@@ -284,6 +287,23 @@ test('a rule that already stands is replaced whole, at its own address', async (
   assert.equal(asked('/api/rules/{id}').method, 'PUT')
   assert.equal(asked('/api/rules/{id}').id, 'r-1')
   assert.equal(bodyOf('/api/rules/{id}').enabled, false)
+})
+
+test('whether what a rule records is encoded arrives with the rule', async () => {
+  standing([held(), held({ id: 'r-2', encodeWhenRecorded: false })])
+
+  const result = await listRules()
+
+  assert.equal(result.items[0].encodeWhenRecorded, true)
+  assert.equal(result.items[1].encodeWhenRecorded, false)
+})
+
+test('a rule told not to encode says so where it is saved', async () => {
+  standing()
+
+  await replaceRule('r-1', draft({ encodeWhenRecorded: false }))
+
+  assert.equal(bodyOf('/api/rules/{id}').encodeWhenRecorded, false)
 })
 
 test('a rule the API will not have is refused in words the screen can show', async () => {

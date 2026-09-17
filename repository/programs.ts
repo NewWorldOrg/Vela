@@ -44,6 +44,7 @@ export interface ProgramBooking {
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number
+  encodeWhenRecorded: boolean
 }
 
 export interface Program {

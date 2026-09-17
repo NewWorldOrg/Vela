@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { InlineAlert } from '@/components/vela/banner'
 import {
   Field,
@@ -44,6 +45,7 @@ export interface Booking {
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number
+  encodeWhenRecorded: boolean
 }
 
 export function EditReservationDialog({
@@ -63,6 +65,7 @@ export function EditReservationDialog({
   const [priority, setPriority] = useState(String(booking.priority))
   const [before, setBefore] = useState(String(booking.marginBeforeSeconds))
   const [after, setAfter] = useState(String(booking.marginAfterSeconds))
+  const [encode, setEncode] = useState(booking.encodeWhenRecorded)
   const [problem, setProblem] = useState<{ field: Named; text: string }>()
   const [refusal, setRefusal] = useState<string>()
   const [pending, startTransition] = useTransition()
@@ -72,6 +75,7 @@ export function EditReservationDialog({
       setPriority(String(booking.priority))
       setBefore(String(booking.marginBeforeSeconds))
       setAfter(String(booking.marginAfterSeconds))
+      setEncode(booking.encodeWhenRecorded)
       setProblem(undefined)
       setRefusal(undefined)
     }
@@ -124,6 +128,10 @@ export function EditReservationDialog({
 
     if (read.after !== booking.marginAfterSeconds) {
       revision.marginAfterSeconds = read.after
+    }
+
+    if (encode !== booking.encodeWhenRecorded) {
+      revision.encodeWhenRecorded = encode
     }
 
     if (Object.keys(revision).length === 0) {
@@ -244,6 +252,15 @@ export function EditReservationDialog({
               )}
             </span>
           </Field>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Switch
+              id="reservation-encode"
+              checked={encode}
+              onCheckedChange={setEncode}
+            />
+            <FieldLabel htmlFor="reservation-encode">エンコードする</FieldLabel>
+          </div>
 
           <span aria-live="polite">
             {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}

@@ -349,6 +349,7 @@ interface Entry {
   before: string
   after: string
   enabled: boolean
+  encodeWhenRecorded: boolean
 }
 
 function entryOf(rule: Rule | undefined, terms: SearchTerms): Entry {
@@ -364,6 +365,7 @@ function entryOf(rule: Rule | undefined, terms: SearchTerms): Entry {
     before: String(rule?.marginBeforeSeconds ?? 0),
     after: String(rule?.marginAfterSeconds ?? 0),
     enabled: rule?.enabled ?? true,
+    encodeWhenRecorded: rule?.encodeWhenRecorded ?? true,
   }
 }
 
@@ -386,6 +388,7 @@ function draftOf(rule: Rule): RuleDraft {
     enabled: rule.enabled,
     marginBeforeSeconds: rule.marginBeforeSeconds,
     marginAfterSeconds: rule.marginAfterSeconds,
+    encodeWhenRecorded: rule.encodeWhenRecorded,
   }
 }
 
@@ -498,6 +501,7 @@ function RuleEditor({
       enabled: entry.enabled,
       marginBeforeSeconds: read.before!,
       marginAfterSeconds: read.after!,
+      encodeWhenRecorded: entry.encodeWhenRecorded,
     }
   }
 
@@ -944,13 +948,24 @@ function RuleEditor({
           </Field>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Switch
-            id="rule-enabled"
-            checked={entry.enabled}
-            onCheckedChange={(next) => amend({ enabled: next })}
-          />
-          <FieldLabel htmlFor="rule-enabled">有効</FieldLabel>
+        <div className="flex flex-col gap-[26px]">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Switch
+              id="rule-enabled"
+              checked={entry.enabled}
+              onCheckedChange={(next) => amend({ enabled: next })}
+            />
+            <FieldLabel htmlFor="rule-enabled">有効</FieldLabel>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Switch
+              id="rule-encode"
+              checked={entry.encodeWhenRecorded}
+              onCheckedChange={(next) => amend({ encodeWhenRecorded: next })}
+            />
+            <FieldLabel htmlFor="rule-encode">エンコードする</FieldLabel>
+          </div>
         </div>
       </FormSection>
 

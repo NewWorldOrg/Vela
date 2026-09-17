@@ -179,6 +179,9 @@ export const ルールを編集: Story = {
     await expect(canvas.getByLabelText('キーワード')).toHaveValue('新番組')
     await expect(canvas.getByLabelText('除外キーワード')).toHaveValue('再放送')
     await expect(canvas.getByLabelText(/優先度/)).toHaveValue('20')
+    await expect(
+      canvas.getByRole('switch', { name: 'エンコードする' }),
+    ).toBeChecked()
 
     await expect(
       canvas.getByRole('link', { name: '番組検索で見る' }),
@@ -232,6 +235,7 @@ export const ルールを編集: Story = {
             enabled: true,
             marginBeforeSeconds: 10,
             marginAfterSeconds: 30,
+            encodeWhenRecorded: true,
           },
         },
       ]),
@@ -325,6 +329,7 @@ export const 検索から作る: Story = {
             enabled: true,
             marginBeforeSeconds: 0,
             marginAfterSeconds: 0,
+            encodeWhenRecorded: true,
           },
         },
       ]),
@@ -499,5 +504,35 @@ export const 削除の件数は保存済みのルールから数える: Story = 
     )
     await waitFor(() => expect(retired).toEqual(['rule-301']))
     await expect(standingSaved).toEqual([])
+  },
+}
+
+const encodeSaved: Saved[] = []
+
+export const エンコードしないルール: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[1] },
+    actions: recording(encodeSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    encodeSaved.length = 0
+
+    const encode = canvas.getByRole('switch', { name: 'エンコードする' })
+
+    await expect(encode).not.toBeChecked()
+
+    await userEvent.click(encode)
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+
+    await userEvent.click(
+      await dialog.findByRole('button', { name: '保存する' }),
+    )
+
+    await waitFor(() => expect(encodeSaved).toHaveLength(1))
+    await expect(encodeSaved[0].draft.encodeWhenRecorded).toBe(true)
   },
 }

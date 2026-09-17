@@ -81,6 +81,7 @@ const reservation = (over: Over = {}) => ({
   origin: 'byHand',
   ruleId: null,
   priority: 10,
+  encodeWhenRecorded: true,
   window: window('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z'),
   standing: 'scheduled',
   startedAt: null,
@@ -1112,6 +1113,20 @@ test('a revision may name all three at once', async () => {
   })
 })
 
+test('whether what a reservation records is encoded is carried onto the row', async () => {
+  const one = await only({ encodeWhenRecorded: false })
+
+  assert.equal(one.encodeWhenRecorded, false)
+})
+
+test('a revision may turn the encoding off on its own', async () => {
+  standing()
+
+  await reviseReservation('b2', { encodeWhenRecorded: false })
+
+  assert.deepEqual(sent.at(-1)?.body, { encodeWhenRecorded: false })
+})
+
 test('each refusal a revision can meet is told apart from the others', async () => {
   const said = new Set<string>()
 
@@ -1185,6 +1200,7 @@ test('a booking carries what the edit form has to fill itself with', async () =>
     priority: 12,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   })
 })
 

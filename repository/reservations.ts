@@ -71,6 +71,7 @@ export interface Reservation {
   priority: number
   marginBeforeSeconds: number
   marginAfterSeconds: number
+  encodeWhenRecorded: boolean
   conflict?: ReservationConflict
   recordingId?: string
   discardable: boolean
@@ -81,6 +82,7 @@ export interface ReservationRevision {
   priority?: number
   marginBeforeSeconds?: number
   marginAfterSeconds?: number
+  encodeWhenRecorded?: boolean
 }
 
 export type ReservationWrite =
@@ -199,6 +201,7 @@ export async function listBookings(): Promise<Map<string, ProgramBooking>> {
       priority: toInt(one.priority),
       marginBeforeSeconds: toInt(one.window.marginBeforeSeconds),
       marginAfterSeconds: toInt(one.window.marginAfterSeconds),
+      encodeWhenRecorded: one.encodeWhenRecorded,
     })
   }
 
@@ -470,6 +473,7 @@ export function toReservation(
     priority: toInt(r.priority),
     marginBeforeSeconds: toInt(r.window.marginBeforeSeconds),
     marginAfterSeconds: toInt(r.window.marginAfterSeconds),
+    encodeWhenRecorded: r.encodeWhenRecorded,
     conflict: conflictOf(r, all, known, rules),
     recordingId,
     discardable: isDiscardable(stands),

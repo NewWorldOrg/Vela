@@ -38,6 +38,7 @@ export interface Rule {
   enabled: boolean
   marginBeforeSeconds: number
   marginAfterSeconds: number
+  encodeWhenRecorded: boolean
   createdAt: string
 }
 
@@ -48,6 +49,7 @@ export interface RuleDraft {
   enabled: boolean
   marginBeforeSeconds: number
   marginAfterSeconds: number
+  encodeWhenRecorded: boolean
 }
 
 export interface RulesResult {
@@ -392,6 +394,7 @@ function bodyOf(draft: RuleDraft) {
     enabled: draft.enabled,
     marginBeforeSeconds: draft.marginBeforeSeconds,
     marginAfterSeconds: draft.marginAfterSeconds,
+    encodeWhenRecorded: draft.encodeWhenRecorded,
   }
 }
 
@@ -437,6 +440,7 @@ function toRule(rule: RuleResponder): Rule {
     enabled: rule.enabled,
     marginBeforeSeconds: toInt(rule.marginBeforeSeconds),
     marginAfterSeconds: toInt(rule.marginAfterSeconds),
+    encodeWhenRecorded: rule.encodeWhenRecorded,
     createdAt: rule.createdAt,
   }
 }

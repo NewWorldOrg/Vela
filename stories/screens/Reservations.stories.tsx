@@ -4,6 +4,7 @@ import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 import type {
   Reservation,
   ReservationBatch,
+  ReservationRevision,
   ReservationsResult,
   ReservationWrite,
 } from '@/repository/reservations'
@@ -42,6 +43,17 @@ const cancellingAll = async (ids: string[]): Promise<ReservationBatch> => {
 
 const throwing = async (id: string): Promise<ReservationWrite> => {
   discarded.push(id)
+
+  return { state: 'ok' }
+}
+
+const revised: { id: string; revision: ReservationRevision }[] = []
+
+const revising = async (
+  id: string,
+  revision: ReservationRevision,
+): Promise<ReservationWrite> => {
+  revised.push({ id, revision })
 
   return { state: 'ok' }
 }
@@ -516,5 +528,59 @@ export const 番組表が動いた予約はどこが動いたかを言う: Story
     await expect(said).toHaveTextContent('開始 08/12 20:00 → 08/12 20:30')
     await expect(said).toHaveTextContent('終了 08/12 20:45 → 08/12 21:15')
     await expect(said).toHaveTextContent('08/11 06:20 に検出')
+  },
+}
+
+export const 予約ごとにエンコードを切り替える: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    actions: {
+      onCancel: accept,
+      onRestore: accept,
+      onRaise: accept,
+      onRevise: revising,
+      onDiscard: throwing,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    revised.length = 0
+
+    await userEvent.click(
+      within(rowFor(canvas.getByText('深夜アニメ劇場'))).getByRole('button', {
+        name: '編集',
+      }),
+    )
+
+    const first = within(await screen.findByRole('dialog'))
+
+    await expect(
+      first.getByRole('switch', { name: 'エンコードする' }),
+    ).toBeChecked()
+
+    await userEvent.click(first.getByRole('button', { name: 'キャンセル' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    await userEvent.click(
+      within(rowFor(canvas.getByText('ナイター中継 延長あり'))).getByRole(
+        'button',
+        { name: '編集' },
+      ),
+    )
+
+    const dialog = within(await screen.findByRole('dialog'))
+    const encode = dialog.getByRole('switch', { name: 'エンコードする' })
+
+    await expect(encode).not.toBeChecked()
+
+    await userEvent.click(encode)
+    await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
+
+    await waitFor(() =>
+      expect(revised).toEqual([
+        { id: 'r-302', revision: { encodeWhenRecorded: true } },
+      ]),
+    )
   },
 }

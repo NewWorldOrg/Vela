@@ -46,6 +46,7 @@ export const RULE_FIXTURES: Rule[] = [
     enabled: true,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     createdAt: '2026-08-01T02:00:00Z',
   },
   {
@@ -62,6 +63,7 @@ export const RULE_FIXTURES: Rule[] = [
     enabled: true,
     marginBeforeSeconds: 0,
     marginAfterSeconds: 0,
+    encodeWhenRecorded: false,
     createdAt: '2026-07-20T05:30:00Z',
   },
   {
@@ -79,6 +81,7 @@ export const RULE_FIXTURES: Rule[] = [
     enabled: false,
     marginBeforeSeconds: 0,
     marginAfterSeconds: 0,
+    encodeWhenRecorded: true,
     createdAt: '2026-07-02T11:00:00Z',
   },
 ]

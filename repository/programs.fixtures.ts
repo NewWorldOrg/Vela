@@ -356,6 +356,7 @@ export const PROGRAM_FIXTURES: Program[] = [
       priority: 10,
       marginBeforeSeconds: 10,
       marginAfterSeconds: 30,
+      encodeWhenRecorded: true,
     },
   },
   {
