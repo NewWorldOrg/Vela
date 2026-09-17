@@ -17,6 +17,7 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-302',
@@ -34,6 +35,7 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: false,
   },
   {
     id: 'r-303',
@@ -52,6 +54,7 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     conflict: {
       headline: '同時刻に地上波チューナー 2 本が録画予定です',
       body: '08/08(金) 22:00 の開始時点で空きがなく、この予約にはチューナーを割り当てられません。',
@@ -87,6 +90,7 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     recordingId: '1291',
   },
   {
@@ -105,6 +109,7 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
 ]
 
@@ -124,6 +129,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-305',
@@ -140,6 +146,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-306',
@@ -156,6 +163,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-307',
@@ -172,6 +180,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     recordingId: '1247',
   },
   {
@@ -189,6 +198,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-309',
@@ -205,6 +215,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     recordingId: '1274',
   },
   {
@@ -222,6 +233,7 @@ export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
 ]
 
@@ -241,6 +253,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'e-402',
@@ -257,6 +270,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 8,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'e-403',
@@ -273,6 +287,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'e-404',
@@ -289,6 +304,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'e-405',
@@ -305,6 +321,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'e-406',
@@ -321,6 +338,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     recordingId: '1301',
   },
   {
@@ -338,6 +356,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     recordingId: '1302',
   },
   {
@@ -355,6 +374,7 @@ export const EVERY_STANDING_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
     recordingId: '1303',
   },
 ]
@@ -384,6 +404,7 @@ export const EPG_DRIFT_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-402',
@@ -413,6 +434,7 @@ export const EPG_DRIFT_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-403',
@@ -434,6 +456,7 @@ export const EPG_DRIFT_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
   {
     id: 'r-404',
@@ -450,5 +473,6 @@ export const EPG_DRIFT_FIXTURES: Reservation[] = [
     priority: 10,
     marginBeforeSeconds: 10,
     marginAfterSeconds: 30,
+    encodeWhenRecorded: true,
   },
 ]

@@ -1903,6 +1903,7 @@ export interface components {
       marginBeforeSeconds?: null | number | string
       /** Format: int32 */
       marginAfterSeconds?: null | number | string
+      encodeWhenRecorded?: null | boolean
     }
     /** @enum {string} */
     Deinterlace: 'leave' | 'everyFrame' | 'everyField'
@@ -3359,6 +3360,7 @@ export interface components {
       ruleId: null | string
       /** Format: int32 */
       priority: number | string
+      encodeWhenRecorded: boolean
       window: components['schemas']['ReservationWindowResponder']
       standing: components['schemas']['ReservationStanding']
       /** Format: date-time */
@@ -3441,6 +3443,7 @@ export interface components {
       marginBeforeSeconds?: null | number | string
       /** Format: int32 */
       marginAfterSeconds?: null | number | string
+      encodeWhenRecorded?: null | boolean
     }
     RotationDepartureResponder: {
       /** Format: int32 */
@@ -3562,6 +3565,7 @@ export interface components {
       marginBeforeSeconds: number | string
       /** Format: int32 */
       marginAfterSeconds: number | string
+      encodeWhenRecorded: boolean
       /** Format: date-time */
       createdAt: string
     }
@@ -3588,6 +3592,7 @@ export interface components {
       marginBeforeSeconds?: null | number | string
       /** Format: int32 */
       marginAfterSeconds?: null | number | string
+      encodeWhenRecorded?: null | boolean
     }
     ScanApplicationResponder: {
       systems: components['schemas']['TuneSystem'][]

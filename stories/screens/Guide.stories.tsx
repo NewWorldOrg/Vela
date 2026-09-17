@@ -213,6 +213,7 @@ const withBookings = PROGRAM_FIXTURES.map((program) => {
           priority: 0,
           marginBeforeSeconds: 0,
           marginAfterSeconds: 0,
+          encodeWhenRecorded: true,
         },
       }
     : program

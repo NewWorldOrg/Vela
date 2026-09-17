@@ -181,6 +181,7 @@ export function ReservationRow({
                   priority: reservation.priority,
                   marginBeforeSeconds: reservation.marginBeforeSeconds,
                   marginAfterSeconds: reservation.marginAfterSeconds,
+                  encodeWhenRecorded: reservation.encodeWhenRecorded,
                 }}
                 open
                 onOpenChange={setEditing}

@@ -9715,6 +9715,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "encodeWhenRecorded": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -15472,6 +15478,7 @@
           "origin",
           "ruleId",
           "priority",
+          "encodeWhenRecorded",
           "window",
           "standing",
           "startedAt",
@@ -15507,6 +15514,9 @@
               "string"
             ],
             "format": "int32"
+          },
+          "encodeWhenRecorded": {
+            "type": "boolean"
           },
           "window": {
             "$ref": "#/components/schemas/ReservationWindowResponder"
@@ -15808,6 +15818,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "encodeWhenRecorded": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -16260,6 +16276,7 @@
           "enabled",
           "marginBeforeSeconds",
           "marginAfterSeconds",
+          "encodeWhenRecorded",
           "createdAt"
         ],
         "type": "object",
@@ -16300,6 +16317,9 @@
               "string"
             ],
             "format": "int32"
+          },
+          "encodeWhenRecorded": {
+            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
@@ -16404,6 +16424,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "encodeWhenRecorded": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
