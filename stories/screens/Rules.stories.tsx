@@ -70,6 +70,23 @@ const IMPACT: RuleImpact = {
 
 const RETIRED: RuleRetirement = { withdrawn: 4, swept: 0 }
 
+const MARKED_REQUIRED = [
+  '条件',
+  'ルール名',
+  '優先度',
+  '前マージン(秒)',
+  '後マージン(秒)',
+]
+
+function whatIsMarkedRequired(canvasElement: HTMLElement): string[] {
+  return [...canvasElement.querySelectorAll('[data-slot="required-mark"]')].map(
+    (mark) =>
+      (mark.parentElement?.textContent ?? '')
+        .replace(mark.textContent ?? '', '')
+        .trim(),
+  )
+}
+
 function recording(saved: Saved[], turned: [string, boolean][]): RuleActions {
   return {
     onSave: async (id, draft): Promise<RuleWrite<Rule>> => {
@@ -156,12 +173,12 @@ export const ルールを編集: Story = {
 
     editSaved.length = 0
 
-    await expect(canvas.getByLabelText('ルール名')).toHaveValue(
+    await expect(canvas.getByLabelText(/ルール名/)).toHaveValue(
       '深夜アニメを追う',
     )
     await expect(canvas.getByLabelText('キーワード')).toHaveValue('新番組')
     await expect(canvas.getByLabelText('除外キーワード')).toHaveValue('再放送')
-    await expect(canvas.getByLabelText('優先度')).toHaveValue('20')
+    await expect(canvas.getByLabelText(/優先度/)).toHaveValue('20')
 
     await expect(
       canvas.getByRole('link', { name: '番組検索で見る' }),
@@ -270,6 +287,8 @@ export const 検索から作る: Story = {
 
     draftSaved.length = 0
 
+    await expect(whatIsMarkedRequired(canvasElement)).toEqual(MARKED_REQUIRED)
+
     await expect(canvas.getByLabelText('キーワード')).toHaveValue('特別警報')
     await expect(canvas.getByText('湾岸放送1')).toBeVisible()
 
@@ -280,7 +299,7 @@ export const 検索から作る: Story = {
     await expect(screen.queryByRole('dialog')).toBeNull()
     await expect(draftSaved).toEqual([])
 
-    await userEvent.type(canvas.getByLabelText('ルール名'), '気象・災害特番')
+    await userEvent.type(canvas.getByLabelText(/ルール名/), '気象・災害特番')
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     const dialog = within(await screen.findByRole('dialog'))
@@ -341,7 +360,7 @@ export const 番組詳細から作る: Story = {
     )
     await expect(canvas.getByText('衛星第一')).toBeVisible()
 
-    await userEvent.type(canvas.getByLabelText('ルール名'), '星のさまよいびと')
+    await userEvent.type(canvas.getByLabelText(/ルール名/), '星のさまよいびと')
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     const dialog = within(await screen.findByRole('dialog'))
@@ -375,7 +394,7 @@ export const 条件のないルール: Story = {
 
     emptySaved.length = 0
 
-    await userEvent.type(canvas.getByLabelText('ルール名'), 'なんでも録る')
+    await userEvent.type(canvas.getByLabelText(/ルール名/), 'なんでも録る')
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     await expect(
@@ -449,8 +468,8 @@ export const 削除の件数は保存済みのルールから数える: Story = 
     retired.length = 0
     weighed.length = 0
 
-    await userEvent.clear(canvas.getByLabelText('ルール名'))
-    await userEvent.type(canvas.getByLabelText('ルール名'), '書きかけの名前')
+    await userEvent.clear(canvas.getByLabelText(/ルール名/))
+    await userEvent.type(canvas.getByLabelText(/ルール名/), '書きかけの名前')
     await userEvent.type(canvas.getByLabelText('キーワード'), 'まだ保存前')
 
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
@@ -469,7 +488,7 @@ export const 削除の件数は保存済みのルールから数える: Story = 
     await expect(screen.getByRole('alertdialog')).toHaveTextContent(
       '深夜アニメを追う',
     )
-    await expect(canvas.getByLabelText('ルール名')).toHaveValue(
+    await expect(canvas.getByLabelText(/ルール名/)).toHaveValue(
       '書きかけの名前',
     )
 
