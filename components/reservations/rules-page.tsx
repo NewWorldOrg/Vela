@@ -88,6 +88,7 @@ import {
   FieldError,
   FieldHint,
   FieldLabel,
+  RequiredMark,
 } from '@/components/vela/field'
 import {
   CloseIcon,
@@ -653,9 +654,13 @@ function RuleEditor({
       <FormSection
         icon={<FilterIcon className="size-4 text-brand" />}
         title="条件"
+        required
       >
         <Field>
-          <FieldLabel htmlFor="rule-name">ルール名</FieldLabel>
+          <FieldLabel htmlFor="rule-name">
+            ルール名
+            <RequiredMark />
+          </FieldLabel>
           <Input
             id="rule-name"
             value={entry.name}
@@ -854,7 +859,10 @@ function RuleEditor({
       >
         <div className="grid gap-3.5 min-[701px]:grid-cols-3">
           <Field>
-            <FieldLabel htmlFor="rule-priority">優先度</FieldLabel>
+            <FieldLabel htmlFor="rule-priority">
+              優先度
+              <RequiredMark />
+            </FieldLabel>
             <Input
               id="rule-priority"
               inputMode="numeric"
@@ -878,7 +886,10 @@ function RuleEditor({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="rule-margin-before">前マージン(秒)</FieldLabel>
+            <FieldLabel htmlFor="rule-margin-before">
+              前マージン(秒)
+              <RequiredMark />
+            </FieldLabel>
             <Input
               id="rule-margin-before"
               inputMode="numeric"
@@ -904,7 +915,10 @@ function RuleEditor({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="rule-margin-after">後マージン(秒)</FieldLabel>
+            <FieldLabel htmlFor="rule-margin-after">
+              後マージン(秒)
+              <RequiredMark />
+            </FieldLabel>
             <Input
               id="rule-margin-after"
               inputMode="numeric"
@@ -1135,10 +1149,12 @@ function RuleEditor({
 function FormSection({
   icon,
   title,
+  required,
   children,
 }: {
   icon: ReactNode
   title: string
+  required?: boolean
   children: ReactNode
 }) {
   return (
@@ -1146,6 +1162,7 @@ function FormSection({
       <h3 className="heading flex items-center gap-1.5 text-ui">
         {icon}
         {title}
+        {required && <RequiredMark />}
       </h3>
       {children}
     </section>
