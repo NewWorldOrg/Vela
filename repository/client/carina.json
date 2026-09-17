@@ -14230,12 +14230,16 @@
       },
       "RecordingEncodeResponder": {
         "required": [
-          "standing"
+          "standing",
+          "whenRecorded"
         ],
         "type": "object",
         "properties": {
           "standing": {
             "$ref": "#/components/schemas/EncodeStanding"
+          },
+          "whenRecorded": {
+            "type": "boolean"
           }
         }
       },

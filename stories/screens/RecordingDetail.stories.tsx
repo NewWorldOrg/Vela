@@ -731,6 +731,36 @@ export const エンコードの行は中止されたジョブを言う: Story = 
 export const 完了のあとに中止したジョブがあっても完了と言う: Story =
   encodeRowStory('completed', CANCELLED_JOB, '完了', undefined, false)
 
+export const エンコードの行は自動実行の対象外と言う: Story = {
+  args: {
+    detail: {
+      ...detail('1274'),
+      encode: 'notEncoded' as const,
+      encodeWhenRecorded: false,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByText('録画の記録'))
+
+    const row = encodeRow(canvasElement)
+
+    await expect(row.getByText('自動実行の対象外')).toBeVisible()
+    await expect(row.queryByText('未エンコード')).toBeNull()
+  },
+}
+
+export const エンコードの行は順番を待つ録画を対象外と言わない: Story = {
+  args: { detail: withoutAnArtefact('1274') },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByText('録画の記録'))
+
+    const row = encodeRow(canvasElement)
+
+    await expect(row.getByText('未エンコード')).toBeVisible()
+    await expect(row.queryByText('自動実行の対象外')).toBeNull()
+  },
+}
+
 export const エンコードの行から実行中のジョブを中止する: Story = {
   args: {
     detail: { ...detail('1274'), encode: 'running' },

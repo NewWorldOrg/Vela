@@ -27,49 +27,93 @@ const job = (over: Partial<Standing> = {}): Standing => ({
 })
 
 test('a recording with no job says the one word the API folded', () => {
-  assert.deepEqual(encodeRowOf(undefined, 'notEncoded'), {
+  assert.deepEqual(encodeRowOf(undefined, 'notEncoded', true), {
     main: '未エンコード',
     cancels: false,
   })
-  assert.deepEqual(encodeRowOf(undefined, 'completed'), {
+  assert.deepEqual(encodeRowOf(undefined, 'completed', true), {
     main: '完了',
     cancels: false,
   })
 })
 
-test('the latest job says where it stands, and why when it is held', () => {
-  assert.deepEqual(encodeRowOf(job(), 'queued'), {
-    main: '待機中',
-    cancels: true,
+test('a recording the automatic run was told to leave alone says that, not that it is waiting', () => {
+  assert.deepEqual(encodeRowOf(undefined, 'notEncoded', false), {
+    main: '自動実行の対象外',
+    cancels: false,
   })
-  assert.deepEqual(encodeRowOf(job({ waitingForAViewer: true }), 'queued'), {
+})
+
+test('every standing but unencoded is said the same whether it was to be encoded or not', () => {
+  for (const standing of [
+    'queued',
+    'running',
+    'completed',
+    'failed',
+  ] as const) {
+    assert.deepEqual(
+      encodeRowOf(undefined, standing, false),
+      encodeRowOf(undefined, standing, true),
+    )
+  }
+})
+
+test('the latest job says where it stands, and why when it is held', () => {
+  assert.deepEqual(encodeRowOf(job(), 'queued', true), {
     main: '待機中',
-    sub: '視聴者待ち',
     cancels: true,
   })
   assert.deepEqual(
-    encodeRowOf(job({ status: 'running', stalled: true }), 'running'),
+    encodeRowOf(job({ waitingForAViewer: true }), 'queued', true),
+    {
+      main: '待機中',
+      sub: '視聴者待ち',
+      cancels: true,
+    },
+  )
+  assert.deepEqual(
+    encodeRowOf(job({ status: 'running', stalled: true }), 'running', true),
     { main: '実行中', sub: '停滞', cancels: true },
   )
 })
 
 test('a job called off on a recording nothing was encoded for says so', () => {
-  assert.deepEqual(encodeRowOf(job({ status: 'cancelled' }), 'notEncoded'), {
-    main: '中止',
-    cancels: false,
-  })
+  assert.deepEqual(
+    encodeRowOf(job({ status: 'cancelled' }), 'notEncoded', true),
+    {
+      main: '中止',
+      cancels: false,
+    },
+  )
+})
+
+test('a job called off on a recording the automatic run left alone still says so', () => {
+  assert.deepEqual(
+    encodeRowOf(job({ status: 'cancelled' }), 'notEncoded', false),
+    {
+      main: '中止',
+      cancels: false,
+    },
+  )
 })
 
 test('a job called off after one that finished does not unsay the finished one', () => {
-  assert.deepEqual(encodeRowOf(job({ status: 'cancelled' }), 'completed'), {
-    main: '完了',
-    cancels: false,
-  })
+  assert.deepEqual(
+    encodeRowOf(job({ status: 'cancelled' }), 'completed', true),
+    {
+      main: '完了',
+      cancels: false,
+    },
+  )
 })
 
 test('a job that is not the one the standing was folded from adds nothing', () => {
   assert.deepEqual(
-    encodeRowOf(job({ status: 'queued', waitingForAViewer: true }), 'running'),
+    encodeRowOf(
+      job({ status: 'queued', waitingForAViewer: true }),
+      'running',
+      true,
+    ),
     { main: '実行中', cancels: false },
   )
 })
@@ -86,6 +130,7 @@ test('a failed job names the class it failed in', () => {
         },
       }),
       'failed',
+      true,
     ),
     { main: '失敗', sub: '容量不足', cancels: false },
   )
@@ -105,6 +150,7 @@ test('a failure class this build does not know is still said', () => {
         },
       }),
       'failed',
+      true,
     ),
     { main: '失敗', sub: 'この版がまだ知らない値', cancels: false },
   )
@@ -115,11 +161,16 @@ test('a status or a standing this build does not know is still said', () => {
     encodeRowOf(
       job({ status: 'somewhereNew' as EncodeJob['status'] }),
       'failed',
+      true,
     ),
     { main: '失敗', cancels: false },
   )
   assert.deepEqual(
-    encodeRowOf(undefined, 'somethingNew' as Parameters<typeof encodeRowOf>[1]),
+    encodeRowOf(
+      undefined,
+      'somethingNew' as Parameters<typeof encodeRowOf>[1],
+      true,
+    ),
     { main: 'この版がまだ知らない値', cancels: false },
   )
 })

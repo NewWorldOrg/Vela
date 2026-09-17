@@ -107,7 +107,7 @@ const recording = (over: Over = {}) => ({
   drops: drops(),
   thumbnail: { state: 'ready', fault: null, showsAnUnfinishedRecording: false },
   broadcastGroup: { key: null, role: 'standalone' },
-  encode: { standing: 'notEncoded' },
+  encode: { standing: 'notEncoded', whenRecorded: true },
   unfinishedDeletion: null,
   ...over,
 })
@@ -572,13 +572,29 @@ test('a recording nothing counted the overflows on carries none, not a count of 
 })
 
 test('the encode standing is the one the API folded, not one read again here', async () => {
-  const running = await only([recording({ encode: { standing: 'running' } })])
+  const running = await only([
+    recording({ encode: { standing: 'running', whenRecorded: true } }),
+  ])
 
   assert.equal(running.encode, 'running')
 
   const none = await only()
 
   assert.equal(none.encode, 'notEncoded')
+})
+
+test('whether the recording was to be encoded once it was recorded comes through', async () => {
+  const skipped = await only([
+    recording({ encode: { standing: 'notEncoded', whenRecorded: false } }),
+  ])
+
+  assert.equal(skipped.encode, 'notEncoded')
+  assert.equal(skipped.encodeWhenRecorded, false)
+
+  const asked = await only()
+
+  assert.equal(asked.encode, 'notEncoded')
+  assert.equal(asked.encodeWhenRecorded, true)
 })
 
 test('a thumbnail that was not going to be made says so', async () => {

@@ -95,6 +95,7 @@ export interface Recording {
   scrambleQuality?: components['schemas']['QualityLevel']
   scrambledShare?: number
   encode: EncodeStanding
+  encodeWhenRecorded: boolean
   thumbnail: ThumbnailState
   thumbnailLabel?: string
   thumbnailHref?: string
@@ -475,6 +476,7 @@ export function toRecording(
     outcomeDetail: faultTitleOf(r.outcomeDetail),
     quality,
     encode: r.encode.standing,
+    encodeWhenRecorded: r.encode.whenRecorded,
     scrambleQuality: r.drops.scrambleQuality,
     scrambledShare:
       scrambled == null || totalPackets === 0

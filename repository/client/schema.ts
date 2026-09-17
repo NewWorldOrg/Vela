@@ -3015,6 +3015,7 @@ export interface components {
     }
     RecordingEncodeResponder: {
       standing: components['schemas']['EncodeStanding']
+      whenRecorded: boolean
     }
     /** @enum {string} */
     RecordingFailure:
