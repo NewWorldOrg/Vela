@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 const MEDIA = ['play', 'thumbnail', 'scrub'] as const
 
-const INPUTS = ['from', 'profile', 'at', 'sound']
+const INPUTS = ['from', 'profile', 'at', 'sound', 'source']
 
 type Medium = (typeof MEDIA)[number]
 

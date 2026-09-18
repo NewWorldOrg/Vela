@@ -2,6 +2,11 @@
 
 import { useState, type ReactNode } from 'react'
 
+import {
+  BOTH_SOURCES,
+  sourceLabel,
+  type PlaybackSource,
+} from '@/repository/playback-sources'
 import { soundLabel, type SoundTrack } from '@/repository/sounds'
 import {
   PLAYBACK_PROFILES,
@@ -56,6 +61,9 @@ export function PlayerSettings({
   sounds,
   sound,
   onChooseSound,
+  source,
+  alternative,
+  onChooseSource,
   onOpenChange,
 }: {
   container: HTMLElement | null
@@ -67,6 +75,9 @@ export function PlayerSettings({
   sounds: readonly SoundTrack[]
   sound: SoundTrack
   onChooseSound: (next: SoundTrack) => void
+  source?: PlaybackSource
+  alternative?: PlaybackSource
+  onChooseSource: (next: PlaybackSource) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -117,6 +128,17 @@ export function PlayerSettings({
               value={sound}
               onChange={onChooseSound}
               nameOf={soundLabel}
+            />
+          </Setting>
+        )}
+        {source !== undefined && alternative !== undefined && (
+          <Setting label="ソース">
+            <PlayerSegmentedControl
+              label="ソース"
+              options={BOTH_SOURCES}
+              value={source}
+              onChange={onChooseSource}
+              nameOf={sourceLabel}
             />
           </Setting>
         )}

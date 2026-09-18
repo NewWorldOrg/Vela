@@ -1,4 +1,5 @@
 import type { operations } from '@/repository/client/schema'
+import type { PlaybackSource } from '@/repository/playback-sources'
 import type { SoundTrack } from '@/repository/sounds'
 
 const VIDEOS = '/api/videos'
@@ -71,6 +72,7 @@ export function videoPictureHref(
   from = 0,
   profile?: PlaybackProfile,
   sound?: SoundTrack,
+  source?: PlaybackSource,
 ) {
   const asked = new URLSearchParams({ from: String(whole(from)) })
 
@@ -80,6 +82,10 @@ export function videoPictureHref(
 
   if (sound) {
     asked.set('sound', sound)
+  }
+
+  if (source) {
+    asked.set('source', source)
   }
 
   return `${VIDEOS}/${encodeURIComponent(id)}/play?${asked.toString()}`

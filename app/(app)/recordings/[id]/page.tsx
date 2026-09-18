@@ -9,6 +9,7 @@ import {
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
 import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
+import { theSourceAsked } from '@/lib/playback-source'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
@@ -42,14 +43,14 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ at?: string | string[] }>
+  searchParams: Promise<{ at?: string | string[]; source?: string | string[] }>
 }) {
   const { id } = await params
-  const { at } = await searchParams
+  const { at, source } = await searchParams
   const [detail, playback, unaskedProfile, encodeChoices, encodeJob] =
     await Promise.all([
       getRecording(id),
-      getPlaybackPlan(id),
+      getPlaybackPlan(id, undefined, theSourceAsked(source)),
       getUnaskedPlaybackProfile(),
       listEncodeChoices(),
       getLatestEncodeJob(id),

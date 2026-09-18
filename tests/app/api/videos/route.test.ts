@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import { BOTH_SOURCES } from '@/repository/playback-sources'
 import { BOTH_SOUNDS } from '@/repository/sounds'
 
 const UPSTREAM = 'http://carina.invalid:8081'
@@ -143,14 +144,52 @@ test('a sound no build offers is carried up as it stands, so the refusal comes f
   assert.equal(given.status, 400)
 })
 
-test('nothing the browser puts in the query beyond those four is carried up', async () => {
+test('the source the player names is carried up beside the position and the sound', async () => {
+  for (const source of BOTH_SOURCES) {
+    asked.length = 0
+    answers = new Response('a picture', {
+      status: 200,
+      headers: { 'content-type': 'video/mp4' },
+    })
+
+    await browserAsks({}, `?from=12&sound=main&source=${source}`)
+
+    const query = whatWasAskedUpstream()
+
+    assert.equal(query.get('from'), '12')
+    assert.equal(query.get('sound'), 'main')
+    assert.equal(query.get('source'), source)
+  }
+})
+
+test('a source no build offers is carried up as it stands, so the refusal comes from the one that decides', async () => {
+  asked.length = 0
+  answers = new Response('{}', {
+    status: 400,
+    headers: { 'content-type': 'application/json' },
+  })
+
+  const given = await browserAsks({}, '?from=0&source=proxy')
+
+  assert.equal(whatWasAskedUpstream().get('source'), 'proxy')
+  assert.equal(given.status, 400)
+})
+
+test('nothing the browser puts in the query beyond those five is carried up', async () => {
   asked.length = 0
   answers = new Response('a picture', {
     status: 200,
     headers: { 'content-type': 'video/mp4' },
   })
 
-  await browserAsks({}, '?from=0&sound=main&seat=held&ticket=a-ticket')
+  await browserAsks(
+    {},
+    '?from=0&sound=main&source=recording&seat=held&ticket=a-ticket',
+  )
 
-  assert.deepEqual([...whatWasAskedUpstream().keys()].sort(), ['from', 'sound'])
+  assert.deepEqual([...whatWasAskedUpstream().keys()].sort(), [
+    'from',
+    'sound',
+    'source',
+  ])
 })

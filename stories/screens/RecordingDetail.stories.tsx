@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type {
@@ -436,6 +437,65 @@ export const Range直配信: Story = {
       'aria-current',
       'true',
     )
+  },
+}
+
+export const 成果物がある録画は元のままに切り替えられる: Story = {
+  args: {
+    detail: detail('1274'),
+    playback: planned({
+      route: 'direct',
+      seeking: 'byRange',
+      canSeek: true,
+      transcodes: false,
+      bytes: 3_490_550_128,
+      source: 'artefact',
+      alternative: 'recording',
+    }),
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/recordings/1274' },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sources = await screen.findByRole('group', { name: 'ソース' })
+
+    await expect(
+      within(sources).getByRole('button', { name: 'エンコード済み' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    await userEvent.click(
+      within(sources).getByRole('button', { name: '元のまま' }),
+    )
+
+    await expect(router.replace).toHaveBeenCalledWith(
+      '/recordings/1274?source=recording',
+      { scroll: false },
+    )
+  },
+}
+
+export const 成果物がない録画にソースの行は無い: Story = {
+  args: {
+    detail: withoutAnArtefact('1266'),
+    playback: planned({ source: 'recording' }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    await expect(
+      await screen.findByRole('group', { name: '速度' }),
+    ).toBeVisible()
+    await expect(screen.queryByRole('group', { name: 'ソース' })).toBeNull()
   },
 }
 
