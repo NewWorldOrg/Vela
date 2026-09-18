@@ -2520,6 +2520,8 @@ export interface components {
     PlaybackPlanResponder: {
       standing: components['schemas']['PlaybackStanding']
       route: components['schemas']['PlaybackRoute']
+      source: components['schemas']['PlaybackSource']
+      alternative: null | components['schemas']['PlaybackSource']
       seeking: null | components['schemas']['PlaybackSeeking']
       canSeek: boolean
       transcodes: boolean
@@ -2543,6 +2545,8 @@ export interface components {
     PlaybackRoute: 'direct' | 'onTheFly' | 'nothing'
     /** @enum {null|string} */
     PlaybackSeeking: 'byRange' | 'byStartingAgain' | null
+    /** @enum {string} */
+    PlaybackSource: 'artefact' | 'recording'
     /** @enum {string} */
     PlaybackStanding: 'notEndedYet' | 'whole' | 'cutShort' | 'failed'
     PlaybackTicketResponder: {
@@ -4004,6 +4008,8 @@ export interface operations {
         profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
         /** @description The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with. */
         sound?: 'main' | 'secondary'
+        /** @description Which of the two things a recording can hold is played: the artefact an encode made of it, or the recording itself. Asking for none plays the artefact where there is one, as it always did. Asking for the recording itself plays it transcoded as it plays even where an artefact exists. The plan names what it plays and what else it could have played. */
+        source?: 'artefact' | 'recording'
       }
       header?: never
       path: {

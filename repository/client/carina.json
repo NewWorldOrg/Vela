@@ -62,6 +62,18 @@
               "type": "string",
               "default": "main"
             }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Which of the two things a recording can hold is played: the artefact an encode made of it, or the recording itself. Asking for none plays the artefact where there is one, as it always did. Asking for the recording itself plays it transcoded as it plays even where an artefact exists. The plan names what it plays and what else it could have played.",
+            "schema": {
+              "enum": [
+                "artefact",
+                "recording"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -12138,6 +12150,8 @@
         "required": [
           "standing",
           "route",
+          "source",
+          "alternative",
           "seeking",
           "canSeek",
           "transcodes",
@@ -12155,6 +12169,19 @@
           },
           "route": {
             "$ref": "#/components/schemas/PlaybackRoute"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PlaybackSource"
+          },
+          "alternative": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PlaybackSource"
+              }
+            ]
           },
           "seeking": {
             "oneOf": [
@@ -12253,6 +12280,13 @@
           "null",
           "string"
         ]
+      },
+      "PlaybackSource": {
+        "enum": [
+          "artefact",
+          "recording"
+        ],
+        "type": "string"
       },
       "PlaybackStanding": {
         "enum": [
