@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
@@ -15,6 +17,7 @@ import {
   whereItStarts,
   type PlayerSaying,
 } from '@/lib/playback-sound'
+import { whereThatSourceOpens } from '@/lib/playback-source'
 import type { RecordingDetail } from '@/repository/recordings'
 import type {
   PlaybackPlan,
@@ -23,6 +26,7 @@ import type {
 } from '@/repository/videos'
 import { useKeptPosition } from '@/hooks/useKeptPosition'
 import type { TicketWrite } from '@/repository/tickets'
+import type { PlaybackSource } from '@/repository/playback-sources'
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,
@@ -118,7 +122,11 @@ export function Player({
   plan: PlaybackPlan
   unaskedProfile?: PlaybackProfile
   onTakeTicket: (id: string) => Promise<TicketWrite>
-  onAskForTheSound: (id: string, sound: SoundTrack) => Promise<PlaybackRead>
+  onAskForTheSound: (
+    id: string,
+    sound: SoundTrack,
+    source?: PlaybackSource,
+  ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   startAt?: number
   playsAtOnce?: boolean
@@ -128,10 +136,14 @@ export function Player({
     from: number,
     profile?: PlaybackProfile,
     sound?: SoundTrack,
+    source?: PlaybackSource,
   ) => string
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
   takeCapture?: TakeCapture
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const inTheAddress = useSearchParams()
   const video = useRef<HTMLVideoElement>(null)
   const holder = useRef<HTMLCanvasElement>(null)
   const redrawnAt = useRedrawnThumbnail(d.id)
@@ -160,6 +172,7 @@ export function Player({
           opening.from,
           opened.transcodes ? unaskedProfile : undefined,
           soundToAsk(opened.sounds, MAIN_SOUND),
+          opened.source,
         )
       : undefined,
   )
@@ -367,6 +380,7 @@ export function Player({
         starts.from,
         under.transcodes ? quality : undefined,
         soundToAsk(under.sounds, carrying),
+        under.source,
       ),
     )
   }
@@ -488,7 +502,7 @@ export function Player({
 
     nowAsking(next)
 
-    void onAskForTheSound(d.id, next)
+    void onAskForTheSound(d.id, next, plan.source)
       .then((answer) => {
         if (asked.current !== mine) {
           return
@@ -524,6 +538,17 @@ export function Player({
         nowAsking(null)
         setSaid({ text: THE_SOUNDS_COULD_NOT_BE_READ, tone: 'err' })
       })
+  }
+
+  const chooseSource = (next: PlaybackSource) => {
+    if (next === plan.source) {
+      return
+    }
+
+    router.replace(
+      whereThatSourceOpens(pathname, inTheAddress.toString(), next) as Route,
+      { scroll: false },
+    )
   }
 
   const chooseSpeed = (next: string) => {
@@ -950,6 +975,9 @@ export function Player({
                     sounds={plan.sounds}
                     sound={pendingSound ?? sound}
                     onChooseSound={chooseSound}
+                    source={plan.source}
+                    alternative={plan.alternative}
+                    onChooseSource={chooseSource}
                   />
                 </PlayerTip>
                 <PlayerTip name="キャプチャ" container={shell}>

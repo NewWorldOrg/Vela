@@ -1,10 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
 import type { TicketWrite } from '@/repository/tickets'
+import type { PlaybackSource } from '@/repository/playback-sources'
 import type { SoundTrack } from '@/repository/sounds'
-import { THE_SOUNDS_COULD_NOT_BE_READ } from '@/repository/video-paths'
+import {
+  THE_SOUNDS_COULD_NOT_BE_READ,
+  videoPictureHref,
+  type PlaybackProfile,
+} from '@/repository/video-paths'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import {
   DRAWN_PICTURE,
@@ -56,6 +62,28 @@ const HANDED_OVER: PlaybackPlan = {
 const HANDED_OVER_IN_TWO_LANGUAGES: PlaybackPlan = {
   ...HANDED_OVER,
   sounds: ['main', 'secondary'],
+}
+
+const WITH_AN_ARTEFACT: PlaybackPlan = {
+  ...HANDED_OVER,
+  source: 'artefact',
+  alternative: 'recording',
+}
+
+const THE_RECORDING_ITSELF: PlaybackPlan = {
+  ...ON_THE_FLY,
+  source: 'recording',
+  alternative: 'artefact',
+}
+
+const THE_RECORDING_ITSELF_IN_TWO_LANGUAGES: PlaybackPlan = {
+  ...THE_RECORDING_ITSELF,
+  sounds: ['main', 'secondary'],
+}
+
+const NOTHING_WAS_ENCODED: PlaybackPlan = {
+  ...ON_THE_FLY,
+  source: 'recording',
 }
 
 const MARKED: PlaybackPlan = {
@@ -138,6 +166,38 @@ function carrying(id: string, from: number, profile?: string, sound?: string) {
   asked.push(`${from}/${profile ?? '—'}/${sound ?? '—'}`)
 
   return stalling()
+}
+
+const handed: string[] = []
+
+function carryingTheSource(
+  id: string,
+  from: number,
+  profile?: PlaybackProfile,
+  sound?: SoundTrack,
+  source?: PlaybackSource,
+) {
+  asked.push(videoPictureHref(id, from, profile, sound, source))
+
+  const href = stalling()
+
+  handed.push(href)
+
+  return href
+}
+
+const reaskedWith: string[] = []
+
+function planningWithTheSource(answer: PlaybackPlan) {
+  return async (
+    id: string,
+    sound: SoundTrack,
+    source?: PlaybackSource,
+  ): Promise<PlaybackRead> => {
+    reaskedWith.push(`${sound}/${source ?? '—'}`)
+
+    return { state: 'planned', plan: answer }
+  }
 }
 
 function answering(fault: PlaybackFault) {
@@ -591,6 +651,159 @@ export const 素材に届かない録画は副音声を諦めて主音声に戻�
     )
     await expect(canvas.getByText(THE_SOUNDS_COULD_NOT_BE_READ)).toBeVisible()
     await expect(asked).toEqual([])
+  },
+}
+
+const AT_1274 = '/recordings/1274'
+
+export const 成果物がある録画は元のままにも切り替えられる: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 0,
+    pictureHref: carryingTheSource,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: AT_1274 } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await waitFor(() =>
+      expect(asked.at(-1)).toBe('/api/videos/1274/play?from=0&source=artefact'),
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sources = await screen.findByRole('group', { name: 'ソース' })
+
+    await expect(
+      within(sources)
+        .getAllByRole('button')
+        .map((one) => one.textContent),
+    ).toEqual(['エンコード済み', '元のまま'])
+    await expect(
+      within(sources).getByRole('button', { name: 'エンコード済み' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      within(sources).getByRole('button', { name: '元のまま' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+
+    await userEvent.click(
+      within(sources).getByRole('button', { name: '元のまま' }),
+    )
+
+    await expect(router.replace).toHaveBeenCalledWith(
+      `${AT_1274}?source=recording`,
+      { scroll: false },
+    )
+  },
+}
+
+export const 元のままを再生している録画はエンコード済みに戻せる: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: THE_RECORDING_ITSELF,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carryingTheSource,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1274, query: { source: 'recording' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await waitFor(() =>
+      expect(asked.at(-1)).toBe(
+        '/api/videos/1274/play?from=0&profile=1080p60&source=recording',
+      ),
+    )
+    await expect(canvasElement.querySelector('video')).toHaveAttribute(
+      'src',
+      handed.at(-1),
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sources = await screen.findByRole('group', { name: 'ソース' })
+
+    await expect(
+      within(sources).getByRole('button', { name: '元のまま' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    await userEvent.click(
+      within(sources).getByRole('button', { name: 'エンコード済み' }),
+    )
+
+    await expect(router.replace).toHaveBeenCalledWith(AT_1274, {
+      scroll: false,
+    })
+  },
+}
+
+export const 成果物がない録画にソースの行は無い: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: NOTHING_WAS_ENCODED,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carryingTheSource,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(asked.at(-1)).toBe(
+        '/api/videos/1266/play?from=0&profile=1080p60&source=recording',
+      ),
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const quality = await screen.findByRole('group', { name: '画質' })
+
+    await expect(
+      within(quality).getByRole('button', { name: '1080p60' }),
+    ).toBeVisible()
+    await expect(screen.queryByRole('group', { name: 'ソース' })).toBeNull()
+    await expect(screen.queryByText('元のまま')).toBeNull()
+  },
+}
+
+export const 元のままを見ている録画は音声を替えても元のままのまま: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: THE_RECORDING_ITSELF_IN_TWO_LANGUAGES,
+    startAt: 0,
+    unaskedProfile: '1080p60',
+    pictureHref: carryingTheSource,
+    onAskForTheSound: planningWithTheSource(
+      THE_RECORDING_ITSELF_IN_TWO_LANGUAGES,
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sounds = await screen.findByRole('group', { name: '音声' })
+
+    asked.length = 0
+    reaskedWith.length = 0
+    await userEvent.click(
+      within(sounds).getByRole('button', { name: '副音声' }),
+    )
+
+    await waitFor(() => expect(reaskedWith).toEqual(['secondary/recording']))
+    await waitFor(() =>
+      expect(asked).toEqual([
+        '/api/videos/1274/play?from=0&profile=1080p60&sound=secondary&source=recording',
+      ]),
+    )
   },
 }
 

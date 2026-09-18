@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import type { EncodeWrite } from '@/repository/encode'
 import { queueEncode } from '@/repository/encode'
+import type { PlaybackSource } from '@/repository/playback-sources'
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
 import type { SoundTrack } from '@/repository/sounds'
@@ -40,8 +41,9 @@ export async function keepThePosition(
 export async function askForTheSound(
   id: string,
   sound: SoundTrack,
+  source?: PlaybackSource,
 ): Promise<PlaybackRead> {
-  return getPlaybackPlan(id, sound)
+  return getPlaybackPlan(id, sound, source)
 }
 
 export async function queueEncoding(

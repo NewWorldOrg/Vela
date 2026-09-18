@@ -17,7 +17,9 @@ import type {
   PositionWrite,
 } from '@/repository/videos'
 import { howThePlayerOpens } from '@/lib/playback-resume'
+import { whatOpensThePlayerAnew } from '@/lib/playback-source'
 import type { TicketWrite } from '@/repository/tickets'
+import type { PlaybackSource } from '@/repository/playback-sources'
 import type { SoundTrack } from '@/repository/sounds'
 import type { PlaybackProfile } from '@/repository/video-paths'
 import type { EncodeChoices, EncodeJob, EncodeWrite } from '@/repository/encode'
@@ -116,7 +118,11 @@ export function RecordingDetailView({
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onTakeTicket: (id: string) => Promise<TicketWrite>
-  onAskForTheSound: (id: string, sound: SoundTrack) => Promise<PlaybackRead>
+  onAskForTheSound: (
+    id: string,
+    sound: SoundTrack,
+    source?: PlaybackSource,
+  ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
@@ -224,7 +230,7 @@ export function RecordingDetailView({
 
       {watching && (
         <Player
-          key={`${d.id}:${opens.at ?? ''}`}
+          key={whatOpensThePlayerAnew(d.id, opens.at, playback.plan.source)}
           detail={d}
           plan={playback.plan}
           unaskedProfile={unaskedProfile}
