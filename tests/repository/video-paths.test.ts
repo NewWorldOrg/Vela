@@ -142,3 +142,24 @@ test('every picture asked for names the second it starts at, so the remembered p
     assert.match(href, /[?&]from=\d/)
   }
 })
+
+test('a picture of the recording itself names that as the source it asks for', () => {
+  assert.equal(
+    videoPictureHref('1266', 90, '720p60', 'main', 'recording'),
+    '/api/videos/1266/play?from=90&profile=720p60&sound=main&source=recording',
+  )
+})
+
+test('a picture of the artefact names that as the source it asks for', () => {
+  assert.equal(
+    videoPictureHref('1274', 0, undefined, undefined, 'artefact'),
+    '/api/videos/1274/play?from=0&source=artefact',
+  )
+})
+
+test('a picture asked for without a source is asked for as it always was', () => {
+  assert.equal(
+    videoPictureHref('1266', 90, '720p60', 'main'),
+    '/api/videos/1266/play?from=90&profile=720p60&sound=main',
+  )
+})

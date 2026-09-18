@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
+import type { PlaybackSource } from '@/repository/playback-sources'
 import type { SoundTrack } from '@/repository/sounds'
 
 interface Sent {
@@ -8,6 +9,7 @@ interface Sent {
   path: string
   accept?: string
   sound?: string
+  source?: string
   positionSec?: number
 }
 
@@ -40,7 +42,7 @@ mock.module('@/repository/client/carina', {
         path: string,
         init?: {
           headers?: { accept?: string }
-          params?: { query?: { sound?: string } }
+          params?: { query?: { sound?: string; source?: string } }
         },
       ) => {
         sent.push({
@@ -48,6 +50,7 @@ mock.module('@/repository/client/carina', {
           path,
           accept: init?.headers?.accept,
           sound: init?.params?.query?.sound,
+          source: init?.params?.query?.source,
         })
 
         if (path === '/api/live/profiles') {
@@ -140,6 +143,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       path: '/api/videos/{id}/play',
       accept: 'application/json',
       sound: undefined,
+      source: undefined,
     },
   ])
   assert.deepEqual(read, {
@@ -147,6 +151,8 @@ test('the plan is asked for as the plan, not as the picture', async () => {
     plan: {
       standing: 'whole',
       route: 'onTheFly',
+      source: undefined,
+      alternative: undefined,
       seeking: 'byStartingAgain',
       canSeek: false,
       transcodes: true,
@@ -183,6 +189,7 @@ test('the plan for a sound is asked for by naming it', async () => {
       path: '/api/videos/{id}/play',
       accept: 'application/json',
       sound: 'secondary',
+      source: undefined,
     },
   ])
   assert.equal(read.state === 'planned' && read.plan.seeking, 'byStartingAgain')
@@ -239,6 +246,132 @@ test('a plan from a build that never named the sounds offers none to choose', as
   const read = await getPlaybackPlan('1266')
 
   assert.deepEqual(read.state === 'planned' && read.plan.sounds, [])
+})
+
+const WITH_AN_ARTEFACT = {
+  standing: 'whole',
+  route: 'direct',
+  seeking: 'byRange',
+  canSeek: true,
+  transcodes: false,
+  showsAsAWholeRecording: true,
+  mediaType: 'video/mp4',
+  bytes: '3490550128',
+  sounds: [],
+  chapters: [],
+}
+
+test('the plan names what it plays and what else it could have played', async () => {
+  store.planStatus = 200
+  store.plan = {
+    ...WITH_AN_ARTEFACT,
+    source: 'artefact',
+    alternative: 'recording',
+  }
+
+  const read = await getPlaybackPlan('r-with-an-artefact')
+
+  assert.equal(read.state === 'planned' && read.plan.source, 'artefact')
+  assert.equal(read.state === 'planned' && read.plan.alternative, 'recording')
+})
+
+test('a plan playing the recording itself says the artefact is the other one', async () => {
+  store.planStatus = 200
+  store.plan = {
+    ...WITH_AN_ARTEFACT,
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    bytes: null,
+    source: 'recording',
+    alternative: 'artefact',
+  }
+
+  const read = await getPlaybackPlan('r-playing-the-recording')
+
+  assert.equal(read.state === 'planned' && read.plan.source, 'recording')
+  assert.equal(read.state === 'planned' && read.plan.alternative, 'artefact')
+})
+
+test('a recording nothing was encoded from has nothing else to play', async () => {
+  store.planStatus = 200
+  store.plan = {
+    ...WITH_AN_ARTEFACT,
+    source: 'recording',
+    alternative: null,
+  }
+
+  const read = await getPlaybackPlan('r-never-encoded')
+
+  assert.equal(read.state === 'planned' && read.plan.source, 'recording')
+  assert.equal(read.state === 'planned' && read.plan.alternative, undefined)
+})
+
+test('a plan from a build that never named the source leaves both unsaid', async () => {
+  store.planStatus = 200
+  store.plan = { ...WITH_AN_ARTEFACT }
+
+  const read = await getPlaybackPlan('r-older-build-source')
+
+  assert.equal(read.state === 'planned' && read.plan.source, undefined)
+  assert.equal(read.state === 'planned' && read.plan.alternative, undefined)
+})
+
+test('a source this build has never heard of is left unnamed, and never carried as it stands', async () => {
+  store.planStatus = 200
+  store.plan = {
+    ...WITH_AN_ARTEFACT,
+    source: 'proxy',
+    alternative: 'remux',
+  }
+
+  const read = await getPlaybackPlan('r-a-third-source')
+
+  assert.equal(read.state === 'planned' && read.plan.source, undefined)
+  assert.equal(read.state === 'planned' && read.plan.alternative, undefined)
+  assert.equal(read.state === 'planned' && read.plan.route, 'direct')
+})
+
+test('the plan for the recording itself is asked for by naming it', async () => {
+  sent.length = 0
+  store.planStatus = 200
+  store.plan = {
+    ...WITH_AN_ARTEFACT,
+    source: 'recording',
+    alternative: 'artefact',
+  }
+
+  const read = await getPlaybackPlan(
+    'r-asked-for-itself',
+    undefined,
+    'recording',
+  )
+
+  assert.deepEqual(sent, [
+    {
+      method: 'GET',
+      path: '/api/videos/{id}/play',
+      accept: 'application/json',
+      sound: undefined,
+      source: 'recording',
+    },
+  ])
+  assert.equal(read.state === 'planned' && read.plan.source, 'recording')
+})
+
+test('a source this build does not offer is refused here, and never asked of the endpoint', async () => {
+  sent.length = 0
+  store.planStatus = 200
+
+  const read = await getPlaybackPlan(
+    'r-a-source-nobody-offers',
+    undefined,
+    'proxy' as PlaybackSource,
+  )
+
+  assert.deepEqual(read, { state: 'refused', refusal: 'nothingToPlay' })
+  assert.deepEqual(sent, [])
 })
 
 test('a stream that answers a byte range carries its length', async () => {

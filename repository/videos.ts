@@ -5,6 +5,11 @@ import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { fetchLiveProfiles } from '@/repository/live'
+import {
+  BOTH_SOURCES,
+  sourceThisBuildKnows,
+  type PlaybackSource,
+} from '@/repository/playback-sources'
 import { BOTH_SOUNDS, type SoundTrack } from '@/repository/sounds'
 import { whyNoTicket, type TicketWrite } from '@/repository/tickets'
 import {
@@ -31,6 +36,8 @@ export interface PlaybackChapter {
 export interface PlaybackPlan {
   standing: PlaybackStanding
   route: PlaybackRoute
+  source?: PlaybackSource
+  alternative?: PlaybackSource
   seeking?: PlaybackSeeking
   canSeek: boolean
   transcodes: boolean
@@ -78,6 +85,8 @@ function toPlan(
   return {
     standing: data.standing,
     route: data.route,
+    source: sourceThisBuildKnows(data.source),
+    alternative: sourceThisBuildKnows(data.alternative ?? undefined),
     seeking: data.seeking ?? undefined,
     canSeek: data.canSeek,
     transcodes: data.transcodes,
@@ -92,15 +101,23 @@ function toPlan(
 }
 
 export const getPlaybackPlan = cache(
-  async (id: string, sound?: SoundTrack): Promise<PlaybackRead> => {
+  async (
+    id: string,
+    sound?: SoundTrack,
+    source?: PlaybackSource,
+  ): Promise<PlaybackRead> => {
     if (sound !== undefined && !BOTH_SOUNDS.includes(sound)) {
+      return { state: 'refused', refusal: 'nothingToPlay' }
+    }
+
+    if (source !== undefined && !BOTH_SOURCES.includes(source)) {
       return { state: 'refused', refusal: 'nothingToPlay' }
     }
 
     const { data, response } = await carinaClient().GET(
       '/api/videos/{id}/play',
       {
-        params: { path: { id }, query: { sound } },
+        params: { path: { id }, query: { sound, source } },
         headers: { accept: 'application/json' },
       },
     )
