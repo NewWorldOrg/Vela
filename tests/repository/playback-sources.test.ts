@@ -47,11 +47,18 @@ test('the sources offered are the ones the endpoint accepts', () => {
   assert.deepEqual([...BOTH_SOURCES], sourceParameter.schema.enum)
 })
 
-test('the endpoint pins no source, so asking for none is what prefers the artefact', () => {
-  assert.equal(sourceParameter.schema.default, undefined)
+test('the source a request that names none is played from is the artefact', () => {
+  assert.equal(sourceParameter.schema.default, THE_ARTEFACT)
   assert.match(
     sourceParameter.description ?? '',
-    /Asking for none plays the artefact where there is one/,
+    /asking for none does the same, as it always did/,
+  )
+})
+
+test('asking for the recording itself is refused where the recording has gone, and never answered with the artefact', () => {
+  assert.match(
+    sourceParameter.description ?? '',
+    /is refused where the recording is no longer on the disk rather than quietly handing over the artefact/,
   )
 })
 
