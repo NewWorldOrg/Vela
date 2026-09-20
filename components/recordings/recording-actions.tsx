@@ -11,6 +11,7 @@ import type {
 import type { EncodeChoices } from '@/repository/encode'
 import type { TicketWrite } from '@/repository/tickets'
 import { Button } from '@/components/ui/button'
+import { ActionRow } from '@/components/vela/action-row'
 import { TrashIcon } from '@/components/vela/icons'
 import { recordingHandover } from '@/lib/external-player'
 import { OpenExternally } from '@/components/recordings/external-player'
@@ -60,24 +61,29 @@ export function RecordingActions({
   return (
     <>
       <div className="flex flex-wrap items-start gap-[9px]">
-        {plays && (
-          <OpenExternally
-            handover={recordingHandover(recording.id, onTakeTicket)}
-          />
-        )}
-        {redrawsThumbnail(recording) && (
-          <ThumbnailButton recording={recording} onRemake={onRemakeThumbnail} />
-        )}
-        {encodes(recording) && (
-          <EncodeButton
-            recording={recording}
-            choices={encodeChoices}
-            onQueue={onQueueEncode}
-          />
-        )}
+        <ActionRow className="max-[700px]:w-full max-[700px]:grid-flow-row">
+          {plays && (
+            <OpenExternally
+              handover={recordingHandover(recording.id, onTakeTicket)}
+            />
+          )}
+          {redrawsThumbnail(recording) && (
+            <ThumbnailButton
+              recording={recording}
+              onRemake={onRemakeThumbnail}
+            />
+          )}
+          {encodes(recording) && (
+            <EncodeButton
+              recording={recording}
+              choices={encodeChoices}
+              onQueue={onQueueEncode}
+            />
+          )}
+        </ActionRow>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-[9px]">
           <span className="text-right">
-            <UnfinishedDeletionChip recording={recording} className="mt-0" />
+            <UnfinishedDeletionChip recording={recording} />
           </span>
           <Button
             variant="destructive"

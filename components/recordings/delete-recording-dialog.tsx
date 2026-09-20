@@ -96,7 +96,7 @@ export function DeleteRecordingDialog({
                 <dd>
                   <OutcomeChip recording={recording} />{' '}
                   {recording.fileMissing && <FileMissingChip />}{' '}
-                  <QualityChip recording={recording} withDetail={false} />
+                  <QualityChip recording={recording} />
                 </dd>
                 <dt className="text-ink-3">ファイル</dt>
                 <dd className="font-code text-ink-2">{recording.filePath}</dd>

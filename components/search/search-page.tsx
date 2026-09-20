@@ -224,7 +224,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   )?.label
                 }
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 {SEARCH_FIELD_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -261,7 +261,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 >
                   ＋ ジャンルを足す
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {unusedGenres.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -292,7 +292,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   (option) => option.value === draft.kind,
                 )?.label ?? 'すべて'}
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 <SelectItem value={EVERY_KIND}>すべて</SelectItem>
                 {SEARCH_KIND_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
@@ -331,7 +331,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   >
                     ＋ チャンネルを足す
                   </SelectTrigger>
-                  <SelectContent position="popper">
+                  <SelectContent>
                     {unusedChannels.map((channel) => (
                       <SelectItem key={channel.id} value={channel.id}>
                         {channel.name}
@@ -499,7 +499,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                         )?.label
                       }
                     </SelectTrigger>
-                    <SelectContent position="popper">
+                    <SelectContent>
                       {SEARCH_SORT_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
                           {o.label}
@@ -520,7 +520,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                     >
                       {condition.perPage} 件ずつ
                     </SelectTrigger>
-                    <SelectContent position="popper">
+                    <SelectContent>
                       {SEARCH_PER_PAGE_OPTIONS.map((count) => (
                         <SelectItem key={count} value={String(count)}>
                           {count} 件ずつ

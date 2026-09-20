@@ -433,7 +433,7 @@ export function CollectionDrawer({
                 >
                   <SelectValue placeholder="対象を選ぶ" />
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {targets.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}

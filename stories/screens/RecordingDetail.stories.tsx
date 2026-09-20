@@ -922,3 +922,34 @@ export const 成果物がない録画はこれまでどおり登録する: Story
     ).toBeVisible()
   },
 }
+
+const THE_ACTIONS = [
+  '外部プレイヤーで開く',
+  'サムネイルを作り直す',
+  'エンコード',
+]
+
+export const 操作の並び: Story = {
+  args: { detail: withoutAnArtefact('1274') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const widths = THE_ACTIONS.map((name) =>
+      Math.round(
+        canvas.getByRole('button', { name }).getBoundingClientRect().width,
+      ),
+    )
+
+    await expect(new Set(widths).size).toBe(1)
+
+    for (const name of [...THE_ACTIONS, '削除']) {
+      await expect(
+        canvas.getByRole('button', { name }).querySelector('svg'),
+      ).not.toBeNull()
+    }
+
+    await expect(canvas.getByRole('button', { name: '削除' })).toHaveAttribute(
+      'data-variant',
+      'destructive',
+    )
+  },
+}

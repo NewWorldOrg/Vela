@@ -166,7 +166,7 @@ export function EncodeButton({
                 <SelectTrigger id="encode-destination">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {choices.destinations.map((destination) => (
                     <SelectItem key={destination.id} value={destination.id}>
                       {destination.label}
@@ -191,7 +191,7 @@ export function EncodeButton({
                   <SelectTrigger id="encode-profile">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper">
+                  <SelectContent>
                     {choices.profiles.map((profile) => (
                       <SelectItem key={profile.id} value={profile.id}>
                         {profile.label}

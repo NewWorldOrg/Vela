@@ -537,6 +537,41 @@ export const エンコードしないルール: Story = {
   },
 }
 
+const addSaved: Saved[] = []
+
+export const ジャンルを足すは下に開く: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[0] },
+    actions: recording(addSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const add = canvas.getByRole('combobox', { name: 'ジャンルを足す' })
+
+    await userEvent.click(add)
+
+    const opened = await waitFor(() => {
+      const content = document.querySelector('[data-slot="select-content"]')
+
+      if (!(content instanceof HTMLElement)) {
+        throw new Error('the select did not open')
+      }
+
+      return content
+    })
+
+    await expect(opened).toHaveAttribute('data-side', 'bottom')
+    await expect(
+      Math.round(opened.getBoundingClientRect().top),
+    ).toBeGreaterThanOrEqual(Math.round(add.getBoundingClientRect().top))
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(document.querySelector('[data-slot="select-content"]')).toBeNull(),
+    )
+  },
+}
+
 const LONG_NAMED_RULE: Rule = {
   ...RULE_FIXTURES[0],
   id: 'rule-390',

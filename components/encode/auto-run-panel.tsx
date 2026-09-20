@@ -142,7 +142,7 @@ export function AutoRunPanel({
             >
               <SelectValue />
             </SelectTrigger>
-            <SelectContent position="popper">
+            <SelectContent>
               {cores.map((count) => (
                 <SelectItem
                   key={count}

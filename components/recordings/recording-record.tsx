@@ -69,7 +69,7 @@ export function RecordingRecord({
           受信品質
           <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
           {d.quality.measured ? (
-            <QualityChip recording={d} withDetail={false} />
+            <QualityChip recording={d} />
           ) : (
             <Badge variant="mute" className="font-bold tracking-normal">
               <ChipDot />

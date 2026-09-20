@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   Field,
@@ -23,7 +23,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SELECT_LEAST_ROOM,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { MarkPill, MarkRuler, MarkSplit } from '@/components/vela/icons'
 import { PasswordInput } from '@/components/vela/password-input'
 
@@ -370,5 +377,135 @@ export const スイッチの入と切: Story = {
     await userEvent.click(off)
     await waitFor(() => expect(off).toHaveAttribute('aria-checked', 'true'))
     await waitFor(() => knobStandsOut(off))
+  },
+}
+
+const POOLS = [
+  { value: 'pool-a', label: 'pool-a(既定)' },
+  { value: 'pool-b', label: 'pool-b' },
+  { value: 'pool-c', label: 'pool-c' },
+  { value: 'pool-d', label: 'pool-d' },
+  { value: 'pool-e', label: 'pool-e' },
+  { value: 'pool-f', label: 'pool-f(最後)' },
+]
+
+function PoolSelect({ id }: { id: string }) {
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>保存先プール</FieldLabel>
+      <Select defaultValue="pool-a">
+        <SelectTrigger id={id}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {POOLS.map((pool) => (
+            <SelectItem key={pool.value} value={pool.value}>
+              {pool.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Field>
+  )
+}
+
+async function opened(): Promise<HTMLElement> {
+  return waitFor(() => {
+    const content = document.querySelector('[data-slot="select-content"]')
+
+    if (!(content instanceof HTMLElement)) {
+      throw new Error('the select did not open')
+    }
+
+    return content
+  })
+}
+
+export const 画面の下端のセレクト: Story = {
+  render: () => (
+    <div className="px-6 pb-6">
+      <div className="h-[calc(100vh-88px)]" />
+      <div className="max-w-[360px]">
+        <PoolSelect id="pool-at-the-foot" />
+      </div>
+      <div className="h-[80vh]" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole('combobox', {
+      name: '保存先プール',
+    })
+
+    await expect(
+      window.innerHeight - trigger.getBoundingClientRect().bottom,
+    ).toBeLessThan(SELECT_LEAST_ROOM)
+
+    await userEvent.click(trigger)
+
+    const content = await opened()
+    const box = content.getBoundingClientRect()
+
+    await expect(content).toHaveAttribute('data-side', 'bottom')
+    await expect(Math.round(box.top)).toBeGreaterThanOrEqual(
+      Math.round(trigger.getBoundingClientRect().top),
+    )
+    await expect(Math.round(box.height)).toBeGreaterThanOrEqual(
+      SELECT_LEAST_ROOM,
+    )
+    await expect(Math.round(box.bottom)).toBeLessThanOrEqual(
+      Math.round(window.innerHeight),
+    )
+
+    const options = within(content).getAllByRole('option')
+    const last = options[options.length - 1]
+
+    await expect(
+      Math.round(last.getBoundingClientRect().bottom),
+    ).toBeLessThanOrEqual(Math.round(window.innerHeight))
+
+    await userEvent.click(last)
+    await waitFor(() =>
+      expect(document.querySelector('[data-slot="select-content"]')).toBeNull(),
+    )
+    await expect(trigger).toHaveTextContent('pool-f(最後)')
+  },
+}
+
+export const 対話の中の下端のセレクト: Story = {
+  render: () => (
+    <Dialog open>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>保存先を選ぶ</DialogTitle>
+        </DialogHeader>
+        <div className="h-[62dvh]" />
+        <PoolSelect id="pool-in-a-dialog" />
+      </DialogContent>
+    </Dialog>
+  ),
+  play: async () => {
+    const trigger = within(await screen.findByRole('dialog')).getByRole(
+      'combobox',
+      { name: '保存先プール' },
+    )
+
+    await expect(
+      window.innerHeight - trigger.getBoundingClientRect().bottom,
+    ).toBeLessThan(SELECT_LEAST_ROOM)
+
+    await userEvent.click(trigger)
+
+    const content = await opened()
+
+    await expect(content).toHaveAttribute('data-side', 'bottom')
+    await expect(
+      Math.round(content.getBoundingClientRect().height),
+    ).toBeGreaterThanOrEqual(SELECT_LEAST_ROOM)
+    await expect(window.scrollY).toBe(0)
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(document.querySelector('[data-slot="select-content"]')).toBeNull(),
+    )
   },
 }

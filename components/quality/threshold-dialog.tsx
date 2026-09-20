@@ -113,7 +113,7 @@ export function ThresholdDialog({
               <SelectTrigger id="threshold-key">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 {thresholds.map((one) => (
                   <SelectItem key={one.key} value={one.key}>
                     {one.label}

@@ -169,7 +169,7 @@ export function DestinationDialog({
                 >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {held.map((root) => (
                     <SelectItem key={root} value={root} className="font-code">
                       {root}
@@ -201,7 +201,7 @@ export function DestinationDialog({
                 >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {profiles.map((profile) => (
                     <SelectItem key={profile.id} value={profile.id}>
                       {profile.label}

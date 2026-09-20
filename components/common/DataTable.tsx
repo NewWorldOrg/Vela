@@ -435,7 +435,7 @@ export default function DataTable<TData>({
                 <SelectTrigger size="sm" className="w-28" aria-label="Per page">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper" side="top" align="end">
+                <SelectContent align="end">
                   {PAGE_SIZE_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}

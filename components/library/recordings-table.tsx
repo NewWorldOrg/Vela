@@ -36,17 +36,17 @@ export function RecordingsTable({
       tabIndex={0}
       className="-mx-1 min-h-0 flex-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring"
     >
-      <table className="w-full min-w-[1256px] table-fixed border-separate border-spacing-0">
+      <table className="w-full min-w-[1372px] table-fixed border-separate border-spacing-0">
         <colgroup>
           <col className="w-[252px]" />
           <col className="w-[152px]" />
           <col className="w-[142px]" />
           <col className="w-[86px]" />
           <col className="w-[96px]" />
-          <col className="w-[100px]" />
-          <col className="w-[140px]" />
-          <col className="w-[110px]" />
-          <col className="w-[144px]" />
+          <col className="w-[136px]" />
+          <col className="w-[148px]" />
+          <col className="w-[148px]" />
+          <col className="w-[178px]" />
           <col className="w-[34px]" />
         </colgroup>
         <thead>
