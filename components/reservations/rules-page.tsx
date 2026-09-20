@@ -719,7 +719,7 @@ function RuleEditor({
                   )?.label
                 }
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 {SEARCH_FIELD_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -750,7 +750,7 @@ function RuleEditor({
                   (option) => option.value === entry.kind,
                 )?.label ?? 'すべて'}
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 <SelectItem value={EVERY_KIND}>すべて</SelectItem>
                 {SEARCH_KIND_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
@@ -791,7 +791,7 @@ function RuleEditor({
                 >
                   ＋ ジャンルを足す
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {unusedGenres.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -833,7 +833,7 @@ function RuleEditor({
                   >
                     ＋ チャンネルを足す
                   </SelectTrigger>
-                  <SelectContent position="popper">
+                  <SelectContent>
                     {unusedChannels.map((channel) => (
                       <SelectItem key={channel.id} value={channel.id}>
                         {channel.name}

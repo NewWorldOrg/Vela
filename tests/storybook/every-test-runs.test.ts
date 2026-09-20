@@ -12,6 +12,7 @@ const THE_SUITE = [
   'tests/components/live/live-captions.test.ts',
   'tests/components/live/live-session.test.ts',
   'tests/components/vela/empty-state.test.ts',
+  'tests/components/vela/the-way-a-select-opens.test.ts',
   'tests/hooks/useKeptPosition.test.ts',
   'tests/hooks/useNow.test.ts',
   'tests/hooks/useReadAgain.test.ts',

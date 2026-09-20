@@ -186,7 +186,7 @@ export function ProfileDialog({
                 <SelectTrigger id="profile-resolution">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {RESOLUTION_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -207,7 +207,7 @@ export function ProfileDialog({
                 <SelectTrigger id="profile-deinterlace">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper">
+                <SelectContent>
                   {DEINTERLACE_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
