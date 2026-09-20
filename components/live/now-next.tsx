@@ -3,6 +3,10 @@ import { saysSubtitled } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import {
+  ProgramDescription,
+  ProgramExtended,
+} from '@/components/guide/program-description'
 
 export function NowNext({ watching }: { watching: LiveWatching }) {
   const { channel, progressPct, nowLabel, restMin } = watching
@@ -59,6 +63,16 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
             </Badge>
           )}
           <Badge>{programme.genreLabel}</Badge>
+        </div>
+      )}
+      {programme && (programme.description || programme.items) && (
+        <div className="mt-[17px] border-t border-dashed border-line pt-[15px] [&>:last-child]:mb-0">
+          {programme.description && (
+            <ProgramDescription description={programme.description} />
+          )}
+          {programme.items?.map((item, index) => (
+            <ProgramExtended key={index} item={item} />
+          ))}
         </div>
       )}
     </section>

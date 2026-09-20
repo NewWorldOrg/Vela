@@ -31,7 +31,7 @@ export function RunningJob({
     <Surface data-slot="running-job">
       <div className="flex flex-wrap items-center gap-2.5">
         <EncodeIcon className="size-[17px] text-brand" />
-        <b className="heading min-w-0 flex-1 truncate text-[15px]">
+        <b className="heading min-w-0 flex-1 text-[15px]">
           {job.title ?? (
             <span className="text-ink-3">{RECORDING_REMOVED_LABEL}</span>
           )}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { formatBytes, formatDateTime } from '@/lib/format'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
+import { SYSTEM_DETAIL_LABELS } from '@/lib/system-terms'
 import type {
   ApiHealthResult,
   CollectionCensus,
@@ -262,7 +263,7 @@ export function SystemView({
         <SectionHeading mark={MarkDots}>詳細</SectionHeading>
         <Surface>
           <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-2.5 text-ui">
-            <DetailRow label="観測時刻">
+            <DetailRow label={SYSTEM_DETAIL_LABELS.observedAt}>
               {reading ? (
                 <span className="font-code tabular-nums text-ink-2">
                   {formatDateTime(reading.observedAt)}
@@ -271,14 +272,14 @@ export function SystemView({
                 NOTHING
               )}
             </DetailRow>
-            <DetailRow label="ヘルスの応答">
+            <DetailRow label={SYSTEM_DETAIL_LABELS.health}>
               {api.state === 'ok' ? (
                 <span className="font-code text-ink-2">{api.status}</span>
               ) : (
                 NOTHING
               )}
             </DetailRow>
-            <DetailRow label="インスタンス">
+            <DetailRow label={SYSTEM_DETAIL_LABELS.instance}>
               {reading?.hello?.instanceId ? (
                 <span className="font-code break-all text-ink-2">
                   {reading.hello.instanceId}
@@ -287,18 +288,18 @@ export function SystemView({
                 NOTHING
               )}
             </DetailRow>
-            <DetailRow label="版">
+            <DetailRow label={SYSTEM_DETAIL_LABELS.version}>
               <span className="font-code text-ink-2">
                 Carina {status.carinaVersion ?? '—'} / Vela {velaVersion}
               </span>
             </DetailRow>
-            <DetailRow label="プロトコル版数">
+            <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>
               <span className="font-code text-ink-2">
                 driver {reading?.hello?.protocolVersion ?? '—'} / アプリ{' '}
                 {reading?.appProtocolVersion ?? '—'}
               </span>
             </DetailRow>
-            <DetailRow label="driver の機能">
+            <DetailRow label={SYSTEM_DETAIL_LABELS.capabilities}>
               {reading?.hello && reading.hello.capabilities.length > 0 ? (
                 <span className="flex flex-wrap gap-1.5">
                   {reading.hello.capabilities.map((capability) => (
