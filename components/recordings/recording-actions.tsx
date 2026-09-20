@@ -60,7 +60,7 @@ export function RecordingActions({
 
   return (
     <>
-      <div className="flex flex-wrap items-start gap-[9px]">
+      <div className="flex flex-wrap items-center gap-[9px]">
         <ActionRow className="max-[700px]:w-full max-[700px]:grid-flow-row">
           {plays && (
             <OpenExternally
@@ -80,11 +80,6 @@ export function RecordingActions({
               onQueue={onQueueEncode}
             />
           )}
-        </ActionRow>
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-[9px]">
-          <span className="text-right">
-            <UnfinishedDeletionChip recording={recording} />
-          </span>
           <Button
             variant="destructive"
             disabled={!deletable}
@@ -94,7 +89,10 @@ export function RecordingActions({
             <TrashIcon />
             削除
           </Button>
-        </div>
+        </ActionRow>
+        <span className="ml-auto text-right">
+          <UnfinishedDeletionChip recording={recording} />
+        </span>
       </div>
       <DeleteRecordingDialog
         recording={asked}

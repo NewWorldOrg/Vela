@@ -1,51 +1,65 @@
 import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import type { EncodeJobStatus } from '@/repository/encode-terms'
 import { STALLED_LABEL, STATUS_LABEL } from '@/repository/encode-terms'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeWidth } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 
 export function JobStatusChip({
   status,
   stalled,
+  width,
 }: {
   status: EncodeJobStatus
   stalled?: boolean
+  width?: BadgeWidth
 }) {
   switch (status) {
     case 'queued':
-      return <Badge variant="outline">{STATUS_LABEL.queued}</Badge>
+      return (
+        <Badge variant="outline" width={width}>
+          {STATUS_LABEL.queued}
+        </Badge>
+      )
     case 'running':
       return (
-        <span className="inline-flex flex-wrap items-center gap-1.5">
-          <Badge variant="info" className="font-bold">
+        <>
+          <Badge variant="info" width={width} className="font-bold">
             <ChipDot />
             {STATUS_LABEL.running}
           </Badge>
           {stalled && (
-            <Badge variant="warn" className="font-bold">
+            <Badge variant="warn" width={width} className="font-bold">
               <ChipDot />
               {STALLED_LABEL}
             </Badge>
           )}
-        </span>
+        </>
       )
     case 'completed':
       return (
-        <Badge variant="ok" className="font-bold">
+        <Badge variant="ok" width={width} className="font-bold">
           <ChipDot />
           {STATUS_LABEL.completed}
         </Badge>
       )
     case 'failed':
       return (
-        <Badge variant="err" className="font-bold">
+        <Badge variant="err" width={width} className="font-bold">
           <ChipDot />
           {STATUS_LABEL.failed}
         </Badge>
       )
     case 'cancelled':
-      return <Badge variant="mute">{STATUS_LABEL.cancelled}</Badge>
+      return (
+        <Badge variant="mute" width={width}>
+          {STATUS_LABEL.cancelled}
+        </Badge>
+      )
     default:
-      return <Badge variant="mute">{NOT_YET_IN_THIS_BUILD}</Badge>
+      return (
+        <Badge variant="mute" width={width}>
+          {NOT_YET_IN_THIS_BUILD}
+        </Badge>
+      )
   }
 }

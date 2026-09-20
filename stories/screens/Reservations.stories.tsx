@@ -654,3 +654,65 @@ export const 必須の欄は印が付いていて空では保存できない: St
     await expect(revised).toEqual([])
   },
 }
+
+const THE_STATE_COLUMN = 6
+
+const THE_ACTION_COLUMN = 7
+
+function pillsOf(row: HTMLElement, column: number): HTMLElement[] {
+  const cell = within(row).getAllByRole('cell')[column]
+
+  return [...cell.querySelectorAll('[data-slot="badge"]')].filter(
+    (pill): pill is HTMLElement => pill instanceof HTMLElement,
+  )
+}
+
+export const 行の揃い: Story = {
+  args: { result: shown(EVERY_STANDING_FIXTURES, { filter: { show: 'all' } }) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const rows = canvas.getAllByRole('row').slice(1)
+    const widths: number[] = []
+
+    for (const row of rows) {
+      const pills = pillsOf(row, THE_STATE_COLUMN)
+
+      if (pills.length === 0) {
+        continue
+      }
+
+      for (const pill of pills) {
+        await expect(pill).toHaveAttribute('data-width', 'column')
+        widths.push(Math.round(pill.getBoundingClientRect().width))
+      }
+    }
+
+    await expect(widths.length).toBeGreaterThan(rows.length)
+    await expect(new Set(widths).size).toBe(1)
+
+    for (const row of rows) {
+      const cell = within(row).getAllByRole('cell')[THE_ACTION_COLUMN]
+      const actions = [
+        ...within(cell).queryAllByRole('button'),
+        ...within(cell).queryAllByRole('link'),
+      ]
+
+      if (actions.length < 2) {
+        continue
+      }
+
+      const drawn = actions.map((one) => one.getBoundingClientRect())
+
+      await expect(
+        new Set(drawn.map((box) => Math.round(box.width))).size,
+      ).toBe(1)
+      await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(
+        1,
+      )
+
+      for (const action of actions) {
+        await expect(action.querySelector('svg')).not.toBeNull()
+      }
+    }
+  },
+}

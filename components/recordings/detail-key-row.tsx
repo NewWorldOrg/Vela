@@ -10,7 +10,7 @@ export function DetailKeyRow({
   action,
 }: {
   label: string
-  main: string
+  main: ReactNode
   sub?: string
   plain?: boolean
   action?: ReactNode

@@ -21,8 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
-import { PlusIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
+import {
+  CheckIcon,
+  PlusIcon,
+  TrashIcon,
+  WarningIcon,
+} from '@/components/vela/icons'
 import { ProgressBar } from '@/components/vela/progress'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { TermTip } from '@/components/vela/term-tip'
@@ -194,48 +200,52 @@ export function CandidateList({
             {candidate.rotation && ` · ${candidate.rotation.note}`}
           </span>
           <span className="ml-auto flex items-center gap-2">
-            {candidate.selected ? (
+            {candidate.selected && (
               <span className="rounded-full border border-brand-line bg-surface px-[11px] py-[3px] text-note font-bold whitespace-nowrap text-brand">
                 ● 選択中
               </span>
-            ) : (
+            )}
+            <ActionRow className="gap-2">
+              {!candidate.selected && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() =>
+                    startTransition(async () => {
+                      setRefusal(undefined)
+                      setRefusal(
+                        toRefusal(
+                          await onSelect(serviceKey, candidate.id),
+                          '切替',
+                        ),
+                      )
+                    })
+                  }
+                >
+                  <CheckIcon />
+                  これに切替
+                </Button>
+              )}
               <Button
-                variant="outline"
+                variant="destructive"
                 size="sm"
                 disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    setRefusal(undefined)
-                    setRefusal(
-                      toRefusal(
-                        await onSelect(serviceKey, candidate.id),
-                        '切替',
-                      ),
-                    )
-                  })
-                }
+                aria-label={`${candidate.channel} を候補から削除`}
+                onClick={() => {
+                  setRefusal(undefined)
+                  setRemoving(candidate)
+                }}
               >
-                これに切替
+                <TrashIcon />
+                削除
               </Button>
-            )}
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={pending}
-              aria-label={`${candidate.channel} を候補から削除`}
-              onClick={() => {
-                setRefusal(undefined)
-                setRemoving(candidate)
-              }}
-            >
-              <TrashIcon />
-            </Button>
+            </ActionRow>
           </span>
         </div>
       ))}
 
       <Button
-        variant="outline"
         size="sm"
         className="mt-1.5"
         disabled={pending}
