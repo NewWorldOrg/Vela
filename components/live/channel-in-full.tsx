@@ -11,12 +11,13 @@ export function ChannelInFull({
   children,
 }: {
   channel: LiveChannel
-  children: ReactElement
+  children: ReactElement<{ className?: string; tabIndex?: number }>
 }) {
   const said = channelInFull(channel)
 
   return (
     <InFull
+      alreadyFocusable
       says={
         <>
           <b className="block font-bold">{said.name}</b>

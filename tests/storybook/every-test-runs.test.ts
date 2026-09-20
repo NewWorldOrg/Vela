@@ -25,6 +25,7 @@ const THE_SUITE = [
   'tests/lib/external-player.test.ts',
   'tests/lib/format.test.ts',
   'tests/lib/guide.test.ts',
+  'tests/lib/in-full.test.ts',
   'tests/lib/live-caption-drift.test.ts',
   'tests/lib/live-captions.test.ts',
   'tests/lib/live-choice.test.ts',
