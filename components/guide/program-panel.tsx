@@ -18,7 +18,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
-import { RecordIcon, SuccessIcon } from '@/components/vela/icons'
+import {
+  CloseIcon,
+  EditIcon,
+  RecordIcon,
+  SuccessIcon,
+} from '@/components/vela/icons'
+import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
@@ -123,21 +129,25 @@ export function ProgramPanel({
                     </p>
                   )}
                   <div className="mt-2.5 flex flex-wrap gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditing(true)}
-                    >
-                      予約を編集
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={pending}
-                      onClick={drop}
-                    >
-                      予約を取り消す
-                    </Button>
+                    <ActionRow className="gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditing(true)}
+                      >
+                        <EditIcon />
+                        予約を編集
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={pending}
+                        onClick={drop}
+                      >
+                        <CloseIcon />
+                        予約を取り消す
+                      </Button>
+                    </ActionRow>
                     {refusal && (
                       <span aria-live="polite" className="basis-full">
                         <InlineAlert tone="warn">{refusal}</InlineAlert>

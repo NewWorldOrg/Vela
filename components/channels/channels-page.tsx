@@ -11,6 +11,7 @@ import type {
 } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { Badge } from '@/components/ui/badge'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -106,20 +107,23 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
                   {run.startedAt}
                 </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      run.state === 'completed'
-                        ? 'ok'
-                        : run.state === 'running'
-                          ? 'info'
-                          : run.state === 'failed'
-                            ? 'err'
-                            : 'mute'
-                    }
-                  >
-                    {run.stateLabel}
-                  </Badge>
+                <TableCell className="align-top">
+                  <StatusCell>
+                    <Badge
+                      width={COLUMN_WIDE}
+                      variant={
+                        run.state === 'completed'
+                          ? 'ok'
+                          : run.state === 'running'
+                            ? 'info'
+                            : run.state === 'failed'
+                              ? 'err'
+                              : 'mute'
+                      }
+                    >
+                      {run.stateLabel}
+                    </Badge>
+                  </StatusCell>
                 </TableCell>
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
                   {run.took ?? '—'}

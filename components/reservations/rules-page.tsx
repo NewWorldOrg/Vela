@@ -82,6 +82,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Banner, InlineAlert } from '@/components/vela/banner'
+import { ActionRow } from '@/components/vela/action-row'
 import { EmptyState } from '@/components/vela/empty-state'
 import {
   Field,
@@ -188,12 +189,18 @@ function RulesScreen({
       <ReservationTabs
         current="rules"
         action={
-          <Button size="sm" asChild>
-            <Link href="/search">
-              <SearchIcon />
-              検索から作る
-            </Link>
-          </Button>
+          <ActionRow className="gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/search">
+                <SearchIcon />
+                検索から作る
+              </Link>
+            </Button>
+            <Button size="sm" onClick={() => open(NEW_RULE)}>
+              <PlusIcon />
+              ルールを追加
+            </Button>
+          </ActionRow>
         }
       />
 
@@ -234,13 +241,6 @@ function RulesScreen({
               ))}
             </ul>
           )}
-
-          <div className="mt-2.5 flex justify-center">
-            <Button variant="ghost" size="sm" onClick={() => open(NEW_RULE)}>
-              <PlusIcon />
-              ルールを追加
-            </Button>
-          </div>
         </section>
 
         {editing.state === 'none' ? (

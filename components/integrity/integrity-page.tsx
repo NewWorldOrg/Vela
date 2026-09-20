@@ -29,8 +29,10 @@ import {
   QualityIcon,
   TrashIcon,
 } from '@/components/vela/icons'
+import { ActionRow } from '@/components/vela/action-row'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialog'
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'
@@ -216,11 +218,14 @@ export function IntegrityView({
                   <span className="text-note text-ink-3">{finding.root}</span>
                 </TableCell>
                 <TableCell className="align-top">
-                  <Badge
-                    variant={shapeFor(REASON_VARIANT, finding.fault, 'mute')}
-                  >
-                    {finding.reason}
-                  </Badge>
+                  <StatusCell>
+                    <Badge
+                      variant={shapeFor(REASON_VARIANT, finding.fault, 'mute')}
+                      width={COLUMN_WIDE}
+                    >
+                      {finding.reason}
+                    </Badge>
+                  </StatusCell>
                 </TableCell>
                 <TableCell className="align-top text-right">
                   <span className="font-code tabular-nums">{finding.size}</span>
@@ -235,15 +240,16 @@ export function IntegrityView({
                 </TableCell>
                 <TableCell className="align-top text-right">
                   {OWNED_BY_NO_RECORDING.includes(finding.fault) && (
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      aria-label="削除"
-                      title="削除"
-                      onClick={() => setAsked(finding)}
-                    >
-                      <TrashIcon />
-                    </Button>
+                    <ActionRow>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setAsked(finding)}
+                      >
+                        <TrashIcon />
+                        削除
+                      </Button>
+                    </ActionRow>
                   )}
                 </TableCell>
               </TableRow>

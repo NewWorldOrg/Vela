@@ -15,6 +15,7 @@ import type {
   WriteResult,
 } from '@/repository/services'
 import { Badge } from '@/components/ui/badge'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import {
   Table,
   TableBody,
@@ -284,18 +285,28 @@ export function ServiceTable({
               <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
                 {service.lastSeen}
               </TableCell>
-              <TableCell>
-                {service.currentChannel === undefined ? (
-                  <Badge variant="warn" className="font-bold">
-                    要対応
-                  </Badge>
-                ) : (
-                  service.betterChannel !== undefined && (
-                    <Badge variant="sky" className="font-bold">
-                      実測上位の候補 {service.betterChannel}
+              <TableCell className="align-top">
+                <StatusCell>
+                  {service.currentChannel === undefined ? (
+                    <Badge
+                      variant="warn"
+                      width={COLUMN_WIDE}
+                      className="font-bold"
+                    >
+                      要対応
                     </Badge>
-                  )
-                )}
+                  ) : (
+                    service.betterChannel !== undefined && (
+                      <Badge
+                        variant="sky"
+                        width={COLUMN_WIDE}
+                        className="font-bold"
+                      >
+                        実測上位の候補 {service.betterChannel}
+                      </Badge>
+                    )
+                  )}
+                </StatusCell>
               </TableCell>
             </TableRow>,
             mounted && (

@@ -15,7 +15,7 @@ import {
   RESERVATION_RECORDING_REMOVED_TERM,
   RESERVATION_STANDING_TERMS,
 } from '@/lib/state-terms'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeWidth } from '@/components/ui/badge'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -43,7 +43,13 @@ const NOT_YET_KNOWN_CHIP: (typeof STANDING)[SettledStanding] = {
   variant: 'mute',
 }
 
-function StandingChip({ standing }: { standing: SettledStanding }) {
+function StandingChip({
+  standing,
+  width,
+}: {
+  standing: SettledStanding
+  width?: BadgeWidth
+}) {
   const chip = shapeFor(STANDING, standing, NOT_YET_KNOWN_CHIP)
   const term = shapeFor(
     RESERVATION_STANDING_TERMS,
@@ -55,6 +61,7 @@ function StandingChip({ standing }: { standing: SettledStanding }) {
     <TermTip term={term}>
       <Badge
         variant={chip.variant}
+        width={width}
         className={chip.bold ? 'font-bold' : undefined}
       >
         {chip.dot && <ChipDot />}
@@ -84,8 +91,10 @@ function divergedTerm(drift: EpgDrift): StateTerm {
 
 export function ReservationStateChip({
   reservation,
+  width,
 }: {
   reservation: Reservation
+  width?: BadgeWidth
 }) {
   const removed = recordingWasRemoved({
     standing: reservation.standing,
@@ -93,39 +102,47 @@ export function ReservationStateChip({
   })
 
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
+    <>
       {reservation.standing === 'recording' ? (
-        <RecordingInProgressChip />
+        <RecordingInProgressChip width={width} />
       ) : (
-        <StandingChip standing={reservation.standing} />
+        <StandingChip standing={reservation.standing} width={width} />
       )}
       {!reservation.endAtConfirmed && (
         <TermTip term={END_UNDECIDED_TERM}>
-          <Badge variant="warn">{END_UNDECIDED_TERM.label}</Badge>
+          <Badge variant="warn" width={width}>
+            {END_UNDECIDED_TERM.label}
+          </Badge>
         </TermTip>
       )}
       {reservation.receptionUnavailable && (
         <TermTip term={RESERVATION_RECEPTION_TERM}>
-          <Badge variant="err">{RESERVATION_RECEPTION_TERM.label}</Badge>
+          <Badge variant="err" width={width}>
+            {RESERVATION_RECEPTION_TERM.label}
+          </Badge>
         </TermTip>
       )}
       {reservation.epg?.programmeMissing && (
         <TermTip term={RESERVATION_EPG_MISSING_TERM}>
-          <Badge variant="err">{RESERVATION_EPG_MISSING_TERM.label}</Badge>
+          <Badge variant="err" width={width}>
+            {RESERVATION_EPG_MISSING_TERM.label}
+          </Badge>
         </TermTip>
       )}
       {reservation.epg?.diverged && (
         <TermTip term={divergedTerm(reservation.epg)}>
-          <Badge variant="warn">{RESERVATION_EPG_DIVERGED_TERM.label}</Badge>
+          <Badge variant="warn" width={width}>
+            {RESERVATION_EPG_DIVERGED_TERM.label}
+          </Badge>
         </TermTip>
       )}
       {removed && (
         <TermTip term={RESERVATION_RECORDING_REMOVED_TERM}>
-          <Badge variant="mute">
+          <Badge variant="mute" width={width}>
             {RESERVATION_RECORDING_REMOVED_TERM.label}
           </Badge>
         </TermTip>
       )}
-    </span>
+    </>
   )
 }

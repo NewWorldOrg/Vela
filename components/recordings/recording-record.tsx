@@ -15,7 +15,10 @@ import { ChevronRightIcon, QualityIcon } from '@/components/vela/icons'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import { DetailKeyRow } from '@/components/recordings/detail-key-row'
 import { DetailStat } from '@/components/recordings/detail-stat'
+import { EncodeChip } from '@/components/recordings/encode-chip'
+import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
+import { ThumbnailChip } from '@/components/recordings/thumbnail-chip'
 
 function Caption({
   children,
@@ -62,7 +65,11 @@ export function RecordingRecord({
         className="max-w-[900px] border-t border-dashed border-line pt-4 pb-5"
       >
         {d.outcome === 'complete' && (
-          <DetailKeyRow label="結果" main="完全" plain />
+          <DetailKeyRow
+            label="結果"
+            main={<OutcomeChip recording={d} />}
+            plain
+          />
         )}
 
         <Caption>
@@ -157,7 +164,7 @@ export function RecordingRecord({
         {plan && <SourceRow detail={d} plan={plan} />}
         <DetailKeyRow
           label="エンコード"
-          main={encode.main}
+          main={<EncodeChip recording={d} says={encode.main} />}
           sub={encode.sub}
           plain
           action={
@@ -177,7 +184,7 @@ export function RecordingRecord({
         {d.thumbnailState && (
           <DetailKeyRow
             label="サムネイル"
-            main={d.thumbnailState.main}
+            main={<ThumbnailChip recording={d} says={d.thumbnailState.main} />}
             sub={d.thumbnailState.sub}
             plain
           />

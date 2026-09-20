@@ -40,6 +40,15 @@ export function PlusIcon(props: IconProps) {
   )
 }
 
+export function EditIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M16.4 4.6a2 2 0 0 1 2.8 2.8L9.4 17.2 5.4 18.6l1.4-4Z" />
+      <path d="m14.6 6.4 3 3" />
+    </Icon>
+  )
+}
+
 export function TrashIcon(props: IconProps) {
   return (
     <Icon {...props}>

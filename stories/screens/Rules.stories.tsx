@@ -585,3 +585,29 @@ export const 長い名前と条件は丸めない: Story = {
     actions: recording([], []),
   },
 }
+
+export const 追加の置き場: Story = {
+  args: { editing: { state: 'none' }, actions: recording([], []) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const add = canvas.getByRole('button', { name: 'ルールを追加' })
+    const fromSearch = canvas.getByRole('link', { name: '検索から作る' })
+
+    await expect(add).toHaveAttribute('data-variant', 'default')
+    await expect(fromSearch).toHaveAttribute('data-variant', 'outline')
+
+    const drawn = [add, fromSearch].map((one) => one.getBoundingClientRect())
+
+    await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
+      1,
+    )
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
+
+    const tabs = canvas.getByRole('link', { name: 'ルール' })
+
+    await expect(
+      Math.round(drawn[0].top) <
+        Math.round(tabs.getBoundingClientRect().bottom) + 24,
+    ).toBe(true)
+  },
+}
