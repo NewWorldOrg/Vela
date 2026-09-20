@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ticketedHref, type Handover } from '@/lib/external-player'
 import { Spinner } from '@/components/vela/progress'
 import { Button } from '@/components/ui/button'
-import { AirPlayIcon } from '@/components/vela/icons'
+import { AirPlayIcon, DevicePlayerIcon } from '@/components/vela/icons'
 import {
   PLAYER_BUTTON,
   PLAYER_GLYPH_BUTTON,
@@ -82,7 +82,7 @@ export function OpenExternally({
         </button>
       ) : (
         <Button variant="outline" onClick={open} aria-disabled={taking}>
-          {taking && <Spinner className="size-3.5" />}
+          {taking ? <Spinner className="size-3.5" /> : <DevicePlayerIcon />}
           外部プレイヤーで開く
         </Button>
       )}

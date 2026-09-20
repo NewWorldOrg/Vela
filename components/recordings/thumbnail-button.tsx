@@ -14,6 +14,7 @@ import type {
   ThumbnailWrite,
 } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
+import { RebuildIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 
 const DREW: Record<ThumbnailRemake, { drew: boolean; text: string }> = {
@@ -92,7 +93,7 @@ export function ThumbnailButton({
         aria-disabled={pending}
         onClick={redraw}
       >
-        {pending && <Spinner className="size-3.5" />}
+        {pending ? <Spinner className="size-3.5" /> : <RebuildIcon />}
         サムネイルを作り直す
       </Button>
       {notice && (

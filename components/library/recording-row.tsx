@@ -14,6 +14,7 @@ import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
+import { ActionRow } from '@/components/vela/action-row'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 
@@ -125,10 +126,7 @@ export function RecordingRow({
         </StatusCell>
       </td>
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>
-        <span
-          className="inline-flex gap-1.5"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <ActionRow className="gap-1.5" onClick={(e) => e.stopPropagation()}>
           {playable ? (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/recordings/${r.id}?at=0`}>
@@ -143,16 +141,16 @@ export function RecordingRow({
             </Button>
           )}
           <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="削除"
-            title={deletable ? '削除' : '録画中は削除できません'}
+            variant="destructive"
+            size="sm"
+            title={deletable ? undefined : '録画中は削除できません'}
             disabled={!deletable}
             onClick={onDelete}
           >
             <TrashIcon />
+            削除
           </Button>
-        </span>
+        </ActionRow>
       </td>
       <td
         className={cn(
