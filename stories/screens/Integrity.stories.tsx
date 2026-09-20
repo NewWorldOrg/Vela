@@ -201,3 +201,34 @@ export const 断りは片付いたあとまで残らない: Story = {
     ).toBeVisible()
   },
 }
+
+export const 削除の形: Story = {
+  args: { result: INTEGRITY_FIXTURE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const remove = canvas.getByRole('button', { name: '削除' })
+
+    await expect(remove).toHaveAttribute('data-variant', 'destructive')
+    await expect(remove).toHaveAttribute('data-size', 'sm')
+    await expect(remove.querySelector('svg')).not.toBeNull()
+    await expect(remove.textContent).toContain('削除')
+
+    const box = remove.getBoundingClientRect()
+
+    await expect(Math.round(box.width)).toBeGreaterThan(Math.round(box.height))
+
+    const pills = canvas
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => within(row).getAllByRole('cell')[1])
+      .map((cell) => cell.querySelector('[data-slot="badge"]'))
+      .filter((pill): pill is HTMLElement => pill instanceof HTMLElement)
+
+    await expect(pills.length).toBeGreaterThan(1)
+    await expect(
+      new Set(
+        pills.map((pill) => Math.round(pill.getBoundingClientRect().width)),
+      ).size,
+    ).toBe(1)
+  },
+}

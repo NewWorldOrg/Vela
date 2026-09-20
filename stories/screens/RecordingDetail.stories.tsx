@@ -927,21 +927,23 @@ const THE_ACTIONS = [
   '外部プレイヤーで開く',
   'サムネイルを作り直す',
   'エンコード',
+  '削除',
 ]
 
 export const 操作の並び: Story = {
   args: { detail: withoutAnArtefact('1274') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const widths = THE_ACTIONS.map((name) =>
-      Math.round(
-        canvas.getByRole('button', { name }).getBoundingClientRect().width,
-      ),
+    const drawn = THE_ACTIONS.map((name) =>
+      canvas.getByRole('button', { name }).getBoundingClientRect(),
     )
 
-    await expect(new Set(widths).size).toBe(1)
+    await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
+      1,
+    )
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
 
-    for (const name of [...THE_ACTIONS, '削除']) {
+    for (const name of THE_ACTIONS) {
       await expect(
         canvas.getByRole('button', { name }).querySelector('svg'),
       ).not.toBeNull()
@@ -951,5 +953,37 @@ export const 操作の並び: Story = {
       'data-variant',
       'destructive',
     )
+  },
+}
+
+export const 記録の値は札で言う: Story = {
+  args: { detail: detail('1274') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByText('録画の記録'))
+
+    const pills = ['完全', '完了', '生成済み', '良好'].map((said) => {
+      const pill = canvas.getByText(said).closest('[data-slot="badge"]')
+
+      if (!(pill instanceof HTMLElement)) {
+        throw new Error(`${said} is not said in a pill`)
+      }
+
+      return pill
+    })
+
+    for (const pill of pills) {
+      const drawn = getComputedStyle(pill)
+
+      await expect(drawn.borderTopStyle).not.toBe('none')
+      await expect(parseFloat(drawn.borderTopWidth)).toBeGreaterThan(0)
+    }
+
+    await expect(
+      new Set(
+        pills.map((pill) => Math.round(pill.getBoundingClientRect().height)),
+      ).size,
+    ).toBe(1)
   },
 }
