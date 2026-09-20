@@ -23,17 +23,11 @@ import { PlayerSegmentedControl } from '@/components/recordings/player-segmented
 
 export const PLAYBACK_SPEEDS = ['0.5', '1.0', '1.25', '1.5', '2.0'] as const
 
-const ONLY_ON_THE_FLY = 'オンザフライ再生のときだけ選べます'
-
-const NOT_WIRED = '字幕の選択はこれから実装されます'
-
 export function Setting({
   label,
-  reason,
   children,
 }: {
   label: string
-  reason?: string
   children?: ReactNode
 }) {
   return (
@@ -42,11 +36,6 @@ export function Setting({
         {label}
       </span>
       {children}
-      {reason && (
-        <p className="w-full text-[11px] leading-relaxed text-(--pl-ink-3)">
-          {reason}
-        </p>
-      )}
     </div>
   )
 }
@@ -100,7 +89,7 @@ export function PlayerSettings({
         sideOffset={10}
         className="w-auto max-w-[min(20rem,calc(100vw-2rem))] min-w-[17rem] rounded-lg border-white/20 bg-(--pl-bg) p-4 text-(--pl-ink) shadow-pop-xl"
       >
-        <Setting label="画質" reason={ONLY_ON_THE_FLY}>
+        <Setting label="画質">
           <PlayerSegmentedControl
             label="画質"
             options={PLAYBACK_PROFILES}
@@ -108,7 +97,6 @@ export function PlayerSettings({
             onChange={onChooseProfile}
             numeric
             off={!onTheFly}
-            title={onTheFly ? undefined : ONLY_ON_THE_FLY}
           />
         </Setting>
         <Setting label="速度">
@@ -142,7 +130,6 @@ export function PlayerSettings({
             />
           </Setting>
         )}
-        <Setting label="字幕" reason={NOT_WIRED} />
       </PopoverContent>
     </Popover>
   )
