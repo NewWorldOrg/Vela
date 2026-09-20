@@ -19,6 +19,10 @@ const AN_OPENING = /<SelectContent\b([^>]*)>/g
 
 const THE_DIRECTION = /\b(side|position|avoidCollisions)\b/
 
+const THE_ROOM = /\b(style|max-h-|maxHeight)/
+
+const A_TRIGGER = /<SelectTrigger\b([^>]*)>/g
+
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -110,4 +114,59 @@ test('the shared select opens downwards and never turns round', async () => {
   assert.match(source, /position="popper"/)
   assert.match(source, /side="bottom"/)
   assert.match(source, /avoidCollisions=\{false\}/)
+})
+
+test('the list keeps a floor, and the same figure makes the room for it', async () => {
+  const source = await readFile(
+    path.join(ROOT, WHERE_THE_DIRECTION_IS_DECLARED),
+    'utf8',
+  )
+  const floor = source.match(/export const SELECT_LEAST_ROOM = (\d+)/)
+
+  assert.ok(floor, 'the shared select declares no floor for the list')
+  assert.ok(
+    Number(floor[1]) >= 5 * 44,
+    `a floor of ${floor[1]}px is under the five rows the list has to keep`,
+  )
+
+  assert.match(
+    source,
+    /maxHeight: `max\(var\(--radix-select-content-available-height\), \$\{SELECT_LEAST_ROOM\}px\)`/,
+  )
+  assert.match(source, /scrollIntoView\(\{ block: 'center' \}\)/)
+  assert.match(
+    source,
+    /window\.innerHeight - box\.bottom >= SELECT_LEAST_ROOM/,
+    'the room is measured against something other than the floor it keeps',
+  )
+})
+
+test('no select makes room for itself on its own', async () => {
+  const making: string[] = []
+
+  for (const { file, source } of await everySource()) {
+    const openings = [...source.matchAll(AN_OPENING)]
+
+    if (openings.length > 0 && /scrollIntoView/.test(source)) {
+      making.push(file)
+    }
+
+    for (const opening of openings) {
+      assert.doesNotMatch(
+        opening[1],
+        THE_ROOM,
+        `${file} sets the room its list takes: ${opening[0]}`,
+      )
+    }
+
+    for (const trigger of source.matchAll(A_TRIGGER)) {
+      assert.doesNotMatch(
+        trigger[1],
+        /\bref=/,
+        `${file} holds the trigger itself, so the shared one cannot: ${trigger[0]}`,
+      )
+    }
+  }
+
+  assert.deepEqual(making, [])
 })

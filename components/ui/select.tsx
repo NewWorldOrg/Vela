@@ -10,10 +10,48 @@ import { Select as SelectPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
+export const SELECT_LEAST_ROOM = 228
+
+const HeldTrigger =
+  React.createContext<React.RefObject<HTMLButtonElement | null> | null>(null)
+
+function makeRoomBelow(trigger: HTMLButtonElement | null): void {
+  if (!trigger) {
+    return
+  }
+
+  const box = trigger.getBoundingClientRect()
+
+  if (window.innerHeight - box.bottom >= SELECT_LEAST_ROOM) {
+    return
+  }
+
+  trigger.scrollIntoView({ block: 'center' })
+}
+
 function Select({
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />
+  const trigger = React.useRef<HTMLButtonElement | null>(null)
+
+  const answer = (open: boolean) => {
+    if (open) {
+      makeRoomBelow(trigger.current)
+    }
+
+    onOpenChange?.(open)
+  }
+
+  return (
+    <HeldTrigger.Provider value={trigger}>
+      <SelectPrimitive.Root
+        data-slot="select"
+        onOpenChange={answer}
+        {...props}
+      />
+    </HeldTrigger.Provider>
+  )
 }
 
 function SelectGroup({
@@ -36,6 +74,8 @@ function SelectTrigger({
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: 'sm' | 'default'
 }) {
+  const heldRef = React.useContext(HeldTrigger)
+
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -45,6 +85,7 @@ function SelectTrigger({
         className,
       )}
       {...props}
+      ref={heldRef}
     >
       {children}
       <SelectPrimitive.Icon asChild>
@@ -65,7 +106,7 @@ function SelectContent({
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          'relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) translate-y-1 overflow-x-hidden overflow-y-auto rounded-lg border border-line-strong bg-surface text-ink shadow-pop-xl slide-in-from-top-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'relative z-50 min-w-[8rem] origin-(--radix-select-content-transform-origin) translate-y-1 overflow-x-hidden overflow-y-auto rounded-lg border border-line-strong bg-surface text-ink shadow-pop-xl slide-in-from-top-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
           className,
         )}
         align={align}
@@ -73,9 +114,13 @@ function SelectContent({
         position="popper"
         side="bottom"
         avoidCollisions={false}
+        style={{
+          ...props.style,
+          maxHeight: `max(var(--radix-select-content-available-height), ${SELECT_LEAST_ROOM}px)`,
+        }}
       >
         <SelectScrollUpButton />
-        <SelectPrimitive.Viewport className="h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1 p-1">
+        <SelectPrimitive.Viewport className="w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1 p-1">
           {children}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
