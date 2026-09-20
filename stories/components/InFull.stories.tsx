@@ -59,3 +59,23 @@ export const すでに押せるもの: Story = {
     await expect(await screen.findByRole('tooltip')).toHaveTextContent(WHOLE)
   },
 }
+
+export const 素の文字列: Story = {
+  render: () => (
+    <div className="max-w-[320px] p-6">
+      <InFull says={WHOLE}>{WHOLE}</InFull>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const held = canvas.getByText(WHOLE)
+
+    await expect(held).toBeVisible()
+    await expect(held).toHaveAttribute('tabindex', '0')
+
+    await userEvent.tab()
+
+    await expect(held).toHaveFocus()
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent(WHOLE)
+  },
+}

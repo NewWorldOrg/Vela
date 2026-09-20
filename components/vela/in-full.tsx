@@ -1,6 +1,6 @@
 'use client'
 
-import { cloneElement, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, isValidElement, type ReactNode } from 'react'
 
 import { tipTrigger } from '@/lib/in-full'
 import {
@@ -12,6 +12,11 @@ import {
 
 export const IN_FULL_WAITS = 200
 
+interface Tipped {
+  className?: string
+  tabIndex?: number
+}
+
 export function InFull({
   says,
   alreadyFocusable = false,
@@ -19,17 +24,21 @@ export function InFull({
 }: {
   says: ReactNode
   alreadyFocusable?: boolean
-  children: ReactElement<{ className?: string; tabIndex?: number }>
+  children: ReactNode
 }) {
+  const held = isValidElement<Tipped>(children) ? (
+    cloneElement(
+      children,
+      tipTrigger(children.props.className, alreadyFocusable),
+    )
+  ) : (
+    <span {...tipTrigger(undefined, alreadyFocusable)}>{children}</span>
+  )
+
   return (
     <TooltipProvider delayDuration={IN_FULL_WAITS}>
       <Tooltip>
-        <TooltipTrigger asChild>
-          {cloneElement(
-            children,
-            tipTrigger(children.props.className, alreadyFocusable),
-          )}
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{held}</TooltipTrigger>
         <TooltipContent
           data-slot="in-full"
           className="whitespace-pre-wrap [overflow-wrap:anywhere]"
