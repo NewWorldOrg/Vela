@@ -28,6 +28,7 @@ import {
   AntennaIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ProgramGuideIcon,
   SearchIcon,
 } from '@/components/vela/icons'
 import { CollectionDrawer } from '@/components/guide/collection-drawer'
@@ -104,6 +105,10 @@ export function GuideView({
       scroll="within"
       className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[30px]"
     >
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[20px]">
+        <ProgramGuideIcon className="size-[18px] text-brand" />
+        番組表
+      </h1>
       <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[18px] py-[9px] max-[700px]:px-3.5">
         <div className="inline-flex gap-1 rounded-full bg-surface-2 p-[3px]">
           {CHANNEL_KINDS.map((k) => (
