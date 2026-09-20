@@ -1,5 +1,5 @@
 import { describeDevice, type Device } from '@/lib/device'
-import { formatDateTime } from '@/lib/format'
+import { formatMoment } from '@/lib/format'
 import type { AuthMethod } from '@/repository/auth'
 import { carinaClient } from '@/repository/client/carina'
 
@@ -54,7 +54,7 @@ export async function getSessions(): Promise<SessionRow[]> {
     displayName: session.displayName,
     device: describeDevice(session.deviceLabel),
     method: session.method,
-    createdAt: formatDateTime(session.createdAt),
+    createdAt: formatMoment(session.createdAt),
     lastUsed: momentOf(session.lastUsedAt, now),
     current: session.current,
   }))
@@ -120,9 +120,9 @@ function momentOf(iso: string, now: number): Moment {
   if (elapsed < HOUR) {
     return {
       label: `約 ${Math.round(elapsed / MINUTE)} 分前`,
-      at: formatDateTime(iso),
+      at: formatMoment(iso),
     }
   }
 
-  return { label: formatDateTime(iso) }
+  return { label: formatMoment(iso) }
 }

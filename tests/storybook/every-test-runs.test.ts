@@ -60,6 +60,7 @@ const THE_SUITE = [
   'tests/lib/system-terms.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',
   'tests/lib/version.test.ts',
+  'tests/lib/when-terms.test.ts',
   'tests/repository/announced.test.ts',
   'tests/repository/channel-ids.test.ts',
   'tests/repository/client/carina.test.ts',

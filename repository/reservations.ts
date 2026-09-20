@@ -1,10 +1,9 @@
 import type { OriginLabel } from '@/lib/format'
 import {
-  formatBroadcastSpan,
-  formatBroadcastStart,
   formatClockSpan,
+  formatMoment,
+  formatMomentSpan,
   formatReservationOrigin,
-  formatStamp,
 } from '@/lib/format'
 import { isDiscardable, isRestorable } from '@/lib/reservations'
 import { wordFor } from '@/lib/not-yet-in-this-build'
@@ -463,7 +462,7 @@ export function toReservation(
     note: r.programme.summary || undefined,
     channelName: channel?.name || serviceKeyOf(r),
     channelNo: channel?.no,
-    whenLabel: formatBroadcastSpan(r.window.startAt, r.window.endAt),
+    whenLabel: formatMomentSpan(r.window.startAt, r.window.endAt),
     origin: formatReservationOrigin(r.origin),
     ruleName: ruleNameOf(r.ruleId, rules),
     standing: r.standing,
@@ -523,7 +522,7 @@ function conflictOf(
 
   return {
     headline: `同時刻に${KIND_LABEL[kind]}チューナー ${seats.size} 本が録画予定です`,
-    body: `${formatBroadcastStart(r.window.startAt)} の開始時点で空きがなく、この予約にはチューナーを割り当てられません。`,
+    body: `${formatMoment(r.window.startAt)} の開始時点で空きがなく、この予約にはチューナーを割り当てられません。`,
     entries: rivals.map((one) => toConflictEntry(one, known, rules)),
     raiseTo: Math.max(...rivals.map((one) => toInt(one.priority))) + 1,
   }
@@ -595,7 +594,7 @@ function toEpgDrift(epg: DivergenceResponder): EpgDrift | undefined {
       before: asSaid(one.field, one.before),
       after: asSaid(one.field, one.after),
     })),
-    noticedAt: noticed === undefined ? undefined : formatStamp(noticed),
+    noticedAt: noticed === undefined ? undefined : formatMoment(noticed),
   }
 }
 
@@ -604,5 +603,5 @@ function asSaid(field: DivergedField, said: string | null): string {
     return UNSAID
   }
 
-  return MOVES_A_CLOCK.includes(field) ? formatStamp(said) : said
+  return MOVES_A_CLOCK.includes(field) ? formatMoment(said) : said
 }

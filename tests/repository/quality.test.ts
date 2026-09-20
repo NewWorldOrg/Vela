@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
+import { formatMoment, formatMomentSpan } from '@/lib/format'
 
 interface Sent {
   path: string
@@ -595,7 +596,10 @@ test('異常は、破った閾値から題を取り、観測と適用閾値を�
   assert.equal(anomaly.applied, '適用閾値 0.1%(暫定)')
   assert.equal(anomaly.levelLabel, '視聴不可の恐れ')
   assert.equal(anomaly.restatedBy, undefined)
-  assert.equal(anomaly.when, '09/07 21:00 発生 · 継続中')
+  assert.equal(
+    anomaly.when,
+    `${formatMoment('2026-09-07T12:00:00Z')} 発生 · 継続中`,
+  )
   assert.equal(result.anomalies.owned, 1)
 })
 
@@ -658,8 +662,8 @@ test('解消していない異常は、口が並べた順のまま、どれも�
   assert.deepEqual(
     result.anomalies.items.map((one) => [one.id, one.when]),
     [
-      ['first', '09/07 21:00 発生 · 継続中'],
-      ['second', '09/07 22:04 発生 · 継続中'],
+      ['first', `${formatMoment('2026-09-07T12:00:00Z')} 発生 · 継続中`],
+      ['second', `${formatMoment('2026-09-07T13:04:00Z')} 発生 · 継続中`],
     ],
   )
 })

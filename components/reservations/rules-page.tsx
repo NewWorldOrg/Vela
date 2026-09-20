@@ -6,7 +6,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
-import { formatDateTime } from '@/lib/format'
+import { formatMoment } from '@/lib/format'
 import { signedOut } from '@/lib/signed-out'
 import {
   MARGIN_RANGE,
@@ -650,7 +650,7 @@ function RuleEditor({
         )}
         {rule && (
           <span className="text-note text-ink-3">
-            作成 {formatDateTime(rule.createdAt)}
+            作成 {formatMoment(rule.createdAt)}
           </span>
         )}
       </div>

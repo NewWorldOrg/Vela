@@ -26,6 +26,11 @@ const CALENDAR = new Intl.DateTimeFormat('en-US', {
   minute: '2-digit',
 })
 
+const WEEKDAY = new Intl.DateTimeFormat('ja-JP', {
+  timeZone: DISPLAY_ZONE,
+  weekday: 'short',
+})
+
 interface Stamp {
   year: string
   month: string
@@ -34,7 +39,9 @@ interface Stamp {
   minute: string
 }
 
-function stampOf(at: string | number): Stamp {
+export type Moment = string | number | Date
+
+function stampOf(at: Moment): Stamp {
   const parts = CALENDAR.formatToParts(new Date(at))
   const read = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((part) => part.type === type)?.value ?? ''
@@ -48,16 +55,34 @@ function stampOf(at: string | number): Stamp {
   }
 }
 
-export function formatStamp(iso: string) {
-  const at = stampOf(iso)
+export const SPAN_DASH = ' – '
 
-  return `${at.month}/${at.day} ${at.hour}:${at.minute}`
+export function formatMoment(at: Moment, now: Moment = Date.now()): string {
+  const it = stampOf(at)
+  const year = it.year === stampOf(now).year ? '' : `${it.year}/`
+
+  return `${year}${it.month}/${it.day}(${WEEKDAY.format(new Date(at))}) ${it.hour}:${it.minute}`
 }
 
-export function formatDateTime(iso: string) {
-  const at = stampOf(iso)
+export function formatMomentSpan(
+  from: Moment,
+  until: Moment,
+  now: Moment = Date.now(),
+): string {
+  const start = stampOf(from)
+  const end = stampOf(until)
+  const sameDay =
+    start.year === end.year &&
+    start.month === end.month &&
+    start.day === end.day
 
-  return `${at.year}/${at.month}/${at.day} ${at.hour}:${at.minute}`
+  return `${formatMoment(from, now)}${SPAN_DASH}${
+    sameDay ? `${end.hour}:${end.minute}` : formatMoment(until, now)
+  }`
+}
+
+export function formatMomentUntil(from: Moment, until: string): string {
+  return `${formatMoment(from)}${SPAN_DASH}${until}`
 }
 
 export function formatClock(at: number) {
@@ -114,28 +139,11 @@ export function formatSpanToTheMillisecond(ms: number) {
   return m > 0 ? `${m}分${s}.${rest}秒` : `${s}.${rest}秒`
 }
 
-const WEEKDAY = new Intl.DateTimeFormat('ja-JP', {
-  timeZone: DISPLAY_ZONE,
-  weekday: 'short',
-})
-
-export function formatBroadcastStart(iso: string) {
-  const at = stampOf(iso)
-
-  return `${at.month}/${at.day}(${WEEKDAY.format(new Date(iso))}) ${at.hour}:${at.minute}`
-}
-
-export function formatBroadcastSpan(startIso: string, endIso: string) {
-  const to = stampOf(endIso)
-
-  return `${formatBroadcastStart(startIso)}–${to.hour}:${to.minute}`
-}
-
 export function formatClockSpan(startIso: string, endIso: string) {
   const from = stampOf(startIso)
   const to = stampOf(endIso)
 
-  return `${from.hour}:${from.minute}–${to.hour}:${to.minute}`
+  return `${from.hour}:${from.minute}${SPAN_DASH}${to.hour}:${to.minute}`
 }
 
 const ORIGIN_LABEL = { byHand: '手動', byRule: 'ルール' } as const

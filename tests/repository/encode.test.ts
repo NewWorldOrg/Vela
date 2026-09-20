@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { beforeEach, mock, test } from 'node:test'
+import { formatMoment, formatMomentSpan } from '@/lib/format'
 
 interface Sent {
   method: string
@@ -335,7 +336,10 @@ test('the screen reads the ledger into names, values and counts', async () => {
 
   assert.equal(screen.profiles.length, 1)
   assert.equal(screen.profiles[0].quantiser, 24)
-  assert.equal(screen.profiles[0].definedAt, '2026/09/05 20:33')
+  assert.equal(
+    screen.profiles[0].definedAt,
+    formatMoment('2026-09-05T11:33:06.372061Z'),
+  )
   assert.equal(screen.destinations[0].defaultProfileLabel, 'Viewing')
   assert.deepEqual(screen.roots, ['encodes'])
   assert.equal(screen.jobs.total, 2)
@@ -345,13 +349,13 @@ test('the screen reads the ledger into names, values and counts', async () => {
 
   const completed = screen.jobs.items[1]
   assert.equal(completed.title, '週末キッチンの手帖')
-  assert.equal(completed.recordedAt, '09/04(金) 00:45')
+  assert.equal(completed.recordedAt, formatMoment('2026-09-03T15:45:02Z'))
   assert.equal(completed.profileLabel, 'Viewing')
   assert.equal(completed.destinationLabel, 'Shelf')
   assert.equal(completed.headway?.percent, 100)
   assert.equal(completed.headway?.leftSeconds, 0)
   assert.equal(completed.headway?.at, '21:08:14')
-  assert.equal(completed.endedAt, '2026/09/05 21:08')
+  assert.equal(completed.endedAt, formatMoment('2026-09-05T12:08:14.217838Z'))
   assert.equal(completed.quietForSeconds, undefined)
   assert.equal(completed.route?.swerved, undefined)
   assert.equal(completed.cancellable, false)
@@ -714,25 +718,25 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     WHEN_REMOVING_A_PROFILE,
     404,
     `No profile ${PROFILE.id} is defined.`,
-    'このプロファイルは残っていないため、撤去できませんでした。',
+    'このプロファイルは残っていないため、削除できませんでした。',
   ],
   [
     WHEN_REMOVING_A_PROFILE,
     409,
     `Profile ${PROFILE.id} is what job ${RUNNING.id} is waiting to run with, and it stands still until that job has ended or been called off.`,
-    'このプロファイルを使うジョブが実行中か待機中のため、撤去できませんでした。',
+    'このプロファイルを使うジョブが実行中か待機中のため、削除できませんでした。',
   ],
   [
     WHEN_REMOVING_A_PROFILE,
     409,
     `Profile ${PROFILE.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
-    'このプロファイルは退役しているため、撤去できませんでした。',
+    'このプロファイルは退役しているため、削除できませんでした。',
   ],
   [
     WHEN_REMOVING_A_PROFILE,
     409,
     `Profile ${PROFILE.id} is what destination ${DESTINATION.id} encodes with unless another is asked for; point that destination at another profile first.`,
-    'このプロファイルを既定にしている保存先があるため、撤去できませんでした。',
+    'このプロファイルを既定にしている保存先があるため、削除できませんでした。',
   ],
   [
     WHEN_SAVING_A_DESTINATION,
@@ -804,19 +808,19 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     WHEN_REMOVING_A_DESTINATION,
     404,
     `No destination ${DESTINATION.id} is defined.`,
-    'この保存先は残っていないため、撤去できませんでした。',
+    'この保存先は残っていないため、削除できませんでした。',
   ],
   [
     WHEN_REMOVING_A_DESTINATION,
     409,
     `Destination ${DESTINATION.id} is the only one left, and a machine with nowhere to put an artefact encodes nothing; define the one that replaces it first.`,
-    'この保存先は最後の 1 つのため、撤去できませんでした。',
+    'この保存先は最後の 1 つのため、削除できませんでした。',
   ],
   [
     WHEN_REMOVING_A_DESTINATION,
     409,
     `Destination ${DESTINATION.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
-    'この保存先は退役しているため、撤去できませんでした。',
+    'この保存先は退役しているため、削除できませんでした。',
   ],
 ]
 
@@ -864,7 +868,7 @@ test('a refusal nothing accounts for is a number, and never the sentence the API
   )
   assert.equal(
     whyItRefused(WHEN_REMOVING_A_DESTINATION, 502, 'Bad Gateway'),
-    '保存先を撤去できませんでした(502)。',
+    '保存先を削除できませんでした(502)。',
   )
 })
 
@@ -1057,8 +1061,8 @@ test('the screen says how long the jobs that finished took, and over what window
     jobs: 5,
     fewestToAverage: 3,
     averageSeconds: 1523,
-    from: '2026/09/05 20:33',
-    to: '2026/09/09 11:10',
+    from: formatMoment('2026-09-05T11:33:19.921264Z'),
+    to: formatMoment('2026-09-09T02:10:44.001122Z'),
   })
 })
 
@@ -1070,7 +1074,7 @@ test('an average is not made of fewer jobs than it takes, and an empty ledger is
   assert.equal(few.spells.jobs, 2)
   assert.equal(few.spells.averageSeconds, undefined)
   assert.equal(few.spells.fewestToAverage, 3)
-  assert.equal(few.spells.from, '2026/09/05 20:33')
+  assert.equal(few.spells.from, formatMoment('2026-09-05T11:33:19.921264Z'))
 
   store.durations = {
     ...DURATIONS,
@@ -1115,7 +1119,10 @@ test('a settled row says when somebody settled it', async () => {
   assert.equal(screen.autoRun.automatically, false)
   assert.equal(screen.autoRun.mostCores, 4)
   assert.equal(screen.autoRun.stored, true)
-  assert.equal(screen.autoRun.updatedAt, '2026/09/09 11:11')
+  assert.equal(
+    screen.autoRun.updatedAt,
+    formatMoment('2026-09-09T02:11:07.552314Z'),
+  )
 })
 
 test('a subject this build cannot name is left out rather than drawn as a blank', async () => {

@@ -5,14 +5,14 @@ import { test } from 'node:test'
 import {
   formatBytes,
   formatClock,
-  formatDateTime,
   formatLength,
+  formatMoment,
+  formatMomentSpan,
+  formatMonth,
   formatPlayhead,
   formatPlayerTime,
-  formatMonth,
   formatSpan,
   formatSpanToTheMillisecond,
-  formatStamp,
 } from '@/lib/format'
 
 const ZONES = ['Etc/UTC', 'Asia/Tokyo', 'America/New_York', 'Pacific/Auckland']
@@ -41,29 +41,92 @@ function inEveryZone(name: string, check: () => void): void {
   }
 }
 
-inEveryZone('formatDateTime spells a UTC instant in Japan time', () => {
-  assert.equal(formatDateTime('2026-08-20T11:50:46Z'), '2026/08/20 20:50')
+const A_DAY_IN_2026 = '2026-06-01T00:00:00Z'
+
+inEveryZone('formatMoment spells a UTC instant in Japan time', () => {
   assert.equal(
-    formatDateTime('2026-08-20T11:50:46.482193Z'),
-    '2026/08/20 20:50',
+    formatMoment('2026-08-20T11:50:46Z', A_DAY_IN_2026),
+    '08/20(木) 20:50',
+  )
+  assert.equal(
+    formatMoment('2026-08-20T11:50:46.482193Z', A_DAY_IN_2026),
+    '08/20(木) 20:50',
   )
 })
 
-inEveryZone('formatDateTime carries an instant over into the next day', () => {
-  assert.equal(formatDateTime('2026-08-20T15:00:00Z'), '2026/08/21 00:00')
-  assert.equal(formatDateTime('2026-12-31T14:59:00Z'), '2026/12/31 23:59')
-  assert.equal(formatDateTime('2026-12-31T15:00:00Z'), '2027/01/01 00:00')
+inEveryZone('formatMoment carries an instant over into the next day', () => {
+  assert.equal(
+    formatMoment('2026-08-20T15:00:00Z', A_DAY_IN_2026),
+    '08/21(金) 00:00',
+  )
+  assert.equal(
+    formatMoment('2026-12-31T14:59:00Z', A_DAY_IN_2026),
+    '12/31(木) 23:59',
+  )
+  assert.equal(
+    formatMoment('2026-12-31T15:00:00Z', A_DAY_IN_2026),
+    '2027/01/01(金) 00:00',
+  )
 })
 
-inEveryZone('formatDateTime reads the offset an instant carries', () => {
-  assert.equal(formatDateTime('2026-08-20T20:50:46+09:00'), '2026/08/20 20:50')
-  assert.equal(formatDateTime('2026-08-20T07:50:46-04:00'), '2026/08/20 20:50')
+inEveryZone('formatMoment reads the offset an instant carries', () => {
+  assert.equal(
+    formatMoment('2026-08-20T20:50:46+09:00', A_DAY_IN_2026),
+    '08/20(木) 20:50',
+  )
+  assert.equal(
+    formatMoment('2026-08-20T07:50:46-04:00', A_DAY_IN_2026),
+    '08/20(木) 20:50',
+  )
 })
 
-inEveryZone('formatStamp drops the year and keeps Japan time', () => {
-  assert.equal(formatStamp('2026-08-20T11:50:46Z'), '08/20 20:50')
-  assert.equal(formatStamp('2026-01-09T15:00:00Z'), '01/10 00:00')
+inEveryZone('formatMoment keeps the year only when it is not this one', () => {
+  assert.equal(
+    formatMoment('2026-08-20T11:50:46Z', A_DAY_IN_2026),
+    '08/20(木) 20:50',
+  )
+  assert.equal(
+    formatMoment('2027-08-20T11:50:46Z', A_DAY_IN_2026),
+    '2027/08/20(金) 20:50',
+  )
+  assert.equal(
+    formatMoment('2025-08-20T11:50:46Z', A_DAY_IN_2026),
+    '2025/08/20(水) 20:50',
+  )
 })
+
+inEveryZone('formatMomentSpan writes one range with one dash', () => {
+  assert.equal(
+    formatMomentSpan(
+      '2026-08-20T11:50:00Z',
+      '2026-08-20T12:50:00Z',
+      A_DAY_IN_2026,
+    ),
+    '08/20(木) 20:50 – 21:50',
+  )
+})
+
+inEveryZone(
+  'formatMomentSpan spells the far side when a span crosses a day',
+  () => {
+    assert.equal(
+      formatMomentSpan(
+        '2026-08-20T14:50:00Z',
+        '2026-08-20T15:10:00Z',
+        A_DAY_IN_2026,
+      ),
+      '08/20(木) 23:50 – 08/21(金) 00:10',
+    )
+    assert.equal(
+      formatMomentSpan(
+        '2026-12-31T14:50:00Z',
+        '2026-12-31T15:10:00Z',
+        A_DAY_IN_2026,
+      ),
+      '12/31(木) 23:50 – 2027/01/01(金) 00:10',
+    )
+  },
+)
 
 inEveryZone('formatClock spells the hour and minute in Japan time', () => {
   assert.equal(formatClock(Date.parse('2026-08-20T11:50:46Z')), '20:50')
@@ -82,8 +145,12 @@ const stamps = await import(${JSON.stringify(new URL('../../lib/format.ts', impo
 
 process.stdout.write(
   [
-    stamps.formatDateTime('2026-08-20T11:50:46Z'),
-    stamps.formatStamp('2026-08-20T11:50:46Z'),
+    stamps.formatMoment('2026-08-20T11:50:46Z', '2026-06-01T00:00:00Z'),
+    stamps.formatMomentSpan(
+      '2026-08-20T11:50:46Z',
+      '2026-08-20T12:50:46Z',
+      '2026-06-01T00:00:00Z',
+    ),
     stamps.formatClock(Date.parse('2026-08-20T15:00:00Z')),
     stamps.formatMonth('2026-07-31T15:00:00Z'),
   ].join('|'),
@@ -98,7 +165,10 @@ for (const zone of ZONES) {
       { env: { ...process.env, TZ: zone }, encoding: 'utf8' },
     )
 
-    assert.equal(spoken, '2026/08/20 20:50|08/20 20:50|00:00|2026/08')
+    assert.equal(
+      spoken,
+      '08/20(木) 20:50|08/20(木) 20:50 – 21:50|00:00|2026/08',
+    )
   })
 }
 
@@ -114,8 +184,14 @@ test('a span shown to the millisecond keeps the three digits it was given', () =
 
 test('the summer of a zone that keeps daylight saving does not shift it', () => {
   underZone('America/New_York', () => {
-    assert.equal(formatDateTime('2026-01-20T11:50:46Z'), '2026/01/20 20:50')
-    assert.equal(formatDateTime('2026-08-20T11:50:46Z'), '2026/08/20 20:50')
+    assert.equal(
+      formatMoment('2026-01-20T11:50:46Z', A_DAY_IN_2026),
+      '01/20(火) 20:50',
+    )
+    assert.equal(
+      formatMoment('2026-08-20T11:50:46Z', A_DAY_IN_2026),
+      '08/20(木) 20:50',
+    )
   })
 })
 

@@ -1,6 +1,6 @@
 import type { Route } from 'next'
 
-import { formatStamp } from '@/lib/format'
+import { formatMoment } from '@/lib/format'
 import { SILENCE_RANGE, reachAgo } from '@/lib/tuners'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
@@ -383,7 +383,7 @@ function toHolding(message: string | undefined): {
 
   return {
     recordings: recordings ? Number(recordings[1]) : undefined,
-    until: until ? formatStamp(until[1]) : undefined,
+    until: until ? formatMoment(until[1]) : undefined,
   }
 }
 
@@ -679,7 +679,7 @@ function toReachNotice(
   const lastSeen =
     system.lastSeenAt === undefined
       ? ''
-      : `最後に受信したのは ${formatStamp(system.lastSeenAt)} です。`
+      : `最後に受信したのは ${formatMoment(system.lastSeenAt)} です。`
 
   return {
     tone: system.level === 'missing' ? 'danger' : 'warn',
@@ -720,7 +720,7 @@ function toDriftNotice(
     body,
     restart: {
       recordings: recordings.length,
-      until: last === undefined ? undefined : formatStamp(last),
+      until: last === undefined ? undefined : formatMoment(last),
     },
   }
 }
@@ -775,7 +775,7 @@ function toLastService(
 
   return seen === undefined
     ? undefined
-    : { at: formatStamp(seen), ago: reachAgo(seen, now) }
+    : { at: formatMoment(seen), ago: reachAgo(seen, now) }
 }
 
 function toSession(
@@ -794,7 +794,7 @@ function toSession(
     label: wordFor(SESSION_LABEL, observation.sessionPurpose),
     tone: observation.sessionPurpose === 'recording' ? 'recording' : 'epg',
     code: tuningLabelOf(observation.sessionTuning),
-    endsAt: endsAt === undefined ? undefined : formatStamp(endsAt),
+    endsAt: endsAt === undefined ? undefined : formatMoment(endsAt),
   }
 }
 

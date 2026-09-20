@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
-import { formatBytes, formatDateTime } from '@/lib/format'
+import { formatBytes, formatMoment } from '@/lib/format'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import { SYSTEM_DETAIL_LABELS } from '@/lib/system-terms'
 import type {
@@ -266,7 +266,7 @@ export function SystemView({
             <DetailRow label={SYSTEM_DETAIL_LABELS.observedAt}>
               {reading ? (
                 <span className="font-code tabular-nums text-ink-2">
-                  {formatDateTime(reading.observedAt)}
+                  {formatMoment(reading.observedAt)}
                 </span>
               ) : (
                 NOTHING

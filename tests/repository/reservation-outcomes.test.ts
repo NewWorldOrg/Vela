@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
+import { formatMoment, formatMomentSpan } from '@/lib/format'
 
 interface Sent {
   path: string
@@ -262,8 +263,8 @@ test('一行は、台帳が書いた語とこの機械の名前で読める', as
   assert.equal(row.title, '週末キッチンの手帖')
   assert.equal(row.channelName, '湾岸放送1')
   assert.equal(row.channelNo, '5')
-  assert.equal(row.whenLabel, '2026/08/27 21:00')
-  assert.equal(row.occurredLabel, '2026/08/27 22:01')
+  assert.equal(row.whenLabel, formatMoment('2026-08-27T12:00:00Z'))
+  assert.equal(row.occurredLabel, formatMoment('2026-08-27T13:01:00Z'))
   assert.equal(row.origin, 'ルール')
   assert.equal(row.ruleName, RULE.name)
   assert.equal(row.priority, 10)

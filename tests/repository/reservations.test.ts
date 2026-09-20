@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
+import { formatClockSpan, formatMoment, formatMomentSpan } from '@/lib/format'
 
 interface Sent {
   method: string
@@ -400,7 +401,10 @@ test('a channel the services no longer name is still named', async () => {
 test('the window is spelled in the zone broadcasting runs on', async () => {
   const one = await only()
 
-  assert.equal(one.whenLabel, '08/08(土) 21:10–22:40')
+  assert.equal(
+    one.whenLabel,
+    formatMomentSpan('2026-08-08T12:10:00Z', '2026-08-08T13:40:00Z'),
+  )
 })
 
 test('a recording under way is read as the standing', async () => {
@@ -478,14 +482,18 @@ test('a programme the guide has moved is marked, and says what moved', async () 
   assert.equal(one.epg?.diverged, true)
   assert.equal(one.epg?.programmeMissing, false)
   assert.deepEqual(one.epg?.changes, [
-    { field: '開始', before: '08/08 21:10', after: '08/08 21:40' },
+    {
+      field: '開始',
+      before: formatMoment('2026-08-08T12:10:00Z'),
+      after: formatMoment('2026-08-08T12:40:00Z'),
+    },
     {
       field: '番組名',
       before: '週末キッチンの手帖',
       after: '週末キッチンの手帖 特別編',
     },
   ])
-  assert.equal(one.epg?.noticedAt, '08/08 08:15')
+  assert.equal(one.epg?.noticedAt, formatMoment('2026-08-07T23:15:00Z'))
 })
 
 test('a programme the guide has dropped is marked as gone, not as moved', async () => {
@@ -615,7 +623,13 @@ test('the counterparts are the overlapping seats on another stream', async () =>
 test('a counterpart is spelled by its channel and its clock', async () => {
   const conflict = await contended()
 
-  assert.equal(conflict.entries[0].meta, '中央テレビ1 · 21:10–22:40')
+  assert.equal(
+    conflict.entries[0].meta,
+    `中央テレビ1 · ${formatClockSpan(
+      '2026-08-08T12:10:00Z',
+      '2026-08-08T13:40:00Z',
+    )}`,
+  )
 })
 
 test('the headline counts the streams, not the reservations', async () => {

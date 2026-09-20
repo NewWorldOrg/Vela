@@ -1,4 +1,5 @@
 import type { LiveWatching } from '@/repository/live'
+import { SPAN_DASH } from '@/lib/format'
 import { saysSubtitled } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
 import { ProgressBar } from '@/components/vela/progress'
@@ -33,7 +34,9 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
         </h1>
         {programme && (
           <span className="ml-auto font-code text-ui whitespace-nowrap text-ink-2">
-            {programme.startLabel}–{programme.endLabel ?? '終了未定'}
+            {programme.startLabel}
+            {SPAN_DASH}
+            {programme.endLabel ?? '終了未定'}
           </span>
         )}
       </div>

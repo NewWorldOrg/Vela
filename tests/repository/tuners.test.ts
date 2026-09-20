@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
+import { formatMoment, formatMomentSpan } from '@/lib/format'
 
 interface Sent {
   method: string
@@ -272,7 +273,7 @@ test('the last service a tuner saw is the one the API reports for its system', a
     systems: [reaching('isdbT', 'reaching', SEEN_AT)],
   }
 
-  assert.equal((await screen()).rows[0]?.lastService?.at, '08/09 03:00')
+  assert.equal((await screen()).rows[0]?.lastService?.at, formatMoment(SEEN_AT))
 })
 
 test('how long ago it was seen is counted from the moment it was read', async () => {
@@ -303,7 +304,9 @@ test('a system the API calls silent is put on the screen as the API judged it', 
   assert.deepEqual((await screen()).notices, [
     {
       tone: 'warn',
-      body: '地上波のサービスをいま受信できていません。最後に受信したのは 08/09 03:00 です。',
+      body: `地上波のサービスをいま受信できていません。最後に受信したのは ${formatMoment(
+        SEEN_AT,
+      )} です。`,
       actions: [
         { label: '切り分けを見る', href: '/settings/channels#system-isdbT' },
       ],

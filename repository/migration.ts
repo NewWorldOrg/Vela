@@ -1,6 +1,6 @@
 import type { Route } from 'next'
 
-import { formatDateTime, formatSpanToTheMillisecond } from '@/lib/format'
+import { formatMoment, formatSpanToTheMillisecond } from '@/lib/format'
 import {
   NOT_YET_IN_THIS_BUILD,
   NOT_YET_IN_THIS_BUILD_SAYING,
@@ -230,15 +230,15 @@ function toRun(run: RunResponder): MigrationRun {
   const rehearsals = toInt(run.rehearsals)
 
   return {
-    heading: `${formatDateTime(run.startedAt)} の実行`,
+    heading: `${formatMoment(run.startedAt)} の実行`,
     kind: run.pass === 'forReal' ? '本番' : '下見',
     rehearsals: rehearsals === 0 ? '下見なし' : `下見 ${rehearsals} 回`,
-    startedAt: formatDateTime(run.startedAt),
-    finishedAt: formatDateTime(run.finishedAt),
+    startedAt: formatMoment(run.startedAt),
+    finishedAt: formatMoment(run.finishedAt),
     duration: `所要 ${formatSpanToTheMillisecond(millisecondsBetween(run.startedAt, run.finishedAt))}`,
     source: whatItCameFrom(run.source),
     lastRehearsal: run.lastRehearsalFinishedAt
-      ? formatDateTime(run.lastRehearsalFinishedAt)
+      ? formatMoment(run.lastRehearsalFinishedAt)
       : NO_REHEARSAL,
   }
 }

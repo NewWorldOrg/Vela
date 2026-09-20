@@ -1,5 +1,5 @@
 import type { OriginLabel } from '@/lib/format'
-import { formatDateTime, formatReservationOrigin } from '@/lib/format'
+import { formatMoment, formatReservationOrigin } from '@/lib/format'
 import type { OutcomeChoice } from '@/lib/reservation-outcomes'
 import { OUTCOME_KINDS, OUTCOME_SPANS } from '@/lib/reservation-outcomes'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
@@ -204,7 +204,7 @@ function toOutcome(
     title: one.programme.name,
     channelName: channel?.name || serviceKeyOf(one),
     channelNo: channel?.no,
-    whenLabel: formatDateTime(one.programme.startsAt),
+    whenLabel: formatMoment(one.programme.startsAt),
     origin: formatReservationOrigin(one.ruleId ? 'byRule' : 'byHand'),
     ruleName: one.ruleId ? rules.get(one.ruleId) : undefined,
     priority: toInt(one.priority),
@@ -215,7 +215,7 @@ function toOutcome(
     recordingResult: one.recordingOutcome ?? undefined,
     retry: retryOf(one),
     instead: one.recordedInstead.map((id) => named.get(id) ?? { key: id }),
-    occurredLabel: formatDateTime(one.occurredAt),
+    occurredLabel: formatMoment(one.occurredAt),
   }
 }
 

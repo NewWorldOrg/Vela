@@ -1,4 +1,4 @@
-import { formatBytes, formatStamp } from '@/lib/format'
+import { formatBytes, formatMoment } from '@/lib/format'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
@@ -135,7 +135,7 @@ function refusalOf(
 
   if (answered.refusal === 'tooSoonAfterTheLastOne') {
     return answered.notBefore
-      ? `${TOO_SOON}次に実行できるのは ${formatStamp(answered.notBefore)} です。`
+      ? `${TOO_SOON}次に実行できるのは ${formatMoment(answered.notBefore)} です。`
       : TOO_SOON
   }
 
@@ -197,7 +197,7 @@ export async function discardIntegrityFinding(
 
 function toCheck(check: CheckResponder): IntegrityCheck {
   return {
-    ranAt: formatStamp(check.finishedAt),
+    ranAt: formatMoment(check.finishedAt),
     rootsWalked: toInt(check.rootsWalked),
     rootsOutOfReach: toInt(check.rootsOutOfReach),
     filesRead: toInt(check.filesRead),
@@ -223,7 +223,7 @@ function toFinding(finding: FindingResponder): IntegrityFinding {
     size: observed === undefined ? '—' : `${grouped(observed)} B`,
     sizeNote:
       ledger === undefined ? undefined : `録画の記録では ${grouped(ledger)} B`,
-    noticedAt: formatStamp(finding.noticedAt),
+    noticedAt: formatMoment(finding.noticedAt),
   }
 }
 
