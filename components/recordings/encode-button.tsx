@@ -152,7 +152,7 @@ export function EncodeButton({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{again ? MAKING_IT_AGAIN : ENCODE}</DialogTitle>
-            <DialogDescription className="min-w-0 truncate">
+            <DialogDescription className="min-w-0">
               {recording.title}
             </DialogDescription>
           </DialogHeader>

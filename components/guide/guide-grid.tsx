@@ -13,6 +13,7 @@ import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
 
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
@@ -80,7 +81,9 @@ export function GuideGrid({
               className="flex min-w-0 items-center justify-center gap-1.5 overflow-hidden border-l border-line px-1.5 py-2 text-sub font-bold first-of-type:border-l-0"
             >
               <ChannelMark logo={c.logo} no={c.no} />
-              <span className="min-w-0 truncate">{c.name}</span>
+              <InFull says={c.name}>
+                <span className="min-w-0 truncate">{c.name}</span>
+              </InFull>
             </div>
           ))}
         </div>

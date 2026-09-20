@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
+import { InFull } from '@/components/vela/in-full'
 
 export type MeterTone = 'brand' | 'ok' | 'warn' | 'err'
 
@@ -69,7 +70,9 @@ export function SignalMeter({
   return (
     <div data-slot="signal-meter" className={cn('', className)} {...props}>
       <div className="mb-[7px] flex items-baseline justify-between gap-3">
-        <span className="truncate text-ui text-ink">{channel}</span>
+        <InFull says={channel}>
+          <span className="truncate text-ui text-ink">{channel}</span>
+        </InFull>
         <span className="flex shrink-0 items-baseline gap-[9px]">
           <b className="font-code text-ui font-medium tabular-nums">{value}</b>
           <span className={cn('text-note font-medium', TEXT_TONE[tone])}>

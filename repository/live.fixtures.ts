@@ -197,3 +197,47 @@ export const LIVE_SCREEN_FIXTURE: LiveScreen = {
   profiles: LIVE_PROFILE_FIXTURES,
   tuners: 2,
 }
+
+export const LONG_TITLE =
+  '夜どおし特集「灯台のある町から ― 半世紀ぶんの記録をたずねて、港ではたらく人びとと海の道をたどる長い夜」'
+
+export const LONG_DESCRIPTION =
+  '半世紀にわたって港町の夜を照らしてきた灯台の記録をたどる。\n' +
+  '灯りを守ってきた人びとの話と、灯台が指し示してきた海の道を、' +
+  '古い航海日誌と当時の写真をならべながら順に追いかけ、' +
+  'いまも変わらず回り続ける灯りの下で夜明けまで見届ける。'
+
+export const LONG_EXTENDED = {
+  heading: '出演',
+  text:
+    '港の灯台を守ってきた人びと、造船所の技師、' +
+    '航路をたどってきた船長、そして夜ごと灯りを見上げてきた町の人たち。',
+}
+
+const LONG_WORDS_CHANNEL: LiveChannel = {
+  ...LIVE_CHANNEL_FIXTURES[0],
+  name: 'みなと総合1 ― 港と海の道をつたえるチャンネル',
+  now: programme('p901', LONG_TITLE, '21:00', '22:00', {
+    description: LONG_DESCRIPTION,
+    items: [LONG_EXTENDED],
+    hasSubtitles: true,
+    genreLabel: 'ドキュメンタリー/教養',
+  }),
+  next: programme(
+    'p902',
+    '深夜便「町の灯りと、そこで暮らしてきた人たちの声をたずねる長い夜の後編」',
+    '22:00',
+    '23:30',
+  ),
+}
+
+export const LIVE_LONG_WORDS_FIXTURE: LiveScreen = {
+  ...LIVE_SCREEN_FIXTURE,
+  channels: [LONG_WORDS_CHANNEL, ...LIVE_CHANNEL_FIXTURES.slice(1)],
+  watching: {
+    channel: LONG_WORDS_CHANNEL,
+    progressPct: 7,
+    nowLabel: '21:04',
+    restMin: 56,
+  },
+}

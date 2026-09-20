@@ -15,6 +15,7 @@ import {
 } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import { ChannelInFull } from '@/components/live/channel-in-full'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 
 export function ChannelList({
@@ -144,60 +145,62 @@ export function ChannelList({
                       foldBand(motion),
                     )}
                   >
-                    <button
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => onSelect(channel)}
-                      className={cn(
-                        'flex min-h-11 w-full items-start gap-[11px] rounded-lg px-3 py-2.5 text-left outline-none',
-                        'transition-[background-color] duration-150 ease-out hover:bg-surface-2 focus-visible:shadow-ring',
-                        on && 'bg-brand-soft hover:bg-brand-soft',
-                        pressable,
-                      )}
-                    >
-                      <ChannelMark
-                        logo={channel.logo}
-                        no={channel.no}
-                        on={on}
-                        keepsTheSlot
-                        className="mt-0.5"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className={cn(
-                            'block truncate text-ui font-bold',
-                            on && 'text-brand',
-                          )}
-                        >
-                          {channel.name}
-                        </span>
-                        {channel.now ? (
-                          <span className="block truncate text-sub text-ink-2">
-                            {channel.now.title}
-                          </span>
-                        ) : (
-                          <span className="block text-sub text-ink-3">
-                            番組情報がありません
-                          </span>
+                    <ChannelInFull channel={channel}>
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => onSelect(channel)}
+                        className={cn(
+                          'flex min-h-11 w-full items-start gap-[11px] rounded-lg px-3 py-2.5 text-left outline-none',
+                          'transition-[background-color] duration-150 ease-out hover:bg-surface-2 focus-visible:shadow-ring',
+                          on && 'bg-brand-soft hover:bg-brand-soft',
+                          pressable,
                         )}
-                        {channel.next && (
-                          <span className="mt-px block truncate text-note text-ink-3">
-                            次{' '}
-                            <span className="font-code">
-                              {channel.next.startLabel}
-                            </span>{' '}
-                            {channel.next.title}
-                          </span>
-                        )}
-                      </span>
-                      {on && (
-                        <i
-                          data-slot="watching-mark"
-                          aria-hidden="true"
-                          className="mt-2 size-[7px] shrink-0 rounded-full bg-coral"
+                      >
+                        <ChannelMark
+                          logo={channel.logo}
+                          no={channel.no}
+                          on={on}
+                          keepsTheSlot
+                          className="mt-0.5"
                         />
-                      )}
-                    </button>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={cn(
+                              'block truncate text-ui font-bold',
+                              on && 'text-brand',
+                            )}
+                          >
+                            {channel.name}
+                          </span>
+                          {channel.now ? (
+                            <span className="block truncate text-sub text-ink-2">
+                              {channel.now.title}
+                            </span>
+                          ) : (
+                            <span className="block text-sub text-ink-3">
+                              番組情報がありません
+                            </span>
+                          )}
+                          {channel.next && (
+                            <span className="mt-px block truncate text-note text-ink-3">
+                              次{' '}
+                              <span className="font-code">
+                                {channel.next.startLabel}
+                              </span>{' '}
+                              {channel.next.title}
+                            </span>
+                          )}
+                        </span>
+                        {on && (
+                          <i
+                            data-slot="watching-mark"
+                            aria-hidden="true"
+                            className="mt-2 size-[7px] shrink-0 rounded-full bg-coral"
+                          />
+                        )}
+                      </button>
+                    </ChannelInFull>
                   </li>
                 )
               })}

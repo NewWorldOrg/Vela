@@ -5,7 +5,6 @@ import type { ReactNode } from 'react'
 import type { Channel } from '@/repository/channels'
 import type {
   Program,
-  ProgramItem,
   RelatedProgram,
   RelationKind,
 } from '@/repository/programs'
@@ -29,11 +28,14 @@ import { Button } from '@/components/ui/button'
 import {
   ListIcon,
   LiveIcon,
-  PersonIcon,
   RecordIcon,
   RelayIcon,
 } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import {
+  ProgramDescription,
+  ProgramExtended,
+} from '@/components/guide/program-description'
 import { ReserveButton } from '@/components/guide/reserve-button'
 
 const RELATION_WORDING: Record<
@@ -122,9 +124,7 @@ export function ProgramDetailBody({
 
       <div className="mt-5 border-t border-dashed border-line pt-5">
         {program.description && (
-          <p className="mb-5 text-[13.5px] leading-[1.95] whitespace-pre-wrap">
-            {program.description}
-          </p>
+          <ProgramDescription description={program.description} />
         )}
         {related.map((item) => (
           <RelatedNotice
@@ -134,7 +134,7 @@ export function ProgramDetailBody({
           />
         ))}
         {items.map((item, index) => (
-          <ExtendedSection key={index} item={item} />
+          <ProgramExtended key={index} item={item} />
         ))}
         <dl className="grid grid-cols-3 gap-5 border-t border-dashed border-line pt-4 max-[700px]:grid-cols-2 max-[480px]:grid-cols-1">
           <div>
@@ -269,26 +269,5 @@ function RelatedNotice({
         </Link>
       )}
     </div>
-  )
-}
-
-function ExtendedSection({ item }: { item: ProgramItem }) {
-  const HeadingIcon = /出演|司会|ゲスト|キャスト/.test(item.heading)
-    ? PersonIcon
-    : ListIcon
-
-  return (
-    <section className="mb-5">
-      {item.heading && (
-        <h2 className="heading mb-[7px] flex items-center gap-[7px] text-[13px]">
-          <HeadingIcon className="size-[15px] shrink-0 text-brand" />
-          {item.heading}
-          <span className="h-px flex-1 border-t border-dashed border-line" />
-        </h2>
-      )}
-      <p className="text-[13px] leading-[1.95] whitespace-pre-wrap text-ink-2">
-        {item.text}
-      </p>
-    </section>
   )
 }

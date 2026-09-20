@@ -77,7 +77,7 @@ export function JobTable({
               <JobStatusChip status={job.status} stalled={job.stalled} />
               {job.failure && (
                 <span
-                  className="mt-[3px] block max-w-[240px] truncate text-[10.5px] leading-relaxed text-ink-3"
+                  className="mt-[3px] block max-w-[240px] text-[10.5px] leading-relaxed text-ink-3"
                   title={job.failure.note || undefined}
                 >
                   {wordFor(FAILURE_LABEL, job.failure.failure)}
@@ -128,7 +128,7 @@ function JobTitle({ job }: { job: EncodeJob }) {
         href={`/recordings/${job.recordingId}` as Route}
         className="tap-target block max-w-[300px] text-[13px] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
       >
-        <span className="block truncate">{job.title}</span>
+        <span className="block">{job.title}</span>
       </Link>
       {job.recordedAt && (
         <span className="block font-code text-[10.5px] text-ink-3">

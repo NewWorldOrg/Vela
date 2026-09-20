@@ -536,3 +536,17 @@ export const エンコードしないルール: Story = {
     await expect(encodeSaved[0].draft.encodeWhenRecorded).toBe(true)
   },
 }
+
+const LONG_NAMED_RULE: Rule = {
+  ...RULE_FIXTURES[0],
+  id: 'rule-390',
+  name: '深夜の再放送をのぞいて、新番組の第一回だけを地上波と衛星の両方から拾うルール',
+}
+
+export const 長い名前と条件は丸めない: Story = {
+  args: {
+    result: { items: [LONG_NAMED_RULE], total: 1 },
+    editing: { state: 'rule', rule: LONG_NAMED_RULE },
+    actions: recording([], []),
+  },
+}

@@ -23,6 +23,7 @@ import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
 import {
   LIVE_CHANNEL_FIXTURES,
+  LIVE_LONG_WORDS_FIXTURE,
   LIVE_NOW_FIXTURE,
   LIVE_PROFILE_FIXTURES_SOFTWARE,
   LIVE_SCREEN_FIXTURE,
@@ -312,6 +313,13 @@ async function noLongerSignedIn(): Promise<TicketWrite> {
 const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
 
 const UNCHOSEN: LiveScreen = { ...LIVE_SCREEN_FIXTURE, watching: undefined }
+
+const LONG_WORDS: LiveScreen = LIVE_LONG_WORDS_FIXTURE
+
+const LONG_WORDS_UNCHOSEN: LiveScreen = {
+  ...LIVE_LONG_WORDS_FIXTURE,
+  watching: undefined,
+}
 
 const IN_TWO_LANGUAGES: LiveScreen = {
   ...CHOSEN,
@@ -2531,5 +2539,28 @@ export const AirPlay_はライブに描かない: Story = {
     await expect(
       canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
     ).toBeVisible()
+  },
+}
+
+export const 観ている番組の説明を読める: Story = {
+  args: { screen: LONG_WORDS, openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const panel = canvasElement.querySelector('[data-slot="now-next"]')
+
+    await expect(panel).toBeVisible()
+    await expect(
+      canvas.getByText(
+        /いまも変わらず回り続ける灯りの下で夜明けまで見届ける。/,
+      ),
+    ).toBeVisible()
+    await expect(canvas.getByText('出演')).toBeVisible()
+  },
+}
+
+export const 選局の一覧は見切れた題名を全文で言う: Story = {
+  args: { screen: LONG_WORDS_UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
 }

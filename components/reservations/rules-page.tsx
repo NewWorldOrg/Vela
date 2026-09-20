@@ -298,13 +298,13 @@ function RuleRow({
         >
           <b
             className={cn(
-              'block truncate text-ui font-bold',
+              'block text-ui font-bold',
               rule.enabled ? 'text-ink' : 'text-ink-3',
             )}
           >
             {rule.name}
           </b>
-          <span className="block truncate text-note text-ink-3">{summary}</span>
+          <span className="block text-note text-ink-3">{summary}</span>
         </button>
         <Switch
           size="sm"
@@ -638,7 +638,7 @@ function RuleEditor({
   return (
     <section className="rounded-lg bg-surface px-4 py-3.5">
       <div className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-dashed border-line pb-2.5">
-        <h2 className="heading min-w-0 flex-1 truncate text-[15px]">
+        <h2 className="heading min-w-0 flex-1 text-[15px]">
           {rule ? rule.name : '新しいルール'}
         </h2>
         {entry.enabled ? (
