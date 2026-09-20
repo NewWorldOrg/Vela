@@ -51,6 +51,7 @@ const THE_SUITE = [
   'tests/lib/search-condition.test.ts',
   'tests/lib/signed-out.test.ts',
   'tests/lib/state-terms.test.ts',
+  'tests/lib/system-terms.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',
   'tests/lib/version.test.ts',
   'tests/repository/announced.test.ts',
