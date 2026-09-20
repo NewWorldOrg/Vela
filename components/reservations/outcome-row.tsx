@@ -7,6 +7,7 @@ import {
   ChevronRightIcon,
   ListIcon,
 } from '@/components/vela/icons'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { OutcomeKindChip } from '@/components/reservations/outcome-kind-chip'
 
 const GONE = '記録が残っていません'
@@ -66,7 +67,9 @@ export function OutcomeRow({
           {outcome.priority}
         </TableCell>
         <TableCell className="align-top">
-          <OutcomeKindChip outcome={outcome} />
+          <StatusCell>
+            <OutcomeKindChip outcome={outcome} width={COLUMN_WIDE} />
+          </StatusCell>
         </TableCell>
         <TableCell className="align-top font-code text-ink-2">
           {outcome.occurredLabel}

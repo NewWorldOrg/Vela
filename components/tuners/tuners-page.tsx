@@ -35,6 +35,7 @@ import {
   TunerSatelliteIcon,
   TunerTerrestrialIcon,
 } from '@/components/vela/icons'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
@@ -332,11 +333,13 @@ export function TunersView({
                   </b>
                 </span>
               </TableCell>
-              <TableCell>
+              <TableCell className="align-top">
                 {row.kind === undefined ? (
                   <span className="text-ink-3">—</span>
                 ) : (
-                  <Badge>{row.kind}</Badge>
+                  <StatusCell>
+                    <Badge width={COLUMN_WIDE}>{row.kind}</Badge>
+                  </StatusCell>
                 )}
               </TableCell>
               <TableCell>
@@ -351,44 +354,49 @@ export function TunersView({
                   </span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell className="align-top">
                 {row.session ? (
-                  <span className="flex flex-wrap items-center gap-2">
+                  <StatusCell
+                    note={
+                      (row.session.code || row.session.endsAt) && (
+                        <>
+                          {row.session.code && (
+                            <span className="font-code">
+                              {row.session.code}
+                            </span>
+                          )}
+                          {row.session.endsAt && (
+                            <span className="block">
+                              終了予定{' '}
+                              <span className="font-code tabular-nums">
+                                {row.session.endsAt}
+                              </span>
+                            </span>
+                          )}
+                        </>
+                      )
+                    }
+                  >
                     <Badge
                       variant={
                         row.session.tone === 'recording' ? 'recording' : 'info'
                       }
+                      width={COLUMN_WIDE}
                       className="font-bold"
                     >
                       {row.session.label}
                     </Badge>
-                    <span className="text-ui">
-                      {row.session.code && (
-                        <span className="font-code">{row.session.code}</span>
-                      )}
-                      {row.session.endsAt && (
-                        <span className="block text-note text-ink-3">
-                          終了予定{' '}
-                          <span className="font-code tabular-nums">
-                            {row.session.endsAt}
-                          </span>
-                        </span>
-                      )}
-                    </span>
-                  </span>
+                  </StatusCell>
                 ) : (
                   <span className="text-ui text-ink-3">
                     {row.idleLabel ?? '—'}
                   </span>
                 )}
               </TableCell>
-              <TableCell>
-                <TunerStateChip row={row} />
-                {row.stateSub && (
-                  <span className="mt-[3px] block text-note leading-[1.5] text-ink-3">
-                    {row.stateSub}
-                  </span>
-                )}
+              <TableCell className="align-top">
+                <StatusCell note={row.stateSub}>
+                  <TunerStateChip row={row} width={COLUMN_WIDE} />
+                </StatusCell>
               </TableCell>
               <TableCell>
                 {row.lastService ? (

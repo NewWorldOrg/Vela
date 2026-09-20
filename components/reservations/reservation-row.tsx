@@ -24,12 +24,20 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
 import {
   ChevronDownIcon,
   ChevronRightIcon,
+  ChevronUpIcon,
+  CloseIcon,
+  EditIcon,
+  LibraryIcon,
   ListIcon,
+  RebuildIcon,
   TrashIcon,
+  TunerIcon,
   WarningIcon,
 } from '@/components/vela/icons'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
@@ -143,13 +151,19 @@ export function ReservationRow({
           )}
         </TableCell>
         <TableCell className="align-top">
-          <ReservationStateChip reservation={reservation} />
+          <StatusCell>
+            <ReservationStateChip
+              reservation={reservation}
+              width={COLUMN_WIDE}
+            />
+          </StatusCell>
         </TableCell>
         <TableCell className="text-right align-top">
-          <span className="inline-flex flex-wrap justify-end gap-2">
+          <ActionRow className="gap-1.5">
             {reservation.recordingId && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/recordings/${reservation.recordingId}`}>
+                  <LibraryIcon />
                   この予約の録画
                 </Link>
               </Button>
@@ -161,6 +175,7 @@ export function ReservationRow({
                 disabled={pending}
                 onClick={() => run(() => actions.onRestore(reservation.id))}
               >
+                <RebuildIcon />
                 復元
               </Button>
             )}
@@ -170,23 +185,9 @@ export function ReservationRow({
                 size="sm"
                 onClick={() => setEditing(true)}
               >
+                <EditIcon />
                 編集
               </Button>
-            )}
-            {editing && (
-              <EditReservationDialog
-                booking={{
-                  id: reservation.id,
-                  title: reservation.title,
-                  priority: reservation.priority,
-                  marginBeforeSeconds: reservation.marginBeforeSeconds,
-                  marginAfterSeconds: reservation.marginAfterSeconds,
-                  encodeWhenRecorded: reservation.encodeWhenRecorded,
-                }}
-                open
-                onOpenChange={setEditing}
-                onRevise={actions.onRevise}
-              />
             )}
             {cancellable && (
               <Button
@@ -195,6 +196,7 @@ export function ReservationRow({
                 disabled={pending}
                 onClick={() => run(() => actions.onCancel(reservation.id))}
               >
+                <CloseIcon />
                 取り消す
               </Button>
             )}
@@ -209,7 +211,22 @@ export function ReservationRow({
                 削除
               </Button>
             )}
-          </span>
+          </ActionRow>
+          {editing && (
+            <EditReservationDialog
+              booking={{
+                id: reservation.id,
+                title: reservation.title,
+                priority: reservation.priority,
+                marginBeforeSeconds: reservation.marginBeforeSeconds,
+                marginAfterSeconds: reservation.marginAfterSeconds,
+                encodeWhenRecorded: reservation.encodeWhenRecorded,
+              }}
+              open
+              onOpenChange={setEditing}
+              onRevise={actions.onRevise}
+            />
+          )}
         </TableCell>
       </TableRow>
       <AlertDialog open={removing} onOpenChange={setRemoving}>
@@ -281,7 +298,7 @@ export function ReservationRow({
                   </div>
                 ))}
               </div>
-              <div className="mt-2.5 flex flex-wrap gap-2">
+              <ActionRow className="mt-2.5 gap-2 max-[900px]:w-full max-[900px]:grid-flow-row">
                 <Button
                   variant="outline"
                   size="sm"
@@ -296,6 +313,7 @@ export function ReservationRow({
                     )
                   }
                 >
+                  <ChevronUpIcon />
                   この予約の優先度を上げる
                 </Button>
                 <Button
@@ -304,14 +322,16 @@ export function ReservationRow({
                   disabled={pending}
                   onClick={() => run(() => actions.onCancel(reservation.id))}
                 >
+                  <CloseIcon />
                   この予約を取り消す
                 </Button>
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="outline" size="sm" asChild>
                   <Link href="/settings/tuners">
+                    <TunerIcon />
                     チューナーの使用状況を見る
                   </Link>
                 </Button>
-              </div>
+              </ActionRow>
             </div>
           </TableCell>
         </TableRow>

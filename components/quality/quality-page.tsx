@@ -10,6 +10,7 @@ import type {
   QualityWrite,
 } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
   Table,
@@ -318,9 +319,14 @@ export function QualityView({
                     </span>
                   </TableCell>
                   <TableCell className="align-top whitespace-normal">
-                    <QualityChip level={tuner.state.level}>
-                      {tuner.state.label}
-                    </QualityChip>
+                    <StatusCell>
+                      <QualityChip
+                        level={tuner.state.level}
+                        width={COLUMN_WIDE}
+                      >
+                        {tuner.state.label}
+                      </QualityChip>
+                    </StatusCell>
                   </TableCell>
                   <QualityHealthCell cell={tuner.drop} />
                   <QualityHealthCell cell={tuner.lock} />

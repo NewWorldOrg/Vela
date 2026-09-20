@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import type { QualityTunerCell } from '@/repository/quality'
 import { TableCell } from '@/components/ui/table'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { QualityChip } from '@/components/quality/signal-quality-chip'
 
 export function QualityHealthCell({ cell }: { cell: QualityTunerCell }) {
@@ -18,7 +19,9 @@ export function QualityHealthCell({ cell }: { cell: QualityTunerCell }) {
       )}
       {cell.level && (
         <span className={cn('block', cell.value !== undefined && 'mt-1')}>
-          <QualityChip level={cell.level} />
+          <StatusCell>
+            <QualityChip level={cell.level} width={COLUMN_WIDE} />
+          </StatusCell>
         </span>
       )}
       {cell.sub && (

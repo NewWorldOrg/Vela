@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import { JobStatusChip } from '@/components/encode/job-status-chip'
@@ -73,16 +74,22 @@ export function JobTable({
             <TableCell className="max-w-[320px] whitespace-normal">
               <JobTitle job={job} />
             </TableCell>
-            <TableCell>
-              <JobStatusChip status={job.status} stalled={job.stalled} />
-              {job.failure && (
-                <span
-                  className="mt-[3px] block max-w-[240px] text-[10.5px] leading-relaxed text-ink-3"
-                  title={job.failure.note || undefined}
-                >
-                  {wordFor(FAILURE_LABEL, job.failure.failure)}
-                </span>
-              )}
+            <TableCell className="align-top">
+              <StatusCell
+                note={
+                  job.failure && (
+                    <span title={job.failure.note || undefined}>
+                      {wordFor(FAILURE_LABEL, job.failure.failure)}
+                    </span>
+                  )
+                }
+              >
+                <JobStatusChip
+                  status={job.status}
+                  stalled={job.stalled}
+                  width={COLUMN_WIDE}
+                />
+              </StatusCell>
               {job.attempt > 1 && (
                 <span className="mt-[3px] block font-code text-[10.5px] text-ink-3">
                   {job.attempt} 回目
