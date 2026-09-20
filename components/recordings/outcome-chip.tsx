@@ -4,7 +4,7 @@ import {
   RECORDING_OUTCOME_TERMS,
 } from '@/lib/state-terms'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeWidth } from '@/components/ui/badge'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -17,9 +17,15 @@ const VARIANT: Record<SettledOutcome, 'ok' | 'warn' | 'err'> = {
   failed: 'err',
 }
 
-export function OutcomeChip({ recording: r }: { recording: Recording }) {
+export function OutcomeChip({
+  recording: r,
+  width,
+}: {
+  recording: Recording
+  width?: BadgeWidth
+}) {
   if (r.outcome === 'recording') {
-    return <RecordingInProgressChip />
+    return <RecordingInProgressChip width={width} />
   }
 
   const term = shapeFor(
@@ -32,6 +38,7 @@ export function OutcomeChip({ recording: r }: { recording: Recording }) {
     <TermTip term={term}>
       <Badge
         variant={shapeFor(VARIANT, r.outcome, 'mute')}
+        width={width}
         className="font-bold"
       >
         <ChipDot />

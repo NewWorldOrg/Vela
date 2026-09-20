@@ -464,16 +464,25 @@ const LONG_AND_SHORT: Recording[] = [
 
 const CHIP_COLUMNS = [OUTCOME_COLUMN, QUALITY_COLUMN, ENCODE_COLUMN]
 
-function chipOf(row: HTMLElement, column: number): HTMLElement {
-  const chip = within(row)
-    .getAllByRole('cell')
-    [column].querySelector('[data-slot="badge"]')
-
-  if (!(chip instanceof HTMLElement)) {
-    throw new Error(`no chip in column ${column}`)
+function hasAnEdge(node: Element): boolean {
+  if (!(node instanceof HTMLElement)) {
+    return false
   }
 
-  return chip
+  const drawn = getComputedStyle(node)
+
+  return drawn.borderTopStyle !== 'none' && parseFloat(drawn.borderTopWidth) > 0
+}
+
+function pillOf(row: HTMLElement, column: number): HTMLElement {
+  const cell = within(row).getAllByRole('cell')[column]
+  const pill = [...cell.querySelectorAll('*')].find(hasAnEdge)
+
+  if (!(pill instanceof HTMLElement)) {
+    throw new Error(`nothing with an edge in column ${column}`)
+  }
+
+  return pill
 }
 
 export const 札の並び: Story = {
@@ -485,7 +494,7 @@ export const 札の並び: Story = {
 
     for (const row of rows) {
       const tops = CHIP_COLUMNS.map((column) =>
-        Math.round(chipOf(row, column).getBoundingClientRect().top),
+        Math.round(pillOf(row, column).getBoundingClientRect().top),
       )
 
       await expect(new Set(tops).size).toBe(1)
@@ -493,10 +502,14 @@ export const 札の並び: Story = {
 
     for (const column of CHIP_COLUMNS) {
       const widths = rows.map((row) =>
-        Math.round(chipOf(row, column).getBoundingClientRect().width),
+        Math.round(pillOf(row, column).getBoundingClientRect().width),
       )
 
       await expect(new Set(widths).size).toBe(1)
+
+      const said = rows.map((row) => pillOf(row, column).textContent ?? '')
+
+      await expect(new Set(said).size).toBeGreaterThan(1)
     }
 
     const actions = rows.map((row) =>
