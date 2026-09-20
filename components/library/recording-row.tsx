@@ -12,7 +12,7 @@ import { EncodeChip } from '@/components/recordings/encode-chip'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
-import { StatusCell } from '@/components/recordings/status-cell'
+import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
 import { ActionRow } from '@/components/vela/action-row'
 import { ChannelMark } from '@/components/vela/channel-mark'
@@ -113,9 +113,9 @@ export function RecordingRow({
       </td>
       <td className={cn(CELL, 'align-top')}>
         <StatusCell note={r.outcomeDetail} noteTone={subTone}>
-          <OutcomeChip recording={r} />
-          {r.fileMissing && <FileMissingChip />}
-          <UnfinishedDeletionChip recording={r} />
+          <OutcomeChip recording={r} width={COLUMN_WIDE} />
+          {r.fileMissing && <FileMissingChip width={COLUMN_WIDE} />}
+          <UnfinishedDeletionChip recording={r} width={COLUMN_WIDE} />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'align-top')}>
@@ -124,12 +124,12 @@ export function RecordingRow({
           noteTone={subTone}
           noteClassName={r.quality.measured ? 'font-code' : undefined}
         >
-          <QualityChip recording={r} />
+          <QualityChip recording={r} width={COLUMN_WIDE} />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'align-top')}>
         <StatusCell>
-          <EncodeChip recording={r} subTone={subTone} />
+          <EncodeChip recording={r} subTone={subTone} width={COLUMN_WIDE} />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>

@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
+import type { BadgeWidth } from '@/components/ui/badge'
 
-const CHIPS =
-  'flex flex-col items-stretch gap-[3px] [&_[data-slot=badge]]:w-full [&_[data-slot=badge]]:justify-start'
+export const COLUMN_WIDE: BadgeWidth = 'column'
+
+const CHIPS = 'flex flex-col items-stretch gap-[3px]'
 
 export function StatusCell({
   note,

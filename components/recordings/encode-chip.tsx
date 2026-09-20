@@ -3,7 +3,7 @@ import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { standingWordOf } from '@/lib/encode'
 import type { Recording } from '@/repository/recordings'
 import type { EncodeStanding } from '@/repository/encode-terms'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeWidth } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 
 const TONE: Record<EncodeStanding, 'info' | 'ok' | 'err' | undefined> = {
@@ -17,23 +17,29 @@ const TONE: Record<EncodeStanding, 'info' | 'ok' | 'err' | undefined> = {
 export function EncodeChip({
   recording: r,
   subTone = 'text-ink-3',
+  width,
 }: {
   recording: Recording
   subTone?: string
+  width?: BadgeWidth
 }) {
   const tone = shapeFor(TONE, r.encode, undefined)
   const word = standingWordOf(r.encode, r.encodeWhenRecorded)
 
   if (!tone) {
     return (
-      <Badge variant="outline" className={cn('border-line', subTone)}>
+      <Badge
+        variant="outline"
+        width={width}
+        className={cn('border-line', subTone)}
+      >
         {word}
       </Badge>
     )
   }
 
   return (
-    <Badge variant={tone} className="font-bold">
+    <Badge variant={tone} width={width} className="font-bold">
       <ChipDot />
       {word}
     </Badge>

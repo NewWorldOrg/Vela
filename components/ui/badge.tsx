@@ -5,9 +5,13 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1.5 rounded-full border px-[11px] py-[3px] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
+  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-[11px] py-[3px] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
+      width: {
+        fit: 'w-fit',
+        column: 'w-full',
+      },
       variant: {
         default: 'border-line bg-surface text-ink-2',
         secondary: 'border-line bg-surface-2 text-ink-2',
@@ -27,13 +31,19 @@ const badgeVariants = cva(
     },
     defaultVariants: {
       variant: 'default',
+      width: 'fit',
     },
   },
 )
 
+export type BadgeWidth = NonNullable<
+  VariantProps<typeof badgeVariants>['width']
+>
+
 function Badge({
   className,
   variant = 'default',
+  width = 'fit',
   asChild = false,
   ...props
 }: React.ComponentProps<'span'> &
@@ -44,7 +54,8 @@ function Badge({
     <Comp
       data-slot="badge"
       data-variant={variant}
-      className={cn(badgeVariants({ variant }), className)}
+      data-width={width}
+      className={cn(badgeVariants({ variant, width }), className)}
       {...props}
     />
   )
