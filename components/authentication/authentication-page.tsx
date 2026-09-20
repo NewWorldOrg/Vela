@@ -66,13 +66,13 @@ export function AuthenticationView({
 
         {notice?.kind === 'revoked' && (
           <Banner tone="success" className="mb-3.5">
-            {notice.device} のセッションを失効させました。
+            {notice.device} のセッションを削除しました。
           </Banner>
         )}
         {notice?.kind === 'password' && (
           <Banner tone="success" className="mb-3.5">
             <b className="block font-bold">パスワードを変更しました。</b>
-            ほかの端末のセッション {notice.sessionsEnded} 件を失効させました。
+            ほかの端末のセッション {notice.sessionsEnded} 件を削除しました。
           </Banner>
         )}
 

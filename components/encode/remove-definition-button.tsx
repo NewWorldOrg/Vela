@@ -20,7 +20,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import { TrashIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 
-const SIGNED_OUT = signedOut('撤去')
+const SIGNED_OUT = signedOut('削除')
 
 export function RemoveDefinitionButton({
   kind,
@@ -60,20 +60,20 @@ export function RemoveDefinitionButton({
       <Button
         variant="destructive"
         size="sm"
-        aria-label={`${label} を撤去`}
+        aria-label={`${label} を削除`}
         onClick={() => {
           setRefusal(undefined)
           setOpen(true)
         }}
       >
         <TrashIcon />
-        撤去
+        削除
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>この{kind}を撤去します</AlertDialogTitle>
+            <AlertDialogTitle>この{kind}を削除します</AlertDialogTitle>
             <AlertDialogDescription>
               <b className="font-bold text-ink">{label}</b>
             </AlertDialogDescription>
@@ -92,7 +92,7 @@ export function RemoveDefinitionButton({
               }}
             >
               {pending ? <Spinner className="size-3.5" /> : <TrashIcon />}
-              撤去する
+              削除する
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -55,7 +55,7 @@ export const Tones: Story = {
         </Banner>
         <Banner tone="success">
           <b className="block font-bold">
-            Safari / iPadOS 18 のセッションを失効させました。
+            Safari / iPadOS 18 のセッションを削除しました。
           </b>
           この端末は次のリクエストから 401 になります。
         </Banner>

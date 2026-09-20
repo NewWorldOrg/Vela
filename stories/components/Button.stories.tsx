@@ -69,7 +69,7 @@ export const Variants: Story = {
           削除
         </Button>
         <Button {...args} variant="destructiveFill">
-          破棄して再取得
+          削除して再取得
         </Button>
         <Button {...args} variant="secondary">
           複製

@@ -70,9 +70,9 @@ const HELD_BY_A_JOB =
 const ALREADY_RETIRED = 'この保存先は退役しているため、変更できませんでした。'
 
 const STILL_THE_DEFAULT =
-  'このプロファイルを既定にしている保存先があるため、撤去できませんでした。'
+  'このプロファイルを既定にしている保存先があるため、削除できませんでした。'
 
-const THE_LAST_ONE = 'この保存先は最後の 1 つのため、撤去できませんでした。'
+const THE_LAST_ONE = 'この保存先は最後の 1 つのため、削除できませんでした。'
 
 const meta = {
   title: 'Screens/設定・エンコード',
@@ -587,24 +587,24 @@ export const 保存先を変更する: Story = {
   },
 }
 
-export const 撤去して消える: Story = {
+export const 削除して消える: Story = {
   play: async ({ canvasElement }) => {
     removeProfile.mockClear()
 
     const canvas = within(canvasElement)
 
     await userEvent.click(
-      canvas.getByRole('button', { name: '録画再生用 を撤去' }),
+      canvas.getByRole('button', { name: '録画再生用 を削除' }),
     )
 
     const dialog = await screen.findByRole('alertdialog', {
-      name: 'このプロファイルを撤去します',
+      name: 'このプロファイルを削除します',
     })
 
     await expect(within(dialog).getByText('録画再生用')).toBeVisible()
 
     await userEvent.click(
-      within(dialog).getByRole('button', { name: '撤去する' }),
+      within(dialog).getByRole('button', { name: '削除する' }),
     )
 
     await waitFor(() => expect(removeProfile).toHaveBeenCalledWith('pf-1'))
@@ -614,7 +614,7 @@ export const 撤去して消える: Story = {
   },
 }
 
-export const 撤去して退役する: Story = {
+export const 削除して退役する: Story = {
   args: {
     actions: {
       ...ACTIONS,
@@ -625,14 +625,14 @@ export const 撤去して退役する: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '棚 を撤去' }))
+    await userEvent.click(canvas.getByRole('button', { name: '棚 を削除' }))
 
     const dialog = await screen.findByRole('alertdialog', {
-      name: 'この保存先を撤去します',
+      name: 'この保存先を削除します',
     })
 
     await userEvent.click(
-      within(dialog).getByRole('button', { name: '撤去する' }),
+      within(dialog).getByRole('button', { name: '削除する' }),
     )
 
     await expect(
@@ -654,13 +654,13 @@ export const 退役した定義: Story = {
       canvas.queryByRole('button', { name: '保管用 を変更' }),
     ).toBeNull()
     await expect(
-      canvas.queryByRole('button', { name: '保管用 を撤去' }),
+      canvas.queryByRole('button', { name: '保管用 を削除' }),
     ).toBeNull()
     await expect(
       canvas.queryByRole('button', { name: '旧棚 を変更' }),
     ).toBeNull()
     await expect(
-      canvas.queryByRole('button', { name: '旧棚 を撤去' }),
+      canvas.queryByRole('button', { name: '旧棚 を削除' }),
     ).toBeNull()
   },
 }
@@ -713,7 +713,7 @@ export const 退役済みのため変更を断られる: Story = {
   },
 }
 
-export const 既定に指名されているため撤去を断られる: Story = {
+export const 既定に指名されているため削除を断られる: Story = {
   args: {
     actions: {
       ...ACTIONS,
@@ -723,15 +723,15 @@ export const 既定に指名されているため撤去を断られる: Story = 
   },
   play: async ({ canvasElement }) => {
     await userEvent.click(
-      within(canvasElement).getByRole('button', { name: '録画再生用 を撤去' }),
+      within(canvasElement).getByRole('button', { name: '録画再生用 を削除' }),
     )
 
     const dialog = await screen.findByRole('alertdialog', {
-      name: 'このプロファイルを撤去します',
+      name: 'このプロファイルを削除します',
     })
 
     await userEvent.click(
-      within(dialog).getByRole('button', { name: '撤去する' }),
+      within(dialog).getByRole('button', { name: '削除する' }),
     )
 
     await expect(
@@ -740,7 +740,7 @@ export const 既定に指名されているため撤去を断られる: Story = 
   },
 }
 
-export const 最後の保存先のため撤去を断られる: Story = {
+export const 最後の保存先のため削除を断られる: Story = {
   args: {
     actions: {
       ...ACTIONS,
@@ -750,15 +750,15 @@ export const 最後の保存先のため撤去を断られる: Story = {
   },
   play: async ({ canvasElement }) => {
     await userEvent.click(
-      within(canvasElement).getByRole('button', { name: '棚 を撤去' }),
+      within(canvasElement).getByRole('button', { name: '棚 を削除' }),
     )
 
     const dialog = await screen.findByRole('alertdialog', {
-      name: 'この保存先を撤去します',
+      name: 'この保存先を削除します',
     })
 
     await userEvent.click(
-      within(dialog).getByRole('button', { name: '撤去する' }),
+      within(dialog).getByRole('button', { name: '削除する' }),
     )
 
     await expect(await within(dialog).findByText(THE_LAST_ONE)).toBeVisible()
