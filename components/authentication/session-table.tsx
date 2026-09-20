@@ -24,6 +24,7 @@ import { ChipDot } from '@/components/vela/status'
 import { RevokeSession } from '@/components/authentication/revoke-session'
 import { SignOut } from '@/components/authentication/sign-out'
 import { METHOD_LABEL } from '@/components/authentication/wording'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 const DEVICE_ICON: Record<
   DeviceKind,
@@ -59,7 +60,7 @@ export function SessionTable({
           <TableHead>端末</TableHead>
           <TableHead>アカウント</TableHead>
           <TableHead>作成</TableHead>
-          <TableHead>最終利用</TableHead>
+          <TableHead>{WHEN_LABELS.taken}</TableHead>
           <TableHead className="text-right">操作</TableHead>
         </TableRow>
       </TableHeader>

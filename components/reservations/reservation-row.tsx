@@ -34,6 +34,7 @@ import {
 } from '@/components/vela/icons'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 export interface ReservationActions {
   onCancel: (id: string) => Promise<ReservationWrite>
@@ -222,7 +223,7 @@ export function ReservationRow({
                 <dd className="font-bold text-ink">{reservation.title}</dd>
                 <dt className="text-ink-3">チャンネル</dt>
                 <dd className="text-ink-2">{reservation.channelName}</dd>
-                <dt className="text-ink-3">放送日時</dt>
+                <dt className="text-ink-3">{WHEN_LABELS.broadcast}</dt>
                 <dd className="font-code text-ink-2">
                   {reservation.whenLabel}
                 </dd>

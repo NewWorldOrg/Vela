@@ -27,6 +27,7 @@ import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { CandidateList } from '@/components/channels/candidate-list'
 import { cn } from '@/lib/utils'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
   { label: '候補チャンネルの開閉', hidden: true },
@@ -35,7 +36,7 @@ const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
   { label: '現在の物理ch' },
   { label: '候補' },
   { label: '有効' },
-  { label: '最終確認' },
+  { label: WHEN_LABELS.taken },
   { label: '状態', hidden: true },
 ]
 

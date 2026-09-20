@@ -20,6 +20,7 @@ import { TrashIcon, WarningIcon } from '@/components/vela/icons'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 function observationOf(recording: Recording): string | undefined {
   return recording.fileMissing ? '実ファイルなし' : recording.sizeObservedAt
@@ -81,7 +82,7 @@ export function DeleteRecordingDialog({
                 <dd className="font-bold text-ink">{recording.title}</dd>
                 <dt className="text-ink-3">チャンネル</dt>
                 <dd className="text-ink-2">{recording.channel}</dd>
-                <dt className="text-ink-3">録画日時</dt>
+                <dt className="text-ink-3">{WHEN_LABELS.recorded}</dt>
                 <dd className="font-code text-ink-2">
                   {recording.recordedRange}
                 </dd>

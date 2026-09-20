@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 import { CloseIcon } from '@/components/vela/icons'
 import { METHOD_LABEL, revokedHref } from '@/components/authentication/wording'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 export function RevokeSession({
   session,
@@ -58,7 +59,7 @@ export function RevokeSession({
         }}
       >
         <CloseIcon />
-        失効させる
+        削除
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
@@ -66,10 +67,10 @@ export function RevokeSession({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-[9px]">
               <CloseIcon className="size-[19px] text-coral" />
-              このセッションを失効させます
+              このセッションを削除します
             </AlertDialogTitle>
             <AlertDialogDescription className="sr-only">
-              {session.device.name}のセッションを失効させます
+              {session.device.name}のセッションを削除します
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -85,7 +86,7 @@ export function RevokeSession({
             <dd>{wordFor(METHOD_LABEL, session.method)}</dd>
             <dt className="text-sub text-ink-3">作成</dt>
             <dd className="font-code tabular-nums">{session.createdAt}</dd>
-            <dt className="text-sub text-ink-3">最終利用</dt>
+            <dt className="text-sub text-ink-3">{WHEN_LABELS.taken}</dt>
             <dd className="font-code tabular-nums">
               {session.lastUsed.at ?? session.lastUsed.label}
             </dd>
@@ -94,7 +95,7 @@ export function RevokeSession({
           <span aria-live="polite">
             {refusal && (
               <InlineAlert tone="danger">
-                失効させられませんでした。{refusal}
+                削除できませんでした。{refusal}
               </InlineAlert>
             )}
           </span>
@@ -109,7 +110,7 @@ export function RevokeSession({
             </Button>
             <Button variant="destructive" disabled={pending} onClick={run}>
               <CloseIcon />
-              失効させる
+              削除する
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

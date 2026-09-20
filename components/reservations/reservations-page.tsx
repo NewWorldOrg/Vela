@@ -31,12 +31,13 @@ import type { ReservationBulkActions } from '@/components/reservations/reservati
 import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
   { label: '競合の詳細の開閉', hidden: true, narrow: true },
   { label: '番組' },
   { label: 'チャンネル' },
-  { label: '放送日時' },
+  { label: WHEN_LABELS.broadcast },
   { label: '由来' },
   { label: '状態' },
   { label: '操作', hidden: true },
