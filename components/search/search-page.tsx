@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/select'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
+import { InFull } from '@/components/vela/in-full'
 import { Pager } from '@/components/vela/pager'
 import {
   ChevronLeftIcon,
@@ -385,9 +386,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
 
         <div className="mt-3 flex min-w-0 items-center gap-2.5 border-t border-dashed border-line pt-3">
           <LinkIcon className="size-3.5 shrink-0 text-ink-3" />
-          <code className="min-w-0 truncate font-code text-note text-ink-3">
-            {decodeURIComponent(href)}
-          </code>
+          <InFull says={decodeURIComponent(href)}>
+            <code className="min-w-0 truncate font-code text-note text-ink-3">
+              {decodeURIComponent(href)}
+            </code>
+          </InFull>
           <button
             type="button"
             onClick={async () => {

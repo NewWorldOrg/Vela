@@ -9,6 +9,7 @@ import type {
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/vela/empty-state'
 import { MarkStar } from '@/components/vela/icons'
+import { InFull } from '@/components/vela/in-full'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { LinkSegments } from '@/components/quality/link-segments'
@@ -129,7 +130,11 @@ export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
         <div className="grid grid-cols-[minmax(0,min(8.5rem,30%))_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5">
           {trend.rows.map((row) => (
             <Fragment key={row.key}>
-              <span className="truncate text-note text-ink-2">{row.name}</span>
+              <InFull says={row.name}>
+                <span className="truncate text-note text-ink-2">
+                  {row.name}
+                </span>
+              </InFull>
               <Strip row={row} />
             </Fragment>
           ))}

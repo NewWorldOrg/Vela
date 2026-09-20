@@ -14,6 +14,7 @@ import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import { InFull } from '@/components/vela/in-full'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 
 const CELL =
@@ -45,16 +46,22 @@ export function RecordingRow({
         <span className="flex min-w-0 items-center gap-3">
           <RecordingThumb recording={r} subTone={subTone} />
           <span className="min-w-0">
-            <b className="block overflow-hidden text-[13.5px] leading-normal font-bold text-ellipsis whitespace-nowrap [font-feature-settings:'palt']">
-              {r.title}
-            </b>
+            <InFull says={r.title}>
+              <b className="block overflow-hidden text-[13.5px] leading-normal font-bold text-ellipsis whitespace-nowrap [font-feature-settings:'palt']">
+                {r.title}
+              </b>
+            </InFull>
             <span className={cn('block truncate text-note', subTone)}>
               {r.segments && (
                 <span className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[9px] text-[10.5px] font-bold text-ink-2">
                   {r.segments} セグメント
                 </span>
               )}
-              {r.note}
+              {r.note && (
+                <InFull says={r.note}>
+                  <span>{r.note}</span>
+                </InFull>
+              )}
             </span>
           </span>
         </span>

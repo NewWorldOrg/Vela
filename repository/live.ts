@@ -7,7 +7,7 @@ import {
   type ChannelKind,
   type StationLogo,
 } from '@/repository/channels'
-import type { Programme } from '@/repository/programmes'
+import type { Programme, ProgrammeItem } from '@/repository/programmes'
 import { fetchGuide, toInt } from '@/repository/programmes'
 import {
   clockLabel,
@@ -45,6 +45,8 @@ const EVERY_CHANNEL = 200
 export interface LiveProgramme {
   id: string
   title: string
+  description?: string
+  items?: ProgrammeItem[]
   startsAt: string
   endsAt?: string
   startLabel: string
@@ -292,6 +294,8 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
   return {
     id: programme.id,
     title: programme.name,
+    description: programme.summary || undefined,
+    items: programme.items.length > 0 ? programme.items : undefined,
     startsAt: programme.startsAt,
     endsAt: programme.endsAt,
     startLabel: clockLabel(new Date(programme.startsAt)),
