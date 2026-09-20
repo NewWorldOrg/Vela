@@ -18,13 +18,15 @@ export function EncodeChip({
   recording: r,
   subTone = 'text-ink-3',
   width,
+  says,
 }: {
   recording: Recording
   subTone?: string
   width?: BadgeWidth
+  says?: string
 }) {
   const tone = shapeFor(TONE, r.encode, undefined)
-  const word = standingWordOf(r.encode, r.encodeWhenRecorded)
+  const word = says ?? standingWordOf(r.encode, r.encodeWhenRecorded)
 
   if (!tone) {
     return (
