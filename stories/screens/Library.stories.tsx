@@ -425,3 +425,88 @@ export const 狭い幅で収まらないほどの録画: Story = {
     })
   },
 }
+
+const LONG_AND_SHORT: Recording[] = [
+  {
+    ...ENDED[0],
+    encode: 'notEncoded',
+    encodeWhenRecorded: false,
+    quality: { measured: true, level: 'good', detail: 'ドロップ 0' },
+    fileMissing: false,
+    unfinishedDeletion: undefined,
+  },
+  {
+    ...ENDED[1],
+    encode: 'completed',
+    quality: {
+      measured: true,
+      level: 'mayNotBeWatchable',
+      detail: 'ドロップ 0 / スクランブル残存 5,042,768',
+    },
+    fileMissing: false,
+    unfinishedDeletion: undefined,
+  },
+  {
+    ...ENDED[2],
+    encode: 'running',
+    quality: { measured: false },
+    fileMissing: true,
+    unfinishedDeletion: undefined,
+  },
+  {
+    ...ENDED[3],
+    encode: 'queued',
+    quality: { measured: true, level: 'warning' },
+    fileMissing: false,
+    unfinishedDeletion: { filesLeft: 2 },
+  },
+]
+
+const CHIP_COLUMNS = [OUTCOME_COLUMN, QUALITY_COLUMN, ENCODE_COLUMN]
+
+function chipOf(row: HTMLElement, column: number): HTMLElement {
+  const chip = within(row)
+    .getAllByRole('cell')
+    [column].querySelector('[data-slot="badge"]')
+
+  if (!(chip instanceof HTMLElement)) {
+    throw new Error(`no chip in column ${column}`)
+  }
+
+  return chip
+}
+
+export const 札の並び: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByRole('row').slice(1)
+
+    await expect(rows.length).toBe(LONG_AND_SHORT.length)
+
+    for (const row of rows) {
+      const tops = CHIP_COLUMNS.map((column) =>
+        Math.round(chipOf(row, column).getBoundingClientRect().top),
+      )
+
+      await expect(new Set(tops).size).toBe(1)
+    }
+
+    for (const column of CHIP_COLUMNS) {
+      const widths = rows.map((row) =>
+        Math.round(chipOf(row, column).getBoundingClientRect().width),
+      )
+
+      await expect(new Set(widths).size).toBe(1)
+    }
+
+    const actions = rows.map((row) =>
+      Math.round(
+        within(row)
+          .getByRole('button', { name: '削除' })
+          .getBoundingClientRect().width,
+      ),
+    )
+
+    await expect(new Set(actions).size).toBe(1)
+  },
+}

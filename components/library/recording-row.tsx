@@ -12,6 +12,7 @@ import { EncodeChip } from '@/components/recordings/encode-chip'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
+import { StatusCell } from '@/components/recordings/status-cell'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { RecordingThumb } from '@/components/library/recording-thumb'
@@ -102,21 +103,26 @@ export function RecordingRow({
           {r.fileMissing ? '実ファイルなし' : r.sizeObservedAt}
         </small>
       </td>
-      <td className={CELL}>
-        <OutcomeChip recording={r} />
-        {r.fileMissing && <FileMissingChip />}
-        <UnfinishedDeletionChip recording={r} />
-        {r.outcomeDetail && (
-          <span className="mt-[3px] block text-[10.5px] leading-relaxed text-ink-3">
-            {r.outcomeDetail}
-          </span>
-        )}
+      <td className={cn(CELL, 'align-top')}>
+        <StatusCell note={r.outcomeDetail} noteTone={subTone}>
+          <OutcomeChip recording={r} />
+          {r.fileMissing && <FileMissingChip />}
+          <UnfinishedDeletionChip recording={r} />
+        </StatusCell>
       </td>
-      <td className={CELL}>
-        <QualityChip recording={r} withDetail subTone={subTone} />
+      <td className={cn(CELL, 'align-top')}>
+        <StatusCell
+          note={r.quality.detail}
+          noteTone={subTone}
+          noteClassName={r.quality.measured ? 'font-code' : undefined}
+        >
+          <QualityChip recording={r} />
+        </StatusCell>
       </td>
-      <td className={CELL}>
-        <EncodeChip recording={r} subTone={subTone} />
+      <td className={cn(CELL, 'align-top')}>
+        <StatusCell>
+          <EncodeChip recording={r} subTone={subTone} />
+        </StatusCell>
       </td>
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>
         <span

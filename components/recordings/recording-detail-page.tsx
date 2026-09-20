@@ -173,7 +173,7 @@ export function RecordingDetailView({
               <h2 className="heading text-[15px] whitespace-nowrap">
                 {OUTCOME_LABEL[alarming]}
               </h2>
-              {d.fileMissing && <FileMissingChip className="mt-0" />}
+              {d.fileMissing && <FileMissingChip />}
               {d.outcomeBody && (
                 <p className="min-w-[200px] flex-1 font-code text-note text-ink-2">
                   {d.outcomeBody}

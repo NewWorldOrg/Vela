@@ -77,7 +77,7 @@ export function RecordingActions({
         )}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-[9px]">
           <span className="text-right">
-            <UnfinishedDeletionChip recording={recording} className="mt-0" />
+            <UnfinishedDeletionChip recording={recording} />
           </span>
           <Button
             variant="destructive"
