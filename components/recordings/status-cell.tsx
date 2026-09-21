@@ -1,42 +1,55 @@
 import type { ReactNode } from 'react'
 
-import { cn } from '@/lib/utils'
+import type { StateTerm } from '@/lib/state-terms'
 import type { BadgeWidth } from '@/components/ui/badge'
 
-export const COLUMN_WIDE: BadgeWidth = 'column'
+export const PILL_WIDTH: BadgeWidth = 'fixed'
 
-const CHIPS = 'flex flex-col items-stretch gap-[3px]'
+export const STATE_COLUMN = 'w-[116px]'
 
-export function StatusCell({
-  note,
-  noteTone = 'text-ink-3',
-  noteClassName,
-  children,
-}: {
-  note?: ReactNode
-  noteTone?: string
-  noteClassName?: string
-  children: ReactNode
-}) {
+export function StatusCell({ children }: { children: ReactNode }) {
   return (
     <span
       data-slot="status-cell"
-      className="flex flex-col items-stretch gap-[3px]"
+      className="flex items-start justify-start text-left"
     >
-      <span data-slot="status-cell-chips" className={CHIPS}>
-        {children}
-      </span>
-      {note && (
-        <span
-          className={cn(
-            'block text-[10.5px] leading-relaxed',
-            noteTone,
-            noteClassName,
-          )}
-        >
-          {note}
-        </span>
-      )}
+      {children}
     </span>
   )
+}
+
+export function Folded({
+  says,
+}: {
+  says?: (string | undefined | false)[] | string
+}) {
+  const said = (Array.isArray(says) ? says : [says]).filter(
+    (one): one is string => Boolean(one),
+  )
+
+  return said.length > 0 ? (
+    <span className="relative">
+      <span className="sr-only">
+        {said.map((one) => (
+          <span key={one}>{one}</span>
+        ))}
+      </span>
+    </span>
+  ) : null
+}
+
+export function alsoSays(
+  term: StateTerm,
+  ...more: (string | undefined | false)[]
+): StateTerm {
+  const rest = more.filter((one): one is string => Boolean(one))
+
+  if (rest.length === 0) {
+    return term
+  }
+
+  return {
+    label: term.label,
+    explanation: [term.explanation, ...rest].join('\n'),
+  }
 }

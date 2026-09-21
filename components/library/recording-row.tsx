@@ -1,19 +1,18 @@
 'use client'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { formatBytes, formatLength } from '@/lib/format'
-import { playsInBrowser } from '@/lib/recordings'
+import { playsInBrowser, unfinishedDeletionShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ChevronRightIcon, PlayIcon, TrashIcon } from '@/components/vela/icons'
 import { EncodeChip } from '@/components/recordings/encode-chip'
-import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
-import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
+import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
@@ -21,6 +20,12 @@ import { RecordingThumb } from '@/components/library/recording-thumb'
 
 const CELL =
   'border-b border-dashed border-line px-3.5 py-3 align-middle text-[13px] group-last:border-b-0 group-hover:border-transparent'
+
+const FILE_MISSING = 'ファイル不在'
+
+function leftOver(r: Recording) {
+  return unfinishedDeletionShapeOf(r)
+}
 
 export function RecordingRow({
   recording: r,
@@ -78,17 +83,12 @@ export function RecordingRow({
         className={cn(CELL, 'font-code text-ui whitespace-nowrap text-ink-2')}
       >
         {r.recordedAtLabel}
-        {r.recordedAtNote && (
-          <small className={cn('block font-sans text-[10.5px]', subTone)}>
-            {r.recordedAtNote}
-          </small>
-        )}
       </td>
       <td className={cn(CELL, 'font-code text-ui whitespace-nowrap')}>
         {r.outcome === 'recording' ? (
           '進行中'
         ) : r.lengthSec == null ? (
-          <span className="text-ink-3">—</span>
+          <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
         ) : (
           <>
             {formatLength(r.lengthSec)}
@@ -103,7 +103,7 @@ export function RecordingRow({
       </td>
       <td className={cn(CELL, 'font-code text-ui whitespace-nowrap')}>
         {r.sizeBytes == null ? (
-          <span className="text-ink-3">—</span>
+          <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
         ) : (
           formatBytes(r.sizeBytes)
         )}
@@ -112,24 +112,31 @@ export function RecordingRow({
         </small>
       </td>
       <td className={cn(CELL, 'align-top')}>
-        <StatusCell note={r.outcomeDetail} noteTone={subTone}>
-          <OutcomeChip recording={r} width={COLUMN_WIDE} />
-          {r.fileMissing && <FileMissingChip width={COLUMN_WIDE} />}
-          <UnfinishedDeletionChip recording={r} width={COLUMN_WIDE} />
-        </StatusCell>
-      </td>
-      <td className={cn(CELL, 'align-top')}>
-        <StatusCell
-          note={r.quality.detail}
-          noteTone={subTone}
-          noteClassName={r.quality.measured ? 'font-code' : undefined}
-        >
-          <QualityChip recording={r} width={COLUMN_WIDE} />
+        <StatusCell>
+          <OutcomeChip
+            recording={r}
+            width={PILL_WIDTH}
+            also={[
+              r.outcomeDetail,
+              r.fileMissing && FILE_MISSING,
+              leftOver(r)?.label,
+              leftOver(r)?.detail,
+            ]}
+          />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'align-top')}>
         <StatusCell>
-          <EncodeChip recording={r} width={COLUMN_WIDE} />
+          <QualityChip
+            recording={r}
+            width={PILL_WIDTH}
+            also={[r.quality.detail]}
+          />
+        </StatusCell>
+      </td>
+      <td className={cn(CELL, 'align-top')}>
+        <StatusCell>
+          <EncodeChip recording={r} width={PILL_WIDTH} />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>

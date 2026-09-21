@@ -1,5 +1,6 @@
 'use client'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -94,10 +95,10 @@ export function ScanAttemptsTable({
               <AttemptResult attempt={attempt} />
             </TableCell>
             <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
-              {attempt.measurement?.value ?? '—'}
+              {attempt.measurement?.value ?? EMPTY_VALUE}
             </TableCell>
             <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
-              {attempt.took ?? '—'}
+              {attempt.took ?? EMPTY_VALUE}
             </TableCell>
             <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
               {attempt.at}

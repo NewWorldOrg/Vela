@@ -1,5 +1,7 @@
 import type { TunerRow } from '@/repository/tuners'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { Folded } from '@/components/recordings/status-cell'
+import { InFull } from '@/components/vela/in-full'
 import { ChipDot } from '@/components/vela/status'
 
 const STATE_VARIANT = {
@@ -11,11 +13,13 @@ const STATE_VARIANT = {
 export function TunerStateChip({
   row,
   width,
+  also,
 }: {
   row: TunerRow
   width?: BadgeWidth
+  also?: string
 }) {
-  return (
+  const pill = (
     <Badge
       variant={STATE_VARIANT[row.state]}
       width={width}
@@ -24,5 +28,14 @@ export function TunerStateChip({
       <ChipDot />
       {row.stateLabel}
     </Badge>
+  )
+
+  return also ? (
+    <>
+      <InFull says={also}>{pill}</InFull>
+      <Folded says={also} />
+    </>
+  ) : (
+    pill
   )
 }

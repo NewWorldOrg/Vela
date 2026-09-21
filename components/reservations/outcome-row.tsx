@@ -7,7 +7,7 @@ import {
   ChevronRightIcon,
   ListIcon,
 } from '@/components/vela/icons'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
 import { OutcomeKindChip } from '@/components/reservations/outcome-kind-chip'
 
 const GONE = '記録が残っていません'
@@ -55,7 +55,7 @@ export function OutcomeRow({
         </TableCell>
         <TableCell className="align-top">
           {outcome.ruleName ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-[11px] py-0.5 text-note text-ink-2">
+            <span className="inline-flex items-center gap-1.5 text-ui text-ink-2">
               <ListIcon className="size-3" />
               {outcome.ruleName}
             </span>
@@ -68,7 +68,7 @@ export function OutcomeRow({
         </TableCell>
         <TableCell className="align-top">
           <StatusCell>
-            <OutcomeKindChip outcome={outcome} width={COLUMN_WIDE} />
+            <OutcomeKindChip outcome={outcome} width={PILL_WIDTH} />
           </StatusCell>
         </TableCell>
         <TableCell className="align-top font-code text-ink-2">

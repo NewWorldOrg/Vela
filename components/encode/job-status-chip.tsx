@@ -16,24 +16,24 @@ export function JobStatusChip({
   switch (status) {
     case 'queued':
       return (
-        <Badge variant="outline" width={width}>
+        <Badge variant="outline" width={width} className="font-bold">
+          <ChipDot />
           {STATUS_LABEL.queued}
         </Badge>
       )
     case 'running':
       return (
-        <>
-          <Badge variant="info" width={width} className="font-bold">
-            <ChipDot />
-            {STATUS_LABEL.running}
-          </Badge>
-          {stalled && (
-            <Badge variant="warn" width={width} className="font-bold">
-              <ChipDot />
-              {STALLED_LABEL}
-            </Badge>
-          )}
-        </>
+        <Badge
+          variant={stalled ? 'warn' : 'info'}
+          width={width}
+          title={
+            stalled ? `${STATUS_LABEL.running} / ${STALLED_LABEL}` : undefined
+          }
+          className="font-bold"
+        >
+          <ChipDot />
+          {stalled ? STALLED_LABEL : STATUS_LABEL.running}
+        </Badge>
       )
     case 'completed':
       return (
@@ -51,13 +51,15 @@ export function JobStatusChip({
       )
     case 'cancelled':
       return (
-        <Badge variant="mute" width={width}>
+        <Badge variant="mute" width={width} className="font-bold">
+          <ChipDot />
           {STATUS_LABEL.cancelled}
         </Badge>
       )
     default:
       return (
-        <Badge variant="mute" width={width}>
+        <Badge variant="mute" width={width} className="font-bold">
+          <ChipDot />
           {NOT_YET_IN_THIS_BUILD}
         </Badge>
       )

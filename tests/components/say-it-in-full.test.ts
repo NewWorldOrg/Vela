@@ -49,9 +49,18 @@ const KEEPS_A_FIXED_BOX: string[] = [
   'components/search/search-page.tsx',
 ]
 
-const LIVE_CHOICE = ['components/live/channel-list.tsx']
-
-const LIVE_TILES = ['components/live/channel-grid.tsx']
+const LIVE_CARDS: { file: string; prints: RegExp; what: string }[] = [
+  {
+    file: 'components/live/channel-list.tsx',
+    prints: /\{channel\.now\.title\}/,
+    what: 'the programme on the channel it offers',
+  },
+  {
+    file: 'components/live/channel-grid.tsx',
+    prints: /\{programme \? programme\.title : /,
+    what: 'the programme on the channel it offers',
+  },
+]
 
 for (const one of SAYS_IT_WHOLE) {
   test(`${one.file} prints ${one.what} whole`, async () => {
@@ -98,21 +107,27 @@ for (const file of KEEPS_A_FIXED_BOX) {
   })
 }
 
-for (const file of [...LIVE_CHOICE, ...LIVE_TILES]) {
-  test(`${file} says the whole of a clipped channel on hover and focus`, async () => {
-    const source = await read(file)
+for (const one of LIVE_CARDS) {
+  test(`${one.file} prints ${one.what} whole, with no tip over the card`, async () => {
+    const source = await read(one.file)
 
     assert.match(
       source,
-      ROUNDS_IT_OFF,
-      'nothing is clipped here any more, so this file should leave the list',
+      one.prints,
+      'the text this card was un-rounded for is no longer printed here, ' +
+        'so the checks below are watching nothing',
     )
-    assert.match(
+    assert.doesNotMatch(
       source,
-      /<ChannelInFull channel=\{channel\}>/,
-      'A channel is offered with its title clipped and no way to read the ' +
-        'rest. The row or tile itself is what carries the tip, so the whole ' +
-        'of it arrives on hover and on focus alike.',
+      ROUNDS_IT_OFF,
+      'A card has the room to wrap. Clipping the title here and handing ' +
+        'the rest to a tip puts a window over the card beside it.',
+    )
+    assert.doesNotMatch(
+      source,
+      /<ChannelInFull\b/,
+      'the whole card still carries a tip; it covers the card next to it ' +
+        'and only repeats what the card already says',
     )
   })
 }

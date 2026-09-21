@@ -1,4 +1,5 @@
 import type { Route } from 'next'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import Link from 'next/link'
 
 import type {
@@ -64,7 +65,7 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
                 ))}
               </div>
             </div>
-            <Badge variant="kindData">{service.category}</Badge>
+            <span className="text-ui text-ink-2">{service.category}</span>
           </div>
         ))}
       </div>
@@ -222,7 +223,7 @@ export function ScanProposalView({
           <p className="text-ui text-ink-2">
             {proposal.run.finishedAt ?? proposal.run.startedAt} · 所要{' '}
             <b className="font-code font-medium tabular-nums text-ink">
-              {proposal.run.took ?? '—'}
+              {proposal.run.took ?? EMPTY_VALUE}
             </b>{' '}
             · サービスを取得できた物理ch{' '}
             <b className="font-code font-medium tabular-nums text-ink">

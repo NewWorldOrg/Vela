@@ -109,9 +109,9 @@ test('the screen that answered 500 draws its rows on the client', async () => {
   assert.match(source, /<InFull says=\{row\.name\}>/)
 })
 
-test('the live rows say they are already on the keyboard', async () => {
+test('a tip over something already on the keyboard adds no second stop', async () => {
   const source = await readFile(
-    path.join(ROOT, 'components/live/channel-in-full.tsx'),
+    path.join(ROOT, 'components/vela/in-full.tsx'),
     'utf8',
   )
 

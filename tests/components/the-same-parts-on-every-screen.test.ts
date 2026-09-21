@@ -34,13 +34,15 @@ const A_NAMED_ACTION = /<[A-Z][A-Za-z]*Button\b/g
 
 const A_METRIC_TILE = /data-slot="metric-tile"/
 
+const NOT_A_STATE = /<Badge\b[^>]*variant="kind[A-Z]/g
+
 const AN_ICON = /<[A-Z][A-Za-z]*(Icon|Glyph)\b|<Spinner\b/
 
 const DELETES = /<TrashIcon\b/
 
 const ADDS = /追加/
 
-const THE_COLUMN_WIDE = 'COLUMN_WIDE'
+const THE_PILL_WIDTH = 'PILL_WIDTH'
 
 const THE_CELL = 'components/recordings/status-cell.tsx'
 
@@ -138,7 +140,7 @@ test('a column that says a state goes through the one cell', async () => {
   }
 })
 
-test('every pill in a state column is told to fill it, by the one name', async () => {
+test('every pill in a state column is told the one width, by the one name', async () => {
   const told: string[] = []
 
   for (const column of await stateColumns()) {
@@ -146,7 +148,7 @@ test('every pill in a state column is told to fill it, by the one name', async (
       told.push(`${column.file}: ${pill[1]}`)
       assert.match(
         pill[2],
-        new RegExp(`width=\\{${THE_COLUMN_WIDE}\\}`),
+        new RegExp(`width=\\{${THE_PILL_WIDTH}\\}`),
         `${column.file}: ${pill[1]} draws itself as wide as it likes`,
       )
     }
@@ -155,16 +157,62 @@ test('every pill in a state column is told to fill it, by the one name', async (
   assert.ok(told.length > 8, `only ${told.length} pills were read`)
 })
 
-test('what the one name means is the pill filling the column', async () => {
+test('what the one name means is one fixed width, the same everywhere', async () => {
   const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
   const named = cell.match(
-    new RegExp(`export const ${THE_COLUMN_WIDE}: BadgeWidth = '(\\w+)'`),
+    new RegExp(`export const ${THE_PILL_WIDTH}: BadgeWidth = '(\\w+)'`),
   )
 
-  assert.ok(named, 'the column width the pills are told to take has no name')
-  assert.match(
+  assert.ok(named, 'the width the pills are told to take has no name')
+
+  const pill = await readFile(
+    path.join(ROOT, 'components/ui/badge.tsx'),
+    'utf8',
+  )
+
+  assert.match(pill, new RegExp(`${named[1]}: 'w-\\[[\\d.]+em\\]`))
+  assert.doesNotMatch(
+    pill,
+    /'w-full'/,
+    'a pill is still told to stretch to the column it sits in',
+  )
+})
+
+test('a state cell holds one pill and nothing under it', async () => {
+  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+
+  assert.doesNotMatch(
+    cell,
+    /\bnote\b/,
+    'the one state cell still draws a second line under the pill',
+  )
+  assert.doesNotMatch(cell, /flex-col/, 'the one state cell still stacks')
+
+  for (const column of await stateColumns()) {
+    const pills = [...column.body.matchAll(A_PILL)]
+
+    assert.equal(
+      pills.length,
+      1,
+      `${column.file} puts ${pills.length} pills in one state cell; ` +
+        'the rest belongs in the tip',
+    )
+  }
+})
+
+test('what is not a state is not drawn as a pill', async () => {
+  for (const { file, source } of await everySource()) {
+    for (const said of source.matchAll(NOT_A_STATE)) {
+      assert.fail(
+        `${file} draws ${said[0]} as a pill; it is a kind, not a state`,
+      )
+    }
+  }
+
+  assert.doesNotMatch(
     await readFile(path.join(ROOT, 'components/ui/badge.tsx'), 'utf8'),
-    new RegExp(`${named[1]}: 'w-full'`),
+    /kind[A-Z]/,
+    'the pill still keeps a colour for a kind',
   )
 })
 

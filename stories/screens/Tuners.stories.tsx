@@ -35,7 +35,7 @@ export const 進行中のセッションが物理選局値で分かる: Story = 
 
     await expect(canvas.getByText('57ch')).toBeVisible()
     await expect(canvas.getByText('53ch')).toBeVisible()
-    await expect(canvas.getByText('08/07 21:15')).toBeVisible()
+    await expect(canvas.getByText('終了予定 08/07 21:15')).toBeInTheDocument()
   },
 }
 

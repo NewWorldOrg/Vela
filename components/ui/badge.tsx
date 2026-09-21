@@ -10,7 +10,7 @@ const badgeVariants = cva(
     variants: {
       width: {
         fit: 'w-fit',
-        column: 'w-full',
+        fixed: 'w-[7.5em] overflow-hidden',
       },
       variant: {
         default: 'border-line bg-surface text-ink-2',
@@ -24,9 +24,6 @@ const badgeVariants = cva(
         info: 'border-brand-line bg-brand-soft text-brand',
         selected: 'border-brand-line bg-brand-soft font-bold text-brand',
         recording: 'border-coral-line bg-coral-soft font-bold text-coral',
-        kindTv: 'border-line bg-tint-sky text-ink-2',
-        kindSegment: 'border-line bg-tint-sage text-ink-2',
-        kindData: 'border-line bg-surface-2 text-ink-2',
       },
     },
     defaultVariants: {
@@ -40,11 +37,20 @@ export type BadgeWidth = NonNullable<
   VariantProps<typeof badgeVariants>['width']
 >
 
+function said(children: React.ReactNode): string {
+  return React.Children.toArray(children)
+    .filter((part) => typeof part === 'string' || typeof part === 'number')
+    .join('')
+    .trim()
+}
+
 function Badge({
   className,
   variant = 'default',
   width = 'fit',
   asChild = false,
+  title,
+  children,
   ...props
 }: React.ComponentProps<'span'> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
@@ -55,9 +61,12 @@ function Badge({
       data-slot="badge"
       data-variant={variant}
       data-width={width}
+      title={title ?? (width === 'fixed' ? said(children) : undefined)}
       className={cn(badgeVariants({ variant, width }), className)}
       {...props}
-    />
+    >
+      {children}
+    </Comp>
   )
 }
 

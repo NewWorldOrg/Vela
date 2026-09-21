@@ -530,8 +530,14 @@ export const 番組表が動いた予約はどこが動いたかを言う: Story
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    const row = rowFor(canvas.getByText('海辺の図書室'))
+
     await userEvent.hover(
-      within(rowFor(canvas.getByText('海辺の図書室'))).getByText('番組変更'),
+      within(row)
+        .getAllByRole('cell')
+        [THE_STATE_COLUMN].querySelector(
+          '[data-slot="term-tip"]',
+        ) as HTMLElement,
     )
 
     const said = await screen.findByRole('tooltip')
@@ -681,13 +687,15 @@ export const 行の揃い: Story = {
         continue
       }
 
+      await expect(pills.length).toBe(1)
+
       for (const pill of pills) {
-        await expect(pill).toHaveAttribute('data-width', 'column')
+        await expect(pill).toHaveAttribute('data-width', 'fixed')
         widths.push(Math.round(pill.getBoundingClientRect().width))
       }
     }
 
-    await expect(widths.length).toBeGreaterThan(rows.length)
+    await expect(widths.length).toBeGreaterThan(1)
     await expect(new Set(widths).size).toBe(1)
 
     for (const row of rows) {

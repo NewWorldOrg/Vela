@@ -11,7 +11,11 @@ import type {
   QualityWrite,
 } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import {
+  PILL_WIDTH,
+  STATE_COLUMN,
+  StatusCell,
+} from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
   Table,
@@ -297,7 +301,12 @@ export function QualityView({
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
               <TableRow>
                 {HEALTH_COLUMNS.map((column) => (
-                  <TableHead key={column}>{column}</TableHead>
+                  <TableHead
+                    key={column}
+                    className={column === '状態' ? STATE_COLUMN : undefined}
+                  >
+                    {column}
+                  </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -314,10 +323,7 @@ export function QualityView({
                   </TableCell>
                   <TableCell className="align-top whitespace-normal">
                     <StatusCell>
-                      <QualityChip
-                        level={tuner.state.level}
-                        width={COLUMN_WIDE}
-                      >
+                      <QualityChip level={tuner.state.level} width={PILL_WIDTH}>
                         {tuner.state.label}
                       </QualityChip>
                     </StatusCell>

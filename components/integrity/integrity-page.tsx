@@ -32,7 +32,11 @@ import {
 import { ActionRow } from '@/components/vela/action-row'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import {
+  PILL_WIDTH,
+  STATE_COLUMN,
+  StatusCell,
+} from '@/components/recordings/status-cell'
 import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialog'
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'
@@ -198,7 +202,10 @@ export function IntegrityView({
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {COLUMNS.map((column) => (
-                <TableHead key={column.label}>
+                <TableHead
+                  key={column.label}
+                  className={column.label === '理由' ? STATE_COLUMN : undefined}
+                >
                   {column.hidden ? (
                     <span className="sr-only">{column.label}</span>
                   ) : (
@@ -221,7 +228,7 @@ export function IntegrityView({
                   <StatusCell>
                     <Badge
                       variant={shapeFor(REASON_VARIANT, finding.fault, 'mute')}
-                      width={COLUMN_WIDE}
+                      width={PILL_WIDTH}
                     >
                       {finding.reason}
                     </Badge>

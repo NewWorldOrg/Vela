@@ -1,5 +1,6 @@
 'use client'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import type { ReactNode } from 'react'
 
 import { isLeftScrambled, scrambledPercent } from '@/lib/recordings'
@@ -100,7 +101,7 @@ const SAID: Record<PlainFault, Said> = {
     mark: <DangerIcon className="size-[22px]" />,
     title: 'スクランブルが解けていません',
     body: (d) =>
-      `スクランブル残存 ${d.scramble?.main ?? '—'}(全体の ${scrambledPercent(d)}%)。スクランブルされたままの映像は復号できないため、時間をおいても再生できるようにはなりません。`,
+      `スクランブル残存 ${d.scramble?.main ?? EMPTY_VALUE}(全体の ${scrambledPercent(d)}%)。スクランブルされたままの映像は復号できないため、時間をおいても再生できるようにはなりません。`,
     worthRetrying: false,
     worthLeaving: false,
   },
