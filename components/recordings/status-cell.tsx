@@ -80,6 +80,7 @@ export function StateSay({
   return (
     <span
       data-slot="state-say"
+      data-state-say=""
       data-tone={tone}
       className={cn(
         'inline-flex min-w-0 items-center gap-1.5 text-ui whitespace-nowrap',

@@ -24,6 +24,7 @@ import {
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
 import { SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useSubChannelsFolded'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { AppFrame } from '@/components/vela/app-shell'
 import { GuideView } from '@/components/guide/guide-page'
@@ -446,6 +447,8 @@ export const 列が余れば分け合う: Story = {
   },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const columns = Array.from(
       canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
@@ -699,6 +702,8 @@ export const 列が多ければ横に流れる: Story = {
   args: { guide: aerial },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const columns = Array.from(
       canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
@@ -1006,6 +1011,8 @@ export const 番組を開いても場所は動かない: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
 
     await expect(scroller.scrollTop).toBeGreaterThan(HOUR_PX)
@@ -1030,6 +1037,8 @@ export const 別の番組を押すとまず閉じる: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const doc = canvasElement.ownerDocument
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const showing = onScreenCells(canvasElement, scroller)
@@ -1197,6 +1206,8 @@ const AN_IPAD_TURNED = { width: 1024, height: 768 }
 async function sidewaysInsideTheGrid(
   canvasElement: HTMLElement,
 ): Promise<void> {
+  await afterTheArrival(canvasElement)
+
   const scroller = partOf(canvasElement, '[data-guide-scroll]')
   const page = partOf(canvasElement, 'main')
   const columns = Array.from(

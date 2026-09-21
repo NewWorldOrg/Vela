@@ -47,7 +47,7 @@ export const 進行中のセッションが物理選局値で分かる: Story = 
       rows
         .filter((row) =>
           cellOf(row, SESSION_COLUMN).querySelector(
-            '[data-slot="tooltip-trigger"], [data-slot="state-say"], [data-slot="badge"]',
+            '[data-slot="tooltip-trigger"], [data-state-say], [data-slot="badge"]',
           ),
         )
         .map(

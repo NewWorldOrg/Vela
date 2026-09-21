@@ -680,7 +680,7 @@ function saidBy(row: HTMLElement, column: number): HTMLElement[] {
   const cell = within(row).getAllByRole('cell')[column]
 
   return [
-    ...cell.querySelectorAll('[data-slot="state-say"], [data-slot="badge"]'),
+    ...cell.querySelectorAll('[data-state-say], [data-slot="badge"]'),
   ].filter((one): one is HTMLElement => one instanceof HTMLElement)
 }
 

@@ -18,7 +18,7 @@ export function saidIn(row: HTMLElement, column: number): HTMLElement[] {
   }
 
   return [
-    ...cell.querySelectorAll('[data-slot="state-say"], [data-slot="badge"]'),
+    ...cell.querySelectorAll('[data-state-say], [data-slot="badge"]'),
   ].filter((node): node is HTMLElement => node instanceof HTMLElement)
 }
 
@@ -108,7 +108,7 @@ export async function tipIn(host: HTMLElement): Promise<HTMLElement> {
   const trigger =
     host.querySelector<HTMLElement>('[data-slot="term-tip"]') ??
     host.querySelector<HTMLElement>('[data-slot="tooltip-trigger"]') ??
-    host.querySelector<HTMLElement>('[data-slot="state-say"]') ??
+    host.querySelector<HTMLElement>('[data-state-say]') ??
     host.querySelector<HTMLElement>('[data-slot="badge"]')
 
   if (!trigger) {
