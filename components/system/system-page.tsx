@@ -2,9 +2,9 @@ import type { ComponentType, ReactNode } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { cn } from '@/lib/utils'
 import { formatBytes, formatMoment } from '@/lib/format'
-import { NOTHING_HERE } from '@/lib/nothing'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import { SYSTEM_DETAIL_LABELS, SYSTEM_STATE_LABELS } from '@/lib/system-terms'
 import type {
@@ -217,7 +217,7 @@ function DetailRow({
   )
 }
 
-const NOTHING = <span className="text-ink-3">{NOTHING_HERE}</span>
+const NOTHING = <span className="text-ink-3">{EMPTY_VALUE}</span>
 
 export function SystemView({
   status,
@@ -295,25 +295,16 @@ export function SystemView({
                 NOTHING
               )}
             </DetailRow>
-            <DetailRow label={SYSTEM_DETAIL_LABELS.instance}>
-              {reading?.hello?.instanceId ? (
-                <span className="font-code break-all text-ink-2">
-                  {reading.hello.instanceId}
-                </span>
-              ) : (
-                NOTHING
-              )}
-            </DetailRow>
             <DetailRow label={SYSTEM_DETAIL_LABELS.version}>
               <span className="font-code text-ink-2">
-                Carina {status.carinaVersion ?? NOTHING_HERE} / Vela{' '}
+                Carina {status.carinaVersion ?? EMPTY_VALUE} / Vela{' '}
                 {velaVersion}
               </span>
             </DetailRow>
             <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>
               <span className="font-code text-ink-2">
-                driver {reading?.hello?.protocolVersion ?? NOTHING_HERE} /
-                アプリ {reading?.appProtocolVersion ?? NOTHING_HERE}
+                driver {reading?.hello?.protocolVersion ?? EMPTY_VALUE} / アプリ{' '}
+                {reading?.appProtocolVersion ?? EMPTY_VALUE}
               </span>
             </DetailRow>
             <DetailRow label={SYSTEM_DETAIL_LABELS.capabilities}>

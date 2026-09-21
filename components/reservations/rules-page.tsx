@@ -220,9 +220,7 @@ function RulesScreen({
           </div>
 
           {result.items.length === 0 ? (
-            <p className="py-4 text-center text-sub text-ink-3">
-              まだルールがありません。
-            </p>
+            <EmptyState spot={null} title="まだルールがありません" />
           ) : (
             <ul className="flex flex-col gap-1.5">
               {result.items.map((rule) => (
@@ -1007,9 +1005,10 @@ function RuleEditor({
               </p>
             )}
             {preview.takes.length === 0 ? (
-              <p className="text-sub text-ink-3">
-                いまの番組表に、この条件に一致する番組はありません。
-              </p>
+              <EmptyState
+                spot={null}
+                title="いまの番組表に、この条件に一致する番組はありません"
+              />
             ) : (
               <>
                 <ul className="flex flex-col">

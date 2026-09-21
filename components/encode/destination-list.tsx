@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { NOTHING_HERE } from '@/lib/nothing'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import type {
   EncodeDestination,
   EncodeProfile,
@@ -109,7 +109,7 @@ export function DestinationList({
               </TableCell>
               <TableCell>
                 {destination.defaultProfileLabel ?? (
-                  <span className="text-ink-3">{NOTHING_HERE}</span>
+                  <span className="text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
               <TableCell className={STAMP}>{destination.definedAt}</TableCell>

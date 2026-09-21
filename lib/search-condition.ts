@@ -1,3 +1,7 @@
+import {
+  BROADCAST_KIND_LABEL,
+  BROADCAST_KIND_ORDER,
+} from '@/lib/broadcast-terms'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 export type SearchSort = 'start_at.asc' | 'start_at.desc' | 'name.asc'
@@ -53,11 +57,11 @@ export const SEARCH_GENRE_OPTIONS: {
   { value: 'other', kind: 15, label: 'その他' },
 ]
 
-export const SEARCH_KIND_OPTIONS: { value: SearchKind; label: string }[] = [
-  { value: 'terrestrial', label: '地上' },
-  { value: 'bs', label: 'BS' },
-  { value: 'cs110', label: 'CS110' },
-]
+export const SEARCH_KIND_OPTIONS: { value: SearchKind; label: string }[] =
+  BROADCAST_KIND_ORDER.map((value) => ({
+    value,
+    label: BROADCAST_KIND_LABEL[value],
+  }))
 
 export const SEARCH_PER_PAGE_OPTIONS = [20, 50, 100]
 

@@ -1,3 +1,7 @@
+import {
+  BROADCAST_KIND_LABEL,
+  BROADCAST_KIND_ORDER,
+} from '@/lib/broadcast-terms'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
@@ -98,13 +102,9 @@ export type RebuildResult =
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
-const KIND_LABEL: Record<ChannelKind, string> = {
-  terrestrial: '地上波',
-  bs: 'BS',
-  cs110: 'CS110',
-}
+const KIND_LABEL = BROADCAST_KIND_LABEL
 
-const KIND_ORDER: ChannelKind[] = ['terrestrial', 'bs', 'cs110']
+const KIND_ORDER: ChannelKind[] = BROADCAST_KIND_ORDER
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

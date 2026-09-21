@@ -11,6 +11,7 @@ import type {
   TunerToggleResult,
   TunerWriteResult,
 } from '@/repository/tuners'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -255,17 +256,7 @@ export function TunersView({
         設定 / <CrumbCurrent>チューナー</CrumbCurrent>
       </Crumb>
       <PageHeading
-        description={
-          <>
-            {DRIVER_LABEL[tuners.connection]}
-            {tuners.instanceId && (
-              <>
-                (<span className="font-code">instance {tuners.instanceId}</span>
-                )
-              </>
-            )}
-          </>
-        }
+        description={DRIVER_LABEL[tuners.connection]}
         action={
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -336,7 +327,7 @@ export function TunersView({
               </TableCell>
               <TableCell className="align-top">
                 {row.kind === undefined ? (
-                  <span className="text-ink-3">—</span>
+                  <span className="text-ink-3">{EMPTY_VALUE}</span>
                 ) : (
                   <StatusCell>
                     <Badge width={COLUMN_WIDE}>{row.kind}</Badge>
@@ -390,7 +381,7 @@ export function TunersView({
                   </StatusCell>
                 ) : (
                   <span className="text-ui text-ink-3">
-                    {row.idleLabel ?? '—'}
+                    {row.idleLabel ?? EMPTY_VALUE}
                   </span>
                 )}
               </TableCell>
@@ -410,11 +401,11 @@ export function TunersView({
                     )}
                   </span>
                 ) : (
-                  <span className="text-ink-3">—</span>
+                  <span className="text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
               <TableCell className="font-code text-[12px] whitespace-nowrap text-ink-2">
-                {row.lnb ?? '—'}
+                {row.lnb ?? EMPTY_VALUE}
               </TableCell>
             </TableRow>
           ))}

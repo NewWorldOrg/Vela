@@ -46,7 +46,7 @@ const THE_CELL = 'components/recordings/status-cell.tsx'
 
 const THE_ROW = 'components/vela/action-row.tsx'
 
-const THE_NOTHING = 'lib/nothing.ts'
+const THE_EMPTY_VALUE = 'lib/empty-value.ts'
 
 const THE_TINTS = 'components/vela/surface.tsx'
 
@@ -339,7 +339,7 @@ test('an action named after what it does carries an icon beside its word', async
 })
 
 test('the mark that stands for an empty value is written down once', async () => {
-  const said = await readFile(path.join(ROOT, THE_NOTHING), 'utf8')
+  const said = await readFile(path.join(ROOT, THE_EMPTY_VALUE), 'utf8')
   const named = said.match(/export const \w+ = '(.+)'/u)
 
   assert.ok(named, 'the mark that stands for an empty value has no name')
