@@ -27,7 +27,7 @@ interface Column {
 
 const COLUMNS: Column[] = [
   { label: '番組' },
-  { label: 'チャンネル', width: 148 },
+  { label: 'チャンネル', width: 176 },
   { label: WHEN_LABELS.recorded, width: 132 },
   { label: '長さ', width: 88, right: true },
   { label: 'サイズ', width: 112, right: true },

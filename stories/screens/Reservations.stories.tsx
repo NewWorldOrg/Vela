@@ -157,7 +157,7 @@ export const 終わった予約: Story = {
 
     for (const [title, state] of [
       ['朝のニュース', '取消済み'],
-      ['山あいの町から', 'チューナー確保済み'],
+      ['山あいの町から', '確保済み'],
       ['午後のロードショー', '撮り逃し'],
     ]) {
       const row = rowFor(canvas.getByText(title))
@@ -170,7 +170,7 @@ export const 終わった予約: Story = {
 
     const removed = rowFor(canvas.getByText('真昼の博物誌'))
 
-    await expect(within(removed).getByText('録画削除済み')).toBeInTheDocument()
+    await expect(within(removed).getByText('削除済み')).toBeInTheDocument()
     await expect(
       await tipIn(cellOf(removed, THE_STATE_COLUMN)),
     ).toHaveTextContent('完了')
@@ -180,7 +180,7 @@ export const 終わった予約: Story = {
 
     for (const title of ['週末キッチンの手帖', '真夜中の音楽室']) {
       await expect(
-        within(rowFor(canvas.getByText(title))).queryByText('録画削除済み'),
+        within(rowFor(canvas.getByText(title))).queryByText('削除済み'),
       ).toBeNull()
     }
 
@@ -247,7 +247,7 @@ export const 録画が削除された予約: Story = {
     ]) {
       const row = rowFor(canvas.getByText(title))
 
-      await expect(within(row).getByText('録画削除済み')).toBeInTheDocument()
+      await expect(within(row).getByText('削除済み')).toBeInTheDocument()
       await expect(
         await tipIn(cellOf(row, THE_STATE_COLUMN)),
       ).toHaveTextContent(standing)
@@ -255,7 +255,7 @@ export const 録画が削除された予約: Story = {
 
     for (const title of ['朝のニュース', '午後のロードショー']) {
       await expect(
-        within(rowFor(canvas.getByText(title))).queryByText('録画削除済み'),
+        within(rowFor(canvas.getByText(title))).queryByText('削除済み'),
       ).toBeNull()
     }
 
@@ -307,7 +307,7 @@ const STILL_LISTED = EVERY_STANDING_FIXTURES.filter(
 )
 
 const STANDING_WORDS = {
-  scheduled: 'チューナー確保済み',
+  scheduled: '確保済み',
   conflict: '競合',
   cancelled: '取消済み',
   missed: '撮り逃し',

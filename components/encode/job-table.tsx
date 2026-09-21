@@ -44,21 +44,16 @@ const STAMP_PX = 132
 const COLUMNS: Column[] = [
   { label: '番組' },
   { label: '状態', width: stateColumnPx(JOB_STATUS_PILL_WIDTH, CELL_SIDES_PX) },
-  { label: 'プロファイル', width: 132 },
-  { label: '保存先', width: 132 },
-  { label: '進捗', width: 84, right: true },
-  { label: '経路', width: 156 },
-  { label: '登録', width: STAMP_PX },
+  { label: 'プロファイル', width: 100 },
+  { label: '保存先', width: 90 },
+  { label: '進捗', width: 64, right: true },
+  { label: '経路', width: 110 },
   { label: '開始', width: STAMP_PX },
   { label: '終了', width: STAMP_PX },
   { label: '操作', width: 96, hidden: true },
 ]
 
-const PROGRAMME_MIN_PX = 240
-
-const TABLE_MIN_PX =
-  COLUMNS.reduce((sum, column) => sum + (column.width ?? 0), 0) +
-  PROGRAMME_MIN_PX
+const TABLE_MIN_PX = 1100
 
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
@@ -93,6 +88,14 @@ function whyItStands(job: EncodeJob): string {
 
 function Dash() {
   return <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
+}
+
+function Started({ job }: { job: EncodeJob }) {
+  return (
+    <InFull says={`登録 ${job.queuedAt}`}>
+      <span className="inline-block">{job.startedAt ?? <Dash />}</span>
+    </InFull>
+  )
 }
 
 function Destination({ job }: { job: EncodeJob }) {
@@ -163,8 +166,9 @@ export function JobTable({
             <TableCell>
               <RouteCell job={job} />
             </TableCell>
-            <TableCell className={STAMP}>{job.queuedAt}</TableCell>
-            <TableCell className={STAMP}>{job.startedAt ?? <Dash />}</TableCell>
+            <TableCell className={STAMP}>
+              <Started job={job} />
+            </TableCell>
             <TableCell className={STAMP}>{job.endedAt ?? <Dash />}</TableCell>
             <TableCell className="text-right">
               {job.cancellable && (

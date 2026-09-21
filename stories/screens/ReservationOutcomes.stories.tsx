@@ -100,7 +100,7 @@ export const 分類がそろう: Story = {
     const gaveUp = rowFor(canvas.getAllByText('深夜の天気図')[1])
 
     await expect(
-      within(refusedAgain).getByText('始め直し').getAttribute('data-variant'),
+      within(refusedAgain).getByText('再試行').getAttribute('data-variant'),
     ).toBe('sky')
     const refusedTip = await tipIn(cellOf(refusedAgain, KIND_COLUMN))
 
@@ -110,7 +110,7 @@ export const 分類がそろう: Story = {
       await tipIn(cellOf(startedAgain, KIND_COLUMN)),
     ).toHaveTextContent('録画開始')
     await expect(
-      within(gaveUp).getByText('始め直しを断念').getAttribute('data-variant'),
+      within(gaveUp).getByText('再試行断念').getAttribute('data-variant'),
     ).toBe('err')
     await expect(await tipIn(cellOf(gaveUp, KIND_COLUMN))).toHaveTextContent(
       '試行の上限',

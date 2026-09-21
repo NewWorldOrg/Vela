@@ -12,6 +12,11 @@ export const SESSION_PURPOSE_LABEL: Record<SessionPurpose, string> = {
   logo: 'ロゴ収集',
 }
 
+export const SESSION_PILL_LABEL: Record<SessionPurpose, string> = {
+  ...SESSION_PURPOSE_LABEL,
+  surveyNow: SESSION_PURPOSE_LABEL.survey,
+}
+
 const CAPABILITY_LABEL: Record<string, string> = {
   recording: '録画',
   live: 'ライブ',

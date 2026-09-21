@@ -11,7 +11,7 @@ import type {
   TunerToggleResult,
   TunerWriteResult,
 } from '@/repository/tuners'
-import { SESSION_PURPOSE_LABEL } from '@/repository/driver-capabilities'
+import { SESSION_PILL_LABEL } from '@/repository/driver-capabilities'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
@@ -55,11 +55,12 @@ import { WHEN_LABELS } from '@/lib/when-terms'
 
 function whatTheSessionIs(session: {
   label: string
+  saying?: string
   code?: string
   endsAt?: string
 }): string {
   return [
-    session.label,
+    session.saying ?? session.label,
     session.code,
     session.endsAt && `終了予定 ${session.endsAt}`,
   ]
@@ -79,7 +80,7 @@ const DIFF_VARIANT = {
 
 const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
 
-const SESSION_PILL_WIDTH = pillWidthFor(Object.values(SESSION_PURPOSE_LABEL))
+const SESSION_PILL_WIDTH = pillWidthFor(Object.values(SESSION_PILL_LABEL))
 
 const COLUMNS = [
   'デバイス',

@@ -4,7 +4,10 @@ import { formatMoment } from '@/lib/format'
 import { SILENCE_RANGE, reachAgo } from '@/lib/tuners'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
-import { SESSION_PURPOSE_LABEL } from '@/repository/driver-capabilities'
+import {
+  SESSION_PILL_LABEL,
+  SESSION_PURPOSE_LABEL,
+} from '@/repository/driver-capabilities'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
 import type { ScanSystem } from '@/repository/scan-systems'
@@ -35,6 +38,7 @@ export interface SystemReach {
 
 export interface TunerSession {
   label: string
+  saying?: string
   tone: 'recording' | 'epg'
   code?: string
   endsAt?: string
@@ -790,8 +794,12 @@ function toSession(
     observation.sessionEndsAt,
   )
 
+  const label = wordFor(SESSION_PILL_LABEL, observation.sessionPurpose)
+  const saying = wordFor(SESSION_LABEL, observation.sessionPurpose)
+
   return {
-    label: wordFor(SESSION_LABEL, observation.sessionPurpose),
+    label,
+    saying: saying === label ? undefined : saying,
     tone: observation.sessionPurpose === 'recording' ? 'recording' : 'epg',
     code: tuningLabelOf(observation.sessionTuning),
     endsAt: endsAt === undefined ? undefined : formatMoment(endsAt),

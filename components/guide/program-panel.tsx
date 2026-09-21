@@ -121,7 +121,7 @@ export function ProgramPanel({
                 <div className="rounded-lg bg-mint-soft px-3.5 py-3">
                   <div className="flex items-center gap-1.5 text-ui font-bold text-mint">
                     <SuccessIcon className="size-4" />
-                    チューナー確保済み
+                    確保済み
                   </div>
                   {channel && (
                     <p className="mt-1 text-sub leading-relaxed text-ink-2">

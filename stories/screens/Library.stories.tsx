@@ -223,6 +223,7 @@ export const 自動実行が飛ばした録画: Story = {
     await expect(await tipIn(encodeOf(rows[0]))).toHaveTextContent(
       '自動実行の対象外',
     )
+    await userEvent.keyboard('{Escape}')
 
     await expect(encodeOf(rows[1])).toHaveTextContent('未実施')
     await expect(encodeOf(rows[1])).not.toHaveTextContent('自動実行')
