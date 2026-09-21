@@ -9,6 +9,10 @@ import {
 } from '@/repository/quality.fixtures'
 import type { QualityReviseThreshold } from '@/components/quality/quality-page'
 import { QualityView } from '@/components/quality/quality-page'
+import {
+  fillsTheColumn,
+  rowsOfTheTableHeaded,
+} from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const REFUSED =
@@ -187,5 +191,17 @@ export const 推移: Story = {
     await expect(quiet.querySelectorAll('[data-level="nodata"]').length).toBe(
       24,
     )
+  },
+}
+
+const TUNER_STATE_COLUMN = 1
+
+export const 札の並び: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const rows = rowsOfTheTableHeaded(canvasElement, 'チューナー')
+
+    await expect(rows.length).toBeGreaterThan(1)
+    await fillsTheColumn(rows, TUNER_STATE_COLUMN)
   },
 }

@@ -7,6 +7,15 @@ import {
   TUNERS,
 } from '@/repository/tuners.fixtures'
 import { TunersView } from '@/components/tuners/tuners-page'
+import {
+  cellOf,
+  rowsOfTheTableHeaded,
+  tipIn,
+} from '@/stories/pills-in-a-column'
+
+const SESSION_COLUMN = 3
+
+const STATE_COLUMN = 4
 
 const meta = {
   title: 'Screens/設定・チューナー',
@@ -33,9 +42,23 @@ export const 進行中のセッションが物理選局値で分かる: Story = 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await expect(canvas.getByText('57ch')).toBeVisible()
-    await expect(canvas.getByText('53ch')).toBeVisible()
-    await expect(canvas.getByText('08/07 21:15')).toBeVisible()
+    const rows = rowsOfTheTableHeaded(canvasElement, 'デバイス')
+    const said = await Promise.all(
+      rows
+        .filter((row) =>
+          cellOf(row, SESSION_COLUMN).querySelector(
+            '[data-slot="tooltip-trigger"], [data-slot="badge"]',
+          ),
+        )
+        .map(
+          async (row) =>
+            (await tipIn(cellOf(row, SESSION_COLUMN))).textContent ?? '',
+        ),
+    )
+
+    await expect(said.join(' ')).toContain('57ch')
+    await expect(said.join(' ')).toContain('53ch')
+    await expect(said.join(' ')).toContain('終了予定 08/07 21:15')
   },
 }
 
@@ -184,9 +207,15 @@ export const 異常と警告はdriverの一文を添えて出る: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    const rows = rowsOfTheTableHeaded(canvasElement, 'デバイス')
+
     await expect(canvas.getByText('異常')).toBeVisible()
-    await expect(canvas.getByText(NOTHING_CAME_BACK)).toBeVisible()
     await expect(canvas.getByText('警告')).toBeVisible()
-    await expect(canvas.getByText(TURNED_OFF_WHILE_HELD)).toBeVisible()
+    await expect(await tipIn(cellOf(rows[0], STATE_COLUMN))).toHaveTextContent(
+      NOTHING_CAME_BACK,
+    )
+    await expect(await tipIn(cellOf(rows[1], STATE_COLUMN))).toHaveTextContent(
+      TURNED_OFF_WHILE_HELD,
+    )
   },
 }

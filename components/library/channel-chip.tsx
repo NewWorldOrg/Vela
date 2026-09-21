@@ -1,5 +1,11 @@
 'use client'
 
+import { cn } from '@/lib/utils'
+import { BAND_CONTROL } from '@/components/vela/filter-select'
+
+const CHIP =
+  'tap-target inline-flex cursor-pointer items-center rounded-full px-[13px] whitespace-nowrap shadow-pop transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none'
+
 export function ChannelChip({
   label,
   on,
@@ -14,11 +20,13 @@ export function ChannelChip({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className={
+      className={cn(
+        CHIP,
+        BAND_CONTROL,
         on
-          ? 'tap-target cursor-pointer rounded-full border border-brand-line bg-brand-soft px-[13px] py-1 text-sub font-bold whitespace-nowrap text-brand shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none'
-          : 'tap-target cursor-pointer rounded-full border border-line-strong bg-surface px-[13px] py-1 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none'
-      }
+          ? 'border border-brand-line bg-brand-soft font-bold text-brand'
+          : 'border border-line-strong bg-surface font-medium text-ink-2',
+      )}
     >
       {label}
     </button>

@@ -68,7 +68,7 @@ export const Rows: Story = {
               <span className="truncate">
                 <span className="font-code tabular-nums">011</span> みなと総合1
               </span>
-              <Badge variant="kindData">地上波</Badge>
+              <span className="text-ui text-ink-2">地上波</span>
             </span>
             <span className="text-right font-code tabular-nums text-mint">
               32.4 dB
@@ -106,7 +106,7 @@ export const Rows: Story = {
                 <span className="font-code tabular-nums">BS01/TS0</span> 中央
                 BS1
               </span>
-              <Badge variant="kindData">BS</Badge>
+              <span className="text-ui text-ink-2">BS</span>
             </span>
             <span className="text-right font-code tabular-nums text-lemon">
               16.8 dB

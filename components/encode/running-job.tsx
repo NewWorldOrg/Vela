@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 
 import { formatLength, formatSpan } from '@/lib/format'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
@@ -43,7 +44,7 @@ export function RunningJob({
           </Badge>
         )}
         <span className="font-code text-[15px] font-medium tabular-nums text-brand">
-          {percent !== undefined ? `${percent}%` : '—'}
+          {percent !== undefined ? `${percent}%` : EMPTY_VALUE}
         </span>
       </div>
       <ProgressBar

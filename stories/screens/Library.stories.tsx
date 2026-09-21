@@ -10,6 +10,12 @@ import {
 import { inProgressFirst } from '@/lib/recordings'
 import { AppFrame } from '@/components/vela/app-shell'
 import { LibraryView } from '@/components/library/library-page'
+import {
+  heightOf,
+  oneShapeDownTheColumn,
+  pillOf,
+  tipIn,
+} from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const asked: string[] = []
@@ -82,8 +88,8 @@ export const 通常: Story = {
 
     await expect(unwatchable.getByText('視聴不可の恐れ')).toBeVisible()
     await expect(
-      unwatchable.getByText('ドロップ 0 / スクランブル残存 5,042,768'),
-    ).toBeVisible()
+      await tipIn(unwatchable.getAllByRole('cell')[QUALITY_COLUMN]),
+    ).toHaveTextContent('ドロップ 0 / スクランブル残存 5,042,768')
 
     await expect(
       unwatchable.getByRole('button', { name: '再生' }),
@@ -235,13 +241,21 @@ export const 削除未完了の録画: Story = {
     const outcomeOf = (row: HTMLElement) =>
       within(row).getAllByRole('cell')[OUTCOME_COLUMN]
 
-    await expect(outcomeOf(rows[0])).not.toHaveTextContent('削除未完了')
+    await expect(await tipIn(outcomeOf(rows[0]))).not.toHaveTextContent(
+      '削除未完了',
+    )
 
-    await expect(outcomeOf(rows[1])).toHaveTextContent('削除未完了')
-    await expect(outcomeOf(rows[1])).not.toHaveTextContent('残り')
+    await expect(await tipIn(outcomeOf(rows[1]))).toHaveTextContent(
+      '削除未完了',
+    )
+    await expect(await tipIn(outcomeOf(rows[1]))).not.toHaveTextContent('残り')
 
-    await expect(outcomeOf(rows[2])).toHaveTextContent('削除未完了')
-    await expect(outcomeOf(rows[2])).toHaveTextContent('残り 2 ファイル')
+    await expect(await tipIn(outcomeOf(rows[2]))).toHaveTextContent(
+      '削除未完了',
+    )
+    await expect(await tipIn(outcomeOf(rows[2]))).toHaveTextContent(
+      '残り 2 ファイル',
+    )
     await expect(
       within(rows[2]).getByRole('button', { name: '削除' }),
     ).toBeEnabled()
@@ -306,7 +320,9 @@ export const 尻切れと失敗の録画: Story = {
     const outcome = failed.getAllByRole('cell')[OUTCOME_COLUMN]
 
     await expect(outcome).toHaveTextContent('失敗')
-    await expect(outcome).toHaveTextContent('スクランブル解除できず')
+    await expect(await tipIn(outcome)).toHaveTextContent(
+      'スクランブル解除できず',
+    )
     await expect(failed.getAllByRole('cell')[SIZE_COLUMN]).toHaveTextContent(
       '0 B',
     )
@@ -332,9 +348,9 @@ export const ファイル不在の録画: Story = {
     const canvas = within(canvasElement)
     const gone = within(canvas.getByRole('row', { name: /朝のバードウォッチ/ }))
 
-    await expect(gone.getAllByRole('cell')[OUTCOME_COLUMN]).toHaveTextContent(
-      'ファイル不在',
-    )
+    await expect(
+      await tipIn(gone.getAllByRole('cell')[OUTCOME_COLUMN]),
+    ).toHaveTextContent('ファイル不在')
 
     const size = gone.getAllByRole('cell')[SIZE_COLUMN]
 
@@ -464,27 +480,6 @@ const LONG_AND_SHORT: Recording[] = [
 
 const CHIP_COLUMNS = [OUTCOME_COLUMN, QUALITY_COLUMN, ENCODE_COLUMN]
 
-function hasAnEdge(node: Element): boolean {
-  if (!(node instanceof HTMLElement)) {
-    return false
-  }
-
-  const drawn = getComputedStyle(node)
-
-  return drawn.borderTopStyle !== 'none' && parseFloat(drawn.borderTopWidth) > 0
-}
-
-function pillOf(row: HTMLElement, column: number): HTMLElement {
-  const cell = within(row).getAllByRole('cell')[column]
-  const pill = [...cell.querySelectorAll('*')].find(hasAnEdge)
-
-  if (!(pill instanceof HTMLElement)) {
-    throw new Error(`nothing with an edge in column ${column}`)
-  }
-
-  return pill
-}
-
 export const 札の並び: Story = {
   args: { result: resultOf(LONG_AND_SHORT), filter: {} },
   play: async ({ canvasElement }) => {
@@ -512,6 +507,8 @@ export const 札の並び: Story = {
       await expect(new Set(said).size).toBeGreaterThan(1)
     }
 
+    await oneShapeDownTheColumn(rows, ENCODE_COLUMN)
+
     const actions = rows.map((row) =>
       Math.round(
         within(row)
@@ -521,5 +518,23 @@ export const 札の並び: Story = {
     )
 
     await expect(new Set(actions).size).toBe(1)
+  },
+}
+
+export const 絞りの帯: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const band = [
+      canvas.getByPlaceholderText('番組名・概要・出演者で検索'),
+      ...canvas.getAllByRole('combobox'),
+      canvas.getByRole('button', { name: 'すべて' }),
+    ]
+
+    await expect(band.length).toBeGreaterThan(4)
+    await expect(new Set(band.map(heightOf)).size).toBe(1)
+    await expect(
+      new Set(band.map((one) => getComputedStyle(one).fontSize)).size,
+    ).toBe(1)
   },
 }

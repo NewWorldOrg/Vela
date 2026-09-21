@@ -1,5 +1,6 @@
 'use client'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { useEffect, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 
@@ -78,7 +79,7 @@ function StreamName({ row }: { row: StreamVisitRow }) {
         {row.channelLabel ? `(${row.channelLabel})` : ''}
       </span>
       <span className="min-w-0 flex-1 text-sub font-bold">
-        {row.name ?? '—'}
+        {row.name ?? EMPTY_VALUE}
         <small className="ml-1.5 text-cap font-normal whitespace-nowrap text-ink-3">
           サービス {row.serviceCount}
         </small>

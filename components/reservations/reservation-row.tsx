@@ -24,7 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
 import {
@@ -143,7 +143,7 @@ export function ReservationRow({
         </TableCell>
         <TableCell className="align-top">
           {reservation.ruleName ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-[11px] py-0.5 text-note text-ink-2">
+            <span className="inline-flex items-center gap-1.5 text-ui text-ink-2">
               <ListIcon className="size-3" />
               {reservation.ruleName}
             </span>
@@ -155,7 +155,7 @@ export function ReservationRow({
           <StatusCell>
             <ReservationStateChip
               reservation={reservation}
-              width={COLUMN_WIDE}
+              width={PILL_WIDTH}
             />
           </StatusCell>
         </TableCell>

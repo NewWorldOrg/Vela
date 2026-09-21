@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import Link from 'next/link'
 
@@ -32,7 +33,11 @@ import {
 import { ActionRow } from '@/components/vela/action-row'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import {
+  PILL_WIDTH,
+  STATE_COLUMN,
+  StatusCell,
+} from '@/components/recordings/status-cell'
 import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialog'
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'
@@ -47,12 +52,14 @@ const COLUMNS: { label: string; hidden?: boolean }[] = [
 
 const OWNED_BY_NO_RECORDING: readonly IntegrityFault[] = ['noLedgerRow']
 
-const REASON_VARIANT: Record<IntegrityFault, 'mute' | 'warn' | 'err'> = {
-  noLedgerRow: 'mute',
-  sizeDisagrees: 'warn',
-  fileMissing: 'warn',
-  fileEmpty: 'err',
-  emptyThoughComplete: 'err',
+const NOT_YET_KNOWN_TONE = 'text-ink-3'
+
+const REASON_TONE: Record<IntegrityFault, string> = {
+  noLedgerRow: 'text-ink-2',
+  sizeDisagrees: 'text-lemon',
+  fileMissing: 'text-lemon',
+  fileEmpty: 'text-coral',
+  emptyThoughComplete: 'text-coral',
 }
 
 export function IntegrityView({
@@ -217,15 +224,15 @@ export function IntegrityView({
                   </b>
                   <span className="text-note text-ink-3">{finding.root}</span>
                 </TableCell>
-                <TableCell className="align-top">
-                  <StatusCell>
-                    <Badge
-                      variant={shapeFor(REASON_VARIANT, finding.fault, 'mute')}
-                      width={COLUMN_WIDE}
-                    >
-                      {finding.reason}
-                    </Badge>
-                  </StatusCell>
+                <TableCell className="align-top whitespace-normal">
+                  <span
+                    className={cn(
+                      'text-ui',
+                      shapeFor(REASON_TONE, finding.fault, NOT_YET_KNOWN_TONE),
+                    )}
+                  >
+                    {finding.reason}
+                  </span>
                 </TableCell>
                 <TableCell className="align-top text-right">
                   <span className="font-code tabular-nums">{finding.size}</span>

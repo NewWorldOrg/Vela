@@ -1,4 +1,7 @@
 import { cn } from '@/lib/utils'
+import { TINT_CLASS, type TintName } from '@/components/vela/surface'
+
+export const METRIC_TILE_TINT: TintName = 'lavender'
 
 export function DetailStat({
   label,
@@ -12,7 +15,13 @@ export function DetailStat({
   wordy?: boolean
 }) {
   return (
-    <div className="min-w-0 rounded-lg bg-surface-2 px-3.5 py-[11px]">
+    <div
+      data-slot="metric-tile"
+      className={cn(
+        'min-w-0 rounded-lg px-3.5 py-[11px] text-ink',
+        TINT_CLASS[METRIC_TILE_TINT],
+      )}
+    >
       <span className="mb-0.5 block text-[11px] font-medium text-ink-3">
         {label}
       </span>

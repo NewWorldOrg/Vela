@@ -5,6 +5,7 @@ import {
 } from '@/lib/state-terms'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { alsoSays } from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -20,30 +21,33 @@ const VARIANT: Record<SettledOutcome, 'ok' | 'warn' | 'err'> = {
 export function OutcomeChip({
   recording: r,
   width,
+  also = [],
 }: {
   recording: Recording
   width?: BadgeWidth
+  also?: (string | undefined | false)[]
 }) {
   if (r.outcome === 'recording') {
     return <RecordingInProgressChip width={width} />
   }
 
-  const term = shapeFor(
-    RECORDING_OUTCOME_TERMS,
-    r.outcome,
-    NOT_YET_IN_THIS_BUILD_TERM,
+  const term = alsoSays(
+    shapeFor(RECORDING_OUTCOME_TERMS, r.outcome, NOT_YET_IN_THIS_BUILD_TERM),
+    ...also,
   )
 
   return (
-    <TermTip term={term}>
-      <Badge
-        variant={shapeFor(VARIANT, r.outcome, 'mute')}
-        width={width}
-        className="font-bold"
-      >
-        <ChipDot />
-        {term.label}
-      </Badge>
-    </TermTip>
+    <>
+      <TermTip term={term}>
+        <Badge
+          variant={shapeFor(VARIANT, r.outcome, 'mute')}
+          width={width}
+          className="font-bold"
+        >
+          <ChipDot />
+          {term.label}
+        </Badge>
+      </TermTip>
+    </>
   )
 }

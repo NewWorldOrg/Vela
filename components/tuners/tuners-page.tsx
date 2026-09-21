@@ -36,13 +36,32 @@ import {
   TunerSatelliteIcon,
   TunerTerrestrialIcon,
 } from '@/components/vela/icons'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import {
+  PILL_WIDTH,
+  STATE_COLUMN,
+  StatusCell,
+} from '@/components/recordings/status-cell'
+import { InFull } from '@/components/vela/in-full'
 import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
 import { ThresholdControl } from '@/components/tuners/threshold-control'
 import { WHEN_LABELS } from '@/lib/when-terms'
+
+function whatTheSessionIs(session: {
+  label: string
+  code?: string
+  endsAt?: string
+}): string {
+  return [
+    session.label,
+    session.code,
+    session.endsAt && `終了予定 ${session.endsAt}`,
+  ]
+    .filter((one): one is string => Boolean(one))
+    .join('\n')
+}
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route
 const SCAN_HISTORY_HREF = '/settings/channels#scan-history' as Route
@@ -53,6 +72,8 @@ const DIFF_VARIANT = {
   del: 'err',
   kind: 'warn',
 } as const
+
+const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
 
 const COLUMNS = [
   'デバイス',
@@ -310,7 +331,14 @@ export function TunersView({
         <TableHeader>
           <TableRow>
             {COLUMNS.map((column) => (
-              <TableHead key={column}>{column}</TableHead>
+              <TableHead
+                key={column}
+                className={
+                  STATE_COLUMNS.includes(column) ? STATE_COLUMN : undefined
+                }
+              >
+                {column}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -325,14 +353,10 @@ export function TunersView({
                   </b>
                 </span>
               </TableCell>
-              <TableCell className="align-top">
-                {row.kind === undefined ? (
-                  <span className="text-ink-3">{EMPTY_VALUE}</span>
-                ) : (
-                  <StatusCell>
-                    <Badge width={COLUMN_WIDE}>{row.kind}</Badge>
-                  </StatusCell>
-                )}
+              <TableCell>
+                <span className="text-ui text-ink-2">
+                  {row.kind ?? EMPTY_VALUE}
+                </span>
               </TableCell>
               <TableCell>
                 <TunerEnableSwitch
@@ -346,38 +370,22 @@ export function TunersView({
                   </span>
                 )}
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell>
                 {row.session ? (
-                  <StatusCell
-                    note={
-                      (row.session.code || row.session.endsAt) && (
-                        <>
-                          {row.session.code && (
-                            <span className="font-code">
-                              {row.session.code}
-                            </span>
-                          )}
-                          {row.session.endsAt && (
-                            <span className="block">
-                              終了予定{' '}
-                              <span className="font-code tabular-nums">
-                                {row.session.endsAt}
-                              </span>
-                            </span>
-                          )}
-                        </>
-                      )
-                    }
-                  >
-                    <Badge
-                      variant={
-                        row.session.tone === 'recording' ? 'recording' : 'info'
-                      }
-                      width={COLUMN_WIDE}
-                      className="font-bold"
-                    >
-                      {row.session.label}
-                    </Badge>
+                  <StatusCell>
+                    <InFull says={whatTheSessionIs(row.session)}>
+                      <Badge
+                        variant={
+                          row.session.tone === 'recording'
+                            ? 'recording'
+                            : 'info'
+                        }
+                        width={PILL_WIDTH}
+                        className="font-bold"
+                      >
+                        {row.session.label}
+                      </Badge>
+                    </InFull>
                   </StatusCell>
                 ) : (
                   <span className="text-ui text-ink-3">
@@ -385,27 +393,26 @@ export function TunersView({
                   </span>
                 )}
               </TableCell>
-              <TableCell className="align-top">
-                <StatusCell note={row.stateSub}>
-                  <TunerStateChip row={row} width={COLUMN_WIDE} />
+              <TableCell>
+                <StatusCell>
+                  <TunerStateChip
+                    row={row}
+                    width={PILL_WIDTH}
+                    also={row.stateSub}
+                  />
                 </StatusCell>
               </TableCell>
               <TableCell>
                 {row.lastService ? (
                   <span className="font-code text-[12px] whitespace-nowrap text-ink-2">
                     {row.lastService.at}
-                    {row.lastService.ago && (
-                      <span className="block text-[10.5px] text-ink-3">
-                        {row.lastService.ago}
-                      </span>
-                    )}
                   </span>
                 ) : (
-                  <span className="text-ink-3">{EMPTY_VALUE}</span>
+                  <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
               <TableCell className="font-code text-[12px] whitespace-nowrap text-ink-2">
-                {row.lnb ?? EMPTY_VALUE}
+                {row.lnb ?? <span className="font-sans">{EMPTY_VALUE}</span>}
               </TableCell>
             </TableRow>
           ))}

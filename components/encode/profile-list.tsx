@@ -26,16 +26,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ActionRow } from '@/components/vela/action-row'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { AddProfileDialog } from '@/components/encode/add-profile-dialog'
 import { ChangeProfileButton } from '@/components/encode/change-definition-button'
 import {
   DefinitionName,
   RemovalNotice,
-  ROW_OPS,
+  RETIRED_ROW,
   STAMP,
   STICKY_HEAD,
-  RETIRED_ROW,
 } from '@/components/encode/definition-list'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 
@@ -120,7 +120,7 @@ export function ProfileList({
               <TableCell className={STAMP}>{profile.definedAt}</TableCell>
               <TableCell className="text-right">
                 {!profile.retired && (
-                  <span className={ROW_OPS}>
+                  <ActionRow>
                     <ChangeProfileButton
                       profile={profile}
                       onRevise={onRevise}
@@ -133,7 +133,7 @@ export function ProfileList({
                         setRemoved({ label: profile.label, removal })
                       }
                     />
-                  </span>
+                  </ActionRow>
                 )}
               </TableCell>
             </TableRow>

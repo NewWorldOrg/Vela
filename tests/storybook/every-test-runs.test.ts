@@ -36,7 +36,6 @@ const THE_SUITE = [
   'tests/lib/live-choice.test.ts',
   'tests/lib/live-clock.test.ts',
   'tests/lib/live-fold.test.ts',
-  'tests/lib/live-in-full.test.ts',
   'tests/lib/live-latency.test.ts',
   'tests/lib/live-lineup.test.ts',
   'tests/lib/live-profiles.test.ts',

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import type { CSSProperties, ReactNode } from 'react'
 import type { Route } from 'next'
 
@@ -72,28 +73,34 @@ export function RecordingRecord({
           />
         )}
 
-        <Caption>
-          受信品質
-          <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
-          {d.quality.measured ? (
-            <QualityChip recording={d} />
-          ) : (
-            <Badge variant="mute" className="font-bold tracking-normal">
-              <ChipDot />
-              未計測
-            </Badge>
-          )}
-        </Caption>
+        <DetailKeyRow
+          label="受信品質"
+          plain
+          main={
+            d.quality.measured ? (
+              <QualityChip recording={d} />
+            ) : (
+              <Badge variant="mute" className="font-bold tracking-normal">
+                <ChipDot />
+                未計測
+              </Badge>
+            )
+          }
+        />
         <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-[11px]">
           <DetailStat
             label="ドロップ合計"
-            value={d.quality.measured ? (d.qualityTotal ?? '—') : '未計測'}
+            value={
+              d.quality.measured ? (d.qualityTotal ?? EMPTY_VALUE) : '未計測'
+            }
             unit={d.quality.measured ? 'パケット' : undefined}
             wordy={!d.quality.measured}
           />
           <DetailStat
             label="総パケット比"
-            value={d.quality.measured ? (d.qualityRatio ?? '—') : '未計測'}
+            value={
+              d.quality.measured ? (d.qualityRatio ?? EMPTY_VALUE) : '未計測'
+            }
             unit={d.quality.measured ? '%' : undefined}
             wordy={!d.quality.measured}
           />

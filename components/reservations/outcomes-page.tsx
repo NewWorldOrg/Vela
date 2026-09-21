@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { STATE_COLUMN } from '@/components/recordings/status-cell'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { FilterSelect } from '@/components/vela/filter-select'
@@ -29,6 +30,8 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import { OutcomeRow } from '@/components/reservations/outcome-row'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { WHEN_LABELS } from '@/lib/when-terms'
+
+const STATE_COLUMNS: string[] = ['分類']
 
 const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
   { label: '代わりに録られた予約の開閉', hidden: true, narrow: true },
@@ -160,6 +163,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                     className={cn(
                       column.narrow && 'w-8',
                       column.label === '優先度' && 'text-right',
+                      STATE_COLUMNS.includes(column.label) && STATE_COLUMN,
                     )}
                   >
                     {column.hidden ? (

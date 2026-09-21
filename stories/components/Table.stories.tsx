@@ -92,9 +92,7 @@ export const Default: Story = {
                 {row.ch}
               </TableCell>
               <TableCell>
-                <Badge variant={row.kind === 'TV' ? 'kindTv' : 'kindSegment'}>
-                  {row.kind}
-                </Badge>
+                <span className="text-ui text-ink-2">{row.kind}</span>
               </TableCell>
               <TableCell className="text-right font-code tabular-nums">
                 {row.cnr}

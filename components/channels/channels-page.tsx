@@ -1,4 +1,5 @@
 import type { Route } from 'next'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
@@ -11,7 +12,11 @@ import type {
 } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { Badge } from '@/components/ui/badge'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import {
+  PILL_WIDTH,
+  STATE_COLUMN,
+  StatusCell,
+} from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -98,7 +103,12 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {['開始', '状態', '所要', '終了'].map((column) => (
-                <TableHead key={column}>{column}</TableHead>
+                <TableHead
+                  key={column}
+                  className={column === '状態' ? STATE_COLUMN : undefined}
+                >
+                  {column}
+                </TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -108,10 +118,10 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
                   {run.startedAt}
                 </TableCell>
-                <TableCell className="align-top">
+                <TableCell>
                   <StatusCell>
                     <Badge
-                      width={COLUMN_WIDE}
+                      width={PILL_WIDTH}
                       variant={
                         run.state === 'completed'
                           ? 'ok'
@@ -127,10 +137,10 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                   </StatusCell>
                 </TableCell>
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
-                  {run.took ?? '—'}
+                  {run.took ?? EMPTY_VALUE}
                 </TableCell>
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
-                  {run.finishedAt ?? '—'}
+                  {run.finishedAt ?? EMPTY_VALUE}
                 </TableCell>
               </TableRow>
             ))}
@@ -249,7 +259,7 @@ export function ChannelsView({
         <ScanBar
           lastScan={
             lastFinished
-              ? `前回: ${lastFinished.startedAt} · ${lastFinished.took ?? '—'} · ${lastFinished.stateLabel}`
+              ? `前回: ${lastFinished.startedAt} · ${lastFinished.took ?? EMPTY_VALUE} · ${lastFinished.stateLabel}`
               : '前回: なし'
           }
           onStart={onStart}

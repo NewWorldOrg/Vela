@@ -6,7 +6,7 @@ import { EMPTY_VALUE } from '@/lib/empty-value'
 import { cn } from '@/lib/utils'
 import { formatBytes, formatMoment } from '@/lib/format'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
-import { SYSTEM_DETAIL_LABELS } from '@/lib/system-terms'
+import { SYSTEM_DETAIL_LABELS, SYSTEM_STATE_LABELS } from '@/lib/system-terms'
 import type {
   ApiHealthResult,
   CollectionCensus,
@@ -38,7 +38,7 @@ import {
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { StatusDot, type StatusTone } from '@/components/vela/status'
 import { Surface } from '@/components/vela/surface'
-import { pressable, tactileQuiet } from '@/components/vela/tactile'
+import { pressable, still, tactile } from '@/components/vela/tactile'
 
 const API_TROUBLE: Record<Exclude<ApiHealthResult['state'], 'ok'>, string> = {
   unconfigured: 'API の接続先が設定されていません',
@@ -120,18 +120,29 @@ function Part({
     </>
   )
 
-  const skin = cn('block rounded-lg px-[18px] py-[15px]', PANEL_TONE[tone])
+  const skin = cn(
+    'block rounded-lg border border-transparent px-[18px] py-[15px] text-ink',
+    PANEL_TONE[tone],
+  )
 
   return href ? (
     <Link
       href={href}
-      data-slot="surface"
-      className={cn(skin, 'hover:bg-surface-2', tactileQuiet, pressable)}
+      data-slot="state-tile"
+      className={cn(
+        skin,
+        'border-line shadow-pop hover:shadow-pop-lg active:shadow-pop-none',
+        tactile,
+        pressable,
+        still,
+      )}
     >
       {body}
     </Link>
   ) : (
-    <Surface className={cn('py-[15px]', PANEL_TONE[tone])}>{body}</Surface>
+    <div data-slot="state-tile" className={skin}>
+      {body}
+    </div>
   )
 }
 
@@ -184,8 +195,8 @@ function Unread({
       tone="off"
       head={
         reading.state === 'unauthenticated'
-          ? 'サインインしないと見られません'
-          : '状態が分かりません'
+          ? SYSTEM_STATE_LABELS.signedOut
+          : SYSTEM_STATE_LABELS.unknown
       }
     />
   )
@@ -246,7 +257,11 @@ export function SystemView({
           tone={
             api.state !== 'ok' ? 'err' : degraded.length > 0 ? 'warn' : 'ok'
           }
-          head={api.state === 'ok' ? '応答しています' : '応答がありません'}
+          head={
+            api.state === 'ok'
+              ? SYSTEM_STATE_LABELS.responding
+              : SYSTEM_STATE_LABELS.notResponding
+          }
         >
           {api.state === 'ok' && (
             <Fact label="低下している機能" names={degraded} />
@@ -323,7 +338,7 @@ function DriverPart({ result }: { result: DriverStatusResult }) {
         name="driver"
         mark={MarkSplit}
         tone="off"
-        head="サインインしないと見られません"
+        head={SYSTEM_STATE_LABELS.signedOut}
       />
     )
   }
@@ -334,7 +349,7 @@ function DriverPart({ result }: { result: DriverStatusResult }) {
         name="driver"
         mark={MarkSplit}
         tone="err"
-        head="状態を取得できませんでした"
+        head={SYSTEM_STATE_LABELS.unreadable}
       >
         {result.message}
       </Part>
@@ -342,7 +357,12 @@ function DriverPart({ result }: { result: DriverStatusResult }) {
   }
 
   return (
-    <Part name="driver" mark={MarkSplit} tone="off" head="状態が分かりません">
+    <Part
+      name="driver"
+      mark={MarkSplit}
+      tone="off"
+      head={SYSTEM_STATE_LABELS.unknown}
+    >
       API に接続できないため、driver が動いているかどうかも分かりません。
     </Part>
   )

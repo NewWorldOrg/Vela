@@ -16,6 +16,7 @@ import {
   RESERVATION_STANDING_TERMS,
 } from '@/lib/state-terms'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { alsoSays } from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -46,15 +47,16 @@ const NOT_YET_KNOWN_CHIP: (typeof STANDING)[SettledStanding] = {
 function StandingChip({
   standing,
   width,
+  also,
 }: {
   standing: SettledStanding
   width?: BadgeWidth
+  also: (string | undefined | false)[]
 }) {
   const chip = shapeFor(STANDING, standing, NOT_YET_KNOWN_CHIP)
-  const term = shapeFor(
-    RESERVATION_STANDING_TERMS,
-    standing,
-    NOT_YET_IN_THIS_BUILD_TERM,
+  const term = alsoSays(
+    shapeFor(RESERVATION_STANDING_TERMS, standing, NOT_YET_IN_THIS_BUILD_TERM),
+    ...also,
   )
 
   return (
@@ -69,6 +71,10 @@ function StandingChip({
       </Badge>
     </TermTip>
   )
+}
+
+function saidBy(term: StateTerm): string {
+  return `${term.label}: ${term.explanation}`
 }
 
 function divergedTerm(drift: EpgDrift): StateTerm {
@@ -100,49 +106,47 @@ export function ReservationStateChip({
     standing: reservation.standing,
     recorded: reservation.recordingId !== undefined,
   })
+  const also = [
+    !reservation.endAtConfirmed && saidBy(END_UNDECIDED_TERM),
+    reservation.receptionUnavailable && saidBy(RESERVATION_RECEPTION_TERM),
+    reservation.epg?.programmeMissing && saidBy(RESERVATION_EPG_MISSING_TERM),
+    reservation.epg?.diverged && saidBy(divergedTerm(reservation.epg)),
+  ]
+
+  if (removed && reservation.standing !== 'recording') {
+    const standing = shapeFor(
+      RESERVATION_STANDING_TERMS,
+      reservation.standing,
+      NOT_YET_IN_THIS_BUILD_TERM,
+    )
+    const term = alsoSays(
+      RESERVATION_RECORDING_REMOVED_TERM,
+      saidBy(standing),
+      ...also,
+    )
+
+    return (
+      <>
+        <TermTip term={term}>
+          <Badge variant="mute" width={width}>
+            {term.label}
+          </Badge>
+        </TermTip>
+      </>
+    )
+  }
+
+  if (reservation.standing === 'recording') {
+    return (
+      <>
+        <RecordingInProgressChip width={width} also={also} />
+      </>
+    )
+  }
 
   return (
     <>
-      {reservation.standing === 'recording' ? (
-        <RecordingInProgressChip width={width} />
-      ) : (
-        <StandingChip standing={reservation.standing} width={width} />
-      )}
-      {!reservation.endAtConfirmed && (
-        <TermTip term={END_UNDECIDED_TERM}>
-          <Badge variant="warn" width={width}>
-            {END_UNDECIDED_TERM.label}
-          </Badge>
-        </TermTip>
-      )}
-      {reservation.receptionUnavailable && (
-        <TermTip term={RESERVATION_RECEPTION_TERM}>
-          <Badge variant="err" width={width}>
-            {RESERVATION_RECEPTION_TERM.label}
-          </Badge>
-        </TermTip>
-      )}
-      {reservation.epg?.programmeMissing && (
-        <TermTip term={RESERVATION_EPG_MISSING_TERM}>
-          <Badge variant="err" width={width}>
-            {RESERVATION_EPG_MISSING_TERM.label}
-          </Badge>
-        </TermTip>
-      )}
-      {reservation.epg?.diverged && (
-        <TermTip term={divergedTerm(reservation.epg)}>
-          <Badge variant="warn" width={width}>
-            {RESERVATION_EPG_DIVERGED_TERM.label}
-          </Badge>
-        </TermTip>
-      )}
-      {removed && (
-        <TermTip term={RESERVATION_RECORDING_REMOVED_TERM}>
-          <Badge variant="mute" width={width}>
-            {RESERVATION_RECORDING_REMOVED_TERM.label}
-          </Badge>
-        </TermTip>
-      )}
+      <StandingChip standing={reservation.standing} width={width} also={also} />
     </>
   )
 }

@@ -1,34 +1,40 @@
-import { cn } from '@/lib/utils'
 import type { QualityTunerCell } from '@/repository/quality'
+import type { QualityLevel } from '@/lib/quality'
 import { TableCell } from '@/components/ui/table'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
 import { QualityChip } from '@/components/quality/signal-quality-chip'
+import { InFull } from '@/components/vela/in-full'
 
 export function QualityHealthCell({ cell }: { cell: QualityTunerCell }) {
   return (
-    <TableCell className="align-top whitespace-normal">
-      {cell.value !== undefined && (
-        <span className="block font-code text-ui font-medium tabular-nums">
-          {cell.value}
-          {cell.unit && (
-            <em className="ml-0.5 font-sans text-note text-ink-3 not-italic">
-              {cell.unit}
-            </em>
-          )}
-        </span>
-      )}
-      {cell.level && (
-        <span className={cn('block', cell.value !== undefined && 'mt-1')}>
-          <StatusCell>
-            <QualityChip level={cell.level} width={COLUMN_WIDE} />
-          </StatusCell>
-        </span>
-      )}
-      {cell.sub && (
-        <span className="mt-1 block font-code text-note text-ink-3">
-          {cell.sub}
-        </span>
-      )}
+    <TableCell className="align-top whitespace-nowrap">
+      <StatusCell>
+        {cell.level !== undefined && (
+          <Reading level={cell.level} sub={cell.sub} />
+        )}
+        {cell.value !== undefined && (
+          <span className="ml-2.5 font-code text-ui font-medium tabular-nums">
+            {cell.value}
+            {cell.unit && (
+              <em className="ml-0.5 font-sans text-note text-ink-3 not-italic">
+                {cell.unit}
+              </em>
+            )}
+          </span>
+        )}
+      </StatusCell>
     </TableCell>
+  )
+}
+
+function Reading({ level, sub }: { level: QualityLevel; sub?: string }) {
+  const pill = <QualityChip level={level} width={PILL_WIDTH} />
+
+  return sub ? (
+    <InFull says={sub}>
+      <span className="inline-flex">{pill}</span>
+    </InFull>
+  ) : (
+    pill
   )
 }

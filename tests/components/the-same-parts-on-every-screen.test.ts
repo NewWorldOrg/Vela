@@ -30,17 +30,33 @@ const SAYS_SOMETHING_ELSE =
 
 const A_BUTTON = /<Button\b([^>]*)>([\s\S]*?)<\/Button>/g
 
+const A_NAMED_ACTION = /<[A-Z][A-Za-z]*Button\b/g
+
+const A_METRIC_TILE = /data-slot="metric-tile"/
+
+const NOT_A_STATE = /<Badge\b[^>]*variant="kind[A-Z]/g
+
 const AN_ICON = /<[A-Z][A-Za-z]*(Icon|Glyph)\b|<Spinner\b/
 
 const DELETES = /<TrashIcon\b/
 
 const ADDS = /追加/
 
-const THE_COLUMN_WIDE = 'COLUMN_WIDE'
+const THE_PILL_WIDTH = 'PILL_WIDTH'
 
 const THE_CELL = 'components/recordings/status-cell.tsx'
 
 const THE_ROW = 'components/vela/action-row.tsx'
+
+const THE_EMPTY_VALUE = 'lib/empty-value.ts'
+
+const THE_TINTS = 'components/vela/surface.tsx'
+
+const THE_BAND = 'components/vela/filter-select.tsx'
+
+const THE_SYSTEM_TERMS = 'lib/system-terms.ts'
+
+const WATCHED_FOR_THE_MARK = ['components/encode', 'components/system']
 
 async function sourceFiles(dir: string): Promise<string[]> {
   const found: string[] = []
@@ -124,7 +140,7 @@ test('a column that says a state goes through the one cell', async () => {
   }
 })
 
-test('every pill in a state column is told to fill it, by the one name', async () => {
+test('every pill in a state column is told the one width, by the one name', async () => {
   const told: string[] = []
 
   for (const column of await stateColumns()) {
@@ -132,7 +148,7 @@ test('every pill in a state column is told to fill it, by the one name', async (
       told.push(`${column.file}: ${pill[1]}`)
       assert.match(
         pill[2],
-        new RegExp(`width=\\{${THE_COLUMN_WIDE}\\}`),
+        new RegExp(`width=\\{${THE_PILL_WIDTH}\\}`),
         `${column.file}: ${pill[1]} draws itself as wide as it likes`,
       )
     }
@@ -141,25 +157,78 @@ test('every pill in a state column is told to fill it, by the one name', async (
   assert.ok(told.length > 8, `only ${told.length} pills were read`)
 })
 
-test('what the one name means is the pill filling the column', async () => {
+test('what the one name means is one fixed width, the same everywhere', async () => {
   const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
   const named = cell.match(
-    new RegExp(`export const ${THE_COLUMN_WIDE}: BadgeWidth = '(\\w+)'`),
+    new RegExp(`export const ${THE_PILL_WIDTH}: BadgeWidth = '(\\w+)'`),
   )
 
-  assert.ok(named, 'the column width the pills are told to take has no name')
-  assert.match(
-    await readFile(path.join(ROOT, 'components/ui/badge.tsx'), 'utf8'),
-    new RegExp(`${named[1]}: 'w-full'`),
+  assert.ok(named, 'the width the pills are told to take has no name')
+
+  const pill = await readFile(
+    path.join(ROOT, 'components/ui/badge.tsx'),
+    'utf8',
+  )
+
+  assert.match(pill, new RegExp(`${named[1]}: 'w-\\[[\\d.]+em\\]`))
+  assert.doesNotMatch(
+    pill,
+    /'w-full'/,
+    'a pill is still told to stretch to the column it sits in',
   )
 })
+
+test('a state cell holds one pill and nothing under it', async () => {
+  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+
+  assert.doesNotMatch(
+    cell,
+    /\bnote\b/,
+    'the one state cell still draws a second line under the pill',
+  )
+  assert.doesNotMatch(cell, /flex-col/, 'the one state cell still stacks')
+
+  for (const column of await stateColumns()) {
+    const pills = [...column.body.matchAll(A_PILL)]
+
+    assert.equal(
+      pills.length,
+      1,
+      `${column.file} puts ${pills.length} pills in one state cell; ` +
+        'the rest belongs in the tip',
+    )
+  }
+})
+
+test('what is not a state is not drawn as a pill', async () => {
+  for (const { file, source } of await everySource()) {
+    for (const said of source.matchAll(NOT_A_STATE)) {
+      assert.fail(
+        `${file} draws ${said[0]} as a pill; it is a kind, not a state`,
+      )
+    }
+  }
+
+  assert.doesNotMatch(
+    await readFile(path.join(ROOT, 'components/ui/badge.tsx'), 'utf8'),
+    /kind[A-Z]/,
+    'the pill still keeps a colour for a kind',
+  )
+})
+
+function actionsIn(body: string): number {
+  return (
+    [...body.matchAll(A_BUTTON)].length +
+    [...body.matchAll(A_NAMED_ACTION)].length
+  )
+}
 
 test('a cell that holds more than one action goes through the one row', async () => {
   const groups: string[] = []
 
   for (const { file, source } of await everySource()) {
     for (const cell of cellsIn(source)) {
-      if ([...cell.body.matchAll(A_BUTTON)].length < 2) {
+      if (actionsIn(cell.body) < 2) {
         continue
       }
 
@@ -290,6 +359,138 @@ test('the record on a recording says its state values in pills', async () => {
       new RegExp(`label="${label}"[\\s\\S]{0,120}main=\\{<${pill}\\b`, 'u'),
       `the record says ${label} in bare text while the list beside it says ` +
         'the same value in a pill',
+    )
+  }
+})
+
+test('an action named after what it does carries an icon beside its word', async () => {
+  const drawn: string[] = []
+
+  for (const file of [
+    'components/encode/change-definition-button.tsx',
+    'components/encode/remove-definition-button.tsx',
+  ]) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    for (const button of source.matchAll(A_BUTTON)) {
+      drawn.push(`${file}: ${saidBy(button[2]).trim()}`)
+      assert.match(
+        button[2],
+        AN_ICON,
+        `${file} offers an action with no icon on it: ` +
+          saidBy(button[2]).trim(),
+      )
+    }
+  }
+
+  assert.ok(drawn.length > 1, `only ${drawn.length} actions were read`)
+})
+
+test('the mark that stands for an empty value is written down once', async () => {
+  const said = await readFile(path.join(ROOT, THE_EMPTY_VALUE), 'utf8')
+  const named = said.match(/export const \w+ = '(.+)'/u)
+
+  assert.ok(named, 'the mark that stands for an empty value has no name')
+
+  const mark = named[1]
+
+  assert.match(mark, /^[—–]$/u, 'the mark is not a dash')
+
+  for (const dir of WATCHED_FOR_THE_MARK) {
+    for (const file of await sourceFiles(dir)) {
+      const source = await readFile(path.join(ROOT, file), 'utf8')
+
+      assert.doesNotMatch(
+        source,
+        /[—–]/u,
+        `${file} writes a dash of its own where the one mark belongs`,
+      )
+    }
+  }
+})
+
+test('what a metric tile is drawn on is one colour face, named once', async () => {
+  const drawn = (await everySource()).filter(({ source }) =>
+    A_METRIC_TILE.test(source),
+  )
+
+  assert.ok(drawn.length >= 1, `only ${drawn.length} files draw a metric tile`)
+
+  for (const { file, source } of drawn) {
+    assert.match(
+      source,
+      /TINT_CLASS/,
+      `${file} draws its metric tiles on a face of its own instead of the ` +
+        'tint the canon puts them on',
+    )
+  }
+
+  const tints = await readFile(path.join(ROOT, THE_TINTS), 'utf8')
+
+  assert.match(tints, /export const TINT_CLASS/)
+})
+
+test('the controls in a filter band are one height and one size of word', async () => {
+  const band = await readFile(path.join(ROOT, THE_BAND), 'utf8')
+
+  assert.match(band, /export const BAND_CONTROL = '[^']+'/)
+
+  for (const file of [
+    'components/library/library-page.tsx',
+    'components/library/channel-chip.tsx',
+  ]) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.match(
+      source,
+      /BAND_CONTROL/,
+      `${file} gives a control in the band a height of its own`,
+    )
+  }
+})
+
+test('every pill in the encode column is the same shape', async () => {
+  const source = await readFile(
+    path.join(ROOT, 'components/recordings/encode-chip.tsx'),
+    'utf8',
+  )
+
+  const shapes = [...source.matchAll(/<Badge\b([^>]*)>/g)]
+
+  assert.equal(
+    shapes.length,
+    1,
+    'the encode column draws more than one shape of pill; the meaning is ' +
+      'meant to be carried by the hue alone',
+  )
+  assert.match(shapes[0][1], /variant=\{/)
+})
+
+test('the system screen says a state as a noun, from the one table', async () => {
+  const source = await readFile(
+    path.join(ROOT, 'components/system/system-page.tsx'),
+    'utf8',
+  )
+
+  for (const head of source.matchAll(/head="([^"]+)"/g)) {
+    assert.fail(
+      `the system screen says a state of its own: ${head[1]}; the words ` +
+        'belong in the terms table',
+    )
+  }
+
+  const terms = await readFile(path.join(ROOT, THE_SYSTEM_TERMS), 'utf8')
+  const table = terms.match(
+    /export const SYSTEM_STATE_LABELS = \{([\s\S]*?)\} as const/u,
+  )
+
+  assert.ok(table, 'the system states have no table')
+
+  for (const word of table[1].matchAll(/: '([^']+)'/gu)) {
+    assert.doesNotMatch(
+      word[1],
+      /(ます|ません|でした|られ)/u,
+      `the system states are meant to be nouns, but one is a sentence: ${word[1]}`,
     )
   }
 })

@@ -31,7 +31,11 @@ import type { ReservationBulkActions } from '@/components/reservations/reservati
 import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { cn } from '@/lib/utils'
+import { STATE_COLUMN } from '@/components/recordings/status-cell'
 import { WHEN_LABELS } from '@/lib/when-terms'
+
+const STATE_COLUMNS: string[] = ['状態']
 
 const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
   { label: '競合の詳細の開閉', hidden: true, narrow: true },
@@ -251,7 +255,10 @@ export function ReservationsView({
               {COLUMNS.map((column) => (
                 <TableHead
                   key={column.label}
-                  className={column.narrow ? 'w-8' : undefined}
+                  className={cn(
+                    column.narrow && 'w-8',
+                    STATE_COLUMNS.includes(column.label) && STATE_COLUMN,
+                  )}
                 >
                   {column.hidden ? (
                     <span className="sr-only">{column.label}</span>

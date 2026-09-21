@@ -15,7 +15,7 @@ import type {
   WriteResult,
 } from '@/repository/services'
 import { Badge } from '@/components/ui/badge'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
 import {
   Table,
   TableBody,
@@ -112,11 +112,31 @@ function useUnfolded(): Unfolded {
   return held
 }
 
-function CategoryBadge({ service }: { service: ServiceRow }) {
+function Category({ service }: { service: ServiceRow }) {
+  return <span className="text-ui text-ink-2">{service.category}</span>
+}
+
+const NEEDS_A_LOOK = '要対応'
+
+const A_BETTER_ONE = '実測上位の候補'
+
+function Standing({ service }: { service: ServiceRow }) {
+  if (service.currentChannel === undefined) {
+    return (
+      <Badge variant="warn" width={PILL_WIDTH} className="font-bold">
+        {NEEDS_A_LOOK}
+      </Badge>
+    )
+  }
+
+  if (service.betterChannel === undefined) {
+    return null
+  }
+
   return (
-    <Badge variant={service.minorCategory ? 'kindData' : 'kindTv'}>
-      {service.category}
-    </Badge>
+    <span className="text-ui text-sky">
+      {A_BETTER_ONE} {service.betterChannel}
+    </span>
   )
 }
 
@@ -245,7 +265,7 @@ export function ServiceTable({
                 <b className="text-[13px] font-bold">{service.name}</b>
               </TableCell>
               <TableCell>
-                <CategoryBadge service={service} />
+                <Category service={service} />
               </TableCell>
               <TableCell>
                 {service.currentChannel === undefined ? (
@@ -282,27 +302,9 @@ export function ServiceTable({
               <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
                 {service.lastSeen}
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell>
                 <StatusCell>
-                  {service.currentChannel === undefined ? (
-                    <Badge
-                      variant="warn"
-                      width={COLUMN_WIDE}
-                      className="font-bold"
-                    >
-                      要対応
-                    </Badge>
-                  ) : (
-                    service.betterChannel !== undefined && (
-                      <Badge
-                        variant="sky"
-                        width={COLUMN_WIDE}
-                        className="font-bold"
-                      >
-                        実測上位の候補 {service.betterChannel}
-                      </Badge>
-                    )
-                  )}
+                  <Standing service={service} />
                 </StatusCell>
               </TableCell>
             </TableRow>,

@@ -87,9 +87,9 @@ export const Chips: Story = {
         区分チップ(TV / ワンセグ / データ)
       </SectionHeading>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="kindTv">TV</Badge>
-        <Badge variant="kindSegment">ワンセグ</Badge>
-        <Badge variant="kindData">データ</Badge>
+        <span className="text-ui text-ink-2">TV</span>
+        <span className="text-ui text-ink-2">ワンセグ</span>
+        <span className="text-ui text-ink-2">データ</span>
       </div>
       <p className="mt-[9px] text-note text-ink-3">
         区分は状態ではないため、文字は ink-2
@@ -157,7 +157,7 @@ export const InUse: Story = {
           <span className="font-medium">
             <span className="font-code tabular-nums">011</span> みなと総合1
           </span>
-          <Badge variant="kindTv">TV</Badge>
+          <span className="text-ui text-ink-2">TV</span>
           <Badge variant="info">予約済み</Badge>
         </div>
       </Surface>

@@ -23,6 +23,13 @@ import {
 } from '@/repository/encode.fixtures'
 import type { EncodeActions } from '@/components/encode/encode-page'
 import { EncodeView } from '@/components/encode/encode-page'
+import {
+  cellOf,
+  fillsTheColumn,
+  rowsOfTheTableHeaded,
+  tipIn,
+  widthOf,
+} from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const callOff = fn(async () => ({ state: 'ok' }) as const)
@@ -73,6 +80,8 @@ const STILL_THE_DEFAULT =
   'このプロファイルを既定にしている保存先があるため、撤去できませんでした。'
 
 const THE_LAST_ONE = 'この保存先は最後の 1 つのため、撤去できませんでした。'
+
+const JOB_STATE_COLUMN = 1
 
 const meta = {
   title: 'Screens/設定・エンコード',
@@ -334,8 +343,12 @@ export const 失敗: Story = {
     const jobs = within(canvas.getAllByRole('table')[0])
 
     await expect(jobs.getByText('失敗')).toBeVisible()
-    await expect(jobs.getByText('ffmpeg 非0終了')).toBeVisible()
-    await expect(jobs.getByText('2 回目')).toBeVisible()
+    const said = await tipIn(
+      cellOf(rowsOfTheTableHeaded(canvasElement, '番組')[0], JOB_STATE_COLUMN),
+    )
+
+    await expect(said).toHaveTextContent('ffmpeg 非0終了')
+    await expect(said).toHaveTextContent('2 回目')
     await counts(canvas, 0, 1)
   },
 }
@@ -978,5 +991,32 @@ export const 対象に何も入っていない: Story = {
 
     await expect(panel.getByText('対象')).toBeVisible()
     await expect(panel.getByText('この版がまだ知らない値')).toBeVisible()
+  },
+}
+
+export const 札の並び: Story = {
+  play: async ({ canvasElement }) => {
+    const rows = rowsOfTheTableHeaded(canvasElement, '番組')
+
+    await expect(rows.length).toBeGreaterThan(3)
+    await fillsTheColumn(rows, JOB_STATE_COLUMN)
+  },
+}
+
+export const 行の操作の並び: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    const changing = canvas.getAllByRole('button', { name: /を変更$/ })
+    const removing = canvas.getAllByRole('button', { name: /を撤去$/ })
+
+    await expect(changing.length).toBe(removing.length)
+    await expect(changing.length).toBeGreaterThan(1)
+
+    for (const [at, one] of changing.entries()) {
+      await expect(widthOf(one)).toBe(widthOf(removing[at]))
+      await expect(one.querySelector('svg')).not.toBeNull()
+      await expect(removing[at].querySelector('svg')).not.toBeNull()
+    }
   },
 }

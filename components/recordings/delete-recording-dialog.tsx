@@ -1,5 +1,6 @@
 'use client'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { useState, useTransition } from 'react'
 
 import { formatBytes } from '@/lib/format'
@@ -89,7 +90,7 @@ export function DeleteRecordingDialog({
                 <dt className="text-ink-3">サイズ</dt>
                 <dd className="font-code text-ink-2">
                   {recording.sizeBytes == null
-                    ? '—'
+                    ? EMPTY_VALUE
                     : formatBytes(recording.sizeBytes)}
                   {observationOf(recording) && ` (${observationOf(recording)})`}
                 </dd>

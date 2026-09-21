@@ -217,18 +217,42 @@ export const 削除の形: Story = {
 
     await expect(Math.round(box.width)).toBeGreaterThan(Math.round(box.height))
 
-    const pills = canvas
+    const reasons = canvas
       .getAllByRole('row')
       .slice(1)
       .map((row) => within(row).getAllByRole('cell')[1])
-      .map((cell) => cell.querySelector('[data-slot="badge"]'))
-      .filter((pill): pill is HTMLElement => pill instanceof HTMLElement)
 
-    await expect(pills.length).toBeGreaterThan(1)
-    await expect(
-      new Set(
-        pills.map((pill) => Math.round(pill.getBoundingClientRect().width)),
-      ).size,
-    ).toBe(1)
+    await expect(reasons.length).toBeGreaterThan(1)
+
+    for (const reason of reasons) {
+      await expect(reason.querySelector('[data-slot="badge"]')).toBeNull()
+      await expect(reason.textContent?.trim()).not.toBe('')
+    }
+  },
+}
+
+export const 指標タイルの面: Story = {
+  args: { result: INTEGRITY_FIXTURE },
+  play: async ({ canvasElement }) => {
+    const tiles = [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="metric-tile"]',
+      ),
+    ]
+
+    await expect(tiles.length).toBeGreaterThan(3)
+
+    const grounds = tiles.map((tile) => getComputedStyle(tile).backgroundColor)
+
+    await expect(new Set(grounds).size).toBe(1)
+
+    const behind = tiles[0].parentElement?.parentElement
+
+    if (!behind) {
+      throw new Error('the tiles are not on a card')
+    }
+
+    await expect(grounds[0]).not.toBe(getComputedStyle(behind).backgroundColor)
+    await expect(grounds[0]).not.toBe('rgba(0, 0, 0, 0)')
   },
 }

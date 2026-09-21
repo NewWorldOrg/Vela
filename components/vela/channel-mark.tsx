@@ -66,7 +66,7 @@ export function ChannelMark({
         loading="lazy"
         decoding="async"
         onError={() => setUnreachable(drawn)}
-        className="size-full object-contain"
+        className="size-[88%] object-contain"
       />
     </span>
   )

@@ -3,6 +3,7 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatLength, formatSpan } from '@/lib/format'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
@@ -19,8 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { COLUMN_WIDE, StatusCell } from '@/components/recordings/status-cell'
+import {
+  PILL_WIDTH,
+  STATE_COLUMN,
+  StatusCell,
+} from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
+import { InFull } from '@/components/vela/in-full'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import { JobStatusChip } from '@/components/encode/job-status-chip'
 
@@ -39,8 +45,37 @@ const COLUMNS: { label: string; hidden?: boolean }[] = [
 
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
+function Standing({ job }: { job: EncodeJob }) {
+  const chip = (
+    <JobStatusChip
+      status={job.status}
+      stalled={job.stalled}
+      width={PILL_WIDTH}
+    />
+  )
+  const why = whyItStands(job)
+
+  return why ? (
+    <InFull says={why}>
+      <span className="inline-flex">{chip}</span>
+    </InFull>
+  ) : (
+    chip
+  )
+}
+
+function whyItStands(job: EncodeJob): string {
+  return [
+    job.failure && wordFor(FAILURE_LABEL, job.failure.failure),
+    job.failure?.note || undefined,
+    job.attempt > 1 ? `${job.attempt} 回目` : undefined,
+  ]
+    .filter((one): one is string => Boolean(one))
+    .join('\n')
+}
+
 function Dash() {
-  return <span className="text-ink-3">—</span>
+  return <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
 }
 
 export function JobTable({
@@ -58,7 +93,10 @@ export function JobTable({
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {COLUMNS.map((column) => (
-            <TableHead key={column.label}>
+            <TableHead
+              key={column.label}
+              className={column.label === '状態' ? STATE_COLUMN : undefined}
+            >
               {column.hidden ? (
                 <span className="sr-only">{column.label}</span>
               ) : (
@@ -74,27 +112,10 @@ export function JobTable({
             <TableCell className="max-w-[320px] whitespace-normal">
               <JobTitle job={job} />
             </TableCell>
-            <TableCell className="align-top">
-              <StatusCell
-                note={
-                  job.failure && (
-                    <span title={job.failure.note || undefined}>
-                      {wordFor(FAILURE_LABEL, job.failure.failure)}
-                    </span>
-                  )
-                }
-              >
-                <JobStatusChip
-                  status={job.status}
-                  stalled={job.stalled}
-                  width={COLUMN_WIDE}
-                />
+            <TableCell className={STATE_COLUMN}>
+              <StatusCell>
+                <Standing job={job} />
               </StatusCell>
-              {job.attempt > 1 && (
-                <span className="mt-[3px] block font-code text-[10.5px] text-ink-3">
-                  {job.attempt} 回目
-                </span>
-              )}
             </TableCell>
             <TableCell>{job.profileLabel ?? <Dash />}</TableCell>
             <TableCell>

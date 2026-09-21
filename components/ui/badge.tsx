@@ -10,7 +10,7 @@ const badgeVariants = cva(
     variants: {
       width: {
         fit: 'w-fit',
-        column: 'w-full',
+        fixed: 'w-[11em]',
       },
       variant: {
         default: 'border-line bg-surface text-ink-2',
@@ -24,9 +24,6 @@ const badgeVariants = cva(
         info: 'border-brand-line bg-brand-soft text-brand',
         selected: 'border-brand-line bg-brand-soft font-bold text-brand',
         recording: 'border-coral-line bg-coral-soft font-bold text-coral',
-        kindTv: 'border-line bg-tint-sky text-ink-2',
-        kindSegment: 'border-line bg-tint-sage text-ink-2',
-        kindData: 'border-line bg-surface-2 text-ink-2',
       },
     },
     defaultVariants: {

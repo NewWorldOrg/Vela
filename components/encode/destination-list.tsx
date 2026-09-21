@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import type {
   EncodeDestination,
   EncodeProfile,
@@ -21,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ActionRow } from '@/components/vela/action-row'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'
 import { ChangeDestinationButton } from '@/components/encode/change-definition-button'
@@ -28,7 +30,6 @@ import {
   DefinitionName,
   RemovalNotice,
   RETIRED_ROW,
-  ROW_OPS,
   STAMP,
   STICKY_HEAD,
 } from '@/components/encode/definition-list'
@@ -108,13 +109,13 @@ export function DestinationList({
               </TableCell>
               <TableCell>
                 {destination.defaultProfileLabel ?? (
-                  <span className="text-ink-3">—</span>
+                  <span className="text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
               <TableCell className={STAMP}>{destination.definedAt}</TableCell>
               <TableCell className="text-right">
                 {!destination.retired && (
-                  <span className={ROW_OPS}>
+                  <ActionRow>
                     <ChangeDestinationButton
                       destination={destination}
                       profiles={profiles}
@@ -129,7 +130,7 @@ export function DestinationList({
                         setRemoved({ label: destination.label, removal })
                       }
                     />
-                  </span>
+                  </ActionRow>
                 )}
               </TableCell>
             </TableRow>

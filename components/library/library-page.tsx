@@ -10,11 +10,12 @@ import type {
   RecordingsFilter,
   RecordingsResult,
 } from '@/repository/recordings'
+import { cn } from '@/lib/utils'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
-import { FilterSelect } from '@/components/vela/filter-select'
+import { BAND_CONTROL, FilterSelect } from '@/components/vela/filter-select'
 import { LibraryIcon, SearchIcon } from '@/components/vela/icons'
 import { ChannelChip } from '@/components/library/channel-chip'
 import { RecordingsTable } from '@/components/library/recordings-table'
@@ -82,7 +83,7 @@ export function LibraryView({
               name="q"
               defaultValue={filter.q ?? ''}
               placeholder="番組名・概要・出演者で検索"
-              className="h-[33px] rounded-full pl-[34px]"
+              className={cn(BAND_CONTROL, 'rounded-full pl-[34px]')}
             />
           </form>
           <FilterSelect

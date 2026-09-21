@@ -12,6 +12,7 @@ import {
 } from '@/lib/state-terms'
 import { numbered } from '@/repository/scan-failures'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { alsoSays } from '@/components/recordings/status-cell'
 import { TermTip } from '@/components/vela/term-tip'
 
 type BadgeTone = ComponentProps<typeof Badge>['variant']
@@ -37,11 +38,6 @@ export function OutcomeKindChip({
   outcome: ReservationOutcome
   width?: BadgeWidth
 }) {
-  const term = shapeFor(
-    RESERVATION_OUTCOME_KIND_TERMS,
-    outcome.kind,
-    NOT_YET_IN_THIS_BUILD_TERM,
-  )
   const tone = shapeFor(KIND_TONE, outcome.kind, NOT_YET_KNOWN_TONE)
   const alsoSaidByTheKind = outcome.recordingResult === 'failed'
   const result =
@@ -50,8 +46,18 @@ export function OutcomeKindChip({
           RECORDING_OUTCOME_TERMS,
           outcome.recordingResult,
           NOT_YET_IN_THIS_BUILD_TERM,
-        )
+        ).label
       : undefined
+  const term = alsoSays(
+    shapeFor(
+      RESERVATION_OUTCOME_KIND_TERMS,
+      outcome.kind,
+      NOT_YET_IN_THIS_BUILD_TERM,
+    ),
+    outcome.retry,
+    outcome.tuneFailure && numbered(outcome.tuneFailure),
+    result,
+  )
 
   return (
     <>
@@ -60,23 +66,6 @@ export function OutcomeKindChip({
           {term.label}
         </Badge>
       </TermTip>
-      {outcome.retry && (
-        <Badge variant="outline" width={width}>
-          {outcome.retry}
-        </Badge>
-      )}
-      {outcome.tuneFailure && (
-        <Badge variant="outline" width={width} className="font-code">
-          {numbered(outcome.tuneFailure)}
-        </Badge>
-      )}
-      {result && (
-        <TermTip term={result}>
-          <Badge variant="warn" width={width}>
-            {result.label}
-          </Badge>
-        </TermTip>
-      )}
     </>
   )
 }
