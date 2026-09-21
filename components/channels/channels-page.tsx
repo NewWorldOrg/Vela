@@ -3,19 +3,20 @@ import { EMPTY_VALUE } from '@/lib/empty-value'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
-import type {
-  ChannelsScreenResult,
-  ScanRun,
-  ServiceGroup,
-  StartScanResult,
-  WriteResult,
+import {
+  SCAN_STATE_LABEL,
+  type ChannelsScreenResult,
+  type ScanRun,
+  type ServiceGroup,
+  type StartScanResult,
+  type WriteResult,
 } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { Badge } from '@/components/ui/badge'
 import {
-  PILL_WIDTH,
   STATE_COLUMN,
   StatusCell,
+  pillWidthFor,
 } from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
@@ -43,6 +44,8 @@ import {
 import { ScanBar } from '@/components/channels/scan-bar'
 import { ScanRunPanel } from '@/components/scan/scan-run-panel'
 import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis'
+
+const SCAN_STATE_PILL_WIDTH = pillWidthFor(Object.values(SCAN_STATE_LABEL))
 
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
@@ -121,7 +124,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 <TableCell>
                   <StatusCell>
                     <Badge
-                      width={PILL_WIDTH}
+                      width={SCAN_STATE_PILL_WIDTH}
                       variant={
                         run.state === 'completed'
                           ? 'ok'

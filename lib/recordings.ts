@@ -17,7 +17,10 @@ export interface RecordingQualityShape {
   label: string
 }
 
-const RECORDING_QUALITY_SHAPES: Record<QualityLevel, RecordingQualityShape> = {
+export const RECORDING_QUALITY_SHAPES: Record<
+  QualityLevel,
+  RecordingQualityShape
+> = {
   good: { variant: 'ok', label: QUALITY_LEVEL_LABEL.good },
   warning: { variant: 'warn', label: QUALITY_LEVEL_LABEL.warn },
   mayNotBeWatchable: { variant: 'err', label: QUALITY_LEVEL_LABEL.bad },

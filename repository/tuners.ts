@@ -822,17 +822,24 @@ function toLnb(
   return observation.lnbPowered ? 'オン' : 'オフ(既定)'
 }
 
+export const TUNER_STATE_LABEL = {
+  unread: '未読込',
+  faulted: '異常',
+  degraded: '警告',
+  ok: '正常',
+} as const
+
 function toState(
   observation: TunerObservationResponder | undefined,
 ): Pick<TunerRow, 'state' | 'stateLabel' | 'stateSub'> {
   if (observation === undefined) {
-    return { state: 'warn', stateLabel: '未読込' }
+    return { state: 'warn', stateLabel: TUNER_STATE_LABEL.unread }
   }
 
   if (observation.state === 'faulted' || observation.health === 'faulted') {
     return {
       state: 'faulted',
-      stateLabel: '異常',
+      stateLabel: TUNER_STATE_LABEL.faulted,
       stateSub: whatTheDriverSaid(observation),
     }
   }
@@ -840,12 +847,12 @@ function toState(
   if (observation.health === 'degraded') {
     return {
       state: 'warn',
-      stateLabel: '警告',
+      stateLabel: TUNER_STATE_LABEL.degraded,
       stateSub: whatTheDriverSaid(observation),
     }
   }
 
-  return { state: 'ok', stateLabel: '正常' }
+  return { state: 'ok', stateLabel: TUNER_STATE_LABEL.ok }
 }
 
 function whatTheDriverSaid(

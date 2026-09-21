@@ -804,7 +804,7 @@ export const エンコードの行は自動実行の対象外と言う: Story = 
 
     const row = encodeRow(canvasElement)
 
-    await expect(row.getByText('自動実行の対象外')).toBeVisible()
+    await expect(row.getByText('対象外')).toBeVisible()
     await expect(row.queryByText('未エンコード')).toBeNull()
   },
 }
@@ -817,7 +817,7 @@ export const エンコードの行は順番を待つ録画を対象外と言わ�
     const row = encodeRow(canvasElement)
 
     await expect(row.getByText('未エンコード')).toBeVisible()
-    await expect(row.queryByText('自動実行の対象外')).toBeNull()
+    await expect(row.queryByText('対象外')).toBeNull()
   },
 }
 

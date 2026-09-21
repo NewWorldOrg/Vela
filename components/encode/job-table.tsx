@@ -10,6 +10,7 @@ import {
   ENCODER_LABEL,
   FAILURE_LABEL,
   RECORDING_REMOVED_LABEL,
+  STALLED_LABEL,
   SWERVE_LABEL,
 } from '@/repository/encode-terms'
 import {
@@ -20,28 +21,44 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  PILL_WIDTH,
-  STATE_COLUMN,
-  StatusCell,
-} from '@/components/recordings/status-cell'
+import { StatusCell, stateColumnPx } from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InFull } from '@/components/vela/in-full'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
-import { JobStatusChip } from '@/components/encode/job-status-chip'
+import {
+  JOB_STATUS_PILL_WIDTH,
+  JobStatusChip,
+} from '@/components/encode/job-status-chip'
 
-const COLUMNS: { label: string; hidden?: boolean }[] = [
+interface Column {
+  label: string
+  width?: number
+  hidden?: boolean
+  right?: boolean
+}
+
+const CELL_SIDES_PX = 26
+
+const STAMP_PX = 132
+
+const COLUMNS: Column[] = [
   { label: '番組' },
-  { label: '状態' },
-  { label: 'プロファイル' },
-  { label: '保存先' },
-  { label: '進捗' },
-  { label: '経路' },
-  { label: '登録' },
-  { label: '開始' },
-  { label: '終了' },
-  { label: '操作', hidden: true },
+  { label: '状態', width: stateColumnPx(JOB_STATUS_PILL_WIDTH, CELL_SIDES_PX) },
+  { label: 'プロファイル', width: 132 },
+  { label: '保存先', width: 132 },
+  { label: '進捗', width: 84, right: true },
+  { label: '経路', width: 156 },
+  { label: '登録', width: STAMP_PX },
+  { label: '開始', width: STAMP_PX },
+  { label: '終了', width: STAMP_PX },
+  { label: '操作', width: 96, hidden: true },
 ]
+
+const PROGRAMME_MIN_PX = 240
+
+const TABLE_MIN_PX =
+  COLUMNS.reduce((sum, column) => sum + (column.width ?? 0), 0) +
+  PROGRAMME_MIN_PX
 
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
@@ -50,7 +67,7 @@ function Standing({ job }: { job: EncodeJob }) {
     <JobStatusChip
       status={job.status}
       stalled={job.stalled}
-      width={PILL_WIDTH}
+      width={JOB_STATUS_PILL_WIDTH}
     />
   )
   const why = whyItStands(job)
@@ -78,6 +95,16 @@ function Dash() {
   return <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
 }
 
+function Destination({ job }: { job: EncodeJob }) {
+  const said = job.destinationLabel ?? <Dash />
+
+  return (
+    <InFull says={job.outputRoot}>
+      <span className="inline-block">{said}</span>
+    </InFull>
+  )
+}
+
 export function JobTable({
   jobs,
   onCallOff,
@@ -87,15 +114,24 @@ export function JobTable({
 }) {
   return (
     <Table
-      className="min-w-[1180px]"
+      className="table-fixed"
+      style={{ minWidth: TABLE_MIN_PX }}
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
+      <colgroup>
+        {COLUMNS.map((column) => (
+          <col
+            key={column.label}
+            style={column.width ? { width: column.width } : undefined}
+          />
+        ))}
+      </colgroup>
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {COLUMNS.map((column) => (
             <TableHead
               key={column.label}
-              className={column.label === '状態' ? STATE_COLUMN : undefined}
+              className={column.right ? 'text-right' : undefined}
             >
               {column.hidden ? (
                 <span className="sr-only">{column.label}</span>
@@ -109,22 +145,19 @@ export function JobTable({
       <TableBody>
         {jobs.map((job) => (
           <TableRow key={job.id}>
-            <TableCell className="max-w-[320px] whitespace-normal">
+            <TableCell className="whitespace-normal">
               <JobTitle job={job} />
             </TableCell>
-            <TableCell className={STATE_COLUMN}>
+            <TableCell>
               <StatusCell>
                 <Standing job={job} />
               </StatusCell>
             </TableCell>
             <TableCell>{job.profileLabel ?? <Dash />}</TableCell>
             <TableCell>
-              {job.destinationLabel ?? <Dash />}
-              <small className="block font-code text-[10.5px] text-ink-3">
-                {job.outputRoot}
-              </small>
+              <Destination job={job} />
             </TableCell>
-            <TableCell>
+            <TableCell className="text-right">
               <Headway job={job} />
             </TableCell>
             <TableCell>
@@ -154,7 +187,7 @@ function JobTitle({ job }: { job: EncodeJob }) {
     <>
       <Link
         href={`/recordings/${job.recordingId}` as Route}
-        className="tap-target block max-w-[300px] text-[13px] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
+        className="tap-target block text-[13px] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
       >
         <span className="block">{job.title}</span>
       </Link>
@@ -172,25 +205,28 @@ function Headway({ job }: { job: EncodeJob }) {
     return <Dash />
   }
 
+  const percent =
+    job.headway.percent !== undefined ? `${job.headway.percent}%` : <Dash />
+  const more = [
+    job.status === 'running' && job.headway.leftSeconds !== undefined
+      ? `残り ${formatLength(job.headway.leftSeconds)}`
+      : undefined,
+    job.status === 'running' ? `最終更新 ${job.headway.at}` : undefined,
+    job.stalled && job.quietForSeconds !== undefined
+      ? `${STALLED_LABEL} ${formatSpan(job.quietForSeconds)}`
+      : undefined,
+  ].filter((one): one is string => one !== undefined)
+
+  if (more.length === 0) {
+    return <span className="font-code text-ui tabular-nums">{percent}</span>
+  }
+
   return (
-    <span className="block font-code text-ui tabular-nums">
-      {job.headway.percent !== undefined ? `${job.headway.percent}%` : <Dash />}
-      {job.status === 'running' && job.headway.leftSeconds !== undefined && (
-        <small className="block text-[10.5px] text-ink-3">
-          残り {formatLength(job.headway.leftSeconds)}
-        </small>
-      )}
-      {job.status === 'running' && (
-        <small className="block text-[10.5px] text-ink-3">
-          最終更新 {job.headway.at}
-        </small>
-      )}
-      {job.stalled && job.quietForSeconds !== undefined && (
-        <small className="block text-[10.5px] text-lemon">
-          停滞 {formatSpan(job.quietForSeconds)}
-        </small>
-      )}
-    </span>
+    <InFull says={more.join('\n')}>
+      <span className="inline-block font-code text-ui tabular-nums">
+        {percent}
+      </span>
+    </InFull>
   )
 }
 

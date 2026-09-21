@@ -15,6 +15,7 @@ import {
   SETTLED_RESERVATION_FIXTURES,
 } from '@/stories/fixtures/reservations'
 import { ReservationsView } from '@/components/reservations/reservations-page'
+import { RESERVATION_STATE_PILL_WIDTH } from '@/components/reservations/reservation-state-chip'
 import { cellOf, tipIn } from '@/stories/pills-in-a-column'
 
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
@@ -701,7 +702,10 @@ export const 行の揃い: Story = {
       await expect(pills.length).toBe(1)
 
       for (const pill of pills) {
-        await expect(pill).toHaveAttribute('data-width', 'fixed')
+        await expect(pill).toHaveAttribute(
+          'data-width',
+          RESERVATION_STATE_PILL_WIDTH,
+        )
         widths.push(Math.round(pill.getBoundingClientRect().width))
       }
     }

@@ -39,7 +39,7 @@ test('a recording with no job says the one word the API folded', () => {
 
 test('a recording the automatic run was told to leave alone says that, not that it is waiting', () => {
   assert.deepEqual(encodeRowOf(undefined, 'notEncoded', false), {
-    main: '自動実行の対象外',
+    main: '対象外',
     cancels: false,
   })
 })

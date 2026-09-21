@@ -218,7 +218,7 @@ const TREND_SUBJECTS: TrendSubjectShape[] = [
 
 const WHOLE = '全体'
 
-const HEALTHY = '健全'
+export const HEALTHY = '健全'
 
 const LEVEL_OF_STATE: Record<State, QualityLevel> = {
   good: 'good',

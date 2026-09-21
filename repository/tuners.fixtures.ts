@@ -71,7 +71,7 @@ export const TUNERS: TunerResult = {
       enabled: true,
       idleLabel: '割当停止中',
       state: 'faulted',
-      stateLabel: '種別不一致',
+      stateLabel: '異常',
       stateSub: '設定: 地上波 / 検出: 衛星',
       lnb: 'オフ(既定)',
     },

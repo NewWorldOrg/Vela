@@ -1,8 +1,15 @@
 import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
+import { HEALTHY } from '@/repository/quality'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { pillWidthFor } from '@/components/recordings/status-cell'
 import { CloseIcon } from '@/components/vela/icons'
 import { ChipDot } from '@/components/vela/status'
+
+export const QUALITY_LEVEL_PILL_WIDTH = pillWidthFor([
+  ...Object.values(QUALITY_LEVEL_LABEL),
+  HEALTHY,
+])
 
 export function QualityChip({
   level,
@@ -49,7 +56,7 @@ export function QualityChip({
 
   if (level === 'unreachable') {
     return (
-      <Badge variant="outline" width={width}>
+      <Badge variant="mute" width={width}>
         <CloseIcon />
         {label}
       </Badge>

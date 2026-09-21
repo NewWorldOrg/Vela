@@ -9,22 +9,85 @@ import { playsInBrowser, unfinishedDeletionShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ChevronRightIcon, PlayIcon, TrashIcon } from '@/components/vela/icons'
-import { EncodeChip } from '@/components/recordings/encode-chip'
-import { OutcomeChip } from '@/components/recordings/outcome-chip'
-import { QualityChip } from '@/components/recordings/quality-chip'
-import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
+import {
+  ENCODE_PILL_WIDTH,
+  EncodeChip,
+} from '@/components/recordings/encode-chip'
+import {
+  OUTCOME_PILL_WIDTH,
+  OutcomeChip,
+} from '@/components/recordings/outcome-chip'
+import {
+  RECORDING_QUALITY_PILL_WIDTH,
+  QualityChip,
+} from '@/components/recordings/quality-chip'
+import { StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 
+export const CELL_SIDES_PX = 24
+
+export const DETAIL_CELL = 'px-1.5'
+
 const CELL =
-  'border-b border-dashed border-line px-3.5 py-3 align-middle text-[13px] group-last:border-b-0 group-hover:border-transparent'
+  'border-b border-dashed border-line px-3 py-3 align-middle text-[13px] group-last:border-b-0 group-hover:border-transparent'
+
+const NUMBER = 'font-code text-ui whitespace-nowrap text-right'
 
 const FILE_MISSING = 'ファイル不在'
 
+const NO_FILE_ON_DISK = '実ファイルなし'
+
 function leftOver(r: Recording) {
   return unfinishedDeletionShapeOf(r)
+}
+
+function Dash() {
+  return <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
+}
+
+function Length({ recording: r }: { recording: Recording }) {
+  if (r.outcome === 'recording') {
+    return <>進行中</>
+  }
+
+  if (r.lengthSec == null) {
+    return <Dash />
+  }
+
+  const said = formatLength(r.lengthSec)
+
+  if (!r.expectedLengthSec) {
+    return <>{said}</>
+  }
+
+  return (
+    <InFull says={`予定 ${formatLength(r.expectedLengthSec)}`}>
+      <span>{said}</span>
+    </InFull>
+  )
+}
+
+function Size({ recording: r }: { recording: Recording }) {
+  const said = r.fileMissing ? (
+    <span className="font-sans text-ink-3">{NO_FILE_ON_DISK}</span>
+  ) : r.sizeBytes == null ? (
+    <Dash />
+  ) : (
+    <>{formatBytes(r.sizeBytes)}</>
+  )
+
+  if (!r.sizeObservedAt) {
+    return said
+  }
+
+  return (
+    <InFull says={r.sizeObservedAt}>
+      <span>{said}</span>
+    </InFull>
+  )
 }
 
 export function RecordingRow({
@@ -54,7 +117,7 @@ export function RecordingRow({
           <RecordingThumb recording={r} subTone={subTone} />
           <span className="min-w-0">
             <InFull says={r.title}>
-              <b className="block overflow-hidden text-[13.5px] leading-normal font-bold text-ellipsis whitespace-nowrap [font-feature-settings:'palt']">
+              <b className="line-clamp-2 text-[13.5px] leading-[1.4] font-bold [font-feature-settings:'palt']">
                 {r.title}
               </b>
             </InFull>
@@ -76,7 +139,9 @@ export function RecordingRow({
       <td className={cn(CELL, 'text-ui')}>
         <span className="flex items-center gap-2">
           <ChannelMark logo={r.channelLogo} no={r.channelNo} keepsTheSlot />
-          <span className="min-w-0">{r.channel}</span>
+          <InFull says={r.channel}>
+            <span className="min-w-0 truncate">{r.channel}</span>
+          </InFull>
         </span>
       </td>
       <td
@@ -84,38 +149,17 @@ export function RecordingRow({
       >
         {r.recordedAtLabel}
       </td>
-      <td className={cn(CELL, 'font-code text-ui whitespace-nowrap')}>
-        {r.outcome === 'recording' ? (
-          '進行中'
-        ) : r.lengthSec == null ? (
-          <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
-        ) : (
-          <>
-            {formatLength(r.lengthSec)}
-            {r.expectedLengthSec && (
-              <span className="text-ink-3">
-                {' '}
-                / {formatLength(r.expectedLengthSec)}
-              </span>
-            )}
-          </>
-        )}
+      <td className={cn(CELL, NUMBER)}>
+        <Length recording={r} />
       </td>
-      <td className={cn(CELL, 'font-code text-ui whitespace-nowrap')}>
-        {r.sizeBytes == null ? (
-          <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
-        ) : (
-          formatBytes(r.sizeBytes)
-        )}
-        <small className={cn('block font-sans text-[10.5px]', subTone)}>
-          {r.fileMissing ? '実ファイルなし' : r.sizeObservedAt}
-        </small>
+      <td className={cn(CELL, NUMBER)}>
+        <Size recording={r} />
       </td>
       <td className={CELL}>
         <StatusCell>
           <OutcomeChip
             recording={r}
-            width={PILL_WIDTH}
+            width={OUTCOME_PILL_WIDTH}
             also={[
               r.outcomeDetail,
               r.fileMissing && FILE_MISSING,
@@ -129,14 +173,14 @@ export function RecordingRow({
         <StatusCell>
           <QualityChip
             recording={r}
-            width={PILL_WIDTH}
+            width={RECORDING_QUALITY_PILL_WIDTH}
             also={[r.quality.detail]}
           />
         </StatusCell>
       </td>
       <td className={CELL}>
         <StatusCell>
-          <EncodeChip recording={r} width={PILL_WIDTH} />
+          <EncodeChip recording={r} width={ENCODE_PILL_WIDTH} />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>
@@ -169,6 +213,7 @@ export function RecordingRow({
       <td
         className={cn(
           CELL,
+          DETAIL_CELL,
           'text-right text-ink-3 group-hover:rounded-r-md group-hover:text-brand',
         )}
       >

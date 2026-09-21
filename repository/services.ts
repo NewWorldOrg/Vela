@@ -108,7 +108,7 @@ export interface ScanAttemptRow {
 
 export type ScanState = components['schemas']['ScanRunState']
 
-const STATE_LABEL: Record<ScanState, string> = {
+export const SCAN_STATE_LABEL: Record<ScanState, string> = {
   running: '実行中',
   completed: '完了',
   failed: '失敗',
@@ -304,7 +304,7 @@ function toRun(run: ScanRunResponder): ScanRun {
   return {
     id: run.scanId,
     state: run.state,
-    stateLabel: wordFor(STATE_LABEL, run.state),
+    stateLabel: wordFor(SCAN_STATE_LABEL, run.state),
     startedAt: formatMoment(run.startedAt),
     finishedAt: finished === null ? undefined : formatMoment(finished),
     took:

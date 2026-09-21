@@ -7,8 +7,11 @@ import {
   ChevronRightIcon,
   ListIcon,
 } from '@/components/vela/icons'
-import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
-import { OutcomeKindChip } from '@/components/reservations/outcome-kind-chip'
+import { StatusCell } from '@/components/recordings/status-cell'
+import {
+  OUTCOME_KIND_PILL_WIDTH,
+  OutcomeKindChip,
+} from '@/components/reservations/outcome-kind-chip'
 
 const GONE = '記録が残っていません'
 
@@ -68,7 +71,10 @@ export function OutcomeRow({
         </TableCell>
         <TableCell className="align-top">
           <StatusCell>
-            <OutcomeKindChip outcome={outcome} width={PILL_WIDTH} />
+            <OutcomeKindChip
+              outcome={outcome}
+              width={OUTCOME_KIND_PILL_WIDTH}
+            />
           </StatusCell>
         </TableCell>
         <TableCell className="align-top font-code text-ink-2">
