@@ -1,6 +1,11 @@
+import type { BroadcastKind } from '@/lib/broadcast-terms'
+import {
+  BROADCAST_KIND_LABEL,
+  BROADCAST_KIND_ORDER,
+} from '@/lib/broadcast-terms'
 import type { components } from '@/repository/client/schema'
 
-export type ChannelKind = 'terrestrial' | 'bs' | 'cs110'
+export type ChannelKind = BroadcastKind
 
 export type StationLogoDeclaration =
   components['schemas']['StationLogoDeclaration']
@@ -22,19 +27,12 @@ export interface Channel {
   logo?: StationLogo
 }
 
-export const CHANNEL_KIND_LABEL: Record<ChannelKind, string> = {
-  terrestrial: '地上波',
-  bs: 'BS',
-  cs110: 'CS110',
-}
+export const CHANNEL_KIND_LABEL = BROADCAST_KIND_LABEL
 
-export const CHANNEL_KIND_ORDER: ChannelKind[] = ['terrestrial', 'bs', 'cs110']
-
-export const CHANNEL_KIND_TAB: Record<ChannelKind, string> = {
-  terrestrial: '地上',
-  bs: 'BS',
-  cs110: 'CS110',
-}
+export const CHANNEL_KIND_ORDER = BROADCAST_KIND_ORDER
 
 export const CHANNEL_KINDS: { value: ChannelKind; label: string }[] =
-  CHANNEL_KIND_ORDER.map((value) => ({ value, label: CHANNEL_KIND_TAB[value] }))
+  CHANNEL_KIND_ORDER.map((value) => ({
+    value,
+    label: CHANNEL_KIND_LABEL[value],
+  }))

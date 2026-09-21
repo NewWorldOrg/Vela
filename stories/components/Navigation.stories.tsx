@@ -33,7 +33,7 @@ export const UnderlineTabs: Story = {
       <Surface>
         <Tabs defaultValue="gr">
           <TabsList>
-            <TabsTrigger value="gr">地上</TabsTrigger>
+            <TabsTrigger value="gr">地上波</TabsTrigger>
             <TabsTrigger value="bs">BS</TabsTrigger>
             <TabsTrigger value="cs">CS110</TabsTrigger>
             <TabsTrigger value="none" disabled>

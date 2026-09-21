@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import type { ChannelKind } from '@/repository/channels'
-import { CHANNEL_KIND_ORDER, CHANNEL_KIND_TAB } from '@/repository/channels'
+import { CHANNEL_KIND_LABEL, CHANNEL_KIND_ORDER } from '@/repository/channels'
 import { pressable } from '@/components/vela/tactile'
 
 export function ChannelKinds({
@@ -41,7 +41,7 @@ export function ChannelKinds({
             pressable,
           )}
         >
-          {CHANNEL_KIND_TAB[one]}
+          {CHANNEL_KIND_LABEL[one]}
         </button>
       ))}
     </div>
