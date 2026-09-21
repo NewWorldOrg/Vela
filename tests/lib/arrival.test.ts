@@ -2,18 +2,23 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  ARRIVAL_SPAN_MS,
   COLUMN_STEP_MS,
   GRID_CAP_MS,
   GRID_STEP_MS,
   LAST_COLUMN_HELD_BACK,
+  LAST_ONE_THAT_MOVES,
   LAST_ROW_HELD_BACK,
   RISE_MS,
   ROW_STEP_MS,
+  arrivesIn,
   columnDelayMs,
   delayOf,
   gridDelayMs,
   groupDelayOf,
+  moves,
   nowLineDelayMs,
+  risesIn,
   rowDelayMs,
   seatIn,
 } from '@/lib/arrival'
@@ -65,4 +70,19 @@ test('the line for now is drawn after the last column has risen', () => {
     nowLineDelayMs(),
     (LAST_COLUMN_HELD_BACK - 1) * COLUMN_STEP_MS + RISE_MS,
   )
+})
+
+test('only the first twelve parts of a list move at all', () => {
+  assert.equal(LAST_ONE_THAT_MOVES, 12)
+  assert.equal(moves(0), true)
+  assert.equal(moves(LAST_ONE_THAT_MOVES - 1), true)
+  assert.equal(moves(LAST_ONE_THAT_MOVES), false)
+  assert.equal(arrivesIn(0), 'arrives')
+  assert.equal(arrivesIn(400), '')
+  assert.equal(risesIn(0), 'rises')
+  assert.equal(risesIn(400), '')
+})
+
+test('the procession has an end the list can wait for', () => {
+  assert.equal(ARRIVAL_SPAN_MS, RISE_MS + GRID_CAP_MS + 100)
 })

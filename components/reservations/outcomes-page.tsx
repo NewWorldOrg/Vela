@@ -30,6 +30,7 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import { OutcomeRow } from '@/components/reservations/outcome-row'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { WHEN_LABELS } from '@/lib/when-terms'
+import { useArrived } from '@/hooks/useArrived'
 
 const STATE_COLUMNS: string[] = ['分類']
 
@@ -104,6 +105,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
     },
     [router, pathname, searchParams],
   )
+  const arrived = useArrived()
   const emptyLedger =
     total === 0 && !(filter.kind || filter.days || filter.ch || filter.rule)
 
@@ -179,7 +181,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody {...arrived}>
               {items.map((outcome, nth) => (
                 <OutcomeRow
                   key={outcome.id}

@@ -18,6 +18,7 @@ import {
   type LiveSupplyEnd,
   type TranscodeCeiling,
 } from '@/lib/live-wire'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import type { LiveScreen } from '@/repository/live'
 import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
@@ -473,6 +474,8 @@ export const 選局前: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
 
     await expect(canvas.queryByText('生放送')).toBeNull()
@@ -567,6 +570,8 @@ export const 副チャンネルを出している: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
 
     await expect(
@@ -587,6 +592,8 @@ export const 副チャンネルを畳んでいる: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
     const fold = canvas.getByRole('button', { name: '副チャンネル' })
 
@@ -1168,6 +1175,7 @@ export const ドロップが読めなければ出さない: Story = {
 
     const gear = await screen.findByRole('dialog', { name: '設定' })
 
+    await afterTheArrival(canvasElement)
     await expect(
       within(gear).getByRole('group', { name: '画質' }),
     ).toBeVisible()

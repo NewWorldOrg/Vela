@@ -19,6 +19,7 @@ const THE_SUITE = [
   'tests/components/the-colour-of-an-action.test.ts',
   'tests/components/the-same-parts-on-every-screen.test.ts',
   'tests/components/the-way-a-screen-arrives.test.ts',
+  'tests/components/the-width-of-a-fixed-thing.test.ts',
   'tests/components/vela/empty-state.test.ts',
   'tests/components/vela/the-way-a-select-opens.test.ts',
   'tests/hooks/useKeptPosition.test.ts',

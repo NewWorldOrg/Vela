@@ -25,6 +25,7 @@ import {
 import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -200,6 +201,8 @@ export const 完全: Story = {
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
+    await afterTheArrival(canvasElement)
+
     await expect(dialog.getByText('/srv/recordings/1274.m2ts')).toBeVisible()
     await expect(asked).toEqual([])
 
@@ -221,6 +224,8 @@ export const 削除未完了: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await waitFor(() => expect(asked).toEqual(['1274']))
@@ -467,6 +472,8 @@ export const 成果物がある録画は元のままに切り替えられる: St
 
     const sources = await screen.findByRole('group', { name: 'ソース' })
 
+    await afterTheArrival(canvasElement)
+
     await expect(
       within(sources).getByRole('button', { name: 'エンコード済み' }),
     ).toHaveAttribute('aria-pressed', 'true')
@@ -655,6 +662,8 @@ export const エンコードの保存先を選ぶ: Story = {
 
     const dialog = await screen.findByRole('dialog', { name: 'エンコード' })
 
+    await afterTheArrival(canvasElement)
+
     await expect(within(dialog).getByText('棚')).toBeVisible()
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'エンコード' }),
@@ -839,6 +848,8 @@ export const エンコードの行から実行中のジョブを中止する: St
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
+    await afterTheArrival(canvasElement)
+
     await expect(dialog.getByText('週末キッチンの手帖')).toBeVisible()
     await expect(calledOff).toEqual([])
     await userEvent.click(dialog.getByRole('button', { name: '中止する' }))
@@ -887,6 +898,8 @@ export const 成果物がある録画は作り直すと言う: Story = {
     const dialog = await screen.findByRole('dialog', {
       name: '成果物を作り直す',
     })
+
+    await afterTheArrival(canvasElement)
 
     await expect(
       within(dialog).getByText('いまの成果物は新しいものに置き換わります。'),

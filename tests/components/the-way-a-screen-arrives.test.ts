@@ -18,6 +18,16 @@ const THE_WAITING_SHAPE = 'components/ui/skeleton.tsx'
 
 const THE_PLAYER_OVERLAY = 'components/recordings/player-seek-flash.tsx'
 
+const THE_ARRIVAL_HOOK = 'hooks/useArrived.ts'
+
+const THE_LONG_LISTS = [
+  'components/library/recording-row.tsx',
+  'components/reservations/reservation-row.tsx',
+  'components/reservations/outcome-row.tsx',
+  'components/live/channel-grid.tsx',
+  'components/guide/guide-grid.tsx',
+]
+
 const READ = ['app', 'components']
 
 const NOT_SOURCE = new Set([
@@ -29,7 +39,6 @@ const NOT_SOURCE = new Set([
 
 const THE_VOCABULARY = [
   'breathe',
-  'curtain-corner',
   'curtain-panel',
   'draw',
   'ink',
@@ -44,9 +53,29 @@ const THE_UTILITIES = [
   'curtain-panel',
   'drawn',
   'rises',
+  'screen-rises',
   'arrives',
+  'joins',
   'breathes',
   'waits',
+  'appears',
+  'scrim-appears',
+  'scrim-disappears',
+]
+
+const THE_MOVEMENTS_THAT_STOP = [
+  'curtain-panel',
+  'draw',
+  'ink',
+  'rise',
+  'screen-rise',
+  'item',
+  'joining',
+  'breathe',
+  'waiting-line',
+  'scrim-in',
+  'scrim-out',
+  'surface-in',
 ]
 
 const CARRIED_BY_A_VARIABLE = 'calc(var(--d, 0s) + var(--delay, 0s)'
@@ -54,7 +83,7 @@ const CARRIED_BY_A_VARIABLE = 'calc(var(--d, 0s) + var(--delay, 0s)'
 const A_KEYFRAMES = /@keyframes\s+([\w-]+)\s*\{/g
 
 const AN_ARRIVAL_ANIMATION =
-  /--animate-(curtain-panel|curtain-corner|draw|ink|rise|item|breathe|waiting-line):([\s\S]*?);/g
+  /--animate-(curtain-panel|draw|ink|rise|item|breathe|waiting-line):([\s\S]*?);/g
 
 const A_UTILITY = /@utility\s+([\w-]+)\s*\{([\s\S]*?)\n\}/g
 
@@ -210,15 +239,45 @@ test('every movement is switched off where less of it is asked for', async () =>
   }
 
   for (const name of THE_UTILITIES) {
-    const body = declared.get(name)
-
-    assert.ok(body !== undefined, `the ${name} movement has no utility`)
-    assert.match(
-      body,
-      /@media \(prefers-reduced-motion: reduce\)/,
-      `${name} keeps moving for a reader who asked for less movement`,
+    assert.ok(
+      declared.get(name) !== undefined,
+      `the ${name} movement has no utility`,
     )
   }
+
+  const asked = sheet.match(
+    /@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) \{([\s\S]*?)\n    \}/,
+  )
+  const switched = sheet.match(
+    /:root\[data-motion='still'\] \{([\s\S]*?)\n  \}/,
+  )
+
+  assert.ok(asked, 'the machine asking for less movement stops nothing')
+  assert.ok(switched, 'the switch in the settings stops nothing')
+
+  for (const token of THE_MOVEMENTS_THAT_STOP) {
+    for (const [what, block] of [
+      ['the machine asks for less movement', asked[1]],
+      ['the reader switched movement off', switched[1]],
+    ] as const) {
+      assert.ok(
+        block.includes(`--animate-${token}: none;`),
+        `${token} keeps running when ${what}`,
+      )
+    }
+  }
+
+  assert.match(
+    declared.get('curtain-panel') ?? '',
+    /:root\[data-motion='still'\] & \{\s*display: none;/,
+    'the curtain is still drawn when movement is switched off, so the screen ' +
+      'opens behind a panel that never leaves',
+  )
+  assert.match(
+    declared.get('waits') ?? '',
+    /:root\[data-motion='still'\] &::after \{\s*display: none;/,
+    'the line of light still crosses the shape that is waiting',
+  )
 })
 
 test('the shape a list waits in no longer blinks', async () => {
@@ -236,6 +295,213 @@ test('the shape a list waits in no longer blinks', async () => {
       source,
       THE_OLD_BLINK,
       `${file} still blinks a shape that is waiting`,
+    )
+  }
+})
+
+const COMPOSITED = new Set(['transform', 'opacity'])
+
+const DRAWN_BY_HAND = 'stroke-dasharray'
+
+const THE_LINE_DRAWING = 'draw'
+
+const A_DECLARATION = /(^|[;{])\s*([-a-z]+)\s*:/g
+
+function keyframeBodies(sheet: string): Map<string, string> {
+  const found = new Map<string, string>()
+
+  for (const opened of sheet.matchAll(/@keyframes\s+([\w-]+)\s*\{/g)) {
+    const from = opened.index + opened[0].length
+    let depth = 1
+    let at = from
+
+    while (at < sheet.length && depth > 0) {
+      if (sheet[at] === '{') {
+        depth += 1
+      } else if (sheet[at] === '}') {
+        depth -= 1
+      }
+      at += 1
+    }
+
+    found.set(opened[1], sheet.slice(from, at - 1))
+  }
+
+  return found
+}
+
+function propertiesIn(body: string): string[] {
+  return [...body.matchAll(A_DECLARATION)].map((one) => one[2])
+}
+
+test('every movement animates only what the compositor can carry', async () => {
+  const sheet = await theSheet()
+  const bodies = keyframeBodies(sheet)
+
+  assert.ok(bodies.size > 0, 'no movement is declared in the sheet at all')
+
+  for (const [name, body] of bodies) {
+    for (const property of propertiesIn(body)) {
+      if (property === DRAWN_BY_HAND) {
+        assert.equal(
+          name,
+          THE_LINE_DRAWING,
+          `${name} animates ${DRAWN_BY_HAND}, which only the line drawing is ` +
+            'allowed to do, and only on a heading mark',
+        )
+        continue
+      }
+
+      assert.ok(
+        COMPOSITED.has(property),
+        `${name} animates ${property}, which is redrawn on the main thread ` +
+          'every frame; a movement is built from transform and opacity or it ' +
+          'stutters as soon as a table of rows is moving',
+      )
+    }
+  }
+})
+
+test('nothing anywhere animates a shape that has to be redrawn', async () => {
+  const sheet = await theSheet()
+
+  for (const property of ['clip-path', 'width', 'height', 'border-radius']) {
+    for (const [name, body] of keyframeBodies(sheet)) {
+      assert.ok(
+        !propertiesIn(body).includes(property),
+        `${name} animates ${property}`,
+      )
+    }
+  }
+
+  for (const { file, source } of await everySource()) {
+    assert.doesNotMatch(
+      source,
+      /clip-path|clipPath:/,
+      `${file} moves a clip path, which was the stutter this vocabulary was ` +
+        'rewritten to be rid of',
+    )
+  }
+})
+
+test('an entrance is switched off once it is over, and under a scroll', async () => {
+  const sheet = await theSheet()
+  const declared = new Map<string, string>()
+
+  for (const utility of sheet.matchAll(A_UTILITY)) {
+    declared.set(utility[1], utility[2])
+  }
+
+  for (const name of ['rises', 'arrives']) {
+    const body = declared.get(name)
+
+    assert.ok(body !== undefined, `the ${name} movement has no utility`)
+    assert.match(
+      body,
+      /\[data-arrived\] & \{\s*animation: none;/,
+      `${name} keeps a finished animation on every part that carried it, so ` +
+        'each one holds a layer of its own for the life of the page',
+    )
+  }
+
+  const hook = await readFile(path.join(ROOT, THE_ARRIVAL_HOOK), 'utf8')
+
+  assert.match(hook, /addEventListener\('scroll'/)
+  assert.match(hook, /data-arrived/)
+})
+
+test('only the head of a long list is held back; the rest does not move', async () => {
+  const delays = await readFile(path.join(ROOT, THE_DELAYS), 'utf8')
+
+  assert.match(delays, /LAST_ONE_THAT_MOVES = 12\b/)
+
+  for (const file of THE_LONG_LISTS) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.match(
+      source,
+      /(arrivesIn|risesIn)\(nth\)/,
+      `${file} names a movement on every part it draws, so a list of two ` +
+        'hundred moves two hundred parts at once',
+    )
+    assert.doesNotMatch(
+      source,
+      /'(arrives|rises) /,
+      `${file} still writes the movement into a class list where the cap on ` +
+        'how many parts move cannot reach it',
+    )
+  }
+})
+
+const THE_FACES = [
+  'components/ui/dialog.tsx',
+  'components/ui/alert-dialog.tsx',
+  'components/ui/dropdown-menu.tsx',
+  'components/ui/popover.tsx',
+  'components/ui/select.tsx',
+  'components/ui/sheet.tsx',
+]
+
+const A_MOVEMENT_NOTHING_DECLARES =
+  /animate-in|animate-out|fade-in-\d|fade-out-\d|zoom-in-\d|zoom-out-\d|slide-in-from-\w+|slide-out-to-\w+/
+
+test('a face comes and goes by a movement this sheet declares', async () => {
+  const sheet = await theSheet()
+
+  for (const name of ['appear', 'disappear']) {
+    assert.ok(
+      keyframeBodies(sheet).has(name),
+      `${name} is not declared, so the faces that name it do not move`,
+    )
+  }
+
+  for (const file of THE_FACES) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.doesNotMatch(
+      source,
+      A_MOVEMENT_NOTHING_DECLARES,
+      `${file} wears a class from a library this build does not have, so it ` +
+        'appears and disappears with no movement at all while reading as ' +
+        'though it had one',
+    )
+    assert.match(
+      source,
+      /data-\[state=open\]:(appears|scrim-appears)/,
+      `${file} names nothing for the way it opens`,
+    )
+    /*
+     * Only the scrim fades out. A face that animates on the way out stays
+     * mounted while it does, and everything the face hides from a reader —
+     * the rest of the page — stays hidden with it, so the control underneath
+     * cannot be found by name for as long as the movement lasts. The face
+     * therefore leaves at once and the scrim behind it fades.
+     */
+    assert.doesNotMatch(source, /data-\[state=closed\]:appears/)
+
+    if (/data-slot="(dialog|alert-dialog|sheet)-overlay"/.test(source)) {
+      assert.match(
+        source,
+        /data-\[state=closed\]:scrim-disappears/,
+        `${file} draws a scrim that does not fade out`,
+      )
+    }
+  }
+})
+
+test('a face that is centred by a translate does not move its position', async () => {
+  for (const file of THE_FACES) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    if (!/translate-x-\[-50%\]/.test(source)) {
+      continue
+    }
+
+    assert.doesNotMatch(
+      source,
+      /\[--from-x:|\[--from-y:/,
+      `${file} is centred with a translate and asks to arrive from a ` +
+        'distance, which takes it off centre for as long as it is moving',
     )
   }
 })

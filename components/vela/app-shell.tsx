@@ -155,7 +155,7 @@ export function AdminSideNav({
       data-slot="admin-side-nav"
       aria-label={ariaLabel ?? caption}
       className={cn(
-        'w-[152px] shrink-0 border-r border-dashed border-line px-[9px] max-[900px]:w-auto',
+        'w-[11rem] shrink-0 border-r border-dashed border-line px-[9px] max-[900px]:w-auto',
         className,
       )}
       {...props}
@@ -204,7 +204,7 @@ export function AdminSideNavItem({
       {...props}
     >
       {icon}
-      <span className="max-[900px]:hidden">{label}</span>
+      <span className="whitespace-nowrap max-[900px]:hidden">{label}</span>
       {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : null}
     </Comp>
   )
@@ -234,7 +234,11 @@ export function ScreenMain({
       data-slot="screen-main"
       data-width={width}
       data-scroll={scroll}
-      className={cn('min-h-0 flex-1', SCREEN_WIDTHS[width], className)}
+      className={cn(
+        'screen-rises min-h-0 flex-1',
+        SCREEN_WIDTHS[width],
+        className,
+      )}
       {...props}
     />
   )

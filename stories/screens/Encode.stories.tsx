@@ -22,6 +22,7 @@ import {
   screenWith,
 } from '@/repository/encode.fixtures'
 import type { EncodeActions } from '@/components/encode/encode-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { EncodeView } from '@/components/encode/encode-page'
 import {
   cellOf,
@@ -225,6 +226,8 @@ export const 実行中の中止を確かめる: Story = {
       name: 'このエンコードを中止します',
     })
 
+    await afterTheArrival(canvasElement)
+
     await expect(
       within(dialog).getByText('のエンコードを途中で止めます。', {
         exact: false,
@@ -247,6 +250,8 @@ export const 実行中を中止する: Story = {
     const dialog = await screen.findByRole('alertdialog', {
       name: 'このエンコードを中止します',
     })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       within(dialog).getByRole('button', { name: '中止する' }),
@@ -277,6 +282,8 @@ export const 実行中の中止を断られる: Story = {
     const dialog = await screen.findByRole('alertdialog', {
       name: 'このエンコードを中止します',
     })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       within(dialog).getByRole('button', { name: '中止する' }),
@@ -311,6 +318,8 @@ export const 中止が入れ違う: Story = {
     const dialog = await screen.findByRole('alertdialog', {
       name: 'このエンコードを中止します',
     })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       within(dialog).getByRole('button', { name: '中止する' }),
@@ -465,6 +474,8 @@ export const プロファイルを追加する: Story = {
       name: 'プロファイルを追加',
     })
 
+    await afterTheArrival(canvasElement)
+
     await expect(
       within(dialog).getByRole('button', { name: 'H.265' }),
     ).toBeVisible()
@@ -485,6 +496,8 @@ export const 保存先を追加する: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存先を追加' }))
 
     const dialog = await screen.findByRole('dialog', { name: '保存先を追加' })
+
+    await afterTheArrival(canvasElement)
 
     await expect(within(dialog).getByText('encodes')).toBeVisible()
     await expect(within(dialog).getByText('録画再生用')).toBeVisible()
@@ -509,6 +522,8 @@ export const 保存先の追加を断られる: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存先を追加' }))
 
     const dialog = await screen.findByRole('dialog', { name: '保存先を追加' })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.type(within(dialog).getByLabelText(/名称/), '書庫')
     await userEvent.click(
@@ -541,6 +556,8 @@ export const 保存先の追加をdriverが断る: Story = {
 
     const dialog = await screen.findByRole('dialog', { name: '保存先を追加' })
 
+    await afterTheArrival(canvasElement)
+
     await userEvent.type(within(dialog).getByLabelText(/名称/), '書庫')
     await userEvent.click(
       within(dialog).getByRole('button', { name: '追加する' }),
@@ -567,6 +584,8 @@ export const プロファイルを変更する: Story = {
     const dialog = await screen.findByRole('dialog', {
       name: 'プロファイルを変更',
     })
+
+    await afterTheArrival(canvasElement)
     const rateFactor = within(dialog).getByLabelText('品質(CRF)')
 
     await expect(within(dialog).getByLabelText(/名称/)).toHaveValue(
@@ -602,6 +621,8 @@ export const 保存先を変更する: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '棚 を変更' }))
 
     const dialog = await screen.findByRole('dialog', { name: '保存先を変更' })
+
+    await afterTheArrival(canvasElement)
     const label = within(dialog).getByLabelText(/名称/)
 
     await expect(label).toHaveValue('棚')
@@ -638,6 +659,8 @@ export const 撤去して消える: Story = {
       name: 'このプロファイルを撤去します',
     })
 
+    await afterTheArrival(canvasElement)
+
     await expect(within(dialog).getByText('録画再生用')).toBeVisible()
 
     await userEvent.click(
@@ -667,6 +690,8 @@ export const 撤去して退役する: Story = {
     const dialog = await screen.findByRole('alertdialog', {
       name: 'この保存先を撤去します',
     })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       within(dialog).getByRole('button', { name: '撤去する' }),
@@ -719,6 +744,8 @@ export const 使用中のため変更を断られる: Story = {
       name: 'プロファイルを変更',
     })
 
+    await afterTheArrival(canvasElement)
+
     await userEvent.click(
       within(dialog).getByRole('button', { name: '変更する' }),
     )
@@ -741,6 +768,8 @@ export const 退役済みのため変更を断られる: Story = {
     )
 
     const dialog = await screen.findByRole('dialog', { name: '保存先を変更' })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       within(dialog).getByRole('button', { name: '変更する' }),
@@ -766,6 +795,8 @@ export const 既定に指名されているため撤去を断られる: Story = 
     const dialog = await screen.findByRole('alertdialog', {
       name: 'このプロファイルを撤去します',
     })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       within(dialog).getByRole('button', { name: '撤去する' }),
@@ -793,6 +824,8 @@ export const 最後の保存先のため撤去を断られる: Story = {
     const dialog = await screen.findByRole('alertdialog', {
       name: 'この保存先を撤去します',
     })
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       within(dialog).getByRole('button', { name: '撤去する' }),
@@ -855,6 +888,8 @@ export const 自動実行は既定のまま: Story = {
 
     const listbox = await screen.findByRole('listbox')
 
+    await afterTheArrival(canvasElement)
+
     await expect(within(listbox).getAllByRole('option')).toHaveLength(
       AUTO_RUN_AS_DEPLOYED.coresThisMachineHas,
     )
@@ -900,6 +935,8 @@ export const 使用コア数の上限を変える: Story = {
 
     const listbox = await screen.findByRole('listbox')
 
+    await afterTheArrival(canvasElement)
+
     await userEvent.click(within(listbox).getByRole('option', { name: '3' }))
 
     await waitFor(() => expect(settleAutoRun).toHaveBeenCalledWith(true, 3))
@@ -938,6 +975,8 @@ export const 自動実行の保存を断られる: Story = {
     )
 
     const listbox = await screen.findByRole('listbox')
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(within(listbox).getByRole('option', { name: '5' }))
 

@@ -14,6 +14,22 @@ export const GRID_CAP_MS = 240
 
 export const RISE_MS = 700
 
+export const LAST_ONE_THAT_MOVES = 12
+
+export const ARRIVAL_SPAN_MS = RISE_MS + GRID_CAP_MS + 100
+
+export function moves(index: number): boolean {
+  return index < LAST_ONE_THAT_MOVES
+}
+
+export function arrivesIn(index: number): string {
+  return moves(index) ? 'arrives' : ''
+}
+
+export function risesIn(index: number): string {
+  return moves(index) ? 'rises' : ''
+}
+
 export function delayOf(ms: number): CSSProperties {
   return { '--delay': `${ms}ms` } as CSSProperties
 }

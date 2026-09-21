@@ -14,6 +14,7 @@ import {
 } from '@/repository/programs.fixtures'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 import { ProgramPanel } from '@/components/guide/program-panel'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 
 const standard = PROGRAM_DETAIL_FIXTURES.standard.program
 const relayed = PROGRAM_DETAIL_FIXTURES.relayed.program
@@ -89,7 +90,7 @@ const overlayIn = (canvasElement: HTMLElement): HTMLElement | null =>
   )
 
 async function opened(canvasElement: HTMLElement): Promise<HTMLElement> {
-  return waitFor(() => {
+  const surface = await waitFor(() => {
     const surface = surfaceIn(canvasElement)
 
     if (surface === null) {
@@ -102,6 +103,10 @@ async function opened(canvasElement: HTMLElement): Promise<HTMLElement> {
 
     return surface
   })
+
+  await afterTheArrival(canvasElement)
+
+  return surface
 }
 
 function detailIn(root: ParentNode): HTMLElement {

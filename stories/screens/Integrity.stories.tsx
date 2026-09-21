@@ -9,6 +9,7 @@ import {
   INTEGRITY_MORE_THAN_FIT_FIXTURE,
 } from '@/stories/fixtures/integrity'
 import { AppFrame } from '@/components/vela/app-shell'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { IntegrityView } from '@/components/integrity/integrity-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
@@ -76,6 +77,8 @@ export const 食い違いあり: Story = {
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
+    await afterTheArrival(canvasElement)
+
     await expect(dialog.getByText(STRAY.path)).toBeVisible()
     await expect(thrownAway).toEqual([])
 
@@ -99,6 +102,8 @@ export const 削除を断られたとき: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await expect(await dialog.findByText(STILL_BEING_WRITTEN)).toBeVisible()
@@ -192,6 +197,8 @@ export const 断りは片付いたあとまで残らない: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
 

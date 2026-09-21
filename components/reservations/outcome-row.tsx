@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReservationOutcome } from '@/repository/reservation-outcomes'
-import { delayOf, rowDelayMs } from '@/lib/arrival'
+import { arrivesIn, delayOf, rowDelayMs } from '@/lib/arrival'
 import { TableCell, TableRow } from '@/components/ui/table'
 import {
   ChevronDownIcon,
@@ -30,7 +30,7 @@ export function OutcomeRow({
 
   return (
     <>
-      <TableRow className="arrives" style={delayOf(rowDelayMs(nth))}>
+      <TableRow className={arrivesIn(nth)} style={delayOf(rowDelayMs(nth))}>
         <TableCell className="align-top">
           {instead.length > 0 && (
             <button

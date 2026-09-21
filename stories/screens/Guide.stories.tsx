@@ -109,6 +109,16 @@ export const 現れ方: Story = {
     for (const [nth, column] of columns.slice(0, 3).entries()) {
       const drawn = getComputedStyle(column)
 
+      /*
+       * A sub channel's column is the one that joins and leaves while somebody
+       * is looking, so it comes in as an item rather than rising with the
+       * grid.
+       */
+      if (column.hasAttribute('data-guide-sub')) {
+        await expect(drawn.animationName).toBe('item')
+        continue
+      }
+
       await expect(drawn.animationName).toBe('rise')
       await expect(drawn.animationDuration).toBe('0.7s')
       await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
@@ -134,7 +144,9 @@ export const 現れ方: Story = {
     document.documentElement.classList.add('dark')
 
     try {
-      await expect(getComputedStyle(columns[0]).animationName).toBe('rise')
+      await expect(getComputedStyle(columns[0]).animationName).toBe(
+        columns[0].hasAttribute('data-guide-sub') ? 'item' : 'rise',
+      )
       await expect(getComputedStyle(line as Element).animationName).toBe('draw')
     } finally {
       document.documentElement.classList.remove('dark')
@@ -981,7 +993,7 @@ async function readsInFull(
 async function openedPanel(canvasElement: HTMLElement): Promise<HTMLElement> {
   const doc = canvasElement.ownerDocument
 
-  return waitFor(() => {
+  const surface = await waitFor(() => {
     const surface = doc.querySelector<HTMLElement>(
       '[data-slot="dialog-content"]',
     )
@@ -996,6 +1008,10 @@ async function openedPanel(canvasElement: HTMLElement): Promise<HTMLElement> {
 
     return surface
   })
+
+  await afterTheArrival(canvasElement)
+
+  return surface
 }
 
 const overlayOver = (canvasElement: HTMLElement): Element | null =>

@@ -48,11 +48,11 @@ export function Curtain() {
     <div
       data-slot="curtain"
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-50 flex"
+      className="pointer-events-none fixed inset-0 z-50"
     >
-      <span className="curtain-panel h-full flex-1 bg-bg [--curtain-away:-101%] [--curtain-round:0_0_0_100%]" />
+      <span className="curtain-panel absolute inset-y-0 left-0 w-[calc(50%+72px)] rounded-br-[72px] bg-bg [--curtain-away:-101%]" />
       <span
-        className="curtain-panel h-full flex-1 bg-bg [--curtain-away:101%] [--curtain-round:0_0_100%_0]"
+        className="curtain-panel absolute inset-y-0 right-0 w-[calc(50%+72px)] rounded-bl-[72px] bg-bg [--curtain-away:101%]"
         onAnimationEnd={() => setRaising(false)}
       />
     </div>

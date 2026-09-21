@@ -3,7 +3,14 @@
 import { useCallback, useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { columnsAcross, delayOf, gridDelayMs, seatIn } from '@/lib/arrival'
+import {
+  arrivesIn,
+  columnsAcross,
+  delayOf,
+  gridDelayMs,
+  seatIn,
+} from '@/lib/arrival'
+import { useArrived } from '@/hooks/useArrived'
 import { SPAN_DASH } from '@/lib/format'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress'
@@ -32,6 +39,7 @@ export function ChannelGrid({
   return (
     <ul
       ref={measure}
+      {...useArrived()}
       data-slot="channel-grid"
       className={cn(
         'mx-auto grid w-full max-w-[137rem] grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-x-4 gap-y-3.5',
@@ -45,7 +53,7 @@ export function ChannelGrid({
           <li
             key={channel.id}
             style={delayOf(gridDelayMs(seat.row, seat.column))}
-            className="arrives min-w-0 max-w-[22rem]"
+            className={cn(arrivesIn(nth), 'min-w-0 max-w-[22rem]')}
           >
             <ChannelCard channel={channel} onSelect={onSelect} />
           </li>

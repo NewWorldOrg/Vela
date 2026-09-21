@@ -223,6 +223,45 @@
     --ring: 0 0 0 3px rgba(150, 187, 180, 0.28);
     --logo-plate: #efece5;
   }
+
+  /*
+   * Movement is switched off in two ways: what the machine asks for, and the
+   * switch in 設定 > 表示. The reader's own answer is the one that wins, so the
+   * machine's setting is read only while nobody has answered here — and the
+   * marks a press leaves behind (the player's bezel, the seek flash) are not
+   * movement but an answer, so they are not on this list.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion='moves']) {
+      --animate-curtain-panel: none;
+      --animate-draw: none;
+      --animate-ink: none;
+      --animate-rise: none;
+      --animate-screen-rise: none;
+      --animate-item: none;
+      --animate-joining: none;
+      --animate-breathe: none;
+      --animate-waiting-line: none;
+      --animate-scrim-in: none;
+      --animate-scrim-out: none;
+      --animate-surface-in: none;
+    }
+  }
+
+  :root[data-motion='still'] {
+    --animate-curtain-panel: none;
+    --animate-draw: none;
+    --animate-ink: none;
+    --animate-rise: none;
+    --animate-screen-rise: none;
+    --animate-item: none;
+    --animate-joining: none;
+    --animate-breathe: none;
+    --animate-waiting-line: none;
+    --animate-scrim-in: none;
+    --animate-scrim-out: none;
+    --animate-surface-in: none;
+  }
 }
 
 /* The broadcast marks — 字 for subtitled, 再 for a repeat, デ for a data
@@ -384,11 +423,15 @@
   --ease-fold: cubic-bezier(0.25, 0.1, 0.45, 1);
   --ease-item: cubic-bezier(0.93, 0, 0.1, 1.01);
 
+  --animate-scrim-in: appear 120ms var(--ease-toy) backwards;
+  --animate-scrim-out: disappear 120ms var(--ease-toy) both;
+  --animate-surface-in: appear 160ms var(--ease-toy) backwards;
+  --animate-joining: item 0.28s var(--ease-item) both;
   --animate-curtain-panel: curtain-panel 0.9s ease-in-out both;
-  --animate-curtain-corner: curtain-corner 0.45s ease-out both;
   --animate-draw: draw 0.6s ease-in-out both;
   --animate-ink: ink 0.1s ease-out both;
   --animate-rise: rise 0.7s ease-in-out both;
+  --animate-screen-rise: rise 0.42s var(--ease-toy) backwards;
   --animate-item: item 0.4s var(--ease-item) both;
   --animate-breathe: breathe 2s ease-in-out infinite;
   --animate-waiting-line: waiting-line calc(0.8s + 0.2s) ease-in-out infinite;
@@ -441,11 +484,11 @@
 @keyframes player-burst {
   from {
     opacity: 1;
-    scale: 1;
+    transform: scale(1);
   }
   to {
     opacity: 0;
-    scale: 2;
+    transform: scale(2);
   }
 }
 
@@ -562,21 +605,25 @@
   margin-block: -6px;
 }
 
+/*
+ * Every movement below animates `transform` or `opacity` and nothing else.
+ * Those two are the only properties a browser can hand to the compositor, so
+ * they cost nothing per frame however many parts are moving. `clip-path`,
+ * `width`, `top` and `border-radius` are redrawn on the main thread every
+ * frame, which is what made the first cut of this vocabulary stutter on a
+ * table of rows — a movement that is not smooth is worse than no movement.
+ *
+ * A curtain panel therefore carries its rounded corner from the start and only
+ * slides. The two panels overlap by the radius, each covering the other's
+ * rounded corner, so together they cover the screen at rest and each shows its
+ * own curve once it starts to leave.
+ */
 @keyframes curtain-panel {
   from {
-    translate: 0 0;
+    transform: translateX(0);
   }
   to {
-    translate: var(--curtain-away, 0) 0;
-  }
-}
-
-@keyframes curtain-corner {
-  from {
-    border-radius: 0;
-  }
-  to {
-    border-radius: var(--curtain-round, 0);
+    transform: translateX(var(--curtain-away, 0));
   }
 }
 
@@ -605,51 +652,92 @@
 
 @keyframes rise {
   from {
-    translate: 0 55%;
-    scale: 1.2 0.9;
+    transform: translateY(var(--rise-from, 55%))
+      scale(var(--rise-squash, 1.2), var(--rise-stretch, 0.9));
   }
   to {
-    translate: 0 0;
-    scale: 1 1;
+    transform: translateY(0) scale(1, 1);
   }
 }
 
 @keyframes item {
   from {
-    translate: 0 6px;
-    scale: 0.96;
+    transform: translateY(6px);
+    opacity: 0;
   }
   to {
-    translate: 0 0;
-    scale: 1;
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/*
+ * A face coming and going. The distance and the scale are variables so that a
+ * bubble can arrive from the side it is on and a dialog can arrive in place:
+ * a dialog is centred with the `translate` property, which is a property of
+ * its own in this version of Tailwind, so animating `transform` here leaves
+ * the centring alone.
+ *
+ * It starts at a fiftieth of full and not at nothing. Two hundredths of a
+ * face is nothing to the eye over 160ms, but `opacity: 0` is the one value
+ * that means "this is not on screen" to everything that reads a page — the
+ * checks in this repository among them — and a face that has just been opened
+ * is on screen. Do not round it down.
+ */
+@keyframes appear {
+  from {
+    opacity: 0.02;
+    transform: translate(var(--from-x, 0), var(--from-y, 0))
+      scale(var(--from-scale, 1));
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes disappear {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    opacity: 0.02;
+    transform: translate(var(--from-x, 0), var(--from-y, 0))
+      scale(var(--from-scale, 1));
   }
 }
 
 @keyframes breathe {
   0%,
   to {
-    scale: 1 1;
+    transform: scale(1, 1);
   }
   50% {
-    scale: 1.05 1.02;
+    transform: scale(1.05, 1.02);
   }
 }
 
 @keyframes waiting-line {
   0% {
-    translate: -100% 0;
+    transform: translateX(-100%);
   }
   80%,
   to {
-    translate: 300% 0;
+    transform: translateX(300%);
   }
 }
 
 @utility curtain-panel {
-  animation: var(--animate-curtain-panel), var(--animate-curtain-corner);
+  animation: var(--animate-curtain-panel);
 
   @media (prefers-reduced-motion: reduce) {
-    animation: none;
+    :root:not([data-motion='moves']) & {
+      display: none;
+    }
+  }
+
+  :root[data-motion='still'] & {
     display: none;
   }
 }
@@ -665,21 +753,35 @@
     animation: var(--animate-ink);
     animation-delay: calc(var(--d, 0s) + var(--delay, 0s) + 0.6s);
   }
+}
 
-  @media (prefers-reduced-motion: reduce) {
-    & :is(path, circle, rect, ellipse, line, polygon, polyline),
-    & [fill='currentColor'],
-    & [data-ink] {
-      animation: none;
-    }
-  }
+/*
+ * An entrance runs once. `[data-arrived]` is what the list around it sets when
+ * the procession is over, or the moment the reader scrolls — a part that keeps
+ * a finished animation on it stays on a layer of its own for the life of the
+ * page, and nothing should be moving under a scroll.
+ */
+/*
+ * A whole screen arriving: the same rise, at a tenth of the distance and
+ * without the squash, because a screen is not a card being dealt.
+ *
+ * It fills backwards and not forwards on purpose. A transform left on the
+ * element after the movement ends — even the identity — makes it the
+ * containing block for everything `fixed` inside it, and the drawer on the
+ * guide is fixed.
+ */
+@utility screen-rises {
+  animation: var(--animate-screen-rise);
+  --rise-from: 10px;
+  --rise-squash: 1;
+  --rise-stretch: 1;
 }
 
 @utility rises {
   animation: var(--animate-rise);
   animation-delay: calc(var(--d, 0s) + var(--delay, 0s));
 
-  @media (prefers-reduced-motion: reduce) {
+  [data-arrived] & {
     animation: none;
   }
 }
@@ -688,17 +790,40 @@
   animation: var(--animate-item);
   animation-delay: calc(var(--d, 0s) + var(--delay, 0s));
 
-  @media (prefers-reduced-motion: reduce) {
+  [data-arrived] & {
     animation: none;
   }
 }
 
+/*
+ * A column or a row that joins a table somebody is already looking at. An
+ * animation runs when the part is put in, and the parts already on screen are
+ * not put in again, so only what joined moves — the rest takes its new width
+ * at once, which is what the canon asks for.
+ */
+@utility joins {
+  animation: var(--animate-joining);
+}
+
 @utility breathes {
   animation: var(--animate-breathe);
+}
 
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
+/*
+ * A face and the scrim behind it. `appears` carries the distance and the scale
+ * in variables, so a bubble arrives from the side Radix put it on and a dialog
+ * arrives in place.
+ */
+@utility scrim-appears {
+  animation: var(--animate-scrim-in);
+}
+
+@utility scrim-disappears {
+  animation: var(--animate-scrim-out);
+}
+
+@utility appears {
+  animation: var(--animate-surface-in);
 }
 
 @utility waits {
@@ -720,9 +845,12 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    &::after {
+    :root:not([data-motion='moves']) &::after {
       display: none;
-      animation: none;
     }
+  }
+
+  :root[data-motion='still'] &::after {
+    display: none;
   }
 }

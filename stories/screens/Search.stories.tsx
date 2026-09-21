@@ -24,6 +24,7 @@ import {
   SEARCH_HIT_FIXTURES,
 } from '@/repository/search.fixtures'
 import { SearchView } from '@/components/search/search-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const emptyCondition: SearchCondition = {
@@ -155,6 +156,13 @@ function Visited({ result }: { result: SearchResult }) {
 async function choose(list: string, option: string): Promise<void> {
   await userEvent.click(screen.getByRole('combobox', { name: list }))
   await userEvent.click(await screen.findByRole('option', { name: option }))
+
+  /*
+   * The list leaves over 120ms, and while it is leaving the rest of the page
+   * is still hidden from a reader, so the next control cannot be found by the
+   * name it answers to.
+   */
+  await afterTheArrival(document.body)
 }
 
 const NO_LONGER_KEPT = '放送が終了した番組は結果に出ません'
