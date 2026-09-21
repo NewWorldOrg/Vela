@@ -173,20 +173,20 @@ export function RecordingRow({
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>
         <ActionRow className="gap-1.5" onClick={(e) => e.stopPropagation()}>
           {playable ? (
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="watch" size="sm" asChild>
               <Link href={`/recordings/${r.id}?at=0`}>
                 <PlayIcon />
                 再生
               </Link>
             </Button>
           ) : (
-            <Button variant="outline" size="sm" disabled>
+            <Button variant="watch" size="sm" disabled>
               <PlayIcon />
               再生
             </Button>
           )}
           <Button
-            variant="destructive"
+            variant="remove"
             size="sm"
             title={deletable ? undefined : '録画中は削除できません'}
             disabled={!deletable}

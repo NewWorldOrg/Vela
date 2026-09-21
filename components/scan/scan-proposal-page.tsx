@@ -192,7 +192,7 @@ export function ScanProposalView({
           }
           className="mt-4"
           action={
-            <Button asChild>
+            <Button variant="watch" asChild>
               <Link href={'/settings/channels' as Route}>チャンネルへ戻る</Link>
             </Button>
           }

@@ -91,7 +91,7 @@ export function DeleteFindingDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
           <AlertDialogAction
-            variant="destructiveFill"
+            variant="removeFill"
             disabled={pending}
             onClick={(event) => {
               event.preventDefault()

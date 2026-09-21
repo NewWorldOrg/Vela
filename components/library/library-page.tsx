@@ -155,7 +155,7 @@ export function LibraryView({
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
               <Button
-                variant="default"
+                variant="halt"
                 size="sm"
                 onClick={() =>
                   onFiltersChange({
@@ -172,7 +172,7 @@ export function LibraryView({
               {filter.q &&
                 (filter.year || filter.genre || filter.state || filter.ch) && (
                   <Button
-                    variant="ghost"
+                    variant="change"
                     size="sm"
                     onClick={() =>
                       onFiltersChange({
@@ -197,10 +197,10 @@ export function LibraryView({
           className="mt-10 max-w-[560px]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
-              <Button variant="default" size="sm" asChild>
+              <Button variant="watch" size="sm" asChild>
                 <Link href="/guide">番組表から予約する</Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="watch" size="sm" asChild>
                 <Link href="/reservations">予約一覧を見る</Link>
               </Button>
             </div>

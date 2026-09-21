@@ -148,7 +148,7 @@ export function ProgramDetailBody({
         </dl>
 
         <div className="mt-4 flex">
-          <Button variant="link" size="sm" className="ml-auto" asChild>
+          <Button variant="watch" size="sm" className="ml-auto" asChild>
             <Link
               href={`/search?q=${encodeURIComponent(mainTitleOf(program.title))}`}
             >
@@ -161,7 +161,7 @@ export function ProgramDetailBody({
       <div className="mt-[22px] border-t border-dashed border-line pt-[17px]">
         {onAir && (
           <div className="mb-[13px] flex flex-wrap gap-[9px]">
-            <Button variant="outline" asChild>
+            <Button variant="watch" asChild>
               <Link
                 href={liveScreenHref(program.channelId, channel?.kind) as Route}
               >

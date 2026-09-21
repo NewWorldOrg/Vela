@@ -190,7 +190,7 @@ function RulesScreen({
         current="rules"
         action={
           <ActionRow className="gap-2">
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="watch" size="sm" asChild>
               <Link href="/search">
                 <SearchIcon />
                 検索から作る
@@ -973,7 +973,7 @@ function RuleEditor({
       >
         <div className="flex flex-wrap items-center gap-2.5">
           <Button
-            variant="outline"
+            variant="change"
             size="sm"
             disabled={pending}
             onClick={rehearse}
@@ -1051,7 +1051,7 @@ function RuleEditor({
       <div className="mt-3.5 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
         {rule && (
           <Button
-            variant="destructive"
+            variant="remove"
             size="sm"
             disabled={pending}
             onClick={retire}
@@ -1099,7 +1099,7 @@ function RuleEditor({
             <AlertDialogFooter>
               <AlertDialogCancel>キャンセル</AlertDialogCancel>
               <AlertDialogAction
-                variant="destructiveFill"
+                variant="removeFill"
                 disabled={pending || !leaving}
                 onClick={(event) => {
                   event.preventDefault()

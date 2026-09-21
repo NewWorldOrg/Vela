@@ -11,7 +11,7 @@ export default function AppError({ reset }: { reset: () => void }) {
       title="画面を表示できませんでした"
       className="mt-16 max-w-[560px]"
       action={
-        <Button variant="outline" size="sm" onClick={reset}>
+        <Button variant="change" size="sm" onClick={reset}>
           読み直す
         </Button>
       }

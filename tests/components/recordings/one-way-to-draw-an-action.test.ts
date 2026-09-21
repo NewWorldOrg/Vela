@@ -21,7 +21,7 @@ const WHERE_THE_EVEN_WIDTH_IS_DECLARED = 'components/vela/action-row.tsx'
 
 const A_BUTTON = /<Button\b([^>]*)>([\s\S]*?)<\/Button>/g
 
-const SPEAKS_FOR_ITSELF = /variant="(outline|destructive)"/
+const SPEAKS_FOR_ITSELF = /variant="(watch|change|halt|remove|removeFill)"/
 
 const AN_ICON = /<[A-Z][A-Za-z]*Icon\b|<Spinner\b/
 
@@ -72,7 +72,7 @@ test('deleting is destructive wherever it is offered', async () => {
       }
 
       deleting.push(button.file)
-      assert.match(button.declared, /variant="destructive"/)
+      assert.match(button.declared, /variant="remove"/)
     }
   }
 

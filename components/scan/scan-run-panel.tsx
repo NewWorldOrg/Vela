@@ -191,7 +191,7 @@ export function ScanRunPanel({
             </h2>
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             disabled={pending}
             onClick={() =>

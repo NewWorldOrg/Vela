@@ -127,7 +127,7 @@ export function EncodeButton({
   return (
     <div className="flex flex-col items-start gap-1.5">
       <Button
-        variant="outline"
+        variant="change"
         disabled={refused !== undefined}
         title={refused}
         aria-disabled={pending}

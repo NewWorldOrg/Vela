@@ -71,7 +71,7 @@ export const ConfirmDialog: Story = {
       <Surface>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="destructive">EPG を削除して再取得</Button>
+            <Button variant="remove">EPG を削除して再取得</Button>
           </DialogTrigger>
           <DialogContent showCloseButton={false}>
             <DialogHeader>
@@ -91,7 +91,7 @@ export const ConfirmDialog: Story = {
                 </Button>
               </DialogClose>
               <DialogClose asChild>
-                <Button variant="destructiveFill" size="sm">
+                <Button variant="removeFill" size="sm">
                   削除して再取得
                 </Button>
               </DialogClose>
@@ -124,7 +124,7 @@ export const DeleteRecording: Story = {
         <SectionHeading mark={TrashIcon}>録画の削除確認</SectionHeading>
         <Surface>
           <Button
-            variant="destructive"
+            variant="remove"
             onClick={() => setTarget(RECORDING_FIXTURES[1])}
           >
             <TrashIcon />

@@ -80,7 +80,7 @@ export function RunningJob({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {job.title !== undefined && (
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="watch" size="sm" asChild>
             <Link href={`/recordings/${job.recordingId}` as Route}>
               録画詳細を開く
             </Link>

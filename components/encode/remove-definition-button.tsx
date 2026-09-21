@@ -58,7 +58,7 @@ export function RemoveDefinitionButton({
   return (
     <>
       <Button
-        variant="destructive"
+        variant="remove"
         size="sm"
         aria-label={`${label} を撤去`}
         onClick={() => {
@@ -84,7 +84,7 @@ export function RemoveDefinitionButton({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructiveFill"
+              variant="removeFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

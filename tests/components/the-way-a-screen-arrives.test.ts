@@ -145,16 +145,34 @@ test('nothing in the vocabulary loops but the breathing and the waiting', async 
 test('every delay is handed down through the variables, not written on a part', async () => {
   const sheet = await theSheet()
 
-  for (const name of ['rise', 'item', 'draw', 'ink']) {
-    const declared = sheet.match(
-      new RegExp(`--animate-${name}:([\\s\\S]*?);`, 'u'),
-    )
+  const declared = new Map<string, string>()
 
-    assert.ok(declared, `--animate-${name} is not declared`)
+  for (const utility of sheet.matchAll(A_UTILITY)) {
+    declared.set(utility[1], utility[2])
+  }
+
+  for (const name of ['rises', 'arrives', 'drawn']) {
+    const body = declared.get(name)
+
+    assert.ok(body !== undefined, `the ${name} movement has no utility`)
     assert.ok(
-      declared[1].includes(CARRIED_BY_A_VARIABLE),
-      `--animate-${name} does not take its delay from the variables, so a ` +
-        'part has to carry a number of its own',
+      body.includes(CARRIED_BY_A_VARIABLE),
+      `${name} does not take its delay from the variables on the part that ` +
+        'moves, so either a part carries a number of its own or every part ' +
+        'moves at once',
+    )
+  }
+
+  for (const name of ['rise', 'item', 'draw', 'ink']) {
+    const token = sheet.match(new RegExp(`--animate-${name}:([^;]*);`, 'u'))
+
+    assert.ok(token, `--animate-${name} is not declared`)
+    assert.doesNotMatch(
+      token[1],
+      /var\(--delay|var\(--d[,)]/,
+      `--animate-${name} builds the delay into a value declared on :root, ` +
+        'where every part reads the same fallback and the procession ' +
+        'collapses to one moment',
     )
   }
 

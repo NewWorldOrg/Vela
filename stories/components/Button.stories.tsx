@@ -3,7 +3,13 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/vela/surface'
 import { Spinner } from '@/components/vela/progress'
-import { PlusIcon, TrashIcon } from '@/components/vela/icons'
+import {
+  CloseIcon,
+  EditIcon,
+  PlayIcon,
+  PlusIcon,
+  TrashIcon,
+} from '@/components/vela/icons'
 
 function hold(event: React.MouseEvent) {
   event.preventDefault()
@@ -21,11 +27,12 @@ const meta = {
       options: [
         'default',
         'outline',
-        'secondary',
         'ghost',
-        'destructive',
-        'destructiveFill',
-        'link',
+        'watch',
+        'change',
+        'halt',
+        'remove',
+        'removeFill',
       ],
     },
     size: {
@@ -58,29 +65,33 @@ export const Variants: Story = {
           <PlusIcon />
           予約を追加
         </Button>
-        <Button {...args} variant="outline">
+        <Button {...args} variant="watch">
+          <PlayIcon />
+          再生
+        </Button>
+        <Button {...args} variant="change">
+          <EditIcon />
           編集
         </Button>
-        <Button {...args} variant="ghost">
-          詳細
+        <Button {...args} variant="halt">
+          <CloseIcon />
+          取り消す
         </Button>
-        <Button {...args} variant="destructive">
+        <Button {...args} variant="remove">
           <TrashIcon />
           削除
         </Button>
-        <Button {...args} variant="destructiveFill">
-          削除して再取得
+        <Button {...args} variant="removeFill">
+          <TrashIcon />
+          削除する
         </Button>
-        <Button {...args} variant="secondary">
-          複製
-        </Button>
-        <Button {...args} variant="link">
-          切り分けを見る
+        <Button {...args} variant="ghost">
+          閉じる
         </Button>
       </div>
       <p className="mt-[11px] text-cap text-ink-3">
-        新規作成=default ・ 編集=outline ・ 削除・破壊的操作=destructive ・
-        ghost は行内の補助操作に限る
+        観る=watch ・ 変える=change ・ 止める=halt ・ 消す=remove ・
+        足すと対話の実行=塗り ・ 無色は 閉じる と キャンセル だけ
       </p>
     </Surface>
   ),
@@ -124,7 +135,7 @@ function StateRow({
         <Button variant="ghost" className={extra ? QUIET[extra] : undefined}>
           詳細
         </Button>
-        <Button variant="destructive" className={extra}>
+        <Button variant="remove" className={extra}>
           削除
         </Button>
       </span>
@@ -152,7 +163,7 @@ export const States: Story = {
           <Button variant="ghost" disabled>
             詳細
           </Button>
-          <Button variant="destructive" disabled>
+          <Button variant="remove" disabled>
             削除
           </Button>
         </span>

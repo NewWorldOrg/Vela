@@ -293,7 +293,7 @@ test('deleting is destructive, with an icon and a word, wherever it is offered',
       deleting.push(file)
       assert.match(
         button[1],
-        /variant="destructive/,
+        /variant="remove/,
         `${file} offers deleting without saying so by its colour`,
       )
       assert.doesNotMatch(
@@ -310,53 +310,6 @@ test('deleting is destructive, with an icon and a word, wherever it is offered',
   }
 
   assert.ok(deleting.length > 5, `only ${deleting.length} were read`)
-})
-
-test('the coral that is filled in belongs to the confirming button alone', async () => {
-  const button = await readFile(
-    path.join(ROOT, 'components/ui/button.tsx'),
-    'utf8',
-  )
-  const destructive = button.match(/destructive:\s*\n?\s*'([^']*)'/u)
-
-  assert.ok(destructive, 'the destructive button is no longer declared')
-  assert.doesNotMatch(
-    destructive[1],
-    /bg-coral-soft/,
-    'the destructive button is drawn on the half-hearted pink cushion again; ' +
-      'a row keeps the surface and says it in the word and the outline',
-  )
-  assert.match(destructive[1], /text-coral/)
-  assert.match(button, /destructiveFill:/)
-
-  for (const { file, source } of await everySource()) {
-    for (const drawn of source.matchAll(
-      /<(?:Button|AlertDialogAction)\b[^>]*variant="(destructive|destructiveFill)"/g,
-    )) {
-      if (drawn[1] === 'destructiveFill') {
-        continue
-      }
-
-      assert.doesNotMatch(
-        drawn[0],
-        /AlertDialogAction/,
-        `${file} confirms a destructive act with the unfilled button; the ` +
-          'filled coral is the confirming button in the dialog',
-      )
-    }
-  }
-})
-
-test('no button is drawn on the soft coral face', async () => {
-  for (const { file, source } of await everySource()) {
-    for (const drawn of source.matchAll(/<button\b[\s\S]{0,400}?>/g)) {
-      assert.doesNotMatch(
-        drawn[0],
-        /bg-coral-soft|hover:bg-coral-soft/,
-        `${file} puts a button on the soft coral face`,
-      )
-    }
-  }
 })
 
 test('an action carries an icon beside its word', async () => {

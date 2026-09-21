@@ -17,7 +17,7 @@ export function ThresholdControl({
 
   return (
     <>
-      <Button variant="ghost" size="xs" onClick={() => setEditing(true)}>
+      <Button variant="change" size="xs" onClick={() => setEditing(true)}>
         変更
       </Button>
       {editing && (

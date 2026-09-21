@@ -21,7 +21,7 @@ export function ChangeThresholdButton({
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+      <Button variant="change" size="sm" onClick={() => setOpen(true)}>
         閾値を変更
       </Button>
       {open && (

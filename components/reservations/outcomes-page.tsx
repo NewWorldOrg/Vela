@@ -212,7 +212,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           className="mt-10 max-w-[560px]"
           action={
             <Button
-              variant="default"
+              variant="halt"
               size="sm"
               onClick={() =>
                 change({ kind: null, days: null, ch: null, rule: null })
@@ -229,7 +229,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           titleLevel={2}
           className="mt-10 max-w-[560px]"
           action={
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="watch" size="sm" asChild>
               <Link href="/reservations">予約一覧へ</Link>
             </Button>
           }

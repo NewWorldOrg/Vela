@@ -20,15 +20,17 @@ const buttonVariants = cva(
           'border border-btn-fill bg-btn-fill text-on-btn shadow-pop hover:border-btn-fill-hover hover:bg-btn-fill-hover hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         outline:
           'border border-edge bg-surface text-ink shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        secondary:
-          'border border-edge bg-surface-2 text-ink shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         ghost:
           'border border-edge bg-transparent font-medium text-ink-2 hover:translate-x-0 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
-        destructive:
-          'border border-coral-line bg-surface text-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        destructiveFill:
+        watch:
+          'border border-brand-line bg-brand-soft text-brand shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+        change:
+          'border border-sky-line bg-sky-soft text-sky shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+        halt: 'border border-lemon-line bg-lemon-soft text-lemon shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+        remove:
+          'border border-coral-line bg-coral-soft text-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+        removeFill:
           'border border-coral bg-coral text-on-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        link: 'text-brand underline-offset-[3px] hover:translate-x-0 hover:translate-y-0 hover:underline focus-visible:shadow-ring',
       },
       size: {
         default: 'h-[34px] px-[17px] text-ui',

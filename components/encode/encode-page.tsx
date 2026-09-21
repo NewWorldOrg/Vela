@@ -100,7 +100,7 @@ export function EncodeView({
               spot="tape"
               title="ジョブの履歴がありません"
               action={
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="watch" size="sm" asChild>
                   <Link href="/library">ライブラリを開く</Link>
                 </Button>
               }

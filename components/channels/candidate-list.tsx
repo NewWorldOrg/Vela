@@ -119,7 +119,7 @@ function DeleteCandidateDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>キャンセル</AlertDialogCancel>
           <AlertDialogAction
-            variant="destructiveFill"
+            variant="removeFill"
             disabled={pending}
             onClick={(event) => {
               event.preventDefault()
@@ -208,7 +208,7 @@ export function CandidateList({
             <ActionRow className="gap-2">
               {!candidate.selected && (
                 <Button
-                  variant="outline"
+                  variant="change"
                   size="sm"
                   disabled={pending}
                   onClick={() =>
@@ -228,7 +228,7 @@ export function CandidateList({
                 </Button>
               )}
               <Button
-                variant="destructive"
+                variant="remove"
                 size="sm"
                 disabled={pending}
                 aria-label={`${candidate.channel} を候補から削除`}

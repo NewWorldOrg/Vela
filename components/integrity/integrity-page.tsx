@@ -240,7 +240,7 @@ export function IntegrityView({
                   {OWNED_BY_NO_RECORDING.includes(finding.fault) && (
                     <ActionRow>
                       <Button
-                        variant="destructive"
+                        variant="remove"
                         size="sm"
                         onClick={() => setAsked(finding)}
                       >

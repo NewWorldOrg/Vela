@@ -516,7 +516,7 @@ export function CollectionDrawer({
 
           <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-dashed border-line pt-[13px]">
             <Button
-              variant="destructive"
+              variant="remove"
               size="sm"
               onClick={() => setRebuildOpen(true)}
             >

@@ -81,7 +81,7 @@ export function OpenExternally({
           外部プレイヤーで開く
         </button>
       ) : (
-        <Button variant="outline" onClick={open} aria-disabled={taking}>
+        <Button variant="watch" onClick={open} aria-disabled={taking}>
           {taking ? <Spinner className="size-3.5" /> : <DevicePlayerIcon />}
           外部プレイヤーで開く
         </Button>

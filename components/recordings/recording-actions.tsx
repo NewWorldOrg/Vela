@@ -81,7 +81,7 @@ export function RecordingActions({
             />
           )}
           <Button
-            variant="destructive"
+            variant="remove"
             disabled={!deletable}
             title={deletable ? undefined : '録画中は削除できません'}
             onClick={() => setAsked(recording)}

@@ -15,7 +15,7 @@ const DOT_AND_GAP_PX = 12
 
 const CELL_SIDES_PX = 26
 
-const BASE_FONT_PX = 13.5
+const BASE_FONT_PX = 16
 
 export type StateTone = 'ok' | 'warn' | 'err' | 'info' | 'mute'
 

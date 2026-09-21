@@ -122,7 +122,7 @@ export function LocalSignIn({
           {busy ? 'サインインしています' : 'サインイン'}
         </Button>
       ) : (
-        <Button type="submit" variant="outline" disabled={busy}>
+        <Button type="submit" variant="watch" disabled={busy}>
           {busy ? 'サインインしています' : 'サインイン'}
         </Button>
       )}

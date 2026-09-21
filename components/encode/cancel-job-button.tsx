@@ -59,7 +59,7 @@ export function CancelJobButton({
   return (
     <span className="inline-flex flex-col items-end gap-1">
       <Button
-        variant="ghost"
+        variant="halt"
         size="sm"
         className="aria-disabled:hover:bg-transparent aria-disabled:hover:text-ink-2"
         aria-disabled={pending}
@@ -98,7 +98,7 @@ export function CancelJobButton({
                 キャンセル
               </AlertDialogCancel>
               <AlertDialogAction
-                variant="destructiveFill"
+                variant="default"
                 disabled={pending}
                 onClick={(event) => {
                   event.preventDefault()

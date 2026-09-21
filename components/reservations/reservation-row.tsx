@@ -125,7 +125,7 @@ export function ReservationRow({
               aria-expanded={expanded}
               aria-label="競合の詳細"
               onClick={onToggle}
-              className="tap-target flex size-6 cursor-pointer items-center justify-center rounded-full text-coral transition-colors duration-150 hover:bg-surface-2 [&_svg]:size-3.5"
+              className="tap-target flex size-6 cursor-pointer items-center justify-center rounded-full text-coral transition-colors duration-150 hover:bg-coral-soft [&_svg]:size-3.5"
             >
               {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
             </button>
@@ -164,7 +164,7 @@ export function ReservationRow({
         <TableCell className="text-right align-top">
           <ActionRow className="gap-1.5">
             {reservation.recordingId && (
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="watch" size="sm" asChild>
                 <Link href={`/recordings/${reservation.recordingId}`}>
                   <LibraryIcon />
                   この予約の録画
@@ -173,7 +173,7 @@ export function ReservationRow({
             )}
             {restorable && (
               <Button
-                variant="outline"
+                variant="watch"
                 size="sm"
                 disabled={pending}
                 onClick={() => run(() => actions.onRestore(reservation.id))}
@@ -184,7 +184,7 @@ export function ReservationRow({
             )}
             {cancellable && (
               <Button
-                variant="outline"
+                variant="change"
                 size="sm"
                 onClick={() => setEditing(true)}
               >
@@ -194,7 +194,7 @@ export function ReservationRow({
             )}
             {cancellable && (
               <Button
-                variant="destructive"
+                variant="halt"
                 size="sm"
                 disabled={pending}
                 onClick={() => run(() => actions.onCancel(reservation.id))}
@@ -205,7 +205,7 @@ export function ReservationRow({
             )}
             {reservation.discardable && (
               <Button
-                variant="destructive"
+                variant="remove"
                 size="sm"
                 disabled={pending}
                 onClick={() => setRemoving(true)}
@@ -260,7 +260,7 @@ export function ReservationRow({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructiveFill"
+              variant="removeFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()
@@ -303,7 +303,7 @@ export function ReservationRow({
               </div>
               <ActionRow className="mt-2.5 gap-2 max-[900px]:w-full max-[900px]:grid-flow-row">
                 <Button
-                  variant="outline"
+                  variant="change"
                   size="sm"
                   disabled={pending}
                   onClick={() =>
@@ -320,7 +320,7 @@ export function ReservationRow({
                   この予約の優先度を上げる
                 </Button>
                 <Button
-                  variant="destructive"
+                  variant="halt"
                   size="sm"
                   disabled={pending}
                   onClick={() => run(() => actions.onCancel(reservation.id))}
@@ -328,7 +328,7 @@ export function ReservationRow({
                   <CloseIcon />
                   この予約を取り消す
                 </Button>
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="watch" size="sm" asChild>
                   <Link href="/settings/tuners">
                     <TunerIcon />
                     チューナーの使用状況を見る

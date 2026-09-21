@@ -145,7 +145,7 @@ export function LiveView({
           titleLevel={2}
           title="チューナーが登録されていません"
           action={
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="watch" size="sm" asChild>
               <Link href="/settings/tuners">チューナー設定へ</Link>
             </Button>
           }
@@ -198,7 +198,7 @@ export function LiveView({
             title="EPG をまだ取得していません"
             className="mt-3.5"
             action={
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="watch" size="sm" asChild>
                 <Link href="/guide">EPG 取得の状況を見る</Link>
               </Button>
             }

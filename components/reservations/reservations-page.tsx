@@ -220,7 +220,7 @@ export function ReservationsView({
           className="mt-10 max-w-[560px]"
           action={
             total === 0 ? undefined : (
-              <Button variant="ghost" size="sm" onClick={onClearFilters}>
+              <Button variant="halt" size="sm" onClick={onClearFilters}>
                 絞り込みを解除
               </Button>
             )

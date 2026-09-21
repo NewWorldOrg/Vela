@@ -51,7 +51,7 @@ export function RevokeSession({
   return (
     <>
       <Button
-        variant="destructive"
+        variant="remove"
         size="sm"
         onClick={() => {
           setRefusal(undefined)
@@ -108,7 +108,7 @@ export function RevokeSession({
             >
               キャンセル
             </Button>
-            <Button variant="destructive" disabled={pending} onClick={run}>
+            <Button variant="remove" disabled={pending} onClick={run}>
               <CloseIcon />
               失効させる
             </Button>

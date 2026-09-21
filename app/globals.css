@@ -20,24 +20,24 @@
   }
 
   html {
-    font-size: 13.5px;
+    font-size: 16px;
   }
 
   @media (width >= 1440px) {
     html {
-      font-size: 14.5px;
+      font-size: calc(16px * 14.5 / 13.5);
     }
   }
 
   @media (width >= 1920px) {
     html {
-      font-size: 16px;
+      font-size: calc(16px * 16 / 13.5);
     }
   }
 
   @media (width >= 2560px) {
     html {
-      font-size: 18px;
+      font-size: calc(16px * 18 / 13.5);
     }
   }
 
@@ -263,25 +263,25 @@
 }
 
 @theme inline {
-  --text-h1: calc(22rem / 13.5);
+  --text-h1: calc(22rem / 16);
   --text-h1--line-height: 1.45;
-  --text-h2: calc(18rem / 13.5);
+  --text-h2: calc(18rem / 16);
   --text-h2--line-height: 1.45;
-  --text-h3: calc(16rem / 13.5);
+  --text-h3: calc(16rem / 16);
   --text-h3--line-height: 1.5;
-  --text-title: calc(14rem / 13.5);
+  --text-title: calc(14rem / 16);
   --text-title--line-height: 1.55;
-  --text-body: 1rem;
+  --text-body: calc(13.5rem / 16);
   --text-body--line-height: 1.8;
-  --text-ui: calc(12.5rem / 13.5);
+  --text-ui: calc(12.5rem / 16);
   --text-ui--line-height: 1.7;
-  --text-sub: calc(12rem / 13.5);
+  --text-sub: calc(12rem / 16);
   --text-sub--line-height: 1.75;
-  --text-note: calc(11.5rem / 13.5);
+  --text-note: calc(11.5rem / 16);
   --text-note--line-height: 1.75;
-  --text-cap: calc(11rem / 13.5);
+  --text-cap: calc(11rem / 16);
   --text-cap--line-height: 1.7;
-  --text-micro: calc(10.5rem / 13.5);
+  --text-micro: calc(10.5rem / 16);
   --text-micro--line-height: 1.6;
 
   --color-bg: var(--bg);
@@ -386,14 +386,10 @@
 
   --animate-curtain-panel: curtain-panel 0.9s ease-in-out both;
   --animate-curtain-corner: curtain-corner 0.45s ease-out both;
-  --animate-draw: draw 0.6s ease-in-out calc(var(--d, 0s) + var(--delay, 0s))
-    both;
-  --animate-ink: ink 0.1s ease-out calc(var(--d, 0s) + var(--delay, 0s) + 0.6s)
-    both;
-  --animate-rise: rise 0.7s ease-in-out calc(var(--d, 0s) + var(--delay, 0s))
-    both;
-  --animate-item: item 0.4s var(--ease-item)
-    calc(var(--d, 0s) + var(--delay, 0s)) both;
+  --animate-draw: draw 0.6s ease-in-out both;
+  --animate-ink: ink 0.1s ease-out both;
+  --animate-rise: rise 0.7s ease-in-out both;
+  --animate-item: item 0.4s var(--ease-item) both;
   --animate-breathe: breathe 2s ease-in-out infinite;
   --animate-waiting-line: waiting-line calc(0.8s + 0.2s) ease-in-out infinite;
 
@@ -661,11 +657,13 @@
 @utility drawn {
   & :is(path, circle, rect, ellipse, line, polygon, polyline) {
     animation: var(--animate-draw);
+    animation-delay: calc(var(--d, 0s) + var(--delay, 0s));
   }
 
   & [fill='currentColor'],
   & [data-ink] {
     animation: var(--animate-ink);
+    animation-delay: calc(var(--d, 0s) + var(--delay, 0s) + 0.6s);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -679,6 +677,7 @@
 
 @utility rises {
   animation: var(--animate-rise);
+  animation-delay: calc(var(--d, 0s) + var(--delay, 0s));
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
@@ -687,6 +686,7 @@
 
 @utility arrives {
   animation: var(--animate-item);
+  animation-delay: calc(var(--d, 0s) + var(--delay, 0s));
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

@@ -131,7 +131,7 @@ export function ProgramPanel({
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     <ActionRow className="gap-2">
                       <Button
-                        variant="outline"
+                        variant="change"
                         size="sm"
                         onClick={() => setEditing(true)}
                       >
@@ -139,7 +139,7 @@ export function ProgramPanel({
                         予約を編集
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="halt"
                         size="sm"
                         disabled={pending}
                         onClick={drop}

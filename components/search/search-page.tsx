@@ -152,7 +152,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
         <div className="min-w-0 flex-1">
           <h1 className="heading text-[20px]">番組検索</h1>
         </div>
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="watch" size="sm" asChild>
           <Link href="/guide">
             <ChevronLeftIcon />
             番組表へ戻る
@@ -541,10 +541,10 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 className="mt-6 max-w-[560px]"
                 action={
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button size="sm" variant="outline" onClick={clear}>
+                    <Button size="sm" variant="halt" onClick={clear}>
                       条件をすべて消す
                     </Button>
-                    <Button size="sm" variant="outline" asChild>
+                    <Button size="sm" variant="watch" asChild>
                       <Link href="/guide">番組表へ戻る</Link>
                     </Button>
                   </div>

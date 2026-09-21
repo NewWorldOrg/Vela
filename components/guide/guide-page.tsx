@@ -219,7 +219,7 @@ export function GuideView({
           titleLevel={2}
           title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
           action={
-            <Button variant="default" size="sm" asChild>
+            <Button variant="watch" size="sm" asChild>
               <Link href="/settings/channels">チャンネル設定へ</Link>
             </Button>
           }
