@@ -129,7 +129,7 @@ export function RecordingRow({
       </td>
       <td className={cn(CELL, 'align-top')}>
         <StatusCell>
-          <EncodeChip recording={r} subTone={subTone} width={COLUMN_WIDE} />
+          <EncodeChip recording={r} width={COLUMN_WIDE} />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>

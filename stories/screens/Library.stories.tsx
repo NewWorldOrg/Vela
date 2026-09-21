@@ -10,6 +10,11 @@ import {
 import { inProgressFirst } from '@/lib/recordings'
 import { AppFrame } from '@/components/vela/app-shell'
 import { LibraryView } from '@/components/library/library-page'
+import {
+  heightOf,
+  oneShapeDownTheColumn,
+  pillOf,
+} from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const asked: string[] = []
@@ -464,27 +469,6 @@ const LONG_AND_SHORT: Recording[] = [
 
 const CHIP_COLUMNS = [OUTCOME_COLUMN, QUALITY_COLUMN, ENCODE_COLUMN]
 
-function hasAnEdge(node: Element): boolean {
-  if (!(node instanceof HTMLElement)) {
-    return false
-  }
-
-  const drawn = getComputedStyle(node)
-
-  return drawn.borderTopStyle !== 'none' && parseFloat(drawn.borderTopWidth) > 0
-}
-
-function pillOf(row: HTMLElement, column: number): HTMLElement {
-  const cell = within(row).getAllByRole('cell')[column]
-  const pill = [...cell.querySelectorAll('*')].find(hasAnEdge)
-
-  if (!(pill instanceof HTMLElement)) {
-    throw new Error(`nothing with an edge in column ${column}`)
-  }
-
-  return pill
-}
-
 export const 札の並び: Story = {
   args: { result: resultOf(LONG_AND_SHORT), filter: {} },
   play: async ({ canvasElement }) => {
@@ -512,6 +496,8 @@ export const 札の並び: Story = {
       await expect(new Set(said).size).toBeGreaterThan(1)
     }
 
+    await oneShapeDownTheColumn(rows, ENCODE_COLUMN)
+
     const actions = rows.map((row) =>
       Math.round(
         within(row)
@@ -521,5 +507,23 @@ export const 札の並び: Story = {
     )
 
     await expect(new Set(actions).size).toBe(1)
+  },
+}
+
+export const 絞りの帯: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const band = [
+      canvas.getByPlaceholderText('番組名・概要・出演者で検索'),
+      ...canvas.getAllByRole('combobox'),
+      canvas.getByRole('button', { name: 'すべて' }),
+    ]
+
+    await expect(band.length).toBeGreaterThan(4)
+    await expect(new Set(band.map(heightOf)).size).toBe(1)
+    await expect(
+      new Set(band.map((one) => getComputedStyle(one).fontSize)).size,
+    ).toBe(1)
   },
 }
