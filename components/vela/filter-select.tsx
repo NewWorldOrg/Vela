@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@/lib/utils'
 import {
   Select,
   SelectContent,
@@ -8,6 +9,8 @@ import {
 } from '@/components/ui/select'
 
 const ALL = '__all__'
+
+export const BAND_CONTROL = 'h-8 text-[13px]'
 
 export function FilterSelect({
   prefix,
@@ -32,7 +35,10 @@ export function FilterSelect({
       <SelectTrigger
         size="sm"
         aria-label={prefix}
-        className="w-fit rounded-full shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg"
+        className={cn(
+          BAND_CONTROL,
+          'w-fit rounded-full shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg',
+        )}
       >
         {prefix}: {current}
       </SelectTrigger>
