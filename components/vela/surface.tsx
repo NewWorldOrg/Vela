@@ -16,7 +16,7 @@ export function Surface({ className, ...props }: ComponentProps<'div'>) {
 export type TintName =
   'accent' | 'lavender' | 'salmon' | 'butter' | 'sage' | 'sky' | 'blush'
 
-const TINT_CLASS: Record<TintName, string> = {
+export const TINT_CLASS: Record<TintName, string> = {
   accent: 'bg-brand-soft',
   lavender: 'bg-tint-lavender',
   salmon: 'bg-tint-salmon',

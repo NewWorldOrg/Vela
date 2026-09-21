@@ -232,3 +232,29 @@ export const 削除の形: Story = {
     ).toBe(1)
   },
 }
+
+export const 指標タイルの面: Story = {
+  args: { result: INTEGRITY_FIXTURE },
+  play: async ({ canvasElement }) => {
+    const tiles = [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="metric-tile"]',
+      ),
+    ]
+
+    await expect(tiles.length).toBeGreaterThan(3)
+
+    const grounds = tiles.map((tile) => getComputedStyle(tile).backgroundColor)
+
+    await expect(new Set(grounds).size).toBe(1)
+
+    const behind = tiles[0].parentElement?.parentElement
+
+    if (!behind) {
+      throw new Error('the tiles are not on a card')
+    }
+
+    await expect(grounds[0]).not.toBe(getComputedStyle(behind).backgroundColor)
+    await expect(grounds[0]).not.toBe('rgba(0, 0, 0, 0)')
+  },
+}
