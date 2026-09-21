@@ -125,7 +125,7 @@ const WRITTEN_WRONG =
 const GONE = 'このルールは残っていないため、'
 
 const CANNOT_COUNT_TUNERS =
-  'チューナーの空きを数えられないため、下見できませんでした。時間をおいてからお試しください。'
+  'チューナーの空きを数えられないため、一致を見られませんでした。時間をおいてからお試しください。'
 
 export function ruleQueryOf(terms: SearchTerms): string {
   const params = new URLSearchParams()
@@ -319,11 +319,11 @@ export async function previewRule(
     response,
     () => toPreview(data!.data!, known),
     {
-      400: '条件が絞り込みになっていないため、下見できませんでした。条件を 1 つ以上指定してください。',
-      404: `${GONE}下見できませんでした。`,
+      400: '条件が絞り込みになっていないため、一致を見られませんでした。条件を 1 つ以上指定してください。',
+      404: `${GONE}一致を見られませんでした。`,
       503: CANNOT_COUNT_TUNERS,
     },
-    '下見できませんでした。',
+    '一致を見られませんでした。',
   )
 }
 

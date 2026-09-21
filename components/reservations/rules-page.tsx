@@ -409,6 +409,7 @@ function RuleEditor({
   const [problem, setProblem] = useState<Named>()
   const [refusal, setRefusal] = useState<string>()
   const [preview, setPreview] = useState<RulePreview>()
+  const [stale, setStale] = useState<boolean>(false)
   const [impact, setImpact] = useState<RuleImpact>()
   const [leaving, setLeaving] = useState<RuleImpact>()
   const [confirming, setConfirming] = useState(false)
@@ -417,7 +418,7 @@ function RuleEditor({
 
   const amend = (part: Partial<Entry>): void => {
     setEntry((previous) => ({ ...previous, ...part }))
-    setPreview(undefined)
+    setStale(true)
   }
 
   const asked: SearchTerms = termsOfEntry(entry)
@@ -525,7 +526,10 @@ function RuleEditor({
     }
 
     startTransition(async () => {
-      answered(await actions.onPreview(draft, rule?.id), setPreview)
+      answered(await actions.onPreview(draft, rule?.id), (seen) => {
+        setPreview(seen)
+        setStale(false)
+      })
     })
   }
 
@@ -979,10 +983,10 @@ function RuleEditor({
             onClick={rehearse}
           >
             <SearchIcon />
-            下見する
+            一致を見る
           </Button>
           {preview && (
-            <span className="text-sub text-ink-2">
+            <span className={cn('text-sub text-ink-2', stale && 'opacity-50')}>
               一致 <Count value={preview.matched} /> 件 / 新しく作られる{' '}
               <Count value={preview.making} /> 件 / 予約済み{' '}
               <Count value={preview.alreadyReserved} /> 件 / 競合{' '}
@@ -998,7 +1002,7 @@ function RuleEditor({
         </div>
 
         {preview && (
-          <>
+          <div className={cn('flex flex-col gap-3.5', stale && 'opacity-50')}>
             {preview.excluded > 0 && (
               <p className="text-note text-ink-3">
                 <Count value={preview.excluded} /> 件は除外されました。
@@ -1044,7 +1048,7 @@ function RuleEditor({
                 )}
               </>
             )}
-          </>
+          </div>
         )}
       </FormSection>
 

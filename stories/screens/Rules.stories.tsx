@@ -13,6 +13,7 @@ import type {
 } from '@/repository/rules'
 import { RULE_CHANNEL_FIXTURES, RULE_FIXTURES } from '@/stories/fixtures/rules'
 import type { RuleActions } from '@/components/reservations/rules-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { RulesView } from '@/components/reservations/rules-page'
 
 interface Saved {
@@ -190,7 +191,7 @@ export const ルールを編集: Story = {
       '/search?q=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=anime',
     )
 
-    await userEvent.click(canvas.getByRole('button', { name: '下見する' }))
+    await userEvent.click(canvas.getByRole('button', { name: '一致を見る' }))
 
     await expect(
       await canvas.findByText('星のさまよいびと 第1話'),
@@ -204,6 +205,8 @@ export const ルールを編集: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
 
     await expect(
       await dialog.findByText(/新しく作られる予約/),
@@ -307,6 +310,8 @@ export const 検索から作る: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
     await userEvent.click(
       await dialog.findByRole('button', { name: '保存する' }),
     )
@@ -369,6 +374,8 @@ export const 番組詳細から作る: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
     await userEvent.click(
       await dialog.findByRole('button', { name: '保存する' }),
     )
@@ -414,6 +421,8 @@ export const 条件のないルール: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
     await userEvent.click(
       await dialog.findByRole('button', { name: '保存する' }),
     )
@@ -527,6 +536,8 @@ export const エンコードしないルール: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(
       await dialog.findByRole('button', { name: '保存する' }),
