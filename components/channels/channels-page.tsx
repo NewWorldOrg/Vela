@@ -118,7 +118,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
                   {run.startedAt}
                 </TableCell>
-                <TableCell className="align-top">
+                <TableCell>
                   <StatusCell>
                     <Badge
                       width={PILL_WIDTH}

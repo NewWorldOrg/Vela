@@ -111,7 +111,7 @@ export function RecordingRow({
           {r.fileMissing ? '実ファイルなし' : r.sizeObservedAt}
         </small>
       </td>
-      <td className={cn(CELL, 'align-top')}>
+      <td className={CELL}>
         <StatusCell>
           <OutcomeChip
             recording={r}
@@ -125,7 +125,7 @@ export function RecordingRow({
           />
         </StatusCell>
       </td>
-      <td className={cn(CELL, 'align-top')}>
+      <td className={CELL}>
         <StatusCell>
           <QualityChip
             recording={r}
@@ -134,7 +134,7 @@ export function RecordingRow({
           />
         </StatusCell>
       </td>
-      <td className={cn(CELL, 'align-top')}>
+      <td className={CELL}>
         <StatusCell>
           <EncodeChip recording={r} width={PILL_WIDTH} />
         </StatusCell>

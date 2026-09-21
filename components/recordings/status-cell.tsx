@@ -11,7 +11,7 @@ export function StatusCell({ children }: { children: ReactNode }) {
   return (
     <span
       data-slot="status-cell"
-      className="flex items-start justify-start text-left"
+      className="flex items-center justify-start text-left"
     >
       {children}
     </span>

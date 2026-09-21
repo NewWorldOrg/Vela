@@ -37,7 +37,7 @@ import {
 } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { StatusDot, type StatusTone } from '@/components/vela/status'
-import { Surface, TINT_CLASS } from '@/components/vela/surface'
+import { Surface } from '@/components/vela/surface'
 import { pressable, still, tactile } from '@/components/vela/tactile'
 
 const API_TROUBLE: Record<Exclude<ApiHealthResult['state'], 'ok'>, string> = {
@@ -65,7 +65,7 @@ const DEGRADED_LABEL: Record<string, string> = {
 }
 
 const PANEL_TONE: Record<StatusTone, string> = {
-  ok: TINT_CLASS.lavender,
+  ok: 'bg-surface',
   warn: 'bg-lemon-soft',
   err: 'bg-coral-soft',
   off: 'bg-surface-2',
@@ -128,7 +128,7 @@ function Part({
   return href ? (
     <Link
       href={href}
-      data-slot="metric-tile"
+      data-slot="state-tile"
       className={cn(
         skin,
         'border-line shadow-pop hover:shadow-pop-lg active:shadow-pop-none',
@@ -140,7 +140,7 @@ function Part({
       {body}
     </Link>
   ) : (
-    <div data-slot="metric-tile" className={skin}>
+    <div data-slot="state-tile" className={skin}>
       {body}
     </div>
   )

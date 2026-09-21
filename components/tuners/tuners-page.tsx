@@ -353,7 +353,7 @@ export function TunersView({
                   </b>
                 </span>
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell>
                 <span className="text-ui text-ink-2">
                   {row.kind ?? EMPTY_VALUE}
                 </span>
@@ -370,7 +370,7 @@ export function TunersView({
                   </span>
                 )}
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell>
                 {row.session ? (
                   <StatusCell>
                     <InFull says={whatTheSessionIs(row.session)}>
@@ -393,7 +393,7 @@ export function TunersView({
                   </span>
                 )}
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell>
                 <StatusCell>
                   <TunerStateChip
                     row={row}

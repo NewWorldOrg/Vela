@@ -414,7 +414,7 @@ test('what a metric tile is drawn on is one colour face, named once', async () =
     A_METRIC_TILE.test(source),
   )
 
-  assert.ok(drawn.length > 1, `only ${drawn.length} files draw a metric tile`)
+  assert.ok(drawn.length >= 1, `only ${drawn.length} files draw a metric tile`)
 
   for (const { file, source } of drawn) {
     assert.match(

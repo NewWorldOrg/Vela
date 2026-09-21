@@ -302,7 +302,7 @@ export function ServiceTable({
               <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
                 {service.lastSeen}
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell>
                 <StatusCell>
                   <Standing service={service} />
                 </StatusCell>

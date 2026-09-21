@@ -163,6 +163,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                     className={cn(
                       column.narrow && 'w-8',
                       column.label === '優先度' && 'text-right',
+                      STATE_COLUMNS.includes(column.label) && STATE_COLUMN,
                     )}
                   >
                     {column.hidden ? (

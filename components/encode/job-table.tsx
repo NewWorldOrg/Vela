@@ -112,7 +112,7 @@ export function JobTable({
             <TableCell className="max-w-[320px] whitespace-normal">
               <JobTitle job={job} />
             </TableCell>
-            <TableCell className={cn(STATE_COLUMN, 'align-top')}>
+            <TableCell className={STATE_COLUMN}>
               <StatusCell>
                 <Standing job={job} />
               </StatusCell>

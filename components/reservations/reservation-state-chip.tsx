@@ -139,7 +139,7 @@ export function ReservationStateChip({
   if (reservation.standing === 'recording') {
     return (
       <>
-        <RecordingInProgressChip width={width} />
+        <RecordingInProgressChip width={width} also={also} />
       </>
     )
   }
