@@ -230,7 +230,7 @@ export function RecordingDetailView({
 
       {watching && (
         <Player
-          key={whatOpensThePlayerAnew(d.id, opens.at, playback.plan.source)}
+          key={whatOpensThePlayerAnew(d.id, startAt, playback.plan.source)}
           detail={d}
           plan={playback.plan}
           unaskedProfile={unaskedProfile}

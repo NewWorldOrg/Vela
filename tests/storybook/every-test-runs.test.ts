@@ -14,6 +14,7 @@ const THE_SUITE = [
   'tests/components/live/live-session.test.ts',
   'tests/components/nothing-internal-and-one-way-to-wait.test.ts',
   'tests/components/recordings/one-way-to-draw-an-action.test.ts',
+  'tests/components/recordings/the-player-stays-while-the-page-refreshes.test.ts',
   'tests/components/say-it-in-full.test.ts',
   'tests/components/the-same-parts-on-every-screen.test.ts',
   'tests/components/vela/empty-state.test.ts',
