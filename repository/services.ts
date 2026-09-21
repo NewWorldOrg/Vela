@@ -67,7 +67,6 @@ export interface CandidateRow {
 export interface ServiceRow {
   key: string
   name: string
-  sid: string
   category: string
   minorCategory: boolean
   currentChannel?: string
@@ -150,7 +149,6 @@ export interface ProposalChannel {
 export interface ProposalService {
   key: string
   name: string
-  sid: string
   category: string
   channels: ProposalChannel[]
 }
@@ -255,7 +253,6 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
   return {
     key: `${toInt(service.networkId)}-${toInt(service.serviceId)}`,
     name: service.name,
-    sid: `sid ${toInt(service.serviceId)}`,
     category: wordFor(CATEGORY_LABEL, service.category),
     minorCategory: service.category !== 'television',
     currentChannel:
@@ -379,7 +376,6 @@ function toProposalService(
   return {
     key: `${toInt(change.networkId)}-${toInt(change.serviceId)}`,
     name: change.name,
-    sid: `sid ${toInt(change.serviceId)}`,
     category: wordFor(CATEGORY_LABEL, change.category),
     channels: change.channels.map((channel) => ({
       kind: channel.kind,

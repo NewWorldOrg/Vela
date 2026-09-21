@@ -142,7 +142,7 @@ function windowFace(judged: RestartWindow): Face {
     case 'returned':
       return {
         tone: 'info',
-        body: `driver が再起動しました(instance ${judged.instanceId})。`,
+        body: 'driver が再起動しました。',
       }
     case 'unverifiable':
       return {

@@ -243,9 +243,6 @@ export function ServiceTable({
               </TableCell>
               <TableCell>
                 <b className="text-[13px] font-bold">{service.name}</b>
-                <span className="ml-2 font-code text-cap text-ink-3">
-                  {service.sid}
-                </span>
               </TableCell>
               <TableCell>
                 <CategoryBadge service={service} />

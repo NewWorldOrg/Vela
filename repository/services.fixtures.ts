@@ -15,7 +15,6 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1024',
     name: 'みなと総合1',
-    sid: 'sid 1024',
     category: 'TV',
     minorCategory: false,
     currentChannel: '53ch',
@@ -53,7 +52,6 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1025',
     name: 'みなと総合2',
-    sid: 'sid 1025',
     category: 'ワンセグ',
     minorCategory: true,
     currentChannel: '53ch',
@@ -77,7 +75,6 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1040',
     name: '中央テレビ1',
-    sid: 'sid 1040',
     category: 'TV',
     minorCategory: false,
     enabled: true,
@@ -105,7 +102,6 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1041',
     name: '中央テレビ2',
-    sid: 'sid 1041',
     category: 'TV',
     minorCategory: false,
     currentChannel: '57ch',
@@ -140,7 +136,6 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1072',
     name: '湾岸放送1',
-    sid: 'sid 1072',
     category: 'TV',
     minorCategory: false,
     enabled: true,
@@ -270,7 +265,6 @@ export const SCAN_PROPOSAL: ScanProposal = {
     {
       key: '50001-1090',
       name: '東都テレビ1',
-      sid: 'sid 1090',
       category: 'TV',
       channels: [
         {
@@ -285,7 +279,6 @@ export const SCAN_PROPOSAL: ScanProposal = {
     {
       key: '50001-1024',
       name: 'みなと総合1',
-      sid: 'sid 1024',
       category: 'TV',
       channels: [
         {
@@ -305,7 +298,6 @@ export const SCAN_PROPOSAL: ScanProposal = {
     {
       key: '50001-1072',
       name: '湾岸放送1',
-      sid: 'sid 1072',
       category: 'TV',
       channels: [{ kind: 'missing', channel: '62ch' }],
     },
@@ -348,7 +340,6 @@ export const MORE_CHANNELS_THAN_FIT: ChannelsResult = {
             SERVICES.slice(0, 4).map((service) => ({
               ...service,
               key: `${service.key}-${round}`,
-              sid: `sid ${Number(service.sid.slice(4)) + round * 16}`,
               candidates: service.candidates.map((candidate) => ({
                 ...candidate,
                 id: `${candidate.id}-${round}`,
