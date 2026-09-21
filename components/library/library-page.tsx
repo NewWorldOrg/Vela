@@ -54,6 +54,14 @@ export function LibraryView({
   const hasFilter = Boolean(
     filter.q || filter.year || filter.genre || filter.state || filter.ch,
   )
+  const clearEveryCondition = (): void =>
+    onFiltersChange({
+      q: null,
+      year: null,
+      genre: null,
+      state: null,
+      ch: null,
+    })
 
   return (
     <ScreenMain
@@ -121,6 +129,11 @@ export function LibraryView({
               </>
             )}
           </span>
+          {hasFilter && (
+            <Button variant="halt" size="sm" onClick={clearEveryCondition}>
+              条件を消す
+            </Button>
+          )}
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
           <span className="text-cap font-bold tracking-[0.04em] text-ink-3">
@@ -154,19 +167,7 @@ export function LibraryView({
           className="mt-10 max-w-[560px]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
-              <Button
-                variant="halt"
-                size="sm"
-                onClick={() =>
-                  onFiltersChange({
-                    q: null,
-                    year: null,
-                    genre: null,
-                    state: null,
-                    ch: null,
-                  })
-                }
-              >
+              <Button variant="halt" size="sm" onClick={clearEveryCondition}>
                 絞り込みを解除
               </Button>
               {filter.q &&

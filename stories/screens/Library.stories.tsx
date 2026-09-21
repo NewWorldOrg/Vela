@@ -18,6 +18,7 @@ import {
   saysItWithoutAnEdge,
   tipIn,
 } from '@/stories/pills-in-a-column'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const asked: string[] = []
@@ -76,6 +77,8 @@ export const 通常: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    await afterTheArrival(canvasElement)
+
     asked.length = 0
 
     await expect(
@@ -97,19 +100,8 @@ export const 通常: Story = {
       'ドロップ 0 / スクランブル残存 5,042,768',
     )
 
-    await expect(
-      unwatchable.getByRole('button', { name: '再生' }),
-    ).toBeDisabled()
-    await expect(
-      within(
-        canvas.getByRole('row', { name: /金曜シネマ「星の渡り鳥」/ }),
-      ).getByRole('link', { name: '再生' }),
-    ).toHaveAttribute('href', '/recordings/1198?at=0')
-    await expect(
-      within(
-        canvas.getByRole('row', { name: /夜ふかしラジオ倶楽部/ }),
-      ).getByRole('button', { name: '再生' }),
-    ).toBeDisabled()
+    await expect(canvas.queryAllByRole('button', { name: '再生' })).toEqual([])
+    await expect(canvas.queryAllByRole('link', { name: '再生' })).toEqual([])
 
     const finished = within(
       canvas.getByRole('row', { name: /週末キッチンの手帖/ }),
@@ -119,6 +111,8 @@ export const 通常: Story = {
     await userEvent.click(finished)
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
     await expect(dialog.getByText('/srv/recordings/1274.m2ts')).toBeVisible()
 
     await expect(dialog.getByText(/GB/)).toHaveTextContent(
@@ -152,6 +146,8 @@ export const 削除を断られたとき: Story = {
     )
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await expect(await dialog.findByText(STILL_RECORDING)).toBeVisible()
@@ -346,7 +342,7 @@ export const 尻切れと失敗の録画: Story = {
     await expect(quality).not.toHaveTextContent('良好')
     await expect(quality).not.toHaveTextContent('ドロップ')
 
-    await expect(failed.getByRole('button', { name: '再生' })).toBeDisabled()
+    await expect(failed.queryByRole('button', { name: '再生' })).toBeNull()
     await expect(failed.getByRole('button', { name: '削除' })).toBeEnabled()
   },
 }
@@ -371,7 +367,7 @@ export const ファイル不在の録画: Story = {
     await expect(size).not.toHaveTextContent('GB')
     await expect(size).not.toHaveTextContent('観測')
 
-    await expect(gone.getByRole('button', { name: '再生' })).toBeDisabled()
+    await expect(gone.queryByRole('button', { name: '再生' })).toBeNull()
     await expect(gone.getByRole('button', { name: '削除' })).toBeEnabled()
 
     const kept = within(
@@ -411,6 +407,8 @@ export const 観測時刻のない録画の削除: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
     const size = dialog.getByText(/GB/)
 
     await expect(size).toHaveTextContent('3.4 GB')

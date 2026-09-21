@@ -15,6 +15,7 @@ import {
   SETTLED_RESERVATION_FIXTURES,
 } from '@/stories/fixtures/reservations'
 import { ReservationsView } from '@/components/reservations/reservations-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { cellOf, tipIn } from '@/stories/pills-in-a-column'
 
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
@@ -216,6 +217,8 @@ export const 終わった予約: Story = {
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
+    await afterTheArrival(canvasElement)
+
     await expect(dialog.getByText('朝のニュース')).toBeVisible()
     await expect(screen.getByRole('alertdialog')).toHaveTextContent(
       'ふたたびルールの対象になります',
@@ -288,6 +291,7 @@ export const 予約の削除を断られたとき: Story = {
         name: '削除',
       }),
     )
+    await afterTheArrival(canvasElement)
     await userEvent.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', {
         name: '削除する',
@@ -323,6 +327,8 @@ export const 未完了だけを出している: Story = {
     }),
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
     const strip = within(canvas.getByRole('group', { name: '表示' }))
 
@@ -387,6 +393,8 @@ export const すべての予約を出している: Story = {
     result: shown(EVERY_STANDING_FIXTURES, { filter: { show: 'all' } }),
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
     const strip = within(canvas.getByRole('group', { name: '表示' }))
 
@@ -430,6 +438,8 @@ export const 一括で選んで削除する: Story = {
     await userEvent.click(bar.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await expect(
       dialog.getByText('選択した 2 件の予約を削除します'),
@@ -583,6 +593,8 @@ export const 予約ごとにエンコードを切り替える: Story = {
 
     const first = within(await screen.findByRole('dialog'))
 
+    await afterTheArrival(canvasElement)
+
     await expect(
       first.getByRole('switch', { name: 'エンコードする' }),
     ).toBeChecked()
@@ -598,6 +610,8 @@ export const 予約ごとにエンコードを切り替える: Story = {
     )
 
     const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
     const encode = dialog.getByRole('switch', { name: 'エンコードする' })
 
     await expect(encode).not.toBeChecked()
@@ -636,6 +650,8 @@ export const 必須の欄は印が付いていて空では保存できない: St
     )
 
     const opened = await screen.findByRole('dialog')
+
+    await afterTheArrival(canvasElement)
     const dialog = within(opened)
 
     await expect(whatIsMarkedRequired(opened)).toEqual(MARKED_REQUIRED)

@@ -1,15 +1,14 @@
 'use client'
 
 import { EMPTY_VALUE } from '@/lib/empty-value'
-import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
-import { delayOf, rowDelayMs } from '@/lib/arrival'
+import { arrivesIn, delayOf, rowDelayMs } from '@/lib/arrival'
 import { formatBytes, formatLength } from '@/lib/format'
-import { playsInBrowser, unfinishedDeletionShapeOf } from '@/lib/recordings'
+import { unfinishedDeletionShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
-import { ChevronRightIcon, PlayIcon, TrashIcon } from '@/components/vela/icons'
+import { ChevronRightIcon, TrashIcon } from '@/components/vela/icons'
 import { EncodeChip } from '@/components/recordings/encode-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
@@ -19,7 +18,11 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 
-export const DETAIL_CELL = 'px-1.5'
+export const DETAIL_CELL = 'pr-1.5 pl-6'
+
+export const GAP_BEFORE_STATE = 'pl-4'
+
+export const GAP_BEFORE_ACTIONS = 'pl-5'
 
 const CELL =
   'border-b border-dashed border-line px-3 py-3 align-middle text-[13px] group-last:border-b-0 group-hover:border-transparent'
@@ -91,7 +94,6 @@ export function RecordingRow({
   onOpen: () => void
   onDelete: () => void
 }) {
-  const playable = playsInBrowser(r)
   const deletable = r.outcome !== 'recording'
   const subTone = r.outcome === 'recording' ? 'text-ink-2' : 'text-ink-3'
 
@@ -101,8 +103,8 @@ export function RecordingRow({
       onClick={onOpen}
       style={delayOf(rowDelayMs(nth))}
       className={cn(
-        'arrives group cursor-pointer transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-surface hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
-        r.outcome === 'recording' && 'bg-brand-soft',
+        arrivesIn(nth),
+        'group cursor-pointer transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-surface hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
       )}
     >
       <td className={cn(CELL, 'group-hover:rounded-l-md')}>
@@ -146,7 +148,7 @@ export function RecordingRow({
       <td className={cn(CELL, NUMBER)}>
         <Size recording={r} />
       </td>
-      <td className={CELL}>
+      <td className={cn(CELL, GAP_BEFORE_STATE)}>
         <StatusCell>
           <OutcomeChip
             recording={r}
@@ -160,31 +162,20 @@ export function RecordingRow({
           />
         </StatusCell>
       </td>
-      <td className={CELL}>
+      <td className={cn(CELL, GAP_BEFORE_STATE)}>
         <StatusCell>
           <QualityChip recording={r} say also={[r.quality.detail]} />
         </StatusCell>
       </td>
-      <td className={CELL}>
+      <td className={cn(CELL, GAP_BEFORE_STATE)}>
         <StatusCell>
           <EncodeChip recording={r} say />
         </StatusCell>
       </td>
-      <td className={cn(CELL, 'text-right whitespace-nowrap')}>
+      <td
+        className={cn(CELL, GAP_BEFORE_ACTIONS, 'text-right whitespace-nowrap')}
+      >
         <ActionRow className="gap-1.5" onClick={(e) => e.stopPropagation()}>
-          {playable ? (
-            <Button variant="watch" size="sm" asChild>
-              <Link href={`/recordings/${r.id}?at=0`}>
-                <PlayIcon />
-                再生
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="watch" size="sm" disabled>
-              <PlayIcon />
-              再生
-            </Button>
-          )}
           <Button
             variant="remove"
             size="sm"

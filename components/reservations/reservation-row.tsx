@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
-import { cn } from '@/lib/utils'
 import { reservationAnchor } from '@/lib/reservations'
 import { signedOut } from '@/lib/signed-out'
 import type {
@@ -40,7 +39,7 @@ import {
   TunerIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { delayOf, rowDelayMs } from '@/lib/arrival'
+import { arrivesIn, delayOf, rowDelayMs } from '@/lib/arrival'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
@@ -105,11 +104,7 @@ export function ReservationRow({
         id={reservationAnchor(reservation.id)}
         data-state={selected ? 'selected' : undefined}
         style={delayOf(rowDelayMs(nth))}
-        className={cn(
-          'arrives',
-          conflict &&
-            'bg-coral-soft/40 hover:bg-coral-soft/40 has-aria-expanded:bg-coral-soft/40',
-        )}
+        className={arrivesIn(nth)}
       >
         <TableCell className="h-11 align-top">
           <Checkbox

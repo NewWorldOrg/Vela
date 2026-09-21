@@ -20,7 +20,7 @@ const A_CELL = /<td\b([^>]*)>([\s\S]*?)<\/td>/g
 
 const SAYS_IT_AS_A_COLUMN = /(^|\s)say(\s|$|=)/
 
-const A_COLUMN_WIDTH = /width:\s*([A-Z_]+_COLUMN)\b/g
+const A_COLUMN_WIDTH = /width:\s*`?(?:calc\(\$\{)?([A-Z_]+_COLUMN)\b/g
 
 const READ = ['app', 'components', 'stories']
 
