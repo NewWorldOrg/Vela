@@ -2,7 +2,13 @@ import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import type { EncodeJobStatus } from '@/repository/encode-terms'
 import { STALLED_LABEL, STATUS_LABEL } from '@/repository/encode-terms'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { pillWidthFor } from '@/components/recordings/status-cell'
 import { ChipDot } from '@/components/vela/status'
+
+export const JOB_STATUS_PILL_WIDTH = pillWidthFor([
+  ...Object.values(STATUS_LABEL),
+  STALLED_LABEL,
+])
 
 export function JobStatusChip({
   status,
@@ -16,7 +22,7 @@ export function JobStatusChip({
   switch (status) {
     case 'queued':
       return (
-        <Badge variant="outline" width={width} className="font-bold">
+        <Badge variant="secondary" width={width} className="font-bold">
           <ChipDot />
           {STATUS_LABEL.queued}
         </Badge>

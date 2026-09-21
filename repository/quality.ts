@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import { formatMoment, formatMomentSpan } from '@/lib/format'
 import { WHEN_MARKS } from '@/lib/when-terms'
 import type { QualityLevel } from '@/lib/quality'
-import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
+import { QUALITY_LEVEL_LABEL, QUALITY_PILL_LABEL } from '@/lib/quality'
 import {
   NOT_YET_IN_THIS_BUILD,
   shapeFor,
@@ -218,7 +218,7 @@ const TREND_SUBJECTS: TrendSubjectShape[] = [
 
 const WHOLE = '全体'
 
-const HEALTHY = '健全'
+export const HEALTHY = '健全'
 
 const LEVEL_OF_STATE: Record<State, QualityLevel> = {
   good: 'good',
@@ -862,7 +862,7 @@ function toTuner(one: TunerResponder): QualityTuner {
     hardware: drop ? countedIn(drop) : '録画 0 本',
     state: {
       level,
-      label: level === 'good' ? HEALTHY : QUALITY_LEVEL_LABEL[level],
+      label: level === 'good' ? HEALTHY : QUALITY_PILL_LABEL[level],
     },
     drop: shareCell(drop),
     lock: signalCell(one.signal, 'lockRate'),

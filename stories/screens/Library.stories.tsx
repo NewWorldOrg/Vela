@@ -86,10 +86,14 @@ export const 通常: Story = {
       canvas.getByRole('row', { name: /波止場のブラスバンド/ }),
     )
 
-    await expect(unwatchable.getByText('視聴不可の恐れ')).toBeVisible()
-    await expect(
-      await tipIn(unwatchable.getAllByRole('cell')[QUALITY_COLUMN]),
-    ).toHaveTextContent('ドロップ 0 / スクランブル残存 5,042,768')
+    await expect(unwatchable.getByText('視聴不可')).toBeVisible()
+
+    const said = await tipIn(unwatchable.getAllByRole('cell')[QUALITY_COLUMN])
+
+    await expect(said).toHaveTextContent('視聴不可の恐れ')
+    await expect(said).toHaveTextContent(
+      'ドロップ 0 / スクランブル残存 5,042,768',
+    )
 
     await expect(
       unwatchable.getByRole('button', { name: '再生' }),
@@ -194,7 +198,7 @@ export const エンコードのない一覧: Story = {
     for (const row of rows) {
       await expect(
         within(row).getAllByRole('cell')[ENCODE_COLUMN],
-      ).toHaveTextContent('未エンコード')
+      ).toHaveTextContent('未実施')
     }
   },
 }
@@ -213,10 +217,15 @@ export const 自動実行が飛ばした録画: Story = {
     const encodeOf = (row: HTMLElement) =>
       within(row).getAllByRole('cell')[ENCODE_COLUMN]
 
-    await expect(encodeOf(rows[0])).toHaveTextContent('自動実行の対象外')
-    await expect(encodeOf(rows[0])).not.toHaveTextContent('未エンコード')
+    await expect(encodeOf(rows[0])).toHaveTextContent('対象外')
+    await expect(encodeOf(rows[0])).not.toHaveTextContent('自動実行')
+    await expect(encodeOf(rows[0])).not.toHaveTextContent('未実施')
+    await expect(await tipIn(encodeOf(rows[0]))).toHaveTextContent(
+      '自動実行の対象外',
+    )
+    await userEvent.keyboard('{Escape}')
 
-    await expect(encodeOf(rows[1])).toHaveTextContent('未エンコード')
+    await expect(encodeOf(rows[1])).toHaveTextContent('未実施')
     await expect(encodeOf(rows[1])).not.toHaveTextContent('自動実行')
 
     await expect(encodeOf(rows[2])).toHaveTextContent('待機中')
@@ -312,9 +321,11 @@ export const 尻切れと失敗の録画: Story = {
     await expect(
       truncated.getAllByRole('cell')[OUTCOME_COLUMN],
     ).toHaveTextContent('尻切れ')
-    await expect(
-      truncated.getAllByRole('cell')[LENGTH_COLUMN],
-    ).toHaveTextContent('36:12 / 54:00')
+    const length = truncated.getAllByRole('cell')[LENGTH_COLUMN]
+
+    await expect(length).toHaveTextContent('36:12')
+    await expect(length).not.toHaveTextContent('54:00')
+    await expect(await tipIn(length)).toHaveTextContent('予定 54:00')
 
     const failed = within(canvas.getByRole('row', { name: /となりの発明王/ }))
     const outcome = failed.getAllByRole('cell')[OUTCOME_COLUMN]
@@ -354,18 +365,19 @@ export const ファイル不在の録画: Story = {
 
     const size = gone.getAllByRole('cell')[SIZE_COLUMN]
 
-    await expect(size).toHaveTextContent('3.6 GB')
     await expect(size).toHaveTextContent('実ファイルなし')
+    await expect(size).not.toHaveTextContent('GB')
     await expect(size).not.toHaveTextContent('観測')
 
     await expect(gone.getByRole('button', { name: '再生' })).toBeDisabled()
     await expect(gone.getByRole('button', { name: '削除' })).toBeEnabled()
 
-    await expect(
-      within(
-        canvas.getByRole('row', { name: /週末キッチンの手帖/ }),
-      ).getAllByRole('cell')[SIZE_COLUMN],
-    ).toHaveTextContent('観測')
+    const kept = within(
+      canvas.getByRole('row', { name: /週末キッチンの手帖/ }),
+    ).getAllByRole('cell')[SIZE_COLUMN]
+
+    await expect(kept).not.toHaveTextContent('観測')
+    await expect(await tipIn(kept)).toHaveTextContent('観測')
   },
 }
 

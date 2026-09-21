@@ -33,11 +33,6 @@ import {
 import { ActionRow } from '@/components/vela/action-row'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
-import {
-  PILL_WIDTH,
-  STATE_COLUMN,
-  StatusCell,
-} from '@/components/recordings/status-cell'
 import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialog'
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'

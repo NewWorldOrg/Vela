@@ -12,10 +12,14 @@ import {
 } from '@/lib/state-terms'
 import { numbered } from '@/repository/scan-failures'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { alsoSays } from '@/components/recordings/status-cell'
+import { alsoSays, pillWidthFor } from '@/components/recordings/status-cell'
 import { TermTip } from '@/components/vela/term-tip'
 
 type BadgeTone = ComponentProps<typeof Badge>['variant']
+
+export const OUTCOME_KIND_PILL_WIDTH = pillWidthFor(
+  Object.values(RESERVATION_OUTCOME_KIND_TERMS).map((term) => term.label),
+)
 
 const KIND_TONE: Record<ReservationOutcomeKind, BadgeTone> = {
   competing: 'err',

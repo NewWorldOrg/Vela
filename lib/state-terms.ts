@@ -33,9 +33,9 @@ export const RESERVATION_STANDING_TERMS: Record<
   StateTerm
 > = {
   scheduled: {
-    label: 'チューナー確保済み',
+    label: '確保済み',
     explanation:
-      '開始時刻に使うチューナーが、この予約のために確保されている状態。',
+      'チューナー確保済み。開始時刻に使うチューナーが、この予約のために確保されている状態。',
   },
   conflict: {
     label: '競合',
@@ -93,12 +93,13 @@ export const RESERVATION_OUTCOME_KIND_TERMS: Record<
       '番組表から無くなっていた番組が戻ったため、取り消しから戻された予約。',
   },
   retried: {
-    label: '始め直し',
-    explanation: '録画が始まらなかったあと、録画を始め直した一回ぶんの試み。',
+    label: '再試行',
+    explanation:
+      '始め直し。録画が始まらなかったあと、録画を始め直した一回ぶんの試み。',
   },
   gaveUpRetrying: {
-    label: '始め直しを断念',
-    explanation: '録画を始め直す試みが打ち切られた予約。',
+    label: '再試行断念',
+    explanation: '始め直しを断念。録画を始め直す試みが打ち切られた予約。',
   },
 }
 
@@ -124,8 +125,9 @@ export const RESERVATION_EPG_MISSING_TERM: StateTerm = {
 }
 
 export const RESERVATION_RECORDING_REMOVED_TERM: StateTerm = {
-  label: '録画削除済み',
-  explanation: 'この予約からできた録画が、あとから削除された状態。',
+  label: '削除済み',
+  explanation:
+    '録画削除済み。この予約からできた録画が、あとから削除された状態。',
 }
 
 export const CANDIDATE_UNLOCKED_TERM: StateTerm = {

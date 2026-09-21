@@ -16,12 +16,17 @@ import {
   RESERVATION_STANDING_TERMS,
 } from '@/lib/state-terms'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { alsoSays } from '@/components/recordings/status-cell'
+import { alsoSays, pillWidthFor } from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
 
 type SettledStanding = Exclude<ReservationStanding, 'recording'>
+
+export const RESERVATION_STATE_PILL_WIDTH = pillWidthFor([
+  ...Object.values(RESERVATION_STANDING_TERMS).map((term) => term.label),
+  RESERVATION_RECORDING_REMOVED_TERM.label,
+])
 
 const STANDING: Record<
   SettledStanding,

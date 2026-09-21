@@ -30,7 +30,7 @@ export const STATUS_LABEL: Record<EncodeJobStatus, string> = {
 }
 
 export const STANDING_LABEL: Record<EncodeStanding, string> = {
-  notEncoded: '未エンコード',
+  notEncoded: '未実施',
   queued: STATUS_LABEL.queued,
   running: STATUS_LABEL.running,
   completed: STATUS_LABEL.completed,
@@ -79,7 +79,11 @@ export const STALLED_LABEL = '停滞'
 
 export const RETIRED_LABEL = '退役'
 
-export const NOT_ASKED_FOR_LABEL = '自動実行の対象外'
+export const NOT_ASKED_FOR_LABEL = '対象外'
+
+export const NOT_ASKED_FOR_SAYING = '自動実行の対象外'
+
+export const NOT_ENCODED_SAYING = 'まだエンコードしていません'
 
 export const REMOVAL_LABEL: Record<EncodeRemoved, string> = {
   deleted: '削除しました',

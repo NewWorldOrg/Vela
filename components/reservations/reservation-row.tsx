@@ -24,7 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
-import { PILL_WIDTH, StatusCell } from '@/components/recordings/status-cell'
+import { StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
 import {
@@ -41,7 +41,10 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
-import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
+import {
+  RESERVATION_STATE_PILL_WIDTH,
+  ReservationStateChip,
+} from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 export interface ReservationActions {
@@ -155,7 +158,7 @@ export function ReservationRow({
           <StatusCell>
             <ReservationStateChip
               reservation={reservation}
-              width={PILL_WIDTH}
+              width={RESERVATION_STATE_PILL_WIDTH}
             />
           </StatusCell>
         </TableCell>
