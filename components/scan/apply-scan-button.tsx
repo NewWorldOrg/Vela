@@ -23,7 +23,7 @@ export function ApplyScanAction({
     <>
       <div className="flex flex-wrap items-center gap-[9px]">
         <Button variant="ghost" size="sm" asChild>
-          <Link href={'/settings/channels' as Route}>破棄</Link>
+          <Link href={'/settings/channels' as Route}>キャンセル</Link>
         </Button>
         <Button
           size="sm"

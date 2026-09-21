@@ -30,8 +30,9 @@ import { Spinner } from '@/components/vela/progress'
 import { MarkAxis } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FailureLabel, FailureLegend } from '@/components/scan/failure-mark'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
-const RESULT_COLUMNS = ['物理ch', '結果', '実測', '所要', '時刻']
+const RESULT_COLUMNS = ['物理ch', '結果', '実測', '所要', WHEN_LABELS.taken]
 
 function useScanTicker(running: boolean) {
   const router = useRouter()

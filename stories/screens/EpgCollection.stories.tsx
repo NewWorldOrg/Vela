@@ -92,7 +92,7 @@ export const ガード非活性: Story = {
   play: pressCollect('実行中のブーストが 1 本あります'),
 }
 
-export const 全破棄の確認: Story = {
+export const 全削除の確認: Story = {
   render: (args) => (
     <RebuildEpgDialog
       open
@@ -130,7 +130,7 @@ export const 確認の上のEscは確認だけを閉じる: Story = {
     const canvas = within(canvasElement)
 
     await showed(canvasElement)
-    await userEvent.click(canvas.getByRole('button', { name: /全破棄/ }))
+    await userEvent.click(canvas.getByRole('button', { name: /全削除/ }))
     await screen.findByRole('alertdialog')
 
     await userEvent.keyboard('{Escape}')

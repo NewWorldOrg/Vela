@@ -56,7 +56,7 @@ export function RebuildEpgDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <RebuildIcon className="size-[19px] text-coral" />
-            EPG 全破棄 → 再構築
+            EPG 全削除 → 再構築
           </AlertDialogTitle>
         </AlertDialogHeader>
 
@@ -113,7 +113,7 @@ export function RebuildEpgDialog({
           <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
           <Button variant="destructiveFill" disabled={pending} onClick={run}>
             <RebuildIcon />
-            全て破棄して再構築する
+            全て削除して再構築する
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

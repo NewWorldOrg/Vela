@@ -1,5 +1,7 @@
+import { WHEN_LABELS } from '@/lib/when-terms'
+
 export const SYSTEM_DETAIL_LABELS = {
-  observedAt: '取得日時',
+  observedAt: WHEN_LABELS.taken,
   health: 'ヘルスの応答',
   instance: 'インスタンス',
   version: 'バージョン',

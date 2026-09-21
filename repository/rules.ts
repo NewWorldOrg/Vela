@@ -1,4 +1,4 @@
-import { formatBroadcastSpan, formatBroadcastStart } from '@/lib/format'
+import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 import { RULE_TAKES_SHOWN } from '@/lib/rules'
 import type { SearchTerms } from '@/lib/search-condition'
 import {
@@ -377,7 +377,7 @@ function refusedBecause(
 ): string {
   if (refusal?.refusal === 'tooSoonAfterTheLastOne') {
     const at = refusal.notBefore
-      ? `${formatBroadcastStart(refusal.notBefore)} 以降に`
+      ? `${formatMoment(refusal.notBefore)} 以降に`
       : '時間をおいてから'
 
     return `前回の適用から間がないため、いま適用されませんでした。${at}お試しください。`
@@ -474,8 +474,8 @@ function toTake(
   return {
     id: take.programme,
     whenLabel: take.endsAt
-      ? formatBroadcastSpan(take.startsAt, take.endsAt)
-      : `${formatBroadcastStart(take.startsAt)}–${END_UNDECIDED}`,
+      ? formatMomentSpan(take.startsAt, take.endsAt)
+      : formatMomentUntil(take.startsAt, END_UNDECIDED),
     channelName: channel?.name || key,
     channelNo: channel?.no,
     title: take.name,

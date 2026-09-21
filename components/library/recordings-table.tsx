@@ -6,11 +6,12 @@ import { useRouter } from 'next/navigation'
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import { RecordingRow } from '@/components/library/recording-row'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 const HEADERS: { label: string; hidden?: boolean }[] = [
   { label: '番組' },
   { label: 'チャンネル' },
-  { label: '録画日時' },
+  { label: WHEN_LABELS.recorded },
   { label: '長さ' },
   { label: 'サイズ' },
   { label: '結果' },

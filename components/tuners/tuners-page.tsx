@@ -41,6 +41,7 @@ import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
 import { ThresholdControl } from '@/components/tuners/threshold-control'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route
 const SCAN_HISTORY_HREF = '/settings/channels#scan-history' as Route
@@ -58,7 +59,7 @@ const COLUMNS = [
   '有効',
   '現在のセッション',
   '状態',
-  '最終サービス取得',
+  WHEN_LABELS.taken,
   'LNB 給電',
 ]
 

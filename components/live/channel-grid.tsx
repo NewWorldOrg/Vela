@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { SPAN_DASH } from '@/lib/format'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress'
 import { Tile } from '@/components/vela/surface'
@@ -76,7 +77,9 @@ function ChannelCard({
         </span>
         {programme && (
           <span className="font-code text-note tabular-nums text-ink-3">
-            {programme.startLabel}–{programme.endLabel ?? '終了未定'}
+            {programme.startLabel}
+            {SPAN_DASH}
+            {programme.endLabel ?? '終了未定'}
           </span>
         )}
         {channel.next && (

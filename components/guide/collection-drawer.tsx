@@ -521,7 +521,7 @@ export function CollectionDrawer({
               onClick={() => setRebuildOpen(true)}
             >
               <RebuildIcon />
-              EPG 全破棄 → 再構築
+              EPG 全削除 → 再構築
             </Button>
           </div>
           <span aria-live="polite">
@@ -529,7 +529,7 @@ export function CollectionDrawer({
               <p className="mt-2 flex items-start gap-2 text-sub leading-[1.7] text-mint">
                 <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
                 <span>
-                  番組表のデータを破棄しました(
+                  番組表のデータを削除しました(
                   <Figure>{discarded}</Figure> 件)。
                 </span>
               </p>

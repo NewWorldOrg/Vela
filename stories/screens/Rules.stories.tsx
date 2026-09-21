@@ -28,7 +28,7 @@ const PREVIEW: RulePreview = {
   takes: [
     {
       id: '131-1310-9001',
-      whenLabel: '08/09(土) 22:00–22:30',
+      whenLabel: '08/09(土) 22:00 – 22:30',
       channelName: '中央テレビ1',
       channelNo: '011',
       title: '星のさまよいびと 第1話',
@@ -37,7 +37,7 @@ const PREVIEW: RulePreview = {
     },
     {
       id: '132-1320-9002',
-      whenLabel: '08/10(日) 24:30–25:00',
+      whenLabel: '08/10(日) 24:30 – 25:00',
       channelName: '湾岸放送1',
       channelNo: '041',
       title: '未明のレイライン 第1話',
@@ -46,7 +46,7 @@ const PREVIEW: RulePreview = {
     },
     {
       id: '4-101-9003',
-      whenLabel: '08/12(火) 25:05–25:35',
+      whenLabel: '08/12(火) 25:05 – 25:35',
       channelName: '衛星第一',
       channelNo: '101',
       title: 'クロックワークガーデン 第1話',

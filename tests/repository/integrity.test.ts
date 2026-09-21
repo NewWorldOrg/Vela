@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
 import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
+import { formatMoment, formatMomentSpan } from '@/lib/format'
 
 interface Sent {
   method: string
@@ -284,7 +285,7 @@ test('the check that walked is reported with what it read', async () => {
   assert.equal(walked?.filesRead, 214)
   assert.equal(walked?.ledgerRowsJudged, 211)
   assert.equal(walked?.ledgerRowsStillWriting, 1)
-  assert.equal(walked?.ranAt, '08/09 03:10')
+  assert.equal(walked?.ranAt, formatMoment('2026-08-08T18:10:04Z'))
 })
 
 test('a list that has never been walked answers without a check', async () => {
@@ -391,9 +392,10 @@ test('a walk refused as too soon names when the next one may be asked for', asyn
   const result = await runIntegrityCheck()
 
   assert.equal(result.state, 'refused')
-  assert.match(
-    result.state === 'refused' ? result.message : '',
-    /次に実行できるのは 08\/09 03:15 です。/,
+  assert.ok(
+    (result.state === 'refused' ? result.message : '').includes(
+      `次に実行できるのは ${formatMoment('2026-08-08T18:15:00Z')} です。`,
+    ),
   )
 })
 

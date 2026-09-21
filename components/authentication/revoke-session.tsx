@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 import { CloseIcon } from '@/components/vela/icons'
 import { METHOD_LABEL, revokedHref } from '@/components/authentication/wording'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 export function RevokeSession({
   session,
@@ -85,7 +86,7 @@ export function RevokeSession({
             <dd>{wordFor(METHOD_LABEL, session.method)}</dd>
             <dt className="text-sub text-ink-3">作成</dt>
             <dd className="font-code tabular-nums">{session.createdAt}</dd>
-            <dt className="text-sub text-ink-3">最終利用</dt>
+            <dt className="text-sub text-ink-3">{WHEN_LABELS.taken}</dt>
             <dd className="font-code tabular-nums">
               {session.lastUsed.at ?? session.lastUsed.label}
             </dd>

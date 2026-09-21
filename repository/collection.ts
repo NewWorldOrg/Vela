@@ -323,7 +323,7 @@ export async function rebuildEpg(): Promise<RebuildResult> {
   if (discarded === undefined) {
     return {
       state: 'rejected',
-      message: `破棄を受け付けられませんでした(${response.status})。`,
+      message: `削除を受け付けられませんでした(${response.status})。`,
     }
   }
 

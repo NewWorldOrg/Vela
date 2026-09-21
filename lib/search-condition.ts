@@ -1,3 +1,5 @@
+import { WHEN_LABELS } from '@/lib/when-terms'
+
 export type SearchSort = 'start_at.asc' | 'start_at.desc' | 'name.asc'
 
 export type SearchField = 'title,description' | 'title' | 'description'
@@ -20,8 +22,8 @@ export type SearchGenre =
 export type SearchKind = 'terrestrial' | 'bs' | 'cs110'
 
 export const SEARCH_SORT_OPTIONS: { value: SearchSort; label: string }[] = [
-  { value: 'start_at.asc', label: '放送日時が早い順' },
-  { value: 'start_at.desc', label: '放送日時が遅い順' },
+  { value: 'start_at.asc', label: `${WHEN_LABELS.broadcast}が早い順` },
+  { value: 'start_at.desc', label: `${WHEN_LABELS.broadcast}が遅い順` },
   { value: 'name.asc', label: '番組名順' },
 ]
 

@@ -28,16 +28,17 @@ import { Pager } from '@/components/vela/pager'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { OutcomeRow } from '@/components/reservations/outcome-row'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
   { label: '代わりに録られた予約の開閉', hidden: true, narrow: true },
   { label: '番組' },
   { label: 'チャンネル' },
-  { label: '放送日時' },
+  { label: WHEN_LABELS.broadcast },
   { label: '由来' },
   { label: '優先度' },
   { label: '分類' },
-  { label: '記録日時' },
+  { label: WHEN_LABELS.taken },
 ]
 
 const EVERY = '__every__'

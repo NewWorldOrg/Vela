@@ -12,7 +12,7 @@ import type { ScanSystem } from '@/repository/scan-systems'
 import { SCAN_SYSTEMS } from '@/repository/scan-systems'
 import type { Measurement, Reception } from '@/repository/tuning'
 import { channelLabel, measurementOf, receptionOf } from '@/repository/tuning'
-import { formatMonth, formatSpan, formatStamp } from '@/lib/format'
+import { formatMonth, formatSpan, formatMoment } from '@/lib/format'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 
 type BroadcastServiceResponder =
@@ -219,7 +219,7 @@ function toCandidate(candidate: CandidateChannelResponder): CandidateRow {
     needsRevalidation: candidate.needsRevalidation,
     rotation: toRotation(candidate, failures),
     discovered: formatMonth(candidate.discoveredAt),
-    lastSeen: formatStamp(candidate.lastSeenAt),
+    lastSeen: formatMoment(candidate.lastSeenAt),
   }
 }
 
@@ -242,7 +242,7 @@ function toRotation(
       note:
         candidate.nextAttemptAt === null
           ? '間隔を空けて試し直します'
-          : `次の試行 ${formatStamp(candidate.nextAttemptAt)}`,
+          : `次の試行 ${formatMoment(candidate.nextAttemptAt)}`,
     }
   }
 
@@ -269,7 +269,7 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
     enabled: service.reservableByDefault,
     candidateCount: toInt(service.candidateCount),
     needsAttentionCount: candidates.filter((c) => c.rotation?.dropped).length,
-    lastSeen: formatStamp(service.lastSeenAt),
+    lastSeen: formatMoment(service.lastSeenAt),
     candidates,
   }
 }
@@ -308,8 +308,8 @@ function toRun(run: ScanRunResponder): ScanRun {
     id: run.scanId,
     state: run.state,
     stateLabel: wordFor(STATE_LABEL, run.state),
-    startedAt: formatStamp(run.startedAt),
-    finishedAt: finished === null ? undefined : formatStamp(finished),
+    startedAt: formatMoment(run.startedAt),
+    finishedAt: finished === null ? undefined : formatMoment(finished),
     took:
       finished === null
         ? undefined
@@ -345,7 +345,7 @@ function toAttempt(
         new Date(attempt.startedAt).getTime()) /
         1000,
     ),
-    at: formatStamp(attempt.startedAt),
+    at: formatMoment(attempt.startedAt),
   }
 }
 
@@ -400,7 +400,7 @@ function toProposal(
     key: `${toInt(departure.networkId)}-${toInt(departure.serviceId)}`,
     channel: channelLabel(departure.target),
     consecutiveFailures: toInt(departure.consecutiveFailures),
-    since: formatStamp(departure.since),
+    since: formatMoment(departure.since),
   }))
 
   return {
@@ -449,7 +449,7 @@ function toDiagnosis(
   const only = counts.find(({ count }) => count === attempts.length)
 
   return {
-    scannedAt: formatStamp(progress.run.startedAt),
+    scannedAt: formatMoment(progress.run.startedAt),
     attempted: attempts.length,
     counts,
     verdict:

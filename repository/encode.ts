@@ -1,4 +1,4 @@
-import { formatBroadcastStart, formatDateTime } from '@/lib/format'
+import { formatMoment } from '@/lib/format'
 import {
   callsOff,
   headwayPercent,
@@ -670,8 +670,8 @@ function toSpells(one: DurationsResponder): EncodeSpells {
       one.averageSeconds === null
         ? undefined
         : Math.round(Number(one.averageSeconds)),
-    from: one.from ? formatDateTime(one.from) : undefined,
-    to: one.to ? formatDateTime(one.to) : undefined,
+    from: one.from ? formatMoment(one.from) : undefined,
+    to: one.to ? formatMoment(one.to) : undefined,
   }
 }
 
@@ -682,7 +682,7 @@ function toAutoRun(one: AutoRunResponder): EncodeAutoRun {
     coresThisMachineHas: toInt(one.coresThisMachineHas),
     subject: one.subject.filter((each): each is EncodeSubject => each !== null),
     stored: one.stored,
-    updatedAt: one.updatedAt ? formatDateTime(one.updatedAt) : undefined,
+    updatedAt: one.updatedAt ? formatMoment(one.updatedAt) : undefined,
   }
 }
 
@@ -695,7 +695,7 @@ function toProfile(one: ProfileResponder): EncodeProfile {
     deinterlace: one.deinterlace,
     rateFactor: toInt(one.rateFactor),
     quantiser: toInt(one.quantiser),
-    definedAt: formatDateTime(one.definedAt),
+    definedAt: formatMoment(one.definedAt),
     retired: !stillOffered(one),
   }
 }
@@ -710,7 +710,7 @@ function toDestination(
     outputRoot: one.outputRoot,
     defaultProfileId: one.defaultProfileId,
     defaultProfileLabel: profiles.get(one.defaultProfileId),
-    definedAt: formatDateTime(one.definedAt),
+    definedAt: formatMoment(one.definedAt),
     retired: !stillOffered(one),
   }
 }
@@ -732,17 +732,15 @@ export function toEncodeJob(
     id: one.id,
     recordingId: one.recordingId,
     title: recording?.title,
-    recordedAt: recording
-      ? formatBroadcastStart(recording.startedAt)
-      : undefined,
+    recordedAt: recording ? formatMoment(recording.startedAt) : undefined,
     profileLabel: named.profiles.get(one.profileId),
     destinationLabel: named.destinations.get(one.destinationId),
     outputRoot: one.outputRoot,
     status: one.status,
     attempt: toInt(one.attempt),
-    queuedAt: formatDateTime(one.queuedAt),
-    startedAt: one.startedAt ? formatDateTime(one.startedAt) : undefined,
-    endedAt: one.endedAt ? formatDateTime(one.endedAt) : undefined,
+    queuedAt: formatMoment(one.queuedAt),
+    startedAt: one.startedAt ? formatMoment(one.startedAt) : undefined,
+    endedAt: one.endedAt ? formatMoment(one.endedAt) : undefined,
     elapsedSeconds:
       one.status === 'running' && one.startedAt
         ? secondsBetween(one.startedAt, now)
@@ -772,7 +770,7 @@ export function toEncodeJob(
       ? {
           failure: one.failure.failure,
           note: one.failure.note,
-          noticedAt: formatDateTime(one.failure.noticedAt),
+          noticedAt: formatMoment(one.failure.noticedAt),
         }
       : undefined,
     artefactName: one.artefactName ?? undefined,

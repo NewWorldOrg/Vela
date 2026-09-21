@@ -1,6 +1,7 @@
 import type { Route } from 'next'
 
-import { formatStamp } from '@/lib/format'
+import { formatMoment, formatMomentSpan } from '@/lib/format'
+import { WHEN_MARKS } from '@/lib/when-terms'
 import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
 import {
@@ -449,8 +450,8 @@ export async function getQuality(
           toTrendBucket(point, following.key),
         ),
       })),
-      from: formatStamp(trend.period.from),
-      until: formatStamp(trend.period.until),
+      from: formatMoment(trend.period.from),
+      until: formatMoment(trend.period.until),
       provisional: trend.provisional,
     },
     stats: statsOf(span.label, summary, tuners, recordings),
@@ -656,7 +657,7 @@ function toAnomaly(
       ? `再掲 · ${wordFor(OWNERS, one.owner)}`
       : undefined,
     classification: one.classification ?? undefined,
-    when: `${formatStamp(one.detectedAt)} 発生 · ${STILL_STANDING}`,
+    when: `${formatMoment(one.detectedAt)} 発生 · ${STILL_STANDING}`,
   }
 }
 
@@ -900,7 +901,7 @@ function signalCell(
   return {
     level: shapeFor(LEVEL_OF_STATE, found.reading.state, 'unsupported'),
     sub: found.lastTakenAt
-      ? `${formatStamp(found.lastTakenAt)} 取得`
+      ? `${formatMoment(found.lastTakenAt)} ${WHEN_MARKS.taken}`
       : undefined,
   }
 }
@@ -931,7 +932,7 @@ function toProblemRecording(
   return {
     id: one.id,
     title: names.get(one.id)?.title ?? '',
-    where: `${channel?.name || id} · ${formatStamp(one.startedAt)}`,
+    where: `${channel?.name || id} · ${formatMoment(one.startedAt)}`,
     drops:
       packets === undefined
         ? wordFor(METRIC_DROPS, metric)
@@ -1085,7 +1086,7 @@ function toTrendBucket(
     key: point.from,
     level,
     says: [
-      `${formatStamp(point.from)}〜${formatStamp(point.until)}`,
+      formatMomentSpan(point.from, point.until),
       QUALITY_LEVEL_LABEL[level],
       ...worst,
       ...layers,

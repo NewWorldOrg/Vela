@@ -89,6 +89,7 @@ mock.module('@/repository/client/carina', {
 })
 
 import { RULE_TAKES_SHOWN } from '@/lib/rules'
+import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 
 const {
   applyRulesNow,
@@ -413,7 +414,10 @@ test('a preview row is named by its channel and the span it covers', async () =>
   const preview = result.state === 'ok' ? result.data : undefined
 
   assert.equal(preview?.takes[0].channelName, '衛星第一')
-  assert.equal(preview?.takes[0].whenLabel, '08/09(日) 22:00–22:30')
+  assert.equal(
+    preview?.takes[0].whenLabel,
+    formatMomentSpan('2026-08-09T13:00:00Z', '2026-08-09T13:30:00Z'),
+  )
   assert.equal(preview?.takes[0].title, '星のさまよいびと 第1話')
   assert.equal(preview?.takes[0].verdict, 'secured')
   assert.equal(preview?.alreadyReserved, 1)
@@ -427,7 +431,10 @@ test('a programme with no end announced says so rather than inventing one', asyn
   const result = await previewRule(draft())
   const preview = result.state === 'ok' ? result.data : undefined
 
-  assert.equal(preview?.takes[0].whenLabel, '08/09(日) 22:00–終了未定')
+  assert.equal(
+    preview?.takes[0].whenLabel,
+    formatMomentUntil('2026-08-09T13:00:00Z', '終了未定'),
+  )
 })
 
 test('a channel the services do not name falls back to the pair that names it', async () => {

@@ -23,7 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { EmptyState } from '@/components/vela/empty-state'
-import { PlusIcon } from '@/components/vela/icons'
+import { PlusIcon, ReservationIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { ReservationRow } from '@/components/reservations/reservation-row'
@@ -31,12 +31,13 @@ import type { ReservationBulkActions } from '@/components/reservations/reservati
 import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { WHEN_LABELS } from '@/lib/when-terms'
 
 const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
   { label: '競合の詳細の開閉', hidden: true, narrow: true },
   { label: '番組' },
   { label: 'チャンネル' },
-  { label: '放送日時' },
+  { label: WHEN_LABELS.broadcast },
   { label: '由来' },
   { label: '状態' },
   { label: '操作', hidden: true },
@@ -144,6 +145,10 @@ export function ReservationsView({
       scroll="within"
       className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
     >
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[20px]">
+        <ReservationIcon className="size-[18px] text-brand" />
+        予約
+      </h1>
       <ReservationTabs
         current="reservations"
         action={

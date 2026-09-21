@@ -509,11 +509,42 @@ export const 効かない操作子: Story = {
     await expect(subtitles).toHaveAttribute('aria-pressed', 'false')
 
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
-    await screen.findByRole('group', { name: '画質' })
+
+    const settings = await screen.findByRole('dialog', { name: '設定' })
+
+    await within(settings).findByRole('group', { name: '画質' })
+    await expect(within(settings).queryByText('字幕')).toBeNull()
+    await expect(
+      within(settings).queryByText(/選べます|実装されます/),
+    ).toBeNull()
+  },
+}
+
+export const オンザフライでない録画の画質は押せない: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: HANDED_OVER_IN_TWO_LANGUAGES,
+    startAt: 0,
+    pictureHref: carrying,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const settings = await screen.findByRole('dialog', { name: '設定' })
+    const quality = await within(settings).findByRole('group', {
+      name: '画質',
+    })
+
+    for (const one of within(quality).getAllByRole('button')) {
+      await expect(one).toBeDisabled()
+      await expect(one).not.toHaveAttribute('title')
+    }
 
     await expect(
-      screen.getAllByText('字幕の選択はこれから実装されます'),
-    ).toHaveLength(1)
+      within(settings).queryByText(/選べます|実装されます/),
+    ).toBeNull()
   },
 }
 

@@ -3,9 +3,12 @@ import { cache } from 'react'
 import {
   formatBytes,
   formatLength,
+  formatMoment,
+  formatMomentSpan,
+  formatMomentUntil,
   formatPlayhead,
-  formatStamp,
 } from '@/lib/format'
+import { WHEN_MARKS } from '@/lib/when-terms'
 import { castInExtended, leadOfExtended } from '@/lib/programme-extended'
 import {
   inProgressFirst,
@@ -457,7 +460,7 @@ export function toRecording(
     channelLogo: channel?.logo,
     year: Number(jst(startedAt).year),
     startedAt: r.startedAt,
-    recordedAtLabel: recordedAtLabelOf(startedAt, now),
+    recordedAtLabel: formatMoment(startedAt, now),
     recordedAtNote: outcome === 'recording' ? 'いま' : undefined,
     recordedRange: recordedRangeOf(r, outcome),
     lengthSec:
@@ -467,7 +470,7 @@ export function toRecording(
         ? Math.round(toInt(r.expectedWindow.durationMs) / 1000)
         : undefined,
     sizeBytes,
-    sizeObservedAt: observedLabelOf(r.observedAt, outcome),
+    sizeObservedAt: observedLabelOf(r.observedAt),
     filePath: `${r.outputRoot.replace(/\/+$/, '')}/${r.fileName}`,
     unfinishedDeletion: r.unfinishedDeletion
       ? { filesLeft: counted(r.unfinishedDeletion.filesLeft) }
@@ -508,8 +511,7 @@ function toDetail(
     ...base,
     genres: genres.length > 0 ? genres : undefined,
     sizeObservedAt:
-      observedLabelOf(d.reconciliation.observedAt, base.outcome) ??
-      base.sizeObservedAt,
+      observedLabelOf(d.reconciliation.observedAt) ?? base.sizeObservedAt,
     synopsis: r.programme.summary || undefined,
     outcomeBody: outcomeBodyOf(r, base),
     reconcile: reconcileOf(d, base),
@@ -766,7 +768,7 @@ function failureReasonOf(
 function whenItWasNoticed(named: FaultResponder | undefined): {
   noticedAt?: string
 } {
-  return named === undefined ? {} : { noticedAt: formatStamp(named.noticedAt) }
+  return named === undefined ? {} : { noticedAt: formatMoment(named.noticedAt) }
 }
 
 function stopReasonOf(d: DetailResponder): string | undefined {
@@ -886,11 +888,6 @@ const JST = new Intl.DateTimeFormat('en-US', {
   second: '2-digit',
 })
 
-const WEEKDAY = new Intl.DateTimeFormat('ja-JP', {
-  timeZone: 'Asia/Tokyo',
-  weekday: 'short',
-})
-
 interface Spelled {
   year: string
   month: string
@@ -915,65 +912,36 @@ function jst(at: Date): Spelled {
   }
 }
 
-function dayOf(at: Date): string {
-  const spelled = jst(at)
-
-  return `${spelled.month}/${spelled.day}(${WEEKDAY.format(at)})`
-}
-
-function clockOf(at: Date): string {
-  const spelled = jst(at)
-
-  return `${spelled.hour}:${spelled.minute}`
-}
-
 export function clockWithSeconds(at: Date): string {
   const spelled = jst(at)
 
   return `${spelled.hour}:${spelled.minute}:${spelled.second}`
 }
 
-export function recordedAtLabelOf(startedAt: Date, now: Date): string {
-  const spelled = jst(startedAt)
-  const thisYear = jst(now).year
-  const stamp = `${dayOf(startedAt)} ${spelled.hour}:${spelled.minute}`
-
-  return spelled.year === thisYear ? stamp : `${spelled.year}/${stamp}`
-}
+const STILL_RUNNING = '進行中'
 
 function recordedRangeOf(
   r: RecordingResponder,
   outcome: RecordingOutcome,
 ): string {
-  const startedAt = new Date(r.startedAt)
-  const spelled = jst(startedAt)
-  const from = `${spelled.year}/${dayOf(startedAt)} ${spelled.hour}:${spelled.minute}`
   const moved = minutesMovedLater(r.promisedWindowEnd, r.expectedWindow.end)
   const extended = moved === undefined ? '' : `(延長 +${moved} 分)`
 
   if (outcome === 'recording') {
     return moved === undefined
-      ? `${from} — 進行中`
-      : `${from} — ${clockOf(new Date(r.expectedWindow.end))} まで${extended}`
+      ? formatMomentUntil(r.startedAt, STILL_RUNNING)
+      : `${formatMomentSpan(r.startedAt, r.expectedWindow.end)} まで${extended}`
   }
 
   const ended = r.stoppedAt ?? r.expectedWindow.end
 
-  return `${from} — ${clockOf(new Date(ended))}${extended}`
+  return `${formatMomentSpan(r.startedAt, ended)}${extended}`
 }
 
 function observedLabelOf(
   observedAt: string | null | undefined,
-  outcome: RecordingOutcome,
 ): string | undefined {
-  if (!observedAt) {
-    return undefined
-  }
-
-  const at = new Date(observedAt)
-  const spelled = jst(at)
-
-  return outcome === 'recording'
-    ? `観測 ${clockOf(at)}`
-    : `観測 ${spelled.month}/${spelled.day} ${clockOf(at)}`
+  return observedAt
+    ? `${WHEN_MARKS.taken} ${formatMoment(observedAt)}`
+    : undefined
 }

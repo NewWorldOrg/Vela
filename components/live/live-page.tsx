@@ -23,6 +23,7 @@ import { liveHandover } from '@/lib/external-player'
 import type { LiveScreen, TakeLiveTicket } from '@/repository/live'
 import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { LiveIcon } from '@/components/vela/icons'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
 import { OpenExternally } from '@/components/recordings/external-player'
@@ -35,6 +36,8 @@ import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
+
+const HEADING = 'heading mb-4 flex items-center gap-2 text-[20px]'
 
 const TICK_MS = 30_000
 
@@ -133,6 +136,10 @@ export function LiveView({
   if (!watching && screen.tuners === 0) {
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
+        <h1 className={HEADING}>
+          <LiveIcon className="size-[18px] text-brand" />
+          ライブ
+        </h1>
         <EmptyState
           spot="tuner"
           titleLevel={2}
@@ -150,6 +157,10 @@ export function LiveView({
   if (!watching) {
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
+        <h1 className={HEADING}>
+          <LiveIcon className="size-[18px] text-brand" />
+          ライブ
+        </h1>
         <div className="mb-3.5 flex flex-wrap items-center gap-2">
           <ChannelKinds kind={screen.kind} kinds={screen.kinds} onKind={kind} />
           {foldable && (
@@ -183,6 +194,7 @@ export function LiveView({
         {nothingIsOn && (
           <EmptyState
             spot={null}
+            titleLevel={2}
             title="EPG をまだ取得していません"
             className="mt-3.5"
             action={

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
+import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 
 interface Asked {
   path: string
@@ -237,7 +238,6 @@ const {
   getRecording,
   listRecordings,
   listRecordingsByReservation,
-  recordedAtLabelOf,
   remakeThumbnail,
   spanLabel,
   spotsOf,
@@ -336,7 +336,10 @@ test('a recording that ended carries what was written as its length', async () =
 
   assert.equal(one.outcome, 'complete')
   assert.equal(one.lengthSec, 1804)
-  assert.equal(one.recordedRange, '2026/08/09(日) 23:00 — 23:30')
+  assert.equal(
+    one.recordedRange,
+    formatMomentSpan('2026-08-09T14:00:00Z', '2026-08-09T14:30:04Z'),
+  )
 })
 
 test('the length it was supposed to be is shown for a recording cut short', async () => {
@@ -371,7 +374,10 @@ test('a size that was observed comes through as the number it is', async () => {
 test('a row of the library says when its file was last seen, in the words the detail uses', async () => {
   const ended = await only()
 
-  assert.equal(ended.sizeObservedAt, '観測 08/09 23:31')
+  assert.equal(
+    ended.sizeObservedAt,
+    `取得 ${formatMoment('2026-08-09T14:31:00Z')}`,
+  )
 
   const writing = await only([
     recording({
@@ -382,7 +388,10 @@ test('a row of the library says when its file was last seen, in the words the de
     }),
   ])
 
-  assert.equal(writing.sizeObservedAt, '観測 23:12')
+  assert.equal(
+    writing.sizeObservedAt,
+    `取得 ${formatMoment('2026-08-09T14:12:00Z')}`,
+  )
 })
 
 test('a row whose file was never measured says nothing about when', async () => {
@@ -403,11 +412,17 @@ test('an ended recording whose end was followed later says how far it moved', as
     }),
   ])
 
-  assert.equal(moved.recordedRange, '2026/08/09(日) 23:00 — 23:40(延長 +10 分)')
+  assert.equal(
+    moved.recordedRange,
+    `${formatMomentSpan('2026-08-09T14:00:00Z', '2026-08-09T14:40:04Z')}(延長 +10 分)`,
+  )
 
   const kept = await only()
 
-  assert.equal(kept.recordedRange, '2026/08/09(日) 23:00 — 23:30')
+  assert.equal(
+    kept.recordedRange,
+    formatMomentSpan('2026-08-09T14:00:00Z', '2026-08-09T14:30:04Z'),
+  )
 })
 
 test('a recording still being written whose end moved says until when', async () => {
@@ -429,12 +444,15 @@ test('a recording still being written whose end moved says until when', async ()
 
   assert.equal(
     moved.recordedRange,
-    '2026/08/09(日) 23:00 — 23:45 まで(延長 +15 分)',
+    `${formatMomentSpan('2026-08-09T14:00:00Z', '2026-08-09T14:45:00Z')} まで(延長 +15 分)`,
   )
 
   const kept = await only([recording(writing)])
 
-  assert.equal(kept.recordedRange, '2026/08/09(日) 23:00 — 進行中')
+  assert.equal(
+    kept.recordedRange,
+    formatMomentUntil('2026-08-09T14:00:00Z', '進行中'),
+  )
 })
 
 test('a recording nothing measured is not good, it is unmeasured', async () => {
@@ -1072,7 +1090,10 @@ test('nothing the server wrote about the failure reaches the screen', async () =
     detail?.failureReason?.body,
     '閾値を超えた残存パケットを検出しました。',
   )
-  assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
+  assert.equal(
+    detail?.failureReason?.noticedAt,
+    formatMoment('2026-08-09T14:20:00Z'),
+  )
   assert.deepEqual(Object.keys(detail?.failureReason ?? {}).sort(), [
     'body',
     'noticedAt',
@@ -1098,7 +1119,10 @@ test('a failure this build has no name for still says when it was noticed', asyn
   const detail = await getRecording('d-unknown-note')
 
   assert.equal(detail?.failureReason?.title, 'この版がまだ知らない値')
-  assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
+  assert.equal(
+    detail?.failureReason?.noticedAt,
+    formatMoment('2026-08-09T14:20:00Z'),
+  )
   assert.deepEqual(Object.keys(detail?.failureReason ?? {}).sort(), [
     'noticedAt',
     'title',
@@ -1123,7 +1147,10 @@ test('a failure the server wrote nothing about still says when it was noticed', 
   const detail = await getRecording('d-no-note')
 
   assert.equal(detail?.failureReason?.title, '0 バイトで終わった')
-  assert.equal(detail?.failureReason?.noticedAt, '08/09 23:20')
+  assert.equal(
+    detail?.failureReason?.noticedAt,
+    formatMoment('2026-08-09T14:20:00Z'),
+  )
 })
 
 test('a failure with nothing recorded against it says nothing', async () => {
@@ -1168,29 +1195,6 @@ test('drops in the same minute are one spot, and a clean second is none', () => 
     { at: '0:12:00 付近', packets: '980 パケット', second: 720 },
     { at: '0:44:00 付近', packets: '224 パケット', second: 2_640 },
   ])
-})
-
-test('a recording from another year is spelled with the year in front', () => {
-  const now = new Date('2026-08-27T00:00:00Z')
-
-  assert.equal(
-    recordedAtLabelOf(new Date('2026-08-09T14:00:00Z'), now),
-    '08/09(日) 23:00',
-  )
-  assert.equal(
-    recordedAtLabelOf(new Date('2024-05-12T14:00:00Z'), now),
-    '2024/05/12(日) 23:00',
-  )
-})
-
-test('a recording is placed in the day Tokyo was in, not the day UTC was', () => {
-  assert.equal(
-    recordedAtLabelOf(
-      new Date('2025-12-31T16:30:00Z'),
-      new Date('2026-01-05T00:00:00Z'),
-    ),
-    '01/01(木) 01:30',
-  )
 })
 
 test('a span is spelled in hours once there is an hour to spell', () => {
