@@ -20,13 +20,15 @@ export function PlayerVolume({
     >
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/30"
+        className="pointer-events-none absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-white/35"
       />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-0 h-[3px] -translate-y-1/2 rounded-full bg-white"
-        style={{ width: `${played}%` }}
-      />
+      {played > 0 && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-0 h-[2px] -translate-y-1/2 rounded-full bg-(--pl-accent)"
+          style={{ width: `${played}%` }}
+        />
+      )}
       <input
         type="range"
         min={0}
@@ -39,10 +41,10 @@ export function PlayerVolume({
         className={cn(
           'relative block h-11 w-full cursor-pointer appearance-none bg-transparent outline-none',
           'focus-visible:shadow-ring focus-visible:rounded-full',
-          '[&::-webkit-slider-runnable-track]:h-11 [&::-webkit-slider-runnable-track]:bg-transparent',
-          '[&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:mt-[16px]',
-          '[&::-moz-range-track]:h-11 [&::-moz-range-track]:bg-transparent',
-          '[&::-moz-range-thumb]:size-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white',
+          '[&::-webkit-slider-runnable-track]:h-[2px] [&::-webkit-slider-runnable-track]:bg-transparent',
+          '[&::-webkit-slider-thumb]:size-[13px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white',
+          '[&::-moz-range-track]:h-[2px] [&::-moz-range-track]:bg-transparent',
+          '[&::-moz-range-thumb]:size-[13px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white',
         )}
       />
     </label>
