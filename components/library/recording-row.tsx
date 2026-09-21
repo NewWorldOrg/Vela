@@ -139,9 +139,7 @@ export function RecordingRow({
       <td className={cn(CELL, 'text-ui')}>
         <span className="flex items-center gap-2">
           <ChannelMark logo={r.channelLogo} no={r.channelNo} keepsTheSlot />
-          <InFull says={r.channel}>
-            <span className="min-w-0 truncate">{r.channel}</span>
-          </InFull>
+          <span className="min-w-0 leading-[1.4]">{r.channel}</span>
         </span>
       </td>
       <td
