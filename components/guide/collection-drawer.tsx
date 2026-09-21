@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
 import {
   AntennaIcon,
@@ -492,9 +493,7 @@ export function CollectionDrawer({
               </div>
             ))}
             {status.streams.length === 0 && (
-              <p className="py-2.5 text-note leading-[1.7] text-ink-3">
-                訪問記録はまだありません。
-              </p>
+              <EmptyState spot={null} title="訪問の記録がありません" />
             )}
           </div>
 

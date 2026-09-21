@@ -138,3 +138,16 @@ export const 確認の上のEscは確認だけを閉じる: Story = {
     await expect(args.onClose).not.toHaveBeenCalled()
   },
 }
+
+export const 訪問の記録がひとつも無い: Story = {
+  args: {
+    status: { ...COLLECTION_FIXTURES, streams: [] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('heading', { name: '訪問の記録がありません' }),
+    ).toBeVisible()
+  },
+}

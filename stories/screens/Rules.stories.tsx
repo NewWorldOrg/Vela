@@ -611,3 +611,20 @@ export const 追加の置き場: Story = {
     ).toBe(true)
   },
 }
+
+const noRulesSaved: Saved[] = []
+
+export const ルールがひとつも無い: Story = {
+  args: {
+    result: { items: [], total: 0 },
+    editing: { state: 'none' },
+    actions: recording(noRulesSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('heading', { name: 'まだルールがありません' }),
+    ).toBeVisible()
+  },
+}
