@@ -7,6 +7,7 @@ import {
   outcomeLedger,
 } from '@/stories/fixtures/reservation-outcomes'
 import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
+import { bodyRows, pillsIn, widthOf } from '@/stories/pills-in-a-column'
 
 function rowFor(cell: HTMLElement): HTMLElement {
   const row = cell.closest('tr')
@@ -159,5 +160,31 @@ export const 絞り込んで空: Story = {
     await expect(
       canvas.getByRole('button', { name: '絞り込みを解除' }),
     ).toBeEnabled()
+  },
+}
+
+const KIND_COLUMN = 6
+
+export const 札の並び: Story = {
+  args: { result: outcomeLedger(EVERY_KIND_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    const rows = bodyRows(canvasElement)
+
+    await expect(rows.length).toBeGreaterThan(3)
+
+    const stacks = rows.map((row) => pillsIn(row, KIND_COLUMN))
+
+    await expect(
+      Math.max(...stacks.map((pills) => pills.length)),
+    ).toBeGreaterThan(1)
+    await expect(new Set(stacks.flat().map(widthOf)).size).toBe(1)
+
+    for (const pills of stacks) {
+      const lefts = pills.map((pill) =>
+        Math.round(pill.getBoundingClientRect().left),
+      )
+
+      await expect(new Set(lefts).size).toBe(1)
+    }
   },
 }

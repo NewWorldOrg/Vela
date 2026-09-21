@@ -23,6 +23,11 @@ import {
 } from '@/repository/encode.fixtures'
 import type { EncodeActions } from '@/components/encode/encode-page'
 import { EncodeView } from '@/components/encode/encode-page'
+import {
+  fillsTheColumn,
+  rowsOfTheTableHeaded,
+  widthOf,
+} from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
 const callOff = fn(async () => ({ state: 'ok' }) as const)
@@ -978,5 +983,34 @@ export const 対象に何も入っていない: Story = {
 
     await expect(panel.getByText('対象')).toBeVisible()
     await expect(panel.getByText('この版がまだ知らない値')).toBeVisible()
+  },
+}
+
+const JOB_STATE_COLUMN = 1
+
+export const 札の並び: Story = {
+  play: async ({ canvasElement }) => {
+    const rows = rowsOfTheTableHeaded(canvasElement, '番組')
+
+    await expect(rows.length).toBeGreaterThan(3)
+    await fillsTheColumn(rows, JOB_STATE_COLUMN)
+  },
+}
+
+export const 行の操作の並び: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    const changing = canvas.getAllByRole('button', { name: /を変更$/ })
+    const removing = canvas.getAllByRole('button', { name: /を撤去$/ })
+
+    await expect(changing.length).toBe(removing.length)
+    await expect(changing.length).toBeGreaterThan(1)
+
+    for (const [at, one] of changing.entries()) {
+      await expect(widthOf(one)).toBe(widthOf(removing[at]))
+      await expect(one.querySelector('svg')).not.toBeNull()
+      await expect(removing[at].querySelector('svg')).not.toBeNull()
+    }
   },
 }

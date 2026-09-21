@@ -12,6 +12,7 @@ import type {
   EncodeProfileDraft,
 } from '@/repository/encode-terms'
 import { Button } from '@/components/ui/button'
+import { EditIcon } from '@/components/vela/icons'
 import { DestinationDialog } from '@/components/encode/destination-dialog'
 import { ProfileDialog } from '@/components/encode/profile-dialog'
 
@@ -24,11 +25,12 @@ function ChangeButton({
 }) {
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       aria-label={`${label} を変更`}
       onClick={onOpen}
     >
+      <EditIcon />
       変更
     </Button>
   )

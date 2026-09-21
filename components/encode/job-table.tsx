@@ -3,6 +3,7 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatLength, formatSpan } from '@/lib/format'
+import { NOTHING_HERE } from '@/lib/nothing'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
@@ -40,7 +41,7 @@ const COLUMNS: { label: string; hidden?: boolean }[] = [
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
 function Dash() {
-  return <span className="text-ink-3">—</span>
+  return <span className="text-ink-3">{NOTHING_HERE}</span>
 }
 
 export function JobTable({

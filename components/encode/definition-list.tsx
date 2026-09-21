@@ -10,8 +10,6 @@ export const STAMP =
 
 export const RETIRED_ROW = '[&>td]:bg-surface-2'
 
-export const ROW_OPS = 'inline-flex items-center gap-2'
-
 export function DefinitionName({
   label,
   retired,
