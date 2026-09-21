@@ -62,7 +62,6 @@ export interface QualityStat {
   level?: QualityLevel
   levelLabel?: string
   aside?: string
-  link?: { href: Route; label: string }
   foot?: string
 }
 
@@ -734,7 +733,6 @@ function statsOf(
       levelLabel: worstProblem
         ? QUALITY_LEVEL_LABEL[worstOfVerdicts(worstProblem)]
         : undefined,
-      link: { href: '/library', label: 'ライブラリで絞り込む' },
     },
     {
       key: 'scramble',
@@ -765,7 +763,6 @@ function healthStat(
       measured.length > 0 && nothingToMeasure > 0
         ? `${QUALITY_LEVEL_LABEL.nodata} ${nothingToMeasure} 台`
         : undefined,
-    link: { href: '/settings/tuners', label: 'チューナーへ' },
     foot: everySignalUnmeasured(signal) ? '信号品質 未計測' : undefined,
   }
 }
