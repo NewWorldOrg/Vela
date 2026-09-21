@@ -147,7 +147,7 @@ export const 訪問の記録がひとつも無い: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.getByRole('heading', { name: '訪問の記録がありません' }),
+      canvas.getByRole('heading', { name: '訪問記録はまだありません' }),
     ).toBeVisible()
   },
 }

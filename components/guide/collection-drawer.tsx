@@ -493,7 +493,7 @@ export function CollectionDrawer({
               </div>
             ))}
             {status.streams.length === 0 && (
-              <EmptyState spot={null} title="訪問の記録がありません" />
+              <EmptyState spot={null} title="訪問記録はまだありません" />
             )}
           </div>
 
