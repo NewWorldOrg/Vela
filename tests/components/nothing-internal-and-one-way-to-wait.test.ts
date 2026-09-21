@@ -28,13 +28,6 @@ const THE_KINDS = 'lib/broadcast-terms.ts'
 
 const THE_WAITING = 'components/vela/waiting.tsx'
 
-const SCREENS_READ_EVERY_DAY = [
-  'app/(app)/library',
-  'app/(app)/guide',
-  'app/(app)/reservations',
-  'app/(app)/live',
-]
-
 const A_VALUE_A_READER_READS =
   /(?<![=$])\{\s*([A-Za-z_$][\w$]*(?:[.?]+[\w$]+)+)\s*\}/g
 
@@ -201,19 +194,11 @@ test('the sign for a value that is not there is named once', async () => {
   assert.ok(dashes.size <= 1, `${dashes.size} kinds of dash were read`)
 })
 
-test('the screens read every day say they are waiting, in the one shape', async () => {
-  for (const screen of SCREENS_READ_EVERY_DAY) {
-    assert.ok(
-      await exists(`${screen}/loading.tsx`),
-      `${screen} shows nothing at all while it waits`,
-    )
-
-    assert.match(
-      await readFile(path.join(ROOT, `${screen}/loading.tsx`), 'utf8'),
-      /@\/components\/vela\/waiting/,
-      `${screen} draws a waiting shape of its own`,
-    )
-  }
+test('a list that is still filling waits in the one shape', async () => {
+  assert.ok(
+    await exists(THE_WAITING),
+    'the shape a list waits in has no one place to be drawn',
+  )
 
   assert.match(
     await readFile(path.join(ROOT, THE_WAITING), 'utf8'),
