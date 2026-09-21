@@ -34,7 +34,7 @@ export function ChannelGrid({
       ref={measure}
       data-slot="channel-grid"
       className={cn(
-        'grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-x-4 gap-y-3.5',
+        'mx-auto grid w-full max-w-[137rem] grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-x-4 gap-y-3.5',
         className,
       )}
     >
@@ -45,7 +45,7 @@ export function ChannelGrid({
           <li
             key={channel.id}
             style={delayOf(gridDelayMs(seat.row, seat.column))}
-            className="arrives min-w-0 max-w-[360px]"
+            className="arrives min-w-0 max-w-[22rem]"
           >
             <ChannelCard channel={channel} onSelect={onSelect} />
           </li>

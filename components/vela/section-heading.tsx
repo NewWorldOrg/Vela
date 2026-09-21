@@ -24,7 +24,7 @@ export function SectionHeading({
       )}
       {...props}
     >
-      <Mark className="drawn size-[15px] text-brand [--stroke-length:60]" />
+      <Mark className="drawn size-[18px] text-brand [--stroke-length:60]" />
       {children}
       <span
         aria-hidden="true"

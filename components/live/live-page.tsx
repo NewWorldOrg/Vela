@@ -137,7 +137,7 @@ export function LiveView({
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
         <h1 className={HEADING}>
-          <LiveIcon className="size-[18px] text-brand" />
+          <LiveIcon className="size-[22px] text-brand" />
           ライブ
         </h1>
         <EmptyState
@@ -158,7 +158,7 @@ export function LiveView({
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
         <h1 className={HEADING}>
-          <LiveIcon className="size-[18px] text-brand" />
+          <LiveIcon className="size-[22px] text-brand" />
           ライブ
         </h1>
         <div className="mb-3.5 flex flex-wrap items-center gap-2">
