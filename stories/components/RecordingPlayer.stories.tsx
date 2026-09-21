@@ -511,6 +511,28 @@ export const 効かない操作子: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
 
     const settings = await screen.findByRole('dialog', { name: '設定' })
+
+    await within(settings).findByRole('group', { name: '画質' })
+    await expect(within(settings).queryByText('字幕')).toBeNull()
+    await expect(
+      within(settings).queryByText(/選べます|実装されます/),
+    ).toBeNull()
+  },
+}
+
+export const オンザフライでない録画の画質は押せない: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: HANDED_OVER_IN_TWO_LANGUAGES,
+    startAt: 0,
+    pictureHref: carrying,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const settings = await screen.findByRole('dialog', { name: '設定' })
     const quality = await within(settings).findByRole('group', {
       name: '画質',
     })
@@ -520,7 +542,6 @@ export const 効かない操作子: Story = {
       await expect(one).not.toHaveAttribute('title')
     }
 
-    await expect(within(settings).queryByText('字幕')).toBeNull()
     await expect(
       within(settings).queryByText(/選べます|実装されます/),
     ).toBeNull()

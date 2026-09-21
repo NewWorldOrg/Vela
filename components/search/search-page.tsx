@@ -56,6 +56,7 @@ import {
   SearchIcon,
 } from '@/components/vela/icons'
 import { ADMIN_LIST_HEIGHT_CAP, ScreenMain } from '@/components/vela/app-shell'
+import { SPAN_DASH } from '@/lib/format'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 const EVERY_KIND = 'all'
@@ -592,7 +593,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             <b className="mr-1.5 font-medium text-ink">
                               {p.dayLabel}
                             </b>
-                            {p.startLabel}–
+                            {p.startLabel}
+                            {SPAN_DASH}
                             {p.endUndecided ? '終了未定' : p.endLabel}
                           </td>
                           <td className="border-b border-dashed border-line px-3.5 py-3 align-top">

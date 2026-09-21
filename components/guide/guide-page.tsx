@@ -216,6 +216,7 @@ export function GuideView({
       {shownGuide.channels.length === 0 ? (
         <EmptyState
           spot="antenna"
+          titleLevel={2}
           title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
           action={
             <Button variant="default" size="sm" asChild>
@@ -224,7 +225,11 @@ export function GuideView({
           }
         />
       ) : shownGuide.programs.length === 0 ? (
-        <EmptyState spot="antenna" title="この日の番組情報がありません" />
+        <EmptyState
+          spot="antenna"
+          titleLevel={2}
+          title="この日の番組情報がありません"
+        />
       ) : (
         <>
           <GuideGrid

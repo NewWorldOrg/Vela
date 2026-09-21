@@ -476,7 +476,9 @@ export const 選局前: Story = {
     const canvas = within(canvasElement)
 
     await expect(canvas.queryByText('生放送')).toBeNull()
-    await expect(canvas.queryByRole('heading', { level: 1 })).toBeNull()
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'ライブ',
+    )
     await expect(
       canvasElement.querySelector('[data-slot="live-player"]'),
     ).toBeNull()
@@ -488,7 +490,7 @@ export const 選局前: Story = {
     ).toBeVisible()
 
     await expect(canvas.getAllByText('ニュースの視点9')[0]).toBeVisible()
-    await expect(canvas.getAllByText('21:00–22:00')[0]).toBeVisible()
+    await expect(canvas.getAllByText('21:00 – 22:00')[0]).toBeVisible()
     await expect(canvas.getAllByText(/クローズアップ列島/)[0]).toBeVisible()
 
     await expect(

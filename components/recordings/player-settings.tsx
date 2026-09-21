@@ -31,7 +31,7 @@ export function Setting({
   children?: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-dashed border-white/12 py-2.5 last:border-b-0">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-dashed border-white/12 py-3.5 last:border-b-0">
       <span className="w-11 shrink-0 text-[11px] text-(--pl-ink-3)">
         {label}
       </span>
@@ -87,7 +87,7 @@ export function PlayerSettings({
         side="top"
         align="end"
         sideOffset={10}
-        className="w-auto max-w-[min(20rem,calc(100vw-2rem))] min-w-[17rem] rounded-lg border-white/20 bg-(--pl-bg) p-4 text-(--pl-ink) shadow-pop-xl"
+        className="w-auto max-w-[min(20rem,calc(100vw-2rem))] min-w-[17rem] rounded-lg border-white/20 bg-(--pl-bg) px-4 pt-6 pb-[22px] text-(--pl-ink) shadow-pop-xl"
       >
         <Setting label="画質">
           <PlayerSegmentedControl

@@ -194,6 +194,7 @@ export function LiveView({
         {nothingIsOn && (
           <EmptyState
             spot={null}
+            titleLevel={2}
             title="EPG をまだ取得していません"
             className="mt-3.5"
             action={
