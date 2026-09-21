@@ -42,9 +42,11 @@ const DELETES = /<TrashIcon\b/
 
 const ADDS = /追加/
 
-const THE_PILL_WIDTH = 'PILL_WIDTH'
+const A_COLUMN_WIDTH = /width=\{([A-Z_]+_PILL_WIDTH)\}/
 
 const THE_CELL = 'components/recordings/status-cell.tsx'
+
+const THE_PILL = 'components/ui/badge.tsx'
 
 const THE_ROW = 'components/vela/action-row.tsx'
 
@@ -140,7 +142,7 @@ test('a column that says a state goes through the one cell', async () => {
   }
 })
 
-test('every pill in a state column is told the one width, by the one name', async () => {
+test('every pill in a state column is told the width of its column, by name', async () => {
   const told: string[] = []
 
   for (const column of await stateColumns()) {
@@ -148,7 +150,7 @@ test('every pill in a state column is told the one width, by the one name', asyn
       told.push(`${column.file}: ${pill[1]}`)
       assert.match(
         pill[2],
-        new RegExp(`width=\\{${THE_PILL_WIDTH}\\}`),
+        A_COLUMN_WIDTH,
         `${column.file}: ${pill[1]} draws itself as wide as it likes`,
       )
     }
@@ -157,24 +159,64 @@ test('every pill in a state column is told the one width, by the one name', asyn
   assert.ok(told.length > 8, `only ${told.length} pills were read`)
 })
 
-test('what the one name means is one fixed width, the same everywhere', async () => {
+async function columnWidthsToldTo(): Promise<Set<string>> {
+  const names = new Set<string>()
+
+  for (const column of await stateColumns()) {
+    for (const pill of column.body.matchAll(A_PILL)) {
+      const told = pill[2].match(A_COLUMN_WIDTH)
+
+      if (told) {
+        names.add(told[1])
+      }
+    }
+  }
+
+  return names
+}
+
+test('the width of a column is made from the words that column can say', async () => {
   const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
-  const named = cell.match(
-    new RegExp(`export const ${THE_PILL_WIDTH}: BadgeWidth = '(\\w+)'`),
+
+  assert.match(cell, /export function pillWidthFor\(/)
+
+  const sources = await everySource()
+  const names = await columnWidthsToldTo()
+
+  assert.ok(names.size > 5, `only ${names.size} column widths were read`)
+
+  for (const name of names) {
+    const declared = sources.some(({ source }) =>
+      new RegExp(`(?:export )?const ${name} = pillWidthFor\\(`).test(source),
+    )
+
+    assert.ok(
+      declared,
+      `${name} is not made from its column's words with pillWidthFor`,
+    )
+  }
+
+  const pill = await readFile(path.join(ROOT, THE_PILL), 'utf8')
+
+  assert.doesNotMatch(
+    pill,
+    /w-\[[\d.]+em\]/,
+    'the pill still keeps one width for every column',
   )
-
-  assert.ok(named, 'the width the pills are told to take has no name')
-
-  const pill = await readFile(
-    path.join(ROOT, 'components/ui/badge.tsx'),
-    'utf8',
-  )
-
-  assert.match(pill, new RegExp(`${named[1]}: 'w-\\[[\\d.]+em\\]`))
   assert.doesNotMatch(
     pill,
     /'w-full'/,
     'a pill is still told to stretch to the column it sits in',
+  )
+})
+
+test('a pill told the width of a column is drawn without a line', async () => {
+  const pill = await readFile(path.join(ROOT, THE_PILL), 'utf8')
+
+  assert.match(
+    pill,
+    /const IN_A_COLUMN = 'border-transparent'/,
+    'a pill in a column still carries the line a button carries',
   )
 })
 

@@ -28,7 +28,8 @@ test('each level the API grades a recording at has its own badge', () => {
   })
   assert.deepEqual(recordingQualityShapeOf('mayNotBeWatchable'), {
     variant: 'err',
-    label: '視聴不可の恐れ',
+    label: '視聴不可',
+    saying: '視聴不可の恐れ',
   })
 })
 

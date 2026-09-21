@@ -378,7 +378,7 @@ export const QUALITY: QualityResult = {
       id: 'adapter3.frontend0',
       device: 'adapter3.frontend0',
       hardware: '録画 2 本を計測',
-      state: { level: 'bad', label: '視聴不可の恐れ' },
+      state: { level: 'bad', label: '視聴不可' },
       drop: { value: '0.152', unit: '%', level: 'bad' },
       lock: NOT_SAMPLED,
       cnr: NOT_SAMPLED,

@@ -61,7 +61,7 @@ test('予約結果の分類は API の enum を漏れなく説明している', 
 
 const FROM_THE_REQUIREMENTS = {
   standing: {
-    scheduled: 'チューナー確保済み',
+    scheduled: '確保済み',
     conflict: '競合',
     recording: '録画中',
     cancelled: '取消済み',

@@ -10,7 +10,7 @@ const WHERE_THE_WIDTH_IS_DECLARED = 'components/recordings/status-cell.tsx'
 
 const WHERE_THE_PILL_IS_DRAWN = 'components/ui/badge.tsx'
 
-const THE_PILL_WIDTH = 'PILL_WIDTH'
+const A_COLUMN_WIDTH = /width=\{([A-Z_]+_PILL_WIDTH)\}/
 
 const A_CHIP = /<([A-Z][A-Za-z]*Chip)\b([^>]*)\/>/g
 
@@ -90,8 +90,7 @@ test('the cells that carry chips are declared the same way', async () => {
   )
 })
 
-test('every chip in a column is told the one width, by the one name', async () => {
-  const source = await readFile(path.join(ROOT, THE_ROW), 'utf8')
+test('every chip in a column is told the width of its column, by name', async () => {
   const told: string[] = []
 
   for (const cell of await cellsThatCarryChips()) {
@@ -99,30 +98,49 @@ test('every chip in a column is told the one width, by the one name', async () =
       told.push(chip[1])
       assert.match(
         chip[2],
-        new RegExp(`width=\\{${THE_PILL_WIDTH}\\}`),
+        A_COLUMN_WIDTH,
         `${chip[1]} draws itself as wide as it likes: ${chip[0]}`,
       )
     }
   }
 
   assert.ok(told.length > 2, `only ${told.length} chips were read`)
-  assert.match(source, new RegExp(`\\b${THE_PILL_WIDTH}\\b`))
 })
 
-test('what the one name means is the one fixed width', async () => {
+test('the width a column is told is made from the words it can say', async () => {
+  const source = await readFile(path.join(ROOT, THE_ROW), 'utf8')
   const cell = await readFile(
     path.join(ROOT, WHERE_THE_WIDTH_IS_DECLARED),
     'utf8',
   )
   const pill = await readFile(path.join(ROOT, WHERE_THE_PILL_IS_DRAWN), 'utf8')
-  const named = cell.match(
-    new RegExp(`export const ${THE_PILL_WIDTH}: BadgeWidth = '(\\w+)'`),
+  const names = new Set<string>()
+
+  for (const told of source.matchAll(new RegExp(A_COLUMN_WIDTH, 'g'))) {
+    names.add(told[1])
+  }
+
+  assert.ok(names.size > 2, `only ${names.size} column widths were read`)
+  assert.match(cell, /export function pillWidthFor\(/)
+
+  const chips = await Promise.all(
+    (await sourceFiles('components/recordings')).map((file) =>
+      readFile(path.join(ROOT, file), 'utf8'),
+    ),
   )
 
-  assert.ok(named, 'the width the chips are told to take has no name')
-  assert.match(pill, new RegExp(`${named[1]}: 'w-\\[[\\d.]+em\\]`))
+  for (const name of names) {
+    assert.ok(
+      chips.some((chip) =>
+        new RegExp(`export const ${name} = pillWidthFor\\(`).test(chip),
+      ),
+      `${name} is not made from its column's words`,
+    )
+  }
+
+  assert.match(pill, /width = 'fit'/)
+  assert.doesNotMatch(pill, /w-\[[\d.]+em\]/)
   assert.doesNotMatch(pill, /'w-full'/)
-  assert.match(pill, /width: 'fit'/)
 })
 
 test('nothing but the pill itself is asked to fill the column', async () => {

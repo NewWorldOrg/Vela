@@ -190,7 +190,7 @@ export const 状態バッジの説明: Story = {
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="ok">受信可</Badge>
         <Badge variant="mute">未計測</Badge>
-        <Badge variant="outline">未エンコード</Badge>
+        <Badge variant="outline">未実施</Badge>
         <Badge variant="ok">良好</Badge>
       </div>
     </div>

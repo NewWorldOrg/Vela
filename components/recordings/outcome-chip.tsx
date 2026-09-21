@@ -5,7 +5,7 @@ import {
 } from '@/lib/state-terms'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { alsoSays } from '@/components/recordings/status-cell'
+import { alsoSays, pillWidthFor } from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -17,6 +17,10 @@ const VARIANT: Record<SettledOutcome, 'ok' | 'warn' | 'err'> = {
   truncated: 'warn',
   failed: 'err',
 }
+
+export const OUTCOME_PILL_WIDTH = pillWidthFor(
+  Object.values(RECORDING_OUTCOME_TERMS).map((term) => term.label),
+)
 
 export function OutcomeChip({
   recording: r,

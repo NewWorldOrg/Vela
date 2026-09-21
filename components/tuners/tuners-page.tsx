@@ -11,6 +11,7 @@ import type {
   TunerToggleResult,
   TunerWriteResult,
 } from '@/repository/tuners'
+import { SESSION_PILL_LABEL } from '@/repository/driver-capabilities'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
@@ -37,12 +38,15 @@ import {
   TunerTerrestrialIcon,
 } from '@/components/vela/icons'
 import {
-  PILL_WIDTH,
   STATE_COLUMN,
   StatusCell,
+  pillWidthFor,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
-import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
+import {
+  TUNER_STATE_PILL_WIDTH,
+  TunerStateChip,
+} from '@/components/tuners/tuner-state-chip'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
@@ -51,11 +55,12 @@ import { WHEN_LABELS } from '@/lib/when-terms'
 
 function whatTheSessionIs(session: {
   label: string
+  saying?: string
   code?: string
   endsAt?: string
 }): string {
   return [
-    session.label,
+    session.saying ?? session.label,
     session.code,
     session.endsAt && `終了予定 ${session.endsAt}`,
   ]
@@ -74,6 +79,8 @@ const DIFF_VARIANT = {
 } as const
 
 const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
+
+const SESSION_PILL_WIDTH = pillWidthFor(Object.values(SESSION_PILL_LABEL))
 
 const COLUMNS = [
   'デバイス',
@@ -380,7 +387,7 @@ export function TunersView({
                             ? 'recording'
                             : 'info'
                         }
-                        width={PILL_WIDTH}
+                        width={SESSION_PILL_WIDTH}
                         className="font-bold"
                       >
                         {row.session.label}
@@ -397,7 +404,7 @@ export function TunersView({
                 <StatusCell>
                   <TunerStateChip
                     row={row}
-                    width={PILL_WIDTH}
+                    width={TUNER_STATE_PILL_WIDTH}
                     also={row.stateSub}
                   />
                 </StatusCell>

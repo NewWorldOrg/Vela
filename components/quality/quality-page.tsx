@@ -11,11 +11,7 @@ import type {
   QualityWrite,
 } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
-import {
-  PILL_WIDTH,
-  STATE_COLUMN,
-  StatusCell,
-} from '@/components/recordings/status-cell'
+import { STATE_COLUMN, StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
   Table,
@@ -44,7 +40,10 @@ import { ChangeThresholdButton } from '@/components/quality/change-threshold-but
 import { AnomalyList } from '@/components/quality/anomaly-list'
 import { LinkSegments } from '@/components/quality/link-segments'
 import { QualityTrendPanel } from '@/components/quality/quality-trend'
-import { QualityChip } from '@/components/quality/signal-quality-chip'
+import {
+  QUALITY_LEVEL_PILL_WIDTH,
+  QualityChip,
+} from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
 
 const SUPPLY_GONE_QUIET = '計測の供給が途絶しています'
@@ -323,7 +322,10 @@ export function QualityView({
                   </TableCell>
                   <TableCell className="align-top whitespace-normal">
                     <StatusCell>
-                      <QualityChip level={tuner.state.level} width={PILL_WIDTH}>
+                      <QualityChip
+                        level={tuner.state.level}
+                        width={QUALITY_LEVEL_PILL_WIDTH}
+                      >
                         {tuner.state.label}
                       </QualityChip>
                     </StatusCell>

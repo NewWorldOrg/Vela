@@ -277,7 +277,7 @@ export const 録画中: Story = {
     const shown = within(surface)
 
     await expect(shown.getByText('録画中')).toBeVisible()
-    await expect(shown.queryByText('チューナー確保済み')).toBeNull()
+    await expect(shown.queryByText('確保済み')).toBeNull()
     await expect(
       shown.queryByRole('button', { name: '予約を取り消す' }),
     ).toBeNull()
@@ -308,7 +308,7 @@ export const 予約済み: Story = {
 
     const shown = within(surface)
 
-    await expect(shown.getByText('チューナー確保済み')).toBeVisible()
+    await expect(shown.getByText('確保済み')).toBeVisible()
     await expect(
       shown.getByRole('button', { name: '予約を取り消す' }),
     ).toBeEnabled()

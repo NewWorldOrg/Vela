@@ -17,6 +17,13 @@ export const QUALITY_LEVEL_LABEL: Record<QualityLevel, string> = {
   unreachable: '取得できず',
 }
 
+export const UNWATCHABLE_PILL = '視聴不可'
+
+export const QUALITY_PILL_LABEL: Record<QualityLevel, string> = {
+  ...QUALITY_LEVEL_LABEL,
+  bad: UNWATCHABLE_PILL,
+}
+
 export function thresholdProblem(
   typed: string,
   lowest: number,
