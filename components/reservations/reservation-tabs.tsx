@@ -10,7 +10,7 @@ const TABS = [
 
 const LEDGER = {
   key: 'outcomes',
-  label: '予約結果台帳',
+  label: '失敗台帳',
   href: '/reservations/outcomes',
 } as const
 

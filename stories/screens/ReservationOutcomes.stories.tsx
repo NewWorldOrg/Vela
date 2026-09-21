@@ -36,7 +36,7 @@ const FAILURES: [string, string][] = [
 const KIND_COLUMN = 6
 
 const meta = {
-  title: 'Screens/予約結果台帳',
+  title: 'Screens/失敗台帳',
   component: OutcomeLedgerView,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof OutcomeLedgerView>

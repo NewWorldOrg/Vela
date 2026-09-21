@@ -6,7 +6,7 @@ import { listReservationOutcomes } from '@/repository/reservation-outcomes'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
 
-export const metadata: Metadata = { title: '予約結果台帳' }
+export const metadata: Metadata = { title: '失敗台帳' }
 
 function only(value: string | string[] | undefined): string | undefined {
   return typeof value === 'string' ? value : undefined
