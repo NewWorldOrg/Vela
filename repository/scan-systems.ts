@@ -1,3 +1,4 @@
+import { BROADCAST_KIND_LABEL } from '@/lib/broadcast-terms'
 import type { components } from '@/repository/client/schema'
 
 type TuneSystem = components['schemas']['TuneSystem']
@@ -5,9 +6,9 @@ type TuneSystem = components['schemas']['TuneSystem']
 export type ScanSystem = Exclude<TuneSystem, 'unspecified'>
 
 export const SYSTEM_LABEL: Record<ScanSystem, string> = {
-  isdbT: '地上波',
-  isdbSBs: 'BS',
-  isdbSCs110: 'CS110',
+  isdbT: BROADCAST_KIND_LABEL.terrestrial,
+  isdbSBs: BROADCAST_KIND_LABEL.bs,
+  isdbSCs110: BROADCAST_KIND_LABEL.cs110,
 }
 
 export const SCAN_SYSTEMS: { value: ScanSystem; label: string }[] = (

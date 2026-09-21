@@ -42,9 +42,6 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
             <div className="min-w-0 flex-1">
               <div className="text-[13px] leading-[1.6] font-bold">
                 {service.name}
-                <span className="ml-2 font-code text-cap font-normal text-ink-3">
-                  {service.sid}
-                </span>
               </div>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {service.channels.map((channel) => (

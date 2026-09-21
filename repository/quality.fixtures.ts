@@ -269,7 +269,6 @@ export const QUALITY: QualityResult = {
       unit: '件',
       level: 'bad',
       levelLabel: '視聴不可の恐れ',
-      link: { href: '/library', label: 'ライブラリで絞り込む' },
     },
     {
       key: 'scramble',
@@ -285,7 +284,6 @@ export const QUALITY: QualityResult = {
       label: 'チューナーヘルス',
       value: '3 / 4',
       unit: '健全',
-      link: { href: '/settings/tuners', label: 'チューナーへ' },
       foot: '信号品質 未計測',
     },
   ],
@@ -461,7 +459,6 @@ export const NOTHING_MEASURED: QualityResult = {
       label: '問題のある録画',
       value: '0',
       unit: '件',
-      link: { href: '/library', label: 'ライブラリで絞り込む' },
     },
     {
       key: 'scramble',
@@ -475,7 +472,6 @@ export const NOTHING_MEASURED: QualityResult = {
       label: 'チューナーヘルス',
       level: 'nodata',
       levelLabel: '対象なし',
-      link: { href: '/settings/tuners', label: 'チューナーへ' },
       foot: '信号品質 未計測',
     },
   ],
@@ -566,7 +562,6 @@ export const EVERY_ROW_UNMEASURED: QualityResult = {
       label: '問題のある録画',
       level: 'unmeasured',
       levelLabel: '未計測',
-      link: { href: '/library', label: 'ライブラリで絞り込む' },
       foot: '録画 36 本 / うち未計測 36 本',
     },
     {
@@ -581,7 +576,6 @@ export const EVERY_ROW_UNMEASURED: QualityResult = {
       label: 'チューナーヘルス',
       level: 'unmeasured',
       levelLabel: '未計測',
-      link: { href: '/settings/tuners', label: 'チューナーへ' },
       foot: '信号品質 未計測',
     },
   ],

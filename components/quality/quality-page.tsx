@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import type {
   QualityChannel,
   QualityResult,
+  QualityStat,
   QualityThresholdKey,
   QualityWrite,
 } from '@/repository/quality'
@@ -77,6 +78,10 @@ const BAR_TRACK: Record<QualityLevel, string> = {
   nodata: 'border border-line',
   unsupported: 'border border-line',
   unreachable: 'border border-line',
+}
+
+function notesOf(stat: QualityStat): string[] {
+  return [stat.aside, stat.foot].filter((note) => note !== undefined)
 }
 
 function ChannelMeters({
@@ -204,27 +209,16 @@ export function QualityView({
                 )
               )}
             </span>
-            <span className="mt-2.5 flex flex-wrap items-center gap-2">
+            <span className="mt-2.5 flex min-h-[19px] flex-wrap items-center gap-x-2 gap-y-1">
               {stat.value && stat.level && (
                 <QualityChip level={stat.level}>{stat.levelLabel}</QualityChip>
               )}
-              {stat.aside && (
-                <span className="text-note text-ink-3">{stat.aside}</span>
-              )}
-              {stat.link && (
-                <Link
-                  href={stat.link.href}
-                  className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
-                >
-                  {stat.link.label}
-                </Link>
-              )}
+              {notesOf(stat).map((note) => (
+                <span key={note} className="text-note text-ink-3">
+                  {note}
+                </span>
+              ))}
             </span>
-            {stat.foot && (
-              <span className="mt-2 block border-t border-dashed border-line pt-2 text-note text-ink-3">
-                {stat.foot}
-              </span>
-            )}
           </Surface>
         ))}
       </div>

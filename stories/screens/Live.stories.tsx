@@ -1578,7 +1578,7 @@ export const 空状態_この種別にチャンネルが無い: Story = {
     ).toBeNull()
 
     await userEvent.click(
-      canvas.getByRole('button', { name: '地上のチャンネルへ' }),
+      canvas.getByRole('button', { name: '地上波のチャンネルへ' }),
     )
     await waitFor(() => expect(getRouter().push).toHaveBeenCalled())
     await expect(getRouter().push.mock.calls[0][0] as string).not.toContain(
@@ -1626,7 +1626,7 @@ export const 空状態_チューナーなし: Story = {
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).toBeNull()
-    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '地上波' })).toBeNull()
   },
 }
 
@@ -1840,7 +1840,7 @@ export const 一覧を畳む: Story = {
     const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
 
     await expect(fold).toHaveAttribute('aria-expanded', 'true')
-    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '地上波' })).toBeVisible()
 
     const wide = asideWidth(canvasElement)
 
@@ -1852,14 +1852,14 @@ export const 一覧を畳む: Story = {
     )
 
     await waitFor(async () => {
-      await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+      await expect(canvas.queryByRole('button', { name: '地上波' })).toBeNull()
       await expect(asideWidth(canvasElement)).toBeLessThan(wide)
     })
 
     await userEvent.click(fold)
 
     await expect(fold).toHaveAttribute('aria-expanded', 'true')
-    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '地上波' })).toBeVisible()
 
     await waitFor(async () => {
       await expect(foldPhaseOf(canvasElement)).toBe('still')
@@ -1880,7 +1880,7 @@ export const 畳んだまま開く: Story = {
     await expect(
       canvas.getByRole('button', { name: 'チャンネル一覧' }),
     ).toHaveAttribute('aria-expanded', 'false')
-    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '地上波' })).toBeNull()
     await expect(foldPhaseOf(canvasElement)).toBe('still')
     await expect(foldRunning(canvasElement)).toHaveLength(0)
     await expect(columnRunning(canvasElement)).toHaveLength(0)
@@ -1903,7 +1903,7 @@ export const 選局前は畳めない: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'チャンネル一覧' }),
     ).toBeNull()
-    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '地上波' })).toBeVisible()
   },
 }
 
@@ -1911,7 +1911,7 @@ export const 一覧を開いたまま: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '地上波' })).toBeVisible()
     await expect(foldPhaseOf(canvasElement)).toBe('still')
     await expect(foldRunning(canvasElement)).toHaveLength(0)
     await expect(rowDelaysOf(canvasElement).join('')).toBe('')
@@ -2015,7 +2015,7 @@ export const 畳みかけて開き直す: Story = {
     await waitFor(async () => {
       await expect(foldPhaseOf(canvasElement)).toBe('still')
     })
-    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '地上波' })).toBeVisible()
     await expect(asideWidth(canvasElement)).toBe(wide)
     await expect(foldRunning(canvasElement)).toHaveLength(0)
   },
@@ -2037,7 +2037,7 @@ export const 動きを減らす設定では一息で畳む: Story = {
     await userEvent.click(fold)
 
     await expect(foldPhaseOf(canvasElement)).toBe('still')
-    await expect(canvas.queryByRole('button', { name: '地上' })).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '地上波' })).toBeNull()
     await expect(asideWidth(canvasElement)).toBeLessThan(wide)
     await expect(foldRunning(canvasElement)).toHaveLength(0)
     await expect(columnRunning(canvasElement)).toHaveLength(0)
@@ -2045,7 +2045,7 @@ export const 動きを減らす設定では一息で畳む: Story = {
     await userEvent.click(fold)
 
     await expect(foldPhaseOf(canvasElement)).toBe('still')
-    await expect(canvas.getByRole('button', { name: '地上' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '地上波' })).toBeVisible()
     await expect(asideWidth(canvasElement)).toBe(wide)
     await expect(foldRunning(canvasElement)).toHaveLength(0)
   },

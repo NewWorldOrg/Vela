@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import type { ChannelKind } from '@/repository/channels'
-import { CHANNEL_KIND_TAB } from '@/repository/channels'
+import { CHANNEL_KIND_LABEL } from '@/repository/channels'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
 
@@ -42,11 +42,11 @@ export function ChannelsMissing({
     <EmptyState
       spot="antenna"
       titleLevel={titleLevel}
-      title={`${CHANNEL_KIND_TAB[kind]}のチャンネルがありません`}
+      title={`${CHANNEL_KIND_LABEL[kind]}のチャンネルがありません`}
       className={className}
       action={
         <Button variant="outline" size="sm" onClick={() => onKind(elsewhere)}>
-          {CHANNEL_KIND_TAB[elsewhere]}のチャンネルへ
+          {CHANNEL_KIND_LABEL[elsewhere]}のチャンネルへ
         </Button>
       }
     />

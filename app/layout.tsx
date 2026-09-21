@@ -3,7 +3,6 @@ import { headers } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { NO_FLASH_THEME_SCRIPT } from '@/components/theme/noFlashThemeScript'
-import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: {
@@ -52,7 +51,6 @@ export default async function RootLayout({
         )}
         <ThemeProvider initialPreference={initialPreference}>
           {children}
-          <Toaster />
         </ThemeProvider>
       </body>
     </html>

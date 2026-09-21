@@ -17,6 +17,7 @@ import {
   SortIcon,
 } from '@/components/vela/icons'
 import { cn } from '@/lib/utils'
+import { WaitingRows, WAITING_LABEL } from '@/components/vela/waiting'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -312,10 +313,12 @@ export default function DataTable<TData>({
                 <TableCell colSpan={colSpan} className="p-0">
                   <div
                     data-testid="datatable-loading"
-                    className="sticky left-0 py-8 text-center text-muted-foreground"
+                    role="status"
+                    aria-label={WAITING_LABEL}
+                    className="sticky left-0 px-3 py-4"
                     style={{ width: 'min(100vw, 100%)' }}
                   >
-                    Loading…
+                    <WaitingRows />
                   </div>
                 </TableCell>
               </TableRow>

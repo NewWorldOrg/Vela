@@ -68,11 +68,7 @@ export function CancelJobButton({
         {pending && !asks && <Spinner className="size-3.5" />}
         中止
       </Button>
-      {refusal && !asks && (
-        <span role="status" className="text-note text-coral">
-          {refusal}
-        </span>
-      )}
+      {refusal && !asks && <InlineAlert tone="warn">{refusal}</InlineAlert>}
       {asks && (
         <AlertDialog
           open={asking}

@@ -12,6 +12,7 @@ const THE_SUITE = [
   'tests/components/library/what-the-library-put-away.test.ts',
   'tests/components/live/live-captions.test.ts',
   'tests/components/live/live-session.test.ts',
+  'tests/components/nothing-internal-and-one-way-to-wait.test.ts',
   'tests/components/recordings/one-way-to-draw-an-action.test.ts',
   'tests/components/say-it-in-full.test.ts',
   'tests/components/the-same-parts-on-every-screen.test.ts',

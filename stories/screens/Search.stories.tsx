@@ -516,7 +516,7 @@ export const 条件は押すまで走らず押すとまとめて走る: Story = 
     await choose('ジャンルを足す', '映画')
     await stillNothingAskedFor('ジャンル')
 
-    await choose('種別', '地上')
+    await choose('種別', '地上波')
     await stillNothingAskedFor('種別')
 
     await choose('チャンネルを足す', '中央テレビ1')
@@ -827,7 +827,7 @@ export const 開いた住所の条件が欄に入っている: Story = {
     ).toHaveTextContent('番組名だけ')
     await expect(
       canvas.getByRole('combobox', { name: '種別' }),
-    ).toHaveTextContent('地上')
+    ).toHaveTextContent('地上波')
     await expect(
       canvas
         .getAllByRole('button', { name: /^ジャンル .+ を外す$/ })

@@ -68,7 +68,7 @@ export const Rows: Story = {
               <span className="truncate">
                 <span className="font-code tabular-nums">011</span> みなと総合1
               </span>
-              <Badge variant="kindData">地上</Badge>
+              <Badge variant="kindData">地上波</Badge>
             </span>
             <span className="text-right font-code tabular-nums text-mint">
               32.4 dB
