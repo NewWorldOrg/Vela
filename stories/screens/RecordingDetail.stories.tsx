@@ -273,7 +273,7 @@ export const スクランブル残存: Story = {
 
     await userEvent.click(canvas.getByText('録画の記録'))
 
-    await expect(canvas.getByText('視聴不可の恐れ')).toBeVisible()
+    await expect(canvas.getByText('視聴不可')).toBeVisible()
     await expect(canvas.getByText('解除できなかったスクランブル')).toBeVisible()
     await expect(canvas.getByText('5,042,768 パケット')).toBeVisible()
   },
@@ -805,7 +805,7 @@ export const エンコードの行は自動実行の対象外と言う: Story = 
     const row = encodeRow(canvasElement)
 
     await expect(row.getByText('対象外')).toBeVisible()
-    await expect(row.queryByText('未エンコード')).toBeNull()
+    await expect(row.queryByText('未実施')).toBeNull()
   },
 }
 
@@ -816,7 +816,7 @@ export const エンコードの行は順番を待つ録画を対象外と言わ�
 
     const row = encodeRow(canvasElement)
 
-    await expect(row.getByText('未エンコード')).toBeVisible()
+    await expect(row.getByText('未実施')).toBeVisible()
     await expect(row.queryByText('対象外')).toBeNull()
   },
 }

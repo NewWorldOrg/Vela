@@ -28,7 +28,7 @@ const job = (over: Partial<Standing> = {}): Standing => ({
 
 test('a recording with no job says the one word the API folded', () => {
   assert.deepEqual(encodeRowOf(undefined, 'notEncoded', true), {
-    main: '未エンコード',
+    main: '未実施',
     cancels: false,
   })
   assert.deepEqual(encodeRowOf(undefined, 'completed', true), {

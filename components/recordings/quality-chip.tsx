@@ -24,20 +24,19 @@ export function QualityChip({
   width?: BadgeWidth
   also?: (string | undefined | false)[]
 }) {
-  const said = also.filter((one): one is string => Boolean(one))
+  const shape = recordingQualityShapeOf(r.quality.level)
+  const said = [r.quality.measured && shape.saying, ...also].filter(
+    (one): one is string => Boolean(one),
+  )
   const pill = !r.quality.measured ? (
     <Badge variant="mute" width={width}>
       <ChipDot />
       {UNMEASURED}
     </Badge>
   ) : (
-    <Badge
-      variant={recordingQualityShapeOf(r.quality.level).variant}
-      width={width}
-      className="font-bold"
-    >
+    <Badge variant={shape.variant} width={width} className="font-bold">
       <ChipDot />
-      {recordingQualityShapeOf(r.quality.level).label}
+      {shape.label}
     </Badge>
   )
 

@@ -44,7 +44,7 @@ const COLUMNS: Column[] = [
   { label: '録画詳細へ', width: 28, hidden: true, detail: true },
 ]
 
-const PROGRAMME_MIN_PX = 245
+const PROGRAMME_MIN_PX = 300
 
 const TABLE_MIN_PX =
   COLUMNS.reduce((sum, column) => sum + (column.width ?? 0), 0) +

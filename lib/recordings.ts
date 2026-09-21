@@ -1,5 +1,5 @@
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
-import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
+import { QUALITY_LEVEL_LABEL, QUALITY_PILL_LABEL } from '@/lib/quality'
 import type {
   QualityLevel,
   Recording,
@@ -15,6 +15,7 @@ export const RECORDING_STATE_FILTERS = [
 export interface RecordingQualityShape {
   variant: 'ok' | 'warn' | 'err' | 'mute'
   label: string
+  saying?: string
 }
 
 export const RECORDING_QUALITY_SHAPES: Record<
@@ -23,7 +24,11 @@ export const RECORDING_QUALITY_SHAPES: Record<
 > = {
   good: { variant: 'ok', label: QUALITY_LEVEL_LABEL.good },
   warning: { variant: 'warn', label: QUALITY_LEVEL_LABEL.warn },
-  mayNotBeWatchable: { variant: 'err', label: QUALITY_LEVEL_LABEL.bad },
+  mayNotBeWatchable: {
+    variant: 'err',
+    label: QUALITY_PILL_LABEL.bad,
+    saying: QUALITY_LEVEL_LABEL.bad,
+  },
 }
 
 const RECORDING_QUALITY_NOT_YET_KNOWN: RecordingQualityShape = {

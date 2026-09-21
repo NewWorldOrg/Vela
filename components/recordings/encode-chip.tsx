@@ -4,6 +4,7 @@ import type { Recording } from '@/repository/recordings'
 import {
   NOT_ASKED_FOR_LABEL,
   NOT_ASKED_FOR_SAYING,
+  NOT_ENCODED_SAYING,
   STANDING_LABEL,
   type EncodeStanding,
 } from '@/repository/encode-terms'
@@ -23,6 +24,11 @@ const TONE: Record<EncodeStanding, EncodeTone> = {
 }
 
 const NOT_YET_KNOWN_TONE: EncodeTone = 'secondary'
+
+const SAYING: Record<string, string> = {
+  [NOT_ASKED_FOR_LABEL]: NOT_ASKED_FOR_SAYING,
+  [STANDING_LABEL.notEncoded]: NOT_ENCODED_SAYING,
+}
 
 export const ENCODE_PILL_WIDTH = pillWidthFor([
   ...Object.values(STANDING_LABEL),
@@ -47,9 +53,11 @@ export function EncodeChip({
     </Badge>
   )
 
-  if (word !== NOT_ASKED_FOR_LABEL) {
+  const saying = SAYING[word]
+
+  if (saying === undefined) {
     return pill
   }
 
-  return <InFull says={NOT_ASKED_FOR_SAYING}>{pill}</InFull>
+  return <InFull says={saying}>{pill}</InFull>
 }
