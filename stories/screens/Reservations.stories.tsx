@@ -15,6 +15,7 @@ import {
   SETTLED_RESERVATION_FIXTURES,
 } from '@/stories/fixtures/reservations'
 import { ReservationsView } from '@/components/reservations/reservations-page'
+import { cellOf, tipIn } from '@/stories/pills-in-a-column'
 
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
 
@@ -168,8 +169,10 @@ export const 終わった予約: Story = {
 
     const removed = rowFor(canvas.getByText('真昼の博物誌'))
 
-    await expect(within(removed).getByText('完了')).toBeInTheDocument()
     await expect(within(removed).getByText('録画削除済み')).toBeInTheDocument()
+    await expect(
+      await tipIn(cellOf(removed, THE_STATE_COLUMN)),
+    ).toHaveTextContent('完了')
     await expect(
       within(removed).queryByRole('link', { name: 'この予約の録画' }),
     ).toBeNull()
@@ -243,8 +246,10 @@ export const 録画が削除された予約: Story = {
     ]) {
       const row = rowFor(canvas.getByText(title))
 
-      await expect(within(row).getByText(standing)).toBeInTheDocument()
       await expect(within(row).getByText('録画削除済み')).toBeInTheDocument()
+      await expect(
+        await tipIn(cellOf(row, THE_STATE_COLUMN)),
+      ).toHaveTextContent(standing)
     }
 
     for (const title of ['朝のニュース', '午後のロードショー']) {
@@ -476,20 +481,26 @@ export const 番組表が動いた予約: Story = {
     const canvas = within(canvasElement)
 
     for (const title of ['海辺の図書室', '灯台守の一日']) {
+      const row = rowFor(canvas.getByText(title))
+
       await expect(
-        within(rowFor(canvas.getByText(title))).getByText('番組変更'),
-      ).toBeVisible()
+        await tipIn(cellOf(row, THE_STATE_COLUMN)),
+      ).toHaveTextContent('番組変更')
     }
 
     const gone = rowFor(canvas.getByText('真夜中の音楽室'))
+    const goneTip = await tipIn(cellOf(gone, THE_STATE_COLUMN))
 
-    await expect(within(gone).getByText('番組消失')).toBeVisible()
-    await expect(within(gone).queryByText('番組変更')).toBeNull()
+    await expect(goneTip).toHaveTextContent('番組消失')
+    await expect(goneTip).not.toHaveTextContent('番組変更')
     await expect(
-      within(rowFor(canvas.getByText('週末キッチンの手帖'))).queryByText(
-        '番組変更',
+      await tipIn(
+        cellOf(
+          rowFor(canvas.getByText('週末キッチンの手帖')),
+          THE_STATE_COLUMN,
+        ),
       ),
-    ).toBeNull()
+    ).not.toHaveTextContent('番組変更')
 
     await expect(
       canvas.getByRole('button', { name: '番組変更 2 件' }),
@@ -521,7 +532,7 @@ export const 番組変更だけに絞ったとき: Story = {
       canvas.getByRole('button', { name: '番組消失 1 件' }),
     ).toHaveAttribute('aria-pressed', 'false')
     await expect(canvas.queryByText('番組消失')).toBeNull()
-    await expect(canvas.getAllByText('番組変更')).toHaveLength(2)
+    await expect(canvas.getAllByRole('row').slice(1)).toHaveLength(2)
   },
 }
 

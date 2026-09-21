@@ -217,19 +217,17 @@ export const 削除の形: Story = {
 
     await expect(Math.round(box.width)).toBeGreaterThan(Math.round(box.height))
 
-    const pills = canvas
+    const reasons = canvas
       .getAllByRole('row')
       .slice(1)
       .map((row) => within(row).getAllByRole('cell')[1])
-      .map((cell) => cell.querySelector('[data-slot="badge"]'))
-      .filter((pill): pill is HTMLElement => pill instanceof HTMLElement)
 
-    await expect(pills.length).toBeGreaterThan(1)
-    await expect(
-      new Set(
-        pills.map((pill) => Math.round(pill.getBoundingClientRect().width)),
-      ).size,
-    ).toBe(1)
+    await expect(reasons.length).toBeGreaterThan(1)
+
+    for (const reason of reasons) {
+      await expect(reason.querySelector('[data-slot="badge"]')).toBeNull()
+      await expect(reason.textContent?.trim()).not.toBe('')
+    }
   },
 }
 

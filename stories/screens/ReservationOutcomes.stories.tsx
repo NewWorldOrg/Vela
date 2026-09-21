@@ -7,7 +7,14 @@ import {
   outcomeLedger,
 } from '@/stories/fixtures/reservation-outcomes'
 import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
-import { bodyRows, pillOf, pillsIn, widthOf } from '@/stories/pills-in-a-column'
+import {
+  bodyRows,
+  cellOf,
+  pillOf,
+  pillsIn,
+  tipIn,
+  widthOf,
+} from '@/stories/pills-in-a-column'
 
 function rowFor(cell: HTMLElement): HTMLElement {
   const row = cell.closest('tr')
@@ -25,6 +32,8 @@ const FAILURES: [string, string][] = [
   ['朝のニュース', '選局失敗'],
   ['山あいの町から', '録画失敗'],
 ]
+
+const KIND_COLUMN = 6
 
 const meta = {
   title: 'Screens/予約結果台帳',
@@ -93,27 +102,35 @@ export const 分類がそろう: Story = {
     await expect(
       within(refusedAgain).getByText('始め直し').getAttribute('data-variant'),
     ).toBe('sky')
-    await expect(within(refusedAgain).getByText('再び失敗')).toBeInTheDocument()
+    const refusedTip = await tipIn(cellOf(refusedAgain, KIND_COLUMN))
+
+    await expect(refusedTip).toHaveTextContent('再び失敗')
+    await expect(refusedTip).toHaveTextContent('① 信号を掴めない')
     await expect(
-      within(refusedAgain).getByText('① 信号を掴めない'),
-    ).toBeInTheDocument()
-    await expect(within(startedAgain).getByText('録画開始')).toBeInTheDocument()
+      await tipIn(cellOf(startedAgain, KIND_COLUMN)),
+    ).toHaveTextContent('録画開始')
     await expect(
       within(gaveUp).getByText('始め直しを断念').getAttribute('data-variant'),
     ).toBe('err')
-    await expect(within(gaveUp).getByText('試行の上限')).toBeInTheDocument()
+    await expect(await tipIn(cellOf(gaveUp, KIND_COLUMN))).toHaveTextContent(
+      '試行の上限',
+    )
 
     const noLock = rowFor(canvas.getByText('朝のニュース'))
     const psi = rowFor(canvas.getAllByText('真夜中の音楽室')[0])
 
-    await expect(
-      within(noLock).getByText('① 信号を掴めない'),
-    ).toBeInTheDocument()
-    await expect(within(psi).getByText('③ 情報が揃わない')).toBeInTheDocument()
+    await expect(await tipIn(cellOf(noLock, KIND_COLUMN))).toHaveTextContent(
+      '① 信号を掴めない',
+    )
+    await expect(await tipIn(cellOf(psi, KIND_COLUMN))).toHaveTextContent(
+      '③ 情報が揃わない',
+    )
 
     const cutShort = rowFor(canvas.getByText('週末キッチンの手帖'))
 
-    await expect(within(cutShort).getByText('尻切れ')).toBeInTheDocument()
+    await expect(await tipIn(cellOf(cutShort, KIND_COLUMN))).toHaveTextContent(
+      '尻切れ',
+    )
 
     const contest = rowFor(canvas.getByText('金曜シネマ「星の渡り鳥」'))
 
@@ -162,8 +179,6 @@ export const 絞り込んで空: Story = {
     ).toBeEnabled()
   },
 }
-
-const KIND_COLUMN = 6
 
 export const 札の並び: Story = {
   args: { result: outcomeLedger(EVERY_KIND_FIXTURES) },

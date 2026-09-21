@@ -12,7 +12,7 @@ import {
 } from '@/lib/state-terms'
 import { numbered } from '@/repository/scan-failures'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { alsoSays, Folded } from '@/components/recordings/status-cell'
+import { alsoSays } from '@/components/recordings/status-cell'
 import { TermTip } from '@/components/vela/term-tip'
 
 type BadgeTone = ComponentProps<typeof Badge>['variant']
@@ -66,13 +66,6 @@ export function OutcomeKindChip({
           {term.label}
         </Badge>
       </TermTip>
-      <Folded
-        says={[
-          outcome.retry,
-          outcome.tuneFailure && numbered(outcome.tuneFailure),
-          result,
-        ]}
-      />
     </>
   )
 }

@@ -1,6 +1,5 @@
 import type { TunerRow } from '@/repository/tuners'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { Folded } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
 import { ChipDot } from '@/components/vela/status'
 
@@ -30,12 +29,5 @@ export function TunerStateChip({
     </Badge>
   )
 
-  return also ? (
-    <>
-      <InFull says={also}>{pill}</InFull>
-      <Folded says={also} />
-    </>
-  ) : (
-    pill
-  )
+  return also ? <InFull says={also}>{pill}</InFull> : pill
 }

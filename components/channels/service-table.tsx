@@ -121,24 +121,22 @@ const NEEDS_A_LOOK = '要対応'
 const A_BETTER_ONE = '実測上位の候補'
 
 function Standing({ service }: { service: ServiceRow }) {
-  const shape =
-    service.currentChannel === undefined
-      ? { variant: 'warn' as const, label: NEEDS_A_LOOK }
-      : service.betterChannel !== undefined
-        ? {
-            variant: 'sky' as const,
-            label: `${A_BETTER_ONE} ${service.betterChannel}`,
-          }
-        : undefined
+  if (service.currentChannel === undefined) {
+    return (
+      <Badge variant="warn" width={PILL_WIDTH} className="font-bold">
+        {NEEDS_A_LOOK}
+      </Badge>
+    )
+  }
 
-  if (!shape) {
+  if (service.betterChannel === undefined) {
     return null
   }
 
   return (
-    <Badge variant={shape.variant} width={PILL_WIDTH} className="font-bold">
-      {shape.label}
-    </Badge>
+    <span className="text-ui text-sky">
+      {A_BETTER_ONE} {service.betterChannel}
+    </span>
   )
 }
 

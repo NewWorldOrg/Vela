@@ -1,4 +1,4 @@
-import { expect, within } from 'storybook/test'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 export function hasAnEdge(node: Element): boolean {
   if (!(node instanceof HTMLElement)) {
@@ -94,4 +94,44 @@ export async function oneShapeDownTheColumn(
   const shapes = rows.map((row) => shapeOf(pillOf(row, column)))
 
   await expect(new Set(shapes).size).toBe(1)
+}
+
+export async function tipIn(host: HTMLElement): Promise<HTMLElement> {
+  const trigger =
+    host.querySelector<HTMLElement>('[data-slot="term-tip"]') ??
+    host.querySelector<HTMLElement>('[data-slot="tooltip-trigger"]') ??
+    host.querySelector<HTMLElement>('[data-slot="badge"]')
+
+  if (!trigger) {
+    throw new Error(
+      `nothing here carries a tip: ${host.outerHTML.slice(0, 400)}`,
+    )
+  }
+
+  await userEvent.hover(trigger)
+  trigger.focus()
+
+  return await waitFor(
+    () => {
+      const named = trigger.getAttribute('aria-describedby')
+      const said = named ? document.getElementById(named) : null
+
+      if (!said) {
+        throw new Error('the tip did not open')
+      }
+
+      return said
+    },
+    { timeout: 3000 },
+  )
+}
+
+export function cellOf(row: HTMLElement, column: number): HTMLElement {
+  const cell = within(row).getAllByRole('cell')[column]
+
+  if (!cell) {
+    throw new Error(`no column ${column} in this row`)
+  }
+
+  return cell
 }

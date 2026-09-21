@@ -16,7 +16,7 @@ import {
   RESERVATION_STANDING_TERMS,
 } from '@/lib/state-terms'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { alsoSays, Folded } from '@/components/recordings/status-cell'
+import { alsoSays } from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -112,12 +112,6 @@ export function ReservationStateChip({
     reservation.epg?.programmeMissing && saidBy(RESERVATION_EPG_MISSING_TERM),
     reservation.epg?.diverged && saidBy(divergedTerm(reservation.epg)),
   ]
-  const folded = [
-    !reservation.endAtConfirmed && END_UNDECIDED_TERM.label,
-    reservation.receptionUnavailable && RESERVATION_RECEPTION_TERM.label,
-    reservation.epg?.programmeMissing && RESERVATION_EPG_MISSING_TERM.label,
-    reservation.epg?.diverged && RESERVATION_EPG_DIVERGED_TERM.label,
-  ]
 
   if (removed && reservation.standing !== 'recording') {
     const standing = shapeFor(
@@ -138,7 +132,6 @@ export function ReservationStateChip({
             {term.label}
           </Badge>
         </TermTip>
-        <Folded says={[standing.label, ...folded]} />
       </>
     )
   }
@@ -147,7 +140,6 @@ export function ReservationStateChip({
     return (
       <>
         <RecordingInProgressChip width={width} />
-        <Folded says={folded} />
       </>
     )
   }
@@ -155,7 +147,6 @@ export function ReservationStateChip({
   return (
     <>
       <StandingChip standing={reservation.standing} width={width} also={also} />
-      <Folded says={folded} />
     </>
   )
 }

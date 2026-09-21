@@ -21,7 +21,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  Folded,
   PILL_WIDTH,
   STATE_COLUMN,
   StatusCell,
@@ -57,10 +56,9 @@ function Standing({ job }: { job: EncodeJob }) {
   const why = whyItStands(job)
 
   return why ? (
-    <>
-      <InFull says={why}>{chip}</InFull>
-      <Folded says={why.split('\n')} />
-    </>
+    <InFull says={why}>
+      <span className="inline-flex">{chip}</span>
+    </InFull>
   ) : (
     chip
   )

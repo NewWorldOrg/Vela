@@ -1,7 +1,6 @@
 import { recordingQualityShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { Folded } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
 import { ChipDot } from '@/components/vela/status'
 
@@ -36,10 +35,5 @@ export function QualityChip({
     return pill
   }
 
-  return (
-    <>
-      <InFull says={said.join('\n')}>{pill}</InFull>
-      <Folded says={said} />
-    </>
-  )
+  return <InFull says={said.join('\n')}>{pill}</InFull>
 }

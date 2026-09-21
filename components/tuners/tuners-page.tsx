@@ -37,7 +37,6 @@ import {
   TunerTerrestrialIcon,
 } from '@/components/vela/icons'
 import {
-  Folded,
   PILL_WIDTH,
   STATE_COLUMN,
   StatusCell,
@@ -387,7 +386,6 @@ export function TunersView({
                         {row.session.label}
                       </Badge>
                     </InFull>
-                    <Folded says={whatTheSessionIs(row.session).split('\n')} />
                   </StatusCell>
                 ) : (
                   <span className="text-ui text-ink-3">

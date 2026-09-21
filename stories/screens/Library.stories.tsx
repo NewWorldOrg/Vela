@@ -14,6 +14,7 @@ import {
   heightOf,
   oneShapeDownTheColumn,
   pillOf,
+  tipIn,
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
@@ -87,8 +88,8 @@ export const 通常: Story = {
 
     await expect(unwatchable.getByText('視聴不可の恐れ')).toBeVisible()
     await expect(
-      unwatchable.getByText('ドロップ 0 / スクランブル残存 5,042,768'),
-    ).toBeVisible()
+      await tipIn(unwatchable.getAllByRole('cell')[QUALITY_COLUMN]),
+    ).toHaveTextContent('ドロップ 0 / スクランブル残存 5,042,768')
 
     await expect(
       unwatchable.getByRole('button', { name: '再生' }),
@@ -240,13 +241,21 @@ export const 削除未完了の録画: Story = {
     const outcomeOf = (row: HTMLElement) =>
       within(row).getAllByRole('cell')[OUTCOME_COLUMN]
 
-    await expect(outcomeOf(rows[0])).not.toHaveTextContent('削除未完了')
+    await expect(await tipIn(outcomeOf(rows[0]))).not.toHaveTextContent(
+      '削除未完了',
+    )
 
-    await expect(outcomeOf(rows[1])).toHaveTextContent('削除未完了')
-    await expect(outcomeOf(rows[1])).not.toHaveTextContent('残り')
+    await expect(await tipIn(outcomeOf(rows[1]))).toHaveTextContent(
+      '削除未完了',
+    )
+    await expect(await tipIn(outcomeOf(rows[1]))).not.toHaveTextContent('残り')
 
-    await expect(outcomeOf(rows[2])).toHaveTextContent('削除未完了')
-    await expect(outcomeOf(rows[2])).toHaveTextContent('残り 2 ファイル')
+    await expect(await tipIn(outcomeOf(rows[2]))).toHaveTextContent(
+      '削除未完了',
+    )
+    await expect(await tipIn(outcomeOf(rows[2]))).toHaveTextContent(
+      '残り 2 ファイル',
+    )
     await expect(
       within(rows[2]).getByRole('button', { name: '削除' }),
     ).toBeEnabled()
@@ -311,7 +320,9 @@ export const 尻切れと失敗の録画: Story = {
     const outcome = failed.getAllByRole('cell')[OUTCOME_COLUMN]
 
     await expect(outcome).toHaveTextContent('失敗')
-    await expect(outcome).toHaveTextContent('スクランブル解除できず')
+    await expect(await tipIn(outcome)).toHaveTextContent(
+      'スクランブル解除できず',
+    )
     await expect(failed.getAllByRole('cell')[SIZE_COLUMN]).toHaveTextContent(
       '0 B',
     )
@@ -337,9 +348,9 @@ export const ファイル不在の録画: Story = {
     const canvas = within(canvasElement)
     const gone = within(canvas.getByRole('row', { name: /朝のバードウォッチ/ }))
 
-    await expect(gone.getAllByRole('cell')[OUTCOME_COLUMN]).toHaveTextContent(
-      'ファイル不在',
-    )
+    await expect(
+      await tipIn(gone.getAllByRole('cell')[OUTCOME_COLUMN]),
+    ).toHaveTextContent('ファイル不在')
 
     const size = gone.getAllByRole('cell')[SIZE_COLUMN]
 
