@@ -23,13 +23,3 @@ export function WaitingRows({
     </div>
   )
 }
-
-export function WaitingScreen() {
-  return (
-    <div role="status" aria-label={WAITING_LABEL} className="mt-3.5">
-      <Skeleton className="h-[30px] w-[220px]" />
-      <Skeleton className="mt-3.5 h-[46px] w-full" />
-      <WaitingRows className="mt-3.5" />
-    </div>
-  )
-}

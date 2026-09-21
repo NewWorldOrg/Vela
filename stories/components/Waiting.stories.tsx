@@ -5,11 +5,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import DataTable from '@/components/common/DataTable'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { MarkDots } from '@/components/vela/icons'
-import {
-  WaitingRows,
-  WaitingScreen,
-  WAITING_LABEL,
-} from '@/components/vela/waiting'
+import { WaitingRows, WAITING_LABEL } from '@/components/vela/waiting'
 
 const meta = {
   title: 'Components/読み込み中',
@@ -29,22 +25,6 @@ const COLUMNS: ColumnDef<Row, unknown>[] = [
   { accessorKey: 'when', header: '放送日時' },
 ]
 
-export const 主画面: Story = {
-  render: () => (
-    <div className="mx-auto max-w-[840px] p-6">
-      <WaitingScreen />
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await expect(canvas.getByRole('status')).toHaveAccessibleName(WAITING_LABEL)
-    await expect(
-      canvasElement.querySelectorAll('[data-slot="skeleton"]').length,
-    ).toBeGreaterThan(2)
-  },
-}
-
 export const 一覧の中: Story = {
   render: () => (
     <div className="mx-auto max-w-[840px] p-6">
@@ -63,7 +43,9 @@ export const 共通の表: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await expect(canvas.getByTestId('datatable-loading')).toBeVisible()
+    await expect(canvas.getByTestId('datatable-loading')).toHaveAccessibleName(
+      WAITING_LABEL,
+    )
     await expect(canvasElement).not.toHaveTextContent(/Loading/)
   },
 }
