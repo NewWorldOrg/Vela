@@ -1005,7 +1005,10 @@ function RuleEditor({
               </p>
             )}
             {preview.takes.length === 0 ? (
-              <EmptyState spot={null} title="条件に一致する番組がありません" />
+              <EmptyState
+                spot={null}
+                title="いまの番組表に、この条件に一致する番組はありません"
+              />
             ) : (
               <>
                 <ul className="flex flex-col">

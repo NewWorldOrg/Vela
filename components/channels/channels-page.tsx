@@ -86,7 +86,10 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
     <section id="scan-history" className="mt-10">
       <SectionHeading mark={MarkDots}>スキャン履歴</SectionHeading>
       {history.length === 0 ? (
-        <EmptyState spot={null} title="スキャンの記録がありません" />
+        <EmptyState
+          spot={null}
+          title="スキャンはまだ一度も実行されていません"
+        />
       ) : (
         <Table
           className="min-w-[560px]"
