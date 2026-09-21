@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { STATE_COLUMN } from '@/components/recordings/status-cell'
+import { OUTCOME_KIND_COLUMN } from '@/components/reservations/outcome-kind-chip'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { FilterSelect } from '@/components/vela/filter-select'
@@ -160,10 +160,14 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                 {COLUMNS.map((column) => (
                   <TableHead
                     key={column.label}
+                    style={
+                      STATE_COLUMNS.includes(column.label)
+                        ? { width: OUTCOME_KIND_COLUMN }
+                        : undefined
+                    }
                     className={cn(
                       column.narrow && 'w-8',
                       column.label === '優先度' && 'text-right',
-                      STATE_COLUMNS.includes(column.label) && STATE_COLUMN,
                     )}
                   >
                     {column.hidden ? (
@@ -176,9 +180,10 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((outcome) => (
+              {items.map((outcome, nth) => (
                 <OutcomeRow
                   key={outcome.id}
+                  nth={nth}
                   outcome={outcome}
                   expanded={expanded === outcome.id}
                   onToggle={() =>

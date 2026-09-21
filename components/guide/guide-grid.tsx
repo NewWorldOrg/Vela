@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from 'react'
 
+import { columnDelayMs, delayOf, nowLineDelayMs } from '@/lib/arrival'
 import {
   GUTTER_PX,
   gridMinWidthOf,
@@ -25,6 +26,7 @@ const UNSCHEDULED_LABEL_PX = 52
 export function GuideGrid({
   channels,
   programs,
+  dayKey,
   windowStartHour,
   windowHours,
   nowMin,
@@ -34,6 +36,7 @@ export function GuideGrid({
 }: {
   channels: Channel[]
   programs: Program[]
+  dayKey: string
   windowStartHour: number
   windowHours: number
   nowMin?: number
@@ -64,6 +67,7 @@ export function GuideGrid({
       className="min-h-0 flex-1 overflow-auto rounded-lg"
     >
       <div
+        key={dayKey}
         className="rounded-lg bg-surface"
         style={{ minWidth: `${gridMinWidthOf(channels.length)}px` }}
       >
@@ -122,16 +126,16 @@ export function GuideGrid({
             ))}
           </div>
 
-          {channels.map((c) => {
+          {channels.map((c, nth) => {
             const carried = programs.filter((p) => p.channelId === c.id)
 
             return (
               <div
                 key={c.id}
                 data-guide-column
-                style={{ flex: COLUMN_FLEX }}
+                style={{ flex: COLUMN_FLEX, ...delayOf(columnDelayMs(nth)) }}
                 className={cn(
-                  'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
+                  'rises relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
                   c.sub && 'bg-surface-2',
                 )}
               >
@@ -178,10 +182,28 @@ export function GuideGrid({
           {nowMin !== undefined && (
             <div
               data-now-line
-              className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 bg-brand"
-              style={{ top: `${(nowMin / 60) * HOUR_PX}px` }}
+              className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-brand"
+              style={{
+                ...delayOf(nowLineDelayMs()),
+                top: `${(nowMin / 60) * HOUR_PX}px`,
+              }}
             >
-              <span className="absolute -top-2.5 left-1.5 rounded-full bg-brand px-2 py-px font-code text-[10.5px] font-medium text-on-brand">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 100 2"
+                preserveAspectRatio="none"
+                className="drawn block h-0.5 w-full [--stroke-length:100]"
+              >
+                <line
+                  x1="0"
+                  y1="1"
+                  x2="100"
+                  y2="1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+              </svg>
+              <span className="arrives absolute -top-2.5 left-1.5 rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand">
                 {nowLabel}
               </span>
             </div>

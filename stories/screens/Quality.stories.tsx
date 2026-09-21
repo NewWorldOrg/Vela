@@ -10,8 +10,8 @@ import {
 import type { QualityReviseThreshold } from '@/components/quality/quality-page'
 import { QualityView } from '@/components/quality/quality-page'
 import {
-  fillsTheColumn,
   rowsOfTheTableHeaded,
+  saysItWithoutAnEdge,
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 
@@ -202,6 +202,6 @@ export const 札の並び: Story = {
     const rows = rowsOfTheTableHeaded(canvasElement, 'チューナー')
 
     await expect(rows.length).toBeGreaterThan(1)
-    await fillsTheColumn(rows, TUNER_STATE_COLUMN)
+    await saysItWithoutAnEdge(rows, TUNER_STATE_COLUMN)
   },
 }

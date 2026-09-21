@@ -32,7 +32,7 @@ import { ReservationSelection } from '@/components/reservations/reservation-sele
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { cn } from '@/lib/utils'
-import { STATE_COLUMN } from '@/components/recordings/status-cell'
+import { RESERVATION_STATE_COLUMN } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 const STATE_COLUMNS: string[] = ['状態']
@@ -255,10 +255,12 @@ export function ReservationsView({
               {COLUMNS.map((column) => (
                 <TableHead
                   key={column.label}
-                  className={cn(
-                    column.narrow && 'w-8',
-                    STATE_COLUMNS.includes(column.label) && STATE_COLUMN,
-                  )}
+                  style={
+                    STATE_COLUMNS.includes(column.label)
+                      ? { width: RESERVATION_STATE_COLUMN }
+                      : undefined
+                  }
+                  className={cn(column.narrow && 'w-8')}
                 >
                   {column.hidden ? (
                     <span className="sr-only">{column.label}</span>
@@ -270,9 +272,10 @@ export function ReservationsView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((reservation) => (
+            {items.map((reservation, nth) => (
               <ReservationRow
                 key={reservation.id}
+                nth={nth}
                 reservation={reservation}
                 actions={actions}
                 expanded={expanded === reservation.id}

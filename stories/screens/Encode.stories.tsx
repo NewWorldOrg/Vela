@@ -25,8 +25,8 @@ import type { EncodeActions } from '@/components/encode/encode-page'
 import { EncodeView } from '@/components/encode/encode-page'
 import {
   cellOf,
-  fillsTheColumn,
   rowsOfTheTableHeaded,
+  saysItWithoutAnEdge,
   tipIn,
   widthOf,
 } from '@/stories/pills-in-a-column'
@@ -1023,7 +1023,7 @@ export const 札の並び: Story = {
     const rows = rowsOfTheTableHeaded(canvasElement, '番組')
 
     await expect(rows.length).toBeGreaterThan(3)
-    await fillsTheColumn(rows, JOB_STATE_COLUMN)
+    await saysItWithoutAnEdge(rows, JOB_STATE_COLUMN)
   },
 }
 

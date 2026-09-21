@@ -506,6 +506,61 @@ export const 選局前: Story = {
   },
 }
 
+export const 現れ方: Story = {
+  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const cards = [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="channel-grid"] > li',
+      ),
+    ]
+
+    await expect(cards.length).toBeGreaterThan(3)
+
+    const first = getComputedStyle(cards[0])
+
+    await expect(first.animationName).toBe('item')
+    await expect(first.animationDuration).toBe('0.4s')
+    await expect(Number.parseFloat(first.animationDelay)).toBe(0)
+
+    const delays = cards.map((card) =>
+      Number.parseFloat(getComputedStyle(card).animationDelay),
+    )
+
+    await expect(Math.max(...delays)).toBeGreaterThan(0)
+    await expect(Math.max(...delays)).toBeLessThanOrEqual(0.24)
+
+    const across = cards.filter(
+      (card) =>
+        Math.round(card.getBoundingClientRect().top) ===
+        Math.round(cards[0].getBoundingClientRect().top),
+    )
+
+    if (across.length > 1) {
+      await expect(
+        Number.parseFloat(getComputedStyle(across[1]).animationDelay),
+      ).toBeCloseTo(0.03, 3)
+    }
+
+    for (const card of cards) {
+      await expect(
+        Math.round(card.getBoundingClientRect().width),
+      ).toBeLessThanOrEqual(360)
+    }
+
+    document.documentElement.classList.add('dark')
+
+    try {
+      await expect(getComputedStyle(cards[0]).animationName).toBe('item')
+    } finally {
+      document.documentElement.classList.remove('dark')
+    }
+  },
+}
+
 export const 副チャンネルを出している: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
   parameters: {

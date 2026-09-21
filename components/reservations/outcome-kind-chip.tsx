@@ -1,5 +1,3 @@
-import type { ComponentProps } from 'react'
-
 import type {
   ReservationOutcome,
   ReservationOutcomeKind,
@@ -11,17 +9,22 @@ import {
   RESERVATION_OUTCOME_KIND_TERMS,
 } from '@/lib/state-terms'
 import { numbered } from '@/repository/scan-failures'
-import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { alsoSays, pillWidthFor } from '@/components/recordings/status-cell'
+import { Badge } from '@/components/ui/badge'
+import {
+  StateSay,
+  alsoSays,
+  stateColumnFor,
+  toneOf,
+} from '@/components/recordings/status-cell'
 import { TermTip } from '@/components/vela/term-tip'
 
-type BadgeTone = ComponentProps<typeof Badge>['variant']
+type KindTone = 'err' | 'sky' | 'warn' | 'ok' | 'mute'
 
-export const OUTCOME_KIND_PILL_WIDTH = pillWidthFor(
+export const OUTCOME_KIND_COLUMN = stateColumnFor(
   Object.values(RESERVATION_OUTCOME_KIND_TERMS).map((term) => term.label),
 )
 
-const KIND_TONE: Record<ReservationOutcomeKind, BadgeTone> = {
+const KIND_TONE: Record<ReservationOutcomeKind, KindTone> = {
   competing: 'err',
   missed: 'err',
   tuneFailure: 'err',
@@ -33,14 +36,14 @@ const KIND_TONE: Record<ReservationOutcomeKind, BadgeTone> = {
   gaveUpRetrying: 'err',
 }
 
-const NOT_YET_KNOWN_TONE: BadgeTone = 'mute'
+const NOT_YET_KNOWN_TONE: KindTone = 'mute'
 
 export function OutcomeKindChip({
   outcome,
-  width,
+  say = false,
 }: {
   outcome: ReservationOutcome
-  width?: BadgeWidth
+  say?: boolean
 }) {
   const tone = shapeFor(KIND_TONE, outcome.kind, NOT_YET_KNOWN_TONE)
   const alsoSaidByTheKind = outcome.recordingResult === 'failed'
@@ -63,13 +66,21 @@ export function OutcomeKindChip({
     result,
   )
 
-  return (
-    <>
+  if (say) {
+    return (
       <TermTip term={term}>
-        <Badge variant={tone} width={width} className="font-bold">
+        <StateSay tone={toneOf(tone)} bold>
           {term.label}
-        </Badge>
+        </StateSay>
       </TermTip>
-    </>
+    )
+  }
+
+  return (
+    <TermTip term={term}>
+      <Badge variant={tone} className="font-bold">
+        {term.label}
+      </Badge>
+    </TermTip>
   )
 }

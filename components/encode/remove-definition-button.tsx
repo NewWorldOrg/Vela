@@ -84,7 +84,7 @@ export function RemoveDefinitionButton({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              variant="destructiveFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

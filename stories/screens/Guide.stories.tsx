@@ -96,6 +96,51 @@ export const 通常: Story = {
   },
 }
 
+export const 現れ方: Story = {
+  args: { guide: base },
+  play: async ({ canvasElement }) => {
+    const columns = [
+      ...canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+    ]
+
+    await expect(columns.length).toBeGreaterThan(2)
+
+    for (const [nth, column] of columns.slice(0, 3).entries()) {
+      const drawn = getComputedStyle(column)
+
+      await expect(drawn.animationName).toBe('rise')
+      await expect(drawn.animationDuration).toBe('0.7s')
+      await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
+        nth * 0.04,
+        3,
+      )
+    }
+
+    const line = canvasElement.querySelector<HTMLElement>(
+      '[data-now-line] line',
+    )
+
+    await expect(line).not.toBeNull()
+
+    const drawnLine = getComputedStyle(line as Element)
+
+    await expect(drawnLine.animationName).toBe('draw')
+    await expect(Number.parseFloat(drawnLine.animationDelay)).toBeCloseTo(
+      0.98,
+      3,
+    )
+
+    document.documentElement.classList.add('dark')
+
+    try {
+      await expect(getComputedStyle(columns[0]).animationName).toBe('rise')
+      await expect(getComputedStyle(line as Element).animationName).toBe('draw')
+    } finally {
+      document.documentElement.classList.remove('dark')
+    }
+  },
+}
+
 export const 放送済み: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {

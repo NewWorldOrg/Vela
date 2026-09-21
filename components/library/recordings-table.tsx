@@ -6,20 +6,15 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
-import { OUTCOME_PILL_WIDTH } from '@/components/recordings/outcome-chip'
-import { RECORDING_QUALITY_PILL_WIDTH } from '@/components/recordings/quality-chip'
-import { ENCODE_PILL_WIDTH } from '@/components/recordings/encode-chip'
-import { stateColumnPx } from '@/components/recordings/status-cell'
-import {
-  CELL_SIDES_PX,
-  DETAIL_CELL,
-  RecordingRow,
-} from '@/components/library/recording-row'
+import { OUTCOME_COLUMN } from '@/components/recordings/outcome-chip'
+import { RECORDING_QUALITY_COLUMN } from '@/components/recordings/quality-chip'
+import { ENCODE_COLUMN } from '@/components/recordings/encode-chip'
+import { DETAIL_CELL, RecordingRow } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 interface Column {
   label: string
-  width?: number
+  width?: number | string
   hidden?: boolean
   right?: boolean
   detail?: boolean
@@ -31,24 +26,14 @@ const COLUMNS: Column[] = [
   { label: WHEN_LABELS.recorded, width: 132 },
   { label: '長さ', width: 88, right: true },
   { label: 'サイズ', width: 112, right: true },
-  { label: '結果', width: stateColumnPx(OUTCOME_PILL_WIDTH, CELL_SIDES_PX) },
-  {
-    label: '品質',
-    width: stateColumnPx(RECORDING_QUALITY_PILL_WIDTH, CELL_SIDES_PX),
-  },
-  {
-    label: 'エンコード',
-    width: stateColumnPx(ENCODE_PILL_WIDTH, CELL_SIDES_PX),
-  },
+  { label: '結果', width: OUTCOME_COLUMN },
+  { label: '品質', width: RECORDING_QUALITY_COLUMN },
+  { label: 'エンコード', width: ENCODE_COLUMN },
   { label: '操作', width: 178, hidden: true },
   { label: '録画詳細へ', width: 28, hidden: true, detail: true },
 ]
 
-const PROGRAMME_MIN_PX = 300
-
-const TABLE_MIN_PX =
-  COLUMNS.reduce((sum, column) => sum + (column.width ?? 0), 0) +
-  PROGRAMME_MIN_PX
+const TABLE_MIN_PX = 1100
 
 export function RecordingsTable({
   items,
@@ -84,7 +69,7 @@ export function RecordingsTable({
               <th
                 key={column.label}
                 className={cn(
-                  'sticky top-0 z-10 bg-surface-2 px-3 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md',
+                  'sticky top-0 z-10 bg-surface-2 px-3 py-[9px] text-left text-micro font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md',
                   column.right && 'text-right',
                   column.detail && DETAIL_CELL,
                 )}
@@ -99,9 +84,10 @@ export function RecordingsTable({
           </tr>
         </thead>
         <tbody>
-          {items.map((r) => (
+          {items.map((r, nth) => (
             <RecordingRow
               key={r.id}
+              nth={nth}
               recording={r}
               onOpen={() => router.push(`/recordings/${r.id}`)}
               onDelete={() => setAsked(r)}

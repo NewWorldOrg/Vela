@@ -98,7 +98,7 @@ export function CancelJobButton({
                 キャンセル
               </AlertDialogCancel>
               <AlertDialogAction
-                variant="destructive"
+                variant="destructiveFill"
                 disabled={pending}
                 onClick={(event) => {
                   event.preventDefault()

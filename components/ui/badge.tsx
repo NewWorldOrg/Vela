@@ -28,34 +28,22 @@ const badgeVariants = cva(
   },
 )
 
-export type PillWidth = `${number}em`
-
-export type BadgeWidth = 'fit' | PillWidth
-
-const IN_A_COLUMN = 'border-transparent'
-
 function Badge({
   className,
   variant = 'default',
-  width = 'fit',
   asChild = false,
-  style,
   ...props
 }: React.ComponentProps<'span'> &
   VariantProps<typeof badgeVariants> & {
     asChild?: boolean
-    width?: BadgeWidth
   }) {
   const Comp = asChild ? Slot.Root : 'span'
-  const told = width !== 'fit'
 
   return (
     <Comp
       data-slot="badge"
       data-variant={variant}
-      data-width={width}
-      className={cn(badgeVariants({ variant }), told && IN_A_COLUMN, className)}
-      style={told ? { ...style, width } : style}
+      className={cn(badgeVariants({ variant }), className)}
       {...props}
     />
   )

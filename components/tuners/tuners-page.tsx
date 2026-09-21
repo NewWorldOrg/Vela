@@ -38,13 +38,13 @@ import {
   TunerTerrestrialIcon,
 } from '@/components/vela/icons'
 import {
-  STATE_COLUMN,
+  StateSay,
   StatusCell,
-  pillWidthFor,
+  stateColumnFor,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
 import {
-  TUNER_STATE_PILL_WIDTH,
+  TUNER_STATE_COLUMN,
   TunerStateChip,
 } from '@/components/tuners/tuner-state-chip'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
@@ -80,7 +80,7 @@ const DIFF_VARIANT = {
 
 const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
 
-const SESSION_PILL_WIDTH = pillWidthFor(Object.values(SESSION_PILL_LABEL))
+const SESSION_COLUMN = stateColumnFor(Object.values(SESSION_PILL_LABEL))
 
 const COLUMNS = [
   'デバイス',
@@ -340,8 +340,12 @@ export function TunersView({
             {COLUMNS.map((column) => (
               <TableHead
                 key={column}
-                className={
-                  STATE_COLUMNS.includes(column) ? STATE_COLUMN : undefined
+                style={
+                  column === '現在のセッション'
+                    ? { width: SESSION_COLUMN }
+                    : column === '状態'
+                      ? { width: TUNER_STATE_COLUMN }
+                      : undefined
                 }
               >
                 {column}
@@ -381,17 +385,12 @@ export function TunersView({
                 {row.session ? (
                   <StatusCell>
                     <InFull says={whatTheSessionIs(row.session)}>
-                      <Badge
-                        variant={
-                          row.session.tone === 'recording'
-                            ? 'recording'
-                            : 'info'
-                        }
-                        width={SESSION_PILL_WIDTH}
-                        className="font-bold"
+                      <StateSay
+                        tone={row.session.tone === 'recording' ? 'err' : 'info'}
+                        bold
                       >
                         {row.session.label}
-                      </Badge>
+                      </StateSay>
                     </InFull>
                   </StatusCell>
                 ) : (
@@ -402,11 +401,7 @@ export function TunersView({
               </TableCell>
               <TableCell>
                 <StatusCell>
-                  <TunerStateChip
-                    row={row}
-                    width={TUNER_STATE_PILL_WIDTH}
-                    also={row.stateSub}
-                  />
+                  <TunerStateChip row={row} say also={row.stateSub} />
                 </StatusCell>
               </TableCell>
               <TableCell>

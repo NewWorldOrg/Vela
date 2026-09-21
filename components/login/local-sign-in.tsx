@@ -7,6 +7,7 @@ import { signIn, type SignInResult } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InlineAlert } from '@/components/vela/banner'
+import { askForTheCurtain } from '@/components/vela/curtain'
 import { Field, FieldLabel } from '@/components/vela/field'
 import {
   ChevronDownIcon,
@@ -74,6 +75,7 @@ export function LocalSignIn({
     })
 
     if (result.state === 'signed-in') {
+      askForTheCurtain()
       window.location.assign(returnPath)
 
       return

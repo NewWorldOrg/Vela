@@ -12,11 +12,10 @@ import {
   type WriteResult,
 } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
-import { Badge } from '@/components/ui/badge'
 import {
-  STATE_COLUMN,
+  StateSay,
   StatusCell,
-  pillWidthFor,
+  stateColumnFor,
 } from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
@@ -45,7 +44,7 @@ import { ScanBar } from '@/components/channels/scan-bar'
 import { ScanRunPanel } from '@/components/scan/scan-run-panel'
 import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis'
 
-const SCAN_STATE_PILL_WIDTH = pillWidthFor(Object.values(SCAN_STATE_LABEL))
+const SCAN_STATE_COLUMN = stateColumnFor(Object.values(SCAN_STATE_LABEL))
 
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
@@ -108,7 +107,9 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
               {['開始', '状態', '所要', '終了'].map((column) => (
                 <TableHead
                   key={column}
-                  className={column === '状態' ? STATE_COLUMN : undefined}
+                  style={
+                    column === '状態' ? { width: SCAN_STATE_COLUMN } : undefined
+                  }
                 >
                   {column}
                 </TableHead>
@@ -123,9 +124,8 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 </TableCell>
                 <TableCell>
                   <StatusCell>
-                    <Badge
-                      width={SCAN_STATE_PILL_WIDTH}
-                      variant={
+                    <StateSay
+                      tone={
                         run.state === 'completed'
                           ? 'ok'
                           : run.state === 'running'
@@ -134,9 +134,10 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                               ? 'err'
                               : 'mute'
                       }
+                      bold
                     >
                       {run.stateLabel}
-                    </Badge>
+                    </StateSay>
                   </StatusCell>
                 </TableCell>
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
-import { thresholdProblem } from '@/lib/quality'
+import { saidWithUnit, thresholdProblem } from '@/lib/quality'
 import { signedOut } from '@/lib/signed-out'
 import type {
   QualityThreshold,
@@ -53,7 +53,7 @@ export function ThresholdDialog({
   const [pending, startTransition] = useTransition()
 
   const chosen = thresholds.find((one) => one.key === key) ?? thresholds[0]
-  const range = `${chosen.lowest} 〜 ${chosen.highest}${chosen.unit}`
+  const range = `${chosen.lowest} 〜 ${saidWithUnit(chosen.highest, chosen.unit)}`
 
   const choose = (next: string) => {
     const found = thresholds.find((one) => one.key === next) ?? thresholds[0]

@@ -77,9 +77,9 @@ const THRESHOLDS: QualityThreshold[] = [
   {
     key: 'overflows',
     label: '取りこぼしの上限',
-    value: '1回',
-    basis: '既定 1回 · 根拠 4,320 件',
-    shipped: '1回',
+    value: '1 回',
+    basis: '既定 1 回 · 根拠 4,320 件',
+    shipped: '1 回',
     provisional: true,
     amount: '1',
     unit: '回',
@@ -101,9 +101,9 @@ const THRESHOLDS: QualityThreshold[] = [
   {
     key: 'carrierToNoiseFloor',
     label: 'CNR の下限',
-    value: '15dB',
-    basis: '既定 15dB · 根拠 0 件',
-    shipped: '15dB',
+    value: '15 dB',
+    basis: '既定 15 dB · 根拠 0 件',
+    shipped: '15 dB',
     provisional: true,
     amount: '15',
     unit: 'dB',
@@ -217,7 +217,7 @@ const spread = (pattern: string): QualityLevel[] =>
             : 'nodata',
   )
 
-const cnr = (at: number) => `${30 + (at % 4)}dB`
+const cnr = (at: number) => `${30 + (at % 4)} dB`
 
 export const SIGNAL_TREND: QualityTrend = {
   subjects: trendSubjects('CNR'),

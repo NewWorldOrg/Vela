@@ -40,11 +40,9 @@ import {
   TunerIcon,
   WarningIcon,
 } from '@/components/vela/icons'
+import { delayOf, rowDelayMs } from '@/lib/arrival'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
-import {
-  RESERVATION_STATE_PILL_WIDTH,
-  ReservationStateChip,
-} from '@/components/reservations/reservation-state-chip'
+import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 export interface ReservationActions {
@@ -62,6 +60,7 @@ const SIGNED_OUT = signedOut('操作')
 
 export function ReservationRow({
   reservation,
+  nth,
   expanded,
   onToggle,
   selected,
@@ -69,6 +68,7 @@ export function ReservationRow({
   actions,
 }: {
   reservation: Reservation
+  nth: number
   expanded: boolean
   onToggle: () => void
   selected: boolean
@@ -104,7 +104,9 @@ export function ReservationRow({
       <TableRow
         id={reservationAnchor(reservation.id)}
         data-state={selected ? 'selected' : undefined}
+        style={delayOf(rowDelayMs(nth))}
         className={cn(
+          'arrives',
           conflict &&
             'bg-coral-soft/40 hover:bg-coral-soft/40 has-aria-expanded:bg-coral-soft/40',
         )}
@@ -123,7 +125,7 @@ export function ReservationRow({
               aria-expanded={expanded}
               aria-label="競合の詳細"
               onClick={onToggle}
-              className="tap-target flex size-6 cursor-pointer items-center justify-center rounded-full text-coral transition-colors duration-150 hover:bg-coral-soft [&_svg]:size-3.5"
+              className="tap-target flex size-6 cursor-pointer items-center justify-center rounded-full text-coral transition-colors duration-150 hover:bg-surface-2 [&_svg]:size-3.5"
             >
               {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
             </button>
@@ -156,10 +158,7 @@ export function ReservationRow({
         </TableCell>
         <TableCell className="align-top">
           <StatusCell>
-            <ReservationStateChip
-              reservation={reservation}
-              width={RESERVATION_STATE_PILL_WIDTH}
-            />
+            <ReservationStateChip reservation={reservation} say />
           </StatusCell>
         </TableCell>
         <TableCell className="text-right align-top">
@@ -261,7 +260,7 @@ export function ReservationRow({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              variant="destructiveFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

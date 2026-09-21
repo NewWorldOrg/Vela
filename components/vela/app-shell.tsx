@@ -211,7 +211,11 @@ export function AdminSideNavItem({
 }
 
 const SCREEN_WIDTHS = {
-  default: 'mx-auto w-full max-w-[1440px]',
+  default: cn(
+    'mx-auto w-full max-w-full',
+    'min-[1441px]:max-w-[1600px] min-[1920px]:max-w-[1760px]',
+    'min-[2560px]:max-w-[2240px] min-[3200px]:max-w-[2560px]',
+  ),
   full: 'w-full',
 } as const
 

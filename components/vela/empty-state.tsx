@@ -31,7 +31,12 @@ export function EmptyState({
       )}
       {...props}
     >
-      {spot && <SpotIllustration name={spot} className="mx-auto size-[78px]" />}
+      {spot && (
+        <SpotIllustration
+          name={spot}
+          className="drawn mx-auto size-[78px] [--stroke-length:200]"
+        />
+      )}
       {title && (
         <Title className={cn('heading text-h3', spot && 'mt-2.5')}>
           {title}

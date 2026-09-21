@@ -11,7 +11,7 @@ import type {
   QualityWrite,
 } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
-import { STATE_COLUMN, StatusCell } from '@/components/recordings/status-cell'
+import { StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
   Table,
@@ -41,7 +41,7 @@ import { AnomalyList } from '@/components/quality/anomaly-list'
 import { LinkSegments } from '@/components/quality/link-segments'
 import { QualityTrendPanel } from '@/components/quality/quality-trend'
 import {
-  QUALITY_LEVEL_PILL_WIDTH,
+  QUALITY_LEVEL_COLUMN,
   QualityChip,
 } from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
@@ -302,7 +302,11 @@ export function QualityView({
                 {HEALTH_COLUMNS.map((column) => (
                   <TableHead
                     key={column}
-                    className={column === '状態' ? STATE_COLUMN : undefined}
+                    style={
+                      column === '状態'
+                        ? { width: QUALITY_LEVEL_COLUMN }
+                        : undefined
+                    }
                   >
                     {column}
                   </TableHead>
@@ -322,10 +326,7 @@ export function QualityView({
                   </TableCell>
                   <TableCell className="align-top whitespace-normal">
                     <StatusCell>
-                      <QualityChip
-                        level={tuner.state.level}
-                        width={QUALITY_LEVEL_PILL_WIDTH}
-                      >
+                      <QualityChip level={tuner.state.level} say>
                         {tuner.state.label}
                       </QualityChip>
                     </StatusCell>

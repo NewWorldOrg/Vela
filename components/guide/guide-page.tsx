@@ -235,6 +235,7 @@ export function GuideView({
           <GuideGrid
             channels={shownGuide.channels}
             programs={shownGuide.programs}
+            dayKey={guide.day.date}
             windowStartHour={guide.windowStartHour}
             windowHours={guide.windowHours}
             nowMin={guide.nowMin}

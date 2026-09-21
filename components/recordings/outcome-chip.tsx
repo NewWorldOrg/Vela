@@ -4,8 +4,13 @@ import {
   RECORDING_OUTCOME_TERMS,
 } from '@/lib/state-terms'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
-import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { alsoSays, pillWidthFor } from '@/components/recordings/status-cell'
+import { Badge } from '@/components/ui/badge'
+import {
+  StateSay,
+  alsoSays,
+  stateColumnFor,
+  toneOf,
+} from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -18,40 +23,45 @@ const VARIANT: Record<SettledOutcome, 'ok' | 'warn' | 'err'> = {
   failed: 'err',
 }
 
-export const OUTCOME_PILL_WIDTH = pillWidthFor(
+export const OUTCOME_COLUMN = stateColumnFor(
   Object.values(RECORDING_OUTCOME_TERMS).map((term) => term.label),
 )
 
 export function OutcomeChip({
   recording: r,
-  width,
+  say = false,
   also = [],
 }: {
   recording: Recording
-  width?: BadgeWidth
+  say?: boolean
   also?: (string | undefined | false)[]
 }) {
   if (r.outcome === 'recording') {
-    return <RecordingInProgressChip width={width} />
+    return <RecordingInProgressChip also={also} />
   }
 
   const term = alsoSays(
     shapeFor(RECORDING_OUTCOME_TERMS, r.outcome, NOT_YET_IN_THIS_BUILD_TERM),
     ...also,
   )
+  const variant = shapeFor(VARIANT, r.outcome, 'mute')
+
+  if (say) {
+    return (
+      <TermTip term={term}>
+        <StateSay tone={toneOf(variant)} bold>
+          {term.label}
+        </StateSay>
+      </TermTip>
+    )
+  }
 
   return (
-    <>
-      <TermTip term={term}>
-        <Badge
-          variant={shapeFor(VARIANT, r.outcome, 'mute')}
-          width={width}
-          className="font-bold"
-        >
-          <ChipDot />
-          {term.label}
-        </Badge>
-      </TermTip>
-    </>
+    <TermTip term={term}>
+      <Badge variant={variant} className="font-bold">
+        <ChipDot />
+        {term.label}
+      </Badge>
+    </TermTip>
   )
 }

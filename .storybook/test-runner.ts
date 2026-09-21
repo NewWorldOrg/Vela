@@ -873,6 +873,25 @@ function clearCursorBait() {
   }
 }
 
+const SETTLING_MS = 3000
+
+async function settled(limitMs: number): Promise<void> {
+  const running = document.getAnimations().filter((one) => {
+    const timing = one.effect?.getTiming()
+
+    return timing !== undefined && timing.iterations !== Infinity
+  })
+
+  if (running.length === 0) {
+    return
+  }
+
+  await Promise.race([
+    Promise.allSettled(running.map((one) => one.finished)),
+    new Promise((stop) => setTimeout(stop, limitMs)),
+  ])
+}
+
 const config: TestRunnerConfig = {
   async prepare({ page, browserContext, testRunnerConfig }) {
     const target = process.env.TARGET_URL
@@ -909,6 +928,8 @@ const config: TestRunnerConfig = {
   },
 
   async postVisit(page: Page, context) {
+    await page.evaluate(settled, SETTLING_MS)
+
     const { missed, taken, overreached } =
       await page.evaluate(measureTapTargets)
 

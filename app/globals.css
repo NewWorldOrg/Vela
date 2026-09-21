@@ -19,9 +19,31 @@
     height: 100%;
   }
 
+  html {
+    font-size: 13.5px;
+  }
+
+  @media (width >= 1440px) {
+    html {
+      font-size: 14.5px;
+    }
+  }
+
+  @media (width >= 1920px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
+  @media (width >= 2560px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
   body {
     font-family: var(--font-body);
-    font-size: 13.5px;
+    font-size: var(--text-body);
     line-height: 1.8;
     background-color: var(--bg);
     color: var(--ink);
@@ -241,25 +263,25 @@
 }
 
 @theme inline {
-  --text-h1: 22px;
+  --text-h1: calc(22rem / 13.5);
   --text-h1--line-height: 1.45;
-  --text-h2: 18px;
+  --text-h2: calc(18rem / 13.5);
   --text-h2--line-height: 1.45;
-  --text-h3: 16px;
+  --text-h3: calc(16rem / 13.5);
   --text-h3--line-height: 1.5;
-  --text-title: 14px;
+  --text-title: calc(14rem / 13.5);
   --text-title--line-height: 1.55;
-  --text-body: 13.5px;
+  --text-body: 1rem;
   --text-body--line-height: 1.8;
-  --text-ui: 12.5px;
+  --text-ui: calc(12.5rem / 13.5);
   --text-ui--line-height: 1.7;
-  --text-sub: 12px;
+  --text-sub: calc(12rem / 13.5);
   --text-sub--line-height: 1.75;
-  --text-note: 11.5px;
+  --text-note: calc(11.5rem / 13.5);
   --text-note--line-height: 1.75;
-  --text-cap: 11px;
+  --text-cap: calc(11rem / 13.5);
   --text-cap--line-height: 1.7;
-  --text-micro: 10.5px;
+  --text-micro: calc(10.5rem / 13.5);
   --text-micro--line-height: 1.6;
 
   --color-bg: var(--bg);
@@ -360,6 +382,20 @@
 
   --ease-toy: var(--ease);
   --ease-fold: cubic-bezier(0.25, 0.1, 0.45, 1);
+  --ease-item: cubic-bezier(0.93, 0, 0.1, 1.01);
+
+  --animate-curtain-panel: curtain-panel 0.9s ease-in-out both;
+  --animate-curtain-corner: curtain-corner 0.45s ease-out both;
+  --animate-draw: draw 0.6s ease-in-out calc(var(--d, 0s) + var(--delay, 0s))
+    both;
+  --animate-ink: ink 0.1s ease-out calc(var(--d, 0s) + var(--delay, 0s) + 0.6s)
+    both;
+  --animate-rise: rise 0.7s ease-in-out calc(var(--d, 0s) + var(--delay, 0s))
+    both;
+  --animate-item: item 0.4s var(--ease-item)
+    calc(var(--d, 0s) + var(--delay, 0s)) both;
+  --animate-breathe: breathe 2s ease-in-out infinite;
+  --animate-waiting-line: waiting-line calc(0.8s + 0.2s) ease-in-out infinite;
 
   /*
    * The mark that answers a press in the middle of a picture: it grows a
@@ -528,4 +564,165 @@
   position: relative;
   padding-block: 6px;
   margin-block: -6px;
+}
+
+@keyframes curtain-panel {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: var(--curtain-away, 0) 0;
+  }
+}
+
+@keyframes curtain-corner {
+  from {
+    border-radius: 0;
+  }
+  to {
+    border-radius: var(--curtain-round, 0);
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dasharray: 0 var(--stroke-length, 200);
+    opacity: 0.55;
+  }
+  83% {
+    opacity: 0.55;
+  }
+  to {
+    stroke-dasharray: var(--stroke-length, 200) var(--stroke-length, 200);
+    opacity: 1;
+  }
+}
+
+@keyframes ink {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    translate: 0 55%;
+    scale: 1.2 0.9;
+  }
+  to {
+    translate: 0 0;
+    scale: 1 1;
+  }
+}
+
+@keyframes item {
+  from {
+    translate: 0 6px;
+    scale: 0.96;
+  }
+  to {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  to {
+    scale: 1 1;
+  }
+  50% {
+    scale: 1.05 1.02;
+  }
+}
+
+@keyframes waiting-line {
+  0% {
+    translate: -100% 0;
+  }
+  80%,
+  to {
+    translate: 300% 0;
+  }
+}
+
+@utility curtain-panel {
+  animation: var(--animate-curtain-panel), var(--animate-curtain-corner);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    display: none;
+  }
+}
+
+@utility drawn {
+  & :is(path, circle, rect, ellipse, line, polygon, polyline) {
+    animation: var(--animate-draw);
+  }
+
+  & [fill='currentColor'],
+  & [data-ink] {
+    animation: var(--animate-ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & :is(path, circle, rect, ellipse, line, polygon, polyline),
+    & [fill='currentColor'],
+    & [data-ink] {
+      animation: none;
+    }
+  }
+}
+
+@utility rises {
+  animation: var(--animate-rise);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility arrives {
+  animation: var(--animate-item);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility breathes {
+  animation: var(--animate-breathe);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility waits {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--surface),
+      transparent
+    );
+    animation: var(--animate-waiting-line);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      display: none;
+      animation: none;
+    }
+  }
 }

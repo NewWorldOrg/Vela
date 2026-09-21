@@ -10,8 +10,8 @@ import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
 import {
   bodyRows,
   cellOf,
-  pillOf,
-  pillsIn,
+  saidIn,
+  sayOf,
   tipIn,
   widthOf,
 } from '@/stories/pills-in-a-column'
@@ -188,19 +188,20 @@ export const 札の並び: Story = {
     await expect(rows.length).toBeGreaterThan(3)
 
     for (const row of rows) {
-      await expect(pillsIn(row, KIND_COLUMN).length).toBe(1)
+      await expect(saidIn(row, KIND_COLUMN).length).toBe(1)
     }
 
-    const pills = rows.map((row) => pillOf(row, KIND_COLUMN))
+    const said = rows.map((row) => sayOf(row, KIND_COLUMN))
 
-    await expect(new Set(pills.map(widthOf)).size).toBe(1)
     await expect(
-      new Set(
-        pills.map((pill) => Math.round(pill.getBoundingClientRect().left)),
-      ).size,
+      new Set(rows.map((row) => widthOf(cellOf(row, KIND_COLUMN)))).size,
     ).toBe(1)
     await expect(
-      new Set(pills.map((pill) => pill.textContent ?? '')).size,
+      new Set(said.map((one) => Math.round(one.getBoundingClientRect().left)))
+        .size,
+    ).toBe(1)
+    await expect(
+      new Set(said.map((one) => one.textContent ?? '')).size,
     ).toBeGreaterThan(1)
   },
 }

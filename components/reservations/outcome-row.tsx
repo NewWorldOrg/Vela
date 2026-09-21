@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReservationOutcome } from '@/repository/reservation-outcomes'
+import { delayOf, rowDelayMs } from '@/lib/arrival'
 import { TableCell, TableRow } from '@/components/ui/table'
 import {
   ChevronDownIcon,
@@ -8,10 +9,7 @@ import {
   ListIcon,
 } from '@/components/vela/icons'
 import { StatusCell } from '@/components/recordings/status-cell'
-import {
-  OUTCOME_KIND_PILL_WIDTH,
-  OutcomeKindChip,
-} from '@/components/reservations/outcome-kind-chip'
+import { OutcomeKindChip } from '@/components/reservations/outcome-kind-chip'
 
 const GONE = '記録が残っていません'
 
@@ -19,10 +17,12 @@ export const OUTCOME_COLUMN_COUNT = 8
 
 export function OutcomeRow({
   outcome,
+  nth,
   expanded,
   onToggle,
 }: {
   outcome: ReservationOutcome
+  nth: number
   expanded: boolean
   onToggle: () => void
 }) {
@@ -30,7 +30,7 @@ export function OutcomeRow({
 
   return (
     <>
-      <TableRow>
+      <TableRow className="arrives" style={delayOf(rowDelayMs(nth))}>
         <TableCell className="align-top">
           {instead.length > 0 && (
             <button
@@ -71,10 +71,7 @@ export function OutcomeRow({
         </TableCell>
         <TableCell className="align-top">
           <StatusCell>
-            <OutcomeKindChip
-              outcome={outcome}
-              width={OUTCOME_KIND_PILL_WIDTH}
-            />
+            <OutcomeKindChip outcome={outcome} say />
           </StatusCell>
         </TableCell>
         <TableCell className="align-top font-code text-ink-2">

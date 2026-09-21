@@ -4,30 +4,20 @@ import { EMPTY_VALUE } from '@/lib/empty-value'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
+import { delayOf, rowDelayMs } from '@/lib/arrival'
 import { formatBytes, formatLength } from '@/lib/format'
 import { playsInBrowser, unfinishedDeletionShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ChevronRightIcon, PlayIcon, TrashIcon } from '@/components/vela/icons'
-import {
-  ENCODE_PILL_WIDTH,
-  EncodeChip,
-} from '@/components/recordings/encode-chip'
-import {
-  OUTCOME_PILL_WIDTH,
-  OutcomeChip,
-} from '@/components/recordings/outcome-chip'
-import {
-  RECORDING_QUALITY_PILL_WIDTH,
-  QualityChip,
-} from '@/components/recordings/quality-chip'
+import { EncodeChip } from '@/components/recordings/encode-chip'
+import { OutcomeChip } from '@/components/recordings/outcome-chip'
+import { QualityChip } from '@/components/recordings/quality-chip'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { RecordingThumb } from '@/components/library/recording-thumb'
-
-export const CELL_SIDES_PX = 24
 
 export const DETAIL_CELL = 'px-1.5'
 
@@ -92,10 +82,12 @@ function Size({ recording: r }: { recording: Recording }) {
 
 export function RecordingRow({
   recording: r,
+  nth,
   onOpen,
   onDelete,
 }: {
   recording: Recording
+  nth: number
   onOpen: () => void
   onDelete: () => void
 }) {
@@ -107,8 +99,9 @@ export function RecordingRow({
     <tr
       data-pressable-row
       onClick={onOpen}
+      style={delayOf(rowDelayMs(nth))}
       className={cn(
-        'group cursor-pointer transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-surface hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
+        'arrives group cursor-pointer transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-surface hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
         r.outcome === 'recording' && 'bg-brand-soft',
       )}
     >
@@ -157,7 +150,7 @@ export function RecordingRow({
         <StatusCell>
           <OutcomeChip
             recording={r}
-            width={OUTCOME_PILL_WIDTH}
+            say
             also={[
               r.outcomeDetail,
               r.fileMissing && FILE_MISSING,
@@ -169,16 +162,12 @@ export function RecordingRow({
       </td>
       <td className={CELL}>
         <StatusCell>
-          <QualityChip
-            recording={r}
-            width={RECORDING_QUALITY_PILL_WIDTH}
-            also={[r.quality.detail]}
-          />
+          <QualityChip recording={r} say also={[r.quality.detail]} />
         </StatusCell>
       </td>
       <td className={CELL}>
         <StatusCell>
-          <EncodeChip recording={r} width={ENCODE_PILL_WIDTH} />
+          <EncodeChip recording={r} say />
         </StatusCell>
       </td>
       <td className={cn(CELL, 'text-right whitespace-nowrap')}>

@@ -1,0 +1,60 @@
+import type { CSSProperties } from 'react'
+
+export const ROW_STEP_MS = 40
+
+export const LAST_ROW_HELD_BACK = 6
+
+export const COLUMN_STEP_MS = 40
+
+export const LAST_COLUMN_HELD_BACK = 8
+
+export const GRID_STEP_MS = 30
+
+export const GRID_CAP_MS = 240
+
+export const RISE_MS = 700
+
+export function delayOf(ms: number): CSSProperties {
+  return { '--delay': `${ms}ms` } as CSSProperties
+}
+
+export function groupDelayOf(ms: number): CSSProperties {
+  return { '--d': `${ms}ms` } as CSSProperties
+}
+
+export function rowDelayMs(index: number): number {
+  return index < LAST_ROW_HELD_BACK ? index * ROW_STEP_MS : 0
+}
+
+export function columnDelayMs(index: number): number {
+  return Math.min(index, LAST_COLUMN_HELD_BACK - 1) * COLUMN_STEP_MS
+}
+
+export function seatIn(
+  index: number,
+  columns: number,
+): { row: number; column: number } {
+  const across = Math.max(1, columns)
+
+  return { row: Math.floor(index / across), column: index % across }
+}
+
+export function gridDelayMs(row: number, column: number): number {
+  return Math.min((row + column) * GRID_STEP_MS, GRID_CAP_MS)
+}
+
+export function nowLineDelayMs(): number {
+  return columnDelayMs(LAST_COLUMN_HELD_BACK - 1) + RISE_MS
+}
+
+export function columnsAcross(node: Element | null): number {
+  if (node === null) {
+    return 1
+  }
+
+  const tracks = getComputedStyle(node)
+    .gridTemplateColumns.split(' ')
+    .filter((one) => one.length > 0).length
+
+  return Math.max(1, tracks)
+}

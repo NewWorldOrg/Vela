@@ -11,9 +11,11 @@ import { inProgressFirst } from '@/lib/recordings'
 import { AppFrame } from '@/components/vela/app-shell'
 import { LibraryView } from '@/components/library/library-page'
 import {
+  cellOf,
   heightOf,
   oneShapeDownTheColumn,
-  pillOf,
+  sayOf,
+  saysItWithoutAnEdge,
   tipIn,
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
@@ -501,22 +503,26 @@ export const 札の並び: Story = {
 
     for (const row of rows) {
       const tops = CHIP_COLUMNS.map((column) =>
-        Math.round(pillOf(row, column).getBoundingClientRect().top),
+        Math.round(sayOf(row, column).getBoundingClientRect().top),
       )
 
       await expect(new Set(tops).size).toBe(1)
     }
 
     for (const column of CHIP_COLUMNS) {
-      const widths = rows.map((row) =>
-        Math.round(pillOf(row, column).getBoundingClientRect().width),
+      const lefts = rows.map((row) =>
+        Math.round(sayOf(row, column).getBoundingClientRect().left),
       )
 
-      await expect(new Set(widths).size).toBe(1)
+      await expect(new Set(lefts).size).toBe(1)
 
-      const said = rows.map((row) => pillOf(row, column).textContent ?? '')
+      const columnWidths = rows.map((row) =>
+        Math.round(cellOf(row, column).getBoundingClientRect().width),
+      )
 
-      await expect(new Set(said).size).toBeGreaterThan(1)
+      await expect(new Set(columnWidths).size).toBe(1)
+
+      await saysItWithoutAnEdge(rows, column)
     }
 
     await oneShapeDownTheColumn(rows, ENCODE_COLUMN)
@@ -530,6 +536,38 @@ export const 札の並び: Story = {
     )
 
     await expect(new Set(actions).size).toBe(1)
+  },
+}
+
+export const 現れ方: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByRole('row').slice(1)
+
+    await expect(rows.length).toBeGreaterThan(6)
+
+    for (const [nth, row] of rows.slice(0, 6).entries()) {
+      const drawn = getComputedStyle(row)
+
+      await expect(drawn.animationName).toBe('item')
+      await expect(drawn.animationDuration).toBe('0.4s')
+      await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
+        nth * 0.04,
+        3,
+      )
+    }
+
+    await expect(
+      Number.parseFloat(getComputedStyle(rows[6]).animationDelay),
+    ).toBe(0)
+
+    document.documentElement.classList.add('dark')
+
+    try {
+      await expect(getComputedStyle(rows[0]).animationName).toBe('item')
+    } finally {
+      document.documentElement.classList.remove('dark')
+    }
   },
 }
 

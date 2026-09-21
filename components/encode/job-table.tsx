@@ -21,29 +21,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { StatusCell, stateColumnPx } from '@/components/recordings/status-cell'
+import { StatusCell } from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InFull } from '@/components/vela/in-full'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import {
-  JOB_STATUS_PILL_WIDTH,
+  JOB_STATUS_COLUMN,
   JobStatusChip,
 } from '@/components/encode/job-status-chip'
 
 interface Column {
   label: string
-  width?: number
+  width?: number | string
   hidden?: boolean
   right?: boolean
 }
-
-const CELL_SIDES_PX = 26
 
 const STAMP_PX = 132
 
 const COLUMNS: Column[] = [
   { label: '番組' },
-  { label: '状態', width: stateColumnPx(JOB_STATUS_PILL_WIDTH, CELL_SIDES_PX) },
+  { label: '状態', width: JOB_STATUS_COLUMN },
   { label: 'プロファイル', width: 100 },
   { label: '保存先', width: 90 },
   { label: '進捗', width: 64, right: true },
@@ -58,13 +56,7 @@ const TABLE_MIN_PX = 1100
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
 function Standing({ job }: { job: EncodeJob }) {
-  const chip = (
-    <JobStatusChip
-      status={job.status}
-      stalled={job.stalled}
-      width={JOB_STATUS_PILL_WIDTH}
-    />
-  )
+  const chip = <JobStatusChip status={job.status} stalled={job.stalled} say />
   const why = whyItStands(job)
 
   return why ? (

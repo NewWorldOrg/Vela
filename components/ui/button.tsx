@@ -25,7 +25,7 @@ const buttonVariants = cva(
         ghost:
           'border border-edge bg-transparent font-medium text-ink-2 hover:translate-x-0 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         destructive:
-          'border border-coral-line bg-coral-soft text-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+          'border border-coral-line bg-surface text-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         destructiveFill:
           'border border-coral bg-coral text-on-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         link: 'text-brand underline-offset-[3px] hover:translate-x-0 hover:translate-y-0 hover:underline focus-visible:shadow-ring',

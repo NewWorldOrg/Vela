@@ -1,73 +1,70 @@
 import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import type { EncodeJobStatus } from '@/repository/encode-terms'
 import { STALLED_LABEL, STATUS_LABEL } from '@/repository/encode-terms'
-import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { pillWidthFor } from '@/components/recordings/status-cell'
+import { Badge } from '@/components/ui/badge'
+import {
+  StateSay,
+  stateColumnFor,
+  toneOf,
+} from '@/components/recordings/status-cell'
 import { ChipDot } from '@/components/vela/status'
 
-export const JOB_STATUS_PILL_WIDTH = pillWidthFor([
+type JobTone = 'secondary' | 'info' | 'warn' | 'ok' | 'err' | 'mute'
+
+export const JOB_STATUS_COLUMN = stateColumnFor([
   ...Object.values(STATUS_LABEL),
   STALLED_LABEL,
 ])
 
+function wordAndTone(
+  status: EncodeJobStatus,
+  stalled?: boolean,
+): { word: string; tone: JobTone } {
+  switch (status) {
+    case 'queued':
+      return { word: STATUS_LABEL.queued, tone: 'secondary' }
+    case 'running':
+      return stalled
+        ? { word: STALLED_LABEL, tone: 'warn' }
+        : { word: STATUS_LABEL.running, tone: 'info' }
+    case 'completed':
+      return { word: STATUS_LABEL.completed, tone: 'ok' }
+    case 'failed':
+      return { word: STATUS_LABEL.failed, tone: 'err' }
+    case 'cancelled':
+      return { word: STATUS_LABEL.cancelled, tone: 'mute' }
+    default:
+      return { word: NOT_YET_IN_THIS_BUILD, tone: 'mute' }
+  }
+}
+
 export function JobStatusChip({
   status,
   stalled,
-  width,
+  say = false,
 }: {
   status: EncodeJobStatus
   stalled?: boolean
-  width?: BadgeWidth
+  say?: boolean
 }) {
-  switch (status) {
-    case 'queued':
-      return (
-        <Badge variant="secondary" width={width} className="font-bold">
-          <ChipDot />
-          {STATUS_LABEL.queued}
-        </Badge>
-      )
-    case 'running':
-      return (
-        <Badge
-          variant={stalled ? 'warn' : 'info'}
-          width={width}
-          title={
-            stalled ? `${STATUS_LABEL.running} / ${STALLED_LABEL}` : undefined
-          }
-          className="font-bold"
-        >
-          <ChipDot />
-          {stalled ? STALLED_LABEL : STATUS_LABEL.running}
-        </Badge>
-      )
-    case 'completed':
-      return (
-        <Badge variant="ok" width={width} className="font-bold">
-          <ChipDot />
-          {STATUS_LABEL.completed}
-        </Badge>
-      )
-    case 'failed':
-      return (
-        <Badge variant="err" width={width} className="font-bold">
-          <ChipDot />
-          {STATUS_LABEL.failed}
-        </Badge>
-      )
-    case 'cancelled':
-      return (
-        <Badge variant="mute" width={width} className="font-bold">
-          <ChipDot />
-          {STATUS_LABEL.cancelled}
-        </Badge>
-      )
-    default:
-      return (
-        <Badge variant="mute" width={width} className="font-bold">
-          <ChipDot />
-          {NOT_YET_IN_THIS_BUILD}
-        </Badge>
-      )
+  const { word, tone } = wordAndTone(status, stalled)
+  const held =
+    status === 'running' && stalled
+      ? `${STATUS_LABEL.running} / ${STALLED_LABEL}`
+      : undefined
+
+  if (say) {
+    return (
+      <StateSay tone={toneOf(tone)} bold title={held}>
+        {word}
+      </StateSay>
+    )
   }
+
+  return (
+    <Badge variant={tone} title={held} className="font-bold">
+      <ChipDot />
+      {word}
+    </Badge>
+  )
 }

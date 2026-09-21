@@ -187,11 +187,7 @@ export function IntegrityView({
       )}
 
       {findings.length === 0 ? (
-        <EmptyState
-          spot="antenna"
-          title="食い違いはありません"
-          titleLevel={2}
-        />
+        <EmptyState spot="star" title="食い違いはありません" titleLevel={2} />
       ) : (
         <Table
           className="min-w-[760px]"

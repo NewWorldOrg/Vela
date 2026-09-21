@@ -1,6 +1,9 @@
 'use client'
 
+import { useCallback, useState } from 'react'
+
 import { cn } from '@/lib/utils'
+import { columnsAcross, delayOf, gridDelayMs, seatIn } from '@/lib/arrival'
 import { SPAN_DASH } from '@/lib/format'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress'
@@ -16,19 +19,38 @@ export function ChannelGrid({
   onSelect: (channel: LiveChannel) => void
   className?: string
 }) {
+  const [columns, setColumns] = useState<number>(0)
+
+  const measure = useCallback((node: HTMLUListElement | null) => {
+    if (node === null) {
+      return
+    }
+
+    setColumns((was) => (was === 0 ? columnsAcross(node) : was))
+  }, [])
+
   return (
     <ul
+      ref={measure}
       data-slot="channel-grid"
       className={cn(
-        'grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-x-4 gap-y-3.5',
+        'grid grid-cols-[repeat(auto-fill,minmax(300px,360px))] gap-x-4 gap-y-3.5',
         className,
       )}
     >
-      {channels.map((channel) => (
-        <li key={channel.id} className="min-w-0">
-          <ChannelCard channel={channel} onSelect={onSelect} />
-        </li>
-      ))}
+      {channels.map((channel, nth) => {
+        const seat = seatIn(nth, columns)
+
+        return (
+          <li
+            key={channel.id}
+            style={delayOf(gridDelayMs(seat.row, seat.column))}
+            className="arrives min-w-0"
+          >
+            <ChannelCard channel={channel} onSelect={onSelect} />
+          </li>
+        )
+      })}
     </ul>
   )
 }

@@ -42,7 +42,7 @@ const DELETES = /<TrashIcon\b/
 
 const ADDS = /追加/
 
-const A_COLUMN_WIDTH = /width=\{([A-Z_]+_PILL_WIDTH)\}/
+const SAYS_IT_AS_A_COLUMN = /(^|\s)say(\s|$|=)/
 
 const THE_CELL = 'components/recordings/status-cell.tsx'
 
@@ -57,6 +57,8 @@ const THE_TINTS = 'components/vela/surface.tsx'
 const THE_BAND = 'components/vela/filter-select.tsx'
 
 const THE_SYSTEM_TERMS = 'lib/system-terms.ts'
+
+const THE_RECORDING_EXCEPTION = 'RecordingInProgressChip'
 
 const WATCHED_FOR_THE_MARK = ['components/encode', 'components/system']
 
@@ -102,6 +104,10 @@ function cellsIn(source: string) {
   }))
 }
 
+function saidBy(body: string): string {
+  return body.replace(/<[^>]*>/g, '').replace(/\{[^}]*\}/g, '')
+}
+
 async function stateColumns() {
   const found: { file: string; body: string }[] = []
 
@@ -119,10 +125,6 @@ async function stateColumns() {
   return found
 }
 
-function saidBy(body: string): string {
-  return body.replace(/<[^>]*>/g, '').replace(/\{[^}]*\}/g, '')
-}
-
 test('a column that says a state goes through the one cell', async () => {
   const columns = await stateColumns()
 
@@ -137,116 +139,40 @@ test('a column that says a state goes through the one cell', async () => {
       column.body,
       /<StatusCell\b/,
       `${column.file} draws a state column of its own instead of going ` +
-        'through StatusCell, so its pills sit at whatever width they like',
+        'through StatusCell, so its states sit however they like',
     )
   }
 })
 
-test('every pill in a state column is told the width of its column, by name', async () => {
-  const told: string[] = []
+test('a state in a table is a dot and a word, with no outline and no fill', async () => {
+  const said: string[] = []
 
   for (const column of await stateColumns()) {
     for (const pill of column.body.matchAll(A_PILL)) {
-      told.push(`${column.file}: ${pill[1]}`)
+      if (pill[1] === THE_RECORDING_EXCEPTION) {
+        continue
+      }
+
+      said.push(`${column.file}: ${pill[1]}`)
       assert.match(
         pill[2],
-        A_COLUMN_WIDTH,
-        `${column.file}: ${pill[1]} draws itself as wide as it likes`,
+        SAYS_IT_AS_A_COLUMN,
+        `${column.file}: ${pill[1]} still wears a pill inside a table. The ` +
+          'canon keeps the pill for the places outside a list — a detail ' +
+          'heading, a tile, a filter chip — and a table says its state as a ' +
+          '6px dot and a word',
       )
     }
   }
 
-  assert.ok(told.length > 8, `only ${told.length} pills were read`)
-})
-
-async function columnWidthsToldTo(): Promise<Set<string>> {
-  const names = new Set<string>()
-
-  for (const column of await stateColumns()) {
-    for (const pill of column.body.matchAll(A_PILL)) {
-      const told = pill[2].match(A_COLUMN_WIDTH)
-
-      if (told) {
-        names.add(told[1])
-      }
-    }
-  }
-
-  return names
-}
-
-test('the width of a column is made from the words that column can say', async () => {
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
-
-  assert.match(cell, /export function pillWidthFor\(/)
-
-  const sources = await everySource()
-  const names = await columnWidthsToldTo()
-
-  assert.ok(names.size > 5, `only ${names.size} column widths were read`)
-
-  for (const name of names) {
-    const declared = sources.some(({ source }) =>
-      new RegExp(`(?:export )?const ${name} = pillWidthFor\\(`).test(source),
-    )
-
-    assert.ok(
-      declared,
-      `${name} is not made from its column's words with pillWidthFor`,
-    )
-  }
-
-  const pill = await readFile(path.join(ROOT, THE_PILL), 'utf8')
-
-  assert.doesNotMatch(
-    pill,
-    /w-\[[\d.]+em\]/,
-    'the pill still keeps one width for every column',
-  )
-  assert.doesNotMatch(
-    pill,
-    /'w-full'/,
-    'a pill is still told to stretch to the column it sits in',
-  )
-})
-
-test('a pill told the width of a column is drawn without a line', async () => {
-  const pill = await readFile(path.join(ROOT, THE_PILL), 'utf8')
-
-  assert.match(
-    pill,
-    /const IN_A_COLUMN = 'border-transparent'/,
-    'a pill in a column still carries the line a button carries',
-  )
-})
-
-test('a state cell holds one pill and nothing under it', async () => {
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
-
-  assert.doesNotMatch(
-    cell,
-    /\bnote\b/,
-    'the one state cell still draws a second line under the pill',
-  )
-  assert.doesNotMatch(cell, /flex-col/, 'the one state cell still stacks')
-
-  for (const column of await stateColumns()) {
-    const pills = [...column.body.matchAll(A_PILL)]
-
-    assert.equal(
-      pills.length,
-      1,
-      `${column.file} puts ${pills.length} pills in one state cell; ` +
-        'the rest belongs in the tip',
-    )
-  }
+  assert.ok(said.length > 5, `only ${said.length} states were read`)
 })
 
 test('what is not a state is not drawn as a pill', async () => {
   for (const { file, source } of await everySource()) {
-    for (const said of source.matchAll(NOT_A_STATE)) {
+    for (const found of source.matchAll(NOT_A_STATE)) {
       assert.fail(
-        `${file} draws ${said[0]} as a pill; it is a kind, not a state`,
+        `${file} draws ${found[0]} as a pill; it is a kind, not a state`,
       )
     }
   }
@@ -256,6 +182,60 @@ test('what is not a state is not drawn as a pill', async () => {
     /kind[A-Z]/,
     'the pill still keeps a colour for a kind',
   )
+})
+
+test('the dot a state is said with is one size, declared once', async () => {
+  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+
+  assert.match(cell, /export function StateSay\(/)
+  assert.match(
+    cell,
+    /size-1\.5 shrink-0 rounded-full bg-current/,
+    'the dot beside a state word is no longer the one 6px dot',
+  )
+  assert.doesNotMatch(
+    cell,
+    /border|bg-(?!current)/,
+    'the way a table says a state carries an outline or a fill again',
+  )
+})
+
+test('a state cell holds one state and nothing under it', async () => {
+  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+
+  assert.doesNotMatch(
+    cell,
+    /\bnote\b/,
+    'the one state cell still draws a second line under the state',
+  )
+  assert.doesNotMatch(cell, /flex-col/, 'the one state cell still stacks')
+
+  for (const column of await stateColumns()) {
+    const pills = [...column.body.matchAll(A_PILL)]
+
+    assert.equal(
+      pills.length,
+      1,
+      `${column.file} puts ${pills.length} states in one cell; ` +
+        'the rest belongs in the tip',
+    )
+  }
+})
+
+test('the pill keeps no fixed width anywhere', async () => {
+  const pill = await readFile(path.join(ROOT, THE_PILL), 'utf8')
+
+  assert.doesNotMatch(pill, /width/)
+  assert.doesNotMatch(pill, /w-\[[\d.]+em\]/)
+  assert.doesNotMatch(pill, /'w-full'/)
+
+  for (const { file, source } of await everySource()) {
+    assert.doesNotMatch(
+      source,
+      /_PILL_WIDTH|pillWidthFor|stateColumnPx/,
+      `${file} still measures a column by the pill that used to sit in it`,
+    )
+  }
 })
 
 function actionsIn(body: string): number {
@@ -330,6 +310,53 @@ test('deleting is destructive, with an icon and a word, wherever it is offered',
   }
 
   assert.ok(deleting.length > 5, `only ${deleting.length} were read`)
+})
+
+test('the coral that is filled in belongs to the confirming button alone', async () => {
+  const button = await readFile(
+    path.join(ROOT, 'components/ui/button.tsx'),
+    'utf8',
+  )
+  const destructive = button.match(/destructive:\s*\n?\s*'([^']*)'/u)
+
+  assert.ok(destructive, 'the destructive button is no longer declared')
+  assert.doesNotMatch(
+    destructive[1],
+    /bg-coral-soft/,
+    'the destructive button is drawn on the half-hearted pink cushion again; ' +
+      'a row keeps the surface and says it in the word and the outline',
+  )
+  assert.match(destructive[1], /text-coral/)
+  assert.match(button, /destructiveFill:/)
+
+  for (const { file, source } of await everySource()) {
+    for (const drawn of source.matchAll(
+      /<(?:Button|AlertDialogAction)\b[^>]*variant="(destructive|destructiveFill)"/g,
+    )) {
+      if (drawn[1] === 'destructiveFill') {
+        continue
+      }
+
+      assert.doesNotMatch(
+        drawn[0],
+        /AlertDialogAction/,
+        `${file} confirms a destructive act with the unfilled button; the ` +
+          'filled coral is the confirming button in the dialog',
+      )
+    }
+  }
+})
+
+test('no button is drawn on the soft coral face', async () => {
+  for (const { file, source } of await everySource()) {
+    for (const drawn of source.matchAll(/<button\b[\s\S]{0,400}?>/g)) {
+      assert.doesNotMatch(
+        drawn[0],
+        /bg-coral-soft|hover:bg-coral-soft/,
+        `${file} puts a button on the soft coral face`,
+      )
+    }
+  }
 })
 
 test('an action carries an icon beside its word', async () => {
@@ -491,21 +518,28 @@ test('the controls in a filter band are one height and one size of word', async 
   }
 })
 
-test('every pill in the encode column is the same shape', async () => {
+test('every state in the encode column is said the same way', async () => {
   const source = await readFile(
     path.join(ROOT, 'components/recordings/encode-chip.tsx'),
     'utf8',
   )
 
-  const shapes = [...source.matchAll(/<Badge\b([^>]*)>/g)]
+  const pills = [...source.matchAll(/<Badge\b([^>]*)>/g)]
+  const words = [...source.matchAll(/<StateSay\b([^>]*)>/g)]
 
   assert.equal(
-    shapes.length,
+    pills.length,
     1,
     'the encode column draws more than one shape of pill; the meaning is ' +
       'meant to be carried by the hue alone',
   )
-  assert.match(shapes[0][1], /variant=\{/)
+  assert.equal(
+    words.length,
+    1,
+    'the encode column says its state in more than one shape of word',
+  )
+  assert.match(pills[0][1], /variant=\{/)
+  assert.match(words[0][1], /tone=\{/)
 })
 
 test('the system screen says a state as a noun, from the one table', async () => {

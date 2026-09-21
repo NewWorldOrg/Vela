@@ -1,9 +1,9 @@
-import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 
-export function FileMissingChip({ width }: { width?: BadgeWidth }) {
+export function FileMissingChip() {
   return (
-    <Badge variant="err" width={width} className="font-bold">
+    <Badge variant="err" className="font-bold">
       <ChipDot />
       ファイル不在
     </Badge>

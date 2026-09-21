@@ -15,7 +15,6 @@ import {
   SETTLED_RESERVATION_FIXTURES,
 } from '@/stories/fixtures/reservations'
 import { ReservationsView } from '@/components/reservations/reservations-page'
-import { RESERVATION_STATE_PILL_WIDTH } from '@/components/reservations/reservation-state-chip'
 import { cellOf, tipIn } from '@/stories/pills-in-a-column'
 
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
@@ -677,12 +676,12 @@ const THE_STATE_COLUMN = 6
 
 const THE_ACTION_COLUMN = 7
 
-function pillsOf(row: HTMLElement, column: number): HTMLElement[] {
+function saidBy(row: HTMLElement, column: number): HTMLElement[] {
   const cell = within(row).getAllByRole('cell')[column]
 
-  return [...cell.querySelectorAll('[data-slot="badge"]')].filter(
-    (pill): pill is HTMLElement => pill instanceof HTMLElement,
-  )
+  return [
+    ...cell.querySelectorAll('[data-slot="state-say"], [data-slot="badge"]'),
+  ].filter((one): one is HTMLElement => one instanceof HTMLElement)
 }
 
 export const 行の揃い: Story = {
@@ -693,20 +692,25 @@ export const 行の揃い: Story = {
     const widths: number[] = []
 
     for (const row of rows) {
-      const pills = pillsOf(row, THE_STATE_COLUMN)
+      const said = saidBy(row, THE_STATE_COLUMN)
 
-      if (pills.length === 0) {
+      if (said.length === 0) {
         continue
       }
 
-      await expect(pills.length).toBe(1)
+      await expect(said.length).toBe(1)
 
-      for (const pill of pills) {
-        await expect(pill).toHaveAttribute(
-          'data-width',
-          RESERVATION_STATE_PILL_WIDTH,
+      for (const one of said) {
+        await expect(
+          Math.round(one.getBoundingClientRect().left),
+        ).toBeGreaterThan(0)
+        widths.push(
+          Math.round(
+            within(row)
+              .getAllByRole('cell')
+              [THE_STATE_COLUMN].getBoundingClientRect().width,
+          ),
         )
-        widths.push(Math.round(pill.getBoundingClientRect().width))
       }
     }
 

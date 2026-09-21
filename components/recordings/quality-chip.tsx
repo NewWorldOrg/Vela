@@ -3,46 +3,52 @@ import {
   recordingQualityShapeOf,
 } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
-import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { pillWidthFor } from '@/components/recordings/status-cell'
+import { Badge } from '@/components/ui/badge'
+import {
+  StateSay,
+  stateColumnFor,
+  toneOf,
+} from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
 import { ChipDot } from '@/components/vela/status'
 
 const UNMEASURED = '未計測'
 
-export const RECORDING_QUALITY_PILL_WIDTH = pillWidthFor([
+export const RECORDING_QUALITY_COLUMN = stateColumnFor([
   UNMEASURED,
   ...Object.values(RECORDING_QUALITY_SHAPES).map((shape) => shape.label),
 ])
 
 export function QualityChip({
   recording: r,
-  width,
+  say = false,
   also = [],
 }: {
   recording: Recording
-  width?: BadgeWidth
+  say?: boolean
   also?: (string | undefined | false)[]
 }) {
   const shape = recordingQualityShapeOf(r.quality.level)
   const said = [r.quality.measured && shape.saying, ...also].filter(
     (one): one is string => Boolean(one),
   )
-  const pill = !r.quality.measured ? (
-    <Badge variant="mute" width={width}>
-      <ChipDot />
-      {UNMEASURED}
-    </Badge>
+  const measured = r.quality.measured
+  const variant = measured ? shape.variant : 'mute'
+  const word = measured ? shape.label : UNMEASURED
+  const drawn = say ? (
+    <StateSay tone={toneOf(variant)} bold={measured}>
+      {word}
+    </StateSay>
   ) : (
-    <Badge variant={shape.variant} width={width} className="font-bold">
+    <Badge variant={variant} className={measured ? 'font-bold' : undefined}>
       <ChipDot />
-      {shape.label}
+      {word}
     </Badge>
   )
 
   if (said.length === 0) {
-    return pill
+    return drawn
   }
 
-  return <InFull says={said.join('\n')}>{pill}</InFull>
+  return <InFull says={said.join('\n')}>{drawn}</InFull>
 }

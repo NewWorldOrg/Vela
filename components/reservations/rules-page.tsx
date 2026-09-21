@@ -243,7 +243,7 @@ function RulesScreen({
 
         {editing.state === 'none' ? (
           <EmptyState
-            spot="antenna"
+            spot="list"
             title="ルールが選ばれていません"
             className="min-[1061px]:mt-6"
           />
@@ -1099,7 +1099,7 @@ function RuleEditor({
             <AlertDialogFooter>
               <AlertDialogCancel>キャンセル</AlertDialogCancel>
               <AlertDialogAction
-                variant="destructive"
+                variant="destructiveFill"
                 disabled={pending || !leaving}
                 onClick={(event) => {
                   event.preventDefault()

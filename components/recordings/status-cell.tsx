@@ -1,21 +1,31 @@
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 
+import { cn } from '@/lib/utils'
 import type { StateTerm } from '@/lib/state-terms'
-import type { PillWidth } from '@/components/ui/badge'
 
-const WIDE_GLYPH = /[　-ヿ㐀-鿿豈-﫿＀-￯]/u
+const WIDE_GLYPH = /[　-ヿ㐀-鿿豈-﫿＀-￯]/u
 
 const WIDE_EM = 1
 
 const NARROW_EM = 0.6
 
-const DOT_AND_PADDING_EM = 3.25
+const SAY_FONT_PX = 12.5
 
-const STEP_EM = 0.25
+const DOT_AND_GAP_PX = 12
 
-const PILL_FONT_PX = 11.5
+const CELL_SIDES_PX = 26
 
-export const STATE_COLUMN = 'w-[156px]'
+const BASE_FONT_PX = 13.5
+
+export type StateTone = 'ok' | 'warn' | 'err' | 'info' | 'mute'
+
+const SAY_TONE: Record<StateTone, string> = {
+  ok: 'text-mint',
+  warn: 'text-lemon',
+  err: 'text-coral',
+  info: 'text-brand',
+  mute: 'text-ink-3',
+}
 
 function emOf(word: string): number {
   return [...word].reduce(
@@ -24,15 +34,24 @@ function emOf(word: string): number {
   )
 }
 
-export function pillWidthFor(words: readonly string[]): PillWidth {
+export function stateColumnFor(words: readonly string[]): string {
   const longest = Math.max(...words.map(emOf))
-  const width = Math.ceil((longest + DOT_AND_PADDING_EM) / STEP_EM) * STEP_EM
+  const px = Math.ceil(longest * SAY_FONT_PX + DOT_AND_GAP_PX + CELL_SIDES_PX)
 
-  return `${width}em`
+  return `calc(${px}rem / ${BASE_FONT_PX})`
 }
 
-export function stateColumnPx(width: PillWidth, cellSidesPx: number): number {
-  return Math.ceil(parseFloat(width) * PILL_FONT_PX + cellSidesPx)
+export function toneOf(variant: string): StateTone {
+  if (
+    variant === 'ok' ||
+    variant === 'warn' ||
+    variant === 'err' ||
+    variant === 'info'
+  ) {
+    return variant
+  }
+
+  return variant === 'sky' ? 'info' : 'mute'
 }
 
 export function StatusCell({ children }: { children: ReactNode }) {
@@ -42,6 +61,41 @@ export function StatusCell({ children }: { children: ReactNode }) {
       className="flex items-center justify-start text-left"
     >
       {children}
+    </span>
+  )
+}
+
+export function StateSay({
+  tone = 'mute',
+  bold = false,
+  dot = true,
+  className,
+  children,
+  ...props
+}: ComponentProps<'span'> & {
+  tone?: StateTone
+  bold?: boolean
+  dot?: boolean
+}) {
+  return (
+    <span
+      data-slot="state-say"
+      data-tone={tone}
+      className={cn(
+        'inline-flex min-w-0 items-center gap-1.5 text-ui whitespace-nowrap',
+        SAY_TONE[tone],
+        bold && 'font-bold',
+        className,
+      )}
+      {...props}
+    >
+      {dot && (
+        <span
+          aria-hidden="true"
+          className="size-1.5 shrink-0 rounded-full bg-current"
+        />
+      )}
+      <span className="min-w-0 truncate">{children}</span>
     </span>
   )
 }

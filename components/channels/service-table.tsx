@@ -14,8 +14,7 @@ import type {
   ServiceRow,
   WriteResult,
 } from '@/repository/services'
-import { Badge } from '@/components/ui/badge'
-import { StatusCell, pillWidthFor } from '@/components/recordings/status-cell'
+import { StateSay, StatusCell } from '@/components/recordings/status-cell'
 import {
   Table,
   TableBody,
@@ -118,20 +117,14 @@ function Category({ service }: { service: ServiceRow }) {
 
 const NEEDS_A_LOOK = '要対応'
 
-const SERVICE_STANDING_PILL_WIDTH = pillWidthFor([NEEDS_A_LOOK])
-
 const A_BETTER_ONE = '実測上位の候補'
 
 function Standing({ service }: { service: ServiceRow }) {
   if (service.currentChannel === undefined) {
     return (
-      <Badge
-        variant="warn"
-        width={SERVICE_STANDING_PILL_WIDTH}
-        className="font-bold"
-      >
+      <StateSay tone="warn" bold>
         {NEEDS_A_LOOK}
-      </Badge>
+      </StateSay>
     )
   }
 
