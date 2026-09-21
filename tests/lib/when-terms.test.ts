@@ -10,15 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 const READS = ['app', 'components', 'lib', 'repository']
 
-const RETIRED = [
-  '記録日時',
-  '最終利用',
-  '最終確認',
-  '最終サービス取得',
-  '撤去',
-  '失効させ',
-  '破棄',
-]
+const RETIRED = ['記録日時', '最終利用', '最終確認', '最終サービス取得', '破棄']
 
 function everySourceFile(from: string): string[] {
   const here = path.join(ROOT, from)

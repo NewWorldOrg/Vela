@@ -47,9 +47,9 @@ export const 通常: Story = {
     await expect(
       canvas.getAllByRole('button', { name: 'ログアウト' }),
     ).toHaveLength(1)
-    await expect(canvas.getAllByRole('button', { name: '削除' })).toHaveLength(
-      SESSIONS.length - 1,
-    )
+    await expect(
+      canvas.getAllByRole('button', { name: '失効させる' }),
+    ).toHaveLength(SESSIONS.length - 1)
   },
 }
 
@@ -101,7 +101,7 @@ export const 狭い幅で名前が長いセッション: Story = {
 
 export const いまの端末のみ: Story = { args: { sessions: ONLY_THIS_DEVICE } }
 
-export const 削除直後: Story = {
+export const 失効直後: Story = {
   args: { notice: { kind: 'revoked', device: 'Safari / iPadOS 18' } },
 }
 

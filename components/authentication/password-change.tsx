@@ -131,7 +131,7 @@ export function ChangePassword({
               onClick={run}
             >
               <LockIcon />
-              変更してほかの端末のセッションを削除する
+              変更してほかの端末を失効させる
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

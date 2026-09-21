@@ -59,7 +59,7 @@ export function RevokeSession({
         }}
       >
         <CloseIcon />
-        削除
+        失効させる
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
@@ -67,10 +67,10 @@ export function RevokeSession({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-[9px]">
               <CloseIcon className="size-[19px] text-coral" />
-              このセッションを削除します
+              このセッションを失効させます
             </AlertDialogTitle>
             <AlertDialogDescription className="sr-only">
-              {session.device.name}のセッションを削除します
+              {session.device.name}のセッションを失効させます
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -95,7 +95,7 @@ export function RevokeSession({
           <span aria-live="polite">
             {refusal && (
               <InlineAlert tone="danger">
-                削除できませんでした。{refusal}
+                失効させられませんでした。{refusal}
               </InlineAlert>
             )}
           </span>
@@ -110,7 +110,7 @@ export function RevokeSession({
             </Button>
             <Button variant="destructive" disabled={pending} onClick={run}>
               <CloseIcon />
-              削除する
+              失効させる
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

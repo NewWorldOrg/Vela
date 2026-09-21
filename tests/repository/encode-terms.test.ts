@@ -39,7 +39,7 @@ const EVERY_TABLE: [string, string][] = [
   ['エンコーダ', wordFor(ENCODER_LABEL, LATER as EncodeEncoder)],
   ['エンコーダを変えた理由', wordFor(SWERVE_LABEL, LATER as EncodeSwerve)],
   ['失敗の分類', wordFor(FAILURE_LABEL, LATER as EncodeFailure)],
-  ['設定の削除', wordFor(REMOVAL_LABEL, LATER as EncodeRemoved)],
+  ['設定の撤去', wordFor(REMOVAL_LABEL, LATER as EncodeRemoved)],
 ]
 
 test('エンコードの語彙は、この版が知らない値でも日本語で閉じる', () => {

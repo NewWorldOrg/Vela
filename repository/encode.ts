@@ -297,8 +297,8 @@ export const WHEN_CHANGING_A_PROFILE: EncodeAsking = {
 }
 
 export const WHEN_REMOVING_A_PROFILE: EncodeAsking = {
-  did: '削除',
-  fell: 'プロファイルを削除できませんでした',
+  did: '撤去',
+  fell: 'プロファイルを撤去できませんでした',
 }
 
 export const WHEN_SAVING_A_DESTINATION: EncodeAsking = {
@@ -314,8 +314,8 @@ export const WHEN_CHANGING_A_DESTINATION: EncodeAsking = {
 }
 
 export const WHEN_REMOVING_A_DESTINATION: EncodeAsking = {
-  did: '削除',
-  fell: '保存先を削除できませんでした',
+  did: '撤去',
+  fell: '保存先を撤去できませんでした',
 }
 
 export const WHEN_SETTLING_THE_AUTO_RUN: EncodeAsking = {

@@ -718,25 +718,25 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     WHEN_REMOVING_A_PROFILE,
     404,
     `No profile ${PROFILE.id} is defined.`,
-    'このプロファイルは残っていないため、削除できませんでした。',
+    'このプロファイルは残っていないため、撤去できませんでした。',
   ],
   [
     WHEN_REMOVING_A_PROFILE,
     409,
     `Profile ${PROFILE.id} is what job ${RUNNING.id} is waiting to run with, and it stands still until that job has ended or been called off.`,
-    'このプロファイルを使うジョブが実行中か待機中のため、削除できませんでした。',
+    'このプロファイルを使うジョブが実行中か待機中のため、撤去できませんでした。',
   ],
   [
     WHEN_REMOVING_A_PROFILE,
     409,
     `Profile ${PROFILE.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
-    'このプロファイルは退役しているため、削除できませんでした。',
+    'このプロファイルは退役しているため、撤去できませんでした。',
   ],
   [
     WHEN_REMOVING_A_PROFILE,
     409,
     `Profile ${PROFILE.id} is what destination ${DESTINATION.id} encodes with unless another is asked for; point that destination at another profile first.`,
-    'このプロファイルを既定にしている保存先があるため、削除できませんでした。',
+    'このプロファイルを既定にしている保存先があるため、撤去できませんでした。',
   ],
   [
     WHEN_SAVING_A_DESTINATION,
@@ -808,19 +808,19 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     WHEN_REMOVING_A_DESTINATION,
     404,
     `No destination ${DESTINATION.id} is defined.`,
-    'この保存先は残っていないため、削除できませんでした。',
+    'この保存先は残っていないため、撤去できませんでした。',
   ],
   [
     WHEN_REMOVING_A_DESTINATION,
     409,
     `Destination ${DESTINATION.id} is the only one left, and a machine with nowhere to put an artefact encodes nothing; define the one that replaces it first.`,
-    'この保存先は最後の 1 つのため、削除できませんでした。',
+    'この保存先は最後の 1 つのため、撤去できませんでした。',
   ],
   [
     WHEN_REMOVING_A_DESTINATION,
     409,
     `Destination ${DESTINATION.id} was retired at ${RETIRED_AT}; a retired definition stands as it was so that what was encoded with it still reads.`,
-    'この保存先は退役しているため、削除できませんでした。',
+    'この保存先は退役しているため、撤去できませんでした。',
   ],
 ]
 
@@ -868,7 +868,7 @@ test('a refusal nothing accounts for is a number, and never the sentence the API
   )
   assert.equal(
     whyItRefused(WHEN_REMOVING_A_DESTINATION, 502, 'Bad Gateway'),
-    '保存先を削除できませんでした(502)。',
+    '保存先を撤去できませんでした(502)。',
   )
 })
 
