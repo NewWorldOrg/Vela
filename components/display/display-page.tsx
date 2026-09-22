@@ -4,12 +4,13 @@ import { useState } from 'react'
 
 import {
   MOTION_COOKIE,
+  MOTION_HINT,
   MOTION_LABEL,
   movesUnless,
   type MotionSetting,
 } from '@/lib/motion'
 import { Switch } from '@/components/ui/switch'
-import { FieldLabel } from '@/components/vela/field'
+import { FieldHint, FieldLabel } from '@/components/vela/field'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { PageHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
@@ -47,6 +48,7 @@ export function DisplayView({ motion }: { motion?: MotionSetting }) {
             />
           </dd>
         </dl>
+        <FieldHint className="mt-1.5">{MOTION_HINT}</FieldHint>
       </Surface>
     </>
   )
