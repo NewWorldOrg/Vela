@@ -55,11 +55,14 @@ export function RecordingRecord({
   const encode = encodeRowOf(encodeJob, d.encode, d.encodeWhenRecorded)
 
   return (
-    <details className="group mt-[calc(22rem/16)] rounded-xl bg-surface px-[calc(22rem/16)]">
+    <details
+      data-slot="unfold-details"
+      className="unfolds-itself group mt-[calc(22rem/16)] rounded-xl bg-surface px-[calc(22rem/16)]"
+    >
       <summary className="tap-target flex cursor-pointer list-none items-center gap-[calc(9rem/16)] py-[calc(15rem/16)] text-ui font-bold text-ink-2 transition-colors duration-150 ease-out hover:text-ink focus-visible:shadow-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden">
         <ChevronRightIcon className="size-[calc(15rem/16)] text-brand transition-transform duration-150 ease-toy group-open:rotate-90" />
         <QualityIcon className="size-[calc(15rem/16)] text-brand" />
-        録画の記録
+        技術情報
       </summary>
       <div
         style={{ '--row-label': '176px' } as CSSProperties}
