@@ -204,7 +204,6 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                   expanded={unfolded.open === outcome.id}
                   shown={unfoldShows(unfolded, outcome.id)}
                   onToggle={() => unfolded.toggle(outcome.id)}
-                  onSettle={() => unfolded.settle(outcome.id)}
                 />
               ))}
             </TableBody>

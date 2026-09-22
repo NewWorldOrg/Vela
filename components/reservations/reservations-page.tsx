@@ -306,7 +306,6 @@ export function ReservationsView({
                     firstConflict === reservation.id)
                 }
                 onToggle={() => unfolded.toggle(reservation.id)}
-                onSettle={() => unfolded.settle(reservation.id)}
                 selected={picked.has(reservation.id)}
                 onSelect={(taken) =>
                   setPicked((prev) => {

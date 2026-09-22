@@ -65,7 +65,6 @@ export function ReservationRow({
   expanded,
   shown,
   onToggle,
-  onSettle,
   selected,
   onSelect,
   actions,
@@ -75,7 +74,6 @@ export function ReservationRow({
   expanded: boolean
   shown: boolean
   onToggle: () => void
-  onSettle: () => void
   selected: boolean
   onSelect: (chosen: boolean) => void
   actions: ReservationActions
@@ -284,11 +282,7 @@ export function ReservationRow({
       {shown && conflict && reservation.conflict && (
         <TableRow className="hover:bg-transparent">
           <TableCell colSpan={8} className="border-b-0 p-0">
-            <Unfold
-              open={expanded}
-              onSettle={onSettle}
-              bodyClassName="px-3.5 pb-3"
-            >
+            <Unfold open={expanded} bodyClassName="px-3.5 pb-3">
               <div className="rounded-lg bg-surface px-4 py-3.5">
                 <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
                   <WarningIcon className="size-4" />

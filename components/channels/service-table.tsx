@@ -106,19 +106,16 @@ function UnfoldedCandidates({
   service,
   actions,
   expanded,
-  onSettle,
 }: {
   service: ServiceRow
   actions: CandidateActions
   expanded: boolean
-  onSettle: (serviceKey: string) => void
 }) {
   return (
     <TableRow className="[&:last-child_[data-slot=unfold-body]]:border-b-0">
       <TableCell colSpan={SERVICE_COLUMNS.length} className="border-0 p-0">
         <Unfold
           open={expanded}
-          onSettle={() => onSettle(service.key)}
           bodyClassName="border-b border-dashed border-line bg-surface-2 py-3.5 pr-[calc(18rem/16)] pl-10"
         >
           <CandidateList
@@ -140,7 +137,7 @@ export function ServiceTable({
   services: ServiceRow[]
   actions: CandidateActions
 }) {
-  const { open, folding, toggle, settle } = useUnfolded()
+  const { open, folding, toggle } = useUnfolded()
 
   return (
     <Table
@@ -241,7 +238,6 @@ export function ServiceTable({
                 service={service}
                 actions={actions}
                 expanded={expanded}
-                onSettle={settle}
               />
             ),
           ]

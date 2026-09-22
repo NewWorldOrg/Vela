@@ -37,8 +37,7 @@ const DEVICE_ICON: Record<
   外部プレイヤー: DevicePlayerIcon,
 }
 
-const CURRENT_ROW =
-  'hover:bg-transparent [&>td]:border-transparent [&>td]:bg-brand-soft [&>td:first-child]:rounded-l-md [&>td:last-child]:rounded-r-md'
+const CURRENT_ROW = 'shadow-[inset_3px_0_0_0_var(--color-brand)]'
 
 export function SessionTable({
   sessions,

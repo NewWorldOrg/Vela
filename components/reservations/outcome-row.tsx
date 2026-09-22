@@ -23,14 +23,12 @@ export function OutcomeRow({
   expanded,
   shown,
   onToggle,
-  onSettle,
 }: {
   outcome: ReservationOutcome
   nth: number
   expanded: boolean
   shown: boolean
   onToggle: () => void
-  onSettle: () => void
 }) {
   const instead = outcome.instead
   return (
@@ -92,11 +90,7 @@ export function OutcomeRow({
       {shown && instead.length > 0 && (
         <TableRow className="hover:bg-transparent">
           <TableCell colSpan={OUTCOME_COLUMN_COUNT} className="border-b-0 p-0">
-            <Unfold
-              open={expanded}
-              onSettle={onSettle}
-              bodyClassName="px-3.5 pb-3"
-            >
+            <Unfold open={expanded} bodyClassName="px-3.5 pb-3">
               <div className="rounded-lg bg-surface px-4 py-3.5">
                 <div className="text-cap font-bold tracking-[0.04em] text-ink-3">
                   代わりに録られた予約

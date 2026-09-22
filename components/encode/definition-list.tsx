@@ -8,7 +8,7 @@ export const STICKY_HEAD = '[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10'
 export const STAMP =
   'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
-export const RETIRED_ROW = '[&>td]:bg-surface-2'
+export const RETIRED_ROW = '[&>td]:text-ink-3'
 
 export function DefinitionName({
   label,

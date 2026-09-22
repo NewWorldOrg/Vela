@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState, type ComponentProps } from 'react'
+import { useRef, useState, type ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
+
+export const FOLD_MS = 200
 
 export interface Unfolding {
   open?: string
   folding?: string
   toggle: (key: string) => void
-  settle: (key: string) => void
 }
 
 function foldsGradually(): boolean {
@@ -23,26 +24,28 @@ export function useUnfolding(): Unfolding {
     open?: string
     folding?: string
   }>({})
+  const shutting = useRef<number | undefined>(undefined)
+  const latest = useRef<{ open?: string; folding?: string }>({})
 
-  return {
-    ...unfolded,
-    toggle: (key) =>
-      setUnfolded(({ open }) => {
-        const next = open === key ? undefined : key
+  const toggle = (key: string): void => {
+    const was = latest.current.open
+    const next = was === key ? undefined : key
+    const folding =
+      was !== undefined && was !== next && foldsGradually() ? was : undefined
 
-        return {
-          open: next,
-          folding:
-            open !== undefined && open !== next && foldsGradually()
-              ? open
-              : undefined,
-        }
-      }),
-    settle: (key) =>
-      setUnfolded((held) =>
-        held.folding === key ? { open: held.open, folding: undefined } : held,
-      ),
+    latest.current = { open: next, folding }
+    window.clearTimeout(shutting.current)
+    setUnfolded(latest.current)
+
+    if (folding !== undefined) {
+      shutting.current = window.setTimeout(() => {
+        latest.current = { open: latest.current.open, folding: undefined }
+        setUnfolded(latest.current)
+      }, FOLD_MS + 40)
+    }
   }
+
+  return { ...unfolded, toggle }
 }
 
 export function unfoldShows(held: Unfolding, key: string): boolean {
@@ -51,48 +54,19 @@ export function unfoldShows(held: Unfolding, key: string): boolean {
 
 export function Unfold({
   open,
-  onSettle,
   className,
   bodyClassName,
   children,
   ...props
 }: ComponentProps<'div'> & {
   open: boolean
-  onSettle?: () => void
   bodyClassName?: string
 }) {
-  const fold = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const element = fold.current
-
-    if (open || element === null || onSettle === undefined) {
-      return
-    }
-
-    const shut = getComputedStyle(element).gridTemplateRows === '0px'
-
-    if (shut || element.getAnimations().length === 0) {
-      onSettle()
-    }
-  }, [open, onSettle])
-
   return (
     <div
-      ref={fold}
       data-slot="unfold"
       data-open={open ? '' : undefined}
       inert={!open}
-      onTransitionEnd={(event) => {
-        if (
-          event.target === event.currentTarget &&
-          event.propertyName === 'grid-template-rows'
-        ) {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => onSettle?.())
-          })
-        }
-      }}
       className={cn(
         'unfolds grid',
         open ? 'grid-rows-[1fr] starting:grid-rows-[0fr]' : 'grid-rows-[0fr]',
