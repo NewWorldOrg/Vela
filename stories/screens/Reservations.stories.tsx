@@ -367,7 +367,7 @@ export const 未完了が一件も無い: Story = {
       canvas.getByRole('heading', { name: '未完了の予約はありません' }),
     ).toBeVisible()
     await expect(
-      canvas.getByRole('button', { name: '絞り込みを解除' }),
+      canvas.getByRole('button', { name: '条件を消す' }),
     ).toBeEnabled()
     await expect(canvas.queryByRole('table')).toBeNull()
   },
@@ -382,7 +382,7 @@ export const 予約が一件も無い: Story = {
       canvas.getByRole('heading', { name: '予約はありません' }),
     ).toBeVisible()
     await expect(
-      canvas.queryByRole('button', { name: '絞り込みを解除' }),
+      canvas.queryByRole('button', { name: '条件を消す' }),
     ).toBeNull()
     await expect(canvas.getByRole('link', { name: '予約を追加' })).toBeVisible()
   },

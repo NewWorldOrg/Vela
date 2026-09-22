@@ -112,11 +112,11 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <ReservationTabs current="outcomes" />
 
-      <div className="mb-3.5 flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl bg-surface px-[17px] py-[13px]">
+      <div className="mb-3.5 flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
         <span className="text-ui font-medium whitespace-nowrap text-ink-2">
           分類
         </span>
@@ -154,7 +154,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
       {items.length > 0 ? (
         <>
           <Table
-            className="min-w-[1040px]"
+            className="min-w-[calc(1040rem/16)]"
             containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
           >
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
@@ -211,7 +211,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           spot="tape"
           title="条件に合う記録がありません"
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <Button
               variant="halt"
@@ -220,7 +220,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                 change({ kind: null, days: null, ch: null, rule: null })
               }
             >
-              絞り込みを解除
+              条件を消す
             </Button>
           }
         />
@@ -229,7 +229,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           spot="star"
           title="録れなかった予約はありません"
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <Button variant="watch" size="sm" asChild>
               <Link href="/reservations">予約一覧へ</Link>

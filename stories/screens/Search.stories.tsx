@@ -342,7 +342,7 @@ export const 該当なし: Story = {
     await expect(empty).not.toBeNull()
     await expect(
       within(empty as HTMLElement).getByRole('button', {
-        name: '条件をすべて消す',
+        name: '条件を消す',
       }),
     ).toBeVisible()
     await saysNothingItCannotKeep(canvas)
@@ -898,7 +898,7 @@ export const 戻ると前の条件が欄に戻る: Story = {
   },
 }
 
-export const 住所が空でも条件をすべて消すと欄が空になる: Story = {
+export const 住所が空でも条件を消すと欄が空になる: Story = {
   args: {
     result: {
       condition: emptyCondition,
@@ -916,9 +916,7 @@ export const 住所が空でも条件をすべて消すと欄が空になる: St
     )
     await choose('ジャンルを足す', '映画')
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: '条件をすべて消す' }),
-    )
+    await userEvent.click(canvas.getByRole('button', { name: '条件を消す' }))
 
     await waitFor(async () => {
       await expect(
@@ -1041,7 +1039,7 @@ export const 種別を戻すとチャンネルも戻る: Story = {
   },
 }
 
-export const 条件をすべて消すと入力欄も空になる: Story = {
+export const 条件を消すと入力欄も空になる: Story = {
   args: {
     result: {
       condition: { ...emptyCondition, genres: ['news'] },
@@ -1069,9 +1067,7 @@ export const 条件をすべて消すと入力欄も空になる: Story = {
       canvas.getByRole('textbox', { name: 'キーワード' }),
       '夏 絶景',
     )
-    await userEvent.click(
-      canvas.getByRole('button', { name: '条件をすべて消す' }),
-    )
+    await userEvent.click(canvas.getByRole('button', { name: '条件を消す' }))
 
     await waitFor(async () => {
       await expect(
@@ -1107,7 +1103,7 @@ export const 探す場所だけでは条件に数えない: Story = {
 
     await waitFor(async () => {
       await expect(
-        canvas.getByRole('button', { name: '条件をすべて消す' }),
+        canvas.getByRole('button', { name: '条件を消す' }),
       ).toBeVisible()
     })
 

@@ -66,11 +66,11 @@ export function LibraryView({
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
-        <h1 className="heading flex items-center gap-2 text-[20px]">
-          <LibraryIcon className="size-[18px] text-brand" />
+        <h1 className="heading flex items-center gap-2 text-[calc(20rem/16)]">
+          <LibraryIcon className="size-[calc(18rem/16)] text-brand" />
           録画ライブラリ
         </h1>
       </div>
@@ -78,20 +78,20 @@ export function LibraryView({
       <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
         <div className="flex flex-wrap items-center gap-2.5">
           <form
-            className="relative min-w-[180px] flex-[1_1_100%] min-[701px]:flex-[0_1_268px]"
+            className="relative min-w-[calc(180rem/16)] flex-[1_1_100%] min-[701px]:flex-[0_1_268px]"
             onSubmit={(e) => {
               e.preventDefault()
               const q = new FormData(e.currentTarget).get('q')
               onFiltersChange({ q: typeof q === 'string' ? q : null })
             }}
           >
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-[13px] z-10 size-[15px] -translate-y-1/2 text-ink-3" />
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-[calc(13rem/16)] z-10 size-[calc(15rem/16)] -translate-y-1/2 text-ink-3" />
             <Input
               key={filter.q ?? ''}
               name="q"
               defaultValue={filter.q ?? ''}
               placeholder="番組名・概要・出演者で検索"
-              className={cn(BAND_CONTROL, 'rounded-full pl-[34px]')}
+              className={cn(BAND_CONTROL, 'rounded-full pl-[calc(34rem/16)]')}
             />
           </form>
           <FilterSelect
@@ -139,7 +139,7 @@ export function LibraryView({
           <span className="text-cap font-bold tracking-[0.04em] text-ink-3">
             チャンネル
           </span>
-          <div className="flex min-w-0 flex-wrap gap-x-1.5 gap-y-[13px]">
+          <div className="flex min-w-0 flex-wrap gap-x-1.5 gap-y-[calc(13rem/16)]">
             <ChannelChip
               label="すべて"
               on={!filter.ch}
@@ -164,11 +164,11 @@ export function LibraryView({
           spot="tape"
           title="条件に合う録画がありません"
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
               <Button variant="halt" size="sm" onClick={clearEveryCondition}>
-                絞り込みを解除
+                条件を消す
               </Button>
               {filter.q &&
                 (filter.year || filter.genre || filter.state || filter.ch) && (
@@ -195,7 +195,7 @@ export function LibraryView({
           spot="antenna"
           title="まだ録画がありません"
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
               <Button variant="watch" size="sm" asChild>

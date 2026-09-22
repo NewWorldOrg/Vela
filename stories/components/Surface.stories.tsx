@@ -113,7 +113,7 @@ export const 空状態の四通り: Story = {
         title="未完了の予約はありません"
         action={
           <Button variant="halt" size="sm">
-            絞り込みを解除
+            条件を消す
           </Button>
         }
       >
@@ -131,7 +131,7 @@ export const EmptyStateInAColumn: Story = {
         title="条件に合う録画がありません"
         className="max-w-[560px]"
       >
-        絞り込みを解除すると、すべての録画が表示されます。
+        条件を消すと、すべての録画が表示されます。
       </EmptyState>
     </div>
   ),

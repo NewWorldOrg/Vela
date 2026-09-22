@@ -149,10 +149,10 @@ export function ReservationsView({
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[20px]">
-        <ReservationIcon className="size-[18px] text-brand" />
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)]">
+        <ReservationIcon className="size-[calc(18rem/16)] text-brand" />
         予約
       </h1>
       <ReservationTabs
@@ -167,7 +167,7 @@ export function ReservationsView({
         }
       />
 
-      <div className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[17px] py-[13px]">
+      <div className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
         <span className="text-ui font-medium whitespace-nowrap text-ink-2">
           表示
         </span>
@@ -219,21 +219,21 @@ export function ReservationsView({
           spot={total === 0 ? 'antenna' : 'star'}
           title={total === 0 ? '予約はありません' : '未完了の予約はありません'}
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
             total === 0 ? undefined : (
               <Button variant="halt" size="sm" onClick={onClearFilters}>
-                絞り込みを解除
+                条件を消す
               </Button>
             )
           }
         />
       ) : (
         <Table
-          className="min-w-[960px]"
+          className="min-w-[calc(960rem/16)]"
           containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
         >
-          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[13px]">
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[calc(13rem/16)]">
             <TableRow>
               <TableHead className="w-11">
                 <Checkbox
