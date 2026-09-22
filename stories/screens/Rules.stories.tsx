@@ -605,7 +605,7 @@ export const 追加の置き場: Story = {
     const fromSearch = canvas.getByRole('link', { name: '検索から作る' })
 
     await expect(add).toHaveAttribute('data-variant', 'default')
-    await expect(fromSearch).toHaveAttribute('data-variant', 'outline')
+    await expect(fromSearch).toHaveAttribute('data-variant', 'watch')
 
     const drawn = [add, fromSearch].map((one) => one.getBoundingClientRect())
 

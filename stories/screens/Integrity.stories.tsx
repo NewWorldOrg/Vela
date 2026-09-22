@@ -215,7 +215,7 @@ export const 削除の形: Story = {
     const canvas = within(canvasElement)
     const remove = canvas.getByRole('button', { name: '削除' })
 
-    await expect(remove).toHaveAttribute('data-variant', 'destructive')
+    await expect(remove).toHaveAttribute('data-variant', 'remove')
     await expect(remove).toHaveAttribute('data-size', 'sm')
     await expect(remove.querySelector('svg')).not.toBeNull()
     await expect(remove.textContent).toContain('削除')

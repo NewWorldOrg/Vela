@@ -47,7 +47,7 @@ function TooltipContent({
         sideOffset={sideOffset}
         collisionPadding={12}
         className={cn(
-          'z-50 max-w-[17rem] rounded-lg border border-line-strong bg-surface px-3 py-2 text-note leading-[1.7] text-ink shadow-pop-xl',
+          'pointer-events-none z-50 max-w-[17rem] rounded-lg border border-line-strong bg-surface px-3 py-2 text-note leading-[1.7] text-ink shadow-pop-xl',
           className,
         )}
         {...props}

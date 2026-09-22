@@ -964,7 +964,7 @@ export const 操作の並び: Story = {
 
     await expect(canvas.getByRole('button', { name: '削除' })).toHaveAttribute(
       'data-variant',
-      'destructive',
+      'remove',
     )
   },
 }
