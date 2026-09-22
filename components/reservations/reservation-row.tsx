@@ -127,14 +127,16 @@ export function ReservationRow({
           )}
         </TableCell>
         <TableCell className="align-top whitespace-normal">
-          <b className="block text-[13px] font-bold">{reservation.title}</b>
+          <b className="block text-[calc(13rem/16)] font-bold">
+            {reservation.title}
+          </b>
           {reservation.note && (
             <span className="text-note text-ink-3">{reservation.note}</span>
           )}
         </TableCell>
         <TableCell className="align-top">
           {reservation.channelName}
-          <small className="ml-1.5 font-code text-[10.5px] text-ink-3">
+          <small className="ml-1.5 font-code text-micro text-ink-3">
             {reservation.channelNo}
           </small>
         </TableCell>

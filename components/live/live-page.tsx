@@ -37,7 +37,7 @@ import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 
-const HEADING = 'heading mb-4 flex items-center gap-2 text-[20px]'
+const HEADING = 'heading mb-4 flex items-center gap-2 text-[calc(20rem/16)]'
 
 const TICK_MS = 30_000
 
@@ -135,9 +135,9 @@ export function LiveView({
 
   if (!watching && screen.tuners === 0) {
     return (
-      <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
+      <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
         <h1 className={HEADING}>
-          <LiveIcon className="size-[22px] text-brand" />
+          <LiveIcon className="size-[calc(22rem/16)] text-brand" />
           ライブ
         </h1>
         <EmptyState
@@ -156,9 +156,9 @@ export function LiveView({
 
   if (!watching) {
     return (
-      <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px]">
+      <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
         <h1 className={HEADING}>
-          <LiveIcon className="size-[22px] text-brand" />
+          <LiveIcon className="size-[calc(22rem/16)] text-brand" />
           ライブ
         </h1>
         <div className="mb-3.5 flex flex-wrap items-center gap-2">
@@ -211,7 +211,7 @@ export function LiveView({
   return (
     <ScreenMain
       width="full"
-      className="flex items-start gap-[26px] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[30px] max-[1180px]:flex-col"
+      className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col"
     >
       <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
         <LivePlayer
@@ -225,7 +225,7 @@ export function LiveView({
           takeCapture={takeCapture}
         />
         <NowNext watching={watching} />
-        <div className="mt-[18px] flex flex-wrap items-start gap-[9px]">
+        <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)]">
           <OpenExternally
             handover={liveHandover(
               watching.channel.networkId,
@@ -252,7 +252,9 @@ export function LiveView({
           motion={motion}
           onKind={kind}
           onSelect={(channel) => choose(channel.id)}
-          className={motion.shown ? 'w-full min-[1181px]:w-[344px]' : 'w-full'}
+          className={
+            motion.shown ? 'w-full min-[1181px]:w-[calc(344rem/16)]' : 'w-full'
+          }
         />
       </aside>
     </ScreenMain>

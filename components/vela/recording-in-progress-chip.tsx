@@ -21,10 +21,12 @@ export function RecordingInProgressChip({
     <TermTip term={term}>
       <Badge
         variant="recording"
-        className={ledger ? 'gap-[7px] pl-[9px]' : undefined}
+        className={
+          ledger ? 'gap-[calc(7rem/16)] pl-[calc(9rem/16)]' : undefined
+        }
       >
         {ledger ? (
-          <ListIcon className="size-[13px]" />
+          <ListIcon className="size-[calc(13rem/16)]" />
         ) : (
           <ChipDot className="breathes" />
         )}

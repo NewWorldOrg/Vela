@@ -22,7 +22,7 @@ export function StatusDot({
       data-tone={tone}
       aria-hidden="true"
       className={cn(
-        'inline-block size-[7px] shrink-0 rounded-full',
+        'inline-block size-[calc(7rem/16)] shrink-0 rounded-full',
         DOT_TONE[tone],
         className,
       )}
@@ -41,7 +41,7 @@ export function StatusText({
     <span
       data-slot="status-text"
       className={cn(
-        'inline-flex items-center gap-[7px] text-sub whitespace-nowrap text-ink-2',
+        'inline-flex items-center gap-[calc(7rem/16)] text-sub whitespace-nowrap text-ink-2',
         className,
       )}
       {...props}

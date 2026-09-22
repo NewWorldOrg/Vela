@@ -34,21 +34,21 @@ const CHANNEL_KIND_VARIANT = {
 function ProposalRows({ services }: { services: ProposalService[] }) {
   return (
     <>
-      <div className="rounded-xl bg-surface px-[17px]">
+      <div className="rounded-xl bg-surface px-[calc(17rem/16)]">
         {services.map((service) => (
           <div
             key={service.key}
             className="flex flex-wrap items-start gap-3 border-b border-dashed border-line py-3 last:border-b-0"
           >
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] leading-[1.6] font-bold">
+              <div className="text-[calc(13rem/16)] leading-[1.6] font-bold">
                 {service.name}
               </div>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {service.channels.map((channel) => (
                   <span
                     key={`${channel.kind}-${channel.channel}`}
-                    className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-[11px] py-[3px] text-note"
+                    className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-[calc(11rem/16)] py-[calc(3rem/16)] text-note"
                   >
                     <Badge variant={CHANNEL_KIND_VARIANT[channel.kind]}>
                       {CHANNEL_KIND_LABEL[channel.kind]}
@@ -76,13 +76,13 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
 function DepartureRows({ departures }: { departures: RotationDeparture[] }) {
   return (
     <>
-      <div className="rounded-xl bg-surface px-[17px]">
+      <div className="rounded-xl bg-surface px-[calc(17rem/16)]">
         {departures.map((departure) => (
           <div
             key={`${departure.key}-${departure.channel}`}
             className="flex flex-wrap items-center gap-3 border-b border-dashed border-line py-3 last:border-b-0"
           >
-            <span className="font-code text-[13.5px] font-medium tabular-nums">
+            <span className="font-code text-body font-medium tabular-nums">
               {departure.channel}
             </span>
             <Badge variant="warn" className="font-bold">
@@ -130,16 +130,16 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
   ]
 
   return (
-    <div className="mb-3 grid gap-[11px] sm:grid-cols-2 min-[1020px]:grid-cols-4">
+    <div className="mb-3 grid gap-[calc(11rem/16)] sm:grid-cols-2 min-[1020px]:grid-cols-4">
       {cells.map((cell) => (
         <div
           key={cell.label}
-          className={`rounded-xl px-4 py-[13px] ${cell.tint}`}
+          className={`rounded-xl px-4 py-[calc(13rem/16)] ${cell.tint}`}
         >
           <div className="text-note font-medium text-ink-2">{cell.label}</div>
-          <div className="font-code text-[22px] leading-[1.4] font-medium tabular-nums">
+          <div className="font-code text-h1 leading-[1.4] font-medium tabular-nums">
             {cell.value}
-            <small className="ml-[3px] text-cap font-normal text-ink-3">
+            <small className="ml-[calc(3rem/16)] text-cap font-normal text-ink-3">
               {cell.unit}
             </small>
           </div>
@@ -152,7 +152,7 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
     <div className="mb-2 flex flex-wrap items-baseline gap-2.5 px-0.5">
-      <h2 className="heading text-[15px]">{title}</h2>
+      <h2 className="heading text-[calc(15rem/16)]">{title}</h2>
       <span className="text-note tabular-nums text-ink-3">{stat}</span>
     </div>
   )
@@ -214,8 +214,8 @@ export function ScanProposalView({
       {crumb}
       <PageHeading>スキャン結果の確認</PageHeading>
 
-      <div className="mt-4 flex flex-wrap items-start gap-3 rounded-xl bg-surface px-[18px] py-4">
-        <SearchIcon className="mt-1 size-[17px] shrink-0 text-brand" />
+      <div className="mt-4 flex flex-wrap items-start gap-3 rounded-xl bg-surface px-[calc(18rem/16)] py-4">
+        <SearchIcon className="mt-1 size-[calc(17rem/16)] shrink-0 text-brand" />
         <div className="min-w-0 flex-1">
           <h2 className="heading text-ui leading-[1.5]">
             走査が{proposal.run.stateLabel}しました
@@ -237,7 +237,7 @@ export function ScanProposalView({
       <Summary proposal={proposal} />
 
       {proposal.empty ? (
-        <EmptyState spot="antenna" className="max-w-[520px]">
+        <EmptyState spot="antenna" className="max-w-[calc(520rem/16)]">
           今回の走査で変わるものはありませんでした。
         </EmptyState>
       ) : (
@@ -295,7 +295,7 @@ export function ScanProposalView({
         </section>
       )}
 
-      <div className="mt-7 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[18px] py-4">
+      <div className="mt-7 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(18rem/16)] py-4">
         <p className="min-w-0 flex-1 text-sub leading-[1.7] text-ink-2">
           保存対象: 新規{' '}
           <b className="font-code font-medium tabular-nums text-ink">

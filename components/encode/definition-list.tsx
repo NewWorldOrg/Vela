@@ -19,7 +19,7 @@ export function DefinitionName({
 }) {
   return (
     <span className="flex items-center gap-2">
-      <b className="text-[13px] font-bold">{label}</b>
+      <b className="text-[calc(13rem/16)] font-bold">{label}</b>
       {retired && <Badge variant="mute">{RETIRED_LABEL}</Badge>}
     </span>
   )

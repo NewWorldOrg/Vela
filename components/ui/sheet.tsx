@@ -62,9 +62,9 @@ function SheetContent({
         className={cn(
           'fixed z-50 flex flex-col bg-surface text-ink data-[state=open]:appears',
           side === 'right' &&
-            'inset-y-0 right-0 h-full w-3/4 border-l border-line-strong shadow-panel [--from-x:8px] sm:max-w-[300px]',
+            'inset-y-0 right-0 h-full w-3/4 border-l border-line-strong shadow-panel [--from-x:8px] sm:max-w-[calc(300rem/16)]',
           side === 'left' &&
-            'inset-y-0 left-0 h-full w-3/4 border-r border-line-strong shadow-pop-xl [--from-x:-8px] sm:max-w-[300px]',
+            'inset-y-0 left-0 h-full w-3/4 border-r border-line-strong shadow-pop-xl [--from-x:-8px] sm:max-w-[calc(300rem/16)]',
           side === 'top' &&
             'inset-x-0 top-0 h-auto rounded-b-xl border border-t-0 border-line-strong shadow-pop-xl [--from-y:-8px]',
           side === 'bottom' &&
@@ -75,8 +75,8 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="tap-target absolute top-[9px] right-2.5 inline-flex size-[27px] cursor-pointer items-center justify-center rounded-full border border-edge text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:-rotate-6 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring focus-visible:outline-hidden">
-            <CloseIcon className="size-[13px]" />
+          <SheetPrimitive.Close className="tap-target absolute top-[calc(9rem/16)] right-2.5 inline-flex size-[calc(27rem/16)] cursor-pointer items-center justify-center rounded-full border border-edge text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:-rotate-6 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring focus-visible:outline-hidden">
+            <CloseIcon className="size-[calc(13rem/16)]" />
             <span className="sr-only">閉じる</span>
           </SheetPrimitive.Close>
         )}
@@ -89,7 +89,10 @@ function SheetBody({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sheet-body"
-      className={cn('flex-1 overflow-auto px-[15px] py-[13px]', className)}
+      className={cn(
+        'flex-1 overflow-auto px-[calc(15rem/16)] py-[calc(13rem/16)]',
+        className,
+      )}
       {...props}
     />
   )
@@ -100,7 +103,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="sheet-header"
       className={cn(
-        'flex items-center justify-between gap-2 border-b border-dashed border-line py-[9px] pr-2.5 pl-[15px]',
+        'flex items-center justify-between gap-2 border-b border-dashed border-line py-[calc(9rem/16)] pr-2.5 pl-[calc(15rem/16)]',
         className,
       )}
       {...props}
@@ -113,7 +116,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="sheet-footer"
       className={cn(
-        'mt-auto flex gap-[9px] border-t border-dashed border-line px-[15px] py-[11px]',
+        'mt-auto flex gap-[calc(9rem/16)] border-t border-dashed border-line px-[calc(15rem/16)] py-[calc(11rem/16)]',
         className,
       )}
       {...props}

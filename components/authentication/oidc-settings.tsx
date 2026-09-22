@@ -63,7 +63,7 @@ export function OidcSettings({
     })
 
   return (
-    <div className="flex flex-col gap-[18px]">
+    <div className="flex flex-col gap-[calc(18rem/16)]">
       <div>
         <span className="heading block text-ui text-ink">
           登録すべき redirect URI
@@ -150,8 +150,8 @@ export function OidcSettings({
           </InlineAlert>
         )}
         {saved && (
-          <span className="flex items-start gap-[9px] rounded-md bg-mint-soft px-3 py-2 text-sub text-mint">
-            <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
+          <span className="flex items-start gap-[calc(9rem/16)] rounded-md bg-mint-soft px-3 py-2 text-sub text-mint">
+            <SuccessIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
             <span>保存しました。</span>
           </span>
         )}

@@ -23,7 +23,7 @@ export function ScanBar({
 
   return (
     <>
-      <div className="mt-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[17px] py-[13px]">
+      <div className="mt-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
         <SearchIcon className="size-4 text-brand" />
         <span className="text-ui font-medium whitespace-nowrap text-ink-2">
           スキャン範囲

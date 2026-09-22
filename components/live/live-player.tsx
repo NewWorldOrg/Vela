@@ -753,7 +753,7 @@ export function LivePlayer({
               'data-[up]:translate-y-0 data-[up]:opacity-100',
             )}
           >
-            <span className="text-[12px] text-white">
+            <span className="text-sub text-white">
               <b className="font-bold">
                 {channel.no && (
                   <span className="mr-1.5 font-code font-medium">
@@ -832,7 +832,7 @@ export function LivePlayer({
             <p
               role="status"
               className={cn(
-                'mb-2 text-[11px] font-medium',
+                'mb-2 text-cap font-medium',
                 said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
               )}
             >
@@ -884,13 +884,13 @@ export function LivePlayer({
                 data-slot="live-latency"
                 data-tone={latencyTone(latency, losing)}
                 className={cn(
-                  'inline-flex items-center gap-[7px] rounded-full border px-3 py-[3px] text-[11.5px] font-medium whitespace-nowrap',
+                  'inline-flex items-center gap-[calc(7rem/16)] rounded-full border px-3 py-[calc(3rem/16)] text-note font-medium whitespace-nowrap',
                   LATENCY_TONE[latencyTone(latency, losing)],
                 )}
               >
                 <i
                   aria-hidden="true"
-                  className="size-[7px] shrink-0 rounded-full bg-current"
+                  className="size-[calc(7rem/16)] shrink-0 rounded-full bg-current"
                 />
                 遅延 <span className="font-code">{latency.toFixed(1)}</span> 秒
                 {running?.catchingUp && (

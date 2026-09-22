@@ -36,16 +36,19 @@ test('a remembered fold is drawn, not played', () => {
   assert.equal(foldBand(STILL), 'translate-x-0')
   assert.equal(foldBandDelay(0, undefined), undefined)
   assert.equal(foldBandDelay(3, STILL), undefined)
-  assert.equal(foldColumn(false, undefined), 'w-[344px]')
+  assert.equal(foldColumn(false, undefined), 'w-[calc(344rem/16)]')
   assert.equal(foldColumn(true, STILL), 'w-11')
 })
 
 test('a band arrives from the fold side and leaves the same way', () => {
-  assert.match(foldBand(OPENING), /starting:translate-x-\[min\(100%,344px\)\]/)
+  assert.match(
+    foldBand(OPENING),
+    /starting:translate-x-\[min\(100%,calc\(344rem\/16\)\)\]/,
+  )
   assert.match(foldBand(OPENING), /(^|\s)translate-x-0(\s|$)/)
   assert.match(
     foldBand(CLOSING),
-    /(^|\s)translate-x-\[min\(100%,344px\)\](\s|$)/,
+    /(^|\s)translate-x-\[min\(100%,calc\(344rem\/16\)\)\](\s|$)/,
   )
   assert.doesNotMatch(foldBand(CLOSING), /starting:/)
 })
@@ -87,7 +90,10 @@ test('a fold turned round mid-flight moves every band at once', () => {
 })
 
 test('the column opens with the first band and closes behind the last one', () => {
-  assert.match(foldColumn(false, OPENING), /(^|\s)w-\[344px\](\s|$)/)
+  assert.match(
+    foldColumn(false, OPENING),
+    /(^|\s)w-\[calc\(344rem\/16\)\](\s|$)/,
+  )
   assert.doesNotMatch(foldColumn(false, OPENING), /delay-/)
   assert.match(foldColumn(true, CLOSING), /(^|\s)w-11(\s|$)/)
   assert.match(foldColumn(true, CLOSING), /delay-220/)

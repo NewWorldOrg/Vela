@@ -29,21 +29,23 @@ export function PlaybackNotice({
     <section
       style={PLAYER_PALETTE}
       className={cn(
-        'rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[22px] text-center',
+        'rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[calc(22rem/16)] text-center',
         className,
       )}
     >
       <span
         className={cn(
-          'mx-auto mb-2.5 flex size-[46px] items-center justify-center rounded-full border',
+          'mx-auto mb-2.5 flex size-[calc(46rem/16)] items-center justify-center rounded-full border',
           TONES[tone],
         )}
       >
         {mark}
       </span>
-      <b className="heading block text-[14.5px] text-(--pl-ink)">{title}</b>
+      <b className="heading block text-[calc(14.5rem/16)] text-(--pl-ink)">
+        {title}
+      </b>
       {body && (
-        <p className="mx-auto mt-[5px] max-w-[46em] text-sub leading-relaxed text-(--pl-ink-2)">
+        <p className="mx-auto mt-[calc(5rem/16)] max-w-[46em] text-sub leading-relaxed text-(--pl-ink-2)">
           {body}
         </p>
       )}

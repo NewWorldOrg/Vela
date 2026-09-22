@@ -52,10 +52,10 @@ export function RebuildEpgDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-[560px]">
+      <AlertDialogContent className="sm:max-w-[calc(560rem/16)]">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <RebuildIcon className="size-[19px] text-coral" />
+            <RebuildIcon className="size-[calc(19rem/16)] text-coral" />
             EPG 全削除 → 再構築
           </AlertDialogTitle>
         </AlertDialogHeader>
@@ -69,16 +69,16 @@ export function RebuildEpgDialog({
           </dd>
         </dl>
 
-        <div className="rounded-xl bg-mint-soft px-3.5 py-[11px]">
+        <div className="rounded-xl bg-mint-soft px-3.5 py-[calc(11rem/16)]">
           <div className="flex items-center gap-2 text-sub font-bold text-mint">
-            <CheckIcon className="size-[15px]" />
+            <CheckIcon className="size-[calc(15rem/16)]" />
             消えないもの
           </div>
           <ul className="mt-1 space-y-0.5 text-sub leading-[1.75] text-ink-2">
             <li className="flex gap-2">
               <span
                 aria-hidden="true"
-                className="mt-[0.7em] size-[5px] shrink-0 rounded-full bg-mint"
+                className="mt-[0.7em] size-[calc(5rem/16)] shrink-0 rounded-full bg-mint"
               />
               <span>
                 <b className="font-bold text-ink">過去番組のアーカイブ</b>
@@ -87,7 +87,7 @@ export function RebuildEpgDialog({
             <li className="flex gap-2">
               <span
                 aria-hidden="true"
-                className="mt-[0.7em] size-[5px] shrink-0 rounded-full bg-mint"
+                className="mt-[0.7em] size-[calc(5rem/16)] shrink-0 rounded-full bg-mint"
               />
               <span>
                 <b className="font-bold text-ink">予約とチャンネル定義</b>
@@ -96,7 +96,7 @@ export function RebuildEpgDialog({
             <li className="flex gap-2">
               <span
                 aria-hidden="true"
-                className="mt-[0.7em] size-[5px] shrink-0 rounded-full bg-mint"
+                className="mt-[0.7em] size-[calc(5rem/16)] shrink-0 rounded-full bg-mint"
               />
               <span>
                 <b className="font-bold text-ink">録画済み番組の情報</b>

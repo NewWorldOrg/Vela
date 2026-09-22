@@ -77,10 +77,10 @@ export function ChangePassword({
         open={open}
         onOpenChange={(next) => (next ? setOpen(true) : close())}
       >
-        <AlertDialogContent className="sm:max-w-[520px]">
+        <AlertDialogContent className="sm:max-w-[calc(520rem/16)]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-[9px]">
-              <LockIcon className="size-[19px] text-coral" />
+            <AlertDialogTitle className="flex items-center gap-[calc(9rem/16)]">
+              <LockIcon className="size-[calc(19rem/16)] text-coral" />
               ローカルアカウントのパスワードを変更します
             </AlertDialogTitle>
             {username && (

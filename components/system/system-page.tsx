@@ -97,8 +97,8 @@ function Part({
 }) {
   const body = (
     <>
-      <span className="heading flex items-center gap-[7px] text-note text-ink-2">
-        <Mark className="size-[15px] text-brand" />
+      <span className="heading flex items-center gap-[calc(7rem/16)] text-note text-ink-2">
+        <Mark className="size-[calc(15rem/16)] text-brand" />
         {name}
         {href && <ChevronRightIcon className="ml-auto size-3.5 text-ink-3" />}
       </span>
@@ -121,7 +121,7 @@ function Part({
   )
 
   const skin = cn(
-    'block rounded-lg border border-transparent px-[18px] py-[15px] text-ink',
+    'block rounded-lg border border-transparent px-[calc(18rem/16)] py-[calc(15rem/16)] text-ink',
     PANEL_TONE[tone],
   )
 
@@ -275,7 +275,7 @@ export function SystemView({
         <LivePart reading={status.live} />
       </div>
 
-      <section className="mt-[26px]">
+      <section className="mt-[calc(26rem/16)]">
         <SectionHeading mark={MarkDots}>詳細</SectionHeading>
         <Surface>
           <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-2.5 text-ui">
@@ -387,11 +387,11 @@ function DriverReading({ status }: { status: DriverStatus }) {
       {status.driverUpdateRequired && (
         <span
           className={cn(
-            'mt-2.5 flex items-start gap-[9px] text-sub font-bold',
+            'mt-2.5 flex items-start gap-[calc(9rem/16)] text-sub font-bold',
             HEAD_TONE[tone],
           )}
         >
-          <WarningIcon className="mt-[3px] size-[15px]" />
+          <WarningIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)]" />
           driver の更新が必要です。
         </span>
       )}

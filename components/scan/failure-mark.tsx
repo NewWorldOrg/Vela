@@ -20,7 +20,7 @@ export function FailureMark({
     <span
       aria-hidden="true"
       className={cn(
-        'inline-flex size-[19px] shrink-0 items-center justify-center rounded-full font-code text-cap leading-none font-medium',
+        'inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full font-code text-cap leading-none font-medium',
         MARK_CLASS[failure.no],
         className,
       )}
@@ -56,9 +56,9 @@ export function FailureLabel({
 
 export function FailureLegend() {
   return (
-    <div className="mb-[13px] grid gap-[9px] rounded-xl bg-surface px-4 py-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">
+    <div className="mb-[calc(13rem/16)] grid gap-[calc(9rem/16)] rounded-xl bg-surface px-4 py-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">
       {FAILURE_CLASSES.map((failure) => (
-        <div key={failure.no} className="flex items-start gap-[9px]">
+        <div key={failure.no} className="flex items-start gap-[calc(9rem/16)]">
           <FailureMark failure={failure} className="mt-0.5" />
           <span className="min-w-0">
             <b className="block text-ui leading-[1.5] font-bold">

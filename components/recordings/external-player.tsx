@@ -90,7 +90,7 @@ export function OpenExternally({
         <p
           role="status"
           className={cn(
-            'text-[11px]',
+            'text-cap',
             tone === 'player' ? 'text-[#EC9A93]' : 'text-coral',
           )}
         >

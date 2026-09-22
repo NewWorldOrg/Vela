@@ -183,12 +183,12 @@ function JobTitle({ job }: { job: EncodeJob }) {
     <>
       <Link
         href={`/recordings/${job.recordingId}` as Route}
-        className="tap-target block text-[13px] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
+        className="tap-target block text-[calc(13rem/16)] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
       >
         <span className="block">{job.title}</span>
       </Link>
       {job.recordedAt && (
-        <span className="block font-code text-[10.5px] text-ink-3">
+        <span className="block font-code text-micro text-ink-3">
           {job.recordedAt} の録画
         </span>
       )}
@@ -242,7 +242,7 @@ function RouteCell({ job }: { job: EncodeJob }) {
           : wordFor(ENCODER_LABEL, job.route.ran)}
       </span>
       {job.route.swerved && (
-        <small className="block text-[10.5px] text-ink-3">
+        <small className="block text-micro text-ink-3">
           {wordFor(SWERVE_LABEL, job.route.swerved)}
         </small>
       )}

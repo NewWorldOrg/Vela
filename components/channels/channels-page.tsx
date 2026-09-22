@@ -49,7 +49,7 @@ const SCAN_STATE_COLUMN = stateColumnFor(Object.values(SCAN_STATE_LABEL))
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
     <div className="mb-2 flex flex-wrap items-baseline gap-2.5 px-0.5">
-      <h2 className="heading text-[15px]">{title}</h2>
+      <h2 className="heading text-[calc(15rem/16)]">{title}</h2>
       <span className="text-note tabular-nums text-ink-3">{stat}</span>
     </div>
   )
@@ -73,7 +73,7 @@ function ServiceGroupSection({
         group.diagnosis ? (
           <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
         ) : (
-          <EmptyState spot="antenna" className="max-w-[520px]">
+          <EmptyState spot="antenna" className="max-w-[calc(520rem/16)]">
             {group.walk === 'never'
               ? `${group.label}はまだスキャンされていません。`
               : group.walk === 'unknown'
@@ -99,7 +99,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
         />
       ) : (
         <Table
-          className="min-w-[560px]"
+          className="min-w-[calc(560rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">

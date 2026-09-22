@@ -22,7 +22,7 @@ export function SpotIllustration({
       focusable="false"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn('size-[74px]', className)}
+      className={cn('size-[calc(74rem/16)]', className)}
       {...props}
     >
       {name === 'antenna' && (

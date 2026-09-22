@@ -59,7 +59,7 @@ function SectionCap({
   stat?: React.ReactNode
 }) {
   return (
-    <div className="mt-4 mb-2 flex items-center gap-[7px] text-sub font-bold text-ink-2">
+    <div className="mt-4 mb-2 flex items-center gap-[calc(7rem/16)] text-sub font-bold text-ink-2">
       <CapIcon className="size-3.5 text-brand" />
       {children}
       {stat !== undefined && (
@@ -74,7 +74,7 @@ function SectionCap({
 function StreamName({ row }: { row: StreamVisitRow }) {
   return (
     <>
-      <span className="font-code text-[12px] font-medium whitespace-nowrap text-ink-2 tabular-nums">
+      <span className="font-code text-sub font-medium whitespace-nowrap text-ink-2 tabular-nums">
         {streamLabel(row)}
         {row.channelLabel ? `(${row.channelLabel})` : ''}
       </span>
@@ -178,9 +178,12 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
 
   if (rows.length > 0 && rows.every((row) => row.outcome === 'complete')) {
     return (
-      <div className="flex items-start gap-[11px] rounded-xl bg-surface-2 px-3.5 py-3">
+      <div className="flex items-start gap-[calc(11rem/16)] rounded-xl bg-surface-2 px-3.5 py-3">
         <span className="relative mt-0.5 shrink-0">
-          <AntennaIcon className="size-[30px] text-mint" strokeWidth={1.5} />
+          <AntennaIcon
+            className="size-[calc(30rem/16)] text-mint"
+            strokeWidth={1.5}
+          />
           <SuccessIcon className="absolute -right-1 -bottom-0.5 size-3.5 text-mint" />
         </span>
         <div className="min-w-0">
@@ -236,7 +239,7 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
   if (outcome.state === 'started') {
     return (
       <p className="mt-2 flex items-start gap-2 text-sub leading-[1.7] text-mint">
-        <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
+        <SuccessIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
         <span>
           いますぐ集めるを受け付けました(
           <Figure>{outcome.streams}</Figure> TS)。
@@ -281,8 +284,8 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
     )
 
   return (
-    <div className="mt-2 flex items-start gap-2 rounded-xl bg-lemon-soft px-[13px] py-2.5 text-sub leading-[1.7] text-lemon">
-      <WarningIcon className="mt-[3px] size-[15px] shrink-0" />
+    <div className="mt-2 flex items-start gap-2 rounded-xl bg-lemon-soft px-[calc(13rem/16)] py-2.5 text-sub leading-[1.7] text-lemon">
+      <WarningIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
       <div className="min-w-0">{body}</div>
     </div>
   )
@@ -381,16 +384,16 @@ export function CollectionDrawer({
         inert={!open}
         data-cursor-shut={!open ? 'the drawer is shut' : undefined}
         className={cn(
-          'fixed top-[60px] right-[18px] bottom-[18px] z-[45] flex w-[500px] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy',
-          'max-[1060px]:w-[440px]',
+          'fixed top-[60px] right-[calc(18rem/16)] bottom-[calc(18rem/16)] z-[45] flex w-[calc(500rem/16)] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy',
+          'max-[1060px]:w-[calc(440rem/16)]',
           'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-3 max-[900px]:left-3 max-[900px]:max-h-[70vh] max-[900px]:w-auto',
           !open &&
             'translate-x-[calc(100%+30px)] max-[900px]:translate-x-0 max-[900px]:translate-y-[calc(100%+30px)]',
         )}
       >
         <div className="flex items-center gap-2.5 px-5 pt-4">
-          <AntennaIcon className="size-[18px] text-brand" />
-          <h2 className="heading min-w-0 flex-1 text-[16px]">収集状態</h2>
+          <AntennaIcon className="size-[calc(18rem/16)] text-brand" />
+          <h2 className="heading min-w-0 flex-1 text-h3">収集状態</h2>
           <IconButton
             aria-label="閉じる"
             variant="quiet"
@@ -401,12 +404,12 @@ export function CollectionDrawer({
           </IconButton>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-1.5 pb-[18px]">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-1.5 pb-[calc(18rem/16)]">
           <SectionCap icon={ClockIcon}>現在の収集</SectionCap>
           <LatestVisit status={status} />
 
           <SectionCap icon={CollectIcon}>いますぐ集める</SectionCap>
-          <div className="flex flex-wrap items-center gap-x-[9px] gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-[calc(9rem/16)] gap-y-2">
             <span className="text-note font-bold whitespace-nowrap text-ink-3">
               集める範囲
             </span>
@@ -418,7 +421,7 @@ export function CollectionDrawer({
             />
           </div>
           {range !== 'all' && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-x-[9px] gap-y-2">
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-[calc(9rem/16)] gap-y-2">
               <span className="text-note font-bold whitespace-nowrap text-ink-3">
                 対象
               </span>
@@ -456,7 +459,7 @@ export function CollectionDrawer({
               いますぐ集める
             </Button>
             {coolingDown && (
-              <p className="min-w-[180px] flex-1 text-note leading-[1.7] text-ink-3">
+              <p className="min-w-[calc(180rem/16)] flex-1 text-note leading-[1.7] text-ink-3">
                 終わってから、間隔を置いてもう一度押せます。
               </p>
             )}
@@ -484,7 +487,7 @@ export function CollectionDrawer({
                 key={row.key}
                 className="border-b border-dashed border-line px-0.5 py-2.5 last:border-b-0"
               >
-                <div className="flex flex-wrap items-center gap-[9px]">
+                <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
                   <StreamName row={row} />
                   <OutcomeChip outcome={row.outcome} />
                 </div>
@@ -499,8 +502,8 @@ export function CollectionDrawer({
           </div>
 
           {status.zeroServiceKinds.length > 0 && (
-            <div className="mt-3 flex items-start gap-[9px] text-sub leading-[1.7] text-ink-2">
-              <WarningIcon className="mt-[3px] size-[15px] shrink-0 text-lemon" />
+            <div className="mt-3 flex items-start gap-[calc(9rem/16)] text-sub leading-[1.7] text-ink-2">
+              <WarningIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0 text-lemon" />
               <div>
                 {status.zeroServiceKinds.map((kind) => kind.label).join(' / ')}{' '}
                 — サービス <Figure>0</Figure> 件。{' '}
@@ -514,7 +517,7 @@ export function CollectionDrawer({
             </div>
           )}
 
-          <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-dashed border-line pt-[13px]">
+          <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-dashed border-line pt-[calc(13rem/16)]">
             <Button
               variant="remove"
               size="sm"
@@ -527,7 +530,7 @@ export function CollectionDrawer({
           <span aria-live="polite">
             {discarded !== undefined && (
               <p className="mt-2 flex items-start gap-2 text-sub leading-[1.7] text-mint">
-                <SuccessIcon className="mt-[3px] size-[15px] shrink-0" />
+                <SuccessIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
                 <span>
                   番組表のデータを削除しました(
                   <Figure>{discarded}</Figure> 件)。

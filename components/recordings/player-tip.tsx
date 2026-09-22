@@ -44,7 +44,7 @@ export function PlayerTip({
           {keys?.map((key) => (
             <kbd
               key={key}
-              className="inline-block rounded border border-white/20 px-1 font-code text-[11px] leading-normal font-normal text-(--pl-ink-3)"
+              className="inline-block rounded border border-white/20 px-1 font-code text-cap leading-normal font-normal text-(--pl-ink-3)"
             >
               {key}
             </kbd>

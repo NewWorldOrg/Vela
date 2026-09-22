@@ -196,7 +196,7 @@ function UnfoldedCandidates({
           <div className="overflow-hidden">
             <div
               data-slot="unfold-body"
-              className="border-b border-dashed border-line bg-surface-2 py-3.5 pr-[18px] pl-10"
+              className="border-b border-dashed border-line bg-surface-2 py-3.5 pr-[calc(18rem/16)] pl-10"
             >
               <CandidateList
                 serviceKey={service.key}
@@ -223,7 +223,7 @@ export function ServiceTable({
 
   return (
     <Table
-      className="min-w-[860px]"
+      className="min-w-[calc(860rem/16)]"
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
@@ -272,7 +272,7 @@ export function ServiceTable({
                     no={service.no}
                     keepsTheSlot
                   />
-                  <b className="min-w-0 text-[13px] font-bold">
+                  <b className="min-w-0 text-[calc(13rem/16)] font-bold">
                     {service.name}
                   </b>
                 </span>

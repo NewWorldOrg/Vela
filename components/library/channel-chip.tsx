@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { BAND_CONTROL } from '@/components/vela/filter-select'
 
 const CHIP =
-  'tap-target inline-flex cursor-pointer items-center rounded-full px-[13px] whitespace-nowrap shadow-pop transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none'
+  'tap-target inline-flex cursor-pointer items-center rounded-full px-[calc(13rem/16)] whitespace-nowrap shadow-pop transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none'
 
 export function ChannelChip({
   label,

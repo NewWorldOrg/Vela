@@ -18,18 +18,18 @@ import { RecordIcon } from '@/components/vela/icons'
 type CellSize = 'md' | 's' | 'xs'
 
 const GENRE_LABEL =
-  'ml-[5px] border-l border-dotted border-line-strong pl-[5px] font-medium text-ink-3'
+  'ml-[calc(5rem/16)] border-l border-dotted border-line-strong pl-[calc(5rem/16)] font-medium text-ink-3'
 
 const MARK_BOX: Record<CellSize, string> = {
-  md: 'size-[13px]',
+  md: 'size-[calc(13rem/16)]',
   s: 'size-3',
-  xs: 'size-[11px]',
+  xs: 'size-[calc(11rem/16)]',
 }
 
 const RECORDING_DOT: Record<CellSize, string> = {
-  md: 'size-[9px]',
+  md: 'size-[calc(9rem/16)]',
   s: 'size-2',
-  xs: 'size-[7px]',
+  xs: 'size-[calc(7rem/16)]',
 }
 
 const MARK_SAYS: Record<BookingMark, string> = {
@@ -67,8 +67,8 @@ export function ProgramCell({
       className={cn(
         'absolute right-px left-px z-[1] cursor-pointer overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
         past ? GENRE_CLASS_PAST[p.genre] : GENRE_CLASS[p.genre],
-        size === 'md' && 'px-[7px] py-1',
-        size === 's' && 'px-[7px] py-0.5',
+        size === 'md' && 'px-[calc(7rem/16)] py-1',
+        size === 's' && 'px-[calc(7rem/16)] py-0.5',
         size === 'xs' && 'flex items-center px-1.5 py-0',
         selected && 'z-[3] border-brand shadow-pop',
       )}
@@ -76,25 +76,27 @@ export function ProgramCell({
       {size === 'xs' ? (
         <span
           className={cn(
-            'overflow-hidden text-[10px] leading-tight font-medium text-ellipsis whitespace-nowrap',
+            'overflow-hidden text-[calc(10rem/16)] leading-tight font-medium text-ellipsis whitespace-nowrap',
             past && 'text-ink-2',
           )}
         >
           {mark && <BookingGlyph mark={mark} size={size} />}
           {p.title}
-          <span className={cn(GENRE_LABEL, 'text-[10px]')}>{p.genreLabel}</span>
+          <span className={cn(GENRE_LABEL, 'text-[calc(10rem/16)]')}>
+            {p.genreLabel}
+          </span>
         </span>
       ) : (
         <>
           <span
             className={cn(
               'block leading-snug font-bold text-ink [font-feature-settings:"palt"]',
-              size === 'md' ? 'text-sub' : 'text-[11px]',
+              size === 'md' ? 'text-sub' : 'text-cap',
               past && 'text-ink-2',
             )}
           >
             {mark && <BookingGlyph mark={mark} size={size} />}
-            <span className="mr-[5px] font-code text-[10.5px] font-medium text-ink-3 tabular-nums">
+            <span className="mr-[calc(5rem/16)] font-code text-micro font-medium text-ink-3 tabular-nums">
               {p.startLabel.slice(3)}
             </span>
             {p.title}
@@ -103,12 +105,12 @@ export function ProgramCell({
             </span>
           </span>
           {p.endUndecided && (
-            <span className="mt-px block text-[10.8px] leading-normal text-ink-2">
+            <span className="mt-px block text-[calc(10.8rem/16)] leading-normal text-ink-2">
               終了未定
             </span>
           )}
           {size === 'md' && p.description && (
-            <span className="mt-px block text-[10.8px] leading-normal text-ink-2">
+            <span className="mt-px block text-[calc(10.8rem/16)] leading-normal text-ink-2">
               {p.description}
             </span>
           )}
@@ -123,7 +125,7 @@ function BookingGlyph({ mark, size }: { mark: BookingMark; size: CellSize }) {
     <span
       data-booking-mark={mark}
       className={cn(
-        'mr-[5px] inline-flex items-center justify-center align-[-2px]',
+        'mr-[calc(5rem/16)] inline-flex items-center justify-center align-[-2px]',
         MARK_BOX[size],
         mark === 'recording' ? 'text-coral' : 'text-mint',
       )}

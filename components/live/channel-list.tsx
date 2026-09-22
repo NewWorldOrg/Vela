@@ -115,7 +115,7 @@ export function ChannelList({
           <div
             style={{ transitionDelay: foldBandDelay(1, motion) }}
             className={cn(
-              'flex items-center gap-[7px] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-3',
+              'flex items-center gap-[calc(7rem/16)] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-3',
               foldBand(motion),
             )}
           >
@@ -149,7 +149,7 @@ export function ChannelList({
                       aria-pressed={on}
                       onClick={() => onSelect(channel)}
                       className={cn(
-                        'flex min-h-11 w-full items-start gap-[11px] rounded-lg px-3 py-2.5 text-left outline-none',
+                        'flex min-h-11 w-full items-start gap-[calc(11rem/16)] rounded-lg px-3 py-2.5 text-left outline-none',
                         'transition-[background-color] duration-150 ease-out hover:bg-surface-2 focus-visible:shadow-ring',
                         on && 'bg-brand-soft hover:bg-brand-soft',
                         pressable,
@@ -194,7 +194,7 @@ export function ChannelList({
                         <i
                           data-slot="watching-mark"
                           aria-hidden="true"
-                          className="mt-2 size-[7px] shrink-0 rounded-full bg-coral"
+                          className="mt-2 size-[calc(7rem/16)] shrink-0 rounded-full bg-coral"
                         />
                       )}
                     </button>

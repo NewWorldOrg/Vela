@@ -46,7 +46,7 @@ import { RecordingActions } from '@/components/recordings/recording-actions'
 import { RecordingRecord } from '@/components/recordings/recording-record'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const GUTTER = 'mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5'
+const GUTTER = 'mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5'
 
 const OUTCOME_STYLE = {
   truncated: 'bg-tint-butter',
@@ -57,14 +57,14 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
   stillRecording: (
     <PlaybackNotice
       tone="waiting"
-      mark={<ListIcon className="size-[22px]" />}
+      mark={<ListIcon className="size-[calc(22rem/16)]" />}
       title="録画中は再生できません"
     />
   ),
   nothingToPlay: (
     <PlaybackNotice
       tone="gone"
-      mark={<OutcomeFailedIcon className="size-[22px]" />}
+      mark={<OutcomeFailedIcon className="size-[calc(22rem/16)]" />}
       title="再生できるものがありません"
       body="この録画には書かれた中身がありません。"
     />
@@ -72,7 +72,7 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
   outOfReach: (
     <PlaybackNotice
       tone="waiting"
-      mark={<ThumbMissingIcon className="size-[22px]" />}
+      mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
       title="録画ファイルに到達できません"
     >
       <Link href="/library/integrity" className={PLAYER_BUTTON}>
@@ -82,7 +82,7 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
   ),
   unreadable: (
     <PlaybackNotice
-      mark={<WarningIcon className="size-[22px]" />}
+      mark={<WarningIcon className="size-[calc(22rem/16)]" />}
       title="再生の可否を読めませんでした"
     />
   ),
@@ -151,12 +151,12 @@ export function RecordingDetailView({
     <ScreenMain width={watching ? 'full' : 'default'} className="pb-16">
       <div className={GUTTER}>
         <div className={PLAYER_COLUMN}>
-          <div className="flex items-center pt-[18px] pb-3">
+          <div className="flex items-center pt-[calc(18rem/16)] pb-3">
             <Link
               href="/library"
-              className="tap-target inline-flex items-center gap-[7px] rounded-full border border-edge py-[5px] pr-[13px] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
+              className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
             >
-              <ChevronLeftIcon className="size-[15px]" />
+              <ChevronLeftIcon className="size-[calc(15rem/16)]" />
               ライブラリへ
             </Link>
           </div>
@@ -165,17 +165,17 @@ export function RecordingDetailView({
             <div
               data-slot="recording-outcome"
               className={cn(
-                'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[18px] py-[13px]',
+                'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[calc(18rem/16)] py-[calc(13rem/16)]',
                 OUTCOME_STYLE[alarming],
               )}
             >
               <OutcomeMark outcome={alarming} />
-              <h2 className="heading text-[15px] whitespace-nowrap">
+              <h2 className="heading text-[calc(15rem/16)] whitespace-nowrap">
                 {OUTCOME_LABEL[alarming]}
               </h2>
               {d.fileMissing && <FileMissingChip />}
               {d.outcomeBody && (
-                <p className="min-w-[200px] flex-1 font-code text-note text-ink-2">
+                <p className="min-w-[calc(200rem/16)] flex-1 font-code text-note text-ink-2">
                   {d.outcomeBody}
                 </p>
               )}
@@ -184,7 +184,7 @@ export function RecordingDetailView({
 
           {d.outcome === 'recording' && d.live && (
             <div className="mb-3.5 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
-              <section className="rounded-xl bg-surface px-[19px] py-[17px]">
+              <section className="rounded-xl bg-surface px-[calc(19rem/16)] py-[calc(17rem/16)]">
                 <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
                   <RecordingInProgressChip mark="ledger" />
                 </div>
@@ -204,7 +204,7 @@ export function RecordingDetailView({
           {d.fileMissing ? (
             <PlaybackNotice
               tone="waiting"
-              mark={<ThumbMissingIcon className="size-[22px]" />}
+              mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
               title="ファイルが見つかりません"
             >
               <Link href="/library/integrity" className={PLAYER_BUTTON}>
@@ -214,14 +214,14 @@ export function RecordingDetailView({
           ) : d.outcome === 'failed' ? (
             <PlaybackNotice
               tone="gone"
-              mark={<OutcomeFailedIcon className="size-[22px]" />}
+              mark={<OutcomeFailedIcon className="size-[calc(22rem/16)]" />}
               title="再生できません"
             />
           ) : playback.state === 'refused' ? (
             REFUSED[playback.refusal]
           ) : playback.plan.route === 'nothing' ? (
             <PlaybackNotice
-              mark={<ThumbMissingIcon className="size-[22px]" />}
+              mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
               title="再生できる成果物がありません"
             />
           ) : null}
@@ -244,10 +244,12 @@ export function RecordingDetailView({
 
       <div className={GUTTER}>
         <div className={cn(PLAYER_COLUMN, 'pt-5')}>
-          <h1 className="heading text-[24px] leading-[1.45]">{d.title}</h1>
+          <h1 className="heading text-[calc(24rem/16)] leading-[1.45]">
+            {d.title}
+          </h1>
           <div
             data-slot="watch-meta"
-            className="mt-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2"
+            className="mt-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2"
           >
             <span className="inline-flex items-center gap-2">
               <ChannelMark logo={d.channelLogo} no={d.channelNo} />
@@ -279,7 +281,7 @@ export function RecordingDetailView({
               {d.genres.map((g) => (
                 <span
                   key={g}
-                  className="inline-block rounded-full border border-line bg-surface px-[11px] py-0.5 text-note font-medium text-ink-2"
+                  className="inline-block rounded-full border border-line bg-surface px-[calc(11rem/16)] py-0.5 text-note font-medium text-ink-2"
                 >
                   {g}
                 </span>
@@ -288,12 +290,12 @@ export function RecordingDetailView({
           )}
 
           {d.synopsis && (
-            <p className="mt-3.5 max-w-[660px] text-[13px] leading-[1.9] text-ink-2">
+            <p className="mt-3.5 max-w-[calc(660rem/16)] text-[calc(13rem/16)] leading-[1.9] text-ink-2">
               {d.synopsis}
             </p>
           )}
 
-          <div className="mt-[18px]">
+          <div className="mt-[calc(18rem/16)]">
             <RecordingActions
               recording={d}
               onDelete={onDelete}
@@ -306,12 +308,12 @@ export function RecordingDetailView({
           </div>
 
           {d.failureReason && (
-            <div className="mt-[18px] flex max-w-[900px] flex-wrap items-start gap-[13px] rounded-lg bg-surface px-[15px] py-3">
+            <div className="mt-[calc(18rem/16)] flex max-w-[calc(900rem/16)] flex-wrap items-start gap-[calc(13rem/16)] rounded-lg bg-surface px-[calc(15rem/16)] py-3">
               <span className="flex size-8 flex-none items-center justify-center rounded-md bg-surface-2 text-ink-2">
-                <WarningIcon className="size-[17px]" />
+                <WarningIcon className="size-[calc(17rem/16)]" />
               </span>
-              <div className="min-w-[170px] flex-1">
-                <b className="heading block text-[13.5px]">
+              <div className="min-w-[calc(170rem/16)] flex-1">
+                <b className="heading block text-body">
                   {d.failureReason.title}
                 </b>
                 {d.failureReason.body && (

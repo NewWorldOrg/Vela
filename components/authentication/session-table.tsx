@@ -52,7 +52,7 @@ export function SessionTable({
     <Table
       containerClassName={cn(
         ADMIN_LIST_HEIGHT_CAP,
-        'overflow-y-auto pb-1 [&>table]:min-w-[800px]',
+        'overflow-y-auto pb-1 [&>table]:min-w-[calc(800rem/16)]',
       )}
     >
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
@@ -109,7 +109,7 @@ function DeviceName({ session }: { session: SessionRow }) {
     : DeviceDesktopIcon
 
   return (
-    <div className="flex min-w-0 items-center gap-[11px]">
+    <div className="flex min-w-0 items-center gap-[calc(11rem/16)]">
       <span
         className={
           session.current
@@ -117,7 +117,7 @@ function DeviceName({ session }: { session: SessionRow }) {
             : 'flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-ink-3'
         }
       >
-        <Glyph className="size-[17px]" />
+        <Glyph className="size-[calc(17rem/16)]" />
       </span>
       <span className="min-w-0">
         <b
@@ -147,7 +147,7 @@ function DeviceName({ session }: { session: SessionRow }) {
 
 function Account({ session }: { session: SessionRow }) {
   return (
-    <span className="block min-w-[160px] whitespace-normal wrap-anywhere">
+    <span className="block min-w-[calc(160rem/16)] whitespace-normal wrap-anywhere">
       <b className="heading block text-ui">{session.displayName}</b>
       <small className="block text-cap text-ink-3">
         {wordFor(METHOD_LABEL, session.method)}

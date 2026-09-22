@@ -138,7 +138,7 @@ export function AutoRunPanel({
               id={MOST_CORES_ID}
               size="sm"
               aria-disabled={pending}
-              className="w-fit min-w-[150px] font-code tabular-nums"
+              className="w-fit min-w-[calc(150rem/16)] font-code tabular-nums"
             >
               <SelectValue />
             </SelectTrigger>

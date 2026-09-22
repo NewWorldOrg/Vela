@@ -30,7 +30,7 @@ const PLAYER_BUTTON_OFF =
   'disabled:border-white/12 disabled:bg-white/3 disabled:text-(--pl-ink-3) disabled:hover:border-white/12 disabled:hover:bg-white/3 disabled:hover:text-(--pl-ink-3)'
 
 export const PLAYER_BUTTON = cn(
-  'tap-target rounded-full border border-white/25 bg-white/5 px-[13px] py-[5px] text-[11.5px] font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none',
+  'tap-target rounded-full border border-white/25 bg-white/5 px-[calc(13rem/16)] py-[calc(5rem/16)] text-note font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none',
   PLAYER_BUTTON_OFF,
   pressable,
   still,
@@ -46,7 +46,7 @@ export const PLAYER_GLYPH_BUTTON = cn(
 )
 
 export const PLAYER_GLYPH_BUTTON_ON =
-  'text-white opacity-100 before:absolute before:bottom-[5px] before:h-[2px] before:w-[18px] before:rounded-full before:bg-(--pl-accent) before:content-[""]'
+  'text-white opacity-100 before:absolute before:bottom-[calc(5rem/16)] before:h-[2px] before:w-[calc(18rem/16)] before:rounded-full before:bg-(--pl-accent) before:content-[""]'
 
 export const PLAYER_BUTTON_ON =
   'border-[rgba(150,187,180,.55)] bg-[rgba(150,187,180,.22)] text-[#C0D8D3]'

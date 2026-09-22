@@ -16,7 +16,7 @@ export function PlayerVolume({
   return (
     <label
       data-slot="input-area"
-      className={cn('relative block w-[68px] shrink-0', className)}
+      className={cn('relative block w-[calc(68rem/16)] shrink-0', className)}
     >
       <span
         aria-hidden="true"
@@ -42,9 +42,9 @@ export function PlayerVolume({
           'relative block h-11 w-full cursor-pointer appearance-none bg-transparent outline-none',
           'focus-visible:shadow-ring focus-visible:rounded-full',
           '[&::-webkit-slider-runnable-track]:h-[2px] [&::-webkit-slider-runnable-track]:bg-transparent',
-          '[&::-webkit-slider-thumb]:size-[13px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white',
+          '[&::-webkit-slider-thumb]:size-[calc(13rem/16)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white',
           '[&::-moz-range-track]:h-[2px] [&::-moz-range-track]:bg-transparent',
-          '[&::-moz-range-thumb]:size-[13px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white',
+          '[&::-moz-range-thumb]:size-[calc(13rem/16)] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white',
         )}
       />
     </label>

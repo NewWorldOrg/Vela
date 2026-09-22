@@ -8,7 +8,7 @@ import {
 
 /*
  * The room between the parts belongs to the frames that hold them, never to
- * the parts. It used to hang off the sentence — `mb-[13px]` — so the sixteen
+ * the parts. It used to hang off the sentence — `mb-[calc(13rem/16)]` — so the sixteen
  * boxes that have a button and no sentence sat their button against the
  * heading. Three nested columns give the three gaps the canon asks for
  * (picture 10 heading, heading 9 sentence, sentence 13 button) and every one
@@ -35,7 +35,7 @@ export function EmptyState({
     <div
       data-slot="empty-state"
       className={cn(
-        'mx-auto flex w-full flex-col items-center gap-[13px] rounded-xl border border-dashed border-line-strong bg-surface px-5 py-[26px] text-center',
+        'mx-auto flex w-full flex-col items-center gap-[calc(13rem/16)] rounded-xl border border-dashed border-line-strong bg-surface px-5 py-[calc(26rem/16)] text-center',
         className,
       )}
       {...props}
@@ -45,14 +45,16 @@ export function EmptyState({
           {spot && (
             <SpotIllustration
               name={spot}
-              className="drawn size-[78px] [--stroke-length:200]"
+              className="drawn size-[calc(78rem/16)] [--stroke-length:200]"
             />
           )}
           {said && (
-            <div className="flex flex-col items-center gap-[9px]">
+            <div className="flex flex-col items-center gap-[calc(9rem/16)]">
               {title && <Title className="heading text-h3">{title}</Title>}
               {children && (
-                <p className="max-w-[520px] text-ui text-ink-2">{children}</p>
+                <p className="max-w-[calc(520rem/16)] text-ui text-ink-2">
+                  {children}
+                </p>
               )}
             </div>
           )}

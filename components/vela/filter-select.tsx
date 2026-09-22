@@ -10,7 +10,7 @@ import {
 
 const ALL = '__all__'
 
-export const BAND_CONTROL = 'h-8 text-[13px]'
+export const BAND_CONTROL = 'h-8 text-[calc(13rem/16)]'
 
 export function FilterSelect({
   prefix,

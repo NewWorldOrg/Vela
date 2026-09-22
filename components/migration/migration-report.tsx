@@ -109,8 +109,8 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           ))}
         </div>
 
-        <div className="mt-2.5 flex items-start gap-[11px] rounded-lg bg-mint-soft px-[15px] py-3 text-mint">
-          <CheckIcon className="mt-[3px] size-[17px]" />
+        <div className="mt-2.5 flex items-start gap-[calc(11rem/16)] rounded-lg bg-mint-soft px-[calc(15rem/16)] py-3 text-mint">
+          <CheckIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)]" />
           <div className="min-w-0">
             <b className="block text-ui">
               未分類{' '}
@@ -128,7 +128,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           取り込まなかったものの明細
         </SectionHeading>
         <Table
-          className="min-w-[860px]"
+          className="min-w-[calc(860rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
@@ -160,7 +160,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               </TableRow>
               {group.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="w-[260px] align-top whitespace-normal">
+                  <TableCell className="w-[calc(260rem/16)] align-top whitespace-normal">
                     <b className="text-ui font-bold wrap-anywhere">
                       {row.subject}
                     </b>

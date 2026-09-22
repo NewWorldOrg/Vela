@@ -28,7 +28,7 @@ export function RecentSpells({
       ) : (
         <span className={SENTENCE}>
           完了 {spells.jobs} 本の平均{' '}
-          <span className="font-code text-[15px] font-medium tabular-nums text-brand">
+          <span className="font-code text-[calc(15rem/16)] font-medium tabular-nums text-brand">
             {formatLength(spells.averageSeconds)}
           </span>
         </span>

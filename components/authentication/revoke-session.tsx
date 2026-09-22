@@ -63,10 +63,10 @@ export function RevokeSession({
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent className="sm:max-w-[520px]">
+        <AlertDialogContent className="sm:max-w-[calc(520rem/16)]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-[9px]">
-              <CloseIcon className="size-[19px] text-coral" />
+            <AlertDialogTitle className="flex items-center gap-[calc(9rem/16)]">
+              <CloseIcon className="size-[calc(19rem/16)] text-coral" />
               このセッションを失効させます
             </AlertDialogTitle>
             <AlertDialogDescription className="sr-only">

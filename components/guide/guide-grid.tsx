@@ -110,7 +110,7 @@ export function GuideGrid({
             {hours.map((h) => (
               <div
                 key={h}
-                className="flex items-start justify-center pt-1.5 font-code text-[11px] text-ink-3 first:border-t-0 [&+&]:border-t [&+&]:border-dashed [&+&]:border-line"
+                className="flex items-start justify-center pt-1.5 font-code text-cap text-ink-3 first:border-t-0 [&+&]:border-t [&+&]:border-dashed [&+&]:border-line"
                 style={{ height: `${HOUR_PX}px` }}
               >
                 {h % 24}時

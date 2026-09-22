@@ -115,7 +115,7 @@ export function LocalSignIn({
         <Button
           type="submit"
           size="lg"
-          className="mt-0.5 w-full gap-[9px] text-[13.5px]"
+          className="mt-0.5 w-full gap-[calc(9rem/16)] text-body"
           disabled={busy}
         >
           <SignInIcon className="size-4" />
@@ -134,7 +134,7 @@ export function LocalSignIn({
   }
 
   return (
-    <div className="mt-[18px] border-t border-dashed border-line-strong pt-[18px]">
+    <div className="mt-[calc(18rem/16)] border-t border-dashed border-line-strong pt-[calc(18rem/16)]">
       <div className="flex justify-center">
         <Button
           type="button"

@@ -19,12 +19,12 @@ export function SectionHeading({
     <Tag
       data-slot="section-heading"
       className={cn(
-        'heading mb-[11px] flex items-center gap-[7px] text-ui text-ink',
+        'heading mb-[calc(11rem/16)] flex items-center gap-[calc(7rem/16)] text-ui text-ink',
         className,
       )}
       {...props}
     >
-      <Mark className="drawn size-[18px] text-brand [--stroke-length:60]" />
+      <Mark className="drawn size-[calc(18rem/16)] text-brand [--stroke-length:60]" />
       {children}
       <span
         aria-hidden="true"
@@ -56,7 +56,9 @@ export function PageHeading({
           <p className="mt-px text-note text-ink-2">{description}</p>
         )}
       </div>
-      {action && <div className="ml-auto shrink-0 pt-[3px]">{action}</div>}
+      {action && (
+        <div className="ml-auto shrink-0 pt-[calc(3rem/16)]">{action}</div>
+      )}
     </div>
   )
 }

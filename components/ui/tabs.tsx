@@ -64,7 +64,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        'tap-target -mb-px rounded-t-md border-b-2 border-transparent px-[13px] pt-1.5 pb-[9px] text-[13px] font-medium whitespace-nowrap text-ink-2 outline-none',
+        'tap-target -mb-px rounded-t-md border-b-2 border-transparent px-[calc(13rem/16)] pt-1.5 pb-[calc(9rem/16)] text-[calc(13rem/16)] font-medium whitespace-nowrap text-ink-2 outline-none',
         'transition-[background-color,color,border-color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         'cursor-pointer disabled:cursor-not-allowed disabled:opacity-45',

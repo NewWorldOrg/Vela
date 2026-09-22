@@ -194,7 +194,7 @@ export function QualityView({
             <span className="heading block text-sub text-ink-2">
               {stat.label}
             </span>
-            <span className="mt-1 block font-code text-[26px] leading-none font-medium tabular-nums">
+            <span className="mt-1 block font-code text-[calc(26rem/16)] leading-none font-medium tabular-nums">
               {stat.value ? (
                 <>
                   {stat.value}
@@ -212,7 +212,7 @@ export function QualityView({
                 )
               )}
             </span>
-            <span className="mt-2.5 flex min-h-[19px] flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="mt-2.5 flex min-h-[calc(19rem/16)] flex-wrap items-center gap-x-2 gap-y-1">
               {stat.value && stat.level && (
                 <QualityChip level={stat.level}>{stat.levelLabel}</QualityChip>
               )}
@@ -291,7 +291,7 @@ export function QualityView({
         <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
         {result.tuners.length > 0 ? (
           <Table
-            className="min-w-[900px]"
+            className="min-w-[calc(900rem/16)]"
             containerClassName={cn(
               ADMIN_LIST_HEIGHT_CAP,
               'overflow-y-auto pb-1',
@@ -317,7 +317,7 @@ export function QualityView({
               {result.tuners.map((tuner) => (
                 <TableRow key={tuner.id}>
                   <TableCell className="align-top">
-                    <b className="block text-[13px] font-bold">
+                    <b className="block text-[calc(13rem/16)] font-bold">
                       {tuner.device}
                     </b>
                     <span className="text-note text-ink-3">

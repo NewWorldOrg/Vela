@@ -105,7 +105,7 @@ export function RecordingsTable({
               <th
                 key={column.label}
                 className={cn(
-                  'sticky top-0 z-10 bg-surface-2 px-3 py-[9px] text-left text-micro font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md',
+                  'sticky top-0 z-10 bg-surface-2 px-3 py-[calc(9rem/16)] text-left text-micro font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md',
                   column.right && 'text-right',
                   column.gap,
                   column.detail && DETAIL_CELL,

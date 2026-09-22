@@ -75,7 +75,7 @@ function ChannelCard({
   return (
     <Tile
       onClick={() => onSelect(channel)}
-      className="relative flex size-full min-w-0 flex-none flex-col gap-1 overflow-hidden px-4 pt-3 pb-[15px]"
+      className="relative flex size-full min-w-0 flex-none flex-col gap-1 overflow-hidden px-4 pt-3 pb-[calc(15rem/16)]"
     >
       <span className="flex min-w-0 items-center gap-2">
         <ChannelMark logo={channel.logo} no={channel.no} />
@@ -89,7 +89,7 @@ function ChannelCard({
           >
             <i
               aria-hidden="true"
-              className="size-[7px] rounded-full bg-coral"
+              className="size-[calc(7rem/16)] rounded-full bg-coral"
             />
             {channel.viewers}
           </span>
@@ -97,7 +97,7 @@ function ChannelCard({
       </span>
       <span
         className={cn(
-          'heading text-[16.5px] leading-[1.5] [overflow-wrap:anywhere]',
+          'heading text-[calc(16.5rem/16)] leading-[1.5] [overflow-wrap:anywhere]',
           !programme && 'font-normal text-ink-3',
         )}
       >

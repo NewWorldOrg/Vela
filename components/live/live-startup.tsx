@@ -31,15 +31,15 @@ export function LiveStartupSteps({
             : 'text-(--pl-lemon)',
         )}
       />
-      <b className="heading text-[14.5px]">
+      <b className="heading text-[calc(14.5rem/16)]">
         {reconnecting === undefined ? 'チャンネルを準備しています' : '再接続中'}
       </b>
       {reconnecting !== undefined && (
-        <span className="mt-1 font-code text-[11.5px] text-(--pl-ink-2)">
+        <span className="mt-1 font-code text-note text-(--pl-ink-2)">
           {reconnecting} 回目
         </span>
       )}
-      <ol className="mt-3 flex w-[300px] max-w-full flex-col gap-[7px] text-left text-sub">
+      <ol className="mt-3 flex w-[calc(300rem/16)] max-w-full flex-col gap-[calc(7rem/16)] text-left text-sub">
         {startupRowsOf(startup, elapsedMs).map((row) => (
           <li
             key={row.segment}
@@ -62,7 +62,7 @@ export function LiveStartupSteps({
               {row.state === 'done' && <CheckIcon className="size-2.5" />}
             </span>
             {row.label}
-            <span className="ml-auto font-code text-[11px]">{row.figure}</span>
+            <span className="ml-auto font-code text-cap">{row.figure}</span>
           </li>
         ))}
       </ol>

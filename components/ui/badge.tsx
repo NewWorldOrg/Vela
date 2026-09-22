@@ -5,7 +5,7 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-[11px] py-[3px] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
+  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-[calc(11rem/16)] py-[calc(3rem/16)] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
       variant: {

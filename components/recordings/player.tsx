@@ -653,7 +653,7 @@ export function Player({
 
   if (phase === 'broken') {
     return (
-      <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
+      <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
         <PlaybackFaultNotice
           detail={d}
           fault={fault}
@@ -665,7 +665,7 @@ export function Player({
   }
 
   return (
-    <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
+    <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
       <section
         ref={setShell}
         tabIndex={-1}
@@ -848,7 +848,7 @@ export function Player({
               <p
                 role="status"
                 className={cn(
-                  'mt-2 text-[11px] font-medium',
+                  'mt-2 text-cap font-medium',
                   said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
                 )}
               >
@@ -926,7 +926,7 @@ export function Player({
                   onChoose={chooseVolume}
                 />
               </PlayerTip>
-              <span className="ml-2 font-code text-[13px] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
+              <span className="ml-2 font-code text-[calc(13rem/16)] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
                 {formatPlayerTime(scrubbingAt ?? position)} /{' '}
                 {formatPlayerTime(duration)}
               </span>

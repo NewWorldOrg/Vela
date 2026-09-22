@@ -40,7 +40,7 @@ export function ChannelMark({
       <span
         className={cn(
           SLOT,
-          'border-line bg-surface-2 font-code text-[11px] leading-none font-medium text-ink-2',
+          'border-line bg-surface-2 font-code text-cap leading-none font-medium text-ink-2',
           on && 'border-brand-line bg-surface text-brand',
           className,
         )}

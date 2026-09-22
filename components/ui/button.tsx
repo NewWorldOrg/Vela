@@ -7,7 +7,7 @@ import { pressable, still, tactile } from '@/components/vela/tactile'
 
 const buttonVariants = cva(
   cn(
-    "tap-target inline-flex shrink-0 items-center justify-center gap-[7px] rounded-full font-bold whitespace-nowrap outline-none disabled:border-dashed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-pop-none disabled:hover:no-underline [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[15px]",
+    "tap-target inline-flex shrink-0 items-center justify-center gap-[calc(7rem/16)] rounded-full font-bold whitespace-nowrap outline-none disabled:border-dashed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-pop-none disabled:hover:no-underline [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[calc(15rem/16)]",
     '[&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:scale-[1.08] hover:[&_svg]:rotate-[-7deg]',
     tactile,
     pressable,
@@ -33,13 +33,14 @@ const buttonVariants = cva(
           'border border-coral bg-coral text-on-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
       },
       size: {
-        default: 'h-[34px] px-[17px] text-ui',
+        default: 'h-[calc(34rem/16)] px-[calc(17rem/16)] text-ui',
         xs: "h-6 gap-1 px-2.5 text-cap [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 px-[13px] text-sub [&_svg:not([class*='size-'])]:size-[13px]",
+        sm: "h-7 px-[calc(13rem/16)] text-sub [&_svg:not([class*='size-'])]:size-[calc(13rem/16)]",
         lg: 'h-10 px-6 text-body',
-        icon: 'size-[34px] px-0',
+        icon: 'size-[calc(34rem/16)] px-0',
         'icon-xs': "size-6 px-0 [&_svg:not([class*='size-'])]:size-3",
-        'icon-sm': "size-7 px-0 [&_svg:not([class*='size-'])]:size-[13px]",
+        'icon-sm':
+          "size-7 px-0 [&_svg:not([class*='size-'])]:size-[calc(13rem/16)]",
         'icon-lg': 'size-10 px-0',
       },
     },

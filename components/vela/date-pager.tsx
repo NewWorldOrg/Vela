@@ -35,7 +35,7 @@ export function DatePager({
       <IconButton aria-label={prevLabel} onClick={onPrev}>
         <ChevronLeftIcon />
       </IconButton>
-      <span className="min-w-[88px] text-center font-code text-[14px] font-medium tabular-nums">
+      <span className="min-w-[calc(88rem/16)] text-center font-code text-title font-medium tabular-nums">
         {label}
       </span>
       <IconButton aria-label={nextLabel} onClick={onNext}>
@@ -43,7 +43,7 @@ export function DatePager({
       </IconButton>
       <span
         aria-hidden="true"
-        className="mx-0.5 h-[22px] w-px border-l border-dashed border-line-strong"
+        className="mx-0.5 h-[calc(22rem/16)] w-px border-l border-dashed border-line-strong"
       />
       <Button variant="change" size="sm" onClick={onToday}>
         {todayLabel}

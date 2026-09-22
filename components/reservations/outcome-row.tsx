@@ -45,11 +45,13 @@ export function OutcomeRow({
           )}
         </TableCell>
         <TableCell className="align-top whitespace-normal">
-          <b className="block text-[13px] font-bold">{outcome.title}</b>
+          <b className="block text-[calc(13rem/16)] font-bold">
+            {outcome.title}
+          </b>
         </TableCell>
         <TableCell className="align-top">
           {outcome.channelName}
-          <small className="ml-1.5 font-code text-[10.5px] text-ink-3">
+          <small className="ml-1.5 font-code text-micro text-ink-3">
             {outcome.channelNo}
           </small>
         </TableCell>

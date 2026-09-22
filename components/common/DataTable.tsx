@@ -386,7 +386,7 @@ export default function DataTable<TData>({
                     const cellClass =
                       [
                         truncate
-                          ? 'max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap'
+                          ? 'max-w-[calc(200rem/16)] overflow-hidden text-ellipsis whitespace-nowrap'
                           : '',
                         cellStickyDir === 'left' ? 'sticky z-10 bg-card' : '',
                       ]

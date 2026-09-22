@@ -74,7 +74,7 @@ export function ProfileList({
       </div>
 
       <Table
-        className="min-w-[930px]"
+        className="min-w-[calc(930rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
         <TableHeader className={STICKY_HEAD}>

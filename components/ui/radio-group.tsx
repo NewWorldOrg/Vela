@@ -12,7 +12,7 @@ function RadioGroup({
   return (
     <RadioGroupPrimitive.Root
       data-slot="radio-group"
-      className={cn('grid gap-[26px]', className)}
+      className={cn('grid gap-[calc(26rem/16)]', className)}
       {...props}
     />
   )
@@ -26,7 +26,7 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        'tap-target inline-flex aspect-square size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-strong bg-surface outline-none',
+        'tap-target inline-flex aspect-square size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-strong bg-surface outline-none',
         'transition-[background-color,border-color,transform,box-shadow] duration-150 ease-toy',
         'enabled:hover:-translate-x-px enabled:hover:-translate-y-px',
         'data-[state=checked]:border-brand data-[state=checked]:bg-brand',

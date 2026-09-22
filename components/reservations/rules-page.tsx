@@ -185,7 +185,7 @@ function RulesScreen({
     channels.find((channel) => channel.id === id)?.name || id
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
       <ReservationTabs
         current="rules"
         action={
@@ -207,7 +207,7 @@ function RulesScreen({
       <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(280px,360px)_1fr]">
         <section className="rounded-lg bg-surface px-4 py-3.5">
           <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-            <h2 className="heading flex items-center gap-1.5 text-[15px]">
+            <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
               <ReservationIcon className="size-4 text-brand" />
               ルール
             </h2>
@@ -640,7 +640,7 @@ function RuleEditor({
   return (
     <section className="rounded-lg bg-surface px-4 py-3.5">
       <div className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-dashed border-line pb-2.5">
-        <h2 className="heading min-w-0 flex-1 text-[15px]">
+        <h2 className="heading min-w-0 flex-1 text-[calc(15rem/16)]">
           {rule ? rule.name : '新しいルール'}
         </h2>
         {entry.enabled ? (
@@ -766,7 +766,7 @@ function RuleEditor({
 
         <Field>
           <FieldLabel>ジャンル</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[18px]">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
             {entry.genres.map((genre) => (
               <Pick
                 key={genre}
@@ -807,7 +807,7 @@ function RuleEditor({
 
         <Field>
           <FieldLabel>対象チャンネル</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[18px]">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
             {entry.channels.map((id) => (
               <Pick
                 key={id}
@@ -950,7 +950,7 @@ function RuleEditor({
           </Field>
         </div>
 
-        <div className="flex flex-col gap-[26px]">
+        <div className="flex flex-col gap-[calc(26rem/16)]">
           <div className="flex flex-wrap items-center gap-2.5">
             <Switch
               id="rule-enabled"
@@ -1019,7 +1019,7 @@ function RuleEditor({
                   {preview.takes.map((take) => (
                     <li
                       key={take.id}
-                      className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b border-dashed border-line py-[7px] last:border-b-0"
+                      className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b border-dashed border-line py-[calc(7rem/16)] last:border-b-0"
                     >
                       <span className="font-code text-note whitespace-nowrap text-ink-2">
                         {take.whenLabel}
@@ -1201,13 +1201,13 @@ function Pick({
   onRemove: () => void
 }) {
   return (
-    <span className="inline-flex items-center gap-[7px] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
+    <span className="inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
       {label}
       <button
         type="button"
         aria-label={spoken}
         onClick={onRemove}
-        className="tap-target flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
+        className="tap-target flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
       >
         <CloseIcon />
       </button>

@@ -53,8 +53,8 @@ function AttemptResult({ attempt }: { attempt: ScanAttemptRow }) {
   if (attempt.failure === undefined) {
     return (
       <span className="inline-flex items-center gap-2 text-ui text-ink">
-        <span className="inline-flex size-[19px] shrink-0 items-center justify-center rounded-full bg-mint-soft">
-          <CheckIcon className="size-[11px] text-mint" />
+        <span className="inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full bg-mint-soft">
+          <CheckIcon className="size-[calc(11rem/16)] text-mint" />
         </span>
         サービスを取得
       </span>
@@ -75,7 +75,7 @@ export function ScanAttemptsTable({
 }) {
   return (
     <Table
-      className="min-w-[720px]"
+      className="min-w-[calc(720rem/16)]"
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
@@ -88,7 +88,7 @@ export function ScanAttemptsTable({
       <TableBody>
         {attempts.map((attempt) => (
           <TableRow key={attempt.id}>
-            <TableCell className="font-code text-[13.5px] font-medium tabular-nums whitespace-nowrap">
+            <TableCell className="font-code text-body font-medium tabular-nums whitespace-nowrap">
               {attempt.channel}
             </TableCell>
             <TableCell>
@@ -112,7 +112,7 @@ export function ScanAttemptsTable({
 
 function ScanCounts({ progress }: { progress: ScanRunProgress }) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-[18px] gap-y-1.5 text-sub text-ink-3">
+    <div className="flex flex-wrap items-baseline gap-x-[calc(18rem/16)] gap-y-1.5 text-sub text-ink-3">
       <span>
         走査済み{' '}
         <b className="font-code text-ui font-medium tabular-nums text-ink">
@@ -158,8 +158,8 @@ export function ScanRunPanel({
 
   return (
     <>
-      <div className="mt-5 rounded-xl bg-surface px-[18px] pt-[15px] pb-4">
-        <div className="mb-[13px] flex flex-wrap items-center gap-[11px]">
+      <div className="mt-5 rounded-xl bg-surface px-[calc(18rem/16)] pt-[calc(15rem/16)] pb-4">
+        <div className="mb-[calc(13rem/16)] flex flex-wrap items-center gap-[calc(11rem/16)]">
           <span className="text-ui font-medium whitespace-nowrap text-ink-2">
             スキャン範囲
           </span>
@@ -177,7 +177,7 @@ export function ScanRunPanel({
         </div>
 
         <div className="mb-3 flex flex-wrap items-start gap-3">
-          <Spinner className="mt-[3px] size-[18px] text-brand" />
+          <Spinner className="mt-[calc(3rem/16)] size-[calc(18rem/16)] text-brand" />
           <div className="min-w-0 flex-1">
             <h2 className="heading text-ui leading-[1.5]">
               スキャン中 —{' '}
@@ -226,7 +226,7 @@ export function ScanRunPanel({
       </span>
 
       {progress && progress.attempts.length > 0 && (
-        <section className="mt-[22px]">
+        <section className="mt-[calc(22rem/16)]">
           <SectionHeading mark={MarkAxis}>走査結果(順次)</SectionHeading>
           <FailureLegend />
           <ScanAttemptsTable attempts={progress.attempts} />

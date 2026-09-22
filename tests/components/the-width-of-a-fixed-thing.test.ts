@@ -128,8 +128,8 @@ test('the mark on the volume sits on the line it reads against', async () => {
   )
   assert.match(volume, /slider-runnable-track\]:h-\[2px\]/)
   assert.match(volume, /range-track\]:h-\[2px\]/)
-  assert.match(volume, /slider-thumb\]:size-\[13px\]/)
-  assert.match(volume, /range-thumb\]:size-\[13px\]/)
+  assert.match(volume, /slider-thumb\]:size-\[calc\(13rem\/16\)\]/)
+  assert.match(volume, /range-thumb\]:size-\[calc\(13rem\/16\)\]/)
   assert.match(volume, /bg-\(--pl-accent\)/)
 })
 

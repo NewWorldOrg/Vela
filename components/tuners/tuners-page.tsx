@@ -103,7 +103,7 @@ function DeviceIcon({ row }: { row: TunerRow }) {
   const Icon = row.kind === '衛星' ? TunerSatelliteIcon : TunerTerrestrialIcon
 
   return (
-    <span className="flex size-[30px] shrink-0 items-center justify-center rounded-md border border-line bg-surface-2">
+    <span className="flex size-[calc(30rem/16)] shrink-0 items-center justify-center rounded-md border border-line bg-surface-2">
       <Icon className="size-4 text-ink-2" />
     </span>
   )
@@ -120,12 +120,12 @@ function DetectionCard({
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
-      <div className="px-[19px] pt-[17px]">
-        <h3 className="heading text-[14.5px]">検出結果の差分</h3>
+      <div className="px-[calc(19rem/16)] pt-[calc(17rem/16)]">
+        <h3 className="heading text-[calc(14.5rem/16)]">検出結果の差分</h3>
         {lede && <p className="mt-px text-sub text-ink-2">{lede}</p>}
       </div>
       {children}
-      <div className="flex flex-wrap items-start justify-end gap-[9px] px-[19px] pt-[15px] pb-[17px]">
+      <div className="flex flex-wrap items-start justify-end gap-[calc(9rem/16)] px-[calc(19rem/16)] pt-[calc(15rem/16)] pb-[calc(17rem/16)]">
         {footer}
       </div>
     </div>
@@ -150,7 +150,7 @@ function DetectionPanel({
   if (detection.state !== 'ok') {
     return (
       <DetectionCard footer={<CancelDetection />}>
-        <div className="px-[19px] py-[13px]">
+        <div className="px-[calc(19rem/16)] py-[calc(13rem/16)]">
           <InlineAlert tone="warn">
             {detection.state === 'unauthenticated'
               ? signedOut('デバイスを検出')
@@ -166,7 +166,7 @@ function DetectionPanel({
   if (rows.length === 0) {
     return (
       <DetectionCard footer={<CancelDetection />}>
-        <p className="px-[19px] py-[13px] text-ui text-ink-2">
+        <p className="px-[calc(19rem/16)] py-[calc(13rem/16)] text-ui text-ink-2">
           検出したデバイスは一覧と一致しています。変更はありません。
         </p>
       </DetectionCard>
@@ -190,23 +190,23 @@ function DetectionPanel({
         </>
       }
     >
-      <div className="px-[19px] py-[13px]">
+      <div className="px-[calc(19rem/16)] py-[calc(13rem/16)]">
         {rows.map((diff) => (
           <div
             key={`${diff.kind}-${diff.device}`}
-            className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0"
+            className="flex items-center gap-[calc(11rem/16)] border-b border-dashed border-line py-2.5 last:border-b-0"
           >
             <Badge variant={DIFF_VARIANT[diff.kind]} className="font-bold">
               {diff.tag}
             </Badge>
-            <span className="font-code text-[12px]">{diff.device}</span>
+            <span className="font-code text-sub">{diff.device}</span>
             <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-3">
               {diff.note}
             </small>
           </div>
         ))}
       </div>
-      <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
+      <p className="px-[calc(19rem/16)] text-note leading-[1.7] text-ink-3">
         {notes.filter(Boolean).join('')}
       </p>
     </DetectionCard>
@@ -322,8 +322,8 @@ export function TunersView({
         />
       </div>
 
-      <p className="mx-0.5 mt-[22px] mb-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2">
-        <ClockIcon className="size-[15px] text-brand" />
+      <p className="mx-0.5 mt-[calc(22rem/16)] mb-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2">
+        <ClockIcon className="size-[calc(15rem/16)] text-brand" />
         健全性のしきい値{' '}
         <b className="font-code font-medium text-ink">
           {tuners.thresholdHours} 時間
@@ -334,7 +334,7 @@ export function TunersView({
         />
       </p>
 
-      <Table className="min-w-[1000px]" containerClassName="pb-1">
+      <Table className="min-w-[calc(1000rem/16)]" containerClassName="pb-1">
         <TableHeader>
           <TableRow>
             {COLUMNS.map((column) => (
@@ -359,7 +359,7 @@ export function TunersView({
               <TableCell>
                 <span className="flex items-center gap-2.5">
                   <DeviceIcon row={row} />
-                  <b className="font-code text-[13px] leading-[1.4] font-medium">
+                  <b className="font-code text-[calc(13rem/16)] leading-[1.4] font-medium">
                     {row.device}
                   </b>
                 </span>
@@ -376,7 +376,7 @@ export function TunersView({
                   onToggle={onToggle}
                 />
                 {row.draining && (
-                  <span className="mt-1 block text-[11px] leading-[1.5] text-lemon">
+                  <span className="mt-1 block text-cap leading-[1.5] text-lemon">
                     無効化を受付済み
                   </span>
                 )}
@@ -406,14 +406,14 @@ export function TunersView({
               </TableCell>
               <TableCell>
                 {row.lastService ? (
-                  <span className="font-code text-[12px] whitespace-nowrap text-ink-2">
+                  <span className="font-code text-sub whitespace-nowrap text-ink-2">
                     {row.lastService.at}
                   </span>
                 ) : (
                   <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
-              <TableCell className="font-code text-[12px] whitespace-nowrap text-ink-2">
+              <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
                 {row.lnb ?? <span className="font-sans">{EMPTY_VALUE}</span>}
               </TableCell>
             </TableRow>
@@ -428,7 +428,7 @@ export function TunersView({
           </SectionHeading>
           <div
             className={cn(
-              'grid items-start gap-[18px]',
+              'grid items-start gap-[calc(18rem/16)]',
               detection !== undefined &&
                 empty &&
                 'min-[1020px]:grid-cols-[1.15fr_1fr]',

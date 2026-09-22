@@ -34,7 +34,7 @@ export function RefreshOnSignal({ events }: { events: readonly AppEvent[] }) {
   }
 
   return (
-    <div className="px-3.5 pt-4 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <div className="px-3.5 pt-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
       <SessionEndedBanner
         returnPath={query ? `${pathname}?${query}` : pathname}
       />

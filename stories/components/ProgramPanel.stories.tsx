@@ -73,7 +73,12 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const AT_MOST_ACROSS = 896
+/*
+ * The width a person can read is 56 letters wide, and a letter is bigger on a
+ * bigger window (the density steps), so the cap is counted in rem and not in
+ * px.
+ */
+const AT_MOST_ACROSS_REM = 56
 
 const BESIDE_IT = 40
 
@@ -525,9 +530,13 @@ async function acrossTheWindow(
   const doc = canvasElement.ownerDocument
   const view = doc.defaultView!
 
+  const aLetter = Number.parseFloat(
+    view.getComputedStyle(doc.documentElement).fontSize,
+  )
+
   await expect(view.innerWidth).toBe(asked)
   await expect(surface.getBoundingClientRect().width).toBeCloseTo(
-    Math.min(AT_MOST_ACROSS, view.innerWidth - BESIDE_IT),
+    Math.min(AT_MOST_ACROSS_REM * aLetter, view.innerWidth - BESIDE_IT),
     0,
   )
   await expect(doc.documentElement.scrollWidth).toBeLessThanOrEqual(

@@ -98,7 +98,7 @@ interface Said {
 const SAID: Record<PlainFault, Said> = {
   leftScrambled: {
     tone: 'gone',
-    mark: <DangerIcon className="size-[22px]" />,
+    mark: <DangerIcon className="size-[calc(22rem/16)]" />,
     title: 'スクランブルが解けていません',
     body: (d) =>
       `スクランブル残存 ${d.scramble?.main ?? EMPTY_VALUE}(全体の ${scrambledPercent(d)}%)。スクランブルされたままの映像は復号できないため、時間をおいても再生できるようにはなりません。`,
@@ -107,14 +107,14 @@ const SAID: Record<PlainFault, Said> = {
   },
   tooManyAtOnce: {
     tone: 'waiting',
-    mark: <ClockIcon className="size-[22px]" />,
+    mark: <ClockIcon className="size-[calc(22rem/16)]" />,
     title: '同時に再生できる本数の上限に達しています',
     worthRetrying: true,
     worthLeaving: true,
   },
   nothingToPlay: {
     tone: 'gone',
-    mark: <OutcomeFailedIcon className="size-[22px]" />,
+    mark: <OutcomeFailedIcon className="size-[calc(22rem/16)]" />,
     title: '再生できるものがありません',
     body: () => 'この録画には、ブラウザへ渡せる中身がありません。',
     worthRetrying: false,
@@ -122,7 +122,7 @@ const SAID: Record<PlainFault, Said> = {
   },
   undecodable: {
     tone: 'gone',
-    mark: <WarningIcon className="size-[22px]" />,
+    mark: <WarningIcon className="size-[calc(22rem/16)]" />,
     title: 'このブラウザでは再生できません',
     body: () => '成果物のコーデックをこのブラウザが復号できません。',
     worthRetrying: false,
@@ -130,7 +130,7 @@ const SAID: Record<PlainFault, Said> = {
   },
   transcode: {
     tone: 'gone',
-    mark: <PlayIcon className="size-[22px]" />,
+    mark: <PlayIcon className="size-[calc(22rem/16)]" />,
     title: '再生を開始できませんでした',
     body: () => '元 TS からのトランスコードに失敗しました。',
     worthRetrying: true,
@@ -140,7 +140,7 @@ const SAID: Record<PlainFault, Said> = {
 
 const REFUSED: Said = {
   tone: 'gone',
-  mark: <WarningIcon className="size-[22px]" />,
+  mark: <WarningIcon className="size-[calc(22rem/16)]" />,
   title: '再生を開始できませんでした',
   worthRetrying: false,
   worthLeaving: true,

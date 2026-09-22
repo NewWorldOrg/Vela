@@ -39,7 +39,7 @@ export function AppTopBar() {
           </GlobalNavItem>
         ))}
       </GlobalNav>
-      <div className="flex items-center gap-[7px]">
+      <div className="flex items-center gap-[calc(7rem/16)]">
         <ThemeToggle />
         <SettingsLink asChild active={inSettings}>
           <Link href="/settings">設定</Link>

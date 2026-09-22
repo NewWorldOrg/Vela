@@ -60,7 +60,7 @@ export function RecordingActions({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-[9px]">
+      <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
         <ActionRow className="max-[700px]:w-full max-[700px]:grid-flow-row">
           {plays && (
             <OpenExternally

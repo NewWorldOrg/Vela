@@ -76,7 +76,7 @@ export function DestinationList({
       </div>
 
       <Table
-        className="min-w-[810px]"
+        className="min-w-[calc(810rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
         <TableHeader className={STICKY_HEAD}>

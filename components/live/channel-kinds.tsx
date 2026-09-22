@@ -35,7 +35,7 @@ export function ChannelKinds({
           aria-pressed={one === kind}
           onClick={() => onKind(one)}
           className={cn(
-            'tap-target rounded-full border border-edge bg-transparent px-[15px] py-[5px] text-ui font-medium whitespace-nowrap text-ink-2 outline-none',
+            'tap-target rounded-full border border-edge bg-transparent px-[calc(15rem/16)] py-[calc(5rem/16)] text-ui font-medium whitespace-nowrap text-ink-2 outline-none',
             'transition-[background-color,color,translate] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px focus-visible:shadow-ring',
             one === kind && 'border-brand bg-brand-soft font-bold text-brand',
             pressable,
