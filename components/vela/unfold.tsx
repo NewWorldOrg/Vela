@@ -18,11 +18,6 @@ function foldsGradually(): boolean {
   )
 }
 
-/*
- * One thing open at a time, and one thing on its way shut: a row that is
- * shutting still has to draw what is inside it until the movement ends, and
- * nothing else in the page should have to know that.
- */
 export function useUnfolding(): Unfolding {
   const [unfolded, setUnfolded] = useState<{
     open?: string
@@ -54,15 +49,6 @@ export function unfoldShows(held: Unfolding, key: string): boolean {
   return held.open === key || held.folding === key
 }
 
-/*
- * The one way a thing opens and shuts in place: the row it sits in grows from
- * no height to its own height, and what is inside arrives with it. There were
- * three copies of this and two of them did not move at all.
- *
- * What is inside stays in the page at no height, so the fold has something to
- * show while it shuts. A caller with a long list to draw can mount it late
- * instead and let `onSettle` say when the shutting is over.
- */
 export function Unfold({
   open,
   onSettle,
@@ -84,10 +70,6 @@ export function Unfold({
       return
     }
 
-    /*
-     * When there is no movement to wait for (a reader who asked for less of
-     * it, or a fold that was already shut), the end never arrives on its own.
-     */
     const shut = getComputedStyle(element).gridTemplateRows === '0px'
 
     if (shut || element.getAnimations().length === 0) {

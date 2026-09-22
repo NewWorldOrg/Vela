@@ -41,15 +41,6 @@ interface Column {
 
 const STAMP_WIDTH = 'calc(122rem/16)'
 
-/*
- * Every column carries a width. Left without one, 番組 took the whole of the
- * room left over : 1200px at a 1920 window : and the eight columns after it
- * were squeezed into 700px with `プロファイル` touching `保存先`.
- *
- * The fixed ones are the longer of the heading and the longest value, and
- * 1.5rem of room: 経路 says `ソフトウェア → VAAPI`, 開始 and 終了 say
- * `08/15 03:20` in the code face, 保存先 says `外付け`.
- */
 const COLUMNS: Column[] = [
   { label: '番組', width: 'calc(320rem/16)' },
   { label: '状態', width: JOB_STATUS_COLUMN },

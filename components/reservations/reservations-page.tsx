@@ -38,11 +38,6 @@ import { RESERVATION_STATE_COLUMN } from '@/components/reservations/reservation-
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { useArrived } from '@/hooks/useArrived'
 
-/*
- * 番組 and 由来 share the room left over. 操作 holds up to four small buttons
- * (`この予約の録画` `復元` `編集` `取り消す`), which is why it is the widest of
- * the fixed ones.
- */
 const COLUMNS: {
   label: string
   width: string

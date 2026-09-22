@@ -6,15 +6,6 @@ import {
   type SpotName,
 } from '@/components/vela/spot-illustration'
 
-/*
- * The room between the parts belongs to the frames that hold them, never to
- * the parts. It used to hang off the sentence (a margin under it), so the
- * sixteen
- * boxes that have a button and no sentence sat their button against the
- * heading. Three nested columns give the three gaps the canon asks for
- * (picture 10 heading, heading 9 sentence, sentence 13 button) and every one
- * of them survives a part that is not there.
- */
 export function EmptyState({
   spot = 'antenna',
   title,

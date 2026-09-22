@@ -29,11 +29,6 @@ import { CandidateList } from '@/components/channels/candidate-list'
 import { cn } from '@/lib/utils'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
-/*
- * サービス takes the room left over; the rest is the longer of the heading and
- * the longest value with 1.5rem of room (`選局先なし`, `2 (要確認 1)`,
- * `08/15 03:20`, and the two-word pill).
- */
 const SERVICE_COLUMNS: {
   label: string
   width: string

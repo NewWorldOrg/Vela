@@ -27,14 +27,6 @@ interface Column {
   gap?: string
 }
 
-/*
- * The three state columns and the actions after them read as one crowd at the
- * right edge when every column is only as wide as its own words. Each of them
- * therefore carries more room on its left than a cell's own 0.75rem: 1.75rem
- * between two state columns, 2rem before the actions. The extra room is added
- * to the column's width as well, so the words keep the space the width was
- * measured for.
- */
 const STATE_GAP = '0.25rem'
 
 const ACTIONS_GAP = '0.5rem'

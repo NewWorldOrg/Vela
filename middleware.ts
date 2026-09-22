@@ -24,10 +24,6 @@ export function middleware(request: NextRequest) {
       : 'system'
   requestHeaders.set('x-theme-mode', themeMode)
 
-  /*
-   * The answer has to reach the very first paint. Switched on the client, the
-   * movement would run once before the setting could stop it.
-   */
   const motionCookie = request.cookies.get(MOTION_COOKIE)?.value
 
   requestHeaders.set(

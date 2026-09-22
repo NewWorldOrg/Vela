@@ -34,11 +34,6 @@ import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { useArrived } from '@/hooks/useArrived'
 
-/*
- * 番組 and 由来 share the room left over; the rest is the longer of the heading
- * and the longest value with 1.5rem of room (`08/08(金) 21:10 - 22:40` in the
- * code face, the widest classification word, a priority of two figures).
- */
 const COLUMNS: {
   label: string
   width: string

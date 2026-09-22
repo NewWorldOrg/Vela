@@ -470,13 +470,6 @@ test('a face comes and goes by a movement this sheet declares', async () => {
       /data-\[state=open\]:(appears|scrim-appears)/,
       `${file} names nothing for the way it opens`,
     )
-    /*
-     * Only the scrim fades out. A face that animates on the way out stays
-     * mounted while it does, and everything the face hides from a reader —
-     * the rest of the page — stays hidden with it, so the control underneath
-     * cannot be found by name for as long as the movement lasts. The face
-     * therefore leaves at once and the scrim behind it fades.
-     */
     assert.doesNotMatch(source, /data-\[state=closed\]:appears/)
 
     if (/data-slot="(dialog|alert-dialog|sheet)-overlay"/.test(source)) {

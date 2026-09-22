@@ -73,11 +73,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/*
- * The width a person can read is 56 letters wide, and a letter is bigger on a
- * bigger window (the density steps), so the cap is counted in rem and not in
- * px.
- */
 const AT_MOST_ACROSS_REM = 56
 
 const BESIDE_IT = 40

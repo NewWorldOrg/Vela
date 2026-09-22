@@ -34,17 +34,8 @@ function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
   return <thead data-slot="table-header" className={cn(className)} {...props} />
 }
 
-/*
- * A column of words takes its share of the room by weight, but the line inside
- * it stops at a width a person can read: at 3840 the library's title column ran
- * to 1740px and the line under it was a 1700px band.
- */
 export const READABLE_LINE = 'max-w-[calc(880rem/16)]'
 
-/*
- * Every column carries a width, so the room left over is shared out in
- * proportion instead of running into the one column that has none.
- */
 function TableColumns({ widths }: { widths: (string | undefined)[] }) {
   return (
     <colgroup>

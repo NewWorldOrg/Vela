@@ -78,11 +78,6 @@ const DIFF_VARIANT = {
 
 const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
 
-/*
- * `現在のセッション` says the longest thing (`EPG 収集` with a programme name
- * behind a tip), so it takes the room over; the rest is the heading or the
- * longest value with 1.5rem of room.
- */
 const COLUMNS: { label: string; width: string }[] = [
   { label: 'デバイス', width: 'calc(180rem/16)' },
   { label: '種別', width: 'calc(96rem/16)' },

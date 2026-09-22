@@ -57,8 +57,6 @@ export function SessionTable({
         'overflow-y-auto pb-1 [&>table]:min-w-[calc(800rem/16)]',
       )}
     >
-      {/* 端末 and アカウント take the room left over between them; the two
-          stamps are `08/15 03:20` in the code face and 操作 holds one button. */}
       <TableColumns
         widths={[
           'calc(260rem/16)',

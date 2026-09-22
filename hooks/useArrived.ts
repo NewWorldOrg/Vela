@@ -6,12 +6,6 @@ import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
 
 export type Arrived = { 'data-arrived'?: '' }
 
-/*
- * A list hands this to the box around its parts. It says nothing while the
- * parts are arriving and marks the box the moment the procession is over — or
- * the moment the reader scrolls, whichever comes first, because a part that
- * moves under a scroll reads as the page fighting the hand.
- */
 export function useArrived(): Arrived {
   const [arrived, setArrived] = useState<boolean>(false)
 

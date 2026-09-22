@@ -210,11 +210,6 @@ export function AdminSideNavItem({
   )
 }
 
-/*
- * The cap is measured against the window and not against the letters, so it is
- * the one width on the screen that stays in px. Above 3200 the island was
- * floating in 640px of field on each side; 3040 leaves 400.
- */
 const SCREEN_WIDTHS = {
   default: cn(
     'mx-auto w-full max-w-full',

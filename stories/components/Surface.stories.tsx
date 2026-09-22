@@ -89,11 +89,6 @@ export const EmptyStates: Story = {
   ),
 }
 
-/*
- * The four shapes an empty box comes in. The room between the parts belongs to
- * the box, so a box with no sentence still holds its button away from the
- * heading.
- */
 export const 空状態の四通り: Story = {
   render: () => (
     <div className="mx-auto grid max-w-[900px] gap-3 p-6 sm:grid-cols-2">

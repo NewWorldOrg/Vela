@@ -109,11 +109,6 @@ export const 現れ方: Story = {
     for (const [nth, column] of columns.slice(0, 3).entries()) {
       const drawn = getComputedStyle(column)
 
-      /*
-       * A sub channel's column is the one that joins and leaves while somebody
-       * is looking, so it comes in as an item rather than rising with the
-       * grid.
-       */
       if (column.hasAttribute('data-guide-sub')) {
         await expect(drawn.animationName).toBe('item')
         continue

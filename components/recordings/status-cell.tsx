@@ -44,12 +44,6 @@ export function stateColumnFor(words: readonly string[]): string {
   return `calc(${px}rem / ${BASE_FONT_PX})`
 }
 
-/*
- * A column that only ever says one of two words is counted, not read. The dot
- * and the word of a state column leave nothing but ink darkness between them,
- * and 無効 cannot be picked out of forty rows that way, so this column keeps
- * the pill: two colours, one width, and the exceptions show up as a band.
- */
 export function pillWidthFor(words: readonly string[]): string {
   const longest = Math.max(...words.map(emOf))
   const px = Math.ceil(longest * SAY_FONT_PX + PILL_SIDES_PX)

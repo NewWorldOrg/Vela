@@ -224,13 +224,6 @@
     --logo-plate: #efece5;
   }
 
-  /*
-   * Movement is switched off in two ways: what the machine asks for, and the
-   * switch in 設定 > 表示. The reader's own answer is the one that wins, so the
-   * machine's setting is read only while nobody has answered here — and the
-   * marks a press leaves behind (the player's bezel, the seek flash) are not
-   * movement but an answer, so they are not on this list.
-   */
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-motion='moves']) {
       --animate-curtain-panel: none;
@@ -605,19 +598,6 @@
   margin-block: -6px;
 }
 
-/*
- * Every movement below animates `transform` or `opacity` and nothing else.
- * Those two are the only properties a browser can hand to the compositor, so
- * they cost nothing per frame however many parts are moving. `clip-path`,
- * `width`, `top` and `border-radius` are redrawn on the main thread every
- * frame, which is what made the first cut of this vocabulary stutter on a
- * table of rows — a movement that is not smooth is worse than no movement.
- *
- * A curtain panel therefore carries its rounded corner from the start and only
- * slides. The two panels overlap by the radius, each covering the other's
- * rounded corner, so together they cover the screen at rest and each shows its
- * own curve once it starts to leave.
- */
 @keyframes curtain-panel {
   from {
     transform: translateX(0);
@@ -671,19 +651,6 @@
   }
 }
 
-/*
- * A face coming and going. The distance and the scale are variables so that a
- * bubble can arrive from the side it is on and a dialog can arrive in place:
- * a dialog is centred with the `translate` property, which is a property of
- * its own in this version of Tailwind, so animating `transform` here leaves
- * the centring alone.
- *
- * It starts at a fiftieth of full and not at nothing. Two hundredths of a
- * face is nothing to the eye over 160ms, but `opacity: 0` is the one value
- * that means "this is not on screen" to everything that reads a page — the
- * checks in this repository among them — and a face that has just been opened
- * is on screen. Do not round it down.
- */
 @keyframes appear {
   from {
     opacity: 0.02;
@@ -755,21 +722,6 @@
   }
 }
 
-/*
- * An entrance runs once. `[data-arrived]` is what the list around it sets when
- * the procession is over, or the moment the reader scrolls — a part that keeps
- * a finished animation on it stays on a layer of its own for the life of the
- * page, and nothing should be moving under a scroll.
- */
-/*
- * A whole screen arriving: the same rise, at a tenth of the distance and
- * without the squash, because a screen is not a card being dealt.
- *
- * It fills backwards and not forwards on purpose. A transform left on the
- * element after the movement ends — even the identity — makes it the
- * containing block for everything `fixed` inside it, and the drawer on the
- * guide is fixed.
- */
 @utility screen-rises {
   animation: var(--animate-screen-rise);
   --rise-from: 10px;
@@ -795,16 +747,6 @@
   }
 }
 
-/*
- * A column or a row that joins a table somebody is already looking at. An
- * animation runs when the part is put in, and the parts already on screen are
- * not put in again, so only what joined moves — the rest takes its new width
- * at once, which is what the canon asks for.
- */
-/*
- * A thing opening and shutting in place. The height is the only thing that
- * moves; what is inside it arrives as an item.
- */
 @utility unfolds {
   transition: grid-template-rows 200ms var(--ease-fold);
 
@@ -819,12 +761,6 @@
   }
 }
 
-/*
- * The same for a native `details`, which has no row of its own to grow: the
- * browser interpolates its content box between nothing and its own height.
- * Where that is not understood, it opens at once — which is what it did
- * everywhere until now.
- */
 @utility unfolds-itself {
   interpolate-size: allow-keywords;
 
@@ -859,11 +795,6 @@
   animation: var(--animate-breathe);
 }
 
-/*
- * A face and the scrim behind it. `appears` carries the distance and the scale
- * in variables, so a bubble arrives from the side Radix put it on and a dialog
- * arrives in place.
- */
 @utility scrim-appears {
   animation: var(--animate-scrim-in);
 }
