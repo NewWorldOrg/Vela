@@ -88,7 +88,9 @@ export function Unfold({
           event.target === event.currentTarget &&
           event.propertyName === 'grid-template-rows'
         ) {
-          onSettle?.()
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => onSettle?.())
+          })
         }
       }}
       className={cn(

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
@@ -43,6 +43,7 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { EmptyState } from '@/components/vela/empty-state'
+import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 import { IconButton } from '@/components/vela/icon-button'
 import { InFull } from '@/components/vela/in-full'
 import { Pager } from '@/components/vela/pager'
@@ -93,12 +94,15 @@ function SearchScreen({ result }: { result: SearchResult }) {
     draftOf(searchTermsOf(condition)),
   )
 
+  const [waiting, startWaiting] = useTransition()
+
   const go = useCallback(
     (next: SearchCondition, push = false) => {
       const written = searchQueryOf(next)
       const href = (written ? `${pathname}?${written}` : pathname) as Route
       const navigate = push ? router.push : router.replace
-      navigate(href, { scroll: false })
+
+      startWaiting(() => navigate(href, { scroll: false }))
     },
     [router, pathname],
   )
@@ -442,7 +446,9 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </div>
       </section>
 
-      {outcome.state === 'idle' ? (
+      {waiting && outcome.state !== 'searched' ? (
+        <WaitingRows rows={6} className="mt-6" aria-label={WAITING_LABEL} />
+      ) : outcome.state === 'idle' ? (
         <EmptyState
           spot="antenna"
           title="まだ検索していません"
@@ -458,7 +464,13 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </EmptyState>
       ) : (
         found && (
-          <>
+          <div
+            inert={waiting ? true : undefined}
+            className={cn(
+              'transition-opacity duration-150',
+              waiting && 'opacity-60',
+            )}
+          >
             <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
               <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
                 <ListIcon className="size-4 text-brand" />
@@ -657,7 +669,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 />
               </>
             )}
-          </>
+          </div>
         )
       )}
     </ScreenMain>

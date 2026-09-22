@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -57,6 +57,7 @@ export function GuideView({
   ) => Promise<ReservationWrite>
 }) {
   const router = useRouter()
+  const [, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
@@ -88,9 +89,11 @@ export function GuideView({
         }
       }
       const qs = params.toString()
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )

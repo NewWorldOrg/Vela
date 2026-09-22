@@ -2,7 +2,13 @@
 
 import { useCallback, useRef } from 'react'
 
-import { columnDelayMs, delayOf, nowLineDelayMs, risesIn } from '@/lib/arrival'
+import {
+  columnDelayMs,
+  delayOf,
+  joinsIn,
+  nowLineDelayMs,
+  risesIn,
+} from '@/lib/arrival'
 import {
   GUTTER_PX,
   gridMinWidthOf,
@@ -79,13 +85,13 @@ export function GuideGrid({
             style={{ flex: GUTTER_FLEX }}
             className="sticky left-0 z-[1] rounded-tl-lg border-r border-dashed border-line bg-surface"
           />
-          {channels.map((c) => (
+          {channels.map((c, nth) => (
             <div
               key={c.id}
               data-guide-heading
               style={{ flex: COLUMN_FLEX }}
               className={cn(
-                c.sub && 'joins',
+                c.sub && joinsIn(nth),
                 'flex min-w-0 items-center justify-center gap-1.5 overflow-hidden border-l border-line px-1.5 py-2 text-sub font-bold first-of-type:border-l-0',
               )}
             >
@@ -142,7 +148,7 @@ export function GuideGrid({
                 data-guide-sub={c.sub ? '' : undefined}
                 style={{ flex: COLUMN_FLEX, ...delayOf(columnDelayMs(nth)) }}
                 className={cn(
-                  c.sub ? 'joins' : risesIn(nth),
+                  c.sub ? joinsIn(nth) : risesIn(nth),
                   'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
                   c.sub && 'bg-surface-2',
                 )}

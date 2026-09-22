@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -73,6 +73,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   const { items, total, page, lastPage, filter, channels, rules } = result
   const unfolded = useUnfolding()
   const router = useRouter()
+  const [waiting, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const change = useCallback(
@@ -91,9 +92,11 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )
@@ -109,9 +112,11 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )
@@ -165,7 +170,10 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         <>
           <Table
             className="table-fixed min-w-[calc(1040rem/16)]"
-            containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+            containerClassName={cn(
+              'min-h-0 flex-1 overflow-y-auto pb-1 transition-opacity duration-150',
+              waiting && 'opacity-60',
+            )}
           >
             <TableColumns widths={COLUMNS.map((column) => column.width)} />
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">

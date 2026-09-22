@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -114,6 +114,7 @@ export function ReservationsView({
   const chosen = items.filter((one) => picked.has(one.id))
   const clear = useCallback(() => setPicked(new Set()), [])
   const router = useRouter()
+  const [waiting, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const go = useCallback(
@@ -130,9 +131,11 @@ export function ReservationsView({
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )
@@ -240,7 +243,10 @@ export function ReservationsView({
       ) : (
         <Table
           className="table-fixed min-w-[calc(960rem/16)]"
-          containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+          containerClassName={cn(
+            'min-h-0 flex-1 overflow-y-auto pb-1 transition-opacity duration-150',
+            waiting && 'opacity-60',
+          )}
         >
           <TableColumns
             widths={[

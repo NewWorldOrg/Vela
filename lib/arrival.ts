@@ -30,6 +30,10 @@ export function risesIn(index: number): string {
   return moves(index) ? 'rises' : ''
 }
 
+export function joinsIn(index: number): string {
+  return moves(index) ? 'joins' : ''
+}
+
 export function delayOf(ms: number): CSSProperties {
   return { '--delay': `${ms}ms` } as CSSProperties
 }
