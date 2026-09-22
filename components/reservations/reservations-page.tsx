@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableHead,
   TableHeader,
   TableRow,
@@ -30,22 +31,36 @@ import { ReservationRow } from '@/components/reservations/reservation-row'
 import type { ReservationBulkActions } from '@/components/reservations/reservation-selection'
 import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
+import { unfoldShows, useUnfolding } from '@/components/vela/unfold'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { cn } from '@/lib/utils'
 import { RESERVATION_STATE_COLUMN } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { useArrived } from '@/hooks/useArrived'
 
-const STATE_COLUMNS: string[] = ['状態']
-
-const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
-  { label: '競合の詳細の開閉', hidden: true, narrow: true },
-  { label: '番組' },
-  { label: 'チャンネル' },
-  { label: WHEN_LABELS.broadcast },
-  { label: '由来' },
-  { label: '状態' },
-  { label: '操作', hidden: true },
+/*
+ * 番組 and 由来 share the room left over. 操作 holds up to four small buttons
+ * (`この予約の録画` `復元` `編集` `取り消す`), which is why it is the widest of
+ * the fixed ones.
+ */
+const COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+  narrow?: boolean
+}[] = [
+  {
+    label: '競合の詳細の開閉',
+    width: 'calc(34rem/16)',
+    hidden: true,
+    narrow: true,
+  },
+  { label: '番組', width: 'calc(300rem/16)' },
+  { label: 'チャンネル', width: 'calc(168rem/16)' },
+  { label: WHEN_LABELS.broadcast, width: 'calc(210rem/16)' },
+  { label: '由来', width: 'calc(180rem/16)' },
+  { label: '状態', width: RESERVATION_STATE_COLUMN },
+  { label: '操作', width: 'calc(360rem/16)', hidden: true },
 ]
 
 const SHOW_PARAM = 'show'
@@ -97,9 +112,8 @@ export function ReservationsView({
   bulk: ReservationBulkActions
 }) {
   const { items, total, drift, filter } = result
-  const [expanded, setExpanded] = useState<string | null>(
-    items.find((r) => r.standing === 'conflict')?.id ?? null,
-  )
+  const unfolded = useUnfolding()
+  const firstConflict = items.find((one) => one.standing === 'conflict')?.id
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const arrived = useArrived()
   const chosen = items.filter((one) => picked.has(one.id))
@@ -230,9 +244,15 @@ export function ReservationsView({
         />
       ) : (
         <Table
-          className="min-w-[calc(960rem/16)]"
+          className="table-fixed min-w-[calc(960rem/16)]"
           containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
         >
+          <TableColumns
+            widths={[
+              'calc(44rem/16)',
+              ...COLUMNS.map((column) => column.width),
+            ]}
+          />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[calc(13rem/16)]">
             <TableRow>
               <TableHead className="w-11">
@@ -255,15 +275,7 @@ export function ReservationsView({
                 />
               </TableHead>
               {COLUMNS.map((column) => (
-                <TableHead
-                  key={column.label}
-                  style={
-                    STATE_COLUMNS.includes(column.label)
-                      ? { width: RESERVATION_STATE_COLUMN }
-                      : undefined
-                  }
-                  className={cn(column.narrow && 'w-8')}
-                >
+                <TableHead key={column.label}>
                   {column.hidden ? (
                     <span className="sr-only">{column.label}</span>
                   ) : (
@@ -280,12 +292,20 @@ export function ReservationsView({
                 nth={nth}
                 reservation={reservation}
                 actions={actions}
-                expanded={expanded === reservation.id}
-                onToggle={() =>
-                  setExpanded((prev) =>
-                    prev === reservation.id ? null : reservation.id,
-                  )
+                expanded={
+                  unfolded.open === reservation.id ||
+                  (unfolded.open === undefined &&
+                    unfolded.folding === undefined &&
+                    firstConflict === reservation.id)
                 }
+                shown={
+                  unfoldShows(unfolded, reservation.id) ||
+                  (unfolded.open === undefined &&
+                    unfolded.folding === undefined &&
+                    firstConflict === reservation.id)
+                }
+                onToggle={() => unfolded.toggle(reservation.id)}
+                onSettle={() => unfolded.settle(reservation.id)}
                 selected={picked.has(reservation.id)}
                 onSelect={(taken) =>
                   setPicked((prev) => {

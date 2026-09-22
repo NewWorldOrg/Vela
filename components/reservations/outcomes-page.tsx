@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableHead,
   TableHeader,
   TableRow,
@@ -28,21 +29,35 @@ import { FilterSelect } from '@/components/vela/filter-select'
 import { Pager } from '@/components/vela/pager'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { OutcomeRow } from '@/components/reservations/outcome-row'
+import { unfoldShows, useUnfolding } from '@/components/vela/unfold'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { useArrived } from '@/hooks/useArrived'
 
-const STATE_COLUMNS: string[] = ['分類']
-
-const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
-  { label: '代わりに録られた予約の開閉', hidden: true, narrow: true },
-  { label: '番組' },
-  { label: 'チャンネル' },
-  { label: WHEN_LABELS.broadcast },
-  { label: '由来' },
-  { label: '優先度' },
-  { label: '分類' },
-  { label: WHEN_LABELS.taken },
+/*
+ * 番組 and 由来 share the room left over; the rest is the longer of the heading
+ * and the longest value with 1.5rem of room (`08/08(金) 21:10 - 22:40` in the
+ * code face, the widest classification word, a priority of two figures).
+ */
+const COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+  narrow?: boolean
+}[] = [
+  {
+    label: '代わりに録られた予約の開閉',
+    width: 'calc(34rem/16)',
+    hidden: true,
+    narrow: true,
+  },
+  { label: '番組', width: 'calc(300rem/16)' },
+  { label: 'チャンネル', width: 'calc(168rem/16)' },
+  { label: WHEN_LABELS.broadcast, width: 'calc(210rem/16)' },
+  { label: '由来', width: 'calc(180rem/16)' },
+  { label: '優先度', width: 'calc(76rem/16)' },
+  { label: '分類', width: OUTCOME_KIND_COLUMN },
+  { label: WHEN_LABELS.taken, width: 'calc(168rem/16)' },
 ]
 
 const EVERY = '__every__'
@@ -61,7 +76,7 @@ const KIND_OPTIONS = [
 
 export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   const { items, total, page, lastPage, filter, channels, rules } = result
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const unfolded = useUnfolding()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -154,19 +169,15 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
       {items.length > 0 ? (
         <>
           <Table
-            className="min-w-[calc(1040rem/16)]"
+            className="table-fixed min-w-[calc(1040rem/16)]"
             containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
           >
+            <TableColumns widths={COLUMNS.map((column) => column.width)} />
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
               <TableRow>
                 {COLUMNS.map((column) => (
                   <TableHead
                     key={column.label}
-                    style={
-                      STATE_COLUMNS.includes(column.label)
-                        ? { width: OUTCOME_KIND_COLUMN }
-                        : undefined
-                    }
                     className={cn(
                       column.narrow && 'w-8',
                       column.label === '優先度' && 'text-right',
@@ -187,12 +198,10 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                   key={outcome.id}
                   nth={nth}
                   outcome={outcome}
-                  expanded={expanded === outcome.id}
-                  onToggle={() =>
-                    setExpanded((prev) =>
-                      prev === outcome.id ? null : outcome.id,
-                    )
-                  }
+                  expanded={unfolded.open === outcome.id}
+                  shown={unfoldShows(unfolded, outcome.id)}
+                  onToggle={() => unfolded.toggle(outcome.id)}
+                  onSettle={() => unfolded.settle(outcome.id)}
                 />
               ))}
             </TableBody>

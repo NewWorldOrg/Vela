@@ -10,6 +10,7 @@ import {
 } from '@/components/vela/icons'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { OutcomeKindChip } from '@/components/reservations/outcome-kind-chip'
+import { Unfold } from '@/components/vela/unfold'
 
 const GONE = '記録が残っていません'
 
@@ -19,15 +20,18 @@ export function OutcomeRow({
   outcome,
   nth,
   expanded,
+  shown,
   onToggle,
+  onSettle,
 }: {
   outcome: ReservationOutcome
   nth: number
   expanded: boolean
+  shown: boolean
   onToggle: () => void
+  onSettle: () => void
 }) {
   const instead = outcome.instead
-
   return (
     <>
       <TableRow className={arrivesIn(nth)} style={delayOf(rowDelayMs(nth))}>
@@ -80,32 +84,35 @@ export function OutcomeRow({
           {outcome.occurredLabel}
         </TableCell>
       </TableRow>
-      {expanded && instead.length > 0 && (
+      {shown && instead.length > 0 && (
         <TableRow className="hover:bg-transparent">
-          <TableCell
-            colSpan={OUTCOME_COLUMN_COUNT}
-            className="border-b-0 px-3.5 pb-3"
-          >
-            <div className="rounded-lg bg-surface px-4 py-3.5">
-              <div className="text-cap font-bold tracking-[0.04em] text-ink-3">
-                代わりに録られた予約
+          <TableCell colSpan={OUTCOME_COLUMN_COUNT} className="border-b-0 p-0">
+            <Unfold
+              open={expanded}
+              onSettle={onSettle}
+              bodyClassName="px-3.5 pb-3"
+            >
+              <div className="rounded-lg bg-surface px-4 py-3.5">
+                <div className="text-cap font-bold tracking-[0.04em] text-ink-3">
+                  代わりに録られた予約
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  {instead.map((one) => (
+                    <div
+                      key={one.key}
+                      className="flex flex-wrap items-center gap-3 rounded-md bg-surface-2 px-3 py-2 text-sub"
+                    >
+                      <span className="min-w-0 flex-1 font-medium">
+                        {one.title ?? GONE}
+                      </span>
+                      {one.meta && (
+                        <span className="font-code text-ink-2">{one.meta}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="mt-2 space-y-1.5">
-                {instead.map((one) => (
-                  <div
-                    key={one.key}
-                    className="flex flex-wrap items-center gap-3 rounded-md bg-surface-2 px-3 py-2 text-sub"
-                  >
-                    <span className="min-w-0 flex-1 font-medium">
-                      {one.title ?? GONE}
-                    </span>
-                    {one.meta && (
-                      <span className="font-code text-ink-2">{one.meta}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            </Unfold>
           </TableCell>
         </TableRow>
       )}

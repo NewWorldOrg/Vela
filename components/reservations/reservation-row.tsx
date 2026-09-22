@@ -40,6 +40,7 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { arrivesIn, delayOf, rowDelayMs } from '@/lib/arrival'
+import { Unfold } from '@/components/vela/unfold'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
@@ -61,7 +62,9 @@ export function ReservationRow({
   reservation,
   nth,
   expanded,
+  shown,
   onToggle,
+  onSettle,
   selected,
   onSelect,
   actions,
@@ -69,7 +72,9 @@ export function ReservationRow({
   reservation: Reservation
   nth: number
   expanded: boolean
+  shown: boolean
   onToggle: () => void
+  onSettle: () => void
   selected: boolean
   onSelect: (chosen: boolean) => void
   actions: ReservationActions
@@ -158,7 +163,7 @@ export function ReservationRow({
             <ReservationStateChip reservation={reservation} say />
           </StatusCell>
         </TableCell>
-        <TableCell className="text-right align-top">
+        <TableCell className="text-right align-middle">
           <ActionRow className="gap-1.5">
             {reservation.recordingId && (
               <Button variant="watch" size="sm" asChild>
@@ -271,68 +276,74 @@ export function ReservationRow({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {conflict && expanded && reservation.conflict && (
+      {shown && conflict && reservation.conflict && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={8} className="border-b-0 px-3.5 pb-3">
-            <div className="rounded-lg bg-surface px-4 py-3.5">
-              <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
-                <WarningIcon className="size-4" />
-                {reservation.conflict.headline}
-              </div>
-              <p className="mt-1 text-sub leading-relaxed whitespace-normal text-ink-2">
-                {reservation.conflict.body}
-              </p>
-              <div className="mt-2.5 space-y-1.5">
-                {reservation.conflict.entries.map((entry) => (
-                  <div
-                    key={entry.title}
-                    className="flex flex-wrap items-center gap-3 rounded-md bg-surface-2 px-3 py-2 text-sub"
+          <TableCell colSpan={8} className="border-b-0 p-0">
+            <Unfold
+              open={expanded}
+              onSettle={onSettle}
+              bodyClassName="px-3.5 pb-3"
+            >
+              <div className="rounded-lg bg-surface px-4 py-3.5">
+                <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
+                  <WarningIcon className="size-4" />
+                  {reservation.conflict.headline}
+                </div>
+                <p className="mt-1 text-sub leading-relaxed whitespace-normal text-ink-2">
+                  {reservation.conflict.body}
+                </p>
+                <div className="mt-2.5 space-y-1.5">
+                  {reservation.conflict.entries.map((entry) => (
+                    <div
+                      key={entry.title}
+                      className="flex flex-wrap items-center gap-3 rounded-md bg-surface-2 px-3 py-2 text-sub"
+                    >
+                      <span className="min-w-0 flex-1 font-medium">
+                        {entry.title}
+                      </span>
+                      <span className="font-code text-ink-2">{entry.meta}</span>
+                      <span className="text-ink-3">
+                        {entry.ruleName ?? entry.origin}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <ActionRow className="mt-2.5 gap-2 max-[900px]:w-full max-[900px]:grid-flow-row">
+                  <Button
+                    variant="change"
+                    size="sm"
+                    disabled={pending}
+                    onClick={() =>
+                      run(() =>
+                        actions.onRaise(
+                          reservation.id,
+                          reservation.conflict?.raiseTo ??
+                            reservation.priority + 1,
+                        ),
+                      )
+                    }
                   >
-                    <span className="min-w-0 flex-1 font-medium">
-                      {entry.title}
-                    </span>
-                    <span className="font-code text-ink-2">{entry.meta}</span>
-                    <span className="text-ink-3">
-                      {entry.ruleName ?? entry.origin}
-                    </span>
-                  </div>
-                ))}
+                    <ChevronUpIcon />
+                    この予約の優先度を上げる
+                  </Button>
+                  <Button
+                    variant="halt"
+                    size="sm"
+                    disabled={pending}
+                    onClick={() => run(() => actions.onCancel(reservation.id))}
+                  >
+                    <CloseIcon />
+                    この予約を取り消す
+                  </Button>
+                  <Button variant="watch" size="sm" asChild>
+                    <Link href="/settings/tuners">
+                      <TunerIcon />
+                      チューナーの使用状況を見る
+                    </Link>
+                  </Button>
+                </ActionRow>
               </div>
-              <ActionRow className="mt-2.5 gap-2 max-[900px]:w-full max-[900px]:grid-flow-row">
-                <Button
-                  variant="change"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() =>
-                    run(() =>
-                      actions.onRaise(
-                        reservation.id,
-                        reservation.conflict?.raiseTo ??
-                          reservation.priority + 1,
-                      ),
-                    )
-                  }
-                >
-                  <ChevronUpIcon />
-                  この予約の優先度を上げる
-                </Button>
-                <Button
-                  variant="halt"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() => run(() => actions.onCancel(reservation.id))}
-                >
-                  <CloseIcon />
-                  この予約を取り消す
-                </Button>
-                <Button variant="watch" size="sm" asChild>
-                  <Link href="/settings/tuners">
-                    <TunerIcon />
-                    チューナーの使用状況を見る
-                  </Link>
-                </Button>
-              </ActionRow>
-            </div>
+            </Unfold>
           </TableCell>
         </TableRow>
       )}

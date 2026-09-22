@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  createContext,
-  use,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { createContext, use, type ReactNode } from 'react'
 
 import type {
   CandidateTuning,
@@ -22,6 +15,7 @@ import {
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -30,19 +24,29 @@ import {
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import { Unfold, useUnfolding, type Unfolding } from '@/components/vela/unfold'
 import { CandidateList } from '@/components/channels/candidate-list'
 import { cn } from '@/lib/utils'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
-const SERVICE_COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: '候補チャンネルの開閉', hidden: true },
-  { label: 'サービス' },
-  { label: '区分' },
-  { label: '現在の物理ch' },
-  { label: '候補' },
-  { label: '有効' },
-  { label: WHEN_LABELS.taken },
-  { label: '状態', hidden: true },
+/*
+ * サービス takes the room left over; the rest is the longer of the heading and
+ * the longest value with 1.5rem of room (`選局先なし`, `2 (要確認 1)`,
+ * `08/15 03:20`, and the two-word pill).
+ */
+const SERVICE_COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+}[] = [
+  { label: '候補チャンネルの開閉', width: 'calc(34rem/16)', hidden: true },
+  { label: 'サービス', width: 'calc(300rem/16)' },
+  { label: '区分', width: 'calc(84rem/16)' },
+  { label: '現在の物理ch', width: 'calc(124rem/16)' },
+  { label: '候補', width: 'calc(124rem/16)' },
+  { label: '有効', width: 'calc(92rem/16)' },
+  { label: WHEN_LABELS.taken, width: 'calc(122rem/16)' },
+  { label: '状態', width: 'calc(200rem/16)', hidden: true },
 ]
 
 export interface CandidateActions {
@@ -57,54 +61,13 @@ export interface CandidateActions {
   ) => Promise<WriteResult>
 }
 
-interface Unfolded {
-  open?: string
-  folding?: string
-  toggle: (serviceKey: string) => void
-  settle: (serviceKey: string) => void
-}
-
-const UnfoldedService = createContext<Unfolded | null>(null)
-
-function foldsGradually() {
-  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
+const UnfoldedService = createContext<Unfolding | null>(null)
 
 export function UnfoldingServices({ children }: { children: ReactNode }) {
-  const [unfolded, setUnfolded] = useState<{ open?: string; folding?: string }>(
-    {},
-  )
-
-  return (
-    <UnfoldedService
-      value={{
-        ...unfolded,
-        toggle: (serviceKey) =>
-          setUnfolded(({ open }) => {
-            const next = open === serviceKey ? undefined : serviceKey
-
-            return {
-              open: next,
-              folding:
-                open !== undefined && open !== next && foldsGradually()
-                  ? open
-                  : undefined,
-            }
-          }),
-        settle: (serviceKey) =>
-          setUnfolded((held) =>
-            held.folding === serviceKey
-              ? { open: held.open, folding: undefined }
-              : held,
-          ),
-      }}
-    >
-      {children}
-    </UnfoldedService>
-  )
+  return <UnfoldedService value={useUnfolding()}>{children}</UnfoldedService>
 }
 
-function useUnfolded(): Unfolded {
+function useUnfolded(): Unfolding {
   const held = use(UnfoldedService)
 
   if (held === null) {
@@ -155,58 +118,21 @@ function UnfoldedCandidates({
   expanded: boolean
   onSettle: (serviceKey: string) => void
 }) {
-  const fold = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const element = fold.current
-
-    if (expanded || element === null) {
-      return
-    }
-
-    const shut = getComputedStyle(element).gridTemplateRows === '0px'
-
-    if (shut || element.getAnimations().length === 0) {
-      onSettle(service.key)
-    }
-  }, [expanded, onSettle, service.key])
-
   return (
     <TableRow className="[&:last-child_[data-slot=unfold-body]]:border-b-0">
       <TableCell colSpan={SERVICE_COLUMNS.length} className="border-0 p-0">
-        <div
-          ref={fold}
-          data-slot="unfold"
-          inert={!expanded}
-          onTransitionEnd={(event) => {
-            if (
-              event.target === event.currentTarget &&
-              event.propertyName === 'grid-template-rows'
-            ) {
-              onSettle(service.key)
-            }
-          }}
-          className={cn(
-            'grid transition-[grid-template-rows] duration-150 ease-toy motion-reduce:transition-none',
-            expanded
-              ? 'grid-rows-[1fr] starting:grid-rows-[0fr]'
-              : 'grid-rows-[0fr]',
-          )}
+        <Unfold
+          open={expanded}
+          onSettle={() => onSettle(service.key)}
+          bodyClassName="border-b border-dashed border-line bg-surface-2 py-3.5 pr-[calc(18rem/16)] pl-10"
         >
-          <div className="overflow-hidden">
-            <div
-              data-slot="unfold-body"
-              className="border-b border-dashed border-line bg-surface-2 py-3.5 pr-[calc(18rem/16)] pl-10"
-            >
-              <CandidateList
-                serviceKey={service.key}
-                serviceName={service.name}
-                candidates={service.candidates}
-                {...actions}
-              />
-            </div>
-          </div>
-        </div>
+          <CandidateList
+            serviceKey={service.key}
+            serviceName={service.name}
+            candidates={service.candidates}
+            {...actions}
+          />
+        </Unfold>
       </TableCell>
     </TableRow>
   )
@@ -223,9 +149,10 @@ export function ServiceTable({
 
   return (
     <Table
-      className="min-w-[calc(860rem/16)]"
+      className="table-fixed min-w-[calc(860rem/16)]"
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
+      <TableColumns widths={SERVICE_COLUMNS.map((column) => column.width)} />
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {SERVICE_COLUMNS.map((column) => (
