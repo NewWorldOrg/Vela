@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { expect, userEvent, within } from 'storybook/test'
 
 import {
@@ -35,6 +36,7 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = {
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     await expect(

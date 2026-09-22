@@ -2,6 +2,8 @@
 
 import * as React from 'react'
 
+import { useArrived } from '@/hooks/useArrived'
+
 import { cn } from '@/lib/utils'
 
 function Table({
@@ -49,6 +51,7 @@ function TableColumns({ widths }: { widths: (string | undefined)[] }) {
 function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   return (
     <tbody
+      {...useArrived()}
       data-slot="table-body"
       className={cn('rows-arrive [&_tr:last-child_td]:border-b-0', className)}
       {...props}

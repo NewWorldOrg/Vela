@@ -1,5 +1,7 @@
 'use client'
 
+import type { CSSProperties } from 'react'
+
 import { cn } from '@/lib/utils'
 
 export function PlayerVolume({
@@ -18,17 +20,6 @@ export function PlayerVolume({
       data-slot="input-area"
       className={cn('relative block w-[calc(68rem/16)] shrink-0', className)}
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-white/35"
-      />
-      {played > 0 && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-0 h-[2px] -translate-y-1/2 rounded-full bg-(--pl-accent)"
-          style={{ width: `${played}%` }}
-        />
-      )}
       <input
         type="range"
         min={0}
@@ -38,14 +29,8 @@ export function PlayerVolume({
         aria-label="音量"
         aria-valuetext={`${played}%`}
         onChange={(event) => onChoose(Number(event.currentTarget.value) / 100)}
-        className={cn(
-          'relative block h-11 w-full cursor-pointer appearance-none bg-transparent outline-none',
-          'focus-visible:shadow-ring focus-visible:rounded-full',
-          '[&::-webkit-slider-runnable-track]:h-[2px] [&::-webkit-slider-runnable-track]:bg-transparent',
-          '[&::-webkit-slider-thumb]:mt-[calc((2px_-_13rem/16)/2)] [&::-webkit-slider-thumb]:size-[calc(13rem/16)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white',
-          '[&::-moz-range-track]:h-[2px] [&::-moz-range-track]:bg-transparent',
-          '[&::-moz-range-thumb]:size-[calc(13rem/16)] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white',
-        )}
+        style={{ '--volume-played': `${played}%` } as CSSProperties}
+        className="volume-range relative block w-full cursor-pointer outline-none focus-visible:rounded-full focus-visible:shadow-ring"
       />
     </label>
   )

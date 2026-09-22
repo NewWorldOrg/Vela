@@ -18,6 +18,8 @@ const THE_LIBRARY_ROW = 'components/library/recording-row.tsx'
 
 const THE_RESERVATION_ROW = 'components/reservations/reservation-row.tsx'
 
+const THE_SHEET = 'app/globals.css'
+
 const THE_VOLUME = 'components/recordings/player-volume.tsx'
 
 const THE_RULES = 'components/reservations/rules-page.tsx'
@@ -119,19 +121,37 @@ test('no row says its state with a colour laid under the whole of it', async () 
 
 test('the mark on the volume sits on the line it reads against', async () => {
   const volume = await read(THE_VOLUME)
+  const sheet = await read(THE_SHEET)
+  const rule = sheet.slice(sheet.indexOf('@utility volume-range'))
+  const body = rule.slice(0, rule.indexOf('\n}\n'))
 
-  assert.match(
+  assert.match(volume, /volume-range/)
+  assert.doesNotMatch(
     volume,
-    /slider-thumb\]:mt-\[calc\(\(2px_-_13rem\/16\)\/2\)\]/,
-    'WebKit lays the top of the mark on the top of the track, so the mark ' +
-      'is centred on the line only when it is pulled up by half of what it ' +
-      'is taller than the track',
+    /<span/,
+    'the line is drawn beside the input, so it and the mark are rounded to ' +
+      'whole pixels apart and meet half a pixel off',
   )
-  assert.match(volume, /slider-runnable-track\]:h-\[2px\]/)
-  assert.match(volume, /range-track\]:h-\[2px\]/)
-  assert.match(volume, /slider-thumb\]:size-\[calc\(13rem\/16\)\]/)
-  assert.match(volume, /range-thumb\]:size-\[calc\(13rem\/16\)\]/)
-  assert.match(volume, /bg-\(--pl-accent\)/)
+  assert.match(
+    body,
+    /--volume-reach: round\(calc\(44rem \/ 16\), 2px\)/,
+    'the box the mark and the line share has to be an even number of pixels ' +
+      'tall, so its middle falls on a whole pixel',
+  )
+  for (const part of [
+    'slider-runnable-track',
+    'moz-range-track',
+    'slider-thumb',
+    'moz-range-thumb',
+  ]) {
+    const at = body.indexOf(part)
+    assert.ok(at >= 0, `${part} is not drawn by the volume rule`)
+    assert.match(
+      body.slice(at, body.indexOf('}', at)),
+      /height: var\(--volume-reach\)/,
+      `${part} does not fill the shared box, so its middle is not the line's`,
+    )
+  }
 })
 
 test('a rehearsal is the migration word; a rule looks at its matches', async () => {

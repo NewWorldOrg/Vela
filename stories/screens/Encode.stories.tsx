@@ -143,6 +143,7 @@ function runningCard(canvasElement: HTMLElement) {
 
 export const 通常: Story = {
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     const jobs = within(canvas.getAllByRole('table')[0])
@@ -176,6 +177,7 @@ export const 空の状態: Story = {
 export const 待機中: Story = {
   args: { screen: screenWith(QUEUED_JOB) },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     callOff.mockClear()
 
     const canvas = within(canvasElement)
@@ -349,6 +351,7 @@ export const 停滞: Story = {
 export const 失敗: Story = {
   args: { screen: screenWith(FAILED_JOB) },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     const jobs = within(canvas.getAllByRole('table')[0])
@@ -367,6 +370,7 @@ export const 失敗: Story = {
 export const 完了: Story = {
   args: { screen: screenWith(COMPLETED_JOB) },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     const jobs = within(canvas.getAllByRole('table')[0])
@@ -379,6 +383,7 @@ export const 完了: Story = {
 export const 中止: Story = {
   args: { screen: screenWith(CANCELLED_JOB) },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     const jobs = within(canvas.getAllByRole('table')[0])
@@ -706,6 +711,7 @@ export const 撤去して退役する: Story = {
 export const 退役した定義: Story = {
   args: { screen: RETIRED_DEFINITIONS },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     await expect(canvas.getAllByText('退役')).toHaveLength(2)

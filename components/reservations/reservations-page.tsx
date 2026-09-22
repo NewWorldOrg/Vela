@@ -36,7 +36,6 @@ import { ScreenMain } from '@/components/vela/app-shell'
 import { cn } from '@/lib/utils'
 import { RESERVATION_STATE_COLUMN } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
-import { useArrived } from '@/hooks/useArrived'
 
 const COLUMNS: {
   label: string
@@ -110,7 +109,6 @@ export function ReservationsView({
   const unfolded = useUnfolding()
   const firstConflict = items.find((one) => one.standing === 'conflict')?.id
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
-  const arrived = useArrived()
   const chosen = items.filter((one) => picked.has(one.id))
   const clear = useCallback(() => setPicked(new Set()), [])
   const router = useRouter()
@@ -286,7 +284,7 @@ export function ReservationsView({
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody {...arrived}>
+          <TableBody>
             {items.map((reservation, nth) => (
               <ReservationRow
                 key={reservation.id}

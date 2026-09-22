@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { expect, within } from 'storybook/test'
 
 import {
@@ -205,6 +206,7 @@ export const 異常と警告はdriverの一文を添えて出る: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     const rows = rowsOfTheTableHeaded(canvasElement, 'デバイス')

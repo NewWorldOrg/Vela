@@ -284,6 +284,7 @@ export const 予約の削除を断られたとき: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     await userEvent.click(
@@ -298,7 +299,9 @@ export const 予約の削除を断られたとき: Story = {
       }),
     )
 
-    await expect(await canvas.findByText(STILL_TO_BE_RECORDED)).toBeVisible()
+    await canvas.findByText(STILL_TO_BE_RECORDED)
+    await afterTheArrival(canvasElement)
+    await expect(canvas.getByText(STILL_TO_BE_RECORDED)).toBeVisible()
     await expect(canvas.getByText('朝のニュース')).toBeVisible()
   },
 }

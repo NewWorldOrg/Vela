@@ -226,7 +226,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-motion='moves']) {
-      --animate-row: none;
       --animate-curtain-panel: none;
       --animate-draw: none;
       --animate-ink: none;
@@ -243,7 +242,6 @@
   }
 
   :root[data-motion='still'] {
-    --animate-row: none;
     --animate-curtain-panel: none;
     --animate-draw: none;
     --animate-ink: none;
@@ -428,7 +426,6 @@
   --animate-rise: rise 0.7s ease-in-out both;
   --animate-screen-rise: rise 0.42s var(--ease-toy) backwards;
   --animate-item: item 0.4s var(--ease-item) both;
-  --animate-row: row 0.36s var(--ease-item) backwards;
   --animate-breathe: breathe 2s ease-in-out infinite;
   --animate-waiting-line: waiting-line calc(0.8s + 0.2s) ease-in-out infinite;
 
@@ -654,17 +651,6 @@
   }
 }
 
-@keyframes row {
-  from {
-    transform: translateY(10px);
-    opacity: 0.3;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
 @keyframes appear {
   from {
     opacity: 0.02;
@@ -762,50 +748,79 @@
 }
 
 @utility rows-arrive {
-  & > tr {
-    animation: var(--animate-row);
+  & > tr:nth-child(-n + 12) {
+    animation: var(--animate-item);
     animation-fill-mode: backwards;
   }
-
-  & > tr:nth-child(n + 13) {
+  &[data-arrived] > tr {
     animation: none;
   }
-
-  & > tr:nth-child(1) {
-    animation-delay: 0ms;
-  }
   & > tr:nth-child(2) {
-    animation-delay: 24ms;
+    animation-delay: 40ms;
   }
   & > tr:nth-child(3) {
-    animation-delay: 48ms;
+    animation-delay: 80ms;
   }
   & > tr:nth-child(4) {
-    animation-delay: 72ms;
-  }
-  & > tr:nth-child(5) {
-    animation-delay: 96ms;
-  }
-  & > tr:nth-child(6) {
     animation-delay: 120ms;
   }
-  & > tr:nth-child(7) {
-    animation-delay: 144ms;
+  & > tr:nth-child(5) {
+    animation-delay: 160ms;
   }
-  & > tr:nth-child(8) {
-    animation-delay: 168ms;
+  & > tr:nth-child(6) {
+    animation-delay: 200ms;
   }
-  & > tr:nth-child(9) {
-    animation-delay: 192ms;
+}
+
+@utility volume-range {
+  --volume-dot: calc(13rem / 16);
+  --volume-reach: round(calc(44rem / 16), 2px);
+  --volume-line: rgb(255 255 255 / 0.35);
+  --volume-lit: var(--pl-accent);
+  appearance: none;
+  height: var(--volume-reach);
+  background: transparent;
+
+  &::-webkit-slider-runnable-track {
+    height: var(--volume-reach);
+    background:
+      linear-gradient(var(--volume-lit), var(--volume-lit)) 0 50% /
+        var(--volume-played, 0%) 2px no-repeat,
+      linear-gradient(var(--volume-line), var(--volume-line)) 0 50% / 100% 2px
+        no-repeat;
   }
-  & > tr:nth-child(10) {
-    animation-delay: 216ms;
+
+  &::-moz-range-track {
+    height: var(--volume-reach);
+    background:
+      linear-gradient(var(--volume-lit), var(--volume-lit)) 0 50% /
+        var(--volume-played, 0%) 2px no-repeat,
+      linear-gradient(var(--volume-line), var(--volume-line)) 0 50% / 100% 2px
+        no-repeat;
   }
-  & > tr:nth-child(11) {
-    animation-delay: 240ms;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: var(--volume-dot);
+    height: var(--volume-reach);
+    border: 0;
+    background: radial-gradient(
+      circle,
+      white calc(var(--volume-dot) / 2 - 0.5px),
+      transparent calc(var(--volume-dot) / 2)
+    );
   }
-  & > tr:nth-child(12) {
-    animation-delay: 264ms;
+
+  &::-moz-range-thumb {
+    width: var(--volume-dot);
+    height: var(--volume-reach);
+    border: 0;
+    border-radius: 0;
+    background: radial-gradient(
+      circle,
+      white calc(var(--volume-dot) / 2 - 0.5px),
+      transparent calc(var(--volume-dot) / 2)
+    );
   }
 }
 
