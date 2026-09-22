@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { EMPTY_VALUE } from '@/lib/empty-value'
 
 import { cn } from '@/lib/utils'
@@ -25,7 +27,7 @@ export const GAP_BEFORE_STATE = 'pl-4'
 export const GAP_BEFORE_ACTIONS = 'pl-5'
 
 const CELL =
-  'border-b border-dashed border-line px-3 py-3 align-middle text-[13px] group-last:border-b-0 group-hover:border-transparent'
+  'border-b border-dashed border-line px-3 py-3 align-middle text-[calc(13rem/16)] group-last:border-b-0 group-hover:border-transparent'
 
 const NUMBER = 'font-code text-ui whitespace-nowrap text-right'
 
@@ -112,13 +114,13 @@ export function RecordingRow({
           <RecordingThumb recording={r} subTone={subTone} />
           <span className="min-w-0">
             <InFull says={r.title}>
-              <b className="line-clamp-2 text-[13.5px] leading-[1.4] font-bold [font-feature-settings:'palt']">
+              <b className="line-clamp-2 text-body leading-[1.4] font-bold [font-feature-settings:'palt']">
                 {r.title}
               </b>
             </InFull>
             <span className={cn('block truncate text-note', subTone)}>
               {r.segments && (
-                <span className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[9px] text-[10.5px] font-bold text-ink-2">
+                <span className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[calc(9rem/16)] text-micro font-bold text-ink-2">
                   {r.segments} セグメント
                 </span>
               )}
@@ -191,11 +193,20 @@ export function RecordingRow({
       <td
         className={cn(
           CELL,
-          DETAIL_CELL,
-          'text-right text-ink-3 group-hover:rounded-r-md group-hover:text-brand',
+          'p-0 text-ink-3 group-hover:rounded-r-md group-hover:text-brand',
         )}
       >
-        <ChevronRightIcon className="size-[15px]" />
+        <Link
+          href={`/recordings/${r.id}`}
+          aria-label="詳細へ"
+          onClick={(event) => event.stopPropagation()}
+          className={cn(
+            DETAIL_CELL,
+            'tap-target flex h-full w-full items-center justify-end outline-none focus-visible:shadow-ring',
+          )}
+        >
+          <ChevronRightIcon className="size-[calc(15rem/16)]" />
+        </Link>
       </td>
     </tr>
   )
