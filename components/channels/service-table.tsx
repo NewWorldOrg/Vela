@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, use, type ReactNode } from 'react'
+import { createContext, use, type ReactNode, memo } from 'react'
 
 import type {
   CandidateTuning,
@@ -130,6 +130,78 @@ function UnfoldedCandidates({
   )
 }
 
+const ServiceLine = memo(function ServiceLine({
+  service,
+  expanded,
+  onToggle,
+}: {
+  service: ServiceRow
+  expanded: boolean
+  onToggle: (serviceKey: string) => void
+}) {
+  return (
+    <TableRow className="has-aria-expanded:bg-transparent">
+      <TableCell className="w-6">
+        <button
+          type="button"
+          aria-label={`${service.name} の候補チャンネル`}
+          aria-expanded={expanded}
+          onClick={() => onToggle(service.key)}
+          className="tap-target inline-flex cursor-pointer text-ink-3 hover:text-ink"
+        >
+          <ChevronRightIcon
+            className={cn(
+              'size-3.5 transition-transform duration-150 ease-toy motion-reduce:transition-none',
+              expanded && 'rotate-90',
+            )}
+          />
+        </button>
+      </TableCell>
+      <TableCell>
+        <span className="flex min-w-0 items-center gap-2">
+          <ChannelMark logo={service.logo} no={service.no} keepsTheSlot />
+          <b className="min-w-0 text-[calc(13rem/16)] font-bold">
+            {service.name}
+          </b>
+        </span>
+      </TableCell>
+      <TableCell>
+        <Category service={service} />
+      </TableCell>
+      <TableCell>
+        {service.currentChannel === undefined ? (
+          <span className="text-ui font-bold text-lemon">選局先なし</span>
+        ) : (
+          <span className="font-code font-medium tabular-nums">
+            {service.currentChannel}
+          </span>
+        )}
+      </TableCell>
+      <TableCell>
+        <span className="font-code tabular-nums text-ink-2">
+          {service.candidateCount}
+        </span>
+        {service.needsAttentionCount > 0 && (
+          <span className="ml-1.5 text-sub text-lemon">
+            (要確認 {service.needsAttentionCount})
+          </span>
+        )}
+      </TableCell>
+      <TableCell>
+        <AbleSay able={service.enabled} />
+      </TableCell>
+      <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
+        {service.lastSeen}
+      </TableCell>
+      <TableCell>
+        <StatusCell>
+          <Standing service={service} />
+        </StatusCell>
+      </TableCell>
+    </TableRow>
+  )
+})
+
 export function ServiceTable({
   services,
   actions,
@@ -164,74 +236,12 @@ export function ServiceTable({
           const mounted = expanded || folding === service.key
 
           return [
-            <TableRow
+            <ServiceLine
               key={service.key}
-              className="has-aria-expanded:bg-transparent"
-            >
-              <TableCell className="w-6">
-                <button
-                  type="button"
-                  aria-label={`${service.name} の候補チャンネル`}
-                  aria-expanded={expanded}
-                  onClick={() => toggle(service.key)}
-                  className="tap-target inline-flex cursor-pointer text-ink-3 hover:text-ink"
-                >
-                  <ChevronRightIcon
-                    className={cn(
-                      'size-3.5 transition-transform duration-150 ease-toy motion-reduce:transition-none',
-                      expanded && 'rotate-90',
-                    )}
-                  />
-                </button>
-              </TableCell>
-              <TableCell>
-                <span className="flex min-w-0 items-center gap-2">
-                  <ChannelMark
-                    logo={service.logo}
-                    no={service.no}
-                    keepsTheSlot
-                  />
-                  <b className="min-w-0 text-[calc(13rem/16)] font-bold">
-                    {service.name}
-                  </b>
-                </span>
-              </TableCell>
-              <TableCell>
-                <Category service={service} />
-              </TableCell>
-              <TableCell>
-                {service.currentChannel === undefined ? (
-                  <span className="text-ui font-bold text-lemon">
-                    選局先なし
-                  </span>
-                ) : (
-                  <span className="font-code font-medium tabular-nums">
-                    {service.currentChannel}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>
-                <span className="font-code tabular-nums text-ink-2">
-                  {service.candidateCount}
-                </span>
-                {service.needsAttentionCount > 0 && (
-                  <span className="ml-1.5 text-sub text-lemon">
-                    (要確認 {service.needsAttentionCount})
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>
-                <AbleSay able={service.enabled} />
-              </TableCell>
-              <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
-                {service.lastSeen}
-              </TableCell>
-              <TableCell>
-                <StatusCell>
-                  <Standing service={service} />
-                </StatusCell>
-              </TableCell>
-            </TableRow>,
+              service={service}
+              expanded={expanded}
+              onToggle={toggle}
+            />,
             mounted && (
               <UnfoldedCandidates
                 key={`${service.key}-candidates`}

@@ -1,11 +1,13 @@
 'use client'
 
 import type { CSSProperties, ReactNode } from 'react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import {
   type ColumnDef,
+  type Updater,
   type VisibilityState,
   flexRender,
+  functionalUpdate,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
@@ -78,15 +80,30 @@ export interface DataTableProps<TData> {
 
 const STORAGE_PREFIX = 'vela-column-visibility-'
 
-function readStoredVisibility(storageKey: string): VisibilityState | null {
-  if (typeof window === 'undefined') {
+function readStoredRaw(storageKey: string | undefined): string | null {
+  if (!storageKey) {
     return null
   }
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + storageKey)
-    if (!raw) {
-      return null
-    }
+    return localStorage.getItem(STORAGE_PREFIX + storageKey)
+  } catch {
+    return null
+  }
+}
+
+function neverChanges() {
+  return () => {}
+}
+
+function nothingStoredOnTheServer() {
+  return null
+}
+
+function parseStoredVisibility(raw: string | null): VisibilityState | null {
+  if (!raw) {
+    return null
+  }
+  try {
     const parsed = JSON.parse(raw)
     if (
       typeof parsed === 'object' &&
@@ -143,47 +160,37 @@ export default function DataTable<TData>({
   onRowClick,
   emptyText = 'No data',
 }: DataTableProps<TData>) {
-  const defaultVisibility = deriveDefaultVisibility(columnVisibilityOptions)
-  const [columnVisibility, setColumnVisibility] =
-    useState<VisibilityState>(defaultVisibility)
+  const storedRaw = useSyncExternalStore(
+    neverChanges,
+    () => readStoredRaw(storageKey),
+    nothingStoredOnTheServer,
+  )
+  const [chosen, setChosen] = useState<VisibilityState | null>(null)
+  const opening = useMemo(() => {
+    const defaultVisibility = deriveDefaultVisibility(columnVisibilityOptions)
+    const stored = parseStoredVisibility(storedRaw)
+    return stored ? { ...defaultVisibility, ...stored } : defaultVisibility
+  }, [columnVisibilityOptions, storedRaw])
+  const columnVisibility = chosen ?? opening
 
-  const didHydrateRef = useRef(false)
-  useEffect(() => {
-    if (didHydrateRef.current) {
-      return
-    }
-    didHydrateRef.current = true
-    if (!storageKey) {
-      return
-    }
-    const stored = readStoredVisibility(storageKey)
-    if (stored) {
-      setColumnVisibility({ ...defaultVisibility, ...stored })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const skipFirstWriteRef = useRef(true)
-  useEffect(() => {
-    if (skipFirstWriteRef.current) {
-      skipFirstWriteRef.current = false
-      return
-    }
+  const chooseColumnVisibility = (updater: Updater<VisibilityState>) => {
+    const next = functionalUpdate(updater, columnVisibility)
+    setChosen(next)
     if (storageKey) {
-      writeStoredVisibility(storageKey, columnVisibility)
+      writeStoredVisibility(storageKey, next)
     }
-  }, [columnVisibility, storageKey])
+  }
 
-  const resetColumnVisibility = useCallback(() => {
-    setColumnVisibility(deriveDefaultVisibility(columnVisibilityOptions))
-  }, [columnVisibilityOptions])
+  const resetColumnVisibility = () => {
+    chooseColumnVisibility(deriveDefaultVisibility(columnVisibilityOptions))
+  }
 
   const table = useReactTable({
     data,
     columns,
     pageCount: pagination?.lastPage ?? -1,
     state: { columnVisibility },
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: chooseColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     manualSorting: true,
@@ -224,7 +231,7 @@ export default function DataTable<TData>({
                 <DataTableColumnVisibility
                   options={columnVisibilityOptions}
                   columnVisibility={columnVisibility}
-                  onColumnVisibilityChange={setColumnVisibility}
+                  onColumnVisibilityChange={chooseColumnVisibility}
                   onReset={resetColumnVisibility}
                 />
               )}

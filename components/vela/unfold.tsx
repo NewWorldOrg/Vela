@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, type ComponentProps } from 'react'
+import { useCallback, useRef, useState, type ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -27,7 +27,7 @@ export function useUnfolding(): Unfolding {
   const shutting = useRef<number | undefined>(undefined)
   const latest = useRef<{ open?: string; folding?: string }>({})
 
-  const toggle = (key: string): void => {
+  const toggle = useCallback((key: string): void => {
     const was = latest.current.open
     const next = was === key ? undefined : key
     const folding =
@@ -43,7 +43,7 @@ export function useUnfolding(): Unfolding {
         setUnfolded(latest.current)
       }, FOLD_MS + 40)
     }
-  }
+  }, [])
 
   return { ...unfolded, toggle }
 }

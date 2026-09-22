@@ -210,13 +210,13 @@ export function Player({
 
   const asItStands = useRef({ position, profile, plan, sound })
 
-  useEffect(() => {
-    asItStands.current = { position, profile, plan, sound }
-  })
+  const standsAs = (now: Partial<typeof asItStands.current>) => {
+    asItStands.current = { ...asItStands.current, ...now }
+  }
 
   useKeptPosition(
     phase === 'playing',
-    () => asItStands.current.position,
+    () => position,
     (at) => {
       void onKeepPosition(d.id, at)
         .then((kept) => {
@@ -373,6 +373,7 @@ export function Player({
     setPosition(second)
     setProfile(quality)
     setSound(carrying)
+    standsAs({ position: second, profile: quality, sound: carrying })
     setPhase('waiting')
     setSource(
       pictureHref(
@@ -452,6 +453,7 @@ export function Player({
 
     wanted.current = at
     setPosition(at)
+    standsAs({ position: at })
 
     if (plan.seeking === 'byRange' && video.current && source) {
       landing.current = null
@@ -477,6 +479,7 @@ export function Player({
 
     if (phase === 'idle') {
       setProfile(quality)
+      standsAs({ profile: quality })
 
       return
     }
@@ -515,6 +518,7 @@ export function Player({
         const became = whatTheSoundBecomes(standing.plan, next, answer)
 
         setPlan(became.plan)
+        standsAs({ plan: became.plan })
         setSaid((was) => whatIsStillSaid(was, became.said))
 
         if (
@@ -524,6 +528,7 @@ export function Player({
             became.plan.seeking === under.seeking)
         ) {
           setSound(became.sound)
+          standsAs({ sound: became.sound })
 
           return
         }
@@ -739,6 +744,7 @@ export function Player({
               landing.current = null
               wanted.current = null
               setPosition(from + at)
+              standsAs({ position: from + at })
             }}
             className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
           />

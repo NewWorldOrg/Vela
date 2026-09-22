@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useEffectEvent, useRef } from 'react'
 
 import {
   browserTicks,
@@ -51,12 +51,9 @@ export function useKeptPosition(
   reading: () => number,
   keep: (positionSec: number) => void,
 ): void {
-  const latest = useRef({ reading, keep })
+  const readNow = useEffectEvent(reading)
+  const keepNow = useEffectEvent(keep)
   const sent = useRef<{ at?: number }>({})
-
-  useEffect(() => {
-    latest.current = { reading, keep }
-  })
 
   useEffect(() => {
     if (!playing) {
@@ -66,9 +63,9 @@ export function useKeptPosition(
     return keepPositionWhilePlaying(
       KEPT_EVERY_MS,
       {
-        reading: () => latest.current.reading(),
+        reading: () => readNow(),
         sent: sent.current,
-        keep: (at) => latest.current.keep(at),
+        keep: (at) => keepNow(at),
       },
       browserTicks,
     )
