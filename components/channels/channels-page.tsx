@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -99,20 +100,21 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
         />
       ) : (
         <Table
-          className="min-w-[calc(560rem/16)]"
+          className="table-fixed min-w-[calc(560rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
+          <TableColumns
+            widths={[
+              'calc(180rem/16)',
+              SCAN_STATE_COLUMN,
+              'calc(112rem/16)',
+              'calc(180rem/16)',
+            ]}
+          />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {['開始', '状態', '所要', '終了'].map((column) => (
-                <TableHead
-                  key={column}
-                  style={
-                    column === '状態' ? { width: SCAN_STATE_COLUMN } : undefined
-                  }
-                >
-                  {column}
-                </TableHead>
+                <TableHead key={column}>{column}</TableHead>
               ))}
             </TableRow>
           </TableHeader>

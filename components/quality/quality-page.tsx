@@ -16,6 +16,7 @@ import { Banner } from '@/components/vela/banner'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -40,10 +41,7 @@ import { ChangeThresholdButton } from '@/components/quality/change-threshold-but
 import { AnomalyList } from '@/components/quality/anomaly-list'
 import { LinkSegments } from '@/components/quality/link-segments'
 import { QualityTrendPanel } from '@/components/quality/quality-trend'
-import {
-  QUALITY_LEVEL_COLUMN,
-  QualityChip,
-} from '@/components/quality/signal-quality-chip'
+import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
 
 const SUPPLY_GONE_QUIET = '計測の供給が途絶しています'
@@ -54,13 +52,13 @@ const TO_THE_TUNERS = 'チューナーへ'
 
 const PERIOD = '期間'
 
-const HEALTH_COLUMNS = [
-  'チューナー',
-  '状態',
-  'ドロップ率',
-  'lock 率',
-  'CNR',
-  'post-Viterbi ビット誤り率',
+const HEALTH_COLUMNS: { label: string; width: string }[] = [
+  { label: 'チューナー', width: 'calc(200rem/16)' },
+  { label: '状態', width: 'calc(112rem/16)' },
+  { label: 'ドロップ率', width: 'calc(124rem/16)' },
+  { label: 'lock 率', width: 'calc(112rem/16)' },
+  { label: 'CNR', width: 'calc(112rem/16)' },
+  { label: 'post-Viterbi ビット誤り率', width: 'calc(260rem/16)' },
 ]
 
 const BAR_TONE: Record<QualityLevel, string> = {
@@ -291,25 +289,19 @@ export function QualityView({
         <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
         {result.tuners.length > 0 ? (
           <Table
-            className="min-w-[calc(900rem/16)]"
+            className="table-fixed min-w-[calc(900rem/16)]"
             containerClassName={cn(
               ADMIN_LIST_HEIGHT_CAP,
               'overflow-y-auto pb-1',
             )}
           >
+            <TableColumns
+              widths={HEALTH_COLUMNS.map((column) => column.width)}
+            />
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
               <TableRow>
                 {HEALTH_COLUMNS.map((column) => (
-                  <TableHead
-                    key={column}
-                    style={
-                      column === '状態'
-                        ? { width: QUALITY_LEVEL_COLUMN }
-                        : undefined
-                    }
-                  >
-                    {column}
-                  </TableHead>
+                  <TableHead key={column.label}>{column.label}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>

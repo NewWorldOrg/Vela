@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -33,7 +34,13 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FailureLabel, FailureLegend } from '@/components/scan/failure-mark'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
-const RESULT_COLUMNS = ['物理ch', '結果', '実測', '所要', WHEN_LABELS.taken]
+const RESULT_COLUMNS: { label: string; width: string }[] = [
+  { label: '物理ch', width: 'calc(112rem/16)' },
+  { label: '結果', width: 'calc(240rem/16)' },
+  { label: '実測', width: 'calc(200rem/16)' },
+  { label: '所要', width: 'calc(112rem/16)' },
+  { label: WHEN_LABELS.taken, width: 'calc(122rem/16)' },
+]
 
 function useScanTicker(running: boolean) {
   const router = useRouter()
@@ -75,13 +82,14 @@ export function ScanAttemptsTable({
 }) {
   return (
     <Table
-      className="min-w-[calc(720rem/16)]"
+      className="table-fixed min-w-[calc(720rem/16)]"
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
+      <TableColumns widths={RESULT_COLUMNS.map((column) => column.width)} />
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {RESULT_COLUMNS.map((column) => (
-            <TableHead key={column}>{column}</TableHead>
+            <TableHead key={column.label}>{column.label}</TableHead>
           ))}
         </TableRow>
       </TableHeader>

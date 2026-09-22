@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -50,11 +51,23 @@ export function SessionTable({
 }) {
   return (
     <Table
+      className="table-fixed"
       containerClassName={cn(
         ADMIN_LIST_HEIGHT_CAP,
         'overflow-y-auto pb-1 [&>table]:min-w-[calc(800rem/16)]',
       )}
     >
+      {/* 端末 and アカウント take the room left over between them; the two
+          stamps are `08/15 03:20` in the code face and 操作 holds one button. */}
+      <TableColumns
+        widths={[
+          'calc(260rem/16)',
+          'calc(220rem/16)',
+          'calc(122rem/16)',
+          'calc(140rem/16)',
+          'calc(140rem/16)',
+        ]}
+      />
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           <TableHead>端末</TableHead>

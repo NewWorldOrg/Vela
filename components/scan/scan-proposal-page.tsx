@@ -9,7 +9,9 @@ import type {
   ScanProposalScreenResult,
   WriteResult,
 } from '@/repository/services'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { READABLE_LINE } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
@@ -41,7 +43,12 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
             className="flex flex-wrap items-start gap-3 border-b border-dashed border-line py-3 last:border-b-0"
           >
             <div className="min-w-0 flex-1">
-              <div className="text-[calc(13rem/16)] leading-[1.6] font-bold">
+              <div
+                className={cn(
+                  READABLE_LINE,
+                  'text-[calc(13rem/16)] leading-[1.6] font-bold',
+                )}
+              >
                 {service.name}
               </div>
               <div className="mt-1 flex flex-wrap gap-1.5">

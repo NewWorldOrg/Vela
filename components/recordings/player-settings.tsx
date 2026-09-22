@@ -85,6 +85,16 @@ export function PlayerSettings({
         side="top"
         align="end"
         sideOffset={10}
+        /*
+         * The row of controls this hangs from slides and lays itself out again
+         * while the panel is open (the bar rises, the line above it comes and
+         * goes), and none of that is a scroll or a resize, so the ordinary
+         * strategy does not notice it: the panel keeps the place the row was
+         * in and ends up over the row itself, taking the presses meant for the
+         * controls. Measured in the story where the settings stay open: the
+         * panel's foot landed 15px inside the row.
+         */
+        updatePositionStrategy="always"
         className="w-auto max-w-[min(20rem,calc(100vw-2rem))] min-w-[17rem] rounded-lg border-white/20 bg-(--pl-bg) px-4 pt-6 pb-[calc(22rem/16)] text-(--pl-ink) shadow-pop-xl"
       >
         <Setting label="画質">

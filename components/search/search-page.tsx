@@ -33,6 +33,7 @@ import type {
   SearchViewing,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
+import { READABLE_LINE } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -560,7 +561,13 @@ function SearchScreen({ result }: { result: SearchResult }) {
                     '-mx-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring',
                   )}
                 >
-                  <table className="w-full min-w-[calc(760rem/16)] border-separate border-spacing-0">
+                  <table className="w-full min-w-[calc(760rem/16)] table-fixed border-separate border-spacing-0">
+                    <colgroup>
+                      <col style={{ width: 'calc(180rem/16)' }} />
+                      <col style={{ width: 'calc(240rem/16)' }} />
+                      <col style={{ width: 'calc(420rem/16)' }} />
+                      <col style={{ width: 'calc(160rem/16)' }} />
+                    </colgroup>
                     <thead>
                       <tr>
                         {[
@@ -598,7 +605,12 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             {p.endUndecided ? '終了未定' : p.endLabel}
                           </td>
                           <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
-                            <span className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={cn(
+                                READABLE_LINE,
+                                'flex flex-wrap items-center gap-2',
+                              )}
+                            >
                               <Link
                                 href={`/guide/programs/${p.id}`}
                                 className="tap-target text-[calc(13rem/16)] font-bold text-ink underline-offset-[3px] hover:underline"
@@ -612,7 +624,12 @@ function SearchScreen({ result }: { result: SearchResult }) {
                               )}
                             </span>
                             {p.description && (
-                              <p className="mt-px text-note text-ink-3">
+                              <p
+                                className={cn(
+                                  READABLE_LINE,
+                                  'mt-px text-note text-ink-3',
+                                )}
+                              >
                                 {p.description}
                               </p>
                             )}

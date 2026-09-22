@@ -801,6 +801,56 @@
  * not put in again, so only what joined moves — the rest takes its new width
  * at once, which is what the canon asks for.
  */
+/*
+ * A thing opening and shutting in place. The height is the only thing that
+ * moves; what is inside it arrives as an item.
+ */
+@utility unfolds {
+  transition: grid-template-rows 200ms var(--ease-fold);
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion='moves']) & {
+      transition: none;
+    }
+  }
+
+  :root[data-motion='still'] & {
+    transition: none;
+  }
+}
+
+/*
+ * The same for a native `details`, which has no row of its own to grow: the
+ * browser interpolates its content box between nothing and its own height.
+ * Where that is not understood, it opens at once — which is what it did
+ * everywhere until now.
+ */
+@utility unfolds-itself {
+  interpolate-size: allow-keywords;
+
+  &::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 200ms var(--ease-fold),
+      content-visibility 200ms allow-discrete;
+  }
+
+  &[open]::details-content {
+    block-size: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion='moves']) &::details-content {
+      transition: none;
+    }
+  }
+
+  :root[data-motion='still'] &::details-content {
+    transition: none;
+  }
+}
+
 @utility joins {
   animation: var(--animate-joining);
 }

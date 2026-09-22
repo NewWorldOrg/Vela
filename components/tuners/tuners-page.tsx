@@ -21,6 +21,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -43,10 +44,7 @@ import {
   stateColumnFor,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
-import {
-  TUNER_STATE_COLUMN,
-  TunerStateChip,
-} from '@/components/tuners/tuner-state-chip'
+import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
@@ -80,16 +78,19 @@ const DIFF_VARIANT = {
 
 const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
 
-const SESSION_COLUMN = stateColumnFor(Object.values(SESSION_PILL_LABEL))
-
-const COLUMNS = [
-  'デバイス',
-  '種別',
-  '有効',
-  '現在のセッション',
-  '状態',
-  WHEN_LABELS.taken,
-  'LNB 給電',
+/*
+ * `現在のセッション` says the longest thing (`EPG 収集` with a programme name
+ * behind a tip), so it takes the room over; the rest is the heading or the
+ * longest value with 1.5rem of room.
+ */
+const COLUMNS: { label: string; width: string }[] = [
+  { label: 'デバイス', width: 'calc(180rem/16)' },
+  { label: '種別', width: 'calc(96rem/16)' },
+  { label: '有効', width: 'calc(124rem/16)' },
+  { label: '現在のセッション', width: 'calc(240rem/16)' },
+  { label: '状態', width: 'calc(104rem/16)' },
+  { label: WHEN_LABELS.taken, width: 'calc(122rem/16)' },
+  { label: 'LNB 給電', width: 'calc(124rem/16)' },
 ]
 
 const DRIVER_LABEL: Record<DriverLink, string> = {
@@ -334,22 +335,15 @@ export function TunersView({
         />
       </p>
 
-      <Table className="min-w-[calc(1000rem/16)]" containerClassName="pb-1">
+      <Table
+        className="table-fixed min-w-[calc(1000rem/16)]"
+        containerClassName="pb-1"
+      >
+        <TableColumns widths={COLUMNS.map((column) => column.width)} />
         <TableHeader>
           <TableRow>
             {COLUMNS.map((column) => (
-              <TableHead
-                key={column}
-                style={
-                  column === '現在のセッション'
-                    ? { width: SESSION_COLUMN }
-                    : column === '状態'
-                      ? { width: TUNER_STATE_COLUMN }
-                      : undefined
-                }
-              >
-                {column}
-              </TableHead>
+              <TableHead key={column.label}>{column.label}</TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -424,7 +418,7 @@ export function TunersView({
       {(detection !== undefined || empty) && (
         <section className="mt-9">
           <SectionHeading mark={MarkAxis}>
-            デバイス検出 — 差分の確認
+            デバイス検出 : 差分の確認
           </SectionHeading>
           <div
             className={cn(

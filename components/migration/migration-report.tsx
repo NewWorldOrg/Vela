@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -24,7 +25,11 @@ import { Surface } from '@/components/vela/surface'
 import { MigrationCountCell } from '@/components/migration/migration-count-cell'
 import { MigrationRunRow } from '@/components/migration/migration-run-row'
 
-const NOT_TAKEN_COLUMNS = ['対象', '母集団', '記録した事実']
+const NOT_TAKEN_COLUMNS: { label: string; width: string }[] = [
+  { label: '対象', width: 'calc(220rem/16)' },
+  { label: '母集団', width: 'calc(160rem/16)' },
+  { label: '記録した事実', width: 'calc(480rem/16)' },
+]
 
 const NO_LOSSES = '該当なし'
 
@@ -128,13 +133,16 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           取り込まなかったものの明細
         </SectionHeading>
         <Table
-          className="min-w-[calc(860rem/16)]"
+          className="table-fixed min-w-[calc(860rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
+          <TableColumns
+            widths={NOT_TAKEN_COLUMNS.map((column) => column.width)}
+          />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {NOT_TAKEN_COLUMNS.map((column) => (
-                <TableHead key={column}>{column}</TableHead>
+                <TableHead key={column.label}>{column.label}</TableHead>
               ))}
             </TableRow>
           </TableHeader>

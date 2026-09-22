@@ -14,8 +14,10 @@ import {
   SWERVE_LABEL,
 } from '@/repository/encode-terms'
 import {
+  READABLE_LINE,
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -32,26 +34,35 @@ import {
 
 interface Column {
   label: string
-  width?: number | string
+  width: string
   hidden?: boolean
   right?: boolean
 }
 
-const STAMP_PX = 132
+const STAMP_WIDTH = 'calc(122rem/16)'
 
+/*
+ * Every column carries a width. Left without one, 番組 took the whole of the
+ * room left over : 1200px at a 1920 window : and the eight columns after it
+ * were squeezed into 700px with `プロファイル` touching `保存先`.
+ *
+ * The fixed ones are the longer of the heading and the longest value, and
+ * 1.5rem of room: 経路 says `ソフトウェア → VAAPI`, 開始 and 終了 say
+ * `08/15 03:20` in the code face, 保存先 says `外付け`.
+ */
 const COLUMNS: Column[] = [
-  { label: '番組' },
+  { label: '番組', width: 'calc(320rem/16)' },
   { label: '状態', width: JOB_STATUS_COLUMN },
-  { label: 'プロファイル', width: 100 },
-  { label: '保存先', width: 90 },
-  { label: '進捗', width: 64, right: true },
-  { label: '経路', width: 110 },
-  { label: '開始', width: STAMP_PX },
-  { label: '終了', width: STAMP_PX },
-  { label: '操作', width: 96, hidden: true },
+  { label: 'プロファイル', width: 'calc(104rem/16)' },
+  { label: '保存先', width: 'calc(76rem/16)' },
+  { label: '進捗', width: 'calc(60rem/16)', right: true },
+  { label: '経路', width: 'calc(168rem/16)' },
+  { label: '開始', width: STAMP_WIDTH },
+  { label: '終了', width: STAMP_WIDTH },
+  { label: '操作', width: 'calc(96rem/16)', hidden: true },
 ]
 
-const TABLE_MIN_PX = 1100
+const TABLE_MIN = 'calc(1100rem/16)'
 
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
@@ -110,17 +121,10 @@ export function JobTable({
   return (
     <Table
       className="table-fixed"
-      style={{ minWidth: TABLE_MIN_PX }}
+      style={{ minWidth: TABLE_MIN }}
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
-      <colgroup>
-        {COLUMNS.map((column) => (
-          <col
-            key={column.label}
-            style={column.width ? { width: column.width } : undefined}
-          />
-        ))}
-      </colgroup>
+      <TableColumns widths={COLUMNS.map((column) => column.width)} />
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {COLUMNS.map((column) => (
@@ -180,7 +184,7 @@ function JobTitle({ job }: { job: EncodeJob }) {
   }
 
   return (
-    <>
+    <div className={READABLE_LINE}>
       <Link
         href={`/recordings/${job.recordingId}` as Route}
         className="tap-target block text-[calc(13rem/16)] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
@@ -192,7 +196,7 @@ function JobTitle({ job }: { job: EncodeJob }) {
           {job.recordedAt} の録画
         </span>
       )}
-    </>
+    </div>
   )
 }
 

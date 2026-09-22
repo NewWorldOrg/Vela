@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -37,12 +38,12 @@ import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialo
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: 'ファイル' },
-  { label: '理由' },
-  { label: 'サイズ' },
-  { label: '検出' },
-  { label: '操作', hidden: true },
+const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
+  { label: 'ファイル', width: 'calc(360rem/16)' },
+  { label: '理由', width: 'calc(240rem/16)' },
+  { label: 'サイズ', width: 'calc(112rem/16)' },
+  { label: '検出', width: 'calc(122rem/16)' },
+  { label: '操作', width: 'calc(112rem/16)', hidden: true },
 ]
 
 const OWNED_BY_NO_RECORDING: readonly IntegrityFault[] = ['noLedgerRow']
@@ -192,9 +193,10 @@ export function IntegrityView({
         <EmptyState spot="star" title="食い違いはありません" titleLevel={2} />
       ) : (
         <Table
-          className="min-w-[calc(760rem/16)]"
+          className="table-fixed min-w-[calc(760rem/16)]"
           containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
         >
+          <TableColumns widths={COLUMNS.map((column) => column.width)} />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {COLUMNS.map((column) => (

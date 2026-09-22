@@ -14,6 +14,7 @@ import { ChevronRightIcon, TrashIcon } from '@/components/vela/icons'
 import { EncodeChip } from '@/components/recordings/encode-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
+import { READABLE_LINE } from '@/components/ui/table'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { ChannelMark } from '@/components/vela/channel-mark'
@@ -112,7 +113,7 @@ export function RecordingRow({
       <td className={cn(CELL, 'group-hover:rounded-l-md')}>
         <span className="flex min-w-0 items-center gap-3">
           <RecordingThumb recording={r} subTone={subTone} />
-          <span className="min-w-0">
+          <span className={cn('min-w-0', READABLE_LINE)}>
             <InFull says={r.title}>
               <b className="line-clamp-2 text-body leading-[1.4] font-bold [font-feature-settings:'palt']">
                 {r.title}

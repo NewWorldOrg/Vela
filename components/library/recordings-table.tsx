@@ -20,7 +20,7 @@ import { useArrived } from '@/hooks/useArrived'
 
 interface Column {
   label: string
-  width?: string
+  width: string
   hidden?: boolean
   right?: boolean
   detail?: boolean
@@ -40,7 +40,7 @@ const STATE_GAP = '0.25rem'
 const ACTIONS_GAP = '0.5rem'
 
 const COLUMNS: Column[] = [
-  { label: '番組' },
+  { label: '番組', width: 'calc(320rem/16)' },
   { label: 'チャンネル', width: '11rem' },
   { label: WHEN_LABELS.recorded, width: '8.25rem' },
   { label: '長さ', width: '5.5rem', right: true },
