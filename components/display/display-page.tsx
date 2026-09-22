@@ -31,12 +31,12 @@ export function DisplayView({ motion }: { motion?: MotionSetting }) {
       </Crumb>
       <PageHeading>表示</PageHeading>
 
-      <Surface className="mt-3.5">
-        <dl className="grid gap-x-5 gap-y-3.5 sm:grid-cols-[minmax(0,180px)_1fr]">
-          <dt className="self-start">
+      <Surface className="mt-3.5 max-w-[calc(640rem/16)]">
+        <dl className="flex items-center justify-between gap-4">
+          <dt className="min-w-0">
             <FieldLabel htmlFor={MOTION_ID}>{MOTION_LABEL}</FieldLabel>
           </dt>
-          <dd className="self-start">
+          <dd className="shrink-0">
             <Switch
               id={MOTION_ID}
               checked={moves}
