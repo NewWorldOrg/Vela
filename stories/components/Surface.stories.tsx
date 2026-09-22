@@ -89,6 +89,40 @@ export const EmptyStates: Story = {
   ),
 }
 
+/*
+ * The four shapes an empty box comes in. The room between the parts belongs to
+ * the box, so a box with no sentence still holds its button away from the
+ * heading.
+ */
+export const 空状態の四通り: Story = {
+  render: () => (
+    <div className="mx-auto grid max-w-[900px] gap-3 p-6 sm:grid-cols-2">
+      <EmptyState spot="antenna" />
+      <EmptyState spot="antenna" title="まだ録画がありません" />
+      <EmptyState
+        spot="tape"
+        title="条件に合う録画がありません"
+        action={
+          <Button variant="halt" size="sm">
+            条件を消す
+          </Button>
+        }
+      />
+      <EmptyState
+        spot="star"
+        title="未完了の予約はありません"
+        action={
+          <Button variant="halt" size="sm">
+            絞り込みを解除
+          </Button>
+        }
+      >
+        放送が終わった予約は、すべての予約に残っています。
+      </EmptyState>
+    </div>
+  ),
+}
+
 export const EmptyStateInAColumn: Story = {
   render: () => (
     <div className="flex w-[900px] flex-col p-6">

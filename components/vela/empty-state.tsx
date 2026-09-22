@@ -6,6 +6,14 @@ import {
   type SpotName,
 } from '@/components/vela/spot-illustration'
 
+/*
+ * The room between the parts belongs to the frames that hold them, never to
+ * the parts. It used to hang off the sentence — `mb-[13px]` — so the sixteen
+ * boxes that have a button and no sentence sat their button against the
+ * heading. Three nested columns give the three gaps the canon asks for
+ * (picture 10 heading, heading 9 sentence, sentence 13 button) and every one
+ * of them survives a part that is not there.
+ */
 export function EmptyState({
   spot = 'antenna',
   title,
@@ -21,31 +29,34 @@ export function EmptyState({
   action?: ReactNode
 }) {
   const Title = titleLevel === 2 ? 'h2' : 'h3'
+  const said = title !== undefined || children !== undefined
 
   return (
     <div
       data-slot="empty-state"
       className={cn(
-        'mx-auto w-full rounded-xl border border-dashed border-line-strong bg-surface px-5 py-[26px] text-center',
+        'mx-auto flex w-full flex-col items-center gap-[13px] rounded-xl border border-dashed border-line-strong bg-surface px-5 py-[26px] text-center',
         className,
       )}
       {...props}
     >
-      {spot && (
-        <SpotIllustration
-          name={spot}
-          className="drawn mx-auto size-[78px] [--stroke-length:200]"
-        />
-      )}
-      {title && (
-        <Title className={cn('heading text-h3', spot && 'mt-2.5')}>
-          {title}
-        </Title>
-      )}
-      {children && (
-        <p className="mx-auto mt-[9px] mb-[13px] max-w-[520px] text-ui text-ink-2">
-          {children}
-        </p>
+      {(spot || said) && (
+        <div className="flex flex-col items-center gap-2.5">
+          {spot && (
+            <SpotIllustration
+              name={spot}
+              className="drawn size-[78px] [--stroke-length:200]"
+            />
+          )}
+          {said && (
+            <div className="flex flex-col items-center gap-[9px]">
+              {title && <Title className="heading text-h3">{title}</Title>}
+              {children && (
+                <p className="max-w-[520px] text-ui text-ink-2">{children}</p>
+              )}
+            </div>
+          )}
+        </div>
       )}
       {action}
     </div>
