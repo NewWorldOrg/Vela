@@ -233,6 +233,27 @@ function measureTapTargets(): Findings {
     const needWidth = reachable(cx, width)
     const needHeight = reachable(cy, height)
 
+    const underALayer = [
+      [0, -TAP / 2],
+      [0, TAP / 2],
+      [-TAP / 2, 0],
+      [TAP / 2, 0],
+    ].some(([dx, dy]) => {
+      const over = document.elementFromPoint(cx + dx, cy + dy)
+
+      return (
+        over !== null &&
+        !control.contains(over) &&
+        over.closest(
+          '[role="dialog"], [role="menu"], [data-radix-popper-content-wrapper], [data-state="open"][data-slot$="-content"]',
+        ) !== null
+      )
+    })
+
+    if (underALayer) {
+      continue
+    }
+
     if (hitWidth < needWidth - 1 || hitHeight < needHeight - 1) {
       missed.push({
         name: named(control),
