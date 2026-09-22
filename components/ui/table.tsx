@@ -50,7 +50,7 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn('[&_tr:last-child_td]:border-b-0', className)}
+      className={cn('rows-arrive [&_tr:last-child_td]:border-b-0', className)}
       {...props}
     />
   )
@@ -74,7 +74,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
     <tr
       data-slot="table-row"
       className={cn(
-        'transition-colors duration-150 ease-out hover:bg-surface-2 has-aria-expanded:bg-surface-2 data-[state=selected]:bg-surface-2',
+        'transition-colors duration-150 ease-out hover:bg-surface-2 data-[state=selected]:bg-surface-2',
         className,
       )}
       {...props}
@@ -87,7 +87,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
     <th
       data-slot="table-head"
       className={cn(
-        'bg-surface-2 px-[calc(13rem/16)] py-[calc(7rem/16)] text-left align-middle text-micro font-bold tracking-[0.04em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',
+        'border-b border-line bg-bg px-[calc(13rem/16)] py-[calc(7rem/16)] text-left align-middle text-micro font-bold tracking-[0.04em] whitespace-nowrap text-ink-3 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',
         className,
       )}
       {...props}
