@@ -60,7 +60,6 @@ export function DataListRow({
       className={cn(
         GRID,
         'items-center border-b border-dashed border-line px-[calc(13rem/16)] py-3 text-ui last:border-b-0',
-        'hover:rounded-md hover:bg-surface-2',
         tactileQuiet,
         muted && 'text-ink-3',
         className,

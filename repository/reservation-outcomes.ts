@@ -1,3 +1,4 @@
+import type { StationLogo } from '@/repository/channels'
 import type { OriginLabel } from '@/lib/format'
 import { formatMoment, formatReservationOrigin } from '@/lib/format'
 import type { OutcomeChoice } from '@/lib/reservation-outcomes'
@@ -45,6 +46,7 @@ export interface ReservationOutcome {
   title: string
   channelName: string
   channelNo?: string
+  channelLogo?: StationLogo
   whenLabel: string
   origin: OriginLabel
   ruleName?: string
@@ -204,6 +206,7 @@ function toOutcome(
     title: one.programme.name,
     channelName: channel?.name || serviceKeyOf(one),
     channelNo: channel?.no,
+    channelLogo: channel?.logo,
     whenLabel: formatMoment(one.programme.startsAt),
     origin: formatReservationOrigin(one.ruleId ? 'byRule' : 'byHand'),
     ruleName: one.ruleId ? rules.get(one.ruleId) : undefined,

@@ -120,11 +120,12 @@ test('no row says its state with a colour laid under the whole of it', async () 
 test('the mark on the volume sits on the line it reads against', async () => {
   const volume = await read(THE_VOLUME)
 
-  assert.doesNotMatch(
+  assert.match(
     volume,
-    /slider-thumb\]:mt-/,
-    'the mark is pushed down from the middle of the track by a margin, so it ' +
-      'hangs below the line everywhere but Firefox',
+    /slider-thumb\]:mt-\[calc\(\(2px_-_13rem\/16\)\/2\)\]/,
+    'WebKit lays the top of the mark on the top of the track, so the mark ' +
+      'is centred on the line only when it is pulled up by half of what it ' +
+      'is taller than the track',
   )
   assert.match(volume, /slider-runnable-track\]:h-\[2px\]/)
   assert.match(volume, /range-track\]:h-\[2px\]/)

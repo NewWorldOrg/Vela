@@ -28,7 +28,7 @@ export const GAP_BEFORE_STATE = 'pl-4'
 export const GAP_BEFORE_ACTIONS = 'pl-5'
 
 const CELL =
-  'border-b border-dashed border-line px-3 py-3 align-middle text-[calc(13rem/16)] group-last:border-b-0 group-hover:border-transparent'
+  'border-b border-dashed border-line px-3 py-3 align-middle text-[calc(13rem/16)] group-last:border-b-0'
 
 const NUMBER = 'font-code text-ui whitespace-nowrap text-right'
 
@@ -105,17 +105,14 @@ export function RecordingRow({
       data-pressable-row
       onClick={onOpen}
       style={delayOf(rowDelayMs(nth))}
-      className={cn(
-        arrivesIn(nth),
-        'group cursor-pointer transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-surface hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
-      )}
+      className={cn(arrivesIn(nth), 'group cursor-pointer')}
     >
-      <td className={cn(CELL, 'group-hover:rounded-l-md')}>
+      <td className={CELL}>
         <span className="flex min-w-0 items-center gap-3">
           <RecordingThumb recording={r} subTone={subTone} />
           <span className={cn('min-w-0', READABLE_LINE)}>
             <InFull says={r.title}>
-              <b className="line-clamp-2 text-body leading-[1.4] font-bold [font-feature-settings:'palt']">
+              <b className="line-clamp-2 text-body leading-[1.4] font-bold transition-colors duration-150 [font-feature-settings:'palt'] group-hover:text-brand">
                 {r.title}
               </b>
             </InFull>
@@ -194,7 +191,7 @@ export function RecordingRow({
       <td
         className={cn(
           CELL,
-          'p-0 text-ink-3 group-hover:rounded-r-md group-hover:text-brand',
+          'p-0 text-ink-3 transition-colors duration-150 group-hover:text-brand',
         )}
       >
         <Link

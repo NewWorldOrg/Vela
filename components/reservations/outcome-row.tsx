@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReservationOutcome } from '@/repository/reservation-outcomes'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { arrivesIn, delayOf, rowDelayMs } from '@/lib/arrival'
 import { TableCell, TableRow } from '@/components/ui/table'
 import {
@@ -54,10 +55,14 @@ export function OutcomeRow({
           </b>
         </TableCell>
         <TableCell className="align-top">
-          {outcome.channelName}
-          <small className="ml-1.5 font-code text-micro text-ink-3">
-            {outcome.channelNo}
-          </small>
+          <span className="flex items-center gap-2">
+            <ChannelMark
+              logo={outcome.channelLogo}
+              no={outcome.channelNo}
+              keepsTheSlot
+            />
+            <span className="min-w-0">{outcome.channelName}</span>
+          </span>
         </TableCell>
         <TableCell className="align-top font-code text-ink-2">
           {outcome.whenLabel}

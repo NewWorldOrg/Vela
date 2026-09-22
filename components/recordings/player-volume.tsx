@@ -42,7 +42,7 @@ export function PlayerVolume({
           'relative block h-11 w-full cursor-pointer appearance-none bg-transparent outline-none',
           'focus-visible:shadow-ring focus-visible:rounded-full',
           '[&::-webkit-slider-runnable-track]:h-[2px] [&::-webkit-slider-runnable-track]:bg-transparent',
-          '[&::-webkit-slider-thumb]:size-[calc(13rem/16)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white',
+          '[&::-webkit-slider-thumb]:mt-[calc((2px_-_13rem/16)/2)] [&::-webkit-slider-thumb]:size-[calc(13rem/16)] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-white',
           '[&::-moz-range-track]:h-[2px] [&::-moz-range-track]:bg-transparent',
           '[&::-moz-range-thumb]:size-[calc(13rem/16)] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white',
         )}

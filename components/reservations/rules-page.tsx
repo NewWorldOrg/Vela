@@ -284,8 +284,10 @@ function RuleRow({
     <li>
       <div
         className={cn(
-          'flex items-center gap-2.5 rounded-md px-2.5 py-2 transition-[background-color] duration-150',
-          selected ? 'bg-brand-soft' : 'hover:bg-surface-2',
+          'flex items-center gap-2.5 rounded-md px-2.5 py-2 transition-[color,box-shadow] duration-150',
+          selected
+            ? 'text-brand shadow-[inset_3px_0_0_0_var(--color-brand)]'
+            : 'hover:text-brand',
         )}
       >
         <button

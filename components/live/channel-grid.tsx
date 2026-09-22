@@ -27,19 +27,24 @@ export function ChannelGrid({
   className?: string
 }) {
   const [columns, setColumns] = useState<number>(0)
+  const arrived = useArrived()
 
-  const measure = useCallback((node: HTMLUListElement | null) => {
-    if (node === null) {
-      return
-    }
+  const measure = useCallback(
+    (node: HTMLUListElement | null) => {
+      arrived.ref(node)
 
-    setColumns((was) => (was === 0 ? columnsAcross(node) : was))
-  }, [])
+      if (node === null) {
+        return
+      }
+
+      setColumns((was) => (was === 0 ? columnsAcross(node) : was))
+    },
+    [arrived],
+  )
 
   return (
     <ul
       ref={measure}
-      {...useArrived()}
       data-slot="channel-grid"
       className={cn(
         'mx-auto grid w-full max-w-[137rem] grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-x-4 gap-y-3.5',

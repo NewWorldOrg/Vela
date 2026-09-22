@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { useState, useTransition } from 'react'
 
 import { reservationAnchor } from '@/lib/reservations'
@@ -140,10 +141,14 @@ export function ReservationRow({
           )}
         </TableCell>
         <TableCell className="align-top">
-          {reservation.channelName}
-          <small className="ml-1.5 font-code text-micro text-ink-3">
-            {reservation.channelNo}
-          </small>
+          <span className="flex items-center gap-2">
+            <ChannelMark
+              logo={reservation.channelLogo}
+              no={reservation.channelNo}
+              keepsTheSlot
+            />
+            <span className="min-w-0">{reservation.channelName}</span>
+          </span>
         </TableCell>
         <TableCell className="align-top font-code text-ink-2">
           {reservation.whenLabel}
