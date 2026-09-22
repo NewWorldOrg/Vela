@@ -1,5 +1,7 @@
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
+import type { StationLogo } from '@/repository/channels'
+import { stationLogoOf } from '@/repository/station-logo'
 import type { FailureClass } from '@/repository/scan-failures'
 import {
   FAILURE_CLASSES,
@@ -67,6 +69,8 @@ export interface CandidateRow {
 export interface ServiceRow {
   key: string
   name: string
+  no?: string
+  logo?: StationLogo
   category: string
   minorCategory: boolean
   currentChannel?: string
@@ -253,6 +257,11 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
   return {
     key: `${toInt(service.networkId)}-${toInt(service.serviceId)}`,
     name: service.name,
+    no:
+      service.remoteControlKeyId == null
+        ? undefined
+        : String(toInt(service.remoteControlKeyId)),
+    logo: stationLogoOf(service),
     category: wordFor(CATEGORY_LABEL, service.category),
     minorCategory: service.category !== 'television',
     currentChannel:

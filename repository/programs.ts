@@ -13,7 +13,8 @@ import {
 } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
-import type { Channel, ChannelKind, StationLogo } from '@/repository/channels'
+import type { Channel, ChannelKind } from '@/repository/channels'
+import { stationLogoOf } from '@/repository/station-logo'
 import type { EpgHealth } from '@/repository/collection'
 import type { AudioMode, VideoMode } from '@/repository/announced'
 import type { Programme } from '@/repository/programmes'
@@ -325,21 +326,6 @@ function compareChannels(left: GuideChannel, right: GuideChannel): number {
   return 0
 }
 
-function logoOf(service: BroadcastServiceResponder): StationLogo {
-  const carried = service.logo
-
-  if (carried == null) {
-    return {
-      declaration:
-        service.logoDeclaration === 'noPictureIsBroadcast'
-          ? 'noPictureIsBroadcast'
-          : 'notYetRead',
-    }
-  }
-
-  return { declaration: 'inTheCommonDataTable', href: carried.url }
-}
-
 export const fetchServiceChannels = cache(
   async function fetchServiceChannels(): Promise<GuideChannel[]> {
     const { data, error } = await carinaClient().GET('/api/services')
@@ -368,7 +354,7 @@ export const fetchServiceChannels = cache(
           no: remoteKey == null ? undefined : String(remoteKey),
           name: service.name ?? '',
           kind,
-          logo: logoOf(service),
+          logo: stationLogoOf(service),
           networkId,
           serviceId,
           sortKey:

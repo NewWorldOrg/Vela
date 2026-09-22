@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import type { StateTerm } from '@/lib/state-terms'
 
 const WIDE_GLYPH = /[　-ヿ㐀-鿿豈-﫿＀-￯]/u
@@ -14,6 +15,8 @@ const SAY_FONT_PX = 12.5
 const DOT_AND_GAP_PX = 12
 
 const CELL_SIDES_PX = 26
+
+const PILL_SIDES_PX = 22
 
 const BASE_FONT_PX = 16
 
@@ -39,6 +42,29 @@ export function stateColumnFor(words: readonly string[]): string {
   const px = Math.ceil(longest * SAY_FONT_PX + DOT_AND_GAP_PX + CELL_SIDES_PX)
 
   return `calc(${px}rem / ${BASE_FONT_PX})`
+}
+
+/*
+ * A column that only ever says one of two words is counted, not read. The dot
+ * and the word of a state column leave nothing but ink darkness between them,
+ * and 無効 cannot be picked out of forty rows that way, so this column keeps
+ * the pill: two colours, one width, and the exceptions show up as a band.
+ */
+export function pillWidthFor(words: readonly string[]): string {
+  const longest = Math.max(...words.map(emOf))
+  const px = Math.ceil(longest * SAY_FONT_PX + PILL_SIDES_PX)
+
+  return `calc(${px}rem / ${BASE_FONT_PX})`
+}
+
+export const ABLE: readonly string[] = ['有効', '無効']
+
+export function AbleSay({ able }: { able: boolean }) {
+  return (
+    <Badge variant={able ? 'ok' : 'mute'} style={{ width: pillWidthFor(ABLE) }}>
+      {able ? ABLE[0] : ABLE[1]}
+    </Badge>
+  )
 }
 
 export function toneOf(variant: string): StateTone {

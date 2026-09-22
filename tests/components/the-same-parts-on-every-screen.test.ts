@@ -222,20 +222,43 @@ test('a state cell holds one state and nothing under it', async () => {
   }
 })
 
-test('the pill keeps no fixed width anywhere', async () => {
+test('a width is measured for the two-word pill and for nothing else', async () => {
   const pill = await readFile(path.join(ROOT, THE_PILL), 'utf8')
 
   assert.doesNotMatch(pill, /width/)
   assert.doesNotMatch(pill, /w-\[[\d.]+em\]/)
   assert.doesNotMatch(pill, /'w-full'/)
 
+  const measuring: string[] = []
+
   for (const { file, source } of await everySource()) {
     assert.doesNotMatch(
       source,
-      /_PILL_WIDTH|pillWidthFor|stateColumnPx/,
+      /_PILL_WIDTH|stateColumnPx/,
       `${file} still measures a column by the pill that used to sit in it`,
     )
+
+    if (/pillWidthFor/.test(source)) {
+      measuring.push(file)
+    }
   }
+
+  assert.deepEqual(
+    measuring,
+    [THE_CELL],
+    'a pill is measured somewhere other than the one cell that draws the ' +
+      'two words of a yes-or-no column; every column with four words or ' +
+      'more says its state as a dot and a word, which has no width of its own',
+  )
+
+  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+
+  assert.match(
+    cell,
+    /export const ABLE: readonly string\[\] = \['有効', '無効'\]/,
+    'the two words the pill is measured for are no longer written down',
+  )
+  assert.match(cell, /pillWidthFor\(ABLE\)/)
 })
 
 function actionsIn(body: string): number {

@@ -5,6 +5,13 @@ import type {
   ServiceRow,
 } from '@/repository/services'
 import {
+  LOGO_DARK_INK,
+  LOGO_FULL_COLOUR,
+  LOGO_NONE_BROADCAST,
+  LOGO_NOT_YET_READ,
+  LOGO_WIDER,
+} from '@/repository/logos.fixtures'
+import {
   INCOMPLETE_TABLES as INCOMPLETE,
   LOCKED_WITHOUT_DATA as NO_DATA,
   NO_LOCK,
@@ -15,6 +22,8 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1024',
     name: 'みなと総合1',
+    no: '1',
+    logo: LOGO_FULL_COLOUR,
     category: 'TV',
     minorCategory: false,
     currentChannel: '53ch',
@@ -52,6 +61,8 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1025',
     name: 'みなと総合2',
+    no: '1',
+    logo: LOGO_NOT_YET_READ,
     category: 'ワンセグ',
     minorCategory: true,
     currentChannel: '53ch',
@@ -75,6 +86,8 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1040',
     name: '中央テレビ1',
+    no: '4',
+    logo: LOGO_DARK_INK,
     category: 'TV',
     minorCategory: false,
     enabled: true,
@@ -102,6 +115,8 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1041',
     name: '中央テレビ2',
+    no: '4',
+    logo: LOGO_WIDER,
     category: 'TV',
     minorCategory: false,
     currentChannel: '57ch',
@@ -136,6 +151,8 @@ const SERVICES: ServiceRow[] = [
   {
     key: '50001-1072',
     name: '湾岸放送1',
+    no: '7',
+    logo: LOGO_NONE_BROADCAST,
     category: 'TV',
     minorCategory: false,
     enabled: true,

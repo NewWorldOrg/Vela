@@ -14,7 +14,11 @@ import type {
   ServiceRow,
   WriteResult,
 } from '@/repository/services'
-import { StateSay, StatusCell } from '@/components/recordings/status-cell'
+import {
+  AbleSay,
+  StateSay,
+  StatusCell,
+} from '@/components/recordings/status-cell'
 import {
   Table,
   TableBody,
@@ -25,6 +29,7 @@ import {
 } from '@/components/ui/table'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChevronRightIcon } from '@/components/vela/icons'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { CandidateList } from '@/components/channels/candidate-list'
 import { cn } from '@/lib/utils'
 import { WHEN_LABELS } from '@/lib/when-terms'
@@ -261,7 +266,16 @@ export function ServiceTable({
                 </button>
               </TableCell>
               <TableCell>
-                <b className="text-[13px] font-bold">{service.name}</b>
+                <span className="flex min-w-0 items-center gap-2">
+                  <ChannelMark
+                    logo={service.logo}
+                    no={service.no}
+                    keepsTheSlot
+                  />
+                  <b className="min-w-0 text-[13px] font-bold">
+                    {service.name}
+                  </b>
+                </span>
               </TableCell>
               <TableCell>
                 <Category service={service} />
@@ -288,15 +302,7 @@ export function ServiceTable({
                 )}
               </TableCell>
               <TableCell>
-                <span
-                  className={
-                    service.enabled
-                      ? 'text-ui font-medium text-ink'
-                      : 'text-ui text-ink-3'
-                  }
-                >
-                  {service.enabled ? '有効' : '無効'}
-                </span>
+                <AbleSay able={service.enabled} />
               </TableCell>
               <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
                 {service.lastSeen}
