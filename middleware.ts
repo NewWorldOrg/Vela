@@ -4,6 +4,8 @@ import { RENDERED_PAGE_HEADER } from '@/repository/auth'
 
 const THEME_COOKIE = 'vela-theme-mode'
 
+const MOTION_COOKIE = 'vela-motion'
+
 const PAYLOAD_PARAM = '_rsc'
 
 export function middleware(request: NextRequest) {
@@ -21,6 +23,17 @@ export function middleware(request: NextRequest) {
       ? themeCookie
       : 'system'
   requestHeaders.set('x-theme-mode', themeMode)
+
+  /*
+   * The answer has to reach the very first paint. Switched on the client, the
+   * movement would run once before the setting could stop it.
+   */
+  const motionCookie = request.cookies.get(MOTION_COOKIE)?.value
+
+  requestHeaders.set(
+    'x-motion',
+    motionCookie === 'still' || motionCookie === 'moves' ? motionCookie : '',
+  )
 
   return NextResponse.next({ request: { headers: requestHeaders } })
 }

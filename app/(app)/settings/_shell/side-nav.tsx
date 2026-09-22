@@ -9,6 +9,7 @@ import { isPathActive } from '@/lib/path'
 import { AdminSideNav, AdminSideNavItem } from '@/components/vela/app-shell'
 import {
   ChannelIcon,
+  DisplayIcon,
   EncodeIcon,
   KeyIcon,
   ListIcon,
@@ -31,6 +32,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: '/settings/encode', label: 'エンコード', icon: EncodeIcon },
   { href: '/settings/quality', label: '品質', icon: QualityIcon },
   { href: '/settings/authentication', label: '認証', icon: KeyIcon },
+  { href: '/settings/display', label: '表示', icon: DisplayIcon },
 ]
 
 const MIGRATION_NAV: AdminNavItem = {
