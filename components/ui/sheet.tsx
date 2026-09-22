@@ -36,7 +36,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        'fixed inset-0 z-50 bg-scrim data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+        'fixed inset-0 z-50 bg-scrim data-[state=closed]:scrim-disappears data-[state=open]:scrim-appears',
         className,
       )}
       {...props}
@@ -60,15 +60,15 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          'fixed z-50 flex flex-col bg-surface text-ink transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500',
+          'fixed z-50 flex flex-col bg-surface text-ink data-[state=open]:appears',
           side === 'right' &&
-            'inset-y-0 right-0 h-full w-3/4 border-l border-line-strong shadow-panel data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-[300px]',
+            'inset-y-0 right-0 h-full w-3/4 border-l border-line-strong shadow-panel [--from-x:8px] sm:max-w-[300px]',
           side === 'left' &&
-            'inset-y-0 left-0 h-full w-3/4 border-r border-line-strong shadow-pop-xl data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-[300px]',
+            'inset-y-0 left-0 h-full w-3/4 border-r border-line-strong shadow-pop-xl [--from-x:-8px] sm:max-w-[300px]',
           side === 'top' &&
-            'inset-x-0 top-0 h-auto rounded-b-xl border border-t-0 border-line-strong shadow-pop-xl data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
+            'inset-x-0 top-0 h-auto rounded-b-xl border border-t-0 border-line-strong shadow-pop-xl [--from-y:-8px]',
           side === 'bottom' &&
-            'inset-x-0 bottom-0 h-auto rounded-t-xl border border-b-0 border-line-strong shadow-sheet data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+            'inset-x-0 bottom-0 h-auto rounded-t-xl border border-b-0 border-line-strong shadow-sheet [--from-y:8px]',
           className,
         )}
         {...props}
