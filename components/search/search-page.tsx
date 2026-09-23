@@ -570,7 +570,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   tabIndex={0}
                   className={cn(
                     ADMIN_LIST_HEIGHT_CAP,
-                    '-mx-1 overflow-auto rounded-xl bg-surface px-1 pb-1 outline-none focus-visible:shadow-ring',
+                    'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring',
                   )}
                 >
                   <table className="w-full min-w-[calc(760rem/16)] table-fixed border-separate border-spacing-0">
