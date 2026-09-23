@@ -1236,14 +1236,30 @@ async function sidewaysInsideTheGrid(
 
   await expect(down).toBeGreaterThan(0)
 
+  const end = columns.length - 1
+  const last = AERIAL_CHANNEL_FIXTURES[end]
+  const lastCarries = AERIAL_PROGRAM_FIXTURES.filter(
+    (program) => program.channelId === last.id,
+  )
+
+  await expect(lastCarries.length).toBeGreaterThan(0)
+  await expect(headings[end]).toBeEmptyDOMElement()
+  await expect(columns[end]).toBeEmptyDOMElement()
+
   scroller.scrollLeft = scroller.scrollWidth
 
   await expect(scroller.scrollLeft).toBeGreaterThan(0)
   await expect(scroller.scrollTop).toBe(down)
   await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
 
+  await waitFor(() => expect(headings[end]).toHaveTextContent(last.name))
+  await expect(
+    columns[end].querySelectorAll('[data-opens="program-panel"]'),
+  ).toHaveLength(lastCarries.length)
+  await expect(headings[0]).toBeEmptyDOMElement()
+  await expect(columns[0]).toBeEmptyDOMElement()
+
   const grid = scroller.getBoundingClientRect()
-  const end = columns.length - 1
 
   for (const gutter of canvasElement.querySelectorAll<HTMLElement>(
     '[data-guide-gutter]',

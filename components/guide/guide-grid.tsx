@@ -12,6 +12,7 @@ import {
 import {
   GUTTER_PX,
   gridMinWidthOf,
+  isDrawn,
   openingScrollTopOf,
   unscheduledSpansOf,
 } from '@/lib/guide'
@@ -23,6 +24,7 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
 import { useArrived } from '@/hooks/useArrived'
+import { useDrawnColumns } from '@/hooks/useDrawnColumns'
 
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
 
@@ -58,8 +60,12 @@ export function GuideGrid({
   const arrived = useArrived()
   const openingTop = useRef(openingScrollTopOf(nowMin, HOUR_PX))
   const opened = useRef(false)
+  const scroller = useRef<HTMLDivElement | null>(null)
+  const drawn = useDrawnColumns(scroller, channels.length)
 
   const openAtNow = useCallback((node: HTMLDivElement | null) => {
+    scroller.current = node
+
     if (!node || opened.current) {
       return
     }
@@ -95,10 +101,14 @@ export function GuideGrid({
                 'flex min-w-0 items-center justify-center gap-1.5 overflow-hidden border-l border-line px-1.5 py-2 text-sub font-bold first-of-type:border-l-0',
               )}
             >
-              <ChannelMark logo={c.logo} no={c.no} />
-              <InFull says={c.name}>
-                <span className="min-w-0 truncate">{c.name}</span>
-              </InFull>
+              {isDrawn(drawn, nth) && (
+                <>
+                  <ChannelMark logo={c.logo} no={c.no} />
+                  <InFull says={c.name}>
+                    <span className="min-w-0 truncate">{c.name}</span>
+                  </InFull>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -139,7 +149,9 @@ export function GuideGrid({
           </div>
 
           {channels.map((c, nth) => {
-            const carried = programs.filter((p) => p.channelId === c.id)
+            const carried = isDrawn(drawn, nth)
+              ? programs.filter((p) => p.channelId === c.id)
+              : undefined
 
             return (
               <div
@@ -154,6 +166,7 @@ export function GuideGrid({
                 )}
               >
                 {c.sub &&
+                  carried &&
                   unscheduledSpansOf(carried, windowHours * 60).map((span) => {
                     const height = (span.durationMin / 60) * HOUR_PX
 
@@ -176,7 +189,7 @@ export function GuideGrid({
                     )
                   })}
 
-                {carried.map((p) => (
+                {carried?.map((p) => (
                   <ProgramCell
                     key={p.id}
                     program={p}

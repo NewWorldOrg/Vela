@@ -327,3 +327,50 @@ export const COLUMN_MIN_PX = 200
 export function gridMinWidthOf(columns: number): number {
   return GUTTER_PX + columns * COLUMN_MIN_PX
 }
+
+export const COLUMNS_DRAWN_BEFORE_MEASURING = 12
+
+export const COLUMNS_DRAWN_AROUND = 2
+
+export interface ColumnRange {
+  from: number
+  to: number
+}
+
+export interface GuideScroll {
+  scrollLeft: number
+  clientWidth: number
+  scrollWidth: number
+}
+
+export function columnsBeforeMeasuringOf(columns: number): ColumnRange {
+  return { from: 0, to: Math.min(columns, COLUMNS_DRAWN_BEFORE_MEASURING) }
+}
+
+export function drawnColumnsOf(
+  view: GuideScroll,
+  columns: number,
+): ColumnRange {
+  const width = (view.scrollWidth - GUTTER_PX) / columns
+
+  if (columns <= 0 || !(width > 0) || view.clientWidth <= GUTTER_PX) {
+    return columnsBeforeMeasuringOf(Math.max(0, columns))
+  }
+
+  const first = Math.min(
+    columns - 1,
+    Math.max(0, Math.floor(view.scrollLeft / width)),
+  )
+  const pastLast = Math.ceil(
+    (view.scrollLeft + view.clientWidth - GUTTER_PX) / width,
+  )
+
+  return {
+    from: Math.max(0, first - COLUMNS_DRAWN_AROUND),
+    to: Math.min(columns, Math.max(first + 1, pastLast) + COLUMNS_DRAWN_AROUND),
+  }
+}
+
+export function isDrawn(range: ColumnRange, nth: number): boolean {
+  return range.from <= nth && nth < range.to
+}

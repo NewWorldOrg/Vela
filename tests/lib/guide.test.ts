@@ -5,9 +5,12 @@ import type { GuideRelationKind } from '@/lib/guide'
 import {
   bookingMarkOf,
   broadcastDateOf,
+  columnsBeforeMeasuringOf,
+  drawnColumnsOf,
   foldedGuideOf,
   foldsAColumn,
   gridMinWidthOf,
+  isDrawn,
   isOnAir,
   nowMinOf,
   openingScrollTopOf,
@@ -215,6 +218,78 @@ test('a whole aerial is wider than the screen it is read on', () => {
 
 test('a grid with no channels is the hour gutter and nothing else', () => {
   assert.equal(gridMinWidthOf(0), 46)
+})
+
+const aGridOf = (columns: number, clientWidth: number, scrollLeft = 0) => ({
+  scrollLeft,
+  clientWidth,
+  scrollWidth: Math.max(clientWidth, gridMinWidthOf(columns)),
+})
+
+test('before the width is known the first twelve columns are drawn', () => {
+  assert.deepEqual(columnsBeforeMeasuringOf(TELEVISION_SERVICES), {
+    from: 0,
+    to: 12,
+  })
+  assert.deepEqual(columnsBeforeMeasuringOf(4), { from: 0, to: 4 })
+})
+
+test('opened at the left edge, the columns in view and two past them are drawn', () => {
+  assert.deepEqual(drawnColumnsOf(aGridOf(TELEVISION_SERVICES, 1845), 27), {
+    from: 0,
+    to: 11,
+  })
+})
+
+test('a column only partly in view counts as in view', () => {
+  assert.deepEqual(
+    drawnColumnsOf(aGridOf(TELEVISION_SERVICES, 46 + 3 * 200 + 1), 27),
+    { from: 0, to: 6 },
+  )
+  assert.deepEqual(
+    drawnColumnsOf(aGridOf(TELEVISION_SERVICES, 46 + 3 * 200), 27),
+    { from: 0, to: 5 },
+  )
+})
+
+test('scrolled sideways, two columns before the view are drawn as well', () => {
+  assert.deepEqual(
+    drawnColumnsOf(aGridOf(TELEVISION_SERVICES, 1046, 10 * 200 + 50), 27),
+    { from: 8, to: 18 },
+  )
+})
+
+test('scrolled to the end, the drawing stops at the last column', () => {
+  const grid = aGridOf(TELEVISION_SERVICES, 1046)
+
+  assert.deepEqual(
+    drawnColumnsOf(
+      { ...grid, scrollLeft: grid.scrollWidth - grid.clientWidth },
+      27,
+    ),
+    { from: 20, to: 27 },
+  )
+})
+
+test('columns that share out a wide screen are all drawn', () => {
+  assert.deepEqual(drawnColumnsOf(aGridOf(4, 1845), 4), { from: 0, to: 4 })
+})
+
+test('a grid laid out at no width is drawn as it was before measuring', () => {
+  assert.deepEqual(drawnColumnsOf(aGridOf(TELEVISION_SERVICES, 0), 27), {
+    from: 0,
+    to: 12,
+  })
+  assert.deepEqual(drawnColumnsOf(aGridOf(0, 1845), 0), { from: 0, to: 0 })
+})
+
+test('a column is drawn from the start of the range up to, not including, its end', () => {
+  const range = { from: 3, to: 6 }
+
+  assert.equal(isDrawn(range, 2), false)
+  assert.equal(isDrawn(range, 3), true)
+  assert.equal(isDrawn(range, 5), true)
+  assert.equal(isDrawn(range, 6), false)
 })
 
 const WHOLE = { networkId: 41000, serviceId: 5100 }
