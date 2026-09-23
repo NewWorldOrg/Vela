@@ -39,7 +39,7 @@ export function useDrawnRange(
 ): DrawnRange {
   const [range, setRange] = useState<DrawnRange>(() => ({
     columns: columnsBeforeMeasuringOf(columns),
-    minutes: minutesBeforeMeasuringOf(nowMin, windowMin),
+    minutes: minutesBeforeMeasuringOf(nowMin, windowMin, hourPx),
   }))
 
   useEffect(() => {

@@ -739,42 +739,42 @@ test('a day with no split at all folds nothing', () => {
 
 const A_DAY_MIN = 24 * 60
 
-test('before the height is known, twelve hours from where the guide opens are drawn', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(9 * 60, A_DAY_MIN), {
-    from: 9 * 60 - 30,
-    to: 21 * 60 - 30,
+test('before the height is known, an eight-hour screen and half a screen either side of where the guide opens are drawn', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(9 * 60, A_DAY_MIN, HOUR_PX), {
+    from: 9 * 60 - 30 - 4 * 60,
+    to: 9 * 60 - 30 + 12 * 60,
   })
 })
 
 test('a day the present is not in is drawn from the top before measuring', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(undefined, A_DAY_MIN), {
+  assert.deepEqual(minutesBeforeMeasuringOf(undefined, A_DAY_MIN, HOUR_PX), {
     from: 0,
     to: 12 * 60,
   })
 })
 
-test('late in the day the first drawing still holds twelve hours, up to the end', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(23 * 60, A_DAY_MIN), {
+test('late in the day the first drawing opens where the scroll stops, not past it', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(23 * 60, A_DAY_MIN, HOUR_PX), {
     from: 12 * 60,
     to: A_DAY_MIN,
   })
 })
 
-test('a window shorter than twelve hours is drawn whole before measuring', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(124, 8 * 60), {
+test('a window shorter than the screen is drawn whole before measuring', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(124, 8 * 60, HOUR_PX), {
     from: 0,
     to: 8 * 60,
   })
 })
 
-test('a screen above and a screen below the hours in view are drawn', () => {
+test('half a screen above and half a screen below the hours in view are drawn', () => {
   assert.deepEqual(
     drawnMinutesOf(
       { scrollTop: 10 * HOUR_PX, clientHeight: 4 * HOUR_PX },
       A_DAY_MIN,
       HOUR_PX,
     ),
-    { from: 6 * 60, to: 18 * 60 },
+    { from: 8 * 60, to: 16 * 60 },
   )
 })
 
@@ -785,7 +785,7 @@ test('the drawing stops at the top and at the end of the window', () => {
       10 * 60,
       HOUR_PX,
     ),
-    { from: 0, to: 8 * 60 },
+    { from: 0, to: 6 * 60 },
   )
   assert.deepEqual(
     drawnMinutesOf(
@@ -793,7 +793,7 @@ test('the drawing stops at the top and at the end of the window', () => {
       A_DAY_MIN,
       HOUR_PX,
     ),
-    { from: 16 * 60, to: A_DAY_MIN },
+    { from: 18 * 60, to: A_DAY_MIN },
   )
 })
 
@@ -801,6 +801,87 @@ test('a grid laid out at no height gives no range of its own', () => {
   assert.equal(
     drawnMinutesOf({ scrollTop: 0, clientHeight: 0 }, A_DAY_MIN, HOUR_PX),
     undefined,
+  )
+})
+
+const HEADING_PX = 50
+
+const A_FULL_HD_VIEW_PX = 758
+
+const A_DAY_OF_HALF_HOURS = Array.from({ length: 27 }, (_, column) =>
+  Array.from({ length: A_DAY_MIN / 30 }, (_, row) => ({
+    id: `${column}-${row}`,
+    startMin: row * 30 + (column % 3) * 10,
+    durationMin: 30,
+  })),
+).flat()
+
+const drawnIn = (range: { from: number; to: number }): Set<string> =>
+  new Set(
+    A_DAY_OF_HALF_HOURS.filter((one) => fallsWithin(range, one)).map(
+      (one) => one.id,
+    ),
+  )
+
+const addedBetween = (
+  was: { from: number; to: number },
+  now: { from: number; to: number },
+): number => {
+  const before = drawnIn(was)
+
+  return [...drawnIn(now)].filter((id) => !before.has(id)).length
+}
+
+const openedAt = (nowMin: number | undefined, viewPx: number): number =>
+  Math.min(
+    openingScrollTopOf(nowMin, HOUR_PX),
+    HEADING_PX + (A_DAY_MIN / 60) * HOUR_PX - viewPx,
+  )
+
+test('on a full HD screen, measuring after the first drawing adds no programme', () => {
+  for (const nowMin of [undefined, 0, 124, 5 * 60, 12 * 60, 17 * 60, 23 * 60]) {
+    const first = minutesBeforeMeasuringOf(nowMin, A_DAY_MIN, HOUR_PX)
+    const measured = drawnMinutesOf(
+      {
+        scrollTop: openedAt(nowMin, A_FULL_HD_VIEW_PX),
+        clientHeight: A_FULL_HD_VIEW_PX,
+      },
+      A_DAY_MIN,
+      HOUR_PX,
+    )
+
+    assert.ok(measured, `no range at ${nowMin}`)
+    assert.equal(addedBetween(first, measured), 0, `opened at ${nowMin}`)
+  }
+})
+
+test('scrolling adds programmes a frame at a time in proportion to how far it went', () => {
+  const stepPx = 60
+  const deepest = HEADING_PX + (A_DAY_MIN / 60) * HOUR_PX - A_FULL_HD_VIEW_PX
+  const columns = 27
+  const rowsPerStep = Math.ceil((stepPx / HOUR_PX) * 2) + 1
+  let was = drawnMinutesOf(
+    { scrollTop: 0, clientHeight: A_FULL_HD_VIEW_PX },
+    A_DAY_MIN,
+    HOUR_PX,
+  )!
+  let most = 0
+
+  for (let scrollTop = stepPx; scrollTop <= deepest; scrollTop += stepPx) {
+    const now = drawnMinutesOf(
+      { scrollTop, clientHeight: A_FULL_HD_VIEW_PX },
+      A_DAY_MIN,
+      HOUR_PX,
+    )!
+
+    most = Math.max(most, addedBetween(was, now))
+    was = now
+  }
+
+  assert.ok(most > 0)
+  assert.ok(
+    most <= rowsPerStep * columns,
+    `${most} programmes were added in one frame`,
   )
 })
 
