@@ -8,6 +8,7 @@ const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
   'tests/app/api/videos/route.test.ts',
+  'tests/components/every-weight-that-is-drawn-is-loaded.test.ts',
   'tests/components/library/the-same-line-for-every-chip.test.ts',
   'tests/components/library/what-the-library-put-away.test.ts',
   'tests/components/live/live-captions.test.ts',
