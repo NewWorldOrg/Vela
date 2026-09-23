@@ -12,6 +12,7 @@ import {
 import {
   GUTTER_PX,
   gridMinWidthOf,
+  fallsWithin,
   isDrawn,
   openingScrollTopOf,
   unscheduledSpansOf,
@@ -24,7 +25,7 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
 import { useArrived } from '@/hooks/useArrived'
-import { useDrawnColumns } from '@/hooks/useDrawnColumns'
+import { useDrawnRange } from '@/hooks/useDrawnRange'
 
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
 
@@ -61,7 +62,12 @@ export function GuideGrid({
   const openingTop = useRef(openingScrollTopOf(nowMin, HOUR_PX))
   const opened = useRef(false)
   const scroller = useRef<HTMLDivElement | null>(null)
-  const drawn = useDrawnColumns(scroller, channels.length)
+  const drawn = useDrawnRange(scroller, {
+    columns: channels.length,
+    windowMin: windowHours * 60,
+    hourPx: HOUR_PX,
+    nowMin,
+  })
 
   const openAtNow = useCallback((node: HTMLDivElement | null) => {
     scroller.current = node
@@ -101,7 +107,7 @@ export function GuideGrid({
                 'flex min-w-0 items-center justify-center gap-1.5 overflow-hidden border-l border-line px-1.5 py-2 text-sub font-bold first-of-type:border-l-0',
               )}
             >
-              {isDrawn(drawn, nth) && (
+              {isDrawn(drawn.columns, nth) && (
                 <>
                   <ChannelMark logo={c.logo} no={c.no} />
                   <InFull says={c.name}>
@@ -149,7 +155,7 @@ export function GuideGrid({
           </div>
 
           {channels.map((c, nth) => {
-            const carried = isDrawn(drawn, nth)
+            const carried = isDrawn(drawn.columns, nth)
               ? programs.filter((p) => p.channelId === c.id)
               : undefined
 
@@ -189,19 +195,21 @@ export function GuideGrid({
                     )
                   })}
 
-                {carried?.map((p) => (
-                  <ProgramCell
-                    key={p.id}
-                    program={p}
-                    past={
-                      nowMin !== undefined &&
-                      !p.endUndecided &&
-                      p.startMin + p.durationMin <= nowMin
-                    }
-                    selected={p.id === selectedId}
-                    onSelect={onSelect}
-                  />
-                ))}
+                {carried
+                  ?.filter((p) => fallsWithin(drawn.minutes, p))
+                  .map((p) => (
+                    <ProgramCell
+                      key={p.id}
+                      program={p}
+                      past={
+                        nowMin !== undefined &&
+                        !p.endUndecided &&
+                        p.startMin + p.durationMin <= nowMin
+                      }
+                      selected={p.id === selectedId}
+                      onSelect={onSelect}
+                    />
+                  ))}
               </div>
             )
           })}

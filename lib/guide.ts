@@ -374,3 +374,60 @@ export function drawnColumnsOf(
 export function isDrawn(range: ColumnRange, nth: number): boolean {
   return range.from <= nth && nth < range.to
 }
+
+export const MINUTES_DRAWN_BEFORE_MEASURING = 12 * 60
+
+export interface MinuteRange {
+  from: number
+  to: number
+}
+
+export interface GuideDepth {
+  scrollTop: number
+  clientHeight: number
+}
+
+export function minutesBeforeMeasuringOf(
+  nowMin: number | undefined,
+  windowMin: number,
+): MinuteRange {
+  const opening = nowMin === undefined ? 0 : nowMin - OPENING_LEAD_MIN
+  const from = Math.max(
+    0,
+    Math.min(opening, windowMin - MINUTES_DRAWN_BEFORE_MEASURING),
+  )
+
+  return {
+    from,
+    to: Math.min(windowMin, from + MINUTES_DRAWN_BEFORE_MEASURING),
+  }
+}
+
+export function drawnMinutesOf(
+  view: GuideDepth,
+  windowMin: number,
+  hourPx: number,
+): MinuteRange | undefined {
+  if (view.clientHeight <= 0 || hourPx <= 0) {
+    return undefined
+  }
+
+  const minuteOf = (px: number): number => (px / hourPx) * 60
+
+  return {
+    from: Math.max(0, Math.floor(minuteOf(view.scrollTop - view.clientHeight))),
+    to: Math.min(
+      windowMin,
+      Math.ceil(minuteOf(view.scrollTop + 2 * view.clientHeight)),
+    ),
+  }
+}
+
+export function fallsWithin(
+  range: MinuteRange,
+  span: { startMin: number; durationMin: number },
+): boolean {
+  return (
+    span.startMin < range.to && span.startMin + span.durationMin > range.from
+  )
+}

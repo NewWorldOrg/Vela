@@ -902,6 +902,46 @@ export const 別の日: Story = {
   },
 }
 
+const A_DAY_NOT_TODAY = {
+  ...day,
+  day: GUIDE_DAYS[2],
+  nowMin: undefined,
+  nowLabel: undefined,
+}
+
+export const 下へ送ると先の番組が描かれる: Story = {
+  args: { guide: A_DAY_NOT_TODAY },
+  decorators: [shorterThanADay],
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const scroller = partOf(canvasElement, '[data-guide-scroll]')
+    const drawnCells = () =>
+      Array.from(
+        canvasElement.querySelectorAll<HTMLElement>(
+          '[data-opens="program-panel"]',
+        ),
+      )
+
+    await expect(scroller.scrollTop).toBe(0)
+    await expect(drawnCells()).toHaveLength(0)
+
+    scroller.scrollTop = (EVENING_MIN / 60) * HOUR_PX
+
+    await waitFor(() => expect(drawnCells()).toHaveLength(IN_GRID_ORDER.length))
+
+    const cells = drawnCells()
+
+    for (const [index, program] of IN_GRID_ORDER.entries()) {
+      await expect(cells[index]).toHaveTextContent(program.title)
+      await expect(cells[index].offsetTop).toBeCloseTo(
+        ((program.startMin + EVENING_MIN) / 60) * HOUR_PX,
+        0,
+      )
+    }
+  },
+}
+
 export const 番組情報が不足: Story = {
   args: {
     guide: {

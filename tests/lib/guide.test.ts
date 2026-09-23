@@ -7,11 +7,14 @@ import {
   broadcastDateOf,
   columnsBeforeMeasuringOf,
   drawnColumnsOf,
+  drawnMinutesOf,
+  fallsWithin,
   foldedGuideOf,
   foldsAColumn,
   gridMinWidthOf,
   isDrawn,
   isOnAir,
+  minutesBeforeMeasuringOf,
   nowMinOf,
   openingScrollTopOf,
   primaryKeyOfShadow,
@@ -732,4 +735,81 @@ test('a day with no split at all folds nothing', () => {
     ),
     false,
   )
+})
+
+const A_DAY_MIN = 24 * 60
+
+test('before the height is known, twelve hours from where the guide opens are drawn', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(9 * 60, A_DAY_MIN), {
+    from: 9 * 60 - 30,
+    to: 21 * 60 - 30,
+  })
+})
+
+test('a day the present is not in is drawn from the top before measuring', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(undefined, A_DAY_MIN), {
+    from: 0,
+    to: 12 * 60,
+  })
+})
+
+test('late in the day the first drawing still holds twelve hours, up to the end', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(23 * 60, A_DAY_MIN), {
+    from: 12 * 60,
+    to: A_DAY_MIN,
+  })
+})
+
+test('a window shorter than twelve hours is drawn whole before measuring', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(124, 8 * 60), {
+    from: 0,
+    to: 8 * 60,
+  })
+})
+
+test('a screen above and a screen below the hours in view are drawn', () => {
+  assert.deepEqual(
+    drawnMinutesOf(
+      { scrollTop: 10 * HOUR_PX, clientHeight: 4 * HOUR_PX },
+      A_DAY_MIN,
+      HOUR_PX,
+    ),
+    { from: 6 * 60, to: 18 * 60 },
+  )
+})
+
+test('the drawing stops at the top and at the end of the window', () => {
+  assert.deepEqual(
+    drawnMinutesOf(
+      { scrollTop: 0, clientHeight: 4 * HOUR_PX },
+      10 * 60,
+      HOUR_PX,
+    ),
+    { from: 0, to: 8 * 60 },
+  )
+  assert.deepEqual(
+    drawnMinutesOf(
+      { scrollTop: 20 * HOUR_PX, clientHeight: 4 * HOUR_PX },
+      A_DAY_MIN,
+      HOUR_PX,
+    ),
+    { from: 16 * 60, to: A_DAY_MIN },
+  )
+})
+
+test('a grid laid out at no height gives no range of its own', () => {
+  assert.equal(
+    drawnMinutesOf({ scrollTop: 0, clientHeight: 0 }, A_DAY_MIN, HOUR_PX),
+    undefined,
+  )
+})
+
+test('a programme is drawn when any of it falls within the range', () => {
+  const range = { from: 600, to: 720 }
+
+  assert.equal(fallsWithin(range, { startMin: 540, durationMin: 60 }), false)
+  assert.equal(fallsWithin(range, { startMin: 540, durationMin: 61 }), true)
+  assert.equal(fallsWithin(range, { startMin: 700, durationMin: 60 }), true)
+  assert.equal(fallsWithin(range, { startMin: 720, durationMin: 30 }), false)
+  assert.equal(fallsWithin(range, { startMin: 500, durationMin: 400 }), true)
 })
