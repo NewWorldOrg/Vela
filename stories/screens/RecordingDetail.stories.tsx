@@ -975,6 +975,7 @@ export const 記録の値は札で言う: Story = {
     const canvas = within(canvasElement)
 
     await userEvent.click(canvas.getByText('技術情報'))
+    await afterTheArrival(canvasElement)
 
     const pills = ['完全', '完了', '生成済み', '良好'].map((said) => {
       const pill = canvas.getByText(said).closest('[data-slot="badge"]')
