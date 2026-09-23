@@ -10,7 +10,6 @@ import type {
   QualityThresholdKey,
   QualityWrite,
 } from '@/repository/quality'
-import { Badge } from '@/components/ui/badge'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
@@ -237,10 +236,11 @@ export function QualityView({
                 <span className="font-code text-ui tabular-nums text-brand">
                   {threshold.value}
                 </span>
-                {threshold.provisional && <Badge variant="mute">暫定</Badge>}
-                <span className="w-full font-code text-note text-ink-3">
-                  {threshold.basis}
-                </span>
+                {threshold.basis && (
+                  <span className="w-full font-code text-note text-ink-3">
+                    {threshold.basis}
+                  </span>
+                )}
               </div>
             ))}
           </div>

@@ -184,6 +184,17 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
+      'every threshold is still the value it shipped with rather than one settled from what was measured, so the mark that says so is always on and says nothing, and the count of what it was settled from is always nought',
+    fields: [
+      'QualityIncidentResponder.appliedProvisional',
+      'QualitySummaryResponder.provisional',
+      'QualityThresholdResponder.observations',
+      'QualityThresholdResponder.provisional',
+      'QualityTrendResponder.provisional',
+    ],
+  },
+  {
+    because:
       'the band names the supplies that have gone quiet and how many of each; the level that decides quiet is spelt on the thresholds of the same screen, whether the driver could be asked is what makes a supply unreachable and is read as that state, and when the watch last passed is not a time anybody acts on',
     fields: [
       'QualitySupplyHealthResponder.appliedProvisional',

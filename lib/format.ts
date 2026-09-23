@@ -91,6 +91,12 @@ export function formatClock(at: number) {
   return `${moment.hour}:${moment.minute}`
 }
 
+export function formatDate(at: Moment) {
+  const moment = stampOf(at)
+
+  return `${moment.month}/${moment.day}`
+}
+
 export function formatMonth(iso: string) {
   const at = stampOf(iso)
 

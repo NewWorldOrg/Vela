@@ -55,6 +55,7 @@ const THE_SUITE = [
   'tests/lib/player-keys.test.ts',
   'tests/lib/program-title.test.ts',
   'tests/lib/programme-extended.test.ts',
+  'tests/lib/quality-trend.test.ts',
   'tests/lib/quality.test.ts',
   'tests/lib/recordings.test.ts',
   'tests/lib/reservation-outcomes.test.ts',
