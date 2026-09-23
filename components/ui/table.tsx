@@ -16,7 +16,7 @@ function Table({
       data-slot="table-container"
       tabIndex={0}
       className={cn(
-        'relative w-full overflow-x-auto outline-none focus-visible:shadow-ring',
+        'relative w-full overflow-x-auto rounded-xl bg-surface outline-none focus-visible:shadow-ring',
         containerClassName,
       )}
     >
@@ -90,7 +90,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
     <th
       data-slot="table-head"
       className={cn(
-        'border-b border-line bg-bg px-[calc(13rem/16)] py-[calc(7rem/16)] text-left align-middle text-micro font-bold tracking-[0.04em] whitespace-nowrap text-ink-3 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',
+        'border-b border-line bg-surface px-[calc(13rem/16)] py-[calc(7rem/16)] text-left align-middle text-micro font-bold tracking-[0.04em] whitespace-nowrap text-ink-3 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',
         className,
       )}
       {...props}

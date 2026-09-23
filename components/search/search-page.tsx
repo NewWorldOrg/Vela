@@ -570,7 +570,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   tabIndex={0}
                   className={cn(
                     ADMIN_LIST_HEIGHT_CAP,
-                    '-mx-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring',
+                    '-mx-1 overflow-auto rounded-xl bg-surface px-1 pb-1 outline-none focus-visible:shadow-ring',
                   )}
                 >
                   <table className="w-full min-w-[calc(760rem/16)] table-fixed border-separate border-spacing-0">
@@ -590,7 +590,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                         ].map((h) => (
                           <th
                             key={h}
-                            className="sticky top-0 z-10 border-b border-line bg-bg px-3.5 py-[calc(9rem/16)] text-left text-micro font-bold tracking-[0.05em] whitespace-nowrap text-ink-3"
+                            className="sticky top-0 z-10 border-b border-line bg-surface px-3.5 py-[calc(9rem/16)] text-left text-micro font-bold tracking-[0.05em] whitespace-nowrap text-ink-3"
                           >
                             {h}
                           </th>
