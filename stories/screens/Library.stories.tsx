@@ -557,7 +557,7 @@ export const 現れ方: Story = {
 
     await expect(
       Number.parseFloat(getComputedStyle(rows[6]).animationDelay),
-    ).toBe(0)
+    ).toBeCloseTo(0.2, 3)
 
     document.documentElement.classList.add('dark')
 

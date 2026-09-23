@@ -767,7 +767,7 @@
   & > tr:nth-child(5) {
     animation-delay: 160ms;
   }
-  & > tr:nth-child(6) {
+  & > tr:nth-child(n + 6) {
     animation-delay: 200ms;
   }
 }

@@ -43,7 +43,7 @@ export function groupDelayOf(ms: number): CSSProperties {
 }
 
 export function rowDelayMs(index: number): number {
-  return index < LAST_ROW_HELD_BACK ? index * ROW_STEP_MS : 0
+  return Math.min(index, LAST_ROW_HELD_BACK - 1) * ROW_STEP_MS
 }
 
 export function columnDelayMs(index: number): number {

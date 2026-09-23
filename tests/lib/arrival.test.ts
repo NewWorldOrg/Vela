@@ -28,14 +28,14 @@ test('a delay is handed over as a custom property, never as a number', () => {
   assert.deepEqual(groupDelayOf(0), { '--d': '0ms' })
 })
 
-test('rows are held back one step at a time, and only the first six', () => {
+test('rows are held back one step at a time, and the rest hold the last delay', () => {
   assert.deepEqual(
     Array.from({ length: LAST_ROW_HELD_BACK }, (_, nth) => rowDelayMs(nth)),
     [0, 40, 80, 120, 160, 200],
   )
   assert.equal(ROW_STEP_MS, 40)
-  assert.equal(rowDelayMs(LAST_ROW_HELD_BACK), 0)
-  assert.equal(rowDelayMs(400), 0)
+  assert.equal(rowDelayMs(LAST_ROW_HELD_BACK), 200)
+  assert.equal(rowDelayMs(400), 200)
 })
 
 test('columns are held back to the eighth and then hold that delay', () => {
