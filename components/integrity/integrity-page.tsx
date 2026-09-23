@@ -194,7 +194,7 @@ export function IntegrityView({
       ) : (
         <Table
           className="table-fixed min-w-[calc(760rem/16)]"
-          containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+          containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
         >
           <TableColumns widths={COLUMNS.map((column) => column.width)} />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">

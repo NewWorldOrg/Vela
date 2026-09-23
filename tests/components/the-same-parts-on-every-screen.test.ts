@@ -546,3 +546,21 @@ test('the system screen says a state as a noun, from the one table', async () =>
     )
   }
 })
+
+test('a table surface stops at its last row instead of filling the screen', async () => {
+  for (const file of [
+    'components/library/recordings-table.tsx',
+    'components/reservations/reservations-page.tsx',
+    'components/reservations/outcomes-page.tsx',
+    'components/integrity/integrity-page.tsx',
+  ]) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.doesNotMatch(
+      source,
+      /min-h-0 flex-1 overflow/,
+      `${file} stretches its table to the bottom of the screen and leaves an empty surface under the rows`,
+    )
+    assert.match(source, /min-h-0 flex-initial overflow/)
+  }
+})

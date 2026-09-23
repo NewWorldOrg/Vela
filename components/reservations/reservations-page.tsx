@@ -242,7 +242,7 @@ export function ReservationsView({
         <Table
           className="table-fixed min-w-[calc(960rem/16)]"
           containerClassName={cn(
-            'min-h-0 flex-1 overflow-y-auto pb-1 transition-opacity duration-150',
+            'min-h-0 flex-initial overflow-y-auto pb-1 transition-opacity duration-150',
             waiting && 'opacity-60',
           )}
         >
