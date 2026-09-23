@@ -152,6 +152,23 @@ test('the mark on the volume sits on the line it reads against', async () => {
       `${part} does not fill the shared box, so its middle is not the line's`,
     )
   }
+  for (const part of ['slider-runnable-track', 'moz-range-track']) {
+    const at = body.indexOf(part)
+    const track = body.slice(at, body.indexOf('}', at))
+
+    assert.match(
+      track,
+      /calc\(var\(--volume-dot\) \/ 2\) 50% \/\s*calc\(100% - var\(--volume-dot\)\) 2px/,
+      `${part} draws the line past the centres the mark can reach, so at full ` +
+        'volume the mark stops short of its end',
+    )
+    assert.match(
+      track,
+      /calc\(\(100% - var\(--volume-dot\)\) \* var\(--volume-ratio, 0\)\) 2px/,
+      `${part} lights the line past the centre of the mark`,
+    )
+  }
+  assert.match(volume, /'--volume-ratio': played \/ 100/)
 })
 
 test('a rehearsal is the migration word; a rule looks at its matches', async () => {

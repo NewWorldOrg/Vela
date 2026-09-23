@@ -29,7 +29,7 @@ export function PlayerVolume({
         aria-label="音量"
         aria-valuetext={`${played}%`}
         onChange={(event) => onChoose(Number(event.currentTarget.value) / 100)}
-        style={{ '--volume-played': `${played}%` } as CSSProperties}
+        style={{ '--volume-ratio': played / 100 } as CSSProperties}
         className="volume-range relative block w-full cursor-pointer outline-none focus-visible:rounded-full focus-visible:shadow-ring"
       />
     </label>

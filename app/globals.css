@@ -785,18 +785,22 @@
   &::-webkit-slider-runnable-track {
     height: var(--volume-reach);
     background:
-      linear-gradient(var(--volume-lit), var(--volume-lit)) 0 50% /
-        var(--volume-played, 0%) 2px no-repeat,
-      linear-gradient(var(--volume-line), var(--volume-line)) 0 50% / 100% 2px
+      linear-gradient(var(--volume-lit), var(--volume-lit))
+        calc(var(--volume-dot) / 2) 50% /
+        calc((100% - var(--volume-dot)) * var(--volume-ratio, 0)) 2px no-repeat,
+      linear-gradient(var(--volume-line), var(--volume-line))
+        calc(var(--volume-dot) / 2) 50% / calc(100% - var(--volume-dot)) 2px
         no-repeat;
   }
 
   &::-moz-range-track {
     height: var(--volume-reach);
     background:
-      linear-gradient(var(--volume-lit), var(--volume-lit)) 0 50% /
-        var(--volume-played, 0%) 2px no-repeat,
-      linear-gradient(var(--volume-line), var(--volume-line)) 0 50% / 100% 2px
+      linear-gradient(var(--volume-lit), var(--volume-lit))
+        calc(var(--volume-dot) / 2) 50% /
+        calc((100% - var(--volume-dot)) * var(--volume-ratio, 0)) 2px no-repeat,
+      linear-gradient(var(--volume-line), var(--volume-line))
+        calc(var(--volume-dot) / 2) 50% / calc(100% - var(--volume-dot)) 2px
         no-repeat;
   }
 
