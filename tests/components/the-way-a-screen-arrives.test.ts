@@ -384,7 +384,7 @@ test('nothing anywhere animates a shape that has to be redrawn', async () => {
   }
 })
 
-test('an entrance is switched off once it is over, and under a scroll', async () => {
+test('an entrance is switched off once it is over, and under a hand', async () => {
   const sheet = await theSheet()
   const declared = new Map<string, string>()
 
@@ -406,7 +406,18 @@ test('an entrance is switched off once it is over, and under a scroll', async ()
 
   const hook = await readFile(path.join(ROOT, THE_ARRIVAL_HOOK), 'utf8')
 
-  assert.match(hook, /addEventListener\('scroll'/)
+  for (const input of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+    assert.match(
+      hook,
+      new RegExp(`'${input}'`),
+      `a ${input} does not stop the arrival`,
+    )
+  }
+  assert.doesNotMatch(
+    hook,
+    /'scroll'/,
+    'a scroll the screen makes by itself would stop the arrival before it is seen',
+  )
   assert.match(hook, /data-arrived/)
 })
 
