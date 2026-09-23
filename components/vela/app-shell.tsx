@@ -226,16 +226,22 @@ export type ScreenScroll = 'page' | 'within'
 export function ScreenMain({
   width = 'default',
   scroll = 'page',
+  rises = true,
   className,
   ...props
-}: ComponentProps<'main'> & { width?: ScreenWidth; scroll?: ScreenScroll }) {
+}: ComponentProps<'main'> & {
+  width?: ScreenWidth
+  scroll?: ScreenScroll
+  rises?: boolean
+}) {
   return (
     <main
       data-slot="screen-main"
       data-width={width}
       data-scroll={scroll}
       className={cn(
-        'screen-rises min-h-0 flex-1',
+        rises && 'screen-rises',
+        'min-h-0 flex-1',
         SCREEN_WIDTHS[width],
         className,
       )}
@@ -247,6 +253,7 @@ export function ScreenMain({
 export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
   return (
     <ScreenMain
+      rises={false}
       data-slot="admin-main"
       className={cn('min-w-0 px-[calc(18rem/16)] pt-4 pb-5', className)}
       {...props}

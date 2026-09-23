@@ -509,3 +509,29 @@ test('a face that is centred by a translate does not move its position', async (
     )
   }
 })
+
+test('a row below the sixth keeps the last delay instead of starting first', async () => {
+  const sheet = await readFile(path.join(ROOT, 'app/globals.css'), 'utf8')
+  const rows = sheet.slice(sheet.indexOf('@utility rows-arrive'))
+  const block = rows.slice(0, rows.indexOf('\n}\n'))
+
+  assert.match(
+    block,
+    /& > tr:nth-child\(n \+ 6\) \{\s*animation-delay: 200ms;/,
+    'the seventh row and below start at 0ms and overtake the rows above them',
+  )
+})
+
+test('each settings screen rises on its own, and the frame around it does not', async () => {
+  const template = await readFile(
+    path.join(ROOT, 'app/(app)/settings/template.tsx'),
+    'utf8',
+  )
+  const shell = await readFile(
+    path.join(ROOT, 'components/vela/app-shell.tsx'),
+    'utf8',
+  )
+
+  assert.match(template, /screen-rises/)
+  assert.match(shell, /<ScreenMain\s+rises=\{false\}/)
+})
