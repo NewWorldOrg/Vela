@@ -238,10 +238,10 @@ function usesOf(
 }
 
 const A_BUTTON_OPENING =
-  /<(?:Button|AlertDialogAction|AlertDialogCancel)\b([^>]*)>|buttonVariants\(\{([^}]*)\}\)/g
+  /<(?:Button|AlertDialogAction|AlertDialogCancel)\b((?:=>|[^>])*)>|buttonVariants\(\{([^}]*)\}\)/g
 
 const AN_ICON_BUTTON_OPENING =
-  /<IconButton\b([^>]*)>|iconButtonVariants\(\{([^}]*)\}\)/g
+  /<IconButton\b((?:=>|[^>])*)>|iconButtonVariants\(\{([^}]*)\}\)/g
 
 function openingsOf(tag: RegExp, source: string): string[] {
   return [...source.matchAll(tag)].map((found) => found[1] ?? found[2])
@@ -267,13 +267,11 @@ test('every kind and size a button offers is one the screens use more than once'
     const declared = await read(file)
     const opened = sources.map(({ file: at, source }) => ({
       file: at,
-      source: openingsOf(tag, source)
-        .map((opening) => `<${opening}>`)
-        .join('\n'),
+      source: openingsOf(tag, source).join('\n'),
     }))
 
     for (const group of groups) {
-      const uses = usesOf(opened, /<([^>]*)>/g, group)
+      const uses = usesOf(opened, /^([\s\S]*)$/g, group)
 
       for (const key of keysOf(declared, group)) {
         if (key === 'default' || (part === 'IconButton' && key === 'pop')) {
@@ -298,4 +296,59 @@ test('nothing but a button is handed a button’s kind', async () => {
       )
     }
   }
+})
+
+const A_WHOLE_BUTTON = /<Button\b((?:=>|[^>])*)>([\s\S]*?)<\/Button>/g
+
+function wordsOf(body: string): string {
+  return body
+    .replace(/\{[^{}]*\}/g, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, '')
+}
+
+const SAVES = /^(保存|保存する|この内容で保存)$/
+
+test('saving is one button of one height, and the row it sits in is that height', async () => {
+  const saving: string[] = []
+
+  for (const { file, source } of await everySource()) {
+    for (const button of source.matchAll(A_WHOLE_BUTTON)) {
+      if (!SAVES.test(wordsOf(button[2]))) {
+        continue
+      }
+
+      saving.push(file)
+      assert.doesNotMatch(
+        button[1],
+        /\bsize=/,
+        `${file} draws saving at a height of its own`,
+      )
+
+      const before = source.slice(0, button.index)
+      const rowStarts = Math.max(
+        before.lastIndexOf('<div'),
+        before.lastIndexOf('<DialogFooter'),
+        before.lastIndexOf('<>'),
+      )
+
+      assert.doesNotMatch(
+        source.slice(rowStarts, button.index),
+        /size="sm"/,
+        `${file} sets a smaller button beside saving, so the row has two heights`,
+      )
+    }
+  }
+
+  assert.ok(saving.length > 5, `only ${saving.length} saving buttons were read`)
+
+  const tuners = await read('components/tuners/tuners-page.tsx')
+  const cancel = tuners.match(/function CancelDetection\(\)[\s\S]*?\n\}/)
+
+  assert.ok(cancel, 'the tuner detection no longer names its cancel')
+  assert.doesNotMatch(
+    cancel[0],
+    /size="sm"/,
+    'the cancel beside saving the detected tuners is smaller than saving',
+  )
 })

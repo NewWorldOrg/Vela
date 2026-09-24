@@ -130,7 +130,7 @@ function DetectionCard({
 
 function CancelDetection() {
   return (
-    <Button variant="ghost" size="sm" asChild>
+    <Button variant="ghost" asChild>
       <Link href={TUNERS_HREF}>キャンセル</Link>
     </Button>
   )

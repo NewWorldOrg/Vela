@@ -1052,17 +1052,12 @@ function RuleEditor({
 
       <div className="mt-3.5 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
         {rule && (
-          <Button
-            variant="remove"
-            size="sm"
-            disabled={pending}
-            onClick={retire}
-          >
+          <Button variant="remove" disabled={pending} onClick={retire}>
             <TrashIcon />
             削除
           </Button>
         )}
-        <Button variant="ghost" size="sm" disabled={pending} onClick={onClose}>
+        <Button variant="ghost" disabled={pending} onClick={onClose}>
           閉じる
         </Button>
         <Button className="ml-auto" disabled={pending} onClick={weigh}>
