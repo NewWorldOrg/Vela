@@ -192,7 +192,7 @@ export function LibraryView({
         />
       ) : (
         <EmptyState
-          spot="antenna"
+          spot="tape"
           title="まだ録画がありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"

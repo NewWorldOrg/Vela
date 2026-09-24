@@ -570,3 +570,53 @@ test('a spinner is one of two sizes, chosen by name and declared once', async ()
 
   assert.ok(spinning.length > 10, `only ${spinning.length} spinners were read`)
 })
+
+const PICTURED: [string, string, string][] = [
+  ['components/library/library-page.tsx', 'まだ録画がありません', 'tape'],
+  ['components/library/library-page.tsx', '条件に合う録画がありません', 'tape'],
+  ['components/encode/encode-page.tsx', 'ジョブの履歴がありません', 'tape'],
+  ['components/encode/encode-page.tsx', 'プロファイルがありません', 'list'],
+  ['components/encode/encode-page.tsx', '保存先がありません', 'list'],
+  [
+    'components/reservations/rules-page.tsx',
+    'ルールが選ばれていません',
+    'list',
+  ],
+  ['components/integrity/integrity-page.tsx', '食い違いはありません', 'star'],
+]
+
+const NOTHING_IS_WRONG = [
+  'components/integrity/integrity-page.tsx',
+  'components/reservations/reservations-page.tsx',
+  'components/reservations/outcomes-page.tsx',
+]
+
+test('an empty state is drawn with the picture of what is missing', async () => {
+  for (const [file, title, spot] of PICTURED) {
+    const source = await read(file)
+    const opening = source.match(
+      new RegExp(`<EmptyState\\b(?:(?!<EmptyState)[\\s\\S])*?title="${title}"`),
+    )
+
+    assert.ok(opening, `${file} no longer says ${title}`)
+    assert.match(
+      opening[0],
+      new RegExp(`spot="${spot}"`),
+      `${file} draws ${title} with a picture that stands for something else`,
+    )
+  }
+})
+
+test('the star is kept for nothing being wrong', async () => {
+  for (const { file, source } of await everySource(['components'])) {
+    for (const found of source.matchAll(
+      /<EmptyState\b(?:(?!<EmptyState)[\s\S])*?spot=(?:"star"|\{[^}]*'star'[^}]*\})/g,
+    )) {
+      assert.ok(
+        NOTHING_IS_WRONG.includes(file),
+        `${file} draws the star for an empty state that is not all clear: ` +
+          found[0].slice(0, 80),
+      )
+    }
+  }
+})
