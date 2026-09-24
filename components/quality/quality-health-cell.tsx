@@ -31,8 +31,8 @@ function Reading({ level, sub }: { level: QualityLevel; sub?: string }) {
   const pill = <QualityChip level={level} say />
 
   return sub ? (
-    <InFull says={sub}>
-      <span className="inline-flex">{pill}</span>
+    <InFull says={sub} wraps="inline-flex">
+      {pill}
     </InFull>
   ) : (
     pill

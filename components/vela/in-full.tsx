@@ -20,20 +20,25 @@ interface Tipped {
 export function InFull({
   says,
   alreadyFocusable = false,
+  wraps,
   children,
 }: {
   says: ReactNode
   alreadyFocusable?: boolean
+  wraps?: string
   children: ReactNode
 }) {
-  const held = isValidElement<Tipped>(children) ? (
-    cloneElement(
-      children,
-      tipTrigger(children.props.className, alreadyFocusable),
+  const held =
+    wraps !== undefined ? (
+      <span {...tipTrigger(wraps, alreadyFocusable)}>{children}</span>
+    ) : isValidElement<Tipped>(children) ? (
+      cloneElement(
+        children,
+        tipTrigger(children.props.className, alreadyFocusable),
+      )
+    ) : (
+      <span {...tipTrigger(undefined, alreadyFocusable)}>{children}</span>
     )
-  ) : (
-    <span {...tipTrigger(undefined, alreadyFocusable)}>{children}</span>
-  )
 
   return (
     <TooltipProvider delayDuration={IN_FULL_WAITS}>

@@ -79,3 +79,26 @@ export const 素の文字列: Story = {
     await expect(await screen.findByRole('tooltip')).toHaveTextContent(WHOLE)
   },
 }
+
+export const 自分で包む: Story = {
+  render: () => (
+    <div className="p-6">
+      <InFull says="保存先の場所" wraps="inline-block">
+        Shelf
+      </InFull>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const trigger = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="tooltip-trigger"]',
+    )
+
+    await expect(trigger).not.toBeNull()
+    await expect(trigger!.tagName).toBe('SPAN')
+    await expect(trigger!.className).toContain('inline-block')
+    await expect(trigger!.className).toContain('cursor-help')
+    await expect(trigger!.tabIndex).toBe(0)
+    await expect(trigger!.children).toHaveLength(0)
+    await expect(trigger).toHaveTextContent('Shelf')
+  },
+}

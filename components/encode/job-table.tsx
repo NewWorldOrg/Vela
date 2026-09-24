@@ -62,8 +62,8 @@ function Standing({ job }: { job: EncodeJob }) {
   const why = whyItStands(job)
 
   return why ? (
-    <InFull says={why}>
-      <span className="inline-flex">{chip}</span>
+    <InFull says={why} wraps="inline-flex">
+      {chip}
     </InFull>
   ) : (
     chip
@@ -86,8 +86,8 @@ function Dash() {
 
 function Started({ job }: { job: EncodeJob }) {
   return (
-    <InFull says={`登録 ${job.queuedAt}`}>
-      <span className="inline-block">{job.startedAt ?? <Dash />}</span>
+    <InFull says={`登録 ${job.queuedAt}`} wraps="inline-block">
+      {job.startedAt ?? <Dash />}
     </InFull>
   )
 }
@@ -96,8 +96,8 @@ function Destination({ job }: { job: EncodeJob }) {
   const said = job.destinationLabel ?? <Dash />
 
   return (
-    <InFull says={job.outputRoot}>
-      <span className="inline-block">{said}</span>
+    <InFull says={job.outputRoot} wraps="inline-block">
+      {said}
     </InFull>
   )
 }
@@ -213,10 +213,11 @@ function Headway({ job }: { job: EncodeJob }) {
   }
 
   return (
-    <InFull says={more.join('\n')}>
-      <span className="inline-block font-code text-ui tabular-nums">
-        {percent}
-      </span>
+    <InFull
+      says={more.join('\n')}
+      wraps="inline-block font-code text-ui tabular-nums"
+    >
+      {percent}
     </InFull>
   )
 }
