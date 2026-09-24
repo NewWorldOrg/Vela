@@ -511,3 +511,32 @@ test('a corner or a size of type that is on a step is said by the step’s name'
     }
   }
 })
+
+test('a menu opens downwards and never turns round, the same as a select', async () => {
+  const menu = await read('components/ui/dropdown-menu.tsx')
+  const content = menu.match(
+    /function DropdownMenuContent\b[\s\S]*?<DropdownMenuPrimitive\.Content\b([\s\S]*?)\/>/,
+  )
+
+  assert.ok(content, 'the shared menu no longer draws its content')
+  assert.match(
+    content[1],
+    /\{\.\.\.props\}[\s\S]*side="bottom"[\s\S]*avoidCollisions=\{false\}/,
+    'the shared menu does not hold the direction after what a caller hands it',
+  )
+
+  const opening: string[] = []
+
+  for (const { file, source } of await everySource()) {
+    for (const found of source.matchAll(/<DropdownMenuContent\b([^>]*)>/g)) {
+      opening.push(file)
+      assert.doesNotMatch(
+        found[1],
+        /\b(side|avoidCollisions)=/,
+        `${file} says which way its menu opens: ${found[0]}`,
+      )
+    }
+  }
+
+  assert.ok(opening.length >= 2, `only ${opening.length} menus were read`)
+})

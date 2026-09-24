@@ -46,6 +46,8 @@ function DropdownMenuContent({
           className,
         )}
         {...props}
+        side="bottom"
+        avoidCollisions={false}
       />
     </DropdownMenuPrimitive.Portal>
   )
