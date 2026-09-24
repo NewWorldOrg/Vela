@@ -1,5 +1,7 @@
 'use client'
 
+import { memo } from 'react'
+
 import type { BookingMark } from '@/lib/guide'
 import { bookingMarkOf } from '@/lib/guide'
 import {
@@ -36,7 +38,7 @@ const MARK_SAYS: Record<BookingMark, string> = {
   recording: RECORDING_IN_PROGRESS_TERM.label,
 }
 
-export function ProgramCell({
+export const ProgramCell = memo(function ProgramCell({
   program: p,
   past,
   selected,
@@ -112,7 +114,7 @@ export function ProgramCell({
       )}
     </button>
   )
-}
+})
 
 function BookingGlyph({ mark, size }: { mark: BookingMark; size: CellSize }) {
   return (

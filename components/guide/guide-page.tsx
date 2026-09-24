@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState, useTransition } from 'react'
+import { useCallback, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -69,9 +69,15 @@ export function GuideView({
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
   const [folded, fold] = useSubChannelsFolded()
-  const foldable = foldsAColumn(guide.channels, guide.programs)
-  const shownGuide =
-    folded && foldable ? foldedGuideOf(guide.channels, guide.programs) : guide
+  const foldable = useMemo(
+    () => foldsAColumn(guide.channels, guide.programs),
+    [guide.channels, guide.programs],
+  )
+  const foldedGuide = useMemo(
+    () => foldedGuideOf(guide.channels, guide.programs),
+    [guide.channels, guide.programs],
+  )
+  const shownGuide = folded && foldable ? foldedGuide : guide
   const shown = selected
     ? (shownGuide.programs.find(
         (one) => one.id === selected.id && one.channelId === selected.channelId,
