@@ -2,7 +2,15 @@
 
 import { memo, useCallback, useMemo, useRef } from 'react'
 
-import { columnDelayMs, delayOf, nowLineDelayMs, risesIn } from '@/lib/arrival'
+import {
+  GUIDE_HOLD_MS,
+  columnDelayMs,
+  delayOf,
+  groupDelayOf,
+  glyphsOf,
+  nowLineDelayMs,
+  risesIn,
+} from '@/lib/arrival'
 import {
   GUTTER_PX,
   gridMinWidthOf,
@@ -21,6 +29,7 @@ import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
 import { useArrived } from '@/hooks/useArrived'
 import { useDrawnRange } from '@/hooks/useDrawnRange'
+import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
 import { useNewcomers } from '@/hooks/useNewcomers'
 
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
@@ -93,7 +102,7 @@ const GuideColumn = memo(function GuideColumn({
       style={{ flex: COLUMN_FLEX, ...delayOf(columnDelayMs(nth)) }}
       className={cn(
         joined ? 'joins' : risesIn(nth),
-        'relative min-w-0 border-l border-dashed border-line first-of-type:border-l-0',
+        'relative min-w-0 border-l border-dashed border-line [contain:size_layout_style] first-of-type:border-l-0',
         c.sub && 'bg-surface-2',
       )}
     >
@@ -167,6 +176,20 @@ export function GuideGrid({
   )
   const arrived = useArrived()
   const newcomers = useNewcomers(channels.map((c) => c.id))
+  const glyphs = useMemo(
+    () =>
+      glyphsOf([
+        ...channels.map((c) => c.name),
+        ...programs.flatMap((p) => [
+          p.title,
+          p.genreLabel,
+          p.description ?? '',
+        ]),
+      ]),
+    [channels, programs],
+  )
+
+  useGlyphsAhead(glyphs)
   const openingTop = useRef(openingScrollTopOf(nowMin, HOUR_PX))
   const opened = useRef(false)
   const scroller = useRef<HTMLDivElement | null>(null)
@@ -233,7 +256,10 @@ export function GuideGrid({
         <div
           {...arrived}
           className="relative flex rounded-b-lg"
-          style={{ height: `${windowHours * HOUR_PX}px` }}
+          style={{
+            height: `${windowHours * HOUR_PX}px`,
+            ...groupDelayOf(GUIDE_HOLD_MS),
+          }}
         >
           <div
             data-guide-gutter

@@ -748,6 +748,22 @@
   --rise-stretch: 1;
 }
 
+@utility guide-cell {
+  @apply absolute right-px left-px z-[1] cursor-pointer overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none;
+}
+
+@utility guide-cell-genre {
+  @apply ml-[calc(5rem/16)] border-l border-dotted border-line-strong pl-[calc(5rem/16)] font-medium text-ink-3;
+}
+
+@utility guide-cell-start {
+  @apply mr-[calc(5rem/16)] font-code text-micro font-medium text-ink-3 tabular-nums;
+}
+
+@utility guide-cell-line {
+  @apply overflow-hidden text-[calc(10rem/16)] leading-tight font-medium text-ellipsis whitespace-nowrap;
+}
+
 @utility rises {
   animation: var(--animate-rise);
   animation-delay: calc(var(--d, 0s) + var(--delay, 0s));

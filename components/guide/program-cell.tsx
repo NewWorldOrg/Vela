@@ -17,8 +17,7 @@ import { RecordIcon } from '@/components/vela/icons'
 
 type CellSize = 'md' | 's' | 'xs'
 
-const GENRE_LABEL =
-  'ml-[calc(5rem/16)] border-l border-dotted border-line-strong pl-[calc(5rem/16)] font-medium text-ink-3'
+const GENRE_LABEL = 'guide-cell-genre'
 
 const MARK_BOX: Record<CellSize, string> = {
   md: 'size-[calc(13rem/16)]',
@@ -65,7 +64,7 @@ export function ProgramCell({
         height: `${height}px`,
       }}
       className={cn(
-        'absolute right-px left-px z-[1] cursor-pointer overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
+        'guide-cell',
         past ? GENRE_CLASS_PAST[p.genre] : GENRE_CLASS[p.genre],
         size === 'md' && 'px-[calc(7rem/16)] py-1',
         size === 's' && 'px-[calc(7rem/16)] py-0.5',
@@ -76,12 +75,7 @@ export function ProgramCell({
       )}
     >
       {size === 'xs' ? (
-        <span
-          className={cn(
-            'overflow-hidden text-[calc(10rem/16)] leading-tight font-medium text-ellipsis whitespace-nowrap',
-            past && 'text-ink-2',
-          )}
-        >
+        <span className={cn('guide-cell-line', past && 'text-ink-2')}>
           {mark && <BookingGlyph mark={mark} size={size} />}
           {p.title}
           <span className={cn(GENRE_LABEL, 'text-[calc(10rem/16)]')}>
@@ -98,9 +92,7 @@ export function ProgramCell({
             )}
           >
             {mark && <BookingGlyph mark={mark} size={size} />}
-            <span className="mr-[calc(5rem/16)] font-code text-micro font-medium text-ink-3 tabular-nums">
-              {p.startLabel.slice(3)}
-            </span>
+            <span className="guide-cell-start">{p.startLabel.slice(3)}</span>
             {p.title}
             <span className={cn(GENRE_LABEL, 'text-micro')}>
               {p.genreLabel}

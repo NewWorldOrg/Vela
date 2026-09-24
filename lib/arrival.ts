@@ -14,9 +14,11 @@ export const GRID_CAP_MS = 240
 
 export const RISE_MS = 700
 
+export const GUIDE_HOLD_MS = 160
+
 export const LAST_ONE_THAT_MOVES = 12
 
-export const ARRIVAL_SPAN_MS = RISE_MS + GRID_CAP_MS + 100
+export const ARRIVAL_SPAN_MS = GUIDE_HOLD_MS + RISE_MS + GRID_CAP_MS + 100
 
 export function moves(index: number): boolean {
   return index < LAST_ONE_THAT_MOVES
@@ -86,4 +88,16 @@ export function newcomersOf(
   const were = new Set(before)
 
   return new Set(now.filter((id) => !were.has(id)))
+}
+
+export const GUIDE_FACES = [
+  '400 1em "Broadcast Marks"',
+  '400 1em "Zen Kaku Gothic New"',
+  '500 1em "Zen Kaku Gothic New"',
+  '700 1em "Zen Kaku Gothic New"',
+  '500 1em "M PLUS 1 Code"',
+] as const
+
+export function glyphsOf(texts: readonly string[]): string {
+  return [...new Set(texts.join(''))].join('')
 }

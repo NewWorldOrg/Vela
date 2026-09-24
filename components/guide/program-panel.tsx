@@ -41,8 +41,10 @@ export function ProgramPanel({
   onReserve,
   onCancel,
   onRevise,
+  extras,
 }: {
   program: Program
+  extras?: 'waiting' | 'failed'
   channel?: Channel
   dayLabel: string
   onAir?: boolean
@@ -98,6 +100,7 @@ export function ProgramPanel({
         <div data-slot="dialog-body" className="min-h-0 overflow-y-auto pb-2.5">
           <ProgramDetailBody
             program={program}
+            extras={extras ?? 'ready'}
             channel={channel}
             dayLabel={dayLabel}
             onAir={onAir}

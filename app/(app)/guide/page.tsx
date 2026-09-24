@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { getGuide } from '@/repository/programs'
+import { forTheGrid, getGuide } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
 import {
   coverageDaysOf,
@@ -19,6 +19,7 @@ import {
   discardAndRebuildEpg,
   dropProgrammeReservation,
   reserveProgramme,
+  readProgramExtras,
   reviseProgrammeReservation,
 } from './actions'
 
@@ -48,6 +49,7 @@ export default async function Page({
       <GuideView
         guide={{
           ...guide,
+          programs: guide.programs.map(forTheGrid),
           health: epgHealthOf(collection, guide.kind),
           coverageDays: coverageDaysOf(collection, guide.kind),
         }}
@@ -57,6 +59,7 @@ export default async function Page({
         onReserve={reserveProgramme}
         onCancel={dropProgrammeReservation}
         onRevise={reviseProgrammeReservation}
+        onReadExtras={readProgramExtras}
       />
     </>
   )

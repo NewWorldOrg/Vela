@@ -14,7 +14,12 @@ import {
   CHANNEL_FIXTURES,
 } from '@/repository/channels.fixtures'
 import { COLLECTION_FIXTURES } from '@/repository/collection.fixtures'
-import type { BookingStanding, Program } from '@/repository/programs'
+import type {
+  BookingStanding,
+  Program,
+  ProgramExtras,
+} from '@/repository/programs'
+import { forTheGrid } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
 import {
   AERIAL_PROGRAM_FIXTURES,
@@ -25,7 +30,7 @@ import {
 } from '@/repository/programs.fixtures'
 import { SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useSubChannelsFolded'
 import { afterTheArrival } from '@/stories/after-the-arrival'
-import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
+import { ARRIVAL_SPAN_MS, GUIDE_HOLD_MS } from '@/lib/arrival'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { AppFrame } from '@/components/vela/app-shell'
 import { GuideView } from '@/components/guide/guide-page'
@@ -56,6 +61,12 @@ const meta = {
     onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
     onCancel: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
     onRevise: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+    onReadExtras: async (
+      _kind: string,
+      _date: string,
+      id: string,
+    ): Promise<ProgramExtras | undefined> =>
+      PROGRAM_FIXTURES.find((program) => program.id === id),
   },
   decorators: [
     (Story) => (
@@ -120,7 +131,7 @@ export const 現れ方: Story = {
       await expect(drawn.animationName).toBe('rise')
       await expect(drawn.animationDuration).toBe('0.7s')
       await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
-        nth * 0.04,
+        GUIDE_HOLD_MS / 1000 + nth * 0.04,
         3,
       )
       await expect(drawn.getPropertyValue('--rise-from').trim()).toBe('55%')
@@ -148,7 +159,7 @@ export const 現れ方: Story = {
 
     await expect(drawnLine.animationName).toBe('draw')
     await expect(Number.parseFloat(drawnLine.animationDelay)).toBeCloseTo(
-      0.98,
+      GUIDE_HOLD_MS / 1000 + 0.98,
       3,
     )
 
@@ -530,6 +541,13 @@ export const 副チャンネルも同じ列: Story = {
 
     await expect(columns).toHaveLength(SERVICES_ONE_OF_THEM_SPLIT.length)
     await expect(headings).toHaveLength(SERVICES_ONE_OF_THEM_SPLIT.length)
+
+    const body = columns[0].parentElement as HTMLElement
+
+    for (const column of columns) {
+      await expect(getComputedStyle(column).contain).toBe('size layout style')
+      await expect(column.offsetHeight).toBe(body.offsetHeight)
+    }
     await expect(widthOf(columns[split])).toBeGreaterThan(COLUMN_MIN_PX)
 
     for (const index of SERVICES_ONE_OF_THEM_SPLIT.keys()) {
@@ -1497,5 +1515,63 @@ export const 畳む先が無ければ操作子を出さない: Story = {
     await expect(
       within(canvasElement).queryByRole('button', { name: '副チャンネル' }),
     ).toBeNull()
+  },
+}
+
+const WITH_ITS_OWN_ITEMS = PROGRAM_FIXTURES.find(
+  (program) => (program.items ?? []).length > 0,
+) as Program
+
+const heldExtras: { asked: string[]; release: () => void } = {
+  asked: [],
+  release: () => undefined,
+}
+
+export const 詳しい情報は開いてから取りに行く: Story = {
+  args: {
+    guide: { ...base, programs: base.programs.map(forTheGrid) },
+    onReadExtras: async (_kind: string, _date: string, id: string) => {
+      heldExtras.asked.push(id)
+      await new Promise<void>((resolve) => {
+        heldExtras.release = resolve
+      })
+
+      return {
+        items: WITH_ITS_OWN_ITEMS.items,
+        related: WITH_ITS_OWN_ITEMS.related,
+      }
+    },
+  },
+  play: async ({ canvasElement }) => {
+    heldExtras.asked = []
+    await afterTheArrival(canvasElement)
+
+    const cell = within(canvasElement).getAllByRole('button', {
+      name: new RegExp(WITH_ITS_OWN_ITEMS.title.slice(0, 6)),
+    })[0]
+
+    await userEvent.click(cell)
+
+    const surface = await waitFor(() => {
+      const found = canvasElement.ownerDocument.querySelector<HTMLElement>(
+        '[data-slot="dialog-content"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found as HTMLElement
+    })
+
+    await expect(within(surface).getByRole('status')).toBeVisible()
+    await expect(heldExtras.asked).toEqual([WITH_ITS_OWN_ITEMS.id])
+
+    heldExtras.release()
+
+    await waitFor(() =>
+      expect(surface).toHaveTextContent(
+        WITH_ITS_OWN_ITEMS.items?.[0]?.heading ?? '',
+      ),
+    )
+    await expect(within(surface).queryByRole('status')).toBeNull()
   },
 }

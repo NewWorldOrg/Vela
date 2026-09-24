@@ -37,6 +37,8 @@ import {
   ProgramExtended,
 } from '@/components/guide/program-description'
 import { ReserveButton } from '@/components/guide/reserve-button'
+import { InlineAlert } from '@/components/vela/banner'
+import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 
 const RELATION_WORDING: Record<
   RelationKind,
@@ -77,6 +79,7 @@ export function ProgramDetailBody({
   onAir = false,
   onReserve,
   reservation,
+  extras = 'ready',
 }: {
   program: Program
   channel?: Channel
@@ -84,6 +87,7 @@ export function ProgramDetailBody({
   onAir?: boolean
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   reservation?: ReactNode
+  extras?: 'ready' | 'waiting' | 'failed'
 }) {
   const related = program.related ?? []
   const items = program.items ?? []
@@ -125,6 +129,16 @@ export function ProgramDetailBody({
       <div className="mt-5 border-t border-dashed border-line pt-5">
         {program.description && (
           <ProgramDescription description={program.description} />
+        )}
+        {extras === 'waiting' && (
+          <div role="status" aria-label={WAITING_LABEL} className="mb-4">
+            <WaitingRows rows={3} />
+          </div>
+        )}
+        {extras === 'failed' && (
+          <InlineAlert className="mb-4">
+            出演者や内容などの詳しい情報を読み込めませんでした。
+          </InlineAlert>
         )}
         {related.map((item) => (
           <RelatedNotice

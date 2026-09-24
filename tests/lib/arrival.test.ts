@@ -22,6 +22,9 @@ import {
   rowDelayMs,
   seatIn,
   newcomersOf,
+  GUIDE_HOLD_MS,
+  glyphsOf,
+  GUIDE_FACES,
 } from '@/lib/arrival'
 
 test('a delay is handed over as a custom property, never as a number', () => {
@@ -85,7 +88,7 @@ test('only the first twelve parts of a list move at all', () => {
 })
 
 test('the procession has an end the list can wait for', () => {
-  assert.equal(ARRIVAL_SPAN_MS, RISE_MS + GRID_CAP_MS + 100)
+  assert.equal(ARRIVAL_SPAN_MS, GUIDE_HOLD_MS + RISE_MS + GRID_CAP_MS + 100)
 })
 
 test('only what was not in the line-up just before counts as having joined', () => {
@@ -95,4 +98,23 @@ test('only what was not in the line-up just before counts as having joined', () 
   )
   assert.deepEqual([...newcomersOf(['a', 'b', 'c'], ['a', 'c'])], [])
   assert.deepEqual([...newcomersOf([], ['a'])], ['a'])
+})
+
+test('the glyphs a guide will draw are gathered once, each only once', () => {
+  assert.equal(glyphsOf(['番組表', '表示', 'NHK 1']), '番組表示NHK 1')
+  assert.equal(glyphsOf([]), '')
+})
+
+test('each face and weight the guide draws in is loaded ahead of scrolling', () => {
+  assert.deepEqual(GUIDE_FACES, [
+    '400 1em "Broadcast Marks"',
+    '400 1em "Zen Kaku Gothic New"',
+    '500 1em "Zen Kaku Gothic New"',
+    '700 1em "Zen Kaku Gothic New"',
+    '500 1em "M PLUS 1 Code"',
+  ])
+})
+
+test('the guide holds its columns still until its first picture is on screen', () => {
+  assert.equal(GUIDE_HOLD_MS, 160)
 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -15,7 +15,7 @@ import type {
   CollectionStatus,
   RebuildResult,
 } from '@/repository/collection'
-import type { GuideResult, Program } from '@/repository/programs'
+import type { GuideResult, Program, ProgramExtras } from '@/repository/programs'
 import type {
   ReservationRevision,
   ReservationWrite,
@@ -44,6 +44,7 @@ export function GuideView({
   onReserve,
   onCancel,
   onRevise,
+  onReadExtras,
 }: {
   guide: GuideResult
   collection: CollectionStatus
@@ -55,6 +56,12 @@ export function GuideView({
     id: string,
     revision: ReservationRevision,
   ) => Promise<ReservationWrite>
+  onReadExtras: (
+    kind: string,
+    date: string,
+    id: string,
+    channelId: string,
+  ) => Promise<ProgramExtras | undefined>
 }) {
   const router = useRouter()
   const [, startWaiting] = useTransition()
@@ -73,10 +80,36 @@ export function GuideView({
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
 
-  const select = useCallback((program: Program) => {
-    setSelected(program)
-    setPanelOpen(true)
-  }, [])
+  const [extras, setExtras] = useState<
+    Record<string, ProgramExtras | 'failed'>
+  >({})
+  const asked = useRef(new Set<string>())
+  const extrasKeyOf = useCallback(
+    (program: Program) =>
+      [guide.kind, guide.day.date, program.channelId, program.id].join('|'),
+    [guide.kind, guide.day.date],
+  )
+
+  const select = useCallback(
+    (program: Program) => {
+      setSelected(program)
+      setPanelOpen(true)
+
+      const key = extrasKeyOf(program)
+
+      if (program.items !== undefined || asked.current.has(key)) {
+        return
+      }
+
+      asked.current.add(key)
+      onReadExtras(guide.kind, guide.day.date, program.id, program.channelId)
+        .then((found) =>
+          setExtras((was) => ({ ...was, [key]: found ?? 'failed' })),
+        )
+        .catch(() => setExtras((was) => ({ ...was, [key]: 'failed' })))
+    },
+    [extrasKeyOf, onReadExtras, guide.kind, guide.day.date],
+  )
 
   const patch = useCallback(
     (next: Record<string, string | null>) => {
@@ -101,6 +134,16 @@ export function GuideView({
   const dayIndex = guide.days.findIndex((d) => d.date === guide.day.date)
   const prev = guide.days[dayIndex - 1]
   const next = guide.days[dayIndex + 1]
+
+  const loaded = shown ? extras[extrasKeyOf(shown)] : undefined
+  const detailed =
+    shown && typeof loaded === 'object' ? { ...shown, ...loaded } : shown
+  const extrasState =
+    !shown || shown.items !== undefined || typeof loaded === 'object'
+      ? undefined
+      : loaded === 'failed'
+        ? 'failed'
+        : 'waiting'
 
   return (
     <ScreenMain
@@ -249,7 +292,8 @@ export function GuideView({
           />
           {shown && (
             <ProgramPanel
-              program={shown}
+              program={detailed ?? shown}
+              extras={extrasState}
               channel={shownGuide.channels.find(
                 (c) => c.id === shown.channelId,
               )}

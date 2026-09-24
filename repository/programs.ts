@@ -218,6 +218,50 @@ export async function getGuide(
   }
 }
 
+export const PANEL_ONLY = [
+  'items',
+  'related',
+  'audio',
+  'video',
+  'sounds',
+  'subtitled',
+  'dateLabel',
+  'durationLabel',
+] as const satisfies readonly (keyof Program)[]
+
+export type ProgramExtras = Pick<Program, (typeof PANEL_ONLY)[number]>
+
+export function forTheGrid(
+  program: Program,
+): Omit<Program, keyof ProgramExtras> {
+  const handed: Program = { ...program }
+
+  for (const key of PANEL_ONLY) {
+    delete handed[key]
+  }
+
+  return handed
+}
+
+export async function extrasOf(
+  rawKind: string | undefined,
+  rawDate: string | undefined,
+  id: string,
+  channelId: string,
+): Promise<ProgramExtras | undefined> {
+  const guide = await getGuide(rawKind, rawDate)
+  const found = guide.programs.find(
+    (program) => program.id === id && program.channelId === channelId,
+  )
+
+  return (
+    found &&
+    (Object.fromEntries(
+      PANEL_ONLY.map((key) => [key, found[key]]),
+    ) as ProgramExtras)
+  )
+}
+
 export async function getProgram(
   id: string,
   now: Date = new Date(),
