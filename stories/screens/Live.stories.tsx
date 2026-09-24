@@ -583,6 +583,19 @@ export const 副チャンネルを出している: Story = {
     await expect(
       canvas.getByRole('button', { name: /湾岸放送2/ }),
     ).toBeVisible()
+
+    const middleOf = (element: HTMLElement) => {
+      const box = element.getBoundingClientRect()
+
+      return box.top + box.height / 2
+    }
+
+    await expect(
+      Math.abs(
+        middleOf(canvas.getByRole('button', { name: '副チャンネル' })) -
+          middleOf(canvas.getByRole('heading', { name: 'ライブ' })),
+      ),
+    ).toBeLessThan(4)
   },
 }
 

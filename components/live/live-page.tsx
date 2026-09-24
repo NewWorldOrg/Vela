@@ -157,12 +157,11 @@ export function LiveView({
   if (!watching) {
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
-        <h1 className={HEADING}>
-          <LiveIcon className="size-[calc(22rem/16)] text-brand" />
-          ライブ
-        </h1>
-        <div className="mb-3.5 flex flex-wrap items-center gap-2">
-          <ChannelKinds kind={screen.kind} kinds={screen.kinds} onKind={kind} />
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <h1 className={cn(HEADING, 'mb-0')}>
+            <LiveIcon className="size-[calc(22rem/16)] text-brand" />
+            ライブ
+          </h1>
           {foldable && (
             <button
               type="button"
@@ -178,6 +177,12 @@ export function LiveView({
             </button>
           )}
         </div>
+        <ChannelKinds
+          kind={screen.kind}
+          kinds={screen.kinds}
+          onKind={kind}
+          className="mb-3.5"
+        />
         {screen.channels.length === 0 ? (
           <ChannelsMissing
             kind={screen.kind}
