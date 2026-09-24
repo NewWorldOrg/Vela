@@ -28,12 +28,11 @@ function writeCookie(value: ThemePreference) {
   document.cookie = `${COOKIE_KEY}=${value};path=/;max-age=31536000;SameSite=Lax`
 }
 
-function applyClass(mode: ThemeMode) {
-  if (mode === 'dark') {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
+function applyClass(preference: ThemePreference) {
+  const { classList } = document.documentElement
+
+  classList.toggle('dark', preference === 'dark')
+  classList.toggle('system', preference === 'system')
 }
 
 function systemMode(dark: boolean): ThemeMode {
@@ -42,6 +41,14 @@ function systemMode(dark: boolean): ThemeMode {
 
 function systemIsDark(): boolean {
   return window.matchMedia(SYSTEM_DARK).matches
+}
+
+function followSystem(notify: () => void): () => void {
+  const mediaQuery = window.matchMedia(SYSTEM_DARK)
+
+  mediaQuery.addEventListener('change', notify)
+
+  return () => mediaQuery.removeEventListener('change', notify)
 }
 
 function systemIsDarkOnTheServer(): boolean {
@@ -58,22 +65,6 @@ export function ThemeProvider({
   const [preference, setPreferenceState] =
     useState<ThemePreference>(initialPreference)
 
-  const followSystem = useCallback(
-    (notify: () => void) => {
-      const mediaQuery = window.matchMedia(SYSTEM_DARK)
-      const listener = (e: MediaQueryListEvent) => {
-        if (preference === 'system') {
-          applyClass(systemMode(e.matches))
-        }
-        notify()
-      }
-
-      mediaQuery.addEventListener('change', listener)
-      return () => mediaQuery.removeEventListener('change', listener)
-    },
-    [preference],
-  )
-
   const systemDark = useSyncExternalStore(
     followSystem,
     systemIsDark,
@@ -86,7 +77,7 @@ export function ThemeProvider({
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next)
     writeCookie(next)
-    applyClass(next === 'system' ? systemMode(systemIsDark()) : next)
+    applyClass(next)
   }, [])
 
   return (

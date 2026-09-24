@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:where(.system, .system *) {
+      @slot;
+    }
+  }
+}
 
 @layer base {
   *,
@@ -144,86 +154,88 @@
     --logo-plate: #fffdf8;
   }
 
-  .dark {
-    color-scheme: dark;
-    --bg: #141317;
-    --dot: rgba(236, 234, 240, 0.07);
-    --surface: #1c1b1f;
-    --surface-2: #252428;
-    --surface-3: #302e34;
-    --line: #39383c;
-    --line-strong: #57565b;
-    --edge: var(--ink-3);
-    --ink: #eceaf0;
-    /* The two lower ink steps are lightened together, one step, keeping the
-       distance between them.
+  :root {
+    @variant dark {
+      color-scheme: dark;
+      --bg: #141317;
+      --dot: rgba(236, 234, 240, 0.07);
+      --surface: #1c1b1f;
+      --surface-2: #252428;
+      --surface-3: #302e34;
+      --line: #39383c;
+      --line-strong: #57565b;
+      --edge: var(--ink-3);
+      --ink: #eceaf0;
+      /* The two lower ink steps are lightened together, one step, keeping the
+         distance between them.
 
-       They were set against the ground. But in this theme every tint and every
-       soft fill sits *above* the ground, and light text on a lighter background
-       is text with less to work with, not more: --ink-3 reads 5.22:1 on
-       --surface and only 3.79:1 on --tint-sage, the lightest surface there is.
-       So the ground is the wrong thing to have measured against, and the step
-       is set against that lightest surface instead — 4.56:1 there, and more
-       everywhere else.
+         They were set against the ground. But in this theme every tint and every
+         soft fill sits *above* the ground, and light text on a lighter background
+         is text with less to work with, not more: --ink-3 reads 5.22:1 on
+         --surface and only 3.79:1 on --tint-sage, the lightest surface there is.
+         So the ground is the wrong thing to have measured against, and the step
+         is set against that lightest surface instead — 4.56:1 there, and more
+         everywhere else.
 
-       --ink-2 has no such trouble of its own; it moves so that the three steps
-       stay three steps. Left where it was, the gap to --ink-3 closes to 1.13:1
-       and the scale reads as two. It now sits 1.35:1 from --ink-3, which is
-       where it was, and 1.69:1 from --ink, which is where the light theme's
-       first gap already is. */
-    --ink-2: #b8b5bf;
-    --ink-3: #9e9ba6;
-    --accent: #96bbb4;
-    --accent-hover: #a6c9c2;
-    --on-accent: #1a181e;
-    --accent-soft: #23312e;
-    --accent-line: #3a4f4b;
-    --btn-fill: #96bbb4;
-    --btn-fill-hover: #a6c9c2;
-    --on-btn: #1a181e;
-    --tint-lavender: #322d3e;
-    --tint-salmon: #3d2e2b;
-    --tint-butter: #3a3224;
-    --tint-sage: #2a3730;
-    --tint-sky: #28333f;
-    --tint-blush: #3b2d35;
-    --genre-news: var(--sky-soft);
-    --genre-news-line: var(--sky-line);
-    --genre-sports: var(--mint-soft);
-    --genre-sports-line: var(--mint-line);
-    --genre-info: #2a2e1e;
-    --genre-info-line: #3e4429;
-    --genre-drama: var(--coral-soft);
-    --genre-drama-line: var(--coral-line);
-    --genre-music: #33291d;
-    --genre-music-line: #4b3c27;
-    --genre-variety: var(--lemon-soft);
-    --genre-variety-line: var(--lemon-line);
-    --genre-movie: var(--accent-soft);
-    --genre-movie-line: var(--accent-line);
-    --genre-anime: #33243a;
-    --genre-anime-line: #4a3454;
-    --genre-doc: #232f27;
-    --genre-doc-line: #33453a;
-    --genre-other: var(--surface-2);
-    --genre-other-line: var(--line);
-    --mint: #86d2ac;
-    --mint-soft: #23342a;
-    --mint-line: #34503f;
-    --lemon: #e5ba6c;
-    --lemon-soft: #3a2f1b;
-    --lemon-line: #55452a;
-    --coral: #ec9a93;
-    --coral-soft: #3f2926;
-    --coral-line: #5c3b37;
-    --on-coral: #331312;
-    --sky: #8fc0ea;
-    --sky-soft: #26313a;
-    --sky-line: #3a4b5c;
-    --pop: rgba(0, 0, 0, 0.5);
-    --scrim: rgba(0, 0, 0, 0.5);
-    --ring: 0 0 0 3px rgba(150, 187, 180, 0.28);
-    --logo-plate: #efece5;
+         --ink-2 has no such trouble of its own; it moves so that the three steps
+         stay three steps. Left where it was, the gap to --ink-3 closes to 1.13:1
+         and the scale reads as two. It now sits 1.35:1 from --ink-3, which is
+         where it was, and 1.69:1 from --ink, which is where the light theme's
+         first gap already is. */
+      --ink-2: #b8b5bf;
+      --ink-3: #9e9ba6;
+      --accent: #96bbb4;
+      --accent-hover: #a6c9c2;
+      --on-accent: #1a181e;
+      --accent-soft: #23312e;
+      --accent-line: #3a4f4b;
+      --btn-fill: #96bbb4;
+      --btn-fill-hover: #a6c9c2;
+      --on-btn: #1a181e;
+      --tint-lavender: #322d3e;
+      --tint-salmon: #3d2e2b;
+      --tint-butter: #3a3224;
+      --tint-sage: #2a3730;
+      --tint-sky: #28333f;
+      --tint-blush: #3b2d35;
+      --genre-news: var(--sky-soft);
+      --genre-news-line: var(--sky-line);
+      --genre-sports: var(--mint-soft);
+      --genre-sports-line: var(--mint-line);
+      --genre-info: #2a2e1e;
+      --genre-info-line: #3e4429;
+      --genre-drama: var(--coral-soft);
+      --genre-drama-line: var(--coral-line);
+      --genre-music: #33291d;
+      --genre-music-line: #4b3c27;
+      --genre-variety: var(--lemon-soft);
+      --genre-variety-line: var(--lemon-line);
+      --genre-movie: var(--accent-soft);
+      --genre-movie-line: var(--accent-line);
+      --genre-anime: #33243a;
+      --genre-anime-line: #4a3454;
+      --genre-doc: #232f27;
+      --genre-doc-line: #33453a;
+      --genre-other: var(--surface-2);
+      --genre-other-line: var(--line);
+      --mint: #86d2ac;
+      --mint-soft: #23342a;
+      --mint-line: #34503f;
+      --lemon: #e5ba6c;
+      --lemon-soft: #3a2f1b;
+      --lemon-line: #55452a;
+      --coral: #ec9a93;
+      --coral-soft: #3f2926;
+      --coral-line: #5c3b37;
+      --on-coral: #331312;
+      --sky: #8fc0ea;
+      --sky-soft: #26313a;
+      --sky-line: #3a4b5c;
+      --pop: rgba(0, 0, 0, 0.5);
+      --scrim: rgba(0, 0, 0, 0.5);
+      --ring: 0 0 0 3px rgba(150, 187, 180, 0.28);
+      --logo-plate: #efece5;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

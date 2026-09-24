@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { NO_FLASH_THEME_SCRIPT } from '@/components/theme/noFlashThemeScript'
 import type { MotionSetting } from '@/lib/motion'
 
 export const metadata: Metadata = {
@@ -33,7 +32,13 @@ export default async function RootLayout({
   return (
     <html
       lang="ja"
-      className={explicitMode === 'dark' ? 'dark' : undefined}
+      className={
+        explicitMode === 'dark'
+          ? 'dark'
+          : explicitMode === null
+            ? 'system'
+            : undefined
+      }
       data-motion={motion}
       suppressHydrationWarning
     >
@@ -50,12 +55,6 @@ export default async function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        {explicitMode === null && (
-          <script
-            id="no-flash-theme-init"
-            dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }}
-          />
-        )}
         <ThemeProvider initialPreference={initialPreference}>
           {children}
         </ThemeProvider>
