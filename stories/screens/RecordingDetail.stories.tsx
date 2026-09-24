@@ -883,7 +883,7 @@ export const 失敗した録画にエンコードの操作子を出さない: St
   },
 }
 
-export const 成果物がある録画は作り直すと言う: Story = {
+export const 成果物がある録画は再エンコードと言う: Story = {
   args: { detail: detail('1274') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -893,10 +893,10 @@ export const 成果物がある録画は作り直すと言う: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'エンコード' }),
     ).toBeNull()
-    await userEvent.click(canvas.getByRole('button', { name: '作り直す' }))
+    await userEvent.click(canvas.getByRole('button', { name: '再エンコード' }))
 
     const dialog = await screen.findByRole('dialog', {
-      name: '成果物を作り直す',
+      name: '再エンコード',
     })
 
     await afterTheArrival(canvasElement)
@@ -907,7 +907,7 @@ export const 成果物がある録画は作り直すと言う: Story = {
     await expect(queued).toEqual([])
 
     await userEvent.click(
-      within(dialog).getByRole('button', { name: '作り直す' }),
+      within(dialog).getByRole('button', { name: '再エンコード' }),
     )
     await waitFor(() =>
       expect(queued).toEqual([['1274', 'ds-1', undefined, true]]),

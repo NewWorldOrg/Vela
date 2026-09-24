@@ -36,9 +36,9 @@ export type QueueEncode = (
 
 const ENCODE = 'エンコード'
 
-const AGAIN = '作り直す'
+const AGAIN = '再エンコード'
 
-const MAKING_IT_AGAIN = '成果物を作り直す'
+const MAKING_IT_AGAIN = '再エンコード'
 
 const WHAT_IT_REPLACES = 'いまの成果物は新しいものに置き換わります。'
 
