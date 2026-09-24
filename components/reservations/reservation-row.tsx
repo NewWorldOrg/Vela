@@ -166,7 +166,7 @@ export function ReservationRow({
             <ReservationStateChip reservation={reservation} say />
           </StatusCell>
         </TableCell>
-        <TableCell className="text-right align-middle">
+        <TableCell className="text-right align-top">
           <ActionRow className="gap-1.5">
             {reservation.recordingId && (
               <Button variant="watch" size="sm" asChild>

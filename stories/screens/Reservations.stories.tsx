@@ -129,6 +129,24 @@ export const 通常: Story = {
     await expect(
       canvas.getByRole('link', { name: '予約を追加' }),
     ).toHaveAttribute('href', '/guide')
+
+    await afterTheArrival(canvasElement)
+
+    for (const row of canvasElement.querySelectorAll<HTMLElement>(
+      'tbody > tr[data-slot="table-row"]',
+    )) {
+      const cells = [...row.children] as HTMLElement[]
+
+      if (cells.length < 2) {
+        continue
+      }
+
+      const lines = new Set(
+        cells.map((cell) => getComputedStyle(cell).verticalAlign),
+      )
+
+      await expect([...lines]).toEqual(['top'])
+    }
   },
 }
 
