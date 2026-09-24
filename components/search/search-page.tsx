@@ -33,7 +33,7 @@ import type {
   SearchViewing,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
-import { READABLE_LINE } from '@/components/ui/table'
+import { READABLE_LINE, TableHead } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -588,19 +588,16 @@ function SearchScreen({ result }: { result: SearchResult }) {
                           '番組',
                           'ジャンル',
                         ].map((h) => (
-                          <th
-                            key={h}
-                            className="sticky top-0 z-10 border-b border-line bg-surface px-3.5 py-[calc(9rem/16)] text-left text-micro font-bold tracking-[0.05em] whitespace-nowrap text-ink-3"
-                          >
+                          <TableHead key={h} className="sticky top-0 z-10">
                             {h}
-                          </th>
+                          </TableHead>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {found.hits.map((p) => (
                         <tr key={p.id} className="group">
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top text-ui whitespace-nowrap">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top text-ui whitespace-nowrap">
                             {p.channelName}
                             {p.channelNo && (
                               <small className="ml-1.5 font-code text-micro text-ink-3">
@@ -608,7 +605,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                               </small>
                             )}
                           </td>
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
                             <b className="mr-1.5 font-medium text-ink">
                               {p.dayLabel}
                             </b>
@@ -616,7 +613,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             {SPAN_DASH}
                             {p.endUndecided ? '終了未定' : p.endLabel}
                           </td>
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top">
                             <span
                               className={cn(
                                 READABLE_LINE,
@@ -646,7 +643,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                               </p>
                             )}
                           </td>
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top">
                             <span
                               className={cn(
                                 'inline-block rounded-full border px-[calc(11rem/16)] py-0.5 text-note font-medium text-ink-2',

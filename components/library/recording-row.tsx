@@ -28,7 +28,7 @@ export const GAP_BEFORE_STATE = 'pl-4'
 export const GAP_BEFORE_ACTIONS = 'pl-5'
 
 const CELL =
-  'border-b border-dashed border-line px-3 py-3 align-middle text-[calc(13rem/16)] group-last:border-b-0'
+  'border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-middle text-[calc(13rem/16)] group-last:border-b-0'
 
 const NUMBER = 'font-code text-ui whitespace-nowrap text-right'
 

@@ -16,6 +16,7 @@ import {
   RecordingRow,
 } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
+import { TableHead } from '@/components/ui/table'
 import { useArrived } from '@/hooks/useArrived'
 
 interface Column {
@@ -94,10 +95,10 @@ export function RecordingsTable({
         <thead>
           <tr>
             {COLUMNS.map((column) => (
-              <th
+              <TableHead
                 key={column.label}
                 className={cn(
-                  'sticky top-0 z-10 border-b border-line bg-surface px-3 py-[calc(9rem/16)] text-left text-micro font-bold tracking-[0.05em] whitespace-nowrap text-ink-3',
+                  'sticky top-0 z-10',
                   column.right && 'text-right',
                   column.gap,
                   column.detail && DETAIL_CELL,
@@ -108,7 +109,7 @@ export function RecordingsTable({
                 ) : (
                   column.label
                 )}
-              </th>
+              </TableHead>
             ))}
           </tr>
         </thead>
