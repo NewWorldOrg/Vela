@@ -612,6 +612,19 @@ export const 副チャンネルを畳んでいる: Story = {
     await expect(
       window.localStorage.getItem(LIVE_SUB_CHANNELS_FOLDED_KEY),
     ).toBe('folded')
+
+    await userEvent.click(fold)
+    await expect(fold).toHaveAttribute('aria-pressed', 'true')
+
+    const back = canvas
+      .getByRole('button', { name: /みなと総合2/ })
+      .closest('li') as HTMLElement
+    const stayed = canvas
+      .getByRole('button', { name: /みなと総合1/ })
+      .closest('li') as HTMLElement
+
+    await expect(getComputedStyle(back).animationName).toBe('item')
+    await expect(getComputedStyle(stayed).animationName).toBe('none')
   },
 }
 

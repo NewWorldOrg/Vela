@@ -631,6 +631,24 @@
   }
 }
 
+@property --rise-from {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 55%;
+}
+
+@property --rise-squash {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1.2;
+}
+
+@property --rise-stretch {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0.9;
+}
+
 @keyframes rise {
   from {
     transform: translateY(var(--rise-from, 55%))

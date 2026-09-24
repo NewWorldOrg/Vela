@@ -11,6 +11,7 @@ import {
   seatIn,
 } from '@/lib/arrival'
 import { useArrived } from '@/hooks/useArrived'
+import { useNewcomers } from '@/hooks/useNewcomers'
 import { SPAN_DASH } from '@/lib/format'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress'
@@ -28,6 +29,7 @@ export function ChannelGrid({
 }) {
   const [columns, setColumns] = useState<number>(0)
   const arrived = useArrived()
+  const newcomers = useNewcomers(channels.map((channel) => channel.id))
 
   const measure = useCallback(
     (node: HTMLUListElement | null) => {
@@ -58,7 +60,10 @@ export function ChannelGrid({
           <li
             key={channel.id}
             style={delayOf(gridDelayMs(seat.row, seat.column))}
-            className={cn(arrivesIn(nth), 'min-w-0 max-w-[22rem]')}
+            className={cn(
+              newcomers.has(channel.id) ? 'joins' : arrivesIn(nth),
+              'min-w-0 max-w-[22rem]',
+            )}
           >
             <ChannelCard channel={channel} onSelect={onSelect} />
           </li>

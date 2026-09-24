@@ -78,3 +78,12 @@ export function columnsAcross(node: Element | null): number {
 
   return Math.max(1, tracks)
 }
+
+export function newcomersOf(
+  before: readonly string[],
+  now: readonly string[],
+): Set<string> {
+  const were = new Set(before)
+
+  return new Set(now.filter((id) => !were.has(id)))
+}

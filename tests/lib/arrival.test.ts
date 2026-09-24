@@ -21,6 +21,7 @@ import {
   risesIn,
   rowDelayMs,
   seatIn,
+  newcomersOf,
 } from '@/lib/arrival'
 
 test('a delay is handed over as a custom property, never as a number', () => {
@@ -85,4 +86,13 @@ test('only the first twelve parts of a list move at all', () => {
 
 test('the procession has an end the list can wait for', () => {
   assert.equal(ARRIVAL_SPAN_MS, RISE_MS + GRID_CAP_MS + 100)
+})
+
+test('only what was not in the line-up just before counts as having joined', () => {
+  assert.deepEqual(
+    [...newcomersOf(['a', 'b'], ['a', 'x', 'b', 'y'])],
+    ['x', 'y'],
+  )
+  assert.deepEqual([...newcomersOf(['a', 'b', 'c'], ['a', 'c'])], [])
+  assert.deepEqual([...newcomersOf([], ['a'])], ['a'])
 })

@@ -1,14 +1,14 @@
 'use client'
 
-import { type RefObject, useEffect, useState } from 'react'
+import { type RefObject, startTransition, useEffect, useState } from 'react'
 
+import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
 import {
   type ColumnRange,
   type MinuteRange,
   columnsBeforeMeasuringOf,
   drawnColumnsOf,
   drawnMinutesOf,
-  minutesBeforeMeasuringOf,
 } from '@/lib/guide'
 
 export interface DrawnRange {
@@ -29,17 +29,15 @@ export function useDrawnRange(
     columns,
     windowMin,
     hourPx,
-    nowMin,
   }: {
     columns: number
     windowMin: number
     hourPx: number
-    nowMin: number | undefined
   },
 ): DrawnRange {
   const [range, setRange] = useState<DrawnRange>(() => ({
     columns: columnsBeforeMeasuringOf(columns),
-    minutes: minutesBeforeMeasuringOf(nowMin, windowMin, hourPx),
+    minutes: { from: 0, to: windowMin },
   }))
 
   useEffect(() => {
@@ -50,20 +48,27 @@ export function useDrawnRange(
     }
 
     let frame: number | null = null
+    let arriving = true
 
     const measure = (): void => {
       frame = null
 
       const across = drawnColumnsOf(node, columns)
-      const down = drawnMinutesOf(node, windowMin, hourPx)
+      const down = arriving
+        ? { from: 0, to: windowMin }
+        : drawnMinutesOf(node, windowMin, hourPx)
 
-      setRange((was) => {
-        const minutes = down ?? was.minutes
+      const settle = (): void =>
+        setRange((was) => {
+          const minutes = down ?? was.minutes
 
-        return sameRange(was.columns, across) && sameRange(was.minutes, minutes)
-          ? was
-          : { columns: across, minutes }
-      })
+          return sameRange(was.columns, across) &&
+            sameRange(was.minutes, minutes)
+            ? was
+            : { columns: across, minutes }
+        })
+
+      startTransition(settle)
     }
 
     const soon = (): void => {
@@ -73,6 +78,10 @@ export function useDrawnRange(
     }
 
     const resizing = new ResizeObserver(soon)
+    const arrived = setTimeout(() => {
+      arriving = false
+      soon()
+    }, ARRIVAL_SPAN_MS)
 
     node.addEventListener('scroll', soon, { passive: true })
     resizing.observe(node)
@@ -81,6 +90,7 @@ export function useDrawnRange(
     return () => {
       node.removeEventListener('scroll', soon)
       resizing.disconnect()
+      clearTimeout(arrived)
 
       if (frame !== null) {
         cancelAnimationFrame(frame)

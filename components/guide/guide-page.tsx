@@ -236,6 +236,7 @@ export function GuideView({
       ) : (
         <>
           <GuideGrid
+            key={guide.kind}
             channels={shownGuide.channels}
             programs={shownGuide.programs}
             dayKey={guide.day.date}

@@ -25,6 +25,7 @@ import {
 } from '@/repository/programs.fixtures'
 import { SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useSubChannelsFolded'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { AppFrame } from '@/components/vela/app-shell'
 import { GuideView } from '@/components/guide/guide-page'
@@ -99,6 +100,13 @@ export const 通常: Story = {
 
 export const 現れ方: Story = {
   args: { guide: base },
+  decorators: [
+    (Story) => (
+      <div className="screen-rises">
+        <Story />
+      </div>
+    ),
+  ],
   play: async ({ canvasElement }) => {
     const columns = [
       ...canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
@@ -109,18 +117,26 @@ export const 現れ方: Story = {
     for (const [nth, column] of columns.slice(0, 3).entries()) {
       const drawn = getComputedStyle(column)
 
-      if (column.hasAttribute('data-guide-sub')) {
-        await expect(drawn.animationName).toBe('item')
-        continue
-      }
-
       await expect(drawn.animationName).toBe('rise')
       await expect(drawn.animationDuration).toBe('0.7s')
       await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
         nth * 0.04,
         3,
       )
+      await expect(drawn.getPropertyValue('--rise-from').trim()).toBe('55%')
+      await expect(drawn.getPropertyValue('--rise-squash').trim()).toBe('1.2')
+      await expect(drawn.getPropertyValue('--rise-stretch').trim()).toBe('0.9')
     }
+
+    const first = columns[0]
+    const channel = base.channels[0]
+
+    await expect(
+      first.querySelectorAll('[data-opens="program-panel"]').length,
+    ).toBe(
+      base.programs.filter((program) => program.channelId === channel.id)
+        .length,
+    )
 
     const line = canvasElement.querySelector<HTMLElement>(
       '[data-now-line] line',
@@ -139,9 +155,7 @@ export const 現れ方: Story = {
     document.documentElement.classList.add('dark')
 
     try {
-      await expect(getComputedStyle(columns[0]).animationName).toBe(
-        columns[0].hasAttribute('data-guide-sub') ? 'item' : 'rise',
-      )
+      await expect(getComputedStyle(columns[0]).animationName).toBe('rise')
       await expect(getComputedStyle(line as Element).animationName).toBe('draw')
     } finally {
       document.documentElement.classList.remove('dark')
@@ -493,6 +507,8 @@ export const 副チャンネルも同じ列: Story = {
   },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const split = SERVICES_ONE_OF_THEM_SPLIT.findIndex((channel) => channel.sub)
     await expect(split).toBeGreaterThan(-1)
 
@@ -913,8 +929,6 @@ export const 下へ送ると先の番組が描かれる: Story = {
   args: { guide: A_DAY_NOT_TODAY },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const drawnCells = () =>
       Array.from(
@@ -923,8 +937,13 @@ export const 下へ送ると先の番組が描かれる: Story = {
         ),
       )
 
+    await expect(drawnCells()).toHaveLength(IN_GRID_ORDER.length)
+
+    await afterTheArrival(canvasElement)
     await expect(scroller.scrollTop).toBe(0)
-    await expect(drawnCells()).toHaveLength(0)
+    await waitFor(() => expect(drawnCells()).toHaveLength(0), {
+      timeout: ARRIVAL_SPAN_MS + 1000,
+    })
 
     scroller.scrollTop = (EVENING_MIN / 60) * HOUR_PX
 
@@ -1435,6 +1454,20 @@ export const 副チャンネルを畳んでいる: Story = {
     await expect(
       kept.querySelectorAll('[data-guide-unscheduled]').length,
     ).toBeGreaterThan(0)
+
+    await userEvent.click(press)
+    await expect(press).toHaveAttribute('aria-pressed', 'true')
+
+    const back = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
+    )[
+      columnsOf(canvasElement).findIndex((one) =>
+        one.includes(SPLIT_REPEATING_IT.name),
+      )
+    ]
+
+    await expect(getComputedStyle(back).animationName).toBe('item')
+    await expect(getComputedStyle(kept).animationName).toBe('none')
   },
 }
 

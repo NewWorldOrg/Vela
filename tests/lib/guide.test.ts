@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import type { GuideRelationKind } from '@/lib/guide'
 import {
+  MINUTES_DRAWN_STEP,
   bookingMarkOf,
   broadcastDateOf,
   columnsBeforeMeasuringOf,
@@ -14,7 +15,6 @@ import {
   gridMinWidthOf,
   isDrawn,
   isOnAir,
-  minutesBeforeMeasuringOf,
   nowMinOf,
   openingScrollTopOf,
   primaryKeyOfShadow,
@@ -739,34 +739,6 @@ test('a day with no split at all folds nothing', () => {
 
 const A_DAY_MIN = 24 * 60
 
-test('before the height is known, an eight-hour screen and half a screen either side of where the guide opens are drawn', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(9 * 60, A_DAY_MIN, HOUR_PX), {
-    from: 9 * 60 - 30 - 4 * 60,
-    to: 9 * 60 - 30 + 12 * 60,
-  })
-})
-
-test('a day the present is not in is drawn from the top before measuring', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(undefined, A_DAY_MIN, HOUR_PX), {
-    from: 0,
-    to: 12 * 60,
-  })
-})
-
-test('late in the day the first drawing opens where the scroll stops, not past it', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(23 * 60, A_DAY_MIN, HOUR_PX), {
-    from: 12 * 60,
-    to: A_DAY_MIN,
-  })
-})
-
-test('a window shorter than the screen is drawn whole before measuring', () => {
-  assert.deepEqual(minutesBeforeMeasuringOf(124, 8 * 60, HOUR_PX), {
-    from: 0,
-    to: 8 * 60,
-  })
-})
-
 test('half a screen above and half a screen below the hours in view are drawn', () => {
   assert.deepEqual(
     drawnMinutesOf(
@@ -838,34 +810,19 @@ const openedAt = (nowMin: number | undefined, viewPx: number): number =>
     HEADING_PX + (A_DAY_MIN / 60) * HOUR_PX - viewPx,
   )
 
-test('on a full HD screen, measuring after the first drawing adds no programme', () => {
-  for (const nowMin of [undefined, 0, 124, 5 * 60, 12 * 60, 17 * 60, 23 * 60]) {
-    const first = minutesBeforeMeasuringOf(nowMin, A_DAY_MIN, HOUR_PX)
-    const measured = drawnMinutesOf(
-      {
-        scrollTop: openedAt(nowMin, A_FULL_HD_VIEW_PX),
-        clientHeight: A_FULL_HD_VIEW_PX,
-      },
-      A_DAY_MIN,
-      HOUR_PX,
-    )
-
-    assert.ok(measured, `no range at ${nowMin}`)
-    assert.equal(addedBetween(first, measured), 0, `opened at ${nowMin}`)
-  }
-})
-
-test('scrolling adds programmes a frame at a time in proportion to how far it went', () => {
+test('scrolling redraws only when the view crosses a two-hour step', () => {
   const stepPx = 60
   const deepest = HEADING_PX + (A_DAY_MIN / 60) * HOUR_PX - A_FULL_HD_VIEW_PX
   const columns = 27
-  const rowsPerStep = Math.ceil((stepPx / HOUR_PX) * 2) + 1
+  const rowsPerStep = MINUTES_DRAWN_STEP / 30 + 1
   let was = drawnMinutesOf(
     { scrollTop: 0, clientHeight: A_FULL_HD_VIEW_PX },
     A_DAY_MIN,
     HOUR_PX,
   )!
   let most = 0
+  let frames = 0
+  let redraws = 0
 
   for (let scrollTop = stepPx; scrollTop <= deepest; scrollTop += stepPx) {
     const now = drawnMinutesOf(
@@ -874,15 +831,41 @@ test('scrolling adds programmes a frame at a time in proportion to how far it we
       HOUR_PX,
     )!
 
+    frames += 1
+    if (now.from !== was.from || now.to !== was.to) {
+      redraws += 1
+    }
     most = Math.max(most, addedBetween(was, now))
     was = now
   }
 
+  assert.equal(MINUTES_DRAWN_STEP, 120)
   assert.ok(most > 0)
   assert.ok(
     most <= rowsPerStep * columns,
     `${most} programmes were added in one frame`,
   )
+  assert.ok(
+    redraws * 2 < frames,
+    `${redraws} redraws over ${frames} frames of scrolling`,
+  )
+})
+
+test('a scroll that stays inside a step keeps the same range', () => {
+  const at = drawnMinutesOf(
+    { scrollTop: 10.5 * HOUR_PX, clientHeight: 4 * HOUR_PX },
+    A_DAY_MIN,
+    HOUR_PX,
+  )
+  const nudged = drawnMinutesOf(
+    { scrollTop: 10.5 * HOUR_PX + HOUR_PX / 3, clientHeight: 4 * HOUR_PX },
+    A_DAY_MIN,
+    HOUR_PX,
+  )
+
+  assert.deepEqual(nudged, at)
+  assert.equal(at!.from % MINUTES_DRAWN_STEP, 0)
+  assert.equal(at!.to % MINUTES_DRAWN_STEP, 0)
 })
 
 test('a programme is drawn when any of it falls within the range', () => {

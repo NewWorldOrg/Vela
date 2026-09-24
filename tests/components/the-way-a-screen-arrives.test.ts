@@ -535,3 +535,39 @@ test('each settings screen rises on its own, and the frame around it does not', 
   assert.match(template, /screen-rises/)
   assert.match(shell, /<ScreenMain\s+rises=\{false\}/)
 })
+
+test('the settings of a movement stay on the part that wrote them', async () => {
+  const sheet = await readFile(path.join(ROOT, THE_SHEET), 'utf8')
+
+  for (const [name, initial] of [
+    ['--rise-from', '55%'],
+    ['--rise-squash', '1.2'],
+    ['--rise-stretch', '0.9'],
+  ]) {
+    const at = sheet.indexOf(`@property ${name} {`)
+
+    assert.ok(
+      at >= 0,
+      `${name} is inherited, so the screen's small rise shrinks every rise inside it`,
+    )
+    const body = sheet.slice(at, sheet.indexOf('}', at))
+
+    assert.match(body, /inherits: false;/)
+    assert.match(
+      body,
+      new RegExp(`initial-value: ${initial.replace('.', '\\.')};`),
+    )
+  }
+})
+
+test('a guide column rises exactly as the first version did', async () => {
+  const sheet = await readFile(path.join(ROOT, THE_SHEET), 'utf8')
+  const at = sheet.indexOf('@utility rises {')
+  const body = sheet.slice(at, sheet.indexOf('\n}\n', at))
+
+  assert.doesNotMatch(
+    body,
+    /--rise-|transform-origin/,
+    'the rise was tuned away from the first version the user liked',
+  )
+})

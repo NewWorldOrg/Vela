@@ -375,8 +375,6 @@ export function isDrawn(range: ColumnRange, nth: number): boolean {
   return range.from <= nth && nth < range.to
 }
 
-export const VIEW_HOURS_BEFORE_MEASURING = 8
-
 export const SCREENS_DRAWN_AROUND = 0.5
 
 export interface MinuteRange {
@@ -388,6 +386,8 @@ export interface GuideDepth {
   scrollTop: number
   clientHeight: number
 }
+
+export const MINUTES_DRAWN_STEP = 120
 
 export function drawnMinutesOf(
   view: GuideDepth,
@@ -401,30 +401,19 @@ export function drawnMinutesOf(
   const minuteOf = (px: number): number => (px / hourPx) * 60
   const around = view.clientHeight * SCREENS_DRAWN_AROUND
 
+  const step = MINUTES_DRAWN_STEP
+
   return {
-    from: Math.max(0, Math.floor(minuteOf(view.scrollTop - around))),
+    from: Math.max(
+      0,
+      Math.floor(minuteOf(view.scrollTop - around) / step) * step,
+    ),
     to: Math.min(
       windowMin,
-      Math.ceil(minuteOf(view.scrollTop + view.clientHeight + around)),
+      Math.ceil(minuteOf(view.scrollTop + view.clientHeight + around) / step) *
+        step,
     ),
   }
-}
-
-export function minutesBeforeMeasuringOf(
-  nowMin: number | undefined,
-  windowMin: number,
-  hourPx: number,
-): MinuteRange {
-  const viewPx = VIEW_HOURS_BEFORE_MEASURING * hourPx
-  const deepest = Math.max(0, (windowMin / 60) * hourPx - viewPx)
-  const scrollTop = Math.min(openingScrollTopOf(nowMin, hourPx), deepest)
-
-  return (
-    drawnMinutesOf({ scrollTop, clientHeight: viewPx }, windowMin, hourPx) ?? {
-      from: 0,
-      to: windowMin,
-    }
-  )
 }
 
 export function fallsWithin(
