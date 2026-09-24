@@ -71,7 +71,9 @@ export function SessionTable({
           <TableHead>アカウント</TableHead>
           <TableHead>作成</TableHead>
           <TableHead>{WHEN_LABELS.taken}</TableHead>
-          <TableHead className="text-right">操作</TableHead>
+          <TableHead>
+            <span className="sr-only">操作</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

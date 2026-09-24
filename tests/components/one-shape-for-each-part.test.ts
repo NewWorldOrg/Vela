@@ -159,3 +159,31 @@ test('the integrity table heads each column on the side its values sit', async (
     'the integrity headings do not follow the side their column is set to',
   )
 })
+
+test('the heading of an actions column is read out and not drawn, in every table', async () => {
+  const headed: string[] = []
+
+  for (const { file, source } of await everySource()) {
+    for (const found of source.matchAll(
+      /<(TableHead|th)\b[^>]*>\s*操作\s*<\/\1>/g,
+    )) {
+      assert.fail(
+        `${file} draws the heading of its actions column: ${found[0]}`,
+      )
+    }
+
+    for (const found of source.matchAll(/\{[^{}]*label: '操作'[^{}]*\}/g)) {
+      headed.push(file)
+      assert.match(
+        found[0],
+        /hidden: true/,
+        `${file} draws the heading of its actions column`,
+      )
+    }
+  }
+
+  assert.ok(
+    headed.length > 4,
+    `only ${headed.length} actions columns were read`,
+  )
+})
