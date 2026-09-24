@@ -159,6 +159,22 @@ export const 通常: Story = {
     )
 
     await waitFor(() => expect(listTurned).toEqual([['rule-303', true]]))
+
+    await afterTheArrival(canvasElement)
+
+    const list = canvas
+      .getByRole('switch', { name: '深夜アニメを追う を有効にする' })
+      .closest('section') as HTMLElement
+    const chosen = canvas
+      .getByText('ルールが選ばれていません')
+      .closest('[data-slot="empty-state"]') as HTMLElement
+
+    if (window.innerWidth > 1060) {
+      await expect(chosen.getBoundingClientRect().top).toBeCloseTo(
+        list.getBoundingClientRect().top,
+        0,
+      )
+    }
   },
 }
 

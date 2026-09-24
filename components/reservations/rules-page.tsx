@@ -242,11 +242,7 @@ function RulesScreen({
         </section>
 
         {editing.state === 'none' ? (
-          <EmptyState
-            spot="list"
-            title="ルールが選ばれていません"
-            className="min-[1061px]:mt-6"
-          />
+          <EmptyState spot="list" title="ルールが選ばれていません" />
         ) : (
           <RuleEditor
             rule={editing.state === 'rule' ? editing.rule : undefined}
