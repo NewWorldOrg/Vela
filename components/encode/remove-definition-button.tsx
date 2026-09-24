@@ -91,7 +91,7 @@ export function RemoveDefinitionButton({
                 remove()
               }}
             >
-              {pending ? <Spinner className="size-3.5" /> : <TrashIcon />}
+              {pending ? <Spinner size="control" /> : <TrashIcon />}
               撤去する
             </AlertDialogAction>
           </AlertDialogFooter>

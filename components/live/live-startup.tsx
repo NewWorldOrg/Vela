@@ -25,7 +25,7 @@ export function LiveStartupSteps({
     >
       <Spinner
         className={cn(
-          'mb-2.5 size-7',
+          'mb-2.5',
           reconnecting === undefined
             ? 'text-(--pl-accent)'
             : 'text-(--pl-lemon)',

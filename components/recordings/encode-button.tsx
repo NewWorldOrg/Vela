@@ -133,7 +133,7 @@ export function EncodeButton({
         aria-disabled={pending}
         onClick={press}
       >
-        {pending ? <Spinner className="size-3.5" /> : <EncodeIcon />}
+        {pending ? <Spinner size="control" /> : <EncodeIcon />}
         {again ? AGAIN : ENCODE}
       </Button>
       {notice && (

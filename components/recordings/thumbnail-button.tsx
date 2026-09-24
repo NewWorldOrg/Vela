@@ -93,7 +93,7 @@ export function ThumbnailButton({
         aria-disabled={pending}
         onClick={redraw}
       >
-        {pending ? <Spinner className="size-3.5" /> : <RebuildIcon />}
+        {pending ? <Spinner size="control" /> : <RebuildIcon />}
         サムネイルを作り直す
       </Button>
       {notice && (

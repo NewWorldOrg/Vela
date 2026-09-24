@@ -171,7 +171,7 @@ export const States: Story = {
             onClick={hold}
             className="hover:border-btn-fill hover:bg-btn-fill hover:shadow-pop"
           >
-            <Spinner className="size-[13px]" />
+            <Spinner size="control" />
             保存しています
           </Button>
           <Button
@@ -181,7 +181,7 @@ export const States: Story = {
             onClick={hold}
             className="hover:shadow-pop"
           >
-            <Spinner className="size-[13px]" />
+            <Spinner size="control" />
             保存しています
           </Button>
         </span>

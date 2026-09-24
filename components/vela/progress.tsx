@@ -85,10 +85,18 @@ export function SignalMeter({
   )
 }
 
+const SPINNER_SIZE = {
+  control: 'size-3.5',
+  status: 'size-[calc(17rem/16)]',
+} as const
+
 export function Spinner({
   className,
+  size = 'status',
   ...props
-}: Omit<ComponentProps<'svg'>, 'children'>) {
+}: Omit<ComponentProps<'svg'>, 'children'> & {
+  size?: keyof typeof SPINNER_SIZE
+}) {
   return (
     <svg
       data-slot="spinner"
@@ -96,7 +104,7 @@ export function Spinner({
       fill="none"
       aria-hidden="true"
       focusable="false"
-      className={cn('size-[calc(17rem/16)] shrink-0 animate-spin', className)}
+      className={cn(SPINNER_SIZE[size], 'shrink-0 animate-spin', className)}
       {...props}
     >
       <circle

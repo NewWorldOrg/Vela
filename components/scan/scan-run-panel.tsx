@@ -185,7 +185,7 @@ export function ScanRunPanel({
         </div>
 
         <div className="mb-3 flex flex-wrap items-start gap-3">
-          <Spinner className="mt-[calc(3rem/16)] size-[calc(18rem/16)] text-brand" />
+          <Spinner className="mt-[calc(3rem/16)] text-brand" />
           <div className="min-w-0 flex-1">
             <h2 className="heading text-ui leading-[1.5]">
               スキャン中 —{' '}

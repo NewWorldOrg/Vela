@@ -540,3 +540,33 @@ test('a menu opens downwards and never turns round, the same as a select', async
 
   assert.ok(opening.length >= 2, `only ${opening.length} menus were read`)
 })
+
+test('a spinner is one of two sizes, chosen by name and declared once', async () => {
+  const progress = await read('components/vela/progress.tsx')
+  const sizes = progress.match(/const SPINNER_SIZE = \{([\s\S]*?)\} as const/)
+
+  assert.ok(sizes, 'the spinner no longer names its sizes')
+
+  const named = [...sizes[1].matchAll(/^\s*(\w+): '([^']+)'/gm)]
+
+  assert.equal(named.length, 2, `the spinner offers ${named.length} sizes`)
+
+  const spinning: string[] = []
+
+  for (const { file, source } of await everySource([
+    'app',
+    'components',
+    'stories',
+  ])) {
+    for (const found of source.matchAll(/<Spinner\b([^>]*)\/>/g)) {
+      spinning.push(file)
+      assert.doesNotMatch(
+        found[1],
+        /(^|[\s"'])size-/,
+        `${file} gives its spinner a size of its own: ${found[0]}`,
+      )
+    }
+  }
+
+  assert.ok(spinning.length > 10, `only ${spinning.length} spinners were read`)
+})

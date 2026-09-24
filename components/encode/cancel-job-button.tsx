@@ -65,7 +65,7 @@ export function CancelJobButton({
         aria-disabled={pending}
         onClick={asks ? () => setAsking(true) : callOff}
       >
-        {pending && !asks && <Spinner className="size-3.5" />}
+        {pending && !asks && <Spinner size="control" />}
         中止
       </Button>
       {refusal && !asks && <InlineAlert tone="warn">{refusal}</InlineAlert>}
@@ -105,7 +105,7 @@ export function CancelJobButton({
                   callOff()
                 }}
               >
-                {pending && <Spinner className="size-3.5" />}
+                {pending && <Spinner size="control" />}
                 中止する
               </AlertDialogAction>
             </AlertDialogFooter>
