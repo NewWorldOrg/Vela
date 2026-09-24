@@ -7,7 +7,6 @@ import {
   columnDelayMs,
   delayOf,
   groupDelayOf,
-  glyphsOf,
   nowLineDelayMs,
   risesIn,
 } from '@/lib/arrival'
@@ -29,7 +28,6 @@ import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
 import { useArrived } from '@/hooks/useArrived'
 import { useDrawnRange } from '@/hooks/useDrawnRange'
-import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
 import { useNewcomers } from '@/hooks/useNewcomers'
 
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
@@ -176,20 +174,6 @@ export function GuideGrid({
   )
   const arrived = useArrived()
   const newcomers = useNewcomers(channels.map((c) => c.id))
-  const glyphs = useMemo(
-    () =>
-      glyphsOf([
-        ...channels.map((c) => c.name),
-        ...programs.flatMap((p) => [
-          p.title,
-          p.genreLabel,
-          p.description ?? '',
-        ]),
-      ]),
-    [channels, programs],
-  )
-
-  useGlyphsAhead(glyphs)
   const openingTop = useRef(openingScrollTopOf(nowMin, HOUR_PX))
   const opened = useRef(false)
   const scroller = useRef<HTMLDivElement | null>(null)

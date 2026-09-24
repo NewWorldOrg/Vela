@@ -33,6 +33,8 @@ import {
 } from '@/components/vela/icons'
 import { CollectionDrawer } from '@/components/guide/collection-drawer'
 import { GuideGrid } from '@/components/guide/guide-grid'
+import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
+import { glyphsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
 import { ScreenMain } from '@/components/vela/app-shell'
 
@@ -78,6 +80,20 @@ export function GuideView({
     [guide.channels, guide.programs],
   )
   const shownGuide = folded && foldable ? foldedGuide : guide
+  const glyphs = useMemo(
+    () =>
+      glyphsOf([
+        ...guide.channels.map((c) => c.name),
+        ...guide.programs.flatMap((p) => [
+          p.title,
+          p.genreLabel,
+          p.description ?? '',
+        ]),
+      ]),
+    [guide.channels, guide.programs],
+  )
+
+  useGlyphsAhead(glyphs)
   const shown = selected
     ? (shownGuide.programs.find(
         (one) => one.id === selected.id && one.channelId === selected.channelId,
