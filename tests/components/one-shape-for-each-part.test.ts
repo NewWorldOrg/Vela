@@ -431,3 +431,83 @@ test('the colours of the player are one set, the same in both themes', async () 
     }
   }
 })
+
+const THE_PLAYER = /^components\/(recordings\/player|live\/live-player)/
+
+function pxOf(written: string): number | undefined {
+  const value = written.replace(/\s+/g, '')
+  const px = value.match(/^([\d.]+)px$/)
+
+  if (px) {
+    return Number(px[1])
+  }
+
+  const rem = value.match(/^calc\(([\d.]+)rem\/16\)$/)
+
+  return rem ? Number(rem[1]) : undefined
+}
+
+async function stepsOf(prefix: string): Promise<Map<number, string>> {
+  const tokens = await read('app/globals.css')
+  const plain = new Map(
+    [...tokens.matchAll(/^\s*(--r-[a-z]+): ([\d.]+)px;/gm)].map((found) => [
+      found[1],
+      Number(found[2]),
+    ]),
+  )
+  const steps = new Map<number, string>()
+
+  for (const found of tokens.matchAll(
+    new RegExp(`^\\s*--${prefix}-([a-z0-9]+): ([^;]+);`, 'gm'),
+  )) {
+    const value = found[2].trim()
+    const px =
+      pxOf(value) ?? plain.get(value.match(/^var\((--r-[a-z]+)\)$/)?.[1] ?? '')
+
+    if (px !== undefined) {
+      steps.set(px, found[1])
+    }
+  }
+
+  return steps
+}
+
+test('a corner or a size of type that is on a step is said by the step’s name', async () => {
+  const corners = await stepsOf('radius')
+  const types = await stepsOf('text')
+
+  assert.ok(corners.size >= 4, `only ${corners.size} corner steps were read`)
+  assert.ok(types.size >= 8, `only ${types.size} type steps were read`)
+
+  for (const { file, source } of await everySource()) {
+    if (THE_PLAYER.test(file)) {
+      continue
+    }
+
+    for (const found of source.matchAll(
+      /\brounded(?:-[a-z]{1,2})?-\[([^\]]+)\]/g,
+    )) {
+      const px = pxOf(found[1])
+
+      assert.ok(
+        px === undefined || !corners.has(px),
+        `${file} writes ${found[0]}, which is the step rounded-${corners.get(px!)}`,
+      )
+    }
+
+    for (const found of source.matchAll(/\btext-\[([^\]]+)\]/g)) {
+      assert.doesNotMatch(
+        found[1],
+        /^[\d.]+px$/,
+        `${file} writes a size of type in px: ${found[0]}`,
+      )
+
+      const px = pxOf(found[1])
+
+      assert.ok(
+        px === undefined || !types.has(px),
+        `${file} writes ${found[0]}, which is the step text-${types.get(px!)}`,
+      )
+    }
+  }
+})

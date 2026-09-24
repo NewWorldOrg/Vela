@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import type { StationLogo } from '@/repository/channels'
 
 const SLOT =
-  'box-content inline-flex h-6 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border align-middle'
+  'box-content inline-flex h-6 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border align-middle'
 
 export function ChannelMark({
   logo,
