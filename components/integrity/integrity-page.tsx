@@ -38,10 +38,15 @@ import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialo
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
+const COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+  right?: boolean
+}[] = [
   { label: 'ファイル', width: 'calc(360rem/16)' },
   { label: '理由', width: 'calc(240rem/16)' },
-  { label: 'サイズ', width: 'calc(112rem/16)' },
+  { label: 'サイズ', width: 'calc(112rem/16)', right: true },
   { label: '検出', width: 'calc(122rem/16)' },
   { label: '操作', width: 'calc(112rem/16)', hidden: true },
 ]
@@ -200,7 +205,10 @@ export function IntegrityView({
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {COLUMNS.map((column) => (
-                <TableHead key={column.label}>
+                <TableHead
+                  key={column.label}
+                  className={column.right ? 'text-right' : undefined}
+                >
                   {column.hidden ? (
                     <span className="sr-only">{column.label}</span>
                   ) : (
@@ -237,7 +245,7 @@ export function IntegrityView({
                     </small>
                   )}
                 </TableCell>
-                <TableCell className="align-top text-right font-code tabular-nums text-ink-2">
+                <TableCell className="align-top font-code tabular-nums text-ink-2">
                   {finding.noticedAt}
                 </TableCell>
                 <TableCell className="align-top text-right">

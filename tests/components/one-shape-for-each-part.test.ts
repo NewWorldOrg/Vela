@@ -106,3 +106,56 @@ test('the library and search tables head their columns with the shared heading c
     )
   }
 })
+
+async function everySource(
+  dirs: string[] = ['app', 'components'],
+): Promise<{ file: string; source: string }[]> {
+  const found: { file: string; source: string }[] = []
+
+  for (const dir of dirs) {
+    for (const file of await sourceFiles(dir)) {
+      found.push({ file, source: await read(file) })
+    }
+  }
+
+  return found
+}
+
+const A_CELL = /<(TableCell|td)\b([^>]*)>([\s\S]*?)<\/\1>/g
+
+const SAYS_A_MOMENT =
+  /\{[^}]*\b(\w+At|whenLabel|occurredLabel|formatMoment\w*)\b[^}]*\}|<Started\b/
+
+test('a moment in a table sits at the left, the same as its heading', async () => {
+  const moments: string[] = []
+
+  for (const { file, source } of await everySource()) {
+    for (const cell of source.matchAll(A_CELL)) {
+      if (!SAYS_A_MOMENT.test(cell[3])) {
+        continue
+      }
+
+      moments.push(file)
+      assert.doesNotMatch(
+        cell[2],
+        /text-right/,
+        `${file} sets a moment against the right edge of its column, ` +
+          'while every other table starts its moments at the left',
+      )
+    }
+  }
+
+  assert.ok(moments.length > 5, `only ${moments.length} moments were read`)
+})
+
+test('the integrity table heads each column on the side its values sit', async () => {
+  const source = await read('components/integrity/integrity-page.tsx')
+
+  assert.match(source, /label: 'サイズ',[^}]*right: true/)
+  assert.doesNotMatch(source, /label: '検出',[^}]*right: true/)
+  assert.match(
+    source,
+    /<TableHead\s+key=\{column\.label\}\s+className=\{column\.right \? 'text-right' : undefined\}/,
+    'the integrity headings do not follow the side their column is set to',
+  )
+})
