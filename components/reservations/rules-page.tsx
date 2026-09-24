@@ -204,7 +204,7 @@ function RulesScreen({
         }
       />
 
-      <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(280px,360px)_1fr]">
+      <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(calc(280rem/16),calc(360rem/16))_1fr]">
         <section className="rounded-lg bg-surface px-4 py-3.5">
           <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
             <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">

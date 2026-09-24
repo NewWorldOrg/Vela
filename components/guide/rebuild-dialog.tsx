@@ -60,7 +60,7 @@ export function RebuildEpgDialog({
           </AlertDialogTitle>
         </AlertDialogHeader>
 
-        <dl className="grid grid-cols-[96px_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 text-ui max-[700px]:grid-cols-1">
+        <dl className="grid grid-cols-[calc(96rem/16)_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 text-ui max-[700px]:grid-cols-1">
           <dt className="pt-0.5 text-sub text-ink-3">消えるもの</dt>
           <dd className="leading-[1.7]">
             いまの番組表のデータ(未来{' '}

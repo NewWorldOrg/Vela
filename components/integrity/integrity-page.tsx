@@ -127,7 +127,7 @@ export function IntegrityView({
             <span>最終実行</span>
             <span className="font-code font-medium">{check.ranAt}</span>
           </SectionHeading>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(150rem/16),1fr))] gap-2.5">
             <DetailStat
               label="走査したルート"
               value={String(check.rootsWalked)}

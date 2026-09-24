@@ -74,7 +74,7 @@ export function RevokeSession({
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <dl className="grid grid-cols-[96px_minmax(0,1fr)] gap-x-3.5 gap-y-1.5 text-ui max-[700px]:grid-cols-1">
+          <dl className="grid grid-cols-[calc(96rem/16)_minmax(0,1fr)] gap-x-3.5 gap-y-1.5 text-ui max-[700px]:grid-cols-1">
             <dt className="text-sub text-ink-3">端末</dt>
             <dd className="min-w-0 break-words">
               {session.device.name}

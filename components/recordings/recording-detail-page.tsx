@@ -188,7 +188,7 @@ export function RecordingDetailView({
                 <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
                   <RecordingInProgressChip mark="ledger" />
                 </div>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(128px,1fr))] gap-2.5">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(128rem/16),1fr))] gap-2.5">
                   <DetailStat label="経過" value={d.live.elapsed} />
                   <DetailStat label="書き込み済み" value={d.live.written} />
                   <DetailStat label="進行中のドロップ" value={d.live.drops} />

@@ -90,7 +90,7 @@ export function RecordingRecord({
             )
           }
         />
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-[calc(11rem/16)]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(140rem/16),1fr))] gap-[calc(11rem/16)]">
           <DetailStat
             label="ドロップ合計"
             value={

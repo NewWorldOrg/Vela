@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -182,4 +182,36 @@ test('a rehearsal is the migration word; a rule looks at its matches', async () 
   }
 
   assert.match(await read(THE_RULES), /一致を見る/)
+})
+
+async function sourcesUnder(dir: string): Promise<string[]> {
+  const found: string[] = []
+
+  for (const entry of await readdir(path.join(ROOT, dir), {
+    withFileTypes: true,
+  })) {
+    const at = path.join(dir, entry.name)
+
+    if (entry.isDirectory()) {
+      found.push(...(await sourcesUnder(at)))
+    } else if (entry.name.endsWith('.tsx')) {
+      found.push(at)
+    }
+  }
+
+  return found
+}
+
+test('a grid column is sized in rem, so it grows with the type', async () => {
+  const offenders: string[] = []
+
+  for (const file of await sourcesUnder('components')) {
+    for (const match of (await read(file)).matchAll(
+      /grid-cols-\[[^\]]*\d+px[^\]]*\]/g,
+    )) {
+      offenders.push(`${file}: ${match[0]}`)
+    }
+  }
+
+  assert.deepEqual(offenders, [])
 })
