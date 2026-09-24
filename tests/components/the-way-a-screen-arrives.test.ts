@@ -567,7 +567,24 @@ test('a guide column rises exactly as the first version did', async () => {
 
   assert.doesNotMatch(
     body,
-    /--rise-|transform-origin/,
+    /--rise-(from|squash|stretch)|transform-origin/,
     'the rise was tuned away from the first version the user liked',
   )
+})
+
+test('a guide column is not seen until it starts to rise', async () => {
+  const sheet = await readFile(path.join(ROOT, THE_SHEET), 'utf8')
+  const rise = sheet.slice(
+    sheet.indexOf('@keyframes rise {'),
+    sheet.indexOf('@keyframes item {'),
+  )
+  const at = sheet.indexOf('@utility rises {')
+  const rises = sheet.slice(at, sheet.indexOf('\n}\n', at))
+  const property = sheet.slice(sheet.indexOf('@property --rise-opacity {'))
+
+  assert.match(rise, /from \{[^}]*opacity: var\(--rise-opacity\)/)
+  assert.match(rise, /30% \{\s*opacity: 1;/)
+  assert.match(rises, /--rise-opacity: 0;/)
+  assert.match(property.slice(0, property.indexOf('}')), /inherits: false;/)
+  assert.match(property.slice(0, property.indexOf('}')), /initial-value: 1;/)
 })

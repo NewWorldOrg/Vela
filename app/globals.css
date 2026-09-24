@@ -680,6 +680,12 @@
   }
 }
 
+@property --rise-opacity {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
 @property --rise-from {
   syntax: '<length-percentage>';
   inherits: false;
@@ -702,6 +708,10 @@
   from {
     transform: translateY(var(--rise-from, 55%))
       scale(var(--rise-squash, 1.2), var(--rise-stretch, 0.9));
+    opacity: var(--rise-opacity);
+  }
+  30% {
+    opacity: 1;
   }
   to {
     transform: translateY(0) scale(1, 1);
@@ -814,6 +824,7 @@
 }
 
 @utility rises {
+  --rise-opacity: 0;
   animation: var(--animate-rise);
   animation-delay: calc(var(--d, 0s) + var(--delay, 0s));
 
