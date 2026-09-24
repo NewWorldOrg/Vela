@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from 'radix-ui'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { CloseIcon } from '@/components/vela/icons'
+import { iconButtonVariants } from '@/components/vela/icon-button'
 
 function Dialog({
   ...props
@@ -98,7 +99,10 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="tap-target absolute top-[calc(15rem/16)] right-[calc(15rem/16)] inline-flex size-[calc(27rem/16)] cursor-pointer items-center justify-center rounded-full border border-edge text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:-rotate-6 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring focus-visible:outline-hidden"
+            className={cn(
+              iconButtonVariants({ variant: 'quiet', size: 'sm' }),
+              'absolute top-[calc(15rem/16)] right-[calc(15rem/16)]',
+            )}
           >
             <CloseIcon className="size-[calc(13rem/16)]" />
             <span className="sr-only">閉じる</span>

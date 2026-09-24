@@ -204,3 +204,98 @@ test('a row of actions keeps the one gap it is given', async () => {
 
   assert.ok(rows.length > 6, `only ${rows.length} rows of actions were read`)
 })
+
+function keysOf(source: string, group: string): string[] {
+  const block = source.match(
+    new RegExp(`\\b${group}: \\{([\\s\\S]*?)\\n      \\},`),
+  )
+
+  assert.ok(block, `no ${group} block was read`)
+
+  return [...block[1].matchAll(/^\s{8}'?([\w-]+)'?:/gm)].map((key) => key[1])
+}
+
+function usesOf(
+  sources: { file: string; source: string }[],
+  tag: RegExp,
+  prop: string,
+): Map<string, string[]> {
+  const uses = new Map<string, string[]>()
+
+  for (const { file, source } of sources) {
+    for (const opening of source.matchAll(tag)) {
+      for (const value of opening[1].matchAll(
+        new RegExp(`\\b${prop}="([^"]+)"|\\b${prop}: '([^']+)'`, 'g'),
+      )) {
+        const said = value[1] ?? value[2]
+
+        uses.set(said, [...(uses.get(said) ?? []), file])
+      }
+    }
+  }
+
+  return uses
+}
+
+const A_BUTTON_OPENING =
+  /<(?:Button|AlertDialogAction|AlertDialogCancel)\b([^>]*)>|buttonVariants\(\{([^}]*)\}\)/g
+
+const AN_ICON_BUTTON_OPENING =
+  /<IconButton\b([^>]*)>|iconButtonVariants\(\{([^}]*)\}\)/g
+
+function openingsOf(tag: RegExp, source: string): string[] {
+  return [...source.matchAll(tag)].map((found) => found[1] ?? found[2])
+}
+
+test('every kind and size a button offers is one the screens use more than once', async () => {
+  const sources = await everySource()
+
+  for (const [part, file, tag, groups] of [
+    [
+      'Button',
+      'components/ui/button.tsx',
+      A_BUTTON_OPENING,
+      ['variant', 'size'],
+    ],
+    [
+      'IconButton',
+      'components/vela/icon-button.tsx',
+      AN_ICON_BUTTON_OPENING,
+      ['variant', 'size'],
+    ],
+  ] as const) {
+    const declared = await read(file)
+    const opened = sources.map(({ file: at, source }) => ({
+      file: at,
+      source: openingsOf(tag, source)
+        .map((opening) => `<${opening}>`)
+        .join('\n'),
+    }))
+
+    for (const group of groups) {
+      const uses = usesOf(opened, /<([^>]*)>/g, group)
+
+      for (const key of keysOf(declared, group)) {
+        if (key === 'default' || (part === 'IconButton' && key === 'pop')) {
+          continue
+        }
+
+        assert.ok(
+          (uses.get(key) ?? []).length > 1,
+          `${part} offers ${group} "${key}", which ` +
+            `${(uses.get(key) ?? []).length === 0 ? 'no screen uses' : `only ${uses.get(key)} uses`}`,
+        )
+      }
+    }
+  }
+})
+
+test('nothing but a button is handed a button’s kind', async () => {
+  for (const { file, source } of await everySource()) {
+    for (const found of source.matchAll(/<(Add[A-Z]\w*)\b[^>]*\bvariant="/g)) {
+      assert.fail(
+        `${file} hands ${found[1]} a variant of a size; a size is said as size`,
+      )
+    }
+  }
+})

@@ -34,14 +34,11 @@ const buttonVariants = cva(
       },
       size: {
         default: 'h-[calc(34rem/16)] px-[calc(17rem/16)] text-ui',
-        xs: "h-6 gap-1 px-2.5 text-cap [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 px-[calc(13rem/16)] text-sub [&_svg:not([class*='size-'])]:size-[calc(13rem/16)]",
         lg: 'h-10 px-6 text-body',
         icon: 'size-[calc(34rem/16)] px-0',
-        'icon-xs': "size-6 px-0 [&_svg:not([class*='size-'])]:size-3",
         'icon-sm':
           "size-7 px-0 [&_svg:not([class*='size-'])]:size-[calc(13rem/16)]",
-        'icon-lg': 'size-10 px-0',
       },
     },
     defaultVariants: {

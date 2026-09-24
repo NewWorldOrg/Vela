@@ -10,19 +10,16 @@ import { ProfileDialog } from '@/components/encode/profile-dialog'
 
 export function AddProfileDialog({
   onDefine,
-  variant = 'default',
+  size = 'default',
 }: {
   onDefine: (draft: EncodeProfileDraft) => Promise<EncodeWrite>
-  variant?: 'default' | 'sm'
+  size?: 'default' | 'sm'
 }) {
   const [open, setOpen] = useState(false)
 
   return (
     <>
-      <Button
-        size={variant === 'sm' ? 'sm' : 'default'}
-        onClick={() => setOpen(true)}
-      >
+      <Button size={size} onClick={() => setOpen(true)}>
         <PlusIcon />
         プロファイルを追加
       </Button>

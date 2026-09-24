@@ -71,7 +71,7 @@ export function ProfileList({
     <>
       <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
         <RemovalNotice removed={removed} />
-        <AddProfileDialog variant="sm" onDefine={onDefine} />
+        <AddProfileDialog size="sm" onDefine={onDefine} />
       </div>
 
       <Table

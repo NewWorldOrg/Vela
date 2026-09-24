@@ -37,16 +37,7 @@ const meta = {
     },
     size: {
       control: 'select',
-      options: [
-        'default',
-        'xs',
-        'sm',
-        'lg',
-        'icon',
-        'icon-xs',
-        'icon-sm',
-        'icon-lg',
-      ],
+      options: ['default', 'sm', 'lg', 'icon', 'icon-sm'],
     },
     disabled: { control: 'boolean' },
   },
@@ -207,7 +198,7 @@ export const Sizes: Story = {
   render: () => (
     <Surface className="max-w-[560px]">
       <div className="flex flex-col gap-5">
-        {(['lg', 'default', 'sm', 'xs'] as const).map((size) => (
+        {(['lg', 'default', 'sm'] as const).map((size) => (
           <div key={size} className="flex items-center gap-3">
             <span className="w-[74px] shrink-0 font-code text-cap text-ink-3">
               {size}
@@ -232,7 +223,7 @@ export const IconOnly: Story = {
   render: () => (
     <Surface>
       <div className="flex flex-wrap items-center gap-5">
-        {(['icon-lg', 'icon', 'icon-sm', 'icon-xs'] as const).map((size) => (
+        {(['icon', 'icon-sm'] as const).map((size) => (
           <Button key={size} size={size} aria-label="予約を追加">
             <PlusIcon />
           </Button>

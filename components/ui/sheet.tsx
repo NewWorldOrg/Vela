@@ -5,6 +5,7 @@ import { Dialog as SheetPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 import { CloseIcon } from '@/components/vela/icons'
+import { iconButtonVariants } from '@/components/vela/icon-button'
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -75,7 +76,12 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="tap-target absolute top-[calc(9rem/16)] right-2.5 inline-flex size-[calc(27rem/16)] cursor-pointer items-center justify-center rounded-full border border-edge text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:-rotate-6 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring focus-visible:outline-hidden">
+          <SheetPrimitive.Close
+            className={cn(
+              iconButtonVariants({ variant: 'quiet', size: 'sm' }),
+              'absolute top-[calc(9rem/16)] right-2.5',
+            )}
+          >
             <CloseIcon className="size-[calc(13rem/16)]" />
             <span className="sr-only">閉じる</span>
           </SheetPrimitive.Close>

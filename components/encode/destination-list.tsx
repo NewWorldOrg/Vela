@@ -69,7 +69,7 @@ export function DestinationList({
       <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
         <RemovalNotice removed={removed} />
         <AddDestinationDialog
-          variant="sm"
+          size="sm"
           profiles={profiles}
           roots={roots}
           onDefine={onDefine}
