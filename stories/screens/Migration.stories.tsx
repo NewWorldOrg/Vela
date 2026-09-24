@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect } from 'storybook/test'
+import { expect, within } from 'storybook/test'
 
 import {
   MIGRATION,
@@ -19,7 +19,35 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = { args: { result: MIGRATION } }
+export const 通常: Story = {
+  args: { result: MIGRATION },
+  play: async ({ canvasElement }) => {
+    const source = within(canvasElement).getByText(
+      'video_file + 出力ディレクトリ',
+    )
+    const range = document.createRange()
+
+    range.selectNodeContents(source)
+
+    const tops = new Set(
+      [...range.getClientRects()]
+        .filter((rect) => rect.width > 0)
+        .map((rect) => Math.round(rect.top)),
+    )
+    const word = document.createRange()
+    const text = source.firstChild as Text
+    const at = (text.textContent ?? '').indexOf('出力ディレクトリ')
+
+    word.setStart(text, at)
+    word.setEnd(text, at + '出力ディレクトリ'.length)
+
+    await expect(
+      new Set([...word.getClientRects()].map((rect) => Math.round(rect.top)))
+        .size,
+    ).toBe(1)
+    await expect(tops.size).toBeLessThanOrEqual(2)
+  },
+}
 
 export const 記録なし: Story = { args: { result: null } }
 

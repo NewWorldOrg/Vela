@@ -71,7 +71,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             >
               <div>
                 <b className="text-ui font-bold">{population.name}</b>
-                <span className="ml-2 font-code text-note text-ink-3">
+                <span className="ml-2 font-code text-note break-keep text-ink-3">
                   {population.source}
                 </span>
                 <span className="mt-0.5 block text-note text-ink-2">
