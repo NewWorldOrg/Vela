@@ -29,10 +29,12 @@ export function useDrawnRange(
     columns,
     windowMin,
     hourPx,
+    filled,
   }: {
     columns: number
     windowMin: number
     hourPx: number
+    filled: boolean
   },
 ): DrawnRange {
   const [range, setRange] = useState<DrawnRange>(() => ({
@@ -43,7 +45,7 @@ export function useDrawnRange(
   useEffect(() => {
     const node = scroller.current
 
-    if (node === null) {
+    if (node === null || !filled) {
       return
     }
 
@@ -96,7 +98,7 @@ export function useDrawnRange(
         cancelAnimationFrame(frame)
       }
     }
-  }, [scroller, columns, windowMin, hourPx])
+  }, [scroller, columns, windowMin, hourPx, filled])
 
   return range
 }

@@ -23,8 +23,10 @@ import {
   seatIn,
   newcomersOf,
   GUIDE_HOLD_MS,
+  glyphLoadsOf,
   glyphsOf,
   GUIDE_FACES,
+  PANEL_TITLE_FACE,
 } from '@/lib/arrival'
 
 test('a delay is handed over as a custom property, never as a number', () => {
@@ -113,6 +115,19 @@ test('each face and weight the guide draws in is loaded ahead of scrolling', () 
     '700 1em "Zen Kaku Gothic New"',
     '500 1em "M PLUS 1 Code"',
   ])
+})
+
+test('the titles are also loaded in the face the detail panel heads them with', () => {
+  assert.equal(PANEL_TITLE_FACE, '700 1em "Zen Maru Gothic"')
+  assert.deepEqual(glyphLoadsOf(['NHK 1', '番組'], ['番組', '表']), [
+    ...GUIDE_FACES.map((face) => [face, 'NHK 1番組']),
+    [PANEL_TITLE_FACE, '番組表'],
+  ])
+})
+
+test('nothing is loaded for a guide with no text', () => {
+  assert.deepEqual(glyphLoadsOf([], []), [])
+  assert.deepEqual(glyphLoadsOf([], ['題']), [[PANEL_TITLE_FACE, '題']])
 })
 
 test('the guide holds its columns still until its first picture is on screen', () => {

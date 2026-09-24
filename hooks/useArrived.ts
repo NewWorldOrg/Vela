@@ -8,10 +8,14 @@ const MOVED_BY_HAND = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const
 
 export type Arrived = { ref: (element: HTMLElement | null) => void }
 
-export function useArrived(): Arrived {
+export function useArrived(started = true): Arrived {
   const held = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
+    if (!started) {
+      return
+    }
+
     const done = (): void => {
       if (held.current !== null) {
         held.current.setAttribute('data-arrived', '')
@@ -29,7 +33,7 @@ export function useArrived(): Arrived {
         window.removeEventListener(input, done, { capture: true })
       }
     }
-  }, [])
+  }, [started])
 
   const ref = useCallback((element: HTMLElement | null): void => {
     held.current = element

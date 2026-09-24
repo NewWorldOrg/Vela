@@ -588,3 +588,23 @@ test('a guide column is not seen until it starts to rise', async () => {
   assert.match(property.slice(0, property.indexOf('}')), /inherits: false;/)
   assert.match(property.slice(0, property.indexOf('}')), /initial-value: 1;/)
 })
+
+test('the guide shows its frame first and fills its columns right after', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/guide/guide-grid.tsx'),
+    'utf8',
+  )
+  const hook = await readFile(path.join(ROOT, 'hooks/useFilledSoon.ts'), 'utf8')
+
+  assert.match(grid, /const filled = useFilledSoon\(\)/)
+  assert.match(grid, /useArrived\(filled\)/)
+  assert.match(grid, /useGlyphsAhead\(glyphLoads, filled\)/)
+  assert.match(grid, /!filled \? 'invisible'/)
+  assert.match(grid, /filled && isDrawn\(/)
+  assert.match(
+    hook,
+    /useSyncExternalStore\(\s*listenToNothing,\s*\(\) => false,\s*\(\) => true,?\s*\)/,
+    'a page opened directly keeps the filled columns its HTML came with',
+  )
+  assert.match(hook, /startTransition\(\(\) => setFilled\(true\)\)/)
+})

@@ -28,6 +28,8 @@ import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
 import { useArrived } from '@/hooks/useArrived'
 import { useDrawnRange } from '@/hooks/useDrawnRange'
+import { useFilledSoon } from '@/hooks/useFilledSoon'
+import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
 import { useNewcomers } from '@/hooks/useNewcomers'
 
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
@@ -72,6 +74,7 @@ const GuideColumn = memo(function GuideColumn({
   channel: c,
   nth,
   joined,
+  filled,
   carried,
   from,
   to,
@@ -83,6 +86,7 @@ const GuideColumn = memo(function GuideColumn({
   channel: Channel
   nth: number
   joined: boolean
+  filled: boolean
   carried?: Program[]
   from: number
   to: number
@@ -99,7 +103,7 @@ const GuideColumn = memo(function GuideColumn({
       data-guide-sub={c.sub ? '' : undefined}
       style={{ flex: COLUMN_FLEX, ...delayOf(columnDelayMs(nth)) }}
       className={cn(
-        joined ? 'joins' : risesIn(nth),
+        !filled ? 'invisible' : joined ? 'joins' : risesIn(nth),
         'relative min-w-0 border-l border-dashed border-line [contain:size_layout_style] first-of-type:border-l-0',
         c.sub && 'bg-surface-2',
       )}
@@ -157,6 +161,7 @@ export function GuideGrid({
   nowLabel,
   selectedId,
   onSelect,
+  glyphLoads,
 }: {
   channels: Channel[]
   programs: Program[]
@@ -167,12 +172,14 @@ export function GuideGrid({
   nowLabel?: string
   selectedId?: string
   onSelect: (program: Program) => void
+  glyphLoads: ReadonlyArray<readonly [string, string]>
 }) {
   const hours = Array.from(
     { length: windowHours },
     (_, i) => windowStartHour + i,
   )
-  const arrived = useArrived()
+  const filled = useFilledSoon()
+  const arrived = useArrived(filled)
   const newcomers = useNewcomers(channels.map((c) => c.id))
   const openingTop = useRef(openingScrollTopOf(nowMin, HOUR_PX))
   const opened = useRef(false)
@@ -181,7 +188,10 @@ export function GuideGrid({
     columns: channels.length,
     windowMin: windowHours * 60,
     hourPx: HOUR_PX,
+    filled,
   })
+
+  useGlyphsAhead(glyphLoads, filled)
 
   const carriedBy = useMemo(() => {
     const by = new Map<string, Program[]>()
@@ -276,9 +286,10 @@ export function GuideGrid({
           </div>
 
           {channels.map((c, nth) => {
-            const carried = isDrawn(drawn.columns, nth)
-              ? (carriedBy.get(c.id) ?? NOTHING_CARRIED)
-              : undefined
+            const carried =
+              filled && isDrawn(drawn.columns, nth)
+                ? (carriedBy.get(c.id) ?? NOTHING_CARRIED)
+                : undefined
 
             return (
               <GuideColumn
@@ -286,6 +297,7 @@ export function GuideGrid({
                 channel={c}
                 nth={nth}
                 joined={newcomers.has(c.id)}
+                filled={filled}
                 carried={carried}
                 from={drawn.minutes.from}
                 to={drawn.minutes.to}
@@ -301,7 +313,7 @@ export function GuideGrid({
             )
           })}
 
-          {nowMin !== undefined && (
+          {filled && nowMin !== undefined && (
             <div
               data-now-line
               className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-brand"

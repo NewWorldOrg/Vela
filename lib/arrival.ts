@@ -101,3 +101,20 @@ export const GUIDE_FACES = [
 export function glyphsOf(texts: readonly string[]): string {
   return [...new Set(texts.join(''))].join('')
 }
+
+export const PANEL_TITLE_FACE = '700 1em "Zen Maru Gothic"'
+
+export function glyphLoadsOf(
+  drawn: readonly string[],
+  titles: readonly string[],
+): Array<readonly [string, string]> {
+  const drawnGlyphs = glyphsOf(drawn)
+  const titleGlyphs = glyphsOf(titles)
+
+  return [
+    ...(drawnGlyphs === ''
+      ? []
+      : GUIDE_FACES.map((face) => [face, drawnGlyphs] as const)),
+    ...(titleGlyphs === '' ? [] : [[PANEL_TITLE_FACE, titleGlyphs] as const]),
+  ]
+}

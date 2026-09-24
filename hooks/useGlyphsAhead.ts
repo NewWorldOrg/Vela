@@ -2,20 +2,21 @@
 
 import { useEffect } from 'react'
 
-import { ARRIVAL_SPAN_MS, GUIDE_FACES } from '@/lib/arrival'
-
-export function useGlyphsAhead(glyphs: string): void {
+export function useGlyphsAhead(
+  loads: ReadonlyArray<readonly [string, string]>,
+  started: boolean,
+): void {
   useEffect(() => {
-    if (glyphs === '' || typeof document.fonts?.load !== 'function') {
+    if (
+      !started ||
+      loads.length === 0 ||
+      typeof document.fonts?.load !== 'function'
+    ) {
       return
     }
 
-    const timer = setTimeout(() => {
-      for (const face of GUIDE_FACES) {
-        document.fonts.load(face, glyphs).catch(() => undefined)
-      }
-    }, ARRIVAL_SPAN_MS)
-
-    return () => clearTimeout(timer)
-  }, [glyphs])
+    for (const [face, glyphs] of loads) {
+      document.fonts.load(face, glyphs).catch(() => undefined)
+    }
+  }, [loads, started])
 }

@@ -94,6 +94,8 @@ const IN_GRID_ORDER = CHANNEL_FIXTURES.flatMap((channel) =>
 export const 通常: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const cells = Array.from(
       canvasElement.querySelectorAll<HTMLElement>(
         '[data-opens="program-panel"]',
@@ -119,6 +121,8 @@ export const 現れ方: Story = {
     ),
   ],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const columns = [
       ...canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
     ]
@@ -177,6 +181,8 @@ export const 現れ方: Story = {
 export const 放送済み: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const cells = Array.from(
       canvasElement.querySelectorAll<HTMLElement>(
         '[data-opens="program-panel"]',
@@ -300,6 +306,8 @@ const withBookings = PROGRAM_FIXTURES.map((program) => {
 export const 予約の印: Story = {
   args: { guide: { ...base, programs: withBookings } },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const cells = Array.from(
       canvasElement.querySelectorAll<HTMLElement>(
         '[data-opens="program-panel"]',
@@ -376,6 +384,14 @@ const shorterThanADay: Decorator = (Story) => (
   </div>
 )
 
+async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
+  await waitFor(() =>
+    expect(
+      canvasElement.querySelector('[data-guide-column].invisible'),
+    ).toBeNull(),
+  )
+}
+
 function partOf(canvasElement: HTMLElement, selector: string): HTMLElement {
   const part = canvasElement.querySelector<HTMLElement>(selector)
 
@@ -390,6 +406,8 @@ export const 現在時刻の位置で開く: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const line = partOf(canvasElement, '[data-now-line]')
 
@@ -443,6 +461,8 @@ export const 読み直しても動かない: Story = {
     )
   },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const was = partOf(canvasElement, '[data-now-line]').offsetTop
     const moved = 320
@@ -487,6 +507,8 @@ export const 列が余れば分け合う: Story = {
   },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await afterTheArrival(canvasElement)
 
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
@@ -526,6 +548,8 @@ export const 副チャンネルも同じ列: Story = {
   },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await afterTheArrival(canvasElement)
 
     const split = SERVICES_ONE_OF_THEM_SPLIT.findIndex((channel) => channel.sub)
@@ -609,6 +633,8 @@ export const 副チャンネルは別番組の時間帯だけ: Story = {
   },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const split = SERVICES_ONE_OF_THEM_SPLIT.findIndex((channel) => channel.sub)
     const columns = Array.from(
       canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
@@ -728,6 +754,8 @@ export const 編成なしの短い帯は名前を落とす: Story = {
   },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const split = SERVICES_ONE_OF_THEM_SPLIT.findIndex((channel) => channel.sub)
     const columns = Array.from(
       canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
@@ -751,6 +779,8 @@ export const 列が多ければ横に流れる: Story = {
   args: { guide: aerial },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await afterTheArrival(canvasElement)
 
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
@@ -855,6 +885,8 @@ export const サービスが0件のバナー: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const banner = partOf(canvasElement, '[data-slot="banner"]')
     const lines = Array.from(
       banner.querySelectorAll<HTMLElement>('[data-health-fact]'),
@@ -890,6 +922,8 @@ export const 健全性バナー2項目: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const canvas = within(canvasElement)
     const banner = partOf(canvasElement, '[data-slot="banner"]')
     const lines = Array.from(
@@ -913,6 +947,8 @@ export const 健全性バナー2項目: Story = {
 export const バナーの無い番組表: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await expect(canvasElement.querySelector('[data-slot="banner"]')).toBeNull()
   },
 }
@@ -928,6 +964,8 @@ export const 別の日: Story = {
   },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const canvas = within(canvasElement)
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const router = getRouter()
@@ -955,6 +993,8 @@ export const 下へ送ると先の番組が描かれる: Story = {
   args: { guide: A_DAY_NOT_TODAY },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const drawnCells = () =>
       Array.from(
@@ -1107,6 +1147,8 @@ export const 番組を開いても場所は動かない: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await afterTheArrival(canvasElement)
 
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
@@ -1133,6 +1175,8 @@ export const 別の番組を押すとまず閉じる: Story = {
   args: { guide: day },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await afterTheArrival(canvasElement)
 
     const doc = canvasElement.ownerDocument
@@ -1174,6 +1218,8 @@ export const 別の番組を押すとまず閉じる: Story = {
 export const 番組の詳細が層の中に出る: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const carries = PROGRAM_FIXTURES.filter(
       (program) => (program.items ?? []).length > 0,
     )
@@ -1227,6 +1273,8 @@ export const 番組の詳細が層の中に出る: Story = {
 export const 放送中の番組からライブへ: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const cells = Array.from(
       canvasElement.querySelectorAll<HTMLElement>(
         '[data-opens="program-panel"]',
@@ -1279,6 +1327,8 @@ export const 放送中の番組からライブへ: Story = {
 export const 日を送る: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const canvas = within(canvasElement)
     const router = getRouter()
 
@@ -1371,6 +1421,8 @@ export const iPadの幅: Story = {
   args: { guide: aerial },
   parameters: { screen: AN_IPAD },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await sidewaysInsideTheGrid(canvasElement)
   },
 }
@@ -1379,6 +1431,8 @@ export const iPadを横にした幅: Story = {
   args: { guide: aerial },
   parameters: { screen: AN_IPAD_TURNED },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await sidewaysInsideTheGrid(canvasElement)
   },
 }
@@ -1439,6 +1493,8 @@ export const 副チャンネルを出している: Story = {
   args: { guide: SPLIT_LINE_UP_GUIDE },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const columns = columnsOf(canvasElement)
 
     await expect(columns).toHaveLength(A_STATION_AND_ITS_SPLITS.length)
@@ -1456,6 +1512,8 @@ export const 副チャンネルを畳んでいる: Story = {
   args: { guide: SPLIT_LINE_UP_GUIDE },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     const press = within(canvasElement).getByRole('button', {
       name: '副チャンネル',
     })
@@ -1512,6 +1570,8 @@ export const 畳む先が無ければ操作子を出さない: Story = {
   },
   decorators: [aScreenWide],
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     await expect(
       within(canvasElement).queryByRole('button', { name: '副チャンネル' }),
     ).toBeNull()
@@ -1543,6 +1603,8 @@ export const 詳しい情報は開いてから取りに行く: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
     heldExtras.asked = []
     await afterTheArrival(canvasElement)
 
