@@ -67,7 +67,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           {result.populations.map((population) => (
             <Surface
               key={population.name}
-              className="grid gap-3 min-[900px]:grid-cols-[240px_1fr] min-[900px]:items-center"
+              className="grid gap-3 min-[900px]:grid-cols-[calc(240rem/16)_1fr] min-[900px]:items-center"
             >
               <div>
                 <b className="text-ui font-bold">{population.name}</b>

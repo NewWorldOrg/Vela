@@ -30,3 +30,10 @@ test('a weight that was not loaded is never faked by smearing the glyphs', async
 
   assert.match(body.slice(0, body.indexOf('}')), /font-synthesis-weight: none;/)
 })
+
+test('a small kana or a long vowel mark never starts a line', async () => {
+  const sheet = await readFile(path.join(ROOT, 'app/globals.css'), 'utf8')
+  const body = sheet.slice(sheet.indexOf('  body {\n    font-family'))
+
+  assert.match(body.slice(0, body.indexOf('}')), /line-break: strict;/)
+})
