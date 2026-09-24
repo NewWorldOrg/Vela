@@ -262,15 +262,6 @@ export function GuideView({
               onRevise={onRevise}
             />
           )}
-          {selected && !panelOpen && (
-            <button
-              type="button"
-              onClick={() => setPanelOpen(true)}
-              className="tap-target fixed right-[calc(18rem/16)] bottom-[calc(18rem/16)] z-30 cursor-pointer rounded-full border border-edge bg-surface px-[calc(17rem/16)] py-2 text-ui font-bold whitespace-nowrap text-ink shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none max-[900px]:right-3 max-[900px]:bottom-3"
-            >
-              番組詳細を開く
-            </button>
-          )}
         </>
       )}
 

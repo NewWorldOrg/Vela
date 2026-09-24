@@ -70,6 +70,8 @@ export function ProgramCell({
         size === 'md' && 'px-[calc(7rem/16)] py-1',
         size === 's' && 'px-[calc(7rem/16)] py-0.5',
         size === 'xs' && 'flex items-center px-1.5 py-0',
+        mark === 'booked' && 'outline-2 -outline-offset-2 outline-mint',
+        mark === 'recording' && 'outline-2 -outline-offset-2 outline-coral',
         selected && 'z-[3] border-brand shadow-pop',
       )}
     >

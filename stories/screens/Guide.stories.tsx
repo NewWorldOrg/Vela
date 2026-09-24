@@ -310,6 +310,7 @@ export const 予約の印: Story = {
 
       if (expected === undefined) {
         await expect(mark).toBeNull()
+        await expect(getComputedStyle(cell).outlineStyle).toBe('none')
         continue
       }
 
@@ -327,6 +328,13 @@ export const 予約の印: Story = {
       const colour = getComputedStyle(mark!).color
       colourOf[expected] ??= colour
       await expect(colour).toBe(colourOf[expected])
+
+      const framed = getComputedStyle(cell)
+
+      await expect(framed.outlineStyle).toBe('solid')
+      await expect(framed.outlineWidth).toBe('2px')
+      await expect(framed.outlineOffset).toBe('-2px')
+      await expect(framed.outlineColor).toBe(colour)
 
       sizesMarked.add(cell.dataset.cellSize ?? '')
     }
@@ -1189,6 +1197,11 @@ export const 番組の詳細が層の中に出る: Story = {
           ),
         ).toBeNull(),
       )
+      await expect(
+        within(canvasElement).queryByRole('button', {
+          name: '番組詳細を開く',
+        }),
+      ).toBeNull()
     }
   },
 }
