@@ -352,3 +352,33 @@ test('saving is one button of one height, and the row it sits in is that height'
     'the cancel beside saving the detected tuners is smaller than saving',
   )
 })
+
+const A_BORROWED_NAME =
+  /(?:^|[\s"'`:!])((?:bg|text|ring|border|outline|fill|stroke|divide|ring-offset)-(?:muted|popover|accent|destructive|primary|secondary|foreground|background|card|input|ring)(?:-foreground)?)(?![\w-])/g
+
+const A_SOFT_SHADOW =
+  /(?:^|[\s"'`:!])(shadow(?:-(?:2xs|xs|sm|md|lg|xl|2xl))?)(?=[\s"'`]|$)/g
+
+test('the shared parts are dressed in the canon’s own names, not the kit’s', async () => {
+  const parts = await sourceFiles('components/ui')
+
+  assert.ok(parts.length > 15, `only ${parts.length} shared parts were read`)
+
+  for (const file of parts) {
+    const source = await read(file)
+
+    for (const found of source.matchAll(A_BORROWED_NAME)) {
+      assert.fail(
+        `${file} still colours itself with the kit’s ${found[1]}; the canon ` +
+          'names that colour itself',
+      )
+    }
+
+    for (const found of source.matchAll(A_SOFT_SHADOW)) {
+      assert.fail(
+        `${file} casts the kit’s blurred ${found[1]}; a floating thing casts ` +
+          'the hard shadow-pop-xl',
+      )
+    }
+  }
+})
