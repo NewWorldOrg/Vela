@@ -85,6 +85,42 @@
   }
 
   :root {
+    --pl-bg: #151418;
+    --pl-video: #0f0e12;
+    --pl-ink: #efeaf2;
+    --pl-ink-2: #b3abbf;
+    --pl-ink-3: #837c90;
+    --pl-accent: #96bbb4;
+    --pl-accent-ink: #c0d8d3;
+    --pl-lemon: #d7ac5e;
+    --pl-coral: #e08a85;
+    --pl-ok: #86d2ac;
+    --pl-ok-ink: #9fdcbb;
+    --pl-done: #9fd9be;
+    --pl-warn: #e5ba6c;
+    --pl-err: #ec9a93;
+    --pl-scrim: linear-gradient(
+      to top,
+      rgba(6, 5, 9, 0.92) 0%,
+      rgba(6, 5, 9, 0.82) 34%,
+      rgba(6, 5, 9, 0.58) 58%,
+      rgba(6, 5, 9, 0.24) 80%,
+      rgba(6, 5, 9, 0) 100%
+    );
+    --pl-scrim-top: linear-gradient(
+      to bottom,
+      rgba(6, 5, 9, 0.78) 0%,
+      rgba(6, 5, 9, 0.42) 52%,
+      rgba(6, 5, 9, 0) 100%
+    );
+    --pl-break-band: repeating-linear-gradient(
+      115deg,
+      rgba(215, 172, 94, 0.62) 0 4px,
+      rgba(215, 172, 94, 0.26) 4px 8px
+    );
+  }
+
+  :root {
     color-scheme: light;
     --bg: #f7f4ed;
     --dot: rgba(72, 60, 46, 0.05);

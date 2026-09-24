@@ -1,12 +1,10 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import { PLAYER_PALETTE } from '@/components/recordings/player-palette'
 
 const TONES = {
-  gone: 'border-[rgba(236,154,147,.45)] bg-[rgba(236,154,147,.12)] text-[#EC9A93]',
-  waiting:
-    'border-[rgba(229,186,108,.45)] bg-[rgba(229,186,108,.12)] text-[#E5BA6C]',
+  gone: 'border-(--pl-err)/45 bg-(--pl-err)/12 text-(--pl-err)',
+  waiting: 'border-(--pl-warn)/45 bg-(--pl-warn)/12 text-(--pl-warn)',
   quiet: 'border-white/20 bg-white/5 text-(--pl-ink-2)',
 } as const
 
@@ -27,7 +25,6 @@ export function PlaybackNotice({
 }) {
   return (
     <section
-      style={PLAYER_PALETTE}
       className={cn(
         'rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[calc(22rem/16)] text-center',
         className,

@@ -44,7 +44,6 @@ import {
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
-  PLAYER_PALETTE,
   PLAYER_PICTURE_BOX,
   PLAYER_SCRIM,
   PLAYER_SCRIM_TOP,
@@ -119,9 +118,9 @@ function begun(key: string): Running {
 }
 
 const LATENCY_TONE = {
-  ok: 'border-[rgba(134,210,172,.45)] bg-[rgba(134,210,172,.12)] text-[#9FDCBB]',
-  warn: 'border-[rgba(229,186,108,.5)] bg-[rgba(229,186,108,.14)] text-[#E5BA6C]',
-  err: 'border-[rgba(236,154,147,.5)] bg-[rgba(236,154,147,.14)] text-[#EC9A93]',
+  ok: 'border-(--pl-ok)/45 bg-(--pl-ok)/12 text-(--pl-ok-ink)',
+  warn: 'border-(--pl-warn)/50 bg-(--pl-warn)/14 text-(--pl-warn)',
+  err: 'border-(--pl-err)/50 bg-(--pl-err)/14 text-(--pl-err)',
 } as const
 
 export function LivePlayer({
@@ -652,7 +651,6 @@ export function LivePlayer({
       tabIndex={-1}
       data-slot="live-player"
       data-phase={phase ?? 'idle'}
-      style={PLAYER_PALETTE}
       onPointerMove={stir}
       onPointerLeave={stir}
       onPointerDown={() => {
@@ -833,7 +831,7 @@ export function LivePlayer({
               role="status"
               className={cn(
                 'mb-2 text-cap font-medium',
-                said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
+                said.tone === 'ok' ? 'text-(--pl-ok-ink)' : 'text-(--pl-err)',
               )}
             >
               {said.text}

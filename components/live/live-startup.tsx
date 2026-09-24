@@ -55,7 +55,7 @@ export function LiveStartupSteps({
               className={cn(
                 'flex size-4 shrink-0 items-center justify-center rounded-full border-[1.5px] border-white/25',
                 row.state === 'done' &&
-                  'border-[#9FD9BE] bg-[#9FD9BE] text-(--pl-video)',
+                  'border-(--pl-done) bg-(--pl-done) text-(--pl-video)',
                 row.state === 'now' && 'border-dashed border-(--pl-accent)',
               )}
             >

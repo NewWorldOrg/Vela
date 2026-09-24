@@ -8,7 +8,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { PLAYER_PALETTE } from '@/components/recordings/player-palette'
 
 const PLAYER_TIP_WAITS = 500
 
@@ -37,7 +36,6 @@ export function PlayerTip({
           container={container ?? undefined}
           collisionBoundary={container ?? undefined}
           side="top"
-          style={PLAYER_PALETTE}
           className="pointer-events-none flex items-center gap-2 border-white/20 bg-(--pl-bg) px-2.5 py-1.5 font-medium text-(--pl-ink)"
         >
           {name}

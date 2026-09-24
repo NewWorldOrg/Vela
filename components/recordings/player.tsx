@@ -53,7 +53,6 @@ import {
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
-  PLAYER_PALETTE,
   PLAYER_PICTURE,
   PLAYER_SCRIM,
 } from '@/components/recordings/player-palette'
@@ -675,7 +674,6 @@ export function Player({
         ref={setShell}
         tabIndex={-1}
         data-slot="player"
-        style={PLAYER_PALETTE}
         onPointerMove={stir}
         onPointerLeave={stir}
         onPointerDown={() => {
@@ -855,7 +853,7 @@ export function Player({
                 role="status"
                 className={cn(
                   'mt-2 text-cap font-medium',
-                  said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
+                  said.tone === 'ok' ? 'text-(--pl-ok-ink)' : 'text-(--pl-err)',
                 )}
               >
                 {said.text}

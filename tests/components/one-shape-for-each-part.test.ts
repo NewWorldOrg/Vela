@@ -382,3 +382,52 @@ test('the shared parts are dressed in the canon’s own names, not the kit’s',
     }
   }
 })
+
+const A_WRITTEN_COLOUR = /#[0-9A-Fa-f]{3,8}\b|rgba?\(/g
+
+test('live and a recording take their colours from named tokens', async () => {
+  const files = [
+    ...(await sourceFiles('components/live', /\.tsx?$/)),
+    ...(await sourceFiles('components/recordings', /\.tsx?$/)),
+  ]
+
+  assert.ok(files.length > 30, `only ${files.length} files were read`)
+
+  for (const file of files) {
+    const source = await read(file)
+
+    for (const found of source.matchAll(A_WRITTEN_COLOUR)) {
+      assert.fail(
+        `${file} writes a colour down itself (${found[0]}…) instead of ` +
+          'naming a token',
+      )
+    }
+  }
+})
+
+test('the colours of the player are one set, the same in both themes', async () => {
+  const tokens = await read('app/globals.css')
+  const named = [...tokens.matchAll(/^\s*(--pl-[\w-]+):/gm)].map(
+    (found) => found[1],
+  )
+
+  assert.ok(named.length > 10, `only ${named.length} player colours are named`)
+  assert.equal(
+    new Set(named).size,
+    named.length,
+    'a player colour is named twice, so one theme can draw it differently',
+  )
+
+  for (const { file, source } of await everySource(['components'])) {
+    for (const used of source.matchAll(
+      /var\((--pl-[\w-]+)\)|\((--pl-[\w-]+)\)/g,
+    )) {
+      const name = used[1] ?? used[2]
+
+      assert.ok(
+        named.includes(name),
+        `${file} uses ${name}, which is not named`,
+      )
+    }
+  }
+})

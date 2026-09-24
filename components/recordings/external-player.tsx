@@ -91,7 +91,7 @@ export function OpenExternally({
           role="status"
           className={cn(
             'text-cap',
-            tone === 'player' ? 'text-[#EC9A93]' : 'text-coral',
+            tone === 'player' ? 'text-(--pl-err)' : 'text-coral',
           )}
         >
           {refused}

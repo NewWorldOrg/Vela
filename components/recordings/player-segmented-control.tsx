@@ -46,7 +46,7 @@ export function PlayerSegmentedControl<T extends string>({
             numeric && 'font-code',
             !off &&
               option === value &&
-              'bg-[rgba(150,187,180,.24)] font-bold text-[#C0D8D3]',
+              'bg-(--pl-accent)/24 font-bold text-(--pl-accent-ink)',
           )}
         >
           {nameOf ? nameOf(option) : option}
