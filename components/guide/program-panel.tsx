@@ -134,7 +134,7 @@ export function ProgramPanel({
                     </p>
                   )}
                   <div className="mt-2.5 flex flex-wrap gap-2">
-                    <ActionRow className="gap-2">
+                    <ActionRow>
                       <Button
                         variant="change"
                         size="sm"

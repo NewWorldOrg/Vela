@@ -187,3 +187,20 @@ test('the heading of an actions column is read out and not drawn, in every table
     `only ${headed.length} actions columns were read`,
   )
 })
+
+test('a row of actions keeps the one gap it is given', async () => {
+  const rows: string[] = []
+
+  for (const { file, source } of await everySource()) {
+    for (const row of source.matchAll(/<ActionRow\b([^>]*)>/g)) {
+      rows.push(file)
+      assert.doesNotMatch(
+        row[1],
+        /(^|[\s"'])gap-/,
+        `${file} spaces its actions its own way: ${row[0]}`,
+      )
+    }
+  }
+
+  assert.ok(rows.length > 6, `only ${rows.length} rows of actions were read`)
+})

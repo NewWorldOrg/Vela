@@ -207,7 +207,7 @@ export function CandidateList({
                 ● 選択中
               </span>
             )}
-            <ActionRow className="gap-2">
+            <ActionRow>
               {!candidate.selected && (
                 <Button
                   variant="change"

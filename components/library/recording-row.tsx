@@ -175,7 +175,7 @@ export function RecordingRow({
       <td
         className={cn(CELL, GAP_BEFORE_ACTIONS, 'text-right whitespace-nowrap')}
       >
-        <ActionRow className="gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <ActionRow onClick={(e) => e.stopPropagation()}>
           <Button
             variant="remove"
             size="sm"

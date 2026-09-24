@@ -167,7 +167,7 @@ export function ReservationRow({
           </StatusCell>
         </TableCell>
         <TableCell className="text-right align-top">
-          <ActionRow className="gap-1.5">
+          <ActionRow>
             {reservation.recordingId && (
               <Button variant="watch" size="sm" asChild>
                 <Link href={`/recordings/${reservation.recordingId}`}>
@@ -307,7 +307,7 @@ export function ReservationRow({
                     </div>
                   ))}
                 </div>
-                <ActionRow className="mt-2.5 gap-2 max-[900px]:w-full max-[900px]:grid-flow-row">
+                <ActionRow className="mt-2.5 max-[900px]:w-full max-[900px]:grid-flow-row">
                   <Button
                     variant="change"
                     size="sm"

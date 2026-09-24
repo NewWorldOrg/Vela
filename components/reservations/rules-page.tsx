@@ -189,7 +189,7 @@ function RulesScreen({
       <ReservationTabs
         current="rules"
         action={
-          <ActionRow className="gap-2">
+          <ActionRow>
             <Button variant="watch" size="sm" asChild>
               <Link href="/search">
                 <SearchIcon />
