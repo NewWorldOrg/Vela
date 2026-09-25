@@ -375,45 +375,33 @@ export function isDrawn(range: ColumnRange, nth: number): boolean {
   return range.from <= nth && nth < range.to
 }
 
-export const SCREENS_DRAWN_AROUND = 0.5
+export function joinedColumnsOf(
+  one: ColumnRange,
+  other: ColumnRange,
+): ColumnRange {
+  return {
+    from: Math.min(one.from, other.from),
+    to: Math.max(one.to, other.to),
+  }
+}
+
+export function grownColumnsOf(
+  range: ColumnRange,
+  columns: number,
+): ColumnRange {
+  return {
+    from: Math.max(0, range.from - 1),
+    to: Math.min(columns, range.to + 1),
+  }
+}
+
+export function holdsEveryColumn(range: ColumnRange, columns: number): boolean {
+  return range.from <= 0 && range.to >= columns
+}
 
 export interface MinuteRange {
   from: number
   to: number
-}
-
-export interface GuideDepth {
-  scrollTop: number
-  clientHeight: number
-}
-
-export const MINUTES_DRAWN_STEP = 120
-
-export function drawnMinutesOf(
-  view: GuideDepth,
-  windowMin: number,
-  hourPx: number,
-): MinuteRange | undefined {
-  if (view.clientHeight <= 0 || hourPx <= 0) {
-    return undefined
-  }
-
-  const minuteOf = (px: number): number => (px / hourPx) * 60
-  const around = view.clientHeight * SCREENS_DRAWN_AROUND
-
-  const step = MINUTES_DRAWN_STEP
-
-  return {
-    from: Math.max(
-      0,
-      Math.floor(minuteOf(view.scrollTop - around) / step) * step,
-    ),
-    to: Math.min(
-      windowMin,
-      Math.ceil(minuteOf(view.scrollTop + view.clientHeight + around) / step) *
-        step,
-    ),
-  }
 }
 
 export function fallsWithin(

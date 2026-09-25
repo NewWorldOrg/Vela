@@ -187,8 +187,8 @@ export function GuideGrid({
   const drawn = useDrawnRange(scroller, {
     columns: channels.length,
     windowMin: windowHours * 60,
-    hourPx: HOUR_PX,
     filled,
+    day: dayKey,
   })
 
   useGlyphsAhead(glyphLoads, filled)

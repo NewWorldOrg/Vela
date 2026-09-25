@@ -3,18 +3,19 @@ import { test } from 'node:test'
 
 import type { GuideRelationKind } from '@/lib/guide'
 import {
-  MINUTES_DRAWN_STEP,
   bookingMarkOf,
   broadcastDateOf,
   columnsBeforeMeasuringOf,
   drawnColumnsOf,
-  drawnMinutesOf,
   fallsWithin,
+  grownColumnsOf,
+  holdsEveryColumn,
   foldedGuideOf,
   foldsAColumn,
   gridMinWidthOf,
   isDrawn,
   isOnAir,
+  joinedColumnsOf,
   nowMinOf,
   openingScrollTopOf,
   primaryKeyOfShadow,
@@ -737,137 +738,6 @@ test('a day with no split at all folds nothing', () => {
   )
 })
 
-const A_DAY_MIN = 24 * 60
-
-test('half a screen above and half a screen below the hours in view are drawn', () => {
-  assert.deepEqual(
-    drawnMinutesOf(
-      { scrollTop: 10 * HOUR_PX, clientHeight: 4 * HOUR_PX },
-      A_DAY_MIN,
-      HOUR_PX,
-    ),
-    { from: 8 * 60, to: 16 * 60 },
-  )
-})
-
-test('the drawing stops at the top and at the end of the window', () => {
-  assert.deepEqual(
-    drawnMinutesOf(
-      { scrollTop: 0, clientHeight: 4 * HOUR_PX },
-      10 * 60,
-      HOUR_PX,
-    ),
-    { from: 0, to: 6 * 60 },
-  )
-  assert.deepEqual(
-    drawnMinutesOf(
-      { scrollTop: 20 * HOUR_PX, clientHeight: 4 * HOUR_PX },
-      A_DAY_MIN,
-      HOUR_PX,
-    ),
-    { from: 18 * 60, to: A_DAY_MIN },
-  )
-})
-
-test('a grid laid out at no height gives no range of its own', () => {
-  assert.equal(
-    drawnMinutesOf({ scrollTop: 0, clientHeight: 0 }, A_DAY_MIN, HOUR_PX),
-    undefined,
-  )
-})
-
-const HEADING_PX = 50
-
-const A_FULL_HD_VIEW_PX = 758
-
-const A_DAY_OF_HALF_HOURS = Array.from({ length: 27 }, (_, column) =>
-  Array.from({ length: A_DAY_MIN / 30 }, (_, row) => ({
-    id: `${column}-${row}`,
-    startMin: row * 30 + (column % 3) * 10,
-    durationMin: 30,
-  })),
-).flat()
-
-const drawnIn = (range: { from: number; to: number }): Set<string> =>
-  new Set(
-    A_DAY_OF_HALF_HOURS.filter((one) => fallsWithin(range, one)).map(
-      (one) => one.id,
-    ),
-  )
-
-const addedBetween = (
-  was: { from: number; to: number },
-  now: { from: number; to: number },
-): number => {
-  const before = drawnIn(was)
-
-  return [...drawnIn(now)].filter((id) => !before.has(id)).length
-}
-
-const openedAt = (nowMin: number | undefined, viewPx: number): number =>
-  Math.min(
-    openingScrollTopOf(nowMin, HOUR_PX),
-    HEADING_PX + (A_DAY_MIN / 60) * HOUR_PX - viewPx,
-  )
-
-test('scrolling redraws only when the view crosses a two-hour step', () => {
-  const stepPx = 60
-  const deepest = HEADING_PX + (A_DAY_MIN / 60) * HOUR_PX - A_FULL_HD_VIEW_PX
-  const columns = 27
-  const rowsPerStep = MINUTES_DRAWN_STEP / 30 + 1
-  let was = drawnMinutesOf(
-    { scrollTop: 0, clientHeight: A_FULL_HD_VIEW_PX },
-    A_DAY_MIN,
-    HOUR_PX,
-  )!
-  let most = 0
-  let frames = 0
-  let redraws = 0
-
-  for (let scrollTop = stepPx; scrollTop <= deepest; scrollTop += stepPx) {
-    const now = drawnMinutesOf(
-      { scrollTop, clientHeight: A_FULL_HD_VIEW_PX },
-      A_DAY_MIN,
-      HOUR_PX,
-    )!
-
-    frames += 1
-    if (now.from !== was.from || now.to !== was.to) {
-      redraws += 1
-    }
-    most = Math.max(most, addedBetween(was, now))
-    was = now
-  }
-
-  assert.equal(MINUTES_DRAWN_STEP, 120)
-  assert.ok(most > 0)
-  assert.ok(
-    most <= rowsPerStep * columns,
-    `${most} programmes were added in one frame`,
-  )
-  assert.ok(
-    redraws * 2 < frames,
-    `${redraws} redraws over ${frames} frames of scrolling`,
-  )
-})
-
-test('a scroll that stays inside a step keeps the same range', () => {
-  const at = drawnMinutesOf(
-    { scrollTop: 10.5 * HOUR_PX, clientHeight: 4 * HOUR_PX },
-    A_DAY_MIN,
-    HOUR_PX,
-  )
-  const nudged = drawnMinutesOf(
-    { scrollTop: 10.5 * HOUR_PX + HOUR_PX / 3, clientHeight: 4 * HOUR_PX },
-    A_DAY_MIN,
-    HOUR_PX,
-  )
-
-  assert.deepEqual(nudged, at)
-  assert.equal(at!.from % MINUTES_DRAWN_STEP, 0)
-  assert.equal(at!.to % MINUTES_DRAWN_STEP, 0)
-})
-
 test('a programme is drawn when any of it falls within the range', () => {
   const range = { from: 600, to: 720 }
 
@@ -876,4 +746,28 @@ test('a programme is drawn when any of it falls within the range', () => {
   assert.equal(fallsWithin(range, { startMin: 700, durationMin: 60 }), true)
   assert.equal(fallsWithin(range, { startMin: 720, durationMin: 30 }), false)
   assert.equal(fallsWithin(range, { startMin: 500, durationMin: 400 }), true)
+})
+
+test('the columns drawn so far and the ones in view are drawn together', () => {
+  assert.deepEqual(joinedColumnsOf({ from: 3, to: 9 }, { from: 7, to: 12 }), {
+    from: 3,
+    to: 12,
+  })
+  assert.deepEqual(joinedColumnsOf({ from: 5, to: 9 }, { from: 0, to: 4 }), {
+    from: 0,
+    to: 9,
+  })
+})
+
+test('the columns are built ahead one on each side, never past the ends', () => {
+  assert.deepEqual(grownColumnsOf({ from: 3, to: 9 }, 12), { from: 2, to: 10 })
+  assert.deepEqual(grownColumnsOf({ from: 0, to: 11 }, 12), { from: 0, to: 12 })
+  assert.deepEqual(grownColumnsOf({ from: 0, to: 12 }, 12), { from: 0, to: 12 })
+})
+
+test('building ahead stops once every column is drawn', () => {
+  assert.equal(holdsEveryColumn({ from: 0, to: 12 }, 12), true)
+  assert.equal(holdsEveryColumn({ from: 1, to: 12 }, 12), false)
+  assert.equal(holdsEveryColumn({ from: 0, to: 11 }, 12), false)
+  assert.equal(holdsEveryColumn({ from: 0, to: 0 }, 0), true)
 })

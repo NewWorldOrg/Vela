@@ -989,7 +989,7 @@ const A_DAY_NOT_TODAY = {
   nowLabel: undefined,
 }
 
-export const 下へ送ると先の番組が描かれる: Story = {
+export const 起き上がったあとも描いた枠は消さない: Story = {
   args: { guide: A_DAY_NOT_TODAY },
   decorators: [shorterThanADay],
   play: async ({ canvasElement }) => {
@@ -1007,13 +1007,12 @@ export const 下へ送ると先の番組が描かれる: Story = {
 
     await afterTheArrival(canvasElement)
     await expect(scroller.scrollTop).toBe(0)
-    await waitFor(() => expect(drawnCells()).toHaveLength(0), {
-      timeout: ARRIVAL_SPAN_MS + 1000,
-    })
+    await new Promise((settled) => setTimeout(settled, ARRIVAL_SPAN_MS + 300))
+    await expect(drawnCells()).toHaveLength(IN_GRID_ORDER.length)
 
     scroller.scrollTop = (EVENING_MIN / 60) * HOUR_PX
 
-    await waitFor(() => expect(drawnCells()).toHaveLength(IN_GRID_ORDER.length))
+    await expect(drawnCells()).toHaveLength(IN_GRID_ORDER.length)
 
     const cells = drawnCells()
 
@@ -1383,8 +1382,11 @@ async function sidewaysInsideTheGrid(
   )
 
   await expect(lastCarries.length).toBeGreaterThan(0)
-  await expect(headings[end]).toBeEmptyDOMElement()
-  await expect(columns[end]).toBeEmptyDOMElement()
+  await waitFor(
+    () =>
+      expect(headings.filter((one) => one.textContent === '')).toHaveLength(0),
+    { timeout: 10_000 },
+  )
 
   scroller.scrollLeft = scroller.scrollWidth
 
@@ -1396,8 +1398,7 @@ async function sidewaysInsideTheGrid(
   await expect(
     columns[end].querySelectorAll('[data-opens="program-panel"]'),
   ).toHaveLength(lastCarries.length)
-  await expect(headings[0]).toBeEmptyDOMElement()
-  await expect(columns[0]).toBeEmptyDOMElement()
+  await expect(headings[0]).toHaveTextContent(AERIAL_CHANNEL_FIXTURES[0].name)
 
   const grid = scroller.getBoundingClientRect()
 

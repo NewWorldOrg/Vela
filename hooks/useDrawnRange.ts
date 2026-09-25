@@ -8,13 +8,19 @@ import {
   type MinuteRange,
   columnsBeforeMeasuringOf,
   drawnColumnsOf,
-  drawnMinutesOf,
+  grownColumnsOf,
+  holdsEveryColumn,
+  joinedColumnsOf,
 } from '@/lib/guide'
 
 export interface DrawnRange {
   columns: ColumnRange
   minutes: MinuteRange
 }
+
+const IDLE_WAIT_MS = 500
+
+const BETWEEN_COLUMNS_MS = 100
 
 function sameRange(
   one: { from: number; to: number },
@@ -23,18 +29,30 @@ function sameRange(
   return one.from === other.from && one.to === other.to
 }
 
+function whenIdle(run: () => void): () => void {
+  if (typeof requestIdleCallback === 'function') {
+    const asked = requestIdleCallback(run, { timeout: IDLE_WAIT_MS })
+
+    return () => cancelIdleCallback(asked)
+  }
+
+  const timer = setTimeout(run, BETWEEN_COLUMNS_MS)
+
+  return () => clearTimeout(timer)
+}
+
 export function useDrawnRange(
   scroller: RefObject<HTMLElement | null>,
   {
     columns,
     windowMin,
-    hourPx,
     filled,
+    day,
   }: {
     columns: number
     windowMin: number
-    hourPx: number
     filled: boolean
+    day: string
   },
 ): DrawnRange {
   const [range, setRange] = useState<DrawnRange>(() => ({
@@ -49,28 +67,29 @@ export function useDrawnRange(
       return
     }
 
+    const minutes = { from: 0, to: windowMin }
+    let built: ColumnRange | null = null
     let frame: number | null = null
-    let arriving = true
+    let stopGrowing: (() => void) | null = null
+
+    const show = (next: ColumnRange): void => {
+      built = next
+
+      startTransition(() =>
+        setRange((was) =>
+          sameRange(was.columns, next) && sameRange(was.minutes, minutes)
+            ? was
+            : { columns: next, minutes },
+        ),
+      )
+    }
 
     const measure = (): void => {
       frame = null
 
-      const across = drawnColumnsOf(node, columns)
-      const down = arriving
-        ? { from: 0, to: windowMin }
-        : drawnMinutesOf(node, windowMin, hourPx)
+      const seen = drawnColumnsOf(node, columns)
 
-      const settle = (): void =>
-        setRange((was) => {
-          const minutes = down ?? was.minutes
-
-          return sameRange(was.columns, across) &&
-            sameRange(was.minutes, minutes)
-            ? was
-            : { columns: across, minutes }
-        })
-
-      startTransition(settle)
+      show(built === null ? seen : joinedColumnsOf(built, seen))
     }
 
     const soon = (): void => {
@@ -79,10 +98,20 @@ export function useDrawnRange(
       }
     }
 
+    const grow = (): void => {
+      stopGrowing = null
+
+      if (built === null || holdsEveryColumn(built, columns)) {
+        return
+      }
+
+      show(grownColumnsOf(built, columns))
+      stopGrowing = whenIdle(grow)
+    }
+
     const resizing = new ResizeObserver(soon)
     const arrived = setTimeout(() => {
-      arriving = false
-      soon()
+      stopGrowing = whenIdle(grow)
     }, ARRIVAL_SPAN_MS)
 
     node.addEventListener('scroll', soon, { passive: true })
@@ -93,12 +122,13 @@ export function useDrawnRange(
       node.removeEventListener('scroll', soon)
       resizing.disconnect()
       clearTimeout(arrived)
+      stopGrowing?.()
 
       if (frame !== null) {
         cancelAnimationFrame(frame)
       }
     }
-  }, [scroller, columns, windowMin, hourPx, filled])
+  }, [scroller, columns, windowMin, filled, day])
 
   return range
 }
