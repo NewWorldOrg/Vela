@@ -11,6 +11,7 @@ import {
   LocalSignIn,
   type LocalSignInPlacement,
 } from '@/components/login/local-sign-in'
+import { IdentityProviderLink } from '@/components/login/identity-provider-link'
 
 export function LoginView({
   returnPath,
@@ -61,12 +62,12 @@ export function LoginView({
               className="w-full gap-[calc(9rem/16)] text-body"
               asChild
             >
-              <a href={oidcStartHref(returnPath)}>
+              <IdentityProviderLink href={oidcStartHref(returnPath)}>
                 <SignInIcon className="size-4" />
                 {identityProvider.providerName === null
                   ? 'SSO でサインイン'
                   : `${identityProvider.providerName} でサインイン`}
-              </a>
+              </IdentityProviderLink>
             </Button>
           </>
         )}

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, userEvent, within } from 'storybook/test'
 
 import { LoginView } from '@/components/login/login-page'
 
@@ -64,5 +65,23 @@ export const サインインに失敗したあと: Story = {
       reachable: true,
     },
     identityProviderFailed: true,
+  },
+}
+
+export const SSOで入ると最初の画面で幕が上がる: Story = {
+  args: 通常.args,
+  play: async ({ canvasElement }) => {
+    window.sessionStorage.removeItem('vela.curtain')
+    canvasElement.addEventListener('click', (event) => event.preventDefault(), {
+      capture: true,
+      once: true,
+    })
+
+    await userEvent.click(
+      within(canvasElement).getByRole('link', { name: 'SSO でサインイン' }),
+    )
+
+    await expect(window.sessionStorage.getItem('vela.curtain')).toBe('raise')
+    window.sessionStorage.removeItem('vela.curtain')
   },
 }
