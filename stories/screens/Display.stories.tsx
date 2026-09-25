@@ -3,11 +3,19 @@ import { expect, userEvent, within } from 'storybook/test'
 
 import { MOTION_LABEL } from '@/lib/motion'
 import { DisplayView } from '@/components/display/display-page'
+import { inTheSettings } from '@/stories/frames'
 
 const meta = {
   title: 'Screens/設定・表示',
   component: DisplayView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/display' },
+    },
+    layout: 'fullscreen',
+  },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof DisplayView>
 
 export default meta

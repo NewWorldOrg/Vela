@@ -8,10 +8,10 @@ import {
   INTEGRITY_FIXTURE,
   INTEGRITY_MORE_THAN_FIT_FIXTURE,
 } from '@/stories/fixtures/integrity'
-import { AppFrame } from '@/components/vela/app-shell'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { IntegrityView } from '@/components/integrity/integrity-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheApp } from '@/stories/frames'
 
 const swept = async (): Promise<SweepWrite> => ({ state: 'ok', findings: 5 })
 
@@ -38,15 +38,15 @@ const tooSoon = async (): Promise<SweepWrite> => ({
 const meta = {
   title: 'Screens/整合性チェック',
   component: IntegrityView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/library/integrity' },
+    },
+    layout: 'fullscreen',
+  },
   args: { onRun: swept, onDelete: throwing },
-  decorators: [
-    (Story) => (
-      <AppFrame>
-        <Story />
-      </AppFrame>
-    ),
-  ],
+  decorators: [inTheApp],
 } satisfies Meta<typeof IntegrityView>
 
 export default meta

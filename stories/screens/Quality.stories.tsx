@@ -18,6 +18,7 @@ import {
   saysItWithoutAnEdge,
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 const REFUSED =
   '警告水準が視聴不可の恐れを越えてしまうため、変更できませんでした。'
@@ -34,8 +35,15 @@ const refusesTheThreshold = fn<QualityReviseThreshold>(async () => ({
 const meta = {
   title: 'Screens/設定・品質',
   component: QualityView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/quality' },
+    },
+    layout: 'fullscreen',
+  },
   args: { onReviseThreshold: reviseThreshold },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof QualityView>
 
 export default meta

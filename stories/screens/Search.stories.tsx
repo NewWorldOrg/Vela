@@ -26,6 +26,7 @@ import {
 import { SearchView } from '@/components/search/search-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheApp } from '@/stories/frames'
 
 const emptyCondition: SearchCondition = {
   fields: 'title,description',
@@ -182,6 +183,7 @@ const meta = {
     layout: 'fullscreen',
     nextjs: { appDirectory: true, navigation: { pathname: '/search' } },
   },
+  decorators: [inTheApp],
 } satisfies Meta<typeof SearchView>
 
 export default meta

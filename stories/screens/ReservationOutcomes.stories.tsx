@@ -15,6 +15,7 @@ import {
   tipIn,
   widthOf,
 } from '@/stories/pills-in-a-column'
+import { inTheApp } from '@/stories/frames'
 
 function rowFor(cell: HTMLElement): HTMLElement {
   const row = cell.closest('tr')
@@ -38,7 +39,14 @@ const KIND_COLUMN = 6
 const meta = {
   title: 'Screens/失敗台帳',
   component: OutcomeLedgerView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/reservations/outcomes' },
+    },
+    layout: 'fullscreen',
+  },
+  decorators: [inTheApp],
 } satisfies Meta<typeof OutcomeLedgerView>
 
 export default meta

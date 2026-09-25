@@ -35,7 +35,6 @@ import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
 } from '@/stories/fixtures/captions'
-import { AppFrame } from '@/components/vela/app-shell'
 import type {
   AskBacklog,
   LiveSocket,
@@ -43,6 +42,7 @@ import type {
 } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
 import type { TakeCapture } from '@/components/recordings/take-capture'
+import { inTheApp } from '@/stories/frames'
 
 class ScriptedSocket implements LiveSocket {
   binaryType: BinaryType = 'blob'
@@ -450,13 +450,7 @@ const meta = {
     askSignedOut: stillSignedIn,
     askBacklog: uncounted,
   },
-  decorators: [
-    (Story) => (
-      <AppFrame>
-        <Story />
-      </AppFrame>
-    ),
-  ],
+  decorators: [inTheApp],
   beforeEach: () => {
     opened.length = 0
     probed.length = 0

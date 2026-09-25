@@ -32,6 +32,7 @@ import {
   widthOf,
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 const callOff = fn(async () => ({ state: 'ok' }) as const)
 
@@ -89,8 +90,15 @@ const STARTED_COLUMN = 6
 const meta = {
   title: 'Screens/設定・エンコード',
   component: EncodeView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/encode' },
+    },
+    layout: 'fullscreen',
+  },
   args: { screen: ENCODE_SCREEN, actions: ACTIONS },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof EncodeView>
 
 export default meta
@@ -445,9 +453,11 @@ export const 狭い幅で収まらないほどのジョブ: Story = {
   },
 }
 
+const SETTINGS_BESIDE_PX = 212
+
 export const 設定の枠に収まるジョブ表: Story = {
   args: { screen: MORE_JOBS_THAN_FIT },
-  parameters: { screen: { width: 1182, height: 1000 } },
+  parameters: { screen: { width: 1182 + SETTINGS_BESIDE_PX, height: 1000 } },
   play: async ({ canvasElement }) => {
     const rows = rowsOfTheTableHeaded(canvasElement, '番組')
     const box = rows[0].closest('[data-slot="table-container"]')

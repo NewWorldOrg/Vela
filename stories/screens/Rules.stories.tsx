@@ -15,6 +15,7 @@ import { RULE_CHANNEL_FIXTURES, RULE_FIXTURES } from '@/stories/fixtures/rules'
 import type { RuleActions } from '@/components/reservations/rules-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { RulesView } from '@/components/reservations/rules-page'
+import { inTheApp } from '@/stories/frames'
 
 interface Saved {
   id: string | undefined
@@ -120,11 +121,18 @@ function recording(saved: Saved[], turned: [string, boolean][]): RuleActions {
 const meta = {
   title: 'Screens/ルール',
   component: RulesView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/reservations/rules' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     result: { items: RULE_FIXTURES, total: RULE_FIXTURES.length },
     channels: RULE_CHANNEL_FIXTURES,
   },
+  decorators: [inTheApp],
 } satisfies Meta<typeof RulesView>
 
 export default meta

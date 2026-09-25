@@ -8,7 +8,6 @@ import {
   RECORDING_FIXTURES,
 } from '@/stories/fixtures/recordings'
 import { inProgressFirst } from '@/lib/recordings'
-import { AppFrame } from '@/components/vela/app-shell'
 import { LibraryView } from '@/components/library/library-page'
 import {
   cellOf,
@@ -20,6 +19,7 @@ import {
 } from '@/stories/pills-in-a-column'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheApp } from '@/stories/frames'
 
 const asked: string[] = []
 
@@ -58,15 +58,12 @@ const result = resultOf(all)
 const meta = {
   title: 'Screens/録画ライブラリ',
   component: LibraryView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+    layout: 'fullscreen',
+  },
   args: { onDelete: throwing },
-  decorators: [
-    (Story) => (
-      <AppFrame>
-        <Story />
-      </AppFrame>
-    ),
-  ],
+  decorators: [inTheApp],
 } satisfies Meta<typeof LibraryView>
 
 export default meta

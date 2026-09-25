@@ -13,6 +13,7 @@ import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { ChannelsView } from '@/components/channels/channels-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 type ChannelsViewProps = ComponentProps<typeof ChannelsView>
 
@@ -32,7 +33,13 @@ const refuse = async () => ({
 const meta = {
   title: 'Screens/設定・チャンネル',
   component: ChannelsView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/channels' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     onStart: refuse,
     onCancel: accept,
@@ -40,6 +47,7 @@ const meta = {
     onAdd: accept,
     onDelete: accept,
   },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof ChannelsView>
 
 export default meta

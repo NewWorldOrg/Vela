@@ -9,11 +9,19 @@ import {
 } from '@/repository/migration.fixtures'
 import { MigrationView } from '@/components/migration/migration-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 const meta = {
   title: 'Screens/設定・移行記録',
   component: MigrationView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/migration' },
+    },
+    layout: 'fullscreen',
+  },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof MigrationView>
 
 export default meta

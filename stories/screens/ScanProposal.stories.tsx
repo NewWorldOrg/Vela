@@ -8,6 +8,7 @@ import {
 } from '@/repository/services.fixtures'
 import { ScanProposalView } from '@/components/scan/scan-proposal-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 const GONE =
   'このスキャンの差分はもう保持されていないため、保存できませんでした。別の保存が先に完了した可能性があります。チャンネル一覧を確かめ、反映されていなければスキャンし直してください。'
@@ -41,8 +42,15 @@ function applying(refusal: string) {
 const meta = {
   title: 'Screens/設定・スキャン結果',
   component: ScanProposalView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/channels/scan/1' },
+    },
+    layout: 'fullscreen',
+  },
   args: { onApply: accept },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof ScanProposalView>
 
 export default meta

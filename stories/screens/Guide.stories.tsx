@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Decorator, Meta, StoryObj } from '@storybook/nextjs'
+import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
@@ -30,21 +30,31 @@ import {
 } from '@/repository/programs.fixtures'
 import { SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useSubChannelsFolded'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import {
+  A_FULL_DAY_CHANNELS,
+  A_FULL_DAY_PROGRAMS,
+  A_FULL_DAY_WINDOW,
+} from '@/stories/fixtures/a-full-day'
 import { ARRIVAL_SPAN_MS, GUIDE_HOLD_MS } from '@/lib/arrival'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
-import { AppFrame } from '@/components/vela/app-shell'
 import { GuideView } from '@/components/guide/guide-page'
+import { inTheApp } from '@/stories/frames'
+
+const EVENING_MIN = (19 - 4) * 60
 
 const base = {
   kind: 'terrestrial' as const,
   day: GUIDE_DAYS[1],
   days: GUIDE_DAYS,
-  windowStartHour: 19,
-  windowHours: 8,
-  nowMin: NOW_MIN,
+  windowStartHour: 4,
+  windowHours: 24,
+  nowMin: EVENING_MIN + NOW_MIN,
   nowLabel: NOW_LABEL,
   channels: CHANNEL_FIXTURES,
-  programs: PROGRAM_FIXTURES,
+  programs: PROGRAM_FIXTURES.map((program) => ({
+    ...program,
+    startMin: program.startMin + EVENING_MIN,
+  })),
 }
 
 const meta = {
@@ -68,13 +78,7 @@ const meta = {
     ): Promise<ProgramExtras | undefined> =>
       PROGRAM_FIXTURES.find((program) => program.id === id),
   },
-  decorators: [
-    (Story) => (
-      <AppFrame>
-        <Story />
-      </AppFrame>
-    ),
-  ],
+  decorators: [inTheApp],
   beforeEach: () => {
     try {
       window.localStorage.removeItem(SUB_CHANNELS_FOLDED_KEY)
@@ -365,24 +369,9 @@ export const 予約の印: Story = {
   },
 }
 
-const EVENING_MIN = (19 - 4) * 60
+const day = base
 
-const day = {
-  ...base,
-  windowStartHour: 4,
-  windowHours: 24,
-  nowMin: EVENING_MIN + NOW_MIN,
-  programs: PROGRAM_FIXTURES.map((program) => ({
-    ...program,
-    startMin: program.startMin + EVENING_MIN,
-  })),
-}
-
-const shorterThanADay: Decorator = (Story) => (
-  <div className="flex h-[720px] flex-col overflow-hidden">
-    <Story />
-  </div>
-)
+const A_LAPTOP = { width: 1280, height: 720 }
 
 async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
   await waitFor(() =>
@@ -404,7 +393,7 @@ function partOf(canvasElement: HTMLElement, selector: string): HTMLElement {
 
 export const 現在時刻の位置で開く: Story = {
   args: { guide: day },
-  decorators: [shorterThanADay],
+  parameters: { screen: A_LAPTOP },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -434,7 +423,7 @@ function clockAt(windowStartHour: number, min: number): string {
 
 export const 読み直しても動かない: Story = {
   args: { guide: day },
-  decorators: [shorterThanADay],
+  parameters: { screen: A_LAPTOP },
   render: function Reread(args) {
     const [reads, setReads] = useState(0)
     const nowMin = (args.guide.nowMin ?? 0) + reads * A_WHILE_MIN
@@ -480,11 +469,7 @@ export const 読み直しても動かない: Story = {
   },
 }
 
-const aScreenWide: Decorator = (Story) => (
-  <div className="flex h-[720px] w-[1400px] flex-col overflow-hidden">
-    <Story />
-  </div>
-)
+const A_WIDE_SCREEN = { width: 1400, height: 720 }
 
 const FEW_SERVICES = CHANNEL_FIXTURES.filter((channel) => !channel.sub).slice(
   0,
@@ -505,7 +490,7 @@ export const 列が余れば分け合う: Story = {
       ),
     },
   },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -546,7 +531,7 @@ export const 副チャンネルも同じ列: Story = {
       ),
     },
   },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -610,13 +595,15 @@ const aerial = {
 }
 
 const UNSCHEDULED = [
-  { startMin: 120, durationMin: 90 },
-  { startMin: 270, durationMin: 150 },
+  { startMin: 0, durationMin: EVENING_MIN },
+  { startMin: EVENING_MIN + 120, durationMin: 90 },
+  { startMin: EVENING_MIN + 270, durationMin: 150 },
+  { startMin: EVENING_MIN + 480, durationMin: 24 * 60 - EVENING_MIN - 480 },
 ]
 
 const A_LISTING_THAT_DID_NOT_ARRIVE = 'p014'
 
-const SPLIT_LINE_UP = PROGRAM_FIXTURES.filter(
+const SPLIT_LINE_UP = base.programs.filter(
   (program) =>
     SERVICES_ONE_OF_THEM_SPLIT.some(
       (channel) => channel.id === program.channelId,
@@ -631,7 +618,7 @@ export const 副チャンネルは別番組の時間帯だけ: Story = {
       programs: SPLIT_LINE_UP,
     },
   },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -749,10 +736,13 @@ export const 編成なしの短い帯は名前を落とす: Story = {
     guide: {
       ...base,
       channels: SERVICES_ONE_OF_THEM_SPLIT,
-      programs: A_SHORT_RETURN,
+      programs: A_SHORT_RETURN.map((program) => ({
+        ...program,
+        startMin: program.startMin + EVENING_MIN,
+      })),
     },
   },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -764,9 +754,9 @@ export const 編成なしの短い帯は名前を落とす: Story = {
       columns[split].querySelectorAll<HTMLElement>('[data-guide-unscheduled]'),
     )
 
-    await expect(bands).toHaveLength(2)
+    await expect(bands).toHaveLength(4)
 
-    const [brief, long] = bands
+    const [, brief, long] = bands
 
     await expect(brief.offsetHeight).toBeCloseTo(HOUR_PX / 2, 0)
     await expect(brief.querySelector('span')).toBeNull()
@@ -777,7 +767,7 @@ export const 編成なしの短い帯は名前を落とす: Story = {
 
 export const 列が多ければ横に流れる: Story = {
   args: { guide: aerial },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -962,7 +952,7 @@ export const 別の日: Story = {
       nowLabel: undefined,
     },
   },
-  decorators: [shorterThanADay],
+  parameters: { screen: A_LAPTOP },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -991,7 +981,7 @@ const A_DAY_NOT_TODAY = {
 
 export const 起き上がったあとも描いた枠は消さない: Story = {
   args: { guide: A_DAY_NOT_TODAY },
-  decorators: [shorterThanADay],
+  parameters: { screen: A_LAPTOP },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -1144,7 +1134,7 @@ const middleOf = (element: Element): [number, number] => {
 
 export const 番組を開いても場所は動かない: Story = {
   args: { guide: day },
-  decorators: [shorterThanADay],
+  parameters: { screen: A_LAPTOP },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -1172,7 +1162,7 @@ export const 番組を開いても場所は動かない: Story = {
 
 export const 別の番組を押すとまず閉じる: Story = {
   args: { guide: day },
-  decorators: [shorterThanADay],
+  parameters: { screen: A_LAPTOP },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -1492,7 +1482,7 @@ function columnsOf(canvasElement: HTMLElement): string[] {
 
 export const 副チャンネルを出している: Story = {
   args: { guide: SPLIT_LINE_UP_GUIDE },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -1511,7 +1501,7 @@ export const 副チャンネルを出している: Story = {
 
 export const 副チャンネルを畳んでいる: Story = {
   args: { guide: SPLIT_LINE_UP_GUIDE },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -1569,7 +1559,7 @@ export const 畳む先が無ければ操作子を出さない: Story = {
       programs: [...drawnOn(STATION.id), ...drawnOn(SPLIT_WITH_ITS_OWN.id)],
     },
   },
-  decorators: [aScreenWide],
+  parameters: { screen: A_WIDE_SCREEN },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
@@ -1636,5 +1626,23 @@ export const 詳しい情報は開いてから取りに行く: Story = {
       ),
     )
     await expect(within(surface).queryByRole('status')).toBeNull()
+  },
+}
+
+export const 大きな一日: Story = {
+  args: {
+    guide: {
+      ...base,
+      ...A_FULL_DAY_WINDOW,
+      channels: A_FULL_DAY_CHANNELS,
+      programs: A_FULL_DAY_PROGRAMS.map(forTheGrid),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    await expect(
+      canvasElement.querySelectorAll('[data-guide-column]'),
+    ).toHaveLength(A_FULL_DAY_CHANNELS.length)
   },
 }

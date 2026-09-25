@@ -26,6 +26,7 @@ import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { inTheApp } from '@/stories/frames'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -148,7 +149,13 @@ async function keepingThePosition() {
 const meta = {
   title: 'Screens/録画詳細',
   component: RecordingDetailView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/recordings/1274' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     onRemakeThumbnail: remade,
     onDelete: throwing,
@@ -161,6 +168,7 @@ const meta = {
     playback: planned(),
     unaskedProfile: '1080p60',
   },
+  decorators: [inTheApp],
 } satisfies Meta<typeof RecordingDetailView>
 
 export default meta

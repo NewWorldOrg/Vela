@@ -17,6 +17,7 @@ import {
 import { ReservationsView } from '@/components/reservations/reservations-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { cellOf, tipIn } from '@/stories/pills-in-a-column'
+import { inTheApp } from '@/stories/frames'
 
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
 
@@ -105,7 +106,10 @@ function whatIsMarkedRequired(dialog: HTMLElement): string[] {
 const meta = {
   title: 'Screens/予約',
   component: ReservationsView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/reservations' } },
+    layout: 'fullscreen',
+  },
   args: {
     actions: {
       onCancel: accept,
@@ -116,6 +120,7 @@ const meta = {
     },
     bulk: { onCancelAll: acceptAll, onDiscardAll: acceptAll },
   },
+  decorators: [inTheApp],
 } satisfies Meta<typeof ReservationsView>
 
 export default meta

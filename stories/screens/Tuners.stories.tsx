@@ -13,6 +13,7 @@ import {
   rowsOfTheTableHeaded,
   tipIn,
 } from '@/stories/pills-in-a-column'
+import { inTheSettings } from '@/stories/frames'
 
 const SESSION_COLUMN = 3
 
@@ -21,7 +22,13 @@ const STATE_COLUMN = 4
 const meta = {
   title: 'Screens/設定・チューナー',
   component: TunersView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/tuners' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     onToggle: async () => ({ state: 'ok' }),
     onRestart: async () => ({ state: 'disconnected' }),
@@ -29,6 +36,7 @@ const meta = {
     onSaveDetection: async () => ({ state: 'ok' }),
     onSaveThreshold: async () => ({ state: 'ok' }),
   },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof TunersView>
 
 export default meta
