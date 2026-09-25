@@ -46,6 +46,10 @@ const THE_VOCABULARY = [
   'waiting-line',
   'now-pop',
   'guide-settle',
+  'curtain-line',
+  'stamp',
+  'swell',
+  'row',
   'opening-above',
   'opening-below',
   'opening-line',
@@ -62,12 +66,16 @@ const THE_VOCABULARY = [
 const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
 
 const THE_UTILITIES = [
+  'row-arrives',
   'curtain-panel',
   'drawn',
   'screen-rises',
   'guide-now-pop',
   'guide-settles',
   'guide-opening',
+  'curtain-line',
+  'stamps',
+  'swells',
   'arrives',
   'joins',
   'breathes',
@@ -83,8 +91,11 @@ const THE_MOVEMENTS_THAT_STOP = [
   'ink',
   'now-pop',
   'guide-settle',
+  'curtain-line',
+  'stamp',
   'screen-rise',
   'item',
+  'row',
   'joining',
   'breathe',
   'waiting-line',
@@ -452,13 +463,13 @@ test('only the head of a long list is held back; the rest does not move', async 
 
     assert.match(
       source,
-      /(arrivesIn|risesIn)\(nth\)/,
+      /(arrivesIn|rowArrivesIn|risesIn)\(nth\)/,
       `${file} names a movement on every part it draws, so a list of two ` +
         'hundred moves two hundred parts at once',
     )
     assert.doesNotMatch(
       source,
-      /'(arrives|rises) /,
+      /'(arrives|row-arrives|rises) /,
       `${file} still writes the movement into a class list where the cap on ` +
         'how many parts move cannot reach it',
     )
@@ -540,6 +551,12 @@ test('a row below the sixth keeps the last delay instead of starting first', asy
     block,
     /& > tr:nth-child\(n \+ 6\) \{\s*animation-delay: 200ms;/,
     'the seventh row and below start at 0ms and overtake the rows above them',
+  )
+  assert.match(
+    block,
+    /& > tr:nth-child\(-n \+ 24\) \{\s*animation: var\(--animate-row\);/,
+    'the rows a tall screen shows past the twelfth are already there while ' +
+      'the rows above them are still arriving',
   )
 })
 
@@ -665,4 +682,43 @@ test('the opening of the guide is taken away where movement is switched off', as
     body,
     /@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) & \{\s*display: none;/,
   )
+})
+
+test('the curtain and the lines drawn by hand end on a small echo, once', async () => {
+  const sheet = await theSheet()
+  const bodies = keyframeBodies(sheet)
+
+  assert.match(bodies.get('rise') ?? '', /70% \{[^}]*-0\.15/)
+  assert.match(bodies.get('swell') ?? '', /70% \{[^}]*translateY\(-1\.5px\)/)
+  assert.doesNotMatch(
+    bodies.get('row') ?? '',
+    /transform/,
+    'rows that move one after another leave neighbouring rows at different ' +
+      'heights, and the table ripples',
+  )
+  assert.match(bodies.get('appear') ?? '', /65% \{[^}]*\* -0\.15/)
+  assert.match(bodies.get('curtain-panel') ?? '', /var\(--curtain-crack/)
+  assert.doesNotMatch(
+    bodies.get('disappear') ?? '',
+    /\d+% \{/,
+    'a surface going away does not bounce; only the arrival carries the echo',
+  )
+
+  const curtain = await readFile(
+    path.join(ROOT, 'components/vela/curtain.tsx'),
+    'utf8',
+  )
+
+  assert.match(curtain, /curtain-line/)
+
+  for (const file of [
+    'components/vela/section-heading.tsx',
+    'components/vela/empty-state.tsx',
+  ]) {
+    assert.match(
+      await readFile(path.join(ROOT, file), 'utf8'),
+      /drawn stamps/,
+      `${file} draws its mark without the stamp at the end`,
+    )
+  }
 })

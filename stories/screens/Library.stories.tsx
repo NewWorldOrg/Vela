@@ -544,8 +544,8 @@ export const 現れ方: Story = {
     for (const [nth, row] of rows.slice(0, 6).entries()) {
       const drawn = getComputedStyle(row)
 
-      await expect(drawn.animationName).toBe('item')
-      await expect(drawn.animationDuration).toBe('0.4s')
+      await expect(drawn.animationName).toBe('row')
+      await expect(drawn.animationDuration).toBe('0.32s')
       await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
         nth * 0.04,
         3,
@@ -559,7 +559,7 @@ export const 現れ方: Story = {
     document.documentElement.classList.add('dark')
 
     try {
-      await expect(getComputedStyle(rows[0]).animationName).toBe('item')
+      await expect(getComputedStyle(rows[0]).animationName).toBe('row')
     } finally {
       document.documentElement.classList.remove('dark')
     }

@@ -62,7 +62,7 @@ export function ChannelGrid({
             style={delayOf(gridDelayMs(seat.row, seat.column))}
             className={cn(
               newcomers.has(channel.id) ? 'joins' : arrivesIn(nth),
-              'min-w-0 max-w-[22rem]',
+              'swells min-w-0 max-w-[22rem]',
             )}
           >
             <ChannelCard channel={channel} onSelect={onSelect} />

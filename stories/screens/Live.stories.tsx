@@ -519,8 +519,8 @@ export const 現れ方: Story = {
 
     const first = getComputedStyle(cards[0])
 
-    await expect(first.animationName).toBe('item')
-    await expect(first.animationDuration).toBe('0.4s')
+    await expect(first.animationName).toBe('swell')
+    await expect(first.animationDuration).toBe('0.56s')
     await expect(Number.parseFloat(first.animationDelay)).toBe(0)
 
     const delays = cards.map((card) =>
@@ -528,7 +528,7 @@ export const 現れ方: Story = {
     )
 
     await expect(Math.max(...delays)).toBeGreaterThan(0)
-    await expect(Math.max(...delays)).toBeLessThanOrEqual(0.24)
+    await expect(Math.max(...delays)).toBeLessThanOrEqual(0.36)
 
     const across = cards.filter(
       (card) =>
@@ -539,7 +539,7 @@ export const 現れ方: Story = {
     if (across.length > 1) {
       await expect(
         Number.parseFloat(getComputedStyle(across[1]).animationDelay),
-      ).toBeCloseTo(0.03, 3)
+      ).toBeCloseTo(0.045, 3)
     }
 
     for (const card of cards) {
@@ -551,7 +551,7 @@ export const 現れ方: Story = {
     document.documentElement.classList.add('dark')
 
     try {
-      await expect(getComputedStyle(cards[0]).animationName).toBe('item')
+      await expect(getComputedStyle(cards[0]).animationName).toBe('swell')
     } finally {
       document.documentElement.classList.remove('dark')
     }
@@ -630,7 +630,7 @@ export const 副チャンネルを畳んでいる: Story = {
       .getByRole('button', { name: /みなと総合1/ })
       .closest('li') as HTMLElement
 
-    await expect(getComputedStyle(back).animationName).toBe('item')
+    await expect(getComputedStyle(back).animationName).toBe('swell')
     await expect(getComputedStyle(stayed).animationName).toBe('none')
   },
 }

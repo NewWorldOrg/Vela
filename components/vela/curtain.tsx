@@ -50,11 +50,12 @@ export function Curtain() {
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-50"
     >
-      <span className="curtain-panel absolute inset-y-0 left-0 w-[calc(50%+72px)] rounded-br-[72px] bg-bg [--curtain-away:-101%]" />
+      <span className="curtain-panel absolute inset-y-0 left-0 w-[calc(50%+72px)] rounded-br-[72px] bg-bg [--curtain-away:-101%] [--curtain-crack:-8px]" />
       <span
-        className="curtain-panel absolute inset-y-0 right-0 w-[calc(50%+72px)] rounded-bl-[72px] bg-bg [--curtain-away:101%]"
+        className="curtain-panel absolute inset-y-0 right-0 w-[calc(50%+72px)] rounded-bl-[72px] bg-bg [--curtain-away:101%] [--curtain-crack:8px]"
         onAnimationEnd={() => setRaising(false)}
       />
+      <span className="curtain-line absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-brand" />
     </div>
   )
 }

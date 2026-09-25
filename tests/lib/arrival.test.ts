@@ -7,6 +7,7 @@ import {
   GRID_STEP_MS,
   LAST_ONE_THAT_MOVES,
   LAST_ROW_HELD_BACK,
+  LAST_ROW_THAT_MOVES,
   RISE_MS,
   ROW_STEP_MS,
   arrivesIn,
@@ -15,9 +16,10 @@ import {
   gridDelayMs,
   groupDelayOf,
   moves,
-  rowDelayMs,
   seatIn,
   newcomersOf,
+  rowArrivesIn,
+  rowDelayMs,
   glyphLoadsOf,
   glyphsOf,
   GUIDE_FACES,
@@ -39,13 +41,19 @@ test('rows are held back one step at a time, and the rest hold the last delay', 
   assert.equal(rowDelayMs(400), 200)
 })
 
+test('a row fades in up to the rows a tall screen shows, and no further', () => {
+  assert.equal(rowArrivesIn(0), 'row-arrives')
+  assert.equal(rowArrivesIn(LAST_ROW_THAT_MOVES - 1), 'row-arrives')
+  assert.equal(rowArrivesIn(LAST_ROW_THAT_MOVES), '')
+})
+
 test('a grid arrives on the diagonal, capped', () => {
   assert.equal(gridDelayMs(0, 0), 0)
   assert.equal(gridDelayMs(1, 0), GRID_STEP_MS)
   assert.equal(gridDelayMs(1, 2), 3 * GRID_STEP_MS)
   assert.equal(gridDelayMs(20, 20), GRID_CAP_MS)
-  assert.equal(GRID_STEP_MS, 30)
-  assert.equal(GRID_CAP_MS, 240)
+  assert.equal(GRID_STEP_MS, 45)
+  assert.equal(GRID_CAP_MS, 360)
 })
 
 test('a seat in the grid is read across and then down', () => {

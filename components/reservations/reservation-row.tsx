@@ -40,7 +40,7 @@ import {
   TunerIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { arrivesIn, delayOf, rowDelayMs } from '@/lib/arrival'
+import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { Unfold } from '@/components/vela/unfold'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
@@ -108,7 +108,7 @@ export function ReservationRow({
         id={reservationAnchor(reservation.id)}
         data-state={selected ? 'selected' : undefined}
         style={delayOf(rowDelayMs(nth))}
-        className={arrivesIn(nth)}
+        className={rowArrivesIn(nth)}
       >
         <TableCell className="h-11 align-top">
           <Checkbox

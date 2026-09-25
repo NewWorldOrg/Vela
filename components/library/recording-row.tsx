@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 
 import { cn } from '@/lib/utils'
-import { arrivesIn, delayOf, rowDelayMs } from '@/lib/arrival'
+import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { formatBytes, formatLength } from '@/lib/format'
 import { unfinishedDeletionShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
@@ -105,7 +105,7 @@ export function RecordingRow({
       data-pressable-row
       onClick={onOpen}
       style={delayOf(rowDelayMs(nth))}
-      className={cn(arrivesIn(nth), 'group cursor-pointer')}
+      className={cn(rowArrivesIn(nth), 'group cursor-pointer')}
     >
       <td className={CELL}>
         <span className="flex min-w-0 items-center gap-3">

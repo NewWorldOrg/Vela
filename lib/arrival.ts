@@ -4,13 +4,15 @@ export const ROW_STEP_MS = 40
 
 export const LAST_ROW_HELD_BACK = 6
 
-export const GRID_STEP_MS = 30
+export const GRID_STEP_MS = 45
 
-export const GRID_CAP_MS = 240
+export const GRID_CAP_MS = 360
 
 export const RISE_MS = 700
 
 export const LAST_ONE_THAT_MOVES = 12
+
+export const LAST_ROW_THAT_MOVES = 24
 
 export const ARRIVAL_SPAN_MS = RISE_MS + GRID_CAP_MS + 100
 
@@ -20,6 +22,10 @@ export function moves(index: number): boolean {
 
 export function arrivesIn(index: number): string {
   return moves(index) ? 'arrives' : ''
+}
+
+export function rowArrivesIn(index: number): string {
+  return index < LAST_ROW_THAT_MOVES ? 'row-arrives' : ''
 }
 
 export function joinsIn(index: number): string {
@@ -34,10 +40,6 @@ export function groupDelayOf(ms: number): CSSProperties {
   return { '--d': `${ms}ms` } as CSSProperties
 }
 
-export function rowDelayMs(index: number): number {
-  return Math.min(index, LAST_ROW_HELD_BACK - 1) * ROW_STEP_MS
-}
-
 export function seatIn(
   index: number,
   columns: number,
@@ -45,6 +47,10 @@ export function seatIn(
   const across = Math.max(1, columns)
 
   return { row: Math.floor(index / across), column: index % across }
+}
+
+export function rowDelayMs(index: number): number {
+  return Math.min(index, LAST_ROW_HELD_BACK - 1) * ROW_STEP_MS
 }
 
 export function gridDelayMs(row: number, column: number): number {

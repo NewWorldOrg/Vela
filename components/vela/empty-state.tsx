@@ -37,7 +37,7 @@ export function EmptyState({
           {spot && (
             <SpotIllustration
               name={spot}
-              className="drawn size-[calc(78rem/16)] [--stroke-length:200]"
+              className="drawn stamps size-[calc(78rem/16)] [--stroke-length:200]"
             />
           )}
           {said && (
