@@ -155,7 +155,7 @@ export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
       <LinkSegments
         label={SUBJECT}
         items={trend.subjects}
-        className="mb-3 flex-wrap rounded-[18px]"
+        className="mb-3 flex-wrap gap-y-[calc(13rem/16)] rounded-[18px]"
       />
       {trend.rows.length > 0 ? (
         <div className="grid grid-cols-[minmax(0,min(8.5rem,30%))_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
