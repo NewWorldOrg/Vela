@@ -25,7 +25,6 @@ const THE_LONG_LISTS = [
   'components/reservations/reservation-row.tsx',
   'components/reservations/outcome-row.tsx',
   'components/live/channel-grid.tsx',
-  'components/guide/guide-grid.tsx',
 ]
 
 const READ = ['app', 'components']
@@ -45,6 +44,19 @@ const THE_VOCABULARY = [
   'item',
   'rise',
   'waiting-line',
+  'now-pop',
+  'guide-settle',
+  'opening-above',
+  'opening-below',
+  'opening-line',
+  'opening-ring',
+  'opening-piece',
+  'ball-across',
+  'ball-hop',
+  'ball-appear',
+  'ball-bump',
+  'ball-landing',
+  'ball-burst',
 ]
 
 const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
@@ -52,8 +64,10 @@ const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
 const THE_UTILITIES = [
   'curtain-panel',
   'drawn',
-  'rises',
   'screen-rises',
+  'guide-now-pop',
+  'guide-settles',
+  'guide-opening',
   'arrives',
   'joins',
   'breathes',
@@ -67,7 +81,8 @@ const THE_MOVEMENTS_THAT_STOP = [
   'curtain-panel',
   'draw',
   'ink',
-  'rise',
+  'now-pop',
+  'guide-settle',
   'screen-rise',
   'item',
   'joining',
@@ -83,7 +98,7 @@ const CARRIED_BY_A_VARIABLE = 'calc(var(--d, 0s) + var(--delay, 0s)'
 const A_KEYFRAMES = /@keyframes\s+([\w-]+)\s*\{/g
 
 const AN_ARRIVAL_ANIMATION =
-  /--animate-(curtain-panel|draw|ink|rise|item|breathe|waiting-line):([\s\S]*?);/g
+  /--animate-(curtain-panel|draw|ink|now-pop|guide-settle|item|breathe|waiting-line):([\s\S]*?);/g
 
 const A_UTILITY = /@utility\s+([\w-]+)\s*\{([\s\S]*?)\n\}/g
 
@@ -180,7 +195,7 @@ test('every delay is handed down through the variables, not written on a part', 
     declared.set(utility[1], utility[2])
   }
 
-  for (const name of ['rises', 'arrives', 'drawn']) {
+  for (const name of ['guide-now-pop', 'arrives', 'drawn']) {
     const body = declared.get(name)
 
     assert.ok(body !== undefined, `the ${name} movement has no utility`)
@@ -192,7 +207,7 @@ test('every delay is handed down through the variables, not written on a part', 
     )
   }
 
-  for (const name of ['rise', 'item', 'draw', 'ink']) {
+  for (const name of ['now-pop', 'item', 'draw', 'ink']) {
     const token = sheet.match(new RegExp(`--animate-${name}:([^;]*);`, 'u'))
 
     assert.ok(token, `--animate-${name} is not declared`)
@@ -303,6 +318,8 @@ const COMPOSITED = new Set(['transform', 'opacity'])
 
 const DRAWN_BY_HAND = 'stroke-dasharray'
 
+const PACED_PER_STEP = 'animation-timing-function'
+
 const THE_LINE_DRAWING = 'draw'
 
 const A_DECLARATION = /(^|[;{])\s*([-a-z]+)\s*:/g
@@ -342,6 +359,10 @@ test('every movement animates only what the compositor can carry', async () => {
 
   for (const [name, body] of bodies) {
     for (const property of propertiesIn(body)) {
+      if (property === PACED_PER_STEP) {
+        continue
+      }
+
       if (property === DRAWN_BY_HAND) {
         assert.equal(
           name,
@@ -392,7 +413,7 @@ test('an entrance is switched off once it is over, and under a hand', async () =
     declared.set(utility[1], utility[2])
   }
 
-  for (const name of ['rises', 'arrives']) {
+  for (const name of ['arrives']) {
     const body = declared.get(name)
 
     assert.ok(body !== undefined, `the ${name} movement has no utility`)
@@ -560,36 +581,7 @@ test('the settings of a movement stay on the part that wrote them', async () => 
   }
 })
 
-test('a guide column rises exactly as the first version did', async () => {
-  const sheet = await readFile(path.join(ROOT, THE_SHEET), 'utf8')
-  const at = sheet.indexOf('@utility rises {')
-  const body = sheet.slice(at, sheet.indexOf('\n}\n', at))
-
-  assert.doesNotMatch(
-    body,
-    /--rise-(from|squash|stretch)|transform-origin/,
-    'the rise was tuned away from the first version the user liked',
-  )
-})
-
-test('a guide column is not seen until it starts to rise', async () => {
-  const sheet = await readFile(path.join(ROOT, THE_SHEET), 'utf8')
-  const rise = sheet.slice(
-    sheet.indexOf('@keyframes rise {'),
-    sheet.indexOf('@keyframes item {'),
-  )
-  const at = sheet.indexOf('@utility rises {')
-  const rises = sheet.slice(at, sheet.indexOf('\n}\n', at))
-  const property = sheet.slice(sheet.indexOf('@property --rise-opacity {'))
-
-  assert.match(rise, /from \{[^}]*opacity: var\(--rise-opacity\)/)
-  assert.match(rise, /30% \{\s*opacity: 1;/)
-  assert.match(rises, /--rise-opacity: 0;/)
-  assert.match(property.slice(0, property.indexOf('}')), /inherits: false;/)
-  assert.match(property.slice(0, property.indexOf('}')), /initial-value: 1;/)
-})
-
-test('the guide shows its frame first and fills its columns right after', async () => {
+test('the guide shows its frame first and fills its columns under the cover', async () => {
   const grid = await readFile(
     path.join(ROOT, 'components/guide/guide-grid.tsx'),
     'utf8',
@@ -597,14 +589,80 @@ test('the guide shows its frame first and fills its columns right after', async 
   const hook = await readFile(path.join(ROOT, 'hooks/useFilledSoon.ts'), 'utf8')
 
   assert.match(grid, /const filled = useFilledSoon\(\)/)
-  assert.match(grid, /useArrived\(filled\)/)
   assert.match(grid, /useGlyphsAhead\(glyphLoads, filled\)/)
-  assert.match(grid, /!filled \? 'invisible'/)
   assert.match(grid, /filled && isDrawn\(/)
+  assert.doesNotMatch(
+    grid,
+    /opening && 'invisible'|!opening && 'invisible'/,
+    'hiding the table until the cover opens makes the opening frame restyle a thousand boxes at once',
+  )
   assert.match(
     hook,
     /useSyncExternalStore\(\s*listenToNothing,\s*\(\) => false,\s*\(\) => true,?\s*\)/,
     'a page opened directly keeps the filled columns its HTML came with',
   )
   assert.match(hook, /startTransition\(\(\) => setFilled\(true\)\)/)
+})
+
+test('the guide opens with a show only when it was not in the HTML and may move', async () => {
+  const hook = await readFile(
+    path.join(ROOT, 'hooks/useOpensWithAShow.ts'),
+    'utf8',
+  )
+
+  assert.match(hook, /!cameWithTheHtml &&/)
+  assert.match(hook, /movesNow\(/)
+  assert.match(hook, /prefers-reduced-motion: reduce/)
+})
+
+test('a hand on the guide during its opening ends the opening at once', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/guide/guide-grid.tsx'),
+    'utf8',
+  )
+
+  for (const input of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+    assert.match(grid, new RegExp(`'${input}'`))
+  }
+  assert.match(grid, /addEventListener\(input, markDone/)
+})
+
+test('the guide builds its other columns only after the opening is over', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/guide/guide-grid.tsx'),
+    'utf8',
+  )
+  const hook = await readFile(path.join(ROOT, 'hooks/useDrawnRange.ts'), 'utf8')
+
+  assert.match(grid, /settled: done/)
+  assert.match(hook, /if \(settled\) \{\s*stopGrowing = whenIdle\(grow\)/)
+})
+
+test('the spark colour is kept to the opening of the guide', async () => {
+  const files = await sourceFiles('components')
+  const users: string[] = []
+
+  for (const file of files) {
+    if (
+      /\b(bg|text|border|fill)-spark\b/.test(
+        await readFile(path.join(ROOT, file), 'utf8'),
+      )
+    ) {
+      users.push(file)
+    }
+  }
+
+  assert.deepEqual(users, ['components/guide/guide-opening.tsx'])
+})
+
+test('the opening of the guide is taken away where movement is switched off', async () => {
+  const sheet = await theSheet()
+  const at = sheet.indexOf('@utility guide-opening {')
+  const body = sheet.slice(at, sheet.indexOf('\n}\n', at))
+
+  assert.match(body, /:root\[data-motion='still'\] & \{\s*display: none;/)
+  assert.match(
+    body,
+    /@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) & \{\s*display: none;/,
+  )
 })

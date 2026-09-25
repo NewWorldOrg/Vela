@@ -4,21 +4,15 @@ export const ROW_STEP_MS = 40
 
 export const LAST_ROW_HELD_BACK = 6
 
-export const COLUMN_STEP_MS = 40
-
-export const LAST_COLUMN_HELD_BACK = 8
-
 export const GRID_STEP_MS = 30
 
 export const GRID_CAP_MS = 240
 
 export const RISE_MS = 700
 
-export const GUIDE_HOLD_MS = 160
-
 export const LAST_ONE_THAT_MOVES = 12
 
-export const ARRIVAL_SPAN_MS = GUIDE_HOLD_MS + RISE_MS + GRID_CAP_MS + 100
+export const ARRIVAL_SPAN_MS = RISE_MS + GRID_CAP_MS + 100
 
 export function moves(index: number): boolean {
   return index < LAST_ONE_THAT_MOVES
@@ -26,10 +20,6 @@ export function moves(index: number): boolean {
 
 export function arrivesIn(index: number): string {
   return moves(index) ? 'arrives' : ''
-}
-
-export function risesIn(index: number): string {
-  return moves(index) ? 'rises' : ''
 }
 
 export function joinsIn(index: number): string {
@@ -48,10 +38,6 @@ export function rowDelayMs(index: number): number {
   return Math.min(index, LAST_ROW_HELD_BACK - 1) * ROW_STEP_MS
 }
 
-export function columnDelayMs(index: number): number {
-  return Math.min(index, LAST_COLUMN_HELD_BACK - 1) * COLUMN_STEP_MS
-}
-
 export function seatIn(
   index: number,
   columns: number,
@@ -63,10 +49,6 @@ export function seatIn(
 
 export function gridDelayMs(row: number, column: number): number {
   return Math.min((row + column) * GRID_STEP_MS, GRID_CAP_MS)
-}
-
-export function nowLineDelayMs(): number {
-  return columnDelayMs(LAST_COLUMN_HELD_BACK - 1) + RISE_MS
 }
 
 export function columnsAcross(node: Element | null): number {
@@ -117,4 +99,56 @@ export function glyphLoadsOf(
       : GUIDE_FACES.map((face) => [face, drawnGlyphs] as const)),
     ...(titleGlyphs === '' ? [] : [[PANEL_TITLE_FACE, titleGlyphs] as const]),
   ]
+}
+
+export const BURST_SHAPES = [
+  'circle',
+  'square',
+  'triangle',
+  'cross',
+  'plus',
+] as const
+
+export type BurstShape = (typeof BURST_SHAPES)[number]
+
+export type BurstTone = 'spark' | 'surface' | 'ink'
+
+const BURST_TONES: readonly BurstTone[] = [
+  'spark',
+  'surface',
+  'spark',
+  'ink',
+  'spark',
+  'surface',
+  'ink',
+  'spark',
+  'surface',
+  'ink',
+]
+
+export interface BurstPiece {
+  shape: BurstShape
+  tone: BurstTone
+  angle: number
+  far: number
+  spin: number
+  size: number
+  lag: number
+  last: boolean
+}
+
+export function burstPiecesOf(count: number): BurstPiece[] {
+  const pieces = Array.from({ length: count }, (_, i) => ({
+    shape: BURST_SHAPES[i % BURST_SHAPES.length],
+    tone: BURST_TONES[i % BURST_TONES.length],
+    angle: i * (360 / count) + ((i * 37) % 17) - 8,
+    far: 18 + ((i * 53) % 30),
+    spin: 160 + ((i * 97) % 260),
+    size: 18 + ((i * 7) % 19),
+    lag: (i * 17) % 80,
+  }))
+  const latest = Math.max(...pieces.map((piece) => piece.lag))
+  const lastAt = pieces.findIndex((piece) => piece.lag === latest)
+
+  return pieces.map((piece, i) => ({ ...piece, last: i === lastAt }))
 }

@@ -3,26 +3,21 @@ import { test } from 'node:test'
 
 import {
   ARRIVAL_SPAN_MS,
-  COLUMN_STEP_MS,
   GRID_CAP_MS,
   GRID_STEP_MS,
-  LAST_COLUMN_HELD_BACK,
   LAST_ONE_THAT_MOVES,
   LAST_ROW_HELD_BACK,
   RISE_MS,
   ROW_STEP_MS,
   arrivesIn,
-  columnDelayMs,
+  burstPiecesOf,
   delayOf,
   gridDelayMs,
   groupDelayOf,
   moves,
-  nowLineDelayMs,
-  risesIn,
   rowDelayMs,
   seatIn,
   newcomersOf,
-  GUIDE_HOLD_MS,
   glyphLoadsOf,
   glyphsOf,
   GUIDE_FACES,
@@ -44,17 +39,6 @@ test('rows are held back one step at a time, and the rest hold the last delay', 
   assert.equal(rowDelayMs(400), 200)
 })
 
-test('columns are held back to the eighth and then hold that delay', () => {
-  assert.deepEqual(
-    Array.from({ length: LAST_COLUMN_HELD_BACK }, (_, nth) =>
-      columnDelayMs(nth),
-    ),
-    [0, 40, 80, 120, 160, 200, 240, 280],
-  )
-  assert.equal(COLUMN_STEP_MS, 40)
-  assert.equal(columnDelayMs(400), (LAST_COLUMN_HELD_BACK - 1) * COLUMN_STEP_MS)
-})
-
 test('a grid arrives on the diagonal, capped', () => {
   assert.equal(gridDelayMs(0, 0), 0)
   assert.equal(gridDelayMs(1, 0), GRID_STEP_MS)
@@ -71,13 +55,6 @@ test('a seat in the grid is read across and then down', () => {
   assert.deepEqual(seatIn(5, 0), { row: 5, column: 0 })
 })
 
-test('the line for now is drawn after the last column has risen', () => {
-  assert.equal(
-    nowLineDelayMs(),
-    (LAST_COLUMN_HELD_BACK - 1) * COLUMN_STEP_MS + RISE_MS,
-  )
-})
-
 test('only the first twelve parts of a list move at all', () => {
   assert.equal(LAST_ONE_THAT_MOVES, 12)
   assert.equal(moves(0), true)
@@ -85,12 +62,10 @@ test('only the first twelve parts of a list move at all', () => {
   assert.equal(moves(LAST_ONE_THAT_MOVES), false)
   assert.equal(arrivesIn(0), 'arrives')
   assert.equal(arrivesIn(400), '')
-  assert.equal(risesIn(0), 'rises')
-  assert.equal(risesIn(400), '')
 })
 
 test('the procession has an end the list can wait for', () => {
-  assert.equal(ARRIVAL_SPAN_MS, GUIDE_HOLD_MS + RISE_MS + GRID_CAP_MS + 100)
+  assert.equal(ARRIVAL_SPAN_MS, RISE_MS + GRID_CAP_MS + 100)
 })
 
 test('only what was not in the line-up just before counts as having joined', () => {
@@ -130,6 +105,44 @@ test('nothing is loaded for a guide with no text', () => {
   assert.deepEqual(glyphLoadsOf([], ['題']), [[PANEL_TITLE_FACE, '題']])
 })
 
-test('the guide holds its columns still until its first picture is on screen', () => {
-  assert.equal(GUIDE_HOLD_MS, 160)
+test('the burst throws twenty shapes all the way round', () => {
+  const pieces = burstPiecesOf(20)
+
+  assert.equal(pieces.length, 20)
+  assert.deepEqual([...new Set(pieces.map((piece) => piece.shape))].sort(), [
+    'circle',
+    'cross',
+    'plus',
+    'square',
+    'triangle',
+  ])
+  assert.deepEqual([...new Set(pieces.map((piece) => piece.tone))].sort(), [
+    'ink',
+    'spark',
+    'surface',
+  ])
+
+  for (const piece of pieces) {
+    assert.ok(piece.size >= 18 && piece.size <= 36, `size ${piece.size}`)
+    assert.ok(piece.far >= 18 && piece.far < 48, `far ${piece.far}`)
+    assert.ok(piece.lag >= 0 && piece.lag < 80, `lag ${piece.lag}`)
+  }
+
+  const quarters = new Set(
+    pieces.map((piece) => Math.floor((((piece.angle % 360) + 360) % 360) / 90)),
+  )
+
+  assert.equal(quarters.size, 4)
+})
+
+test('the burst is the same every time it is drawn', () => {
+  assert.deepEqual(burstPiecesOf(20), burstPiecesOf(20))
+})
+
+test('the shape that leaves last is the one the burst waits for', () => {
+  const pieces = burstPiecesOf(20)
+  const last = pieces.filter((piece) => piece.last)
+
+  assert.equal(last.length, 1)
+  assert.equal(last[0].lag, Math.max(...pieces.map((piece) => piece.lag)))
 })

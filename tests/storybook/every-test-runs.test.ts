@@ -50,6 +50,7 @@ const THE_SUITE = [
   'tests/lib/live-seat.test.ts',
   'tests/lib/live-startup.test.ts',
   'tests/lib/live-wire.test.ts',
+  'tests/lib/motion.test.ts',
   'tests/lib/not-yet-in-this-build.test.ts',
   'tests/lib/playback-resume.test.ts',
   'tests/lib/playback-sound.test.ts',

@@ -19,6 +19,7 @@ import {
   nowMinOf,
   openingScrollTopOf,
   primaryKeyOfShadow,
+  seamTopOf,
   relationDestinationOf,
   sharesWith,
   servicesSettled,
@@ -61,11 +62,14 @@ test('a window that does not hold now is given no now at all', () => {
   assert.equal(nowMinOf(AFTER_MIDNIGHT, windowStartOf('2026-08-19')), undefined)
 })
 
-test('the guide opens half an hour above the line', () => {
-  assert.equal(openingScrollTopOf(600, HOUR_PX), (570 / 60) * HOUR_PX)
+test('the guide opens with the line for now in the middle of what it shows', () => {
+  assert.equal(
+    openingScrollTopOf(600, HOUR_PX, 700),
+    (600 / 60) * HOUR_PX - 350,
+  )
 })
 
-test('it opens half an hour above the line an hour past midnight too', () => {
+test('it opens with the line in the middle an hour past midnight too', () => {
   const nowMin = nowMinOf(
     AFTER_MIDNIGHT,
     windowStartOf(broadcastDateOf(AFTER_MIDNIGHT)),
@@ -73,22 +77,19 @@ test('it opens half an hour above the line an hour past midnight too', () => {
 
   assert.equal(nowMin, 1260)
   assert.equal(
-    openingScrollTopOf(nowMin, HOUR_PX),
-    ((nowMin as number) / 60) * HOUR_PX - HOUR_PX / 2,
+    openingScrollTopOf(nowMin, HOUR_PX, 700),
+    ((nowMin as number) / 60) * HOUR_PX - 350,
   )
 })
 
 test('a day the present is not in opens at the top', () => {
-  assert.equal(openingScrollTopOf(undefined, HOUR_PX), 0)
+  assert.equal(openingScrollTopOf(undefined, HOUR_PX, 700), 0)
 })
 
-test('the first half hour of a day opens at the top, not above it', () => {
-  assert.equal(openingScrollTopOf(0, HOUR_PX), 0)
-  assert.equal(openingScrollTopOf(29, HOUR_PX), 0)
-})
-
-test('a minute past the lead opens a minute in', () => {
-  assert.equal(openingScrollTopOf(31, HOUR_PX), HOUR_PX / 60)
+test('the start of a day opens at the top, not above it', () => {
+  assert.equal(openingScrollTopOf(0, HOUR_PX, 700), 0)
+  assert.equal(openingScrollTopOf(120, HOUR_PX, 700), 0)
+  assert.equal(openingScrollTopOf(240, HOUR_PX, 700), 384 - 350)
 })
 
 test('a programme nobody booked carries no mark', () => {
@@ -770,4 +771,42 @@ test('building ahead stops once every column is drawn', () => {
   assert.equal(holdsEveryColumn({ from: 1, to: 12 }, 12), false)
   assert.equal(holdsEveryColumn({ from: 0, to: 11 }, 12), false)
   assert.equal(holdsEveryColumn({ from: 0, to: 0 }, 0), true)
+})
+
+test('the cover opens along the line for now, where the screen shows it', () => {
+  assert.equal(
+    seamTopOf({
+      nowMin: 960,
+      hourPx: 96,
+      scrollTop: 1488,
+      headingPx: 40,
+      viewPx: 700,
+    }),
+    40 + 1536 - 1488,
+  )
+})
+
+test('a day without a line for now opens in the middle of the view', () => {
+  assert.equal(
+    seamTopOf({
+      nowMin: undefined,
+      hourPx: 96,
+      scrollTop: 0,
+      headingPx: 40,
+      viewPx: 700,
+    }),
+    350,
+  )
+})
+
+test('a line for now outside the view still opens inside it', () => {
+  const at = {
+    hourPx: 96,
+    scrollTop: 0,
+    headingPx: 40,
+    viewPx: 700,
+  }
+
+  assert.equal(seamTopOf({ ...at, nowMin: 24 * 60 }), 700)
+  assert.equal(seamTopOf({ ...at, nowMin: 0, scrollTop: 900 }), 40)
 })

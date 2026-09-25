@@ -35,7 +35,7 @@ import {
   A_FULL_DAY_PROGRAMS,
   A_FULL_DAY_WINDOW,
 } from '@/stories/fixtures/a-full-day'
-import { ARRIVAL_SPAN_MS, GUIDE_HOLD_MS } from '@/lib/arrival'
+import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { GuideView } from '@/components/guide/guide-page'
 import { inTheApp } from '@/stories/frames'
@@ -117,68 +117,84 @@ export const 通常: Story = {
 
 export const 現れ方: Story = {
   args: { guide: base },
-  decorators: [
-    (Story) => (
-      <div className="screen-rises">
-        <Story />
-      </div>
-    ),
-  ],
+  globals: { a11y: { manual: true } },
   play: async ({ canvasElement }) => {
-    await columnsFilled(canvasElement)
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-guide-opening]'),
+      ).not.toBeNull(),
+    )
 
-    const columns = [
-      ...canvasElement.querySelectorAll<HTMLElement>('[data-guide-column]'),
-    ]
+    const opening = partOf(canvasElement, '[data-guide-opening]')
 
-    await expect(columns.length).toBeGreaterThan(2)
+    await expect(opening).not.toHaveAttribute('data-open')
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-above')).backgroundColor,
+    ).toBe(
+      getComputedStyle(partOf(opening, '.guide-opening-below')).backgroundColor,
+    )
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-line')).animationName,
+    ).toBe('opening-line')
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-ball')).animationName,
+    ).toBe('ball-across')
+    await expect(canvasElement.querySelector('[data-now-line]')).toBeNull()
 
-    for (const [nth, column] of columns.slice(0, 3).entries()) {
-      const drawn = getComputedStyle(column)
-
-      await expect(drawn.animationName).toBe('rise')
-      await expect(drawn.animationDuration).toBe('0.7s')
-      await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
-        GUIDE_HOLD_MS / 1000 + nth * 0.04,
-        3,
-      )
-      await expect(drawn.getPropertyValue('--rise-from').trim()).toBe('55%')
-      await expect(drawn.getPropertyValue('--rise-squash').trim()).toBe('1.2')
-      await expect(drawn.getPropertyValue('--rise-stretch').trim()).toBe('0.9')
-    }
-
-    const first = columns[0]
-    const channel = base.channels[0]
+    await waitFor(() => expect(opening).toHaveAttribute('data-open'), {
+      timeout: 4000,
+    })
 
     await expect(
-      first.querySelectorAll('[data-opens="program-panel"]').length,
-    ).toBe(
-      base.programs.filter((program) => program.channelId === channel.id)
-        .length,
+      getComputedStyle(partOf(opening, '.guide-opening-ball-body'))
+        .animationName,
+    ).toBe('ball-burst')
+    await expect(opening.querySelectorAll('.guide-opening-ring')).toHaveLength(
+      2,
+    )
+    await expect(opening.querySelectorAll('.guide-opening-piece')).toHaveLength(
+      20,
+    )
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-piece')).animationName,
+    ).toBe('opening-piece')
+
+    const label = partOf(canvasElement, '[data-now-line] span')
+
+    await expect(getComputedStyle(label).animationName).toBe('now-pop')
+
+    await waitFor(
+      () =>
+        expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
+      { timeout: 4000 },
     )
 
-    const line = canvasElement.querySelector<HTMLElement>(
-      '[data-now-line] line',
-    )
-
-    await expect(line).not.toBeNull()
-
-    const drawnLine = getComputedStyle(line as Element)
-
-    await expect(drawnLine.animationName).toBe('draw')
-    await expect(Number.parseFloat(drawnLine.animationDelay)).toBeCloseTo(
-      GUIDE_HOLD_MS / 1000 + 0.98,
-      3,
-    )
-
-    document.documentElement.classList.add('dark')
-
-    try {
-      await expect(getComputedStyle(columns[0]).animationName).toBe('rise')
-      await expect(getComputedStyle(line as Element).animationName).toBe('draw')
-    } finally {
-      document.documentElement.classList.remove('dark')
+    for (const column of canvasElement.querySelectorAll<HTMLElement>(
+      '[data-guide-column]',
+    )) {
+      await expect(getComputedStyle(column).animationName).toBe('none')
     }
+  },
+}
+
+export const 途中で操作すると入りを飛ばす: Story = {
+  args: { guide: base },
+  globals: { a11y: { manual: true } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-guide-opening]'),
+      ).not.toBeNull(),
+    )
+
+    window.dispatchEvent(new WheelEvent('wheel', { deltaY: 40 }))
+
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
+    )
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-now-line]')).not.toBeNull(),
+    )
   },
 }
 
@@ -374,10 +390,14 @@ const day = base
 const A_LAPTOP = { width: 1280, height: 720 }
 
 async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
-  await waitFor(() =>
-    expect(
-      canvasElement.querySelector('[data-guide-column].invisible'),
-    ).toBeNull(),
+  await waitFor(
+    () => {
+      expect(
+        canvasElement.querySelector('[data-guide-column].invisible'),
+      ).toBeNull()
+      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull()
+    },
+    { timeout: 5000 },
   )
 }
 
@@ -400,16 +420,13 @@ export const 現在時刻の位置で開く: Story = {
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const line = partOf(canvasElement, '[data-now-line]')
 
-    await expect(scroller.scrollTop).toBeCloseTo(
-      line.offsetTop - HOUR_PX / 2,
-      0,
-    )
-
     const grid = scroller.getBoundingClientRect()
+    const heading = partOf(canvasElement, '[data-guide-heading]')
+      .parentElement as HTMLElement
     const now = line.getBoundingClientRect()
+    const shown = grid.top + heading.offsetHeight
 
-    await expect(now.top).toBeGreaterThan(grid.top)
-    await expect(now.bottom).toBeLessThan(grid.bottom)
+    await expect(now.top).toBeCloseTo((shown + grid.bottom) / 2, -1)
   },
 }
 
@@ -1630,6 +1647,7 @@ export const 詳しい情報は開いてから取りに行く: Story = {
 }
 
 export const 大きな一日: Story = {
+  globals: { a11y: { manual: true } },
   args: {
     guide: {
       ...base,

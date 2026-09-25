@@ -4,8 +4,6 @@ export const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
 export const WINDOW_HOURS = 24
 
-const OPENING_LEAD_MIN = 30
-
 export function broadcastDateOf(at: Date): string {
   const shifted = new Date(
     at.getTime() + JST_OFFSET_MS - DAY_STARTS_AT_HOUR * 60 * 60 * 1000,
@@ -49,12 +47,13 @@ export function isOnAir(
 export function openingScrollTopOf(
   nowMin: number | undefined,
   hourPx: number,
+  viewPx: number,
 ): number {
   if (nowMin === undefined) {
     return 0
   }
 
-  return Math.max(0, ((nowMin - OPENING_LEAD_MIN) / 60) * hourPx)
+  return Math.max(0, (nowMin / 60) * hourPx - viewPx / 2)
 }
 
 export interface GuideService {
@@ -410,5 +409,28 @@ export function fallsWithin(
 ): boolean {
   return (
     span.startMin < range.to && span.startMin + span.durationMin > range.from
+  )
+}
+
+export function seamTopOf({
+  nowMin,
+  hourPx,
+  scrollTop,
+  headingPx,
+  viewPx,
+}: {
+  nowMin: number | undefined
+  hourPx: number
+  scrollTop: number
+  headingPx: number
+  viewPx: number
+}): number {
+  if (nowMin === undefined) {
+    return viewPx / 2
+  }
+
+  return Math.min(
+    viewPx,
+    Math.max(headingPx, headingPx + (nowMin / 60) * hourPx - scrollTop),
   )
 }

@@ -2,7 +2,6 @@
 
 import { type RefObject, startTransition, useEffect, useState } from 'react'
 
-import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
 import {
   type ColumnRange,
   type MinuteRange,
@@ -47,11 +46,13 @@ export function useDrawnRange(
     columns,
     windowMin,
     filled,
+    settled,
     day,
   }: {
     columns: number
     windowMin: number
     filled: boolean
+    settled: boolean
     day: string
   },
 ): DrawnRange {
@@ -110,9 +111,9 @@ export function useDrawnRange(
     }
 
     const resizing = new ResizeObserver(soon)
-    const arrived = setTimeout(() => {
+    if (settled) {
       stopGrowing = whenIdle(grow)
-    }, ARRIVAL_SPAN_MS)
+    }
 
     node.addEventListener('scroll', soon, { passive: true })
     resizing.observe(node)
@@ -121,14 +122,13 @@ export function useDrawnRange(
     return () => {
       node.removeEventListener('scroll', soon)
       resizing.disconnect()
-      clearTimeout(arrived)
       stopGrowing?.()
 
       if (frame !== null) {
         cancelAnimationFrame(frame)
       }
     }
-  }, [scroller, columns, windowMin, filled, day])
+  }, [scroller, columns, windowMin, filled, settled, day])
 
   return range
 }
