@@ -10,6 +10,7 @@ import type {
   WriteResult,
 } from '@/repository/services'
 import { cn } from '@/lib/utils'
+import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { Badge } from '@/components/ui/badge'
 import { READABLE_LINE } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
@@ -57,8 +58,14 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
                     key={`${channel.kind}-${channel.channel}`}
                     className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-[calc(11rem/16)] py-[calc(3rem/16)] text-note"
                   >
-                    <Badge variant={CHANNEL_KIND_VARIANT[channel.kind]}>
-                      {CHANNEL_KIND_LABEL[channel.kind]}
+                    <Badge
+                      variant={shapeFor(
+                        CHANNEL_KIND_VARIANT,
+                        channel.kind,
+                        'mute',
+                      )}
+                    >
+                      {wordFor(CHANNEL_KIND_LABEL, channel.kind)}
                     </Badge>
                     <span className="font-code tabular-nums">
                       {channel.channel}

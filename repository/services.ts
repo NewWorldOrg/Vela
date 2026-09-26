@@ -23,6 +23,7 @@ type CandidateChannelResponder =
   components['schemas']['CandidateChannelResponder']
 type ScanAttemptResponder = components['schemas']['ScanAttemptResponder']
 type ScanAttemptOutcome = components['schemas']['ScanAttemptOutcome']
+type ScanChangeKind = components['schemas']['ScanChangeKind']
 type ScanDifferenceResponder = components['schemas']['ScanDifferenceResponder']
 type ScanMeasurementResponder =
   components['schemas']['ScanMeasurementResponder']
@@ -145,7 +146,7 @@ export type RunningScan =
   | { state: 'unreadable'; run: ScanRun; message: string }
 
 export interface ProposalChannel {
-  kind: 'added' | 'updated' | 'missing'
+  kind: ScanChangeKind
   channel: string
   measurement?: Measurement
 }
