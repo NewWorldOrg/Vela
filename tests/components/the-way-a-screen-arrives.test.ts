@@ -85,6 +85,7 @@ const THE_UTILITIES = [
   'breathes',
   'waits',
   'appears',
+  'disappears',
   'scrim-appears',
   'scrim-disappears',
 ]
@@ -108,6 +109,7 @@ const THE_MOVEMENTS_THAT_STOP = [
   'scrim-in',
   'scrim-out',
   'surface-in',
+  'surface-out',
 ]
 
 const CARRIED_BY_A_VARIABLE = 'calc(var(--d, 0s) + var(--delay, 0s)'
@@ -528,6 +530,11 @@ test('a face comes and goes by a movement this sheet declares', async () => {
       `${file} names nothing for the way it opens`,
     )
     assert.doesNotMatch(source, /data-\[state=closed\]:appears/)
+    assert.match(
+      source,
+      /data-\[state=closed\]:disappears/,
+      `${file} opens with a movement and vanishes at once when it closes`,
+    )
 
     if (/data-slot="(dialog|alert-dialog|sheet)-overlay"/.test(source)) {
       assert.match(

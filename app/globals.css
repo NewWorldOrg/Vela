@@ -288,6 +288,7 @@
       --animate-scrim-in: none;
       --animate-scrim-out: none;
       --animate-surface-in: none;
+      --animate-surface-out: none;
     }
   }
 
@@ -310,6 +311,7 @@
     --animate-scrim-in: none;
     --animate-scrim-out: none;
     --animate-surface-in: none;
+    --animate-surface-out: none;
   }
 }
 
@@ -467,6 +469,7 @@
   --animate-scrim-in: appear 120ms var(--ease-toy) backwards;
   --animate-scrim-out: disappear 120ms var(--ease-toy) both;
   --animate-surface-in: appear 200ms var(--ease-toy) backwards;
+  --animate-surface-out: disappear 120ms var(--ease-toy) both;
   --animate-joining: item 0.28s var(--ease-item) both;
   --animate-curtain-panel: curtain-panel 0.8s 0.32s both;
   --animate-curtain-line: curtain-line 1s ease-in-out both;
@@ -1043,6 +1046,10 @@
 
 @utility appears {
   animation: var(--animate-surface-in);
+}
+
+@utility disappears {
+  animation: var(--animate-surface-out);
 }
 
 @utility waits {
