@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils'
 import { SettingsIcon, VelaMark } from '@/components/vela/icons'
 
 const TOP_BAR_HEIGHT = 'h-[calc(46rem/16)]'
-const BELOW_TOP_BAR = 'top-[46px]'
+const BELOW_TOP_BAR = 'top-[calc(46rem/16)]'
 
-export const ADMIN_LIST_HEIGHT_CAP = 'max-h-[calc(100dvh-66px)]'
+export const ADMIN_LIST_HEIGHT_CAP = 'max-h-[calc(100dvh-66rem/16)]'
 
 export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
   return (
