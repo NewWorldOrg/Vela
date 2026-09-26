@@ -296,6 +296,8 @@ export const SCAN_PROPOSAL: ScanProposal = {
     {
       key: '50001-1024',
       name: 'みなと総合1',
+      no: '1',
+      logo: LOGO_FULL_COLOUR,
       category: 'TV',
       channels: [
         {
@@ -315,6 +317,8 @@ export const SCAN_PROPOSAL: ScanProposal = {
     {
       key: '50001-1072',
       name: '湾岸放送1',
+      no: '7',
+      logo: LOGO_NONE_BROADCAST,
       category: 'TV',
       channels: [{ kind: 'missing', channel: '62ch' }],
     },
