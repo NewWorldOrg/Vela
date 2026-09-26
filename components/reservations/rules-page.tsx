@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useRef, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -414,9 +414,12 @@ function RuleEditor({
   const [retiring, setRetiring] = useState(false)
   const [pending, startTransition] = useTransition()
 
+  const edits = useRef(0)
+
   const amend = (part: Partial<Entry>): void => {
     setEntry((previous) => ({ ...previous, ...part }))
     setStale(true)
+    edits.current += 1
   }
 
   const asked: SearchTerms = termsOfEntry(entry)
@@ -523,10 +526,12 @@ function RuleEditor({
       return
     }
 
+    const askedAt = edits.current
+
     startTransition(async () => {
       answered(await actions.onPreview(draft, rule?.id), (seen) => {
         setPreview(seen)
-        setStale(false)
+        setStale(edits.current !== askedAt)
       })
     })
   }
@@ -984,7 +989,12 @@ function RuleEditor({
             一致を見る
           </Button>
           {preview && (
-            <span className={cn('text-sub text-ink-2', stale && 'opacity-50')}>
+            <span
+              className={cn(
+                'text-sub text-ink-2',
+                stale && 'text-ink-3 [&_b]:text-ink-3',
+              )}
+            >
               一致 <Count value={preview.matched} /> 件 / 新しく作られる{' '}
               <Count value={preview.making} /> 件 / 予約済み{' '}
               <Count value={preview.alreadyReserved} /> 件 / 競合{' '}
@@ -1000,7 +1010,7 @@ function RuleEditor({
         </div>
 
         {preview && (
-          <div className={cn('flex flex-col gap-3.5', stale && 'opacity-50')}>
+          <div className={cn('flex flex-col gap-3.5', stale && 'grayscale')}>
             {preview.excluded > 0 && (
               <p className="text-note text-ink-3">
                 <Count value={preview.excluded} /> 件は除外されました。

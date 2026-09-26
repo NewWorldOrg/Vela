@@ -456,6 +456,40 @@ export const 条件のないルール: Story = {
   },
 }
 
+const heldPreview: { release: () => void } = { release: () => undefined }
+
+export const 一致を見ているあいだに条件を変えると結果は古いまま: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[0] },
+    actions: {
+      ...recording([], []),
+      onPreview: async (): Promise<RuleWrite<RulePreview>> => {
+        await new Promise<void>((resolve) => {
+          heldPreview.release = resolve
+        })
+
+        return { state: 'ok', data: PREVIEW }
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '一致を見る' }))
+    await userEvent.type(canvas.getByLabelText('キーワード'), '2')
+
+    heldPreview.release()
+
+    const counted = await canvas.findByText(
+      (_, element) =>
+        element?.tagName === 'SPAN' &&
+        /^一致 \d+ 件 \/ 新しく作られる/.test(element.textContent ?? ''),
+    )
+
+    await expect(counted).toHaveClass('text-ink-3')
+  },
+}
+
 const refusedSaved: Saved[] = []
 
 export const 影響を数えられないとき: Story = {
