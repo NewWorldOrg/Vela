@@ -7,6 +7,8 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/api/events/route.test.ts',
+  'tests/app/api/services/logo/route.test.ts',
   'tests/app/api/videos/route.test.ts',
   'tests/app/the-system-theme-needs-no-script.test.ts',
   'tests/components/every-weight-that-is-drawn-is-loaded.test.ts',
@@ -72,6 +74,7 @@ const THE_SUITE = [
   'tests/lib/thumbnail-redraw.test.ts',
   'tests/lib/version.test.ts',
   'tests/lib/when-terms.test.ts',
+  'tests/middleware.test.ts',
   'tests/repository/announced.test.ts',
   'tests/repository/auth.test.ts',
   'tests/repository/channel-ids.test.ts',
