@@ -1403,6 +1403,11 @@ export const 撤収_映像が届かない: Story = ended(
   '映像が届かなくなりました',
 )
 
+export const 撤収_トランスコーダ追いつけず: Story = ended(
+  'transcoderFellBehind',
+  '配信が追いつきませんでした',
+)
+
 export const 撤収_配信終了: Story = ended('letGo', '配信が終了しました')
 
 export const セッション切れ: Story = {

@@ -166,6 +166,12 @@ const ENDED: Record<LiveSupplyEnd, Said> = {
     title: '映像が届かなくなりました',
     worthRetrying: true,
   },
+  transcoderFellBehind: {
+    tone: 'gone',
+    mark: <SignalIcon className="size-[calc(22rem/16)]" />,
+    title: '配信が追いつきませんでした',
+    worthRetrying: true,
+  },
 }
 
 const DROPPED: Said = {
