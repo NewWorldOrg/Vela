@@ -10,26 +10,26 @@ export function hasAnEdge(node: Element): boolean {
   return drawn.borderTopStyle !== 'none' && parseFloat(drawn.borderTopWidth) > 0
 }
 
-export function pillsIn(row: HTMLElement, column: number): HTMLElement[] {
+export function saidIn(row: HTMLElement, column: number): HTMLElement[] {
   const cell = within(row).getAllByRole('cell')[column]
 
   if (!cell) {
     throw new Error(`no column ${column} in this row`)
   }
 
-  return [...cell.querySelectorAll('*')].filter((node): node is HTMLElement =>
-    hasAnEdge(node),
-  )
+  return [
+    ...cell.querySelectorAll('[data-state-say], [data-slot="badge"]'),
+  ].filter((node): node is HTMLElement => node instanceof HTMLElement)
 }
 
-export function pillOf(row: HTMLElement, column: number): HTMLElement {
-  const [pill] = pillsIn(row, column)
+export function sayOf(row: HTMLElement, column: number): HTMLElement {
+  const [said] = saidIn(row, column)
 
-  if (!pill) {
-    throw new Error(`nothing with an edge in column ${column}`)
+  if (!said) {
+    throw new Error(`nothing says a state in column ${column}`)
   }
 
-  return pill
+  return said
 }
 
 export function widthOf(node: HTMLElement): number {
@@ -73,25 +73,33 @@ export function rowsOfTheTableHeaded(
   return bodyRows(table)
 }
 
-export async function fillsTheColumn(
+export async function saysItWithoutAnEdge(
   rows: HTMLElement[],
   column: number,
 ): Promise<void> {
-  const pills = rows.map((row) => pillOf(row, column))
-  const widths = pills.map(widthOf)
+  const said = rows.map((row) => sayOf(row, column))
 
-  await expect(new Set(widths).size).toBe(1)
+  await expect(said.length).toBeGreaterThan(1)
 
-  const said = pills.map((pill) => pill.textContent ?? '')
+  for (const one of said) {
+    if (one.dataset.slot === 'badge') {
+      continue
+    }
 
-  await expect(new Set(said).size).toBeGreaterThan(1)
+    await expect(hasAnEdge(one)).toBe(false)
+    await expect(getComputedStyle(one).backgroundColor).toBe('rgba(0, 0, 0, 0)')
+  }
+
+  await expect(
+    new Set(said.map((one) => one.textContent ?? '')).size,
+  ).toBeGreaterThan(1)
 }
 
 export async function oneShapeDownTheColumn(
   rows: HTMLElement[],
   column: number,
 ): Promise<void> {
-  const shapes = rows.map((row) => shapeOf(pillOf(row, column)))
+  const shapes = rows.map((row) => shapeOf(sayOf(row, column)))
 
   await expect(new Set(shapes).size).toBe(1)
 }
@@ -100,6 +108,7 @@ export async function tipIn(host: HTMLElement): Promise<HTMLElement> {
   const trigger =
     host.querySelector<HTMLElement>('[data-slot="term-tip"]') ??
     host.querySelector<HTMLElement>('[data-slot="tooltip-trigger"]') ??
+    host.querySelector<HTMLElement>('[data-state-say]') ??
     host.querySelector<HTMLElement>('[data-slot="badge"]')
 
   if (!trigger) {

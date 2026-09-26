@@ -10,11 +10,12 @@ import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
 import {
   bodyRows,
   cellOf,
-  pillOf,
-  pillsIn,
+  saidIn,
+  sayOf,
   tipIn,
   widthOf,
 } from '@/stories/pills-in-a-column'
+import { inTheApp } from '@/stories/frames'
 
 function rowFor(cell: HTMLElement): HTMLElement {
   const row = cell.closest('tr')
@@ -36,9 +37,16 @@ const FAILURES: [string, string][] = [
 const KIND_COLUMN = 6
 
 const meta = {
-  title: 'Screens/予約結果台帳',
+  title: 'Screens/失敗台帳',
   component: OutcomeLedgerView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/reservations/outcomes' },
+    },
+    layout: 'fullscreen',
+  },
+  decorators: [inTheApp],
 } satisfies Meta<typeof OutcomeLedgerView>
 
 export default meta
@@ -77,7 +85,8 @@ export const 分類がそろう: Story = {
       await expect(
         within(rowFor(canvas.getByText(title)))
           .getByText(word)
-          .getAttribute('data-variant'),
+          .closest('[data-state-say]')
+          ?.getAttribute('data-tone'),
       ).toBe('err')
     }
 
@@ -86,13 +95,22 @@ export const 分類がそろう: Story = {
     const returned = rowFor(canvas.getAllByText('海辺の紀行')[1])
 
     await expect(
-      within(moved).getByText('番組追従').getAttribute('data-variant'),
-    ).toBe('sky')
+      within(moved)
+        .getByText('番組追従')
+        .closest('[data-state-say]')
+        ?.getAttribute('data-tone'),
+    ).toBe('info')
     await expect(
-      within(gone).getByText('番組消失').getAttribute('data-variant'),
+      within(gone)
+        .getByText('番組消失')
+        .closest('[data-state-say]')
+        ?.getAttribute('data-tone'),
     ).toBe('warn')
     await expect(
-      within(returned).getByText('番組復帰').getAttribute('data-variant'),
+      within(returned)
+        .getByText('番組復帰')
+        .closest('[data-state-say]')
+        ?.getAttribute('data-tone'),
     ).toBe('ok')
 
     const refusedAgain = rowFor(canvas.getAllByText('深夜の天気図')[0])
@@ -100,8 +118,11 @@ export const 分類がそろう: Story = {
     const gaveUp = rowFor(canvas.getAllByText('深夜の天気図')[1])
 
     await expect(
-      within(refusedAgain).getByText('再試行').getAttribute('data-variant'),
-    ).toBe('sky')
+      within(refusedAgain)
+        .getByText('再試行')
+        .closest('[data-state-say]')
+        ?.getAttribute('data-tone'),
+    ).toBe('info')
     const refusedTip = await tipIn(cellOf(refusedAgain, KIND_COLUMN))
 
     await expect(refusedTip).toHaveTextContent('再び失敗')
@@ -110,7 +131,10 @@ export const 分類がそろう: Story = {
       await tipIn(cellOf(startedAgain, KIND_COLUMN)),
     ).toHaveTextContent('録画開始')
     await expect(
-      within(gaveUp).getByText('再試行断念').getAttribute('data-variant'),
+      within(gaveUp)
+        .getByText('再試行断念')
+        .closest('[data-state-say]')
+        ?.getAttribute('data-tone'),
     ).toBe('err')
     await expect(await tipIn(cellOf(gaveUp, KIND_COLUMN))).toHaveTextContent(
       '試行の上限',
@@ -175,7 +199,7 @@ export const 絞り込んで空: Story = {
       canvas.getByRole('heading', { name: '条件に合う記録がありません' }),
     ).toBeInTheDocument()
     await expect(
-      canvas.getByRole('button', { name: '絞り込みを解除' }),
+      canvas.getByRole('button', { name: '条件を消す' }),
     ).toBeEnabled()
   },
 }
@@ -188,19 +212,20 @@ export const 札の並び: Story = {
     await expect(rows.length).toBeGreaterThan(3)
 
     for (const row of rows) {
-      await expect(pillsIn(row, KIND_COLUMN).length).toBe(1)
+      await expect(saidIn(row, KIND_COLUMN).length).toBe(1)
     }
 
-    const pills = rows.map((row) => pillOf(row, KIND_COLUMN))
+    const said = rows.map((row) => sayOf(row, KIND_COLUMN))
 
-    await expect(new Set(pills.map(widthOf)).size).toBe(1)
     await expect(
-      new Set(
-        pills.map((pill) => Math.round(pill.getBoundingClientRect().left)),
-      ).size,
+      new Set(rows.map((row) => widthOf(cellOf(row, KIND_COLUMN)))).size,
     ).toBe(1)
     await expect(
-      new Set(pills.map((pill) => pill.textContent ?? '')).size,
+      new Set(said.map((one) => Math.round(one.getBoundingClientRect().left)))
+        .size,
+    ).toBe(1)
+    await expect(
+      new Set(said.map((one) => one.textContent ?? '')).size,
     ).toBeGreaterThan(1)
   },
 }

@@ -5,6 +5,7 @@ import { test } from 'node:test'
 import {
   formatBytes,
   formatClock,
+  formatDate,
   formatLength,
   formatMoment,
   formatMomentSpan,
@@ -132,6 +133,11 @@ inEveryZone('formatClock spells the hour and minute in Japan time', () => {
   assert.equal(formatClock(Date.parse('2026-08-20T11:50:46Z')), '20:50')
   assert.equal(formatClock(Date.parse('2026-08-20T15:00:00Z')), '00:00')
   assert.equal(formatClock(Date.parse('2026-08-20T14:59:00Z')), '23:59')
+})
+
+inEveryZone('formatDate spells the month and day Japan time is in', () => {
+  assert.equal(formatDate(Date.parse('2026-08-20T11:50:46Z')), '08/20')
+  assert.equal(formatDate(Date.parse('2026-08-20T15:00:00Z')), '08/21')
 })
 
 inEveryZone('formatMonth names the month Japan time is in', () => {

@@ -10,7 +10,7 @@ const TABS = [
 
 const LEDGER = {
   key: 'outcomes',
-  label: '予約結果台帳',
+  label: '失敗台帳',
   href: '/reservations/outcomes',
 } as const
 
@@ -50,7 +50,7 @@ export function ReservationTabs({
           LEDGER.key === current && CURRENT_CLASS,
         )}
       >
-        <LedgerIcon className="size-[15px]" />
+        <LedgerIcon className="size-[calc(15rem/16)]" />
         {LEDGER.label}
       </Link>
       {action && <span className="ml-auto">{action}</span>}

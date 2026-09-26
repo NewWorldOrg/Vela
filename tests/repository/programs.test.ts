@@ -118,7 +118,7 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getGuide, getProgram, primaryProgramKeyOf } =
+const { extrasOf, forTheGrid, getGuide, getProgram, primaryProgramKeyOf } =
   await import('@/repository/programs')
 
 function broadcastDay(at: string): string {
@@ -630,4 +630,83 @@ test('a station the table claims a picture for, with none carried, is read as no
   const guide = await getGuide('terrestrial', broadcastDay(STARTS))
 
   assert.deepEqual(guide.channels[0].logo, { declaration: 'notYetRead' })
+})
+
+test('the grid is handed a programme without what only its panel reads', async () => {
+  standing()
+
+  const program = await fromTheGuide(idOf(CARRIED))
+  const handed = forTheGrid(program)
+
+  for (const onlyThePanel of ['items', 'related', 'audio', 'video', 'sounds']) {
+    assert.equal(onlyThePanel in handed, false, onlyThePanel)
+  }
+  for (const saidBeforeTheRestArrives of [
+    'subtitled',
+    'dateLabel',
+    'durationLabel',
+  ] as const) {
+    assert.equal(
+      handed[saidBeforeTheRestArrives],
+      program[saidBeforeTheRestArrives],
+      saidBeforeTheRestArrives,
+    )
+  }
+  assert.deepEqual(
+    {
+      ...handed,
+      ...(await extrasOf(
+        'terrestrial',
+        broadcastDay(STARTS),
+        program.id,
+        program.channelId,
+      )),
+    },
+    program,
+  )
+})
+
+const extrasFrom = (program: Awaited<ReturnType<typeof fromTheGuide>>) => ({
+  items: program.items,
+  related: program.related,
+  audio: program.audio,
+  video: program.video,
+  sounds: program.sounds,
+})
+
+test('the panel reads back what the grid was not handed, for the cell it was opened from', async () => {
+  splitting()
+
+  const guide = await getGuide('terrestrial', broadcastDay(STARTS))
+  const [listed, shared] = guide.programs.filter(
+    (program) => program.id === idOf(CARRIED),
+  )
+
+  assert.deepEqual(
+    await extrasOf(
+      'terrestrial',
+      broadcastDay(STARTS),
+      listed.id,
+      listed.channelId,
+    ),
+    extrasFrom(listed),
+  )
+  assert.deepEqual(
+    await extrasOf(
+      'terrestrial',
+      broadcastDay(STARTS),
+      shared.id,
+      shared.channelId,
+    ),
+    extrasFrom(shared),
+  )
+  assert.equal(
+    await extrasOf(
+      'terrestrial',
+      broadcastDay(STARTS),
+      'no-such',
+      listed.channelId,
+    ),
+    undefined,
+  )
 })

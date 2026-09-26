@@ -54,39 +54,39 @@ interface Said {
 const REFUSED: Record<LiveRefusal, Said> = {
   noSuchChannel: {
     tone: 'gone',
-    mark: <DangerIcon className="size-[22px]" />,
+    mark: <DangerIcon className="size-[calc(22rem/16)]" />,
     title: 'チャンネルが見つかりません',
     worthRetrying: false,
   },
   noTunerFree: {
     tone: 'gone',
-    mark: <TunerIcon className="size-[22px]" />,
+    mark: <TunerIcon className="size-[calc(22rem/16)]" />,
     title: '空いているチューナーがありません',
     worthRetrying: true,
     worthLooking: true,
   },
   wouldNotTune: {
     tone: 'gone',
-    mark: <SignalIcon className="size-[22px]" />,
+    mark: <SignalIcon className="size-[calc(22rem/16)]" />,
     title: '選局できませんでした',
     worthRetrying: true,
   },
   driverUnavailable: {
     tone: 'waiting',
-    mark: <WarningIcon className="size-[22px]" />,
+    mark: <WarningIcon className="size-[calc(22rem/16)]" />,
     title: 'チューナーに接続できません',
     worthRetrying: true,
   },
   tooManyAlready: {
     tone: 'waiting',
-    mark: <ClockIcon className="size-[22px]" />,
+    mark: <ClockIcon className="size-[calc(22rem/16)]" />,
     title: '同時に配信できる本数の上限です',
     worthRetrying: true,
     worthLooking: true,
   },
   transcoderWouldNotStart: {
     tone: 'gone',
-    mark: <PlayIcon className="size-[22px]" />,
+    mark: <PlayIcon className="size-[calc(22rem/16)]" />,
     title: '再生を開始できませんでした',
     worthRetrying: true,
   },
@@ -95,14 +95,14 @@ const REFUSED: Record<LiveRefusal, Said> = {
 const HELD_BY: Record<LiveTunerHolder, Said> = {
   aRecording: {
     tone: 'gone',
-    mark: <RecordIcon className="size-[22px]" />,
+    mark: <RecordIcon className="size-[calc(22rem/16)]" />,
     title: 'チューナーは録画に使われています',
     worthRetrying: true,
     worthLooking: true,
   },
   anotherViewer: {
     tone: 'gone',
-    mark: <PersonIcon className="size-[22px]" />,
+    mark: <PersonIcon className="size-[calc(22rem/16)]" />,
     title: 'チューナーは別の視聴に使われています',
     worthRetrying: true,
     worthLooking: true,
@@ -111,7 +111,7 @@ const HELD_BY: Record<LiveTunerHolder, Said> = {
 
 const NO_LOCK: Said = {
   tone: 'gone',
-  mark: <QualityIcon className="size-[22px]" />,
+  mark: <QualityIcon className="size-[calc(22rem/16)]" />,
   title: '信号を掴めませんでした',
   worthRetrying: false,
 }
@@ -125,43 +125,43 @@ const ENDED: Record<LiveSupplyEnd, Said> = {
   },
   takenForARecording: {
     tone: 'gone',
-    mark: <RecordIcon className="size-[22px]" />,
+    mark: <RecordIcon className="size-[calc(22rem/16)]" />,
     title: '録画のために切れました',
     worthRetrying: true,
   },
   driverDraining: {
     tone: 'waiting',
-    mark: <WarningIcon className="size-[22px]" />,
+    mark: <WarningIcon className="size-[calc(22rem/16)]" />,
     title: 'サーバが停止処理に入りました',
     worthRetrying: true,
   },
   windowClosed: {
     tone: 'quiet',
-    mark: <ClockIcon className="size-[22px]" />,
+    mark: <ClockIcon className="size-[calc(22rem/16)]" />,
     title: '視聴時間の上限に達しました',
     worthRetrying: true,
   },
   tunerFailed: {
     tone: 'gone',
-    mark: <TunerIcon className="size-[22px]" />,
+    mark: <TunerIcon className="size-[calc(22rem/16)]" />,
     title: 'チューナーが停止しました',
     worthRetrying: true,
   },
   stoppedByAnother: {
     tone: 'waiting',
-    mark: <DangerIcon className="size-[22px]" />,
+    mark: <DangerIcon className="size-[calc(22rem/16)]" />,
     title: '別の操作で停止されました',
     worthRetrying: true,
   },
   driverLost: {
     tone: 'gone',
-    mark: <SignalIcon className="size-[22px]" />,
+    mark: <SignalIcon className="size-[calc(22rem/16)]" />,
     title: 'チューナーとの接続が切れました',
     worthRetrying: true,
   },
   wentQuiet: {
     tone: 'gone',
-    mark: <SignalIcon className="size-[22px]" />,
+    mark: <SignalIcon className="size-[calc(22rem/16)]" />,
     title: '映像が届かなくなりました',
     worthRetrying: true,
   },
@@ -169,21 +169,21 @@ const ENDED: Record<LiveSupplyEnd, Said> = {
 
 const DROPPED: Said = {
   tone: 'quiet',
-  mark: <WarningIcon className="size-[22px]" />,
+  mark: <WarningIcon className="size-[calc(22rem/16)]" />,
   title: '接続が切れました',
   worthRetrying: true,
 }
 
 const SIGNED_OUT: Said = {
   tone: 'gone',
-  mark: <LockIcon className="size-[22px]" />,
+  mark: <LockIcon className="size-[calc(22rem/16)]" />,
   title: 'セッションが切れました',
   worthRetrying: false,
 }
 
 const TOOK_TOO_LONG: Said = {
   tone: 'waiting',
-  mark: <ClockIcon className="size-[22px]" />,
+  mark: <ClockIcon className="size-[calc(22rem/16)]" />,
   title: '映像が始まりませんでした',
   worthRetrying: true,
   worthLooking: true,
@@ -191,14 +191,14 @@ const TOOK_TOO_LONG: Said = {
 
 const APPEND_FAILED: Said = {
   tone: 'gone',
-  mark: <PlayIcon className="size-[22px]" />,
+  mark: <PlayIcon className="size-[calc(22rem/16)]" />,
   title: '映像を再生できなくなりました',
   worthRetrying: true,
 }
 
 const UNSUPPORTED: Said = {
   tone: 'gone',
-  mark: <DisplayIcon className="size-[22px]" />,
+  mark: <DisplayIcon className="size-[calc(22rem/16)]" />,
   title: 'このブラウザでは再生できません',
   worthRetrying: false,
 }
@@ -207,7 +207,7 @@ function LiveEndMark() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="size-[22px] fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
+      className="size-[calc(22rem/16)] fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
     >
       <rect x="4.2" y="5.4" width="15.6" height="11" rx="2.6" />
       <path d="M8.6 20.2h6.8" />

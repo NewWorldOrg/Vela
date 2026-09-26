@@ -427,7 +427,7 @@ test('期間は URL が持ち、押された幅がそのまま口に渡る', asy
   )
 })
 
-test('閾値は現在値・既定・根拠件数を口から取り、暫定の印を持つ', async () => {
+test('閾値は現在値を口から取り、既定から変えていなければ既定を添えない', async () => {
   standing()
 
   const result = await getQuality()
@@ -438,13 +438,28 @@ test('閾値は現在値・既定・根拠件数を口から取り、暫定の�
 
   assert.equal(result.thresholds.length, 9)
   assert.equal(warning?.value, '0.02%')
-  assert.equal(warning?.basis, '既定 0.02% · 根拠 0 件')
-  assert.equal(warning?.provisional, true)
+  assert.equal(warning?.basis, undefined)
+  assert.equal(warning?.shipped, '0.02%')
+  assert.equal('provisional' in (warning ?? {}), false)
   assert.equal(silence?.value, '5分')
   assert.equal(result.warnMarkPct, 20)
 })
 
-test('スクランブル残存率の視聴不可の恐れは名前を持ち、暫定のまま百分率で出る', async () => {
+test('既定から変えた閾値だけが、既定の値を添える', async () => {
+  standing()
+  store.thresholds = SHIPPED.map((one) =>
+    one.key === 'packetsLostWarning' ? { ...one, currentValue: 0.0005 } : one,
+  )
+
+  const warning = (await getQuality()).thresholds.find(
+    (one) => one.key === 'packetsLostWarning',
+  )
+
+  assert.equal(warning?.value, '0.05%')
+  assert.equal(warning?.basis, '既定 0.02%')
+})
+
+test('スクランブル残存率の視聴不可の恐れは名前を持ち、百分率で出る', async () => {
   standing()
 
   const result = await getQuality()
@@ -458,7 +473,6 @@ test('スクランブル残存率の視聴不可の恐れは名前を持ち、�
   assert.equal(scrambled?.unit, '%')
   assert.equal(scrambled?.lowest, 0)
   assert.equal(scrambled?.highest, 100)
-  assert.equal(scrambled?.provisional, true)
 })
 
 test('スクランブル残存率の視聴不可の恐れは、画面の単位で受けて口の単位で送る', async () => {
@@ -593,7 +607,7 @@ test('異常は、破った閾値から題を取り、観測と適用閾値を�
   assert.equal(anomaly.title, 'ドロップ率が視聴不可の恐れを超過')
   assert.equal(anomaly.subject, '湾岸放送1')
   assert.equal(anomaly.observed, '観測 0.152%')
-  assert.equal(anomaly.applied, '適用閾値 0.1%(暫定)')
+  assert.equal(anomaly.applied, '適用閾値 0.1%')
   assert.equal(anomaly.levelLabel, '視聴不可の恐れ')
   assert.equal(anomaly.restatedBy, undefined)
   assert.equal(
@@ -621,7 +635,7 @@ test('供給途絶の異常は、どの供給が黙ったかを題に持つ', as
   assert.equal(anomaly.title, '信号品質の供給途絶')
   assert.equal(anomaly.subject, 'adapter3.frontend0')
   assert.equal(anomaly.observed, '途絶 12分')
-  assert.equal(anomaly.applied, '適用閾値 5分(暫定)')
+  assert.equal(anomaly.applied, '適用閾値 5分')
   assert.equal(anomaly.levelLabel, '取得できず')
 })
 
@@ -901,4 +915,92 @@ test('電波ごとの系列は、運んでいる局の名前で呼ばれる', as
     ['全体', '湾岸放送2', 'チャンネル'],
   )
   assert.equal(new Set(rows.map((one) => one.key)).size, rows.length)
+})
+
+test('推移の刻みは、画面の単位の最悪値と刻みの時刻を持ち、測っていない刻みは値を持たない', async () => {
+  standing()
+  store.trend = trendOf([
+    {
+      channel: null,
+      points: [
+        point({ worst: '0.0003' }),
+        point({
+          from: '2026-09-07T01:00:00Z',
+          until: '2026-09-07T02:00:00Z',
+          reading: {
+            state: 'unmeasured',
+            subjects: 1,
+            measured: 0,
+            unmeasured: 1,
+            beyondThreshold: 0,
+          },
+          worst: null,
+          level: 0.0005,
+        }),
+      ],
+    },
+  ])
+
+  const [row] = (await getQuality('1')).trend.rows
+  const [counted, unmeasured] = row.buckets
+
+  assert.equal(counted.worst, 0.03)
+  assert.equal(counted.from, Date.parse('2026-09-07T00:00:00Z'))
+  assert.equal(counted.until, Date.parse('2026-09-07T01:00:00Z'))
+  assert.equal(unmeasured.worst, undefined)
+  assert.deepEqual(row.line, { value: 0.05, says: '0.05%' })
+})
+
+test('下が良い対象の最悪値と閾値も、画面の単位で並ぶ', async () => {
+  standing()
+  store.trend = trendOf(
+    [{ channel: null, points: [point({ worst: 12500, level: 15000 })] }],
+    { subject: 'carrierToNoise' },
+  )
+
+  const [row] = (await getQuality('1', 'carrierToNoise')).trend.rows
+
+  assert.equal(row.buckets[0].worst, 12.5)
+  assert.deepEqual(row.line, { value: 15, says: '15dB' })
+})
+
+test('推移の横軸は両端の時刻と、期間に応じた目盛りを持つ', async () => {
+  standing()
+
+  const day = (await getQuality('1')).trend
+
+  assert.equal(day.from, Date.parse('2026-09-07T00:00:00Z'))
+  assert.equal(day.until, Date.parse('2026-09-08T00:00:00Z'))
+  assert.equal(day.opens, '09:00')
+  assert.equal(day.closes, '09:00')
+  assert.deepEqual(
+    day.ticks.map((one) => [one.x, one.says]),
+    [
+      [12.5, '12:00'],
+      [37.5, '18:00'],
+      [62.5, '00:00'],
+      [87.5, '06:00'],
+    ],
+  )
+
+  store.trend = trendOf([], {
+    period: { from: '2026-09-01T00:00:00Z', until: '2026-09-08T00:00:00Z' },
+  })
+
+  const week = (await getQuality('7')).trend
+
+  assert.equal(week.opens, '09/01 09:00')
+  assert.equal(week.closes, '09/08 09:00')
+  assert.equal(week.ticks.length, 7)
+  assert.equal(week.ticks[3].says, '09/05')
+  assert.ok(week.ticks.every((one) => one.room > 0))
+})
+
+test('推移の見出しにも、閾値にも、要約にも、異常にも暫定を書かない', async () => {
+  standing()
+  store.incidents = [incident()]
+
+  const result = await getQuality()
+
+  assert.doesNotMatch(JSON.stringify(result), /暫定|根拠/)
 })

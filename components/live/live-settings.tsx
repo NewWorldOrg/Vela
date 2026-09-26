@@ -16,7 +16,7 @@ import { Setting } from '@/components/recordings/player-settings'
 
 function Figure({ children }: { children: ReactNode }) {
   return (
-    <span className="font-code text-[15px] font-medium text-(--pl-ink)">
+    <span className="font-code text-[calc(15rem/16)] font-medium text-(--pl-ink)">
       {children}
     </span>
   )
@@ -65,6 +65,7 @@ export function LiveSettings({
         side="top"
         align="end"
         sideOffset={10}
+        updatePositionStrategy="always"
         className="w-auto max-w-[min(20rem,calc(100vw-2rem))] min-w-[17rem] rounded-lg border-white/20 bg-(--pl-bg) p-4 text-(--pl-ink) shadow-pop-xl"
       >
         <Setting label="画質">
@@ -91,7 +92,7 @@ export function LiveSettings({
           <Setting label="ドロップ">
             <span
               data-slot="live-dropped"
-              className="text-[12px] text-(--pl-ink-2)"
+              className="text-sub text-(--pl-ink-2)"
             >
               <Figure>{dropped}</Figure> 件
             </span>
@@ -99,7 +100,7 @@ export function LiveSettings({
               droppedByThoseStillWatching !== dropped && (
                 <span
                   data-slot="live-dropped-still-watching"
-                  className="text-[12px] text-(--pl-ink-3)"
+                  className="text-sub text-(--pl-ink-3)"
                 >
                   視聴中 <Figure>{droppedByThoseStillWatching}</Figure> 件
                 </span>
@@ -110,7 +111,7 @@ export function LiveSettings({
           <Setting label="受信">
             <span
               data-slot="live-lost-on-the-way-in"
-              className="text-[12px] text-(--pl-ink-2)"
+              className="text-sub text-(--pl-ink-2)"
             >
               取りこぼし <Figure>{lostOnTheWayIn}</Figure> 件
             </span>

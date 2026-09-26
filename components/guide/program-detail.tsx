@@ -37,6 +37,8 @@ import {
   ProgramExtended,
 } from '@/components/guide/program-description'
 import { ReserveButton } from '@/components/guide/reserve-button'
+import { InlineAlert } from '@/components/vela/banner'
+import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 
 const RELATION_WORDING: Record<
   RelationKind,
@@ -77,6 +79,7 @@ export function ProgramDetailBody({
   onAir = false,
   onReserve,
   reservation,
+  extras = 'ready',
 }: {
   program: Program
   channel?: Channel
@@ -84,6 +87,7 @@ export function ProgramDetailBody({
   onAir?: boolean
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   reservation?: ReactNode
+  extras?: 'ready' | 'waiting' | 'failed'
 }) {
   const related = program.related ?? []
   const items = program.items ?? []
@@ -91,22 +95,22 @@ export function ProgramDetailBody({
 
   return (
     <div data-program-detail>
-      <div className="mb-[9px] flex items-center gap-2.5">
+      <div className="mb-[calc(9rem/16)] flex items-center gap-2.5">
         <ChannelMark logo={channel?.logo} no={channel?.no} />
         {channel?.name && (
           <span className="text-ui text-ink-2">{channel.name}</span>
         )}
       </div>
-      <p className="font-code text-[13.5px] tabular-nums">
+      <p className="font-code text-body tabular-nums">
         {program.dateLabel ?? dayLabel} {program.startLabel} –{' '}
         {program.endUndecided ? '終了未定' : program.endLabel}
         {program.durationLabel && (
-          <span className="ml-[9px] text-sub text-ink-3">
+          <span className="ml-[calc(9rem/16)] text-sub text-ink-3">
             {program.durationLabel}
           </span>
         )}
       </p>
-      <div className="mt-[13px] flex flex-wrap gap-[7px]">
+      <div className="mt-[calc(13rem/16)] flex flex-wrap gap-[calc(7rem/16)]">
         <Badge variant="info" className="font-bold">
           {program.genreLabel}
         </Badge>
@@ -126,6 +130,16 @@ export function ProgramDetailBody({
         {program.description && (
           <ProgramDescription description={program.description} />
         )}
+        {extras === 'waiting' && (
+          <div role="status" aria-label={WAITING_LABEL} className="mb-4">
+            <WaitingRows rows={3} />
+          </div>
+        )}
+        {extras === 'failed' && (
+          <InlineAlert className="mb-4">
+            出演者や内容などの詳しい情報を読み込めませんでした。
+          </InlineAlert>
+        )}
         {related.map((item) => (
           <RelatedNotice
             key={`${item.kind}-${item.key}`}
@@ -141,14 +155,14 @@ export function ProgramDetailBody({
             <dt className="text-cap font-bold tracking-[.04em] text-ink-3">
               字幕
             </dt>
-            <dd className="mt-0.5 text-[13.5px] font-medium">
+            <dd className="mt-0.5 text-body font-medium">
               {program.subtitled ? 'あり' : 'なし'}
             </dd>
           </div>
         </dl>
 
         <div className="mt-4 flex">
-          <Button variant="link" size="sm" className="ml-auto" asChild>
+          <Button variant="watch" size="sm" className="ml-auto" asChild>
             <Link
               href={`/search?q=${encodeURIComponent(mainTitleOf(program.title))}`}
             >
@@ -158,10 +172,10 @@ export function ProgramDetailBody({
         </div>
       </div>
 
-      <div className="mt-[22px] border-t border-dashed border-line pt-[17px]">
+      <div className="mt-[calc(22rem/16)] border-t border-dashed border-line pt-[calc(17rem/16)]">
         {onAir && (
-          <div className="mb-[13px] flex flex-wrap gap-[9px]">
-            <Button variant="outline" asChild>
+          <div className="mb-[calc(13rem/16)] flex flex-wrap gap-[calc(9rem/16)]">
+            <Button variant="watch" asChild>
               <Link
                 href={liveScreenHref(program.channelId, channel?.kind) as Route}
               >
@@ -173,7 +187,7 @@ export function ProgramDetailBody({
         )}
         {reservation ?? (
           <>
-            <div className="flex flex-wrap gap-[9px]">
+            <div className="flex flex-wrap gap-[calc(9rem/16)]">
               <ReserveButton programmeId={program.id} onReserve={onReserve}>
                 <RecordIcon />
                 録画予約
@@ -255,15 +269,15 @@ function RelatedNotice({
   const href = relatedHrefOf(related, onAir)
 
   return (
-    <div className="mb-[22px] flex items-start gap-[11px] rounded-lg bg-sky-soft px-4 py-[13px] text-ui leading-[1.75] text-sky max-[700px]:flex-wrap">
-      <RelayIcon className="mt-[3px] size-[17px] shrink-0" />
+    <div className="mb-[calc(22rem/16)] flex items-start gap-[calc(11rem/16)] rounded-lg bg-sky-soft px-4 py-[calc(13rem/16)] text-ui leading-[1.75] text-sky max-[700px]:flex-wrap">
+      <RelayIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)] shrink-0" />
       <p className="min-w-0 flex-1 font-bold">
         {wording.lead(related.channelLabel)}
       </p>
       {href !== undefined && (
         <Link
           href={href as Route}
-          className="tap-target ml-auto pl-[13px] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
+          className="tap-target ml-auto pl-[calc(13rem/16)] font-bold whitespace-nowrap underline-offset-[3px] hover:underline max-[700px]:ml-0 max-[700px]:pl-0"
         >
           {wording.link}
         </Link>

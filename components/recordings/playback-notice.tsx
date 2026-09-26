@@ -1,12 +1,10 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import { PLAYER_PALETTE } from '@/components/recordings/player-palette'
 
 const TONES = {
-  gone: 'border-[rgba(236,154,147,.45)] bg-[rgba(236,154,147,.12)] text-[#EC9A93]',
-  waiting:
-    'border-[rgba(229,186,108,.45)] bg-[rgba(229,186,108,.12)] text-[#E5BA6C]',
+  gone: 'border-(--pl-err)/45 bg-(--pl-err)/12 text-(--pl-err)',
+  waiting: 'border-(--pl-warn)/45 bg-(--pl-warn)/12 text-(--pl-warn)',
   quiet: 'border-white/20 bg-white/5 text-(--pl-ink-2)',
 } as const
 
@@ -27,23 +25,24 @@ export function PlaybackNotice({
 }) {
   return (
     <section
-      style={PLAYER_PALETTE}
       className={cn(
-        'rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[22px] text-center',
+        'rounded-lg border border-line-strong bg-(--pl-bg) px-5 py-[calc(22rem/16)] text-center',
         className,
       )}
     >
       <span
         className={cn(
-          'mx-auto mb-2.5 flex size-[46px] items-center justify-center rounded-full border',
+          'mx-auto mb-2.5 flex size-[calc(46rem/16)] items-center justify-center rounded-full border',
           TONES[tone],
         )}
       >
         {mark}
       </span>
-      <b className="heading block text-[14.5px] text-(--pl-ink)">{title}</b>
+      <b className="heading block text-[calc(14.5rem/16)] text-(--pl-ink)">
+        {title}
+      </b>
       {body && (
-        <p className="mx-auto mt-[5px] max-w-[46em] text-sub leading-relaxed text-(--pl-ink-2)">
+        <p className="mx-auto mt-[calc(5rem/16)] max-w-[46em] text-sub leading-relaxed text-(--pl-ink-2)">
           {body}
         </p>
       )}

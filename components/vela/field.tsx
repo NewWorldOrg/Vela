@@ -20,7 +20,10 @@ export function FieldLabel({
 }: ComponentProps<typeof Label>) {
   return (
     <Label
-      className={cn('gap-[7px] text-ui font-bold text-ink', className)}
+      className={cn(
+        'gap-[calc(7rem/16)] text-ui font-bold text-ink',
+        className,
+      )}
       {...props}
     />
   )
@@ -31,7 +34,7 @@ export function RequiredMark({ className, ...props }: ComponentProps<'span'>) {
     <span
       data-slot="required-mark"
       className={cn(
-        'rounded-full border border-coral-line bg-coral-soft px-2 text-[10px] leading-[1.7] font-bold text-coral',
+        'rounded-full border border-coral-line bg-coral-soft px-2 text-[calc(10rem/16)] leading-[1.7] font-bold text-coral',
         className,
       )}
       {...props}
@@ -62,7 +65,7 @@ export function FieldError({
       className={cn('flex items-start gap-1.5 text-note text-coral', className)}
       {...props}
     >
-      <DangerIcon className="mt-[3px] size-3.5" />
+      <DangerIcon className="mt-[calc(3rem/16)] size-3.5" />
       <span>{children}</span>
     </p>
   )
@@ -80,7 +83,7 @@ export function OptionGroup({
       role="group"
       aria-label={title}
       className={cn(
-        'flex flex-col items-start gap-[26px] rounded-lg px-[15px] py-[13px]',
+        'flex flex-col items-start gap-[calc(26rem/16)] rounded-lg px-[calc(15rem/16)] py-[calc(13rem/16)]',
         className,
       )}
       {...props}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useEffectEvent, useRef, type RefObject } from 'react'
 
 import { escapeDismisses, pressDismisses } from '@/lib/dismiss'
 
@@ -20,6 +20,7 @@ export function useDismissable<T extends HTMLElement>({
   opener,
 }: Dismissable): RefObject<T | null> {
   const surface = useRef<T>(null)
+  const dismiss = useEffectEvent(onDismiss)
 
   useEffect(() => {
     const node = surface.current
@@ -40,7 +41,7 @@ export function useDismissable<T extends HTMLElement>({
           covered: covered(node),
         })
       ) {
-        onDismiss()
+        dismiss()
       }
     }
 
@@ -49,7 +50,7 @@ export function useDismissable<T extends HTMLElement>({
         event.key === 'Escape' &&
         escapeDismisses({ covered: covered(node) })
       ) {
-        onDismiss()
+        dismiss()
       }
     }
 
@@ -62,7 +63,7 @@ export function useDismissable<T extends HTMLElement>({
       owner.removeEventListener('pointerdown', onPointerDown)
       owner.removeEventListener('keydown', onKeyDown)
     }
-  }, [open, onDismiss, opener])
+  }, [open, opener])
 
   useEffect(() => {
     const node = surface.current

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -37,12 +38,17 @@ import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialo
 import { RunCheckButton } from '@/components/integrity/run-check-button'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: 'ファイル' },
-  { label: '理由' },
-  { label: 'サイズ' },
-  { label: '検出' },
-  { label: '操作', hidden: true },
+const COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+  right?: boolean
+}[] = [
+  { label: 'ファイル', width: 'calc(360rem/16)' },
+  { label: '理由', width: 'calc(240rem/16)' },
+  { label: 'サイズ', width: 'calc(112rem/16)', right: true },
+  { label: '検出', width: 'calc(122rem/16)' },
+  { label: '操作', width: 'calc(112rem/16)', hidden: true },
 ]
 
 const OWNED_BY_NO_RECORDING: readonly IntegrityFault[] = ['noLedgerRow']
@@ -92,21 +98,21 @@ export function IntegrityView({
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <div className="mb-3">
         <Link
           href="/library"
-          className="tap-target inline-flex items-center gap-[7px] rounded-full border border-edge py-[5px] pr-[13px] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
+          className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
         >
-          <ChevronLeftIcon className="size-[15px]" />
+          <ChevronLeftIcon className="size-[calc(15rem/16)]" />
           ライブラリへ
         </Link>
       </div>
 
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
-        <h1 className="heading flex items-center gap-2 text-[20px]">
-          <QualityIcon className="size-[18px] text-brand" />
+        <h1 className="heading flex items-center gap-2 text-[calc(20rem/16)]">
+          <QualityIcon className="size-[calc(18rem/16)] text-brand" />
           整合性チェック
         </h1>
         <span className="ml-auto">
@@ -126,7 +132,7 @@ export function IntegrityView({
             <span>最終実行</span>
             <span className="font-code font-medium">{check.ranAt}</span>
           </SectionHeading>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(150rem/16),1fr))] gap-2.5">
             <DetailStat
               label="走査したルート"
               value={String(check.rootsWalked)}
@@ -162,9 +168,11 @@ export function IntegrityView({
           {roots.map((root) => (
             <div
               key={root.name}
-              className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 border-b border-dashed border-line py-[9px] text-ui last:border-b-0"
+              className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 border-b border-dashed border-line py-[calc(9rem/16)] text-ui last:border-b-0"
             >
-              <b className="font-code text-[13px] font-medium">{root.name}</b>
+              <b className="font-code text-[calc(13rem/16)] font-medium">
+                {root.name}
+              </b>
               {!root.writable && <Badge variant="err">書き込めません</Badge>}
               <span className="text-ink-2">
                 空き <span className="font-code">{root.free}</span> / 全体{' '}
@@ -187,20 +195,20 @@ export function IntegrityView({
       )}
 
       {findings.length === 0 ? (
-        <EmptyState
-          spot="antenna"
-          title="食い違いはありません"
-          titleLevel={2}
-        />
+        <EmptyState spot="star" title="食い違いはありません" titleLevel={2} />
       ) : (
         <Table
-          className="min-w-[760px]"
-          containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+          className="table-fixed min-w-[calc(760rem/16)]"
+          containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
         >
+          <TableColumns widths={COLUMNS.map((column) => column.width)} />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {COLUMNS.map((column) => (
-                <TableHead key={column.label}>
+                <TableHead
+                  key={column.label}
+                  className={column.right ? 'text-right' : undefined}
+                >
                   {column.hidden ? (
                     <span className="sr-only">{column.label}</span>
                   ) : (
@@ -214,7 +222,7 @@ export function IntegrityView({
             {findings.map((finding) => (
               <TableRow key={finding.key}>
                 <TableCell className="align-top whitespace-normal">
-                  <b className="block font-code text-[12px] font-medium break-all">
+                  <b className="block font-code text-sub font-medium break-all">
                     {finding.path}
                   </b>
                   <span className="text-note text-ink-3">{finding.root}</span>
@@ -232,19 +240,19 @@ export function IntegrityView({
                 <TableCell className="align-top text-right">
                   <span className="font-code tabular-nums">{finding.size}</span>
                   {finding.sizeNote && (
-                    <small className="block text-[10.5px] text-ink-3">
+                    <small className="block text-micro text-ink-3">
                       {finding.sizeNote}
                     </small>
                   )}
                 </TableCell>
-                <TableCell className="align-top text-right font-code tabular-nums text-ink-2">
+                <TableCell className="align-top font-code tabular-nums text-ink-2">
                   {finding.noticedAt}
                 </TableCell>
                 <TableCell className="align-top text-right">
                   {OWNED_BY_NO_RECORDING.includes(finding.fault) && (
                     <ActionRow>
                       <Button
-                        variant="destructive"
+                        variant="remove"
                         size="sm"
                         onClick={() => setAsked(finding)}
                       >

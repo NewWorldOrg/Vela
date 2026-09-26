@@ -41,8 +41,10 @@ export function ProgramPanel({
   onReserve,
   onCancel,
   onRevise,
+  extras,
 }: {
   program: Program
+  extras?: 'waiting' | 'failed'
   channel?: Channel
   dayLabel: string
   onAir?: boolean
@@ -91,11 +93,14 @@ export function ProgramPanel({
     >
       <DialogContent size="reading" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="pr-[30px]">{program.title}</DialogTitle>
+          <DialogTitle className="pr-[calc(30rem/16)]">
+            {program.title}
+          </DialogTitle>
         </DialogHeader>
         <div data-slot="dialog-body" className="min-h-0 overflow-y-auto pb-2.5">
           <ProgramDetailBody
             program={program}
+            extras={extras ?? 'ready'}
             channel={channel}
             dayLabel={dayLabel}
             onAir={onAir}
@@ -129,9 +134,9 @@ export function ProgramPanel({
                     </p>
                   )}
                   <div className="mt-2.5 flex flex-wrap gap-2">
-                    <ActionRow className="gap-2">
+                    <ActionRow>
                       <Button
-                        variant="outline"
+                        variant="change"
                         size="sm"
                         onClick={() => setEditing(true)}
                       >
@@ -139,7 +144,7 @@ export function ProgramPanel({
                         予約を編集
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="halt"
                         size="sm"
                         disabled={pending}
                         onClick={drop}

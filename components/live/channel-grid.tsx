@@ -1,6 +1,17 @@
 'use client'
 
+import { useCallback, useState } from 'react'
+
 import { cn } from '@/lib/utils'
+import {
+  arrivesIn,
+  columnsAcross,
+  delayOf,
+  gridDelayMs,
+  seatIn,
+} from '@/lib/arrival'
+import { useArrived } from '@/hooks/useArrived'
+import { useNewcomers } from '@/hooks/useNewcomers'
 import { SPAN_DASH } from '@/lib/format'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress'
@@ -16,19 +27,48 @@ export function ChannelGrid({
   onSelect: (channel: LiveChannel) => void
   className?: string
 }) {
+  const [columns, setColumns] = useState<number>(0)
+  const arrived = useArrived()
+  const newcomers = useNewcomers(channels.map((channel) => channel.id))
+
+  const measure = useCallback(
+    (node: HTMLUListElement | null) => {
+      arrived.ref(node)
+
+      if (node === null) {
+        return
+      }
+
+      setColumns((was) => (was === 0 ? columnsAcross(node) : was))
+    },
+    [arrived],
+  )
+
   return (
     <ul
+      ref={measure}
       data-slot="channel-grid"
       className={cn(
-        'grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-x-4 gap-y-3.5',
+        'mx-auto grid w-full max-w-[137rem] grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-x-4 gap-y-3.5',
         className,
       )}
     >
-      {channels.map((channel) => (
-        <li key={channel.id} className="min-w-0">
-          <ChannelCard channel={channel} onSelect={onSelect} />
-        </li>
-      ))}
+      {channels.map((channel, nth) => {
+        const seat = seatIn(nth, columns)
+
+        return (
+          <li
+            key={channel.id}
+            style={delayOf(gridDelayMs(seat.row, seat.column))}
+            className={cn(
+              newcomers.has(channel.id) ? 'joins' : arrivesIn(nth),
+              'swells min-w-0 max-w-[22rem]',
+            )}
+          >
+            <ChannelCard channel={channel} onSelect={onSelect} />
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -45,7 +85,7 @@ function ChannelCard({
   return (
     <Tile
       onClick={() => onSelect(channel)}
-      className="relative flex size-full min-w-0 flex-none flex-col gap-1 overflow-hidden px-4 pt-3 pb-[15px]"
+      className="relative flex size-full min-w-0 flex-none flex-col gap-1 overflow-hidden px-4 pt-3 pb-[calc(15rem/16)]"
     >
       <span className="flex min-w-0 items-center gap-2">
         <ChannelMark logo={channel.logo} no={channel.no} />
@@ -59,7 +99,7 @@ function ChannelCard({
           >
             <i
               aria-hidden="true"
-              className="size-[7px] rounded-full bg-coral"
+              className="size-[calc(7rem/16)] rounded-full bg-coral"
             />
             {channel.viewers}
           </span>
@@ -67,7 +107,7 @@ function ChannelCard({
       </span>
       <span
         className={cn(
-          'heading text-[16.5px] leading-[1.5] [overflow-wrap:anywhere]',
+          'heading text-[calc(16.5rem/16)] leading-[1.5] [overflow-wrap:anywhere]',
           !programme && 'font-normal text-ink-3',
         )}
       >

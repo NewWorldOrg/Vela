@@ -28,7 +28,7 @@ export function SegmentedControl({
       data-slot="segmented-control"
       role="group"
       className={cn(
-        'inline-flex gap-0.5 rounded-full bg-surface-2 p-[3px]',
+        'inline-flex gap-0.5 rounded-full bg-surface-2 p-[calc(3rem/16)]',
         disabled && 'opacity-55',
         className,
       )}
@@ -44,7 +44,7 @@ export function SegmentedControl({
             disabled={disabled}
             onClick={() => onValueChange?.(option.value)}
             className={cn(
-              'tap-target cursor-pointer rounded-full border border-transparent px-[14px] py-[5px] text-sub font-medium whitespace-nowrap text-ink-2 outline-none disabled:cursor-not-allowed',
+              'tap-target cursor-pointer rounded-full border border-transparent px-[calc(14rem/16)] py-[calc(5rem/16)] text-sub font-medium whitespace-nowrap text-ink-2 outline-none disabled:cursor-not-allowed',
               'transition-[background-color,color,transform] duration-150 ease-toy',
               'enabled:hover:text-ink enabled:active:translate-x-px enabled:active:translate-y-px focus-visible:shadow-ring',
               selected && 'border-brand bg-brand-soft font-bold text-brand',

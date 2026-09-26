@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
@@ -33,6 +33,7 @@ import type {
   SearchViewing,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
+import { READABLE_LINE, TableHead } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -42,6 +43,7 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { EmptyState } from '@/components/vela/empty-state'
+import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 import { IconButton } from '@/components/vela/icon-button'
 import { InFull } from '@/components/vela/in-full'
 import { Pager } from '@/components/vela/pager'
@@ -92,12 +94,15 @@ function SearchScreen({ result }: { result: SearchResult }) {
     draftOf(searchTermsOf(condition)),
   )
 
+  const [waiting, startWaiting] = useTransition()
+
   const go = useCallback(
     (next: SearchCondition, push = false) => {
       const written = searchQueryOf(next)
       const href = (written ? `${pathname}?${written}` : pathname) as Route
       const navigate = push ? router.push : router.replace
-      navigate(href, { scroll: false })
+
+      startWaiting(() => navigate(href, { scroll: false }))
     },
     [router, pathname],
   )
@@ -147,12 +152,12 @@ function SearchScreen({ result }: { result: SearchResult }) {
     channels.find((channel) => channel.id === id)?.name || id
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
       <div className="mb-4 flex flex-wrap items-start gap-3.5">
         <div className="min-w-0 flex-1">
-          <h1 className="heading text-[20px]">番組検索</h1>
+          <h1 className="heading text-[calc(20rem/16)]">番組検索</h1>
         </div>
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="watch" size="sm" asChild>
           <Link href="/guide">
             <ChevronLeftIcon />
             番組表へ戻る
@@ -162,7 +167,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
 
       <section className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
         <div className="flex flex-wrap items-center gap-2.5">
-          <h2 className="heading flex items-center gap-1.5 text-[15px]">
+          <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
             <FilterIcon className="size-4 text-brand" />
             検索条件
           </h2>
@@ -172,7 +177,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
               onClick={clear}
               className="tap-target ml-auto cursor-pointer text-note text-ink-3 underline underline-offset-[3px] hover:text-ink-2"
             >
-              条件をすべて消す
+              条件を消す
             </button>
           )}
         </div>
@@ -195,8 +200,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
               aria-label="キーワード"
               value={draft.q}
               onChange={(event) => amend({ q: event.target.value })}
-              areaClassName="w-[300px] max-w-full"
-              className="h-[33px] rounded-full"
+              areaClassName="w-[calc(300rem/16)] max-w-full"
+              className="h-[calc(33rem/16)] rounded-full"
             />
           </ConditionRow>
 
@@ -205,8 +210,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
               aria-label="除外"
               value={draft.exclude}
               onChange={(event) => amend({ exclude: event.target.value })}
-              areaClassName="w-[300px] max-w-full"
-              className="h-[33px] rounded-full"
+              areaClassName="w-[calc(300rem/16)] max-w-full"
+              className="h-[calc(33rem/16)] rounded-full"
             />
           </ConditionRow>
 
@@ -357,8 +362,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
               onChange={(event) =>
                 amend({ from: event.target.value || undefined })
               }
-              areaClassName="w-[150px]"
-              className="h-[33px] rounded-full"
+              areaClassName="w-[calc(150rem/16)]"
+              className="h-[calc(33rem/16)] rounded-full"
             />
             <span className="text-sub text-ink-3">〜</span>
             <Input
@@ -368,8 +373,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
               onChange={(event) =>
                 amend({ to: event.target.value || undefined })
               }
-              areaClassName="w-[150px]"
-              className="h-[33px] rounded-full"
+              areaClassName="w-[calc(150rem/16)]"
+              className="h-[calc(33rem/16)] rounded-full"
             />
           </ConditionRow>
 
@@ -441,25 +446,33 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </div>
       </section>
 
-      {outcome.state === 'idle' ? (
+      {waiting && outcome.state !== 'searched' ? (
+        <WaitingRows rows={6} className="mt-6" aria-label={WAITING_LABEL} />
+      ) : outcome.state === 'idle' ? (
         <EmptyState
           spot="antenna"
           title="まだ検索していません"
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
         />
       ) : outcome.state === 'refused' ? (
         <EmptyState
           spot="antenna"
           title="この条件では検索できません"
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
         >
           {outcome.message}
         </EmptyState>
       ) : (
         found && (
-          <>
+          <div
+            inert={waiting ? true : undefined}
+            className={cn(
+              'transition-opacity duration-150',
+              waiting && 'opacity-60',
+            )}
+          >
             <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-              <h2 className="heading flex items-center gap-1.5 text-[15px]">
+              <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
                 <ListIcon className="size-4 text-brand" />
                 検索結果
               </h2>
@@ -538,13 +551,13 @@ function SearchScreen({ result }: { result: SearchResult }) {
               <EmptyState
                 spot="antenna"
                 title="該当する番組がありません"
-                className="mt-6 max-w-[560px]"
+                className="mt-6 max-w-[calc(560rem/16)]"
                 action={
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button size="sm" variant="outline" onClick={clear}>
-                      条件をすべて消す
+                    <Button size="sm" variant="halt" onClick={clear}>
+                      条件を消す
                     </Button>
-                    <Button size="sm" variant="outline" asChild>
+                    <Button size="sm" variant="watch" asChild>
                       <Link href="/guide">番組表へ戻る</Link>
                     </Button>
                   </div>
@@ -557,10 +570,16 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   tabIndex={0}
                   className={cn(
                     ADMIN_LIST_HEIGHT_CAP,
-                    '-mx-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring',
+                    'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring',
                   )}
                 >
-                  <table className="w-full min-w-[760px] border-separate border-spacing-0">
+                  <table className="w-full min-w-[calc(760rem/16)] table-fixed border-separate border-spacing-0">
+                    <colgroup>
+                      <col style={{ width: 'calc(180rem/16)' }} />
+                      <col style={{ width: 'calc(240rem/16)' }} />
+                      <col style={{ width: 'calc(420rem/16)' }} />
+                      <col style={{ width: 'calc(160rem/16)' }} />
+                    </colgroup>
                     <thead>
                       <tr>
                         {[
@@ -569,27 +588,24 @@ function SearchScreen({ result }: { result: SearchResult }) {
                           '番組',
                           'ジャンル',
                         ].map((h) => (
-                          <th
-                            key={h}
-                            className="sticky top-0 z-10 bg-surface-2 px-3.5 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md"
-                          >
+                          <TableHead key={h} className="sticky top-0 z-10">
                             {h}
-                          </th>
+                          </TableHead>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {found.hits.map((p) => (
                         <tr key={p.id} className="group">
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top text-ui whitespace-nowrap">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top text-ui whitespace-nowrap">
                             {p.channelName}
                             {p.channelNo && (
-                              <small className="ml-1.5 font-code text-[10.5px] text-ink-3">
+                              <small className="ml-1.5 font-code text-micro text-ink-3">
                                 {p.channelNo}
                               </small>
                             )}
                           </td>
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
                             <b className="mr-1.5 font-medium text-ink">
                               {p.dayLabel}
                             </b>
@@ -597,11 +613,16 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             {SPAN_DASH}
                             {p.endUndecided ? '終了未定' : p.endLabel}
                           </td>
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
-                            <span className="flex flex-wrap items-center gap-2">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top">
+                            <span
+                              className={cn(
+                                READABLE_LINE,
+                                'flex flex-wrap items-center gap-2',
+                              )}
+                            >
                               <Link
                                 href={`/guide/programs/${p.id}`}
-                                className="tap-target text-[13px] font-bold text-ink underline-offset-[3px] hover:underline"
+                                className="tap-target text-[calc(13rem/16)] font-bold text-ink underline-offset-[3px] hover:underline"
                               >
                                 {p.title}
                               </Link>
@@ -612,15 +633,20 @@ function SearchScreen({ result }: { result: SearchResult }) {
                               )}
                             </span>
                             {p.description && (
-                              <p className="mt-px text-note text-ink-3">
+                              <p
+                                className={cn(
+                                  READABLE_LINE,
+                                  'mt-px text-note text-ink-3',
+                                )}
+                              >
                                 {p.description}
                               </p>
                             )}
                           </td>
-                          <td className="border-b border-dashed border-line px-3.5 py-3 align-top">
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top">
                             <span
                               className={cn(
-                                'inline-block rounded-full border px-[11px] py-0.5 text-note font-medium text-ink-2',
+                                'inline-block rounded-full border px-[calc(11rem/16)] py-0.5 text-note font-medium text-ink-2',
                                 GENRE_CLASS[p.genre],
                               )}
                             >
@@ -640,7 +666,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 />
               </>
             )}
-          </>
+          </div>
         )
       )}
     </ScreenMain>
@@ -672,11 +698,11 @@ function ConditionRow({
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-1.5 border-b border-dashed border-line py-[9px] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5">
-      <span className="text-note font-bold text-ink-3 min-[701px]:w-[92px] min-[701px]:shrink-0 min-[701px]:pt-2">
+    <div className="flex flex-col gap-1.5 border-b border-dashed border-line py-[calc(9rem/16)] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5">
+      <span className="text-note font-bold text-ink-3 min-[701px]:w-[calc(92rem/16)] min-[701px]:shrink-0 min-[701px]:pt-2">
         {label}
       </span>
-      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-[18px]">
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
         {children}
       </span>
     </div>
@@ -697,13 +723,13 @@ function Pick({
   onRemove: () => void
 }) {
   return (
-    <span className="inline-flex items-center gap-[7px] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
+    <span className="inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
       {label}
       <button
         type="button"
         aria-label={spoken}
         onClick={onRemove}
-        className="tap-target flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
+        className="tap-target flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
       >
         <CloseIcon />
       </button>

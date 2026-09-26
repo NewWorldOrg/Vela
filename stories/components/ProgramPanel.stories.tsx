@@ -14,6 +14,7 @@ import {
 } from '@/repository/programs.fixtures'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 import { ProgramPanel } from '@/components/guide/program-panel'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 
 const standard = PROGRAM_DETAIL_FIXTURES.standard.program
 const relayed = PROGRAM_DETAIL_FIXTURES.relayed.program
@@ -72,7 +73,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const AT_MOST_ACROSS = 896
+const AT_MOST_ACROSS_REM = 56
 
 const BESIDE_IT = 40
 
@@ -89,7 +90,7 @@ const overlayIn = (canvasElement: HTMLElement): HTMLElement | null =>
   )
 
 async function opened(canvasElement: HTMLElement): Promise<HTMLElement> {
-  return waitFor(() => {
+  const surface = await waitFor(() => {
     const surface = surfaceIn(canvasElement)
 
     if (surface === null) {
@@ -102,6 +103,10 @@ async function opened(canvasElement: HTMLElement): Promise<HTMLElement> {
 
     return surface
   })
+
+  await afterTheArrival(canvasElement)
+
+  return surface
 }
 
 function detailIn(root: ParentNode): HTMLElement {
@@ -520,9 +525,13 @@ async function acrossTheWindow(
   const doc = canvasElement.ownerDocument
   const view = doc.defaultView!
 
+  const aLetter = Number.parseFloat(
+    view.getComputedStyle(doc.documentElement).fontSize,
+  )
+
   await expect(view.innerWidth).toBe(asked)
   await expect(surface.getBoundingClientRect().width).toBeCloseTo(
-    Math.min(AT_MOST_ACROSS, view.innerWidth - BESIDE_IT),
+    Math.min(AT_MOST_ACROSS_REM * aLetter, view.innerWidth - BESIDE_IT),
     0,
   )
   await expect(doc.documentElement.scrollWidth).toBeLessThanOrEqual(

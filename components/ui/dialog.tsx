@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from 'radix-ui'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { CloseIcon } from '@/components/vela/icons'
+import { iconButtonVariants } from '@/components/vela/icon-button'
 
 function Dialog({
   ...props
@@ -39,7 +40,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        'fixed inset-0 z-50 bg-scrim data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+        'fixed inset-0 z-50 bg-scrim data-[state=closed]:scrim-disappears data-[state=open]:scrim-appears',
         className,
       )}
       {...props}
@@ -89,7 +90,7 @@ function DialogContent({
           }
         }}
         className={cn(
-          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] max-h-[85dvh] translate-x-[-50%] translate-y-[-50%] gap-[15px] rounded-xl border border-line-strong bg-surface px-5 pt-[18px] pb-[17px] text-ink shadow-pop-xl duration-200 outline-none has-[>[data-slot=dialog-body]]:grid-rows-[auto_minmax(0,1fr)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[size=default]:sm:max-w-2xl data-[size=reading]:sm:max-w-[min(56rem,calc(100%-2.5rem))]',
+          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] max-h-[85dvh] translate-x-[-50%] translate-y-[-50%] gap-[calc(15rem/16)] rounded-xl border border-line-strong bg-surface px-5 pt-[calc(18rem/16)] pb-[calc(17rem/16)] text-ink shadow-pop-xl outline-none [--from-scale:0.97] has-[>[data-slot=dialog-body]]:grid-rows-[auto_minmax(0,1fr)] data-[state=open]:appears data-[size=default]:sm:max-w-2xl data-[size=reading]:sm:max-w-[min(56rem,calc(100%-2.5rem))]',
           className,
         )}
         {...props}
@@ -98,9 +99,12 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="tap-target absolute top-[15px] right-[15px] inline-flex size-[27px] cursor-pointer items-center justify-center rounded-full border border-edge text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:-rotate-6 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring focus-visible:outline-hidden"
+            className={cn(
+              iconButtonVariants({ variant: 'quiet', size: 'sm' }),
+              'absolute top-[calc(15rem/16)] right-[calc(15rem/16)]',
+            )}
           >
-            <CloseIcon className="size-[13px]" />
+            <CloseIcon className="size-[calc(13rem/16)]" />
             <span className="sr-only">閉じる</span>
           </DialogPrimitive.Close>
         )}
@@ -131,7 +135,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        'flex flex-col-reverse gap-[9px] sm:flex-row sm:justify-center',
+        'flex flex-col-reverse gap-[calc(9rem/16)] sm:flex-row sm:justify-center',
         className,
       )}
       {...props}
@@ -139,7 +143,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="ghost" size="sm">
             閉じる
           </Button>
         </DialogPrimitive.Close>

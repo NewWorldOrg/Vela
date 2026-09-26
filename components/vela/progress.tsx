@@ -69,11 +69,11 @@ export function SignalMeter({
 }) {
   return (
     <div data-slot="signal-meter" className={cn('', className)} {...props}>
-      <div className="mb-[7px] flex items-baseline justify-between gap-3">
+      <div className="mb-[calc(7rem/16)] flex items-baseline justify-between gap-3">
         <InFull says={channel}>
           <span className="truncate text-ui text-ink">{channel}</span>
         </InFull>
-        <span className="flex shrink-0 items-baseline gap-[9px]">
+        <span className="flex shrink-0 items-baseline gap-[calc(9rem/16)]">
           <b className="font-code text-ui font-medium tabular-nums">{value}</b>
           <span className={cn('text-note font-medium', TEXT_TONE[tone])}>
             {status}
@@ -85,10 +85,18 @@ export function SignalMeter({
   )
 }
 
+const SPINNER_SIZE = {
+  control: 'size-3.5',
+  status: 'size-[calc(17rem/16)]',
+} as const
+
 export function Spinner({
   className,
+  size = 'status',
   ...props
-}: Omit<ComponentProps<'svg'>, 'children'>) {
+}: Omit<ComponentProps<'svg'>, 'children'> & {
+  size?: keyof typeof SPINNER_SIZE
+}) {
   return (
     <svg
       data-slot="spinner"
@@ -96,7 +104,7 @@ export function Spinner({
       fill="none"
       aria-hidden="true"
       focusable="false"
-      className={cn('size-[17px] shrink-0 animate-spin', className)}
+      className={cn(SPINNER_SIZE[size], 'shrink-0 animate-spin', className)}
       {...props}
     >
       <circle

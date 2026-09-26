@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -24,7 +25,11 @@ import { Surface } from '@/components/vela/surface'
 import { MigrationCountCell } from '@/components/migration/migration-count-cell'
 import { MigrationRunRow } from '@/components/migration/migration-run-row'
 
-const NOT_TAKEN_COLUMNS = ['対象', '母集団', '記録した事実']
+const NOT_TAKEN_COLUMNS: { label: string; width: string }[] = [
+  { label: '対象', width: 'calc(220rem/16)' },
+  { label: '母集団', width: 'calc(160rem/16)' },
+  { label: '記録した事実', width: 'calc(480rem/16)' },
+]
 
 const NO_LOSSES = '該当なし'
 
@@ -62,11 +67,11 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           {result.populations.map((population) => (
             <Surface
               key={population.name}
-              className="grid gap-3 min-[900px]:grid-cols-[240px_1fr] min-[900px]:items-center"
+              className="grid gap-3 min-[900px]:grid-cols-[calc(240rem/16)_1fr] min-[900px]:items-center"
             >
               <div>
                 <b className="text-ui font-bold">{population.name}</b>
-                <span className="ml-2 font-code text-note text-ink-3">
+                <span className="ml-2 font-code text-note break-keep text-ink-3">
                   {population.source}
                 </span>
                 <span className="mt-0.5 block text-note text-ink-2">
@@ -109,8 +114,8 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           ))}
         </div>
 
-        <div className="mt-2.5 flex items-start gap-[11px] rounded-lg bg-mint-soft px-[15px] py-3 text-mint">
-          <CheckIcon className="mt-[3px] size-[17px]" />
+        <div className="mt-2.5 flex items-start gap-[calc(11rem/16)] rounded-lg bg-mint-soft px-[calc(15rem/16)] py-3 text-mint">
+          <CheckIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)]" />
           <div className="min-w-0">
             <b className="block text-ui">
               未分類{' '}
@@ -128,13 +133,16 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
           取り込まなかったものの明細
         </SectionHeading>
         <Table
-          className="min-w-[860px]"
+          className="table-fixed min-w-[calc(860rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
+          <TableColumns
+            widths={NOT_TAKEN_COLUMNS.map((column) => column.width)}
+          />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {NOT_TAKEN_COLUMNS.map((column) => (
-                <TableHead key={column}>{column}</TableHead>
+                <TableHead key={column.label}>{column.label}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -160,7 +168,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               </TableRow>
               {group.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="w-[260px] align-top whitespace-normal">
+                  <TableCell className="w-[calc(260rem/16)] align-top whitespace-normal">
                     <b className="text-ui font-bold wrap-anywhere">
                       {row.subject}
                     </b>

@@ -4,6 +4,7 @@ import { expect, userEvent, within } from 'storybook/test'
 
 import type { Recording } from '@/repository/recordings'
 import { RECORDING_FIXTURES } from '@/stories/fixtures/recordings'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import {
   Dialog,
@@ -71,7 +72,7 @@ export const ConfirmDialog: Story = {
       <Surface>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="destructive">EPG を削除して再取得</Button>
+            <Button variant="remove">EPG を削除して再取得</Button>
           </DialogTrigger>
           <DialogContent showCloseButton={false}>
             <DialogHeader>
@@ -91,7 +92,7 @@ export const ConfirmDialog: Story = {
                 </Button>
               </DialogClose>
               <DialogClose asChild>
-                <Button variant="destructiveFill" size="sm">
+                <Button variant="removeFill" size="sm">
                   削除して再取得
                 </Button>
               </DialogClose>
@@ -110,7 +111,10 @@ export const ConfirmDialog: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'EPG を削除して再取得' }),
     )
-    await expect(await within(document.body).findByRole('dialog')).toBeVisible()
+    const opened = await within(document.body).findByRole('dialog')
+
+    await afterTheArrival(canvasElement)
+    await expect(opened).toBeVisible()
   },
 }
 
@@ -124,7 +128,7 @@ export const DeleteRecording: Story = {
         <SectionHeading mark={TrashIcon}>録画の削除確認</SectionHeading>
         <Surface>
           <Button
-            variant="destructive"
+            variant="remove"
             onClick={() => setTarget(RECORDING_FIXTURES[1])}
           >
             <TrashIcon />
@@ -145,9 +149,11 @@ export const DeleteRecording: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
-    await expect(
-      await within(document.body).findByRole('alertdialog'),
-    ).toBeVisible()
+
+    const asked = await within(document.body).findByRole('alertdialog')
+
+    await afterTheArrival(canvasElement)
+    await expect(asked).toBeVisible()
   },
 }
 
@@ -261,9 +267,11 @@ export const OpenList: Story = {
     await expect(off).toBeTruthy()
     await userEvent.click(off as HTMLElement)
     await expect(opener).toHaveTextContent('そのまま(TS)')
-    await expect(
-      await within(document.body).findByRole('listbox'),
-    ).toBeVisible()
+
+    const listed = await within(document.body).findByRole('listbox')
+
+    await afterTheArrival(canvasElement)
+    await expect(listed).toBeVisible()
   },
 }
 
@@ -300,6 +308,8 @@ export const OpenMenu: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '表示する列' }))
 
     const menu = await within(document.body).findByRole('menu')
+
+    await afterTheArrival(canvasElement)
     await expect(menu).toBeVisible()
 
     const off = within(menu)

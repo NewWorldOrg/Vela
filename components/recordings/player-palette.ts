@@ -1,36 +1,20 @@
-import type { CSSProperties } from 'react'
-
 import { cn } from '@/lib/utils'
 import { pressable, still } from '@/components/vela/tactile'
 
-export const PLAYER_PALETTE = {
-  '--pl-bg': '#151418',
-  '--pl-video': '#0F0E12',
-  '--pl-ink': '#EFEAF2',
-  '--pl-ink-2': '#B3ABBF',
-  '--pl-ink-3': '#837C90',
-  '--pl-accent': '#96BBB4',
-  '--pl-lemon': '#D7AC5E',
-  '--pl-coral': '#E08A85',
-} as CSSProperties
-
-export const PLAYER_SCRIM =
-  'linear-gradient(to top, rgba(6,5,9,.92) 0%, rgba(6,5,9,.82) 34%, rgba(6,5,9,.58) 58%, rgba(6,5,9,.24) 80%, rgba(6,5,9,0) 100%)'
+export const PLAYER_SCRIM = 'var(--pl-scrim)'
 
 export const PLAYER_CHROME_FADE =
   'transition-[opacity,translate] duration-100 ease-[cubic-bezier(.4,0,1,1)] data-[up]:duration-[250ms] data-[up]:ease-[cubic-bezier(0,0,.2,1)]'
 
-export const PLAYER_BREAK_BAND =
-  'repeating-linear-gradient(115deg, rgba(215,172,94,.62) 0 4px, rgba(215,172,94,.26) 4px 8px)'
+export const PLAYER_BREAK_BAND = 'var(--pl-break-band)'
 
-export const PLAYER_SCRIM_TOP =
-  'linear-gradient(to bottom, rgba(6,5,9,.78) 0%, rgba(6,5,9,.42) 52%, rgba(6,5,9,0) 100%)'
+export const PLAYER_SCRIM_TOP = 'var(--pl-scrim-top)'
 
 const PLAYER_BUTTON_OFF =
   'disabled:border-white/12 disabled:bg-white/3 disabled:text-(--pl-ink-3) disabled:hover:border-white/12 disabled:hover:bg-white/3 disabled:hover:text-(--pl-ink-3)'
 
 export const PLAYER_BUTTON = cn(
-  'tap-target rounded-full border border-white/25 bg-white/5 px-[13px] py-[5px] text-[11.5px] font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none',
+  'tap-target rounded-full border border-white/25 bg-white/5 px-[calc(13rem/16)] py-[calc(5rem/16)] text-note font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none',
   PLAYER_BUTTON_OFF,
   pressable,
   still,
@@ -46,10 +30,10 @@ export const PLAYER_GLYPH_BUTTON = cn(
 )
 
 export const PLAYER_GLYPH_BUTTON_ON =
-  'text-white opacity-100 before:absolute before:bottom-[5px] before:h-[2px] before:w-[18px] before:rounded-full before:bg-(--pl-accent) before:content-[""]'
+  'text-white opacity-100 before:absolute before:bottom-[calc(5rem/16)] before:h-[2px] before:w-[calc(18rem/16)] before:rounded-full before:bg-(--pl-accent) before:content-[""]'
 
 export const PLAYER_BUTTON_ON =
-  'border-[rgba(150,187,180,.55)] bg-[rgba(150,187,180,.22)] text-[#C0D8D3]'
+  'border-(--pl-accent)/55 bg-(--pl-accent)/22 text-(--pl-accent-ink)'
 
 export const PLAYER_COLUMN =
   'mx-auto w-full max-w-[calc((100dvh_-_210px)*16/9)]'

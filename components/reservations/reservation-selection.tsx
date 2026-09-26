@@ -69,13 +69,13 @@ export function ReservationSelection({
     <div
       role="group"
       aria-label="選択した予約の操作"
-      className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[17px] py-[13px]"
+      className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[calc(17rem/16)] py-[calc(13rem/16)]"
     >
       <span className="text-ui font-medium whitespace-nowrap text-ink">
         <b className="font-code font-bold">{chosen.length}</b> 件を選択
       </span>
       <Button
-        variant="destructive"
+        variant="halt"
         size="sm"
         disabled={pending || !cancellable}
         onClick={() =>
@@ -85,7 +85,7 @@ export function ReservationSelection({
         取り消す
       </Button>
       <Button
-        variant="destructive"
+        variant="remove"
         size="sm"
         disabled={pending || !discardable}
         onClick={() => setRemoving(true)}
@@ -93,7 +93,7 @@ export function ReservationSelection({
         <TrashIcon />
         削除
       </Button>
-      <Button variant="ghost" size="sm" disabled={pending} onClick={onClear}>
+      <Button variant="halt" size="sm" disabled={pending} onClick={onClear}>
         選択を解除
       </Button>
       {outcome && (
@@ -108,7 +108,7 @@ export function ReservationSelection({
               選択した {chosen.length} 件の予約を削除します
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <ul className="max-h-[240px] space-y-1 overflow-y-auto text-left text-ui">
+              <ul className="max-h-[calc(240rem/16)] space-y-1 overflow-y-auto text-left text-ui">
                 {chosen.map((one) => (
                   <li key={one.id} className="flex flex-wrap gap-x-3">
                     <b className="font-bold text-ink">{one.title}</b>
@@ -131,7 +131,7 @@ export function ReservationSelection({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              variant="removeFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

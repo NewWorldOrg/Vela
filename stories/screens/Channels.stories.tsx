@@ -11,7 +11,9 @@ import {
 } from '@/repository/services.fixtures'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { ChannelsView } from '@/components/channels/channels-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 type ChannelsViewProps = ComponentProps<typeof ChannelsView>
 
@@ -31,7 +33,13 @@ const refuse = async () => ({
 const meta = {
   title: 'Screens/設定・チャンネル',
   component: ChannelsView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/channels' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     onStart: refuse,
     onCancel: accept,
@@ -39,6 +47,7 @@ const meta = {
     onAdd: accept,
     onDelete: accept,
   },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof ChannelsView>
 
 export default meta
@@ -56,6 +65,7 @@ export const 候補を開いた状態: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'みなと総合1 の候補チャンネル' }),
     )
+    await afterTheArrival(canvasElement)
 
     await expect(canvas.getByText('● 選択中')).toBeVisible()
   },
@@ -69,6 +79,7 @@ export const 候補の受信状態: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'みなと総合1 の候補チャンネル' }),
     )
+    await afterTheArrival(canvasElement)
 
     await expect(canvas.getByText('受信可')).toBeVisible()
     await expect(canvas.getByText('受信不可')).toBeVisible()
@@ -83,6 +94,7 @@ export const 構成変更後に測り直しを待つ候補: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'みなと総合2 の候補チャンネル' }),
     )
+    await afterTheArrival(canvasElement)
 
     await expect(canvas.getByText('要再検証')).toBeVisible()
   },
@@ -120,9 +132,9 @@ export const 開閉は遷移で伸び縮みする: Story = {
 
     const fold = getComputedStyle(unfold!)
     await expect(fold.transitionProperty).toBe('grid-template-rows')
-    await expect(fold.transitionDuration).toBe('0.15s')
+    await expect(fold.transitionDuration).toBe('0.2s')
     await expect(fold.transitionTimingFunction).toBe(
-      'cubic-bezier(0.34, 1.4, 0.64, 1)',
+      'cubic-bezier(0.25, 0.1, 0.45, 1)',
     )
 
     const turn = getComputedStyle(caret.querySelector('svg')!)

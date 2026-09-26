@@ -44,7 +44,6 @@ import {
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
-  PLAYER_PALETTE,
   PLAYER_PICTURE_BOX,
   PLAYER_SCRIM,
   PLAYER_SCRIM_TOP,
@@ -119,9 +118,9 @@ function begun(key: string): Running {
 }
 
 const LATENCY_TONE = {
-  ok: 'border-[rgba(134,210,172,.45)] bg-[rgba(134,210,172,.12)] text-[#9FDCBB]',
-  warn: 'border-[rgba(229,186,108,.5)] bg-[rgba(229,186,108,.14)] text-[#E5BA6C]',
-  err: 'border-[rgba(236,154,147,.5)] bg-[rgba(236,154,147,.14)] text-[#EC9A93]',
+  ok: 'border-(--pl-ok)/45 bg-(--pl-ok)/12 text-(--pl-ok-ink)',
+  warn: 'border-(--pl-warn)/50 bg-(--pl-warn)/14 text-(--pl-warn)',
+  err: 'border-(--pl-err)/50 bg-(--pl-err)/14 text-(--pl-err)',
 } as const
 
 export function LivePlayer({
@@ -652,7 +651,6 @@ export function LivePlayer({
       tabIndex={-1}
       data-slot="live-player"
       data-phase={phase ?? 'idle'}
-      style={PLAYER_PALETTE}
       onPointerMove={stir}
       onPointerLeave={stir}
       onPointerDown={() => {
@@ -753,7 +751,7 @@ export function LivePlayer({
               'data-[up]:translate-y-0 data-[up]:opacity-100',
             )}
           >
-            <span className="text-[12px] text-white">
+            <span className="text-sub text-white">
               <b className="font-bold">
                 {channel.no && (
                   <span className="mr-1.5 font-code font-medium">
@@ -832,8 +830,8 @@ export function LivePlayer({
             <p
               role="status"
               className={cn(
-                'mb-2 text-[11px] font-medium',
-                said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
+                'mb-2 text-cap font-medium',
+                said.tone === 'ok' ? 'text-(--pl-ok-ink)' : 'text-(--pl-err)',
               )}
             >
               {said.text}
@@ -884,13 +882,13 @@ export function LivePlayer({
                 data-slot="live-latency"
                 data-tone={latencyTone(latency, losing)}
                 className={cn(
-                  'inline-flex items-center gap-[7px] rounded-full border px-3 py-[3px] text-[11.5px] font-medium whitespace-nowrap',
+                  'inline-flex items-center gap-[calc(7rem/16)] rounded-full border px-3 py-[calc(3rem/16)] text-note font-medium whitespace-nowrap',
                   LATENCY_TONE[latencyTone(latency, losing)],
                 )}
               >
                 <i
                   aria-hidden="true"
-                  className="size-[7px] shrink-0 rounded-full bg-current"
+                  className="size-[calc(7rem/16)] shrink-0 rounded-full bg-current"
                 />
                 遅延 <span className="font-code">{latency.toFixed(1)}</span> 秒
                 {running?.catchingUp && (

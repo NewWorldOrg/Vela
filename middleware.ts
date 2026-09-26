@@ -4,6 +4,8 @@ import { RENDERED_PAGE_HEADER } from '@/repository/auth'
 
 const THEME_COOKIE = 'vela-theme-mode'
 
+const MOTION_COOKIE = 'vela-motion'
+
 const PAYLOAD_PARAM = '_rsc'
 
 export function middleware(request: NextRequest) {
@@ -21,6 +23,13 @@ export function middleware(request: NextRequest) {
       ? themeCookie
       : 'system'
   requestHeaders.set('x-theme-mode', themeMode)
+
+  const motionCookie = request.cookies.get(MOTION_COOKIE)?.value
+
+  requestHeaders.set(
+    'x-motion',
+    motionCookie === 'still' || motionCookie === 'moves' ? motionCookie : '',
+  )
 
   return NextResponse.next({ request: { headers: requestHeaders } })
 }

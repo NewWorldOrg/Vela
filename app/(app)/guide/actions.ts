@@ -8,6 +8,8 @@ import type {
   RebuildResult,
 } from '@/repository/collection'
 import { collectNow, rebuildEpg } from '@/repository/collection'
+import type { ProgramExtras } from '@/repository/programs'
+import { extrasOf } from '@/repository/programs'
 import type {
   ReservationRevision,
   ReservationWrite,
@@ -70,4 +72,13 @@ export async function reviseProgrammeReservation(
   revalidatePath('/reservations')
 
   return result
+}
+
+export async function readProgramExtras(
+  kind: string,
+  date: string,
+  id: string,
+  channelId: string,
+): Promise<ProgramExtras | undefined> {
+  return extrasOf(kind, date, id, channelId)
 }

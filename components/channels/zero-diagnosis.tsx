@@ -11,10 +11,10 @@ export function ZeroDiagnosisPanel({
 }) {
   return (
     <div className="rounded-xl bg-surface pt-0.5 pb-1">
-      <div className="flex items-start gap-[9px] px-[18px] pt-4 pb-1">
-        <DangerIcon className="mt-[3px] size-[17px] text-coral" />
+      <div className="flex items-start gap-[calc(9rem/16)] px-[calc(18rem/16)] pt-4 pb-1">
+        <DangerIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)] text-coral" />
         <div>
-          <h3 className="heading text-[14.5px] text-coral">
+          <h3 className="heading text-[calc(14.5rem/16)] text-coral">
             {label} のサービスがありません
           </h3>
           <p className="mt-px text-sub text-ink-2">
@@ -23,7 +23,7 @@ export function ZeroDiagnosisPanel({
           </p>
         </div>
       </div>
-      <div className="grid gap-2.5 px-[18px] pt-3 pb-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">
+      <div className="grid gap-2.5 px-[calc(18rem/16)] pt-3 pb-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">
         {diagnosis.counts.map(({ class: failure, count }) => {
           const sole = count > 0 && count === diagnosis.attempted
 
@@ -32,8 +32,8 @@ export function ZeroDiagnosisPanel({
               key={failure.no}
               className={
                 sole
-                  ? 'rounded-lg bg-coral-soft px-[13px] py-[11px]'
-                  : 'rounded-lg bg-surface-2 px-[13px] py-[11px]'
+                  ? 'rounded-lg bg-coral-soft px-[calc(13rem/16)] py-[calc(11rem/16)]'
+                  : 'rounded-lg bg-surface-2 px-[calc(13rem/16)] py-[calc(11rem/16)]'
               }
             >
               <div
@@ -48,8 +48,8 @@ export function ZeroDiagnosisPanel({
               <div
                 className={
                   sole
-                    ? 'font-code text-[19px] leading-[1.5] font-medium tabular-nums text-coral'
-                    : 'font-code text-[19px] leading-[1.5] font-medium tabular-nums'
+                    ? 'font-code text-[calc(19rem/16)] leading-[1.5] font-medium tabular-nums text-coral'
+                    : 'font-code text-[calc(19rem/16)] leading-[1.5] font-medium tabular-nums'
                 }
               >
                 {count}
@@ -65,7 +65,7 @@ export function ZeroDiagnosisPanel({
         })}
       </div>
       {diagnosis.verdict && (
-        <p className="mx-[18px] mb-4 rounded-xl bg-lemon-soft px-[15px] py-[11px] text-ui leading-[1.7] text-lemon">
+        <p className="mx-[calc(18rem/16)] mb-4 rounded-xl bg-lemon-soft px-[calc(15rem/16)] py-[calc(11rem/16)] text-ui leading-[1.7] text-lemon">
           {diagnosis.verdict}
         </p>
       )}

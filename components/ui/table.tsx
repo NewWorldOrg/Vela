@@ -2,6 +2,8 @@
 
 import * as React from 'react'
 
+import { useArrived } from '@/hooks/useArrived'
+
 import { cn } from '@/lib/utils'
 
 function Table({
@@ -14,7 +16,7 @@ function Table({
       data-slot="table-container"
       tabIndex={0}
       className={cn(
-        'relative w-full overflow-x-auto outline-none focus-visible:shadow-ring',
+        'relative w-full overflow-x-auto rounded-xl bg-surface outline-none focus-visible:shadow-ring',
         containerClassName,
       )}
     >
@@ -34,11 +36,24 @@ function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
   return <thead data-slot="table-header" className={cn(className)} {...props} />
 }
 
+export const READABLE_LINE = 'max-w-[calc(880rem/16)]'
+
+function TableColumns({ widths }: { widths: (string | undefined)[] }) {
+  return (
+    <colgroup>
+      {widths.map((width, nth) => (
+        <col key={nth} style={width === undefined ? undefined : { width }} />
+      ))}
+    </colgroup>
+  )
+}
+
 function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   return (
     <tbody
+      {...useArrived()}
       data-slot="table-body"
-      className={cn('[&_tr:last-child_td]:border-b-0', className)}
+      className={cn('rows-arrive [&_tr:last-child_td]:border-b-0', className)}
       {...props}
     />
   )
@@ -62,7 +77,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
     <tr
       data-slot="table-row"
       className={cn(
-        'transition-colors duration-150 ease-out hover:bg-surface-2 has-aria-expanded:bg-surface-2 data-[state=selected]:bg-surface-2',
+        'transition-colors duration-150 ease-out data-[state=selected]:shadow-[inset_3px_0_0_0_var(--color-brand)]',
         className,
       )}
       {...props}
@@ -75,7 +90,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
     <th
       data-slot="table-head"
       className={cn(
-        'bg-surface-2 px-[13px] py-[7px] text-left align-middle text-micro font-bold tracking-[0.04em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+        'border-b border-line bg-surface px-[calc(13rem/16)] py-[calc(7rem/16)] text-left align-middle text-micro font-bold tracking-[0.04em] whitespace-nowrap text-ink-3 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',
         className,
       )}
       {...props}
@@ -88,7 +103,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
     <td
       data-slot="table-cell"
       className={cn(
-        'border-b border-dashed border-line px-[13px] py-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+        'border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',
         className,
       )}
       {...props}
@@ -111,6 +126,7 @@ function TableCaption({
 
 export {
   Table,
+  TableColumns,
   TableHeader,
   TableBody,
   TableFooter,

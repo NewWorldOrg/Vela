@@ -20,7 +20,6 @@ export function DetectionSave({
   return (
     <>
       <Button
-        size="sm"
         disabled={pending}
         onClick={() =>
           startTransition(async () => {

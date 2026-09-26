@@ -1,38 +1,34 @@
 'use client'
 
-import { EMPTY_VALUE } from '@/lib/empty-value'
 import Link from 'next/link'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
+
 import { cn } from '@/lib/utils'
+import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { formatBytes, formatLength } from '@/lib/format'
-import { playsInBrowser, unfinishedDeletionShapeOf } from '@/lib/recordings'
+import { unfinishedDeletionShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
-import { ChevronRightIcon, PlayIcon, TrashIcon } from '@/components/vela/icons'
-import {
-  ENCODE_PILL_WIDTH,
-  EncodeChip,
-} from '@/components/recordings/encode-chip'
-import {
-  OUTCOME_PILL_WIDTH,
-  OutcomeChip,
-} from '@/components/recordings/outcome-chip'
-import {
-  RECORDING_QUALITY_PILL_WIDTH,
-  QualityChip,
-} from '@/components/recordings/quality-chip'
+import { ChevronRightIcon, TrashIcon } from '@/components/vela/icons'
+import { EncodeChip } from '@/components/recordings/encode-chip'
+import { OutcomeChip } from '@/components/recordings/outcome-chip'
+import { QualityChip } from '@/components/recordings/quality-chip'
+import { READABLE_LINE } from '@/components/ui/table'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 
-export const CELL_SIDES_PX = 24
+export const DETAIL_CELL = 'pr-1.5 pl-6'
 
-export const DETAIL_CELL = 'px-1.5'
+export const GAP_BEFORE_STATE = 'pl-4'
+
+export const GAP_BEFORE_ACTIONS = 'pl-5'
 
 const CELL =
-  'border-b border-dashed border-line px-3 py-3 align-middle text-[13px] group-last:border-b-0 group-hover:border-transparent'
+  'border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-middle text-[calc(13rem/16)] group-last:border-b-0'
 
 const NUMBER = 'font-code text-ui whitespace-nowrap text-right'
 
@@ -92,14 +88,15 @@ function Size({ recording: r }: { recording: Recording }) {
 
 export function RecordingRow({
   recording: r,
+  nth,
   onOpen,
   onDelete,
 }: {
   recording: Recording
+  nth: number
   onOpen: () => void
   onDelete: () => void
 }) {
-  const playable = playsInBrowser(r)
   const deletable = r.outcome !== 'recording'
   const subTone = r.outcome === 'recording' ? 'text-ink-2' : 'text-ink-3'
 
@@ -107,23 +104,21 @@ export function RecordingRow({
     <tr
       data-pressable-row
       onClick={onOpen}
-      className={cn(
-        'group cursor-pointer transition-[translate,box-shadow,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-surface hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none',
-        r.outcome === 'recording' && 'bg-brand-soft',
-      )}
+      style={delayOf(rowDelayMs(nth))}
+      className={cn(rowArrivesIn(nth), 'group cursor-pointer')}
     >
-      <td className={cn(CELL, 'group-hover:rounded-l-md')}>
+      <td className={CELL}>
         <span className="flex min-w-0 items-center gap-3">
           <RecordingThumb recording={r} subTone={subTone} />
-          <span className="min-w-0">
+          <span className={cn('min-w-0', READABLE_LINE)}>
             <InFull says={r.title}>
-              <b className="line-clamp-2 text-[13.5px] leading-[1.4] font-bold [font-feature-settings:'palt']">
+              <b className="line-clamp-2 text-body leading-[1.4] font-bold transition-colors duration-150 [font-feature-settings:'palt'] group-hover:text-brand">
                 {r.title}
               </b>
             </InFull>
             <span className={cn('block truncate text-note', subTone)}>
               {r.segments && (
-                <span className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[9px] text-[10.5px] font-bold text-ink-2">
+                <span className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[calc(9rem/16)] text-micro font-bold text-ink-2">
                   {r.segments} セグメント
                 </span>
               )}
@@ -153,11 +148,11 @@ export function RecordingRow({
       <td className={cn(CELL, NUMBER)}>
         <Size recording={r} />
       </td>
-      <td className={CELL}>
+      <td className={cn(CELL, GAP_BEFORE_STATE)}>
         <StatusCell>
           <OutcomeChip
             recording={r}
-            width={OUTCOME_PILL_WIDTH}
+            say
             also={[
               r.outcomeDetail,
               r.fileMissing && FILE_MISSING,
@@ -167,37 +162,22 @@ export function RecordingRow({
           />
         </StatusCell>
       </td>
-      <td className={CELL}>
+      <td className={cn(CELL, GAP_BEFORE_STATE)}>
         <StatusCell>
-          <QualityChip
-            recording={r}
-            width={RECORDING_QUALITY_PILL_WIDTH}
-            also={[r.quality.detail]}
-          />
+          <QualityChip recording={r} say also={[r.quality.detail]} />
         </StatusCell>
       </td>
-      <td className={CELL}>
+      <td className={cn(CELL, GAP_BEFORE_STATE)}>
         <StatusCell>
-          <EncodeChip recording={r} width={ENCODE_PILL_WIDTH} />
+          <EncodeChip recording={r} say />
         </StatusCell>
       </td>
-      <td className={cn(CELL, 'text-right whitespace-nowrap')}>
-        <ActionRow className="gap-1.5" onClick={(e) => e.stopPropagation()}>
-          {playable ? (
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/recordings/${r.id}?at=0`}>
-                <PlayIcon />
-                再生
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" disabled>
-              <PlayIcon />
-              再生
-            </Button>
-          )}
+      <td
+        className={cn(CELL, GAP_BEFORE_ACTIONS, 'text-right whitespace-nowrap')}
+      >
+        <ActionRow onClick={(e) => e.stopPropagation()}>
           <Button
-            variant="destructive"
+            variant="remove"
             size="sm"
             title={deletable ? undefined : '録画中は削除できません'}
             disabled={!deletable}
@@ -211,11 +191,20 @@ export function RecordingRow({
       <td
         className={cn(
           CELL,
-          DETAIL_CELL,
-          'text-right text-ink-3 group-hover:rounded-r-md group-hover:text-brand',
+          'p-0 text-ink-3 transition-colors duration-150 group-hover:text-brand',
         )}
       >
-        <ChevronRightIcon className="size-[15px]" />
+        <Link
+          href={`/recordings/${r.id}`}
+          aria-label="詳細へ"
+          onClick={(event) => event.stopPropagation()}
+          className={cn(
+            DETAIL_CELL,
+            'tap-target flex h-full w-full items-center justify-end outline-none focus-visible:shadow-ring',
+          )}
+        >
+          <ChevronRightIcon className="size-[calc(15rem/16)]" />
+        </Link>
       </td>
     </tr>
   )

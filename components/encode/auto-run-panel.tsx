@@ -108,7 +108,7 @@ export function AutoRunPanel({
 
   return (
     <Surface data-slot="auto-run">
-      <dl className="grid gap-x-5 gap-y-3.5 sm:grid-cols-[minmax(0,180px)_1fr]">
+      <dl className="grid gap-x-5 gap-y-3.5 sm:grid-cols-[minmax(0,calc(180rem/16))_1fr]">
         <dt className="self-start">
           <FieldLabel htmlFor={RUNS_ITSELF_ID}>{RUNS_ITSELF}</FieldLabel>
         </dt>
@@ -138,7 +138,7 @@ export function AutoRunPanel({
               id={MOST_CORES_ID}
               size="sm"
               aria-disabled={pending}
-              className="w-fit min-w-[150px] font-code tabular-nums"
+              className="w-fit min-w-[calc(150rem/16)] font-code tabular-nums"
             >
               <SelectValue />
             </SelectTrigger>

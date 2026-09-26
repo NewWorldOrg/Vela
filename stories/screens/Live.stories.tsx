@@ -18,6 +18,7 @@ import {
   type LiveSupplyEnd,
   type TranscodeCeiling,
 } from '@/lib/live-wire'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import type { LiveScreen } from '@/repository/live'
 import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
@@ -34,7 +35,6 @@ import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
 } from '@/stories/fixtures/captions'
-import { AppFrame } from '@/components/vela/app-shell'
 import type {
   AskBacklog,
   LiveSocket,
@@ -42,6 +42,7 @@ import type {
 } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
 import type { TakeCapture } from '@/components/recordings/take-capture'
+import { inTheApp } from '@/stories/frames'
 
 class ScriptedSocket implements LiveSocket {
   binaryType: BinaryType = 'blob'
@@ -449,13 +450,7 @@ const meta = {
     askSignedOut: stillSignedIn,
     askBacklog: uncounted,
   },
-  decorators: [
-    (Story) => (
-      <AppFrame>
-        <Story />
-      </AppFrame>
-    ),
-  ],
+  decorators: [inTheApp],
   beforeEach: () => {
     opened.length = 0
     probed.length = 0
@@ -473,6 +468,8 @@ export const 選局前: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
 
     await expect(canvas.queryByText('生放送')).toBeNull()
@@ -506,12 +503,69 @@ export const 選局前: Story = {
   },
 }
 
+export const 現れ方: Story = {
+  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    const cards = [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="channel-grid"] > li',
+      ),
+    ]
+
+    await expect(cards.length).toBeGreaterThan(3)
+
+    const first = getComputedStyle(cards[0])
+
+    await expect(first.animationName).toBe('swell')
+    await expect(first.animationDuration).toBe('0.56s')
+    await expect(Number.parseFloat(first.animationDelay)).toBe(0)
+
+    const delays = cards.map((card) =>
+      Number.parseFloat(getComputedStyle(card).animationDelay),
+    )
+
+    await expect(Math.max(...delays)).toBeGreaterThan(0)
+    await expect(Math.max(...delays)).toBeLessThanOrEqual(0.36)
+
+    const across = cards.filter(
+      (card) =>
+        Math.round(card.getBoundingClientRect().top) ===
+        Math.round(cards[0].getBoundingClientRect().top),
+    )
+
+    if (across.length > 1) {
+      await expect(
+        Number.parseFloat(getComputedStyle(across[1]).animationDelay),
+      ).toBeCloseTo(0.045, 3)
+    }
+
+    for (const card of cards) {
+      await expect(
+        Math.round(card.getBoundingClientRect().width),
+      ).toBeLessThanOrEqual(360)
+    }
+
+    document.documentElement.classList.add('dark')
+
+    try {
+      await expect(getComputedStyle(cards[0]).animationName).toBe('swell')
+    } finally {
+      document.documentElement.classList.remove('dark')
+    }
+  },
+}
+
 export const 副チャンネルを出している: Story = {
   args: { screen: UNCHOSEN, openSocket: nothingToWatch },
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
 
     await expect(
@@ -523,6 +577,19 @@ export const 副チャンネルを出している: Story = {
     await expect(
       canvas.getByRole('button', { name: /湾岸放送2/ }),
     ).toBeVisible()
+
+    const middleOf = (element: HTMLElement) => {
+      const box = element.getBoundingClientRect()
+
+      return box.top + box.height / 2
+    }
+
+    await expect(
+      Math.abs(
+        middleOf(canvas.getByRole('button', { name: '副チャンネル' })) -
+          middleOf(canvas.getByRole('heading', { name: 'ライブ' })),
+      ),
+    ).toBeLessThan(4)
   },
 }
 
@@ -532,6 +599,8 @@ export const 副チャンネルを畳んでいる: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const canvas = within(canvasElement)
     const fold = canvas.getByRole('button', { name: '副チャンネル' })
 
@@ -550,6 +619,19 @@ export const 副チャンネルを畳んでいる: Story = {
     await expect(
       window.localStorage.getItem(LIVE_SUB_CHANNELS_FOLDED_KEY),
     ).toBe('folded')
+
+    await userEvent.click(fold)
+    await expect(fold).toHaveAttribute('aria-pressed', 'true')
+
+    const back = canvas
+      .getByRole('button', { name: /みなと総合2/ })
+      .closest('li') as HTMLElement
+    const stayed = canvas
+      .getByRole('button', { name: /みなと総合1/ })
+      .closest('li') as HTMLElement
+
+    await expect(getComputedStyle(back).animationName).toBe('swell')
+    await expect(getComputedStyle(stayed).animationName).toBe('none')
   },
 }
 
@@ -1113,6 +1195,7 @@ export const ドロップが読めなければ出さない: Story = {
 
     const gear = await screen.findByRole('dialog', { name: '設定' })
 
+    await afterTheArrival(canvasElement)
     await expect(
       within(gear).getByRole('group', { name: '画質' }),
     ).toBeVisible()

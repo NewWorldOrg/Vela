@@ -28,7 +28,7 @@ interface ThemeToggleProps {
   size?: React.ComponentProps<typeof Button>['size']
 }
 
-const OPTIONS: {
+export const THEME_OPTIONS: {
   value: ThemePreference
   label: string
   Icon: ComponentType<IconProps>
@@ -67,7 +67,7 @@ export function ThemeToggle({
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuLabel>テーマ</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {OPTIONS.map(({ value, label, Icon }) => {
+        {THEME_OPTIONS.map(({ value, label, Icon }) => {
           const selected = preference === value
           return (
             <DropdownMenuItem

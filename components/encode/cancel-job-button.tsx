@@ -59,13 +59,13 @@ export function CancelJobButton({
   return (
     <span className="inline-flex flex-col items-end gap-1">
       <Button
-        variant="ghost"
+        variant="halt"
         size="sm"
         className="aria-disabled:hover:bg-transparent aria-disabled:hover:text-ink-2"
         aria-disabled={pending}
         onClick={asks ? () => setAsking(true) : callOff}
       >
-        {pending && !asks && <Spinner className="size-3.5" />}
+        {pending && !asks && <Spinner size="control" />}
         中止
       </Button>
       {refusal && !asks && <InlineAlert tone="warn">{refusal}</InlineAlert>}
@@ -98,14 +98,14 @@ export function CancelJobButton({
                 キャンセル
               </AlertDialogCancel>
               <AlertDialogAction
-                variant="destructive"
+                variant="default"
                 disabled={pending}
                 onClick={(event) => {
                   event.preventDefault()
                   callOff()
                 }}
               >
-                {pending && <Spinner className="size-3.5" />}
+                {pending && <Spinner size="control" />}
                 中止する
               </AlertDialogAction>
             </AlertDialogFooter>

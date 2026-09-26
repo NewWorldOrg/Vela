@@ -21,15 +21,15 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
   return (
     <section
       data-slot="now-next"
-      className="mt-4 rounded-lg bg-surface px-5 pt-[17px] pb-[19px]"
+      className="mt-4 rounded-lg bg-surface px-5 pt-[calc(17rem/16)] pb-[calc(19rem/16)]"
     >
-      <div className="flex flex-wrap items-baseline gap-[11px]">
+      <div className="flex flex-wrap items-baseline gap-[calc(11rem/16)]">
         <ChannelMark
           logo={channel.logo}
           no={channel.no}
           className="self-center"
         />
-        <h1 className="heading text-[18px] leading-[1.45]">
+        <h1 className="heading text-h2 leading-[1.45]">
           {programme ? programme.title : '番組情報がありません'}
         </h1>
         {programme && (
@@ -42,14 +42,14 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
       </div>
       <p className="text-ui text-ink-2">{channel.name}</p>
       {programme && (
-        <div className="mt-[11px] flex items-center gap-[11px]">
+        <div className="mt-[calc(11rem/16)] flex items-center gap-[calc(11rem/16)]">
           <span className="font-code text-note whitespace-nowrap text-ink-3">
             {nowLabel}
           </span>
           <ProgressBar
             value={progressPct}
             label="番組の進行"
-            className="h-[5px] min-w-[60px] flex-1"
+            className="h-[calc(5rem/16)] min-w-[calc(60rem/16)] flex-1"
           />
           {restMin !== undefined && (
             <span className="font-code text-note whitespace-nowrap text-ink-3">
@@ -59,7 +59,7 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
         </div>
       )}
       {programme && (subtitled || programme.genreLabel) && (
-        <div className="mt-3 flex flex-wrap gap-[7px]">
+        <div className="mt-3 flex flex-wrap gap-[calc(7rem/16)]">
           {subtitled && (
             <Badge variant="ok" className="font-bold">
               字幕あり
@@ -69,7 +69,7 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
         </div>
       )}
       {programme && (programme.description || programme.items) && (
-        <div className="mt-[17px] border-t border-dashed border-line pt-[15px] [&>:last-child]:mb-0">
+        <div className="mt-[calc(17rem/16)] border-t border-dashed border-line pt-[calc(15rem/16)] [&>:last-child]:mb-0">
           {programme.description && (
             <ProgramDescription description={programme.description} />
           )}

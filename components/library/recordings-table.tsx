@@ -6,49 +6,63 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
-import { OUTCOME_PILL_WIDTH } from '@/components/recordings/outcome-chip'
-import { RECORDING_QUALITY_PILL_WIDTH } from '@/components/recordings/quality-chip'
-import { ENCODE_PILL_WIDTH } from '@/components/recordings/encode-chip'
-import { stateColumnPx } from '@/components/recordings/status-cell'
+import { OUTCOME_COLUMN } from '@/components/recordings/outcome-chip'
+import { RECORDING_QUALITY_COLUMN } from '@/components/recordings/quality-chip'
+import { ENCODE_COLUMN } from '@/components/recordings/encode-chip'
 import {
-  CELL_SIDES_PX,
   DETAIL_CELL,
+  GAP_BEFORE_ACTIONS,
+  GAP_BEFORE_STATE,
   RecordingRow,
 } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
+import { TableHead } from '@/components/ui/table'
+import { useArrived } from '@/hooks/useArrived'
 
 interface Column {
   label: string
-  width?: number
+  width: string
   hidden?: boolean
   right?: boolean
   detail?: boolean
+  gap?: string
 }
 
+const STATE_GAP = '0.25rem'
+
+const ACTIONS_GAP = '0.5rem'
+
 const COLUMNS: Column[] = [
-  { label: '番組' },
-  { label: 'チャンネル', width: 176 },
-  { label: WHEN_LABELS.recorded, width: 132 },
-  { label: '長さ', width: 88, right: true },
-  { label: 'サイズ', width: 112, right: true },
-  { label: '結果', width: stateColumnPx(OUTCOME_PILL_WIDTH, CELL_SIDES_PX) },
+  { label: '番組', width: 'calc(320rem/16)' },
+  { label: 'チャンネル', width: '11rem' },
+  { label: WHEN_LABELS.recorded, width: '8.25rem' },
+  { label: '長さ', width: '5.5rem', right: true },
+  { label: 'サイズ', width: '7rem', right: true },
+  {
+    label: '結果',
+    width: `calc(${OUTCOME_COLUMN} + ${STATE_GAP})`,
+    gap: GAP_BEFORE_STATE,
+  },
   {
     label: '品質',
-    width: stateColumnPx(RECORDING_QUALITY_PILL_WIDTH, CELL_SIDES_PX),
+    width: `calc(${RECORDING_QUALITY_COLUMN} + ${STATE_GAP})`,
+    gap: GAP_BEFORE_STATE,
   },
   {
     label: 'エンコード',
-    width: stateColumnPx(ENCODE_PILL_WIDTH, CELL_SIDES_PX),
+    width: `calc(${ENCODE_COLUMN} + ${STATE_GAP})`,
+    gap: GAP_BEFORE_STATE,
   },
-  { label: '操作', width: 178, hidden: true },
-  { label: '録画詳細へ', width: 28, hidden: true, detail: true },
+  {
+    label: '操作',
+    width: `calc(5.5rem + ${ACTIONS_GAP})`,
+    hidden: true,
+    gap: GAP_BEFORE_ACTIONS,
+  },
+  { label: '録画詳細へ', width: '3.25rem', hidden: true, detail: true },
 ]
 
-const PROGRAMME_MIN_PX = 300
-
-const TABLE_MIN_PX =
-  COLUMNS.reduce((sum, column) => sum + (column.width ?? 0), 0) +
-  PROGRAMME_MIN_PX
+const TABLE_MIN = '68.75rem'
 
 export function RecordingsTable({
   items,
@@ -64,11 +78,11 @@ export function RecordingsTable({
     <div
       data-slot="table-container"
       tabIndex={0}
-      className="-mx-1 min-h-0 flex-1 overflow-auto px-1 pb-1 outline-none focus-visible:shadow-ring"
+      className="min-h-0 flex-initial overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring"
     >
       <table
         className="w-full table-fixed border-separate border-spacing-0"
-        style={{ minWidth: TABLE_MIN_PX }}
+        style={{ minWidth: TABLE_MIN }}
       >
         <colgroup>
           {COLUMNS.map((column) => (
@@ -81,11 +95,12 @@ export function RecordingsTable({
         <thead>
           <tr>
             {COLUMNS.map((column) => (
-              <th
+              <TableHead
                 key={column.label}
                 className={cn(
-                  'sticky top-0 z-10 bg-surface-2 px-3 py-[9px] text-left text-[10.5px] font-bold tracking-[0.05em] whitespace-nowrap text-ink-3 first:rounded-l-md last:rounded-r-md',
+                  'sticky top-0 z-10',
                   column.right && 'text-right',
+                  column.gap,
                   column.detail && DETAIL_CELL,
                 )}
               >
@@ -94,14 +109,15 @@ export function RecordingsTable({
                 ) : (
                   column.label
                 )}
-              </th>
+              </TableHead>
             ))}
           </tr>
         </thead>
-        <tbody>
-          {items.map((r) => (
+        <tbody {...useArrived()}>
+          {items.map((r, nth) => (
             <RecordingRow
               key={r.id}
+              nth={nth}
               recording={r}
               onOpen={() => router.push(`/recordings/${r.id}`)}
               onDelete={() => setAsked(r)}

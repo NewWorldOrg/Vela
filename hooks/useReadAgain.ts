@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 
 export type StopReading = () => void
 
@@ -104,17 +104,13 @@ export function useReadAgain(
   everyMs: number | undefined,
   read: () => void,
 ): void {
-  const latest = useRef(read)
-
-  useEffect(() => {
-    latest.current = read
-  })
+  const readNow = useEffectEvent(read)
 
   useEffect(() => {
     if (atMs === undefined && everyMs === undefined) {
       return
     }
 
-    return keepReading(atMs, everyMs, () => latest.current(), browserReading)
+    return keepReading(atMs, everyMs, () => readNow(), browserReading)
   }, [atMs, everyMs])
 }

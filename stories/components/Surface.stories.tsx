@@ -89,6 +89,35 @@ export const EmptyStates: Story = {
   ),
 }
 
+export const 空状態の四通り: Story = {
+  render: () => (
+    <div className="mx-auto grid max-w-[900px] gap-3 p-6 sm:grid-cols-2">
+      <EmptyState spot="antenna" />
+      <EmptyState spot="antenna" title="まだ録画がありません" />
+      <EmptyState
+        spot="tape"
+        title="条件に合う録画がありません"
+        action={
+          <Button variant="halt" size="sm">
+            条件を消す
+          </Button>
+        }
+      />
+      <EmptyState
+        spot="star"
+        title="未完了の予約はありません"
+        action={
+          <Button variant="halt" size="sm">
+            条件を消す
+          </Button>
+        }
+      >
+        放送が終わった予約は、すべての予約に残っています。
+      </EmptyState>
+    </div>
+  ),
+}
+
 export const EmptyStateInAColumn: Story = {
   render: () => (
     <div className="flex w-[900px] flex-col p-6">
@@ -97,7 +126,7 @@ export const EmptyStateInAColumn: Story = {
         title="条件に合う録画がありません"
         className="max-w-[560px]"
       >
-        絞り込みを解除すると、すべての録画が表示されます。
+        条件を消すと、すべての録画が表示されます。
       </EmptyState>
     </div>
   ),

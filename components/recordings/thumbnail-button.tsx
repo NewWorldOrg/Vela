@@ -87,13 +87,13 @@ export function ThumbnailButton({
   return (
     <div className="flex flex-col items-start gap-1.5">
       <Button
-        variant="outline"
+        variant="change"
         disabled={refused !== undefined}
         title={refused}
         aria-disabled={pending}
         onClick={redraw}
       >
-        {pending ? <Spinner className="size-3.5" /> : <RebuildIcon />}
+        {pending ? <Spinner size="control" /> : <RebuildIcon />}
         サムネイルを作り直す
       </Button>
       {notice && (

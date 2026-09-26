@@ -4,6 +4,8 @@ import { formatMoment, formatMomentSpan } from '@/lib/format'
 import { WHEN_MARKS } from '@/lib/when-terms'
 import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_LEVEL_LABEL, QUALITY_PILL_LABEL } from '@/lib/quality'
+import type { TrendAxis } from '@/lib/quality-trend'
+import { trendAxis } from '@/lib/quality-trend'
 import {
   NOT_YET_IN_THIS_BUILD,
   shapeFor,
@@ -69,9 +71,8 @@ export interface QualityThreshold {
   key: QualityThresholdKey
   label: string
   value: string
-  basis: string
+  basis?: string
   shipped: string
-  provisional: boolean
   amount: string
   unit: string
   lowest: number
@@ -149,20 +150,28 @@ export interface QualityTrendBucket {
   key: string
   level: QualityLevel
   says: string
+  from: number
+  until: number
+  worst?: number
+}
+
+export interface QualityTrendLine {
+  value: number
+  says: string
 }
 
 export interface QualityTrendRow {
   key: string
   name: string
   buckets: QualityTrendBucket[]
+  line?: QualityTrendLine
 }
 
-export interface QualityTrend {
+export interface QualityTrend extends TrendAxis {
   subjects: QualityWindow[]
   rows: QualityTrendRow[]
-  from: string
-  until: string
-  provisional: boolean
+  from: number
+  until: number
 }
 
 export interface QualityResult {
@@ -448,10 +457,15 @@ export async function getQuality(
         buckets: series.points.map((point) =>
           toTrendBucket(point, following.key),
         ),
+        line: lineOf(series.points.at(-1), following.key),
       })),
-      from: formatMoment(trend.period.from),
-      until: formatMoment(trend.period.until),
-      provisional: trend.provisional,
+      from: Date.parse(trend.period.from),
+      until: Date.parse(trend.period.until),
+      ...trendAxis(
+        Date.parse(trend.period.from),
+        Date.parse(trend.period.until),
+        span.days,
+      ),
     },
     stats: statsOf(span.label, summary, tuners, recordings),
     thresholds: thresholds.map(toThreshold),
@@ -649,7 +663,7 @@ function toAnomaly(
       one.observed,
       one.breached,
     )}`,
-    applied: `適用閾値 ${applied}${one.appliedProvisional ? '(暫定)' : ''}`,
+    applied: `適用閾値 ${applied}`,
     level,
     levelLabel: QUALITY_LEVEL_LABEL[level],
     restatedBy: one.restated
@@ -721,7 +735,6 @@ function statsOf(
       key: 'drop',
       label: `直近 ${spanLabel}のドロップ率`,
       ...shareStat(drop),
-      aside: summary.provisional ? '閾値は暫定' : undefined,
       foot: drop && countedIn(drop),
     },
     {
@@ -946,14 +959,14 @@ function toThreshold(one: ThresholdResponder): QualityThreshold {
   const shape = shapeFor(THRESHOLD_SHAPES, one.key, THRESHOLD_NOT_YET_SHAPED)
   const current = shown(toRatio(one.currentValue), shape.scale)
   const shipped = spelled(shown(toRatio(one.defaultValue), shape.scale), shape)
+  const moved = toRatio(one.currentValue) !== toRatio(one.defaultValue)
 
   return {
     key: one.key,
     label: shape.label,
     value: spelled(current, shape),
-    basis: `既定 ${shipped} · 根拠 ${grouped(toInt(one.observations))} 件`,
+    basis: moved ? `既定 ${shipped}` : undefined,
     shipped,
-    provisional: one.provisional,
     amount: trimmed(current),
     unit: shape.unit,
     lowest: shown(toRatio(one.lowest), shape.scale),
@@ -1082,6 +1095,9 @@ function toTrendBucket(
   return {
     key: point.from,
     level,
+    from: Date.parse(point.from),
+    until: Date.parse(point.until),
+    worst: point.worst == null ? undefined : scaled(point.worst, key),
     says: [
       formatMomentSpan(point.from, point.until),
       QUALITY_LEVEL_LABEL[level],
@@ -1090,4 +1106,19 @@ function toTrendBucket(
       `適用閾値 ${measured(point.level, key)}`,
     ].join(' · '),
   }
+}
+
+function scaled(value: number | string, key: QualityThresholdKey): number {
+  const shape = shapeFor(THRESHOLD_SHAPES, key, THRESHOLD_NOT_YET_SHAPED)
+
+  return shown(toRatio(value), shape.scale)
+}
+
+function lineOf(
+  point: TrendPointResponder | undefined,
+  key: QualityThresholdKey,
+): QualityTrendLine | undefined {
+  return point === undefined
+    ? undefined
+    : { value: scaled(point.level, key), says: measured(point.level, key) }
 }

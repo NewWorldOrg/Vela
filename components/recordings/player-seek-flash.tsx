@@ -22,7 +22,7 @@ export function PlayerSeekFlash({ flash }: { flash?: SeekFlash }) {
       data-slot="player-seek-flash"
       data-way={flash.way}
       className={cn(
-        'pointer-events-none absolute top-1/2 flex size-[110px] -translate-y-1/2 animate-player-seek-flash flex-col items-center justify-center gap-1.5 rounded-full bg-black/60',
+        'pointer-events-none absolute top-1/2 flex size-[calc(110rem/16)] -translate-y-1/2 animate-player-seek-flash flex-col items-center justify-center gap-1.5 rounded-full bg-black/60',
         back ? 'left-[10%]' : 'right-[10%]',
       )}
     >
@@ -31,7 +31,7 @@ export function PlayerSeekFlash({ flash }: { flash?: SeekFlash }) {
           <Arrow key={nth} nth={back ? 2 - nth : nth} />
         ))}
       </span>
-      <span className="font-code text-[12px] leading-none font-medium text-white tabular-nums">
+      <span className="font-code text-sub leading-none font-medium text-white tabular-nums">
         {flash.seconds}秒
       </span>
     </div>
@@ -43,7 +43,7 @@ function Arrow({ nth }: { nth: number }) {
     <svg
       viewBox="0 0 11 20"
       fill="currentColor"
-      className="-mx-px h-5 w-[11px] animate-player-seek-arrow text-white"
+      className="-mx-px h-5 w-[calc(11rem/16)] animate-player-seek-arrow text-white"
       style={{ animationDelay: `${nth * 67}ms` }}
     >
       <path d="M0.6 0.4 10.4 10 0.6 19.6Z" />

@@ -5,7 +5,7 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-[11px] py-[3px] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
+  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-[calc(11rem/16)] py-[calc(3rem/16)] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-brand/50 [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
       variant: {
@@ -28,34 +28,22 @@ const badgeVariants = cva(
   },
 )
 
-export type PillWidth = `${number}em`
-
-export type BadgeWidth = 'fit' | PillWidth
-
-const IN_A_COLUMN = 'border-transparent'
-
 function Badge({
   className,
   variant = 'default',
-  width = 'fit',
   asChild = false,
-  style,
   ...props
 }: React.ComponentProps<'span'> &
   VariantProps<typeof badgeVariants> & {
     asChild?: boolean
-    width?: BadgeWidth
   }) {
   const Comp = asChild ? Slot.Root : 'span'
-  const told = width !== 'fit'
 
   return (
     <Comp
       data-slot="badge"
       data-variant={variant}
-      data-width={width}
-      className={cn(badgeVariants({ variant }), told && IN_A_COLUMN, className)}
-      style={told ? { ...style, width } : style}
+      className={cn(badgeVariants({ variant }), className)}
       {...props}
     />
   )

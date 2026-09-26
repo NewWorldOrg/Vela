@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useTransition } from 'react'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
@@ -19,6 +19,7 @@ const OPTIONS = [{ value: EVERY, label: 'すべて' }, ...STATUS_OPTIONS]
 
 function useJobsAddress() {
   const router = useRouter()
+  const [, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -36,9 +37,11 @@ function useJobsAddress() {
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )

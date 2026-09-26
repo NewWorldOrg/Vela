@@ -197,7 +197,7 @@ export function PlayerSeek({
       onPointerCancel={letGo}
       onPointerLeave={() => held.current === null && leave()}
       onKeyDown={onKeyDown}
-      className="tap-target group relative h-[18px] cursor-pointer focus-visible:outline-none"
+      className="tap-target group relative h-[calc(18rem/16)] cursor-pointer focus-visible:outline-none"
     >
       <div
         ref={rail}
@@ -244,20 +244,20 @@ export function PlayerSeek({
             key={second}
             aria-hidden="true"
             title="ドロップ発生位置"
-            className="absolute top-1/2 -ml-[3px] size-1.5 -translate-y-1/2 rounded-full bg-(--pl-coral)"
+            className="absolute top-1/2 -ml-[calc(3rem/16)] size-1.5 -translate-y-1/2 rounded-full bg-(--pl-coral)"
             style={{ left: `${Math.min(100, (second / duration) * 100)}%` }}
           />
         ))}
       <span
         aria-hidden="true"
         data-slot="player-seek-knob"
-        className="absolute top-1/2 -ml-[6.5px] size-[13px] origin-center -translate-y-1/2 scale-0 rounded-full bg-(--pl-accent) transition-transform duration-100 ease-out group-hover:scale-100 group-focus-visible:scale-100 group-data-[wanted]:scale-100"
+        className="absolute top-1/2 -ml-[calc(6.5rem/16)] size-[calc(13rem/16)] origin-center -translate-y-1/2 scale-0 rounded-full bg-(--pl-accent) transition-transform duration-100 ease-out group-hover:scale-100 group-focus-visible:scale-100 group-data-[wanted]:scale-100"
         style={{ left: `${playedPct}%` }}
       />
       {hover && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-[20px] z-10 -translate-x-1/2"
+          className="pointer-events-none absolute bottom-[calc(20rem/16)] z-10 -translate-x-1/2"
           style={{ left: `${hover.pct}%` }}
         >
           {!framesGone && frameAt !== null && (
@@ -270,10 +270,10 @@ export function PlayerSeek({
                 setFramesGone(true)
                 setFrameAt(null)
               }}
-              className="h-[70px] w-[124px] rounded-md border border-white/25 bg-(--pl-video) object-cover"
+              className="h-[calc(70rem/16)] w-[calc(124rem/16)] rounded-md border border-white/25 bg-(--pl-video) object-cover"
             />
           )}
-          <span className="mt-1 block rounded-sm bg-black/80 px-2 py-px text-center font-code text-[12px] font-medium text-white">
+          <span className="mt-1 block rounded-sm bg-black/80 px-2 py-px text-center font-code text-sub font-medium text-white">
             {formatPlayerTime(hover.at)}
           </span>
         </div>

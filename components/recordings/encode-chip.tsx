@@ -8,8 +8,12 @@ import {
   STANDING_LABEL,
   type EncodeStanding,
 } from '@/repository/encode-terms'
-import { Badge, type BadgeWidth } from '@/components/ui/badge'
-import { pillWidthFor } from '@/components/recordings/status-cell'
+import { Badge } from '@/components/ui/badge'
+import {
+  StateSay,
+  stateColumnFor,
+  toneOf,
+} from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
 import { ChipDot } from '@/components/vela/status'
 
@@ -30,24 +34,28 @@ const SAYING: Record<string, string> = {
   [STANDING_LABEL.notEncoded]: NOT_ENCODED_SAYING,
 }
 
-export const ENCODE_PILL_WIDTH = pillWidthFor([
+export const ENCODE_COLUMN = stateColumnFor([
   ...Object.values(STANDING_LABEL),
   NOT_ASKED_FOR_LABEL,
 ])
 
 export function EncodeChip({
   recording: r,
-  width,
+  say = false,
   says,
 }: {
   recording: Recording
-  width?: BadgeWidth
+  say?: boolean
   says?: string
 }) {
   const tone = shapeFor(TONE, r.encode, NOT_YET_KNOWN_TONE)
   const word = says ?? standingWordOf(r.encode, r.encodeWhenRecorded)
-  const pill = (
-    <Badge variant={tone} width={width} className="font-bold">
+  const drawn = say ? (
+    <StateSay tone={toneOf(tone)} bold>
+      {word}
+    </StateSay>
+  ) : (
+    <Badge variant={tone} className="font-bold">
       <ChipDot />
       {word}
     </Badge>
@@ -56,8 +64,8 @@ export function EncodeChip({
   const saying = SAYING[word]
 
   if (saying === undefined) {
-    return pill
+    return drawn
   }
 
-  return <InFull says={saying}>{pill}</InFull>
+  return <InFull says={saying}>{drawn}</InFull>
 }

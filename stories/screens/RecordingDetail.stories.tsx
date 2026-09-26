@@ -25,6 +25,8 @@ import {
 import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
+import { inTheApp } from '@/stories/frames'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -147,7 +149,13 @@ async function keepingThePosition() {
 const meta = {
   title: 'Screens/録画詳細',
   component: RecordingDetailView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/recordings/1274' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     onRemakeThumbnail: remade,
     onDelete: throwing,
@@ -160,6 +168,7 @@ const meta = {
     playback: planned(),
     unaskedProfile: '1080p60',
   },
+  decorators: [inTheApp],
 } satisfies Meta<typeof RecordingDetailView>
 
 export default meta
@@ -179,7 +188,7 @@ export const 完全: Story = {
     await expect(record).not.toHaveAttribute('open')
     await expect(canvas.queryByText('尻切れ')).toBeNull()
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
     await expect(canvas.getByText('完全')).toBeVisible()
     await expect(canvas.getByText('完了')).toBeVisible()
 
@@ -199,6 +208,8 @@ export const 完全: Story = {
     await userEvent.click(remove)
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await expect(dialog.getByText('/srv/recordings/1274.m2ts')).toBeVisible()
     await expect(asked).toEqual([])
@@ -222,6 +233,8 @@ export const 削除未完了: Story = {
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
+    await afterTheArrival(canvasElement)
+
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await waitFor(() => expect(asked).toEqual(['1274']))
   },
@@ -237,7 +250,7 @@ export const 警告水準: Story = {
     await expect(bar).toHaveAttribute('aria-valuemax', '15158')
     await expect(bar).toHaveAttribute('aria-valuetext', '0:00:00 / 4:12:38')
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
 
     const spots = canvas.getAllByRole('link', { name: 'この時間帯を再生' })
 
@@ -261,7 +274,7 @@ export const 尻切れ: Story = {
     await expect(band.getByText('尻切れ')).toBeVisible()
     await expect(band.getByText(/書けた尺 36:12 \/ 予定 54:00/)).toBeVisible()
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
     await expect(canvas.getAllByText('尻切れ')).toHaveLength(1)
     await expect(canvas.queryByText('結果')).toBeNull()
   },
@@ -271,7 +284,7 @@ export const スクランブル残存: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
 
     await expect(canvas.getByText('視聴不可')).toBeVisible()
     await expect(canvas.getByText('解除できなかったスクランブル')).toBeVisible()
@@ -392,7 +405,7 @@ export const 未計測: Story = {
       canvas.queryByRole('link', { name: 'この録画の予約' }),
     ).toBeNull()
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
     await expect(canvas.getAllByText('未計測').length).toBeGreaterThan(0)
     await expect(canvas.queryByText('取りこぼし')).toBeNull()
   },
@@ -429,7 +442,7 @@ export const Range直配信: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
 
     const source = canvas.getByRole('group', { name: '再生ソース' })
 
@@ -466,6 +479,8 @@ export const 成果物がある録画は元のままに切り替えられる: St
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
 
     const sources = await screen.findByRole('group', { name: 'ソース' })
+
+    await afterTheArrival(canvasElement)
 
     await expect(
       within(sources).getByRole('button', { name: 'エンコード済み' }),
@@ -522,7 +537,7 @@ export const サムネイルを作り直す: Story = {
       ).toMatch(/redrawn=\d+$/),
     )
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
     await expect(canvas.getByText('生成済み')).toBeVisible()
     await expect(
       canvas.getAllByRole('button', { name: 'サムネイルを作り直す' }),
@@ -655,6 +670,8 @@ export const エンコードの保存先を選ぶ: Story = {
 
     const dialog = await screen.findByRole('dialog', { name: 'エンコード' })
 
+    await afterTheArrival(canvasElement)
+
     await expect(within(dialog).getByText('棚')).toBeVisible()
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'エンコード' }),
@@ -741,7 +758,7 @@ function encodeRowStory(
   return {
     args: { detail: { ...detail('1274'), encode: standing }, encodeJob: job },
     play: async ({ canvasElement }) => {
-      await userEvent.click(within(canvasElement).getByText('録画の記録'))
+      await userEvent.click(within(canvasElement).getByText('技術情報'))
 
       const row = encodeRow(canvasElement)
 
@@ -800,7 +817,7 @@ export const エンコードの行は自動実行の対象外と言う: Story = 
     },
   },
   play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByText('録画の記録'))
+    await userEvent.click(within(canvasElement).getByText('技術情報'))
 
     const row = encodeRow(canvasElement)
 
@@ -812,7 +829,7 @@ export const エンコードの行は自動実行の対象外と言う: Story = 
 export const エンコードの行は順番を待つ録画を対象外と言わない: Story = {
   args: { detail: withoutAnArtefact('1274') },
   play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByText('録画の記録'))
+    await userEvent.click(within(canvasElement).getByText('技術情報'))
 
     const row = encodeRow(canvasElement)
 
@@ -829,7 +846,7 @@ export const エンコードの行から実行中のジョブを中止する: St
   play: async ({ canvasElement }) => {
     calledOff.length = 0
 
-    await userEvent.click(within(canvasElement).getByText('録画の記録'))
+    await userEvent.click(within(canvasElement).getByText('技術情報'))
 
     const row = encodeRow(canvasElement)
 
@@ -838,6 +855,8 @@ export const エンコードの行から実行中のジョブを中止する: St
     await userEvent.click(row.getByRole('button', { name: '中止' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await expect(dialog.getByText('週末キッチンの手帖')).toBeVisible()
     await expect(calledOff).toEqual([])
@@ -872,7 +891,7 @@ export const 失敗した録画にエンコードの操作子を出さない: St
   },
 }
 
-export const 成果物がある録画は作り直すと言う: Story = {
+export const 成果物がある録画は再エンコードと言う: Story = {
   args: { detail: detail('1274') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -882,11 +901,13 @@ export const 成果物がある録画は作り直すと言う: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'エンコード' }),
     ).toBeNull()
-    await userEvent.click(canvas.getByRole('button', { name: '作り直す' }))
+    await userEvent.click(canvas.getByRole('button', { name: '再エンコード' }))
 
     const dialog = await screen.findByRole('dialog', {
-      name: '成果物を作り直す',
+      name: '再エンコード',
     })
+
+    await afterTheArrival(canvasElement)
 
     await expect(
       within(dialog).getByText('いまの成果物は新しいものに置き換わります。'),
@@ -894,7 +915,7 @@ export const 成果物がある録画は作り直すと言う: Story = {
     await expect(queued).toEqual([])
 
     await userEvent.click(
-      within(dialog).getByRole('button', { name: '作り直す' }),
+      within(dialog).getByRole('button', { name: '再エンコード' }),
     )
     await waitFor(() =>
       expect(queued).toEqual([['1274', 'ds-1', undefined, true]]),
@@ -951,7 +972,7 @@ export const 操作の並び: Story = {
 
     await expect(canvas.getByRole('button', { name: '削除' })).toHaveAttribute(
       'data-variant',
-      'destructive',
+      'remove',
     )
   },
 }
@@ -961,7 +982,8 @@ export const 記録の値は札で言う: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByText('録画の記録'))
+    await userEvent.click(canvas.getByText('技術情報'))
+    await afterTheArrival(canvasElement)
 
     const pills = ['完全', '完了', '生成済み', '良好'].map((said) => {
       const pill = canvas.getByText(said).closest('[data-slot="badge"]')

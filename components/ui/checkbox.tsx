@@ -14,7 +14,7 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'group/checkbox tap-target peer inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-line-strong bg-surface outline-none',
+        'group/checkbox tap-target peer inline-flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-line-strong bg-surface outline-none',
         'transition-[background-color,border-color,transform,box-shadow] duration-150 ease-toy',
         'enabled:hover:-translate-x-px enabled:hover:-translate-y-px',
         'data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-on-brand',
@@ -29,8 +29,8 @@ function Checkbox({
         data-slot="checkbox-indicator"
         className="grid place-content-center text-current"
       >
-        <CheckIcon className="size-[11px] group-data-[state=indeterminate]/checkbox:hidden" />
-        <span className="hidden h-[2px] w-[9px] rounded-full bg-current group-data-[state=indeterminate]/checkbox:block" />
+        <CheckIcon className="size-[calc(11rem/16)] group-data-[state=indeterminate]/checkbox:hidden" />
+        <span className="hidden h-[2px] w-[calc(9rem/16)] rounded-full bg-current group-data-[state=indeterminate]/checkbox:block" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

@@ -25,7 +25,7 @@ function ChangeButton({
 }) {
   return (
     <Button
-      variant="outline"
+      variant="change"
       size="sm"
       aria-label={`${label} を変更`}
       onClick={onOpen}

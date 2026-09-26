@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { NO_FLASH_THEME_SCRIPT } from '@/components/theme/noFlashThemeScript'
+import type { MotionSetting } from '@/lib/motion'
 
 export const metadata: Metadata = {
   title: {
@@ -23,11 +23,23 @@ export default async function RootLayout({
     themeHeader === 'dark' ? 'dark' : themeHeader === 'light' ? 'light' : null
   const initialPreference: 'light' | 'dark' | 'system' =
     explicitMode ?? 'system'
+  const motionHeader = headerStore.get('x-motion')
+  const motion: MotionSetting | undefined =
+    motionHeader === 'still' || motionHeader === 'moves'
+      ? motionHeader
+      : undefined
 
   return (
     <html
       lang="ja"
-      className={explicitMode === 'dark' ? 'dark' : undefined}
+      className={
+        explicitMode === 'dark'
+          ? 'dark'
+          : explicitMode === null
+            ? 'system'
+            : undefined
+      }
+      data-motion={motion}
       suppressHydrationWarning
     >
       <head>
@@ -38,17 +50,11 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=M+PLUS+1+Code:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=M+PLUS+1+Code:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
       </head>
       <body suppressHydrationWarning>
-        {explicitMode === null && (
-          <script
-            id="no-flash-theme-init"
-            dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }}
-          />
-        )}
         <ThemeProvider initialPreference={initialPreference}>
           {children}
         </ThemeProvider>

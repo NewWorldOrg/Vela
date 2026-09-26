@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { expect, userEvent, within } from 'storybook/test'
 
 import {
@@ -15,11 +16,18 @@ import {
 } from '@/repository/authentication.fixtures'
 import { AuthenticationView } from '@/components/authentication/authentication-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 const meta = {
   title: 'Screens/設定・認証',
   component: AuthenticationView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/authentication' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     sessions: SESSIONS,
     signedIn: SIGNED_IN_WITH_A_PROVIDER,
@@ -28,6 +36,7 @@ const meta = {
     onChangePassword: async () => ({ state: 'ok', sessionsEnded: 3 }) as const,
     onSaveOidc: async () => ({ state: 'ok' }) as const,
   },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof AuthenticationView>
 
 export default meta
@@ -35,6 +44,7 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = {
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     await expect(

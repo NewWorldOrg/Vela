@@ -17,6 +17,7 @@ import type {
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -35,12 +36,12 @@ import {
 } from '@/components/encode/definition-list'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 
-const COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: '名称' },
-  { label: '出力ルート' },
-  { label: '既定のプロファイル' },
-  { label: '作成' },
-  { label: '操作', hidden: true },
+const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
+  { label: '名称', width: 'calc(180rem/16)' },
+  { label: '出力ルート', width: 'calc(320rem/16)' },
+  { label: '既定のプロファイル', width: 'calc(180rem/16)' },
+  { label: '作成', width: 'calc(122rem/16)' },
+  { label: '操作', width: 'calc(148rem/16)', hidden: true },
 ]
 
 export function DestinationList({
@@ -68,7 +69,7 @@ export function DestinationList({
       <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
         <RemovalNotice removed={removed} />
         <AddDestinationDialog
-          variant="sm"
+          size="sm"
           profiles={profiles}
           roots={roots}
           onDefine={onDefine}
@@ -76,9 +77,10 @@ export function DestinationList({
       </div>
 
       <Table
-        className="min-w-[810px]"
+        className="table-fixed min-w-[calc(810rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
+        <TableColumns widths={COLUMNS.map((column) => column.width)} />
         <TableHeader className={STICKY_HEAD}>
           <TableRow>
             {COLUMNS.map((column) => (

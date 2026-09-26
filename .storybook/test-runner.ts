@@ -233,6 +233,27 @@ function measureTapTargets(): Findings {
     const needWidth = reachable(cx, width)
     const needHeight = reachable(cy, height)
 
+    const underALayer = [
+      [0, -TAP / 2],
+      [0, TAP / 2],
+      [-TAP / 2, 0],
+      [TAP / 2, 0],
+    ].some(([dx, dy]) => {
+      const over = document.elementFromPoint(cx + dx, cy + dy)
+
+      return (
+        over !== null &&
+        !control.contains(over) &&
+        over.closest(
+          '[role="dialog"], [role="menu"], [data-radix-popper-content-wrapper], [data-state="open"][data-slot$="-content"]',
+        ) !== null
+      )
+    })
+
+    if (underALayer) {
+      continue
+    }
+
     if (hitWidth < needWidth - 1 || hitHeight < needHeight - 1) {
       missed.push({
         name: named(control),
@@ -873,6 +894,36 @@ function clearCursorBait() {
   }
 }
 
+const SETTLING_ROUNDS = 4
+
+async function settled(rounds: number): Promise<void> {
+  for (let round = 0; round < rounds; round += 1) {
+    const running = document.getAnimations().filter((one) => {
+      const timing = one.effect?.getTiming()
+
+      return (
+        one.playState !== 'finished' &&
+        timing !== undefined &&
+        timing.iterations !== Infinity
+      )
+    })
+
+    if (running.length === 0) {
+      return
+    }
+
+    for (const one of running) {
+      try {
+        one.finish()
+      } catch {
+        one.cancel()
+      }
+    }
+
+    await new Promise((next) => requestAnimationFrame(next))
+  }
+}
+
 const config: TestRunnerConfig = {
   async prepare({ page, browserContext, testRunnerConfig }) {
     const target = process.env.TARGET_URL
@@ -909,6 +960,8 @@ const config: TestRunnerConfig = {
   },
 
   async postVisit(page: Page, context) {
+    await page.evaluate(settled, SETTLING_ROUNDS)
+
     const { missed, taken, overreached } =
       await page.evaluate(measureTapTargets)
 

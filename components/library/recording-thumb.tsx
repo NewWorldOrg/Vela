@@ -14,10 +14,10 @@ import {
 } from '@/components/vela/icons'
 
 const ART = {
-  shot: <ThumbShotIcon className="size-[19px] text-sky" />,
-  pending: <ThumbPendingIcon className="size-[19px] text-ink-3" />,
-  none: <ThumbMissingIcon className="size-[19px] text-ink-3" />,
-  error: <ThumbErrorIcon className="size-[19px] text-coral" />,
+  shot: <ThumbShotIcon className="size-[calc(19rem/16)] text-sky" />,
+  pending: <ThumbPendingIcon className="size-[calc(19rem/16)] text-ink-3" />,
+  none: <ThumbMissingIcon className="size-[calc(19rem/16)] text-ink-3" />,
+  error: <ThumbErrorIcon className="size-[calc(19rem/16)] text-coral" />,
 }
 
 export function RecordingThumb({
@@ -37,7 +37,7 @@ export function RecordingThumb({
   return (
     <span
       className={cn(
-        'flex h-[52px] w-[92px] shrink-0 flex-col items-center justify-center gap-px overflow-hidden rounded-md border',
+        'flex h-[calc(52rem/16)] w-[calc(92rem/16)] shrink-0 flex-col items-center justify-center gap-px overflow-hidden rounded-md border',
         recording.thumbnail === 'shot' && 'border-line bg-tint-sky',
         recording.thumbnail === 'pending' &&
           'border-dashed border-line bg-surface-2',
@@ -62,7 +62,7 @@ export function RecordingThumb({
           {recording.thumbnailLabel && (
             <span
               className={cn(
-                'text-center text-[9px] leading-tight',
+                'text-center text-[calc(9rem/16)] leading-tight',
                 recording.thumbnail === 'error' ? 'text-coral' : subTone,
               )}
             >

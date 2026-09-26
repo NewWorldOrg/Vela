@@ -2,18 +2,23 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
+  A_WEEK,
   EVERY_ROW_UNMEASURED,
   MORE_TUNERS_THAN_FIT,
   NOTHING_MEASURED,
+  ONE_RECORDING_IN_A_DAY,
+  OVER_THE_LINE,
   QUALITY,
+  TWO_BROADCAST_DAYS,
 } from '@/repository/quality.fixtures'
 import type { QualityReviseThreshold } from '@/components/quality/quality-page'
 import { QualityView } from '@/components/quality/quality-page'
 import {
-  fillsTheColumn,
   rowsOfTheTableHeaded,
+  saysItWithoutAnEdge,
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheSettings } from '@/stories/frames'
 
 const REFUSED =
   '警告水準が視聴不可の恐れを越えてしまうため、変更できませんでした。'
@@ -30,8 +35,15 @@ const refusesTheThreshold = fn<QualityReviseThreshold>(async () => ({
 const meta = {
   title: 'Screens/設定・品質',
   component: QualityView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/quality' },
+    },
+    layout: 'fullscreen',
+  },
   args: { onReviseThreshold: reviseThreshold },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof QualityView>
 
 export default meta
@@ -194,6 +206,112 @@ export const 推移: Story = {
   },
 }
 
+const trendPanel = (canvasElement: HTMLElement) =>
+  canvasElement
+    .querySelector('[aria-label="全体の推移"]')
+    ?.closest<HTMLElement>('[data-slot="surface"]') ?? canvasElement
+
+const middleOf = (element: Element) => {
+  const box = element.getBoundingClientRect()
+
+  return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+}
+
+export const 録画が1本だけの24時間: Story = {
+  args: { result: ONE_RECORDING_IN_A_DAY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const whole = canvas.getByRole('img', { name: '全体の推移' })
+
+    await expect(whole.querySelectorAll('[data-slot="step"]').length).toBe(2)
+    await expect(whole.querySelectorAll('[data-slot="riser"]').length).toBe(1)
+    await expect(whole.querySelector('[data-over]')).toBeNull()
+    await expect(
+      whole.querySelector('[data-slot="threshold"]'),
+    ).toBeInTheDocument()
+
+    const quiet = canvas.getByRole('img', { name: '中央テレビ1の推移' })
+
+    await expect(quiet.querySelectorAll('[data-slot="step"]').length).toBe(0)
+    await expect(quiet.querySelectorAll('[data-level="nodata"]').length).toBe(
+      24,
+    )
+    await expect(canvas.queryByText('暫定')).toBeNull()
+  },
+}
+
+export const 閾値を越えた刻みがある: Story = {
+  args: { result: OVER_THE_LINE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const whole = canvas.getByRole('img', { name: '全体の推移' })
+
+    await expect(whole.querySelectorAll('[data-slot="step"]').length).toBe(12)
+    await expect(whole.querySelectorAll('[data-over]').length).toBe(2)
+    await expect(whole.querySelectorAll('[data-slot="riser"]').length).toBe(8)
+
+    const labels = within(trendPanel(canvasElement)).getAllByText('0.02%')
+    const lines = canvasElement.querySelectorAll('[data-slot="threshold"]')
+
+    await expect(labels.length).toBe(3)
+    await expect(lines.length).toBe(3)
+
+    for (const [index, label] of labels.entries()) {
+      await expect(
+        Math.abs(middleOf(label).y - middleOf(lines[index]).y),
+      ).toBeLessThan(1.5)
+    }
+  },
+}
+
+export const 放送日の刻みが2つだけの24時間: Story = {
+  args: { result: TWO_BROADCAST_DAYS },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const whole = canvas.getByRole('img', { name: '全体の推移' })
+    const [step] = whole.querySelectorAll('[data-slot="step"]')
+    const box = whole.getBoundingClientRect()
+    const drawn = step.getBoundingClientRect()
+
+    await expect(whole.querySelectorAll('[data-slot="step"]').length).toBe(1)
+    await expect(Math.abs(drawn.left - box.left)).toBeLessThan(2)
+    await expect(
+      Math.abs(drawn.right - (box.left + (box.width * 15.35) / 24)),
+    ).toBeLessThan(2)
+    await expect(whole.querySelectorAll('title').length).toBe(2)
+
+    const quiet = canvas.getByRole('img', { name: '中央テレビ1の推移' })
+
+    await expect(quiet.querySelectorAll('[data-slot="step"]').length).toBe(0)
+  },
+}
+
+export const 推移_7日: Story = {
+  args: { result: A_WEEK },
+  play: async ({ canvasElement }) => {
+    const panel = within(trendPanel(canvasElement))
+    const whole = panel.getByRole('img', { name: '全体の推移' })
+    const rules = [...whole.querySelectorAll('line[stroke-dasharray="1 3"]')]
+
+    await expect(rules.length).toBe(7)
+    await expect(panel.getByText('09/01 14:00')).toBeVisible()
+    await expect(panel.getByText('09/08 14:00')).toBeVisible()
+
+    for (const [day, rule] of [
+      ['09/04', rules[2]],
+      ['09/05', rules[3]],
+      ['09/06', rules[4]],
+    ] as const) {
+      const label = panel.getByText(day)
+
+      await expect(label.getBoundingClientRect().width).toBeGreaterThan(0)
+      await expect(Math.abs(middleOf(label).x - middleOf(rule).x)).toBeLessThan(
+        1.5,
+      )
+    }
+  },
+}
+
 const TUNER_STATE_COLUMN = 1
 
 export const 札の並び: Story = {
@@ -202,6 +320,6 @@ export const 札の並び: Story = {
     const rows = rowsOfTheTableHeaded(canvasElement, 'チューナー')
 
     await expect(rows.length).toBeGreaterThan(1)
-    await fillsTheColumn(rows, TUNER_STATE_COLUMN)
+    await saysItWithoutAnEdge(rows, TUNER_STATE_COLUMN)
   },
 }

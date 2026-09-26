@@ -7,12 +7,20 @@ import {
   VELA_VERSION,
 } from '@/repository/system.fixtures'
 import { SystemView } from '@/components/system/system-page'
+import { inTheSettings } from '@/stories/frames'
 
 const meta = {
   title: 'Screens/設定・システム',
   component: SystemView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/system' },
+    },
+    layout: 'fullscreen',
+  },
   args: { velaVersion: VELA_VERSION },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof SystemView>
 
 export default meta

@@ -4,7 +4,7 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 import { SettingsIcon, VelaMark } from '@/components/vela/icons'
 
-const TOP_BAR_HEIGHT = 'h-[46px]'
+const TOP_BAR_HEIGHT = 'h-[calc(46rem/16)]'
 const BELOW_TOP_BAR = 'top-[46px]'
 
 export const ADMIN_LIST_HEIGHT_CAP = 'max-h-[calc(100dvh-66px)]'
@@ -41,7 +41,7 @@ export function TopBar({ className, ...props }: ComponentProps<'header'>) {
     <header
       data-slot="top-bar"
       className={cn(
-        'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[14px]',
+        'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[calc(14rem/16)]',
         TOP_BAR_HEIGHT,
         className,
       )}
@@ -55,7 +55,7 @@ export function Brand({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="brand"
       className={cn(
-        'heading mr-[14px] flex items-center gap-1.5 text-[14px]',
+        'heading mr-[calc(14rem/16)] flex items-center gap-1.5 text-title',
         className,
       )}
       {...props}
@@ -94,7 +94,7 @@ export function GlobalNavItem({
       data-slot="global-nav-item"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'tap-target rounded-full px-[11px] py-[5px] text-sub font-medium text-ink-2 no-underline outline-none',
+        'tap-target rounded-full px-[calc(11rem/16)] py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         active && 'bg-brand-soft font-bold text-brand',
@@ -119,7 +119,7 @@ export function SettingsLink({
       data-slot="settings-link"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[5px] text-sub font-medium text-ink-2 no-underline outline-none',
+        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         active && 'border-brand bg-brand-soft font-bold text-brand',
@@ -137,7 +137,7 @@ export function AdminBody({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
       data-slot="admin-body"
-      className={cn('flex min-h-[196px]', className)}
+      className={cn('flex min-h-[calc(196rem/16)]', className)}
       {...props}
     />
   )
@@ -155,14 +155,14 @@ export function AdminSideNav({
       data-slot="admin-side-nav"
       aria-label={ariaLabel ?? caption}
       className={cn(
-        'w-[152px] shrink-0 border-r border-dashed border-line px-[9px] max-[900px]:w-auto',
+        'w-[11rem] shrink-0 border-r border-dashed border-line px-[calc(9rem/16)] max-[900px]:w-auto',
         className,
       )}
       {...props}
     >
       <div className={cn('sticky py-3.5', BELOW_TOP_BAR)}>
         {caption && (
-          <div className="mb-[11px] px-2.5 font-code text-[9.5px] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
+          <div className="mb-[calc(11rem/16)] px-2.5 font-code text-[calc(9.5rem/16)] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
             {caption}
           </div>
         )}
@@ -194,7 +194,7 @@ export function AdminSideNavItem({
       aria-current={active ? 'page' : undefined}
       aria-label={label}
       className={cn(
-        'tap-target mb-[11px] flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sub font-medium text-ink-2 no-underline outline-none max-[900px]:mb-[18px]',
+        'tap-target mb-[calc(11rem/16)] flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sub font-medium text-ink-2 no-underline outline-none max-[900px]:mb-[calc(18rem/16)]',
         'transition-[background-color,color,transform] duration-150 ease-toy',
         'hover:translate-x-0.5 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         '[&_svg]:size-3.5 [&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:-rotate-6 hover:[&_svg]:scale-110',
@@ -204,14 +204,18 @@ export function AdminSideNavItem({
       {...props}
     >
       {icon}
-      <span className="max-[900px]:hidden">{label}</span>
+      <span className="whitespace-nowrap max-[900px]:hidden">{label}</span>
       {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : null}
     </Comp>
   )
 }
 
 const SCREEN_WIDTHS = {
-  default: 'mx-auto w-full max-w-[1440px]',
+  default: cn(
+    'mx-auto w-full max-w-full',
+    'min-[1441px]:max-w-[1600px] min-[1920px]:max-w-[1760px]',
+    'min-[2560px]:max-w-[2240px] min-[3200px]:max-w-[3040px]',
+  ),
   full: 'w-full',
 } as const
 
@@ -222,15 +226,25 @@ export type ScreenScroll = 'page' | 'within'
 export function ScreenMain({
   width = 'default',
   scroll = 'page',
+  rises = true,
   className,
   ...props
-}: ComponentProps<'main'> & { width?: ScreenWidth; scroll?: ScreenScroll }) {
+}: ComponentProps<'main'> & {
+  width?: ScreenWidth
+  scroll?: ScreenScroll
+  rises?: boolean
+}) {
   return (
     <main
       data-slot="screen-main"
       data-width={width}
       data-scroll={scroll}
-      className={cn('min-h-0 flex-1', SCREEN_WIDTHS[width], className)}
+      className={cn(
+        rises && 'screen-rises',
+        'min-h-0 flex-1',
+        SCREEN_WIDTHS[width],
+        className,
+      )}
       {...props}
     />
   )
@@ -239,8 +253,9 @@ export function ScreenMain({
 export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
   return (
     <ScreenMain
+      rises={false}
       data-slot="admin-main"
-      className={cn('min-w-0 px-[18px] pt-4 pb-5', className)}
+      className={cn('min-w-0 px-[calc(18rem/16)] pt-4 pb-5', className)}
       {...props}
     />
   )
@@ -250,7 +265,7 @@ export function Crumb({ className, children, ...props }: ComponentProps<'p'>) {
   return (
     <p
       data-slot="crumb"
-      className={cn('mb-[5px] text-cap text-ink-3', className)}
+      className={cn('mb-[calc(5rem/16)] text-cap text-ink-3', className)}
       {...props}
     >
       {children}

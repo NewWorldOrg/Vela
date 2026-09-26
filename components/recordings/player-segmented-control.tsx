@@ -40,13 +40,13 @@ export function PlayerSegmentedControl<T extends string>({
           aria-pressed={off ? undefined : option === value}
           onClick={() => onChange(option)}
           className={cn(
-            'tap-target rounded-full border-none bg-transparent px-[11px] py-[3px] text-[11.5px] font-medium whitespace-nowrap text-(--pl-ink-2) transition-[background-color,color] duration-150 hover:text-(--pl-ink) focus-visible:shadow-ring focus-visible:outline-none disabled:text-(--pl-ink-3) disabled:hover:text-(--pl-ink-3)',
+            'tap-target rounded-full border-none bg-transparent px-[calc(11rem/16)] py-[calc(3rem/16)] text-note font-medium whitespace-nowrap text-(--pl-ink-2) transition-[background-color,color] duration-150 hover:text-(--pl-ink) focus-visible:shadow-ring focus-visible:outline-none disabled:text-(--pl-ink-3) disabled:hover:text-(--pl-ink-3)',
             pressable,
             still,
             numeric && 'font-code',
             !off &&
               option === value &&
-              'bg-[rgba(150,187,180,.24)] font-bold text-[#C0D8D3]',
+              'bg-(--pl-accent)/24 font-bold text-(--pl-accent-ink)',
           )}
         >
           {nameOf ? nameOf(option) : option}

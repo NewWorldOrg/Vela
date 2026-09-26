@@ -7,6 +7,7 @@ import { signIn, type SignInResult } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InlineAlert } from '@/components/vela/banner'
+import { askForTheCurtain } from '@/components/vela/curtain'
 import { Field, FieldLabel } from '@/components/vela/field'
 import {
   ChevronDownIcon,
@@ -74,6 +75,7 @@ export function LocalSignIn({
     })
 
     if (result.state === 'signed-in') {
+      askForTheCurtain()
       window.location.assign(returnPath)
 
       return
@@ -113,14 +115,14 @@ export function LocalSignIn({
         <Button
           type="submit"
           size="lg"
-          className="mt-0.5 w-full gap-[9px] text-[13.5px]"
+          className="mt-0.5 w-full gap-[calc(9rem/16)] text-body"
           disabled={busy}
         >
           <SignInIcon className="size-4" />
           {busy ? 'サインインしています' : 'サインイン'}
         </Button>
       ) : (
-        <Button type="submit" variant="outline" disabled={busy}>
+        <Button type="submit" variant="watch" disabled={busy}>
           {busy ? 'サインインしています' : 'サインイン'}
         </Button>
       )}
@@ -132,7 +134,7 @@ export function LocalSignIn({
   }
 
   return (
-    <div className="mt-[18px] border-t border-dashed border-line-strong pt-[18px]">
+    <div className="mt-[calc(18rem/16)] border-t border-dashed border-line-strong pt-[calc(18rem/16)]">
       <div className="flex justify-center">
         <Button
           type="button"

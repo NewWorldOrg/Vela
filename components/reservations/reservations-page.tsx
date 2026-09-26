@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableHead,
   TableHeader,
   TableRow,
@@ -30,21 +31,30 @@ import { ReservationRow } from '@/components/reservations/reservation-row'
 import type { ReservationBulkActions } from '@/components/reservations/reservation-selection'
 import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
+import { unfoldShows, useUnfolding } from '@/components/vela/unfold'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { cn } from '@/lib/utils'
-import { STATE_COLUMN } from '@/components/recordings/status-cell'
+import { RESERVATION_STATE_COLUMN } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
-const STATE_COLUMNS: string[] = ['状態']
-
-const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
-  { label: '競合の詳細の開閉', hidden: true, narrow: true },
-  { label: '番組' },
-  { label: 'チャンネル' },
-  { label: WHEN_LABELS.broadcast },
-  { label: '由来' },
-  { label: '状態' },
-  { label: '操作', hidden: true },
+const COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+  narrow?: boolean
+}[] = [
+  {
+    label: '競合の詳細の開閉',
+    width: 'calc(34rem/16)',
+    hidden: true,
+    narrow: true,
+  },
+  { label: '番組', width: 'calc(260rem/16)' },
+  { label: 'チャンネル', width: 'calc(150rem/16)' },
+  { label: WHEN_LABELS.broadcast, width: 'calc(190rem/16)' },
+  { label: '由来', width: 'calc(140rem/16)' },
+  { label: '状態', width: RESERVATION_STATE_COLUMN },
+  { label: '操作', width: 'calc(360rem/16)', hidden: true },
 ]
 
 const SHOW_PARAM = 'show'
@@ -96,13 +106,13 @@ export function ReservationsView({
   bulk: ReservationBulkActions
 }) {
   const { items, total, drift, filter } = result
-  const [expanded, setExpanded] = useState<string | null>(
-    items.find((r) => r.standing === 'conflict')?.id ?? null,
-  )
+  const unfolded = useUnfolding()
+  const firstConflict = items.find((one) => one.standing === 'conflict')?.id
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const chosen = items.filter((one) => picked.has(one.id))
   const clear = useCallback(() => setPicked(new Set()), [])
   const router = useRouter()
+  const [waiting, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const go = useCallback(
@@ -119,9 +129,11 @@ export function ReservationsView({
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )
@@ -147,10 +159,10 @@ export function ReservationsView({
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[20px]">
-        <ReservationIcon className="size-[18px] text-brand" />
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)]">
+        <ReservationIcon className="size-[calc(18rem/16)] text-brand" />
         予約
       </h1>
       <ReservationTabs
@@ -165,7 +177,7 @@ export function ReservationsView({
         }
       />
 
-      <div className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[17px] py-[13px]">
+      <div className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
         <span className="text-ui font-medium whitespace-nowrap text-ink-2">
           表示
         </span>
@@ -217,21 +229,30 @@ export function ReservationsView({
           spot={total === 0 ? 'antenna' : 'star'}
           title={total === 0 ? '予約はありません' : '未完了の予約はありません'}
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
             total === 0 ? undefined : (
-              <Button variant="ghost" size="sm" onClick={onClearFilters}>
-                絞り込みを解除
+              <Button variant="halt" size="sm" onClick={onClearFilters}>
+                条件を消す
               </Button>
             )
           }
         />
       ) : (
         <Table
-          className="min-w-[960px]"
-          containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+          className="table-fixed min-w-[calc(960rem/16)]"
+          containerClassName={cn(
+            'min-h-0 flex-initial overflow-y-auto pb-1 transition-opacity duration-150',
+            waiting && 'opacity-60',
+          )}
         >
-          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[13px]">
+          <TableColumns
+            widths={[
+              'calc(44rem/16)',
+              ...COLUMNS.map((column) => column.width),
+            ]}
+          />
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[calc(13rem/16)]">
             <TableRow>
               <TableHead className="w-11">
                 <Checkbox
@@ -253,13 +274,7 @@ export function ReservationsView({
                 />
               </TableHead>
               {COLUMNS.map((column) => (
-                <TableHead
-                  key={column.label}
-                  className={cn(
-                    column.narrow && 'w-8',
-                    STATE_COLUMNS.includes(column.label) && STATE_COLUMN,
-                  )}
-                >
+                <TableHead key={column.label}>
                   {column.hidden ? (
                     <span className="sr-only">{column.label}</span>
                   ) : (
@@ -270,17 +285,25 @@ export function ReservationsView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((reservation) => (
+            {items.map((reservation, nth) => (
               <ReservationRow
                 key={reservation.id}
+                nth={nth}
                 reservation={reservation}
                 actions={actions}
-                expanded={expanded === reservation.id}
-                onToggle={() =>
-                  setExpanded((prev) =>
-                    prev === reservation.id ? null : reservation.id,
-                  )
+                expanded={
+                  unfolded.open === reservation.id ||
+                  (unfolded.open === undefined &&
+                    unfolded.folding === undefined &&
+                    firstConflict === reservation.id)
                 }
+                shown={
+                  unfoldShows(unfolded, reservation.id) ||
+                  (unfolded.open === undefined &&
+                    unfolded.folding === undefined &&
+                    firstConflict === reservation.id)
+                }
+                onToggle={() => unfolded.toggle(reservation.id)}
                 selected={picked.has(reservation.id)}
                 onSelect={(taken) =>
                   setPicked((prev) => {

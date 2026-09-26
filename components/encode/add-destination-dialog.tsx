@@ -12,12 +12,12 @@ export function AddDestinationDialog({
   profiles,
   roots,
   onDefine,
-  variant = 'default',
+  size = 'default',
 }: {
   profiles: Pick<EncodeProfile, 'id' | 'label'>[]
   roots: string[]
   onDefine: (draft: EncodeDestinationDraft) => Promise<EncodeWrite>
-  variant?: 'default' | 'sm'
+  size?: 'default' | 'sm'
 }) {
   const [open, setOpen] = useState(false)
   const refused =
@@ -30,7 +30,7 @@ export function AddDestinationDialog({
   return (
     <>
       <Button
-        size={variant === 'sm' ? 'sm' : 'default'}
+        size={size}
         disabled={refused !== undefined}
         title={refused}
         onClick={() => setOpen(true)}

@@ -10,12 +10,12 @@ import type {
   QualityThresholdKey,
   QualityWrite,
 } from '@/repository/quality'
-import { Badge } from '@/components/ui/badge'
-import { STATE_COLUMN, StatusCell } from '@/components/recordings/status-cell'
+import { StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -40,10 +40,7 @@ import { ChangeThresholdButton } from '@/components/quality/change-threshold-but
 import { AnomalyList } from '@/components/quality/anomaly-list'
 import { LinkSegments } from '@/components/quality/link-segments'
 import { QualityTrendPanel } from '@/components/quality/quality-trend'
-import {
-  QUALITY_LEVEL_PILL_WIDTH,
-  QualityChip,
-} from '@/components/quality/signal-quality-chip'
+import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
 
 const SUPPLY_GONE_QUIET = '計測の供給が途絶しています'
@@ -54,13 +51,13 @@ const TO_THE_TUNERS = 'チューナーへ'
 
 const PERIOD = '期間'
 
-const HEALTH_COLUMNS = [
-  'チューナー',
-  '状態',
-  'ドロップ率',
-  'lock 率',
-  'CNR',
-  'post-Viterbi ビット誤り率',
+const HEALTH_COLUMNS: { label: string; width: string }[] = [
+  { label: 'チューナー', width: 'calc(200rem/16)' },
+  { label: '状態', width: 'calc(112rem/16)' },
+  { label: 'ドロップ率', width: 'calc(124rem/16)' },
+  { label: 'lock 率', width: 'calc(112rem/16)' },
+  { label: 'CNR', width: 'calc(112rem/16)' },
+  { label: 'post-Viterbi ビット誤り率', width: 'calc(260rem/16)' },
 ]
 
 const BAR_TONE: Record<QualityLevel, string> = {
@@ -194,7 +191,7 @@ export function QualityView({
             <span className="heading block text-sub text-ink-2">
               {stat.label}
             </span>
-            <span className="mt-1 block font-code text-[26px] leading-none font-medium tabular-nums">
+            <span className="mt-1 block font-code text-[calc(26rem/16)] leading-none font-medium tabular-nums">
               {stat.value ? (
                 <>
                   {stat.value}
@@ -212,7 +209,7 @@ export function QualityView({
                 )
               )}
             </span>
-            <span className="mt-2.5 flex min-h-[19px] flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="mt-2.5 flex min-h-[calc(19rem/16)] flex-wrap items-center gap-x-2 gap-y-1">
               {stat.value && stat.level && (
                 <QualityChip level={stat.level}>{stat.levelLabel}</QualityChip>
               )}
@@ -239,10 +236,11 @@ export function QualityView({
                 <span className="font-code text-ui tabular-nums text-brand">
                   {threshold.value}
                 </span>
-                {threshold.provisional && <Badge variant="mute">暫定</Badge>}
-                <span className="w-full font-code text-note text-ink-3">
-                  {threshold.basis}
-                </span>
+                {threshold.basis && (
+                  <span className="w-full font-code text-note text-ink-3">
+                    {threshold.basis}
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -291,21 +289,19 @@ export function QualityView({
         <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
         {result.tuners.length > 0 ? (
           <Table
-            className="min-w-[900px]"
+            className="table-fixed min-w-[calc(900rem/16)]"
             containerClassName={cn(
               ADMIN_LIST_HEIGHT_CAP,
               'overflow-y-auto pb-1',
             )}
           >
+            <TableColumns
+              widths={HEALTH_COLUMNS.map((column) => column.width)}
+            />
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
               <TableRow>
                 {HEALTH_COLUMNS.map((column) => (
-                  <TableHead
-                    key={column}
-                    className={column === '状態' ? STATE_COLUMN : undefined}
-                  >
-                    {column}
-                  </TableHead>
+                  <TableHead key={column.label}>{column.label}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -313,7 +309,7 @@ export function QualityView({
               {result.tuners.map((tuner) => (
                 <TableRow key={tuner.id}>
                   <TableCell className="align-top">
-                    <b className="block text-[13px] font-bold">
+                    <b className="block text-[calc(13rem/16)] font-bold">
                       {tuner.device}
                     </b>
                     <span className="text-note text-ink-3">
@@ -322,10 +318,7 @@ export function QualityView({
                   </TableCell>
                   <TableCell className="align-top whitespace-normal">
                     <StatusCell>
-                      <QualityChip
-                        level={tuner.state.level}
-                        width={QUALITY_LEVEL_PILL_WIDTH}
-                      >
+                      <QualityChip level={tuner.state.level} say>
                         {tuner.state.label}
                       </QualityChip>
                     </StatusCell>

@@ -77,12 +77,12 @@ export function OpenExternally({
           aria-disabled={taking}
           className={PLAYER_BUTTON}
         >
-          {taking && <Spinner className="mr-1.5 inline size-3" />}
+          {taking && <Spinner size="control" className="mr-1.5 inline" />}
           外部プレイヤーで開く
         </button>
       ) : (
-        <Button variant="outline" onClick={open} aria-disabled={taking}>
-          {taking ? <Spinner className="size-3.5" /> : <DevicePlayerIcon />}
+        <Button variant="watch" onClick={open} aria-disabled={taking}>
+          {taking ? <Spinner size="control" /> : <DevicePlayerIcon />}
           外部プレイヤーで開く
         </Button>
       )}
@@ -90,8 +90,8 @@ export function OpenExternally({
         <p
           role="status"
           className={cn(
-            'text-[11px]',
-            tone === 'player' ? 'text-[#EC9A93]' : 'text-coral',
+            'text-cap',
+            tone === 'player' ? 'text-(--pl-err)' : 'text-coral',
           )}
         >
           {refused}
@@ -149,7 +149,7 @@ export function AirPlayButton({
       aria-label="AirPlay"
       className={PLAYER_GLYPH_BUTTON}
     >
-      {taking ? <Spinner className="size-5" /> : <AirPlayIcon />}
+      {taking ? <Spinner size="control" /> : <AirPlayIcon />}
     </button>
   )
 }

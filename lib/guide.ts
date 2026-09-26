@@ -4,8 +4,6 @@ export const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
 export const WINDOW_HOURS = 24
 
-const OPENING_LEAD_MIN = 30
-
 export function broadcastDateOf(at: Date): string {
   const shifted = new Date(
     at.getTime() + JST_OFFSET_MS - DAY_STARTS_AT_HOUR * 60 * 60 * 1000,
@@ -49,12 +47,13 @@ export function isOnAir(
 export function openingScrollTopOf(
   nowMin: number | undefined,
   hourPx: number,
+  viewPx: number,
 ): number {
   if (nowMin === undefined) {
     return 0
   }
 
-  return Math.max(0, ((nowMin - OPENING_LEAD_MIN) / 60) * hourPx)
+  return Math.max(0, (nowMin / 60) * hourPx - viewPx / 2)
 }
 
 export interface GuideService {
@@ -326,4 +325,112 @@ export const COLUMN_MIN_PX = 200
 
 export function gridMinWidthOf(columns: number): number {
   return GUTTER_PX + columns * COLUMN_MIN_PX
+}
+
+export const COLUMNS_DRAWN_BEFORE_MEASURING = 12
+
+export const COLUMNS_DRAWN_AROUND = 2
+
+export interface ColumnRange {
+  from: number
+  to: number
+}
+
+export interface GuideScroll {
+  scrollLeft: number
+  clientWidth: number
+  scrollWidth: number
+}
+
+export function columnsBeforeMeasuringOf(columns: number): ColumnRange {
+  return { from: 0, to: Math.min(columns, COLUMNS_DRAWN_BEFORE_MEASURING) }
+}
+
+export function drawnColumnsOf(
+  view: GuideScroll,
+  columns: number,
+): ColumnRange {
+  const width = (view.scrollWidth - GUTTER_PX) / columns
+
+  if (columns <= 0 || !(width > 0) || view.clientWidth <= GUTTER_PX) {
+    return columnsBeforeMeasuringOf(Math.max(0, columns))
+  }
+
+  const first = Math.min(
+    columns - 1,
+    Math.max(0, Math.floor(view.scrollLeft / width)),
+  )
+  const pastLast = Math.ceil(
+    (view.scrollLeft + view.clientWidth - GUTTER_PX) / width,
+  )
+
+  return {
+    from: Math.max(0, first - COLUMNS_DRAWN_AROUND),
+    to: Math.min(columns, Math.max(first + 1, pastLast) + COLUMNS_DRAWN_AROUND),
+  }
+}
+
+export function isDrawn(range: ColumnRange, nth: number): boolean {
+  return range.from <= nth && nth < range.to
+}
+
+export function joinedColumnsOf(
+  one: ColumnRange,
+  other: ColumnRange,
+): ColumnRange {
+  return {
+    from: Math.min(one.from, other.from),
+    to: Math.max(one.to, other.to),
+  }
+}
+
+export function grownColumnsOf(
+  range: ColumnRange,
+  columns: number,
+): ColumnRange {
+  return {
+    from: Math.max(0, range.from - 1),
+    to: Math.min(columns, range.to + 1),
+  }
+}
+
+export function holdsEveryColumn(range: ColumnRange, columns: number): boolean {
+  return range.from <= 0 && range.to >= columns
+}
+
+export interface MinuteRange {
+  from: number
+  to: number
+}
+
+export function fallsWithin(
+  range: MinuteRange,
+  span: { startMin: number; durationMin: number },
+): boolean {
+  return (
+    span.startMin < range.to && span.startMin + span.durationMin > range.from
+  )
+}
+
+export function seamTopOf({
+  nowMin,
+  hourPx,
+  scrollTop,
+  headingPx,
+  viewPx,
+}: {
+  nowMin: number | undefined
+  hourPx: number
+  scrollTop: number
+  headingPx: number
+  viewPx: number
+}): number {
+  if (nowMin === undefined) {
+    return viewPx / 2
+  }
+
+  return Math.min(
+    viewPx,
+    Math.max(headingPx, headingPx + (nowMin / 60) * hourPx - scrollTop),
+  )
 }

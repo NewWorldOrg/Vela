@@ -19,16 +19,16 @@ export function ProgramDetailView({
 
   return (
     <ScreenMain className="pb-16">
-      <div className="mx-auto max-w-[780px] px-6 pt-[22px] max-[700px]:px-3.5">
-        <Button variant="ghost" size="sm" className="mb-3.5" asChild>
+      <div className="mx-auto max-w-[calc(780rem/16)] px-6 pt-[calc(22rem/16)] max-[700px]:px-3.5">
+        <Button variant="watch" size="sm" className="mb-3.5" asChild>
           <Link href="/guide">
             <ChevronLeftIcon />
             番組表へ
           </Link>
         </Button>
 
-        <section className="rounded-xl bg-surface px-[30px] pt-[26px] pb-[22px] max-[700px]:px-[18px] max-[700px]:pt-[22px]">
-          <h1 className="heading mb-[13px] text-[23px] leading-normal">
+        <section className="rounded-xl bg-surface px-[calc(30rem/16)] pt-[calc(26rem/16)] pb-[calc(22rem/16)] max-[700px]:px-[calc(18rem/16)] max-[700px]:pt-[calc(22rem/16)]">
+          <h1 className="heading mb-[calc(13rem/16)] text-[calc(23rem/16)] leading-normal">
             {program.title}
           </h1>
           <ProgramDetailBody

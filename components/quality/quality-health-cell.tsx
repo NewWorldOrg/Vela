@@ -2,10 +2,7 @@ import type { QualityTunerCell } from '@/repository/quality'
 import type { QualityLevel } from '@/lib/quality'
 import { TableCell } from '@/components/ui/table'
 import { StatusCell } from '@/components/recordings/status-cell'
-import {
-  QUALITY_LEVEL_PILL_WIDTH,
-  QualityChip,
-} from '@/components/quality/signal-quality-chip'
+import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { InFull } from '@/components/vela/in-full'
 
 export function QualityHealthCell({ cell }: { cell: QualityTunerCell }) {
@@ -31,11 +28,11 @@ export function QualityHealthCell({ cell }: { cell: QualityTunerCell }) {
 }
 
 function Reading({ level, sub }: { level: QualityLevel; sub?: string }) {
-  const pill = <QualityChip level={level} width={QUALITY_LEVEL_PILL_WIDTH} />
+  const pill = <QualityChip level={level} say />
 
   return sub ? (
-    <InFull says={sub}>
-      <span className="inline-flex">{pill}</span>
+    <InFull says={sub} wraps="inline-flex">
+      {pill}
     </InFull>
   ) : (
     pill

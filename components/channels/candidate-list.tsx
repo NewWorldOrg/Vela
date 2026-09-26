@@ -69,14 +69,14 @@ function ReceptionBadge({
 function CandidateMeter({ candidate }: { candidate: CandidateRow }) {
   if (candidate.measurement === undefined) {
     return (
-      <span className="w-[280px] max-w-full text-sub text-ink-3">
+      <span className="w-[calc(280rem/16)] max-w-full text-sub text-ink-3">
         {RECEPTION_WITHOUT_FIGURE[candidate.reception]}
       </span>
     )
   }
 
   return (
-    <span className="flex max-w-[280px] flex-1 items-center gap-[9px]">
+    <span className="flex max-w-[calc(280rem/16)] flex-1 items-center gap-[calc(9rem/16)]">
       <ProgressBar
         value={candidate.measurement.percent}
         tone={candidate.measurement.tone}
@@ -119,7 +119,7 @@ function DeleteCandidateDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>キャンセル</AlertDialogCancel>
           <AlertDialogAction
-            variant="destructiveFill"
+            variant="removeFill"
             disabled={pending}
             onClick={(event) => {
               event.preventDefault()
@@ -170,7 +170,9 @@ export function CandidateList({
 
   return (
     <>
-      <p className="mb-[9px] text-cap font-bold text-ink-3">候補チャンネル</p>
+      <p className="mb-[calc(9rem/16)] text-cap font-bold text-ink-3">
+        候補チャンネル
+      </p>
       {candidates.map((candidate) => (
         <div
           key={candidate.id}
@@ -180,7 +182,7 @@ export function CandidateList({
               : 'mb-1.5 flex flex-wrap items-center gap-4 rounded-lg border border-transparent bg-surface px-3.5 py-2.5'
           }
         >
-          <span className="w-[52px] font-code text-[13.5px] font-medium tabular-nums">
+          <span className="w-[calc(52rem/16)] font-code text-body font-medium tabular-nums">
             {candidate.channel}
           </span>
           <CandidateMeter candidate={candidate} />
@@ -201,14 +203,14 @@ export function CandidateList({
           </span>
           <span className="ml-auto flex items-center gap-2">
             {candidate.selected && (
-              <span className="rounded-full border border-brand-line bg-surface px-[11px] py-[3px] text-note font-bold whitespace-nowrap text-brand">
+              <span className="rounded-full border border-brand-line bg-surface px-[calc(11rem/16)] py-[calc(3rem/16)] text-note font-bold whitespace-nowrap text-brand">
                 ● 選択中
               </span>
             )}
-            <ActionRow className="gap-2">
+            <ActionRow>
               {!candidate.selected && (
                 <Button
-                  variant="outline"
+                  variant="change"
                   size="sm"
                   disabled={pending}
                   onClick={() =>
@@ -228,7 +230,7 @@ export function CandidateList({
                 </Button>
               )}
               <Button
-                variant="destructive"
+                variant="remove"
                 size="sm"
                 disabled={pending}
                 aria-label={`${candidate.channel} を候補から削除`}

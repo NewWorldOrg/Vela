@@ -30,7 +30,7 @@ export function ChannelsMissing({
         title="視聴できるチャンネルがありません"
         className={className}
         action={
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="watch" size="sm" asChild>
             <Link href="/settings/channels">チャンネル設定へ</Link>
           </Button>
         }
@@ -45,7 +45,7 @@ export function ChannelsMissing({
       title={`${CHANNEL_KIND_LABEL[kind]}のチャンネルがありません`}
       className={className}
       action={
-        <Button variant="outline" size="sm" onClick={() => onKind(elsewhere)}>
+        <Button variant="watch" size="sm" onClick={() => onKind(elsewhere)}>
           {CHANNEL_KIND_LABEL[elsewhere]}のチャンネルへ
         </Button>
       }

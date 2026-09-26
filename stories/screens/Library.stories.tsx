@@ -8,15 +8,18 @@ import {
   RECORDING_FIXTURES,
 } from '@/stories/fixtures/recordings'
 import { inProgressFirst } from '@/lib/recordings'
-import { AppFrame } from '@/components/vela/app-shell'
 import { LibraryView } from '@/components/library/library-page'
 import {
+  cellOf,
   heightOf,
   oneShapeDownTheColumn,
-  pillOf,
+  sayOf,
+  saysItWithoutAnEdge,
   tipIn,
 } from '@/stories/pills-in-a-column'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheApp } from '@/stories/frames'
 
 const asked: string[] = []
 
@@ -55,15 +58,12 @@ const result = resultOf(all)
 const meta = {
   title: 'Screens/録画ライブラリ',
   component: LibraryView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+    layout: 'fullscreen',
+  },
   args: { onDelete: throwing },
-  decorators: [
-    (Story) => (
-      <AppFrame>
-        <Story />
-      </AppFrame>
-    ),
-  ],
+  decorators: [inTheApp],
 } satisfies Meta<typeof LibraryView>
 
 export default meta
@@ -73,6 +73,8 @@ export const 通常: Story = {
   args: { result, filter: {} },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
 
     asked.length = 0
 
@@ -95,19 +97,8 @@ export const 通常: Story = {
       'ドロップ 0 / スクランブル残存 5,042,768',
     )
 
-    await expect(
-      unwatchable.getByRole('button', { name: '再生' }),
-    ).toBeDisabled()
-    await expect(
-      within(
-        canvas.getByRole('row', { name: /金曜シネマ「星の渡り鳥」/ }),
-      ).getByRole('link', { name: '再生' }),
-    ).toHaveAttribute('href', '/recordings/1198?at=0')
-    await expect(
-      within(
-        canvas.getByRole('row', { name: /夜ふかしラジオ倶楽部/ }),
-      ).getByRole('button', { name: '再生' }),
-    ).toBeDisabled()
+    await expect(canvas.queryAllByRole('button', { name: '再生' })).toEqual([])
+    await expect(canvas.queryAllByRole('link', { name: '再生' })).toEqual([])
 
     const finished = within(
       canvas.getByRole('row', { name: /週末キッチンの手帖/ }),
@@ -117,6 +108,8 @@ export const 通常: Story = {
     await userEvent.click(finished)
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
     await expect(dialog.getByText('/srv/recordings/1274.m2ts')).toBeVisible()
 
     await expect(dialog.getByText(/GB/)).toHaveTextContent(
@@ -150,6 +143,8 @@ export const 削除を断られたとき: Story = {
     )
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await expect(await dialog.findByText(STILL_RECORDING)).toBeVisible()
@@ -344,7 +339,7 @@ export const 尻切れと失敗の録画: Story = {
     await expect(quality).not.toHaveTextContent('良好')
     await expect(quality).not.toHaveTextContent('ドロップ')
 
-    await expect(failed.getByRole('button', { name: '再生' })).toBeDisabled()
+    await expect(failed.queryByRole('button', { name: '再生' })).toBeNull()
     await expect(failed.getByRole('button', { name: '削除' })).toBeEnabled()
   },
 }
@@ -369,7 +364,7 @@ export const ファイル不在の録画: Story = {
     await expect(size).not.toHaveTextContent('GB')
     await expect(size).not.toHaveTextContent('観測')
 
-    await expect(gone.getByRole('button', { name: '再生' })).toBeDisabled()
+    await expect(gone.queryByRole('button', { name: '再生' })).toBeNull()
     await expect(gone.getByRole('button', { name: '削除' })).toBeEnabled()
 
     const kept = within(
@@ -409,6 +404,8 @@ export const 観測時刻のない録画の削除: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
     const size = dialog.getByText(/GB/)
 
     await expect(size).toHaveTextContent('3.4 GB')
@@ -501,22 +498,26 @@ export const 札の並び: Story = {
 
     for (const row of rows) {
       const tops = CHIP_COLUMNS.map((column) =>
-        Math.round(pillOf(row, column).getBoundingClientRect().top),
+        Math.round(sayOf(row, column).getBoundingClientRect().top),
       )
 
       await expect(new Set(tops).size).toBe(1)
     }
 
     for (const column of CHIP_COLUMNS) {
-      const widths = rows.map((row) =>
-        Math.round(pillOf(row, column).getBoundingClientRect().width),
+      const lefts = rows.map((row) =>
+        Math.round(sayOf(row, column).getBoundingClientRect().left),
       )
 
-      await expect(new Set(widths).size).toBe(1)
+      await expect(new Set(lefts).size).toBe(1)
 
-      const said = rows.map((row) => pillOf(row, column).textContent ?? '')
+      const columnWidths = rows.map((row) =>
+        Math.round(cellOf(row, column).getBoundingClientRect().width),
+      )
 
-      await expect(new Set(said).size).toBeGreaterThan(1)
+      await expect(new Set(columnWidths).size).toBe(1)
+
+      await saysItWithoutAnEdge(rows, column)
     }
 
     await oneShapeDownTheColumn(rows, ENCODE_COLUMN)
@@ -530,6 +531,38 @@ export const 札の並び: Story = {
     )
 
     await expect(new Set(actions).size).toBe(1)
+  },
+}
+
+export const 現れ方: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByRole('row').slice(1)
+
+    await expect(rows.length).toBeGreaterThan(6)
+
+    for (const [nth, row] of rows.slice(0, 6).entries()) {
+      const drawn = getComputedStyle(row)
+
+      await expect(drawn.animationName).toBe('row')
+      await expect(drawn.animationDuration).toBe('0.32s')
+      await expect(Number.parseFloat(drawn.animationDelay)).toBeCloseTo(
+        nth * 0.04,
+        3,
+      )
+    }
+
+    await expect(
+      Number.parseFloat(getComputedStyle(rows[6]).animationDelay),
+    ).toBeCloseTo(0.2, 3)
+
+    document.documentElement.classList.add('dark')
+
+    try {
+      await expect(getComputedStyle(rows[0]).animationName).toBe('row')
+    } finally {
+      document.documentElement.classList.remove('dark')
+    }
   },
 }
 

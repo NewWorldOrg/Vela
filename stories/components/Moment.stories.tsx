@@ -23,7 +23,7 @@ const HEADINGS: [string, string][] = [
 const PLACES: [string, string][] = [
   ['ライブラリ一覧', formatMoment(RECORDED_FROM)],
   ['予約一覧', formatMomentSpan(BROADCAST_FROM, BROADCAST_UNTIL)],
-  ['予約結果台帳・エンコード', formatMoment(TAKEN)],
+  ['失敗台帳・エンコード', formatMoment(TAKEN)],
   ['録画詳細', formatMomentSpan(RECORDED_FROM, RECORDED_UNTIL)],
 ]
 

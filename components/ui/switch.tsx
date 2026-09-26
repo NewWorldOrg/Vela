@@ -19,7 +19,7 @@ function Switch({
       className={cn(
         'tap-target peer group/switch inline-flex shrink-0 cursor-pointer items-center rounded-full border border-line-strong bg-surface-3 p-0.5 outline-none',
         'transition-[background-color,border-color,box-shadow] duration-150 ease-out',
-        'data-[size=default]:h-6 data-[size=default]:w-[42px] data-[size=sm]:h-5 data-[size=sm]:w-[34px]',
+        'data-[size=default]:h-6 data-[size=default]:w-[calc(42rem/16)] data-[size=sm]:h-5 data-[size=sm]:w-[calc(34rem/16)]',
         'data-[state=checked]:border-brand data-[state=checked]:bg-brand',
         'focus-visible:shadow-ring disabled:cursor-not-allowed disabled:opacity-45',
         className,

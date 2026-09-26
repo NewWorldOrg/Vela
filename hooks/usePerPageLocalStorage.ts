@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { PAGE_SIZES, type PageSize } from '@/types/dataTable'
 
 export const STORAGE_PREFIX = 'vela-per-page-'
@@ -54,7 +54,6 @@ function writeStoredPerPage(value: PageSize) {
 
 export interface UsePerPageLocalStorageOptions {
   defaultPerPage: PageSize
-  onInitialMismatch?: () => void | Promise<void>
 }
 
 export interface UsePerPageLocalStorageResult {
@@ -62,108 +61,42 @@ export interface UsePerPageLocalStorageResult {
   setPerPage: (next: PageSize) => void
 }
 
-interface InitialState {
-  perPage: PageSize
-  mismatch: boolean
-}
-
-export function usePerPageLocalStorage(
-  options: UsePerPageLocalStorageOptions,
-): UsePerPageLocalStorageResult {
-  const { defaultPerPage } = options
-
-  const [initial] = useState<InitialState>(() => {
-    const stored = readStoredPerPage()
-    return {
-      perPage: stored ?? defaultPerPage,
-      mismatch: stored !== null && stored !== defaultPerPage,
-    }
-  })
-
-  const [perPage, setPerPageState] = useState<PageSize>(initial.perPage)
-
-  const perPageRef = useRef(perPage)
-  useEffect(() => {
-    perPageRef.current = perPage
-  })
-
-  const onInitialMismatchRef = useRef(options.onInitialMismatch)
-  useEffect(() => {
-    onInitialMismatchRef.current = options.onInitialMismatch
-  })
-
-  function runMismatchCallback() {
-    const cb = onInitialMismatchRef.current
-    if (!cb) {
-      return
-    }
-    try {
-      const result = cb()
-      if (result instanceof Promise) {
-        result.catch((err) =>
-          console.warn(
-            '[usePerPageLocalStorage] onInitialMismatch rejected',
-            err,
-          ),
-        )
-      }
-    } catch (err) {
-      console.warn('[usePerPageLocalStorage] onInitialMismatch threw', err)
+function followStoredPerPage(notify: () => void) {
+  function handleStorage(e: StorageEvent) {
+    if (e.key === STORAGE_KEY) {
+      notify()
     }
   }
+  window.addEventListener(SAME_WINDOW_SYNC_EVENT, notify)
+  window.addEventListener('storage', handleStorage)
+  return () => {
+    window.removeEventListener(SAME_WINDOW_SYNC_EVENT, notify)
+    window.removeEventListener('storage', handleStorage)
+  }
+}
 
-  const setPerPage = useCallback((next: PageSize) => {
-    setPerPageState(next)
-    writeStoredPerPage(next)
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent<PageSize>(SAME_WINDOW_SYNC_EVENT, { detail: next }),
-      )
-    }
-  }, [])
+function nothingStoredOnTheServer(): PageSize | null {
+  return null
+}
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
-    function applyExternalChange(next: PageSize | null) {
-      if (next == null || next === perPageRef.current) {
-        return
-      }
-      setPerPageState(next)
-      runMismatchCallback()
-    }
-    function handleSameWindow(e: Event) {
-      applyExternalChange((e as CustomEvent<PageSize>).detail)
-    }
-    function handleStorage(e: StorageEvent) {
-      if (e.key !== STORAGE_KEY) {
-        return
-      }
-      applyExternalChange(parsePerPage(e.newValue))
-    }
-    window.addEventListener(SAME_WINDOW_SYNC_EVENT, handleSameWindow)
-    window.addEventListener('storage', handleStorage)
-    return () => {
-      window.removeEventListener(SAME_WINDOW_SYNC_EVENT, handleSameWindow)
-      window.removeEventListener('storage', handleStorage)
-    }
-  }, [])
+function setPerPage(next: PageSize) {
+  writeStoredPerPage(next)
+  window.dispatchEvent(
+    new CustomEvent<PageSize>(SAME_WINDOW_SYNC_EVENT, { detail: next }),
+  )
+}
 
-  const didRunRef = useRef(false)
-  useEffect(() => {
-    if (didRunRef.current) {
-      return
-    }
-    didRunRef.current = true
-    if (initial.mismatch) {
-      runMismatchCallback()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+export function usePerPageLocalStorage({
+  defaultPerPage,
+}: UsePerPageLocalStorageOptions): UsePerPageLocalStorageResult {
+  const stored = useSyncExternalStore(
+    followStoredPerPage,
+    readStoredPerPage,
+    nothingStoredOnTheServer,
+  )
 
   return {
-    perPage,
+    perPage: stored ?? defaultPerPage,
     setPerPage,
   }
 }

@@ -24,6 +24,10 @@ export const QUALITY_PILL_LABEL: Record<QualityLevel, string> = {
   bad: UNWATCHABLE_PILL,
 }
 
+export function saidWithUnit(value: number | string, unit: string): string {
+  return unit === '%' ? `${value}${unit}` : `${value} ${unit}`
+}
+
 export function thresholdProblem(
   typed: string,
   lowest: number,
@@ -37,7 +41,7 @@ export function thresholdProblem(
   }
 
   if (amount < lowest || amount > highest) {
-    return `${lowest} 〜 ${highest}${unit} の範囲で入力してください`
+    return `${lowest} 〜 ${saidWithUnit(highest, unit)} の範囲で入力してください`
   }
 
   return undefined

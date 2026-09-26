@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { expect, within } from 'storybook/test'
 
 import {
@@ -12,6 +13,7 @@ import {
   rowsOfTheTableHeaded,
   tipIn,
 } from '@/stories/pills-in-a-column'
+import { inTheSettings } from '@/stories/frames'
 
 const SESSION_COLUMN = 3
 
@@ -20,7 +22,13 @@ const STATE_COLUMN = 4
 const meta = {
   title: 'Screens/設定・チューナー',
   component: TunersView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/tuners' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     onToggle: async () => ({ state: 'ok' }),
     onRestart: async () => ({ state: 'disconnected' }),
@@ -28,6 +36,7 @@ const meta = {
     onSaveDetection: async () => ({ state: 'ok' }),
     onSaveThreshold: async () => ({ state: 'ok' }),
   },
+  decorators: [inTheSettings],
 } satisfies Meta<typeof TunersView>
 
 export default meta
@@ -47,7 +56,7 @@ export const 進行中のセッションが物理選局値で分かる: Story = 
       rows
         .filter((row) =>
           cellOf(row, SESSION_COLUMN).querySelector(
-            '[data-slot="tooltip-trigger"], [data-slot="badge"]',
+            '[data-slot="tooltip-trigger"], [data-state-say], [data-slot="badge"]',
           ),
         )
         .map(
@@ -205,6 +214,7 @@ export const 異常と警告はdriverの一文を添えて出る: Story = {
     },
   },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
     const rows = rowsOfTheTableHeaded(canvasElement, 'デバイス')

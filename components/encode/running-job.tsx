@@ -31,8 +31,8 @@ export function RunningJob({
   return (
     <Surface data-slot="running-job">
       <div className="flex flex-wrap items-center gap-2.5">
-        <EncodeIcon className="size-[17px] text-brand" />
-        <b className="heading min-w-0 flex-1 text-[15px]">
+        <EncodeIcon className="size-[calc(17rem/16)] text-brand" />
+        <b className="heading min-w-0 flex-1 text-[calc(15rem/16)]">
           {job.title ?? (
             <span className="text-ink-3">{RECORDING_REMOVED_LABEL}</span>
           )}
@@ -43,7 +43,7 @@ export function RunningJob({
             {STALLED_LABEL}
           </Badge>
         )}
-        <span className="font-code text-[15px] font-medium tabular-nums text-brand">
+        <span className="font-code text-[calc(15rem/16)] font-medium tabular-nums text-brand">
           {percent !== undefined ? `${percent}%` : EMPTY_VALUE}
         </span>
       </div>
@@ -80,7 +80,7 @@ export function RunningJob({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {job.title !== undefined && (
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="watch" size="sm" asChild>
             <Link href={`/recordings/${job.recordingId}` as Route}>
               録画詳細を開く
             </Link>

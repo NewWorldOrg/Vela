@@ -21,6 +21,7 @@ import {
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -39,15 +40,15 @@ import {
 } from '@/components/encode/definition-list'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 
-const COLUMNS: { label: string; hidden?: boolean }[] = [
-  { label: '名称' },
-  { label: 'コーデック' },
-  { label: '解像度' },
-  { label: '品質(CRF)' },
-  { label: '品質(QP)' },
-  { label: 'インタレース解除' },
-  { label: '作成' },
-  { label: '操作', hidden: true },
+const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
+  { label: '名称', width: 'calc(200rem/16)' },
+  { label: 'コーデック', width: 'calc(124rem/16)' },
+  { label: '解像度', width: 'calc(112rem/16)' },
+  { label: '品質(CRF)', width: 'calc(104rem/16)' },
+  { label: '品質(QP)', width: 'calc(104rem/16)' },
+  { label: 'インタレース解除', width: 'calc(148rem/16)' },
+  { label: '作成', width: 'calc(122rem/16)' },
+  { label: '操作', width: 'calc(148rem/16)', hidden: true },
 ]
 
 export function ProfileList({
@@ -70,13 +71,14 @@ export function ProfileList({
     <>
       <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
         <RemovalNotice removed={removed} />
-        <AddProfileDialog variant="sm" onDefine={onDefine} />
+        <AddProfileDialog size="sm" onDefine={onDefine} />
       </div>
 
       <Table
-        className="min-w-[930px]"
+        className="table-fixed min-w-[calc(930rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
+        <TableColumns widths={COLUMNS.map((column) => column.width)} />
         <TableHeader className={STICKY_HEAD}>
           <TableRow>
             {COLUMNS.map((column) => (

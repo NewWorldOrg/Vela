@@ -12,16 +12,16 @@ import {
   type WriteResult,
 } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
-import { Badge } from '@/components/ui/badge'
 import {
-  STATE_COLUMN,
+  StateSay,
   StatusCell,
-  pillWidthFor,
+  stateColumnFor,
 } from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -45,12 +45,12 @@ import { ScanBar } from '@/components/channels/scan-bar'
 import { ScanRunPanel } from '@/components/scan/scan-run-panel'
 import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis'
 
-const SCAN_STATE_PILL_WIDTH = pillWidthFor(Object.values(SCAN_STATE_LABEL))
+const SCAN_STATE_COLUMN = stateColumnFor(Object.values(SCAN_STATE_LABEL))
 
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
     <div className="mb-2 flex flex-wrap items-baseline gap-2.5 px-0.5">
-      <h2 className="heading text-[15px]">{title}</h2>
+      <h2 className="heading text-[calc(15rem/16)]">{title}</h2>
       <span className="text-note tabular-nums text-ink-3">{stat}</span>
     </div>
   )
@@ -74,7 +74,7 @@ function ServiceGroupSection({
         group.diagnosis ? (
           <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
         ) : (
-          <EmptyState spot="antenna" className="max-w-[520px]">
+          <EmptyState spot="antenna" className="max-w-[calc(520rem/16)]">
             {group.walk === 'never'
               ? `${group.label}はまだスキャンされていません。`
               : group.walk === 'unknown'
@@ -100,18 +100,21 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
         />
       ) : (
         <Table
-          className="min-w-[560px]"
+          className="table-fixed min-w-[calc(560rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
+          <TableColumns
+            widths={[
+              'calc(180rem/16)',
+              SCAN_STATE_COLUMN,
+              'calc(112rem/16)',
+              'calc(180rem/16)',
+            ]}
+          />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
             <TableRow>
               {['開始', '状態', '所要', '終了'].map((column) => (
-                <TableHead
-                  key={column}
-                  className={column === '状態' ? STATE_COLUMN : undefined}
-                >
-                  {column}
-                </TableHead>
+                <TableHead key={column}>{column}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -123,9 +126,8 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 </TableCell>
                 <TableCell>
                   <StatusCell>
-                    <Badge
-                      width={SCAN_STATE_PILL_WIDTH}
-                      variant={
+                    <StateSay
+                      tone={
                         run.state === 'completed'
                           ? 'ok'
                           : run.state === 'running'
@@ -134,9 +136,10 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                               ? 'err'
                               : 'mute'
                       }
+                      bold
                     >
                       {run.stateLabel}
-                    </Badge>
+                    </StateSay>
                   </StatusCell>
                 </TableCell>
                 <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">

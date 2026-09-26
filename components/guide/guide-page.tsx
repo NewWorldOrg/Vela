@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -15,7 +15,7 @@ import type {
   CollectionStatus,
   RebuildResult,
 } from '@/repository/collection'
-import type { GuideResult, Program } from '@/repository/programs'
+import type { GuideResult, Program, ProgramExtras } from '@/repository/programs'
 import type {
   ReservationRevision,
   ReservationWrite,
@@ -33,6 +33,7 @@ import {
 } from '@/components/vela/icons'
 import { CollectionDrawer } from '@/components/guide/collection-drawer'
 import { GuideGrid } from '@/components/guide/guide-grid'
+import { glyphLoadsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
 import { ScreenMain } from '@/components/vela/app-shell'
 
@@ -44,6 +45,7 @@ export function GuideView({
   onReserve,
   onCancel,
   onRevise,
+  onReadExtras,
 }: {
   guide: GuideResult
   collection: CollectionStatus
@@ -55,15 +57,44 @@ export function GuideView({
     id: string,
     revision: ReservationRevision,
   ) => Promise<ReservationWrite>
+  onReadExtras: (
+    kind: string,
+    date: string,
+    id: string,
+    channelId: string,
+  ) => Promise<ProgramExtras | undefined>
 }) {
   const router = useRouter()
+  const [, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
   const [folded, fold] = useSubChannelsFolded()
-  const foldable = foldsAColumn(guide.channels, guide.programs)
-  const shownGuide =
-    folded && foldable ? foldedGuideOf(guide.channels, guide.programs) : guide
+  const foldable = useMemo(
+    () => foldsAColumn(guide.channels, guide.programs),
+    [guide.channels, guide.programs],
+  )
+  const foldedGuide = useMemo(
+    () => foldedGuideOf(guide.channels, guide.programs),
+    [guide.channels, guide.programs],
+  )
+  const shownGuide = folded && foldable ? foldedGuide : guide
+  const glyphLoads = useMemo(
+    () =>
+      glyphLoadsOf(
+        [
+          ...guide.channels.map((c) => c.name),
+          ...guide.programs.flatMap((p) => [
+            p.title,
+            p.genreLabel,
+            p.description ?? '',
+          ]),
+        ],
+        guide.programs.map((p) => p.title),
+      ),
+    [guide.channels, guide.programs],
+  )
+
   const shown = selected
     ? (shownGuide.programs.find(
         (one) => one.id === selected.id && one.channelId === selected.channelId,
@@ -72,10 +103,52 @@ export function GuideView({
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
 
-  const select = useCallback((program: Program) => {
-    setSelected(program)
-    setPanelOpen(true)
-  }, [])
+  const [extras, setExtras] = useState<
+    Record<string, ProgramExtras | 'failed'>
+  >({})
+  const asked = useRef(new Set<string>())
+  const extrasKeyOf = useCallback(
+    (program: Program) =>
+      [guide.kind, guide.day.date, program.channelId, program.id].join('|'),
+    [guide.kind, guide.day.date],
+  )
+
+  const select = useCallback(
+    (program: Program) => {
+      setSelected(program)
+      setPanelOpen(true)
+
+      const key = extrasKeyOf(program)
+
+      if (program.items !== undefined || asked.current.has(key)) {
+        return
+      }
+
+      const failed = (): void => {
+        asked.current.delete(key)
+        setExtras((was) => ({ ...was, [key]: 'failed' }))
+      }
+
+      asked.current.add(key)
+      setExtras((was) => {
+        const { [key]: _, ...rest } = was
+
+        return rest
+      })
+      onReadExtras(guide.kind, guide.day.date, program.id, program.channelId)
+        .then((found) => {
+          if (found === undefined) {
+            failed()
+
+            return
+          }
+
+          setExtras((was) => ({ ...was, [key]: found }))
+        })
+        .catch(failed)
+    },
+    [extrasKeyOf, onReadExtras, guide.kind, guide.day.date],
+  )
 
   const patch = useCallback(
     (next: Record<string, string | null>) => {
@@ -88,9 +161,11 @@ export function GuideView({
         }
       }
       const qs = params.toString()
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )
@@ -99,18 +174,28 @@ export function GuideView({
   const prev = guide.days[dayIndex - 1]
   const next = guide.days[dayIndex + 1]
 
+  const loaded = shown ? extras[extrasKeyOf(shown)] : undefined
+  const detailed =
+    shown && typeof loaded === 'object' ? { ...shown, ...loaded } : shown
+  const extrasState =
+    !shown || shown.items !== undefined || typeof loaded === 'object'
+      ? undefined
+      : loaded === 'failed'
+        ? 'failed'
+        : 'waiting'
+
   return (
     <ScreenMain
       width="full"
       scroll="within"
-      className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[30px]"
+      className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[20px]">
-        <ProgramGuideIcon className="size-[18px] text-brand" />
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)]">
+        <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
         番組表
       </h1>
-      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[18px] py-[9px] max-[700px]:px-3.5">
-        <div className="inline-flex gap-1 rounded-full bg-surface-2 p-[3px]">
+      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5">
+        <div className="inline-flex gap-1 rounded-full bg-surface-2 p-[calc(3rem/16)]">
           {CHANNEL_KINDS.map((k) => (
             <button
               key={k.value}
@@ -180,14 +265,14 @@ export function GuideView({
           onClick={() => setCollectionOpen(true)}
           className="tap-target ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
         >
-          <AntennaIcon className="size-[15px]" />
+          <AntennaIcon className="size-[calc(15rem/16)]" />
           収集状態
         </button>
         <Link
           href="/search"
           className="tap-target inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
         >
-          <SearchIcon className="size-[15px]" />
+          <SearchIcon className="size-[calc(15rem/16)]" />
           番組を検索
         </Link>
       </div>
@@ -219,7 +304,7 @@ export function GuideView({
           titleLevel={2}
           title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
           action={
-            <Button variant="default" size="sm" asChild>
+            <Button variant="watch" size="sm" asChild>
               <Link href="/settings/channels">チャンネル設定へ</Link>
             </Button>
           }
@@ -233,18 +318,22 @@ export function GuideView({
       ) : (
         <>
           <GuideGrid
+            key={guide.kind}
             channels={shownGuide.channels}
             programs={shownGuide.programs}
+            dayKey={guide.day.date}
             windowStartHour={guide.windowStartHour}
             windowHours={guide.windowHours}
             nowMin={guide.nowMin}
             nowLabel={guide.nowLabel}
             selectedId={panelOpen ? selected?.id : undefined}
             onSelect={select}
+            glyphLoads={glyphLoads}
           />
           {shown && (
             <ProgramPanel
-              program={shown}
+              program={detailed ?? shown}
+              extras={extrasState}
               channel={shownGuide.channels.find(
                 (c) => c.id === shown.channelId,
               )}
@@ -256,15 +345,6 @@ export function GuideView({
               onCancel={onCancel}
               onRevise={onRevise}
             />
-          )}
-          {selected && !panelOpen && (
-            <button
-              type="button"
-              onClick={() => setPanelOpen(true)}
-              className="tap-target fixed right-[18px] bottom-[18px] z-30 cursor-pointer rounded-full border border-edge bg-surface px-[17px] py-2 text-ui font-bold whitespace-nowrap text-ink shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none max-[900px]:right-3 max-[900px]:bottom-3"
-            >
-              番組詳細を開く
-            </button>
           )}
         </>
       )}

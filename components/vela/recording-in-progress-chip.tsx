@@ -1,6 +1,6 @@
 import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
 import { alsoSays } from '@/components/recordings/status-cell'
-import { Badge, type BadgeWidth } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
 import { ListIcon } from '@/components/vela/icons'
 import { ChipDot } from '@/components/vela/status'
 import { TermTip } from '@/components/vela/term-tip'
@@ -9,11 +9,9 @@ export type RecordingChipMark = 'dot' | 'ledger'
 
 export function RecordingInProgressChip({
   mark = 'dot',
-  width,
   also = [],
 }: {
   mark?: RecordingChipMark
-  width?: BadgeWidth
   also?: (string | undefined | false)[]
 }) {
   const ledger = mark === 'ledger'
@@ -23,10 +21,15 @@ export function RecordingInProgressChip({
     <TermTip term={term}>
       <Badge
         variant="recording"
-        width={width}
-        className={ledger ? 'gap-[7px] pl-[9px]' : undefined}
+        className={
+          ledger ? 'gap-[calc(7rem/16)] pl-[calc(9rem/16)]' : undefined
+        }
       >
-        {ledger ? <ListIcon className="size-[13px]" /> : <ChipDot />}
+        {ledger ? (
+          <ListIcon className="size-[calc(13rem/16)]" />
+        ) : (
+          <ChipDot className="breathes" />
+        )}
         {term.label}
       </Badge>
     </TermTip>

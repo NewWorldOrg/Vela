@@ -70,7 +70,7 @@ export function Pager({
             aria-current={item === page ? 'page' : undefined}
             onClick={() => onPage(item)}
             className={cn(
-              'tap-target flex h-[29px] min-w-[29px] cursor-pointer items-center justify-center rounded-full border px-2.5 font-code text-sub shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none',
+              'tap-target flex h-[calc(29rem/16)] min-w-[calc(29rem/16)] cursor-pointer items-center justify-center rounded-full border px-2.5 font-code text-sub shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg active:translate-x-px active:translate-y-px active:shadow-pop-none',
               item === page
                 ? 'border-btn-fill bg-btn-fill text-on-btn'
                 : 'border-line-strong bg-surface text-ink-2 hover:text-ink',

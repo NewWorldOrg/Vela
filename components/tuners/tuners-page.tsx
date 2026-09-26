@@ -21,6 +21,7 @@ import { InlineAlert } from '@/components/vela/banner'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
@@ -38,15 +39,12 @@ import {
   TunerTerrestrialIcon,
 } from '@/components/vela/icons'
 import {
-  STATE_COLUMN,
+  StateSay,
   StatusCell,
-  pillWidthFor,
+  stateColumnFor,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
-import {
-  TUNER_STATE_PILL_WIDTH,
-  TunerStateChip,
-} from '@/components/tuners/tuner-state-chip'
+import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
@@ -80,16 +78,14 @@ const DIFF_VARIANT = {
 
 const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
 
-const SESSION_PILL_WIDTH = pillWidthFor(Object.values(SESSION_PILL_LABEL))
-
-const COLUMNS = [
-  'デバイス',
-  '種別',
-  '有効',
-  '現在のセッション',
-  '状態',
-  WHEN_LABELS.taken,
-  'LNB 給電',
+const COLUMNS: { label: string; width: string }[] = [
+  { label: 'デバイス', width: 'calc(180rem/16)' },
+  { label: '種別', width: 'calc(96rem/16)' },
+  { label: '有効', width: 'calc(124rem/16)' },
+  { label: '現在のセッション', width: 'calc(240rem/16)' },
+  { label: '状態', width: 'calc(104rem/16)' },
+  { label: WHEN_LABELS.taken, width: 'calc(122rem/16)' },
+  { label: 'LNB 給電', width: 'calc(124rem/16)' },
 ]
 
 const DRIVER_LABEL: Record<DriverLink, string> = {
@@ -103,7 +99,7 @@ function DeviceIcon({ row }: { row: TunerRow }) {
   const Icon = row.kind === '衛星' ? TunerSatelliteIcon : TunerTerrestrialIcon
 
   return (
-    <span className="flex size-[30px] shrink-0 items-center justify-center rounded-md border border-line bg-surface-2">
+    <span className="flex size-[calc(30rem/16)] shrink-0 items-center justify-center rounded-md border border-line bg-surface-2">
       <Icon className="size-4 text-ink-2" />
     </span>
   )
@@ -120,12 +116,12 @@ function DetectionCard({
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
-      <div className="px-[19px] pt-[17px]">
-        <h3 className="heading text-[14.5px]">検出結果の差分</h3>
+      <div className="px-[calc(19rem/16)] pt-[calc(17rem/16)]">
+        <h3 className="heading text-[calc(14.5rem/16)]">検出結果の差分</h3>
         {lede && <p className="mt-px text-sub text-ink-2">{lede}</p>}
       </div>
       {children}
-      <div className="flex flex-wrap items-start justify-end gap-[9px] px-[19px] pt-[15px] pb-[17px]">
+      <div className="flex flex-wrap items-start justify-end gap-[calc(9rem/16)] px-[calc(19rem/16)] pt-[calc(15rem/16)] pb-[calc(17rem/16)]">
         {footer}
       </div>
     </div>
@@ -134,7 +130,7 @@ function DetectionCard({
 
 function CancelDetection() {
   return (
-    <Button variant="ghost" size="sm" asChild>
+    <Button variant="ghost" asChild>
       <Link href={TUNERS_HREF}>キャンセル</Link>
     </Button>
   )
@@ -150,7 +146,7 @@ function DetectionPanel({
   if (detection.state !== 'ok') {
     return (
       <DetectionCard footer={<CancelDetection />}>
-        <div className="px-[19px] py-[13px]">
+        <div className="px-[calc(19rem/16)] py-[calc(13rem/16)]">
           <InlineAlert tone="warn">
             {detection.state === 'unauthenticated'
               ? signedOut('デバイスを検出')
@@ -166,7 +162,7 @@ function DetectionPanel({
   if (rows.length === 0) {
     return (
       <DetectionCard footer={<CancelDetection />}>
-        <p className="px-[19px] py-[13px] text-ui text-ink-2">
+        <p className="px-[calc(19rem/16)] py-[calc(13rem/16)] text-ui text-ink-2">
           検出したデバイスは一覧と一致しています。変更はありません。
         </p>
       </DetectionCard>
@@ -190,23 +186,23 @@ function DetectionPanel({
         </>
       }
     >
-      <div className="px-[19px] py-[13px]">
+      <div className="px-[calc(19rem/16)] py-[calc(13rem/16)]">
         {rows.map((diff) => (
           <div
             key={`${diff.kind}-${diff.device}`}
-            className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0"
+            className="flex items-center gap-[calc(11rem/16)] border-b border-dashed border-line py-2.5 last:border-b-0"
           >
             <Badge variant={DIFF_VARIANT[diff.kind]} className="font-bold">
               {diff.tag}
             </Badge>
-            <span className="font-code text-[12px]">{diff.device}</span>
+            <span className="font-code text-sub">{diff.device}</span>
             <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-3">
               {diff.note}
             </small>
           </div>
         ))}
       </div>
-      <p className="px-[19px] text-[11.5px] leading-[1.7] text-ink-3">
+      <p className="px-[calc(19rem/16)] text-note leading-[1.7] text-ink-3">
         {notes.filter(Boolean).join('')}
       </p>
     </DetectionCard>
@@ -322,8 +318,8 @@ export function TunersView({
         />
       </div>
 
-      <p className="mx-0.5 mt-[22px] mb-2.5 flex flex-wrap items-center gap-[9px] text-ui text-ink-2">
-        <ClockIcon className="size-[15px] text-brand" />
+      <p className="mx-0.5 mt-[calc(22rem/16)] mb-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2">
+        <ClockIcon className="size-[calc(15rem/16)] text-brand" />
         健全性のしきい値{' '}
         <b className="font-code font-medium text-ink">
           {tuners.thresholdHours} 時間
@@ -334,18 +330,15 @@ export function TunersView({
         />
       </p>
 
-      <Table className="min-w-[1000px]" containerClassName="pb-1">
+      <Table
+        className="table-fixed min-w-[calc(1000rem/16)]"
+        containerClassName="pb-1"
+      >
+        <TableColumns widths={COLUMNS.map((column) => column.width)} />
         <TableHeader>
           <TableRow>
             {COLUMNS.map((column) => (
-              <TableHead
-                key={column}
-                className={
-                  STATE_COLUMNS.includes(column) ? STATE_COLUMN : undefined
-                }
-              >
-                {column}
-              </TableHead>
+              <TableHead key={column.label}>{column.label}</TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -355,7 +348,7 @@ export function TunersView({
               <TableCell>
                 <span className="flex items-center gap-2.5">
                   <DeviceIcon row={row} />
-                  <b className="font-code text-[13px] leading-[1.4] font-medium">
+                  <b className="font-code text-[calc(13rem/16)] leading-[1.4] font-medium">
                     {row.device}
                   </b>
                 </span>
@@ -372,7 +365,7 @@ export function TunersView({
                   onToggle={onToggle}
                 />
                 {row.draining && (
-                  <span className="mt-1 block text-[11px] leading-[1.5] text-lemon">
+                  <span className="mt-1 block text-cap leading-[1.5] text-lemon">
                     無効化を受付済み
                   </span>
                 )}
@@ -381,17 +374,12 @@ export function TunersView({
                 {row.session ? (
                   <StatusCell>
                     <InFull says={whatTheSessionIs(row.session)}>
-                      <Badge
-                        variant={
-                          row.session.tone === 'recording'
-                            ? 'recording'
-                            : 'info'
-                        }
-                        width={SESSION_PILL_WIDTH}
-                        className="font-bold"
+                      <StateSay
+                        tone={row.session.tone === 'recording' ? 'err' : 'info'}
+                        bold
                       >
                         {row.session.label}
-                      </Badge>
+                      </StateSay>
                     </InFull>
                   </StatusCell>
                 ) : (
@@ -402,23 +390,19 @@ export function TunersView({
               </TableCell>
               <TableCell>
                 <StatusCell>
-                  <TunerStateChip
-                    row={row}
-                    width={TUNER_STATE_PILL_WIDTH}
-                    also={row.stateSub}
-                  />
+                  <TunerStateChip row={row} say also={row.stateSub} />
                 </StatusCell>
               </TableCell>
               <TableCell>
                 {row.lastService ? (
-                  <span className="font-code text-[12px] whitespace-nowrap text-ink-2">
+                  <span className="font-code text-sub whitespace-nowrap text-ink-2">
                     {row.lastService.at}
                   </span>
                 ) : (
                   <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
-              <TableCell className="font-code text-[12px] whitespace-nowrap text-ink-2">
+              <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
                 {row.lnb ?? <span className="font-sans">{EMPTY_VALUE}</span>}
               </TableCell>
             </TableRow>
@@ -429,11 +413,11 @@ export function TunersView({
       {(detection !== undefined || empty) && (
         <section className="mt-9">
           <SectionHeading mark={MarkAxis}>
-            デバイス検出 — 差分の確認
+            デバイス検出 : 差分の確認
           </SectionHeading>
           <div
             className={cn(
-              'grid items-start gap-[18px]',
+              'grid items-start gap-[calc(18rem/16)]',
               detection !== undefined &&
                 empty &&
                 'min-[1020px]:grid-cols-[1.15fr_1fr]',

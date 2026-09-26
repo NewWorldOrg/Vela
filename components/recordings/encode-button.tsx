@@ -36,9 +36,9 @@ export type QueueEncode = (
 
 const ENCODE = 'エンコード'
 
-const AGAIN = '作り直す'
+const AGAIN = '再エンコード'
 
-const MAKING_IT_AGAIN = '成果物を作り直す'
+const MAKING_IT_AGAIN = '再エンコード'
 
 const WHAT_IT_REPLACES = 'いまの成果物は新しいものに置き換わります。'
 
@@ -127,13 +127,13 @@ export function EncodeButton({
   return (
     <div className="flex flex-col items-start gap-1.5">
       <Button
-        variant="outline"
+        variant="change"
         disabled={refused !== undefined}
         title={refused}
         aria-disabled={pending}
         onClick={press}
       >
-        {pending ? <Spinner className="size-3.5" /> : <EncodeIcon />}
+        {pending ? <Spinner size="control" /> : <EncodeIcon />}
         {again ? AGAIN : ENCODE}
       </Button>
       {notice && (

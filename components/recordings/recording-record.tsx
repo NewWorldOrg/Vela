@@ -31,7 +31,7 @@ function Caption({
   return (
     <div
       className={cn(
-        'mt-[18px] mb-1.5 flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3 first:mt-0',
+        'mt-[calc(18rem/16)] mb-1.5 flex items-center gap-[calc(7rem/16)] text-cap font-bold tracking-[0.05em] text-ink-3 first:mt-0',
         className,
       )}
     >
@@ -55,15 +55,18 @@ export function RecordingRecord({
   const encode = encodeRowOf(encodeJob, d.encode, d.encodeWhenRecorded)
 
   return (
-    <details className="group mt-[22px] rounded-xl bg-surface px-[22px]">
-      <summary className="tap-target flex cursor-pointer list-none items-center gap-[9px] py-[15px] text-ui font-bold text-ink-2 transition-colors duration-150 ease-out hover:text-ink focus-visible:shadow-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden">
-        <ChevronRightIcon className="size-[15px] text-brand transition-transform duration-150 ease-toy group-open:rotate-90" />
-        <QualityIcon className="size-[15px] text-brand" />
-        録画の記録
+    <details
+      data-slot="unfold-details"
+      className="unfolds-itself group mt-[calc(22rem/16)] rounded-xl bg-surface px-[calc(22rem/16)]"
+    >
+      <summary className="tap-target flex cursor-pointer list-none items-center gap-[calc(9rem/16)] py-[calc(15rem/16)] text-ui font-bold text-ink-2 transition-colors duration-150 ease-out hover:text-ink focus-visible:shadow-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+        <ChevronRightIcon className="size-[calc(15rem/16)] text-brand transition-transform duration-150 ease-toy group-open:rotate-90" />
+        <QualityIcon className="size-[calc(15rem/16)] text-brand" />
+        技術情報
       </summary>
       <div
         style={{ '--row-label': '176px' } as CSSProperties}
-        className="max-w-[900px] border-t border-dashed border-line pt-4 pb-5"
+        className="max-w-[calc(900rem/16)] border-t border-dashed border-line pt-4 pb-5"
       >
         {d.outcome === 'complete' && (
           <DetailKeyRow
@@ -87,7 +90,7 @@ export function RecordingRecord({
             )
           }
         />
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-[11px]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(140rem/16),1fr))] gap-[calc(11rem/16)]">
           <DetailStat
             label="ドロップ合計"
             value={
@@ -107,7 +110,7 @@ export function RecordingRecord({
         </div>
         {spots.length > 0 && (
           <>
-            <div className="mt-3.5 mb-1 flex items-center gap-[7px] text-[11px] font-bold tracking-[0.05em] text-ink-3">
+            <div className="mt-3.5 mb-1 flex items-center gap-[calc(7rem/16)] text-cap font-bold tracking-[0.05em] text-ink-3">
               発生時間帯の内訳
               <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
             </div>
@@ -221,8 +224,8 @@ function SourceRow({
   }
 
   return (
-    <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[9px] text-ui last:border-b-0">
-      <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-3 max-[900px]:w-[130px] max-[700px]:w-full">
+    <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[calc(9rem/16)] text-ui last:border-b-0">
+      <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-3 max-[900px]:w-[calc(130rem/16)] max-[700px]:w-full">
         再生ソース
       </span>
       <span
@@ -238,7 +241,7 @@ function SourceRow({
               key={label}
               aria-current={inUse ? 'true' : undefined}
               className={cn(
-                'rounded-full px-[11px] py-[3px] font-code text-[11.5px] font-medium whitespace-nowrap text-ink-3',
+                'rounded-full px-[calc(11rem/16)] py-[calc(3rem/16)] font-code text-note font-medium whitespace-nowrap text-ink-3',
                 inUse && 'bg-brand-soft font-bold text-brand',
               )}
             >

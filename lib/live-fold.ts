@@ -16,11 +16,11 @@ export function foldColumn(
   motion: FoldMotion | undefined,
 ): string {
   if (motion === undefined || motion.phase === 'still') {
-    return folded ? 'w-11' : 'w-[344px]'
+    return folded ? 'w-11' : 'w-[calc(344rem/16)]'
   }
 
   if (motion.phase === 'opening') {
-    return 'w-[344px] transition-[width] duration-300 ease-fold motion-reduce:transition-none'
+    return 'w-[calc(344rem/16)] transition-[width] duration-300 ease-fold motion-reduce:transition-none'
   }
 
   if (motion.staggered) {
@@ -36,10 +36,10 @@ export function foldBand(motion: FoldMotion | undefined): string {
   }
 
   if (motion.phase === 'opening') {
-    return 'translate-x-0 starting:translate-x-[min(100%,344px)] transition-[translate] duration-300 ease-fold motion-reduce:transition-none'
+    return 'translate-x-0 starting:translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold motion-reduce:transition-none'
   }
 
-  return 'translate-x-[min(100%,344px)] transition-[translate] duration-300 ease-fold motion-reduce:transition-none'
+  return 'translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold motion-reduce:transition-none'
 }
 
 export function foldBandDelay(

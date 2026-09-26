@@ -53,7 +53,6 @@ import {
   PLAYER_FACE,
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
-  PLAYER_PALETTE,
   PLAYER_PICTURE,
   PLAYER_SCRIM,
 } from '@/components/recordings/player-palette'
@@ -210,13 +209,13 @@ export function Player({
 
   const asItStands = useRef({ position, profile, plan, sound })
 
-  useEffect(() => {
-    asItStands.current = { position, profile, plan, sound }
-  })
+  const standsAs = (now: Partial<typeof asItStands.current>) => {
+    asItStands.current = { ...asItStands.current, ...now }
+  }
 
   useKeptPosition(
     phase === 'playing',
-    () => asItStands.current.position,
+    () => position,
     (at) => {
       void onKeepPosition(d.id, at)
         .then((kept) => {
@@ -373,6 +372,7 @@ export function Player({
     setPosition(second)
     setProfile(quality)
     setSound(carrying)
+    standsAs({ position: second, profile: quality, sound: carrying })
     setPhase('waiting')
     setSource(
       pictureHref(
@@ -452,6 +452,7 @@ export function Player({
 
     wanted.current = at
     setPosition(at)
+    standsAs({ position: at })
 
     if (plan.seeking === 'byRange' && video.current && source) {
       landing.current = null
@@ -477,6 +478,7 @@ export function Player({
 
     if (phase === 'idle') {
       setProfile(quality)
+      standsAs({ profile: quality })
 
       return
     }
@@ -515,6 +517,7 @@ export function Player({
         const became = whatTheSoundBecomes(standing.plan, next, answer)
 
         setPlan(became.plan)
+        standsAs({ plan: became.plan })
         setSaid((was) => whatIsStillSaid(was, became.said))
 
         if (
@@ -524,6 +527,7 @@ export function Player({
             became.plan.seeking === under.seeking)
         ) {
           setSound(became.sound)
+          standsAs({ sound: became.sound })
 
           return
         }
@@ -653,7 +657,7 @@ export function Player({
 
   if (phase === 'broken') {
     return (
-      <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
+      <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
         <PlaybackFaultNotice
           detail={d}
           fault={fault}
@@ -665,12 +669,11 @@ export function Player({
   }
 
   return (
-    <div className="mx-[30px] max-[1060px]:mx-5 max-[700px]:mx-3.5">
+    <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
       <section
         ref={setShell}
         tabIndex={-1}
         data-slot="player"
-        style={PLAYER_PALETTE}
         onPointerMove={stir}
         onPointerLeave={stir}
         onPointerDown={() => {
@@ -739,6 +742,7 @@ export function Player({
               landing.current = null
               wanted.current = null
               setPosition(from + at)
+              standsAs({ position: from + at })
             }}
             className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
           />
@@ -848,8 +852,8 @@ export function Player({
               <p
                 role="status"
                 className={cn(
-                  'mt-2 text-[11px] font-medium',
-                  said.tone === 'ok' ? 'text-[#9FDCBB]' : 'text-[#EC9A93]',
+                  'mt-2 text-cap font-medium',
+                  said.tone === 'ok' ? 'text-(--pl-ok-ink)' : 'text-(--pl-err)',
                 )}
               >
                 {said.text}
@@ -926,7 +930,7 @@ export function Player({
                   onChoose={chooseVolume}
                 />
               </PlayerTip>
-              <span className="ml-2 font-code text-[13px] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
+              <span className="ml-2 font-code text-[calc(13rem/16)] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
                 {formatPlayerTime(scrubbingAt ?? position)} /{' '}
                 {formatPlayerTime(duration)}
               </span>

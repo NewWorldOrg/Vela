@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useRef, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -185,12 +185,12 @@ function RulesScreen({
     channels.find((channel) => channel.id === id)?.name || id
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[30px]">
+    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
       <ReservationTabs
         current="rules"
         action={
-          <ActionRow className="gap-2">
-            <Button variant="outline" size="sm" asChild>
+          <ActionRow>
+            <Button variant="watch" size="sm" asChild>
               <Link href="/search">
                 <SearchIcon />
                 検索から作る
@@ -204,10 +204,10 @@ function RulesScreen({
         }
       />
 
-      <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(280px,360px)_1fr]">
+      <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(calc(280rem/16),calc(360rem/16))_1fr]">
         <section className="rounded-lg bg-surface px-4 py-3.5">
           <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-            <h2 className="heading flex items-center gap-1.5 text-[15px]">
+            <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
               <ReservationIcon className="size-4 text-brand" />
               ルール
             </h2>
@@ -242,11 +242,7 @@ function RulesScreen({
         </section>
 
         {editing.state === 'none' ? (
-          <EmptyState
-            spot="antenna"
-            title="ルールが選ばれていません"
-            className="min-[1061px]:mt-6"
-          />
+          <EmptyState spot="list" title="ルールが選ばれていません" />
         ) : (
           <RuleEditor
             rule={editing.state === 'rule' ? editing.rule : undefined}
@@ -284,8 +280,10 @@ function RuleRow({
     <li>
       <div
         className={cn(
-          'flex items-center gap-2.5 rounded-md px-2.5 py-2 transition-[background-color] duration-150',
-          selected ? 'bg-brand-soft' : 'hover:bg-surface-2',
+          'flex items-center gap-2.5 rounded-md px-2.5 py-2 transition-[color,box-shadow] duration-150',
+          selected
+            ? 'text-brand shadow-[inset_3px_0_0_0_var(--color-brand)]'
+            : 'hover:text-brand',
         )}
       >
         <button
@@ -409,15 +407,19 @@ function RuleEditor({
   const [problem, setProblem] = useState<Named>()
   const [refusal, setRefusal] = useState<string>()
   const [preview, setPreview] = useState<RulePreview>()
+  const [stale, setStale] = useState<boolean>(false)
   const [impact, setImpact] = useState<RuleImpact>()
   const [leaving, setLeaving] = useState<RuleImpact>()
   const [confirming, setConfirming] = useState(false)
   const [retiring, setRetiring] = useState(false)
   const [pending, startTransition] = useTransition()
 
+  const edits = useRef(0)
+
   const amend = (part: Partial<Entry>): void => {
     setEntry((previous) => ({ ...previous, ...part }))
-    setPreview(undefined)
+    setStale(true)
+    edits.current += 1
   }
 
   const asked: SearchTerms = termsOfEntry(entry)
@@ -524,8 +526,13 @@ function RuleEditor({
       return
     }
 
+    const askedAt = edits.current
+
     startTransition(async () => {
-      answered(await actions.onPreview(draft, rule?.id), setPreview)
+      answered(await actions.onPreview(draft, rule?.id), (seen) => {
+        setPreview(seen)
+        setStale(edits.current !== askedAt)
+      })
     })
   }
 
@@ -636,7 +643,7 @@ function RuleEditor({
   return (
     <section className="rounded-lg bg-surface px-4 py-3.5">
       <div className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-dashed border-line pb-2.5">
-        <h2 className="heading min-w-0 flex-1 text-[15px]">
+        <h2 className="heading min-w-0 flex-1 text-[calc(15rem/16)]">
           {rule ? rule.name : '新しいルール'}
         </h2>
         {entry.enabled ? (
@@ -762,7 +769,7 @@ function RuleEditor({
 
         <Field>
           <FieldLabel>ジャンル</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[18px]">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
             {entry.genres.map((genre) => (
               <Pick
                 key={genre}
@@ -803,7 +810,7 @@ function RuleEditor({
 
         <Field>
           <FieldLabel>対象チャンネル</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[18px]">
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
             {entry.channels.map((id) => (
               <Pick
                 key={id}
@@ -946,7 +953,7 @@ function RuleEditor({
           </Field>
         </div>
 
-        <div className="flex flex-col gap-[26px]">
+        <div className="flex flex-col gap-[calc(26rem/16)]">
           <div className="flex flex-wrap items-center gap-2.5">
             <Switch
               id="rule-enabled"
@@ -973,16 +980,21 @@ function RuleEditor({
       >
         <div className="flex flex-wrap items-center gap-2.5">
           <Button
-            variant="outline"
+            variant="change"
             size="sm"
             disabled={pending}
             onClick={rehearse}
           >
             <SearchIcon />
-            下見する
+            一致を見る
           </Button>
           {preview && (
-            <span className="text-sub text-ink-2">
+            <span
+              className={cn(
+                'text-sub text-ink-2',
+                stale && 'text-ink-3 [&_b]:text-ink-3',
+              )}
+            >
               一致 <Count value={preview.matched} /> 件 / 新しく作られる{' '}
               <Count value={preview.making} /> 件 / 予約済み{' '}
               <Count value={preview.alreadyReserved} /> 件 / 競合{' '}
@@ -998,7 +1010,7 @@ function RuleEditor({
         </div>
 
         {preview && (
-          <>
+          <div className={cn('flex flex-col gap-3.5', stale && 'grayscale')}>
             {preview.excluded > 0 && (
               <p className="text-note text-ink-3">
                 <Count value={preview.excluded} /> 件は除外されました。
@@ -1015,7 +1027,7 @@ function RuleEditor({
                   {preview.takes.map((take) => (
                     <li
                       key={take.id}
-                      className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b border-dashed border-line py-[7px] last:border-b-0"
+                      className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b border-dashed border-line py-[calc(7rem/16)] last:border-b-0"
                     >
                       <span className="font-code text-note whitespace-nowrap text-ink-2">
                         {take.whenLabel}
@@ -1044,23 +1056,18 @@ function RuleEditor({
                 )}
               </>
             )}
-          </>
+          </div>
         )}
       </FormSection>
 
       <div className="mt-3.5 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
         {rule && (
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={pending}
-            onClick={retire}
-          >
+          <Button variant="remove" disabled={pending} onClick={retire}>
             <TrashIcon />
             削除
           </Button>
         )}
-        <Button variant="ghost" size="sm" disabled={pending} onClick={onClose}>
+        <Button variant="ghost" disabled={pending} onClick={onClose}>
           閉じる
         </Button>
         <Button className="ml-auto" disabled={pending} onClick={weigh}>
@@ -1099,7 +1106,7 @@ function RuleEditor({
             <AlertDialogFooter>
               <AlertDialogCancel>キャンセル</AlertDialogCancel>
               <AlertDialogAction
-                variant="destructive"
+                variant="removeFill"
                 disabled={pending || !leaving}
                 onClick={(event) => {
                   event.preventDefault()
@@ -1197,13 +1204,13 @@ function Pick({
   onRemove: () => void
 }) {
   return (
-    <span className="inline-flex items-center gap-[7px] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
+    <span className="inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
       {label}
       <button
         type="button"
         aria-label={spoken}
         onClick={onRemove}
-        className="tap-target flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
+        className="tap-target flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
       >
         <CloseIcon />
       </button>

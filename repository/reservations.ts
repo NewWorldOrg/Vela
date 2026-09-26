@@ -1,3 +1,4 @@
+import type { StationLogo } from '@/repository/channels'
 import type { OriginLabel } from '@/lib/format'
 import {
   formatClockSpan,
@@ -60,6 +61,7 @@ export interface Reservation {
   note?: string
   channelName: string
   channelNo?: string
+  channelLogo?: StationLogo
   whenLabel: string
   origin: OriginLabel
   ruleName?: string
@@ -462,6 +464,7 @@ export function toReservation(
     note: r.programme.summary || undefined,
     channelName: channel?.name || serviceKeyOf(r),
     channelNo: channel?.no,
+    channelLogo: channel?.logo,
     whenLabel: formatMomentSpan(r.window.startAt, r.window.endAt),
     origin: formatReservationOrigin(r.origin),
     ruleName: ruleNameOf(r.ruleId, rules),

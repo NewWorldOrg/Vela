@@ -17,7 +17,10 @@ export function WaitingRows({
       {Array.from({ length: rows }, (_, nth) => (
         <Skeleton
           key={nth}
-          className={cn('h-[34px]', ROW_WIDTHS[nth % ROW_WIDTHS.length])}
+          className={cn(
+            'h-[calc(34rem/16)]',
+            ROW_WIDTHS[nth % ROW_WIDTHS.length],
+          )}
         />
       ))}
     </div>

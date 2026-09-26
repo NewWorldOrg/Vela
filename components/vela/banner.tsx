@@ -133,17 +133,17 @@ export function Banner({
       data-tone={tone}
       role={tone === 'danger' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-[11px] rounded-lg px-[15px] py-3 text-ui',
+        'flex items-start gap-[calc(11rem/16)] rounded-lg px-[calc(15rem/16)] py-3 text-ui',
         TONE_CLASS[tone],
         className,
       )}
       {...props}
     >
-      <ToneIcon className="mt-[3px] size-[17px]" />
+      <ToneIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)]" />
       <div id={bodyId} className="min-w-0 flex-1">
         {children}
         {progress !== undefined && (
-          <div className="mt-[9px] h-1 overflow-hidden rounded-full bg-surface">
+          <div className="mt-[calc(9rem/16)] h-1 overflow-hidden rounded-full bg-surface">
             <div
               className="h-full rounded-full bg-current transition-[width] duration-150 ease-out"
               style={{ width: `${progress}%` }}
@@ -152,7 +152,7 @@ export function Banner({
         )}
       </div>
       {actions && (
-        <div className="ml-auto flex shrink-0 items-center gap-[14px] self-center pl-[14px] text-ui">
+        <div className="ml-auto flex shrink-0 items-center gap-[calc(14rem/16)] self-center pl-[calc(14rem/16)] text-ui">
           {actions.map((action) => (
             <BannerActionControl
               key={action.label}
@@ -181,13 +181,13 @@ export function InlineAlert({
       data-tone={tone}
       role={tone === 'danger' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-[9px] rounded-md px-3 py-2 text-sub',
+        'flex items-start gap-[calc(9rem/16)] rounded-md px-3 py-2 text-sub',
         TONE_CLASS[tone],
         className,
       )}
       {...props}
     >
-      <ToneIcon className="mt-[3px] size-[15px]" />
+      <ToneIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)]" />
       <div className="min-w-0">{children}</div>
     </div>
   )

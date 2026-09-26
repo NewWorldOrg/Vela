@@ -21,12 +21,11 @@ export function ApplyScanAction({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-[9px]">
-        <Button variant="ghost" size="sm" asChild>
+      <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
+        <Button variant="ghost" asChild>
           <Link href={'/settings/channels' as Route}>キャンセル</Link>
         </Button>
         <Button
-          size="sm"
           disabled={pending}
           onClick={() =>
             startTransition(async () => {

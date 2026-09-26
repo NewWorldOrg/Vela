@@ -14,62 +14,56 @@ import {
   SWERVE_LABEL,
 } from '@/repository/encode-terms'
 import {
+  READABLE_LINE,
   Table,
   TableBody,
+  TableColumns,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { StatusCell, stateColumnPx } from '@/components/recordings/status-cell'
+import { StatusCell } from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InFull } from '@/components/vela/in-full'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import {
-  JOB_STATUS_PILL_WIDTH,
+  JOB_STATUS_COLUMN,
   JobStatusChip,
 } from '@/components/encode/job-status-chip'
 
 interface Column {
   label: string
-  width?: number
+  width: string
   hidden?: boolean
   right?: boolean
 }
 
-const CELL_SIDES_PX = 26
-
-const STAMP_PX = 132
+const STAMP_WIDTH = 'calc(122rem/16)'
 
 const COLUMNS: Column[] = [
-  { label: '番組' },
-  { label: '状態', width: stateColumnPx(JOB_STATUS_PILL_WIDTH, CELL_SIDES_PX) },
-  { label: 'プロファイル', width: 100 },
-  { label: '保存先', width: 90 },
-  { label: '進捗', width: 64, right: true },
-  { label: '経路', width: 110 },
-  { label: '開始', width: STAMP_PX },
-  { label: '終了', width: STAMP_PX },
-  { label: '操作', width: 96, hidden: true },
+  { label: '番組', width: 'calc(320rem/16)' },
+  { label: '状態', width: JOB_STATUS_COLUMN },
+  { label: 'プロファイル', width: 'calc(104rem/16)' },
+  { label: '保存先', width: 'calc(76rem/16)' },
+  { label: '進捗', width: 'calc(60rem/16)', right: true },
+  { label: '経路', width: 'calc(168rem/16)' },
+  { label: '開始', width: STAMP_WIDTH },
+  { label: '終了', width: STAMP_WIDTH },
+  { label: '操作', width: 'calc(96rem/16)', hidden: true },
 ]
 
-const TABLE_MIN_PX = 1100
+const TABLE_MIN = 'calc(1100rem/16)'
 
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
 function Standing({ job }: { job: EncodeJob }) {
-  const chip = (
-    <JobStatusChip
-      status={job.status}
-      stalled={job.stalled}
-      width={JOB_STATUS_PILL_WIDTH}
-    />
-  )
+  const chip = <JobStatusChip status={job.status} stalled={job.stalled} say />
   const why = whyItStands(job)
 
   return why ? (
-    <InFull says={why}>
-      <span className="inline-flex">{chip}</span>
+    <InFull says={why} wraps="inline-flex">
+      {chip}
     </InFull>
   ) : (
     chip
@@ -92,8 +86,8 @@ function Dash() {
 
 function Started({ job }: { job: EncodeJob }) {
   return (
-    <InFull says={`登録 ${job.queuedAt}`}>
-      <span className="inline-block">{job.startedAt ?? <Dash />}</span>
+    <InFull says={`登録 ${job.queuedAt}`} wraps="inline-block">
+      {job.startedAt ?? <Dash />}
     </InFull>
   )
 }
@@ -102,8 +96,8 @@ function Destination({ job }: { job: EncodeJob }) {
   const said = job.destinationLabel ?? <Dash />
 
   return (
-    <InFull says={job.outputRoot}>
-      <span className="inline-block">{said}</span>
+    <InFull says={job.outputRoot} wraps="inline-block">
+      {said}
     </InFull>
   )
 }
@@ -118,17 +112,10 @@ export function JobTable({
   return (
     <Table
       className="table-fixed"
-      style={{ minWidth: TABLE_MIN_PX }}
+      style={{ minWidth: TABLE_MIN }}
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
-      <colgroup>
-        {COLUMNS.map((column) => (
-          <col
-            key={column.label}
-            style={column.width ? { width: column.width } : undefined}
-          />
-        ))}
-      </colgroup>
+      <TableColumns widths={COLUMNS.map((column) => column.width)} />
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
         <TableRow>
           {COLUMNS.map((column) => (
@@ -188,19 +175,19 @@ function JobTitle({ job }: { job: EncodeJob }) {
   }
 
   return (
-    <>
+    <div className={READABLE_LINE}>
       <Link
         href={`/recordings/${job.recordingId}` as Route}
-        className="tap-target block text-[13px] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
+        className="tap-target block text-[calc(13rem/16)] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
       >
         <span className="block">{job.title}</span>
       </Link>
       {job.recordedAt && (
-        <span className="block font-code text-[10.5px] text-ink-3">
+        <span className="block font-code text-micro text-ink-3">
           {job.recordedAt} の録画
         </span>
       )}
-    </>
+    </div>
   )
 }
 
@@ -226,10 +213,11 @@ function Headway({ job }: { job: EncodeJob }) {
   }
 
   return (
-    <InFull says={more.join('\n')}>
-      <span className="inline-block font-code text-ui tabular-nums">
-        {percent}
-      </span>
+    <InFull
+      says={more.join('\n')}
+      wraps="inline-block font-code text-ui tabular-nums"
+    >
+      {percent}
     </InFull>
   )
 }
@@ -250,7 +238,7 @@ function RouteCell({ job }: { job: EncodeJob }) {
           : wordFor(ENCODER_LABEL, job.route.ran)}
       </span>
       {job.route.swerved && (
-        <small className="block text-[10.5px] text-ink-3">
+        <small className="block text-micro text-ink-3">
           {wordFor(SWERVE_LABEL, job.route.swerved)}
         </small>
       )}

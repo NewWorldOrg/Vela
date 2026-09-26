@@ -72,9 +72,9 @@ export function TunerEnableSwitch({
       <span
         aria-live="polite"
         className={cn(
-          'block text-[11px] leading-[1.5]',
+          'block text-cap leading-[1.5]',
           outcome?.failed
-            ? 'mt-1 max-w-[180px] whitespace-normal text-coral'
+            ? 'mt-1 max-w-[calc(180rem/16)] whitespace-normal text-coral'
             : 'sr-only',
         )}
       >

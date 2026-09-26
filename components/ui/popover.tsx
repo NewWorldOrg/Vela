@@ -33,7 +33,7 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          'z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
+          'z-50 max-h-(--radix-popper-available-height) w-72 origin-(--radix-popover-content-transform-origin) overflow-y-auto overscroll-contain rounded-md border border-line-strong bg-surface p-4 text-ink shadow-pop-xl outline-hidden data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=open]:appears',
           className,
         )}
         {...props}
@@ -75,7 +75,7 @@ function PopoverDescription({
   return (
     <p
       data-slot="popover-description"
-      className={cn('text-muted-foreground', className)}
+      className={cn('text-ink-2', className)}
       {...props}
     />
   )

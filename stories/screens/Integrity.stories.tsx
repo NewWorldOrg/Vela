@@ -8,9 +8,10 @@ import {
   INTEGRITY_FIXTURE,
   INTEGRITY_MORE_THAN_FIT_FIXTURE,
 } from '@/stories/fixtures/integrity'
-import { AppFrame } from '@/components/vela/app-shell'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { IntegrityView } from '@/components/integrity/integrity-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { inTheApp } from '@/stories/frames'
 
 const swept = async (): Promise<SweepWrite> => ({ state: 'ok', findings: 5 })
 
@@ -37,15 +38,15 @@ const tooSoon = async (): Promise<SweepWrite> => ({
 const meta = {
   title: 'Screens/整合性チェック',
   component: IntegrityView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/library/integrity' },
+    },
+    layout: 'fullscreen',
+  },
   args: { onRun: swept, onDelete: throwing },
-  decorators: [
-    (Story) => (
-      <AppFrame>
-        <Story />
-      </AppFrame>
-    ),
-  ],
+  decorators: [inTheApp],
 } satisfies Meta<typeof IntegrityView>
 
 export default meta
@@ -76,6 +77,8 @@ export const 食い違いあり: Story = {
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
+    await afterTheArrival(canvasElement)
+
     await expect(dialog.getByText(STRAY.path)).toBeVisible()
     await expect(thrownAway).toEqual([])
 
@@ -99,6 +102,8 @@ export const 削除を断られたとき: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
+
+    await afterTheArrival(canvasElement)
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await expect(await dialog.findByText(STILL_BEING_WRITTEN)).toBeVisible()
@@ -193,6 +198,8 @@ export const 断りは片付いたあとまで残らない: Story = {
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
+    await afterTheArrival(canvasElement)
+
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
 
     await waitFor(() => expect(canvas.queryByText(TOO_SOON)).toBeNull())
@@ -208,7 +215,7 @@ export const 削除の形: Story = {
     const canvas = within(canvasElement)
     const remove = canvas.getByRole('button', { name: '削除' })
 
-    await expect(remove).toHaveAttribute('data-variant', 'destructive')
+    await expect(remove).toHaveAttribute('data-variant', 'remove')
     await expect(remove).toHaveAttribute('data-size', 'sm')
     await expect(remove.querySelector('svg')).not.toBeNull()
     await expect(remove.textContent).toContain('削除')

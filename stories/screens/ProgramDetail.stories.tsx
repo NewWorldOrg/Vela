@@ -10,14 +10,22 @@ import {
 } from '@/repository/programs.fixtures'
 import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
+import { inTheApp } from '@/stories/frames'
 
 const meta = {
   title: 'Screens/番組詳細',
   component: ProgramDetailView,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/guide/programs/p001' },
+    },
+    layout: 'fullscreen',
+  },
   args: {
     onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
   },
+  decorators: [inTheApp],
 } satisfies Meta<typeof ProgramDetailView>
 
 export default meta

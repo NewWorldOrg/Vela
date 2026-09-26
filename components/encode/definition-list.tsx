@@ -8,7 +8,7 @@ export const STICKY_HEAD = '[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10'
 export const STAMP =
   'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
-export const RETIRED_ROW = '[&>td]:bg-surface-2'
+export const RETIRED_ROW = '[&>td]:text-ink-3'
 
 export function DefinitionName({
   label,
@@ -19,7 +19,7 @@ export function DefinitionName({
 }) {
   return (
     <span className="flex items-center gap-2">
-      <b className="text-[13px] font-bold">{label}</b>
+      <b className="text-[calc(13rem/16)] font-bold">{label}</b>
       {retired && <Badge variant="mute">{RETIRED_LABEL}</Badge>}
     </span>
   )

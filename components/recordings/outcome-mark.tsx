@@ -17,5 +17,5 @@ export function OutcomeMark({
 }) {
   const Mark = OUTCOME_MARK[outcome]
 
-  return <Mark className="size-[26px] shrink-0 text-ink" />
+  return <Mark className="size-[calc(26rem/16)] shrink-0 text-ink" />
 }

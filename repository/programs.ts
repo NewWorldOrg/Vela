@@ -13,7 +13,8 @@ import {
 } from '@/lib/guide'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
-import type { Channel, ChannelKind, StationLogo } from '@/repository/channels'
+import type { Channel, ChannelKind } from '@/repository/channels'
+import { stationLogoOf } from '@/repository/station-logo'
 import type { EpgHealth } from '@/repository/collection'
 import type { AudioMode, VideoMode } from '@/repository/announced'
 import type { Programme } from '@/repository/programmes'
@@ -217,6 +218,47 @@ export async function getGuide(
   }
 }
 
+export const PANEL_ONLY = [
+  'items',
+  'related',
+  'audio',
+  'video',
+  'sounds',
+] as const satisfies readonly (keyof Program)[]
+
+export type ProgramExtras = Pick<Program, (typeof PANEL_ONLY)[number]>
+
+export function forTheGrid(
+  program: Program,
+): Omit<Program, keyof ProgramExtras> {
+  const handed: Program = { ...program }
+
+  for (const key of PANEL_ONLY) {
+    delete handed[key]
+  }
+
+  return handed
+}
+
+export async function extrasOf(
+  rawKind: string | undefined,
+  rawDate: string | undefined,
+  id: string,
+  channelId: string,
+): Promise<ProgramExtras | undefined> {
+  const guide = await getGuide(rawKind, rawDate)
+  const found = guide.programs.find(
+    (program) => program.id === id && program.channelId === channelId,
+  )
+
+  return (
+    found &&
+    (Object.fromEntries(
+      PANEL_ONLY.map((key) => [key, found[key]]),
+    ) as ProgramExtras)
+  )
+}
+
 export async function getProgram(
   id: string,
   now: Date = new Date(),
@@ -325,21 +367,6 @@ function compareChannels(left: GuideChannel, right: GuideChannel): number {
   return 0
 }
 
-function logoOf(service: BroadcastServiceResponder): StationLogo {
-  const carried = service.logo
-
-  if (carried == null) {
-    return {
-      declaration:
-        service.logoDeclaration === 'noPictureIsBroadcast'
-          ? 'noPictureIsBroadcast'
-          : 'notYetRead',
-    }
-  }
-
-  return { declaration: 'inTheCommonDataTable', href: carried.url }
-}
-
 export const fetchServiceChannels = cache(
   async function fetchServiceChannels(): Promise<GuideChannel[]> {
     const { data, error } = await carinaClient().GET('/api/services')
@@ -368,7 +395,7 @@ export const fetchServiceChannels = cache(
           no: remoteKey == null ? undefined : String(remoteKey),
           name: service.name ?? '',
           kind,
-          logo: logoOf(service),
+          logo: stationLogoOf(service),
           networkId,
           serviceId,
           sortKey:

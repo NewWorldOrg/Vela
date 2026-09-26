@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -17,31 +17,42 @@ import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
+  TableColumns,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { STATE_COLUMN } from '@/components/recordings/status-cell'
+import { OUTCOME_KIND_COLUMN } from '@/components/reservations/outcome-kind-chip'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { FilterSelect } from '@/components/vela/filter-select'
 import { Pager } from '@/components/vela/pager'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { OutcomeRow } from '@/components/reservations/outcome-row'
+import { unfoldShows, useUnfolding } from '@/components/vela/unfold'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { WHEN_LABELS } from '@/lib/when-terms'
+import { useArrived } from '@/hooks/useArrived'
 
-const STATE_COLUMNS: string[] = ['分類']
-
-const COLUMNS: { label: string; hidden?: boolean; narrow?: boolean }[] = [
-  { label: '代わりに録られた予約の開閉', hidden: true, narrow: true },
-  { label: '番組' },
-  { label: 'チャンネル' },
-  { label: WHEN_LABELS.broadcast },
-  { label: '由来' },
-  { label: '優先度' },
-  { label: '分類' },
-  { label: WHEN_LABELS.taken },
+const COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+  narrow?: boolean
+}[] = [
+  {
+    label: '代わりに録られた予約の開閉',
+    width: 'calc(34rem/16)',
+    hidden: true,
+    narrow: true,
+  },
+  { label: '番組', width: 'calc(300rem/16)' },
+  { label: 'チャンネル', width: 'calc(168rem/16)' },
+  { label: WHEN_LABELS.broadcast, width: 'calc(210rem/16)' },
+  { label: '由来', width: 'calc(180rem/16)' },
+  { label: '優先度', width: 'calc(76rem/16)' },
+  { label: '分類', width: OUTCOME_KIND_COLUMN },
+  { label: WHEN_LABELS.taken, width: 'calc(168rem/16)' },
 ]
 
 const EVERY = '__every__'
@@ -60,8 +71,9 @@ const KIND_OPTIONS = [
 
 export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   const { items, total, page, lastPage, filter, channels, rules } = result
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const unfolded = useUnfolding()
   const router = useRouter()
+  const [waiting, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const change = useCallback(
@@ -80,9 +92,11 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )
@@ -98,23 +112,26 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
 
       const qs = params.toString()
 
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
+          scroll: false,
+        }),
+      )
     },
     [router, pathname, searchParams],
   )
+  const arrived = useArrived()
   const emptyLedger =
     total === 0 && !(filter.kind || filter.days || filter.ch || filter.rule)
 
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[30px]"
+      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <ReservationTabs current="outcomes" />
 
-      <div className="mb-3.5 flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl bg-surface px-[17px] py-[13px]">
+      <div className="mb-3.5 flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
         <span className="text-ui font-medium whitespace-nowrap text-ink-2">
           分類
         </span>
@@ -152,9 +169,13 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
       {items.length > 0 ? (
         <>
           <Table
-            className="min-w-[1040px]"
-            containerClassName="min-h-0 flex-1 overflow-y-auto pb-1"
+            className="table-fixed min-w-[calc(1040rem/16)]"
+            containerClassName={cn(
+              'min-h-0 flex-initial overflow-y-auto pb-1 transition-opacity duration-150',
+              waiting && 'opacity-60',
+            )}
           >
+            <TableColumns widths={COLUMNS.map((column) => column.width)} />
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
               <TableRow>
                 {COLUMNS.map((column) => (
@@ -163,7 +184,6 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                     className={cn(
                       column.narrow && 'w-8',
                       column.label === '優先度' && 'text-right',
-                      STATE_COLUMNS.includes(column.label) && STATE_COLUMN,
                     )}
                   >
                     {column.hidden ? (
@@ -175,17 +195,15 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                 ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {items.map((outcome) => (
+            <TableBody {...arrived}>
+              {items.map((outcome, nth) => (
                 <OutcomeRow
                   key={outcome.id}
+                  nth={nth}
                   outcome={outcome}
-                  expanded={expanded === outcome.id}
-                  onToggle={() =>
-                    setExpanded((prev) =>
-                      prev === outcome.id ? null : outcome.id,
-                    )
-                  }
+                  expanded={unfolded.open === outcome.id}
+                  shown={unfoldShows(unfolded, outcome.id)}
+                  onToggle={() => unfolded.toggle(outcome.id)}
                 />
               ))}
             </TableBody>
@@ -204,16 +222,16 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           spot="tape"
           title="条件に合う記録がありません"
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <Button
-              variant="default"
+              variant="halt"
               size="sm"
               onClick={() =>
                 change({ kind: null, days: null, ch: null, rule: null })
               }
             >
-              絞り込みを解除
+              条件を消す
             </Button>
           }
         />
@@ -222,9 +240,9 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           spot="star"
           title="録れなかった予約はありません"
           titleLevel={2}
-          className="mt-10 max-w-[560px]"
+          className="mt-10 max-w-[calc(560rem/16)]"
           action={
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="watch" size="sm" asChild>
               <Link href="/reservations">予約一覧へ</Link>
             </Button>
           }

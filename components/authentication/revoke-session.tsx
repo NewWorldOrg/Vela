@@ -51,7 +51,7 @@ export function RevokeSession({
   return (
     <>
       <Button
-        variant="destructive"
+        variant="remove"
         size="sm"
         onClick={() => {
           setRefusal(undefined)
@@ -63,10 +63,10 @@ export function RevokeSession({
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent className="sm:max-w-[520px]">
+        <AlertDialogContent className="sm:max-w-[calc(520rem/16)]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-[9px]">
-              <CloseIcon className="size-[19px] text-coral" />
+            <AlertDialogTitle className="flex items-center gap-[calc(9rem/16)]">
+              <CloseIcon className="size-[calc(19rem/16)] text-coral" />
               このセッションを失効させます
             </AlertDialogTitle>
             <AlertDialogDescription className="sr-only">
@@ -74,7 +74,7 @@ export function RevokeSession({
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <dl className="grid grid-cols-[96px_minmax(0,1fr)] gap-x-3.5 gap-y-1.5 text-ui max-[700px]:grid-cols-1">
+          <dl className="grid grid-cols-[calc(96rem/16)_minmax(0,1fr)] gap-x-3.5 gap-y-1.5 text-ui max-[700px]:grid-cols-1">
             <dt className="text-sub text-ink-3">端末</dt>
             <dd className="min-w-0 break-words">
               {session.device.name}
@@ -108,7 +108,7 @@ export function RevokeSession({
             >
               キャンセル
             </Button>
-            <Button variant="destructive" disabled={pending} onClick={run}>
+            <Button variant="remove" disabled={pending} onClick={run}>
               <CloseIcon />
               失効させる
             </Button>
