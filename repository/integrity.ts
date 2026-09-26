@@ -74,8 +74,6 @@ const REASON: Record<IntegrityFault, string> = {
   emptyThoughComplete: '0 バイト(録画は完走している)',
 }
 
-export const INTEGRITY_REASON = REASON
-
 export async function getIntegrity(): Promise<IntegrityResult> {
   const client = carinaClient()
   const [listing, storage] = await Promise.all([

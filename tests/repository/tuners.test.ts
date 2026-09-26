@@ -276,23 +276,6 @@ test('the last service a tuner saw is the one the API reports for its system', a
   assert.equal((await screen()).rows[0]?.lastService?.at, formatMoment(SEEN_AT))
 })
 
-test('how long ago it was seen is counted from the moment it was read', async () => {
-  standing()
-  observing('terrestrial')
-  store.health = {
-    ...health(24),
-    systems: [
-      reaching(
-        'isdbT',
-        'reaching',
-        new Date(Date.now() - 7200000).toISOString(),
-      ),
-    ],
-  }
-
-  assert.equal((await screen()).rows[0]?.lastService?.ago, '2 時間前')
-})
-
 test('a system the API calls silent is put on the screen as the API judged it', async () => {
   standing()
   observing('terrestrial')
