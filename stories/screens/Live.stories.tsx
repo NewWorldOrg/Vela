@@ -2113,6 +2113,60 @@ export const 動きを減らす設定では一息で畳む: Story = {
   },
 }
 
+export const 表示の設定で動きを切っていると一息で畳む: Story = {
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.documentElement.dataset.motion = 'still'
+
+    return () => {
+      delete document.documentElement.dataset.motion
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+    const wide = asideWidth(canvasElement)
+
+    await userEvent.click(fold)
+
+    await expect(foldPhaseOf(canvasElement)).toBe('still')
+    await expect(canvas.queryByRole('button', { name: '地上波' })).toBeNull()
+    await expect(asideWidth(canvasElement)).toBeLessThan(wide)
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
+    await expect(columnRunning(canvasElement)).toHaveLength(0)
+  },
+}
+
+export const 動きを入に選んでいれば端末が減らしていても流れて畳む: Story = {
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.documentElement.dataset.motion = 'moves'
+    const restore = askedForLessMotion()
+
+    return () => {
+      restore()
+      delete document.documentElement.dataset.motion
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+
+    await userEvent.click(fold)
+
+    await expect(foldPhaseOf(canvasElement)).toBe('closing')
+    await expect(columnRunning(canvasElement)).toEqual(['width'])
+
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+    })
+  },
+}
+
 export const 長い一覧でも畳みの長さは変わらない: Story = {
   args: { screen: MANY },
   beforeEach: () => {

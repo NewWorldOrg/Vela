@@ -384,7 +384,7 @@ export function CollectionDrawer({
         inert={!open}
         data-cursor-shut={!open ? 'the drawer is shut' : undefined}
         className={cn(
-          'fixed top-[60px] right-[calc(18rem/16)] bottom-[calc(18rem/16)] z-[45] flex w-[calc(500rem/16)] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy',
+          'fixed top-[60px] right-[calc(18rem/16)] bottom-[calc(18rem/16)] z-[45] flex w-[calc(500rem/16)] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy still:transition-none',
           'max-[1060px]:w-[calc(440rem/16)]',
           'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-3 max-[900px]:left-3 max-[900px]:max-h-[70vh] max-[900px]:w-auto',
           !open &&
