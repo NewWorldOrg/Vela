@@ -123,6 +123,32 @@ export const 複数を選んで削除する: Story = {
   },
 }
 
+export const 絞りを変えると選択を外す: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = result.items
+
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: `${first.title} を選ぶ` }),
+    )
+    await expect(
+      canvas.getByRole('group', { name: '選択した録画の操作' }),
+    ).toBeVisible()
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: result.channels[0] }),
+    )
+
+    await expect(
+      canvas.queryByRole('group', { name: '選択した録画の操作' }),
+    ).toBeNull()
+    await expect(
+      canvas.getByRole('checkbox', { name: '表示中の録画をすべて選ぶ' }),
+    ).not.toBeChecked()
+  },
+}
+
 export const 録画中を含むと削除できない: Story = {
   args: { result, filter: {} },
   play: async ({ canvasElement }) => {

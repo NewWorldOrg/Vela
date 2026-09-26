@@ -79,6 +79,7 @@ export function RecordingsTable({
 }) {
   const router = useRouter()
   const [asked, setAsked] = useState<Recording | null>(null)
+  const shown = items.filter((one) => picked.has(one.id)).length
 
   return (
     <div
@@ -113,9 +114,9 @@ export function RecordingsTable({
                 {column === COLUMNS[0] ? (
                   <Checkbox
                     checked={
-                      picked.size === 0
+                      shown === 0
                         ? false
-                        : items.every((one) => picked.has(one.id))
+                        : shown === items.length
                           ? true
                           : 'indeterminate'
                     }

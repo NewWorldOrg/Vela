@@ -49,6 +49,7 @@ export function LibraryView({
         }
       }
       const qs = params.toString()
+      setPicked(new Set())
       router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
         scroll: false,
       })
