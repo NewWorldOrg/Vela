@@ -633,3 +633,36 @@ test('the star is kept for nothing being wrong', async () => {
     }
   }
 })
+
+const THE_ICON_TILT =
+  /export const iconTilt =\s*'[^']*hover:\[&_svg\]:scale-\[1\.08\] hover:\[&_svg\]:rotate-\[-7deg\]'/
+
+test('an icon outside the player tilts by the one amount, and only the icon tilts', async () => {
+  assert.match(
+    await read('components/vela/tactile.ts'),
+    THE_ICON_TILT,
+    'the tilt of an icon under the pointer is not the one the canon gives',
+  )
+
+  for (const file of [
+    'components/ui/button.tsx',
+    'components/vela/icon-button.tsx',
+    'components/vela/app-shell.tsx',
+  ]) {
+    assert.match(await read(file), /\biconTilt\b/, `${file} tilts on its own`)
+  }
+
+  const offenders: string[] = []
+
+  for (const file of (await sourceFiles('components')).filter(
+    (file) => !/\/player-/.test(file),
+  )) {
+    for (const found of (await read(file)).matchAll(
+      /hover:(?:\[&_svg\]:)?(?:-rotate-\d+|rotate-\[[^\]]+\]|scale-\d+|scale-\[[^\]]+\])/g,
+    )) {
+      offenders.push(`${file}: ${found[0]}`)
+    }
+  }
+
+  assert.deepEqual(offenders, [])
+})

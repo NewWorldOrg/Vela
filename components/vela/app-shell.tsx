@@ -3,6 +3,7 @@ import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 import { SettingsIcon, VelaMark } from '@/components/vela/icons'
+import { iconTilt } from '@/components/vela/tactile'
 
 const TOP_BAR_HEIGHT = 'h-[calc(46rem/16)]'
 const BELOW_TOP_BAR = 'top-[calc(46rem/16)]'
@@ -197,7 +198,8 @@ export function AdminSideNavItem({
         'tap-target mb-[calc(11rem/16)] flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sub font-medium text-ink-2 no-underline outline-none max-[900px]:mb-[calc(18rem/16)]',
         'transition-[background-color,color,transform] duration-150 ease-toy',
         'hover:translate-x-0.5 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
-        '[&_svg]:size-3.5 [&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:-rotate-6 hover:[&_svg]:scale-110',
+        '[&_svg]:size-3.5',
+        iconTilt,
         active && 'bg-brand-soft font-bold text-brand',
         className,
       )}

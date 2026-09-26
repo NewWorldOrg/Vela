@@ -3,12 +3,12 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
-import { pressable, still, tactile } from '@/components/vela/tactile'
+import { iconTilt, pressable, still, tactile } from '@/components/vela/tactile'
 
 const buttonVariants = cva(
   cn(
     "tap-target inline-flex shrink-0 items-center justify-center gap-[calc(7rem/16)] rounded-full font-bold whitespace-nowrap outline-none disabled:border-dashed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-pop-none disabled:hover:no-underline [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[calc(15rem/16)]",
-    '[&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:scale-[1.08] hover:[&_svg]:rotate-[-7deg]',
+    iconTilt,
     tactile,
     pressable,
     still,
