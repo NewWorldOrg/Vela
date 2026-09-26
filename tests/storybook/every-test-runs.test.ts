@@ -35,6 +35,7 @@ const THE_SUITE = [
   'tests/lib/capture-name.test.ts',
   'tests/lib/clock.test.ts',
   'tests/lib/collection.test.ts',
+  'tests/lib/device.test.ts',
   'tests/lib/dismiss.test.ts',
   'tests/lib/encode.test.ts',
   'tests/lib/external-player.test.ts',
