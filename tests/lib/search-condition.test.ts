@@ -7,9 +7,12 @@ import {
   SEARCH_DEFAULT_PER_PAGE,
   SEARCH_DEFAULT_SORT,
   SEARCH_MOST_CHANNELS,
+  SEARCH_GENRE_OPTIONS,
   SEARCH_QUERY_KEYS,
+  genreKindsOf,
   genreLabelOfKind,
   narrowsAnything,
+  rawSearchConditionOf,
   readSearchCondition,
   searchConditionOfQuery,
   searchQueryOf,
@@ -500,4 +503,78 @@ test('a genre kind the broadcast names is spelled the way the search spells it',
 
 test('a genre kind nothing in this build names falls back to その他', () => {
   assert.equal(genreLabelOfKind(13), 'その他')
+})
+
+test('the address is taken key by key as it arrived, before anything is read out of it', () => {
+  assert.deepEqual(
+    rawSearchConditionOf({
+      q: '  夏 絶景 ',
+      exclude: '再放送',
+      fields: 'title',
+      genre: 'drama',
+      type: 'isdbT',
+      channel: '32701-101,32701-102',
+      from: '2026-10-01',
+      to: '2026-10-07',
+      sort: 'startAsc',
+      per_page: '50',
+      page: '2',
+    }),
+    {
+      q: '  夏 絶景 ',
+      exclude: '再放送',
+      fields: 'title',
+      genre: 'drama',
+      type: 'isdbT',
+      channel: '32701-101,32701-102',
+      from: '2026-10-01',
+      to: '2026-10-07',
+      sort: 'startAsc',
+      per_page: '50',
+      page: '2',
+    },
+  )
+})
+
+test('genres repeated in the address arrive as the list they were', () => {
+  assert.deepEqual(rawSearchConditionOf({ genre: ['drama', 'anime'] }).genre, [
+    'drama',
+    'anime',
+  ])
+})
+
+test('any other key repeated in the address is not guessed between', () => {
+  const raw = rawSearchConditionOf({
+    q: ['夏', '冬'],
+    channel: ['32701-101', '32701-102'],
+    page: ['1', '2'],
+  })
+
+  assert.equal(raw.q, undefined)
+  assert.equal(raw.channel, undefined)
+  assert.equal(raw.page, undefined)
+})
+
+test('keys the search does not own are left behind', () => {
+  assert.deepEqual(
+    Object.entries(
+      rawSearchConditionOf({ show: 'all', utm_source: 'mail', q: '夏' }),
+    ).filter(([, value]) => value !== undefined),
+    [['q', '夏']],
+  )
+})
+
+test('the genres asked for are sent as the kinds the broadcast numbers them by', () => {
+  assert.deepEqual(
+    genreKindsOf(['anime', 'news', 'other']).sort((a, b) => a - b),
+    [0, 7, 15],
+  )
+  assert.deepEqual(genreKindsOf([]), [])
+})
+
+test('every genre the screen offers reaches a kind of its own', () => {
+  const kinds = genreKindsOf(SEARCH_GENRE_OPTIONS.map(({ value }) => value))
+
+  assert.equal(kinds.length, SEARCH_GENRE_OPTIONS.length)
+  assert.equal(new Set(kinds).size, kinds.length)
 })
