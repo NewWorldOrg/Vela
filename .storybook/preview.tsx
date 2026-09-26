@@ -43,6 +43,7 @@ const preview: Preview = {
     },
     a11y: {
       test: 'error',
+      options: { preload: { assets: ['cssom'] } },
     },
   },
   globalTypes: {
