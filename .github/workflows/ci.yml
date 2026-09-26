@@ -11,66 +11,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '25'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: yarn lint
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '25'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: yarn typecheck
 
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '25'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: yarn test
 
   codegen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '25'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: yarn codegen:verify
 
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '25'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: yarn build
 
   stories:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '25'
-          cache: 'yarn'
-      - run: yarn install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: yarn playwright install --with-deps chromium
       - run: yarn build-storybook
       # Both themes, off the one build, in the one job. A theme costs about the
