@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 
 import { cn } from '@/lib/utils'
+import { Checkbox } from '@/components/ui/checkbox'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { formatBytes, formatLength } from '@/lib/format'
 import { unfinishedDeletionShapeOf } from '@/lib/recordings'
@@ -91,11 +92,15 @@ export function RecordingRow({
   nth,
   onOpen,
   onDelete,
+  selected,
+  onSelect,
 }: {
   recording: Recording
   nth: number
   onOpen: () => void
   onDelete: () => void
+  selected: boolean
+  onSelect: (chosen: boolean) => void
 }) {
   const deletable = r.outcome !== 'recording'
   const subTone = r.outcome === 'recording' ? 'text-ink-2' : 'text-ink-3'
@@ -103,10 +108,18 @@ export function RecordingRow({
   return (
     <tr
       data-pressable-row
+      data-state={selected ? 'selected' : undefined}
       onClick={onOpen}
       style={delayOf(rowDelayMs(nth))}
       className={cn(rowArrivesIn(nth), 'group cursor-pointer')}
     >
+      <td className={CELL} onClick={(event) => event.stopPropagation()}>
+        <Checkbox
+          checked={selected}
+          onCheckedChange={(next) => onSelect(next === true)}
+          aria-label={`${r.title} を選ぶ`}
+        />
+      </td>
       <td className={CELL}>
         <span className="flex min-w-0 items-center gap-3">
           <RecordingThumb recording={r} subTone={subTone} />

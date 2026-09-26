@@ -17,6 +17,7 @@ import {
 } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { TableHead } from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useArrived } from '@/hooks/useArrived'
 
 interface Column {
@@ -33,6 +34,7 @@ const STATE_GAP = '0.25rem'
 const ACTIONS_GAP = '0.5rem'
 
 const COLUMNS: Column[] = [
+  { label: '選択', width: 'calc(44rem/16)', hidden: true },
   { label: '番組', width: 'calc(320rem/16)' },
   { label: 'チャンネル', width: '11rem' },
   { label: WHEN_LABELS.recorded, width: '8.25rem' },
@@ -62,14 +64,18 @@ const COLUMNS: Column[] = [
   { label: '録画詳細へ', width: '3.25rem', hidden: true, detail: true },
 ]
 
-const TABLE_MIN = '68.75rem'
+const TABLE_MIN = '71.5rem'
 
 export function RecordingsTable({
   items,
   onDelete,
+  picked,
+  onPick,
 }: {
   items: Recording[]
   onDelete: (id: string) => Promise<RecordingDiscarded>
+  picked: ReadonlySet<string>
+  onPick: (next: ReadonlySet<string>) => void
 }) {
   const router = useRouter()
   const [asked, setAsked] = useState<Recording | null>(null)
@@ -104,7 +110,25 @@ export function RecordingsTable({
                   column.detail && DETAIL_CELL,
                 )}
               >
-                {column.hidden ? (
+                {column === COLUMNS[0] ? (
+                  <Checkbox
+                    checked={
+                      picked.size === 0
+                        ? false
+                        : items.every((one) => picked.has(one.id))
+                          ? true
+                          : 'indeterminate'
+                    }
+                    onCheckedChange={(next) =>
+                      onPick(
+                        next === true
+                          ? new Set(items.map((one) => one.id))
+                          : new Set(),
+                      )
+                    }
+                    aria-label="表示中の録画をすべて選ぶ"
+                  />
+                ) : column.hidden ? (
                   <span className="sr-only">{column.label}</span>
                 ) : (
                   column.label
@@ -121,6 +145,18 @@ export function RecordingsTable({
               recording={r}
               onOpen={() => router.push(`/recordings/${r.id}`)}
               onDelete={() => setAsked(r)}
+              selected={picked.has(r.id)}
+              onSelect={(taken) => {
+                const next = new Set(picked)
+
+                if (taken) {
+                  next.add(r.id)
+                } else {
+                  next.delete(r.id)
+                }
+
+                onPick(next)
+              }}
             />
           ))}
         </tbody>

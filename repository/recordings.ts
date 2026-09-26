@@ -359,6 +359,33 @@ const DISCARD_REFUSAL: Record<RecordingRefusal, string> = {
 
 const CANNOT_DISCARD = '録画を削除できませんでした'
 
+export type RecordingBatch =
+  | { state: 'ok'; done: number }
+  | { state: 'unauthenticated'; done: number }
+  | { state: 'rejected'; done: number; message: string }
+
+export async function discardRecordings(
+  ids: readonly string[],
+): Promise<RecordingBatch> {
+  let done = 0
+
+  for (const id of ids) {
+    const result = await discardRecording(id)
+
+    if (result.state === 'unauthenticated') {
+      return { state: 'unauthenticated', done }
+    }
+
+    if (result.state === 'rejected') {
+      return { state: 'rejected', done, message: result.message }
+    }
+
+    done += 1
+  }
+
+  return { state: 'ok', done }
+}
+
 export async function discardRecording(
   id: string,
 ): Promise<RecordingDiscarded> {

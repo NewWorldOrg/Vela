@@ -14,17 +14,6 @@ const WHAT_THE_LIBRARY_IS_ASKED = ['q', 'year', 'genre', 'state', 'ch']
 
 const PUT_AWAY: { what: string; spelt: RegExp; caught: string }[] = [
   {
-    what: 'a bar that acts on many recordings at once',
-    spelt: /一括|\bbulk/i,
-    caught: '<div data-slot="bulk-bar">一括削除</div>',
-  },
-  {
-    what: 'a box to tick on each row',
-    spelt:
-      /@\/components\/ui\/checkbox|<Checkbox\b|type="checkbox"|role="checkbox"/,
-    caught: "import { Checkbox } from '@/components/ui/checkbox'",
-  },
-  {
     what: 'a meter of the storage left',
     spelt: /保存領域|空き容量|\/api\/storage|<meter\b|<progress\b|role="meter"/,
     caught: '<meter value={0.4} />',
@@ -112,10 +101,8 @@ test('the library draws none of what it put away', async () => {
     back,
     [],
     'The library grew back something it deliberately does without. There is ' +
-      'no bulk action bar and no row checkbox, no storage meter, no action ' +
-      'that encodes several recordings together, and no order or page-size ' +
-      'selector: one recording is acted on from its own row, and every row ' +
-      'is listed.',
+      'no storage meter, no action that encodes several recordings together, ' +
+      'and no order or page-size selector: every row is listed.',
   )
 })
 

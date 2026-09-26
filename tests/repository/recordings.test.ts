@@ -235,6 +235,7 @@ mock.module('@/repository/client/carina', {
 
 const {
   discardRecording,
+  discardRecordings,
   getRecording,
   listRecordings,
   listRecordingsByReservation,
@@ -1293,6 +1294,39 @@ test('nothing left to remove is an answer, not a refusal', async () => {
   assert.deepEqual(await discardRecording('re-1'), {
     state: 'ok',
     filesRemoved: 0,
+  })
+})
+
+test('throwing several away removes them one after another, in the order chosen', async () => {
+  discarding(200, { recordingId: 're-1', filesRemoved: 1 })
+
+  const before = asked.length
+  const result = await discardRecordings(['re-1', 're-2', 're-3'])
+
+  assert.deepEqual(result, { state: 'ok', done: 3 })
+  assert.deepEqual(
+    asked.slice(before).map((one) => one.query),
+    [{ id: 're-1' }, { id: 're-2' }, { id: 're-3' }],
+  )
+})
+
+test('the first refusal stops the rest and says how many went before it', async () => {
+  discarding(409, { recordingId: 're-1', refusal: 'stillRecording' })
+
+  const before = asked.length
+  const result = await discardRecordings(['re-1', 're-2'])
+
+  assert.equal(result.state, 'rejected')
+  assert.equal(result.done, 0)
+  assert.equal(asked.length - before, 1)
+})
+
+test('a signed-out answer stops the rest as well', async () => {
+  discarding(401, {})
+
+  assert.deepEqual(await discardRecordings(['re-1', 're-2']), {
+    state: 'unauthenticated',
+    done: 0,
   })
 })
 

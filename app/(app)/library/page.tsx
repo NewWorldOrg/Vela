@@ -8,7 +8,10 @@ import {
 import { listRecordings, type RecordingsFilter } from '@/repository/recordings'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { LibraryView } from '@/components/library/library-page'
-import { throwRecordingAway } from '@/app/(app)/library/actions'
+import {
+  throwRecordingAway,
+  throwRecordingsAway,
+} from '@/app/(app)/library/actions'
 
 export const metadata: Metadata = { title: 'ライブラリ' }
 
@@ -36,6 +39,7 @@ export default async function Page({
         result={result}
         filter={result.filter}
         onDelete={throwRecordingAway}
+        onDeleteAll={throwRecordingsAway}
       />
     </>
   )
