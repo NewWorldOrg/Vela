@@ -22,6 +22,7 @@ import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 import { OutcomeChip } from '@/components/recordings/outcome-chip'
 import { QualityChip } from '@/components/recordings/quality-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
+import { useHeldWhileClosing } from '@/hooks/useHeldWhileClosing'
 
 function observationOf(recording: Recording): string | undefined {
   return recording.fileMissing ? '実ファイルなし' : recording.sizeObservedAt
@@ -40,6 +41,7 @@ export function DeleteRecordingDialog({
 }) {
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
+  const shown = useHeldWhileClosing(recording, () => setRefusal(undefined))
 
   const remove = (): void => {
     if (!recording) {
@@ -63,45 +65,34 @@ export function DeleteRecordingDialog({
   }
 
   return (
-    <AlertDialog
-      open={recording !== null}
-      onOpenChange={(open) => {
-        if (!open) {
-          setRefusal(undefined)
-        }
-
-        onOpenChange(open)
-      }}
-    >
+    <AlertDialog open={recording !== null} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>この録画を削除します</AlertDialogTitle>
-          {recording && (
+          {shown && (
             <AlertDialogDescription asChild>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-ui">
                 <dt className="text-ink-3">番組</dt>
-                <dd className="font-bold text-ink">{recording.title}</dd>
+                <dd className="font-bold text-ink">{shown.title}</dd>
                 <dt className="text-ink-3">チャンネル</dt>
-                <dd className="text-ink-2">{recording.channel}</dd>
+                <dd className="text-ink-2">{shown.channel}</dd>
                 <dt className="text-ink-3">{WHEN_LABELS.recorded}</dt>
-                <dd className="font-code text-ink-2">
-                  {recording.recordedRange}
-                </dd>
+                <dd className="font-code text-ink-2">{shown.recordedRange}</dd>
                 <dt className="text-ink-3">サイズ</dt>
                 <dd className="font-code text-ink-2">
-                  {recording.sizeBytes == null
+                  {shown.sizeBytes == null
                     ? EMPTY_VALUE
-                    : formatBytes(recording.sizeBytes)}
-                  {observationOf(recording) && ` (${observationOf(recording)})`}
+                    : formatBytes(shown.sizeBytes)}
+                  {observationOf(shown) && ` (${observationOf(shown)})`}
                 </dd>
                 <dt className="text-ink-3">結果と品質</dt>
                 <dd>
-                  <OutcomeChip recording={recording} />{' '}
-                  {recording.fileMissing && <FileMissingChip />}{' '}
-                  <QualityChip recording={recording} />
+                  <OutcomeChip recording={shown} />{' '}
+                  {shown.fileMissing && <FileMissingChip />}{' '}
+                  <QualityChip recording={shown} />
                 </dd>
                 <dt className="text-ink-3">ファイル</dt>
-                <dd className="font-code text-ink-2">{recording.filePath}</dd>
+                <dd className="font-code text-ink-2">{shown.filePath}</dd>
               </dl>
             </AlertDialogDescription>
           )}

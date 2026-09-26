@@ -32,6 +32,7 @@ import {
 import { ProgressBar } from '@/components/vela/progress'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { TermTip } from '@/components/vela/term-tip'
+import { useHeldWhileClosing } from '@/hooks/useHeldWhileClosing'
 
 const RECEPTION_BADGE: Record<
   CandidateRow['reception'],
@@ -101,16 +102,18 @@ function DeleteCandidateDialog({
   onConfirm: () => void
   pending: boolean
 }) {
+  const shown = useHeldWhileClosing(candidate)
+
   return (
     <AlertDialog open={candidate !== null} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>この候補チャンネルを削除します</AlertDialogTitle>
           <AlertDialogDescription>
-            {candidate?.channel} を候補から外します。
+            {shown?.channel} を候補から外します。
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {candidate?.selected && (
+        {shown?.selected && (
           <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
             <WarningIcon className="size-4 shrink-0" />
             現在の選局先です。
