@@ -56,6 +56,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
@@ -154,13 +155,13 @@ export function LivePlayer({
   const captions = useRef<CaptionLayer | null>(null)
   const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
+  const full = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
-  const [full, setFull] = useState(false)
   const [said, setSaid] = useState<{
     text: string
     tone: 'ok' | 'err'
@@ -204,14 +205,6 @@ export function LivePlayer({
   const phase = running?.phase
   const fault = running?.fault ?? null
 
-  useEffect(() => {
-    const read = () => setFull(document.fullscreenElement === shell)
-
-    document.addEventListener('fullscreenchange', read)
-
-    return () => document.removeEventListener('fullscreenchange', read)
-  }, [shell])
-
   useEffect(
     () => () => {
       if (settling.current) {
@@ -234,8 +227,15 @@ export function LivePlayer({
       return
     }
 
-    const change = (patch: (was: Running) => Running) =>
+    let gone = false
+
+    const change = (patch: (was: Running) => Running) => {
+      if (gone) {
+        return
+      }
+
       setHeld((was) => patch(was && was.key === key ? was : begun(key)))
+    }
 
     let settled = false
 
@@ -243,7 +243,7 @@ export function LivePlayer({
     stalls.current = 0
 
     const fail = (why: LiveFault) => {
-      if (settled) {
+      if (settled || gone) {
         return
       }
 
@@ -260,7 +260,6 @@ export function LivePlayer({
 
     let pictured = false
     let everPlayed = false
-    let gone = false
     let edge = -1
     let edgeMovedAt = performance.now()
     let quickenedSince: number | null = null
@@ -355,7 +354,7 @@ export function LivePlayer({
         void askBacklog(seated).then((read) => {
           asking = false
 
-          if (gone || settled || !read) {
+          if (settled || !read) {
             return
           }
 

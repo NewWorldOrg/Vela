@@ -82,6 +82,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedAt, capturedName } from '@/lib/capture-name'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { recordingHandover } from '@/lib/external-player'
 import { AirPlayButton } from '@/components/recordings/external-player'
@@ -147,6 +148,7 @@ export function Player({
   const holder = useRef<HTMLCanvasElement>(null)
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
+  const full = useFullscreen(shell)
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
     unaskedProfile,
@@ -158,7 +160,6 @@ export function Player({
   const [fault, setFault] = useState<PlaybackFault>({ kind: 'transcode' })
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
-  const [full, setFull] = useState(false)
   const opening = whereItStarts(opened, startAt ?? 0)
   const landing = useRef<number | null>(opensPlaying ? opening.land : null)
   const [from, setFrom] = useState(opensPlaying ? opening.from : 0)
@@ -260,14 +261,6 @@ export function Player({
         : { text: SAID_NOT_CAPTURED, tone: 'err' },
     )
   }
-
-  useEffect(() => {
-    const read = () => setFull(document.fullscreenElement === shell)
-
-    document.addEventListener('fullscreenchange', read)
-
-    return () => document.removeEventListener('fullscreenchange', read)
-  }, [shell])
 
   useEffect(() => {
     shell?.focus({ preventScroll: true })
@@ -550,7 +543,12 @@ export function Player({
     }
 
     router.replace(
-      whereThatSourceOpens(pathname, inTheAddress.toString(), next) as Route,
+      whereThatSourceOpens(
+        pathname,
+        inTheAddress.toString(),
+        next,
+        phase === 'idle' ? undefined : position,
+      ) as Route,
       { scroll: false },
     )
   }

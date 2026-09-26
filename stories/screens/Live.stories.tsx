@@ -265,6 +265,13 @@ const probing = async () => {
 
 const signedOut = async () => true
 
+const theProbe: { answers?: (signedOut: boolean) => void } = {}
+
+const answeredLater = () =>
+  new Promise<boolean>((settle) => {
+    theProbe.answers = settle
+  })
+
 const uncounted: AskBacklog = async () => undefined
 
 function losing(lostOnTheWayIn: number): AskBacklog {
@@ -455,6 +462,7 @@ const meta = {
   beforeEach: () => {
     opened.length = 0
     probed.length = 0
+    theProbe.answers = undefined
     window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
     window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
   },
@@ -761,6 +769,38 @@ export const 答えに従い古い選択は蘇らない: Story = {
 
     await userEvent.click(back)
     await expect(marked()).toEqual([watched().textContent])
+  },
+}
+
+export const 切れた線の後始末は選び直したチャンネルに触れない: Story = {
+  render: (args) => <Wandering {...args} />,
+  args: { openSocket: droppingOnce, askSignedOut: answeredLater },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const list = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-list"]',
+    )!
+    const transcoder = () =>
+      canvas.getByText('トランスコーダ起動').closest('li')
+
+    await waitFor(() => expect(theProbe.answers).toBeDefined())
+
+    await userEvent.click(
+      within(list).getByRole('button', { name: /中央テレビ1/ }),
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '答えが届く' }))
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await waitFor(() =>
+      expect(transcoder()).toHaveAttribute('data-startup', 'done'),
+    )
+
+    theProbe.answers?.(false)
+    await new Promise((rest) => setTimeout(rest, 300))
+
+    await expect(canvas.queryByText('接続が切れました')).toBeNull()
+    await expect(transcoder()).toHaveAttribute('data-startup', 'done')
+    await expect(opened).toHaveLength(2)
   },
 }
 
