@@ -56,6 +56,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
@@ -154,13 +155,13 @@ export function LivePlayer({
   const captions = useRef<CaptionLayer | null>(null)
   const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
+  const full = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
-  const [full, setFull] = useState(false)
   const [said, setSaid] = useState<{
     text: string
     tone: 'ok' | 'err'
@@ -203,14 +204,6 @@ export function LivePlayer({
     key === null ? null : held && held.key === key ? held : begun(key)
   const phase = running?.phase
   const fault = running?.fault ?? null
-
-  useEffect(() => {
-    const read = () => setFull(document.fullscreenElement === shell)
-
-    document.addEventListener('fullscreenchange', read)
-
-    return () => document.removeEventListener('fullscreenchange', read)
-  }, [shell])
 
   useEffect(
     () => () => {
