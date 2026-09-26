@@ -345,6 +345,23 @@ export const 再生できない_スクランブル残存: Story = {
   },
 }
 
+export const 再生できない_スクランブル解除済み: Story = {
+  args: {
+    detail: { ...detail('0906'), leftScrambled: false },
+    startAt: 0,
+    pictureHref: noPicture,
+    askWhy: answering({ kind: 'transcode' }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(canvas.getByText('再生を開始できませんでした')).toBeVisible(),
+    )
+    await expect(canvas.queryByText('スクランブルが解けていません')).toBeNull()
+  },
+}
+
 export const 再生できない_同時視聴の上限: Story = {
   args: {
     detail: detail('1266'),

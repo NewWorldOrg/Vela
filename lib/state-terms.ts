@@ -103,6 +103,15 @@ export const RESERVATION_OUTCOME_KIND_TERMS: Record<
   },
 }
 
+export const SCRAMBLING_UNRESOLVED = 'スクランブル解除失敗'
+
+export const LEFT_SCRAMBLED_IN_FULL = 'スクランブル残存'
+
+export const LEFT_SCRAMBLED_TERM: StateTerm = {
+  label: '未解除',
+  explanation: `${LEFT_SCRAMBLED_IN_FULL}。録画にスクランブルが解除されないまま残っている状態。`,
+}
+
 export const END_UNDECIDED_TERM: StateTerm = {
   label: '終了未定',
   explanation: '番組の終了時刻が放送側で確定していない状態。',

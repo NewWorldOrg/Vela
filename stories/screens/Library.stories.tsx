@@ -17,6 +17,7 @@ import {
   cellOf,
   heightOf,
   oneShapeDownTheColumn,
+  saidIn,
   sayOf,
   saysItWithoutAnEdge,
   tipIn,
@@ -188,7 +189,7 @@ export const 通常: Story = {
       canvas.getByRole('row', { name: /波止場のブラスバンド/ }),
     )
 
-    await expect(unwatchable.getByText('視聴不可')).toBeVisible()
+    await expect(unwatchable.getByText('未解除')).toBeVisible()
 
     const said = await tipIn(unwatchable.getAllByRole('cell')[QUALITY_COLUMN])
 
@@ -376,6 +377,7 @@ export const 全件未計測: Story = {
         .map((r) => ({
           ...r,
           quality: { measured: false },
+          leftScrambled: false,
           encode: 'queued' as EncodeStanding,
         })),
     ),
@@ -476,6 +478,55 @@ export const ファイル不在の録画: Story = {
   },
 }
 
+const LEFT_SCRAMBLED = {
+  ...all.find((r) => r.title === '波止場のブラスバンド')!,
+  leftScrambled: true,
+  outcomeDetail: 'スクランブル解除失敗',
+}
+
+const DESCRAMBLED = {
+  ...all.find((r) => r.title === '手仕事の地図')!,
+  leftScrambled: false,
+}
+
+export const スクランブルが解けずに残った録画: Story = {
+  args: { result: resultOf([LEFT_SCRAMBLED, DESCRAMBLED]), filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const scrambled = canvas.getByRole('row', { name: /波止場のブラスバンド/ })
+
+    await expect(saidIn(scrambled, OUTCOME_COLUMN)).toHaveLength(1)
+    await expect(sayOf(scrambled, OUTCOME_COLUMN)).toHaveTextContent('完全')
+    await expect(
+      await tipIn(cellOf(scrambled, OUTCOME_COLUMN)),
+    ).toHaveTextContent('スクランブル解除失敗')
+
+    await expect(saidIn(scrambled, QUALITY_COLUMN)).toHaveLength(1)
+
+    const unresolved = sayOf(scrambled, QUALITY_COLUMN)
+
+    await expect(unresolved).toHaveTextContent('未解除')
+    await expect(unresolved.getAttribute('data-tone')).toBe('err')
+    await expect(getComputedStyle(unresolved).fontWeight).toBe('700')
+
+    const tip = await tipIn(cellOf(scrambled, QUALITY_COLUMN))
+
+    await expect(tip).toHaveTextContent('スクランブル残存。')
+    await expect(tip).toHaveTextContent('視聴不可の恐れ')
+    await expect(tip).toHaveTextContent('スクランブル残存 5,042,768')
+
+    const descrambled = canvas.getByRole('row', { name: /手仕事の地図/ })
+
+    await expect(sayOf(descrambled, OUTCOME_COLUMN)).toHaveTextContent('完全')
+    await expect(sayOf(descrambled, QUALITY_COLUMN)).not.toHaveTextContent(
+      '未解除',
+    )
+    await expect(
+      within(descrambled).queryByText('未解除'),
+    ).not.toBeInTheDocument()
+  },
+}
+
 export const 検索0件: Story = {
   args: {
     result: { ...result, items: [], filter: { q: '該当なし' } },
@@ -529,6 +580,28 @@ export const 実ファイルのない録画の削除: Story = {
     await expect(
       within(await screen.findByRole('alertdialog')).getByText(/GB/),
     ).toHaveTextContent('3.4 GB (実ファイルなし)')
+  },
+}
+
+export const スクランブルが解けずに残った録画の削除: Story = {
+  args: { result: resultOf([LEFT_SCRAMBLED]), filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+    const said = dialog
+      .getByText('結果と品質')
+      .nextElementSibling?.querySelectorAll('[data-variant]')
+
+    await expect(
+      [...(said ?? [])].map((badge) => badge.textContent?.trim()),
+    ).toEqual(['完全', '未解除'])
+    await expect(dialog.getByText('未解除')).toHaveAttribute(
+      'data-variant',
+      'err',
+    )
   },
 }
 

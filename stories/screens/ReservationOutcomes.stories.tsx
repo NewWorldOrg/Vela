@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
+import type { ReservationOutcome } from '@/repository/reservation-outcomes'
 import {
   EVERY_KIND_FIXTURES,
   OUTCOME_FIXTURES,
@@ -170,6 +171,72 @@ export const 分類がそろう: Story = {
     await expect(
       canvas.getAllByRole('button', { name: /代わりに/ }),
     ).toHaveLength(1)
+  },
+}
+
+const LEFT_SCRAMBLED_LINES: ReservationOutcome[] = [
+  {
+    ...OUTCOME_FIXTURES[0],
+    id: 'o-601',
+    title: '港町の朝市めぐり',
+    recordingResult: 'complete',
+    endedScrambled: true,
+    leftScrambled: true,
+  },
+  {
+    ...OUTCOME_FIXTURES[1],
+    id: 'o-602',
+    title: '高原の星空観察',
+    recordingResult: 'truncated',
+    endedScrambled: true,
+    leftScrambled: true,
+  },
+  {
+    ...OUTCOME_FIXTURES[2],
+    id: 'o-603',
+    title: '川べりの古書市',
+    recordingResult: 'complete',
+    endedScrambled: true,
+    leftScrambled: false,
+  },
+]
+
+export const スクランブルが解けずに残った行: Story = {
+  args: { result: outcomeLedger(LEFT_SCRAMBLED_LINES) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    for (const row of bodyRows(canvasElement)) {
+      await expect(saidIn(row, KIND_COLUMN)).toHaveLength(1)
+      await expect(sayOf(row, KIND_COLUMN)).toHaveTextContent('録画失敗')
+      await expect(sayOf(row, KIND_COLUMN).getAttribute('data-tone')).toBe(
+        'err',
+      )
+    }
+
+    const whole = await tipIn(
+      cellOf(rowFor(canvas.getByText('港町の朝市めぐり')), KIND_COLUMN),
+    )
+
+    await expect(whole).toHaveTextContent('スクランブル解除失敗')
+    await expect(whole).toHaveTextContent('スクランブル残存。')
+    await expect(whole).not.toHaveTextContent('完全')
+
+    const cutShort = await tipIn(
+      cellOf(rowFor(canvas.getByText('高原の星空観察')), KIND_COLUMN),
+    )
+
+    await expect(cutShort).toHaveTextContent('スクランブル解除失敗')
+    await expect(cutShort).toHaveTextContent('スクランブル残存。')
+    await expect(cutShort).toHaveTextContent('尻切れ')
+
+    const lifted = await tipIn(
+      cellOf(rowFor(canvas.getByText('川べりの古書市')), KIND_COLUMN),
+    )
+
+    await expect(lifted).toHaveTextContent('スクランブル解除失敗')
+    await expect(lifted).not.toHaveTextContent('スクランブル残存')
+    await expect(lifted).not.toHaveTextContent('完全')
   },
 }
 

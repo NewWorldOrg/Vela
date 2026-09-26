@@ -76,12 +76,12 @@ export function inProgressFirst<T extends Pick<Recording, 'outcome'>>(
   ]
 }
 
-export function isLeftScrambled(recording: Pick<Recording, 'scrambleQuality'>) {
-  return recording.scrambleQuality === 'mayNotBeWatchable'
+export function isLeftScrambled(recording: Pick<Recording, 'leftScrambled'>) {
+  return recording.leftScrambled === true
 }
 
 export function playsInBrowser(
-  recording: Pick<Recording, 'outcome' | 'fileMissing' | 'scrambleQuality'>,
+  recording: Pick<Recording, 'outcome' | 'fileMissing' | 'leftScrambled'>,
 ) {
   return (
     recording.outcome !== 'failed' &&

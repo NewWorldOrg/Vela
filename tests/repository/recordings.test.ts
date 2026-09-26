@@ -72,6 +72,13 @@ const drops = (over: Over = {}) => ({
   ...over,
 })
 
+const ENDED_SCRAMBLED = {
+  fault: 'scramblingUnresolved',
+  tuneFailure: null,
+  note: '',
+  noticedAt: '2026-08-09T14:30:04Z',
+}
+
 const recording = (over: Over = {}) => ({
   id: 'a1',
   reservationId: null,
@@ -110,6 +117,8 @@ const recording = (over: Over = {}) => ({
   broadcastGroup: { key: null, role: 'standalone' },
   encode: { standing: 'notEncoded', whenRecorded: true },
   unfinishedDeletion: null,
+  leftScrambled: false,
+  descrambledAt: null,
   ...over,
 })
 
@@ -517,6 +526,27 @@ test('the reading under the badge names the scrambled packets where there are an
   assert.equal(one.scrambledShare, 5_042_768 / 5_302_549)
 })
 
+test('a recording descrambled since names no scrambled packets, on the badge or in the record', async () => {
+  const descrambled = recording({
+    outcomeDetail: [ENDED_SCRAMBLED],
+    descrambledAt: '2026-08-10T03:00:00Z',
+    drops: drops({
+      ccDroppedPackets: 0,
+      ccTotalPackets: 5_302_549,
+      scrambledPackets: 5_042_768,
+    }),
+  })
+  standing([descrambled])
+  store.detail = detailOf(descrambled)
+
+  const [one] = (await listRecordings({})).items
+  const detail = await getRecording('d-descrambled')
+
+  assert.equal(one.quality.detail, 'ドロップ 0')
+  assert.equal(detail?.quality.detail, 'ドロップ 0')
+  assert.equal(detail?.scramble, undefined)
+})
+
 test('the scramble level is the one the API graded, carried beside the overall one', async () => {
   const scrambled = await only([
     recording({
@@ -563,6 +593,53 @@ test('a deletion that left files behind is carried, with the count when the API 
 
   assert.deepEqual(counted.unfinishedDeletion, { filesLeft: 2 })
   assert.deepEqual(uncounted.unfinishedDeletion, { filesLeft: undefined })
+})
+
+test('a recording that came out whole but was left scrambled carries both', async () => {
+  const one = await only([
+    recording({ outcomeDetail: [ENDED_SCRAMBLED], leftScrambled: true }),
+  ])
+
+  assert.equal(one.outcome, 'complete')
+  assert.equal(one.leftScrambled, true)
+  assert.equal(one.outcomeDetail, 'スクランブル解除失敗')
+})
+
+test('a recording nothing was left scrambled on does not say it was', async () => {
+  const one = await only([recording()])
+
+  assert.equal(one.leftScrambled, false)
+})
+
+test('a recording descrambled since says nothing more about the scrambling it ended with', async () => {
+  const one = await only([
+    recording({
+      outcomeDetail: [ENDED_SCRAMBLED],
+      leftScrambled: false,
+      descrambledAt: '2026-08-10T03:00:00Z',
+    }),
+  ])
+
+  assert.equal(one.leftScrambled, false)
+  assert.equal(one.outcomeDetail, undefined)
+})
+
+test('a failed recording descrambled since still names what else it failed of', async () => {
+  const failed = recording({
+    outcome: 'failed',
+    outcomeDetail: [
+      ENDED_SCRAMBLED,
+      { ...ENDED_SCRAMBLED, fault: 'diskExhausted' },
+    ],
+    descrambledAt: '2026-08-10T03:00:00Z',
+  })
+  standing([failed])
+  store.detail = detailOf(failed)
+
+  const detail = await getRecording('d-descrambled')
+
+  assert.equal(detail?.outcomeDetail, '書き込み中にディスクが尽きた')
+  assert.equal(detail?.failureReason?.title, '書き込み中にディスクが尽きた')
 })
 
 test('a recording nothing counted carries no scrambled share', async () => {
