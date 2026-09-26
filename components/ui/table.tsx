@@ -5,18 +5,27 @@ import * as React from 'react'
 import { useArrived } from '@/hooks/useArrived'
 
 import { cn } from '@/lib/utils'
+import { waitsWhile } from '@/components/vela/waiting'
 
 function Table({
   className,
   containerClassName,
+  waiting = false,
   ...props
-}: React.ComponentProps<'table'> & { containerClassName?: string }) {
+}: React.ComponentProps<'table'> & {
+  containerClassName?: string
+  waiting?: boolean
+}) {
+  const wait = waitsWhile(waiting)
+
   return (
     <div
       data-slot="table-container"
       tabIndex={0}
+      inert={wait.inert}
       className={cn(
         'relative w-full overflow-x-auto rounded-xl bg-surface outline-none focus-visible:shadow-ring',
+        wait.className,
         containerClassName,
       )}
     >

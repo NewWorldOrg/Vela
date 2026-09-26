@@ -154,10 +154,8 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         <>
           <Table
             className="table-fixed min-w-[calc(1040rem/16)]"
-            containerClassName={cn(
-              'min-h-0 flex-initial overflow-y-auto pb-1 transition-opacity duration-150',
-              waiting && 'opacity-60',
-            )}
+            waiting={waiting}
+            containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
           >
             <TableColumns widths={COLUMNS.map((column) => column.width)} />
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">

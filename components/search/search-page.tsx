@@ -43,7 +43,11 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { EmptyState } from '@/components/vela/empty-state'
-import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
+import {
+  WAITING_LABEL,
+  WaitingRows,
+  waitsWhile,
+} from '@/components/vela/waiting'
 import { IconButton } from '@/components/vela/icon-button'
 import { InFull } from '@/components/vela/in-full'
 import { Pager } from '@/components/vela/pager'
@@ -464,13 +468,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </EmptyState>
       ) : (
         found && (
-          <div
-            inert={waiting ? true : undefined}
-            className={cn(
-              'transition-opacity duration-150',
-              waiting && 'opacity-60',
-            )}
-          >
+          <div {...waitsWhile(waiting)}>
             <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
               <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
                 <ListIcon className="size-4 text-brand" />

@@ -18,6 +18,7 @@ import {
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { TableHead } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
+import { waitsWhile } from '@/components/vela/waiting'
 import { useArrived } from '@/hooks/useArrived'
 
 interface Column {
@@ -71,21 +72,28 @@ export function RecordingsTable({
   onDelete,
   picked,
   onPick,
+  waiting = false,
 }: {
   items: Recording[]
   onDelete: (id: string) => Promise<RecordingDiscarded>
   picked: ReadonlySet<string>
   onPick: (next: ReadonlySet<string>) => void
+  waiting?: boolean
 }) {
   const router = useRouter()
   const [asked, setAsked] = useState<Recording | null>(null)
   const shown = items.filter((one) => picked.has(one.id)).length
+  const wait = waitsWhile(waiting)
 
   return (
     <div
       data-slot="table-container"
       tabIndex={0}
-      className="min-h-0 flex-initial overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring"
+      inert={wait.inert}
+      className={cn(
+        'min-h-0 flex-initial overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring',
+        wait.className,
+      )}
     >
       <table
         className="w-full table-fixed border-separate border-spacing-0"

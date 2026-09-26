@@ -587,7 +587,7 @@ test('a spinner is one of two sizes, chosen by name and declared once', async ()
 const PICTURED: [string, string, string][] = [
   ['components/library/library-page.tsx', 'まだ録画がありません', 'tape'],
   ['components/library/library-page.tsx', '条件に合う録画がありません', 'tape'],
-  ['components/encode/encode-page.tsx', 'ジョブの履歴がありません', 'tape'],
+  ['components/encode/jobs-navigation.tsx', 'ジョブの履歴がありません', 'tape'],
   ['components/encode/encode-page.tsx', 'プロファイルがありません', 'list'],
   ['components/encode/encode-page.tsx', '保存先がありません', 'list'],
   [

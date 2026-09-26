@@ -3,6 +3,16 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export const WAITING_LABEL = '読み込み中'
 
+export function waitsWhile(waiting: boolean): {
+  inert: true | undefined
+  className: string
+} {
+  return {
+    inert: waiting || undefined,
+    className: cn('transition-opacity duration-150', waiting && 'opacity-60'),
+  }
+}
+
 const ROW_WIDTHS = ['w-[92%]', 'w-[78%]', 'w-[85%]', 'w-[70%]', 'w-[88%]']
 
 export function WaitingRows({
