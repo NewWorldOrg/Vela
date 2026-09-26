@@ -10,10 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  useTheme,
-  type ThemePreference,
-} from '@/components/theme/ThemeProvider'
+import { useTheme } from '@/components/theme/ThemeProvider'
+import type { ThemePreference } from '@/lib/theme'
 import {
   CheckIcon,
   DisplayIcon,

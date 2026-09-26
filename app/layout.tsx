@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import type { MotionSetting } from '@/lib/motion'
+import { MOTION_HEADER, motionOf } from '@/lib/motion'
+import { THEME_HEADER, themeOf } from '@/lib/theme'
 
 export const metadata: Metadata = {
   title: {
@@ -18,24 +19,16 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const headerStore = await headers()
-  const themeHeader = headerStore.get('x-theme-mode')
-  const explicitMode: 'light' | 'dark' | null =
-    themeHeader === 'dark' ? 'dark' : themeHeader === 'light' ? 'light' : null
-  const initialPreference: 'light' | 'dark' | 'system' =
-    explicitMode ?? 'system'
-  const motionHeader = headerStore.get('x-motion')
-  const motion: MotionSetting | undefined =
-    motionHeader === 'still' || motionHeader === 'moves'
-      ? motionHeader
-      : undefined
+  const initialPreference = themeOf(headerStore.get(THEME_HEADER))
+  const motion = motionOf(headerStore.get(MOTION_HEADER))
 
   return (
     <html
       lang="ja"
       className={
-        explicitMode === 'dark'
+        initialPreference === 'dark'
           ? 'dark'
-          : explicitMode === null
+          : initialPreference === 'system'
             ? 'system'
             : undefined
       }

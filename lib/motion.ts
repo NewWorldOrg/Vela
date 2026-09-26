@@ -1,5 +1,7 @@
 export const MOTION_COOKIE = 'vela-motion'
 
+export const MOTION_HEADER = 'x-motion'
+
 export type MotionSetting = 'moves' | 'still'
 
 export const MOTION_LABEL = 'アニメーション'
@@ -7,7 +9,9 @@ export const MOTION_LABEL = 'アニメーション'
 export const MOTION_HINT =
   '切ると、画面の出入りや一覧の展開などの動きを止めます。'
 
-export function motionOf(said: string | undefined): MotionSetting | undefined {
+export function motionOf(
+  said: string | null | undefined,
+): MotionSetting | undefined {
   return said === 'moves' || said === 'still' ? said : undefined
 }
 

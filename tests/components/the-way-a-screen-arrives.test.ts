@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
 
+import { MOVED_BY_HAND } from '@/lib/arrival'
+
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -451,17 +453,17 @@ test('an entrance is switched off once it is over, and under a hand', async () =
   const hook = await readFile(path.join(ROOT, THE_ARRIVAL_HOOK), 'utf8')
 
   for (const input of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
-    assert.match(
-      hook,
-      new RegExp(`'${input}'`),
+    assert.ok(
+      (MOVED_BY_HAND as readonly string[]).includes(input),
       `a ${input} does not stop the arrival`,
     )
   }
-  assert.doesNotMatch(
-    hook,
-    /'scroll'/,
+  assert.ok(
+    !(MOVED_BY_HAND as readonly string[]).includes('scroll'),
     'a scroll the screen makes by itself would stop the arrival before it is seen',
   )
+  assert.match(hook, /for \(const input of MOVED_BY_HAND\)/)
+  assert.match(hook, /addEventListener\(input, done/)
   assert.match(hook, /data-arrived/)
 })
 
@@ -650,9 +652,7 @@ test('a hand on the guide during its opening ends the opening at once', async ()
     'utf8',
   )
 
-  for (const input of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
-    assert.match(grid, new RegExp(`'${input}'`))
-  }
+  assert.match(grid, /for \(const input of MOVED_BY_HAND\)/)
   assert.match(grid, /addEventListener\(input, markDone/)
 })
 

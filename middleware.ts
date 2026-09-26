@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { RENDERED_PAGE_HEADER } from '@/repository/auth'
-
-const THEME_COOKIE = 'vela-theme-mode'
-
-const MOTION_COOKIE = 'vela-motion'
+import { MOTION_COOKIE, MOTION_HEADER, motionOf } from '@/lib/motion'
+import { THEME_COOKIE, THEME_HEADER, themeOf } from '@/lib/theme'
 
 const PAYLOAD_PARAM = '_rsc'
 
@@ -15,20 +13,13 @@ export function middleware(request: NextRequest) {
   page.searchParams.delete(PAYLOAD_PARAM)
   requestHeaders.set(RENDERED_PAGE_HEADER, `${page.pathname}${page.search}`)
 
-  const themeCookie = request.cookies.get(THEME_COOKIE)?.value
-  const themeMode =
-    themeCookie === 'dark' ||
-    themeCookie === 'light' ||
-    themeCookie === 'system'
-      ? themeCookie
-      : 'system'
-  requestHeaders.set('x-theme-mode', themeMode)
-
-  const motionCookie = request.cookies.get(MOTION_COOKIE)?.value
-
   requestHeaders.set(
-    'x-motion',
-    motionCookie === 'still' || motionCookie === 'moves' ? motionCookie : '',
+    THEME_HEADER,
+    themeOf(request.cookies.get(THEME_COOKIE)?.value),
+  )
+  requestHeaders.set(
+    MOTION_HEADER,
+    motionOf(request.cookies.get(MOTION_COOKIE)?.value) ?? '',
   )
 
   return NextResponse.next({ request: { headers: requestHeaders } })
