@@ -772,3 +772,18 @@ test('the collection drawer slides in and out only while movement is on', async 
   assert.match(drawer, /transition-transform duration-200 ease-toy/)
   assert.match(drawer, /still:transition-none/)
 })
+
+test('the cards that join the live grid are cut at the same twelve', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/live/channel-grid.tsx'),
+    'utf8',
+  )
+
+  assert.match(
+    grid,
+    /joinsIn\(/,
+    'the grid hands the joining movement to every newcomer, so a sub-channel ' +
+      'switched on moves every card it adds at once',
+  )
+  assert.doesNotMatch(grid, /\? 'joins'/)
+})
