@@ -1,5 +1,6 @@
 import { cache } from 'react'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import {
   formatBytes,
   formatLength,
@@ -852,12 +853,12 @@ function liveOf(d: DetailResponder, base: Recording, now: Date) {
 
   return {
     elapsed: formatLength(secondsBetween(started, now.getTime())),
-    written: base.sizeBytes == null ? '—' : formatBytes(base.sizeBytes),
+    written: base.sizeBytes == null ? EMPTY_VALUE : formatBytes(base.sizeBytes),
     drops: measured
       ? `${grouped(counted(r.drops.ccDroppedPackets) ?? 0)} パケット`
       : '未計測',
     rest: formatLength(secondsBetween(now.getTime(), ends)),
-    updatedAt: updatedAt ? clockWithSeconds(new Date(updatedAt)) : '—',
+    updatedAt: updatedAt ? clockWithSeconds(new Date(updatedAt)) : EMPTY_VALUE,
   }
 }
 
