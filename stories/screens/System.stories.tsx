@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, within } from 'storybook/test'
 
 import {
   DRIVER_CAPABILITIES,
@@ -7,7 +8,9 @@ import {
   VELA_VERSION,
 } from '@/repository/system.fixtures'
 import { SystemView } from '@/components/system/system-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
+import { groundOf } from '@/stories/ground-of'
 
 const meta = {
   title: 'Screens/設定・システム',
@@ -26,7 +29,64 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const 通常: Story = { args: { status: SYSTEM_STATUS } }
+type Tone = 'ok' | 'warn' | 'err' | 'off'
+
+const GROUND: Record<Tone, string> = {
+  ok: 'bg-surface',
+  warn: 'bg-lemon-soft',
+  err: 'bg-coral-soft',
+  off: 'bg-surface-2',
+}
+
+const PARTS = ['API', 'driver', 'チューナー', '保存先', '番組表', 'ライブ']
+
+function tileNamed(canvasElement: HTMLElement, name: string): HTMLElement {
+  const tile = [
+    ...canvasElement.querySelectorAll<HTMLElement>('[data-slot="state-tile"]'),
+  ].find((one) => one.firstElementChild?.textContent?.trim() === name)
+
+  if (!tile) {
+    throw new Error(`no state tile is named ${name}`)
+  }
+
+  return tile
+}
+
+async function tonesAre(
+  canvasElement: HTMLElement,
+  heads: Record<string, [Tone, string]>,
+): Promise<void> {
+  await afterTheArrival(canvasElement)
+
+  const grounds = Object.values(GROUND).map((one) =>
+    groundOf(canvasElement, one),
+  )
+
+  await expect(new Set(grounds).size).toBe(grounds.length)
+
+  for (const name of PARTS) {
+    const [tone, head] = heads[name] ?? ['ok', '']
+    const tile = tileNamed(canvasElement, name)
+
+    await expect(getComputedStyle(tile).backgroundColor).toBe(
+      groundOf(canvasElement, GROUND[tone]),
+    )
+
+    if (head !== '') {
+      await expect(tile.children[1]?.textContent).toContain(head)
+    }
+  }
+}
+
+export const 通常: Story = {
+  args: { status: SYSTEM_STATUS },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, {
+      API: ['ok', '応答あり'],
+      driver: ['ok', '接続中'],
+    })
+  },
+}
 
 export const サインインが必要: Story = {
   args: {
@@ -35,6 +95,9 @@ export const サインインが必要: Story = {
       api: { state: 'ok', status: 'ok', degraded: [] },
       driver: { state: 'unauthenticated' },
     },
+  },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, { driver: ['off', '未サインイン'] })
   },
 }
 
@@ -61,6 +124,16 @@ export const 機能が足りない: Story = {
       },
     },
   },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, { driver: ['warn', '接続中'] })
+
+    const driver = tileNamed(canvasElement, 'driver')
+
+    await expect(
+      within(driver).getByText('driver の更新が必要です。'),
+    ).toBeVisible()
+    await expect(driver.querySelectorAll('[data-slot="badge"]')).toHaveLength(2)
+  },
 }
 
 export const プロバイダに届かない: Story = {
@@ -70,6 +143,12 @@ export const プロバイダに届かない: Story = {
       api: { state: 'ok', status: 'ok', degraded: ['oidc'] },
       driver: SYSTEM_STATUS.driver,
     },
+  },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, { API: ['warn', '応答あり'] })
+    await expect(
+      within(tileNamed(canvasElement, 'API')).getByText('ID プロバイダ'),
+    ).toBeVisible()
   },
 }
 
@@ -96,6 +175,9 @@ export const 停止準備中: Story = {
       },
     },
   },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, { driver: ['warn', '停止準備中'] })
+  },
 }
 
 export const driver未接続: Story = {
@@ -115,6 +197,9 @@ export const driver未接続: Story = {
         },
       },
     },
+  },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, { driver: ['err', '未接続'] })
   },
 }
 
@@ -141,6 +226,13 @@ export const 保存先が書けない: Story = {
       live: { state: 'ok', value: { sessions: 2, viewers: 3 } },
     },
   },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, {
+      チューナー: ['err', '2 / 4'],
+      保存先: ['err', ''],
+      番組表: ['warn', '31 / 34'],
+    })
+  },
 }
 
 export const API接続なし: Story = {
@@ -154,5 +246,18 @@ export const API接続なし: Story = {
       collection: { state: 'unavailable' },
       live: { state: 'unavailable' },
     },
+  },
+  play: async ({ canvasElement }) => {
+    await tonesAre(canvasElement, {
+      API: ['err', '応答なし'],
+      driver: ['off', '状態不明'],
+      チューナー: ['off', '状態不明'],
+      保存先: ['off', '状態不明'],
+      番組表: ['off', '状態不明'],
+      ライブ: ['off', '状態不明'],
+    })
+    await expect(within(canvasElement).getByRole('alert')).toHaveTextContent(
+      'API に接続できません',
+    )
   },
 }

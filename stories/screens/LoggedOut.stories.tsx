@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { expect, within } from 'storybook/test'
 
 import { LoggedOutView } from '@/components/login/logged-out-page'
 
@@ -11,10 +12,36 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+const STILL_SIGNED_IN_THERE =
+  '組織の ID プロバイダからはサインアウトしていません'
+
+async function signedOut(canvasElement: HTMLElement): Promise<void> {
+  const canvas = within(canvasElement)
+
+  await expect(
+    canvas.getByRole('heading', { level: 1, name: 'ログアウトしました' }),
+  ).toBeVisible()
+  await expect(
+    canvas.getByRole('link', { name: 'もう一度ログイン' }),
+  ).toHaveAttribute('href', '/login')
+}
+
 export const OIDCのセッションを終えたとき: Story = {
   args: { method: 'oidc' },
+  play: async ({ canvasElement }) => {
+    await signedOut(canvasElement)
+    await expect(
+      within(canvasElement).getByText(STILL_SIGNED_IN_THERE),
+    ).toBeVisible()
+  },
 }
 
 export const ローカルアカウントのセッションを終えたとき: Story = {
   args: { method: 'local' },
+  play: async ({ canvasElement }) => {
+    await signedOut(canvasElement)
+    await expect(
+      within(canvasElement).queryByText(STILL_SIGNED_IN_THERE),
+    ).toBeNull()
+  },
 }
