@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
 import type {
+  RecordingBatch,
   RecordingDiscarded,
   RecordingsFilter,
   RecordingsResult,
@@ -19,17 +20,21 @@ import { BAND_CONTROL, FilterSelect } from '@/components/vela/filter-select'
 import { LibraryIcon, SearchIcon } from '@/components/vela/icons'
 import { ChannelChip } from '@/components/library/channel-chip'
 import { RecordingsTable } from '@/components/library/recordings-table'
+import { RecordingSelection } from '@/components/library/recording-selection'
 import { ScreenMain } from '@/components/vela/app-shell'
 
 export function LibraryView({
   result,
   filter,
   onDelete,
+  onDeleteAll,
 }: {
   result: RecordingsResult
   filter: RecordingsFilter
   onDelete: (id: string) => Promise<RecordingDiscarded>
+  onDeleteAll: (ids: string[]) => Promise<RecordingBatch>
 }) {
+  const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -44,6 +49,7 @@ export function LibraryView({
         }
       }
       const qs = params.toString()
+      setPicked(new Set())
       router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
         scroll: false,
       })
@@ -51,6 +57,7 @@ export function LibraryView({
     [router, pathname, searchParams],
   )
   const { items, total, channels, years, genres } = result
+  const chosen = items.filter((one) => picked.has(one.id))
   const hasFilter = Boolean(
     filter.q || filter.year || filter.genre || filter.state || filter.ch,
   )
@@ -157,8 +164,21 @@ export function LibraryView({
         </div>
       </div>
 
+      {chosen.length > 0 && (
+        <RecordingSelection
+          chosen={chosen}
+          onClear={() => setPicked(new Set())}
+          onDeleteAll={onDeleteAll}
+        />
+      )}
+
       {items.length > 0 ? (
-        <RecordingsTable items={items} onDelete={onDelete} />
+        <RecordingsTable
+          items={items}
+          onDelete={onDelete}
+          picked={picked}
+          onPick={setPicked}
+        />
       ) : hasFilter ? (
         <EmptyState
           spot="tape"

@@ -179,8 +179,16 @@ function drifted(one: Reservation, kind: EpgDriftKind): boolean {
     : one.epg?.diverged === true
 }
 
+const REACHED_ITS_END: ReservationStanding[] = [
+  'complete',
+  'cancelled',
+  'missed',
+  'truncated',
+  'failed',
+]
+
 function isSettled(one: ReservationResponder, now: Date): boolean {
-  if (one.standing !== 'complete' && one.standing !== 'cancelled') {
+  if (!REACHED_ITS_END.includes(one.standing)) {
     return false
   }
 

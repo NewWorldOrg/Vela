@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import type { Recording, RecordingDiscarded } from '@/repository/recordings'
+import type {
+  Recording,
+  RecordingBatch,
+  RecordingDiscarded,
+} from '@/repository/recordings'
 import { STANDING_LABEL, type EncodeStanding } from '@/repository/encode-terms'
 import {
   MORE_RECORDINGS_THAN_FIT,
@@ -55,6 +59,14 @@ function resultOf(items: Recording[]) {
 
 const result = resultOf(all)
 
+const thrownAway: string[][] = []
+
+async function throwingAway(ids: string[]): Promise<RecordingBatch> {
+  thrownAway.push(ids)
+
+  return { state: 'ok', done: ids.length }
+}
+
 const meta = {
   title: 'Screens/録画ライブラリ',
   component: LibraryView,
@@ -62,12 +74,100 @@ const meta = {
     nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
     layout: 'fullscreen',
   },
-  args: { onDelete: throwing },
+  args: { onDelete: throwing, onDeleteAll: throwingAway },
   decorators: [inTheApp],
 } satisfies Meta<typeof LibraryView>
 
 export default meta
 type Story = StoryObj<typeof meta>
+
+export const 複数を選んで削除する: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = result.items.filter(
+      (one) => one.outcome !== 'recording',
+    )
+
+    thrownAway.length = 0
+
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: `${first.title} を選ぶ` }),
+    )
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: `${second.title} を選ぶ` }),
+    )
+    await expect(
+      canvas.getByRole('group', { name: '選択した録画の操作' }),
+    ).toHaveTextContent('2 件を選択')
+    await expect(window.location.pathname).not.toMatch(/\/recordings\//)
+
+    await userEvent.click(
+      within(
+        canvas.getByRole('group', { name: '選択した録画の操作' }),
+      ).getByRole('button', { name: '削除' }),
+    )
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+
+    await expect(dialog.getByText(first.title)).toBeVisible()
+    await expect(dialog.getByText(second.title)).toBeVisible()
+    await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
+
+    await waitFor(() => expect(thrownAway).toEqual([[first.id, second.id]]))
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole('group', { name: '選択した録画の操作' }),
+      ).toBeNull(),
+    )
+  },
+}
+
+export const 絞りを変えると選択を外す: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = result.items
+
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: `${first.title} を選ぶ` }),
+    )
+    await expect(
+      canvas.getByRole('group', { name: '選択した録画の操作' }),
+    ).toBeVisible()
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: result.channels[0] }),
+    )
+
+    await expect(
+      canvas.queryByRole('group', { name: '選択した録画の操作' }),
+    ).toBeNull()
+    await expect(
+      canvas.getByRole('checkbox', { name: '表示中の録画をすべて選ぶ' }),
+    ).not.toBeChecked()
+  },
+}
+
+export const 録画中を含むと削除できない: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const recording = result.items.find((one) => one.outcome === 'recording')
+
+    await expect(recording).toBeDefined()
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: '表示中の録画をすべて選ぶ' }),
+    )
+
+    const bar = within(
+      canvas.getByRole('group', { name: '選択した録画の操作' }),
+    )
+
+    await expect(bar.getByText(String(result.items.length))).toBeVisible()
+    await expect(bar.getByRole('button', { name: '削除' })).toBeDisabled()
+  },
+}
 
 export const 通常: Story = {
   args: { result, filter: {} },
@@ -160,7 +260,7 @@ const STANDINGS: EncodeStanding[] = [
   'failed',
 ]
 
-const ENCODE_COLUMN = 7
+const ENCODE_COLUMN = 8
 
 export const エンコードの5状態: Story = {
   args: {
@@ -227,7 +327,7 @@ export const 自動実行が飛ばした録画: Story = {
   },
 }
 
-const OUTCOME_COLUMN = 5
+const OUTCOME_COLUMN = 6
 
 const ENDED = all.filter((r) => r.outcome !== 'recording')
 
@@ -266,7 +366,7 @@ export const 削除未完了の録画: Story = {
   },
 }
 
-const QUALITY_COLUMN = 6
+const QUALITY_COLUMN = 7
 
 export const 全件未計測: Story = {
   args: {
@@ -297,9 +397,9 @@ export const 全件未計測: Story = {
   },
 }
 
-const LENGTH_COLUMN = 3
+const LENGTH_COLUMN = 4
 
-const SIZE_COLUMN = 4
+const SIZE_COLUMN = 5
 
 const ENDED_BADLY = all.filter(
   (r) => r.outcome === 'truncated' || r.outcome === 'failed',

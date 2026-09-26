@@ -289,6 +289,7 @@
       --animate-hop-in: none;
       --animate-item: none;
       --animate-row: none;
+      --animate-swell: none;
       --animate-joining: none;
       --animate-breathe: none;
       --animate-waiting-line: none;
@@ -310,6 +311,7 @@
     --animate-hop-in: none;
     --animate-item: none;
     --animate-row: none;
+    --animate-swell: none;
     --animate-joining: none;
     --animate-breathe: none;
     --animate-waiting-line: none;
@@ -494,6 +496,7 @@
   --animate-hop-in: hop-in 0.66s linear backwards;
   --animate-item: item 0.4s var(--ease-item) both;
   --animate-row: row 0.32s var(--ease-fold) both;
+  --animate-swell: swell 0.56s var(--ease-item) both;
   --animate-breathe: breathe 2s ease-in-out infinite;
   --animate-waiting-line: waiting-line calc(0.8s + 0.2s) ease-in-out infinite;
 
@@ -1458,8 +1461,8 @@
 
 @utility swells {
   &:is(.arrives, .joins) {
-    animation-name: swell;
-    animation-duration: 0.56s;
+    animation: var(--animate-swell);
+    animation-delay: calc(var(--d, 0s) + var(--delay, 0s));
   }
 
   [data-arrived] &.arrives {

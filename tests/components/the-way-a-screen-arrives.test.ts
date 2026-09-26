@@ -99,6 +99,7 @@ const THE_MOVEMENTS_THAT_STOP = [
   'hop-in',
   'item',
   'row',
+  'swell',
   'joining',
   'breathe',
   'waiting-line',
@@ -296,6 +297,14 @@ test('every movement is switched off where less of it is asked for', async () =>
     }
   }
 
+  for (const [name, body] of declared) {
+    assert.doesNotMatch(
+      body,
+      /animation-name:/,
+      `${name} names its keyframes directly, so switching movement off ` +
+        'clears the variable and the name brings the movement back',
+    )
+  }
   assert.match(
     declared.get('curtain-panel') ?? '',
     /:root\[data-motion='still'\] & \{\s*display: none;/,
