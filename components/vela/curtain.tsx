@@ -2,6 +2,8 @@
 
 import { useEffect, useLayoutEffect, useState } from 'react'
 
+import { movesNow } from '@/lib/motion'
+
 const CURTAIN_KEY = 'vela.curtain'
 
 const RAISE = 'raise'
@@ -35,7 +37,13 @@ export function Curtain() {
   const [raising, setRaising] = useState<boolean>(false)
 
   useOnFirstPaint(() => {
-    if (asked()) {
+    if (
+      asked() &&
+      movesNow(
+        document.documentElement.dataset.motion,
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      )
+    ) {
       setRaising(true)
     }
   }, [])
