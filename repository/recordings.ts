@@ -534,7 +534,7 @@ function toDetail(
   const measured = r.drops.ccMeasured
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
   const totalPackets = counted(r.drops.ccTotalPackets) ?? 0
-  const scrambled = counted(r.drops.scrambledPackets)
+  const scrambled = scrambledPacketsOf(r)
   const overflows = counted(r.drops.eovfCount)
   const genres = genresOf(r)
 
@@ -638,7 +638,7 @@ function qualityOf(
   }
 
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
-  const scrambled = counted(r.drops.scrambledPackets)
+  const scrambled = scrambledPacketsOf(r)
 
   return {
     measured: true,
@@ -738,6 +738,10 @@ const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {
   noData: LOCKED_WITHOUT_DATA,
   incompletePsi: INCOMPLETE_TABLES,
   streamMismatch: UNEXPECTED_STREAM,
+}
+
+function scrambledPacketsOf(r: RecordingResponder): number | undefined {
+  return r.descrambledAt ? undefined : counted(r.drops.scrambledPackets)
 }
 
 function faultsStandingOn(r: RecordingResponder): FaultResponder[] {

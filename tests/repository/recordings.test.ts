@@ -72,6 +72,13 @@ const drops = (over: Over = {}) => ({
   ...over,
 })
 
+const ENDED_SCRAMBLED = {
+  fault: 'scramblingUnresolved',
+  tuneFailure: null,
+  note: '',
+  noticedAt: '2026-08-09T14:30:04Z',
+}
+
 const recording = (over: Over = {}) => ({
   id: 'a1',
   reservationId: null,
@@ -519,6 +526,27 @@ test('the reading under the badge names the scrambled packets where there are an
   assert.equal(one.scrambledShare, 5_042_768 / 5_302_549)
 })
 
+test('a recording descrambled since names no scrambled packets, on the badge or in the record', async () => {
+  const descrambled = recording({
+    outcomeDetail: [ENDED_SCRAMBLED],
+    descrambledAt: '2026-08-10T03:00:00Z',
+    drops: drops({
+      ccDroppedPackets: 0,
+      ccTotalPackets: 5_302_549,
+      scrambledPackets: 5_042_768,
+    }),
+  })
+  standing([descrambled])
+  store.detail = detailOf(descrambled)
+
+  const [one] = (await listRecordings({})).items
+  const detail = await getRecording('d-descrambled')
+
+  assert.equal(one.quality.detail, 'ドロップ 0')
+  assert.equal(detail?.quality.detail, 'ドロップ 0')
+  assert.equal(detail?.scramble, undefined)
+})
+
 test('the scramble level is the one the API graded, carried beside the overall one', async () => {
   const scrambled = await only([
     recording({
@@ -566,13 +594,6 @@ test('a deletion that left files behind is carried, with the count when the API 
   assert.deepEqual(counted.unfinishedDeletion, { filesLeft: 2 })
   assert.deepEqual(uncounted.unfinishedDeletion, { filesLeft: undefined })
 })
-
-const ENDED_SCRAMBLED = {
-  fault: 'scramblingUnresolved',
-  tuneFailure: null,
-  note: '',
-  noticedAt: '2026-08-09T14:30:04Z',
-}
 
 test('a recording that came out whole but was left scrambled carries both', async () => {
   const one = await only([
