@@ -124,12 +124,28 @@ export function GuideView({
         return
       }
 
+      const failed = (): void => {
+        asked.current.delete(key)
+        setExtras((was) => ({ ...was, [key]: 'failed' }))
+      }
+
       asked.current.add(key)
+      setExtras((was) => {
+        const { [key]: _, ...rest } = was
+
+        return rest
+      })
       onReadExtras(guide.kind, guide.day.date, program.id, program.channelId)
-        .then((found) =>
-          setExtras((was) => ({ ...was, [key]: found ?? 'failed' })),
-        )
-        .catch(() => setExtras((was) => ({ ...was, [key]: 'failed' })))
+        .then((found) => {
+          if (found === undefined) {
+            failed()
+
+            return
+          }
+
+          setExtras((was) => ({ ...was, [key]: found }))
+        })
+        .catch(failed)
     },
     [extrasKeyOf, onReadExtras, guide.kind, guide.day.date],
   )

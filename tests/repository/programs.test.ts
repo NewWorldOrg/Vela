@@ -638,17 +638,19 @@ test('the grid is handed a programme without what only its panel reads', async (
   const program = await fromTheGuide(idOf(CARRIED))
   const handed = forTheGrid(program)
 
-  for (const onlyThePanel of [
-    'items',
-    'related',
-    'audio',
-    'video',
-    'sounds',
+  for (const onlyThePanel of ['items', 'related', 'audio', 'video', 'sounds']) {
+    assert.equal(onlyThePanel in handed, false, onlyThePanel)
+  }
+  for (const saidBeforeTheRestArrives of [
     'subtitled',
     'dateLabel',
     'durationLabel',
-  ]) {
-    assert.equal(onlyThePanel in handed, false, onlyThePanel)
+  ] as const) {
+    assert.equal(
+      handed[saidBeforeTheRestArrives],
+      program[saidBeforeTheRestArrives],
+      saidBeforeTheRestArrives,
+    )
   }
   assert.deepEqual(
     {
@@ -670,9 +672,6 @@ const extrasFrom = (program: Awaited<ReturnType<typeof fromTheGuide>>) => ({
   audio: program.audio,
   video: program.video,
   sounds: program.sounds,
-  subtitled: program.subtitled,
-  dateLabel: program.dateLabel,
-  durationLabel: program.durationLabel,
 })
 
 test('the panel reads back what the grid was not handed, for the cell it was opened from', async () => {

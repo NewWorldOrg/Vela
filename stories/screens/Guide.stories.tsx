@@ -1646,6 +1646,69 @@ export const 詳しい情報は開いてから取りに行く: Story = {
   },
 }
 
+const failingOnce: { asked: number } = { asked: 0 }
+
+export const 読み込めなかった詳しい情報は開き直すと取りに行き直す: Story = {
+  args: {
+    guide: { ...base, programs: base.programs.map(forTheGrid) },
+    onReadExtras: async () => {
+      failingOnce.asked += 1
+
+      if (failingOnce.asked === 1) {
+        throw new Error('timeout')
+      }
+
+      return {
+        items: WITH_ITS_OWN_ITEMS.items,
+        related: WITH_ITS_OWN_ITEMS.related,
+      }
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    await afterTheArrival(canvasElement)
+
+    failingOnce.asked = 0
+
+    const cell = within(canvasElement).getAllByRole('button', {
+      name: new RegExp(WITH_ITS_OWN_ITEMS.title.slice(0, 6)),
+    })[0]
+    const surface = async (): Promise<HTMLElement> =>
+      waitFor(() => {
+        const found = canvasElement.ownerDocument.querySelector<HTMLElement>(
+          '[data-slot="dialog-content"]',
+        )
+
+        expect(found).not.toBeNull()
+
+        return found as HTMLElement
+      })
+
+    await userEvent.click(cell)
+    await waitFor(async () =>
+      expect(await surface()).toHaveTextContent('読み込めませんでした'),
+    )
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(
+        canvasElement.ownerDocument.querySelector(
+          '[data-slot="dialog-content"]',
+        ),
+      ).toBeNull(),
+    )
+
+    await userEvent.click(cell)
+    await waitFor(async () =>
+      expect(await surface()).toHaveTextContent(
+        WITH_ITS_OWN_ITEMS.items?.[0]?.heading ?? '',
+      ),
+    )
+    await expect(failingOnce.asked).toBe(2)
+    await expect(await surface()).not.toHaveTextContent('読み込めませんでした')
+  },
+}
+
 export const 大きな一日: Story = {
   globals: { a11y: { manual: true } },
   args: {

@@ -224,9 +224,6 @@ export const PANEL_ONLY = [
   'audio',
   'video',
   'sounds',
-  'subtitled',
-  'dateLabel',
-  'durationLabel',
 ] as const satisfies readonly (keyof Program)[]
 
 export type ProgramExtras = Pick<Program, (typeof PANEL_ONLY)[number]>
