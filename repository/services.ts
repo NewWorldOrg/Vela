@@ -283,9 +283,7 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
 function systemOf(service: BroadcastServiceResponder): ScanSystem | undefined {
   const target = service.selectedChannel ?? service.candidates[0]?.target
 
-  return target === undefined || target.system === 'unspecified'
-    ? undefined
-    : target.system
+  return SCAN_SYSTEMS.find(({ value }) => value === target?.system)?.value
 }
 
 function toStat(services: BroadcastServiceResponder[]): string {
