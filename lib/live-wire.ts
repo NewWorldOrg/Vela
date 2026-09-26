@@ -234,6 +234,7 @@ const ENDING_BYTE = {
   stoppedByAnother: 6,
   driverLost: 7,
   wentQuiet: 8,
+  transcoderFellBehind: 9,
 } as const
 
 export type LiveSupplyEnd = keyof typeof ENDING_BYTE
