@@ -234,8 +234,15 @@ export function LivePlayer({
       return
     }
 
-    const change = (patch: (was: Running) => Running) =>
+    let gone = false
+
+    const change = (patch: (was: Running) => Running) => {
+      if (gone) {
+        return
+      }
+
       setHeld((was) => patch(was && was.key === key ? was : begun(key)))
+    }
 
     let settled = false
 
@@ -243,7 +250,7 @@ export function LivePlayer({
     stalls.current = 0
 
     const fail = (why: LiveFault) => {
-      if (settled) {
+      if (settled || gone) {
         return
       }
 
@@ -260,7 +267,6 @@ export function LivePlayer({
 
     let pictured = false
     let everPlayed = false
-    let gone = false
     let edge = -1
     let edgeMovedAt = performance.now()
     let quickenedSince: number | null = null
@@ -355,7 +361,7 @@ export function LivePlayer({
         void askBacklog(seated).then((read) => {
           asking = false
 
-          if (gone || settled || !read) {
+          if (settled || !read) {
             return
           }
 
