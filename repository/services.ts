@@ -23,6 +23,7 @@ type CandidateChannelResponder =
   components['schemas']['CandidateChannelResponder']
 type ScanAttemptResponder = components['schemas']['ScanAttemptResponder']
 type ScanAttemptOutcome = components['schemas']['ScanAttemptOutcome']
+type ScanChangeKind = components['schemas']['ScanChangeKind']
 type ScanDifferenceResponder = components['schemas']['ScanDifferenceResponder']
 type ScanMeasurementResponder =
   components['schemas']['ScanMeasurementResponder']
@@ -145,7 +146,7 @@ export type RunningScan =
   | { state: 'unreadable'; run: ScanRun; message: string }
 
 export interface ProposalChannel {
-  kind: 'added' | 'updated' | 'missing'
+  kind: ScanChangeKind
   channel: string
   measurement?: Measurement
 }
@@ -283,9 +284,7 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
 function systemOf(service: BroadcastServiceResponder): ScanSystem | undefined {
   const target = service.selectedChannel ?? service.candidates[0]?.target
 
-  return target === undefined || target.system === 'unspecified'
-    ? undefined
-    : target.system
+  return SCAN_SYSTEMS.find(({ value }) => value === target?.system)?.value
 }
 
 function toStat(services: BroadcastServiceResponder[]): string {
@@ -297,7 +296,7 @@ function toStat(services: BroadcastServiceResponder[]): string {
     .filter(([, count]) => (count as number) > 0)
 
   if (parts.length === 0) {
-    return '0 サービス'
+    return `${services.length} サービス`
   }
 
   const breakdown = parts
