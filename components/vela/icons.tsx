@@ -292,35 +292,6 @@ export function ChevronUpIcon(props: IconProps) {
   )
 }
 
-export function SortIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M8.4 10.2 12 6.4l3.6 3.8" />
-      <path d="M8.4 13.8 12 17.6l3.6-3.8" />
-    </Icon>
-  )
-}
-
-export function MoreIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <circle cx="5.6" cy="12" r="1.4" />
-      <circle cx="12" cy="12" r="1.4" />
-      <circle cx="18.4" cy="12" r="1.4" />
-    </Icon>
-  )
-}
-
-export function ColumnsIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M4 7.4h9.4M4 12h16M4 16.6h6.6" />
-      <circle cx="16.6" cy="7.4" r="1.5" />
-      <circle cx="13.6" cy="16.6" r="1.5" />
-    </Icon>
-  )
-}
-
 export function DotIcon(props: IconProps) {
   return (
     <Icon {...props}>
