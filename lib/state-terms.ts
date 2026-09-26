@@ -103,6 +103,8 @@ export const RESERVATION_OUTCOME_KIND_TERMS: Record<
   },
 }
 
+export const SCRAMBLING_UNRESOLVED = 'スクランブル解除失敗'
+
 export const END_UNDECIDED_TERM: StateTerm = {
   label: '終了未定',
   explanation: '番組の終了時刻が放送側で確定していない状態。',
