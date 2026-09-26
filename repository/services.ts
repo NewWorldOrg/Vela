@@ -1,3 +1,4 @@
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { StationLogo } from '@/repository/channels'
@@ -342,7 +343,7 @@ function toAttempt(
         : shapeFor(FAILURE_CLASS, attempt.outcome, undefined),
     streamMismatch:
       attempt.outcome === 'unexpectedStream' && observed !== null
-        ? `期待 TSID ${expected === null ? '—' : toInt(expected)} / 受信 TSID ${toInt(observed)}`
+        ? `期待 TSID ${expected === null ? EMPTY_VALUE : toInt(expected)} / 受信 TSID ${toInt(observed)}`
         : undefined,
     measurement: measurementOf(attempt.measurement),
     took: formatSpan(

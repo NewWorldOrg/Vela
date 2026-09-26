@@ -143,10 +143,6 @@
     --line-strong: #cec4b3;
     --edge: var(--ink-3);
     --ink: #2e2a38;
-    /* The ink scale is shifted one step darker than the design source: at the
-       11px used for notes and table headers, the original --ink-3 lands at
-       2.6:1 on --surface, which the a11y gate rejects. Keeping three steps and
-       WCAG AA means ink-3 takes the old ink-2 value and ink-2 moves down. */
     --ink-2: #514b60;
     --ink-3: #6e6780;
     --accent: #3f6461;
@@ -215,22 +211,6 @@
       --line-strong: #57565b;
       --edge: var(--ink-3);
       --ink: #eceaf0;
-      /* The two lower ink steps are lightened together, one step, keeping the
-         distance between them.
-
-         They were set against the ground. But in this theme every tint and every
-         soft fill sits *above* the ground, and light text on a lighter background
-         is text with less to work with, not more: --ink-3 reads 5.22:1 on
-         --surface and only 3.79:1 on --tint-sage, the lightest surface there is.
-         So the ground is the wrong thing to have measured against, and the step
-         is set against that lightest surface instead — 4.56:1 there, and more
-         everywhere else.
-
-         --ink-2 has no such trouble of its own; it moves so that the three steps
-         stay three steps. Left where it was, the gap to --ink-3 closes to 1.13:1
-         and the scale reads as two. It now sits 1.35:1 from --ink-3, which is
-         where it was, and 1.69:1 from --ink, which is where the light theme's
-         first gap already is. */
       --ink-2: #b8b5bf;
       --ink-3: #9e9ba6;
       --accent: #96bbb4;
@@ -333,17 +313,8 @@
   }
 }
 
-/* The broadcast marks — 字 for subtitled, 再 for a repeat, デ for a data
-   channel, and the rest of the set a broadcaster writes into a programme's
-   own name. They are carried in two Unicode blocks that no font in the stacks
-   below draws: the brand faces have no glyph for them, and neither do the
-   Japanese system faces most readers have, so the name arrives on screen with
-   a blank box in it and the mark's meaning is lost.
-
-   Served here rather than left to the reader's machine, over the two blocks
-   and nothing else — every other character is answered by the faces below,
-   exactly as before. Noto Sans CJK JP 2.004 (© 2014-2021 Adobe), subset to
-   those blocks, SIL Open Font License 1.1: http://scripts.sil.org/OFL */
+/* The broadcast marks (字, 再, デ …). Noto Sans CJK JP 2.004 (© 2014-2021 Adobe),
+   subset to these blocks, SIL Open Font License 1.1: http://scripts.sil.org/OFL */
 @font-face {
   font-family: 'Broadcast Marks';
   font-style: normal;
@@ -512,51 +483,12 @@
   --animate-breathe: breathe 2s ease-in-out infinite;
   --animate-waiting-line: waiting-line calc(0.8s + 0.2s) ease-in-out infinite;
 
-  /*
-   * The mark that answers a press in the middle of a picture: it grows a
-   * little and fades, and it is gone. Every player draws one — YouTube's
-   * circle blooms out of the centre on every play and pause — because the
-   * control that was pressed is at the bottom edge while the eye is in the
-   * middle, and without it the only proof a press landed is the picture
-   * itself, which for a pause is a picture that stopped changing.
-   *
-   * It runs once per press. The ban on looping animation is about decoration
-   * that never stops; this stops in half a second and only ever starts
-   * because somebody pressed something.
-   */
   --animate-player-burst: player-burst 500ms linear forwards;
-  /*
-   * The word beside the mark — the level a volume press moved to. It is a
-   * second element in YouTube's bezel, not part of the circle
-   * (`.ytp-bezel-text-wrapper` sits at `top:10%` while `.ytp-bezel` is at the
-   * centre), and it does not grow with it: a number that doubles in size while
-   * it fades is unreadable for most of the half second it is up.
-   */
   --animate-player-bezel-text: player-bezel-text 500ms linear forwards;
-  /*
-   * The answer to a seek, at the side the picture moved towards.
-   *
-   * 700ms, which is the hide timer YouTube gives its own seek overlay
-   * (`new g.DQ(this.hide,700,this)`) and the length of Chromium's native
-   * `arrow-pulse`. The two arrived at it independently.
-   */
   --animate-player-seek-flash: player-seek-flash 700ms linear forwards;
-  /*
-   * The three arrows under it, each starting later than the last, so the run
-   * reads as movement in one direction rather than as three marks blinking.
-   * Chromium staggers its three by 67ms and 134ms; the shape of one arrow's
-   * life — up, peak, down — is YouTube's `arrow-fade-out-N`.
-   */
   --animate-player-seek-arrow: player-seek-arrow 700ms linear infinite;
 }
 
-/*
- * YouTube's own `ytp-bezel-fadeout`, which is the only published spec for this
- * mark: `animation: ytp-bezel-fadeout .5s linear 1 normal forwards` over
- * `0%{opacity:1} to{opacity:0;transform:scale(2)}`. It grows as it fades, so
- * the mark reads as something leaving rather than something arriving, and it
- * is gone in half a second.
- */
 @keyframes player-burst {
   from {
     opacity: 1;
@@ -568,11 +500,6 @@
   }
 }
 
-/*
- * The level a volume press moved to, said in words beside the mark. YouTube's
- * is `padding:10px 20px; font-size:175%; background:rgba(0,0,0,.5);
- * border-radius:3px`, hidden by the same 500ms timer as the circle.
- */
 @keyframes player-bezel-text {
   0%,
   70% {
@@ -583,12 +510,6 @@
   }
 }
 
-/*
- * The seek answer. Opaque for most of its life and then gone, which is the
- * shape VLC gives every one of its on-screen answers (solid for the first 75%
- * of the duration, then a linear ramp) and the one YouTube's newer bezel took.
- * A fade that runs the whole 700ms reads as far slower than 700ms.
- */
 @keyframes player-seek-flash {
   0% {
     opacity: 0;
@@ -625,24 +546,7 @@
   font-feature-settings: 'palt';
 }
 
-/*
- * The area a finger has to land on, held to 44px square without moving a
- * pixel of what is drawn. The control keeps its own size; an invisible
- * pseudo-element centred on it takes the press, growing past the edges only
- * where the control is smaller than 44px.
- *
- * It is laid on every control, not only under `pointer: coarse`. A rule that
- * splits on input device leaves one of the two halves untested, and a larger
- * area is easier to hit with a mouse too.
- *
- * Where two controls sit close enough that these areas would overlap, the
- * answer is more space between them, not a smaller area: an overlap makes the
- * neighbour answer the press, which is worse than a small target.
- *
- * The area is raised a layer so that text drawn after it does not take the
- * press back. It is transparent and covers no other control, because controls
- * that would collide are spaced apart instead.
- */
+/* The 44px area a press lands on, laid around a control without moving what is drawn. */
 @utility tap-target {
   position: relative;
 
@@ -659,22 +563,7 @@
   }
 }
 
-/*
- * The same 44px for a replaced element — `<input>`, `<select>`, `<textarea>` —
- * which draws no pseudo-element of its own. The wrapping `<label>` carries the
- * area instead, and a press on it moves focus into the field.
- *
- * `tap-target` would be wrong here even if it worked: an area laid over a text
- * field answers the press instead of the field, and a field you cannot click
- * into at the character, or drag a selection across, is worse than a small one.
- * So the area is the label's own box, grown by padding rather than by anything
- * drawn on top, leaving the field itself the topmost thing over its own pixels.
- *
- * 6px a side takes the shortest field Vela draws (33px) past 44px. An equal
- * negative margin hands that padding back to the layout, so the area grows and
- * nothing around it moves. `relative` keeps it above the in-flow boxes it now
- * reaches over — a hint or an error line, neither of which answers a press.
- */
+/* The same 44px for a field, carried by its wrapping label's padding. */
 @utility tap-area {
   position: relative;
   padding-block: 6px;

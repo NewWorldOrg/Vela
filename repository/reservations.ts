@@ -1,3 +1,4 @@
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import type { StationLogo } from '@/repository/channels'
 import type { OriginLabel } from '@/lib/format'
 import {
@@ -585,8 +586,6 @@ const DIVERGED_FIELD: Record<DivergedField, string> = {
 
 const MOVES_A_CLOCK: DivergedField[] = ['startAt', 'endAt']
 
-const UNSAID = '—'
-
 function toEpgDrift(epg: DivergenceResponder): EpgDrift | undefined {
   if (!epg.diverged && !epg.programmeMissing) {
     return undefined
@@ -611,7 +610,7 @@ function toEpgDrift(epg: DivergenceResponder): EpgDrift | undefined {
 
 function asSaid(field: DivergedField, said: string | null): string {
   if (!said) {
-    return UNSAID
+    return EMPTY_VALUE
   }
 
   return MOVES_A_CLOCK.includes(field) ? formatMoment(said) : said

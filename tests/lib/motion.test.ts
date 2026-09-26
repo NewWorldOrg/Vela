@@ -18,6 +18,7 @@ test('only the two words the switch writes are read back as a setting', () => {
   assert.equal(motionOf('moves'), 'moves')
   assert.equal(motionOf('still'), 'still')
   assert.equal(motionOf(undefined), undefined)
+  assert.equal(motionOf(null), undefined)
   assert.equal(motionOf(''), undefined)
   assert.equal(motionOf('Still'), undefined)
   assert.equal(motionOf('reduce'), undefined)

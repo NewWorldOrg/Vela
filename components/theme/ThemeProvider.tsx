@@ -9,8 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 
-type ThemeMode = 'light' | 'dark'
-export type ThemePreference = ThemeMode | 'system'
+import { THEME_COOKIE, type ThemeMode, type ThemePreference } from '@/lib/theme'
 
 interface ThemeContextValue {
   mode: ThemeMode
@@ -20,12 +19,10 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
-const COOKIE_KEY = 'vela-theme-mode'
-
 const SYSTEM_DARK = '(prefers-color-scheme: dark)'
 
 function writeCookie(value: ThemePreference) {
-  document.cookie = `${COOKIE_KEY}=${value};path=/;max-age=31536000;SameSite=Lax`
+  document.cookie = `${THEME_COOKIE}=${value};path=/;max-age=31536000;SameSite=Lax`
 }
 
 function applyClass(preference: ThemePreference) {

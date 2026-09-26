@@ -1,7 +1,7 @@
 import type { Route } from 'next'
 
 import { formatMoment } from '@/lib/format'
-import { SILENCE_RANGE, reachAgo } from '@/lib/tuners'
+import { SILENCE_RANGE } from '@/lib/tuners'
 import { wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import {
@@ -55,7 +55,7 @@ export interface TunerRow {
   state: 'ok' | 'warn' | 'faulted'
   stateLabel: string
   stateSub?: string
-  lastService?: { at: string; ago?: string }
+  lastService?: { at: string }
   lnb?: string
 }
 
@@ -636,10 +636,8 @@ function toResult(
     (ledger.observed ?? []).map((entry) => [entry.deviceId, entry]),
   )
 
-  const now = Date.now()
-
   const rows = ledger.desired.map((entry) =>
-    toRow(entry, observed.get(entry.deviceId), reach, now),
+    toRow(entry, observed.get(entry.deviceId), reach),
   )
 
   return {
@@ -733,7 +731,6 @@ function toRow(
   entry: TunerEntryResponder,
   observation: TunerObservationResponder | undefined,
   reach: SystemReach[],
-  now: number,
 ): TunerRow {
   const kind = observation && KIND_LABEL[observation.kind]
 
@@ -752,7 +749,7 @@ function toRow(
     session: toSession(observation),
     idleLabel: toIdleLabel(observation),
     lnb: kind === '衛星' ? toLnb(observation) : undefined,
-    lastService: toLastService(observation, reach, now),
+    lastService: toLastService(observation, reach),
     ...toState(observation),
   }
 }
@@ -760,7 +757,6 @@ function toRow(
 function toLastService(
   observation: TunerObservationResponder | undefined,
   reach: SystemReach[],
-  now: number,
 ): TunerRow['lastService'] {
   const served = observation && SYSTEMS_OF[observation.kind]
 
@@ -777,9 +773,7 @@ function toLastService(
     .sort((a, b) => Date.parse(a) - Date.parse(b))
     .at(-1)
 
-  return seen === undefined
-    ? undefined
-    : { at: formatMoment(seen), ago: reachAgo(seen, now) }
+  return seen === undefined ? undefined : { at: formatMoment(seen) }
 }
 
 function toSession(

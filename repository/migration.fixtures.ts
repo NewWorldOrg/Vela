@@ -1,3 +1,4 @@
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import type { MigrationResult } from '@/repository/migration'
 
 export const MIGRATION: MigrationResult = {
@@ -138,13 +139,13 @@ export const MIGRATION: MigrationResult = {
           id: 'nt-8',
           subject: '真夜中の音楽室',
           population: 'ルール',
-          fact: '—',
+          fact: EMPTY_VALUE,
         },
         {
           id: 'nt-9',
           subject: 'とおい街のラジオ',
           population: 'チャンネル定義',
-          fact: '—',
+          fact: EMPTY_VALUE,
         },
       ],
     },
@@ -158,19 +159,19 @@ export const MIGRATION: MigrationResult = {
           id: 'nt-10',
           subject: 'そらいろ通信',
           population: 'チャンネル定義',
-          fact: '—',
+          fact: EMPTY_VALUE,
         },
         {
           id: 'nt-11',
           subject: 'みなとチャンネル',
           population: 'チャンネル定義',
-          fact: '—',
+          fact: EMPTY_VALUE,
         },
         {
           id: 'nt-12',
           subject: 'こもれびテレビ',
           population: 'チャンネル定義',
-          fact: '—',
+          fact: EMPTY_VALUE,
         },
       ],
     },
@@ -190,7 +191,7 @@ export const MIGRATION: MigrationResult = {
         id: `nt-${13 + index}`,
         subject: `週末キッチンの手帖　第${index + 1}回`,
         population: '予約',
-        fact: '—',
+        fact: EMPTY_VALUE,
       })),
     },
   ],
@@ -214,7 +215,7 @@ export const MIGRATION_REHEARSAL: MigrationResult = {
     ...MIGRATION.run,
     kind: '下見',
     rehearsals: '下見なし',
-    lastRehearsal: '—',
+    lastRehearsal: EMPTY_VALUE,
   },
 }
 

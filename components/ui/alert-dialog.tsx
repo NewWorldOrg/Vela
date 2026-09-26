@@ -36,7 +36,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        'fixed inset-0 z-50 bg-black/50 data-[state=closed]:scrim-disappears data-[state=open]:scrim-appears',
+        'fixed inset-0 z-50 bg-scrim data-[state=closed]:scrim-disappears data-[state=open]:scrim-appears',
         className,
       )}
       {...props}

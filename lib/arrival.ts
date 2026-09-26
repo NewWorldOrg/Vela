@@ -16,6 +16,13 @@ export const LAST_ROW_THAT_MOVES = 24
 
 export const ARRIVAL_SPAN_MS = RISE_MS + GRID_CAP_MS + 100
 
+export const MOVED_BY_HAND = [
+  'wheel',
+  'touchstart',
+  'keydown',
+  'pointerdown',
+] as const
+
 export function moves(index: number): boolean {
   return index < LAST_ONE_THAT_MOVES
 }

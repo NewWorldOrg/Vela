@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { addressWith } from '@/lib/path'
 import type {
   EpgDriftKind,
   ReservationsResult,
@@ -116,44 +117,30 @@ export function ReservationsView({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const go = useCallback(
-    (taken: [string, string | undefined][]) => {
-      const params = new URLSearchParams(searchParams.toString())
-
-      for (const [key, value] of taken) {
-        if (value === undefined) {
-          params.delete(key)
-        } else {
-          params.set(key, value)
-        }
-      }
-
-      const qs = params.toString()
-
+    (patch: Record<string, string | undefined>) => {
       startWaiting(() =>
-        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-          scroll: false,
-        }),
+        router.replace(
+          addressWith(pathname, searchParams.toString(), patch) as Route,
+          { scroll: false },
+        ),
       )
     },
     [router, pathname, searchParams],
   )
   const onShowChange = useCallback(
     (next: string) => {
-      go([[SHOW_PARAM, next === EVERY ? EVERY : undefined]])
+      go({ [SHOW_PARAM]: next === EVERY ? EVERY : undefined })
     },
     [go],
   )
   const onDriftPick = useCallback(
     (kind: EpgDriftKind) => {
-      go([[EPG_PARAM, filter.epg === kind ? undefined : kind]])
+      go({ [EPG_PARAM]: filter.epg === kind ? undefined : kind })
     },
     [go, filter.epg],
   )
   const onClearFilters = useCallback(() => {
-    go([
-      [SHOW_PARAM, EVERY],
-      [EPG_PARAM, undefined],
-    ])
+    go({ [SHOW_PARAM]: EVERY, [EPG_PARAM]: undefined })
   }, [go])
 
   return (

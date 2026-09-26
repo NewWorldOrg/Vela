@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
 import { MOTION_LABEL } from '@/lib/motion'
+import { THEME_COOKIE } from '@/lib/theme'
 import { DisplayView } from '@/components/display/display-page'
 import { askedForLessMotion } from '@/stories/asked-for-less-motion'
 import { inTheSettings } from '@/stories/frames'
@@ -78,7 +79,7 @@ export const 端末が動きを減らしていても入を選んでいる: Story
 function themeCookie(): string | undefined {
   return document.cookie
     .split('; ')
-    .find((one) => one.startsWith('vela-theme-mode='))
+    .find((one) => one.startsWith(`${THEME_COOKIE}=`))
     ?.split('=')[1]
 }
 
@@ -89,7 +90,7 @@ export const テーマを切り替える: Story = {
 
     return () => {
       document.documentElement.className = held
-      document.cookie = 'vela-theme-mode=;path=/;max-age=0'
+      document.cookie = `${THEME_COOKIE}=;path=/;max-age=0`
     }
   },
   play: async ({ canvasElement }) => {

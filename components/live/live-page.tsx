@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { addressWith } from '@/lib/path'
 import { cn } from '@/lib/utils'
 import { foldedLineupOf, foldsAChannel } from '@/lib/live-lineup'
 import { foldColumn } from '@/lib/live-fold'
@@ -85,21 +86,10 @@ export function LiveView({
 
   const patch = useCallback(
     (next: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString())
-
-      for (const [key, value] of Object.entries(next)) {
-        if (value == null) {
-          params.delete(key)
-        } else {
-          params.set(key, value)
-        }
-      }
-
-      const qs = params.toString()
-
-      router.push((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      router.push(
+        addressWith(pathname, searchParams.toString(), next) as Route,
+        { scroll: false },
+      )
     },
     [router, pathname, searchParams],
   )

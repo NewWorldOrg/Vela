@@ -10,10 +10,8 @@ import {
   type MotionSetting,
 } from '@/lib/motion'
 import { Switch } from '@/components/ui/switch'
-import {
-  useTheme,
-  type ThemePreference,
-} from '@/components/theme/ThemeProvider'
+import { useTheme } from '@/components/theme/ThemeProvider'
+import type { ThemePreference } from '@/lib/theme'
 import { THEME_OPTIONS } from '@/components/theme/ThemeToggle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FieldHint, FieldLabel } from '@/components/vela/field'

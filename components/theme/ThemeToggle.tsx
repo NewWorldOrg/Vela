@@ -10,10 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  useTheme,
-  type ThemePreference,
-} from '@/components/theme/ThemeProvider'
+import { useTheme } from '@/components/theme/ThemeProvider'
+import type { ThemePreference } from '@/lib/theme'
 import {
   CheckIcon,
   DisplayIcon,
@@ -24,8 +22,6 @@ import {
 
 interface ThemeToggleProps {
   className?: string
-  variant?: React.ComponentProps<typeof Button>['variant']
-  size?: React.ComponentProps<typeof Button>['size']
 }
 
 export const THEME_OPTIONS: {
@@ -38,11 +34,7 @@ export const THEME_OPTIONS: {
   { value: 'system', label: 'システム', Icon: DisplayIcon },
 ]
 
-export function ThemeToggle({
-  className,
-  variant = 'ghost',
-  size = 'icon-sm',
-}: ThemeToggleProps) {
+export function ThemeToggle({ className }: ThemeToggleProps) {
   const { preference, setPreference } = useTheme()
 
   const TriggerIcon =
@@ -56,8 +48,8 @@ export function ThemeToggle({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={variant}
-          size={size}
+          variant="ghost"
+          size="icon-sm"
           aria-label="テーマ"
           className={className}
         >
