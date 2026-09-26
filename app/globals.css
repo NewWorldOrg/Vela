@@ -286,6 +286,7 @@
       --animate-now-pop: none;
       --animate-guide-settle: none;
       --animate-screen-rise: none;
+      --animate-hop-in: none;
       --animate-item: none;
       --animate-row: none;
       --animate-joining: none;
@@ -306,6 +307,7 @@
     --animate-now-pop: none;
     --animate-guide-settle: none;
     --animate-screen-rise: none;
+    --animate-hop-in: none;
     --animate-item: none;
     --animate-row: none;
     --animate-joining: none;
@@ -489,6 +491,7 @@
   --animate-now-pop: now-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   --animate-guide-settle: guide-settle 0.6s ease-out 0.26s backwards;
   --animate-screen-rise: rise 0.42s var(--ease-toy) backwards;
+  --animate-hop-in: hop-in 0.66s linear backwards;
   --animate-item: item 0.4s var(--ease-item) both;
   --animate-row: row 0.32s var(--ease-fold) both;
   --animate-breathe: breathe 2s ease-in-out infinite;
@@ -780,6 +783,33 @@
   }
 }
 
+@keyframes hop-in {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1);
+  }
+  30% {
+    opacity: 1;
+  }
+  42% {
+    transform: translateY(-8px);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.4);
+  }
+  64% {
+    transform: translateY(0) scale(1.01, 0.985);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1);
+  }
+  82% {
+    transform: translateY(-1.5px) scale(0.998, 1.004);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  to {
+    transform: translateY(0) scale(1, 1);
+    opacity: 1;
+  }
+}
+
 @keyframes row {
   from {
     opacity: 0;
@@ -901,6 +931,31 @@
   & [data-ink] {
     animation: var(--animate-ink);
     animation-delay: calc(var(--d, 0s) + var(--delay, 0s) + 0.6s);
+  }
+}
+
+@utility screen-hops {
+  & > * {
+    animation: var(--animate-hop-in);
+    transform-origin: 50% 100%;
+  }
+  & > :nth-child(2) {
+    animation-delay: 70ms;
+  }
+  & > :nth-child(3) {
+    animation-delay: 140ms;
+  }
+  & > :nth-child(4) {
+    animation-delay: 210ms;
+  }
+  & > :nth-child(5) {
+    animation-delay: 280ms;
+  }
+  & > :nth-child(6) {
+    animation-delay: 350ms;
+  }
+  & > :nth-child(n + 7) {
+    animation-delay: 420ms;
   }
 }
 

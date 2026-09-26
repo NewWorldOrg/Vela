@@ -50,6 +50,7 @@ const THE_VOCABULARY = [
   'stamp',
   'swell',
   'row',
+  'hop-in',
   'opening-above',
   'opening-below',
   'opening-line',
@@ -70,6 +71,7 @@ const THE_UTILITIES = [
   'curtain-panel',
   'drawn',
   'screen-rises',
+  'screen-hops',
   'guide-now-pop',
   'guide-settles',
   'guide-opening',
@@ -94,6 +96,7 @@ const THE_MOVEMENTS_THAT_STOP = [
   'curtain-line',
   'stamp',
   'screen-rise',
+  'hop-in',
   'item',
   'row',
   'joining',
@@ -570,7 +573,7 @@ test('each settings screen rises on its own, and the frame around it does not', 
     'utf8',
   )
 
-  assert.match(template, /screen-rises/)
+  assert.match(template, /screen-hops/)
   assert.match(shell, /<ScreenMain\s+rises=\{false\}/)
 })
 
