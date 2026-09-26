@@ -3,10 +3,16 @@ import { test } from 'node:test'
 
 import type { ReservationStanding } from '@/repository/reservations'
 import {
+  MARGIN_RANGE,
+  PRIORITY_RANGE,
   isDiscardable,
+  isRestorable,
   recordingWasRemoved,
   reservationAnchor,
   reservationHref,
+  wholeNumber,
+  withinMargin,
+  withinPriority,
 } from '@/lib/reservations'
 
 test('予約の行の錨は、その予約の id から綴られる', () => {
@@ -149,5 +155,62 @@ test('この版が知らない状態の予約は、破棄できるものとし�
       false,
       String(windowClosed),
     )
+  }
+})
+
+test('復元できるのは、取り消した予約で放送がまだ終わっていないものだけ', () => {
+  const restorable = (windowClosed: boolean) =>
+    STANDINGS.filter((standing) =>
+      isRestorable({ standing, recorded: false, windowClosed }),
+    )
+
+  assert.deepEqual(restorable(false), ['cancelled'])
+  assert.deepEqual(restorable(true), [])
+})
+
+test('優先度は 1 から 99 までを、両端を含めて受け付ける', () => {
+  assert.deepEqual(PRIORITY_RANGE, { least: 1, most: 99 })
+
+  for (const value of [1, 50, 99]) {
+    assert.equal(withinPriority(value), true, String(value))
+  }
+
+  for (const value of [0, 100, -1, Number.NaN]) {
+    assert.equal(withinPriority(value), false, String(value))
+  }
+})
+
+test('マージンは 0 から 3600 秒までを、両端を含めて受け付ける', () => {
+  assert.deepEqual(MARGIN_RANGE, { least: 0, most: 3600 })
+
+  for (const value of [0, 60, 3600]) {
+    assert.equal(withinMargin(value), true, String(value))
+  }
+
+  for (const value of [-1, 3601, Number.NaN]) {
+    assert.equal(withinMargin(value), false, String(value))
+  }
+})
+
+test('打ち込まれた整数は、前後の空白を除いて数として読む', () => {
+  assert.equal(wholeNumber('12'), 12)
+  assert.equal(wholeNumber('  30 '), 30)
+  assert.equal(wholeNumber('007'), 7)
+  assert.equal(wholeNumber('0'), 0)
+})
+
+test('空欄と、符号・小数・指数・文字の混じったものは整数として読まない', () => {
+  for (const typed of [
+    '',
+    '   ',
+    '-1',
+    '+3',
+    '1.5',
+    '1e3',
+    '12分',
+    '0x10',
+    '1 2',
+  ]) {
+    assert.equal(wholeNumber(typed), undefined, typed)
   }
 })
