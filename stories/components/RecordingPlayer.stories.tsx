@@ -725,7 +725,7 @@ export const 成果物がある録画は元のままにも切り替えられる:
     )
 
     await expect(router.replace).toHaveBeenCalledWith(
-      `${AT_1274}?source=recording`,
+      `${AT_1274}?at=0&source=recording`,
       { scroll: false },
     )
   },
@@ -771,11 +771,80 @@ export const 元のままを再生している録画はエンコード済みに�
       within(sources).getByRole('button', { name: 'エンコード済み' }),
     )
 
-    await expect(router.replace).toHaveBeenCalledWith(AT_1274, {
+    await expect(router.replace).toHaveBeenCalledWith(`${AT_1274}?at=0`, {
       scroll: false,
     })
   },
 }
+
+export const ソースを切り替えても観ていた秒から続く: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 612,
+    pictureHref: carryingTheSource,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1274, query: { at: '612' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await waitFor(() =>
+      expect(canvas.getByText(/^10:22 \//)).toBeInTheDocument(),
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sources = await screen.findByRole('group', { name: 'ソース' })
+
+    await userEvent.click(
+      within(sources).getByRole('button', { name: '元のまま' }),
+    )
+
+    await expect(router.replace).toHaveBeenCalledWith(
+      `${AT_1274}?at=622&source=recording`,
+      { scroll: false },
+    )
+  },
+}
+
+export const まだ観ていないうちにソースを切り替えてもアドレスの秒は変えない: Story =
+  {
+    args: {
+      detail: detail('1274'),
+      plan: WITH_AN_ARTEFACT,
+      startAt: 612,
+      playsAtOnce: false,
+      pictureHref: carryingTheSource,
+    },
+    parameters: {
+      nextjs: { appDirectory: true, navigation: { pathname: AT_1274 } },
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const router = getRouter()
+
+      await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+      const sources = await screen.findByRole('group', { name: 'ソース' })
+
+      await userEvent.click(
+        within(sources).getByRole('button', { name: '元のまま' }),
+      )
+
+      await expect(router.replace).toHaveBeenCalledWith(
+        `${AT_1274}?source=recording`,
+        { scroll: false },
+      )
+      await expect(canvas.getByText(/^10:12 \//)).toBeInTheDocument()
+    },
+  }
 
 export const 成果物がない録画にソースの行は無い: Story = {
   args: {

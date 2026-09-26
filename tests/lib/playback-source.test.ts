@@ -46,14 +46,36 @@ test('going back to the artefact drops the source rather than naming it', () => 
   )
 })
 
-test('the second the reader was carried to is kept across the switch', () => {
+test('the second being watched is carried across the switch, over the one the reader was carried to', () => {
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'at=612', 'recording', 1500.7),
+    '/recordings/1266?at=1500&source=recording',
+  )
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'at=612&source=recording', 'artefact', 1500),
+    '/recordings/1266?at=1500',
+  )
+})
+
+test('a switch made while watching names the second even when the address named none', () => {
+  assert.equal(
+    whereThatSourceOpens(WATCHING, '', 'recording', 1500),
+    '/recordings/1266?at=1500&source=recording',
+  )
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'source=recording', 'artefact', 0),
+    '/recordings/1266?at=0',
+  )
+})
+
+test('a switch made before anything played leaves the second in the address as it was', () => {
   assert.equal(
     whereThatSourceOpens(WATCHING, 'at=612', 'recording'),
     '/recordings/1266?at=612&source=recording',
   )
   assert.equal(
-    whereThatSourceOpens(WATCHING, 'at=612&source=recording', 'artefact'),
-    '/recordings/1266?at=612',
+    whereThatSourceOpens(WATCHING, '', 'recording'),
+    '/recordings/1266?source=recording',
   )
 })
 

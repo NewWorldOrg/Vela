@@ -550,7 +550,12 @@ export function Player({
     }
 
     router.replace(
-      whereThatSourceOpens(pathname, inTheAddress.toString(), next) as Route,
+      whereThatSourceOpens(
+        pathname,
+        inTheAddress.toString(),
+        next,
+        phase === 'idle' ? undefined : position,
+      ) as Route,
       { scroll: false },
     )
   }
