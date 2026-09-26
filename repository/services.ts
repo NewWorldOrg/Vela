@@ -295,7 +295,7 @@ function toStat(services: BroadcastServiceResponder[]): string {
     .filter(([, count]) => (count as number) > 0)
 
   if (parts.length === 0) {
-    return '0 サービス'
+    return `${services.length} サービス`
   }
 
   const breakdown = parts
