@@ -213,6 +213,16 @@ export function LiveIcon(props: IconProps) {
   )
 }
 
+export function LiveEndedIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4.2" y="5.4" width="15.6" height="11" rx="2.6" />
+      <path d="M8.6 20.2h6.8" />
+      <path d="M9.4 8.6v4.6l3.9-2.3Z" />
+    </Icon>
+  )
+}
+
 export function LibraryIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -724,6 +734,22 @@ export function PauseGlyph({ className, ...props }: IconProps) {
       {...props}
     >
       <path d="M6.6 4.6h4.1v14.8H6.6ZM13.3 4.6h4.1v14.8h-4.1Z" />
+    </svg>
+  )
+}
+
+export function SeekArrowGlyph({ className, ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 11 20"
+      fill="currentColor"
+      stroke="none"
+      aria-hidden="true"
+      focusable="false"
+      className={cn('h-5 w-[calc(11rem/16)]', className)}
+      {...props}
+    >
+      <path d="M0.6 0.4 10.4 10 0.6 19.6Z" />
     </svg>
   )
 }

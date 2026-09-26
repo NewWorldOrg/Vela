@@ -17,6 +17,7 @@ import {
   ClockIcon,
   DangerIcon,
   DisplayIcon,
+  LiveEndedIcon,
   LockIcon,
   PersonIcon,
   PlayIcon,
@@ -119,7 +120,7 @@ const NO_LOCK: Said = {
 const ENDED: Record<LiveSupplyEnd, Said> = {
   letGo: {
     tone: 'quiet',
-    mark: <LiveEndMark />,
+    mark: <LiveEndedIcon className="size-[calc(22rem/16)]" />,
     title: '配信が終了しました',
     worthRetrying: true,
   },
@@ -201,19 +202,6 @@ const UNSUPPORTED: Said = {
   mark: <DisplayIcon className="size-[calc(22rem/16)]" />,
   title: 'このブラウザでは再生できません',
   worthRetrying: false,
-}
-
-function LiveEndMark() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="size-[calc(22rem/16)] fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]"
-    >
-      <rect x="4.2" y="5.4" width="15.6" height="11" rx="2.6" />
-      <path d="M8.6 20.2h6.8" />
-      <path d="M9.4 8.6v4.6l3.9-2.3Z" />
-    </svg>
-  )
 }
 
 function refusedSaid(refusal: LiveRefusal, detail?: LiveRefusalDetail): Said {

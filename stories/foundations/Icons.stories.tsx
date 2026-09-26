@@ -22,6 +22,7 @@ const NAVIGATION: [string, ComponentType<IconProps>][] = [
   ['VelaMark', Icons.VelaMark],
   ['ProgramGuideIcon', Icons.ProgramGuideIcon],
   ['LiveIcon', Icons.LiveIcon],
+  ['LiveEndedIcon', Icons.LiveEndedIcon],
   ['PlayIcon', Icons.PlayIcon],
   ['PauseIcon', Icons.PauseIcon],
   ['SkipBackIcon', () => <Icons.SkipBackIcon seconds={10} />],
