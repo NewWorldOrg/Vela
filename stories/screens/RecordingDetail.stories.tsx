@@ -286,7 +286,7 @@ export const スクランブル残存: Story = {
 
     await userEvent.click(canvas.getByText('技術情報'))
 
-    await expect(canvas.getByText('視聴不可')).toBeVisible()
+    await expect(canvas.getByText('未解除')).toBeVisible()
     await expect(canvas.getByText('解除できなかったスクランブル')).toBeVisible()
     await expect(canvas.getByText('5,042,768 パケット')).toBeVisible()
   },
@@ -350,16 +350,26 @@ export const 尻切れでスクランブルも残った: Story = {
 }
 
 export const スクランブルを解除した録画: Story = {
-  args: { detail: { ...detail('0906'), leftScrambled: false } },
+  args: {
+    detail: {
+      ...detail('0906'),
+      leftScrambled: false,
+      scramble: undefined,
+      quality: { measured: true, level: 'good', detail: 'ドロップ 0' },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
     await expect(bandIn(canvasElement)).toBeNull()
+    await expect(canvas.queryByText('スクランブルが解けていません')).toBeNull()
 
     await userEvent.click(canvas.getByText('技術情報'))
 
-    await expect(canvas.getByText('視聴不可')).toBeVisible()
+    await expect(canvas.getByText('良好')).toBeVisible()
+    await expect(canvas.queryByText('視聴不可')).toBeNull()
     await expect(canvas.queryByText('未解除')).toBeNull()
+    await expect(canvas.queryByText('解除できなかったスクランブル')).toBeNull()
     await expect(canvas.queryByText('スクランブル残存')).toBeNull()
   },
 }

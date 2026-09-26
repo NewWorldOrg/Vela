@@ -199,6 +199,7 @@ const RECORDINGS: Recording[] = [
     },
     scrambleQuality: 'mayNotBeWatchable',
     scrambledShare: 5_042_768 / 5_302_549,
+    leftScrambled: true,
     encode: 'notEncoded',
     encodeWhenRecorded: true,
     thumbnail: 'shot',

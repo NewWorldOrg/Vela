@@ -189,7 +189,7 @@ export const 通常: Story = {
       canvas.getByRole('row', { name: /波止場のブラスバンド/ }),
     )
 
-    await expect(unwatchable.getByText('視聴不可')).toBeVisible()
+    await expect(unwatchable.getByText('未解除')).toBeVisible()
 
     const said = await tipIn(unwatchable.getAllByRole('cell')[QUALITY_COLUMN])
 
@@ -377,6 +377,7 @@ export const 全件未計測: Story = {
         .map((r) => ({
           ...r,
           quality: { measured: false },
+          leftScrambled: false,
           encode: 'queued' as EncodeStanding,
         })),
     ),
