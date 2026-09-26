@@ -5,6 +5,7 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatLength } from '@/lib/format'
+import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
 import { reservationHref } from '@/lib/reservations'
 import type {
   RecordingDetail,
@@ -33,6 +34,7 @@ import {
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
+import { LeftScrambledChip } from '@/components/recordings/left-scrambled-chip'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import {
   PLAYER_BUTTON,
@@ -147,6 +149,8 @@ export function RecordingDetailView({
   const alarming: 'truncated' | 'failed' | null =
     d.outcome === 'truncated' || d.outcome === 'failed' ? d.outcome : null
 
+  const banded = alarming ?? (d.leftScrambled ? 'failed' : null)
+
   return (
     <ScreenMain width={watching ? 'full' : 'default'} className="pb-16">
       <div className={GUTTER}>
@@ -161,19 +165,20 @@ export function RecordingDetailView({
             </Link>
           </div>
 
-          {alarming && (
+          {banded && (
             <div
               data-slot="recording-outcome"
               className={cn(
                 'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[calc(18rem/16)] py-[calc(13rem/16)]',
-                OUTCOME_STYLE[alarming],
+                OUTCOME_STYLE[banded],
               )}
             >
-              <OutcomeMark outcome={alarming} />
+              <OutcomeMark outcome={banded} />
               <h2 className="heading text-[calc(15rem/16)] whitespace-nowrap">
-                {OUTCOME_LABEL[alarming]}
+                {alarming ? OUTCOME_LABEL[alarming] : LEFT_SCRAMBLED_IN_FULL}
               </h2>
               {d.fileMissing && <FileMissingChip />}
+              {alarming && d.leftScrambled && <LeftScrambledChip />}
               {d.outcomeBody && (
                 <p className="min-w-[calc(200rem/16)] flex-1 font-code text-note text-ink-2">
                   {d.outcomeBody}

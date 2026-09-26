@@ -291,6 +291,79 @@ export const スクランブル残存: Story = {
     await expect(canvas.getByText('5,042,768 パケット')).toBeVisible()
   },
 }
+function bandIn(canvasElement: HTMLElement): HTMLElement | null {
+  return canvasElement.querySelector<HTMLElement>(
+    '[data-slot="recording-outcome"]',
+  )
+}
+
+export const 完全でもスクランブルが残った: Story = {
+  args: { detail: { ...detail('0906'), leftScrambled: true } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const banded = bandIn(canvasElement)
+
+    await expect(banded).not.toBeNull()
+    await expect(banded).toHaveClass('bg-tint-salmon')
+
+    const band = within(banded as HTMLElement)
+
+    await expect(
+      band.getByRole('heading', { name: 'スクランブル残存' }),
+    ).toBeVisible()
+    await expect(band.queryByText('未解除')).toBeNull()
+    await expect(band.queryByText('完全')).toBeNull()
+    await expect(band.getByText(/書けた尺/)).toBeVisible()
+
+    await userEvent.click(canvas.getByText('技術情報'))
+
+    await expect(canvas.getByText('結果')).toBeVisible()
+    await expect(canvas.getByText('完全')).toBeVisible()
+    await expect(canvas.getByText('未解除')).toHaveAttribute(
+      'data-variant',
+      'err',
+    )
+    await expect(canvas.getAllByText('スクランブル残存')).toHaveLength(1)
+  },
+}
+
+export const 尻切れでスクランブルも残った: Story = {
+  args: {
+    detail: { ...detail('1247'), leftScrambled: true },
+    playback: planned({ standing: 'cutShort', showsAsAWholeRecording: false }),
+  },
+  play: async ({ canvasElement }) => {
+    const band = within(bandIn(canvasElement) as HTMLElement)
+
+    await expect(band.getByRole('heading', { name: '尻切れ' })).toBeVisible()
+
+    const unresolved = band.getByText('スクランブル残存')
+
+    await expect(unresolved).toBeVisible()
+    await expect(unresolved.closest('[data-slot="badge"]')).toHaveAttribute(
+      'data-variant',
+      'err',
+    )
+
+    await expect(band.queryByText('未解除')).toBeNull()
+  },
+}
+
+export const スクランブルを解除した録画: Story = {
+  args: { detail: { ...detail('0906'), leftScrambled: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(bandIn(canvasElement)).toBeNull()
+
+    await userEvent.click(canvas.getByText('技術情報'))
+
+    await expect(canvas.getByText('視聴不可')).toBeVisible()
+    await expect(canvas.queryByText('未解除')).toBeNull()
+    await expect(canvas.queryByText('スクランブル残存')).toBeNull()
+  },
+}
+
 export const 失敗: Story = { args: { detail: detail('1239') } }
 
 export const 失敗の理由は分類と気づいた時刻で出る: Story = {
