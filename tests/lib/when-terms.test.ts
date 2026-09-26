@@ -52,3 +52,17 @@ test('no screen spells a heading for a time of its own', () => {
 
   assert.deepEqual(spelled, [])
 })
+
+test('no heading names a time with 日時 but the three', () => {
+  const spelled = READS.flatMap(everySourceFile)
+    .filter((file) => file !== path.join('lib', 'when-terms.ts'))
+    .flatMap((file) =>
+      [
+        ...readFileSync(path.join(ROOT, file), 'utf8').matchAll(
+          /['"`>]([^'"`<>\s]{0,8}日時)['"`<]/g,
+        ),
+      ].map((found) => `${file}: ${found[1]}`),
+    )
+
+  assert.deepEqual(spelled, [])
+})
