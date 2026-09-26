@@ -6,7 +6,7 @@ import { SettingsSideNav } from './_shell/side-nav'
 export default async function SettingsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const hasMigration = await hasMigrationRecord()
+  const hasMigration = await hasMigrationRecord().catch(() => false)
 
   return (
     <AdminBody className="min-h-0 flex-1">
