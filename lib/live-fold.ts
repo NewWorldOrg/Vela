@@ -20,14 +20,14 @@ export function foldColumn(
   }
 
   if (motion.phase === 'opening') {
-    return 'w-[calc(344rem/16)] transition-[width] duration-300 ease-fold motion-reduce:transition-none'
+    return 'w-[calc(344rem/16)] transition-[width] duration-300 ease-fold still:transition-none'
   }
 
   if (motion.staggered) {
-    return 'w-11 transition-[width] delay-220 duration-300 ease-fold motion-reduce:transition-none'
+    return 'w-11 transition-[width] delay-220 duration-300 ease-fold still:transition-none'
   }
 
-  return 'w-11 transition-[width] duration-300 ease-fold motion-reduce:transition-none'
+  return 'w-11 transition-[width] duration-300 ease-fold still:transition-none'
 }
 
 export function foldBand(motion: FoldMotion | undefined): string {
@@ -36,10 +36,10 @@ export function foldBand(motion: FoldMotion | undefined): string {
   }
 
   if (motion.phase === 'opening') {
-    return 'translate-x-0 starting:translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold motion-reduce:transition-none'
+    return 'translate-x-0 starting:translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold still:transition-none'
   }
 
-  return 'translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold motion-reduce:transition-none'
+  return 'translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold still:transition-none'
 }
 
 export function foldBandDelay(

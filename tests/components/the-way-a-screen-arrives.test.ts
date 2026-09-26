@@ -734,3 +734,41 @@ test('the curtain and the lines drawn by hand end on a small echo, once', async 
     )
   }
 })
+
+test('every part that moves hears the switch in the settings, not the machine alone', async () => {
+  assert.match(
+    await theSheet(),
+    /@custom-variant still \{\s*@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) & \{\s*@slot;\s*\}\s*\}\s*:root\[data-motion='still'\] & \{\s*@slot;\s*\}\s*\}/,
+    'still: does not stop what the machine or the switch in the settings stops',
+  )
+
+  for (const dir of ['app', 'components', 'hooks', 'lib']) {
+    for (const file of await sourceFiles(dir)) {
+      const source = await readFile(path.join(ROOT, file), 'utf8')
+
+      assert.doesNotMatch(
+        source,
+        /motion-(reduce|safe):/,
+        `${file} stops moving only when the machine asks, so the switch in the settings does not reach it`,
+      )
+
+      if (source.includes('prefers-reduced-motion')) {
+        assert.match(
+          source,
+          /movesNow\(/,
+          `${file} decides whether to move without the switch in the settings`,
+        )
+      }
+    }
+  }
+})
+
+test('the collection drawer slides in and out only while movement is on', async () => {
+  const drawer = await readFile(
+    path.join(ROOT, 'components/guide/collection-drawer.tsx'),
+    'utf8',
+  )
+
+  assert.match(drawer, /transition-transform duration-200 ease-toy/)
+  assert.match(drawer, /still:transition-none/)
+})

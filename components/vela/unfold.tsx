@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState, type ComponentProps } from 'react'
 
+import { movesNow } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 export const FOLD_MS = 200
@@ -13,9 +14,9 @@ export interface Unfolding {
 }
 
 function foldsGradually(): boolean {
-  return (
-    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-    document.documentElement.dataset.motion !== 'still'
+  return movesNow(
+    document.documentElement.dataset.motion,
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   )
 }
 

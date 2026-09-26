@@ -1,5 +1,17 @@
 @import 'tailwindcss';
 
+@custom-variant still {
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion='moves']) & {
+      @slot;
+    }
+  }
+
+  :root[data-motion='still'] & {
+    @slot;
+  }
+}
+
 @custom-variant dark {
   &:where(.dark, .dark *) {
     @slot;
