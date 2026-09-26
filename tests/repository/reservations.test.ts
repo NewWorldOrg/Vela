@@ -732,7 +732,7 @@ test('a cancellation whose broadcast has ended is left out', async () => {
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
+    ['x2', 'x6', 'x8', 'x9'],
   )
 })
 
@@ -773,12 +773,12 @@ test('a cancellation still ahead of its end is listed either way', async () => {
   }
 })
 
-test('the standings a recording never settled cleanly stay on', async () => {
+test('a missed, failed or cut-short reservation leaves once its broadcast is over', async () => {
   const { items } = await mixedAt('2026-08-09T00:00:00Z')
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
+    ['x6', 'x8', 'x9'],
   )
 })
 
@@ -787,7 +787,7 @@ test('a second before the end still holds the cancellation in the list', async (
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x1', 'x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
+    ['x1', 'x2', 'x6', 'x8', 'x9'],
   )
 })
 
@@ -796,7 +796,7 @@ test('the end of the broadcast is the moment the cancellation leaves', async () 
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
+    ['x2', 'x6', 'x8', 'x9'],
   )
 })
 
@@ -805,7 +805,7 @@ test('a second after the end leaves the cancellation out', async () => {
 
   assert.deepEqual(
     items.map((row) => row.id),
-    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
+    ['x2', 'x6', 'x8', 'x9'],
   )
 })
 
@@ -834,7 +834,7 @@ test('the whole list is counted by the store, not by what is left in it', async 
   assert.equal(result.total, 41)
   assert.deepEqual(
     result.items.map((row) => row.id),
-    ['x2', 'x3', 'x5', 'x6', 'x7', 'x8', 'x9'],
+    ['x2', 'x6', 'x8', 'x9'],
   )
 })
 
@@ -885,18 +885,18 @@ const EVERY_STANDING = [
 
 const AFTER_EVERY_STANDING = new Date('2026-08-08T03:00:00Z')
 
-test('after the broadcast, the completed and the cancelled leave', async () => {
+test('after the broadcast, every reservation that has reached its end leaves', async () => {
   standing(EVERY_STANDING)
 
   const { items } = await listReservations({}, AFTER_EVERY_STANDING)
 
   assert.deepEqual(
     items.map((row) => row.standing),
-    ['scheduled', 'conflict', 'missed', 'recording', 'truncated', 'failed'],
+    ['scheduled', 'conflict', 'recording'],
   )
 })
 
-test('asking for every one brings those two back and nothing else changes', async () => {
+test('asking for every one brings the ended back and nothing else changes', async () => {
   standing(EVERY_STANDING)
 
   const { items } = await listReservations(
