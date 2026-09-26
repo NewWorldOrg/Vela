@@ -331,6 +331,11 @@ export function parseRestartTicket(
   }
 
   const [previous, deadline, budget] = value.split('|')
+
+  if (!deadline?.trim() || !budget?.trim()) {
+    return undefined
+  }
+
   const deadlineMs = Number(deadline)
   const budgetSeconds = Number(budget)
 

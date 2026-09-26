@@ -700,9 +700,14 @@ test('a restart ticket reads back as the ticket it was written from', () => {
 })
 
 test('a ticket that is missing or not a ticket is no restart at all', () => {
-  for (const value of [undefined, '', 'instance|soon|30'] as (
-    string | undefined
-  )[]) {
+  for (const value of [
+    undefined,
+    '',
+    'instance|soon|30',
+    'instance|1767225600000|',
+    'instance||30',
+    'instance',
+  ] as (string | undefined)[]) {
     assert.equal(parseRestartTicket(value), undefined, String(value))
   }
 })
