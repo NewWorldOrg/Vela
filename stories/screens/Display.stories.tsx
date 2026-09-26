@@ -74,3 +74,53 @@ export const 端末が動きを減らしていても入を選んでいる: Story
     ).toBeChecked()
   },
 }
+
+function themeCookie(): string | undefined {
+  return document.cookie
+    .split('; ')
+    .find((one) => one.startsWith('vela-theme-mode='))
+    ?.split('=')[1]
+}
+
+export const テーマを切り替える: Story = {
+  args: {},
+  beforeEach: () => {
+    const held = document.documentElement.className
+
+    return () => {
+      document.documentElement.className = held
+      document.cookie = 'vela-theme-mode=;path=/;max-age=0'
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const theme = canvas.getByRole('group', { name: 'テーマ' })
+    const html = document.documentElement
+
+    await userEvent.click(within(theme).getByRole('button', { name: 'ダーク' }))
+
+    await expect(
+      within(theme).getByRole('button', { name: 'ダーク' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(html).toHaveClass('dark')
+    await expect(html).not.toHaveClass('system')
+    await expect(themeCookie()).toBe('dark')
+
+    await userEvent.click(
+      within(theme).getByRole('button', { name: 'システム' }),
+    )
+
+    await expect(html).toHaveClass('system')
+    await expect(html).not.toHaveClass('dark')
+    await expect(themeCookie()).toBe('system')
+
+    await userEvent.click(within(theme).getByRole('button', { name: 'ライト' }))
+
+    await expect(
+      within(theme).getByRole('button', { name: 'ライト' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(html).not.toHaveClass('system')
+    await expect(html).not.toHaveClass('dark')
+    await expect(themeCookie()).toBe('light')
+  },
+}
