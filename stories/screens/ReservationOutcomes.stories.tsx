@@ -220,7 +220,7 @@ export const スクランブルが解けずに残った行: Story = {
 
     await expect(whole).toHaveTextContent('スクランブル解除失敗')
     await expect(whole).toHaveTextContent('スクランブル残存。')
-    await expect(whole).toHaveTextContent('完全')
+    await expect(whole).not.toHaveTextContent('完全')
 
     const cutShort = await tipIn(
       cellOf(rowFor(canvas.getByText('高原の星空観察')), KIND_COLUMN),
@@ -236,6 +236,7 @@ export const スクランブルが解けずに残った行: Story = {
 
     await expect(lifted).toHaveTextContent('スクランブル解除失敗')
     await expect(lifted).not.toHaveTextContent('スクランブル残存')
+    await expect(lifted).not.toHaveTextContent('完全')
   },
 }
 

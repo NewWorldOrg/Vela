@@ -48,7 +48,9 @@ export function OutcomeKindChip({
   say?: boolean
 }) {
   const tone = shapeFor(KIND_TONE, outcome.kind, NOT_YET_KNOWN_TONE)
-  const alsoSaidByTheKind = outcome.recordingResult === 'failed'
+  const alsoSaidByTheKind =
+    outcome.recordingResult === 'failed' ||
+    (outcome.recordingResult === 'complete' && outcome.endedScrambled === true)
   const result =
     outcome.recordingResult && !alsoSaidByTheKind
       ? shapeFor(
