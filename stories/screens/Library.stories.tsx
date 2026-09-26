@@ -252,6 +252,45 @@ export const 削除を断られたとき: Story = {
   },
 }
 
+export const 閉じる途中も削除の対象を描く: Story = {
+  args: {
+    result,
+    filter: {},
+    onDelete: async (): Promise<RecordingDiscarded> => ({
+      state: 'rejected',
+      message: STILL_RECORDING,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      within(canvas.getByRole('row', { name: /週末キッチンの手帖/ })).getByRole(
+        'button',
+        { name: '削除' },
+      ),
+    )
+
+    const face = await screen.findByRole('alertdialog')
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(
+      within(face).getByRole('button', { name: '削除する' }),
+    )
+    await within(face).findByText(STILL_RECORDING)
+    await userEvent.click(
+      within(face).getByRole('button', { name: 'キャンセル' }),
+    )
+
+    await expect(face).toHaveAttribute('data-state', 'closed')
+    await expect(face).toHaveTextContent('週末キッチンの手帖')
+    await expect(face).toHaveTextContent(STILL_RECORDING)
+
+    await afterTheArrival(canvasElement)
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+  },
+}
+
 const STANDINGS: EncodeStanding[] = [
   'notEncoded',
   'queued',

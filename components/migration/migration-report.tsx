@@ -47,7 +47,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             <Badge variant="mute">{run.rehearsals}</Badge>
           </div>
           <dl className="mt-3 space-y-2.5">
-            <MigrationRunRow label="実行日時">
+            <MigrationRunRow label="実行">
               <span className="font-code tabular-nums">{run.startedAt}</span>{' '}
               開始 /{' '}
               <span className="font-code tabular-nums">{run.finishedAt}</span>{' '}

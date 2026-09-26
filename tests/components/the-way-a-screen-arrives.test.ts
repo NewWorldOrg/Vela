@@ -85,6 +85,7 @@ const THE_UTILITIES = [
   'breathes',
   'waits',
   'appears',
+  'disappears',
   'scrim-appears',
   'scrim-disappears',
 ]
@@ -108,6 +109,7 @@ const THE_MOVEMENTS_THAT_STOP = [
   'scrim-in',
   'scrim-out',
   'surface-in',
+  'surface-out',
 ]
 
 const CARRIED_BY_A_VARIABLE = 'calc(var(--d, 0s) + var(--delay, 0s)'
@@ -528,6 +530,11 @@ test('a face comes and goes by a movement this sheet declares', async () => {
       `${file} names nothing for the way it opens`,
     )
     assert.doesNotMatch(source, /data-\[state=closed\]:appears/)
+    assert.match(
+      source,
+      /data-\[state=closed\]:disappears/,
+      `${file} opens with a movement and vanishes at once when it closes`,
+    )
 
     if (/data-slot="(dialog|alert-dialog|sheet)-overlay"/.test(source)) {
       assert.match(
@@ -771,4 +778,19 @@ test('the collection drawer slides in and out only while movement is on', async 
 
   assert.match(drawer, /transition-transform duration-200 ease-toy/)
   assert.match(drawer, /still:transition-none/)
+})
+
+test('the cards that join the live grid are cut at the same twelve', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/live/channel-grid.tsx'),
+    'utf8',
+  )
+
+  assert.match(
+    grid,
+    /joinsIn\(/,
+    'the grid hands the joining movement to every newcomer, so a sub-channel ' +
+      'switched on moves every card it adds at once',
+  )
+  assert.doesNotMatch(grid, /\? 'joins'/)
 })

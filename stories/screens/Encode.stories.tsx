@@ -1001,6 +1001,7 @@ export const 自動実行の保存を断られる: Story = {
         '使用コア数の上限がこの機械のコア数の範囲にないため、保存できませんでした。',
       ),
     ).toBeVisible()
+    await afterTheArrival(canvasElement)
     await expect(
       canvas.getByRole('combobox', { name: '使用コア数の上限' }),
     ).toHaveTextContent('2')

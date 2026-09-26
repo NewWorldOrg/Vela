@@ -43,7 +43,11 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { EmptyState } from '@/components/vela/empty-state'
-import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
+import {
+  WAITING_LABEL,
+  WaitingRows,
+  waitsWhile,
+} from '@/components/vela/waiting'
 import { IconButton } from '@/components/vela/icon-button'
 import { InFull } from '@/components/vela/in-full'
 import { Pager } from '@/components/vela/pager'
@@ -58,6 +62,7 @@ import {
   SearchIcon,
 } from '@/components/vela/icons'
 import { ADMIN_LIST_HEIGHT_CAP, ScreenMain } from '@/components/vela/app-shell'
+import { ChannelMark } from '@/components/vela/channel-mark'
 import { SPAN_DASH } from '@/lib/format'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
@@ -464,13 +469,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </EmptyState>
       ) : (
         found && (
-          <div
-            inert={waiting ? true : undefined}
-            className={cn(
-              'transition-opacity duration-150',
-              waiting && 'opacity-60',
-            )}
-          >
+          <div {...waitsWhile(waiting)}>
             <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
               <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
                 <ListIcon className="size-4 text-brand" />
@@ -573,9 +572,9 @@ function SearchScreen({ result }: { result: SearchResult }) {
                     'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring',
                   )}
                 >
-                  <table className="w-full min-w-[calc(760rem/16)] table-fixed border-separate border-spacing-0">
+                  <table className="w-full min-w-[calc(800rem/16)] table-fixed border-separate border-spacing-0">
                     <colgroup>
-                      <col style={{ width: 'calc(180rem/16)' }} />
+                      <col style={{ width: 'calc(220rem/16)' }} />
                       <col style={{ width: 'calc(240rem/16)' }} />
                       <col style={{ width: 'calc(420rem/16)' }} />
                       <col style={{ width: 'calc(160rem/16)' }} />
@@ -597,13 +596,17 @@ function SearchScreen({ result }: { result: SearchResult }) {
                     <tbody>
                       {found.hits.map((p) => (
                         <tr key={p.id} className="group">
-                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top text-ui whitespace-nowrap">
-                            {p.channelName}
-                            {p.channelNo && (
-                              <small className="ml-1.5 font-code text-micro text-ink-3">
-                                {p.channelNo}
-                              </small>
-                            )}
+                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top text-ui">
+                            <span className="flex items-center gap-2">
+                              <ChannelMark
+                                logo={p.channelLogo}
+                                no={p.channelNo}
+                                keepsTheSlot
+                              />
+                              <span className="min-w-0 leading-[1.4]">
+                                {p.channelName}
+                              </span>
+                            </span>
                           </td>
                           <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
                             <b className="mr-1.5 font-medium text-ink">

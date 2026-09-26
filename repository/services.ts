@@ -155,6 +155,8 @@ export interface ProposalChannel {
 export interface ProposalService {
   key: string
   name: string
+  no?: string
+  logo?: StationLogo
   category: string
   channels: ProposalChannel[]
 }
@@ -253,17 +255,40 @@ function toRotation(
   return undefined
 }
 
-function toService(service: BroadcastServiceResponder): ServiceRow {
-  const candidates = service.candidates.map(toCandidate)
+type StationMark = Pick<ServiceRow, 'no' | 'logo'>
 
+function serviceKeyOf(service: {
+  networkId: string | number
+  serviceId: string | number
+}): string {
+  return `${toInt(service.networkId)}-${toInt(service.serviceId)}`
+}
+
+function stationMarkOf(service: BroadcastServiceResponder): StationMark {
   return {
-    key: `${toInt(service.networkId)}-${toInt(service.serviceId)}`,
-    name: service.name,
     no:
       service.remoteControlKeyId == null
         ? undefined
         : String(toInt(service.remoteControlKeyId)),
     logo: stationLogoOf(service),
+  }
+}
+
+function stationMarksOf(
+  services: BroadcastServiceResponder[],
+): ReadonlyMap<string, StationMark> {
+  return new Map(
+    services.map((service) => [serviceKeyOf(service), stationMarkOf(service)]),
+  )
+}
+
+function toService(service: BroadcastServiceResponder): ServiceRow {
+  const candidates = service.candidates.map(toCandidate)
+
+  return {
+    key: serviceKeyOf(service),
+    name: service.name,
+    ...stationMarkOf(service),
     category: wordFor(CATEGORY_LABEL, service.category),
     minorCategory: service.category !== 'television',
     currentChannel:
@@ -381,10 +406,16 @@ function toProgress(progress: ScanProgressResponder): ScanRunProgress {
 
 function toProposalService(
   change: ScanServiceChangeResponder,
+  marks: ReadonlyMap<string, StationMark>,
 ): ProposalService {
+  const key = serviceKeyOf(change)
+  const mark = marks.get(key)
+
   return {
-    key: `${toInt(change.networkId)}-${toInt(change.serviceId)}`,
+    key,
     name: change.name,
+    no: mark?.no,
+    logo: mark?.logo,
     category: wordFor(CATEGORY_LABEL, change.category),
     channels: change.channels.map((channel) => ({
       kind: channel.kind,
@@ -397,10 +428,11 @@ function toProposalService(
 function toProposal(
   progress: ScanProgressResponder,
   difference: ScanDifferenceResponder,
+  marks: ReadonlyMap<string, StationMark>,
 ): ScanProposal {
-  const added = difference.added.map(toProposalService)
-  const updated = difference.updated.map(toProposalService)
-  const missing = difference.missing.map(toProposalService)
+  const added = difference.added.map((one) => toProposalService(one, marks))
+  const updated = difference.updated.map((one) => toProposalService(one, marks))
+  const missing = difference.missing.map((one) => toProposalService(one, marks))
   const leftRotation = difference.leftRotation.map((departure) => ({
     key: `${toInt(departure.networkId)}-${toInt(departure.serviceId)}`,
     channel: channelLabel(departure.target),
@@ -536,14 +568,17 @@ function lastWalkOf(
   return undefined
 }
 
-function outstandingProposal(history: ReadRun[]): ScanProposal | undefined {
+function outstandingProposal(
+  history: ReadRun[],
+  marks: ReadonlyMap<string, StationMark>,
+): ScanProposal | undefined {
   for (const { run, read } of history) {
     if (
       run.state === 'completed' &&
       read.state === 'ok' &&
       read.progress.difference !== null
     ) {
-      return toProposal(read.progress, read.progress.difference)
+      return toProposal(read.progress, read.progress.difference, marks)
     }
   }
 
@@ -640,7 +675,7 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
       groups,
       unattributed,
       running: running && toRunning(running),
-      proposal: outstandingProposal(history),
+      proposal: outstandingProposal(history, stationMarksOf(serviceBody.data)),
       history: runList.map(toRun),
     },
   }
@@ -664,17 +699,24 @@ function toRunning({ run, read }: ReadRun): RunningScan {
 export async function getScanProposal(
   scanId: string,
 ): Promise<ScanProposalScreenResult> {
-  const read = await getProgress(scanId)
+  const [read, services] = await Promise.all([
+    getProgress(scanId),
+    carinaClient().GET('/api/services'),
+  ])
 
   if (read.state !== 'ok') {
     return read
   }
 
   const { progress } = read
+  const marks = stationMarksOf(services.data?.data ?? [])
 
   return progress.difference === null
     ? { state: 'gone' }
-    : { state: 'ok', proposal: toProposal(progress, progress.difference) }
+    : {
+        state: 'ok',
+        proposal: toProposal(progress, progress.difference, marks),
+      }
 }
 
 function refusedRunId(body: unknown): string | undefined {

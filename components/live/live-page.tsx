@@ -233,7 +233,7 @@ export function LiveView({
       <aside
         aria-label="チャンネル"
         className={cn(
-          'sticky top-[62px] flex max-h-[calc(100dvh-102px)] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          'sticky top-[calc(62rem/16)] flex max-h-[calc(100dvh-102rem/16)] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
           foldColumn(away, motion),
         )}
       >

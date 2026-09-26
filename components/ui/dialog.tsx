@@ -90,7 +90,7 @@ function DialogContent({
           }
         }}
         className={cn(
-          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] max-h-[85dvh] translate-x-[-50%] translate-y-[-50%] gap-[calc(15rem/16)] rounded-xl border border-line-strong bg-surface px-5 pt-[calc(18rem/16)] pb-[calc(17rem/16)] text-ink shadow-pop-xl outline-none [--from-scale:0.97] has-[>[data-slot=dialog-body]]:grid-rows-[auto_minmax(0,1fr)] data-[state=open]:appears data-[size=default]:sm:max-w-2xl data-[size=reading]:sm:max-w-[min(56rem,calc(100%-2.5rem))]',
+          'fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2.5rem)] max-h-[85dvh] translate-x-[-50%] translate-y-[-50%] gap-[calc(15rem/16)] rounded-xl border border-line-strong bg-surface px-5 pt-[calc(18rem/16)] pb-[calc(17rem/16)] text-ink shadow-pop-xl outline-none [--from-scale:0.97] has-[>[data-slot=dialog-body]]:grid-rows-[auto_minmax(0,1fr)] data-[state=closed]:disappears data-[state=open]:appears data-[size=default]:sm:max-w-2xl data-[size=reading]:sm:max-w-[min(56rem,calc(100%-2.5rem))]',
           className,
         )}
         {...props}

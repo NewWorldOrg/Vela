@@ -105,12 +105,15 @@ function Destination({ job }: { job: EncodeJob }) {
 export function JobTable({
   jobs,
   onCallOff,
+  waiting = false,
 }: {
   jobs: EncodeJob[]
   onCallOff: (id: string) => Promise<EncodeWrite>
+  waiting?: boolean
 }) {
   return (
     <Table
+      waiting={waiting}
       className="table-fixed"
       style={{ minWidth: TABLE_MIN }}
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}

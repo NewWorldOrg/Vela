@@ -269,6 +269,7 @@ export const ルールを編集: Story = {
     )
 
     retired.length = 0
+    await afterTheArrival(canvasElement)
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
     await expect(await screen.findByRole('alertdialog')).toHaveTextContent(
       'このルールを削除します',

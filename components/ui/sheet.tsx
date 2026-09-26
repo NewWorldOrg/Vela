@@ -61,7 +61,7 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          'fixed z-50 flex flex-col bg-surface text-ink data-[state=open]:appears',
+          'fixed z-50 flex flex-col bg-surface text-ink data-[state=closed]:disappears data-[state=open]:appears',
           side === 'right' &&
             'inset-y-0 right-0 h-full w-3/4 border-l border-line-strong shadow-panel [--from-x:8px] sm:max-w-[calc(300rem/16)]',
           side === 'left' &&

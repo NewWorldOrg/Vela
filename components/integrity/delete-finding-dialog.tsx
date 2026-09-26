@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { InlineAlert } from '@/components/vela/banner'
 import { TrashIcon, WarningIcon } from '@/components/vela/icons'
+import { useHeldWhileClosing } from '@/hooks/useHeldWhileClosing'
 
 const SIGNED_OUT = signedOut('操作')
 
@@ -30,6 +31,7 @@ export function DeleteFindingDialog({
 }) {
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
+  const shown = useHeldWhileClosing(finding, () => setRefusal(undefined))
 
   const remove = (): void => {
     if (!finding) {
@@ -53,30 +55,21 @@ export function DeleteFindingDialog({
   }
 
   return (
-    <AlertDialog
-      open={finding !== null}
-      onOpenChange={(open) => {
-        if (!open) {
-          setRefusal(undefined)
-        }
-
-        onOpenChange(open)
-      }}
-    >
+    <AlertDialog open={finding !== null} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>このファイルを削除します</AlertDialogTitle>
-          {finding && (
+          {shown && (
             <AlertDialogDescription asChild>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-ui">
                 <dt className="text-ink-3">ファイル</dt>
-                <dd className="font-code break-all text-ink">{finding.path}</dd>
+                <dd className="font-code break-all text-ink">{shown.path}</dd>
                 <dt className="text-ink-3">保存先</dt>
-                <dd className="font-code text-ink-2">{finding.root}</dd>
+                <dd className="font-code text-ink-2">{shown.root}</dd>
                 <dt className="text-ink-3">サイズ</dt>
-                <dd className="font-code text-ink-2">{finding.size}</dd>
+                <dd className="font-code text-ink-2">{shown.size}</dd>
                 <dt className="text-ink-3">検出</dt>
-                <dd className="font-code text-ink-2">{finding.noticedAt}</dd>
+                <dd className="font-code text-ink-2">{shown.noticedAt}</dd>
               </dl>
             </AlertDialogDescription>
           )}

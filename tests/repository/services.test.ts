@@ -869,6 +869,7 @@ test('the proposal waiting on the screen is the latest completed run that still 
 
 test('a proposal carries what was added, updated, missed and taken out of the rotation', async () => {
   replies.clear()
+  replies.set('GET /api/services', ok([]))
   progressOf(
     'scan-1',
     ok(
@@ -917,6 +918,8 @@ test('a proposal carries what was added, updated, missed and taken out of the ro
     {
       key: '50001-1024',
       name: 'みなと総合1',
+      no: undefined,
+      logo: undefined,
       category: 'ラジオ',
       channels: [
         {
@@ -951,8 +954,51 @@ test('a proposal carries what was added, updated, missed and taken out of the ro
   assert.equal(read.empty, false)
 })
 
+test('a proposed service already on the list carries the mark of its station', async () => {
+  replies.clear()
+  replies.set('GET /api/services', ok([service()]))
+  progressOf(
+    'scan-1',
+    ok(
+      progress({
+        difference: difference({
+          updated: [change({ kind: 'updated' })],
+          added: [change({ serviceId: '1099', name: 'みなと臨時' })],
+        }),
+      }),
+    ),
+  )
+
+  const read = await proposal()
+
+  assert.deepEqual(
+    [read.updated[0].no, read.updated[0].logo],
+    ['1', { declaration: 'inTheCommonDataTable', href: LOGO }],
+  )
+  assert.deepEqual(
+    [read.added[0].no, read.added[0].logo],
+    [undefined, undefined],
+  )
+})
+
+test('a proposal still opens when the list of services cannot be read', async () => {
+  replies.clear()
+  replies.set('GET /api/services', refusing(500))
+  progressOf(
+    'scan-1',
+    ok(
+      progress({
+        difference: difference({ updated: [change({ kind: 'updated' })] }),
+      }),
+    ),
+  )
+
+  assert.equal((await proposal()).updated[0].logo, undefined)
+})
+
 test('a proposal with nothing in it says it is empty', async () => {
   replies.clear()
+  replies.set('GET /api/services', ok([]))
   progressOf('scan-1', ok(progress({ difference: difference() })))
 
   assert.equal((await proposal()).empty, true)
@@ -960,6 +1006,7 @@ test('a proposal with nothing in it says it is empty', async () => {
 
 test('a category or channel change this build does not know still reaches the proposal', async () => {
   replies.clear()
+  replies.set('GET /api/services', ok([]))
   progressOf(
     'scan-1',
     ok(
@@ -992,6 +1039,7 @@ test('a category or channel change this build does not know still reaches the pr
 
 test('every failure the API names is read into its own class', async () => {
   replies.clear()
+  replies.set('GET /api/services', ok([]))
   progressOf(
     'scan-1',
     ok(
@@ -1015,6 +1063,7 @@ test('every failure the API names is read into its own class', async () => {
 
 test('a stream mismatch without the stream it expected still names the one it received', async () => {
   replies.clear()
+  replies.set('GET /api/services', ok([]))
   progressOf(
     'scan-1',
     ok(
@@ -1039,6 +1088,7 @@ test('a stream mismatch without the stream it expected still names the one it re
 
 test('a proposal that cannot be opened says why', async () => {
   replies.clear()
+  replies.set('GET /api/services', ok([]))
   progressOf('scan-1', { status: 401 })
   assert.deepEqual(await getScanProposal('scan-1'), {
     state: 'unauthenticated',
