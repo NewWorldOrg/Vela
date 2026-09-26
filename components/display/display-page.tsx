@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 import {
   MOTION_COOKIE,
   MOTION_HINT,
   MOTION_LABEL,
-  movesUnless,
+  movesNow,
   type MotionSetting,
 } from '@/lib/motion'
 import { Switch } from '@/components/ui/switch'
@@ -27,13 +27,37 @@ const THEME_LABEL = 'テーマ'
 
 const THEME_HINT = 'システムは端末の明暗の設定に合わせます。'
 
+const REDUCED_BY_THE_SYSTEM = '(prefers-reduced-motion: reduce)'
+
+function followTheSystem(notify: () => void): () => void {
+  const asked = window.matchMedia(REDUCED_BY_THE_SYSTEM)
+
+  asked.addEventListener('change', notify)
+
+  return () => asked.removeEventListener('change', notify)
+}
+
+function reducedByTheSystem(): boolean {
+  return window.matchMedia(REDUCED_BY_THE_SYSTEM).matches
+}
+
+function reducedOnTheServer(): boolean {
+  return false
+}
+
 function remember(said: MotionSetting): void {
   document.cookie = `${MOTION_COOKIE}=${said};path=/;max-age=31536000;SameSite=Lax`
   document.documentElement.dataset.motion = said
 }
 
 export function DisplayView({ motion }: { motion?: MotionSetting }) {
-  const [moves, setMoves] = useState<boolean>(movesUnless(motion))
+  const [said, setSaid] = useState<MotionSetting | undefined>(motion)
+  const reduced = useSyncExternalStore(
+    followTheSystem,
+    reducedByTheSystem,
+    reducedOnTheServer,
+  )
+  const moves = movesNow(said, reduced)
   const { preference, setPreference } = useTheme()
 
   return (
@@ -69,8 +93,10 @@ export function DisplayView({ motion }: { motion?: MotionSetting }) {
               id={MOTION_ID}
               checked={moves}
               onCheckedChange={(next) => {
-                setMoves(next)
-                remember(next ? 'moves' : 'still')
+                const chosen: MotionSetting = next ? 'moves' : 'still'
+
+                setSaid(chosen)
+                remember(chosen)
               }}
             />
           </dd>

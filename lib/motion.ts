@@ -11,10 +11,6 @@ export function motionOf(said: string | undefined): MotionSetting | undefined {
   return said === 'moves' || said === 'still' ? said : undefined
 }
 
-export function movesUnless(said: MotionSetting | undefined): boolean {
-  return said !== 'still'
-}
-
 export function movesNow(
   said: string | undefined,
   reducedByTheSystem: boolean,

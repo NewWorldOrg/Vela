@@ -3,6 +3,7 @@ import { expect, userEvent, within } from 'storybook/test'
 
 import { MOTION_LABEL } from '@/lib/motion'
 import { DisplayView } from '@/components/display/display-page'
+import { askedForLessMotion } from '@/stories/asked-for-less-motion'
 import { inTheSettings } from '@/stories/frames'
 
 const meta = {
@@ -43,5 +44,33 @@ export const 動きを切っている: Story = {
 
     await expect(motion).toBeChecked()
     await expect(document.documentElement.dataset.motion).toBe('moves')
+  },
+}
+
+export const 端末が動きを減らしている: Story = {
+  args: {},
+  beforeEach: () => askedForLessMotion(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const motion = canvas.getByRole('switch', { name: MOTION_LABEL })
+
+    await expect(motion).not.toBeChecked()
+
+    await userEvent.click(motion)
+
+    await expect(motion).toBeChecked()
+    await expect(document.documentElement.dataset.motion).toBe('moves')
+  },
+}
+
+export const 端末が動きを減らしていても入を選んでいる: Story = {
+  args: { motion: 'moves' },
+  beforeEach: () => askedForLessMotion(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('switch', { name: MOTION_LABEL }),
+    ).toBeChecked()
   },
 }

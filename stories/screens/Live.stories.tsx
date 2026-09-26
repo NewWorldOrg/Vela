@@ -19,6 +19,7 @@ import {
   type TranscodeCeiling,
 } from '@/lib/live-wire'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { askedForLessMotion } from '@/stories/asked-for-less-motion'
 import type { LiveScreen } from '@/repository/live'
 import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
@@ -1893,28 +1894,6 @@ function foldRunning(canvasElement: HTMLElement): Animation[] {
 
     return moved !== null && press?.contains(moved) !== true
   })
-}
-
-function askedForLessMotion(): () => void {
-  const asked = window.matchMedia.bind(window)
-
-  window.matchMedia = ((query: string) =>
-    query.includes('prefers-reduced-motion')
-      ? ({
-          matches: true,
-          media: query,
-          onchange: null,
-          addEventListener: () => {},
-          removeEventListener: () => {},
-          addListener: () => {},
-          removeListener: () => {},
-          dispatchEvent: () => false,
-        } as MediaQueryList)
-      : asked(query)) as typeof window.matchMedia
-
-  return () => {
-    window.matchMedia = asked
-  }
 }
 
 export const 一覧を畳む: Story = {
