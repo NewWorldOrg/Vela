@@ -91,15 +91,44 @@ const answer = async (path: string) => {
   throw new Error(`nothing stands in for ${path}`)
 }
 
+interface Posted {
+  path: string
+  body: unknown
+}
+
+const posted: Posted[] = []
+
+const written: { status: number; body?: unknown } = { status: 200 }
+
+const post = async (path: string, init?: { body?: unknown }) => {
+  posted.push({ path, body: init?.body })
+
+  const { status, body } = written
+
+  return {
+    data: status < 300 ? body : undefined,
+    error: status < 300 ? undefined : body,
+    response: { status, ok: status < 300 },
+  }
+}
+
 mock.module('@/repository/client/carina', {
   namedExports: {
-    carinaClient: () => ({ GET: answer }),
+    carinaClient: () => ({ GET: answer, POST: post }),
     revalidatingCarinaClient: () => ({ GET: answer }),
   },
 })
 
-const { coverageDaysOf, epgHealthOf, getCollectionStatus } =
-  await import('@/repository/collection')
+const {
+  collectNow,
+  coverageDaysOf,
+  epgHealthOf,
+  getCollectionStatus,
+  rebuildEpg,
+} = await import('@/repository/collection')
+
+const { calendarDateOf, clockLabel, dayLabel } =
+  await import('@/repository/programs')
 
 const AERIAL_SERVICES = [
   service(101, '海辺テレビ1'),
@@ -453,4 +482,124 @@ test('a collection ledger that refuses throws what the API said about it', async
   )
 
   store.refusing = undefined
+})
+
+function answering(status: number, body?: unknown): void {
+  posted.length = 0
+  written.status = status
+  written.body = body
+}
+
+const envelope = (data: unknown, message = '') => ({
+  status: data !== null,
+  message,
+  data,
+})
+
+const refusedBoost = (refusal: string, notBefore: string | null = null) =>
+  envelope({ refusal, runningBoostId: null, notBefore }, 'refused')
+
+test('collecting everything now asks with no stream, service or network named', async () => {
+  answering(202, envelope({ streams: 12 }))
+
+  assert.deepEqual(await collectNow({}), { state: 'started', streams: 12 })
+  assert.deepEqual(posted, [
+    {
+      path: '/api/epg/collect-now',
+      body: { networkId: null, transportStreamId: null, serviceId: null },
+    },
+  ])
+})
+
+test('collecting one stream now names it, and the count comes back a number', async () => {
+  answering(202, envelope({ streams: '1' }))
+
+  assert.deepEqual(
+    await collectNow({ networkId: 32701, transportStreamId: 32701 }),
+    { state: 'started', streams: 1 },
+  )
+  assert.deepEqual(posted[0]?.body, {
+    networkId: 32701,
+    transportStreamId: 32701,
+    serviceId: null,
+  })
+})
+
+test('a collection already running is said as running', async () => {
+  answering(409, refusedBoost('oneIsAlreadyRunning'))
+
+  assert.deepEqual(await collectNow({}), { state: 'running' })
+})
+
+test('a collection asked for too soon says when it may be asked again', async () => {
+  const soon = new Date(Date.now() + 60_000)
+  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+  answering(409, refusedBoost('tooSoonAfterTheLastOne', soon.toISOString()))
+
+  const shortly = await collectNow({})
+
+  assert.equal(shortly.state, 'cooldown')
+  assert.equal(
+    shortly.state === 'cooldown' ? shortly.notBefore : undefined,
+    soon.toISOString(),
+  )
+  assert.ok(
+    (shortly.state === 'cooldown' ? shortly.notBeforeLabel : '')?.endsWith(
+      clockLabel(soon),
+    ),
+  )
+
+  answering(409, refusedBoost('tooSoonAfterTheLastOne', nextWeek.toISOString()))
+
+  const later = await collectNow({})
+
+  assert.equal(
+    later.state === 'cooldown' ? later.notBeforeLabel : undefined,
+    `${dayLabel(calendarDateOf(nextWeek))} ${clockLabel(nextWeek)}`,
+  )
+})
+
+test('a collection turned away too soon without a time says no time', async () => {
+  answering(409, refusedBoost('tooSoonAfterTheLastOne'))
+
+  assert.deepEqual(await collectNow({}), {
+    state: 'cooldown',
+    notBefore: undefined,
+    notBeforeLabel: undefined,
+  })
+})
+
+test('each other answer to collecting now has a state of its own', async () => {
+  answering(401)
+  assert.deepEqual(await collectNow({}), { state: 'unauthenticated' })
+
+  answering(404, envelope(null, 'no such stream'))
+  assert.deepEqual(await collectNow({ networkId: 1 }), { state: 'missing' })
+
+  answering(500, envelope(null, 'failed'))
+  assert.deepEqual(await collectNow({}), {
+    state: 'rejected',
+    message: 'いますぐ集めるを受け付けられませんでした(500)。',
+  })
+})
+
+test('rebuilding the guide is sent with the words that confirm it, and says how much went', async () => {
+  answering(200, envelope({ discarded: '4210' }))
+
+  assert.deepEqual(await rebuildEpg(), { state: 'ok', discarded: 4210 })
+  assert.deepEqual(posted, [
+    { path: '/api/epg/rebuild', body: { confirm: 'discard-everything' } },
+  ])
+})
+
+test('a rebuild the API will not take says so, and a lost session is told apart', async () => {
+  answering(400, envelope(null, 'confirm'))
+  assert.deepEqual(await rebuildEpg(), {
+    state: 'rejected',
+    message: '削除を受け付けられませんでした(400)。',
+  })
+
+  answering(401)
+  assert.deepEqual(await rebuildEpg(), { state: 'unauthenticated' })
 })
