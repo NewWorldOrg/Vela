@@ -18,6 +18,9 @@ const store: {
   healthStatus: number
   writeStatus: number
   writeOk: boolean
+  writeMessage: string
+  written: Reply
+  detected: Reply
 } = {
   ledger: undefined,
   ledgerStatus: 200,
@@ -26,7 +29,31 @@ const store: {
   healthStatus: 200,
   writeStatus: 200,
   writeOk: true,
+  writeMessage: '',
+  written: { status: 200 },
+  detected: { status: 200 },
 }
+
+interface Reply {
+  status: number
+  body?: unknown
+}
+
+interface Asking {
+  params?: { path?: Record<string, string> }
+  body?: Record<string, unknown>
+}
+
+const pathOf = (template: string, init?: Asking) =>
+  template.replace(/\{(\w+)\}/g, (_, name: string) =>
+    String(init?.params?.path?.[name]),
+  )
+
+const replying = ({ status, body }: Reply) => ({
+  data: status < 300 ? body : undefined,
+  error: status < 300 ? undefined : body,
+  response: answered(status),
+})
 
 const answered = (status: number) => ({ status, ok: status < 400 })
 
@@ -104,6 +131,10 @@ mock.module('@/repository/client/carina', {
       GET: async (path: string) => {
         sent.push({ method: 'GET', path })
 
+        if (path === '/api/tuners/detected') {
+          return replying(store.detected)
+        }
+
         if (path === '/api/tuners/health') {
           return store.healthStatus === 200
             ? {
@@ -131,9 +162,27 @@ mock.module('@/repository/client/carina', {
         sent.push({ method: 'PUT', path, body: init?.body })
 
         return {
-          data: { status: store.writeOk, message: '', data: null },
+          data: {
+            status: store.writeOk,
+            message: store.writeMessage,
+            data: null,
+          },
           response: answered(store.writeStatus),
         }
+      },
+      PATCH: async (template: string, init?: Asking) => {
+        sent.push({
+          method: 'PATCH',
+          path: pathOf(template, init),
+          body: init?.body,
+        })
+
+        return replying(store.written)
+      },
+      POST: async (template: string, init?: Asking) => {
+        sent.push({ method: 'POST', path: pathOf(template, init) })
+
+        return replying(store.written)
       },
     }),
     revalidatingCarinaClient: () => {
@@ -142,7 +191,17 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getTuners, setHoursOfSilence } = await import('@/repository/tuners')
+const {
+  getDetectedTuners,
+  getTuners,
+  parseRestartTicket,
+  restartDriver,
+  saveDetectedTuners,
+  serializeRestartTicket,
+  setHoursOfSilence,
+  setTunerDisabled,
+  toRestartWindow,
+} = await import('@/repository/tuners')
 
 function standing(hoursOfSilence: number | string = 24): void {
   sent.length = 0
@@ -153,6 +212,9 @@ function standing(hoursOfSilence: number | string = 24): void {
   store.healthStatus = 200
   store.writeStatus = 200
   store.writeOk = true
+  store.writeMessage = ''
+  store.written = { status: 200 }
+  store.detected = { status: 200 }
 }
 
 const threshold = async () => {
@@ -448,4 +510,489 @@ test('a healthy tuner is not given a sentence it has no state to explain', async
 
   assert.equal(row?.stateLabel, '正常')
   assert.equal(row?.stateSub, undefined)
+})
+
+const envelope = (data: unknown, message = '') => ({
+  status: data !== null,
+  message,
+  data,
+})
+
+const DEVICE = 'adapter0.frontend0'
+
+const TOGGLED = {
+  status: 200,
+  body: envelope({ deviceId: DEVICE, kind: 'terrestrial', state: 'disabled' }),
+}
+
+test('turning a tuner off is sent to that tuner alone, saying off', async () => {
+  standing()
+  store.written = TOGGLED
+
+  assert.deepEqual(await setTunerDisabled(DEVICE, true), { state: 'ok' })
+  assert.deepEqual(sent.at(-1), {
+    method: 'PATCH',
+    path: `/api/tuners/${DEVICE}`,
+    body: { disabled: true },
+  })
+})
+
+test('turning a tuner back on says on', async () => {
+  standing()
+  store.written = TOGGLED
+
+  await setTunerDisabled(DEVICE, false)
+
+  assert.deepEqual(sent.at(-1)?.body, { disabled: false })
+})
+
+test('a switch the API will not take says what the API answered', async () => {
+  for (const reply of [
+    { status: 409, body: envelope(null, 'the device is not in the ledger') },
+    { status: 502 },
+  ]) {
+    standing()
+    store.written = reply
+
+    assert.deepEqual(await setTunerDisabled(DEVICE, true), {
+      state: 'unavailable',
+      message: `API は ${reply.status} を返しました。`,
+    })
+  }
+})
+
+test('a switch whose session is gone is told apart from a refusal', async () => {
+  standing()
+  store.written = { status: 401 }
+
+  assert.deepEqual(await setTunerDisabled(DEVICE, true), {
+    state: 'unauthenticated',
+  })
+})
+
+const ACCEPTED = (over: Record<string, unknown> = {}) => ({
+  status: 202,
+  body: envelope({
+    instanceId: 'instance-before',
+    acceptedAt: '2026-10-03T12:00:00Z',
+    budgetSeconds: 30,
+    ...over,
+  }),
+})
+
+test('a restart the driver accepts carries the instance it is leaving and how long to wait', async () => {
+  standing()
+  store.written = ACCEPTED({ budgetSeconds: '30' })
+
+  assert.deepEqual(await restartDriver(), {
+    state: 'accepted',
+    instanceId: 'instance-before',
+    budgetSeconds: 30,
+  })
+  assert.deepEqual(sent.at(-1), {
+    method: 'POST',
+    path: '/api/driver/restart',
+  })
+})
+
+test('the wait for a restart is held between ten seconds and a minute', async () => {
+  for (const [asked, held] of [
+    [3, 10],
+    [45, 45],
+    [600, 60],
+  ]) {
+    standing()
+    store.written = ACCEPTED({ budgetSeconds: asked })
+
+    const result = await restartDriver()
+
+    assert.equal(result.state === 'accepted' ? result.budgetSeconds : 0, held)
+  }
+})
+
+test('a driver that never said who it was restarts without an instance to watch for', async () => {
+  standing()
+  store.written = ACCEPTED({ instanceId: null })
+
+  const result = await restartDriver()
+
+  assert.equal(result.state, 'accepted')
+  assert.equal(
+    result.state === 'accepted' ? result.instanceId : 'kept',
+    undefined,
+  )
+})
+
+const LAST_ENDS = '2026-10-03T21:30:00.0000000+09:00'
+
+test('a restart held back by recordings says how many and until when', async () => {
+  standing()
+  store.written = {
+    status: 409,
+    body: envelope(
+      null,
+      `2 recording(s) are running (a, b); the driver is not restarted until the last one ends at ${LAST_ENDS}.`,
+    ),
+  }
+
+  assert.deepEqual(await restartDriver(), {
+    state: 'recording',
+    recordings: 2,
+    until: formatMoment(LAST_ENDS),
+  })
+})
+
+test('a restart held back in words this build cannot read is still held back', async () => {
+  standing()
+  store.written = { status: 409, body: envelope(null, 'busy') }
+
+  assert.deepEqual(await restartDriver(), {
+    state: 'recording',
+    recordings: undefined,
+    until: undefined,
+  })
+})
+
+test('each way a restart is turned down has a state of its own', async () => {
+  for (const [status, state] of [
+    [401, 'unauthenticated'],
+    [503, 'disconnected'],
+    [501, 'unsupported'],
+    [502, 'mismatched'],
+  ] as const) {
+    standing()
+    store.written = { status, body: envelope(null) }
+
+    assert.deepEqual(await restartDriver(), { state })
+  }
+})
+
+test('any other answer to a restart is a refusal carrying its status', async () => {
+  for (const reply of [
+    { status: 500, body: envelope(null, 'failed') },
+    { status: 400, body: envelope(null, 'bad') },
+    { status: 202 },
+  ]) {
+    standing()
+    store.written = reply
+
+    assert.deepEqual(await restartDriver(), {
+      state: 'refused',
+      status: reply.status,
+    })
+  }
+})
+
+const TICKET = {
+  previousInstanceId: 'instance-before',
+  deadline: Date.parse('2026-10-03T12:00:30Z'),
+  budgetSeconds: 30,
+}
+
+test('a restart ticket reads back as the ticket it was written from', () => {
+  assert.deepEqual(parseRestartTicket(serializeRestartTicket(TICKET)), TICKET)
+  assert.deepEqual(
+    parseRestartTicket(
+      serializeRestartTicket({ ...TICKET, previousInstanceId: undefined }),
+    ),
+    { ...TICKET, previousInstanceId: undefined },
+  )
+})
+
+test('a ticket that is missing or not a ticket is no restart at all', () => {
+  for (const value of [undefined, '', 'instance|soon|30'] as (
+    string | undefined
+  )[]) {
+    assert.equal(parseRestartTicket(value), undefined, String(value))
+  }
+})
+
+const connected = (instanceId?: string) => ({
+  connection: 'connected' as const,
+  instanceId,
+})
+
+test('no ticket means no restart is being waited for', () => {
+  assert.equal(
+    toRestartWindow(undefined, connected('instance-after')),
+    undefined,
+  )
+})
+
+test('a driver back under another instance has returned', () => {
+  assert.deepEqual(
+    toRestartWindow(TICKET, connected('instance-after'), TICKET.deadline + 1),
+    { state: 'returned', instanceId: 'instance-after' },
+  )
+})
+
+test('the same instance still answering is still restarting until the deadline, then overdue', () => {
+  assert.deepEqual(
+    toRestartWindow(TICKET, connected('instance-before'), TICKET.deadline - 1),
+    { state: 'restarting', deadline: TICKET.deadline, budgetSeconds: 30 },
+  )
+  assert.deepEqual(
+    toRestartWindow(TICKET, { connection: 'disconnected' }, TICKET.deadline),
+    { state: 'overdue', budgetSeconds: 30 },
+  )
+})
+
+test('a restart with no instance to compare cannot say the driver came back', () => {
+  const blind = { ...TICKET, previousInstanceId: undefined }
+
+  assert.deepEqual(
+    toRestartWindow(blind, connected('instance-after'), TICKET.deadline - 1),
+    { state: 'unverifiable' },
+  )
+  assert.deepEqual(
+    toRestartWindow(blind, { connection: 'disconnected' }, TICKET.deadline - 1),
+    { state: 'restarting', deadline: TICKET.deadline, budgetSeconds: 30 },
+  )
+})
+
+const detectedDevice = (
+  deviceId: string,
+  kinds: string[],
+  detection = 'detected',
+) => ({ deviceId, detection, kinds, detail: null })
+
+test('a detection reads each added, vanished and mismatched device as a row', async () => {
+  standing()
+  store.detected = {
+    status: 200,
+    body: envelope({
+      devices: [
+        detectedDevice(DEVICE, ['terrestrial']),
+        detectedDevice('adapter1.frontend0', ['satellite', 'terrestrial']),
+        detectedDevice('adapter2.frontend0', [], 'permissionDenied'),
+      ],
+      added: ['adapter1.frontend0', 'adapter2.frontend0'],
+      missing: ['adapter3.frontend0'],
+      mismatched: [
+        {
+          deviceId: DEVICE,
+          observed: 'satellite',
+          detected: ['terrestrial'],
+        },
+      ],
+    }),
+  }
+
+  assert.deepEqual(await getDetectedTuners(), {
+    state: 'ok',
+    detection: {
+      detected: [DEVICE, 'adapter1.frontend0'],
+      changes: true,
+      rows: [
+        {
+          kind: 'add',
+          tag: '新規',
+          device: 'adapter1.frontend0',
+          note: '衛星・地上波として検出されました',
+        },
+        {
+          kind: 'add',
+          tag: '新規',
+          device: 'adapter2.frontend0',
+          note: 'アクセス権がないため保存されません',
+        },
+        {
+          kind: 'del',
+          tag: '消失',
+          device: 'adapter3.frontend0',
+          note: '接続が確認できません',
+        },
+        {
+          kind: 'kind',
+          tag: '種別相違',
+          device: DEVICE,
+          note: '一覧は 衛星 / 検出は 地上波',
+        },
+      ],
+    },
+  })
+  assert.deepEqual(sent.at(-1), {
+    method: 'GET',
+    path: '/api/tuners/detected',
+  })
+})
+
+test('a detection that only finds devices it cannot save changes nothing', async () => {
+  standing()
+  store.detected = {
+    status: 200,
+    body: envelope({
+      devices: [detectedDevice('adapter2.frontend0', [], 'busy')],
+      added: ['adapter2.frontend0'],
+      missing: [],
+      mismatched: [],
+    }),
+  }
+
+  const result = await getDetectedTuners()
+
+  assert.equal(result.state === 'ok' ? result.detection.changes : true, false)
+  assert.deepEqual(
+    result.state === 'ok' ? result.detection.detected : undefined,
+    [],
+  )
+})
+
+test('a detection the API will not give says what it answered', async () => {
+  for (const reply of [
+    { status: 503, body: envelope(null, 'not connected') },
+    { status: 200, body: envelope(null) },
+    { status: 502 },
+  ]) {
+    standing()
+    store.detected = reply
+
+    assert.deepEqual(await getDetectedTuners(), {
+      state: 'unavailable',
+      message: `API は ${reply.status} を返しました。`,
+    })
+  }
+
+  standing()
+  store.detected = { status: 401 }
+
+  assert.deepEqual(await getDetectedTuners(), { state: 'unauthenticated' })
+})
+
+function ledgerOf(
+  desired: Record<string, unknown>[],
+  observed: Record<string, unknown>[] = [],
+): void {
+  store.ledger = {
+    ...(ledger() as Record<string, unknown>),
+    desired,
+    observed,
+  }
+}
+
+const desired = (deviceId: string, disabled: boolean, lnbPower = false) => ({
+  deviceId,
+  disabled,
+  lnbPower,
+  kind: 'terrestrial',
+})
+
+const observation = (
+  deviceId: string,
+  state: string,
+  disablePending = false,
+) => ({ deviceId, kind: 'terrestrial', state, disablePending })
+
+const savedTuners = () => {
+  const put = sent.findLast((one) => one.method === 'PUT')
+
+  return put?.path === '/api/tuners' ? put.body?.tuners : undefined
+}
+
+test('saving a detection writes every device detected, keeping what each was set to', async () => {
+  standing()
+  ledgerOf([desired(DEVICE, true), desired('adapter1.frontend0', false, true)])
+
+  assert.deepEqual(
+    await saveDetectedTuners([
+      DEVICE,
+      'adapter1.frontend0',
+      'adapter2.frontend0',
+    ]),
+    { state: 'ok' },
+  )
+  assert.deepEqual(savedTuners(), [
+    { deviceId: DEVICE, disabled: true, lnbPower: false },
+    { deviceId: 'adapter1.frontend0', disabled: false, lnbPower: true },
+    { deviceId: 'adapter2.frontend0', disabled: false, lnbPower: false },
+  ])
+})
+
+test('a tuner the driver is taking out of service is saved as off, whatever the ledger said', async () => {
+  standing()
+  ledgerOf(
+    [
+      desired(DEVICE, false),
+      desired('adapter1.frontend0', false),
+      desired('adapter2.frontend0', false),
+      desired('adapter3.frontend0', true),
+    ],
+    [
+      observation(DEVICE, 'disabled'),
+      observation('adapter1.frontend0', 'draining'),
+      observation('adapter2.frontend0', 'idle', true),
+      observation('adapter3.frontend0', 'idle'),
+    ],
+  )
+
+  await saveDetectedTuners([
+    DEVICE,
+    'adapter1.frontend0',
+    'adapter2.frontend0',
+    'adapter3.frontend0',
+  ])
+
+  assert.deepEqual(
+    (savedTuners() as { disabled: boolean }[]).map(({ disabled }) => disabled),
+    [true, true, true, false],
+  )
+})
+
+test('nothing is saved when the ledger before it cannot be read', async () => {
+  standing()
+  store.ledgerStatus = 503
+
+  assert.deepEqual(await saveDetectedTuners([DEVICE]), {
+    state: 'rejected',
+    message: '保存前の一覧を読み取れなかったため、保存していません(503)。',
+  })
+  assert.equal(savedTuners(), undefined)
+
+  standing()
+  store.ledgerStatus = 401
+
+  assert.deepEqual(await saveDetectedTuners([DEVICE]), {
+    state: 'unauthenticated',
+  })
+  assert.equal(savedTuners(), undefined)
+})
+
+test('a detection of no devices is never saved as an empty ledger', async () => {
+  standing()
+
+  const result = await saveDetectedTuners([])
+
+  assert.equal(result.state, 'rejected')
+  assert.match(result.state === 'rejected' ? result.message : '', /1 台も/)
+  assert.equal(savedTuners(), undefined)
+})
+
+test('a save the API refuses is said in the words of why it refused', async () => {
+  for (const [status, message, said] of [
+    [409, 'unknownDevice: adapter9.frontend0', /もう一度検出してください/],
+    [422, 'undeterminedKind: adapter0.frontend0', /種別を判定できない/],
+    [500, 'ledgerUnwritable: read-only', /driver が一覧を書き込めない/],
+    [501, 'the driver cannot detect', /デバイス検出に対応していない/],
+    [503, 'no driver', /driver に接続できない/],
+    [400, 'somethingNew: x', /保存できませんでした\(400\)/],
+  ] as const) {
+    standing()
+    store.writeStatus = status
+    store.writeOk = false
+    store.writeMessage = message
+
+    const result = await saveDetectedTuners([DEVICE])
+
+    assert.equal(result.state, 'rejected', message)
+    assert.match(result.state === 'rejected' ? result.message : '', said)
+  }
+})
+
+test('a save whose session is gone is told apart from a refusal', async () => {
+  standing()
+  store.writeStatus = 401
+
+  assert.deepEqual(await saveDetectedTuners([DEVICE]), {
+    state: 'unauthenticated',
+  })
 })
