@@ -490,6 +490,8 @@
   --animate-player-bezel-text: player-bezel-text 500ms linear forwards;
   --animate-player-seek-flash: player-seek-flash 700ms linear forwards;
   --animate-player-seek-arrow: player-seek-arrow 700ms linear infinite;
+  --animate-player-shown-briefly: player-shown 500ms step-end forwards;
+  --animate-player-shown-longer: player-shown 700ms step-end forwards;
 }
 
 @keyframes player-burst {
@@ -519,6 +521,15 @@
   }
   12%,
   72% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes player-shown {
+  from {
     opacity: 1;
   }
   to {

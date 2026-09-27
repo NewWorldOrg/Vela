@@ -97,7 +97,17 @@ const MARKED: PlaybackPlan = {
   ],
 }
 
+const ENDS_IN_A_BREAK: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: [
+    { startsAtSec: 0, endsAtSec: 14800, kind: 'programme' },
+    { startsAtSec: 14800, endsAtSec: 15158, kind: 'break' },
+  ],
+}
+
 const NEXT_CHAPTER = '次のチャプターへ'
+
+const SKIP_THE_BREAK = 'CM を飛ばす'
 
 function marksOn(canvasElement: HTMLElement, named: string) {
   return canvasElement.querySelectorAll(`[title="${named}"]`).length
@@ -1676,11 +1686,11 @@ export const 映像を押して再生: Story = {
     const area = canvasElement.querySelector('[data-slot="player-press"]')
 
     asked.length = 0
-    await userEvent.click(area as HTMLElement)
+    await tapAt(area as HTMLElement, 1 / 2, 1)
     await waitFor(() => expect(asked).toEqual(['0/1080p60']))
 
     asked.length = 0
-    await userEvent.dblClick(area as HTMLElement)
+    await tapAt(area as HTMLElement, 1 / 2, 2)
     await waitFor(() => expect(document.fullscreenElement).not.toBeNull())
     await expect(asked).toEqual([])
 
@@ -2538,5 +2548,354 @@ export const 見ていた位置を覚える: Story = {
     picture.dispatchEvent(new Event('pause'))
 
     await waitFor(() => expect(kept).toEqual([1250]))
+  },
+}
+
+function pressArea(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector('[data-slot="player-press"]')
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error('the picture has nothing to press')
+  }
+
+  return found
+}
+
+async function tapAt(
+  area: HTMLElement,
+  share: number,
+  times: number,
+  pointer: 'mouse' | 'touch' = 'mouse',
+) {
+  const box = area.getBoundingClientRect()
+  const coords = {
+    clientX: box.left + box.width * share,
+    clientY: box.top + box.height / 2,
+  }
+  const key = pointer === 'touch' ? '[TouchA]' : '[MouseLeft]'
+
+  await userEvent.pointer(
+    Array.from({ length: times }, () => ({ keys: key, target: area, coords })),
+  )
+}
+
+function seekMark(canvasElement: HTMLElement) {
+  return canvasElement.querySelector('[data-slot="player-seek-flash"]')
+}
+
+function bezelOn(canvasElement: HTMLElement) {
+  return canvasElement.querySelector('[data-slot="player-center-bezel"]')
+}
+
+export const 右を二度叩くと10秒進み_続けて叩くと重なる: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const area = pressArea(canvasElement)
+
+    await tapAt(area, 5 / 6, 2)
+    await waitFor(() =>
+      expect(seekMark(canvasElement)).toHaveAttribute('data-way', 'forward'),
+    )
+    await expect(seekMark(canvasElement)).toHaveTextContent('10秒')
+    await expect(canvas.getByText('10:10 / 4:12:38')).toBeVisible()
+
+    await tapAt(area, 5 / 6, 1)
+    await waitFor(() =>
+      expect(seekMark(canvasElement)).toHaveTextContent('20秒'),
+    )
+    await tapAt(area, 5 / 6, 1)
+    await waitFor(() =>
+      expect(seekMark(canvasElement)).toHaveTextContent('30秒'),
+    )
+    await expect(canvas.getByText('10:30 / 4:12:38')).toBeVisible()
+
+    await new Promise((rest) => setTimeout(rest, 400))
+    await expect(bezelOn(canvasElement)).toBeNull()
+    await expect(document.fullscreenElement).toBeNull()
+  },
+}
+
+export const 左を二度叩くと10秒戻る: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await tapAt(pressArea(canvasElement), 1 / 6, 2)
+    await waitFor(() =>
+      expect(seekMark(canvasElement)).toHaveAttribute('data-way', 'back'),
+    )
+    await expect(seekMark(canvasElement)).toHaveTextContent('10秒')
+    await expect(canvas.getByText('9:50 / 4:12:38')).toBeVisible()
+    await expect(document.fullscreenElement).toBeNull()
+  },
+}
+
+export const 指で二度叩いても送る: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const area = pressArea(canvasElement)
+
+    await tapAt(area, 5 / 6, 2, 'touch')
+    await waitFor(() =>
+      expect(seekMark(canvasElement)).toHaveTextContent('10秒'),
+    )
+    await tapAt(area, 5 / 6, 1, 'touch')
+    await waitFor(() =>
+      expect(seekMark(canvasElement)).toHaveTextContent('20秒'),
+    )
+    await expect(canvas.getByText('10:20 / 4:12:38')).toBeVisible()
+    await expect(getComputedStyle(area).touchAction).toBe('manipulation')
+  },
+}
+
+export const 左右を一度だけ叩くと待ってから再生する: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    asked.length = 0
+
+    await tapAt(pressArea(canvasElement), 5 / 6, 1)
+    await expect(asked).toEqual([])
+    await expect(bezelOn(canvasElement)).toBeNull()
+
+    await waitFor(() => expect(asked).toEqual(['0/1080p60']))
+    await expect(seekMark(canvasElement)).toBeNull()
+  },
+}
+
+export const 真ん中の一度は待たずに再生する: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    asked.length = 0
+
+    await tapAt(pressArea(canvasElement), 1 / 2, 1)
+    await expect(asked).toEqual(['0/1080p60'])
+  },
+}
+
+export const 長さの分からない録画は左右も待たない: Story = {
+  args: {
+    detail: { ...detail('1266'), lengthSec: undefined },
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    asked.length = 0
+
+    await tapAt(pressArea(canvasElement), 5 / 6, 1)
+    await expect(asked.length).toBe(1)
+  },
+}
+
+export const バーの上を二度叩いても送らない: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const time = canvas.getByText('10:00 / 4:12:38')
+
+    await userEvent.dblClick(time)
+    await new Promise((rest) => setTimeout(rest, 400))
+
+    await expect(seekMark(canvasElement)).toBeNull()
+    await expect(canvas.getByText('10:00 / 4:12:38')).toBeVisible()
+  },
+}
+
+export const CM区間ではCMを飛ばすが出る: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const skip = canvas.getByRole('button', { name: SKIP_THE_BREAK })
+
+    await expect(skip).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '閉じる' })).toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="player-skip-break"]'),
+    ).toHaveAttribute('data-raised', 'true')
+  },
+}
+
+export const CMを飛ばすと次の本編の頭へ: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+
+    await waitFor(() =>
+      expect(canvas.getByText('22:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+    await expect(document.activeElement).toBe(board(canvasElement))
+  },
+}
+
+export const 閉じたCM区間では出さない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await waitFor(() =>
+      expect(canvas.getByText('21:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: NEXT_CHAPTER }))
+    await userEvent.click(canvas.getByRole('button', { name: NEXT_CHAPTER }))
+    await waitFor(() =>
+      expect(canvas.getByText('1:00:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      canvas.getByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeVisible()
+  },
+}
+
+export const 本編ではCMを飛ばすは出ない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 600,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+  },
+}
+
+export const 最後まで続くCMでは出さない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: ENDS_IN_A_BREAK,
+    startAt: 15000,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(marksOn(canvasElement, 'CM と判定した区間')).toBe(1)
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+  },
+}
+
+export const まだ再生していなければCMを飛ばすは出ない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    playsAtOnce: false,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+  },
+}
+
+export const 操作列が消えるとCMを飛ばすは下へ戻る: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const skip = () =>
+      canvasElement.querySelector('[data-slot="player-skip-break"]')
+
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    await waitFor(() => expect(skip()).toHaveAttribute('data-raised', 'true'))
+    await waitFor(() => expect(skip()).not.toHaveAttribute('data-raised'), {
+      timeout: 4500,
+    })
+    await expect(
+      within(canvasElement).getByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeVisible()
+
+    board(canvasElement).dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true }),
+    )
+    await waitFor(() => expect(skip()).toHaveAttribute('data-raised', 'true'))
+  },
+}
+
+export const 動きを止めていると印は育たない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const root = document.documentElement
+    const was = root.dataset.motion
+
+    root.dataset.motion = 'still'
+
+    try {
+      const player = board(canvasElement)
+
+      aim(player)
+      press(player, 'ArrowRight')
+      await waitFor(() => expect(seekMark(canvasElement)).not.toBeNull())
+
+      const mark = seekMark(canvasElement) as Element
+
+      await expect(getComputedStyle(mark).animationName).toBe('player-shown')
+      await expect(getComputedStyle(mark).animationDuration).toBe('0.7s')
+      await expect(
+        getComputedStyle(mark.querySelector('svg') as Element).animationName,
+      ).toBe('none')
+
+      press(player, 'ArrowUp')
+      await waitFor(() => expect(bezelOn(canvasElement)).not.toBeNull())
+      await expect(
+        getComputedStyle(bezelOn(canvasElement)?.lastElementChild as Element)
+          .animationName,
+      ).toBe('player-shown')
+
+      const skip = canvasElement.querySelector(
+        '[data-slot="player-skip-break"]',
+      ) as Element
+
+      await expect(getComputedStyle(skip).transitionProperty).toBe('none')
+      await expect(getComputedStyle(skip).animationName).toBe('none')
+    } finally {
+      if (was === undefined) {
+        delete root.dataset.motion
+      } else {
+        root.dataset.motion = was
+      }
+    }
   },
 }

@@ -23,7 +23,7 @@ export function PlayerSeekFlash({ flash }: { flash?: SeekFlash }) {
       data-slot="player-seek-flash"
       data-way={flash.way}
       className={cn(
-        'pointer-events-none absolute top-1/2 flex size-[calc(110rem/16)] -translate-y-1/2 animate-player-seek-flash flex-col items-center justify-center gap-1.5 rounded-full bg-black/60',
+        'pointer-events-none absolute top-1/2 flex size-[calc(110rem/16)] -translate-y-1/2 animate-player-seek-flash flex-col still:animate-player-shown-longer items-center justify-center gap-1.5 rounded-full bg-black/60',
         back ? 'left-[10%]' : 'right-[10%]',
       )}
     >
@@ -31,7 +31,7 @@ export function PlayerSeekFlash({ flash }: { flash?: SeekFlash }) {
         {[0, 1, 2].map((nth) => (
           <SeekArrowGlyph
             key={nth}
-            className="-mx-px animate-player-seek-arrow text-white"
+            className="-mx-px animate-player-seek-arrow text-white still:animate-none"
             style={{ animationDelay: `${(back ? 2 - nth : nth) * 67}ms` }}
           />
         ))}
