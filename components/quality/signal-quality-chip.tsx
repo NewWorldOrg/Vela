@@ -1,6 +1,6 @@
 import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_PILL_LABEL } from '@/lib/quality'
-import { HEALTHY } from '@/repository/quality'
+import { CANNOT_LOCK, HEALTHY } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
 import {
   StateSay,
@@ -13,6 +13,7 @@ import { ChipDot } from '@/components/vela/status'
 export const QUALITY_LEVEL_COLUMN = stateColumnFor([
   ...Object.values(QUALITY_PILL_LABEL),
   HEALTHY,
+  CANNOT_LOCK,
 ])
 
 export function QualityChip({

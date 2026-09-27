@@ -229,6 +229,8 @@ const WHOLE = '全体'
 
 export const HEALTHY = '健全'
 
+export const CANNOT_LOCK = '受信不可'
+
 const LEVEL_OF_STATE: Record<State, QualityLevel> = {
   good: 'good',
   atOrAboveWarning: 'warn',
@@ -341,7 +343,7 @@ const CANNOT_LOCK_TITLE = 'チューナーが電波を掴めない'
 const CANNOT_LOCK_OBSERVED = '観測 3 回続けて失敗'
 
 const CLASSIFICATION_LABELS: Record<string, string> = {
-  [CANNOT_LOCK_CLASSIFICATION]: '受信不可',
+  [CANNOT_LOCK_CLASSIFICATION]: CANNOT_LOCK,
 }
 
 const RAW_CLASSIFICATION_SPELLING = /^[A-Za-z]+$/
@@ -789,23 +791,47 @@ function healthStat(
   tuners: TunerResponder[],
   signal: SignalResponder[],
 ): QualityStat {
-  const levels = tuners.map((one) => worstOfMeasures(one.measures))
-  const measured = levels.filter((level) => level !== 'nodata')
-  const healthy = measured.filter((level) => level === 'good').length
-  const nothingToMeasure = levels.length - measured.length
+  const states = tuners.map(tunerState)
+  const healthy = states.filter((state) => state.level === 'good').length
+  const worstShown = worstState(states)
+  const foot = everySignalUnmeasured(signal) ? '信号品質 未計測' : undefined
+
+  if (states.length === 0) {
+    return {
+      key: 'health',
+      label: 'チューナーヘルス',
+      level: 'nodata',
+      levelLabel: QUALITY_LEVEL_LABEL.nodata,
+      foot,
+    }
+  }
 
   return {
     key: 'health',
     label: 'チューナーヘルス',
-    ...(measured.length === 0
-      ? { level: 'nodata', levelLabel: QUALITY_LEVEL_LABEL.nodata }
-      : { value: `${healthy} / ${measured.length}`, unit: HEALTHY }),
-    aside:
-      measured.length > 0 && nothingToMeasure > 0
-        ? `${QUALITY_LEVEL_LABEL.nodata} ${nothingToMeasure} 台`
-        : undefined,
-    foot: everySignalUnmeasured(signal) ? '信号品質 未計測' : undefined,
+    value: `${healthy} / ${states.length}`,
+    unit: HEALTHY,
+    ...(worstShown && {
+      level: worstShown.level,
+      levelLabel: `${worstShown.label} ${
+        states.filter((state) => state.label === worstShown.label).length
+      }`,
+    }),
+    foot,
   }
+}
+
+function worstState(
+  states: QualityTuner['state'][],
+): QualityTuner['state'] | undefined {
+  const unwell = states.filter((state) => state.level !== 'good')
+  const level = worst(unwell.map((state) => state.level))
+
+  return (
+    unwell.find(
+      (state) => state.level === level && state.label === CANNOT_LOCK,
+    ) ?? unwell.find((state) => state.level === level)
+  )
 }
 
 function shareStat(reading: TallyResponder | undefined): Partial<QualityStat> {
@@ -895,20 +921,29 @@ function warnMarkOf(thresholds: ThresholdResponder[]): number | undefined {
 function toTuner(one: TunerResponder): QualityTuner {
   const device = one.deviceId ?? ''
   const drop = readingOf(one.measures, 'packetsLost')
-  const level = worstOfMeasures(one.measures)
 
   return {
     id: device || 'unnamed',
     device: device || '対象なし',
     hardware: drop ? countedIn(drop) : '録画 0 本',
-    state: {
-      level,
-      label: level === 'good' ? HEALTHY : QUALITY_PILL_LABEL[level],
-    },
+    state: tunerState(one),
     drop: shareCell(drop),
     lock: signalCell(one.signal, 'lockRate'),
     cnr: signalCell(one.signal, 'carrierToNoiseFloor'),
     ber: signalCell(one.signal, 'bitErrorRateCeiling'),
+  }
+}
+
+function tunerState(one: TunerResponder): QualityTuner['state'] {
+  if (one.cannotLock) {
+    return { level: 'bad', label: CANNOT_LOCK }
+  }
+
+  const level = shapeFor(LEVEL_OF_STANDING, one.standing, 'unsupported')
+
+  return {
+    level,
+    label: level === 'good' ? HEALTHY : QUALITY_PILL_LABEL[level],
   }
 }
 
@@ -1015,10 +1050,6 @@ function levelOfTally(reading: TallyResponder): QualityLevel {
   }
 
   return toInt(reading.mayNotBeWatchable) > 0 ? 'bad' : 'warn'
-}
-
-function worstOfMeasures(measures: MeasureResponder[]): QualityLevel {
-  return worst(measures.map((one) => levelOfTally(one.reading)))
 }
 
 function worstOfVerdicts(one: RecordingResponder): QualityLevel {
