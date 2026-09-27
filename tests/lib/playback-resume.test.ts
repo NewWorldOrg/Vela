@@ -95,6 +95,21 @@ test('a second named on the address is honoured even where the remembered positi
   })
 })
 
+test('a second named on the address as held opens there without playing', () => {
+  assert.deepEqual(howThePlayerOpens(622, 600, AN_HOUR, true), {
+    at: 622,
+    playing: true,
+    held: true,
+  })
+})
+
+test('being held means nothing when the address names no second', () => {
+  assert.deepEqual(howThePlayerOpens(undefined, 600, AN_HOUR, true), {
+    at: 600,
+    playing: false,
+  })
+})
+
 test('the remembered position opens the recording without playing it', () => {
   assert.deepEqual(howThePlayerOpens(undefined, 600, AN_HOUR), {
     at: 600,

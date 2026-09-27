@@ -1,4 +1,8 @@
-import { APP_EVENTS_PATH, type AppEvent } from '@/repository/events'
+import {
+  APP_EVENTS_PATH,
+  ENCODE_JOBS_EVENT,
+  type AppEvent,
+} from '@/repository/events'
 
 const DEBOUNCE_MS = 200
 
@@ -93,4 +97,14 @@ async function sessionRefused(): Promise<boolean> {
   } finally {
     ask.abort()
   }
+}
+
+export type StopListening = () => void
+
+export function listenForEncodeJobs(noticed: () => void): StopListening {
+  const watch = new SignalWatch([ENCODE_JOBS_EVENT], noticed, () => {})
+
+  watch.listen()
+
+  return () => watch.close()
 }

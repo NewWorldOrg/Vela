@@ -1,6 +1,10 @@
 import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import type { EncodeJobStatus } from '@/repository/encode-terms'
-import { STALLED_LABEL, STATUS_LABEL } from '@/repository/encode-terms'
+import {
+  REPLACED_LABEL,
+  STALLED_LABEL,
+  STATUS_LABEL,
+} from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
 import {
   StateSay,
@@ -14,11 +18,13 @@ type JobTone = 'secondary' | 'info' | 'warn' | 'ok' | 'err' | 'mute'
 export const JOB_STATUS_COLUMN = stateColumnFor([
   ...Object.values(STATUS_LABEL),
   STALLED_LABEL,
+  REPLACED_LABEL,
 ])
 
 function wordAndTone(
   status: EncodeJobStatus,
   stalled?: boolean,
+  replaced?: boolean,
 ): { word: string; tone: JobTone } {
   switch (status) {
     case 'queued':
@@ -28,7 +34,9 @@ function wordAndTone(
         ? { word: STALLED_LABEL, tone: 'warn' }
         : { word: STATUS_LABEL.running, tone: 'info' }
     case 'completed':
-      return { word: STATUS_LABEL.completed, tone: 'ok' }
+      return replaced
+        ? { word: REPLACED_LABEL, tone: 'mute' }
+        : { word: STATUS_LABEL.completed, tone: 'ok' }
     case 'failed':
       return { word: STATUS_LABEL.failed, tone: 'err' }
     case 'cancelled':
@@ -41,13 +49,15 @@ function wordAndTone(
 export function JobStatusChip({
   status,
   stalled,
+  replaced,
   say = false,
 }: {
   status: EncodeJobStatus
   stalled?: boolean
+  replaced?: boolean
   say?: boolean
 }) {
-  const { word, tone } = wordAndTone(status, stalled)
+  const { word, tone } = wordAndTone(status, stalled, replaced)
   const held =
     status === 'running' && stalled
       ? `${STATUS_LABEL.running} / ${STALLED_LABEL}`

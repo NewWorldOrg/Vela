@@ -17,7 +17,11 @@ import {
   whereItStarts,
   type PlayerSaying,
 } from '@/lib/playback-sound'
-import { whereThatSourceOpens } from '@/lib/playback-source'
+import {
+  whatTheStandingArtefactAsks,
+  whereThatSourceOpens,
+} from '@/lib/playback-source'
+import { listenForEncodeJobs } from '@/lib/app-signals'
 import type { RecordingDetail } from '@/repository/recordings'
 import type {
   PlaybackPlan,
@@ -25,8 +29,15 @@ import type {
   PositionWrite,
 } from '@/repository/videos'
 import { useKeptPosition } from '@/hooks/useKeptPosition'
+import {
+  useStandingArtefact,
+  type ListenForEncodeJobs,
+} from '@/hooks/useStandingArtefact'
 import type { TicketWrite } from '@/repository/tickets'
-import type { PlaybackSource } from '@/repository/playback-sources'
+import {
+  THE_ARTEFACT,
+  type PlaybackSource,
+} from '@/repository/playback-sources'
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,
@@ -111,8 +122,12 @@ export function Player({
   onTakeTicket,
   onAskForTheSound,
   onKeepPosition,
+  artefact,
+  onAskWhichArtefact,
+  listenForEncodeJobs: listen = listenForEncodeJobs,
   startAt,
   playsAtOnce = true,
+  holdsAtOnce = false,
   frameHref = videoFrameHref,
   pictureHref = videoPictureHref,
   askWhy = askWhyItWouldNotPlay,
@@ -128,8 +143,12 @@ export function Player({
     source?: PlaybackSource,
   ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
+  artefact?: string
+  onAskWhichArtefact?: (id: string) => Promise<string | undefined>
+  listenForEncodeJobs?: ListenForEncodeJobs
   startAt?: number
   playsAtOnce?: boolean
+  holdsAtOnce?: boolean
   frameHref?: (id: string, at: number) => string
   pictureHref?: (
     id: string,
@@ -156,6 +175,9 @@ export function Player({
   const [plan, setPlan] = useState<PlaybackPlan>(opened)
   const [sound, setSound] = useState<SoundTrack>(MAIN_SOUND)
   const opensPlaying = startAt !== undefined && playsAtOnce
+  const [waitsForAHand, setWaitsForAHand] = useState(
+    opensPlaying && holdsAtOnce,
+  )
   const [phase, setPhase] = useState<Phase>(opensPlaying ? 'waiting' : 'idle')
   const [fault, setFault] = useState<PlaybackFault>({ kind: 'transcode' })
   const [muted, setMuted] = useState(false)
@@ -207,6 +229,8 @@ export function Player({
   const shownUnder = useRef<PlaybackPlan | null>(opensPlaying ? opened : null)
 
   const attempt = useRef(0)
+  const openedOn = useRef(artefact)
+  const replanned = useRef(0)
 
   const asItStands = useRef({ position, profile, plan, sound })
 
@@ -355,6 +379,7 @@ export function Player({
     const starts = whereItStarts(under, second)
 
     hold()
+    setWaitsForAHand(false)
     wanted.current = null
     attempt.current += 1
     asked.current += 1
@@ -537,21 +562,73 @@ export function Player({
       })
   }
 
-  const chooseSource = (next: PlaybackSource) => {
-    if (next === plan.source) {
-      return
-    }
-
+  const openAgain = (next: PlaybackSource, at: number | undefined) => {
     router.replace(
       whereThatSourceOpens(
         pathname,
         inTheAddress.toString(),
         next,
-        phase === 'idle' ? undefined : position,
+        at,
+        phase === 'paused',
       ) as Route,
       { scroll: false },
     )
   }
+
+  const chooseSource = (next: PlaybackSource) => {
+    if (next === plan.source) {
+      return
+    }
+
+    openAgain(next, phase === 'idle' ? undefined : position)
+  }
+
+  useStandingArtefact(
+    onAskWhichArtefact !== undefined && plan.source === THE_ARTEFACT,
+    listen,
+    () => onAskWhichArtefact?.(d.id) ?? Promise.resolve(undefined),
+    (standing) => {
+      const asks = whatTheStandingArtefactAsks(
+        openedOn.current,
+        standing,
+        plan.source,
+        phase !== 'idle',
+      )
+
+      if (asks === 'stay') {
+        return
+      }
+
+      if (asks === 'learn') {
+        openedOn.current = standing
+
+        return
+      }
+
+      if (asks === 'reopen') {
+        openedOn.current = standing
+        openAgain(THE_ARTEFACT, asItStands.current.position)
+
+        return
+      }
+
+      const mine = (replanned.current += 1)
+
+      void onAskForTheSound(d.id, asItStands.current.sound, plan.source)
+        .then((answer) => {
+          if (replanned.current !== mine || answer.state !== 'planned') {
+            return
+          }
+
+          openedOn.current = standing
+          setPlan(answer.plan)
+          standsAs({ plan: answer.plan })
+        })
+        .catch((error) => {
+          console.warn('[player] the new artefact was not planned', d.id, error)
+        })
+    },
+  )
 
   const chooseSpeed = (next: string) => {
     setSpeed(next)
@@ -692,9 +769,9 @@ export function Player({
           <video
             ref={video}
             src={source}
-            autoPlay={source !== undefined}
+            autoPlay={source !== undefined && !waitsForAHand}
             poster={poster}
-            preload="none"
+            preload={waitsForAHand ? 'auto' : 'none'}
             playsInline
             onLoadedMetadata={(event) => {
               event.currentTarget.playbackRate = Number(speed)

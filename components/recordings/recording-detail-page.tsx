@@ -108,11 +108,14 @@ export function RecordingDetailView({
   onTakeTicket,
   onAskForTheSound,
   onKeepPosition,
+  artefact,
+  onAskWhichArtefact,
   onQueueEncode,
   encodeChoices,
   encodeJob,
   onCallOffEncode,
   startAt,
+  startsHeld = false,
 }: {
   detail: RecordingDetail
   playback: PlaybackRead
@@ -126,11 +129,14 @@ export function RecordingDetailView({
     source?: PlaybackSource,
   ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
+  artefact?: string
+  onAskWhichArtefact?: (id: string) => Promise<string | undefined>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
   encodeJob?: EncodeJob
   onCallOffEncode: (id: string) => Promise<EncodeWrite>
   startAt?: number
+  startsHeld?: boolean
 }) {
   const plays =
     !d.fileMissing &&
@@ -144,6 +150,7 @@ export function RecordingDetailView({
     startAt,
     playback.state === 'planned' ? playback.plan.resumeAtSec : undefined,
     d.lengthSec,
+    startsHeld,
   )
 
   const alarming: 'truncated' | 'failed' | null =
@@ -235,15 +242,23 @@ export function RecordingDetailView({
 
       {watching && (
         <Player
-          key={whatOpensThePlayerAnew(d.id, startAt, playback.plan.source)}
+          key={whatOpensThePlayerAnew(
+            d.id,
+            startAt,
+            playback.plan.source,
+            startsHeld,
+          )}
           detail={d}
           plan={playback.plan}
           unaskedProfile={unaskedProfile}
           onTakeTicket={onTakeTicket}
           onAskForTheSound={onAskForTheSound}
           onKeepPosition={onKeepPosition}
+          artefact={artefact}
+          onAskWhichArtefact={onAskWhichArtefact}
           startAt={opens.at}
           playsAtOnce={opens.playing}
+          holdsAtOnce={opens.held}
         />
       )}
 

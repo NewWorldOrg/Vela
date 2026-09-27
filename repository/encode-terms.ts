@@ -77,6 +77,10 @@ export const FAILURE_LABEL: Record<EncodeFailure, string> = {
 
 export const STALLED_LABEL = '停滞'
 
+export const REPLACED_LABEL = '置換済み'
+
+export const REPLACED_IN_FULL = '置き換え済み'
+
 export const RETIRED_LABEL = '退役'
 
 export const NOT_ASKED_FOR_LABEL = '対象外'

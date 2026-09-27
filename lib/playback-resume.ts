@@ -40,15 +40,19 @@ export function whereToPickUp(
 export interface WhereItOpens {
   at?: number
   playing: boolean
+  held?: true
 }
 
 export function howThePlayerOpens(
   askedFor: number | undefined,
   resumeAtSec: number | undefined,
   lengthSec: number | undefined,
+  held = false,
 ): WhereItOpens {
   if (askedFor !== undefined) {
-    return { at: askedFor, playing: true }
+    return held
+      ? { at: askedFor, playing: true, held: true }
+      : { at: askedFor, playing: true }
   }
 
   return { at: whereToPickUp(resumeAtSec, lengthSec), playing: false }

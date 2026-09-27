@@ -102,6 +102,7 @@ export interface EncodeJob {
   route?: EncodeRoute
   failure?: EncodeFailureDetail
   artefactName?: string
+  replacedAt?: string
   cancellable: boolean
 }
 
@@ -268,6 +269,23 @@ export async function getLatestEncodeJob(
   return latest.items[0]
     ? toEncodeJob(latest.items[0], NAMED_NOTHING, now)
     : undefined
+}
+
+const COMPLETED_LOOKED_THROUGH = 10
+
+export async function getStandingArtefact(
+  recordingId: string,
+): Promise<string | undefined> {
+  const completed = await fetchJobs({
+    status: 'completed',
+    recordingId,
+    page: 1,
+    perPage: COMPLETED_LOOKED_THROUGH,
+  })
+
+  return completed.items.find(
+    (one) => one.artefactName !== null && one.replacedAt === null,
+  )?.id
 }
 
 export interface EncodeAsking {
@@ -774,6 +792,7 @@ export function toEncodeJob(
         }
       : undefined,
     artefactName: one.artefactName ?? undefined,
+    replacedAt: one.replacedAt ? formatMoment(one.replacedAt) : undefined,
     cancellable: callsOff(one.status),
   }
 }

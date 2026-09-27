@@ -129,6 +129,7 @@ const COMPLETED = {
   waitingForAViewer: false,
   failure: null,
   artefactName: '0123456789abcdef0123456789abcdef.0f1e2d3c.mp4',
+  replacedAt: null,
 }
 
 const RUNNING = {
@@ -278,6 +279,7 @@ const {
   defineProfile,
   getEncodeScreen,
   getLatestEncodeJob,
+  getStandingArtefact,
   listEncodeChoices,
   queueEncode,
   removeDestination,
@@ -331,6 +333,37 @@ test('a recording nothing was ever queued for has no latest job', async () => {
   assert.equal(await getLatestEncodeJob(RECORDING.id, NOW), undefined)
 })
 
+test('the artefact standing for a recording is the completed job no newer one replaced', async () => {
+  const replaced = {
+    ...COMPLETED,
+    id: '1f2e3d4c-5b6a-4978-8a9b-0c1d2e3f4a5b',
+    replacedAt: '2026-09-05T12:08:15.004Z',
+  }
+
+  store.jobs = [RUNNING, replaced, COMPLETED]
+
+  assert.equal(await getStandingArtefact(RECORDING.id), COMPLETED.id)
+  assert.deepEqual(sent.at(-1)?.query, {
+    status: ['completed'],
+    recordingId: RECORDING.id,
+    page: 1,
+    perPage: 10,
+  })
+})
+
+test('a recording whose completed jobs were all replaced, or that has none, has no standing artefact', async () => {
+  store.jobs = [
+    { ...COMPLETED, replacedAt: '2026-09-05T12:08:15.004Z' },
+    RUNNING,
+  ]
+
+  assert.equal(await getStandingArtefact(RECORDING.id), undefined)
+
+  store.jobs = []
+
+  assert.equal(await getStandingArtefact(RECORDING.id), undefined)
+})
+
 test('the screen reads the ledger into names, values and counts', async () => {
   const screen = await getEncodeScreen({}, NOW)
 
@@ -359,6 +392,26 @@ test('the screen reads the ledger into names, values and counts', async () => {
   assert.equal(completed.quietForSeconds, undefined)
   assert.equal(completed.route?.swerved, undefined)
   assert.equal(completed.cancellable, false)
+})
+
+test('a completed job whose artefact a newer one replaced says when, and the standing one says nothing', async () => {
+  store.jobs = [
+    COMPLETED,
+    {
+      ...COMPLETED,
+      id: '1f2e3d4c-5b6a-4978-8a9b-0c1d2e3f4a5b',
+      replacedAt: '2026-09-05T12:08:15.004Z',
+    },
+  ]
+
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.equal(screen.jobs.items[0].replacedAt, undefined)
+  assert.equal(
+    screen.jobs.items[1].replacedAt,
+    formatMoment('2026-09-05T12:08:15.004Z'),
+  )
+  assert.equal(screen.jobs.items[1].status, 'completed')
 })
 
 test('a running job carries where it ran, how far it got and how long it has been quiet', async () => {

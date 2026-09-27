@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { mock, test, type TestContext } from 'node:test'
 
-import { RECONNECT_MS, SignalWatch } from '@/lib/app-signals'
+import {
+  listenForEncodeJobs,
+  RECONNECT_MS,
+  SignalWatch,
+} from '@/lib/app-signals'
 import {
   ENCODE_JOBS_EVENT,
   QUALITY_EVENT,
@@ -197,4 +201,32 @@ test('a screen that goes away while the hub is being asked stays away', async (t
 
   assert.equal(stand.ended(), 0)
   assert.equal(stand.streams(), 1)
+})
+
+test('a player listening for its artefact hears only the encode jobs, and stops when told', (t) => {
+  streams = []
+  mock.timers.enable({ apis: ['setTimeout'] })
+
+  const trueStream = globalThis.EventSource
+
+  Object.assign(globalThis, { EventSource: TestStream })
+  t.after(() => {
+    mock.timers.reset()
+    Object.assign(globalThis, { EventSource: trueStream })
+  })
+
+  let noticed = 0
+  const stop = listenForEncodeJobs(() => {
+    noticed += 1
+  })
+
+  assert.equal(streams.length, 1)
+  assert.deepEqual(streams[0].heeding, [ENCODE_JOBS_EVENT])
+
+  streams[0].say(ENCODE_JOBS_EVENT)
+  mock.timers.tick(DEBOUNCE_MS)
+  assert.equal(noticed, 1)
+
+  stop()
+  assert.equal(streams[0].closed, true)
 })
