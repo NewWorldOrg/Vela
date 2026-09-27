@@ -99,6 +99,8 @@ export function videoFrameHref(id: string, at: number) {
   return `${VIDEOS}/${encodeURIComponent(id)}/scrub?at=${whole(at)}`
 }
 
-export function videoFileHref(id: string) {
-  return `${VIDEOS}/${encodeURIComponent(id)}`
+export function videoFileHref(id: string, source?: PlaybackSource) {
+  const file = `${VIDEOS}/${encodeURIComponent(id)}`
+
+  return source ? `${file}?source=${source}` : file
 }

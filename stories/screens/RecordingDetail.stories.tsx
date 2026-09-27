@@ -1092,3 +1092,103 @@ export const 記録の値は札で言う: Story = {
     ).toBe(1)
   },
 }
+
+const ENCODED_AND_RECORDED = planned({
+  route: 'direct',
+  seeking: 'byRange',
+  canSeek: true,
+  transcodes: false,
+  source: 'artefact',
+  alternative: 'recording',
+})
+
+async function openedFromTheMenu(
+  canvasElement: HTMLElement,
+  item: string,
+): Promise<string[]> {
+  const opened: string[] = []
+  const wasOpen = window.open
+
+  window.open = ((href?: string | URL) => {
+    opened.push(String(href))
+
+    return null
+  }) as typeof window.open
+
+  try {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', {
+        name: '外部プレイヤーで開く',
+      }),
+    )
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: new RegExp(`^${item}`) }),
+    )
+    await waitFor(() => expect(opened).toHaveLength(1))
+  } finally {
+    window.open = wasOpen
+  }
+
+  return opened
+}
+
+async function closeTheMenu() {
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+}
+
+function menuItems(): string[] {
+  return screen.getAllByRole('menuitem').map((one) => one.textContent ?? '')
+}
+
+export const 外部プレイヤーはエンコード済みと元のままから選ぶ: Story = {
+  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+    )
+    await expect(await screen.findByRole('menu')).toBeVisible()
+    await expect(menuItems()).toEqual(['エンコード済み', '元のまま3.4 GB'])
+    await closeTheMenu()
+
+    const opened = await openedFromTheMenu(canvasElement, '元のまま')
+
+    await expect(opened[0]).toMatch(
+      /^https?:\/\/ticket:a-ticket-that-lapses@[^/]+\/api\/videos\/1274\?source=recording$/,
+    )
+  },
+}
+
+export const 外部プレイヤーにエンコード済みを渡す: Story = {
+  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
+  play: async ({ canvasElement }) => {
+    const opened = await openedFromTheMenu(canvasElement, 'エンコード済み')
+
+    await expect(opened[0]).toMatch(
+      /^https?:\/\/ticket:a-ticket-that-lapses@[^/]+\/api\/videos\/1274\?source=artefact$/,
+    )
+  },
+}
+
+export const 成果物が無い録画は外部プレイヤーに元のままだけ: Story = {
+  args: {
+    detail: withoutAnArtefact('1274'),
+    playback: planned({ source: 'recording' }),
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', {
+        name: '外部プレイヤーで開く',
+      }),
+    )
+
+    const menu = await screen.findByRole('menu')
+
+    await expect(menu).toBeVisible()
+    await expect(menuItems()).toEqual(['元のまま3.4 GB'])
+    await expect(menu.textContent).not.toMatch(/TS|VLC/)
+    await closeTheMenu()
+  },
+}

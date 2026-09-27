@@ -7,6 +7,7 @@ import { isLeftScrambled, scrambledPercent } from '@/lib/recordings'
 import type { RecordingDetail } from '@/repository/recordings'
 import { whatItSaid } from '@/repository/said'
 import type { TicketWrite } from '@/repository/tickets'
+import type { PlaybackPlan } from '@/repository/videos'
 import {
   PLAYBACK_REFUSAL_HEADER,
   PLAYBACK_REFUSAL_TOO_MANY,
@@ -22,8 +23,7 @@ import {
 } from '@/components/vela/icons'
 import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
-import { recordingHandover } from '@/lib/external-player'
-import { OpenExternally } from '@/components/recordings/external-player'
+import { ExternalPlayerOpener } from '@/components/recordings/external-player'
 
 type PlainFault =
   | 'leftScrambled'
@@ -148,11 +148,13 @@ const REFUSED: Said = {
 
 export function PlaybackFaultNotice({
   detail: d,
+  plan,
   fault,
   onRetry,
   onTakeTicket,
 }: {
   detail: RecordingDetail
+  plan: PlaybackPlan
   fault: PlaybackFault
   onRetry: () => void
   onTakeTicket: (id: string) => Promise<TicketWrite>
@@ -173,8 +175,10 @@ export function PlaybackFaultNotice({
         </button>
       )}
       {said.worthLeaving && (
-        <OpenExternally
-          handover={recordingHandover(d.id, onTakeTicket)}
+        <ExternalPlayerOpener
+          recording={d}
+          plan={plan}
+          onTakeTicket={onTakeTicket}
           tone="player"
         />
       )}

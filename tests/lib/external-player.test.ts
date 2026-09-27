@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   liveHandover,
   recordingHandover,
+  recordingHandoverChoices,
   ticketedHref,
 } from '@/lib/external-player'
 import type { TicketWrite } from '@/repository/tickets'
@@ -61,6 +62,108 @@ test('a recording is handed over the way it always was', () => {
       TICKET,
     ),
     `https://ticket:${TICKET}@vela.example/api/videos/a-recording`,
+  )
+})
+
+const DETAIL = 'https://vela.example/recordings/a-recording'
+
+const RECORDED_BYTES = 16_857_325_158
+
+function hrefsOf(
+  choices: ReturnType<typeof recordingHandoverChoices>,
+): string[] {
+  return choices.map((one) => ticketedHref(one.handover, DETAIL, TICKET))
+}
+
+test('a recording asked for as it was recorded names that file in the URL', () => {
+  assert.equal(
+    ticketedHref(
+      recordingHandover('a-recording', async () => issued(), 'recording'),
+      DETAIL,
+      TICKET,
+    ),
+    `https://ticket:${TICKET}@vela.example/api/videos/a-recording?source=recording`,
+  )
+})
+
+test('an encoded recording offers the artefact first and the recording with its size', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    { source: 'artefact', alternative: 'recording' },
+    RECORDED_BYTES,
+  )
+
+  assert.deepEqual(
+    choices.map(({ source, label, size }) => ({ source, label, size })),
+    [
+      { source: 'artefact', label: 'エンコード済み', size: undefined },
+      { source: 'recording', label: '元のまま', size: '15.7 GB' },
+    ],
+  )
+  assert.deepEqual(hrefsOf(choices), [
+    `https://ticket:${TICKET}@vela.example/api/videos/a-recording?source=artefact`,
+    `https://ticket:${TICKET}@vela.example/api/videos/a-recording?source=recording`,
+  ])
+})
+
+test('the order stays the same while the recording itself is the one playing', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    { source: 'recording', alternative: 'artefact' },
+    RECORDED_BYTES,
+  )
+
+  assert.deepEqual(
+    choices.map((one) => one.source),
+    ['artefact', 'recording'],
+  )
+})
+
+test('a recording with no artefact offers the recording alone', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    { source: 'recording' },
+    RECORDED_BYTES,
+  )
+
+  assert.deepEqual(
+    choices.map(({ label, size }) => [label, size]),
+    [['元のまま', '15.7 GB']],
+  )
+})
+
+test('an artefact whose recording is gone offers the artefact alone', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    { source: 'artefact' },
+    RECORDED_BYTES,
+  )
+
+  assert.deepEqual(
+    choices.map((one) => one.source),
+    ['artefact'],
+  )
+})
+
+test('the recording is offered without a size when its size is not known', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    { source: 'recording' },
+    undefined,
+  )
+
+  assert.equal(choices[0].size, undefined)
+})
+
+test('a plan that names neither file offers nothing to choose', () => {
+  assert.deepEqual(
+    recordingHandoverChoices('a-recording', async () => issued(), {}, 1),
+    [],
   )
 })
 

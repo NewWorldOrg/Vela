@@ -658,6 +658,7 @@ export function Player({
       <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
         <PlaybackFaultNotice
           detail={d}
+          plan={plan}
           fault={fault}
           onRetry={() => play(position)}
           onTakeTicket={onTakeTicket}

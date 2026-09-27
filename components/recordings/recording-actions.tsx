@@ -10,11 +10,11 @@ import type {
 } from '@/repository/recordings'
 import type { EncodeChoices } from '@/repository/encode'
 import type { TicketWrite } from '@/repository/tickets'
+import type { PlaybackPlan } from '@/repository/videos'
 import { Button } from '@/components/ui/button'
 import { ActionRow } from '@/components/vela/action-row'
 import { TrashIcon } from '@/components/vela/icons'
-import { recordingHandover } from '@/lib/external-player'
-import { OpenExternally } from '@/components/recordings/external-player'
+import { ExternalPlayerOpener } from '@/components/recordings/external-player'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
 import {
@@ -34,7 +34,7 @@ export function RecordingActions({
   onTakeTicket,
   onQueueEncode,
   encodeChoices,
-  plays,
+  plan,
 }: {
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>
@@ -42,7 +42,7 @@ export function RecordingActions({
   onTakeTicket: (id: string) => Promise<TicketWrite>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
-  plays?: boolean
+  plan?: PlaybackPlan
 }) {
   const deletable = recording.outcome !== 'recording'
   const router = useRouter()
@@ -62,9 +62,11 @@ export function RecordingActions({
     <>
       <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
         <ActionRow className="max-[700px]:w-full max-[700px]:grid-flow-row">
-          {plays && (
-            <OpenExternally
-              handover={recordingHandover(recording.id, onTakeTicket)}
+          {plan && (
+            <ExternalPlayerOpener
+              recording={recording}
+              plan={plan}
+              onTakeTicket={onTakeTicket}
             />
           )}
           {redrawsThumbnail(recording) && (
