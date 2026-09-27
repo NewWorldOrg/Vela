@@ -1079,6 +1079,53 @@ export const 一時停止のまま開くと映像を読んでも再生を始め�
   },
 }
 
+let plansAsked = 0
+
+async function failingOnceThenPlanning(
+  _id: string,
+  sound: SoundTrack,
+  source?: PlaybackSource,
+): Promise<PlaybackRead> {
+  plansAsked += 1
+  reaskedWith.push(`${sound}/${source ?? '—'}`)
+
+  if (plansAsked === 1) {
+    throw new Error('the plan could not be read')
+  }
+
+  return { state: 'planned', plan: WITH_AN_ARTEFACT }
+}
+
+export const 置き換えの再計画に失敗したら次の知らせで読み直す: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 612,
+    playsAtOnce: false,
+    pictureHref: carryingTheSource,
+    onAskForTheSound: failingOnceThenPlanning,
+    artefact: 'job-a',
+    onAskWhichArtefact: askingWhichArtefact,
+    listenForEncodeJobs: hearingTheJobs,
+  },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: AT_1274 } },
+  },
+  play: async () => {
+    plansAsked = 0
+    reaskedWith.length = 0
+
+    await theJobsSay('job-b')
+    await waitFor(() => expect(reaskedWith).toHaveLength(1))
+
+    await theJobsSay('job-b')
+    await waitFor(() => expect(reaskedWith).toHaveLength(2))
+
+    await theJobsSay('job-b')
+    await expect(reaskedWith).toHaveLength(2)
+  },
+}
+
 export const まだ観ていないうちに成果物が置き換わると次の再生で新しい成果物を開く: Story =
   {
     args: {

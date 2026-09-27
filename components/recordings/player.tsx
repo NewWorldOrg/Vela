@@ -599,13 +599,14 @@ export function Player({
         return
       }
 
-      openedOn.current = standing
-
       if (asks === 'learn') {
+        openedOn.current = standing
+
         return
       }
 
       if (asks === 'reopen') {
+        openedOn.current = standing
         openAgain(THE_ARTEFACT, asItStands.current.position)
 
         return
@@ -619,6 +620,7 @@ export function Player({
             return
           }
 
+          openedOn.current = standing
           setPlan(answer.plan)
           standsAs({ plan: answer.plan })
         })
