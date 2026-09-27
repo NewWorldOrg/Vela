@@ -102,6 +102,7 @@ export interface EncodeJob {
   route?: EncodeRoute
   failure?: EncodeFailureDetail
   artefactName?: string
+  replacedAt?: string
   cancellable: boolean
 }
 
@@ -774,6 +775,7 @@ export function toEncodeJob(
         }
       : undefined,
     artefactName: one.artefactName ?? undefined,
+    replacedAt: one.replacedAt ? formatMoment(one.replacedAt) : undefined,
     cancellable: callsOff(one.status),
   }
 }

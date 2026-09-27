@@ -11,6 +11,7 @@ import {
   FAILED_JOB,
   MORE_JOBS_THAN_FIT,
   QUEUED_JOB,
+  REPLACED_JOB,
   RETIRED_DEFINITIONS,
   RUNNING_JOB,
   AUTO_RUN_ON_A_LATER_BUILD,
@@ -385,6 +386,35 @@ export const 完了: Story = {
 
     await expect(jobs.getByText('完了')).toBeVisible()
     await expect(jobs.getByText('100%')).toBeVisible()
+  },
+}
+
+export const 置き換え済み: Story = {
+  args: {
+    screen: {
+      ...screenWith(COMPLETED_JOB),
+      jobs: jobsPage([COMPLETED_JOB, REPLACED_JOB]),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const [standing, replaced] = rowsOfTheTableHeaded(canvasElement, '番組')
+
+    await expect(
+      within(cellOf(standing, JOB_STATE_COLUMN)).getByText('完了'),
+    ).toBeVisible()
+    await expect(
+      within(cellOf(replaced, JOB_STATE_COLUMN)).getByText('置換済み'),
+    ).toBeVisible()
+    await expect(
+      within(cellOf(replaced, JOB_STATE_COLUMN)).queryByText('完了'),
+    ).toBeNull()
+
+    const said = await tipIn(cellOf(replaced, JOB_STATE_COLUMN))
+
+    await expect(said).toHaveTextContent(/^置き換え済み/)
+    await expect(said).toHaveTextContent('置き換え 08/08(土) 20:19')
   },
 }
 

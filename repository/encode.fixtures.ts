@@ -146,6 +146,18 @@ export const COMPLETED_JOB: EncodeJob = {
   artefactName: '1199.pf-1.mp4',
 }
 
+export const REPLACED_JOB: EncodeJob = {
+  ...COMPLETED_JOB,
+  id: 'job-o',
+  profileLabel: ARCHIVE_PROFILE.label,
+  queuedAt: '2026/08/08 19:31',
+  startedAt: '2026/08/08 19:31',
+  endedAt: '2026/08/08 19:52',
+  headway: { percent: 100, leftSeconds: 0, at: '19:52:10' },
+  artefactName: '1199.pf-2.mp4',
+  replacedAt: '08/08(土) 20:19',
+}
+
 export const FAILED_JOB: EncodeJob = {
   ...ROW,
   id: 'job-f',

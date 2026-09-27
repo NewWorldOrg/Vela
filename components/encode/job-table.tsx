@@ -10,6 +10,7 @@ import {
   ENCODER_LABEL,
   FAILURE_LABEL,
   RECORDING_REMOVED_LABEL,
+  REPLACED_IN_FULL,
   STALLED_LABEL,
   SWERVE_LABEL,
 } from '@/repository/encode-terms'
@@ -58,7 +59,14 @@ const TABLE_MIN = 'calc(1100rem/16)'
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
 function Standing({ job }: { job: EncodeJob }) {
-  const chip = <JobStatusChip status={job.status} stalled={job.stalled} say />
+  const chip = (
+    <JobStatusChip
+      status={job.status}
+      stalled={job.stalled}
+      replaced={job.replacedAt !== undefined}
+      say
+    />
+  )
   const why = whyItStands(job)
 
   return why ? (
@@ -72,6 +80,8 @@ function Standing({ job }: { job: EncodeJob }) {
 
 function whyItStands(job: EncodeJob): string {
   return [
+    job.replacedAt && REPLACED_IN_FULL,
+    job.replacedAt && `置き換え ${job.replacedAt}`,
     job.failure && wordFor(FAILURE_LABEL, job.failure.failure),
     job.failure?.note || undefined,
     job.attempt > 1 ? `${job.attempt} 回目` : undefined,
