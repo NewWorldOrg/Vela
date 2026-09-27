@@ -1419,6 +1419,7 @@ const REFUSALS = [
   ['alreadyEnded', 409],
   ['notBeingWritten', 409],
   ['nowhereToPutPictures', 503],
+  ['beingEncoded', 409],
 ] as const
 
 test('every refusal the endpoint can give is said in words of its own', async () => {

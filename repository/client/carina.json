@@ -10013,7 +10013,8 @@
           "coresThisMachineHas",
           "subject",
           "stored",
-          "updatedAt"
+          "updatedAt",
+          "whereArtefactsGo"
         ],
         "type": "object",
         "properties": {
@@ -10051,6 +10052,9 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "whereArtefactsGo": {
+            "$ref": "#/components/schemas/EncodeUnaskedStanding"
           }
         }
       },
@@ -10313,6 +10317,7 @@
           "waitingForAViewer",
           "failure",
           "artefactName",
+          "replacedAt",
           "timeline"
         ],
         "type": "object",
@@ -10414,6 +10419,13 @@
               "null",
               "string"
             ]
+          },
+          "replacedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           },
           "timeline": {
             "oneOf": [
@@ -10667,6 +10679,15 @@
             ]
           }
         }
+      },
+      "EncodeUnaskedStanding": {
+        "enum": [
+          "settled",
+          "nothingIsDefined",
+          "moreThanOneIsOffered",
+          "theProfileIsNotOffered"
+        ],
+        "type": "string"
       },
       "EpgRebuiltResponder": {
         "required": [
@@ -14291,7 +14312,8 @@
           "rootOutOfReach",
           "filesLeftBehind",
           "oneIsAlreadyBeingDiscarded",
-          "tookTooLong"
+          "tookTooLong",
+          "beingEncoded"
         ],
         "type": "string"
       },
@@ -17592,7 +17614,8 @@
           "lnbPower": {
             "type": "boolean"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TunerEntryResponder": {
         "required": [
@@ -17698,7 +17721,8 @@
               "$ref": "#/components/schemas/TunerEntryRequest"
             }
           }
-        }
+        },
+        "additionalProperties": false
       },
       "TunerLedgerResponder": {
         "required": [

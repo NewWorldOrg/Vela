@@ -339,6 +339,8 @@ const DISCARD_REFUSAL: Record<RecordingRefusal, string> = {
   noSuchRecording: 'この録画は残っていないため、削除できませんでした。',
   stillRecording:
     'この録画はまだ書き込み中です。録画を止めてから削除してください。',
+  beingEncoded:
+    'この録画はエンコードの待機中か実行中です。エンコードを中止するか、終わってから削除してください。',
   oneIsAlreadyBeingDiscarded:
     '別の録画の削除が進行中です。削除は同時に 1 件までのため、終わってからもう一度お試しください。',
   rootOutOfReach:

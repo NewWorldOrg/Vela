@@ -1979,6 +1979,7 @@ export interface components {
       stored: boolean
       /** Format: date-time */
       updatedAt: null | string
+      whereArtefactsGo: components['schemas']['EncodeUnaskedStanding']
     }
     /** @enum {string} */
     EncodeCodec: 'h264' | 'h265'
@@ -2073,6 +2074,8 @@ export interface components {
       waitingForAViewer: boolean
       failure: null | components['schemas']['EncodeFailureResponder']
       artefactName: null | string
+      /** Format: date-time */
+      replacedAt: null | string
       timeline: null | components['schemas']['EncodeTimelineResponder']
     }
     /** @enum {string} */
@@ -2135,6 +2138,12 @@ export interface components {
       driftSeconds: null | number | string
       lengthsAgree: null | boolean
     }
+    /** @enum {string} */
+    EncodeUnaskedStanding:
+      | 'settled'
+      | 'nothingIsDefined'
+      | 'moreThanOneIsOffered'
+      | 'theProfileIsNotOffered'
     EpgRebuiltResponder: {
       /** Format: int32 */
       discarded: number | string
@@ -3035,6 +3044,7 @@ export interface components {
       | 'filesLeftBehind'
       | 'oneIsAlreadyBeingDiscarded'
       | 'tookTooLong'
+      | 'beingEncoded'
     /** @enum {string} */
     RecordingFault:
       | 'tuneFailed'
