@@ -1,50 +1,46 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
-import { movesNow } from '@/lib/motion'
-
-const CURTAIN_KEY = 'vela.curtain'
-
-const RAISE = 'raise'
-
-const useOnFirstPaint =
-  typeof window === 'undefined' ? useEffect : useLayoutEffect
+import { CURTAIN_ASKING, CURTAIN_FORGETTING } from '@/lib/curtain'
 
 export function askForTheCurtain(): void {
-  try {
-    window.sessionStorage.setItem(CURTAIN_KEY, RAISE)
-  } catch {
-    return
-  }
+  document.cookie = CURTAIN_ASKING
 }
 
-function asked(): boolean {
-  try {
-    if (window.sessionStorage.getItem(CURTAIN_KEY) !== RAISE) {
-      return false
-    }
-
-    window.sessionStorage.removeItem(CURTAIN_KEY)
-
-    return true
-  } catch {
-    return false
+function allFinished(node: HTMLElement): Promise<unknown> {
+  if (typeof node.getAnimations !== 'function') {
+    return Promise.resolve()
   }
+
+  return Promise.all(
+    node.getAnimations({ subtree: true }).map((running) => running.finished),
+  )
 }
 
 export function Curtain() {
-  const [raising, setRaising] = useState<boolean>(false)
+  const [raising, setRaising] = useState<boolean>(true)
 
-  useOnFirstPaint(() => {
-    if (
-      asked() &&
-      movesNow(
-        document.documentElement.dataset.motion,
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-      )
-    ) {
-      setRaising(true)
+  const raised = useCallback((node: HTMLDivElement | null) => {
+    if (node === null) {
+      return
+    }
+
+    document.cookie = CURTAIN_FORGETTING
+
+    let gone = false
+
+    allFinished(node).then(
+      () => {
+        if (!gone) {
+          setRaising(false)
+        }
+      },
+      () => undefined,
+    )
+
+    return () => {
+      gone = true
     }
   }, [])
 
@@ -54,15 +50,13 @@ export function Curtain() {
 
   return (
     <div
+      ref={raised}
       data-slot="curtain"
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-50"
     >
       <span className="curtain-panel absolute inset-y-0 left-0 w-[calc(50%+72px)] rounded-br-[72px] bg-bg [--curtain-away:-101%] [--curtain-crack:-8px]" />
-      <span
-        className="curtain-panel absolute inset-y-0 right-0 w-[calc(50%+72px)] rounded-bl-[72px] bg-bg [--curtain-away:101%] [--curtain-crack:8px]"
-        onAnimationEnd={() => setRaising(false)}
-      />
+      <span className="curtain-panel absolute inset-y-0 right-0 w-[calc(50%+72px)] rounded-bl-[72px] bg-bg [--curtain-away:101%] [--curtain-crack:8px]" />
       <span className="curtain-line absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-brand" />
     </div>
   )

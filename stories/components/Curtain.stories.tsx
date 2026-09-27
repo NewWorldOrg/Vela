@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, waitFor } from 'storybook/test'
 
+import { CURTAIN_COOKIE } from '@/lib/curtain'
 import { Curtain, askForTheCurtain } from '@/components/vela/curtain'
 
 const meta = {
@@ -17,7 +18,19 @@ function curtainOf(canvasElement: HTMLElement): Element | null {
   return canvasElement.ownerDocument.querySelector('[data-slot="curtain"]')
 }
 
-export const 上がり終わると片付く: Story = {
+function panelsOf(canvasElement: HTMLElement): HTMLElement[] {
+  return [
+    ...canvasElement.ownerDocument.querySelectorAll<HTMLElement>(
+      '[data-slot="curtain"] .curtain-panel',
+    ),
+  ]
+}
+
+function asked(): boolean {
+  return document.cookie.includes(`${CURTAIN_COOKIE}=`)
+}
+
+export const 閉じた形で描かれ上がり終わると片付く: Story = {
   beforeEach: () => {
     document.documentElement.dataset.motion = 'moves'
     askForTheCurtain()
@@ -28,6 +41,15 @@ export const 上がり終わると片付く: Story = {
   },
   play: async ({ canvasElement }) => {
     await expect(curtainOf(canvasElement)).not.toBeNull()
+    await expect(asked()).toBe(false)
+
+    const panels = panelsOf(canvasElement)
+
+    await expect(panels).toHaveLength(2)
+    for (const panel of panels) {
+      await expect(getComputedStyle(panel).display).not.toBe('none')
+    }
+
     await waitFor(() => expect(curtainOf(canvasElement)).toBeNull(), {
       timeout: 3000,
     })
@@ -44,7 +66,7 @@ export const 動きを切っていると幕を立てない: Story = {
     }
   },
   play: async ({ canvasElement }) => {
-    await expect(curtainOf(canvasElement)).toBeNull()
-    await expect(window.sessionStorage.getItem('vela.curtain')).toBeNull()
+    await waitFor(() => expect(curtainOf(canvasElement)).toBeNull())
+    await expect(asked()).toBe(false)
   },
 }
