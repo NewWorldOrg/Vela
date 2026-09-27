@@ -7,6 +7,7 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/a-fold-comes-with-the-page.test.ts',
   'tests/app/api/events/route.test.ts',
   'tests/app/api/services/logo/route.test.ts',
   'tests/app/api/videos/route.test.ts',
@@ -79,6 +80,7 @@ const THE_SUITE = [
   'tests/lib/search-condition.test.ts',
   'tests/lib/signed-out.test.ts',
   'tests/lib/state-terms.test.ts',
+  'tests/lib/stored-flag.test.ts',
   'tests/lib/system-terms.test.ts',
   'tests/lib/theme.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',

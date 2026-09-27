@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 
 import { forTheGrid, getGuide } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
@@ -12,6 +13,11 @@ import {
   PROGRAMS_EVENT,
   RESERVATIONS_EVENT,
 } from '@/repository/events'
+import {
+  FOLD_SPELLING,
+  GUIDE_SUB_CHANNELS_FOLDED,
+  flagOf,
+} from '@/lib/stored-flag'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { GuideView } from '@/components/guide/guide-page'
 import {
@@ -31,6 +37,7 @@ export default async function Page({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const params = await searchParams
+  const jar = await cookies()
   const bookings = await listBookings()
   const [guide, collection] = await Promise.all([
     getGuide(
@@ -60,6 +67,10 @@ export default async function Page({
         onCancel={dropProgrammeReservation}
         onRevise={reviseProgrammeReservation}
         onReadExtras={readProgramExtras}
+        subChannelsFolded={flagOf(
+          jar.get(GUIDE_SUB_CHANNELS_FOLDED)?.value,
+          FOLD_SPELLING,
+        )}
       />
     </>
   )
