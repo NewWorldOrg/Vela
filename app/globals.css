@@ -804,6 +804,18 @@
   }
 }
 
+@utility curtain {
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion='moves']) & {
+      display: none;
+    }
+  }
+
+  :root[data-motion='still'] & {
+    display: none;
+  }
+}
+
 @utility curtain-panel {
   animation: var(--animate-curtain-panel);
 

@@ -53,7 +53,7 @@ export function Curtain() {
       ref={raised}
       data-slot="curtain"
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-50"
+      className="curtain pointer-events-none fixed inset-0 z-50"
     >
       <span className="curtain-panel absolute inset-y-0 left-0 w-[calc(50%+72px)] rounded-br-[72px] bg-bg [--curtain-away:-101%] [--curtain-crack:-8px]" />
       <span className="curtain-panel absolute inset-y-0 right-0 w-[calc(50%+72px)] rounded-bl-[72px] bg-bg [--curtain-away:101%] [--curtain-crack:8px]" />
