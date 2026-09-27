@@ -308,7 +308,11 @@ export function RecordingDetailView({
               onTakeTicket={onTakeTicket}
               onQueueEncode={onQueueEncode}
               encodeChoices={encodeChoices}
-              plays={plays}
+              plan={
+                plays && playback.state === 'planned'
+                  ? playback.plan
+                  : undefined
+              }
             />
           </div>
 

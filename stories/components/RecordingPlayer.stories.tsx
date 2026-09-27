@@ -400,6 +400,32 @@ export const 再生できない_トランスコード失敗: Story = {
   },
 }
 
+export const 再生できない_外部プレイヤーは渡すものを選べる: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 0,
+    pictureHref: noPicture,
+    askWhy: answering({ kind: 'undecodable' }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(canvas.getByText('このブラウザでは再生できません')).toBeVisible(),
+    )
+    await userEvent.click(
+      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+    )
+    await expect(await screen.findByRole('menu')).toBeVisible()
+    await expect(
+      screen.getAllByRole('menuitem').map((one) => one.textContent),
+    ).toEqual(['エンコード済み', '元のまま3.4 GB'])
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+  },
+}
+
 export const 読み込み中: Story = {
   args: {
     detail: { ...detail('1266'), thumbnailHref: SUBTITLED_FRAME },
