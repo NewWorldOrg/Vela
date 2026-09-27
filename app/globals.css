@@ -289,6 +289,10 @@
       --animate-scrim-out: none;
       --animate-surface-in: none;
       --animate-surface-out: none;
+      --animate-player-burst: player-shown 500ms step-end forwards;
+      --animate-player-bezel-text: player-shown 500ms step-end forwards;
+      --animate-player-seek-flash: player-shown 700ms step-end forwards;
+      --animate-player-seek-arrow: none;
     }
   }
 
@@ -312,6 +316,10 @@
     --animate-scrim-out: none;
     --animate-surface-in: none;
     --animate-surface-out: none;
+    --animate-player-burst: player-shown 500ms step-end forwards;
+    --animate-player-bezel-text: player-shown 500ms step-end forwards;
+    --animate-player-seek-flash: player-shown 700ms step-end forwards;
+    --animate-player-seek-arrow: none;
   }
 }
 
@@ -519,6 +527,15 @@
   }
   12%,
   72% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes player-shown {
+  from {
     opacity: 1;
   }
   to {
