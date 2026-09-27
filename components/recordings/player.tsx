@@ -1,12 +1,25 @@
 'use client'
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
 import { nextBoundaryAfter } from '@/lib/player-chapters'
+import {
+  SECOND_TAP_WITHIN,
+  tapZone,
+  whatTheTapDoes,
+  type TapRun,
+  type TapZone,
+} from '@/lib/player-taps'
 import { redrawnHref } from '@/lib/thumbnail-redraw'
 import { useRedrawnThumbnail } from '@/hooks/useRedrawnThumbnail'
 import {
@@ -218,6 +231,8 @@ export function Player({
   const [said, setSaid] = useState<PlayerSaying | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const dismissing = useRef(false)
+  const tapRun = useRef<TapRun | null>(null)
+  const tapWaits = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [held, setHeld] = useState(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -298,6 +313,10 @@ export function Player({
 
       if (asking.current) {
         clearTimeout(asking.current)
+      }
+
+      if (tapWaits.current) {
+        clearTimeout(tapWaits.current)
       }
     },
     [],
@@ -489,6 +508,45 @@ export function Player({
   const step = (by: number) => {
     answerSeek(by < 0 ? 'back' : 'forward')
     choose((wanted.current ?? position) + by)
+  }
+
+  const zoneOf = (event: MouseEvent<HTMLElement>): TapZone => {
+    if (duration <= 0) {
+      return 'middle'
+    }
+
+    const box = event.currentTarget.getBoundingClientRect()
+
+    return tapZone(event.clientX - box.left, box.width)
+  }
+
+  const tap = (zone: TapZone, at: number) => {
+    if (tapWaits.current) {
+      clearTimeout(tapWaits.current)
+      tapWaits.current = null
+    }
+
+    const said = whatTheTapDoes(tapRun.current, zone, at)
+
+    tapRun.current = said.run
+
+    if (said.answer === 'toggle') {
+      toggle()
+
+      return
+    }
+
+    if (said.answer === 'wait') {
+      tapWaits.current = setTimeout(() => {
+        tapWaits.current = null
+        tapRun.current = null
+        toggle()
+      }, SECOND_TAP_WITHIN)
+
+      return
+    }
+
+    step(said.answer === 'back' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS)
   }
 
   const chooseProfile = (next: string) => {
@@ -841,18 +899,22 @@ export function Player({
                 dismissing.current = settingsOpen
                 shell?.focus({ preventScroll: true })
               }}
-              onClick={() => {
+              onClick={(event) => {
                 if (dismissing.current) {
                   dismissing.current = false
 
                   return
                 }
 
-                toggle()
+                tap(zoneOf(event), event.timeStamp)
               }}
-              onDoubleClick={toggleFullscreen}
+              onDoubleClick={(event) => {
+                if (zoneOf(event) === 'middle') {
+                  toggleFullscreen()
+                }
+              }}
               data-up={chromeUp ? 'true' : undefined}
-              className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
+              className="absolute inset-0 cursor-none touch-manipulation select-none data-[up]:cursor-pointer"
             />
           )}
           <PlayerCenter
