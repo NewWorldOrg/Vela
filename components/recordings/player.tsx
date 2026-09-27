@@ -17,7 +17,11 @@ import {
   whereItStarts,
   type PlayerSaying,
 } from '@/lib/playback-sound'
-import { whereThatSourceOpens } from '@/lib/playback-source'
+import {
+  whatTheStandingArtefactAsks,
+  whereThatSourceOpens,
+} from '@/lib/playback-source'
+import { listenForEncodeJobs } from '@/lib/app-signals'
 import type { RecordingDetail } from '@/repository/recordings'
 import type {
   PlaybackPlan,
@@ -25,8 +29,15 @@ import type {
   PositionWrite,
 } from '@/repository/videos'
 import { useKeptPosition } from '@/hooks/useKeptPosition'
+import {
+  useStandingArtefact,
+  type ListenForEncodeJobs,
+} from '@/hooks/useStandingArtefact'
 import type { TicketWrite } from '@/repository/tickets'
-import type { PlaybackSource } from '@/repository/playback-sources'
+import {
+  THE_ARTEFACT,
+  type PlaybackSource,
+} from '@/repository/playback-sources'
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,
@@ -111,6 +122,9 @@ export function Player({
   onTakeTicket,
   onAskForTheSound,
   onKeepPosition,
+  artefact,
+  onAskWhichArtefact,
+  listenForEncodeJobs: listen = listenForEncodeJobs,
   startAt,
   playsAtOnce = true,
   frameHref = videoFrameHref,
@@ -128,6 +142,9 @@ export function Player({
     source?: PlaybackSource,
   ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
+  artefact?: string
+  onAskWhichArtefact?: (id: string) => Promise<string | undefined>
+  listenForEncodeJobs?: ListenForEncodeJobs
   startAt?: number
   playsAtOnce?: boolean
   frameHref?: (id: string, at: number) => string
@@ -207,6 +224,8 @@ export function Player({
   const shownUnder = useRef<PlaybackPlan | null>(opensPlaying ? opened : null)
 
   const attempt = useRef(0)
+  const openedOn = useRef(artefact)
+  const replanned = useRef(0)
 
   const asItStands = useRef({ position, profile, plan, sound })
 
@@ -537,21 +556,70 @@ export function Player({
       })
   }
 
-  const chooseSource = (next: PlaybackSource) => {
-    if (next === plan.source) {
-      return
-    }
-
+  const openAgain = (next: PlaybackSource, at: number | undefined) => {
     router.replace(
       whereThatSourceOpens(
         pathname,
         inTheAddress.toString(),
         next,
-        phase === 'idle' ? undefined : position,
+        at,
       ) as Route,
       { scroll: false },
     )
   }
+
+  const chooseSource = (next: PlaybackSource) => {
+    if (next === plan.source) {
+      return
+    }
+
+    openAgain(next, phase === 'idle' ? undefined : position)
+  }
+
+  useStandingArtefact(
+    onAskWhichArtefact !== undefined && plan.source === THE_ARTEFACT,
+    listen,
+    () => onAskWhichArtefact?.(d.id) ?? Promise.resolve(undefined),
+    (standing) => {
+      const asks = whatTheStandingArtefactAsks(
+        openedOn.current,
+        standing,
+        plan.source,
+        phase !== 'idle',
+      )
+
+      if (asks === 'stay') {
+        return
+      }
+
+      openedOn.current = standing
+
+      if (asks === 'learn') {
+        return
+      }
+
+      if (asks === 'reopen') {
+        openAgain(THE_ARTEFACT, asItStands.current.position)
+
+        return
+      }
+
+      const mine = (replanned.current += 1)
+
+      void onAskForTheSound(d.id, asItStands.current.sound, plan.source)
+        .then((answer) => {
+          if (replanned.current !== mine || answer.state !== 'planned') {
+            return
+          }
+
+          setPlan(answer.plan)
+          standsAs({ plan: answer.plan })
+        })
+        .catch((error) => {
+          console.warn('[player] the new artefact was not planned', d.id, error)
+        })
+    },
+  )
 
   const chooseSpeed = (next: string) => {
     setSpeed(next)

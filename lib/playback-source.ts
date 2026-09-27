@@ -45,3 +45,26 @@ export function whatOpensThePlayerAnew(
 ): string {
   return `${id}:${at ?? ''}:${source ?? ''}`
 }
+
+export type WhenTheArtefactMoves = 'stay' | 'learn' | 'reopen' | 'replan'
+
+export function whatTheStandingArtefactAsks(
+  opened: string | undefined,
+  standing: string | undefined,
+  source: PlaybackSource | undefined,
+  started: boolean,
+): WhenTheArtefactMoves {
+  if (
+    source !== THE_ARTEFACT ||
+    standing === undefined ||
+    standing === opened
+  ) {
+    return 'stay'
+  }
+
+  if (opened === undefined) {
+    return 'learn'
+  }
+
+  return started ? 'reopen' : 'replan'
+}

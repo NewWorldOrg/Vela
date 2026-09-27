@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   theSourceAsked,
   whatOpensThePlayerAnew,
+  whatTheStandingArtefactAsks,
   whereThatSourceOpens,
 } from '@/lib/playback-source'
 import { BOTH_SOURCES } from '@/repository/playback-sources'
@@ -109,5 +110,48 @@ test('the player is left as it stands while the recording, the second and the so
   assert.notEqual(
     whatOpensThePlayerAnew('1266', 612, 'recording'),
     whatOpensThePlayerAnew('1274', 612, 'recording'),
+  )
+})
+
+test('a player watching the artefact reopens when another job has the standing artefact', () => {
+  assert.equal(
+    whatTheStandingArtefactAsks('job-a', 'job-b', 'artefact', true),
+    'reopen',
+  )
+})
+
+test('a player that has not played yet only takes the new plan', () => {
+  assert.equal(
+    whatTheStandingArtefactAsks('job-a', 'job-b', 'artefact', false),
+    'replan',
+  )
+})
+
+test('the same artefact, or none standing, leaves the player as it is', () => {
+  assert.equal(
+    whatTheStandingArtefactAsks('job-a', 'job-a', 'artefact', true),
+    'stay',
+  )
+  assert.equal(
+    whatTheStandingArtefactAsks('job-a', undefined, 'artefact', true),
+    'stay',
+  )
+})
+
+test('a player watching the recording itself is not moved by the artefact', () => {
+  assert.equal(
+    whatTheStandingArtefactAsks('job-a', 'job-b', 'recording', true),
+    'stay',
+  )
+  assert.equal(
+    whatTheStandingArtefactAsks('job-a', 'job-b', undefined, true),
+    'stay',
+  )
+})
+
+test('a player that opened without knowing its artefact learns it before it moves', () => {
+  assert.equal(
+    whatTheStandingArtefactAsks(undefined, 'job-b', 'artefact', true),
+    'learn',
   )
 })

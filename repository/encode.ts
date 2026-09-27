@@ -271,6 +271,23 @@ export async function getLatestEncodeJob(
     : undefined
 }
 
+const COMPLETED_LOOKED_THROUGH = 10
+
+export async function getStandingArtefact(
+  recordingId: string,
+): Promise<string | undefined> {
+  const completed = await fetchJobs({
+    status: 'completed',
+    recordingId,
+    page: 1,
+    perPage: COMPLETED_LOOKED_THROUGH,
+  })
+
+  return completed.items.find(
+    (one) => one.artefactName !== null && one.replacedAt === null,
+  )?.id
+}
+
 export interface EncodeAsking {
   did: string
   fell: string

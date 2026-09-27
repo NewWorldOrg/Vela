@@ -918,6 +918,127 @@ export const まだ観ていないうちにソースを切り替えてもアド�
     },
   }
 
+const jobsHeard: (() => void)[] = []
+
+function hearingTheJobs(noticed: () => void) {
+  jobsHeard.push(noticed)
+
+  return () => {
+    const at = jobsHeard.indexOf(noticed)
+
+    if (at >= 0) {
+      jobsHeard.splice(at, 1)
+    }
+  }
+}
+
+const standing: { now?: string } = {}
+
+async function askingWhichArtefact() {
+  return standing.now
+}
+
+async function theJobsSay(artefact: string) {
+  standing.now = artefact
+
+  await waitFor(() => expect(jobsHeard.length).toBeGreaterThan(0))
+  jobsHeard.at(-1)?.()
+  await new Promise((settle) => setTimeout(settle, 50))
+}
+
+export const 観ている最中に成果物が置き換わるとその秒から開き直す: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 612,
+    pictureHref: carryingTheSource,
+    artefact: 'job-a',
+    onAskWhichArtefact: askingWhichArtefact,
+    listenForEncodeJobs: hearingTheJobs,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1274, query: { at: '612' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await waitFor(() =>
+      expect(canvas.getByText(/^10:22 \//)).toBeInTheDocument(),
+    )
+
+    const before = router.replace.mock.calls.length
+
+    await theJobsSay('job-a')
+    await expect(router.replace.mock.calls.length).toBe(before)
+
+    await theJobsSay('job-b')
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(`${AT_1274}?at=622`, {
+        scroll: false,
+      }),
+    )
+  },
+}
+
+export const まだ観ていないうちに成果物が置き換わると次の再生で新しい成果物を開く: Story =
+  {
+    args: {
+      detail: detail('1274'),
+      plan: WITH_AN_ARTEFACT,
+      startAt: 612,
+      playsAtOnce: false,
+      pictureHref: carryingTheSource,
+      onAskForTheSound: planningWithTheSource(WITH_AN_ARTEFACT),
+      artefact: 'job-a',
+      onAskWhichArtefact: askingWhichArtefact,
+      listenForEncodeJobs: hearingTheJobs,
+    },
+    parameters: {
+      nextjs: { appDirectory: true, navigation: { pathname: AT_1274 } },
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const router = getRouter()
+      const before = router.replace.mock.calls.length
+
+      reaskedWith.length = 0
+      await theJobsSay('job-b')
+
+      await waitFor(() => expect(reaskedWith).toEqual(['main/artefact']))
+      await expect(router.replace.mock.calls.length).toBe(before)
+      await expect(canvas.getByText(/^10:12 \//)).toBeInTheDocument()
+    },
+  }
+
+export const 元のままを見ているあいだは成果物の置き換えを聞かない: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: THE_RECORDING_ITSELF,
+    startAt: 612,
+    pictureHref: carryingTheSource,
+    artefact: 'job-a',
+    onAskWhichArtefact: askingWhichArtefact,
+    listenForEncodeJobs: hearingTheJobs,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1274, query: { at: '612' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(within(canvasElement).getByText(/^10:12 \//)).toBeInTheDocument(),
+    )
+    await expect(jobsHeard).toHaveLength(0)
+  },
+}
+
 export const 成果物がない録画にソースの行は無い: Story = {
   args: {
     detail: detail('1266'),

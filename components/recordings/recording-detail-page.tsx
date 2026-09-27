@@ -108,6 +108,8 @@ export function RecordingDetailView({
   onTakeTicket,
   onAskForTheSound,
   onKeepPosition,
+  artefact,
+  onAskWhichArtefact,
   onQueueEncode,
   encodeChoices,
   encodeJob,
@@ -126,6 +128,8 @@ export function RecordingDetailView({
     source?: PlaybackSource,
   ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
+  artefact?: string
+  onAskWhichArtefact?: (id: string) => Promise<string | undefined>
   onQueueEncode: QueueEncode
   encodeChoices: EncodeChoices
   encodeJob?: EncodeJob
@@ -242,6 +246,8 @@ export function RecordingDetailView({
           onTakeTicket={onTakeTicket}
           onAskForTheSound={onAskForTheSound}
           onKeepPosition={onKeepPosition}
+          artefact={artefact}
+          onAskWhichArtefact={onAskWhichArtefact}
           startAt={opens.at}
           playsAtOnce={opens.playing}
         />

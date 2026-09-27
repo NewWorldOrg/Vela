@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 
 import type { EncodeWrite } from '@/repository/encode'
-import { queueEncode } from '@/repository/encode'
+import { getStandingArtefact, queueEncode } from '@/repository/encode'
 import type { PlaybackSource } from '@/repository/playback-sources'
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
@@ -36,6 +36,12 @@ export async function keepThePosition(
   positionSec: number,
 ): Promise<PositionWrite> {
   return keepPlaybackPosition(id, positionSec)
+}
+
+export async function askWhichArtefact(
+  id: string,
+): Promise<string | undefined> {
+  return getStandingArtefact(id)
 }
 
 export async function askForTheSound(

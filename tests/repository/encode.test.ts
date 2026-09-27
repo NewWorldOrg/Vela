@@ -279,6 +279,7 @@ const {
   defineProfile,
   getEncodeScreen,
   getLatestEncodeJob,
+  getStandingArtefact,
   listEncodeChoices,
   queueEncode,
   removeDestination,
@@ -330,6 +331,37 @@ test('a recording nothing was ever queued for has no latest job', async () => {
   store.jobs = [RUNNING]
 
   assert.equal(await getLatestEncodeJob(RECORDING.id, NOW), undefined)
+})
+
+test('the artefact standing for a recording is the completed job no newer one replaced', async () => {
+  const replaced = {
+    ...COMPLETED,
+    id: '1f2e3d4c-5b6a-4978-8a9b-0c1d2e3f4a5b',
+    replacedAt: '2026-09-05T12:08:15.004Z',
+  }
+
+  store.jobs = [RUNNING, replaced, COMPLETED]
+
+  assert.equal(await getStandingArtefact(RECORDING.id), COMPLETED.id)
+  assert.deepEqual(sent.at(-1)?.query, {
+    status: ['completed'],
+    recordingId: RECORDING.id,
+    page: 1,
+    perPage: 10,
+  })
+})
+
+test('a recording whose completed jobs were all replaced, or that has none, has no standing artefact', async () => {
+  store.jobs = [
+    { ...COMPLETED, replacedAt: '2026-09-05T12:08:15.004Z' },
+    RUNNING,
+  ]
+
+  assert.equal(await getStandingArtefact(RECORDING.id), undefined)
+
+  store.jobs = []
+
+  assert.equal(await getStandingArtefact(RECORDING.id), undefined)
 })
 
 test('the screen reads the ledger into names, values and counts', async () => {

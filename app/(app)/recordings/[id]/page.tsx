@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { getLatestEncodeJob, listEncodeChoices } from '@/repository/encode'
+import {
+  getLatestEncodeJob,
+  getStandingArtefact,
+  listEncodeChoices,
+} from '@/repository/encode'
 import {
   ENCODE_JOBS_EVENT,
   QUALITY_EVENT,
@@ -16,6 +20,7 @@ import { throwRecordingAway } from '@/app/(app)/library/actions'
 import { callOffJob } from '@/app/(app)/settings/encode/actions'
 import {
   askForTheSound,
+  askWhichArtefact,
   keepThePosition,
   queueEncoding,
   redrawThumbnail,
@@ -47,13 +52,22 @@ export default async function Page({
 }) {
   const { id } = await params
   const { at, source } = await searchParams
-  const [detail, playback, unaskedProfile, encodeChoices, encodeJob] =
+  const [detail, playback, unaskedProfile, encodeChoices, encodeJob, artefact] =
     await Promise.all([
       getRecording(id),
       getPlaybackPlan(id, undefined, theSourceAsked(source)),
       getUnaskedPlaybackProfile(),
       listEncodeChoices(),
       getLatestEncodeJob(id),
+      getStandingArtefact(id).catch((error: unknown) => {
+        console.warn(
+          '[recording] the standing artefact was not read',
+          id,
+          error,
+        )
+
+        return undefined
+      }),
     ])
 
   if (!detail) {
@@ -75,6 +89,8 @@ export default async function Page({
         onTakeTicket={takeTicket}
         onAskForTheSound={askForTheSound}
         onKeepPosition={keepThePosition}
+        artefact={artefact}
+        onAskWhichArtefact={askWhichArtefact}
         onQueueEncode={queueEncoding}
         encodeChoices={encodeChoices}
         encodeJob={encodeJob}
