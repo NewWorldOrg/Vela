@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  theHoldAsked,
   theSourceAsked,
   whatOpensThePlayerAnew,
   whatTheStandingArtefactAsks,
@@ -66,6 +67,38 @@ test('a switch made while watching names the second even when the address named 
   assert.equal(
     whereThatSourceOpens(WATCHING, 'source=recording', 'artefact', 0),
     '/recordings/1266?at=0',
+  )
+})
+
+test('a player that was paused is reopened held at the second it stood at', () => {
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'at=612', 'recording', 622.4, true),
+    '/recordings/1266?at=622&paused=1&source=recording',
+  )
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'at=612', 'artefact', 622, true),
+    '/recordings/1266?at=622&paused=1',
+  )
+})
+
+test('a player that was playing drops a hold the address still carried', () => {
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'at=622&paused=1', 'artefact', 640, false),
+    '/recordings/1266?at=640',
+  )
+})
+
+test('the address is read as held only when it says so once', () => {
+  assert.equal(theHoldAsked('1'), true)
+  assert.equal(theHoldAsked(undefined), false)
+  assert.equal(theHoldAsked('0'), false)
+  assert.equal(theHoldAsked(['1', '1']), false)
+})
+
+test('the player is opened anew when a hold is asked at the same second', () => {
+  assert.notEqual(
+    whatOpensThePlayerAnew('1266', 622, 'artefact', true),
+    whatOpensThePlayerAnew('1266', 622, 'artefact', false),
   )
 })
 

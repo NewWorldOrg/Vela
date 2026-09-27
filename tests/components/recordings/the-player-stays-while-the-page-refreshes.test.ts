@@ -15,8 +15,8 @@ test('the player is reopened only for what the address asks, never for the posit
 
   assert.match(
     source,
-    /key=\{whatOpensThePlayerAnew\(d\.id, startAt, playback\.plan\.source\)\}/,
-    'the remount key must be built from the address (startAt), not from opens.at',
+    /key=\{whatOpensThePlayerAnew\(\s*d\.id,\s*startAt,\s*playback\.plan\.source,\s*startsHeld,?\s*\)\}/,
+    'the remount key must be built from the address (startAt, startsHeld), not from opens.at',
   )
   assert.doesNotMatch(
     source,

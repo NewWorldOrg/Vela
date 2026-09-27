@@ -13,7 +13,7 @@ import {
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
 import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
-import { theSourceAsked } from '@/lib/playback-source'
+import { theHoldAsked, theSourceAsked } from '@/lib/playback-source'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
@@ -48,10 +48,14 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ at?: string | string[]; source?: string | string[] }>
+  searchParams: Promise<{
+    at?: string | string[]
+    paused?: string | string[]
+    source?: string | string[]
+  }>
 }) {
   const { id } = await params
-  const { at, source } = await searchParams
+  const { at, paused, source } = await searchParams
   const [detail, playback, unaskedProfile, encodeChoices, encodeJob, artefact] =
     await Promise.all([
       getRecording(id),
@@ -84,6 +88,7 @@ export default async function Page({
         playback={playback}
         unaskedProfile={unaskedProfile}
         startAt={secondsIn(at)}
+        startsHeld={theHoldAsked(paused)}
         onRemakeThumbnail={redrawThumbnail}
         onDelete={throwRecordingAway}
         onTakeTicket={takeTicket}

@@ -985,6 +985,100 @@ export const 観ている最中に成果物が置き換わるとその秒から�
   },
 }
 
+async function pausedAt622(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+  const video = canvasElement.querySelector('video')
+
+  await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+  await waitFor(() => expect(canvas.getByText(/^10:22 \//)).toBeInTheDocument())
+  video?.dispatchEvent(new Event('playing'))
+  video?.dispatchEvent(new Event('pause'))
+  await waitFor(() =>
+    expect(canvas.getByRole('button', { name: '再生' })).toBeVisible(),
+  )
+}
+
+export const 一時停止中に成果物が置き換わると一時停止のまま開き直す: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 612,
+    pictureHref: carryingTheSource,
+    artefact: 'job-a',
+    onAskWhichArtefact: askingWhichArtefact,
+    listenForEncodeJobs: hearingTheJobs,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1274, query: { at: '612' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await pausedAt622(canvasElement)
+    await theJobsSay('job-b')
+    await waitFor(() =>
+      expect(getRouter().replace).toHaveBeenCalledWith(
+        `${AT_1274}?at=622&paused=1`,
+        { scroll: false },
+      ),
+    )
+  },
+}
+
+export const 一時停止中にソースを切り替えると一時停止のまま開き直す: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 612,
+    pictureHref: carryingTheSource,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1274, query: { at: '612' } },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await pausedAt622(canvasElement)
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '設定' }),
+    )
+
+    const sources = await screen.findByRole('group', { name: 'ソース' })
+
+    await userEvent.click(
+      within(sources).getByRole('button', { name: '元のまま' }),
+    )
+
+    await expect(getRouter().replace).toHaveBeenCalledWith(
+      `${AT_1274}?at=622&paused=1&source=recording`,
+      { scroll: false },
+    )
+  },
+}
+
+export const 一時停止のまま開くと映像を読んでも再生を始めない: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 0,
+    holdsAtOnce: true,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const video = canvasElement.querySelector('video')
+
+    await expect(video).not.toHaveAttribute('autoplay')
+    await expect(video).toHaveAttribute('preload', 'auto')
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '再生' })).toBeVisible(),
+    )
+    await expect(video?.paused).toBe(true)
+  },
+}
+
 export const まだ観ていないうちに成果物が置き換わると次の再生で新しい成果物を開く: Story =
   {
     args: {

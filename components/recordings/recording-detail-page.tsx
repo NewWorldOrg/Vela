@@ -115,6 +115,7 @@ export function RecordingDetailView({
   encodeJob,
   onCallOffEncode,
   startAt,
+  startsHeld = false,
 }: {
   detail: RecordingDetail
   playback: PlaybackRead
@@ -135,6 +136,7 @@ export function RecordingDetailView({
   encodeJob?: EncodeJob
   onCallOffEncode: (id: string) => Promise<EncodeWrite>
   startAt?: number
+  startsHeld?: boolean
 }) {
   const plays =
     !d.fileMissing &&
@@ -148,6 +150,7 @@ export function RecordingDetailView({
     startAt,
     playback.state === 'planned' ? playback.plan.resumeAtSec : undefined,
     d.lengthSec,
+    startsHeld,
   )
 
   const alarming: 'truncated' | 'failed' | null =
@@ -239,7 +242,12 @@ export function RecordingDetailView({
 
       {watching && (
         <Player
-          key={whatOpensThePlayerAnew(d.id, startAt, playback.plan.source)}
+          key={whatOpensThePlayerAnew(
+            d.id,
+            startAt,
+            playback.plan.source,
+            startsHeld,
+          )}
           detail={d}
           plan={playback.plan}
           unaskedProfile={unaskedProfile}
@@ -250,6 +258,7 @@ export function RecordingDetailView({
           onAskWhichArtefact={onAskWhichArtefact}
           startAt={opens.at}
           playsAtOnce={opens.playing}
+          holdsAtOnce={opens.held}
         />
       )}
 

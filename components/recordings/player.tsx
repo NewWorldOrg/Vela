@@ -127,6 +127,7 @@ export function Player({
   listenForEncodeJobs: listen = listenForEncodeJobs,
   startAt,
   playsAtOnce = true,
+  holdsAtOnce = false,
   frameHref = videoFrameHref,
   pictureHref = videoPictureHref,
   askWhy = askWhyItWouldNotPlay,
@@ -147,6 +148,7 @@ export function Player({
   listenForEncodeJobs?: ListenForEncodeJobs
   startAt?: number
   playsAtOnce?: boolean
+  holdsAtOnce?: boolean
   frameHref?: (id: string, at: number) => string
   pictureHref?: (
     id: string,
@@ -173,6 +175,9 @@ export function Player({
   const [plan, setPlan] = useState<PlaybackPlan>(opened)
   const [sound, setSound] = useState<SoundTrack>(MAIN_SOUND)
   const opensPlaying = startAt !== undefined && playsAtOnce
+  const [waitsForAHand, setWaitsForAHand] = useState(
+    opensPlaying && holdsAtOnce,
+  )
   const [phase, setPhase] = useState<Phase>(opensPlaying ? 'waiting' : 'idle')
   const [fault, setFault] = useState<PlaybackFault>({ kind: 'transcode' })
   const [muted, setMuted] = useState(false)
@@ -374,6 +379,7 @@ export function Player({
     const starts = whereItStarts(under, second)
 
     hold()
+    setWaitsForAHand(false)
     wanted.current = null
     attempt.current += 1
     asked.current += 1
@@ -563,6 +569,7 @@ export function Player({
         inTheAddress.toString(),
         next,
         at,
+        phase === 'paused',
       ) as Route,
       { scroll: false },
     )
@@ -760,9 +767,9 @@ export function Player({
           <video
             ref={video}
             src={source}
-            autoPlay={source !== undefined}
+            autoPlay={source !== undefined && !waitsForAHand}
             poster={poster}
-            preload="none"
+            preload={waitsForAHand ? 'auto' : 'none'}
             playsInline
             onLoadedMetadata={(event) => {
               event.currentTarget.playbackRate = Number(speed)
