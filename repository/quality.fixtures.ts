@@ -157,6 +157,17 @@ const ANOMALIES: QualityAnomaly[] = [
     classification: '① 信号を掴めない',
     when: '08/09 18:41 発生 · 継続中',
   },
+  {
+    id: 'anomaly-4',
+    title: 'チューナーが電波を掴めない',
+    subject: 'adapter1.frontend0',
+    observed: '観測 3 回続けて失敗',
+    level: 'warn',
+    levelLabel: '警告水準',
+    restatedBy: '再掲 · チューナー',
+    classification: '受信不可',
+    when: '08/10 07:12 発生 · 継続中',
+  },
 ]
 
 const TREND_SUBJECTS = [
@@ -587,7 +598,7 @@ export const QUALITY: QualityResult = {
   anomalies: {
     items: ANOMALIES,
     owned: 2,
-    restated: 1,
+    restated: 2,
   },
 }
 

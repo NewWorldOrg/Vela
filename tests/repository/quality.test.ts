@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 import { formatMoment, formatMomentSpan } from '@/lib/format'
+import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 
 interface Sent {
   path: string
@@ -661,6 +662,42 @@ test('他のドメインが持つ異常は、再掲として所有者と分類�
 
   assert.equal(anomaly.restatedBy, '再掲 · チューナー')
   assert.equal(anomaly.classification, '① 信号を掴めない')
+})
+
+test('電波を掴めないチューナーの異常は、題と観測を回数で言い、適用閾値を書かない', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      breached: 'lockRate',
+      owner: 'tuner',
+      restated: true,
+      classification: 'NoLock',
+      subjectKind: 'tuner',
+      subjectKey: 'adapter0.frontend0',
+      observed: 0,
+      appliedValue: 0.99,
+      state: 'detected',
+      notifiedAt: null,
+    }),
+  ]
+  store.restated = 1
+
+  const anomaly = (await getQuality()).anomalies.items[0]
+
+  assert.equal(anomaly.title, 'チューナーが電波を掴めない')
+  assert.equal(anomaly.observed, '観測 3 回続けて失敗')
+  assert.equal(anomaly.applied, undefined)
+  assert.equal(anomaly.restatedBy, '再掲 · チューナー')
+  assert.equal(anomaly.classification, '受信不可')
+})
+
+test('英字だけの未知の分類は、生の綴りではなく汎用の語に落とす', async () => {
+  standing()
+  store.incidents = [incident({ classification: 'SomeFutureKind' })]
+
+  const anomaly = (await getQuality()).anomalies.items[0]
+
+  assert.equal(anomaly.classification, NOT_YET_IN_THIS_BUILD)
 })
 
 test('解消していない異常は、口が並べた順のまま、どれも継続中として出る', async () => {

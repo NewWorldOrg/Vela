@@ -132,7 +132,7 @@ export interface QualityAnomaly {
   title: string
   subject: string
   observed: string
-  applied: string
+  applied?: string
   level: QualityLevel
   levelLabel: string
   restatedBy?: string
@@ -333,6 +333,18 @@ const BREACH_LEVELS: Record<QualityThresholdKey, QualityLevel> = {
   bitErrorRateCeiling: 'warn',
   supplySilence: 'unreachable',
 }
+
+const CANNOT_LOCK_CLASSIFICATION = 'NoLock'
+
+const CANNOT_LOCK_TITLE = 'チューナーが電波を掴めない'
+
+const CANNOT_LOCK_OBSERVED = '観測 3 回続けて失敗'
+
+const CLASSIFICATION_LABELS: Record<string, string> = {
+  [CANNOT_LOCK_CLASSIFICATION]: '受信不可',
+}
+
+const RAW_CLASSIFICATION_SPELLING = /^[A-Za-z]+$/
 
 const OWNERS: Record<IncidentOwner, string> = {
   quality: '品質',
@@ -653,25 +665,41 @@ function toAnomaly(
   names: ReadonlyMap<string, RecordingName>,
 ): QualityAnomaly {
   const level = shapeFor(BREACH_LEVELS, one.breached, 'unsupported')
-  const applied = measured(one.appliedValue, one.breached)
+  const cannotLock = one.classification === CANNOT_LOCK_CLASSIFICATION
 
   return {
     id: one.id,
-    title: titleOf(one),
+    title: cannotLock ? CANNOT_LOCK_TITLE : titleOf(one),
     subject: subjectOf(one, known, names),
-    observed: `${one.breached === SUPPLY_SILENCE ? '途絶' : '観測'} ${measured(
-      one.observed,
-      one.breached,
-    )}`,
-    applied: `適用閾値 ${applied}`,
+    observed: cannotLock
+      ? CANNOT_LOCK_OBSERVED
+      : `${one.breached === SUPPLY_SILENCE ? '途絶' : '観測'} ${measured(
+          one.observed,
+          one.breached,
+        )}`,
+    applied: cannotLock
+      ? undefined
+      : `適用閾値 ${measured(one.appliedValue, one.breached)}`,
     level,
     levelLabel: QUALITY_LEVEL_LABEL[level],
     restatedBy: one.restated
       ? `再掲 · ${wordFor(OWNERS, one.owner)}`
       : undefined,
-    classification: one.classification ?? undefined,
+    classification: classificationOf(one.classification),
     when: `${formatMoment(one.detectedAt)} 発生 · ${STILL_STANDING}`,
   }
+}
+
+function classificationOf(raw: string | null): string | undefined {
+  if (!raw) {
+    return undefined
+  }
+
+  if (Object.hasOwn(CLASSIFICATION_LABELS, raw)) {
+    return CLASSIFICATION_LABELS[raw]
+  }
+
+  return RAW_CLASSIFICATION_SPELLING.test(raw) ? NOT_YET_IN_THIS_BUILD : raw
 }
 
 function titleOf(one: IncidentResponder): string {
