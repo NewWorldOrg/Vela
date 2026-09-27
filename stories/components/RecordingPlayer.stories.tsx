@@ -426,6 +426,35 @@ export const 再生できない_外部プレイヤーは渡すものを選べる
   },
 }
 
+export const エンコード済みがある録画は_AirPlay_を置く: Story = {
+  args: { detail: detail('1274'), plan: WITH_AN_ARTEFACT },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'AirPlay' }),
+    ).toBeVisible()
+  },
+}
+
+export const 元のままを再生していてもエンコード済みがあれば_AirPlay_を置く: Story =
+  {
+    args: { detail: detail('1274'), plan: THE_RECORDING_ITSELF },
+    play: async ({ canvasElement }) => {
+      await expect(
+        within(canvasElement).getByRole('button', { name: 'AirPlay' }),
+      ).toBeVisible()
+    },
+  }
+
+export const エンコード済みが無い録画は_AirPlay_を置かない: Story = {
+  args: { detail: detail('1266'), plan: NOTHING_WAS_ENCODED },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.queryByRole('button', { name: 'AirPlay' })).toBeNull()
+    await expect(canvas.getByRole('button', { name: '字幕' })).toBeVisible()
+  },
+}
+
 export const 読み込み中: Story = {
   args: {
     detail: { ...detail('1266'), thumbnailHref: SUBTITLED_FRAME },
