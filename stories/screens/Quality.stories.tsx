@@ -51,6 +51,20 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = { args: { result: QUALITY } }
 
+export const 電波を掴めないチューナーの異常: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('チューナーが電波を掴めない')).toBeVisible()
+    await expect(
+      canvas.getByText('adapter1.frontend0 · 観測 3 回続けて失敗'),
+    ).toBeVisible()
+    await expect(canvas.getByText('分類 受信不可')).toBeVisible()
+    await expect(canvas.queryByText('NoLock')).toBeNull()
+  },
+}
+
 export const 何も計測されていない: Story = {
   args: { result: NOTHING_MEASURED },
   play: async ({ canvasElement }) => {

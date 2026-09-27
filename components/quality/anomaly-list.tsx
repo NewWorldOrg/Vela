@@ -29,7 +29,8 @@ function AnomalyRow({ anomaly }: { anomaly: QualityAnomaly }) {
         )}
       </span>
       <span className="mt-0.5 block text-note text-ink-2">
-        {anomaly.subject} · {anomaly.observed} / {anomaly.applied}
+        {anomaly.subject} · {anomaly.observed}
+        {anomaly.applied ? ` / ${anomaly.applied}` : ''}
       </span>
       {anomaly.classification && (
         <span className="block text-note text-ink-2">
