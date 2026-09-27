@@ -14624,7 +14624,9 @@
           "thumbnail",
           "broadcastGroup",
           "encode",
-          "unfinishedDeletion"
+          "unfinishedDeletion",
+          "leftScrambled",
+          "descrambledAt"
         ],
         "type": "object",
         "properties": {
@@ -14750,6 +14752,16 @@
                 "$ref": "#/components/schemas/RecordingUnfinishedDeletionResponder"
               }
             ]
+          },
+          "leftScrambled": {
+            "type": "boolean"
+          },
+          "descrambledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -15324,7 +15336,9 @@
           "ruleId",
           "occurredAt",
           "retryResult",
-          "gaveUpBecause"
+          "gaveUpBecause",
+          "leftScrambled",
+          "descrambledAt"
         ],
         "type": "object",
         "properties": {
@@ -15421,6 +15435,16 @@
                 "$ref": "#/components/schemas/RetryGiveUp"
               }
             ]
+          },
+          "leftScrambled": {
+            "type": "boolean"
+          },
+          "descrambledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

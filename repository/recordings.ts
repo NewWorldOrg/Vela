@@ -18,6 +18,7 @@ import {
 } from '@/lib/recordings'
 import { genreLabelOfKind } from '@/lib/search-condition'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
+import { SCRAMBLING_UNRESOLVED } from '@/lib/state-terms'
 import {
   INCOMPLETE_TABLES,
   LOCKED_WITHOUT_DATA,
@@ -95,6 +96,7 @@ export interface Recording {
   unfinishedDeletion?: UnfinishedDeletion
   outcome: RecordingOutcome
   outcomeDetail?: string
+  leftScrambled?: boolean
   quality: RecordingQuality
   scrambleQuality?: components['schemas']['QualityLevel']
   scrambledShare?: number
@@ -504,7 +506,8 @@ export function toRecording(
       ? { filesLeft: counted(r.unfinishedDeletion.filesLeft) }
       : undefined,
     outcome,
-    outcomeDetail: faultTitleOf(r.outcomeDetail),
+    outcomeDetail: faultTitleOf(faultsStandingOn(r)),
+    leftScrambled: r.leftScrambled,
     quality,
     encode: r.encode.standing,
     encodeWhenRecorded: r.encode.whenRecorded,
@@ -527,11 +530,12 @@ function toDetail(
 ): RecordingDetail {
   const r = d.recording
   const base = toRecording(r, known, now)
-  const named = leadingFault(r.outcomeDetail)
+  const standing = faultsStandingOn(r)
+  const named = leadingFault(standing)
   const measured = r.drops.ccMeasured
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
   const totalPackets = counted(r.drops.ccTotalPackets) ?? 0
-  const scrambled = counted(r.drops.scrambledPackets)
+  const scrambled = scrambledPacketsOf(r)
   const overflows = counted(r.drops.eovfCount)
   const genres = genresOf(r)
 
@@ -553,7 +557,7 @@ function toDetail(
         ? undefined
         : { main: `${grouped(scrambled)} パケット` },
     stopReason: stopReasonOf(d),
-    failureReason: failureReasonOf(base.outcome, named, r.outcomeDetail),
+    failureReason: failureReasonOf(base.outcome, named, standing),
     thumbnailState: shapeFor(
       THUMBNAIL_ROWS,
       r.thumbnail.state,
@@ -635,7 +639,7 @@ function qualityOf(
   }
 
   const dropped = counted(r.drops.ccDroppedPackets) ?? 0
-  const scrambled = counted(r.drops.scrambledPackets)
+  const scrambled = scrambledPacketsOf(r)
 
   return {
     measured: true,
@@ -702,7 +706,7 @@ const FAILURES: Partial<Record<Fault, { title: string; body?: string }>> = {
     body: '開始前の事前チェックで不足を検出しました。',
   },
   scramblingUnresolved: {
-    title: 'スクランブル解除失敗',
+    title: SCRAMBLING_UNRESOLVED,
     body: '閾値を超えた残存パケットを検出しました。',
   },
   nothingLanded: {
@@ -735,6 +739,16 @@ const TUNE_FAILURES: Record<TuneFailure, FailureClass> = {
   noData: LOCKED_WITHOUT_DATA,
   incompletePsi: INCOMPLETE_TABLES,
   streamMismatch: UNEXPECTED_STREAM,
+}
+
+function scrambledPacketsOf(r: RecordingResponder): number | undefined {
+  return r.descrambledAt ? undefined : counted(r.drops.scrambledPackets)
+}
+
+function faultsStandingOn(r: RecordingResponder): FaultResponder[] {
+  return r.descrambledAt
+    ? r.outcomeDetail.filter((one) => one.fault !== 'scramblingUnresolved')
+    : r.outcomeDetail
 }
 
 function leadingFault(detail: FaultResponder[]): FaultResponder | undefined {

@@ -4,9 +4,11 @@ import type {
 } from '@/repository/reservation-outcomes'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import {
+  LEFT_SCRAMBLED_TERM,
   NOT_YET_IN_THIS_BUILD_TERM,
   RECORDING_OUTCOME_TERMS,
   RESERVATION_OUTCOME_KIND_TERMS,
+  SCRAMBLING_UNRESOLVED,
 } from '@/lib/state-terms'
 import { numbered } from '@/repository/scan-failures'
 import { Badge } from '@/components/ui/badge'
@@ -46,7 +48,9 @@ export function OutcomeKindChip({
   say?: boolean
 }) {
   const tone = shapeFor(KIND_TONE, outcome.kind, NOT_YET_KNOWN_TONE)
-  const alsoSaidByTheKind = outcome.recordingResult === 'failed'
+  const alsoSaidByTheKind =
+    outcome.recordingResult === 'failed' ||
+    (outcome.recordingResult === 'complete' && outcome.endedScrambled === true)
   const result =
     outcome.recordingResult && !alsoSaidByTheKind
       ? shapeFor(
@@ -63,6 +67,8 @@ export function OutcomeKindChip({
     ),
     outcome.retry,
     outcome.tuneFailure && numbered(outcome.tuneFailure),
+    outcome.endedScrambled && SCRAMBLING_UNRESOLVED,
+    outcome.leftScrambled && LEFT_SCRAMBLED_TERM.explanation,
     result,
   )
 

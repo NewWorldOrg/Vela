@@ -54,6 +54,8 @@ export interface ReservationOutcome {
   kind: ReservationOutcomeKind
   tuneFailure?: FailureClass
   recordingResult?: RecordingResult
+  endedScrambled?: boolean
+  leftScrambled?: boolean
   retry?: string
   instead: RecordedInstead[]
   occurredLabel: string
@@ -216,6 +218,8 @@ function toOutcome(
       ? shapeFor(TUNE_FAILURES, one.tuneFailure, undefined)
       : undefined,
     recordingResult: one.recordingOutcome ?? undefined,
+    endedScrambled: one.faults.includes('scramblingUnresolved'),
+    leftScrambled: one.leftScrambled,
     retry: retryOf(one),
     instead: one.recordedInstead.map((id) => named.get(id) ?? { key: id }),
     occurredLabel: formatMoment(one.occurredAt),

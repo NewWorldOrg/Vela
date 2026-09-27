@@ -80,7 +80,7 @@ export function RecordingRecord({
           label="受信品質"
           plain
           main={
-            d.quality.measured ? (
+            d.quality.measured || d.leftScrambled ? (
               <QualityChip recording={d} />
             ) : (
               <Badge variant="mute" className="font-bold tracking-normal">

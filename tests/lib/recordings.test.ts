@@ -101,23 +101,21 @@ function detail(over: Partial<RecordingDetail> = {}) {
   return over as RecordingDetail
 }
 
-test('a recording the API graded as scrambled beyond watching is one that will not play', () => {
+test('a recording the API says is left scrambled is one that will not play', () => {
+  assert.equal(isLeftScrambled(detail({ leftScrambled: true })), true)
+})
+
+test('a recording descrambled since is not scrambled, however its scramble was graded', () => {
   assert.equal(
-    isLeftScrambled(detail({ scrambleQuality: 'mayNotBeWatchable' })),
-    true,
+    isLeftScrambled(
+      detail({ leftScrambled: false, scrambleQuality: 'mayNotBeWatchable' }),
+    ),
+    false,
   )
 })
 
-test('a scramble level below that, unmeasured, unknown or absent is not one of them', () => {
-  for (const level of [
-    'good',
-    'warning',
-    'unmeasured',
-    'unreachable' as RecordingDetail['scrambleQuality'],
-    undefined,
-  ] as const) {
-    assert.equal(isLeftScrambled(detail({ scrambleQuality: level })), false)
-  }
+test('a recording the API says nothing about is not one of them', () => {
+  assert.equal(isLeftScrambled(detail({})), false)
 })
 
 test('the share of scrambled packets is never the judge, however large it is', () => {
@@ -125,7 +123,7 @@ test('the share of scrambled packets is never the judge, however large it is', (
     isLeftScrambled(
       detail({
         scrambledShare: 5_042_768 / 5_302_549,
-        scrambleQuality: 'good',
+        leftScrambled: false,
       }),
     ),
     false,
@@ -159,15 +157,24 @@ test('a recording still being written, one that failed, or one whose file is gon
   assert.equal(playsInBrowser(row({ fileMissing: true })), false)
 })
 
-test('a recording whose scramble level may not be watchable does not, whatever its outcome says', () => {
+test('a recording left scrambled does not, whatever its outcome says', () => {
   assert.equal(
     playsInBrowser(
       row({
-        scrambleQuality: 'mayNotBeWatchable',
+        leftScrambled: true,
         quality: { measured: true, level: 'mayNotBeWatchable' },
       }),
     ),
     false,
+  )
+})
+
+test('a recording descrambled since plays, though its scramble was graded unwatchable', () => {
+  assert.equal(
+    playsInBrowser(
+      row({ leftScrambled: false, scrambleQuality: 'mayNotBeWatchable' }),
+    ),
+    true,
   )
 })
 

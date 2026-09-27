@@ -3154,6 +3154,9 @@ export interface components {
       encode: components['schemas']['RecordingEncodeResponder']
       unfinishedDeletion:
         null | components['schemas']['RecordingUnfinishedDeletionResponder']
+      leftScrambled: boolean
+      /** Format: date-time */
+      descrambledAt: null | string
     }
     /** @enum {string} */
     RecordingSort: 'startedAt' | 'programmeStartsAt'
@@ -3333,6 +3336,9 @@ export interface components {
       occurredAt: string
       retryResult: null | components['schemas']['RetryResult']
       gaveUpBecause: null | components['schemas']['RetryGiveUp']
+      leftScrambled: boolean
+      /** Format: date-time */
+      descrambledAt: null | string
     }
     ReservationProgrammeResponder: {
       id: string

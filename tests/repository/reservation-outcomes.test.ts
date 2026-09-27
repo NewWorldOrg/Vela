@@ -68,6 +68,11 @@ const outcome = (over: Over = {}) => ({
   priority: 10,
   ruleId: null,
   occurredAt: '2026-08-27T13:01:00Z',
+  faults: [],
+  retryResult: null,
+  gaveUpBecause: null,
+  leftScrambled: false,
+  descrambledAt: null,
   ...over,
 })
 
@@ -285,6 +290,47 @@ test('録画から報告された結果は、台帳が書いたとおりに残�
   assert.equal(row.tuneFailure, undefined)
   assert.equal(row.origin, '手動')
   assert.equal(row.ruleName, undefined)
+})
+
+test('全編そろってもスクランブルが解けずに残った行は、その理由と、いまも残っていることを持つ', async () => {
+  standing([
+    outcome({
+      recordingOutcome: 'complete',
+      faults: ['scramblingUnresolved'],
+      leftScrambled: true,
+    }),
+  ])
+
+  const [row] = (await listReservationOutcomes({}, NOW)).items
+
+  assert.equal(row.recordingResult, 'complete')
+  assert.equal(row.endedScrambled, true)
+  assert.equal(row.leftScrambled, true)
+})
+
+test('あとから解除された行は、書かれた理由を持ったまま、いまは残っていないと読める', async () => {
+  standing([
+    outcome({
+      recordingOutcome: 'truncated',
+      faults: ['shortOfTheWindow', 'scramblingUnresolved'],
+      leftScrambled: false,
+      descrambledAt: '2026-08-28T03:00:00Z',
+    }),
+  ])
+
+  const [row] = (await listReservationOutcomes({}, NOW)).items
+
+  assert.equal(row.endedScrambled, true)
+  assert.equal(row.leftScrambled, false)
+})
+
+test('スクランブルを名指さない行は、そのどちらも持たない', async () => {
+  standing([outcome({ faults: ['diskExhausted'] })])
+
+  const [row] = (await listReservationOutcomes({}, NOW)).items
+
+  assert.equal(row.endedScrambled, false)
+  assert.equal(row.leftScrambled, false)
 })
 
 test('代わりに録られた予約は、番組名で名指される', async () => {
