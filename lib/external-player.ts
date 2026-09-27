@@ -6,6 +6,7 @@ import type { PlaybackPlan } from '@/repository/videos'
 import {
   BOTH_SOURCES,
   sourceLabel,
+  THE_ARTEFACT,
   THE_RECORDING_ITSELF,
   type PlaybackSource,
 } from '@/repository/playback-sources'
@@ -78,4 +79,10 @@ export function liveHandover(
     user: '',
     take: () => take(networkId, serviceId),
   }
+}
+
+export function airPlayCanBeHanded(
+  plan: Pick<PlaybackPlan, 'source' | 'alternative'>,
+): boolean {
+  return plan.source === THE_ARTEFACT || plan.alternative === THE_ARTEFACT
 }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  airPlayCanBeHanded,
   liveHandover,
   recordingHandover,
   recordingHandoverChoices,
@@ -223,4 +224,21 @@ test('a session that has lapsed carries no saying, and builds no URL either', as
 
   assert.deepEqual(write, { state: 'unauthenticated' })
   assert.deepEqual(built, [])
+})
+
+test('AirPlay is handed a recording whose plan names the artefact, whichever one is playing', () => {
+  assert.equal(
+    airPlayCanBeHanded({ source: 'artefact', alternative: 'recording' }),
+    true,
+  )
+  assert.equal(
+    airPlayCanBeHanded({ source: 'recording', alternative: 'artefact' }),
+    true,
+  )
+  assert.equal(airPlayCanBeHanded({ source: 'artefact' }), true)
+})
+
+test('AirPlay is not handed a recording with no artefact to give it', () => {
+  assert.equal(airPlayCanBeHanded({ source: 'recording' }), false)
+  assert.equal(airPlayCanBeHanded({}), false)
 })

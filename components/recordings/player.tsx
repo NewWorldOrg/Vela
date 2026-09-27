@@ -84,7 +84,7 @@ import {
 import { capturedAt, capturedName } from '@/lib/capture-name'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
-import { recordingHandover } from '@/lib/external-player'
+import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
 import { AirPlayButton } from '@/components/recordings/external-player'
 import {
   askWhyItWouldNotPlay,
@@ -946,15 +946,17 @@ export function Player({
                 </button>
               )}
               <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
-                <PlayerTip name="AirPlay" container={shell}>
-                  <AirPlayButton
-                    handover={recordingHandover(d.id, onTakeTicket)}
-                    video={video}
-                    onRefused={(message) =>
-                      setSaid({ text: message, tone: 'err' })
-                    }
-                  />
-                </PlayerTip>
+                {airPlayCanBeHanded(plan) && (
+                  <PlayerTip name="AirPlay" container={shell}>
+                    <AirPlayButton
+                      handover={recordingHandover(d.id, onTakeTicket)}
+                      video={video}
+                      onRefused={(message) =>
+                        setSaid({ text: message, tone: 'err' })
+                      }
+                    />
+                  </PlayerTip>
+                )}
                 <PlayerTip name="字幕" container={shell}>
                   <button
                     type="button"
