@@ -289,10 +289,6 @@
       --animate-scrim-out: none;
       --animate-surface-in: none;
       --animate-surface-out: none;
-      --animate-player-burst: player-shown 500ms step-end forwards;
-      --animate-player-bezel-text: player-shown 500ms step-end forwards;
-      --animate-player-seek-flash: player-shown 700ms step-end forwards;
-      --animate-player-seek-arrow: none;
     }
   }
 
@@ -316,10 +312,6 @@
     --animate-scrim-out: none;
     --animate-surface-in: none;
     --animate-surface-out: none;
-    --animate-player-burst: player-shown 500ms step-end forwards;
-    --animate-player-bezel-text: player-shown 500ms step-end forwards;
-    --animate-player-seek-flash: player-shown 700ms step-end forwards;
-    --animate-player-seek-arrow: none;
   }
 }
 
@@ -498,6 +490,8 @@
   --animate-player-bezel-text: player-bezel-text 500ms linear forwards;
   --animate-player-seek-flash: player-seek-flash 700ms linear forwards;
   --animate-player-seek-arrow: player-seek-arrow 700ms linear infinite;
+  --animate-player-shown-briefly: player-shown 500ms step-end forwards;
+  --animate-player-shown-longer: player-shown 700ms step-end forwards;
 }
 
 @keyframes player-burst {

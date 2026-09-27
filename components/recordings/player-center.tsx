@@ -51,14 +51,14 @@ export function PlayerCenter({
           {bezel.was === 'volume' && (
             <span
               data-slot="player-center-bezel-text"
-              className="absolute inset-x-0 top-[10%] animate-player-bezel-text text-center"
+              className="absolute inset-x-0 top-[10%] animate-player-bezel-text text-center still:animate-player-shown-briefly"
             >
               <span className="inline-block rounded-[3px] bg-black/50 px-5 py-2.5 font-code text-h1 leading-none font-medium text-white tabular-nums">
                 {Math.floor(bezel.level * 100)}%
               </span>
             </span>
           )}
-          <span className="absolute top-1/2 left-1/2 -mt-[calc(26rem/16)] -ml-[calc(26rem/16)] flex size-[calc(52rem/16)] animate-player-burst items-center justify-center rounded-full bg-black/50 text-white">
+          <span className="absolute top-1/2 left-1/2 -mt-[calc(26rem/16)] -ml-[calc(26rem/16)] flex size-[calc(52rem/16)] animate-player-burst items-center still:animate-player-shown-briefly justify-center rounded-full bg-black/50 text-white">
             {bezel.was === 'volume' ? (
               <VolumeIcon level={bezel.level} className="size-8" />
             ) : bezel.was === 'play' ? (
