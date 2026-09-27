@@ -7,9 +7,11 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/a-fold-comes-with-the-page.test.ts',
   'tests/app/api/events/route.test.ts',
   'tests/app/api/services/logo/route.test.ts',
   'tests/app/api/videos/route.test.ts',
+  'tests/app/the-curtain-comes-with-the-page.test.ts',
   'tests/app/the-system-theme-needs-no-script.test.ts',
   'tests/components/a-face-keeps-its-words-while-it-closes.test.ts',
   'tests/components/every-weight-that-is-drawn-is-loaded.test.ts',
@@ -39,6 +41,7 @@ const THE_SUITE = [
   'tests/lib/capture-name.test.ts',
   'tests/lib/clock.test.ts',
   'tests/lib/collection.test.ts',
+  'tests/lib/curtain.test.ts',
   'tests/lib/device.test.ts',
   'tests/lib/dismiss.test.ts',
   'tests/lib/encode.test.ts',
@@ -77,6 +80,7 @@ const THE_SUITE = [
   'tests/lib/search-condition.test.ts',
   'tests/lib/signed-out.test.ts',
   'tests/lib/state-terms.test.ts',
+  'tests/lib/stored-flag.test.ts',
   'tests/lib/system-terms.test.ts',
   'tests/lib/theme.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',

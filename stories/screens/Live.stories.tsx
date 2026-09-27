@@ -30,8 +30,13 @@ import {
   LIVE_PROFILE_FIXTURES_SOFTWARE,
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
-import { CHANNELS_FOLDED_KEY } from '@/hooks/useChannelsFolded'
-import { LIVE_SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useLiveSubChannelsFolded'
+import {
+  LIVE_CHANNELS_FOLDED,
+  LIVE_SUB_CHANNELS_FOLDED,
+  cookieIn,
+  forgettingCookie,
+  storingCookie,
+} from '@/lib/stored-flag'
 import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
@@ -463,8 +468,8 @@ const meta = {
     opened.length = 0
     probed.length = 0
     theProbe.answers = undefined
-    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = forgettingCookie(LIVE_CHANNELS_FOLDED)
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
   },
 } satisfies Meta<typeof LiveView>
 
@@ -625,9 +630,9 @@ export const 副チャンネルを畳んでいる: Story = {
     await expect(
       canvas.getByRole('button', { name: /湾岸放送2/ }),
     ).toBeVisible()
-    await expect(
-      window.localStorage.getItem(LIVE_SUB_CHANNELS_FOLDED_KEY),
-    ).toBe('folded')
+    await expect(cookieIn(document.cookie, LIVE_SUB_CHANNELS_FOLDED)).toBe(
+      'folded',
+    )
 
     await userEvent.click(fold)
     await expect(fold).toHaveAttribute('aria-pressed', 'true')
@@ -1954,9 +1959,7 @@ export const 一覧を畳む: Story = {
     await userEvent.click(fold)
 
     await expect(fold).toHaveAttribute('aria-expanded', 'false')
-    await expect(window.localStorage.getItem(CHANNELS_FOLDED_KEY)).toBe(
-      'folded',
-    )
+    await expect(cookieIn(document.cookie, LIVE_CHANNELS_FOLDED)).toBe('folded')
 
     await waitFor(async () => {
       await expect(canvas.queryByRole('button', { name: '地上波' })).toBeNull()
@@ -1976,10 +1979,11 @@ export const 一覧を畳む: Story = {
 }
 
 export const 畳んだまま開く: Story = {
+  args: { channelsFolded: true },
   beforeEach: () => {
     opened.length = 0
-    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = storingCookie(LIVE_CHANNELS_FOLDED, 'folded')
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1995,14 +1999,18 @@ export const 畳んだまま開く: Story = {
 }
 
 export const 選局前は畳めない: Story = {
-  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  args: {
+    screen: UNCHOSEN,
+    openSocket: nothingToWatch,
+    channelsFolded: true,
+  },
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
   beforeEach: () => {
     opened.length = 0
-    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = storingCookie(LIVE_CHANNELS_FOLDED, 'folded')
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -2027,10 +2035,11 @@ export const 一覧を開いたまま: Story = {
 }
 
 export const 一覧が開くあいだ: Story = {
+  args: { channelsFolded: true },
   beforeEach: () => {
     opened.length = 0
-    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = storingCookie(LIVE_CHANNELS_FOLDED, 'folded')
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -2131,8 +2140,8 @@ export const 畳みかけて開き直す: Story = {
 export const 動きを減らす設定では一息で畳む: Story = {
   beforeEach: () => {
     opened.length = 0
-    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = forgettingCookie(LIVE_CHANNELS_FOLDED)
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
 
     return askedForLessMotion()
   },
@@ -2161,8 +2170,8 @@ export const 動きを減らす設定では一息で畳む: Story = {
 export const 表示の設定で動きを切っていると一息で畳む: Story = {
   beforeEach: () => {
     opened.length = 0
-    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = forgettingCookie(LIVE_CHANNELS_FOLDED)
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
     document.documentElement.dataset.motion = 'still'
 
     return () => {
@@ -2187,8 +2196,8 @@ export const 表示の設定で動きを切っていると一息で畳む: Story
 export const 動きを入に選んでいれば端末が減らしていても流れて畳む: Story = {
   beforeEach: () => {
     opened.length = 0
-    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = forgettingCookie(LIVE_CHANNELS_FOLDED)
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
     document.documentElement.dataset.motion = 'moves'
     const restore = askedForLessMotion()
 
@@ -2213,11 +2222,11 @@ export const 動きを入に選んでいれば端末が減らしていても流�
 }
 
 export const 長い一覧でも畳みの長さは変わらない: Story = {
-  args: { screen: MANY },
+  args: { screen: MANY, channelsFolded: true },
   beforeEach: () => {
     opened.length = 0
-    window.localStorage.setItem(CHANNELS_FOLDED_KEY, 'folded')
-    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.cookie = storingCookie(LIVE_CHANNELS_FOLDED, 'folded')
+    document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)

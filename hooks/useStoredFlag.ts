@@ -2,65 +2,80 @@
 
 import { useCallback, useSyncExternalStore } from 'react'
 
+import { type FlagSpelling, cookieIn, storingCookie } from '@/lib/stored-flag'
+
 const CHANGED = 'vela-stored-flag-changed'
+
+const ACROSS_TABS = 'vela-stored-flag'
 
 const unstored = new Map<string, boolean>()
 
-export interface FlagSpelling {
-  yes: string
-  no: string
-}
+function tellTheOtherTabs(key: string): void {
+  if (typeof BroadcastChannel !== 'function') {
+    return
+  }
 
-function unset(): boolean {
-  return false
+  const channel = new BroadcastChannel(ACROSS_TABS)
+
+  channel.postMessage(key)
+  channel.close()
 }
 
 export function useStoredFlag(
   key: string,
   spelling: FlagSpelling,
+  stored: boolean,
 ): [boolean, (next: boolean) => void] {
   const subscribe = useCallback(
     (onChange: () => void) => {
-      function fromAnotherTab(event: StorageEvent) {
-        if (event.key === key || event.key === null) {
+      const otherTabs =
+        typeof BroadcastChannel === 'function'
+          ? new BroadcastChannel(ACROSS_TABS)
+          : null
+
+      function fromAnotherTab(event: MessageEvent) {
+        if (event.data === key) {
           onChange()
         }
       }
 
       window.addEventListener(CHANGED, onChange)
-      window.addEventListener('storage', fromAnotherTab)
+      otherTabs?.addEventListener('message', fromAnotherTab)
 
       return () => {
         window.removeEventListener(CHANGED, onChange)
-        window.removeEventListener('storage', fromAnotherTab)
+        otherTabs?.close()
       }
     },
     [key],
   )
 
   const read = useCallback(() => {
-    try {
-      return window.localStorage.getItem(key) === spelling.yes
-    } catch (error) {
-      console.warn(`[useStoredFlag] read failed for ${key}`, error)
+    const said = cookieIn(document.cookie, key)
 
-      return unstored.get(key) ?? false
-    }
-  }, [key, spelling.yes])
+    return said === undefined
+      ? (unstored.get(key) ?? stored)
+      : said === spelling.yes
+  }, [key, spelling.yes, stored])
 
-  const on = useSyncExternalStore(subscribe, read, unset)
+  const readOnTheServer = useCallback(() => stored, [stored])
+
+  const on = useSyncExternalStore(subscribe, read, readOnTheServer)
 
   const set = useCallback(
     (next: boolean) => {
-      try {
-        window.localStorage.setItem(key, next ? spelling.yes : spelling.no)
-      } catch (error) {
-        console.warn(`[useStoredFlag] write failed for ${key}`, error)
+      const value = next ? spelling.yes : spelling.no
+
+      document.cookie = storingCookie(key, value)
+
+      if (cookieIn(document.cookie, key) !== value) {
+        console.warn(`[useStoredFlag] the cookie was not kept for ${key}`)
 
         unstored.set(key, next)
       }
 
       window.dispatchEvent(new Event(CHANGED))
+      tellTheOtherTabs(key)
     },
     [key, spelling.yes, spelling.no],
   )

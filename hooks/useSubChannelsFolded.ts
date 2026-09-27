@@ -1,11 +1,10 @@
 'use client'
 
+import { FOLD_SPELLING, GUIDE_SUB_CHANNELS_FOLDED } from '@/lib/stored-flag'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 
-export const SUB_CHANNELS_FOLDED_KEY = 'vela-guide-sub-channels-folded'
-
-const SPELLING = { yes: 'folded', no: 'open' }
-
-export function useSubChannelsFolded(): [boolean, (next: boolean) => void] {
-  return useStoredFlag(SUB_CHANNELS_FOLDED_KEY, SPELLING)
+export function useSubChannelsFolded(
+  stored: boolean,
+): [boolean, (next: boolean) => void] {
+  return useStoredFlag(GUIDE_SUB_CHANNELS_FOLDED, FOLD_SPELLING, stored)
 }

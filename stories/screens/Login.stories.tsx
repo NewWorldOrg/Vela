@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
+import { CURTAIN_COOKIE, CURTAIN_FORGETTING } from '@/lib/curtain'
 import { oidcStartHref } from '@/repository/auth'
 import { LoginView } from '@/components/login/login-page'
 import { groundOf } from '@/stories/ground-of'
@@ -192,7 +193,7 @@ export const 失敗したうえにIDプロバイダにも届かないとき: Sto
 export const SSOで入ると最初の画面で幕が上がる: Story = {
   args: 通常.args,
   play: async ({ canvasElement }) => {
-    window.sessionStorage.removeItem('vela.curtain')
+    document.cookie = CURTAIN_FORGETTING
     canvasElement.addEventListener('click', (event) => event.preventDefault(), {
       capture: true,
       once: true,
@@ -202,7 +203,7 @@ export const SSOで入ると最初の画面で幕が上がる: Story = {
       within(canvasElement).getByRole('link', { name: 'SSO でサインイン' }),
     )
 
-    await expect(window.sessionStorage.getItem('vela.curtain')).toBe('raise')
-    window.sessionStorage.removeItem('vela.curtain')
+    await expect(document.cookie).toContain(`${CURTAIN_COOKIE}=raise`)
+    document.cookie = CURTAIN_FORGETTING
   },
 }

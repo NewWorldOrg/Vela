@@ -28,7 +28,11 @@ import {
   NOW_MIN,
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
-import { SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useSubChannelsFolded'
+import {
+  GUIDE_SUB_CHANNELS_FOLDED,
+  forgettingCookie,
+  storingCookie,
+} from '@/lib/stored-flag'
 import { afterTheArrival, fastForward } from '@/stories/after-the-arrival'
 import {
   A_FULL_DAY_CHANNELS,
@@ -80,11 +84,7 @@ const meta = {
   },
   decorators: [inTheApp],
   beforeEach: () => {
-    try {
-      window.localStorage.removeItem(SUB_CHANNELS_FOLDED_KEY)
-    } catch (error) {
-      console.warn('[Guide.stories] the fold could not be cleared', error)
-    }
+    document.cookie = forgettingCookie(GUIDE_SUB_CHANNELS_FOLDED)
   },
 } satisfies Meta<typeof GuideView>
 
@@ -1566,6 +1566,25 @@ export const 副チャンネルを畳んでいる: Story = {
 
     await expect(getComputedStyle(back).animationName).toBe('item')
     await expect(getComputedStyle(kept).animationName).toBe('none')
+  },
+}
+
+export const 畳んだまま開く: Story = {
+  args: { guide: SPLIT_LINE_UP_GUIDE, subChannelsFolded: true },
+  parameters: { screen: A_WIDE_SCREEN },
+  beforeEach: () => {
+    document.cookie = storingCookie(GUIDE_SUB_CHANNELS_FOLDED, 'folded')
+  },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const columns = columnsOf(canvasElement)
+
+    await expect(columns.join(' ')).not.toContain(SPLIT_REPEATING_IT.name)
+    await expect(columns).toHaveLength(A_STATION_AND_ITS_SPLITS.length - 1)
+    await expect(
+      within(canvasElement).getByRole('button', { name: '副チャンネル' }),
+    ).toHaveAttribute('aria-pressed', 'false')
   },
 }
 

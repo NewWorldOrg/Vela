@@ -47,6 +47,7 @@ export function GuideView({
   onCancel,
   onRevise,
   onReadExtras,
+  subChannelsFolded = false,
 }: {
   guide: GuideResult
   collection: CollectionStatus
@@ -64,13 +65,14 @@ export function GuideView({
     id: string,
     channelId: string,
   ) => Promise<ProgramExtras | undefined>
+  subChannelsFolded?: boolean
 }) {
   const router = useRouter()
   const [, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [selected, setSelected] = useState<Program | null>(null)
-  const [folded, fold] = useSubChannelsFolded()
+  const [folded, fold] = useSubChannelsFolded(subChannelsFolded)
   const foldable = useMemo(
     () => foldsAColumn(guide.channels, guide.programs),
     [guide.channels, guide.programs],

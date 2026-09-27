@@ -53,6 +53,8 @@ export function LiveView({
   askBacklog,
   startupDeadlineMs,
   takeCapture,
+  channelsFolded = false,
+  subChannelsFolded = false,
 }: {
   screen: LiveScreen
   onTakeTicket: TakeLiveTicket
@@ -62,6 +64,8 @@ export function LiveView({
   askBacklog?: AskBacklog
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
+  channelsFolded?: boolean
+  subChannelsFolded?: boolean
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -95,9 +99,9 @@ export function LiveView({
   )
 
   const watching = screen.watching
-  const [away, remember] = useChannelsFolded()
+  const [away, remember] = useChannelsFolded(channelsFolded)
   const { motion, fold } = useFoldingChannels(away, remember)
-  const [subsFolded, foldSubs] = useLiveSubChannelsFolded()
+  const [subsFolded, foldSubs] = useLiveSubChannelsFolded(subChannelsFolded)
   const foldable = foldsAChannel(screen.channels, watching?.channel.id)
   const channels =
     subsFolded && foldable
