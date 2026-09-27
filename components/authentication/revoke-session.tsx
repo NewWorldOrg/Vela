@@ -69,7 +69,7 @@ export function RevokeSession({
               <CloseIcon className="size-[calc(19rem/16)] text-coral" />
               このセッションを失効させます
             </AlertDialogTitle>
-            <AlertDialogDescription className="sr-only">
+            <AlertDialogDescription>
               {session.device.name}のセッションを失効させます
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -2,11 +2,12 @@ import type { ComponentProps } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
-import { pressable, still, tactile } from '@/components/vela/tactile'
+import { iconTilt, pressable, still, tactile } from '@/components/vela/tactile'
 
 const iconButtonVariants = cva(
   cn(
     "tap-target inline-flex shrink-0 items-center justify-center rounded-full outline-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-[calc(15rem/16)]",
+    iconTilt,
     pressable,
     still,
   ),
@@ -20,7 +21,7 @@ const iconButtonVariants = cva(
           tactile,
         ),
         quiet:
-          'border border-edge bg-transparent text-ink-2 transition-[background-color,color,transform] duration-150 ease-toy hover:bg-surface-2 hover:text-ink hover:-rotate-6 focus-visible:shadow-ring disabled:hover:bg-transparent disabled:hover:text-ink-2',
+          'border border-edge bg-transparent text-ink-2 transition-[background-color,color] duration-150 ease-toy hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring disabled:hover:bg-transparent disabled:hover:text-ink-2',
       },
       size: {
         sm: "size-[calc(27rem/16)] [&_svg:not([class*='size-'])]:size-[calc(13rem/16)]",

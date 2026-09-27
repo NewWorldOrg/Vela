@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react'
 
-import { delayOf } from '@/lib/arrival'
+import { MOVED_BY_HAND, delayOf } from '@/lib/arrival'
 import {
   GUTTER_PX,
   gridMinWidthOf,
@@ -43,8 +43,6 @@ const COLUMN_FLEX = '1 1 0'
 const UNSCHEDULED_LABEL_PX = 52
 
 const NOTHING_CARRIED: Program[] = []
-
-const HANDS = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const
 
 const NOW_LABEL_AFTER_OPENING_MS = 420
 
@@ -270,12 +268,12 @@ export function GuideGrid({
       return
     }
 
-    for (const input of HANDS) {
+    for (const input of MOVED_BY_HAND) {
       window.addEventListener(input, markDone, { capture: true, passive: true })
     }
 
     return () => {
-      for (const input of HANDS) {
+      for (const input of MOVED_BY_HAND) {
         window.removeEventListener(input, markDone, { capture: true })
       }
     }

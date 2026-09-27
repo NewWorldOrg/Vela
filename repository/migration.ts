@@ -1,5 +1,6 @@
 import type { Route } from 'next'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { formatMoment, formatSpanToTheMillisecond } from '@/lib/format'
 import {
   NOT_YET_IN_THIS_BUILD,
@@ -81,10 +82,6 @@ const MOST_PER_PAGE = 500
 
 const NOTHING_IN_THIS_GROUP = '該当なし'
 
-const NO_REHEARSAL = '—'
-
-const NOTHING_WAS_MEASURED = '—'
-
 interface PopulationShape {
   name: string
   source: string
@@ -117,7 +114,7 @@ const POPULATION_SHAPES: Record<Population, PopulationShape> = {
 
 const POPULATION_NOT_YET_SHAPED: PopulationShape = {
   name: NOT_YET_IN_THIS_BUILD,
-  source: '—',
+  source: EMPTY_VALUE,
   unit: '件',
 }
 
@@ -239,7 +236,7 @@ function toRun(run: RunResponder): MigrationRun {
     source: whatItCameFrom(run.source),
     lastRehearsal: run.lastRehearsalFinishedAt
       ? formatMoment(run.lastRehearsalFinishedAt)
-      : NO_REHEARSAL,
+      : EMPTY_VALUE,
   }
 }
 
@@ -299,7 +296,7 @@ function toDetail(one: DetailResponder): MigrationNotTakenRow {
       one.population,
       POPULATION_NOT_YET_SHAPED,
     ).name,
-    fact: sizeOf(one) ?? NOTHING_WAS_MEASURED,
+    fact: sizeOf(one) ?? EMPTY_VALUE,
   }
 }
 

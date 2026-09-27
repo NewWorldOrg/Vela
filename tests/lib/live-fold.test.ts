@@ -58,7 +58,7 @@ test('nothing but transform moves, and nothing moves at all when less is asked f
     assert.match(classes, /transition-\[translate\]/)
     assert.match(classes, /duration-300/)
     assert.match(classes, /ease-fold/)
-    assert.match(classes, /motion-reduce:transition-none/)
+    assert.match(classes, /still:transition-none/)
     assert.doesNotMatch(classes, /opacity/)
   }
 })
@@ -112,6 +112,6 @@ test('the column runs the length the bands run, on the one curve', () => {
     assert.match(classes, /transition-\[width\]/)
     assert.match(classes, /duration-300/)
     assert.match(classes, /ease-fold/)
-    assert.match(classes, /motion-reduce:transition-none/)
+    assert.match(classes, /still:transition-none/)
   }
 })

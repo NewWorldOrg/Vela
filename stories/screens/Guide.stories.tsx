@@ -29,7 +29,7 @@ import {
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
 import { SUB_CHANNELS_FOLDED_KEY } from '@/hooks/useSubChannelsFolded'
-import { afterTheArrival } from '@/stories/after-the-arrival'
+import { afterTheArrival, fastForward } from '@/stories/after-the-arrival'
 import {
   A_FULL_DAY_CHANNELS,
   A_FULL_DAY_PROGRAMS,
@@ -392,6 +392,7 @@ const A_LAPTOP = { width: 1280, height: 720 }
 async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
   await waitFor(
     () => {
+      fastForward(canvasElement.ownerDocument)
       expect(
         canvasElement.querySelector('[data-guide-column].invisible'),
       ).toBeNull()

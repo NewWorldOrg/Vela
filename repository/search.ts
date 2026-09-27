@@ -14,6 +14,7 @@ import {
   SEARCH_SYSTEM_OF_KIND,
   searchProgrammes,
 } from '@/repository/programmes'
+import type { StationLogo } from '@/repository/channels'
 import type { Genre, GuideChannel } from '@/repository/programs'
 import {
   calendarDateOf,
@@ -30,6 +31,7 @@ export interface SearchHit {
   id: string
   channelName: string
   channelNo?: string
+  channelLogo?: StationLogo
   dayLabel: string
   startLabel: string
   endLabel?: string
@@ -83,6 +85,7 @@ function toHit(
     id: programme.id,
     channelName: channel?.name || channelId,
     channelNo: channel?.no,
+    channelLogo: channel?.logo,
     dayLabel: dayLabel(calendarDateOf(startsAt)),
     startLabel: clockLabel(startsAt),
     endLabel: programme.endsAt

@@ -22,7 +22,6 @@ hooks/              画面をまたいで使うフック
 stories/            Storybook
 tests/              テスト。lib と repository は対象のパスをそのまま写す
 scripts/            生成物の検証、疎通確認
-types/              共通の型
 ```
 
 画面は `app/` → `components/{領域}/` → `repository/` → `repository/client/` の順に重なる。

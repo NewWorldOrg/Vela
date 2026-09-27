@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { SeekArrowGlyph } from '@/components/vela/icons'
 
 export interface SeekFlash {
   way: 'back' | 'forward'
@@ -28,25 +29,16 @@ export function PlayerSeekFlash({ flash }: { flash?: SeekFlash }) {
     >
       <span className={cn('flex', back && 'rotate-180')}>
         {[0, 1, 2].map((nth) => (
-          <Arrow key={nth} nth={back ? 2 - nth : nth} />
+          <SeekArrowGlyph
+            key={nth}
+            className="-mx-px animate-player-seek-arrow text-white"
+            style={{ animationDelay: `${(back ? 2 - nth : nth) * 67}ms` }}
+          />
         ))}
       </span>
       <span className="font-code text-sub leading-none font-medium text-white tabular-nums">
         {flash.seconds}秒
       </span>
     </div>
-  )
-}
-
-function Arrow({ nth }: { nth: number }) {
-  return (
-    <svg
-      viewBox="0 0 11 20"
-      fill="currentColor"
-      className="-mx-px h-5 w-[calc(11rem/16)] animate-player-seek-arrow text-white"
-      style={{ animationDelay: `${nth * 67}ms` }}
-    >
-      <path d="M0.6 0.4 10.4 10 0.6 19.6Z" />
-    </svg>
   )
 }

@@ -18,15 +18,7 @@ mock.module('@/repository/client/carina', {
 const { AERIAL_PROGRAM_FIXTURES, PROGRAM_DETAIL_FIXTURES, PROGRAM_FIXTURES } =
   await import('@/repository/programs.fixtures')
 
-const SEARCHED = [
-  'app',
-  'components',
-  'hooks',
-  'lib',
-  'repository',
-  'stories',
-  'types',
-]
+const SEARCHED = ['app', 'components', 'hooks', 'lib', 'repository', 'stories']
 
 const GENERATED = 'repository/client'
 

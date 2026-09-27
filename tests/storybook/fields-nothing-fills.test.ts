@@ -7,7 +7,7 @@ import ts from 'typescript'
 
 const PUBLISHED = ['repository']
 
-const PRODUCTION = ['app', 'components', 'hooks', 'lib', 'repository', 'types']
+const PRODUCTION = ['app', 'components', 'hooks', 'lib', 'repository']
 
 const GENERATED = 'repository/client'
 

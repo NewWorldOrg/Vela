@@ -39,7 +39,7 @@ export const TUNERS: TunerResult = {
       },
       state: 'ok',
       stateLabel: '正常',
-      lastService: { at: '08/07 20:58', ago: '6 分前' },
+      lastService: { at: '08/07 20:58' },
     },
     {
       id: 'adapter3',
@@ -50,7 +50,7 @@ export const TUNERS: TunerResult = {
       session: { label: 'EPG 収集', tone: 'epg', code: '53ch' },
       state: 'ok',
       stateLabel: '正常',
-      lastService: { at: '08/07 20:40', ago: '24 分前' },
+      lastService: { at: '08/07 20:40' },
     },
     {
       id: 'adapter0',
@@ -61,7 +61,7 @@ export const TUNERS: TunerResult = {
       state: 'warn',
       stateLabel: '警告',
       stateSub: 'BS のサービスが 26 時間 0 件',
-      lastService: { at: '08/06 19:02', ago: '26 時間前' },
+      lastService: { at: '08/06 19:02' },
       lnb: 'オフ(既定)',
     },
     {

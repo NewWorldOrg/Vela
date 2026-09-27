@@ -1,10 +1,9 @@
 import type { Preview } from '@storybook/nextjs'
 import { useEffect } from 'react'
 import '../app/globals.css'
-import {
-  ThemeProvider,
-  type ThemePreference,
-} from '../components/theme/ThemeProvider'
+import { ThemeProvider } from '../components/theme/ThemeProvider'
+import type { ThemePreference } from '../lib/theme'
+import { afterTheArrival } from '../stories/after-the-arrival'
 
 const REQUESTED_THEME =
   typeof location === 'undefined'
@@ -60,6 +59,9 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+  },
+  afterEach: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
   },
   decorators: [
     (Story, context) => {

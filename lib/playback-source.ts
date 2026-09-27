@@ -3,8 +3,11 @@ import {
   THE_ARTEFACT,
   type PlaybackSource,
 } from '@/repository/playback-sources'
+import { wholeSecond } from '@/lib/playback-resume'
 
 export const SOURCE_ASKED_AS = 'source'
+
+export const SECOND_ASKED_AS = 'at'
 
 export function theSourceAsked(
   asked: string | string[] | undefined,
@@ -16,8 +19,13 @@ export function whereThatSourceOpens(
   pathname: string,
   asked: string,
   source: PlaybackSource,
+  watchingAt?: number,
 ): string {
   const params = new URLSearchParams(asked)
+
+  if (watchingAt !== undefined) {
+    params.set(SECOND_ASKED_AS, String(wholeSecond(watchingAt)))
+  }
 
   if (source === THE_ARTEFACT) {
     params.delete(SOURCE_ASKED_AS)

@@ -213,8 +213,10 @@ function measureTapTargets(): Findings {
     }
 
     const reach = (dx: number, dy: number) => {
-      const limit =
-        Math.ceil(Math.max(TAP, dx === 0 ? box.height : box.width) / 2) + 2
+      const limit = Math.min(
+        Math.ceil(Math.max(TAP, dx === 0 ? box.height : box.width) / 2) + 2,
+        TAP + 1,
+      )
       let far = 0
       for (let step = 1; step <= limit; step++) {
         if (

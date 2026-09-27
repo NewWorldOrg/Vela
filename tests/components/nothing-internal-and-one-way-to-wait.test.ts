@@ -247,3 +247,33 @@ test('the kinds of broadcast are spelt from the one table', async () => {
     )
   }
 })
+
+const THE_LISTS_THAT_SWAP = [
+  'components/library/library-page.tsx',
+  'components/reservations/reservations-page.tsx',
+  'components/reservations/outcomes-page.tsx',
+  'components/search/search-page.tsx',
+  'components/encode/jobs-navigation.tsx',
+]
+
+test('a list that is being swapped dims and stops in the one shape', async () => {
+  for (const file of THE_LISTS_THAT_SWAP) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.match(
+      source,
+      /waitsWhile\(|\bwaiting=\{/,
+      `${file} swaps its list under a transition and leaves the old one ` +
+        'pressable while the new one is on its way',
+    )
+  }
+
+  const spelled = (await everySource())
+    .filter(({ file }) => file !== THE_WAITING)
+    .filter(({ source }) =>
+      /waiting && 'opacity-60'|inert=\{waiting/.test(source),
+    )
+    .map(({ file }) => file)
+
+  assert.deepEqual(spelled, [], 'a list spells the waiting shape of its own')
+})

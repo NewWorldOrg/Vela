@@ -1,3 +1,4 @@
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { formatBytes, formatMoment } from '@/lib/format'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
@@ -73,8 +74,6 @@ const REASON: Record<IntegrityFault, string> = {
   fileEmpty: '0 バイト',
   emptyThoughComplete: '0 バイト(録画は完走している)',
 }
-
-export const INTEGRITY_REASON = REASON
 
 export async function getIntegrity(): Promise<IntegrityResult> {
   const client = carinaClient()
@@ -220,7 +219,7 @@ function toFinding(finding: FindingResponder): IntegrityFinding {
     root: finding.outputRoot,
     path: finding.path,
     recordingId: finding.recordingId ?? undefined,
-    size: observed === undefined ? '—' : `${grouped(observed)} B`,
+    size: observed === undefined ? EMPTY_VALUE : `${grouped(observed)} B`,
     sizeNote:
       ledger === undefined ? undefined : `録画の記録では ${grouped(ledger)} B`,
     noticedAt: formatMoment(finding.noticedAt),

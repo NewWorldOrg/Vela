@@ -1,3 +1,4 @@
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import {
   STARTUP_SEGMENTS,
   type LiveStartup,
@@ -68,7 +69,7 @@ export function startupRowsOf(
         segment,
         label,
         state: 'done',
-        figure: at === undefined ? '—' : seconds(at - from),
+        figure: at === undefined ? EMPTY_VALUE : seconds(at - from),
       }
     }
 
@@ -81,6 +82,6 @@ export function startupRowsOf(
       }
     }
 
-    return { segment, label, state: 'ahead', figure: '—' }
+    return { segment, label, state: 'ahead', figure: EMPTY_VALUE }
   })
 }

@@ -16,12 +16,10 @@ This file is for changing it, and does not repeat what is there.
   middleware request header and a no-flash inline script. `next-themes` is not used
 - **Components**: shadcn primitives from the unified `radix-ui` package, pulled
   towards Vela's tokens and feel, plus the components in `components/vela/`
-- **Table**: one general `DataTable` over `@tanstack/react-table` v8
+- **Tables**: `components/ui/table`, laid out by each screen
 - **Forms**: the parts in `components/vela/field.tsx` — `Field`, `FieldLabel`,
   `RequiredMark`, `FieldHint`, `FieldError`, `OptionGroup` — laid over the
-  controls in `components/ui/`, with the submit handled by the screen.
-  `components/ui/form.tsx`, `react-hook-form`, `zod` and `@hookform/resolvers`
-  are installed and imported by nothing
+  controls in `components/ui/`, with the submit handled by the screen
 - **Catalog and verification**: Storybook 10 (`@storybook/nextjs`, `addon-a11y`)
   and `@storybook/test-runner`, which drives a real browser
 
@@ -39,7 +37,6 @@ app/_components/            Parts used only under app/, too specific for compone
 components/ui/*             shadcn primitives, dressed in Vela's look
 components/vela/*           Vela's own components and hand-drawn SVG icons
 components/theme/*          light / dark / system
-components/common/*         the general DataTable
 components/{domain}/        A domain: its screens and the parts they are made of.
                             A screen is {name}-page.tsx exporting {Name}View; data
                             arrives as props from the RSC in app/, and the Client
@@ -52,16 +49,15 @@ scripts/                    codegen-verify (the client matches the document),
                             the unit tests, which read no tsconfig)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
-hooks/                      useListUrlState / usePerPageLocalStorage / useDismissable
-types/                      DataTable types
-stories/{foundations,components,screens,common,theme}/
+hooks/                      React hooks shared across screens
+stories/{foundations,components,screens,theme}/
 tests/                      Every test. tests/lib/ and tests/repository/ mirror the
                             path of what they test; tests/storybook/ holds the nine
                             that read the source tree instead of importing a module
 ```
 
 A screen is layered `app/` (a Server Component fetches) → `components/{domain}/`
-→ `components/common/` → `repository/` → `repository/client/`. The URL is the
+→ `repository/` → `repository/client/`. The URL is the
 source of state. Fetching data or syncing initial values in a `useEffect` is not
 allowed.
 

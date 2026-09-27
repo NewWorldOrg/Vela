@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
 
+import { MOVED_BY_HAND } from '@/lib/arrival'
+
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -83,6 +85,7 @@ const THE_UTILITIES = [
   'breathes',
   'waits',
   'appears',
+  'disappears',
   'scrim-appears',
   'scrim-disappears',
 ]
@@ -106,6 +109,7 @@ const THE_MOVEMENTS_THAT_STOP = [
   'scrim-in',
   'scrim-out',
   'surface-in',
+  'surface-out',
 ]
 
 const CARRIED_BY_A_VARIABLE = 'calc(var(--d, 0s) + var(--delay, 0s)'
@@ -451,17 +455,17 @@ test('an entrance is switched off once it is over, and under a hand', async () =
   const hook = await readFile(path.join(ROOT, THE_ARRIVAL_HOOK), 'utf8')
 
   for (const input of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
-    assert.match(
-      hook,
-      new RegExp(`'${input}'`),
+    assert.ok(
+      (MOVED_BY_HAND as readonly string[]).includes(input),
       `a ${input} does not stop the arrival`,
     )
   }
-  assert.doesNotMatch(
-    hook,
-    /'scroll'/,
+  assert.ok(
+    !(MOVED_BY_HAND as readonly string[]).includes('scroll'),
     'a scroll the screen makes by itself would stop the arrival before it is seen',
   )
+  assert.match(hook, /for \(const input of MOVED_BY_HAND\)/)
+  assert.match(hook, /addEventListener\(input, done/)
   assert.match(hook, /data-arrived/)
 })
 
@@ -526,6 +530,11 @@ test('a face comes and goes by a movement this sheet declares', async () => {
       `${file} names nothing for the way it opens`,
     )
     assert.doesNotMatch(source, /data-\[state=closed\]:appears/)
+    assert.match(
+      source,
+      /data-\[state=closed\]:disappears/,
+      `${file} opens with a movement and vanishes at once when it closes`,
+    )
 
     if (/data-slot="(dialog|alert-dialog|sheet)-overlay"/.test(source)) {
       assert.match(
@@ -650,9 +659,7 @@ test('a hand on the guide during its opening ends the opening at once', async ()
     'utf8',
   )
 
-  for (const input of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
-    assert.match(grid, new RegExp(`'${input}'`))
-  }
+  assert.match(grid, /for \(const input of MOVED_BY_HAND\)/)
   assert.match(grid, /addEventListener\(input, markDone/)
 })
 
@@ -733,4 +740,57 @@ test('the curtain and the lines drawn by hand end on a small echo, once', async 
       `${file} draws its mark without the stamp at the end`,
     )
   }
+})
+
+test('every part that moves hears the switch in the settings, not the machine alone', async () => {
+  assert.match(
+    await theSheet(),
+    /@custom-variant still \{\s*@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) & \{\s*@slot;\s*\}\s*\}\s*:root\[data-motion='still'\] & \{\s*@slot;\s*\}\s*\}/,
+    'still: does not stop what the machine or the switch in the settings stops',
+  )
+
+  for (const dir of ['app', 'components', 'hooks', 'lib']) {
+    for (const file of await sourceFiles(dir)) {
+      const source = await readFile(path.join(ROOT, file), 'utf8')
+
+      assert.doesNotMatch(
+        source,
+        /motion-(reduce|safe):/,
+        `${file} stops moving only when the machine asks, so the switch in the settings does not reach it`,
+      )
+
+      if (source.includes('prefers-reduced-motion')) {
+        assert.match(
+          source,
+          /movesNow\(/,
+          `${file} decides whether to move without the switch in the settings`,
+        )
+      }
+    }
+  }
+})
+
+test('the collection drawer slides in and out only while movement is on', async () => {
+  const drawer = await readFile(
+    path.join(ROOT, 'components/guide/collection-drawer.tsx'),
+    'utf8',
+  )
+
+  assert.match(drawer, /transition-transform duration-200 ease-toy/)
+  assert.match(drawer, /still:transition-none/)
+})
+
+test('the cards that join the live grid are cut at the same twelve', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/live/channel-grid.tsx'),
+    'utf8',
+  )
+
+  assert.match(
+    grid,
+    /joinsIn\(/,
+    'the grid hands the joining movement to every newcomer, so a sub-channel ' +
+      'switched on moves every card it adds at once',
+  )
+  assert.doesNotMatch(grid, /\? 'joins'/)
 })

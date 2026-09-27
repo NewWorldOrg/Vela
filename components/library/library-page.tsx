@@ -1,10 +1,11 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
+import { addressWith } from '@/lib/path'
 import type {
   RecordingBatch,
   RecordingDiscarded,
@@ -36,23 +37,18 @@ export function LibraryView({
 }) {
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const router = useRouter()
+  const [waiting, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const onFiltersChange = useCallback(
     (patch: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString())
-      for (const [key, value] of Object.entries(patch)) {
-        if (value == null || value === '') {
-          params.delete(key)
-        } else {
-          params.set(key, value)
-        }
-      }
-      const qs = params.toString()
       setPicked(new Set())
-      router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-        scroll: false,
-      })
+      startWaiting(() =>
+        router.replace(
+          addressWith(pathname, searchParams.toString(), patch) as Route,
+          { scroll: false },
+        ),
+      )
     },
     [router, pathname, searchParams],
   )
@@ -175,6 +171,7 @@ export function LibraryView({
       {items.length > 0 ? (
         <RecordingsTable
           items={items}
+          waiting={waiting}
           onDelete={onDelete}
           picked={picked}
           onPick={setPicked}

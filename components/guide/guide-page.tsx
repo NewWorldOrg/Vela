@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { addressWith } from '@/lib/path'
 import { foldedGuideOf, foldsAColumn, isOnAir } from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import { useSubChannelsFolded } from '@/hooks/useSubChannelsFolded'
@@ -152,19 +153,11 @@ export function GuideView({
 
   const patch = useCallback(
     (next: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString())
-      for (const [k, v] of Object.entries(next)) {
-        if (v == null) {
-          params.delete(k)
-        } else {
-          params.set(k, v)
-        }
-      }
-      const qs = params.toString()
       startWaiting(() =>
-        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-          scroll: false,
-        }),
+        router.replace(
+          addressWith(pathname, searchParams.toString(), next) as Route,
+          { scroll: false },
+        ),
       )
     },
     [router, pathname, searchParams],

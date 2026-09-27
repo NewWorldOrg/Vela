@@ -280,6 +280,7 @@ test('a programme comes back spelled the way the screen shows it', async () => {
         id: '131-1310-40001',
         channelName: '中央テレビ1',
         channelNo: '1',
+        channelLogo: { declaration: 'notYetRead' },
         dayLabel: '8/9(日)',
         startLabel: '19:30',
         endLabel: '20:15',
@@ -294,6 +295,7 @@ test('a programme comes back spelled the way the screen shows it', async () => {
         id: '999-9990-40002',
         channelName: '999-9990',
         channelNo: undefined,
+        channelLogo: undefined,
         dayLabel: '8/10(月)',
         startLabel: '00:00',
         endLabel: undefined,
@@ -303,6 +305,37 @@ test('a programme comes back spelled the way the screen shows it', async () => {
         genre: 'other',
         genreLabel: 'その他',
         booked: undefined,
+      },
+    ],
+  )
+})
+
+test('a hit carries the mark of its station, as every other list of programmes does', async () => {
+  standing()
+  store.services[0] = {
+    ...service(131, 1310, '中央テレビ1', 'isdbT', 'television', 1),
+    logo: { url: '/api/services/131-1310/logo' },
+  }
+  store.page = {
+    items: [
+      programme(131, 1310, 40001, '空から見る港町の夏', '2026-08-09T10:30:00Z'),
+    ],
+    total: 1,
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 20,
+  }
+
+  const result = await searchPrograms({ q: '観測所' })
+
+  assert.deepEqual(
+    result.outcome.state === 'searched'
+      ? result.outcome.found.hits.map((hit) => hit.channelLogo)
+      : [],
+    [
+      {
+        declaration: 'inTheCommonDataTable',
+        href: '/api/services/131-1310/logo',
       },
     ],
   )

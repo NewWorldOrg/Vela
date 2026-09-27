@@ -36,7 +36,7 @@ function AlertDialogOverlay({
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        'fixed inset-0 z-50 bg-black/50 data-[state=closed]:scrim-disappears data-[state=open]:scrim-appears',
+        'fixed inset-0 z-50 bg-scrim data-[state=closed]:scrim-disappears data-[state=open]:scrim-appears',
         className,
       )}
       {...props}
@@ -58,7 +58,7 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          'group/alert-dialog-content fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-line-strong bg-surface p-6 shadow-pop-xl [--from-scale:0.97] data-[size=sm]:max-w-xs data-[state=open]:appears data-[size=default]:sm:max-w-2xl',
+          'group/alert-dialog-content fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-line-strong bg-surface p-6 shadow-pop-xl [--from-scale:0.97] data-[size=sm]:max-w-xs data-[state=closed]:disappears data-[state=open]:appears data-[size=default]:sm:max-w-2xl',
           className,
         )}
         {...props}

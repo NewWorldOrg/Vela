@@ -151,7 +151,7 @@ const ServiceLine = memo(function ServiceLine({
         >
           <ChevronRightIcon
             className={cn(
-              'size-3.5 transition-transform duration-150 ease-toy motion-reduce:transition-none',
+              'size-3.5 transition-transform duration-150 ease-toy still:transition-none',
               expanded && 'rotate-90',
             )}
           />

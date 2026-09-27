@@ -215,3 +215,17 @@ test('a grid column is sized in rem, so it grows with the type', async () => {
 
   assert.deepEqual(offenders, [])
 })
+
+test('what sits under the top bar is placed in rem, as the top bar is', async () => {
+  const offenders: string[] = []
+
+  for (const file of await sourcesUnder('components')) {
+    for (const match of (await read(file)).matchAll(
+      /(?<![\w-])(top|max-h)-\[(\d+px|calc\([^\]]*\d+px[^\]]*\))\]/g,
+    )) {
+      offenders.push(`${file}: ${match[0]}`)
+    }
+  }
+
+  assert.deepEqual(offenders, [])
+})

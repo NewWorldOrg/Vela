@@ -30,9 +30,8 @@ const PUT_AWAY: { what: string; spelt: RegExp; caught: string }[] = [
   },
   {
     what: 'a selector of how many rows a page shows',
-    spelt:
-      /表示件数|件数切替|\bperPage\b|\bpageSize\b|usePerPageLocalStorage|ページ送り/,
-    caught: 'const [perPage] = usePerPageLocalStorage()',
+    spelt: /表示件数|件数切替|\bperPage\b|\bpageSize\b|ページ送り/,
+    caught: 'const [perPage] = useState(20)',
   },
 ]
 

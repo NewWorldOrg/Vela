@@ -69,7 +69,8 @@ registerHooks({
 
 process.env.CARINA_API_BASE_URL = 'http://carina.test'
 
-const { changePassword, getSessions } = await import('@/repository/sessions')
+const { changePassword, getSessions, revokeSession } =
+  await import('@/repository/sessions')
 
 const SESSION_COOKIE = 'carina_session'
 
@@ -215,5 +216,59 @@ test('BR-AU-018: every session on the system is listed, each saying whose it is'
       ['theirs', 'nao@example.test', 'oidc', false],
       ['mine', 'operator', 'local', true],
     ],
+  )
+})
+
+test('ending a session is sent to that session alone, carrying the one that asked', async () => {
+  apiAnswering(new Response(null, { status: 204 }))
+
+  assert.deepEqual(await revokeSession('a-session-elsewhere'), { state: 'ok' })
+
+  const [request] = sent
+
+  assert.equal(request.method, 'DELETE')
+  assert.equal(
+    new URL(request.url).pathname,
+    '/api/auth/sessions/a-session-elsewhere',
+  )
+  assert.equal(request.headers.get('origin'), 'http://carina.test')
+  assert.equal(
+    request.headers.get('cookie'),
+    `${SESSION_COOKIE}=the-session-that-asked`,
+  )
+})
+
+test('a session already ended elsewhere is said to be gone, not refused', async () => {
+  apiAnswering(refusing('No such session.', 404))
+
+  assert.deepEqual(await revokeSession('a-session-elsewhere'), {
+    state: 'gone',
+  })
+})
+
+test('a session the API will not end comes back with the reason it gave', async () => {
+  apiAnswering(refusing('The session could not be ended.', 500))
+
+  assert.deepEqual(await revokeSession('a-session-elsewhere'), {
+    state: 'unavailable',
+    message: 'The session could not be ended.',
+  })
+})
+
+test('a refusal to end a session with nothing said says the status', async () => {
+  apiAnswering(new Response(null, { status: 502 }))
+
+  assert.deepEqual(await revokeSession('a-session-elsewhere'), {
+    state: 'unavailable',
+    message: 'API は 502 を返しました。',
+  })
+})
+
+test("ending a session after one's own has lapsed goes to the login screen", async () => {
+  apiAnswering(turnedAway())
+
+  await assert.rejects(
+    () => revokeSession('a-session-elsewhere'),
+    (error: Error & { where?: string }) => error.where === loginHref(THE_PAGE),
   )
 })

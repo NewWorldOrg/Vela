@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
-import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
-
-const MOVED_BY_HAND = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const
+import { ARRIVAL_SPAN_MS, MOVED_BY_HAND } from '@/lib/arrival'
 
 export type Arrived = { ref: (element: HTMLElement | null) => void }
 

@@ -26,8 +26,7 @@ import { AutoRunPanel } from '@/components/encode/auto-run-panel'
 import { DestinationList } from '@/components/encode/destination-list'
 import { EncodeTicker } from '@/components/encode/encode-ticker'
 import { JobCounts } from '@/components/encode/job-counts'
-import { JobTable } from '@/components/encode/job-table'
-import { JobsFilter, JobsPager } from '@/components/encode/jobs-navigation'
+import { JobsList } from '@/components/encode/jobs-navigation'
 import { ProfileList } from '@/components/encode/profile-list'
 import { RecentSpells } from '@/components/encode/recent-spells'
 import { RunningJob } from '@/components/encode/running-job'
@@ -87,25 +86,7 @@ export function EncodeView({
         <RecentSpells spells={screen.spells} className="mt-2.5" />
 
         <div className="mt-3.5">
-          <JobsFilter jobs={jobs} />
-          {jobs.items.length > 0 ? (
-            <>
-              <JobTable jobs={jobs.items} onCallOff={actions.onCallOff} />
-              <JobsPager jobs={jobs} />
-            </>
-          ) : jobs.status ? (
-            <EmptyState spot="tape" title="条件に合うジョブがありません" />
-          ) : (
-            <EmptyState
-              spot="tape"
-              title="ジョブの履歴がありません"
-              action={
-                <Button variant="watch" size="sm" asChild>
-                  <Link href="/library">ライブラリを開く</Link>
-                </Button>
-              }
-            />
-          )}
+          <JobsList jobs={jobs} onCallOff={actions.onCallOff} />
         </div>
       </section>
 

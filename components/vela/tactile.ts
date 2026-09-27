@@ -1,6 +1,9 @@
 export const tactile =
   'transition-[translate,transform,box-shadow,background-color,border-color,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px'
 
+export const iconTilt =
+  '[&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:scale-[1.08] hover:[&_svg]:rotate-[-7deg]'
+
 export const tactileQuiet =
   'transition-[background-color,border-color,color,box-shadow] duration-150 ease-out'
 

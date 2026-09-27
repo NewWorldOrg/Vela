@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 
 import type { FoldMotion, FoldPhase } from '@/lib/live-fold'
+import { movesNow } from '@/lib/motion'
 
 const AT_REST: { phase: FoldPhase; staggered: boolean } = {
   phase: 'still',
@@ -10,7 +11,10 @@ const AT_REST: { phase: FoldPhase; staggered: boolean } = {
 }
 
 function atOnce(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  return !movesNow(
+    document.documentElement.dataset.motion,
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
 }
 
 export function useFoldingChannels(

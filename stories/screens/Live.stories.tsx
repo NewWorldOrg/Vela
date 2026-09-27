@@ -19,6 +19,7 @@ import {
   type TranscodeCeiling,
 } from '@/lib/live-wire'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { askedForLessMotion } from '@/stories/asked-for-less-motion'
 import type { LiveScreen } from '@/repository/live'
 import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
@@ -264,6 +265,13 @@ const probing = async () => {
 
 const signedOut = async () => true
 
+const theProbe: { answers?: (signedOut: boolean) => void } = {}
+
+const answeredLater = () =>
+  new Promise<boolean>((settle) => {
+    theProbe.answers = settle
+  })
+
 const uncounted: AskBacklog = async () => undefined
 
 function losing(lostOnTheWayIn: number): AskBacklog {
@@ -454,6 +462,7 @@ const meta = {
   beforeEach: () => {
     opened.length = 0
     probed.length = 0
+    theProbe.answers = undefined
     window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
     window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
   },
@@ -760,6 +769,38 @@ export const 答えに従い古い選択は蘇らない: Story = {
 
     await userEvent.click(back)
     await expect(marked()).toEqual([watched().textContent])
+  },
+}
+
+export const 切れた線の後始末は選び直したチャンネルに触れない: Story = {
+  render: (args) => <Wandering {...args} />,
+  args: { openSocket: droppingOnce, askSignedOut: answeredLater },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const list = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-list"]',
+    )!
+    const transcoder = () =>
+      canvas.getByText('トランスコーダ起動').closest('li')
+
+    await waitFor(() => expect(theProbe.answers).toBeDefined())
+
+    await userEvent.click(
+      within(list).getByRole('button', { name: /中央テレビ1/ }),
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '答えが届く' }))
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await waitFor(() =>
+      expect(transcoder()).toHaveAttribute('data-startup', 'done'),
+    )
+
+    theProbe.answers?.(false)
+    await new Promise((rest) => setTimeout(rest, 300))
+
+    await expect(canvas.queryByText('接続が切れました')).toBeNull()
+    await expect(transcoder()).toHaveAttribute('data-startup', 'done')
+    await expect(opened).toHaveLength(2)
   },
 }
 
@@ -1362,6 +1403,11 @@ export const 撤収_映像が届かない: Story = ended(
   '映像が届かなくなりました',
 )
 
+export const 撤収_トランスコーダ追いつけず: Story = ended(
+  'transcoderFellBehind',
+  '配信が追いつきませんでした',
+)
+
 export const 撤収_配信終了: Story = ended('letGo', '配信が終了しました')
 
 export const セッション切れ: Story = {
@@ -1895,28 +1941,6 @@ function foldRunning(canvasElement: HTMLElement): Animation[] {
   })
 }
 
-function askedForLessMotion(): () => void {
-  const asked = window.matchMedia.bind(window)
-
-  window.matchMedia = ((query: string) =>
-    query.includes('prefers-reduced-motion')
-      ? ({
-          matches: true,
-          media: query,
-          onchange: null,
-          addEventListener: () => {},
-          removeEventListener: () => {},
-          addListener: () => {},
-          removeListener: () => {},
-          dispatchEvent: () => false,
-        } as MediaQueryList)
-      : asked(query)) as typeof window.matchMedia
-
-  return () => {
-    window.matchMedia = asked
-  }
-}
-
 export const 一覧を畳む: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -2131,6 +2155,60 @@ export const 動きを減らす設定では一息で畳む: Story = {
     await expect(canvas.getByRole('button', { name: '地上波' })).toBeVisible()
     await expect(asideWidth(canvasElement)).toBe(wide)
     await expect(foldRunning(canvasElement)).toHaveLength(0)
+  },
+}
+
+export const 表示の設定で動きを切っていると一息で畳む: Story = {
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.documentElement.dataset.motion = 'still'
+
+    return () => {
+      delete document.documentElement.dataset.motion
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+    const wide = asideWidth(canvasElement)
+
+    await userEvent.click(fold)
+
+    await expect(foldPhaseOf(canvasElement)).toBe('still')
+    await expect(canvas.queryByRole('button', { name: '地上波' })).toBeNull()
+    await expect(asideWidth(canvasElement)).toBeLessThan(wide)
+    await expect(foldRunning(canvasElement)).toHaveLength(0)
+    await expect(columnRunning(canvasElement)).toHaveLength(0)
+  },
+}
+
+export const 動きを入に選んでいれば端末が減らしていても流れて畳む: Story = {
+  beforeEach: () => {
+    opened.length = 0
+    window.localStorage.removeItem(CHANNELS_FOLDED_KEY)
+    window.localStorage.removeItem(LIVE_SUB_CHANNELS_FOLDED_KEY)
+    document.documentElement.dataset.motion = 'moves'
+    const restore = askedForLessMotion()
+
+    return () => {
+      restore()
+      delete document.documentElement.dataset.motion
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: 'チャンネル一覧' })
+
+    await userEvent.click(fold)
+
+    await expect(foldPhaseOf(canvasElement)).toBe('closing')
+    await expect(columnRunning(canvasElement)).toEqual(['width'])
+
+    await waitFor(async () => {
+      await expect(foldPhaseOf(canvasElement)).toBe('still')
+    })
   },
 }
 

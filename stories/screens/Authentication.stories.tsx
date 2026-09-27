@@ -152,6 +152,24 @@ export const IDプロバイダに到達できない: Story = {
   args: { oidc: OIDC_OUT_OF_REACH },
 }
 
+export const 失効の確認: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getAllByRole('button', { name: '失効させる' })[0],
+    )
+
+    const dialog = await within(document.body).findByRole('alertdialog')
+    const description = document.getElementById(
+      dialog.getAttribute('aria-describedby') ?? '',
+    )
+
+    await expect(description).toBeVisible()
+    await expect(description).toHaveTextContent('のセッションを失効させます')
+  },
+}
+
 export const パスワードを変更する対話: Story = {
   args: { sessions: ONLY_THIS_DEVICE, signedIn: SIGNED_IN_LOCALLY },
   play: async ({ canvasElement }) => {

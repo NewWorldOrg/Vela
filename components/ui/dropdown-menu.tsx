@@ -42,7 +42,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg border border-line-strong bg-surface p-1 text-ink shadow-pop-xl data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=open]:appears',
+          'z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg border border-line-strong bg-surface p-1 text-ink shadow-pop-xl data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=closed]:disappears data-[state=open]:appears',
           className,
         )}
         {...props}
@@ -229,7 +229,7 @@ function DropdownMenuSubContent({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        'z-50 min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg border border-line-strong bg-surface p-1 text-ink shadow-pop-xl data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=open]:appears',
+        'z-50 min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg border border-line-strong bg-surface p-1 text-ink shadow-pop-xl data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=closed]:disappears data-[state=open]:appears',
         className,
       )}
       {...props}

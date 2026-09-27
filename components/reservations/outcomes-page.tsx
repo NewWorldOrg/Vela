@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
+import { addressWith } from '@/lib/path'
 import type { OutcomeLedgerResult } from '@/repository/reservation-outcomes'
 import { cn } from '@/lib/utils'
 import { OUTCOME_KINDS, OUTCOME_SPANS } from '@/lib/reservation-outcomes'
@@ -78,44 +79,27 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   const searchParams = useSearchParams()
   const change = useCallback(
     (patch: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString())
-
-      for (const [key, value] of Object.entries(patch)) {
-        if (value == null || value === '') {
-          params.delete(key)
-        } else {
-          params.set(key, value)
-        }
-      }
-
-      params.delete('page')
-
-      const qs = params.toString()
-
       startWaiting(() =>
-        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-          scroll: false,
-        }),
+        router.replace(
+          addressWith(pathname, searchParams.toString(), {
+            ...patch,
+            page: null,
+          }) as Route,
+          { scroll: false },
+        ),
       )
     },
     [router, pathname, searchParams],
   )
   const onPage = useCallback(
     (next: number) => {
-      const params = new URLSearchParams(searchParams.toString())
-
-      if (next > 1) {
-        params.set('page', String(next))
-      } else {
-        params.delete('page')
-      }
-
-      const qs = params.toString()
-
       startWaiting(() =>
-        router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, {
-          scroll: false,
-        }),
+        router.replace(
+          addressWith(pathname, searchParams.toString(), {
+            page: next > 1 ? String(next) : null,
+          }) as Route,
+          { scroll: false },
+        ),
       )
     },
     [router, pathname, searchParams],
@@ -170,10 +154,8 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         <>
           <Table
             className="table-fixed min-w-[calc(1040rem/16)]"
-            containerClassName={cn(
-              'min-h-0 flex-initial overflow-y-auto pb-1 transition-opacity duration-150',
-              waiting && 'opacity-60',
-            )}
+            waiting={waiting}
+            containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
           >
             <TableColumns widths={COLUMNS.map((column) => column.width)} />
             <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
