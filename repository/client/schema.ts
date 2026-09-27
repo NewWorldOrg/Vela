@@ -2968,6 +2968,8 @@ export interface components {
       deviceId: null | string
       measures: components['schemas']['QualityMeasureResponder'][]
       signal: components['schemas']['QualitySignalResponder'][]
+      standing: components['schemas']['QualityStanding']
+      cannotLock: boolean
     }
     QualityVerdictResponder: {
       metric: components['schemas']['QualityMetric']

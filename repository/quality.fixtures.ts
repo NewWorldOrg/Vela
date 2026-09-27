@@ -454,8 +454,10 @@ export const QUALITY: QualityResult = {
     {
       key: 'health',
       label: 'チューナーヘルス',
-      value: '3 / 4',
+      value: '2 / 4',
       unit: '健全',
+      level: 'bad',
+      levelLabel: '視聴不可 1',
       foot: '信号品質 未計測',
     },
   ],
@@ -733,8 +735,10 @@ export const EVERY_ROW_UNMEASURED: QualityResult = {
     {
       key: 'health',
       label: 'チューナーヘルス',
+      value: '0 / 4',
+      unit: '健全',
       level: 'unmeasured',
-      levelLabel: '未計測',
+      levelLabel: '未計測 4',
       foot: '信号品質 未計測',
     },
   ],
@@ -750,6 +754,56 @@ export const EVERY_ROW_UNMEASURED: QualityResult = {
     owned: 0,
     restated: 0,
   },
+}
+
+const NOTHING_RECORDED = { level: 'nodata' } as const
+
+export const SATELLITES_THAT_CANNOT_LOCK: QualityResult = {
+  ...QUALITY,
+  stats: QUALITY.stats.map((stat) =>
+    stat.key === 'health'
+      ? {
+          key: 'health',
+          label: 'チューナーヘルス',
+          value: '0 / 3',
+          unit: '健全',
+          level: 'bad',
+          levelLabel: '受信不可 2',
+        }
+      : stat,
+  ),
+  tuners: [
+    {
+      id: 'adapter0.frontend0',
+      device: 'adapter0.frontend0',
+      hardware: '録画 0 本',
+      state: { level: 'bad', label: '受信不可' },
+      drop: NOTHING_RECORDED,
+      lock: NOT_SAMPLED,
+      cnr: NOT_SAMPLED,
+      ber: NOT_SAMPLED,
+    },
+    {
+      id: 'adapter2.frontend0',
+      device: 'adapter2.frontend0',
+      hardware: '録画 0 本',
+      state: { level: 'bad', label: '受信不可' },
+      drop: NOTHING_RECORDED,
+      lock: NOT_SAMPLED,
+      cnr: NOT_SAMPLED,
+      ber: NOT_SAMPLED,
+    },
+    {
+      id: 'adapter3.frontend0',
+      device: 'adapter3.frontend0',
+      hardware: '録画 0 本',
+      state: { level: 'warn', label: '警告水準' },
+      drop: NOTHING_RECORDED,
+      lock: { level: 'good', sub: '09/27 21:40 取得' },
+      cnr: { level: 'good', sub: '09/27 21:40 取得' },
+      ber: { level: 'warn', sub: '09/27 21:40 取得' },
+    },
+  ],
 }
 
 export const MORE_TUNERS_THAN_FIT: QualityResult = {

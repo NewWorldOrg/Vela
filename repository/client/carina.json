@@ -14016,7 +14016,9 @@
         "required": [
           "deviceId",
           "measures",
-          "signal"
+          "signal",
+          "standing",
+          "cannotLock"
         ],
         "type": "object",
         "properties": {
@@ -14037,6 +14039,12 @@
             "items": {
               "$ref": "#/components/schemas/QualitySignalResponder"
             }
+          },
+          "standing": {
+            "$ref": "#/components/schemas/QualityStanding"
+          },
+          "cannotLock": {
+            "type": "boolean"
           }
         }
       },

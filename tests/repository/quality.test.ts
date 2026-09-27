@@ -306,7 +306,13 @@ function standing() {
     { networkId: 32736, serviceId: 1024, kind: 'isdbT', measures: measures() },
   ]
   store.tuners = [
-    { deviceId: 'adapter3.frontend0', measures: measures(), signal: signal() },
+    {
+      deviceId: 'adapter3.frontend0',
+      measures: measures(),
+      signal: signal(),
+      standing: 'good',
+      cannotLock: false,
+    },
   ]
   store.recordings = []
   store.incidents = []
@@ -348,45 +354,94 @@ test('信号品質は、良好ではなく未計測のまま出る', async () =>
   )
 })
 
-test('測るものが無いチューナーは、健全でないほうに数えない', async () => {
+test('チューナーが 1 台も無いときだけ、タイルは対象なし', async () => {
   standing()
-  store.tuners = [
-    {
-      deviceId: 'adapter0.frontend0',
-      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
-      signal: signal(),
-    },
-  ]
+  store.tuners = []
 
   const result = await getQuality()
   const health = result.stats.find((one) => one.key === 'health')
 
-  assert.equal(result.tuners[0].state.label, '対象なし')
   assert.equal(health?.value, undefined)
   assert.equal(health?.levelLabel, '対象なし')
-  assert.equal(health?.aside, undefined)
 })
 
-test('測れたチューナーだけを数え、測るものが無かった台数は横に添える', async () => {
+test('行の状態は Carina が答える段をそのまま出し、録画が無くても信号の警告が上がる', async () => {
   standing()
   store.tuners = [
-    { deviceId: 'adapter1.frontend0', measures: measures(), signal: signal() },
     {
-      deviceId: 'adapter0.frontend0',
+      deviceId: 'adapter3.frontend0',
       measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
       signal: signal(),
+      standing: 'warning',
+      cannotLock: false,
     },
   ]
 
   const result = await getQuality()
   const health = result.stats.find((one) => one.key === 'health')
 
-  assert.equal(health?.value, '1 / 1')
-  assert.equal(health?.unit, '健全')
-  assert.equal(health?.aside, '対象なし 1 台')
+  assert.deepEqual(result.tuners[0].state, {
+    level: 'warn',
+    label: '警告水準',
+  })
+  assert.equal(result.tuners[0].drop.level, 'nodata')
+  assert.equal(health?.value, '0 / 1')
+  assert.equal(health?.level, 'warn')
+  assert.equal(health?.levelLabel, '警告水準 1')
 })
 
-test('未計測のチューナーは数のうちに残り、良好には数えない', async () => {
+test('LOCK しない異常のあるチューナーは受信不可で、タイルは最も悪い語と台数を 1 つ添える', async () => {
+  standing()
+  store.tuners = [
+    {
+      deviceId: 'adapter0.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+      standing: 'mayNotBeWatchable',
+      cannotLock: true,
+    },
+    {
+      deviceId: 'adapter2.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+      standing: 'mayNotBeWatchable',
+      cannotLock: true,
+    },
+    {
+      deviceId: 'adapter1.frontend0',
+      measures: measures(),
+      signal: signal(),
+      standing: 'mayNotBeWatchable',
+      cannotLock: false,
+    },
+    {
+      deviceId: 'adapter3.frontend0',
+      measures: measures(),
+      signal: signal(),
+      standing: 'good',
+      cannotLock: false,
+    },
+  ]
+
+  const result = await getQuality()
+  const health = result.stats.find((one) => one.key === 'health')
+
+  assert.deepEqual(
+    result.tuners.map((one) => one.state),
+    [
+      { level: 'bad', label: '受信不可' },
+      { level: 'bad', label: '受信不可' },
+      { level: 'bad', label: '視聴不可' },
+      { level: 'good', label: '健全' },
+    ],
+  )
+  assert.equal(health?.value, '1 / 4')
+  assert.equal(health?.unit, '健全')
+  assert.equal(health?.level, 'bad')
+  assert.equal(health?.levelLabel, '受信不可 2')
+})
+
+test('測られていないチューナーも数のうちに残り、良好には数えない', async () => {
   standing()
   store.tuners = [
     {
@@ -397,6 +452,15 @@ test('未計測のチューナーは数のうちに残り、良好には数え�
         unmeasured: 3,
       }),
       signal: signal(),
+      standing: 'unmeasured',
+      cannotLock: false,
+    },
+    {
+      deviceId: 'adapter0.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+      standing: 'unmeasured',
+      cannotLock: false,
     },
   ]
 
@@ -404,7 +468,9 @@ test('未計測のチューナーは数のうちに残り、良好には数え�
   const health = result.stats.find((one) => one.key === 'health')
 
   assert.equal(result.tuners[0].state.label, '未計測')
-  assert.equal(health?.value, '0 / 1')
+  assert.equal(result.tuners[1].state.label, '未計測')
+  assert.equal(health?.value, '0 / 2')
+  assert.equal(health?.levelLabel, '未計測 2')
   assert.equal(health?.aside, undefined)
 })
 

@@ -9,6 +9,7 @@ import {
   ONE_RECORDING_IN_A_DAY,
   OVER_THE_LINE,
   QUALITY,
+  SATELLITES_THAT_CANNOT_LOCK,
   TWO_BROADCAST_DAYS,
 } from '@/repository/quality.fixtures'
 import type { QualityReviseThreshold } from '@/components/quality/quality-page'
@@ -335,5 +336,28 @@ export const 札の並び: Story = {
 
     await expect(rows.length).toBeGreaterThan(1)
     await saysItWithoutAnEdge(rows, TUNER_STATE_COLUMN)
+  },
+}
+
+export const 受信不可のチューナーと録画の無い信号の警告: Story = {
+  args: { result: SATELLITES_THAT_CANNOT_LOCK },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const tile = canvas
+      .getAllByText('チューナーヘルス')
+      .find((one) => one.closest('[data-slot="section-heading"]') === null)
+      ?.closest('[data-slot="surface"]')
+
+    await expect(tile).toHaveTextContent('0 / 3')
+    await expect(tile).toHaveTextContent('受信不可 2')
+    await expect(tile).not.toHaveTextContent('対象なし')
+
+    const rows = rowsOfTheTableHeaded(canvasElement, 'チューナー')
+
+    await expect(
+      rows.map(
+        (row) => row.querySelectorAll('td')[TUNER_STATE_COLUMN]?.textContent,
+      ),
+    ).toEqual(['受信不可', '受信不可', '警告水準'])
   },
 }
