@@ -12,7 +12,7 @@ import type { Route } from 'next'
 
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
-import { nextBoundaryAfter } from '@/lib/player-chapters'
+import { nextBoundaryAfter, whereTheBreakEnds } from '@/lib/player-chapters'
 import {
   SECOND_TAP_WITHIN,
   tapZone,
@@ -99,6 +99,7 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
+import { PlayerSkipBreak } from '@/components/recordings/player-skip-break'
 import {
   SAID_CAPTURED,
   SAID_NOT_CAPTURED,
@@ -233,6 +234,7 @@ export function Player({
   const dismissing = useRef(false)
   const tapRun = useRef<TapRun | null>(null)
   const tapWaits = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [breaksLeftAlone, setBreaksLeftAlone] = useState<number[]>([])
   const [held, setHeld] = useState(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -278,6 +280,7 @@ export function Player({
   const drops = d.qualitySpots?.map((spot) => spot.second)
   const chapters = plan.chapters
   const nextChapterAt = nextBoundaryAfter(position, chapters)
+  const breakEndsAt = whereTheBreakEnds(position, chapters)
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
@@ -548,6 +551,22 @@ export function Player({
 
     step(said.answer === 'back' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS)
   }
+
+  const skipTheBreak = (to: number) => {
+    shell?.focus({ preventScroll: true })
+    choose(to)
+  }
+
+  const leaveTheBreak = (to: number) => {
+    shell?.focus({ preventScroll: true })
+    setBreaksLeftAlone((were) => [...were, to])
+  }
+
+  const offersTheSkip =
+    breakEndsAt !== undefined &&
+    !breaksLeftAlone.includes(breakEndsAt) &&
+    (phase === 'playing' || phase === 'paused' || phase === 'waiting') &&
+    !pip.out
 
   const chooseProfile = (next: string) => {
     const quality = next as PlaybackProfile
@@ -930,6 +949,15 @@ export function Player({
             bezel={bezel ?? undefined}
           />
           <PlayerSeekFlash flash={flash ?? undefined} />
+          {offersTheSkip && (
+            <PlayerSkipBreak
+              to={breakEndsAt}
+              raised={chromeUp}
+              onSkip={skipTheBreak}
+              onDismiss={leaveTheBreak}
+              container={shell}
+            />
+          )}
           {pip.out && (
             <p
               role="status"
