@@ -17,6 +17,7 @@ import {
   isOnAir,
   joinedColumnsOf,
   nowMinOf,
+  openingScrollScriptOf,
   openingScrollTopOf,
   openingSeamOf,
   primaryKeyOfShadow,
@@ -840,4 +841,30 @@ test('a line for now within a pixel of the middle still carries the ball', () =>
     openingSeamOf({ ...view, nowMin: 600, scrollTop: scrollTop + 3 }).line,
     false,
   )
+})
+
+test('the script in the first HTML scrolls the guide where opening it would', () => {
+  const guide = {
+    clientHeight: 740,
+    scrollTop: 0,
+    querySelector: () => ({ parentElement: { offsetHeight: 40 } }),
+  }
+  const run = new Function('document', openingScrollScriptOf(960, HOUR_PX))
+
+  run({ currentScript: { closest: () => guide } })
+
+  assert.equal(guide.scrollTop, openingScrollTopOf(960, HOUR_PX, 700))
+})
+
+test('the script in the first HTML does not scroll above the start of the day', () => {
+  const guide = {
+    clientHeight: 740,
+    scrollTop: 0,
+    querySelector: () => null,
+  }
+  const run = new Function('document', openingScrollScriptOf(30, HOUR_PX))
+
+  run({ currentScript: { closest: () => guide } })
+
+  assert.equal(guide.scrollTop, 0)
 })

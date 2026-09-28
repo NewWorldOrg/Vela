@@ -18,6 +18,7 @@ import {
   isDrawn,
   type MinuteRange,
   type OpeningSeam,
+  openingScrollScriptOf,
   openingScrollTopOf,
   openingSeamOf,
   unscheduledSpansOf,
@@ -29,6 +30,7 @@ import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
+import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'
 import { useDrawnRange } from '@/hooks/useDrawnRange'
 import { useFilledSoon } from '@/hooks/useFilledSoon'
 import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
@@ -183,6 +185,7 @@ export function GuideGrid({
     { length: windowHours },
     (_, i) => windowStartHour + i,
   )
+  const cameWithTheHtml = useCameWithTheHtml()
   const filled = useFilledSoon()
   const shows = useOpensWithAShow()
   const painted = usePaintedAfter(filled)
@@ -330,6 +333,13 @@ export function GuideGrid({
             className="relative flex rounded-b-lg"
             style={{ height: `${windowHours * HOUR_PX}px` }}
           >
+            {cameWithTheHtml && nowMin !== undefined && (
+              <script
+                dangerouslySetInnerHTML={{
+                  __html: openingScrollScriptOf(nowMin, HOUR_PX),
+                }}
+              />
+            )}
             <div
               data-guide-gutter
               style={{ flex: GUTTER_FLEX }}

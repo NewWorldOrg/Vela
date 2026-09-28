@@ -625,6 +625,10 @@ test('the guide shows its frame first and fills its columns under the cover', as
     'utf8',
   )
   const hook = await readFile(path.join(ROOT, 'hooks/useFilledSoon.ts'), 'utf8')
+  const hydrating = await readFile(
+    path.join(ROOT, 'hooks/useCameWithTheHtml.ts'),
+    'utf8',
+  )
 
   assert.match(grid, /const filled = useFilledSoon\(\)/)
   assert.match(grid, /useGlyphsAhead\(glyphLoads, filled\)/)
@@ -636,10 +640,26 @@ test('the guide shows its frame first and fills its columns under the cover', as
   )
   assert.match(
     hook,
-    /useSyncExternalStore\(\s*listenToNothing,\s*\(\) => false,\s*\(\) => true,?\s*\)/,
+    /useState\(useCameWithTheHtml\(\)\)|const cameWithTheHtml = useCameWithTheHtml\(\)\s*const \[filled, setFilled\] = useState\(cameWithTheHtml\)/,
     'a page opened directly keeps the filled columns its HTML came with',
   )
+  assert.match(
+    hydrating,
+    /useSyncExternalStore\(\s*listenToNothing,\s*\(\) => false,\s*\(\) => true,?\s*\)/,
+  )
   assert.match(hook, /startTransition\(\(\) => setFilled\(true\)\)/)
+})
+
+test('a guide opened directly is scrolled to now before its first paint, by its HTML alone', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/guide/guide-grid.tsx'),
+    'utf8',
+  )
+
+  assert.match(
+    grid,
+    /\{cameWithTheHtml && nowMin !== undefined && \(\s*<script\s*dangerouslySetInnerHTML=\{\{\s*__html: openingScrollScriptOf\(nowMin, HOUR_PX\)/,
+  )
 })
 
 test('the guide opens with a show only when it was not in the HTML and may move', async () => {

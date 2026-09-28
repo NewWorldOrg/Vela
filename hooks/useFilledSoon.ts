@@ -1,20 +1,11 @@
 'use client'
 
-import {
-  startTransition,
-  useEffect,
-  useState,
-  useSyncExternalStore,
-} from 'react'
+import { startTransition, useEffect, useState } from 'react'
 
-const listenToNothing = (): (() => void) => () => undefined
+import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'
 
 export function useFilledSoon(): boolean {
-  const cameWithTheHtml = useSyncExternalStore(
-    listenToNothing,
-    () => false,
-    () => true,
-  )
+  const cameWithTheHtml = useCameWithTheHtml()
   const [filled, setFilled] = useState(cameWithTheHtml)
 
   useEffect(() => {

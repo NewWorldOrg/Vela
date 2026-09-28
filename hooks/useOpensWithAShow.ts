@@ -1,17 +1,12 @@
 'use client'
 
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 
 import { movesNow } from '@/lib/motion'
-
-const listenToNothing = (): (() => void) => () => undefined
+import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'
 
 export function useOpensWithAShow(): boolean {
-  const cameWithTheHtml = useSyncExternalStore(
-    listenToNothing,
-    () => false,
-    () => true,
-  )
+  const cameWithTheHtml = useCameWithTheHtml()
   const [shows] = useState(
     () =>
       !cameWithTheHtml &&
