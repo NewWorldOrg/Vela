@@ -185,7 +185,10 @@ const TUNED_AND_FAILED =
 const THE_LEDGER_DISAGREES =
   '一覧では地上波、このチューナーが受信できるのは衛星。一致するまで割り当てられない。'
 
-export const 異常は割当停止の理由を画面の語で出す: Story = {
+const A_CHANNEL_FAILED =
+  '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。'
+
+export const 異常と警告は理由を画面の語で出す: Story = {
   args: {
     result: {
       state: 'ok',
@@ -213,6 +216,16 @@ export const 異常は割当停止の理由を画面の語で出す: Story = {
             stateLabel: '異常',
             stateSub: THE_LEDGER_DISAGREES,
           },
+          {
+            ...TUNERS.rows[0],
+            id: 'adapter6',
+            device: 'adapter6',
+            session: undefined,
+            idleLabel: 'アイドル',
+            state: 'warn',
+            stateLabel: '警告',
+            stateSub: A_CHANNEL_FAILED,
+          },
         ],
       },
     },
@@ -229,6 +242,10 @@ export const 異常は割当停止の理由を画面の語で出す: Story = {
     )
     await expect(await tipIn(cellOf(rows[1], STATE_COLUMN))).toHaveTextContent(
       THE_LEDGER_DISAGREES,
+    )
+    await expect(canvas.getByText('警告')).toBeVisible()
+    await expect(await tipIn(cellOf(rows[2], STATE_COLUMN))).toHaveTextContent(
+      A_CHANNEL_FAILED,
     )
   },
 }

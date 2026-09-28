@@ -1,13 +1,9 @@
+import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import type { Route } from 'next'
 
 import { formatMoment } from '@/lib/format'
 import { SILENCE_RANGE } from '@/lib/tuners'
-import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
-import {
-  NOT_YET_IN_THIS_BUILD_SAYING,
-  shapeFor,
-  wordFor,
-} from '@/lib/not-yet-in-this-build'
+import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import {
   SESSION_PILL_LABEL,
@@ -28,6 +24,7 @@ type DriverStatusEnvelope =
 type SessionPurpose = components['schemas']['SessionPurpose']
 type TunerKind = components['schemas']['TunerKind']
 type TunerFaultKind = components['schemas']['TunerFaultKind']
+type TunerDegradedKind = components['schemas']['TunerDegradedKind']
 type DeviceDetection = components['schemas']['DeviceDetection']
 type DetectedTunersResponder = components['schemas']['DetectedTunersResponder']
 type DetectedDeviceResponder = components['schemas']['DetectedDeviceResponder']
@@ -928,7 +925,11 @@ function toState(
   }
 
   if (observation.health === 'degraded') {
-    return { state: 'warn', stateLabel: TUNER_STATE_LABEL.degraded }
+    return {
+      state: 'warn',
+      stateLabel: TUNER_STATE_LABEL.degraded,
+      stateSub: whyItIsNotQuiteWell(observation),
+    }
   }
 
   return { state: 'ok', stateLabel: TUNER_STATE_LABEL.ok }
@@ -936,11 +937,13 @@ function toState(
 
 const UNTIL_THE_DRIVER_RESTARTS = 'driver を起動し直すまで割り当てられない。'
 
+const NOT_TOLD_WHY = '理由はまだ分からない。'
+
 const FAULT_SAID: Record<
   TunerFaultKind,
   (observation: TunerObservationResponder) => string
 > = {
-  unspecified: () => NOT_YET_IN_THIS_BUILD_SAYING,
+  unspecified: () => NOT_TOLD_WHY,
   ledgerDisagrees: (observation) =>
     `一覧では${wordFor(KIND_TEXT, observation.faultDeclaredKind ?? 'unspecified')}、このチューナーが受信できるのは${observation.faultReceivableKinds
       .map((kind) => wordFor(KIND_TEXT, kind))
@@ -956,7 +959,21 @@ const FAULT_SAID: Record<
 function whyItIsNotHandedOut(observation: TunerObservationResponder): string {
   return shapeFor(
     FAULT_SAID,
-    observation.faultKind,
-    () => NOT_YET_IN_THIS_BUILD_SAYING,
+    observation.faultKind ?? 'unspecified',
+    () => NOT_TOLD_WHY,
   )(observation)
+}
+
+const DEGRADED_SAID: Record<TunerDegradedKind, string> = {
+  unspecified: NOT_TOLD_WHY,
+  tuneFailing:
+    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+}
+
+function whyItIsNotQuiteWell(observation: TunerObservationResponder): string {
+  return shapeFor(
+    DEGRADED_SAID,
+    observation.degradedKind ?? 'unspecified',
+    NOT_TOLD_WHY,
+  )
 }

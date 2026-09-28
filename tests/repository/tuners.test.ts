@@ -535,7 +535,7 @@ test("each way the driver takes a tuner out of service is said in the screen's w
   }
 })
 
-test("a way of taking a tuner out of service this build does not know is said as such, never as the driver's sentence", async () => {
+test("a way of taking a tuner out of service the driver did not name, or this build does not know, says the reason is not known yet and never the driver's sentence", async () => {
   for (const faultKind of ['overheated', 'unspecified', undefined]) {
     standing()
     observedAs({
@@ -548,18 +548,41 @@ test("a way of taking a tuner out of service this build does not know is said as
     const row = (await screen()).rows[0]
 
     assert.equal(row?.stateLabel, '異常')
-    assert.equal(row?.stateSub, 'この版がまだ知らない値です。')
+    assert.equal(row?.stateSub, '理由はまだ分からない。')
   }
 })
 
-test("a tuner the driver only warns about is not given the driver's sentence", async () => {
+test("a tuner that has failed to tune a channel says so in the screen's words", async () => {
   standing()
-  observedAs({ health: 'degraded', healthDetail: A_DEVICE_TURNED_OFF })
+  observedAs({
+    health: 'degraded',
+    healthDetail: A_DEVICE_TURNED_OFF,
+    degradedKind: 'tuneFailing',
+  })
 
   const row = (await screen()).rows[0]
 
   assert.equal(row?.stateLabel, '警告')
-  assert.equal(row?.stateSub, undefined)
+  assert.equal(
+    row?.stateSub,
+    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+  )
+})
+
+test("a tuner the driver warns about without naming why says the reason is not known yet and never the driver's sentence", async () => {
+  for (const degradedKind of ['runningHot', 'unspecified', undefined]) {
+    standing()
+    observedAs({
+      health: 'degraded',
+      healthDetail: A_DEVICE_TURNED_OFF,
+      degradedKind,
+    })
+
+    const row = (await screen()).rows[0]
+
+    assert.equal(row?.stateLabel, '警告')
+    assert.equal(row?.stateSub, '理由はまだ分からない。')
+  }
 })
 
 test('a healthy tuner is not given a sentence it has no state to explain', async () => {
