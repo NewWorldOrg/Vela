@@ -555,7 +555,7 @@ test('a status nobody worded still says something', async () => {
 
   assert.equal(
     write.state === 'refused' && write.message,
-    '外部プレイヤーの札を発行できませんでした(418)。',
+    '外部プレイヤーの札を発行できませんでした。しばらくしてからもう一度試してください。',
   )
 })
 

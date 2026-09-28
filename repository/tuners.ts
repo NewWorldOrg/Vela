@@ -1,8 +1,9 @@
+import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import type { Route } from 'next'
 
 import { formatMoment } from '@/lib/format'
 import { SILENCE_RANGE } from '@/lib/tuners'
-import { wordFor } from '@/lib/not-yet-in-this-build'
+import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import {
   SESSION_PILL_LABEL,
@@ -22,6 +23,8 @@ type DriverStatusEnvelope =
   components['schemas']['BaseResponderOfDriverStatusResponder']
 type SessionPurpose = components['schemas']['SessionPurpose']
 type TunerKind = components['schemas']['TunerKind']
+type TunerFaultKind = components['schemas']['TunerFaultKind']
+type TunerDegradedKind = components['schemas']['TunerDegradedKind']
 type DeviceDetection = components['schemas']['DeviceDetection']
 type DetectedTunersResponder = components['schemas']['DetectedTunersResponder']
 type DetectedDeviceResponder = components['schemas']['DetectedDeviceResponder']
@@ -197,7 +200,7 @@ export async function getTuners(): Promise<TunerScreenResult> {
   if (body.data === null || !body.status) {
     return {
       state: 'unavailable',
-      message: `API は ${ledger.response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -247,7 +250,7 @@ export async function setHoursOfSilence(
   if (body === undefined) {
     return {
       state: 'rejected',
-      message: `しきい値を変えられませんでした(${response.status})。`,
+      message: couldNot('しきい値を変えられませんでした'),
     }
   }
 
@@ -277,7 +280,7 @@ export async function setTunerDisabled(
   if (body === undefined) {
     return {
       state: 'unavailable',
-      message: `API は ${response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -285,7 +288,7 @@ export async function setTunerDisabled(
     ? { state: 'ok' }
     : {
         state: 'unavailable',
-        message: `API は ${response.status} を返しました。`,
+        message: TRY_AGAIN_LATER,
       }
 }
 
@@ -419,14 +422,14 @@ export async function getDetectedTuners(): Promise<DetectionScreenResult> {
   if (body === undefined) {
     return {
       state: 'unavailable',
-      message: `API は ${response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
   if (body.data === null || !body.status) {
     return {
       state: 'unavailable',
-      message: `API は ${response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -448,7 +451,7 @@ export async function saveDetectedTuners(
   if (ledgerBody?.data == null) {
     return {
       state: 'rejected',
-      message: `保存前の一覧を読み取れなかったため、保存していません(${ledger.response.status})。`,
+      message: couldNot('保存前の一覧を読み取れなかったため、保存していません'),
     }
   }
 
@@ -489,7 +492,7 @@ export async function saveDetectedTuners(
     message: toSaveRefusal(
       saved.response,
       saved.data ?? saved.error,
-      `検出結果を保存できませんでした(${saved.response.status})。`,
+      couldNot('検出結果を保存できませんでした'),
     ),
   }
 }
@@ -531,7 +534,7 @@ export async function setLnbPower(
     message: toSaveRefusal(
       response,
       data ?? error,
-      `LNB 給電を保存できませんでした(${response.status})。`,
+      couldNot('LNB 給電を保存できませんでした'),
     ),
   }
 }
@@ -917,7 +920,7 @@ function toState(
     return {
       state: 'faulted',
       stateLabel: TUNER_STATE_LABEL.faulted,
-      stateSub: whatTheDriverSaid(observation),
+      stateSub: whyItIsNotHandedOut(observation),
     }
   }
 
@@ -925,20 +928,52 @@ function toState(
     return {
       state: 'warn',
       stateLabel: TUNER_STATE_LABEL.degraded,
-      stateSub: whatTheDriverSaid(observation),
+      stateSub: whyItIsNotQuiteWell(observation),
     }
   }
 
   return { state: 'ok', stateLabel: TUNER_STATE_LABEL.ok }
 }
 
-function whatTheDriverSaid(
-  observation: TunerObservationResponder,
-): string | undefined {
-  const said =
-    observation.state === 'faulted' && observation.detail
-      ? observation.detail
-      : observation.healthDetail
+const UNTIL_THE_DRIVER_RESTARTS = 'driver を起動し直すまで割り当てられない。'
 
-  return said || undefined
+const NOT_TOLD_WHY = '理由はまだ分からない。'
+
+const FAULT_SAID: Record<
+  TunerFaultKind,
+  (observation: TunerObservationResponder) => string
+> = {
+  unspecified: () => NOT_TOLD_WHY,
+  ledgerDisagrees: (observation) =>
+    `一覧では${wordFor(KIND_TEXT, observation.faultDeclaredKind ?? 'unspecified')}、このチューナーが受信できるのは${observation.faultReceivableKinds
+      .map((kind) => wordFor(KIND_TEXT, kind))
+      .join('・')}。一致するまで割り当てられない。`,
+  deviceFailed: () =>
+    '使用中にデバイスが応答しなくなった。開き直せた時点で割り当てが戻る。',
+  deviceFailedAgain: () =>
+    `戻した直後にデバイスがまた応答しなくなった。${UNTIL_THE_DRIVER_RESTARTS}`,
+  repeatedTuneFailure: () =>
+    `同じチャンネルで続けて選局できなかった。${UNTIL_THE_DRIVER_RESTARTS}`,
+}
+
+function whyItIsNotHandedOut(observation: TunerObservationResponder): string {
+  return shapeFor(
+    FAULT_SAID,
+    observation.faultKind ?? 'unspecified',
+    () => NOT_TOLD_WHY,
+  )(observation)
+}
+
+const DEGRADED_SAID: Record<TunerDegradedKind, string> = {
+  unspecified: NOT_TOLD_WHY,
+  tuneFailing:
+    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+}
+
+function whyItIsNotQuiteWell(observation: TunerObservationResponder): string {
+  return shapeFor(
+    DEGRADED_SAID,
+    observation.degradedKind ?? 'unspecified',
+    NOT_TOLD_WHY,
+  )
 }

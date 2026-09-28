@@ -1185,6 +1185,16 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -1252,6 +1262,16 @@
         "responses": {
           "200": {
             "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1398,6 +1418,16 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfBroadcastServiceResponder"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -1454,6 +1484,16 @@
         "responses": {
           "200": {
             "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanApplicationResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1536,6 +1576,16 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -1592,6 +1642,16 @@
         "responses": {
           "200": {
             "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanProgressResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
@@ -6771,7 +6831,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfPasswordChangedResponder"
+                  "$ref": "#/components/schemas/BaseResponderOfPasswordRefusedResponder"
                 }
               }
             }
@@ -6952,7 +7012,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfOidcConfigResponder"
+                  "$ref": "#/components/schemas/BaseResponderOfOidcConfigRefusedResponder"
                 }
               }
             }
@@ -8057,6 +8117,32 @@
           }
         }
       },
+      "BaseResponderOfOidcConfigRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OidcConfigRefusedResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfOidcConfigResponder": {
         "required": [
           "status",
@@ -8104,6 +8190,32 @@
               },
               {
                 "$ref": "#/components/schemas/PasswordChangedResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfPasswordRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PasswordRefusedResponder"
               }
             ]
           }
@@ -12146,6 +12258,27 @@
           }
         }
       },
+      "OidcConfigRefusal": {
+        "enum": [
+          "secretRequired",
+          "discoveryUrlInvalid",
+          "clientIdInvalid",
+          "restrictionInvalid",
+          "providerUnreachable"
+        ],
+        "type": "string"
+      },
+      "OidcConfigRefusedResponder": {
+        "required": [
+          "refusal"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/OidcConfigRefusal"
+          }
+        }
+      },
       "OidcConfigRequest": {
         "type": "object",
         "properties": {
@@ -12261,6 +12394,42 @@
         "type": "object",
         "properties": {
           "sessionsEnded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PasswordRefusal": {
+        "enum": [
+          "wrongPassword",
+          "outOfLength"
+        ],
+        "type": "string"
+      },
+      "PasswordRefusedResponder": {
+        "required": [
+          "refusal",
+          "shortestLength",
+          "longestLength"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/PasswordRefusal"
+          },
+          "shortestLength": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "longestLength": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -14543,6 +14712,41 @@
           }
         }
       },
+      "RecordingGapResponder": {
+        "required": [
+          "from",
+          "until",
+          "seconds",
+          "atSecond"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "seconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "atSecond": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "RecordingInterruptionResponder": {
         "required": [
           "fault",
@@ -14821,7 +15025,9 @@
           "encode",
           "unfinishedDeletion",
           "leftScrambled",
-          "descrambledAt"
+          "descrambledAt",
+          "gaps",
+          "missedMs"
         ],
         "type": "object",
         "properties": {
@@ -14957,6 +15163,20 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "gaps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingGapResponder"
+            }
+          },
+          "missedMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         }
       },
@@ -17869,6 +18089,13 @@
           "string"
         ]
       },
+      "TunerDegradedKind": {
+        "enum": [
+          "unspecified",
+          "tuneFailing"
+        ],
+        "type": "string"
+      },
       "TunerEntryRequest": {
         "type": "object",
         "properties": {
@@ -17909,6 +18136,16 @@
             "$ref": "#/components/schemas/TunerKind"
           }
         }
+      },
+      "TunerFaultKind": {
+        "enum": [
+          "unspecified",
+          "ledgerDisagrees",
+          "deviceFailed",
+          "deviceFailedAgain",
+          "repeatedTuneFailure"
+        ],
+        "type": "string"
       },
       "TunerHealthLevel": {
         "enum": [
@@ -18068,6 +18305,10 @@
           "lnbPowered",
           "healthDetail",
           "healthChangedAt",
+          "faultKind",
+          "faultDeclaredKind",
+          "faultReceivableKinds",
+          "degradedKind",
           "sessionId",
           "sessionPurpose",
           "sessionStartedAt",
@@ -18112,6 +18353,28 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "faultKind": {
+            "$ref": "#/components/schemas/TunerFaultKind"
+          },
+          "faultDeclaredKind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TunerKind"
+              }
+            ]
+          },
+          "faultReceivableKinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TunerKind"
+            }
+          },
+          "degradedKind": {
+            "$ref": "#/components/schemas/TunerDegradedKind"
           },
           "sessionId": {
             "type": [

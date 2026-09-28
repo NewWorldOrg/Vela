@@ -1235,7 +1235,8 @@ test('a status with no reading of its own keeps the number beside it', async () 
 
   assert.deepEqual(result, {
     state: 'rejected',
-    message: '予約を復元できませんでした。(500)',
+    message:
+      '予約を復元できませんでした。しばらくしてからもう一度試してください。',
   })
 })
 
@@ -1531,14 +1532,17 @@ test('the reason is read from the answer, not from the status it shares', async 
   )
 })
 
-test('a refusal with no reason of its own falls back to the status', async () => {
+test('a refusal with no reason of its own asks to try again later', async () => {
   standing()
   discarding(409, null)
 
   const result = await discardReservation('a1')
 
   assert.equal(result.state, 'rejected')
-  assert.match(result.state === 'rejected' ? result.message : '', /\(409\)/)
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /しばらくしてからもう一度試してください。$/,
+  )
 })
 
 test('a session that has run out is not a refusal of the deletion', async () => {

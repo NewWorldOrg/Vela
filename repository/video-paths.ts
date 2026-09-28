@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import type { operations } from '@/repository/client/schema'
 import type { PlaybackSource } from '@/repository/playback-sources'
 import type { SoundTrack } from '@/repository/sounds'
@@ -60,7 +61,7 @@ export function whyItRefused(
     return saying[1]
   }
 
-  return `${asking.fell}(${status})。`
+  return couldNot(asking.fell)
 }
 
 function whole(seconds: number) {

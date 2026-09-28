@@ -173,7 +173,6 @@ export const FAILED_JOB: EncodeJob = {
   route: { asked: 'software', ran: 'software' },
   failure: {
     failure: 'ffmpegExitedNonZero',
-    note: 'Conversion failed!',
     noticedAt: '2026/08/07 23:13',
   },
 }

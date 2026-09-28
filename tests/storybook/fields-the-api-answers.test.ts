@@ -299,6 +299,20 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
+      'the sentences the driver and the encoder write are English for the record, and the screen says the same thing in its own words from the kind that comes beside them',
+    fields: [
+      'EncodeFailureResponder.note',
+      'TunerObservationResponder.detail',
+      'TunerObservationResponder.healthDetail',
+    ],
+  },
+  {
+    because:
+      'a gap is said by where it began and how long it lasted, so where it ended is the two added together',
+    fields: ['RecordingGapResponder.until'],
+  },
+  {
+    because:
       'the ledger keeps there whatever a person wrote when they stopped a recording by hand, and nothing else; why a recording failed is said on screen from the fault and the figures beside it, never by repeating a sentence the server wrote',
     fields: ['RecordingFaultResponder.note'],
   },

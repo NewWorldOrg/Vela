@@ -1557,6 +1557,11 @@ export interface components {
       message: string
       data: null | components['schemas']['MigrationRecordResponder']
     }
+    BaseResponderOfOidcConfigRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['OidcConfigRefusedResponder']
+    }
     BaseResponderOfOidcConfigResponder: {
       status: boolean
       message: string
@@ -1566,6 +1571,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['PasswordChangedResponder']
+    }
+    BaseResponderOfPasswordRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['PasswordRefusedResponder']
     }
     BaseResponderOfPlaybackPlanResponder: {
       status: boolean
@@ -2511,6 +2521,16 @@ export interface components {
       /** Format: date-time */
       lastRehearsalFinishedAt: null | string
     }
+    /** @enum {string} */
+    OidcConfigRefusal:
+      | 'secretRequired'
+      | 'discoveryUrlInvalid'
+      | 'clientIdInvalid'
+      | 'restrictionInvalid'
+      | 'providerUnreachable'
+    OidcConfigRefusedResponder: {
+      refusal: components['schemas']['OidcConfigRefusal']
+    }
     OidcConfigRequest: {
       discoveryUrl?: null | string
       clientId?: null | string
@@ -2535,6 +2555,15 @@ export interface components {
     PasswordChangedResponder: {
       /** Format: int32 */
       sessionsEnded: number | string
+    }
+    /** @enum {string} */
+    PasswordRefusal: 'wrongPassword' | 'outOfLength'
+    PasswordRefusedResponder: {
+      refusal: components['schemas']['PasswordRefusal']
+      /** Format: int32 */
+      shortestLength: number | string
+      /** Format: int32 */
+      longestLength: number | string
     }
     PcrReanchorResponder: {
       /** Format: int32 */
@@ -3098,6 +3127,16 @@ export interface components {
       /** Format: date-time */
       noticedAt: string
     }
+    RecordingGapResponder: {
+      /** Format: date-time */
+      from: string
+      /** Format: date-time */
+      until: string
+      /** Format: double */
+      seconds: number | string
+      /** Format: double */
+      atSecond: number | string
+    }
     RecordingInterruptionResponder: {
       fault: components['schemas']['RecordingFault']
       /** Format: date-time */
@@ -3194,6 +3233,9 @@ export interface components {
       leftScrambled: boolean
       /** Format: date-time */
       descrambledAt: null | string
+      gaps: components['schemas']['RecordingGapResponder'][]
+      /** Format: int64 */
+      missedMs: number | string
     }
     /** @enum {string} */
     RecordingSort: 'startedAt' | 'programmeStartsAt'
@@ -3949,6 +3991,8 @@ export interface components {
     /** @enum {null|string} */
     TuneFailureKind:
       'noLock' | 'noData' | 'incompletePsi' | 'streamMismatch' | null
+    /** @enum {string} */
+    TunerDegradedKind: 'unspecified' | 'tuneFailing'
     TunerEntryRequest: {
       deviceId?: null | string
       disabled?: boolean
@@ -3960,6 +4004,13 @@ export interface components {
       lnbPower: boolean
       kind: components['schemas']['TunerKind']
     }
+    /** @enum {string} */
+    TunerFaultKind:
+      | 'unspecified'
+      | 'ledgerDisagrees'
+      | 'deviceFailed'
+      | 'deviceFailedAgain'
+      | 'repeatedTuneFailure'
     /** @enum {string} */
     TunerHealthLevel: 'unspecified' | 'healthy' | 'degraded' | 'faulted'
     TunerHealthResponder: {
@@ -4000,6 +4051,10 @@ export interface components {
       healthDetail: null | string
       /** Format: date-time */
       healthChangedAt: null | string
+      faultKind: components['schemas']['TunerFaultKind']
+      faultDeclaredKind: null | components['schemas']['TunerKind']
+      faultReceivableKinds: components['schemas']['TunerKind'][]
+      degradedKind: components['schemas']['TunerDegradedKind']
       sessionId: null | string
       sessionPurpose: components['schemas']['SessionPurpose']
       /** Format: date-time */
@@ -5002,6 +5057,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
         }
       }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
       /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
       401: {
         headers: {
@@ -5052,6 +5116,15 @@ export interface operations {
     responses: {
       /** @description OK */
       200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
         headers: {
           [name: string]: unknown
         }
@@ -5151,6 +5224,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
         }
       }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
       /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
       401: {
         headers: {
@@ -5200,6 +5282,15 @@ export interface operations {
     responses: {
       /** @description OK */
       200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanApplicationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
         headers: {
           [name: string]: unknown
         }
@@ -5272,6 +5363,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
         }
       }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
       /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
       401: {
         headers: {
@@ -5321,6 +5421,15 @@ export interface operations {
     responses: {
       /** @description OK */
       200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanProgressResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
         headers: {
           [name: string]: unknown
         }
@@ -9208,7 +9317,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['BaseResponderOfPasswordChangedResponder']
+          'application/json': components['schemas']['BaseResponderOfPasswordRefusedResponder']
         }
       }
       /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
@@ -9375,7 +9484,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['BaseResponderOfOidcConfigResponder']
+          'application/json': components['schemas']['BaseResponderOfOidcConfigRefusedResponder']
         }
       }
       /** @description Unauthenticated. The default-deny middleware answers with an empty body. */

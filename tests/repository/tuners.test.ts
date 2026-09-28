@@ -480,46 +480,109 @@ function observedAs(over: Record<string, unknown>): void {
 const A_DEVICE_TURNED_OFF =
   'This device was turned off and comes out of service as soon as the session it holds ends.'
 
-const NOTHING_CAME_BACK = 'The last three tunes on this device timed out.'
+const THE_LEDGER_DISAGREES =
+  "The ledger calls 'adapter0.frontend0' a terrestrial tuner and the tuner reports that it receives satellite."
 
-test('a tuner the driver calls faulted carries the sentence the driver wrote beside it', async () => {
+test("a tuner the ledger disagrees with says both kinds in the screen's words and not the sentence the driver wrote", async () => {
   standing()
-  observedAs({ state: 'faulted', detail: NOTHING_CAME_BACK })
+  observedAs({
+    state: 'faulted',
+    health: 'faulted',
+    detail: THE_LEDGER_DISAGREES,
+    healthDetail: THE_LEDGER_DISAGREES,
+    faultKind: 'ledgerDisagrees',
+    faultDeclaredKind: 'terrestrial',
+    faultReceivableKinds: ['satellite'],
+  })
 
   const row = (await screen()).rows[0]
 
   assert.equal(row?.stateLabel, '異常')
-  assert.equal(row?.stateSub, NOTHING_CAME_BACK)
+  assert.equal(
+    row?.stateSub,
+    '一覧では地上波、このチューナーが受信できるのは衛星。一致するまで割り当てられない。',
+  )
 })
 
-test('a tuner faulted on its health alone reads the sentence written beside the health', async () => {
-  standing()
-  observedAs({ health: 'faulted', healthDetail: A_DEVICE_TURNED_OFF })
+test("each way the driver takes a tuner out of service is said in the screen's words", async () => {
+  for (const [faultKind, said] of [
+    [
+      'deviceFailed',
+      '使用中にデバイスが応答しなくなった。開き直せた時点で割り当てが戻る。',
+    ],
+    [
+      'deviceFailedAgain',
+      '戻した直後にデバイスがまた応答しなくなった。driver を起動し直すまで割り当てられない。',
+    ],
+    [
+      'repeatedTuneFailure',
+      '同じチャンネルで続けて選局できなかった。driver を起動し直すまで割り当てられない。',
+    ],
+  ] as const) {
+    standing()
+    observedAs({
+      health: 'faulted',
+      healthDetail: A_DEVICE_TURNED_OFF,
+      faultKind,
+      faultDeclaredKind: null,
+      faultReceivableKinds: [],
+    })
 
-  const row = (await screen()).rows[0]
+    const row = (await screen()).rows[0]
 
-  assert.equal(row?.stateLabel, '異常')
-  assert.equal(row?.stateSub, A_DEVICE_TURNED_OFF)
+    assert.equal(row?.stateLabel, '異常')
+    assert.equal(row?.stateSub, said)
+  }
 })
 
-test('a tuner the driver only warns about carries the sentence too', async () => {
+test("a way of taking a tuner out of service the driver did not name, or this build does not know, says the reason is not known yet and never the driver's sentence", async () => {
+  for (const faultKind of ['overheated', 'unspecified', undefined]) {
+    standing()
+    observedAs({
+      state: 'faulted',
+      detail: A_DEVICE_TURNED_OFF,
+      faultKind,
+      faultReceivableKinds: [],
+    })
+
+    const row = (await screen()).rows[0]
+
+    assert.equal(row?.stateLabel, '異常')
+    assert.equal(row?.stateSub, '理由はまだ分からない。')
+  }
+})
+
+test("a tuner that has failed to tune a channel says so in the screen's words", async () => {
   standing()
-  observedAs({ health: 'degraded', healthDetail: A_DEVICE_TURNED_OFF })
+  observedAs({
+    health: 'degraded',
+    healthDetail: A_DEVICE_TURNED_OFF,
+    degradedKind: 'tuneFailing',
+  })
 
   const row = (await screen()).rows[0]
 
   assert.equal(row?.stateLabel, '警告')
-  assert.equal(row?.stateSub, A_DEVICE_TURNED_OFF)
+  assert.equal(
+    row?.stateSub,
+    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+  )
 })
 
-test('a tuner the driver wrote nothing about is left without a sentence', async () => {
-  standing()
-  observedAs({ state: 'faulted', detail: null, healthDetail: null })
+test("a tuner the driver warns about without naming why says the reason is not known yet and never the driver's sentence", async () => {
+  for (const degradedKind of ['runningHot', 'unspecified', undefined]) {
+    standing()
+    observedAs({
+      health: 'degraded',
+      healthDetail: A_DEVICE_TURNED_OFF,
+      degradedKind,
+    })
 
-  const row = (await screen()).rows[0]
+    const row = (await screen()).rows[0]
 
-  assert.equal(row?.stateLabel, '異常')
-  assert.equal(row?.stateSub, undefined)
+    assert.equal(row?.stateLabel, '警告')
+    assert.equal(row?.stateSub, '理由はまだ分からない。')
+  }
 })
 
 test('a healthy tuner is not given a sentence it has no state to explain', async () => {
@@ -576,7 +639,7 @@ test('a switch the API will not take says what the API answered', async () => {
 
     assert.deepEqual(await setTunerDisabled(DEVICE, true), {
       state: 'unavailable',
-      message: `API は ${reply.status} を返しました。`,
+      message: 'しばらくしてからもう一度試してください。',
     })
   }
 })
@@ -874,7 +937,7 @@ test('a detection the API will not give says what it answered', async () => {
 
     assert.deepEqual(await getDetectedTuners(), {
       state: 'unavailable',
-      message: `API は ${reply.status} を返しました。`,
+      message: 'しばらくしてからもう一度試してください。',
     })
   }
 
@@ -969,7 +1032,8 @@ test('nothing is saved when the ledger before it cannot be read', async () => {
 
   assert.deepEqual(await saveDetectedTuners([DEVICE]), {
     state: 'rejected',
-    message: '保存前の一覧を読み取れなかったため、保存していません(503)。',
+    message:
+      '保存前の一覧を読み取れなかったため、保存していません。しばらくしてからもう一度試してください。',
   })
   assert.equal(savedTuners(), undefined)
 
@@ -999,7 +1063,11 @@ test('a save the API refuses is said in the words of why it refused', async () =
     [500, 'ledgerUnwritable: read-only', /driver が一覧を書き込めない/],
     [501, 'the driver cannot detect', /デバイス検出に対応していない/],
     [503, 'no driver', /driver に接続できない/],
-    [400, 'somethingNew: x', /保存できませんでした\(400\)/],
+    [
+      400,
+      'somethingNew: x',
+      /保存できませんでした。しばらくしてからもう一度試してください。/,
+    ],
   ] as const) {
     standing()
     store.writeStatus = status
@@ -1130,7 +1198,11 @@ test('power the API refuses is said in the words of why it refused', async () =>
     [404, 'noSuchTuner: adapter1.frontend0', /保存された一覧にない/],
     [501, 'capabilityMissing', /対応していない/],
     [503, 'no driver', /driver に接続できない/],
-    [400, 'rejected: x', /LNB 給電を保存できませんでした\(400\)/],
+    [
+      400,
+      'rejected: x',
+      /LNB 給電を保存できませんでした。しばらくしてからもう一度試してください。/,
+    ],
   ] as const) {
     standing()
     store.writeStatus = status

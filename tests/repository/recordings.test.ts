@@ -119,6 +119,8 @@ const recording = (over: Over = {}) => ({
   unfinishedDeletion: null,
   leftScrambled: false,
   descrambledAt: null,
+  gaps: [],
+  missedMs: 0,
   ...over,
 })
 
@@ -659,6 +661,59 @@ test('the times the recorder overflowed are spelled with their thousands apart',
   standing([recording({ drops: drops({ eovfCount: 12_400 }) })])
 
   assert.equal((await getRecording('d1'))?.eoverflow, '12,400 回')
+})
+
+const CARRIED_ON = {
+  gaps: [
+    {
+      from: '2026-08-09T14:05:12Z',
+      until: '2026-08-09T14:05:14.5Z',
+      seconds: 2.5,
+      atSecond: 312.3,
+    },
+  ],
+  missedMs: 2500,
+  drops: drops({ quality: 'warning' }),
+}
+
+test('a recording that carried on after a gap says how long it missed beside its quality', async () => {
+  const one = await only([recording(CARRIED_ON)])
+
+  assert.equal(one.quality.level, 'warning')
+  assert.equal(one.quality.detail, 'ドロップ 0 / 欠け 2.5 秒')
+})
+
+test('a recording that carried on after a gap says where the gap began in its record, and marks it on the seek bar', async () => {
+  standing([recording(CARRIED_ON)])
+
+  const detail = await getRecording('d1')
+
+  assert.equal(detail?.interruptions?.sub, '欠け 23:05 から 2.5 秒')
+  assert.deepEqual(detail?.qualitySpots, [
+    { at: '0:05:12', packets: '欠け 2.5 秒', second: 312 },
+  ])
+})
+
+test('a recording from an API that keeps no gaps yet says nothing about a gap', async () => {
+  const older = recording()
+  delete (older as Over).gaps
+  delete (older as Over).missedMs
+  standing([older])
+
+  const detail = await getRecording('d1')
+
+  assert.equal(detail?.interruptions?.sub, undefined)
+  assert.deepEqual(detail?.qualitySpots, [])
+  assert.equal(detail?.quality.detail, 'ドロップ 0')
+})
+
+test('a recording that missed nothing says nothing about a gap', async () => {
+  standing([recording()])
+
+  const detail = await getRecording('d1')
+
+  assert.equal(detail?.interruptions?.sub, undefined)
+  assert.equal(detail?.quality.detail, 'ドロップ 0')
 })
 
 test('a recording nothing counted the overflows on carries none, not a count of zero', async () => {
@@ -1330,13 +1385,16 @@ test('each refusal the endpoint can give is told apart from the others', async (
   assert.equal(said.size, 4)
 })
 
-test('a status the endpoint does not name falls back to saying which it was', async () => {
+test('a status the endpoint does not name asks to try again later', async () => {
   store.remakeStatus = 500
 
   const result = await remakeThumbnail('7e7a14cf')
 
   assert.equal(result.state, 'rejected')
-  assert.match(result.state === 'rejected' ? result.message : '', /\(500\)/)
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /しばらくしてからもう一度試してください。$/,
+  )
 })
 
 function discarding(status: number, data: unknown): void {
@@ -1472,13 +1530,16 @@ test('a refusal that says the files are still there says so, not that it failed'
   )
 })
 
-test('a refusal carrying no reason falls back to saying which status it was', async () => {
+test('a refusal carrying no reason asks to try again later', async () => {
   discarding(400, null)
 
   const result = await discardRecording('re-1')
 
   assert.equal(result.state, 'rejected')
-  assert.match(result.state === 'rejected' ? result.message : '', /\(400\)/)
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /しばらくしてからもう一度試してください。$/,
+  )
 })
 
 test('a session that has run out is not a refusal of the deletion', async () => {

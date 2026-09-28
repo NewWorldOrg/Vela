@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { formatBytes, formatMoment } from '@/lib/format'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
@@ -125,7 +126,7 @@ function refusalOf(
   answered: SweepRefused | SweepDone | null | undefined,
 ): string {
   if (!answered || !('refusal' in answered)) {
-    return `整合性チェックを実行できませんでした(${response.status})。`
+    return couldNot('整合性チェックを実行できませんでした')
   }
 
   if (answered.refusal === 'oneIsAlreadyRunning') {
@@ -138,7 +139,7 @@ function refusalOf(
       : TOO_SOON
   }
 
-  return `整合性チェックを実行できませんでした(${response.status})。`
+  return couldNot('整合性チェックを実行できませんでした')
 }
 
 type FindingRefusal = components['schemas']['FindingDisposalFailure']
@@ -190,7 +191,7 @@ export async function discardIntegrityFinding(
 
   return {
     state: 'rejected',
-    message: refusal ?? `${CANNOT_DISCARD}(${response.status})。`,
+    message: refusal ?? couldNot(CANNOT_DISCARD),
   }
 }
 

@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import { formatMoment } from '@/lib/format'
 import {
   callsOff,
@@ -77,7 +78,6 @@ export interface EncodeRoute {
 
 export interface EncodeFailureDetail {
   failure: EncodeFailure
-  note: string
   noticedAt: string
 }
 
@@ -445,7 +445,7 @@ export function whyItRefused(
     return `${DRIVER_OUT_OF_REACH}${asking.did}できませんでした。`
   }
 
-  return `${asking.fell}(${status})。`
+  return couldNot(asking.fell)
 }
 
 export async function defineProfile(
@@ -787,7 +787,6 @@ export function toEncodeJob(
     failure: one.failure
       ? {
           failure: one.failure.failure,
-          note: one.failure.note,
           noticedAt: formatMoment(one.failure.noticedAt),
         }
       : undefined,

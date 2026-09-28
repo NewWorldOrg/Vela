@@ -11,6 +11,7 @@ import {
   shapeFor,
   wordFor,
 } from '@/lib/not-yet-in-this-build'
+import { couldNot } from '@/lib/try-again'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -412,7 +413,7 @@ export function whyItRefused(
     return `${reason[1]}${asking.did}できませんでした。`
   }
 
-  return `${asking.fell}(${status})。`
+  return couldNot(asking.fell)
 }
 
 export async function getQuality(
