@@ -2,7 +2,11 @@ import type { Route } from 'next'
 
 import { formatMoment } from '@/lib/format'
 import { SILENCE_RANGE } from '@/lib/tuners'
-import { wordFor } from '@/lib/not-yet-in-this-build'
+import {
+  NOT_YET_IN_THIS_BUILD_SAYING,
+  shapeFor,
+  wordFor,
+} from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import {
   SESSION_PILL_LABEL,
@@ -22,6 +26,7 @@ type DriverStatusEnvelope =
   components['schemas']['BaseResponderOfDriverStatusResponder']
 type SessionPurpose = components['schemas']['SessionPurpose']
 type TunerKind = components['schemas']['TunerKind']
+type TunerFaultKind = components['schemas']['TunerFaultKind']
 type DeviceDetection = components['schemas']['DeviceDetection']
 type DetectedTunersResponder = components['schemas']['DetectedTunersResponder']
 type DetectedDeviceResponder = components['schemas']['DetectedDeviceResponder']
@@ -917,28 +922,40 @@ function toState(
     return {
       state: 'faulted',
       stateLabel: TUNER_STATE_LABEL.faulted,
-      stateSub: whatTheDriverSaid(observation),
+      stateSub: whyItIsNotHandedOut(observation),
     }
   }
 
   if (observation.health === 'degraded') {
-    return {
-      state: 'warn',
-      stateLabel: TUNER_STATE_LABEL.degraded,
-      stateSub: whatTheDriverSaid(observation),
-    }
+    return { state: 'warn', stateLabel: TUNER_STATE_LABEL.degraded }
   }
 
   return { state: 'ok', stateLabel: TUNER_STATE_LABEL.ok }
 }
 
-function whatTheDriverSaid(
-  observation: TunerObservationResponder,
-): string | undefined {
-  const said =
-    observation.state === 'faulted' && observation.detail
-      ? observation.detail
-      : observation.healthDetail
+const UNTIL_THE_DRIVER_RESTARTS = 'driver を起動し直すまで割り当てられない。'
 
-  return said || undefined
+const FAULT_SAID: Record<
+  TunerFaultKind,
+  (observation: TunerObservationResponder) => string
+> = {
+  unspecified: () => NOT_YET_IN_THIS_BUILD_SAYING,
+  ledgerDisagrees: (observation) =>
+    `一覧では${wordFor(KIND_TEXT, observation.faultDeclaredKind ?? 'unspecified')}、このチューナーが受信できるのは${observation.faultReceivableKinds
+      .map((kind) => wordFor(KIND_TEXT, kind))
+      .join('・')}。一致するまで割り当てられない。`,
+  deviceFailed: () =>
+    '使用中にデバイスが応答しなくなった。開き直せた時点で割り当てが戻る。',
+  deviceFailedAgain: () =>
+    `戻した直後にデバイスがまた応答しなくなった。${UNTIL_THE_DRIVER_RESTARTS}`,
+  repeatedTuneFailure: () =>
+    `同じチャンネルで続けて選局できなかった。${UNTIL_THE_DRIVER_RESTARTS}`,
+}
+
+function whyItIsNotHandedOut(observation: TunerObservationResponder): string {
+  return shapeFor(
+    FAULT_SAID,
+    observation.faultKind,
+    () => NOT_YET_IN_THIS_BUILD_SAYING,
+  )(observation)
 }

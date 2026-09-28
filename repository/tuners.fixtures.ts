@@ -72,7 +72,8 @@ export const TUNERS: TunerResult = {
       idleLabel: '割当停止中',
       state: 'faulted',
       stateLabel: '異常',
-      stateSub: '設定: 地上波 / 検出: 衛星',
+      stateSub:
+        '一覧では地上波、このチューナーが受信できるのは衛星。一致するまで割り当てられない。',
     },
   ],
 }

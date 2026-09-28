@@ -480,45 +480,85 @@ function observedAs(over: Record<string, unknown>): void {
 const A_DEVICE_TURNED_OFF =
   'This device was turned off and comes out of service as soon as the session it holds ends.'
 
-const NOTHING_CAME_BACK = 'The last three tunes on this device timed out.'
+const THE_LEDGER_DISAGREES =
+  "The ledger calls 'adapter0.frontend0' a terrestrial tuner and the tuner reports that it receives satellite."
 
-test('a tuner the driver calls faulted carries the sentence the driver wrote beside it', async () => {
+test("a tuner the ledger disagrees with says both kinds in the screen's words and not the sentence the driver wrote", async () => {
   standing()
-  observedAs({ state: 'faulted', detail: NOTHING_CAME_BACK })
+  observedAs({
+    state: 'faulted',
+    health: 'faulted',
+    detail: THE_LEDGER_DISAGREES,
+    healthDetail: THE_LEDGER_DISAGREES,
+    faultKind: 'ledgerDisagrees',
+    faultDeclaredKind: 'terrestrial',
+    faultReceivableKinds: ['satellite'],
+  })
 
   const row = (await screen()).rows[0]
 
   assert.equal(row?.stateLabel, '異常')
-  assert.equal(row?.stateSub, NOTHING_CAME_BACK)
+  assert.equal(
+    row?.stateSub,
+    '一覧では地上波、このチューナーが受信できるのは衛星。一致するまで割り当てられない。',
+  )
 })
 
-test('a tuner faulted on its health alone reads the sentence written beside the health', async () => {
-  standing()
-  observedAs({ health: 'faulted', healthDetail: A_DEVICE_TURNED_OFF })
+test("each way the driver takes a tuner out of service is said in the screen's words", async () => {
+  for (const [faultKind, said] of [
+    [
+      'deviceFailed',
+      '使用中にデバイスが応答しなくなった。開き直せた時点で割り当てが戻る。',
+    ],
+    [
+      'deviceFailedAgain',
+      '戻した直後にデバイスがまた応答しなくなった。driver を起動し直すまで割り当てられない。',
+    ],
+    [
+      'repeatedTuneFailure',
+      '同じチャンネルで続けて選局できなかった。driver を起動し直すまで割り当てられない。',
+    ],
+  ] as const) {
+    standing()
+    observedAs({
+      health: 'faulted',
+      healthDetail: A_DEVICE_TURNED_OFF,
+      faultKind,
+      faultDeclaredKind: null,
+      faultReceivableKinds: [],
+    })
 
-  const row = (await screen()).rows[0]
+    const row = (await screen()).rows[0]
 
-  assert.equal(row?.stateLabel, '異常')
-  assert.equal(row?.stateSub, A_DEVICE_TURNED_OFF)
+    assert.equal(row?.stateLabel, '異常')
+    assert.equal(row?.stateSub, said)
+  }
 })
 
-test('a tuner the driver only warns about carries the sentence too', async () => {
+test("a way of taking a tuner out of service this build does not know is said as such, never as the driver's sentence", async () => {
+  for (const faultKind of ['overheated', 'unspecified', undefined]) {
+    standing()
+    observedAs({
+      state: 'faulted',
+      detail: A_DEVICE_TURNED_OFF,
+      faultKind,
+      faultReceivableKinds: [],
+    })
+
+    const row = (await screen()).rows[0]
+
+    assert.equal(row?.stateLabel, '異常')
+    assert.equal(row?.stateSub, 'この版がまだ知らない値です。')
+  }
+})
+
+test("a tuner the driver only warns about is not given the driver's sentence", async () => {
   standing()
   observedAs({ health: 'degraded', healthDetail: A_DEVICE_TURNED_OFF })
 
   const row = (await screen()).rows[0]
 
   assert.equal(row?.stateLabel, '警告')
-  assert.equal(row?.stateSub, A_DEVICE_TURNED_OFF)
-})
-
-test('a tuner the driver wrote nothing about is left without a sentence', async () => {
-  standing()
-  observedAs({ state: 'faulted', detail: null, healthDetail: null })
-
-  const row = (await screen()).rows[0]
-
-  assert.equal(row?.stateLabel, '異常')
   assert.equal(row?.stateSub, undefined)
 })
 

@@ -179,12 +179,13 @@ export const 状態を取得できない: Story = {
   },
 }
 
-const TURNED_OFF_WHILE_HELD =
-  'This device was turned off and comes out of service as soon as the session it holds ends.'
+const TUNED_AND_FAILED =
+  '同じチャンネルで続けて選局できなかった。driver を起動し直すまで割り当てられない。'
 
-const NOTHING_CAME_BACK = 'The last three tunes on this device timed out.'
+const THE_LEDGER_DISAGREES =
+  '一覧では地上波、このチューナーが受信できるのは衛星。一致するまで割り当てられない。'
 
-export const 異常と警告はdriverの一文を添えて出る: Story = {
+export const 異常は割当停止の理由を画面の語で出す: Story = {
   args: {
     result: {
       state: 'ok',
@@ -200,17 +201,17 @@ export const 異常と警告はdriverの一文を添えて出る: Story = {
             idleLabel: '割当停止中',
             state: 'faulted',
             stateLabel: '異常',
-            stateSub: NOTHING_CAME_BACK,
+            stateSub: TUNED_AND_FAILED,
           },
           {
             ...TUNERS.rows[0],
             id: 'adapter5',
             device: 'adapter5',
             session: undefined,
-            idleLabel: 'アイドル',
-            state: 'warn',
-            stateLabel: '警告',
-            stateSub: TURNED_OFF_WHILE_HELD,
+            idleLabel: '割当停止中',
+            state: 'faulted',
+            stateLabel: '異常',
+            stateSub: THE_LEDGER_DISAGREES,
           },
         ],
       },
@@ -222,13 +223,12 @@ export const 異常と警告はdriverの一文を添えて出る: Story = {
 
     const rows = rowsOfTheTableHeaded(canvasElement, 'デバイス')
 
-    await expect(canvas.getByText('異常')).toBeVisible()
-    await expect(canvas.getByText('警告')).toBeVisible()
+    await expect(canvas.getAllByText('異常')).toHaveLength(2)
     await expect(await tipIn(cellOf(rows[0], STATE_COLUMN))).toHaveTextContent(
-      NOTHING_CAME_BACK,
+      TUNED_AND_FAILED,
     )
     await expect(await tipIn(cellOf(rows[1], STATE_COLUMN))).toHaveTextContent(
-      TURNED_OFF_WHILE_HELD,
+      THE_LEDGER_DISAGREES,
     )
   },
 }
