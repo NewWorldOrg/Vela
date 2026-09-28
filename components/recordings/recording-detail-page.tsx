@@ -140,7 +140,6 @@ export function RecordingDetailView({
 }) {
   const plays =
     !d.fileMissing &&
-    d.outcome !== 'failed' &&
     playback.state === 'planned' &&
     playback.plan.route !== 'nothing'
 
@@ -223,12 +222,6 @@ export function RecordingDetailView({
                 整合性チェックの結果へ
               </Link>
             </PlaybackNotice>
-          ) : d.outcome === 'failed' ? (
-            <PlaybackNotice
-              tone="gone"
-              mark={<OutcomeFailedIcon className="size-[calc(22rem/16)]" />}
-              title="再生できません"
-            />
           ) : playback.state === 'refused' ? (
             REFUSED[playback.refusal]
           ) : playback.plan.route === 'nothing' ? (
