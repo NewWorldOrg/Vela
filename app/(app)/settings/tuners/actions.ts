@@ -15,6 +15,7 @@ import {
   saveDetectedTuners,
   serializeRestartTicket,
   setHoursOfSilence,
+  setLnbPower,
   setTunerDisabled,
 } from '@/repository/tuners'
 
@@ -83,6 +84,19 @@ export async function saveHealthThreshold(
   hours: number,
 ): Promise<TunerWriteResult> {
   const result = await setHoursOfSilence(hours)
+
+  if (result.state === 'ok') {
+    revalidatePath(TUNERS)
+  }
+
+  return result
+}
+
+export async function saveLnbPower(
+  deviceId: string,
+  on: boolean,
+): Promise<TunerWriteResult> {
+  const result = await setLnbPower(deviceId, on)
 
   if (result.state === 'ok') {
     revalidatePath(TUNERS)

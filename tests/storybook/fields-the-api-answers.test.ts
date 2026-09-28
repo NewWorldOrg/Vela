@@ -315,11 +315,6 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the row takes its kind from what the driver observed, which is the same field on the observation standing beside it',
-    fields: ['TunerEntryResponder.kind'],
-  },
-  {
-    because:
       'the channel and scan screens show what a scan changed and what is worth adding; how strongly it came in, why a rescan is being asked for, and how the sweep is getting on, have no part of a screen drawn for them yet',
     fields: [
       'CandidateChannelResponder.needsAttentionSince',

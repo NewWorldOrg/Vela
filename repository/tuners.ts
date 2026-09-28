@@ -56,7 +56,12 @@ export interface TunerRow {
   stateLabel: string
   stateSub?: string
   lastService?: { at: string }
-  lnb?: string
+  lnb?: LnbPower
+}
+
+export interface LnbPower {
+  saved: boolean
+  applied?: boolean
 }
 
 export interface DetectionDiffRow {
@@ -467,7 +472,9 @@ export async function saveDetectedTuners(
     }
   }
 
-  const saved = await client.PUT('/api/tuners', { body: { tuners } })
+  const saved = await client.PUT('/api/tuners', {
+    body: { tuners, savedHash: ledgerBody.data.savedHash },
+  })
 
   if (saved.response.status === 401) {
     return { state: 'unauthenticated' }
@@ -479,25 +486,70 @@ export async function saveDetectedTuners(
 
   return {
     state: 'rejected',
-    message: toSaveRefusal(saved.response, saved.data ?? saved.error),
+    message: toSaveRefusal(
+      saved.response,
+      saved.data ?? saved.error,
+      `検出結果を保存できませんでした(${saved.response.status})。`,
+    ),
+  }
+}
+
+export async function setLnbPower(
+  deviceId: string,
+  on: boolean,
+): Promise<TunerWriteResult> {
+  const { data, error, response } = await carinaClient().PUT(
+    '/api/tuners/{deviceId}/lnb-power',
+    { params: { path: { deviceId } }, body: { lnbPower: on } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok) {
+    return { state: 'ok' }
+  }
+
+  if (response.status === 404) {
+    return {
+      state: 'rejected',
+      message: `${deviceId} は保存された一覧にないため、保存していません。デバイスを検出してから保存してください。`,
+    }
+  }
+
+  if (response.status === 501) {
+    return {
+      state: 'rejected',
+      message:
+        'driver が LNB 給電の保存に対応していないため、保存できませんでした。',
+    }
+  }
+
+  return {
+    state: 'rejected',
+    message: toSaveRefusal(
+      response,
+      data ?? error,
+      `LNB 給電を保存できませんでした(${response.status})。`,
+    ),
   }
 }
 
 function toSaveRefusal(
   response: Response,
   body: { message: string } | undefined,
+  fallback: string,
 ): string {
   const prefix = body?.message.split(':', 1)[0]?.trim()
   const known = prefix !== undefined ? REFUSAL_BY_PREFIX[prefix] : undefined
 
-  return (
-    known ??
-    DETECTION_REFUSAL[response.status] ??
-    `検出結果を保存できませんでした(${response.status})。`
-  )
+  return known ?? DETECTION_REFUSAL[response.status] ?? fallback
 }
 
 const REFUSAL_BY_PREFIX: Partial<Record<string, string>> = {
+  ledgerChanged:
+    'チューナーの一覧が保存のあいだに変わったため、保存していません。検出し直してから保存してください。',
   unknownDevice:
     '確認した検出結果が古くなっています。接続が変わったため保存されていません。もう一度検出してください。',
   undeterminedKind:
@@ -672,6 +724,10 @@ function toNotices(
     notices.push(toReachNotice(system, thresholdHours))
   }
 
+  for (const system of reach.filter((one) => one.level === 'unmeasured')) {
+    notices.push(toNoServiceNotice(system))
+  }
+
   if (ledger.drifted) {
     notices.push(toDriftNotice(ledger.observed))
   }
@@ -694,6 +750,19 @@ function toReachNotice(
       system.level === 'missing'
         ? `${system.label}のサービスを ${thresholdHours} 時間以上受信していません。${lastSeen}`
         : `${system.label}のサービスをいま受信できていません。${lastSeen}`,
+    actions: [
+      {
+        label: '切り分けを見る',
+        href: `/settings/channels#system-${system.system}` as Route,
+      },
+    ],
+  }
+}
+
+function toNoServiceNotice(system: SystemReach): TunerNotice {
+  return {
+    tone: 'warn',
+    body: `${system.label}のサービスが 0 件です。`,
     actions: [
       {
         label: '切り分けを見る',
@@ -753,7 +822,7 @@ function toRow(
       observation?.state === 'draining' || observation?.disablePending === true,
     session: toSession(observation),
     idleLabel: toIdleLabel(observation),
-    lnb: kind === '衛星' ? toLnb(observation) : undefined,
+    lnb: toLnb(entry, observation),
     lastService: toLastService(observation, reach),
     ...toState(observation),
   }
@@ -820,13 +889,14 @@ function toIdleLabel(
 }
 
 function toLnb(
+  entry: TunerEntryResponder,
   observation: TunerObservationResponder | undefined,
-): string | undefined {
-  if (observation === undefined) {
+): LnbPower | undefined {
+  if ((observation?.kind ?? entry.kind) !== 'satellite') {
     return undefined
   }
 
-  return observation.lnbPowered ? 'オン' : 'オフ(既定)'
+  return { saved: entry.lnbPower, applied: observation?.lnbPowered }
 }
 
 export const TUNER_STATE_LABEL = {

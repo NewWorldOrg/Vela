@@ -14,6 +14,7 @@ import {
   dismissRestartWindow,
   saveDetection,
   saveHealthThreshold,
+  saveLnbPower,
   toggleTuner,
 } from './actions'
 
@@ -48,6 +49,7 @@ export default async function Page({
       onDismiss={dismissRestartWindow}
       onSaveDetection={saveDetection}
       onSaveThreshold={saveHealthThreshold}
+      onSaveLnb={saveLnbPower}
     />
   )
 }

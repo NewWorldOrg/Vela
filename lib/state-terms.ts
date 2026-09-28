@@ -139,6 +139,11 @@ export const RESERVATION_RECORDING_REMOVED_TERM: StateTerm = {
     '録画削除済み。この予約からできた録画が、あとから削除された状態。',
 }
 
+export const SERVICE_NO_TUNER_TERM: StateTerm = {
+  label: '受信不可',
+  explanation: 'この種別を受信できる有効なチューナーがない状態。',
+}
+
 export const CANDIDATE_UNLOCKED_TERM: StateTerm = {
   label: '受信不可',
   explanation: 'この候補チャンネルで同調できなかった状態。',

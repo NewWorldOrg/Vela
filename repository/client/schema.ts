@@ -200,6 +200,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/tuners/{deviceId}/lnb-power': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['putTunerLnbPower']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/storage': {
     parameters: {
       query?: never
@@ -1827,6 +1843,7 @@ export interface components {
       candidateCount: number | string
       selectedChannel: null | components['schemas']['ScanTargetResponder']
       betterChannel: null | components['schemas']['ScanTargetResponder']
+      reception: components['schemas']['ServiceReception']
       candidates: components['schemas']['CandidateChannelResponder'][]
       logoDeclaration: components['schemas']['StationLogoDeclaration']
       logo: null | components['schemas']['StationLogoResponder']
@@ -2391,6 +2408,9 @@ export interface components {
       droppedSinceTheyJoined: number | string
       /** Format: int32 */
       queued: number | string
+    }
+    LnbPowerRequest: {
+      lnbPower?: null | boolean
     }
     LoginRequest: {
       username?: null | string
@@ -3753,6 +3773,8 @@ export interface components {
       hoursOfSilence: number | string
     }
     /** @enum {string} */
+    ServiceReception: 'receivable' | 'noTunerInService' | 'unknown'
+    /** @enum {string} */
     SessionPurpose:
       | 'unspecified'
       | 'recording'
@@ -3931,6 +3953,7 @@ export interface components {
     }
     TunerLedgerRequest: {
       tuners?: null | components['schemas']['TunerEntryRequest'][]
+      savedHash?: null | string
     }
     TunerLedgerResponder: {
       desired: components['schemas']['TunerEntryResponder'][]
@@ -4538,6 +4561,15 @@ export interface operations {
         }
         content?: never
       }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
       /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
       500: {
         headers: {
@@ -4694,6 +4726,86 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfServiceReachSettingsResponder']
+        }
+      }
+    }
+  }
+  putTunerLnbPower: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        deviceId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LnbPowerRequest']
+        'text/json': components['schemas']['LnbPowerRequest']
+        'application/*+json': components['schemas']['LnbPowerRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Not Implemented */
+      501: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfTunerLedgerResponder']
         }
       }
     }
@@ -5302,6 +5414,15 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfScanRefusedResponder']
+        }
+      }
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
         }
       }
       /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */

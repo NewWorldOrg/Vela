@@ -158,8 +158,12 @@ mock.module('@/repository/client/carina', {
             }
           : { data: undefined, response: answered(store.ledgerStatus) }
       },
-      PUT: async (path: string, init?: { body?: Record<string, unknown> }) => {
-        sent.push({ method: 'PUT', path, body: init?.body })
+      PUT: async (template: string, init?: Asking) => {
+        sent.push({
+          method: 'PUT',
+          path: pathOf(template, init),
+          body: init?.body,
+        })
 
         return {
           data: {
@@ -199,6 +203,7 @@ const {
   saveDetectedTuners,
   serializeRestartTicket,
   setHoursOfSilence,
+  setLnbPower,
   setTunerDisabled,
   toRestartWindow,
 } = await import('@/repository/tuners')
@@ -413,6 +418,38 @@ test('a system named in a way this build has no case for is left out', async () 
 
   assert.deepEqual(result.reach, [])
   assert.deepEqual(result.notices, [])
+})
+
+test('a system a tuner receives but that has no service at all is said to have none', async () => {
+  standing()
+  observing('satellite')
+  store.health = {
+    ...health(24),
+    systems: [
+      reaching('isdbSBs', 'unmeasured', null, 0),
+      reaching('isdbSCs110', 'unmeasured', null, 0),
+    ],
+  }
+
+  assert.deepEqual((await screen()).notices, [
+    {
+      tone: 'warn',
+      body: 'BSのサービスが 0 件です。',
+      actions: [
+        { label: '切り分けを見る', href: '/settings/channels#system-isdbSBs' },
+      ],
+    },
+    {
+      tone: 'warn',
+      body: 'CS110のサービスが 0 件です。',
+      actions: [
+        {
+          label: '切り分けを見る',
+          href: '/settings/channels#system-isdbSCs110',
+        },
+      ],
+    },
+  ])
 })
 
 test('a health the API will not answer leaves the last service blank, not guessed', async () => {
@@ -982,5 +1019,159 @@ test('a save whose session is gone is told apart from a refusal', async () => {
 
   assert.deepEqual(await saveDetectedTuners([DEVICE]), {
     state: 'unauthenticated',
+  })
+})
+
+const satellite = (deviceId: string, lnbPower: boolean) => ({
+  deviceId,
+  disabled: false,
+  lnbPower,
+  kind: 'satellite',
+})
+
+const observedPower = (
+  deviceId: string,
+  kind: string,
+  lnbPowered: boolean,
+) => ({
+  deviceId,
+  kind,
+  state: 'idle',
+  detail: null,
+  health: 'healthy',
+  disablePending: false,
+  lnbPowered,
+  healthDetail: null,
+  healthChangedAt: null,
+  sessionId: null,
+  sessionPurpose: 'unspecified',
+  sessionStartedAt: null,
+  sessionEndsAt: null,
+  sessionTuning: null,
+})
+
+test('a satellite row carries the power saved for it and the power the driver has on', async () => {
+  standing()
+  ledgerOf(
+    [desired(DEVICE, false), satellite('adapter1.frontend0', true)],
+    [
+      observedPower(DEVICE, 'terrestrial', false),
+      observedPower('adapter1.frontend0', 'satellite', false),
+    ],
+  )
+
+  const rows = (await screen()).rows
+
+  assert.equal(rows[0]?.lnb, undefined)
+  assert.deepEqual(rows[1]?.lnb, { saved: true, applied: false })
+})
+
+test('a satellite the driver has not described yet still carries the power saved for it', async () => {
+  standing()
+  ledgerOf([satellite('adapter1.frontend0', false)], [])
+
+  assert.deepEqual((await screen()).rows[0]?.lnb, {
+    saved: false,
+    applied: undefined,
+  })
+})
+
+const switchedPower = () =>
+  sent.filter((one) => one.method === 'PUT' && one.path.endsWith('/lnb-power'))
+
+test('turning the power on names that one tuner and the flag, and nothing else', async () => {
+  standing()
+  ledgerOf([desired(DEVICE, true), satellite('adapter1.frontend0', false)])
+
+  assert.deepEqual(await setLnbPower('adapter1.frontend0', true), {
+    state: 'ok',
+  })
+  assert.deepEqual(switchedPower(), [
+    {
+      method: 'PUT',
+      path: '/api/tuners/adapter1.frontend0/lnb-power',
+      body: { lnbPower: true },
+    },
+  ])
+  assert.equal(savedTuners(), undefined)
+})
+
+test('turning the power off does not read the ledger to write it back whole', async () => {
+  standing()
+
+  await setLnbPower('adapter1.frontend0', false)
+
+  assert.deepEqual(sent, [
+    {
+      method: 'PUT',
+      path: '/api/tuners/adapter1.frontend0/lnb-power',
+      body: { lnbPower: false },
+    },
+  ])
+})
+
+test('two satellites switched one after the other each send only their own flag', async () => {
+  standing()
+
+  await setLnbPower('adapter1.frontend0', true)
+  await setLnbPower('adapter2.frontend0', true)
+
+  assert.deepEqual(
+    switchedPower().map(({ path, body }) => [path, body]),
+    [
+      ['/api/tuners/adapter1.frontend0/lnb-power', { lnbPower: true }],
+      ['/api/tuners/adapter2.frontend0/lnb-power', { lnbPower: true }],
+    ],
+  )
+})
+
+test('power the API refuses is said in the words of why it refused', async () => {
+  for (const [status, message, said] of [
+    [404, 'noSuchTuner: adapter1.frontend0', /保存された一覧にない/],
+    [501, 'capabilityMissing', /対応していない/],
+    [503, 'no driver', /driver に接続できない/],
+    [400, 'rejected: x', /LNB 給電を保存できませんでした\(400\)/],
+  ] as const) {
+    standing()
+    store.writeStatus = status
+    store.writeOk = false
+    store.writeMessage = message
+
+    const result = await setLnbPower('adapter1.frontend0', true)
+
+    assert.equal(result.state, 'rejected', message)
+    assert.match(result.state === 'rejected' ? result.message : '', said)
+  }
+
+  standing()
+  store.writeStatus = 401
+
+  assert.deepEqual(await setLnbPower('adapter1.frontend0', true), {
+    state: 'unauthenticated',
+  })
+})
+
+test('saving a detection carries the version of the ledger it read', async () => {
+  standing()
+  ledgerOf([desired(DEVICE, false)])
+
+  await saveDetectedTuners([DEVICE])
+
+  const put = sent.findLast((one) => one.method === 'PUT')
+
+  assert.equal(put?.body?.savedHash, 'a')
+})
+
+test('a detection saved over a ledger that changed since it was read is refused with a way on', async () => {
+  standing()
+  store.writeStatus = 409
+  store.writeOk = false
+  store.writeMessage =
+    'ledgerChanged: The ledger has been saved since this one was read.'
+
+  assert.deepEqual(await saveDetectedTuners([DEVICE]), {
+    state: 'rejected',
+    message:
+      'チューナーの一覧が保存のあいだに変わったため、保存していません。検出し直してから保存してください。',
   })
 })

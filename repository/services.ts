@@ -77,6 +77,7 @@ export interface ServiceRow {
   minorCategory: boolean
   currentChannel?: string
   betterChannel?: string
+  unreceivable: boolean
   enabled: boolean
   candidateCount: number
   needsAttentionCount: number
@@ -299,6 +300,7 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
       service.betterChannel === null
         ? undefined
         : channelLabel(service.betterChannel),
+    unreceivable: service.reception === 'noTunerInService',
     enabled: service.reservableByDefault,
     candidateCount: toInt(service.candidateCount),
     needsAttentionCount: candidates.filter((c) => c.rotation?.dropped).length,
@@ -741,6 +743,14 @@ export async function startScan(
       scanId: refusedRunId(error ?? data),
       message:
         'すでにスキャンが実行中です。同時に走らせられるのは 1 本までです。実行中のスキャンを確認するか、キャンセルしてから開始してください。',
+    }
+  }
+
+  if (response.status === 422) {
+    return {
+      state: 'rejected',
+      message:
+        '対象の種別を受信できる有効なチューナーがないため、スキャンを開始できませんでした。',
     }
   }
 

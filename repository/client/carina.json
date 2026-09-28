@@ -624,6 +624,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
           "501": {
             "description": "Not Implemented",
             "content": {
@@ -819,6 +829,109 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfServiceReachSettingsResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tuners/{deviceId}/lnb-power": {
+      "put": {
+        "tags": [
+          "tuners"
+        ],
+        "operationId": "putTunerLnbPower",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LnbPowerRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LnbPowerRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LnbPowerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfTunerLedgerResponder"
                 }
               }
             }
@@ -1619,6 +1732,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfScanRefusedResponder"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanStartedResponder"
                 }
               }
             }
@@ -9308,6 +9431,7 @@
           "candidateCount",
           "selectedChannel",
           "betterChannel",
+          "reception",
           "candidates",
           "logoDeclaration",
           "logo"
@@ -9383,6 +9507,9 @@
                 "$ref": "#/components/schemas/ScanTargetResponder"
               }
             ]
+          },
+          "reception": {
+            "$ref": "#/components/schemas/ServiceReception"
           },
           "candidates": {
             "type": "array",
@@ -11637,6 +11764,18 @@
             "format": "int32"
           }
         }
+      },
+      "LnbPowerRequest": {
+        "type": "object",
+        "properties": {
+          "lnbPower": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "LoginRequest": {
         "type": "object",
@@ -17082,6 +17221,14 @@
           }
         }
       },
+      "ServiceReception": {
+        "enum": [
+          "receivable",
+          "noTunerInService",
+          "unknown"
+        ],
+        "type": "string"
+      },
       "SessionPurpose": {
         "enum": [
           "unspecified",
@@ -17728,6 +17875,12 @@
             "items": {
               "$ref": "#/components/schemas/TunerEntryRequest"
             }
+          },
+          "savedHash": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "additionalProperties": false
