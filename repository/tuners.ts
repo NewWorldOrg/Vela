@@ -496,53 +496,40 @@ export async function setLnbPower(
   deviceId: string,
   on: boolean,
 ): Promise<TunerWriteResult> {
-  const client = carinaClient()
-  const ledger = await client.GET('/api/tuners')
+  const { data, error, response } = await carinaClient().PUT(
+    '/api/tuners/{deviceId}/lnb-power',
+    { params: { path: { deviceId } }, body: { lnbPower: on } },
+  )
 
-  if (ledger.response.status === 401) {
+  if (response.status === 401) {
     return { state: 'unauthenticated' }
   }
 
-  const ledgerBody = ledger.data ?? ledger.error
-
-  if (ledgerBody?.data == null) {
-    return {
-      state: 'rejected',
-      message: `保存前の一覧を読み取れなかったため、保存していません(${ledger.response.status})。`,
-    }
+  if (response.ok) {
+    return { state: 'ok' }
   }
 
-  const { desired } = ledgerBody.data
-
-  if (!desired.some((entry) => entry.deviceId === deviceId)) {
+  if (response.status === 404) {
     return {
       state: 'rejected',
       message: `${deviceId} は保存された一覧にないため、保存していません。デバイスを検出してから保存してください。`,
     }
   }
 
-  const tuners = desired.map((entry) => ({
-    deviceId: entry.deviceId,
-    disabled: entry.disabled,
-    lnbPower: entry.deviceId === deviceId ? on : entry.lnbPower,
-  }))
-
-  const saved = await client.PUT('/api/tuners', { body: { tuners } })
-
-  if (saved.response.status === 401) {
-    return { state: 'unauthenticated' }
-  }
-
-  if (saved.response.ok) {
-    return { state: 'ok' }
+  if (response.status === 501) {
+    return {
+      state: 'rejected',
+      message:
+        'driver が LNB 給電の保存に対応していないため、保存できませんでした。',
+    }
   }
 
   return {
     state: 'rejected',
     message: toSaveRefusal(
-      saved.response,
-      saved.data ?? saved.error,
-      `LNB 給電を保存できませんでした(${saved.response.status})。`,
+      response,
+      data ?? error,
+      `LNB 給電を保存できませんでした(${response.status})。`,
     ),
   }
 }
