@@ -45,6 +45,7 @@ import { Unfold } from '@/components/vela/unfold'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
+import { cn } from '@/lib/utils'
 
 export interface ReservationActions {
   onCancel: (id: string) => Promise<ReservationWrite>
@@ -68,8 +69,10 @@ export function ReservationRow({
   selected,
   onSelect,
   actions,
+  segment,
 }: {
   reservation: Reservation
+  segment?: { nth: number; of: number }
   nth: number
   expanded: boolean
   shown: boolean
@@ -107,8 +110,9 @@ export function ReservationRow({
       <TableRow
         id={reservationAnchor(reservation.id)}
         data-state={selected ? 'selected' : undefined}
+        data-segment={segment ? '' : undefined}
         style={delayOf(rowDelayMs(nth))}
-        className={rowArrivesIn(nth)}
+        className={cn(rowArrivesIn(nth), segment && 'bg-surface-2')}
       >
         <TableCell className="h-11 align-top">
           <Checkbox
@@ -134,8 +138,14 @@ export function ReservationRow({
           <b className="block text-[calc(13rem/16)] font-bold">
             {reservation.title}
           </b>
-          {reservation.note && (
-            <span className="text-note text-ink-3">{reservation.note}</span>
+          {segment ? (
+            <span className="text-note text-ink-3">
+              区切り {segment.nth} / {segment.of}
+            </span>
+          ) : (
+            reservation.note && (
+              <span className="text-note text-ink-3">{reservation.note}</span>
+            )
           )}
         </TableCell>
         <TableCell className="align-top">

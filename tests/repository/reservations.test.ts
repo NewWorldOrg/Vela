@@ -1071,6 +1071,33 @@ test('a refusal that is not about a move keeps the reading it had', async () => 
   assert.equal(result.state === 'rejected' ? result.movedTo : 'ok', undefined)
 })
 
+test('a segment of a relay carries its group and its own window', async () => {
+  const row = await only({
+    broadcastGroup: { key: 'relay:131-1310-40001', role: 'relaySegment' },
+  })
+
+  assert.deepEqual(row.relay, {
+    key: 'relay:131-1310-40001',
+    startAt: '2026-08-08T12:10:00Z',
+    endAt: '2026-08-08T13:40:00Z',
+  })
+})
+
+test('a reservation standing alone or on a moved broadcast carries no relay', async () => {
+  assert.equal((await only()).relay, undefined)
+  assert.equal(
+    (
+      await only({
+        broadcastGroup: {
+          key: 'movement:131-1310-40001',
+          role: 'movementPrimary',
+        },
+      })
+    ).relay,
+    undefined,
+  )
+})
+
 test('a cancellation for the same broadcast is told apart from one by hand', async () => {
   const later = new Date('2026-08-08T00:00:00Z')
 

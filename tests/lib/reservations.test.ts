@@ -1,9 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import type { ReservationStanding } from '@/repository/reservations'
+import type {
+  Reservation,
+  ReservationStanding,
+} from '@/repository/reservations'
 import {
   MARGIN_RANGE,
+  leadingSegmentOf,
+  linesOf,
+  relaySpanOf,
   PRIORITY_RANGE,
   isDiscardable,
   isRestorable,
@@ -213,4 +219,139 @@ test('空欄と、符号・小数・指数・文字の混じったものは整�
   ]) {
     assert.equal(wholeNumber(typed), undefined, typed)
   }
+})
+
+const plain = (id: string, over: Partial<Reservation> = {}): Reservation => ({
+  id,
+  title: `番組 ${id}`,
+  channelName: '中央テレビ1',
+  whenLabel: '',
+  origin: '手動',
+  standing: 'scheduled',
+  endAtConfirmed: true,
+  receptionUnavailable: false,
+  priority: 10,
+  marginBeforeSeconds: 0,
+  marginAfterSeconds: 0,
+  encodeWhenRecorded: true,
+  discardable: false,
+  restorable: false,
+  ...over,
+})
+
+const segment = (
+  id: string,
+  startAt: string,
+  endAt: string,
+  over: Partial<Reservation> = {},
+): Reservation =>
+  plain(id, { relay: { key: 'relay:1-2-3', startAt, endAt }, ...over })
+
+test('中継の区切りが 2 つ以上並ぶと、1 つの塊にまとまる', () => {
+  const lines = linesOf([
+    plain('a'),
+    segment('b', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
+    plain('c'),
+    segment('d', '2026-09-28T11:00:00Z', '2026-09-28T12:00:00Z'),
+  ])
+
+  assert.deepEqual(
+    lines.map((line) =>
+      line.kind === 'one'
+        ? line.reservation.id
+        : line.segments.map((one) => one.id).join('+'),
+    ),
+    ['a', 'b+d', 'c'],
+  )
+})
+
+test('区切りは開始の順に並ぶ', () => {
+  const lines = linesOf([
+    segment('late', '2026-09-28T11:00:00Z', '2026-09-28T12:00:00Z'),
+    segment('early', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
+  ])
+
+  assert.equal(lines.length, 1)
+  assert.deepEqual(
+    lines[0].kind === 'relay' ? lines[0].segments.map((one) => one.id) : [],
+    ['early', 'late'],
+  )
+})
+
+test('区切りが 1 つしか残っていなければ、ふつうの行のまま', () => {
+  const lines = linesOf([
+    segment('b', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
+  ])
+
+  assert.deepEqual(lines, [
+    {
+      kind: 'one',
+      reservation: segment('b', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
+    },
+  ])
+})
+
+test('別の中継の区切りは、別の塊になる', () => {
+  const lines = linesOf([
+    segment('a', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
+    segment('b', '2026-09-28T11:00:00Z', '2026-09-28T12:00:00Z'),
+    segment('c', '2026-09-28T20:00:00Z', '2026-09-28T21:00:00Z', {
+      relay: {
+        key: 'relay:9-9-9',
+        startAt: '2026-09-28T20:00:00Z',
+        endAt: '2026-09-28T21:00:00Z',
+      },
+    }),
+  ])
+
+  assert.deepEqual(
+    lines.map((line) => line.kind),
+    ['relay', 'one'],
+  )
+})
+
+test('塊の時間は、最初の区切りの開始から最後の区切りの終了まで', () => {
+  assert.deepEqual(
+    relaySpanOf([
+      segment('a', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
+      segment('b', '2026-09-28T11:00:00Z', '2026-09-28T12:30:00Z'),
+    ]),
+    { startAt: '2026-09-28T10:00:00Z', endAt: '2026-09-28T12:30:00Z' },
+  )
+})
+
+test('塊の状態は、先に見るべき区切りのもの', () => {
+  const standings: ReservationStanding[] = [
+    'scheduled',
+    'conflict',
+    'cancelled',
+  ]
+
+  assert.equal(
+    leadingSegmentOf(
+      standings.map((standing, at) => plain(`s${at}`, { standing })),
+    ).standing,
+    'conflict',
+  )
+  assert.equal(
+    leadingSegmentOf([
+      plain('x', { standing: 'scheduled' }),
+      plain('y', { standing: 'recording' }),
+    ]).id,
+    'y',
+  )
+})
+
+test('取消だけの塊は、同じ放送による取消を人の取消より先に言う', () => {
+  assert.equal(
+    leadingSegmentOf([
+      plain('by-hand', { standing: 'cancelled' }),
+      plain('same', { standing: 'cancelled', sameBroadcast: true }),
+    ]).id,
+    'same',
+  )
+})
+
+test('区切りの状態が全部同じなら、最初の区切りが塊を言う', () => {
+  assert.equal(leadingSegmentOf([plain('first'), plain('second')]).id, 'first')
 })

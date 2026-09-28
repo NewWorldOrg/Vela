@@ -1,4 +1,7 @@
-import type { ReservationStanding } from '@/repository/reservations'
+import type {
+  Reservation,
+  ReservationStanding,
+} from '@/repository/reservations'
 
 export function reservationAnchor(id: string): string {
   return `reservation-${id}`
@@ -70,5 +73,92 @@ export function recordingWasRemoved(reservation: {
 }): boolean {
   return (
     !reservation.recorded && CAME_OF_A_RECORDING.includes(reservation.standing)
+  )
+}
+
+export type ReservationLine =
+  | { kind: 'one'; reservation: Reservation }
+  | { kind: 'relay'; key: string; segments: Reservation[] }
+
+export function linesOf(items: readonly Reservation[]): ReservationLine[] {
+  const segmentsOf = new Map<string, Reservation[]>()
+
+  for (const one of items) {
+    if (one.relay) {
+      segmentsOf.set(one.relay.key, [
+        ...(segmentsOf.get(one.relay.key) ?? []),
+        one,
+      ])
+    }
+  }
+
+  const lines: ReservationLine[] = []
+  const placed = new Set<string>()
+
+  for (const one of items) {
+    const segments = one.relay ? segmentsOf.get(one.relay.key) : undefined
+
+    if (!one.relay || !segments || segments.length < 2) {
+      lines.push({ kind: 'one', reservation: one })
+      continue
+    }
+
+    if (placed.has(one.relay.key)) {
+      continue
+    }
+
+    placed.add(one.relay.key)
+    lines.push({
+      kind: 'relay',
+      key: one.relay.key,
+      segments: [...segments].sort(
+        (left, right) =>
+          Date.parse(left.relay?.startAt ?? '') -
+          Date.parse(right.relay?.startAt ?? ''),
+      ),
+    })
+  }
+
+  return lines
+}
+
+export function relaySpanOf(segments: readonly Reservation[]): {
+  startAt: string
+  endAt: string
+} {
+  const starts = segments.map((one) => one.relay?.startAt ?? '')
+  const ends = segments.map((one) => one.relay?.endAt ?? '')
+  const earliest = starts.reduce((a, b) =>
+    Date.parse(b) < Date.parse(a) ? b : a,
+  )
+  const latest = ends.reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a))
+
+  return { startAt: earliest, endAt: latest }
+}
+
+const NEEDS_A_LOOK_FIRST: ReservationStanding[] = [
+  'recording',
+  'conflict',
+  'missed',
+  'failed',
+  'truncated',
+  'scheduled',
+  'complete',
+]
+
+export function leadingSegmentOf(
+  segments: readonly Reservation[],
+): Reservation {
+  for (const standing of NEEDS_A_LOOK_FIRST) {
+    const found = segments.find((one) => one.standing === standing)
+
+    if (found) {
+      return found
+    }
+  }
+
+  return (
+    segments.find((one) => one.standing === 'cancelled' && one.sameBroadcast) ??
+    segments[0]
   )
 }

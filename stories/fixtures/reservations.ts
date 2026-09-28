@@ -477,6 +477,88 @@ export const EPG_DRIFT_FIXTURES: Reservation[] = [
   },
 ]
 
+const segmentOf = (
+  id: string,
+  channelName: string,
+  channelNo: string,
+  whenLabel: string,
+  startAt: string,
+  endAt: string,
+  over: Partial<Reservation> = {},
+): Reservation => ({
+  id,
+  title: '湾岸杯 野球 決勝',
+  note: '港の球場から',
+  channelName,
+  channelNo,
+  whenLabel,
+  origin: '手動',
+  standing: 'scheduled',
+  discardable: false,
+  restorable: false,
+  endAtConfirmed: true,
+  receptionUnavailable: false,
+  priority: 10,
+  marginBeforeSeconds: 10,
+  marginAfterSeconds: 30,
+  encodeWhenRecorded: true,
+  relay: { key: 'relay:191-1910-7001', startAt, endAt },
+  ...over,
+})
+
+export const RELAY_FIXTURES: Reservation[] = [
+  segmentOf(
+    'r-401',
+    'みなと教育1',
+    '191',
+    '08/08(土) 13:00 – 15:00',
+    '2026-08-08T04:00:00Z',
+    '2026-08-08T06:00:00Z',
+  ),
+  segmentOf(
+    'r-402',
+    '中央テレビ1',
+    '011',
+    '08/08(土) 15:00 – 16:30',
+    '2026-08-08T06:00:00Z',
+    '2026-08-08T07:30:00Z',
+  ),
+  segmentOf(
+    'r-403',
+    '中央テレビ1',
+    '011',
+    '08/08(土) 16:30 – 17:30',
+    '2026-08-08T07:30:00Z',
+    '2026-08-08T08:30:00Z',
+  ),
+]
+
+export const CONTENDED_RELAY_FIXTURES: Reservation[] = [
+  RELAY_FIXTURES[0],
+  {
+    ...RELAY_FIXTURES[1],
+    standing: 'conflict',
+    conflict: {
+      headline: '同時刻に地上波チューナー 2 本が録画予定です',
+      body: '08/08(土) 15:00 の開始時点で空きがなく、この予約にはチューナーを割り当てられません。',
+      raiseTo: 11,
+      entries: [
+        {
+          title: '午後のロードショー',
+          meta: '湾岸放送1 · 14:00 – 16:00',
+          origin: '手動',
+        },
+        {
+          title: '夕方の情報ワイド',
+          meta: '第一テレビ1 · 15:00 – 17:00',
+          origin: 'ルール',
+          ruleName: '情報番組',
+        },
+      ],
+    },
+  },
+]
+
 export const SAME_BROADCAST_FIXTURES: Reservation[] = [
   {
     id: 'r-411',

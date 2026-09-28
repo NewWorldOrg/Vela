@@ -8,6 +8,7 @@ import { shapeFor } from '@/lib/not-yet-in-this-build'
 import type { StateTerm } from '@/lib/state-terms'
 import {
   END_UNDECIDED_TERM,
+  RECORDING_IN_PROGRESS_TERM,
   NOT_YET_IN_THIS_BUILD_TERM,
   RESERVATION_EPG_DIVERGED_TERM,
   RESERVATION_EPG_MISSING_TERM,
@@ -124,6 +125,31 @@ function divergedTerm(drift: EpgDrift): StateTerm {
   }
 }
 
+export function reservationStateLabelOf(reservation: Reservation): string {
+  const removed = recordingWasRemoved({
+    standing: reservation.standing,
+    recorded: reservation.recordingId !== undefined,
+  })
+
+  if (reservation.standing === 'recording') {
+    return RECORDING_IN_PROGRESS_TERM.label
+  }
+
+  if (removed) {
+    return RESERVATION_RECORDING_REMOVED_TERM.label
+  }
+
+  if (sameBroadcastCancelled(reservation)) {
+    return RESERVATION_SAME_BROADCAST_TERM.label
+  }
+
+  return shapeFor(
+    RESERVATION_STANDING_TERMS,
+    reservation.standing,
+    NOT_YET_IN_THIS_BUILD_TERM,
+  ).label
+}
+
 function sameBroadcastCancelled(reservation: Reservation): boolean {
   return (
     reservation.standing === 'cancelled' && reservation.sameBroadcast === true
@@ -133,9 +159,11 @@ function sameBroadcastCancelled(reservation: Reservation): boolean {
 export function ReservationStateChip({
   reservation,
   say = false,
+  more = [],
 }: {
   reservation: Reservation
   say?: boolean
+  more?: string[]
 }) {
   const removed = recordingWasRemoved({
     standing: reservation.standing,
@@ -146,6 +174,7 @@ export function ReservationStateChip({
     reservation.receptionUnavailable && saidBy(RESERVATION_RECEPTION_TERM),
     reservation.epg?.programmeMissing && saidBy(RESERVATION_EPG_MISSING_TERM),
     reservation.epg?.diverged && saidBy(divergedTerm(reservation.epg)),
+    ...more,
   ]
 
   if (removed && reservation.standing !== 'recording') {

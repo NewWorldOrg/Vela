@@ -56,6 +56,12 @@ export interface EpgDrift {
   noticedAt?: string
 }
 
+export interface RelaySegment {
+  key: string
+  startAt: string
+  endAt: string
+}
+
 export interface Reservation {
   id: string
   title: string
@@ -78,6 +84,7 @@ export interface Reservation {
   recordingId?: string
   discardable: boolean
   restorable: boolean
+  relay?: RelaySegment
   sameBroadcast?: boolean
 }
 
@@ -523,11 +530,22 @@ export function toReservation(
     recordingId,
     discardable: isDiscardable(stands),
     restorable: isRestorable(stands),
+    relay: relayOf(r),
     sameBroadcast:
       r.standing === 'cancelled' && r.cancellation === 'sameBroadcast'
         ? true
         : undefined,
   }
+}
+
+function relayOf(r: ReservationResponder): RelaySegment | undefined {
+  const group = r.broadcastGroup
+
+  if (group.role !== 'relaySegment' || !group.key) {
+    return undefined
+  }
+
+  return { key: group.key, startAt: r.window.startAt, endAt: r.window.endAt }
 }
 
 function serviceKeyOf(r: ReservationResponder): string {
