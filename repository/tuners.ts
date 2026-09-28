@@ -472,7 +472,9 @@ export async function saveDetectedTuners(
     }
   }
 
-  const saved = await client.PUT('/api/tuners', { body: { tuners } })
+  const saved = await client.PUT('/api/tuners', {
+    body: { tuners, savedHash: ledgerBody.data.savedHash },
+  })
 
   if (saved.response.status === 401) {
     return { state: 'unauthenticated' }
@@ -546,6 +548,8 @@ function toSaveRefusal(
 }
 
 const REFUSAL_BY_PREFIX: Partial<Record<string, string>> = {
+  ledgerChanged:
+    'チューナーの一覧が保存のあいだに変わったため、保存していません。検出し直してから保存してください。',
   unknownDevice:
     '確認した検出結果が古くなっています。接続が変わったため保存されていません。もう一度検出してください。',
   undeterminedKind:

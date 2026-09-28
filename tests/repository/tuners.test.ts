@@ -1150,3 +1150,28 @@ test('power the API refuses is said in the words of why it refused', async () =>
     state: 'unauthenticated',
   })
 })
+
+test('saving a detection carries the version of the ledger it read', async () => {
+  standing()
+  ledgerOf([desired(DEVICE, false)])
+
+  await saveDetectedTuners([DEVICE])
+
+  const put = sent.findLast((one) => one.method === 'PUT')
+
+  assert.equal(put?.body?.savedHash, 'a')
+})
+
+test('a detection saved over a ledger that changed since it was read is refused with a way on', async () => {
+  standing()
+  store.writeStatus = 409
+  store.writeOk = false
+  store.writeMessage =
+    'ledgerChanged: The ledger has been saved since this one was read.'
+
+  assert.deepEqual(await saveDetectedTuners([DEVICE]), {
+    state: 'rejected',
+    message:
+      'チューナーの一覧が保存のあいだに変わったため、保存していません。検出し直してから保存してください。',
+  })
+})
