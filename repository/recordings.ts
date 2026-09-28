@@ -886,8 +886,27 @@ function outcomeBodyOf(
     Math.round(toInt(r.expectedWindow.durationMs) / 1000),
   )
   const written = formatLength(Math.round(toInt(r.writtenDurationMs) / 1000))
+  const missed = missedLengthOf(r)
 
-  return `書けた尺 ${written} / 予定 ${planned} · ${formatBytes(base.sizeBytes)}`
+  return [
+    `書けた尺 ${written} / 予定 ${planned}`,
+    missed,
+    formatBytes(base.sizeBytes),
+  ]
+    .filter((one): one is string => one !== undefined)
+    .join(' · ')
+}
+
+function missedLengthOf(r: RecordingResponder): string | undefined {
+  const seconds = toInt(r.missedMs ?? 0) / 1000
+
+  if (seconds <= 0) {
+    return undefined
+  }
+
+  return seconds < 60
+    ? `欠け ${secondsOf(seconds)}`
+    : `欠け ${formatLength(Math.round(seconds))}`
 }
 
 function reconcileOf(

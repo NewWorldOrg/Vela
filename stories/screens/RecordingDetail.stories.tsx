@@ -405,10 +405,49 @@ export const スクランブルを解除した録画: Story = {
   },
 }
 
-export const 失敗: Story = { args: { detail: detail('1239') } }
+const NOTHING_WRITTEN = refused('nothingToPlay')
+
+export const 失敗: Story = {
+  args: { detail: detail('1239'), playback: NOTHING_WRITTEN },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('再生できるものがありません')).toBeVisible()
+    await expect(canvas.queryByText('再生できません')).toBeNull()
+  },
+}
+
+export const 中身のある失敗は再生できる: Story = {
+  args: {
+    detail: {
+      ...detail('1239'),
+      outcomeBody: '書けた尺 28:00 / 予定 30:00 · 欠け 1:52 · 3.4 GB',
+      stopReason: undefined,
+      scramble: undefined,
+      failureReason: { title: '書けた尺が予定に届かなかった' },
+      interruptions: {
+        main: '中断 1 回 / 再開 1 回',
+        sub: '欠け 00:10 から 112.0 秒',
+      },
+      qualitySpots: [{ at: '0:10:00', packets: '欠け 112.0 秒', second: 600 }],
+    },
+    playback: planned({ standing: 'failed', showsAsAWholeRecording: false }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const band = bandIn(canvasElement) as HTMLElement
+
+    await expect(within(band).getByText('失敗')).toBeVisible()
+    await expect(
+      within(band).getByText(/書けた尺 28:00 \/ 予定 30:00 · 欠け 1:52/),
+    ).toBeVisible()
+    await expect(canvas.queryByText('再生できません')).toBeNull()
+    await expect(canvasElement.querySelector('video')).not.toBeNull()
+  },
+}
 
 export const 失敗の理由は分類と気づいた時刻で出る: Story = {
-  args: { detail: detail('1239') },
+  args: { detail: detail('1239'), playback: NOTHING_WRITTEN },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -420,7 +459,11 @@ export const 失敗の理由は分類と気づいた時刻で出る: Story = {
   },
 }
 
-function failed(title: string, body?: string): Story {
+function failed(
+  title: string,
+  body?: string,
+  playback: PlaybackRead = planned({ standing: 'failed' }),
+): Story {
   return {
     args: {
       detail: {
@@ -429,6 +472,7 @@ function failed(title: string, body?: string): Story {
         scramble: undefined,
         failureReason: { title, body },
       },
+      playback,
     },
     play: async ({ canvasElement }) => {
       await expect(within(canvasElement).getByText(title)).toBeVisible()
@@ -442,11 +486,13 @@ export const 予定に届かなかった失敗: Story =
 export const 何も残らなかった失敗: Story = failed(
   '0 バイトで終わった',
   '録画ファイルは残っていますが、中身がありません。',
+  NOTHING_WRITTEN,
 )
 
 export const 大きさを観測できなかった失敗: Story = failed(
   'ファイルの大きさを観測できなかった',
   '録画ファイルの大きさを確かめられないまま終わりました。',
+  refused('outOfReach'),
 )
 
 export const 尺のわりに小さい失敗: Story = failed(

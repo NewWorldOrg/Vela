@@ -694,6 +694,45 @@ test('a recording that carried on after a gap says where the gap began in its re
   ])
 })
 
+test('the band of a recording that failed after a gap says how long it missed beside what it wrote', async () => {
+  standing([
+    recording({
+      outcome: 'failed',
+      writtenDurationMs: 1_680_000,
+      fileSizeBytes: 3_400_000_000,
+      gaps: [
+        {
+          from: '2026-08-09T14:10:00Z',
+          until: '2026-08-09T14:11:52Z',
+          seconds: 112,
+          atSecond: 600,
+        },
+      ],
+      missedMs: 112_000,
+    }),
+  ])
+
+  assert.equal(
+    (await getRecording('d1'))?.outcomeBody,
+    '書けた尺 28:00 / 予定 30:00 · 欠け 1:52 · 3.2 GB',
+  )
+})
+
+test('a gap shorter than a minute is spelled in seconds on the band', async () => {
+  standing([
+    recording({
+      ...CARRIED_ON,
+      outcome: 'truncated',
+      writtenDurationMs: 1_700_000,
+    }),
+  ])
+
+  assert.equal(
+    (await getRecording('d1'))?.outcomeBody,
+    '書けた尺 28:20 / 予定 30:00 · 欠け 2.5 秒 · 3.4 GB',
+  )
+})
+
 test('a recording from an API that keeps no gaps yet says nothing about a gap', async () => {
   const older = recording()
   delete (older as Over).gaps

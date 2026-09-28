@@ -152,10 +152,18 @@ test('a whole or cut-short recording with a file plays in the browser', () => {
   )
 })
 
-test('a recording still being written, one that failed, or one whose file is gone does not', () => {
+test('a recording still being written, one that failed with nothing in it, or one whose file is gone does not', () => {
   assert.equal(playsInBrowser(row({ outcome: 'recording' })), false)
   assert.equal(playsInBrowser(row({ outcome: 'failed' })), false)
+  assert.equal(playsInBrowser(row({ outcome: 'failed', sizeBytes: 0 })), false)
   assert.equal(playsInBrowser(row({ fileMissing: true })), false)
+})
+
+test('a recording that failed with something written in it plays in the browser', () => {
+  assert.equal(
+    playsInBrowser(row({ outcome: 'failed', sizeBytes: 3_400_000_000 })),
+    true,
+  )
 })
 
 test('a recording left scrambled does not, whatever its outcome says', () => {

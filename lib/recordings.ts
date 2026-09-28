@@ -90,10 +90,13 @@ export function isLeftScrambled(recording: Pick<Recording, 'leftScrambled'>) {
 }
 
 export function playsInBrowser(
-  recording: Pick<Recording, 'outcome' | 'fileMissing' | 'leftScrambled'>,
+  recording: Pick<
+    Recording,
+    'outcome' | 'fileMissing' | 'leftScrambled' | 'sizeBytes'
+  >,
 ) {
   return (
-    recording.outcome !== 'failed' &&
+    (recording.outcome !== 'failed' || (recording.sizeBytes ?? 0) > 0) &&
     recording.outcome !== 'recording' &&
     !recording.fileMissing &&
     !isLeftScrambled(recording)
