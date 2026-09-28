@@ -733,6 +733,10 @@ function toNotices(
     notices.push(toReachNotice(system, thresholdHours))
   }
 
+  for (const system of reach.filter((one) => one.level === 'unmeasured')) {
+    notices.push(toNoServiceNotice(system))
+  }
+
   if (ledger.drifted) {
     notices.push(toDriftNotice(ledger.observed))
   }
@@ -755,6 +759,19 @@ function toReachNotice(
       system.level === 'missing'
         ? `${system.label}のサービスを ${thresholdHours} 時間以上受信していません。${lastSeen}`
         : `${system.label}のサービスをいま受信できていません。${lastSeen}`,
+    actions: [
+      {
+        label: '切り分けを見る',
+        href: `/settings/channels#system-${system.system}` as Route,
+      },
+    ],
+  }
+}
+
+function toNoServiceNotice(system: SystemReach): TunerNotice {
+  return {
+    tone: 'warn',
+    body: `${system.label}のサービスが 0 件です。`,
     actions: [
       {
         label: '切り分けを見る',

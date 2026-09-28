@@ -405,3 +405,45 @@ export const LNB給電を保存して未反映: Story = {
     )
   },
 }
+
+export const サービスが0件の種別を最上部で言う: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...TUNERS,
+        notices: [
+          {
+            tone: 'warn',
+            body: 'BSのサービスが 0 件です。',
+            actions: [
+              {
+                label: '切り分けを見る',
+                href: '/settings/channels#system-isdbSBs',
+              },
+            ],
+          },
+          {
+            tone: 'warn',
+            body: 'CS110のサービスが 0 件です。',
+            actions: [
+              {
+                label: '切り分けを見る',
+                href: '/settings/channels#system-isdbSCs110',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
+    await expect(canvas.getByText('BSのサービスが 0 件です。')).toBeVisible()
+    await expect(
+      canvas.getAllByRole('link', { name: '切り分けを見る' })[0],
+    ).toHaveAttribute('href', '/settings/channels#system-isdbSBs')
+  },
+}

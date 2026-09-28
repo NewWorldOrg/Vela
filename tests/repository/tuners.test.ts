@@ -416,6 +416,38 @@ test('a system named in a way this build has no case for is left out', async () 
   assert.deepEqual(result.notices, [])
 })
 
+test('a system a tuner receives but that has no service at all is said to have none', async () => {
+  standing()
+  observing('satellite')
+  store.health = {
+    ...health(24),
+    systems: [
+      reaching('isdbSBs', 'unmeasured', null, 0),
+      reaching('isdbSCs110', 'unmeasured', null, 0),
+    ],
+  }
+
+  assert.deepEqual((await screen()).notices, [
+    {
+      tone: 'warn',
+      body: 'BSのサービスが 0 件です。',
+      actions: [
+        { label: '切り分けを見る', href: '/settings/channels#system-isdbSBs' },
+      ],
+    },
+    {
+      tone: 'warn',
+      body: 'CS110のサービスが 0 件です。',
+      actions: [
+        {
+          label: '切り分けを見る',
+          href: '/settings/channels#system-isdbSCs110',
+        },
+      ],
+    },
+  ])
+})
+
 test('a health the API will not answer leaves the last service blank, not guessed', async () => {
   standing()
   observing('terrestrial')
