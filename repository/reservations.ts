@@ -78,6 +78,7 @@ export interface Reservation {
   recordingId?: string
   discardable: boolean
   restorable: boolean
+  sameBroadcast?: boolean
 }
 
 export interface ReservationRevision {
@@ -522,6 +523,10 @@ export function toReservation(
     recordingId,
     discardable: isDiscardable(stands),
     restorable: isRestorable(stands),
+    sameBroadcast:
+      r.standing === 'cancelled' && r.cancellation === 'sameBroadcast'
+        ? true
+        : undefined,
   }
 }
 

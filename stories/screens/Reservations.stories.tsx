@@ -10,6 +10,7 @@ import type {
 } from '@/repository/reservations'
 import {
   EPG_DRIFT_FIXTURES,
+  SAME_BROADCAST_FIXTURES,
   EVERY_STANDING_FIXTURES,
   RESERVATION_FIXTURES,
   SETTLED_RESERVATION_FIXTURES,
@@ -783,5 +784,27 @@ export const 行の揃い: Story = {
         await expect(action.querySelector('svg')).not.toBeNull()
       }
     }
+  },
+}
+
+export const 同じ放送の予約があるため取り消した予約: Story = {
+  args: {
+    result: shown(SAME_BROADCAST_FIXTURES, { filter: { show: 'all' } }),
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const canvas = within(canvasElement)
+    const same = rowFor(canvas.getByText('世界の車窓紀行'))
+    const byHand = rowFor(canvas.getByText('朝のニュース'))
+
+    await expect(cellOf(same, THE_STATE_COLUMN)).toHaveTextContent('重複取消')
+    await expect(await tipIn(cellOf(same, THE_STATE_COLUMN))).toHaveTextContent(
+      '同じ放送の予約が別にあるため取り消された予約。',
+    )
+    await expect(
+      within(same).getByRole('button', { name: '復元' }),
+    ).toBeEnabled()
+    await expect(cellOf(byHand, THE_STATE_COLUMN)).toHaveTextContent('取消済み')
   },
 }

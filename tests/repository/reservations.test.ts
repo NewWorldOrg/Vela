@@ -97,6 +97,7 @@ const reservation = (over: Over = {}) => ({
     acknowledgedAt: null,
   },
   broadcastGroup: { key: null, role: 'standalone' },
+  cancellation: null,
   createdAt: '2026-08-08T10:00:00Z',
   ...over,
 })
@@ -1068,6 +1069,24 @@ test('a refusal that is not about a move keeps the reading it had', async () => 
   const result = await createReservation('131-1310-40001')
 
   assert.equal(result.state === 'rejected' ? result.movedTo : 'ok', undefined)
+})
+
+test('a cancellation for the same broadcast is told apart from one by hand', async () => {
+  const later = new Date('2026-08-08T00:00:00Z')
+
+  standing([
+    reservation({
+      id: 'same',
+      standing: 'cancelled',
+      cancellation: 'sameBroadcast',
+    }),
+    reservation({ id: 'hand', standing: 'cancelled', cancellation: 'byHand' }),
+  ])
+
+  const rows = await listed(later)
+
+  assert.equal(rows.find((one) => one.id === 'same')?.sameBroadcast, true)
+  assert.equal(rows.find((one) => one.id === 'hand')?.sameBroadcast, undefined)
 })
 
 test('cancelling names the reservation it was pressed on', async () => {

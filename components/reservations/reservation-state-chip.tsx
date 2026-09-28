@@ -13,6 +13,7 @@ import {
   RESERVATION_EPG_MISSING_TERM,
   RESERVATION_RECEPTION_TERM,
   RESERVATION_RECORDING_REMOVED_TERM,
+  RESERVATION_SAME_BROADCAST_TERM,
   RESERVATION_STANDING_TERMS,
 } from '@/lib/state-terms'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +32,7 @@ type SettledStanding = Exclude<ReservationStanding, 'recording'>
 export const RESERVATION_STATE_COLUMN = stateColumnFor([
   ...Object.values(RESERVATION_STANDING_TERMS).map((term) => term.label),
   RESERVATION_RECORDING_REMOVED_TERM.label,
+  RESERVATION_SAME_BROADCAST_TERM.label,
 ])
 
 const STANDING: Record<
@@ -56,16 +58,24 @@ const NOT_YET_KNOWN_CHIP: (typeof STANDING)[SettledStanding] = {
 
 function StandingChip({
   standing,
+  sameBroadcast,
   say,
   also,
 }: {
   standing: SettledStanding
+  sameBroadcast: boolean
   say: boolean
   also: (string | undefined | false)[]
 }) {
   const chip = shapeFor(STANDING, standing, NOT_YET_KNOWN_CHIP)
   const term = alsoSays(
-    shapeFor(RESERVATION_STANDING_TERMS, standing, NOT_YET_IN_THIS_BUILD_TERM),
+    sameBroadcast
+      ? RESERVATION_SAME_BROADCAST_TERM
+      : shapeFor(
+          RESERVATION_STANDING_TERMS,
+          standing,
+          NOT_YET_IN_THIS_BUILD_TERM,
+        ),
     ...also,
   )
 
@@ -114,6 +124,12 @@ function divergedTerm(drift: EpgDrift): StateTerm {
   }
 }
 
+function sameBroadcastCancelled(reservation: Reservation): boolean {
+  return (
+    reservation.standing === 'cancelled' && reservation.sameBroadcast === true
+  )
+}
+
 export function ReservationStateChip({
   reservation,
   say = false,
@@ -159,5 +175,12 @@ export function ReservationStateChip({
     return <RecordingInProgressChip also={also} />
   }
 
-  return <StandingChip standing={reservation.standing} say={say} also={also} />
+  return (
+    <StandingChip
+      standing={reservation.standing}
+      sameBroadcast={sameBroadcastCancelled(reservation)}
+      say={say}
+      also={also}
+    />
+  )
 }
