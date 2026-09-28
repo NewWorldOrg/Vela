@@ -1111,6 +1111,9 @@ test('a proposal that cannot be opened says why', async () => {
   progressOf('scan-1', refusing(404))
   assert.deepEqual(await getScanProposal('scan-1'), { state: 'missing' })
 
+  progressOf('scan-1', refusing(400))
+  assert.deepEqual(await getScanProposal('scan-1'), { state: 'missing' })
+
   progressOf('scan-1', refusing(500))
   assert.deepEqual(await getScanProposal('scan-1'), {
     state: 'unavailable',

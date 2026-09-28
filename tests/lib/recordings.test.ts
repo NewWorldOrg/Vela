@@ -10,6 +10,7 @@ import { NOT_YET_IN_THIS_BUILD } from '@/lib/not-yet-in-this-build'
 import {
   inProgressFirst,
   isLeftScrambled,
+  isRecordingId,
   minutesMovedLater,
   playsInBrowser,
   recordingQualityShapeOf,
@@ -225,4 +226,14 @@ test('a deletion that left a known number of files behind names how many', () =>
     unfinishedDeletionShapeOf({ unfinishedDeletion: { filesLeft: 2 } }),
     { label: '削除未完了', detail: '残り 2 ファイル' },
   )
+})
+
+test('a recording is named by 32 hexadecimal digits and nothing else', () => {
+  assert.equal(isRecordingId('16d40bca0e3d4e0f9a1b2c3d4e5f6a7b'), true)
+  assert.equal(isRecordingId('16D40BCA0E3D4E0F9A1B2C3D4E5F6A7B'), true)
+  assert.equal(isRecordingId('16d40bca-0e3d-4e0f-9a1b-2c3d4e5f6a7b'), false)
+  assert.equal(isRecordingId('00000000000000000000000000000000'), false)
+  assert.equal(isRecordingId('16d40bca0e3d4e0f9a1b2c3d4e5f6a7'), false)
+  assert.equal(isRecordingId('16d40bca0e3d4e0f9a1b2c3d4e5f6a7g'), false)
+  assert.equal(isRecordingId(''), false)
 })
