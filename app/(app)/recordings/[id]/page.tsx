@@ -12,6 +12,7 @@ import {
   RECORDINGS_EVENT,
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
+import { isRecordingId } from '@/lib/recordings'
 import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
 import { theHoldAsked, theSourceAsked } from '@/lib/playback-source'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
@@ -33,7 +34,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
-  const detail = await getRecording(id)
+  const detail = isRecordingId(id) ? await getRecording(id) : undefined
   return { title: detail ? detail.title : 'ページが見つかりません' }
 }
 
@@ -56,6 +57,11 @@ export default async function Page({
 }) {
   const { id } = await params
   const { at, paused, source } = await searchParams
+
+  if (!isRecordingId(id)) {
+    notFound()
+  }
+
   const [detail, playback, unaskedProfile, encodeChoices, encodeJob, artefact] =
     await Promise.all([
       getRecording(id),

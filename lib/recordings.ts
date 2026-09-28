@@ -6,6 +6,15 @@ import type {
   RecordingDetail,
 } from '@/repository/recordings'
 
+const RECORDING_ID = /^[0-9a-f]{32}$/i
+
+const NO_RECORDING = /^0{32}$/
+
+/** Whether `text` names a recording the way the API does: 32 hexadecimal digits, not all zero. */
+export function isRecordingId(text: string): boolean {
+  return RECORDING_ID.test(text) && !NO_RECORDING.test(text)
+}
+
 export const RECORDING_STATE_FILTERS = [
   '問題のある録画',
   '尻切れ・失敗',
