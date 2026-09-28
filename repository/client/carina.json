@@ -18089,6 +18089,13 @@
           "string"
         ]
       },
+      "TunerDegradedKind": {
+        "enum": [
+          "unspecified",
+          "tuneFailing"
+        ],
+        "type": "string"
+      },
       "TunerEntryRequest": {
         "type": "object",
         "properties": {
@@ -18301,6 +18308,7 @@
           "faultKind",
           "faultDeclaredKind",
           "faultReceivableKinds",
+          "degradedKind",
           "sessionId",
           "sessionPurpose",
           "sessionStartedAt",
@@ -18364,6 +18372,9 @@
             "items": {
               "$ref": "#/components/schemas/TunerKind"
             }
+          },
+          "degradedKind": {
+            "$ref": "#/components/schemas/TunerDegradedKind"
           },
           "sessionId": {
             "type": [

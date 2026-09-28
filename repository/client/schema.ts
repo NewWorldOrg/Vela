@@ -3991,6 +3991,8 @@ export interface components {
     /** @enum {null|string} */
     TuneFailureKind:
       'noLock' | 'noData' | 'incompletePsi' | 'streamMismatch' | null
+    /** @enum {string} */
+    TunerDegradedKind: 'unspecified' | 'tuneFailing'
     TunerEntryRequest: {
       deviceId?: null | string
       disabled?: boolean
@@ -4052,6 +4054,7 @@ export interface components {
       faultKind: components['schemas']['TunerFaultKind']
       faultDeclaredKind: null | components['schemas']['TunerKind']
       faultReceivableKinds: components['schemas']['TunerKind'][]
+      degradedKind: components['schemas']['TunerDegradedKind']
       sessionId: null | string
       sessionPurpose: components['schemas']['SessionPurpose']
       /** Format: date-time */
