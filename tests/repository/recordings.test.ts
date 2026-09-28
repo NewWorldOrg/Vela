@@ -694,6 +694,19 @@ test('a recording that carried on after a gap says where the gap began in its re
   ])
 })
 
+test('a recording from an API that keeps no gaps yet says nothing about a gap', async () => {
+  const older = recording()
+  delete (older as Over).gaps
+  delete (older as Over).missedMs
+  standing([older])
+
+  const detail = await getRecording('d1')
+
+  assert.equal(detail?.interruptions?.sub, undefined)
+  assert.deepEqual(detail?.qualitySpots, [])
+  assert.equal(detail?.quality.detail, 'ドロップ 0')
+})
+
 test('a recording that missed nothing says nothing about a gap', async () => {
   standing([recording()])
 

@@ -553,7 +553,7 @@ function toDetail(
     reconcile: reconcileOf(d, base),
     interruptions: {
       main: `中断 ${d.interruptions.length} 回 / 再開 ${toInt(r.resumeCount)} 回`,
-      sub: gapsSaidOf(r.gaps),
+      sub: gapsSaidOf(gapsOf(r)),
     },
     tunerUnit: r.tunerDeviceId ? { main: r.tunerDeviceId } : undefined,
     eoverflow: overflows == null ? undefined : `${grouped(overflows)} 回`,
@@ -572,9 +572,10 @@ function toDetail(
     qualityRatio: measured
       ? ratioOf(dropped, totalPackets).toFixed(4)
       : undefined,
-    qualitySpots: [...spotsOf(d.positions.buckets), ...gapSpotsOf(r.gaps)].sort(
-      (left, right) => left.second - right.second,
-    ),
+    qualitySpots: [
+      ...spotsOf(d.positions.buckets),
+      ...gapSpotsOf(gapsOf(r)),
+    ].sort((left, right) => left.second - right.second),
     live: base.outcome === 'recording' ? liveOf(d, base, now) : undefined,
   }
 }
@@ -666,9 +667,14 @@ function secondsOf(seconds: Counted): string {
 }
 
 function missedOf(r: RecordingResponder): string | undefined {
-  const missed = toInt(r.missedMs)
+  const missed = toInt(r.missedMs ?? 0)
 
   return missed > 0 ? `欠け ${secondsOf(missed / 1000)}` : undefined
+}
+
+/** The gaps a recording kept; an API from before gaps were kept answers none. */
+function gapsOf(r: RecordingResponder): GapResponder[] {
+  return r.gaps ?? []
 }
 
 function gapsSaidOf(gaps: GapResponder[]): string | undefined {
