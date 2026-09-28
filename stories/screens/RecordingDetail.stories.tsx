@@ -226,13 +226,13 @@ export const 追記で再開した録画は欠けを言う: Story = {
       quality: {
         measured: true,
         level: 'warning',
-        detail: 'ドロップ 0 / 欠け 3.5 秒',
+        detail: 'ドロップ 0 / 欠け 2.5 秒',
       },
       interruptions: {
         main: '中断 1 回 / 再開 1 回',
-        sub: '欠け 17:54 から 3.5 秒',
+        sub: '欠け 23:05 から 2.5 秒',
       },
-      qualitySpots: [{ at: '0:09:16', packets: '欠け 3.5 秒', second: 556 }],
+      qualitySpots: [{ at: '0:05:12', packets: '欠け 2.5 秒', second: 312 }],
     },
   },
   play: async ({ canvasElement }) => {
@@ -241,11 +241,11 @@ export const 追記で再開した録画は欠けを言う: Story = {
     await userEvent.click(canvas.getByText('技術情報'))
 
     await expect(canvas.getByText('中断 1 回 / 再開 1 回')).toBeVisible()
-    await expect(canvas.getByText('欠け 17:54 から 3.5 秒')).toBeVisible()
-    await expect(canvas.getByText('欠け 3.5 秒')).toBeVisible()
+    await expect(canvas.getByText('欠け 23:05 から 2.5 秒')).toBeVisible()
+    await expect(canvas.getByText('欠け 2.5 秒')).toBeVisible()
     await expect(
       canvas.getByRole('link', { name: 'この時間帯を再生' }),
-    ).toHaveAttribute('href', '/recordings/1274?at=556')
+    ).toHaveAttribute('href', '/recordings/1274?at=312')
     await expect(canvas.queryByText('良好')).toBeNull()
   },
 }

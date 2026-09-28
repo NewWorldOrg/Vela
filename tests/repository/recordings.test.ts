@@ -666,13 +666,13 @@ test('the times the recorder overflowed are spelled with their thousands apart',
 const CARRIED_ON = {
   gaps: [
     {
-      from: '2026-08-09T14:09:16.2Z',
-      until: '2026-08-09T14:09:19.7Z',
-      seconds: 3.5,
-      atSecond: 556.2,
+      from: '2026-08-09T14:05:12Z',
+      until: '2026-08-09T14:05:14.5Z',
+      seconds: 2.5,
+      atSecond: 312.3,
     },
   ],
-  missedMs: 3500,
+  missedMs: 2500,
   drops: drops({ quality: 'warning' }),
 }
 
@@ -680,7 +680,7 @@ test('a recording that carried on after a gap says how long it missed beside its
   const one = await only([recording(CARRIED_ON)])
 
   assert.equal(one.quality.level, 'warning')
-  assert.equal(one.quality.detail, 'ドロップ 0 / 欠け 3.5 秒')
+  assert.equal(one.quality.detail, 'ドロップ 0 / 欠け 2.5 秒')
 })
 
 test('a recording that carried on after a gap says where the gap began in its record, and marks it on the seek bar', async () => {
@@ -688,9 +688,9 @@ test('a recording that carried on after a gap says where the gap began in its re
 
   const detail = await getRecording('d1')
 
-  assert.equal(detail?.interruptions?.sub, '欠け 23:09 から 3.5 秒')
+  assert.equal(detail?.interruptions?.sub, '欠け 23:05 から 2.5 秒')
   assert.deepEqual(detail?.qualitySpots, [
-    { at: '0:09:16', packets: '欠け 3.5 秒', second: 556 },
+    { at: '0:05:12', packets: '欠け 2.5 秒', second: 312 },
   ])
 })
 
