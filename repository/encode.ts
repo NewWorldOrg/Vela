@@ -77,7 +77,6 @@ export interface EncodeRoute {
 
 export interface EncodeFailureDetail {
   failure: EncodeFailure
-  note: string
   noticedAt: string
 }
 
@@ -787,7 +786,6 @@ export function toEncodeJob(
     failure: one.failure
       ? {
           failure: one.failure.failure,
-          note: one.failure.note,
           noticedAt: formatMoment(one.failure.noticedAt),
         }
       : undefined,

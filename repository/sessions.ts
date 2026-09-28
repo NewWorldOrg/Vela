@@ -1,7 +1,12 @@
 import { describeDevice, type Device } from '@/lib/device'
 import { formatMoment } from '@/lib/format'
 import type { AuthMethod } from '@/repository/auth'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
+import type { components } from '@/repository/client/schema'
+
+type PasswordRefusedResponder =
+  components['schemas']['PasswordRefusedResponder']
 
 const MINUTE = 60_000
 
@@ -71,10 +76,9 @@ export async function getSignedIn(): Promise<SignedIn> {
 }
 
 export async function revokeSession(id: string): Promise<RevokeResult> {
-  const { error, response } = await carinaClient().DELETE(
-    '/api/auth/sessions/{id}',
-    { params: { path: { id } } },
-  )
+  const { response } = await carinaClient().DELETE('/api/auth/sessions/{id}', {
+    params: { path: { id } },
+  })
 
   if (response.status === 204) {
     return { state: 'ok' }
@@ -86,7 +90,7 @@ export async function revokeSession(id: string): Promise<RevokeResult> {
 
   return {
     state: 'unavailable',
-    message: error?.message || `API は ${response.status} を返しました。`,
+    message: `API は ${response.status} を返しました。`,
   }
 }
 
@@ -106,8 +110,31 @@ export async function changePassword(
 
   return {
     state: 'refused',
-    message: error?.message || `API は ${response.status} を返しました。`,
+    message: passwordRefusalOf(
+      error?.data && 'refusal' in error.data ? error.data : undefined,
+      response.status,
+    ),
   }
+}
+
+const PASSWORD_REFUSAL: Record<
+  PasswordRefusedResponder['refusal'],
+  (refused: PasswordRefusedResponder) => string
+> = {
+  wrongPassword: () => 'いまのパスワードが一致しません。',
+  outOfLength: (refused) =>
+    `新しいパスワードは ${Number(refused.shortestLength)}〜${Number(refused.longestLength)} 文字です。`,
+}
+
+function passwordRefusalOf(
+  refused: PasswordRefusedResponder | undefined,
+  status: number,
+): string {
+  const fallback = `API は ${status} を返しました。`
+
+  return refused === undefined
+    ? fallback
+    : shapeFor(PASSWORD_REFUSAL, refused.refusal, () => fallback)(refused)
 }
 
 function momentOf(iso: string, now: number): Moment {

@@ -97,8 +97,12 @@ function envelope(value: unknown, status: number): Response {
   })
 }
 
-function refusing(message: string, status: number): Response {
-  return envelope({ status: false, message, data: null }, status)
+function refusing(
+  message: string,
+  status: number,
+  data: unknown = null,
+): Response {
+  return envelope({ status: false, message, data }, status)
 }
 
 function turnedAway(): Response {
@@ -111,14 +115,20 @@ beforeEach(() => {
   asked.page = THE_PAGE
 })
 
-test('a wrong current password comes back as a refusal the screen can show', async () => {
-  apiAnswering(refusing('The current password is wrong.', 401))
+test("a wrong current password comes back as a refusal in the screen's words", async () => {
+  apiAnswering(
+    refusing('The current password is wrong.', 400, {
+      refusal: 'wrongPassword',
+      shortestLength: 12,
+      longestLength: 256,
+    }),
+  )
 
   const result = await changePassword(TYPED)
 
   assert.deepEqual(result, {
     state: 'refused',
-    message: 'The current password is wrong.',
+    message: 'いまのパスワードが一致しません。',
   })
   assert.equal(sent.length, 1)
   assert.equal(new URL(sent[0].url).pathname, '/api/auth/password')
@@ -126,14 +136,33 @@ test('a wrong current password comes back as a refusal the screen can show', asy
 
 test('a new password the API will not take comes back with its reason too', async () => {
   apiAnswering(
-    refusing('A password is between 12 and 256 characters long.', 400),
+    refusing('A password is between 12 and 256 characters long.', 400, {
+      refusal: 'outOfLength',
+      shortestLength: 12,
+      longestLength: 256,
+    }),
   )
 
   const result = await changePassword(TYPED)
 
   assert.deepEqual(result, {
     state: 'refused',
-    message: 'A password is between 12 and 256 characters long.',
+    message: '新しいパスワードは 12〜256 文字です。',
+  })
+})
+
+test('a password refusal this build has no words for says the status, not the sentence the API wrote', async () => {
+  apiAnswering(
+    refusing('Reused a password.', 400, {
+      refusal: 'usedBefore',
+      shortestLength: 12,
+      longestLength: 256,
+    }),
+  )
+
+  assert.deepEqual(await changePassword(TYPED), {
+    state: 'refused',
+    message: 'API は 400 を返しました。',
   })
 })
 
@@ -246,12 +275,12 @@ test('a session already ended elsewhere is said to be gone, not refused', async 
   })
 })
 
-test('a session the API will not end comes back with the reason it gave', async () => {
+test('a session the API will not end says the status rather than the sentence the API wrote', async () => {
   apiAnswering(refusing('The session could not be ended.', 500))
 
   assert.deepEqual(await revokeSession('a-session-elsewhere'), {
     state: 'unavailable',
-    message: 'The session could not be ended.',
+    message: 'API は 500 を返しました。',
   })
 })
 

@@ -83,7 +83,6 @@ function whyItStands(job: EncodeJob): string {
     job.replacedAt && REPLACED_IN_FULL,
     job.replacedAt && `置き換え ${job.replacedAt}`,
     job.failure && wordFor(FAILURE_LABEL, job.failure.failure),
-    job.failure?.note || undefined,
     job.attempt > 1 ? `${job.attempt} 回目` : undefined,
   ]
     .filter((one): one is string => Boolean(one))

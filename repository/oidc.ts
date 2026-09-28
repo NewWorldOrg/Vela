@@ -1,5 +1,8 @@
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
+
+type OidcConfigRefusal = components['schemas']['OidcConfigRefusal']
 
 export type OidcReach = components['schemas']['OidcReach']
 
@@ -70,6 +73,31 @@ export async function saveOidcConfig(
 
   return {
     state: 'refused',
-    message: error?.message || `API は ${response.status} を返しました。`,
+    message: refusalOf(
+      error?.data && 'refusal' in error.data ? error.data.refusal : undefined,
+      response.status,
+    ),
   }
+}
+
+const OIDC_REFUSAL: Record<OidcConfigRefusal, string> = {
+  secretRequired: '初めての保存には client secret が必要です。',
+  discoveryUrlInvalid:
+    'discovery URL が https で始まる URL ではないか、長すぎます。',
+  clientIdInvalid: 'client ID が空か、長すぎます。',
+  restrictionInvalid:
+    '許可グループか許可ドメインに、受け付けられない値が含まれています。',
+  providerUnreachable:
+    'discovery の文書を読めなかったため、何も保存されていません。表示されている redirect URI を IdP に登録してから、discovery URL を確かめてください。',
+}
+
+function refusalOf(
+  refusal: OidcConfigRefusal | undefined,
+  status: number,
+): string {
+  const fallback = `API は ${status} を返しました。`
+
+  return refusal === undefined
+    ? fallback
+    : shapeFor(OIDC_REFUSAL, refusal, fallback)
 }

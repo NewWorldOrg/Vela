@@ -125,7 +125,6 @@ test('a failed job names the class it failed in', () => {
         status: 'failed',
         failure: {
           failure: 'notEnoughRoom',
-          note: 'No space left on device',
           noticedAt: '2026/08/07 23:13',
         },
       }),
@@ -145,7 +144,6 @@ test('a failure class this build does not know is still said', () => {
           failure: 'aNewWayToFail' as NonNullable<
             EncodeJob['failure']
           >['failure'],
-          note: '',
           noticedAt: '2026/08/07 23:13',
         },
       }),

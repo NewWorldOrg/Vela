@@ -144,12 +144,41 @@ test('a secret typed in is sent as it was typed', async () => {
   )
 })
 
-test('a change the API refuses comes back with the reason it gave', async () => {
-  answering(400, envelope(null, 'The discovery document could not be read.'))
+test("a change the API refuses comes back with the reason in the screen's words, not the sentence the API wrote", async () => {
+  for (const [refusal, said] of [
+    ['secretRequired', '初めての保存には client secret が必要です。'],
+    [
+      'discoveryUrlInvalid',
+      'discovery URL が https で始まる URL ではないか、長すぎます。',
+    ],
+    ['clientIdInvalid', 'client ID が空か、長すぎます。'],
+    [
+      'restrictionInvalid',
+      '許可グループか許可ドメインに、受け付けられない値が含まれています。',
+    ],
+    [
+      'providerUnreachable',
+      'discovery の文書を読めなかったため、何も保存されていません。表示されている redirect URI を IdP に登録してから、discovery URL を確かめてください。',
+    ],
+  ] as const) {
+    answering(
+      400,
+      envelope({ refusal }, 'The discovery document could not be read.'),
+    )
+
+    assert.deepEqual(await saveOidcConfig(CHANGE), {
+      state: 'refused',
+      message: said,
+    })
+  }
+})
+
+test('a refusal this build has no words for says the status rather than the sentence the API wrote', async () => {
+  answering(400, envelope({ refusal: 'overTheLimit' }, 'Too many of them.'))
 
   assert.deepEqual(await saveOidcConfig(CHANGE), {
     state: 'refused',
-    message: 'The discovery document could not be read.',
+    message: 'API は 400 を返しました。',
   })
 })
 
