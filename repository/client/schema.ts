@@ -1676,6 +1676,11 @@ export interface components {
       message: string
       data: null | components['schemas']['ReservationOutcomeListResponder']
     }
+    BaseResponderOfReservationRefusedResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ReservationRefusedResponder']
+    }
     BaseResponderOfReservationResponder: {
       status: boolean
       message: string
@@ -3228,6 +3233,8 @@ export interface components {
       key: null | string
       role: components['schemas']['BroadcastGroupRole']
     }
+    /** @enum {null|string} */
+    ReservationCancellation: 'byHand' | 'programmeGone' | 'sameBroadcast' | null
     ReservationDiscardRefusedResponder: {
       /** Format: uuid */
       reservationId: string
@@ -3266,6 +3273,7 @@ export interface components {
       | 'turningIntoARecording'
       | 'recordingCameOfIt'
       | 'stillToBeRecorded'
+      | 'programmeIsAMovedDuplicate'
     ReservationHealthResponder: {
       /** Format: date-time */
       asOf: string
@@ -3352,6 +3360,11 @@ export interface components {
       /** Format: date-time */
       descrambledAt: null | string
     }
+    ReservationPrimaryResponder: {
+      programme: string
+      /** Format: date-time */
+      startsAt: string
+    }
     ReservationProgrammeResponder: {
       id: string
       /** Format: int32 */
@@ -3374,6 +3387,10 @@ export interface components {
       /** Format: date-time */
       since: null | string
     }
+    ReservationRefusedResponder: {
+      refusal: components['schemas']['ReservationFailure']
+      primary: null | components['schemas']['ReservationPrimaryResponder']
+    }
     ReservationResponder: {
       /** Format: uuid */
       id: string
@@ -3392,6 +3409,7 @@ export interface components {
       reception: components['schemas']['ReservationReceptionResponder']
       epg: components['schemas']['ReservationDivergenceResponder']
       broadcastGroup: components['schemas']['ReservationBroadcastGroupResponder']
+      cancellation: null | components['schemas']['ReservationCancellation']
       /** Format: date-time */
       createdAt: string
     }
@@ -3505,6 +3523,8 @@ export interface components {
       turnedOff: number | string
       /** Format: int32 */
       faulted: number | string
+      /** Format: int32 */
+      excludedAsMoved: number | string
     }
     /** @enum {string} */
     RuleApplyRefusal:
@@ -3537,6 +3557,8 @@ export interface components {
       changingHands: number | string
       /** Format: int32 */
       excludedAsShadows: number | string
+      /** Format: int32 */
+      excludedAsMoved: number | string
     }
     RuleListResponder: {
       rules: components['schemas']['RuleResponder'][]
@@ -3559,6 +3581,8 @@ export interface components {
       excludedAsShadows: number | string
       /** Format: int32 */
       seatsLeftOut: number | string
+      /** Format: int32 */
+      excludedAsMoved: number | string
     }
     RulePreviewTakeResponder: {
       programme: string
@@ -6032,7 +6056,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+          'application/json': components['schemas']['BaseResponderOfReservationRefusedResponder']
         }
       }
       /** @description Conflict */
@@ -6041,7 +6065,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+          'application/json': components['schemas']['BaseResponderOfReservationRefusedResponder']
         }
       }
       /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
@@ -6059,7 +6083,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+          'application/json': components['schemas']['BaseResponderOfReservationRefusedResponder']
         }
       }
     }
