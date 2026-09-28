@@ -56,6 +56,25 @@ export function openingScrollTopOf(
   return Math.max(0, (nowMin / 60) * hourPx - viewPx / 2)
 }
 
+export const NOW_LABEL_GAP_PX = 10
+
+export const NOW_LINE_THICKNESS_PX = 2
+
+export function nowLineTopOf(
+  nowMin: number,
+  hourPx: number,
+  windowHours: number,
+): number {
+  return Math.min(
+    (nowMin / 60) * hourPx,
+    windowHours * hourPx - NOW_LINE_THICKNESS_PX,
+  )
+}
+
+export function nowLabelTopOf(lineTopPx: number): number {
+  return Math.max(-NOW_LABEL_GAP_PX, -lineTopPx) + 0
+}
+
 /** 最初の HTML で番組表の枠の直後に置き、最初の描画の前に今の位置へ送るスクリプト。 */
 export function openingScrollScriptOf(nowMin: number, hourPx: number): string {
   const nowPx = (nowMin / 60) * hourPx

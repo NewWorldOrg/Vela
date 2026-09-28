@@ -16,6 +16,10 @@ import {
   isDrawn,
   isOnAir,
   joinedColumnsOf,
+  NOW_LABEL_GAP_PX,
+  NOW_LINE_THICKNESS_PX,
+  nowLabelTopOf,
+  nowLineTopOf,
   nowMinOf,
   openingScrollScriptOf,
   openingScrollTopOf,
@@ -91,6 +95,39 @@ test('the start of a day opens at the top, not above it', () => {
   assert.equal(openingScrollTopOf(0, HOUR_PX, 700), 0)
   assert.equal(openingScrollTopOf(120, HOUR_PX, 700), 0)
   assert.equal(openingScrollTopOf(240, HOUR_PX, 700), 384 - 350)
+})
+
+test('the now line sits where the minute says, away from the edges', () => {
+  assert.equal(nowLineTopOf(600, HOUR_PX, 24), (600 / 60) * HOUR_PX)
+})
+
+test('the now line does not run past the bottom of the day', () => {
+  const windowHours = 24
+  const lastMinute = windowHours * 60 - 1
+
+  assert.equal(
+    nowLineTopOf(lastMinute, HOUR_PX, windowHours),
+    windowHours * HOUR_PX - NOW_LINE_THICKNESS_PX,
+  )
+})
+
+test('the label sits ten pixels above the line, away from the top', () => {
+  assert.equal(nowLabelTopOf(200), -NOW_LABEL_GAP_PX)
+  assert.equal(nowLabelTopOf(NOW_LABEL_GAP_PX), -NOW_LABEL_GAP_PX)
+})
+
+test('the label stops at the top of the day instead of climbing into the heading', () => {
+  assert.equal(nowLabelTopOf(0), 0)
+  assert.equal(nowLabelTopOf(4), -4)
+  assert.equal(nowLabelTopOf(9), -9)
+})
+
+test('the label never sits above where the day begins, at any minute', () => {
+  for (const nowMin of [0, 1, 3, 6, 9, 10, 11, 30]) {
+    const lineTopPx = nowLineTopOf(nowMin, HOUR_PX, 24)
+
+    assert.ok(lineTopPx + nowLabelTopOf(lineTopPx) >= 0)
+  }
 })
 
 test('a programme nobody booked carries no mark', () => {

@@ -18,6 +18,8 @@ import {
   isDrawn,
   type MinuteRange,
   type OpeningSeam,
+  nowLabelTopOf,
+  nowLineTopOf,
   openingScrollScriptOf,
   openingScrollTopOf,
   openingSeamOf,
@@ -397,35 +399,46 @@ export function GuideGrid({
               )
             })}
 
-            {filled && nowMin !== undefined && (done || opening) && (
-              <div
-                data-now-line
-                className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-brand"
-                style={{
-                  ...delayOf(opening ? NOW_LABEL_AFTER_OPENING_MS : 0),
-                  top: `${(nowMin / 60) * HOUR_PX}px`,
-                }}
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 100 2"
-                  preserveAspectRatio="none"
-                  className="block h-0.5 w-full"
-                >
-                  <line
-                    x1="0"
-                    y1="1"
-                    x2="100"
-                    y2="1"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                </svg>
-                <span className="guide-now-pop absolute -top-2.5 left-1.5 rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand">
-                  {nowLabel}
-                </span>
-              </div>
-            )}
+            {filled &&
+              nowMin !== undefined &&
+              (done || opening) &&
+              (() => {
+                const lineTopPx = nowLineTopOf(nowMin, HOUR_PX, windowHours)
+                const labelTopPx = nowLabelTopOf(lineTopPx)
+
+                return (
+                  <div
+                    data-now-line
+                    className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-brand"
+                    style={{
+                      ...delayOf(opening ? NOW_LABEL_AFTER_OPENING_MS : 0),
+                      top: `${lineTopPx}px`,
+                    }}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 100 2"
+                      preserveAspectRatio="none"
+                      className="block h-0.5 w-full"
+                    >
+                      <line
+                        x1="0"
+                        y1="1"
+                        x2="100"
+                        y2="1"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                    <span
+                      className="guide-now-pop absolute left-1.5 rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand"
+                      style={{ top: `${labelTopPx}px` }}
+                    >
+                      {nowLabel}
+                    </span>
+                  </div>
+                )
+              })()}
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import {
   bookingMarkOf,
   gridMinWidthOf,
   isOnAir,
+  nowLineTopOf,
 } from '@/lib/guide'
 import {
   AERIAL_CHANNEL_FIXTURES,
@@ -448,6 +449,64 @@ const THE_FIRST_MINUTE_OF_THE_DAY = {
   nowMin: 0,
   nowLabel: '04:00',
   programs: PROGRAM_FIXTURES,
+}
+
+const A_FEW_MINUTES_INTO_THE_DAY = {
+  ...THE_FIRST_MINUTE_OF_THE_DAY,
+  nowMin: 3,
+  nowLabel: '04:03',
+}
+
+export const 朝4時ちょうどは札が見出しの下に隠れない: Story = {
+  args: { guide: THE_FIRST_MINUTE_OF_THE_DAY },
+  parameters: { screen: A_LAPTOP },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const heading = partOf(canvasElement, '[data-guide-heading]')
+      .parentElement as HTMLElement
+    const label = partOf(canvasElement, '[data-now-line] span')
+
+    await expect(label.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      heading.getBoundingClientRect().bottom,
+    )
+  },
+}
+
+export const 朝4時を数分過ぎても札が見出しの下に隠れない: Story = {
+  args: { guide: A_FEW_MINUTES_INTO_THE_DAY },
+  parameters: { screen: A_LAPTOP },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const heading = partOf(canvasElement, '[data-guide-heading]')
+      .parentElement as HTMLElement
+    const label = partOf(canvasElement, '[data-now-line] span')
+
+    await expect(label.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      heading.getBoundingClientRect().bottom,
+    )
+  },
+}
+
+export const 深夜3時59分は線が表の高さに収まる: Story = {
+  args: { guide: THE_LAST_MINUTE_OF_THE_DAY },
+  parameters: { screen: A_LAPTOP },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const line = partOf(canvasElement, '[data-now-line]')
+    const label = partOf(canvasElement, '[data-now-line] span')
+
+    await expect(line.offsetTop).toBeCloseTo(
+      nowLineTopOf(THE_LAST_MINUTE_OF_THE_DAY.nowMin, HOUR_PX, 24),
+      0,
+    )
+    await expect(line.offsetTop + line.offsetHeight).toBeLessThanOrEqual(
+      24 * HOUR_PX,
+    )
+    await expect(label.offsetTop).toBeCloseTo(-10, 0)
+  },
 }
 
 async function opensInTheMiddle(canvasElement: HTMLElement): Promise<void> {
