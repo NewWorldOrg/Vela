@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import { formatMoment } from '@/lib/format'
 import {
   callsOff,
@@ -444,7 +445,7 @@ export function whyItRefused(
     return `${DRIVER_OUT_OF_REACH}${asking.did}できませんでした。`
   }
 
-  return `${asking.fell}(${status})。`
+  return couldNot(asking.fell)
 }
 
 export async function defineProfile(

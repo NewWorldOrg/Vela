@@ -162,7 +162,7 @@ test('a password refusal this build has no words for says the status, not the se
 
   assert.deepEqual(await changePassword(TYPED), {
     state: 'refused',
-    message: 'API は 400 を返しました。',
+    message: 'しばらくしてからもう一度試してください。',
   })
 })
 
@@ -280,7 +280,7 @@ test('a session the API will not end says the status rather than the sentence th
 
   assert.deepEqual(await revokeSession('a-session-elsewhere'), {
     state: 'unavailable',
-    message: 'API は 500 を返しました。',
+    message: 'しばらくしてからもう一度試してください。',
   })
 })
 
@@ -289,7 +289,7 @@ test('a refusal to end a session with nothing said says the status', async () =>
 
   assert.deepEqual(await revokeSession('a-session-elsewhere'), {
     state: 'unavailable',
-    message: 'API は 502 を返しました。',
+    message: 'しばらくしてからもう一度試してください。',
   })
 })
 

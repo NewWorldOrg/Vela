@@ -913,15 +913,15 @@ test('a refusal nothing accounts for is a number, and never the sentence the API
       500,
       'The ledger would not take the profile.',
     ),
-    'プロファイルを保存できませんでした(500)。',
+    'プロファイルを保存できませんでした。しばらくしてからもう一度試してください。',
   )
   assert.equal(
     whyItRefused(WHEN_QUEUEING, 500, undefined),
-    'エンコードを登録できませんでした(500)。',
+    'エンコードを登録できませんでした。しばらくしてからもう一度試してください。',
   )
   assert.equal(
     whyItRefused(WHEN_REMOVING_A_DESTINATION, 502, 'Bad Gateway'),
-    '保存先を撤去できませんでした(502)。',
+    '保存先を撤去できませんでした。しばらくしてからもう一度試してください。',
   )
 })
 
@@ -1047,7 +1047,8 @@ test('a profile refused for a value out of range names the field, and an unaccou
   store.writeMessage = 'The ledger would not take the profile.'
   assert.deepEqual(await defineProfile(draft), {
     state: 'rejected',
-    message: 'プロファイルを保存できませんでした(500)。',
+    message:
+      'プロファイルを保存できませんでした。しばらくしてからもう一度試してください。',
   })
 
   store.writeStatus = 401
@@ -1082,7 +1083,8 @@ test('a job the ledger no longer holds cannot be called off, and says so', async
   store.writeMessage = 'The ledger would not take the cancellation.'
   assert.deepEqual(await callOffEncode(RUNNING.id), {
     state: 'rejected',
-    message: 'このジョブを中止できませんでした(500)。',
+    message:
+      'このジョブを中止できませんでした。しばらくしてからもう一度試してください。',
   })
 
   store.writeStatus = 401
@@ -1225,6 +1227,6 @@ test('the auto-run refused for a field names that field in Japanese', () => {
   )
   assert.equal(
     whyItRefused(WHEN_SETTLING_THE_AUTO_RUN, 500, 'Something else entirely.'),
-    '自動実行の設定を保存できませんでした(500)。',
+    '自動実行の設定を保存できませんでした。しばらくしてからもう一度試してください。',
   )
 })

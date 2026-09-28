@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 import { RULE_TAKES_SHOWN } from '@/lib/rules'
 import type { SearchTerms } from '@/lib/search-condition'
@@ -431,7 +432,7 @@ function toWrite<T>(
   }
 
   if (!response.ok) {
-    return { state: 'rejected', message: `${fallback}(${response.status})` }
+    return { state: 'rejected', message: couldNot(fallback) }
   }
 
   return { state: 'ok', data: read() }

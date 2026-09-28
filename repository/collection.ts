@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import {
   BROADCAST_KIND_LABEL,
   BROADCAST_KIND_ORDER,
@@ -302,7 +303,7 @@ export async function collectNow(
   if (streams === undefined) {
     return {
       state: 'rejected',
-      message: `いますぐ集めるを受け付けられませんでした(${response.status})。`,
+      message: couldNot('いますぐ集めるを受け付けられませんでした'),
     }
   }
 
@@ -323,7 +324,7 @@ export async function rebuildEpg(): Promise<RebuildResult> {
   if (discarded === undefined) {
     return {
       state: 'rejected',
-      message: `削除を受け付けられませんでした(${response.status})。`,
+      message: couldNot('削除を受け付けられませんでした'),
     }
   }
 

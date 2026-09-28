@@ -642,6 +642,6 @@ test('a refusal with no saying of its own still says what happened', async () =>
 
   assert.equal(
     write.state === 'refused' && write.message,
-    '外部プレイヤーの札を発行できませんでした(503)。',
+    '外部プレイヤーの札を発行できませんでした。しばらくしてからもう一度試してください。',
   )
 })

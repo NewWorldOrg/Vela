@@ -596,14 +596,14 @@ test('a refusal the API sends in its body is read as the screen being unavailabl
   replies.set('GET /api/services', refusing(500))
   assert.deepEqual(await getChannels(), {
     state: 'unavailable',
-    message: 'API は 500 を返しました。',
+    message: 'しばらくしてからもう一度試してください。',
   })
 
   standing()
   replies.set('GET /api/tuners/scan-runs', refusing(503))
   assert.deepEqual(await getChannels(), {
     state: 'unavailable',
-    message: 'API は 503 を返しました。',
+    message: 'しばらくしてからもう一度試してください。',
   })
 })
 
@@ -834,7 +834,8 @@ test('a running scan the API could not describe is still shown, with why', async
       took: undefined,
       reason: undefined,
     },
-    message: 'スキャンの状況を読み取れませんでした(500)。',
+    message:
+      'スキャンの状況を読み取れませんでした。しばらくしてからもう一度試してください。',
   })
 
   standing([service()], [run({ state: 'running', finishedAt: null })])
@@ -1117,13 +1118,15 @@ test('a proposal that cannot be opened says why', async () => {
   progressOf('scan-1', refusing(500))
   assert.deepEqual(await getScanProposal('scan-1'), {
     state: 'unavailable',
-    message: 'スキャンの状況を読み取れませんでした(500)。',
+    message:
+      'スキャンの状況を読み取れませんでした。しばらくしてからもう一度試してください。',
   })
 
   progressOf('scan-1', { status: 502 })
   assert.deepEqual(await getScanProposal('scan-1'), {
     state: 'unavailable',
-    message: 'スキャンの状況を読み取れませんでした(502)。',
+    message:
+      'スキャンの状況を読み取れませんでした。しばらくしてからもう一度試してください。',
   })
 
   progressOf('scan-1', ok(progress()))
@@ -1184,7 +1187,8 @@ test('a scan refused for want of a tuner, or for anything else, is rejected with
 
   assert.deepEqual(await startScan(['isdbT']), {
     state: 'rejected',
-    message: 'スキャンを開始できませんでした(500)。',
+    message:
+      'スキャンを開始できませんでした。しばらくしてからもう一度試してください。',
   })
 })
 
@@ -1319,7 +1323,7 @@ for (const write of WRITES) {
     replies.set(key, refusing(500))
     assert.deepEqual(await write.call(), {
       state: 'rejected',
-      message: `${write.fallback}(500)`,
+      message: `${write.fallback.replace(/。$/, '')}。しばらくしてからもう一度試してください。`,
     })
 
     replies.set(key, { status: 401 })

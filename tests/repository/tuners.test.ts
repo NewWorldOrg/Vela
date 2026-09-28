@@ -616,7 +616,7 @@ test('a switch the API will not take says what the API answered', async () => {
 
     assert.deepEqual(await setTunerDisabled(DEVICE, true), {
       state: 'unavailable',
-      message: `API は ${reply.status} を返しました。`,
+      message: 'しばらくしてからもう一度試してください。',
     })
   }
 })
@@ -914,7 +914,7 @@ test('a detection the API will not give says what it answered', async () => {
 
     assert.deepEqual(await getDetectedTuners(), {
       state: 'unavailable',
-      message: `API は ${reply.status} を返しました。`,
+      message: 'しばらくしてからもう一度試してください。',
     })
   }
 
@@ -1009,7 +1009,8 @@ test('nothing is saved when the ledger before it cannot be read', async () => {
 
   assert.deepEqual(await saveDetectedTuners([DEVICE]), {
     state: 'rejected',
-    message: '保存前の一覧を読み取れなかったため、保存していません(503)。',
+    message:
+      '保存前の一覧を読み取れなかったため、保存していません。しばらくしてからもう一度試してください。',
   })
   assert.equal(savedTuners(), undefined)
 
@@ -1039,7 +1040,11 @@ test('a save the API refuses is said in the words of why it refused', async () =
     [500, 'ledgerUnwritable: read-only', /driver が一覧を書き込めない/],
     [501, 'the driver cannot detect', /デバイス検出に対応していない/],
     [503, 'no driver', /driver に接続できない/],
-    [400, 'somethingNew: x', /保存できませんでした\(400\)/],
+    [
+      400,
+      'somethingNew: x',
+      /保存できませんでした。しばらくしてからもう一度試してください。/,
+    ],
   ] as const) {
     standing()
     store.writeStatus = status
@@ -1170,7 +1175,11 @@ test('power the API refuses is said in the words of why it refused', async () =>
     [404, 'noSuchTuner: adapter1.frontend0', /保存された一覧にない/],
     [501, 'capabilityMissing', /対応していない/],
     [503, 'no driver', /driver に接続できない/],
-    [400, 'rejected: x', /LNB 給電を保存できませんでした\(400\)/],
+    [
+      400,
+      'rejected: x',
+      /LNB 給電を保存できませんでした。しばらくしてからもう一度試してください。/,
+    ],
   ] as const) {
     standing()
     store.writeStatus = status

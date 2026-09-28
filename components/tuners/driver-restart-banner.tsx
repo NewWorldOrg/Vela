@@ -1,5 +1,6 @@
 'use client'
 
+import { couldNot } from '@/lib/try-again'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -100,7 +101,7 @@ function refusalFace(refusal: Refusal): Face {
     case 'refused':
       return {
         tone: 'danger',
-        body: `再起動を要求できませんでした。API は ${refusal.status} を返しました。`,
+        body: couldNot('再起動を要求できませんでした'),
       }
   }
 }

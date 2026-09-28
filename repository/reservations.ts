@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import type { StationLogo } from '@/repository/channels'
 import type { OriginLabel } from '@/lib/format'
@@ -392,7 +393,7 @@ export async function discardReservation(
 
   return {
     state: 'rejected',
-    message: refusal ?? `${CANNOT_DISCARD}(${response.status})。`,
+    message: refusal ?? couldNot(CANNOT_DISCARD),
   }
 }
 
@@ -453,7 +454,7 @@ function toWrite(
   }
 
   if (!response.ok) {
-    return { state: 'rejected', message: `${fallback}(${response.status})` }
+    return { state: 'rejected', message: couldNot(fallback) }
   }
 
   return { state: 'ok', verdict }

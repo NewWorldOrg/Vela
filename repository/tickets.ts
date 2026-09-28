@@ -1,3 +1,5 @@
+import { couldNot } from '@/lib/try-again'
+
 export interface PlaybackTicket {
   inTheClear: string
   lapsesAt: string
@@ -25,6 +27,6 @@ export function whyNoTicket(
     message:
       sayings[status] ??
       REFUSED_WHEREVER_IT_IS_ASKED[status] ??
-      `外部プレイヤーの札を発行できませんでした(${status})。`,
+      couldNot('外部プレイヤーの札を発行できませんでした'),
   }
 }

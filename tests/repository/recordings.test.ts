@@ -1385,13 +1385,16 @@ test('each refusal the endpoint can give is told apart from the others', async (
   assert.equal(said.size, 4)
 })
 
-test('a status the endpoint does not name falls back to saying which it was', async () => {
+test('a status the endpoint does not name asks to try again later', async () => {
   store.remakeStatus = 500
 
   const result = await remakeThumbnail('7e7a14cf')
 
   assert.equal(result.state, 'rejected')
-  assert.match(result.state === 'rejected' ? result.message : '', /\(500\)/)
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /しばらくしてからもう一度試してください。$/,
+  )
 })
 
 function discarding(status: number, data: unknown): void {
@@ -1527,13 +1530,16 @@ test('a refusal that says the files are still there says so, not that it failed'
   )
 })
 
-test('a refusal carrying no reason falls back to saying which status it was', async () => {
+test('a refusal carrying no reason asks to try again later', async () => {
   discarding(400, null)
 
   const result = await discardRecording('re-1')
 
   assert.equal(result.state, 'rejected')
-  assert.match(result.state === 'rejected' ? result.message : '', /\(400\)/)
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /しばらくしてからもう一度試してください。$/,
+  )
 })
 
 test('a session that has run out is not a refusal of the deletion', async () => {

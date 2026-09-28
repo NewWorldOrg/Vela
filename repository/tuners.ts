@@ -2,6 +2,7 @@ import type { Route } from 'next'
 
 import { formatMoment } from '@/lib/format'
 import { SILENCE_RANGE } from '@/lib/tuners'
+import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import {
   NOT_YET_IN_THIS_BUILD_SAYING,
   shapeFor,
@@ -202,7 +203,7 @@ export async function getTuners(): Promise<TunerScreenResult> {
   if (body.data === null || !body.status) {
     return {
       state: 'unavailable',
-      message: `API は ${ledger.response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -252,7 +253,7 @@ export async function setHoursOfSilence(
   if (body === undefined) {
     return {
       state: 'rejected',
-      message: `しきい値を変えられませんでした(${response.status})。`,
+      message: couldNot('しきい値を変えられませんでした'),
     }
   }
 
@@ -282,7 +283,7 @@ export async function setTunerDisabled(
   if (body === undefined) {
     return {
       state: 'unavailable',
-      message: `API は ${response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -290,7 +291,7 @@ export async function setTunerDisabled(
     ? { state: 'ok' }
     : {
         state: 'unavailable',
-        message: `API は ${response.status} を返しました。`,
+        message: TRY_AGAIN_LATER,
       }
 }
 
@@ -424,14 +425,14 @@ export async function getDetectedTuners(): Promise<DetectionScreenResult> {
   if (body === undefined) {
     return {
       state: 'unavailable',
-      message: `API は ${response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
   if (body.data === null || !body.status) {
     return {
       state: 'unavailable',
-      message: `API は ${response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -453,7 +454,7 @@ export async function saveDetectedTuners(
   if (ledgerBody?.data == null) {
     return {
       state: 'rejected',
-      message: `保存前の一覧を読み取れなかったため、保存していません(${ledger.response.status})。`,
+      message: couldNot('保存前の一覧を読み取れなかったため、保存していません'),
     }
   }
 
@@ -494,7 +495,7 @@ export async function saveDetectedTuners(
     message: toSaveRefusal(
       saved.response,
       saved.data ?? saved.error,
-      `検出結果を保存できませんでした(${saved.response.status})。`,
+      couldNot('検出結果を保存できませんでした'),
     ),
   }
 }
@@ -536,7 +537,7 @@ export async function setLnbPower(
     message: toSaveRefusal(
       response,
       data ?? error,
-      `LNB 給電を保存できませんでした(${response.status})。`,
+      couldNot('LNB 給電を保存できませんでした'),
     ),
   }
 }

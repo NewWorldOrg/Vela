@@ -23,6 +23,7 @@ import { capabilityLabel } from '@/repository/driver-capabilities'
 import { Badge } from '@/components/ui/badge'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { Banner } from '@/components/vela/banner'
+import { InFull } from '@/components/vela/in-full'
 import {
   ChevronRightIcon,
   LiveIcon,
@@ -243,9 +244,12 @@ export function SystemView({
 
       {trouble && (
         <Banner tone="danger" className="mt-3.5">
-          <b>{trouble}</b>
-          {api.state === 'failed' && (
-            <span className="ml-1 font-code">HTTP {api.httpStatus}</span>
+          {api.state === 'failed' ? (
+            <InFull says={`HTTP ${api.httpStatus}`} wraps="inline-block">
+              <b>{trouble}</b>
+            </InFull>
+          ) : (
+            <b>{trouble}</b>
           )}
         </Banner>
       )}

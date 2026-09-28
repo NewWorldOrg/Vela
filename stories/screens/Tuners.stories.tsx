@@ -160,7 +160,7 @@ export const 再起動中で読めない: Story = {
   args: {
     result: {
       state: 'unavailable',
-      message: 'API は 503 を返しました。',
+      message: 'しばらくしてからもう一度試してください。',
     },
     restartWindow: {
       state: 'restarting',

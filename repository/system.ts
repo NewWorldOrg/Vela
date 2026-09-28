@@ -1,3 +1,4 @@
+import { TRY_AGAIN_LATER } from '@/lib/try-again'
 import { unstable_rethrow } from 'next/navigation'
 
 import { carinaClient } from '@/repository/client/carina'
@@ -302,7 +303,7 @@ async function readDriverStatus(
     if (body.data === null) {
       return {
         state: 'unavailable',
-        message: `API は ${response.status} を返しました。`,
+        message: TRY_AGAIN_LATER,
       }
     }
 

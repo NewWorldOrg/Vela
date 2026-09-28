@@ -1,3 +1,4 @@
+import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
@@ -523,7 +524,7 @@ async function getProgress(scanId: string): Promise<ProgressRead> {
   if (progress === undefined || progress === null) {
     return {
       state: 'unavailable',
-      message: `スキャンの状況を読み取れませんでした(${response.status})。`,
+      message: couldNot('スキャンの状況を読み取れませんでした'),
     }
   }
 
@@ -608,7 +609,7 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
   if (serviceBody.data === null) {
     return {
       state: 'unavailable',
-      message: `API は ${services.response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -623,7 +624,7 @@ export async function getChannels(): Promise<ChannelsScreenResult> {
   if (runBody.data === null) {
     return {
       state: 'unavailable',
-      message: `API は ${runs.response.status} を返しました。`,
+      message: TRY_AGAIN_LATER,
     }
   }
 
@@ -765,7 +766,7 @@ export async function startScan(
   if (!response.ok) {
     return {
       state: 'rejected',
-      message: `スキャンを開始できませんでした(${response.status})。`,
+      message: couldNot('スキャンを開始できませんでした'),
     }
   }
 
@@ -795,7 +796,7 @@ function toWriteResult(
 
   return response.ok
     ? { state: 'ok' }
-    : { state: 'rejected', message: `${fallback}(${response.status})` }
+    : { state: 'rejected', message: couldNot(fallback) }
 }
 
 export async function cancelScan(scanId: string): Promise<WriteResult> {

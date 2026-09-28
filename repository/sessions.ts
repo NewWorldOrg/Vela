@@ -2,6 +2,7 @@ import { describeDevice, type Device } from '@/lib/device'
 import { formatMoment } from '@/lib/format'
 import type { AuthMethod } from '@/repository/auth'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
+import { TRY_AGAIN_LATER } from '@/lib/try-again'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 
@@ -90,7 +91,7 @@ export async function revokeSession(id: string): Promise<RevokeResult> {
 
   return {
     state: 'unavailable',
-    message: `API は ${response.status} を返しました。`,
+    message: TRY_AGAIN_LATER,
   }
 }
 
@@ -130,7 +131,7 @@ function passwordRefusalOf(
   refused: PasswordRefusedResponder | undefined,
   status: number,
 ): string {
-  const fallback = `API は ${status} を返しました。`
+  const fallback = TRY_AGAIN_LATER
 
   return refused === undefined
     ? fallback

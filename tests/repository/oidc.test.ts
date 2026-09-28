@@ -178,7 +178,7 @@ test('a refusal this build has no words for says the status rather than the sent
 
   assert.deepEqual(await saveOidcConfig(CHANGE), {
     state: 'refused',
-    message: 'API は 400 を返しました。',
+    message: 'しばらくしてからもう一度試してください。',
   })
 })
 
@@ -192,7 +192,7 @@ test('a refusal with nothing said, or an answer with nothing in it, says the sta
 
     assert.deepEqual(await saveOidcConfig(CHANGE), {
       state: 'refused',
-      message: `API は ${status} を返しました。`,
+      message: 'しばらくしてからもう一度試してください。',
     })
   }
 })

@@ -94,7 +94,10 @@ test('every reason the play endpoint gives for a sound is answered in Japanese',
 test('a reason this build has never heard is still said in Japanese, with the status', () => {
   const said = whyItRefused(WHEN_CARRYING_A_SOUND, 418, 'I am a teapot')
 
-  assert.equal(said, '再生を開始できませんでした(418)。')
+  assert.equal(
+    said,
+    '再生を開始できませんでした。しばらくしてからもう一度試してください。',
+  )
   assert.doesNotMatch(said, /teapot/)
 })
 

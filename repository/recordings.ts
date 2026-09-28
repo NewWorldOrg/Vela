@@ -1,3 +1,4 @@
+import { couldNot } from '@/lib/try-again'
 import { cache } from 'react'
 
 import { EMPTY_VALUE } from '@/lib/empty-value'
@@ -323,7 +324,7 @@ export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
     state: 'rejected',
     message:
       THUMBNAIL_REFUSAL[response.status] ??
-      `サムネイルを作り直せませんでした(${response.status})。`,
+      couldNot('サムネイルを作り直せませんでした'),
   }
 }
 
@@ -421,7 +422,7 @@ export async function discardRecording(
 
   return {
     state: 'rejected',
-    message: refusal ?? `${CANNOT_DISCARD}(${response.status})。`,
+    message: refusal ?? couldNot(CANNOT_DISCARD),
   }
 }
 

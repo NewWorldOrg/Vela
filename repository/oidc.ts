@@ -1,3 +1,4 @@
+import { TRY_AGAIN_LATER } from '@/lib/try-again'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
@@ -95,7 +96,7 @@ function refusalOf(
   refusal: OidcConfigRefusal | undefined,
   status: number,
 ): string {
-  const fallback = `API は ${status} を返しました。`
+  const fallback = TRY_AGAIN_LATER
 
   return refusal === undefined
     ? fallback

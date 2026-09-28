@@ -399,7 +399,7 @@ test('a walk refused as too soon names when the next one may be asked for', asyn
   )
 })
 
-test('a refusal that says nothing falls back to the status it answered with', async () => {
+test('a refusal that says nothing asks to try again later rather than giving a status', async () => {
   standing()
   store.sweepStatus = 500
   store.sweepError = null
@@ -407,7 +407,10 @@ test('a refusal that says nothing falls back to the status it answered with', as
   const result = await runIntegrityCheck()
 
   assert.equal(result.state, 'refused')
-  assert.match(result.state === 'refused' ? result.message : '', /\(500\)/)
+  assert.match(
+    result.state === 'refused' ? result.message : '',
+    /しばらくしてからもう一度試してください。$/,
+  )
 })
 
 test('a finding carries the id the check gave it, so it can be thrown away by name', async () => {
@@ -493,13 +496,16 @@ test('a finding from a check that took no time asks for the check to run again',
   )
 })
 
-test('a refusal this build does not know falls back to the status it answered with', async () => {
+test('a refusal this build does not know asks to try again later rather than giving a status', async () => {
   discarding(409, { findingId: STRAY_ID, refusal: 'somethingTheApiAddedLater' })
 
   const result = await discardIntegrityFinding(STRAY_ID)
 
   assert.equal(result.state, 'rejected')
-  assert.match(result.state === 'rejected' ? result.message : '', /\(409\)/)
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /しばらくしてからもう一度試してください。$/,
+  )
   assert.doesNotMatch(
     result.state === 'rejected' ? result.message : '',
     /somethingTheApiAddedLater/,
