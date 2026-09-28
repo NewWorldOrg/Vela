@@ -56,7 +56,12 @@ export interface TunerRow {
   stateLabel: string
   stateSub?: string
   lastService?: { at: string }
-  lnb?: string
+  lnb?: LnbPower
+}
+
+export interface LnbPower {
+  saved: boolean
+  applied?: boolean
 }
 
 export interface DetectionDiffRow {
@@ -479,22 +484,78 @@ export async function saveDetectedTuners(
 
   return {
     state: 'rejected',
-    message: toSaveRefusal(saved.response, saved.data ?? saved.error),
+    message: toSaveRefusal(
+      saved.response,
+      saved.data ?? saved.error,
+      `検出結果を保存できませんでした(${saved.response.status})。`,
+    ),
+  }
+}
+
+export async function setLnbPower(
+  deviceId: string,
+  on: boolean,
+): Promise<TunerWriteResult> {
+  const client = carinaClient()
+  const ledger = await client.GET('/api/tuners')
+
+  if (ledger.response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  const ledgerBody = ledger.data ?? ledger.error
+
+  if (ledgerBody?.data == null) {
+    return {
+      state: 'rejected',
+      message: `保存前の一覧を読み取れなかったため、保存していません(${ledger.response.status})。`,
+    }
+  }
+
+  const { desired } = ledgerBody.data
+
+  if (!desired.some((entry) => entry.deviceId === deviceId)) {
+    return {
+      state: 'rejected',
+      message: `${deviceId} は保存された一覧にないため、保存していません。デバイスを検出してから保存してください。`,
+    }
+  }
+
+  const tuners = desired.map((entry) => ({
+    deviceId: entry.deviceId,
+    disabled: entry.disabled,
+    lnbPower: entry.deviceId === deviceId ? on : entry.lnbPower,
+  }))
+
+  const saved = await client.PUT('/api/tuners', { body: { tuners } })
+
+  if (saved.response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (saved.response.ok) {
+    return { state: 'ok' }
+  }
+
+  return {
+    state: 'rejected',
+    message: toSaveRefusal(
+      saved.response,
+      saved.data ?? saved.error,
+      `LNB 給電を保存できませんでした(${saved.response.status})。`,
+    ),
   }
 }
 
 function toSaveRefusal(
   response: Response,
   body: { message: string } | undefined,
+  fallback: string,
 ): string {
   const prefix = body?.message.split(':', 1)[0]?.trim()
   const known = prefix !== undefined ? REFUSAL_BY_PREFIX[prefix] : undefined
 
-  return (
-    known ??
-    DETECTION_REFUSAL[response.status] ??
-    `検出結果を保存できませんでした(${response.status})。`
-  )
+  return known ?? DETECTION_REFUSAL[response.status] ?? fallback
 }
 
 const REFUSAL_BY_PREFIX: Partial<Record<string, string>> = {
@@ -753,7 +814,7 @@ function toRow(
       observation?.state === 'draining' || observation?.disablePending === true,
     session: toSession(observation),
     idleLabel: toIdleLabel(observation),
-    lnb: kind === '衛星' ? toLnb(observation) : undefined,
+    lnb: toLnb(entry, observation),
     lastService: toLastService(observation, reach),
     ...toState(observation),
   }
@@ -820,13 +881,14 @@ function toIdleLabel(
 }
 
 function toLnb(
+  entry: TunerEntryResponder,
   observation: TunerObservationResponder | undefined,
-): string | undefined {
-  if (observation === undefined) {
+): LnbPower | undefined {
+  if ((observation?.kind ?? entry.kind) !== 'satellite') {
     return undefined
   }
 
-  return observation.lnbPowered ? 'オン' : 'オフ(既定)'
+  return { saved: entry.lnbPower, applied: observation?.lnbPowered }
 }
 
 export const TUNER_STATE_LABEL = {

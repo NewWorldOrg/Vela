@@ -49,6 +49,7 @@ import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
 import { ThresholdControl } from '@/components/tuners/threshold-control'
+import { LnbPowerSwitch } from '@/components/tuners/lnb-power-switch'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 function whatTheSessionIs(session: {
@@ -218,6 +219,7 @@ export function TunersView({
   onDismiss,
   onSaveDetection,
   onSaveThreshold,
+  onSaveLnb,
 }: {
   result: TunerScreenResult
   detection?: DetectionScreenResult
@@ -227,6 +229,7 @@ export function TunersView({
   onDismiss: () => Promise<void>
   onSaveDetection: (devices: string[]) => Promise<TunerWriteResult>
   onSaveThreshold: (hours: number) => Promise<TunerWriteResult>
+  onSaveLnb: (deviceId: string, on: boolean) => Promise<TunerWriteResult>
 }) {
   if (result.state !== 'ok') {
     const restarting = result.state === 'unavailable' && restartWindow
@@ -402,8 +405,16 @@ export function TunersView({
                   <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
-              <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
-                {row.lnb ?? <span className="font-sans">{EMPTY_VALUE}</span>}
+              <TableCell>
+                {row.lnb ? (
+                  <LnbPowerSwitch
+                    deviceId={row.device}
+                    lnb={row.lnb}
+                    onSave={onSaveLnb}
+                  />
+                ) : (
+                  <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
+                )}
               </TableCell>
             </TableRow>
           ))}

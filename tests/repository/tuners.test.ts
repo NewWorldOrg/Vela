@@ -199,6 +199,7 @@ const {
   saveDetectedTuners,
   serializeRestartTicket,
   setHoursOfSilence,
+  setLnbPower,
   setTunerDisabled,
   toRestartWindow,
 } = await import('@/repository/tuners')
@@ -981,6 +982,147 @@ test('a save whose session is gone is told apart from a refusal', async () => {
   store.writeStatus = 401
 
   assert.deepEqual(await saveDetectedTuners([DEVICE]), {
+    state: 'unauthenticated',
+  })
+})
+
+const satellite = (deviceId: string, lnbPower: boolean) => ({
+  deviceId,
+  disabled: false,
+  lnbPower,
+  kind: 'satellite',
+})
+
+const observedPower = (
+  deviceId: string,
+  kind: string,
+  lnbPowered: boolean,
+) => ({
+  deviceId,
+  kind,
+  state: 'idle',
+  detail: null,
+  health: 'healthy',
+  disablePending: false,
+  lnbPowered,
+  healthDetail: null,
+  healthChangedAt: null,
+  sessionId: null,
+  sessionPurpose: 'unspecified',
+  sessionStartedAt: null,
+  sessionEndsAt: null,
+  sessionTuning: null,
+})
+
+test('a satellite row carries the power saved for it and the power the driver has on', async () => {
+  standing()
+  ledgerOf(
+    [desired(DEVICE, false), satellite('adapter1.frontend0', true)],
+    [
+      observedPower(DEVICE, 'terrestrial', false),
+      observedPower('adapter1.frontend0', 'satellite', false),
+    ],
+  )
+
+  const rows = (await screen()).rows
+
+  assert.equal(rows[0]?.lnb, undefined)
+  assert.deepEqual(rows[1]?.lnb, { saved: true, applied: false })
+})
+
+test('a satellite the driver has not described yet still carries the power saved for it', async () => {
+  standing()
+  ledgerOf([satellite('adapter1.frontend0', false)], [])
+
+  assert.deepEqual((await screen()).rows[0]?.lnb, {
+    saved: false,
+    applied: undefined,
+  })
+})
+
+test('turning the power on saves the ledger as it is saved, changing that one tuner alone', async () => {
+  standing()
+  ledgerOf(
+    [
+      desired(DEVICE, true),
+      satellite('adapter1.frontend0', false),
+      satellite('adapter2.frontend0', true),
+    ],
+    [
+      observation(DEVICE, 'idle'),
+      observation('adapter1.frontend0', 'disabled'),
+    ],
+  )
+
+  assert.deepEqual(await setLnbPower('adapter1.frontend0', true), {
+    state: 'ok',
+  })
+  assert.deepEqual(savedTuners(), [
+    { deviceId: DEVICE, disabled: true, lnbPower: false },
+    { deviceId: 'adapter1.frontend0', disabled: false, lnbPower: true },
+    { deviceId: 'adapter2.frontend0', disabled: false, lnbPower: true },
+  ])
+})
+
+test('turning the power off sends off for that tuner', async () => {
+  standing()
+  ledgerOf([satellite('adapter1.frontend0', true)])
+
+  await setLnbPower('adapter1.frontend0', false)
+
+  assert.deepEqual(savedTuners(), [
+    { deviceId: 'adapter1.frontend0', disabled: false, lnbPower: false },
+  ])
+})
+
+test('power for a tuner the saved ledger does not hold is not saved at all', async () => {
+  standing()
+  ledgerOf([satellite('adapter1.frontend0', false)])
+
+  const result = await setLnbPower('adapter9.frontend0', true)
+
+  assert.equal(result.state, 'rejected')
+  assert.match(
+    result.state === 'rejected' ? result.message : '',
+    /adapter9\.frontend0 は保存された一覧にない/,
+  )
+  assert.equal(savedTuners(), undefined)
+})
+
+test('power is not saved when the ledger before it cannot be read', async () => {
+  standing()
+  store.ledgerStatus = 503
+
+  assert.deepEqual(await setLnbPower('adapter1.frontend0', true), {
+    state: 'rejected',
+    message: '保存前の一覧を読み取れなかったため、保存していません(503)。',
+  })
+  assert.equal(savedTuners(), undefined)
+})
+
+test('power the API refuses is said in the words of why it refused', async () => {
+  for (const [status, message, said] of [
+    [409, 'unknownDevice: adapter1.frontend0', /もう一度検出してください/],
+    [503, 'no driver', /driver に接続できない/],
+    [400, 'malformed: x', /LNB 給電を保存できませんでした\(400\)/],
+  ] as const) {
+    standing()
+    ledgerOf([satellite('adapter1.frontend0', false)])
+    store.writeStatus = status
+    store.writeOk = false
+    store.writeMessage = message
+
+    const result = await setLnbPower('adapter1.frontend0', true)
+
+    assert.equal(result.state, 'rejected', message)
+    assert.match(result.state === 'rejected' ? result.message : '', said)
+  }
+
+  standing()
+  ledgerOf([satellite('adapter1.frontend0', false)])
+  store.writeStatus = 401
+
+  assert.deepEqual(await setLnbPower('adapter1.frontend0', true), {
     state: 'unauthenticated',
   })
 })

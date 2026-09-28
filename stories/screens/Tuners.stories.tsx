@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { afterTheArrival } from '@/stories/after-the-arrival'
-import { expect, within } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
+import type { TunerWriteResult } from '@/repository/tuners'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import {
   DETECTION,
   DETECTION_MISMATCH_ONLY,
@@ -35,6 +37,7 @@ const meta = {
     onDismiss: async () => {},
     onSaveDetection: async () => ({ state: 'ok' }),
     onSaveThreshold: async () => ({ state: 'ok' }),
+    onSaveLnb: async (): Promise<TunerWriteResult> => ({ state: 'ok' }),
   },
   decorators: [inTheSettings],
 } satisfies Meta<typeof TunersView>
@@ -226,6 +229,179 @@ export const 異常と警告はdriverの一文を添えて出る: Story = {
     )
     await expect(await tipIn(cellOf(rows[1], STATE_COLUMN))).toHaveTextContent(
       TURNED_OFF_WHILE_HELD,
+    )
+  },
+}
+
+const SATELLITE = 'adapter0'
+
+const LNB_COLUMN = 6
+
+function withSatellitePower(saved: boolean, applied: boolean) {
+  return {
+    ...TUNERS,
+    notices: [],
+    rows: TUNERS.rows.map((row) =>
+      row.device === SATELLITE ? { ...row, lnb: { saved, applied } } : row,
+    ),
+  }
+}
+
+function lnbCellOf(canvasElement: HTMLElement, device: string): HTMLElement {
+  const row = rowsOfTheTableHeaded(canvasElement, 'デバイス').find(
+    (one) => one.id === device,
+  )
+
+  if (!row) {
+    throw new Error(`no row for ${device}`)
+  }
+
+  return cellOf(row, LNB_COLUMN)
+}
+
+export const LNB給電は衛星の行だけで切り替えられる: Story = {
+  args: { result: { state: 'ok', result: withSatellitePower(false, false) } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getAllByRole('switch', { name: /の LNB 給電$/ }),
+    ).toHaveLength(1)
+    await expect(
+      within(lnbCellOf(canvasElement, SATELLITE)).getByRole('switch', {
+        name: `${SATELLITE} の LNB 給電`,
+      }),
+    ).not.toBeChecked()
+    await expect(lnbCellOf(canvasElement, 'adapter1')).toHaveTextContent(
+      EMPTY_VALUE,
+    )
+  },
+}
+
+export const LNB給電をオンにするときは確かめてから保存する: Story = {
+  args: {
+    result: { state: 'ok', result: withSatellitePower(false, false) },
+    onSaveLnb: fn(async () => ({ state: 'ok' as const })),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+    const power = canvas.getByRole('switch', {
+      name: `${SATELLITE} の LNB 給電`,
+    })
+
+    await userEvent.click(power)
+
+    const asked = await screen.findByRole('alertdialog')
+
+    await expect(
+      within(asked).getByText('LNB 給電をオンにします'),
+    ).toBeVisible()
+    await expect(
+      within(asked).getByText(`${SATELLITE} からアンテナ線へ給電します。`),
+    ).toBeVisible()
+
+    await userEvent.click(
+      within(asked).getByRole('button', { name: 'キャンセル' }),
+    )
+
+    await waitFor(() =>
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
+    )
+    await expect(args.onSaveLnb).not.toHaveBeenCalled()
+
+    await userEvent.click(power)
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: 'オンにする',
+      }),
+    )
+
+    await waitFor(() =>
+      expect(args.onSaveLnb).toHaveBeenCalledWith(SATELLITE, true),
+    )
+    await waitFor(() =>
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
+    )
+  },
+}
+
+export const LNB給電の確認で断られたら閉じずに理由を出す: Story = {
+  args: {
+    result: { state: 'ok', result: withSatellitePower(false, false) },
+    onSaveLnb: async () => ({
+      state: 'rejected' as const,
+      message:
+        'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('switch', {
+        name: `${SATELLITE} の LNB 給電`,
+      }),
+    )
+
+    const asked = await screen.findByRole('alertdialog')
+
+    await userEvent.click(
+      within(asked).getByRole('button', { name: 'オンにする' }),
+    )
+
+    await expect(
+      await within(asked).findByText(
+        'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
+      ),
+    ).toBeVisible()
+    await expect(screen.getByRole('alertdialog')).toBeVisible()
+  },
+}
+
+export const LNB給電をオフにするときは確かめない: Story = {
+  args: {
+    result: { state: 'ok', result: withSatellitePower(true, true) },
+    onSaveLnb: fn(async () => ({ state: 'ok' as const })),
+  },
+  play: async ({ canvasElement, args }) => {
+    const power = within(canvasElement).getByRole('switch', {
+      name: `${SATELLITE} の LNB 給電`,
+    })
+
+    await expect(power).toBeChecked()
+
+    await userEvent.click(power)
+
+    await waitFor(() =>
+      expect(args.onSaveLnb).toHaveBeenCalledWith(SATELLITE, false),
+    )
+    await expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  },
+}
+
+export const LNB給電を保存して未反映: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...withSatellitePower(true, false),
+        notices: [
+          {
+            tone: 'warn',
+            body: '保存済み・未反映の変更があります。',
+            restart: { recordings: 0 },
+          },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const cell = lnbCellOf(canvasElement, SATELLITE)
+
+    await expect(within(cell).getByRole('switch')).toBeChecked()
+    await expect(within(cell).getByText('未反映')).toBeVisible()
+    await expect(lnbCellOf(canvasElement, 'adapter1')).not.toHaveTextContent(
+      '未反映',
     )
   },
 }

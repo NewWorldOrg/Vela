@@ -62,7 +62,7 @@ export const TUNERS: TunerResult = {
       stateLabel: '警告',
       stateSub: 'BS のサービスが 26 時間 0 件',
       lastService: { at: '08/06 19:02' },
-      lnb: 'オフ(既定)',
+      lnb: { saved: false, applied: false },
     },
     {
       id: 'adapter2',
@@ -73,7 +73,6 @@ export const TUNERS: TunerResult = {
       state: 'faulted',
       stateLabel: '異常',
       stateSub: '設定: 地上波 / 検出: 衛星',
-      lnb: 'オフ(既定)',
     },
   ],
 }
