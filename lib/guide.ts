@@ -56,6 +56,13 @@ export function openingScrollTopOf(
   return Math.max(0, (nowMin / 60) * hourPx - viewPx / 2)
 }
 
+/** 最初の HTML で番組表の枠の直後に置き、最初の描画の前に今の位置へ送るスクリプト。 */
+export function openingScrollScriptOf(nowMin: number, hourPx: number): string {
+  const nowPx = (nowMin / 60) * hourPx
+
+  return `(function(s){var h=s.querySelector('[data-guide-heading]');h=h&&h.parentElement?h.parentElement.offsetHeight:0;s.scrollTop=Math.max(0,${nowPx}-(s.clientHeight-h)/2)})(document.currentScript.closest('[data-guide-scroll]'))`
+}
+
 export interface GuideService {
   networkId: number
   serviceId: number
@@ -412,7 +419,15 @@ export function fallsWithin(
   )
 }
 
-export function seamTopOf({
+const SEAM_SLACK_PX = 1
+
+export interface OpeningSeam {
+  top: number
+  line: boolean
+}
+
+/** 番組表の入りで覆いが割れる高さと、そこを今の線として玉が走るかどうか。 */
+export function openingSeamOf({
   nowMin,
   hourPx,
   scrollTop,
@@ -424,13 +439,16 @@ export function seamTopOf({
   scrollTop: number
   headingPx: number
   viewPx: number
-}): number {
-  if (nowMin === undefined) {
-    return viewPx / 2
+}): OpeningSeam {
+  const middle = (headingPx + viewPx) / 2
+
+  if (nowMin !== undefined) {
+    const top = headingPx + (nowMin / 60) * hourPx - scrollTop
+
+    if (Math.abs(top - middle) <= SEAM_SLACK_PX) {
+      return { top, line: true }
+    }
   }
 
-  return Math.min(
-    viewPx,
-    Math.max(headingPx, headingPx + (nowMin / 60) * hourPx - scrollTop),
-  )
+  return { top: middle, line: false }
 }

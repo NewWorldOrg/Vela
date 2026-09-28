@@ -17,8 +17,10 @@ import {
   fallsWithin,
   isDrawn,
   type MinuteRange,
+  type OpeningSeam,
+  openingScrollScriptOf,
   openingScrollTopOf,
-  seamTopOf,
+  openingSeamOf,
   unscheduledSpansOf,
 } from '@/lib/guide'
 import { cn } from '@/lib/utils'
@@ -28,6 +30,7 @@ import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
+import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'
 import { useDrawnRange } from '@/hooks/useDrawnRange'
 import { useFilledSoon } from '@/hooks/useFilledSoon'
 import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
@@ -45,8 +48,6 @@ const UNSCHEDULED_LABEL_PX = 52
 const NOTHING_CARRIED: Program[] = []
 
 const NOW_LABEL_AFTER_OPENING_MS = 420
-
-const HEADING_ALLOWANCE_PX = 40
 
 const GuideHeading = memo(function GuideHeading({
   channel: c,
@@ -184,13 +185,16 @@ export function GuideGrid({
     { length: windowHours },
     (_, i) => windowStartHour + i,
   )
+  const cameWithTheHtml = useCameWithTheHtml()
   const filled = useFilledSoon()
   const shows = useOpensWithAShow()
   const painted = usePaintedAfter(filled)
   const [landed, setLanded] = useState(false)
   const [done, setDone] = useState(!shows)
-  const [seam, setSeam] = useState<number | null>(null)
-  const opening = shows && painted && (landed || nowMin === undefined)
+  const [seam, setSeam] = useState<(OpeningSeam & { origin: number }) | null>(
+    null,
+  )
+  const opening = shows && painted && seam !== null && (landed || !seam.line)
   const markLanded = useCallback(() => setLanded(true), [])
   const markDone = useCallback(() => setDone(true), [])
   const newcomers = useNewcomers(channels.map((c) => c.id))
@@ -250,17 +254,17 @@ export function GuideGrid({
       return
     }
 
-    setSeam(
-      seamTopOf({
-        nowMin,
-        hourPx: HOUR_PX,
-        scrollTop: node.scrollTop,
-        headingPx:
-          node.querySelector<HTMLElement>('[data-guide-heading]')?.parentElement
-            ?.offsetHeight ?? 0,
-        viewPx: node.clientHeight,
-      }),
-    )
+    const opens = openingSeamOf({
+      nowMin,
+      hourPx: HOUR_PX,
+      scrollTop: node.scrollTop,
+      headingPx:
+        node.querySelector<HTMLElement>('[data-guide-heading]')?.parentElement
+          ?.offsetHeight ?? 0,
+      viewPx: node.clientHeight,
+    })
+
+    setSeam({ ...opens, origin: node.scrollTop + opens.top })
   }, [shows, nowMin])
 
   useEffect(() => {
@@ -283,8 +287,8 @@ export function GuideGrid({
     <div className="relative flex min-h-0 flex-1 flex-col">
       {!done && seam !== null && (
         <GuideOpening
-          seam={seam}
-          line={nowMin !== undefined}
+          seam={seam.top}
+          line={seam.line}
           open={opening}
           onLanded={markLanded}
           onDone={markDone}
@@ -304,8 +308,8 @@ export function GuideGrid({
           )}
           style={{
             minWidth: `${gridMinWidthOf(channels.length)}px`,
-            ...(nowMin !== undefined && {
-              transformOrigin: `50% ${(nowMin / 60) * HOUR_PX + HEADING_ALLOWANCE_PX}px`,
+            ...(seam !== null && {
+              transformOrigin: `50% ${seam.origin}px`,
             }),
           }}
         >
@@ -329,6 +333,13 @@ export function GuideGrid({
             className="relative flex rounded-b-lg"
             style={{ height: `${windowHours * HOUR_PX}px` }}
           >
+            {cameWithTheHtml && nowMin !== undefined && (
+              <script
+                dangerouslySetInnerHTML={{
+                  __html: openingScrollScriptOf(nowMin, HOUR_PX),
+                }}
+              />
+            )}
             <div
               data-guide-gutter
               style={{ flex: GUTTER_FLEX }}

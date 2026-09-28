@@ -17,9 +17,10 @@ import {
   isOnAir,
   joinedColumnsOf,
   nowMinOf,
+  openingScrollScriptOf,
   openingScrollTopOf,
+  openingSeamOf,
   primaryKeyOfShadow,
-  seamTopOf,
   relationDestinationOf,
   sharesWith,
   servicesSettled,
@@ -774,39 +775,96 @@ test('building ahead stops once every column is drawn', () => {
 })
 
 test('the cover opens along the line for now, where the screen shows it', () => {
-  assert.equal(
-    seamTopOf({
+  assert.deepEqual(
+    openingSeamOf({
       nowMin: 960,
       hourPx: 96,
-      scrollTop: 1488,
+      scrollTop: 1536 - 330,
       headingPx: 40,
       viewPx: 700,
     }),
-    40 + 1536 - 1488,
+    { top: 370, line: true },
   )
 })
 
-test('a day without a line for now opens in the middle of the view', () => {
-  assert.equal(
-    seamTopOf({
+test('a day without a line for now opens in the middle of the rows it shows', () => {
+  assert.deepEqual(
+    openingSeamOf({
       nowMin: undefined,
       hourPx: 96,
       scrollTop: 0,
       headingPx: 40,
       viewPx: 700,
     }),
-    350,
+    { top: 370, line: false },
   )
 })
 
-test('a line for now outside the view still opens inside it', () => {
-  const at = {
-    hourPx: 96,
-    scrollTop: 0,
-    headingPx: 40,
-    viewPx: 700,
-  }
+test('late at night the cover opens in the middle, not along the line near the bottom', () => {
+  const lateAtNight = 22 * 60 + 13
+  const view = { hourPx: 96, headingPx: 40, viewPx: 700 }
+  const lastScrollTop = 40 + 24 * 96 - 700
 
-  assert.equal(seamTopOf({ ...at, nowMin: 24 * 60 }), 700)
-  assert.equal(seamTopOf({ ...at, nowMin: 0, scrollTop: 900 }), 40)
+  assert.deepEqual(
+    openingSeamOf({ ...view, nowMin: lateAtNight, scrollTop: lastScrollTop }),
+    { top: 370, line: false },
+  )
+  assert.deepEqual(
+    openingSeamOf({ ...view, nowMin: 24 * 60 - 1, scrollTop: lastScrollTop }),
+    { top: 370, line: false },
+  )
+})
+
+test('early in the morning the cover opens in the middle, not along the line near the top', () => {
+  const view = { hourPx: 96, headingPx: 40, viewPx: 700, scrollTop: 0 }
+
+  assert.deepEqual(openingSeamOf({ ...view, nowMin: 0 }), {
+    top: 370,
+    line: false,
+  })
+  assert.deepEqual(openingSeamOf({ ...view, nowMin: 60 }), {
+    top: 370,
+    line: false,
+  })
+})
+
+test('a line for now within a pixel of the middle still carries the ball', () => {
+  const view = { hourPx: 96, headingPx: 40, viewPx: 700 }
+  const scrollTop = openingScrollTopOf(600, 96, 660)
+
+  assert.equal(
+    openingSeamOf({ ...view, nowMin: 600, scrollTop: Math.round(scrollTop) })
+      .line,
+    true,
+  )
+  assert.equal(
+    openingSeamOf({ ...view, nowMin: 600, scrollTop: scrollTop + 3 }).line,
+    false,
+  )
+})
+
+test('the script in the first HTML scrolls the guide where opening it would', () => {
+  const guide = {
+    clientHeight: 740,
+    scrollTop: 0,
+    querySelector: () => ({ parentElement: { offsetHeight: 40 } }),
+  }
+  const run = new Function('document', openingScrollScriptOf(960, HOUR_PX))
+
+  run({ currentScript: { closest: () => guide } })
+
+  assert.equal(guide.scrollTop, openingScrollTopOf(960, HOUR_PX, 700))
+})
+
+test('the script in the first HTML does not scroll above the start of the day', () => {
+  const guide = {
+    clientHeight: 740,
+    scrollTop: 0,
+    querySelector: () => null,
+  }
+  const run = new Function('document', openingScrollScriptOf(30, HOUR_PX))
+
+  run({ currentScript: { closest: () => guide } })
+
+  assert.equal(guide.scrollTop, 0)
 })
