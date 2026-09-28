@@ -86,6 +86,7 @@ const service = (over: Record<string, unknown> = {}) => ({
   candidateCount: 1,
   selectedChannel: tuning(),
   betterChannel: null,
+  reception: 'receivable',
   candidates: [candidate()],
   logoDeclaration: 'inTheCommonDataTable',
   logo: { url: LOGO, collectedAt: SEEN },
@@ -326,6 +327,19 @@ test('a service becomes the row the channel screen draws', async () => {
   assert.equal(row.enabled, false)
   assert.equal(row.candidateCount, 2)
   assert.equal(row.lastSeen, formatMoment(SEEN))
+})
+
+test('a service no tuner in service receives is said to be out of reception, and no other is', async () => {
+  for (const [reception, unreceivable] of [
+    ['noTunerInService', true],
+    ['receivable', false],
+    ['unknown', false],
+    ['somethingNew', false],
+  ] as const) {
+    standing([service({ reception })])
+
+    assert.equal((await onlyRow()).unreceivable, unreceivable, reception)
+  }
 })
 
 test('a service with no remote key, no tuned channel and no better one leaves those out', async () => {
@@ -1168,6 +1182,17 @@ test('a scan refused for want of a tuner, or for anything else, is rejected with
   assert.deepEqual(await startScan(['isdbT']), {
     state: 'rejected',
     message: 'スキャンを開始できませんでした(500)。',
+  })
+})
+
+test('a scan over systems no tuner in service receives is refused as such', async () => {
+  replies.clear()
+  replies.set('POST /api/tuners/scan', refusing(422))
+
+  assert.deepEqual(await startScan(['isdbSBs']), {
+    state: 'rejected',
+    message:
+      '対象の種別を受信できる有効なチューナーがないため、スキャンを開始できませんでした。',
   })
 })
 

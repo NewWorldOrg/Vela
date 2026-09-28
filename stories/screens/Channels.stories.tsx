@@ -7,12 +7,14 @@ import {
   CHANNELS,
   MORE_ATTEMPTS_THAN_FIT,
   MORE_CHANNELS_THAN_FIT,
+  SATELLITE_TUNER_TURNED_OFF,
   SCAN_RUNNING,
 } from '@/repository/services.fixtures'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { ChannelsView } from '@/components/channels/channels-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { tipIn } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
 
 type ChannelsViewProps = ComponentProps<typeof ChannelsView>
@@ -377,5 +379,46 @@ export const 狭い幅でスキャン中に収まらないほどの走査結果:
   parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
+  },
+}
+
+const SATELLITE_TURNED_OFF = {
+  ...CHANNELS,
+  groups: CHANNELS.groups.map((group) =>
+    group.system === 'isdbSBs'
+      ? {
+          ...group,
+          services: [SATELLITE_TUNER_TURNED_OFF],
+          stat: '1 サービス(TV 1)',
+          diagnosis: undefined,
+        }
+      : group,
+  ),
+}
+
+export const 受信できるチューナーのない種別は受信不可: Story = {
+  args: { result: { state: 'ok', result: SATELLITE_TURNED_OFF } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const bs = canvasElement.querySelector<HTMLElement>('#system-isdbSBs')
+
+    if (!bs) {
+      throw new Error('no BS group')
+    }
+
+    const said = within(bs).getByText('受信不可')
+
+    await expect(said).toBeVisible()
+    await expect(within(bs).queryByText('要対応')).not.toBeInTheDocument()
+    await expect((await tipIn(bs)).textContent).toContain(
+      'この種別を受信できる有効なチューナーがない状態。',
+    )
+
+    const ground = canvasElement.querySelector<HTMLElement>('#system-isdbT')
+
+    await expect(
+      within(ground as HTMLElement).queryByText('受信不可'),
+    ).not.toBeInTheDocument()
   },
 }

@@ -26,6 +26,7 @@ const SERVICES: ServiceRow[] = [
     logo: LOGO_FULL_COLOUR,
     category: 'TV',
     minorCategory: false,
+    unreceivable: false,
     currentChannel: '53ch',
     enabled: true,
     candidateCount: 2,
@@ -65,6 +66,7 @@ const SERVICES: ServiceRow[] = [
     logo: LOGO_NOT_YET_READ,
     category: 'ワンセグ',
     minorCategory: true,
+    unreceivable: false,
     currentChannel: '53ch',
     enabled: false,
     candidateCount: 1,
@@ -90,6 +92,7 @@ const SERVICES: ServiceRow[] = [
     logo: LOGO_DARK_INK,
     category: 'TV',
     minorCategory: false,
+    unreceivable: false,
     enabled: true,
     candidateCount: 1,
     needsAttentionCount: 0,
@@ -119,6 +122,7 @@ const SERVICES: ServiceRow[] = [
     logo: LOGO_WIDER,
     category: 'TV',
     minorCategory: false,
+    unreceivable: false,
     currentChannel: '57ch',
     betterChannel: '59ch',
     enabled: true,
@@ -155,6 +159,7 @@ const SERVICES: ServiceRow[] = [
     logo: LOGO_NONE_BROADCAST,
     category: 'TV',
     minorCategory: false,
+    unreceivable: false,
     enabled: true,
     candidateCount: 0,
     needsAttentionCount: 0,
@@ -162,6 +167,32 @@ const SERVICES: ServiceRow[] = [
     candidates: [],
   },
 ]
+
+export const SATELLITE_TUNER_TURNED_OFF: ServiceRow = {
+  key: '50004-50111',
+  name: '湾岸衛星',
+  logo: LOGO_NOT_YET_READ,
+  category: 'TV',
+  minorCategory: false,
+  unreceivable: true,
+  currentChannel: 'BS9 / TS 50002',
+  enabled: true,
+  candidateCount: 1,
+  needsAttentionCount: 0,
+  lastSeen: '08/10 21:04',
+  candidates: [
+    {
+      id: 'candidate-bs9',
+      channel: 'BS9 / TS 50002',
+      selected: true,
+      reception: 'locked',
+      needsRevalidation: false,
+      measurement: { value: '12.1 dB', percent: 30, tone: 'warn' },
+      discovered: '2026/08',
+      lastSeen: '08/10 21:04',
+    },
+  ],
+}
 
 export const CHANNELS: ChannelsResult = {
   unattributed: [SERVICES[4]],

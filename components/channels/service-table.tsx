@@ -26,6 +26,8 @@ import { ChevronRightIcon } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { Unfold, useUnfolding, type Unfolding } from '@/components/vela/unfold'
 import { CandidateList } from '@/components/channels/candidate-list'
+import { TermTip } from '@/components/vela/term-tip'
+import { SERVICE_NO_TUNER_TERM } from '@/lib/state-terms'
 import { cn } from '@/lib/utils'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
@@ -83,6 +85,16 @@ const NEEDS_A_LOOK = '要対応'
 const A_BETTER_ONE = '実測上位の候補'
 
 function Standing({ service }: { service: ServiceRow }) {
+  if (service.unreceivable) {
+    return (
+      <TermTip term={SERVICE_NO_TUNER_TERM}>
+        <StateSay tone="err" bold>
+          {SERVICE_NO_TUNER_TERM.label}
+        </StateSay>
+      </TermTip>
+    )
+  }
+
   if (service.currentChannel === undefined) {
     return (
       <StateSay tone="warn" bold>
