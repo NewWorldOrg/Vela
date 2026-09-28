@@ -107,3 +107,18 @@ export function ruleConditionParts(
 
   return parts
 }
+
+export interface ExclusionPart {
+  label: string
+  count: number
+}
+
+export function exclusionPartsOf(excluded: {
+  shadows: number
+  moved: number
+}): ExclusionPart[] {
+  return [
+    { label: '同時放送', count: excluded.shadows },
+    { label: '移動', count: excluded.moved },
+  ].filter((part) => part.count > 0)
+}

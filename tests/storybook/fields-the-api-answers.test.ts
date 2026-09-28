@@ -228,7 +228,6 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
     fields: [
       'ReservationProgrammeResponder.extended',
       'ReservationProgrammeResponder.genres',
-      'ReservationResponder.broadcastGroup',
       'ReservationResponder.recordingOutcome',
       'ReservationSettlementResponder.instead',
       'ReservationSettlementResponder.reservation',

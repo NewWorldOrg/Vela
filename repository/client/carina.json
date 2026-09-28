@@ -2604,7 +2604,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfReservationSettlementResponder"
+                  "$ref": "#/components/schemas/BaseResponderOfReservationRefusedResponder"
                 }
               }
             }
@@ -2614,7 +2614,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfReservationSettlementResponder"
+                  "$ref": "#/components/schemas/BaseResponderOfReservationRefusedResponder"
                 }
               }
             }
@@ -2624,7 +2624,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfReservationSettlementResponder"
+                  "$ref": "#/components/schemas/BaseResponderOfReservationRefusedResponder"
                 }
               }
             }
@@ -8754,6 +8754,32 @@
               },
               {
                 "$ref": "#/components/schemas/ReservationOutcomeListResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfReservationRefusedResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationRefusedResponder"
               }
             ]
           }
@@ -15167,6 +15193,18 @@
           }
         }
       },
+      "ReservationCancellation": {
+        "enum": [
+          "byHand",
+          "programmeGone",
+          "sameBroadcast",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
       "ReservationDiscardRefusedResponder": {
         "required": [
           "reservationId",
@@ -15269,7 +15307,8 @@
           "somethingArrivedWhileReading",
           "turningIntoARecording",
           "recordingCameOfIt",
-          "stillToBeRecorded"
+          "stillToBeRecorded",
+          "programmeIsAMovedDuplicate"
         ],
         "type": "string"
       },
@@ -15617,6 +15656,22 @@
           }
         }
       },
+      "ReservationPrimaryResponder": {
+        "required": [
+          "programme",
+          "startsAt"
+        ],
+        "type": "object",
+        "properties": {
+          "programme": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ReservationProgrammeResponder": {
         "required": [
           "id",
@@ -15703,6 +15758,28 @@
           }
         }
       },
+      "ReservationRefusedResponder": {
+        "required": [
+          "refusal",
+          "primary"
+        ],
+        "type": "object",
+        "properties": {
+          "refusal": {
+            "$ref": "#/components/schemas/ReservationFailure"
+          },
+          "primary": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationPrimaryResponder"
+              }
+            ]
+          }
+        }
+      },
       "ReservationResponder": {
         "required": [
           "id",
@@ -15718,6 +15795,7 @@
           "reception",
           "epg",
           "broadcastGroup",
+          "cancellation",
           "createdAt"
         ],
         "type": "object",
@@ -15781,6 +15859,16 @@
           },
           "broadcastGroup": {
             "$ref": "#/components/schemas/ReservationBroadcastGroupResponder"
+          },
+          "cancellation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReservationCancellation"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -16146,7 +16234,8 @@
           "refused",
           "withdrawn",
           "turnedOff",
-          "faulted"
+          "faulted",
+          "excludedAsMoved"
         ],
         "type": "object",
         "properties": {
@@ -16203,6 +16292,14 @@
             "format": "int32"
           },
           "faulted": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "excludedAsMoved": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -16283,7 +16380,8 @@
           "withdrawing",
           "sweeping",
           "changingHands",
-          "excludedAsShadows"
+          "excludedAsShadows",
+          "excludedAsMoved"
         ],
         "type": "object",
         "properties": {
@@ -16326,6 +16424,14 @@
               "string"
             ],
             "format": "int32"
+          },
+          "excludedAsMoved": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -16361,7 +16467,8 @@
           "contended",
           "contendedAltogether",
           "excludedAsShadows",
-          "seatsLeftOut"
+          "seatsLeftOut",
+          "excludedAsMoved"
         ],
         "type": "object",
         "properties": {
@@ -16420,6 +16527,14 @@
             "format": "int32"
           },
           "seatsLeftOut": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "excludedAsMoved": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",

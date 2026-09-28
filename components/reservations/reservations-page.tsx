@@ -29,6 +29,9 @@ import { PlusIcon, ReservationIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { ReservationRow } from '@/components/reservations/reservation-row'
+import { RelayRow } from '@/components/reservations/relay-row'
+import type { Reservation } from '@/repository/reservations'
+import { linesOf } from '@/lib/reservations'
 import type { ReservationBulkActions } from '@/components/reservations/reservation-selection'
 import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
@@ -45,7 +48,7 @@ const COLUMNS: {
   narrow?: boolean
 }[] = [
   {
-    label: '競合の詳細の開閉',
+    label: '詳細の開閉',
     width: 'calc(34rem/16)',
     hidden: true,
     narrow: true,
@@ -109,7 +112,49 @@ export function ReservationsView({
   const { items, total, drift, filter } = result
   const unfolded = useUnfolding()
   const firstConflict = items.find((one) => one.standing === 'conflict')?.id
+  const lines = linesOf(items)
+  const [relaysOpen, setRelaysOpen] = useState<ReadonlySet<string>>(
+    () =>
+      new Set(
+        lines.flatMap((line) =>
+          line.kind === 'relay' &&
+          line.segments.some((one) => one.id === firstConflict)
+            ? [line.key]
+            : [],
+        ),
+      ),
+  )
+  const toggleRelay = useCallback(
+    (key: string) =>
+      setRelaysOpen((prev) => {
+        const next = new Set(prev)
+
+        if (!next.delete(key)) {
+          next.add(key)
+        }
+
+        return next
+      }),
+    [],
+  )
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
+  const pick = useCallback(
+    (ids: readonly string[], taken: boolean) =>
+      setPicked((prev) => {
+        const next = new Set(prev)
+
+        for (const id of ids) {
+          if (taken) {
+            next.add(id)
+          } else {
+            next.delete(id)
+          }
+        }
+
+        return next
+      }),
+    [],
+  )
   const chosen = items.filter((one) => picked.has(one.id))
   const clear = useCallback(() => setPicked(new Set()), [])
   const router = useRouter()
@@ -142,6 +187,35 @@ export function ReservationsView({
   const onClearFilters = useCallback(() => {
     go({ [SHOW_PARAM]: EVERY, [EPG_PARAM]: undefined })
   }, [go])
+
+  const rowOf = (
+    reservation: Reservation,
+    nth: number,
+    segment?: { nth: number; of: number },
+  ) => (
+    <ReservationRow
+      key={reservation.id}
+      nth={nth}
+      segment={segment}
+      reservation={reservation}
+      actions={actions}
+      expanded={
+        unfolded.open === reservation.id ||
+        (unfolded.open === undefined &&
+          unfolded.folding === undefined &&
+          firstConflict === reservation.id)
+      }
+      shown={
+        unfoldShows(unfolded, reservation.id) ||
+        (unfolded.open === undefined &&
+          unfolded.folding === undefined &&
+          firstConflict === reservation.id)
+      }
+      onToggle={() => unfolded.toggle(reservation.id)}
+      selected={picked.has(reservation.id)}
+      onSelect={(taken) => pick([reservation.id], taken)}
+    />
+  )
 
   return (
     <ScreenMain
@@ -270,41 +344,40 @@ export function ReservationsView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((reservation, nth) => (
-              <ReservationRow
-                key={reservation.id}
-                nth={nth}
-                reservation={reservation}
-                actions={actions}
-                expanded={
-                  unfolded.open === reservation.id ||
-                  (unfolded.open === undefined &&
-                    unfolded.folding === undefined &&
-                    firstConflict === reservation.id)
-                }
-                shown={
-                  unfoldShows(unfolded, reservation.id) ||
-                  (unfolded.open === undefined &&
-                    unfolded.folding === undefined &&
-                    firstConflict === reservation.id)
-                }
-                onToggle={() => unfolded.toggle(reservation.id)}
-                selected={picked.has(reservation.id)}
-                onSelect={(taken) =>
-                  setPicked((prev) => {
-                    const next = new Set(prev)
+            {lines.map((line, nth) => {
+              if (line.kind === 'one') {
+                return rowOf(line.reservation, nth)
+              }
 
-                    if (taken) {
-                      next.add(reservation.id)
-                    } else {
-                      next.delete(reservation.id)
-                    }
+              const open = relaysOpen.has(line.key)
 
-                    return next
-                  })
-                }
-              />
-            ))}
+              return [
+                <RelayRow
+                  key={line.key}
+                  segments={line.segments}
+                  nth={nth}
+                  open={open}
+                  onToggle={() => toggleRelay(line.key)}
+                  chosen={
+                    line.segments.filter((one) => picked.has(one.id)).length
+                  }
+                  onSelect={(taken) =>
+                    pick(
+                      line.segments.map((one) => one.id),
+                      taken,
+                    )
+                  }
+                />,
+                ...(open
+                  ? line.segments.map((one, at) =>
+                      rowOf(one, at, {
+                        nth: one.relay?.nth ?? at + 1,
+                        of: one.relay?.of ?? line.segments.length,
+                      }),
+                    )
+                  : []),
+              ]
+            })}
           </TableBody>
         </Table>
       )}

@@ -9,7 +9,10 @@ import type {
   ReservationWrite,
 } from '@/repository/reservations'
 import {
+  CONTENDED_RELAY_FIXTURES,
   EPG_DRIFT_FIXTURES,
+  RELAY_FIXTURES,
+  SAME_BROADCAST_FIXTURES,
   EVERY_STANDING_FIXTURES,
   RESERVATION_FIXTURES,
   SETTLED_RESERVATION_FIXTURES,
@@ -18,6 +21,7 @@ import { ReservationsView } from '@/components/reservations/reservations-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { cellOf, tipIn } from '@/stories/pills-in-a-column'
 import { inTheApp } from '@/stories/frames'
+import { formatMomentSpan } from '@/lib/format'
 
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
 
@@ -783,5 +787,112 @@ export const 行の揃い: Story = {
         await expect(action.querySelector('svg')).not.toBeNull()
       }
     }
+  },
+}
+
+export const 中継で分かれた放送: Story = {
+  args: { result: shown([RESERVATION_FIXTURES[0], ...RELAY_FIXTURES]) },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const canvas = within(canvasElement)
+    const relay = rowFor(canvas.getByText('区切り 3 つ'))
+    const cells = within(relay).getAllByRole('cell')
+
+    await expect(within(relay).getByText('湾岸杯 野球 決勝')).toBeVisible()
+    await expect(cells[3]).toHaveTextContent('みなと教育1')
+    await expect(cells[4]).toHaveTextContent(
+      formatMomentSpan('2026-08-08T04:00:00Z', '2026-08-08T08:30:00Z'),
+    )
+    await expect(cells[THE_STATE_COLUMN]).toHaveTextContent('確保済み')
+    await expect(canvas.queryByText('区切り 1 / 3')).toBeNull()
+    await expect(relay.querySelector('#reservation-r-402')).not.toBeNull()
+
+    const toggle = within(relay).getByRole('button', { name: '区切りの一覧' })
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+
+    for (const [at, id] of [
+      [1, 'r-401'],
+      [2, 'r-402'],
+      [3, 'r-403'],
+    ] as const) {
+      const row = rowFor(canvas.getByText(`区切り ${at} / 3`))
+
+      await expect(row).toHaveAttribute('id', `reservation-${id}`)
+      await expect(
+        within(row).getByRole('button', { name: '取り消す' }),
+      ).toBeVisible()
+    }
+
+    await expect(relay.querySelector('[id^="reservation-"]')).toBeNull()
+
+    await userEvent.click(
+      within(relay).getByRole('checkbox', {
+        name: '湾岸杯 野球 決勝 の区切りをすべて選ぶ',
+      }),
+    )
+    await expect(within(chosenBar(canvas)).getByText('3')).toBeVisible()
+
+    await userEvent.click(toggle)
+    await expect(canvas.queryByText('区切り 1 / 3')).toBeNull()
+  },
+}
+
+export const 区切りの一部だけを表示している中継: Story = {
+  args: { result: shown(CONTENDED_RELAY_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const canvas = within(canvasElement)
+    const relay = rowFor(canvas.getByText('区切り 3 つ(うち 2 つを表示)'))
+
+    await expect(within(relay).getAllByRole('cell')[4]).toHaveTextContent(
+      formatMomentSpan('2026-08-08T04:00:00Z', '2026-08-08T08:30:00Z'),
+    )
+    await expect(
+      within(relay).getByRole('button', { name: '区切りの一覧' }),
+    ).toHaveAttribute('aria-expanded', 'true')
+    await expect(canvas.getByText('区切り 1 / 3')).toBeVisible()
+    await expect(canvas.getByText('区切り 2 / 3')).toBeVisible()
+    await expect(canvas.queryByText('区切り 3 / 3')).toBeNull()
+    await expect(cellOf(relay, THE_STATE_COLUMN)).toHaveTextContent('競合')
+    await expect(
+      await tipIn(cellOf(relay, THE_STATE_COLUMN)),
+    ).toHaveTextContent('区切りごと: 確保済み 1、競合 1')
+    await expect(
+      await canvas.findByText('同時刻に地上波チューナー 2 本が録画予定です'),
+    ).toBeVisible()
+
+    await userEvent.click(
+      within(relay).getByRole('checkbox', {
+        name: '湾岸杯 野球 決勝 の表示中の区切り 2 つを選ぶ',
+      }),
+    )
+    await expect(within(chosenBar(canvas)).getByText('2')).toBeVisible()
+  },
+}
+
+export const 同じ放送の予約があるため取り消した予約: Story = {
+  args: {
+    result: shown(SAME_BROADCAST_FIXTURES, { filter: { show: 'all' } }),
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const canvas = within(canvasElement)
+    const same = rowFor(canvas.getByText('世界の車窓紀行'))
+    const byHand = rowFor(canvas.getByText('朝のニュース'))
+
+    await expect(cellOf(same, THE_STATE_COLUMN)).toHaveTextContent('重複取消')
+    await expect(await tipIn(cellOf(same, THE_STATE_COLUMN))).toHaveTextContent(
+      '同じ放送の予約が別にあるため取り消された予約。',
+    )
+    await expect(
+      within(same).getByRole('button', { name: '復元' }),
+    ).toBeEnabled()
+    await expect(cellOf(byHand, THE_STATE_COLUMN)).toHaveTextContent('取消済み')
   },
 }

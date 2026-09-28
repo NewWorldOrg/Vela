@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, within } from 'storybook/test'
+import { expect, userEvent, within } from 'storybook/test'
 
 import { isOnAir, relationDestinationOf } from '@/lib/guide'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
@@ -303,5 +303,31 @@ export const 放送前: Story = {
     await expect(
       within(canvasElement).queryByRole('link', { name: 'ライブ視聴' }),
     ).toBeNull()
+  },
+}
+
+const MOVED =
+  'この番組の放送枠は 中央テレビ1 の 08/08(金) 21:00 からに移動しているため、予約できませんでした。移動先の番組を予約してください。'
+
+export const 移動した放送の元の枠を予約しようとしたとき: Story = {
+  args: {
+    detail: standard,
+    onReserve: async (): Promise<ReservationWrite> => ({
+      state: 'rejected',
+      message: MOVED,
+      movedTo: '131-1310-50001',
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '録画予約' }))
+
+    const refused = await canvas.findByRole('alert')
+
+    await expect(refused).toHaveTextContent(MOVED)
+    await expect(
+      within(refused).getByRole('link', { name: '移動先を見る' }),
+    ).toHaveAttribute('href', '/guide/programs/131-1310-50001')
   },
 }

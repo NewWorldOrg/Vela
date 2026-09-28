@@ -21,6 +21,7 @@ const store: {
   programmeStatus: number
   writeStatus: number
   settlement: unknown
+  refused: unknown
   discardStatus: number
   discarded: unknown
   listingStatus: number
@@ -34,6 +35,7 @@ const store: {
   programmeStatus: 200,
   writeStatus: 200,
   settlement: undefined,
+  refused: null,
   discardStatus: 200,
   discarded: { reservationId: 'a1' },
   listingStatus: 200,
@@ -95,6 +97,7 @@ const reservation = (over: Over = {}) => ({
     acknowledgedAt: null,
   },
   broadcastGroup: { key: null, role: 'standalone' },
+  cancellation: null,
   createdAt: '2026-08-08T10:00:00Z',
   ...over,
 })
@@ -152,10 +155,15 @@ const write = (method: string) => async (path: string, init?: Asking) => {
     body: init?.body,
   })
 
-  return {
-    data: { status: true, message: '', data: store.settlement },
-    response: answered(store.writeStatus),
-  }
+  return store.writeStatus < 400
+    ? {
+        data: { status: true, message: '', data: store.settlement },
+        response: answered(store.writeStatus),
+      }
+    : {
+        error: { status: false, message: '', data: store.refused },
+        response: answered(store.writeStatus),
+      }
 }
 
 mock.module('@/repository/client/carina', {
@@ -275,6 +283,7 @@ function standing(items: unknown[] = [reservation()]): void {
   store.programmeStatus = 200
   store.writeStatus = 200
   store.settlement = settlementOf('secured')
+  store.refused = null
 }
 
 const BEFORE_THEM_ALL = new Date('2026-08-08T00:00:00Z')
@@ -1017,6 +1026,161 @@ test('a broadcast already reserved is sent back to the list, not reserved twice'
     message:
       'この番組はすでに予約されています。取り消した予約も残るため、作り直すのではなく予約一覧から復元してください。',
   })
+})
+
+test('a listing of a moved broadcast is refused naming where it moved, with the way there', async () => {
+  standing()
+  store.writeStatus = 409
+  store.refused = {
+    refusal: 'programmeIsAMovedDuplicate',
+    primary: {
+      programme: '132-1320-50001',
+      startsAt: '2026-08-08T13:10:00Z',
+    },
+  }
+
+  const result = await createReservation('131-1310-40001')
+
+  assert.deepEqual(result, {
+    state: 'rejected',
+    message: `この番組の放送枠は 湾岸放送1 の ${formatMoment('2026-08-08T13:10:00Z')} からに移動しているため、予約できませんでした。移動先の番組を予約してください。`,
+    movedTo: '132-1320-50001',
+  })
+})
+
+test('a moved broadcast whose other listing is not named is refused without a way there', async () => {
+  standing()
+  store.writeStatus = 409
+  store.refused = { refusal: 'programmeIsAMovedDuplicate', primary: null }
+
+  const result = await createReservation('131-1310-40001')
+
+  assert.deepEqual(result, {
+    state: 'rejected',
+    message: 'この番組の放送枠は移動しているため、予約できませんでした。',
+  })
+})
+
+test('a refusal that is not about a move keeps the reading it had', async () => {
+  standing()
+  store.writeStatus = 409
+  store.refused = { refusal: 'alreadyReserved', primary: null }
+
+  const result = await createReservation('131-1310-40001')
+
+  assert.equal(result.state === 'rejected' ? result.movedTo : 'ok', undefined)
+})
+
+test('a segment of a relay carries its place in the group and the span of the whole', async () => {
+  const row = await only({
+    broadcastGroup: { key: 'relay:131-1310-40001', role: 'relaySegment' },
+  })
+
+  assert.deepEqual(row.relay, {
+    key: 'relay:131-1310-40001',
+    nth: 1,
+    of: 1,
+    wholeStartAt: '2026-08-08T12:10:00Z',
+    wholeEndAt: '2026-08-08T13:40:00Z',
+  })
+})
+
+const RELAY = { key: 'relay:131-1310-40001', role: 'relaySegment' }
+
+const relaySegment = (
+  id: string,
+  startAt: string,
+  endAt: string,
+  standing: string,
+) =>
+  reservation({
+    id,
+    standing,
+    window: window(startAt, endAt),
+    broadcastGroup: RELAY,
+  })
+
+test('a relay whose first segment has left the list is still counted and spanned whole', async () => {
+  standing([
+    relaySegment(
+      's1',
+      '2026-08-08T10:00:00Z',
+      '2026-08-08T11:00:00Z',
+      'complete',
+    ),
+    relaySegment(
+      's2',
+      '2026-08-08T11:00:00Z',
+      '2026-08-08T12:00:00Z',
+      'recording',
+    ),
+    relaySegment(
+      's3',
+      '2026-08-08T12:00:00Z',
+      '2026-08-08T13:00:00Z',
+      'scheduled',
+    ),
+  ])
+
+  const rows = (await listReservations({}, new Date('2026-08-08T11:30:00Z')))
+    .items
+
+  assert.deepEqual(
+    rows.map((one) => one.id),
+    ['s2', 's3'],
+  )
+  assert.deepEqual(
+    rows.map((one) => one.relay),
+    [
+      {
+        key: RELAY.key,
+        nth: 2,
+        of: 3,
+        wholeStartAt: '2026-08-08T10:00:00Z',
+        wholeEndAt: '2026-08-08T13:00:00Z',
+      },
+      {
+        key: RELAY.key,
+        nth: 3,
+        of: 3,
+        wholeStartAt: '2026-08-08T10:00:00Z',
+        wholeEndAt: '2026-08-08T13:00:00Z',
+      },
+    ],
+  )
+})
+
+test('a reservation standing alone or on a moved broadcast carries no relay', async () => {
+  assert.equal((await only()).relay, undefined)
+  assert.equal(
+    (
+      await only({
+        broadcastGroup: {
+          key: 'movement:131-1310-40001',
+          role: 'movementPrimary',
+        },
+      })
+    ).relay,
+    undefined,
+  )
+})
+
+test('a cancellation for the same broadcast is told apart from one by hand', async () => {
+  const later = new Date('2026-08-08T00:00:00Z')
+
+  standing([
+    reservation({
+      id: 'same',
+      standing: 'cancelled',
+      cancellation: 'sameBroadcast',
+    }),
+    reservation({ id: 'hand', standing: 'cancelled', cancellation: 'byHand' }),
+  ])
+
+  const rows = await listed(later)
+
+  assert.equal(rows.find((one) => one.id === 'same')?.sameBroadcast, true)
+  assert.equal(rows.find((one) => one.id === 'hand')?.sameBroadcast, undefined)
 })
 
 test('cancelling names the reservation it was pressed on', async () => {

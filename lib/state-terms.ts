@@ -133,6 +133,12 @@ export const RESERVATION_EPG_MISSING_TERM: StateTerm = {
     '予約した番組が番組表から無くなった状態。番組表に戻れば予約も戻ります。',
 }
 
+export const RESERVATION_SAME_BROADCAST_TERM: StateTerm = {
+  label: '重複取消',
+  explanation:
+    '同じ放送の予約が別にあるため取り消された予約。記録は残り、一覧から復元できます。',
+}
+
 export const RESERVATION_RECORDING_REMOVED_TERM: StateTerm = {
   label: '削除済み',
   explanation:

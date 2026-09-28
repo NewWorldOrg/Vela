@@ -56,6 +56,14 @@ export interface EpgDrift {
   noticedAt?: string
 }
 
+export interface RelaySegment {
+  key: string
+  nth: number
+  of: number
+  wholeStartAt: string
+  wholeEndAt: string
+}
+
 export interface Reservation {
   id: string
   title: string
@@ -78,6 +86,8 @@ export interface Reservation {
   recordingId?: string
   discardable: boolean
   restorable: boolean
+  relay?: RelaySegment
+  sameBroadcast?: boolean
 }
 
 export interface ReservationRevision {
@@ -90,12 +100,16 @@ export interface ReservationRevision {
 export type ReservationWrite =
   | { state: 'ok'; verdict?: AllocationVerdict }
   | { state: 'unauthenticated' }
-  | { state: 'rejected'; message: string }
+  | { state: 'rejected'; message: string; movedTo?: string }
 
 type ReservationRefusal = components['schemas']['ReservationFailure']
 
 type ReservationDiscardRefused =
   components['schemas']['ReservationDiscardRefusedResponder']
+
+type ReservationRefused = components['schemas']['ReservationRefusedResponder']
+
+const MOVED_ELSEWHERE = 'programmeIsAMovedDuplicate'
 
 const DISCARD_REFUSAL: Partial<Record<ReservationRefusal, string>> = {
   noSuchReservation: 'この予約は残っていないため、削除できませんでした。',
@@ -231,12 +245,20 @@ export async function createReservation(
     }
   }
 
-  const { data, response } = await carinaClient().POST('/api/reservations', {
-    body: {
-      programme: programmeId,
-      programmeStartsAt: programme.startsAt,
+  const { data, error, response } = await carinaClient().POST(
+    '/api/reservations',
+    {
+      body: {
+        programme: programmeId,
+        programmeStartsAt: programme.startsAt,
+      },
     },
-  })
+  )
+  const refused = error?.data as ReservationRefused | null | undefined
+
+  if (response.status === 409 && refused?.refusal === MOVED_ELSEWHERE) {
+    return movedElsewhere(refused.primary)
+  }
 
   return toWrite(
     response,
@@ -248,6 +270,27 @@ export async function createReservation(
     },
     '予約できませんでした。',
   )
+}
+
+async function movedElsewhere(
+  primary: ReservationRefused['primary'],
+): Promise<ReservationWrite> {
+  if (!primary) {
+    return {
+      state: 'rejected',
+      message: 'この番組の放送枠は移動しているため、予約できませんでした。',
+    }
+  }
+
+  const services = await fetchServiceChannels()
+  const key = primary.programme.split('-').slice(0, 2).join('-')
+  const channel = services.find((one) => one.id === key)?.name || key
+
+  return {
+    state: 'rejected',
+    message: `この番組の放送枠は ${channel} の ${formatMoment(primary.startsAt)} からに移動しているため、予約できませんでした。移動先の番組を予約してください。`,
+    movedTo: primary.programme,
+  }
 }
 
 export async function cancelReservation(id: string): Promise<ReservationWrite> {
@@ -489,7 +532,45 @@ export function toReservation(
     recordingId,
     discardable: isDiscardable(stands),
     restorable: isRestorable(stands),
+    relay: relayOf(r, all),
+    sameBroadcast:
+      r.standing === 'cancelled' && r.cancellation === 'sameBroadcast'
+        ? true
+        : undefined,
   }
+}
+
+function relayOf(
+  r: ReservationResponder,
+  all: ReservationResponder[],
+): RelaySegment | undefined {
+  const key = relayKeyOf(r)
+
+  if (key === undefined) {
+    return undefined
+  }
+
+  const at = (moment: string) => Date.parse(moment)
+  const members = all
+    .filter((one) => relayKeyOf(one) === key)
+    .sort((left, right) => at(left.window.startAt) - at(right.window.startAt))
+  const latest = members.reduce((last, one) =>
+    at(one.window.endAt) > at(last.window.endAt) ? one : last,
+  )
+
+  return {
+    key,
+    nth: members.findIndex((one) => one.id === r.id) + 1,
+    of: members.length,
+    wholeStartAt: members[0].window.startAt,
+    wholeEndAt: latest.window.endAt,
+  }
+}
+
+function relayKeyOf(r: ReservationResponder): string | undefined {
+  const group = r.broadcastGroup
+
+  return group.role === 'relaySegment' && group.key ? group.key : undefined
 }
 
 function serviceKeyOf(r: ReservationResponder): string {
