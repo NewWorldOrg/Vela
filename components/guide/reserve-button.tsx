@@ -2,6 +2,8 @@
 
 import type { ReactNode } from 'react'
 import { useState, useTransition } from 'react'
+import type { Route } from 'next'
+import Link from 'next/link'
 
 import { signedOut } from '@/lib/signed-out'
 import type { ReservationWrite } from '@/repository/reservations'
@@ -30,6 +32,7 @@ export function ReserveButton({
   const [notice, setNotice] = useState<{
     tone: 'warn' | 'danger'
     text: string
+    movedTo?: string
   }>()
   const [reserved, setReserved] = useState(false)
 
@@ -51,7 +54,11 @@ export function ReserveButton({
             }
 
             if (result.state === 'rejected') {
-              setNotice({ tone: 'danger', text: result.message })
+              setNotice({
+                tone: 'danger',
+                text: result.message,
+                movedTo: result.movedTo,
+              })
 
               return
             }
@@ -77,7 +84,17 @@ export function ReserveButton({
       {(notice || reserved) && (
         <span aria-live="polite" className="basis-full">
           {notice ? (
-            <InlineAlert tone={notice.tone}>{notice.text}</InlineAlert>
+            <InlineAlert tone={notice.tone}>
+              {notice.text}
+              {notice.movedTo && (
+                <Link
+                  href={`/guide/programs/${notice.movedTo}` as Route}
+                  className="tap-target ml-[calc(9rem/16)] font-bold whitespace-nowrap underline underline-offset-[3px]"
+                >
+                  移動先を見る
+                </Link>
+              )}
+            </InlineAlert>
           ) : (
             <span className="block text-note leading-relaxed text-mint">
               {RESERVED}

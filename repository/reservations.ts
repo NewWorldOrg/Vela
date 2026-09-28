@@ -90,12 +90,16 @@ export interface ReservationRevision {
 export type ReservationWrite =
   | { state: 'ok'; verdict?: AllocationVerdict }
   | { state: 'unauthenticated' }
-  | { state: 'rejected'; message: string }
+  | { state: 'rejected'; message: string; movedTo?: string }
 
 type ReservationRefusal = components['schemas']['ReservationFailure']
 
 type ReservationDiscardRefused =
   components['schemas']['ReservationDiscardRefusedResponder']
+
+type ReservationRefused = components['schemas']['ReservationRefusedResponder']
+
+const MOVED_ELSEWHERE = 'programmeIsAMovedDuplicate'
 
 const DISCARD_REFUSAL: Partial<Record<ReservationRefusal, string>> = {
   noSuchReservation: 'この予約は残っていないため、削除できませんでした。',
@@ -231,12 +235,20 @@ export async function createReservation(
     }
   }
 
-  const { data, response } = await carinaClient().POST('/api/reservations', {
-    body: {
-      programme: programmeId,
-      programmeStartsAt: programme.startsAt,
+  const { data, error, response } = await carinaClient().POST(
+    '/api/reservations',
+    {
+      body: {
+        programme: programmeId,
+        programmeStartsAt: programme.startsAt,
+      },
     },
-  })
+  )
+  const refused = error?.data as ReservationRefused | null | undefined
+
+  if (response.status === 409 && refused?.refusal === MOVED_ELSEWHERE) {
+    return movedElsewhere(refused.primary)
+  }
 
   return toWrite(
     response,
@@ -248,6 +260,27 @@ export async function createReservation(
     },
     '予約できませんでした。',
   )
+}
+
+async function movedElsewhere(
+  primary: ReservationRefused['primary'],
+): Promise<ReservationWrite> {
+  if (!primary) {
+    return {
+      state: 'rejected',
+      message: 'この番組の放送枠は移動しているため、予約できませんでした。',
+    }
+  }
+
+  const services = await fetchServiceChannels()
+  const key = primary.programme.split('-').slice(0, 2).join('-')
+  const channel = services.find((one) => one.id === key)?.name || key
+
+  return {
+    state: 'rejected',
+    message: `この番組の放送枠は ${channel} の ${formatMoment(primary.startsAt)} からに移動しているため、予約できませんでした。移動先の番組を予約してください。`,
+    movedTo: primary.programme,
+  }
 }
 
 export async function cancelReservation(id: string): Promise<ReservationWrite> {

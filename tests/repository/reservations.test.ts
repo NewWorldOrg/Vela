@@ -21,6 +21,7 @@ const store: {
   programmeStatus: number
   writeStatus: number
   settlement: unknown
+  refused: unknown
   discardStatus: number
   discarded: unknown
   listingStatus: number
@@ -34,6 +35,7 @@ const store: {
   programmeStatus: 200,
   writeStatus: 200,
   settlement: undefined,
+  refused: null,
   discardStatus: 200,
   discarded: { reservationId: 'a1' },
   listingStatus: 200,
@@ -152,10 +154,15 @@ const write = (method: string) => async (path: string, init?: Asking) => {
     body: init?.body,
   })
 
-  return {
-    data: { status: true, message: '', data: store.settlement },
-    response: answered(store.writeStatus),
-  }
+  return store.writeStatus < 400
+    ? {
+        data: { status: true, message: '', data: store.settlement },
+        response: answered(store.writeStatus),
+      }
+    : {
+        error: { status: false, message: '', data: store.refused },
+        response: answered(store.writeStatus),
+      }
 }
 
 mock.module('@/repository/client/carina', {
@@ -275,6 +282,7 @@ function standing(items: unknown[] = [reservation()]): void {
   store.programmeStatus = 200
   store.writeStatus = 200
   store.settlement = settlementOf('secured')
+  store.refused = null
 }
 
 const BEFORE_THEM_ALL = new Date('2026-08-08T00:00:00Z')
@@ -1017,6 +1025,49 @@ test('a broadcast already reserved is sent back to the list, not reserved twice'
     message:
       'この番組はすでに予約されています。取り消した予約も残るため、作り直すのではなく予約一覧から復元してください。',
   })
+})
+
+test('a listing of a moved broadcast is refused naming where it moved, with the way there', async () => {
+  standing()
+  store.writeStatus = 409
+  store.refused = {
+    refusal: 'programmeIsAMovedDuplicate',
+    primary: {
+      programme: '132-1320-50001',
+      startsAt: '2026-08-08T13:10:00Z',
+    },
+  }
+
+  const result = await createReservation('131-1310-40001')
+
+  assert.deepEqual(result, {
+    state: 'rejected',
+    message: `この番組の放送枠は 湾岸放送1 の ${formatMoment('2026-08-08T13:10:00Z')} からに移動しているため、予約できませんでした。移動先の番組を予約してください。`,
+    movedTo: '132-1320-50001',
+  })
+})
+
+test('a moved broadcast whose other listing is not named is refused without a way there', async () => {
+  standing()
+  store.writeStatus = 409
+  store.refused = { refusal: 'programmeIsAMovedDuplicate', primary: null }
+
+  const result = await createReservation('131-1310-40001')
+
+  assert.deepEqual(result, {
+    state: 'rejected',
+    message: 'この番組の放送枠は移動しているため、予約できませんでした。',
+  })
+})
+
+test('a refusal that is not about a move keeps the reading it had', async () => {
+  standing()
+  store.writeStatus = 409
+  store.refused = { refusal: 'alreadyReserved', primary: null }
+
+  const result = await createReservation('131-1310-40001')
+
+  assert.equal(result.state === 'rejected' ? result.movedTo : 'ok', undefined)
 })
 
 test('cancelling names the reservation it was pressed on', async () => {
