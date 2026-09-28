@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 
 import type { QualityLevel } from '@/lib/quality'
@@ -8,8 +9,10 @@ import type {
   QualityResult,
   QualityStat,
   QualityThresholdKey,
+  QualityTuner,
   QualityWrite,
 } from '@/repository/quality'
+import { TermTip } from '@/components/vela/term-tip'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
@@ -147,6 +150,24 @@ export type QualityReviseThreshold = (
   key: QualityThresholdKey,
   amount: number,
 ) => Promise<QualityWrite>
+
+function StateTip({
+  state,
+  children,
+}: {
+  state: QualityTuner['state']
+  children: ReactNode
+}) {
+  if (!state.explanation) {
+    return children
+  }
+
+  return (
+    <TermTip term={{ label: state.label, explanation: state.explanation }}>
+      {children}
+    </TermTip>
+  )
+}
 
 export function QualityView({
   result,
@@ -318,9 +339,11 @@ export function QualityView({
                   </TableCell>
                   <TableCell className="align-top whitespace-normal">
                     <StatusCell>
-                      <QualityChip level={tuner.state.level} say>
-                        {tuner.state.label}
-                      </QualityChip>
+                      <StateTip state={tuner.state}>
+                        <QualityChip level={tuner.state.level} say>
+                          {tuner.state.label}
+                        </QualityChip>
+                      </StateTip>
                     </StatusCell>
                   </TableCell>
                   <QualityHealthCell cell={tuner.drop} />

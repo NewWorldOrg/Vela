@@ -9,6 +9,7 @@ import {
   ONE_RECORDING_IN_A_DAY,
   OVER_THE_LINE,
   QUALITY,
+  SATELLITES_FAILING_TO_TUNE,
   SATELLITES_THAT_CANNOT_LOCK,
   TWO_BROADCAST_DAYS,
 } from '@/repository/quality.fixtures'
@@ -359,5 +360,38 @@ export const 受信不可のチューナーと録画の無い信号の警告: St
         (row) => row.querySelectorAll('td')[TUNER_STATE_COLUMN]?.textContent,
       ),
     ).toEqual(['受信不可', '受信不可', '警告水準'])
+  },
+}
+
+export const 選局の失敗が続く衛星チューナー: Story = {
+  args: { result: SATELLITES_FAILING_TO_TUNE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const tile = canvas
+      .getAllByText('チューナーヘルス')
+      .find((one) => one.closest('[data-slot="section-heading"]') === null)
+      ?.closest('[data-slot="surface"]')
+
+    await expect(tile).toHaveTextContent('選局失敗 2')
+
+    const rows = rowsOfTheTableHeaded(canvasElement, 'チューナー')
+
+    await expect(
+      rows.map(
+        (row) => row.querySelectorAll('td')[TUNER_STATE_COLUMN]?.textContent,
+      ),
+    ).toEqual(['選局失敗', '選局失敗', '健全'])
+
+    const tip = rows[0]
+      .querySelectorAll('td')
+      [TUNER_STATE_COLUMN]?.querySelector('[data-slot="term-tip"]')
+
+    await expect(tip).not.toBeNull()
+
+    await expect(
+      canvas.getByText('チューナーの選局が失敗している'),
+    ).toBeVisible()
+    await expect(canvas.getByText(/分類 選局失敗/)).toBeVisible()
+    await expect(canvas.queryByText('TuneFailing')).toBeNull()
   },
 }

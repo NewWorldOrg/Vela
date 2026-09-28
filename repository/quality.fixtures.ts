@@ -806,6 +806,74 @@ export const SATELLITES_THAT_CANNOT_LOCK: QualityResult = {
   ],
 }
 
+const FAILING_TO_TUNE =
+  '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。'
+
+export const SATELLITES_FAILING_TO_TUNE: QualityResult = {
+  ...SATELLITES_THAT_CANNOT_LOCK,
+  stats: QUALITY.stats.map((stat) =>
+    stat.key === 'health'
+      ? {
+          key: 'health',
+          label: 'チューナーヘルス',
+          value: '1 / 3',
+          unit: '健全',
+          level: 'warn',
+          levelLabel: '選局失敗 2',
+        }
+      : stat,
+  ),
+  tuners: [
+    {
+      id: 'adapter0.frontend0',
+      device: 'adapter0.frontend0',
+      hardware: '録画 0 本',
+      state: { level: 'warn', label: '選局失敗', explanation: FAILING_TO_TUNE },
+      drop: NOTHING_RECORDED,
+      lock: NOT_SAMPLED,
+      cnr: NOT_SAMPLED,
+      ber: NOT_SAMPLED,
+    },
+    {
+      id: 'adapter2.frontend0',
+      device: 'adapter2.frontend0',
+      hardware: '録画 0 本',
+      state: { level: 'warn', label: '選局失敗', explanation: FAILING_TO_TUNE },
+      drop: NOTHING_RECORDED,
+      lock: NOT_SAMPLED,
+      cnr: NOT_SAMPLED,
+      ber: NOT_SAMPLED,
+    },
+    {
+      id: 'adapter3.frontend0',
+      device: 'adapter3.frontend0',
+      hardware: '録画 0 本',
+      state: { level: 'good', label: '健全' },
+      drop: NOTHING_RECORDED,
+      lock: { level: 'good', sub: '09/27 21:40 取得' },
+      cnr: { level: 'good', sub: '09/27 21:40 取得' },
+      ber: { level: 'good', sub: '09/27 21:40 取得' },
+    },
+  ],
+  anomalies: {
+    items: [
+      {
+        id: 'tune-failing-adapter0',
+        title: 'チューナーの選局が失敗している',
+        subject: 'adapter0.frontend0',
+        observed: FAILING_TO_TUNE,
+        level: 'warn',
+        levelLabel: '警告水準',
+        restatedBy: '再掲 · チューナー',
+        classification: '選局失敗',
+        when: '09/28 20:32 発生 · 継続中',
+      },
+    ],
+    owned: 0,
+    restated: 1,
+  },
+}
+
 export const MORE_TUNERS_THAN_FIT: QualityResult = {
   ...QUALITY,
   tuners: Array.from({ length: 24 }, (_, index) => {

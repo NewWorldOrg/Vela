@@ -1,6 +1,12 @@
 import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_PILL_LABEL } from '@/lib/quality'
-import { CANNOT_LOCK, HEALTHY } from '@/repository/quality'
+import {
+  CANNOT_LOCK,
+  DEGRADED_LABEL,
+  HEALTHY,
+  OUT_OF_SERVICE,
+  TUNE_FAILING_LABEL,
+} from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
 import {
   StateSay,
@@ -14,6 +20,9 @@ export const QUALITY_LEVEL_COLUMN = stateColumnFor([
   ...Object.values(QUALITY_PILL_LABEL),
   HEALTHY,
   CANNOT_LOCK,
+  OUT_OF_SERVICE,
+  TUNE_FAILING_LABEL,
+  DEGRADED_LABEL,
 ])
 
 export function QualityChip({
