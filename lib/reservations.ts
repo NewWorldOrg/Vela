@@ -84,7 +84,7 @@ export function linesOf(items: readonly Reservation[]): ReservationLine[] {
   const segmentsOf = new Map<string, Reservation[]>()
 
   for (const one of items) {
-    if (one.relay) {
+    if (one.relay && one.relay.of > 1) {
       segmentsOf.set(one.relay.key, [
         ...(segmentsOf.get(one.relay.key) ?? []),
         one,
@@ -93,28 +93,24 @@ export function linesOf(items: readonly Reservation[]): ReservationLine[] {
   }
 
   const lines: ReservationLine[] = []
-  const placed = new Set<string>()
 
   for (const one of items) {
     const segments = one.relay ? segmentsOf.get(one.relay.key) : undefined
 
-    if (!one.relay || !segments || segments.length < 2) {
+    if (!one.relay || !segments) {
       lines.push({ kind: 'one', reservation: one })
       continue
     }
 
-    if (placed.has(one.relay.key)) {
+    if (segments[0] !== one) {
       continue
     }
 
-    placed.add(one.relay.key)
     lines.push({
       kind: 'relay',
       key: one.relay.key,
       segments: [...segments].sort(
-        (left, right) =>
-          Date.parse(left.relay?.startAt ?? '') -
-          Date.parse(right.relay?.startAt ?? ''),
+        (left, right) => (left.relay?.nth ?? 0) - (right.relay?.nth ?? 0),
       ),
     })
   }
@@ -122,18 +118,31 @@ export function linesOf(items: readonly Reservation[]): ReservationLine[] {
   return lines
 }
 
-export function relaySpanOf(segments: readonly Reservation[]): {
+export interface RelaySummary {
+  of: number
+  shown: number
   startAt: string
   endAt: string
-} {
-  const starts = segments.map((one) => one.relay?.startAt ?? '')
-  const ends = segments.map((one) => one.relay?.endAt ?? '')
-  const earliest = starts.reduce((a, b) =>
-    Date.parse(b) < Date.parse(a) ? b : a,
-  )
-  const latest = ends.reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a))
+}
 
-  return { startAt: earliest, endAt: latest }
+export function relaySummaryOf(segments: readonly Reservation[]): RelaySummary {
+  const relay = segments[0]?.relay
+
+  return {
+    of: relay?.of ?? segments.length,
+    shown: segments.length,
+    startAt: relay?.wholeStartAt ?? '',
+    endAt: relay?.wholeEndAt ?? '',
+  }
+}
+
+export function relayCountSaying(summary: {
+  of: number
+  shown: number
+}): string {
+  return summary.shown < summary.of
+    ? `区切り ${summary.of} つ(うち ${summary.shown} つを表示)`
+    : `区切り ${summary.of} つ`
 }
 
 const NEEDS_A_LOOK_FIRST: ReservationStanding[] = [

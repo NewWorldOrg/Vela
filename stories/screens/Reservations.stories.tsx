@@ -841,17 +841,23 @@ export const 中継で分かれた放送: Story = {
   },
 }
 
-export const 区切りに競合がある中継: Story = {
+export const 区切りの一部だけを表示している中継: Story = {
   args: { result: shown(CONTENDED_RELAY_FIXTURES) },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
 
     const canvas = within(canvasElement)
-    const relay = rowFor(canvas.getByText('区切り 2 つ'))
+    const relay = rowFor(canvas.getByText('区切り 3 つ(うち 2 つを表示)'))
 
+    await expect(within(relay).getAllByRole('cell')[4]).toHaveTextContent(
+      formatMomentSpan('2026-08-08T04:00:00Z', '2026-08-08T08:30:00Z'),
+    )
     await expect(
       within(relay).getByRole('button', { name: '区切りの一覧' }),
     ).toHaveAttribute('aria-expanded', 'true')
+    await expect(canvas.getByText('区切り 1 / 3')).toBeVisible()
+    await expect(canvas.getByText('区切り 2 / 3')).toBeVisible()
+    await expect(canvas.queryByText('区切り 3 / 3')).toBeNull()
     await expect(cellOf(relay, THE_STATE_COLUMN)).toHaveTextContent('競合')
     await expect(
       await tipIn(cellOf(relay, THE_STATE_COLUMN)),
@@ -859,6 +865,13 @@ export const 区切りに競合がある中継: Story = {
     await expect(
       await canvas.findByText('同時刻に地上波チューナー 2 本が録画予定です'),
     ).toBeVisible()
+
+    await userEvent.click(
+      within(relay).getByRole('checkbox', {
+        name: '湾岸杯 野球 決勝 の表示中の区切り 2 つを選ぶ',
+      }),
+    )
+    await expect(within(chosenBar(canvas)).getByText('2')).toBeVisible()
   },
 }
 

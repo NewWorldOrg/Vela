@@ -3,7 +3,8 @@
 import { formatMomentSpan } from '@/lib/format'
 import {
   leadingSegmentOf,
-  relaySpanOf,
+  relayCountSaying,
+  relaySummaryOf,
   reservationAnchor,
 } from '@/lib/reservations'
 import type { Reservation } from '@/repository/reservations'
@@ -42,7 +43,8 @@ export function RelayRow({
   onSelect: (taken: boolean) => void
 }) {
   const first = segments[0]
-  const span = relaySpanOf(segments)
+  const summary = relaySummaryOf(segments)
+  const partial = summary.shown < summary.of
   const leading = leadingSegmentOf(segments)
   const said = segments.map(reservationStateLabelOf)
   const differ = new Set(said).size > 1
@@ -64,7 +66,11 @@ export function RelayRow({
                 : 'indeterminate'
           }
           onCheckedChange={(next) => onSelect(next === true)}
-          aria-label={`${first.title} の区切りをすべて選ぶ`}
+          aria-label={
+            partial
+              ? `${first.title} の表示中の区切り ${summary.shown} つを選ぶ`
+              : `${first.title} の区切りをすべて選ぶ`
+          }
         />
         {!open &&
           segments.map((one) => (
@@ -85,7 +91,7 @@ export function RelayRow({
       <TableCell className="align-top whitespace-normal">
         <b className="block text-[calc(13rem/16)] font-bold">{first.title}</b>
         <span className="text-note text-ink-3">
-          区切り {segments.length} つ
+          {relayCountSaying(summary)}
         </span>
       </TableCell>
       <TableCell className="align-top">
@@ -99,7 +105,7 @@ export function RelayRow({
         </span>
       </TableCell>
       <TableCell className="align-top font-code text-ink-2">
-        {formatMomentSpan(span.startAt, span.endAt)}
+        {formatMomentSpan(summary.startAt, summary.endAt)}
       </TableCell>
       <TableCell className="align-top">
         {first.ruleName ? (

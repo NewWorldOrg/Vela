@@ -482,8 +482,7 @@ const segmentOf = (
   channelName: string,
   channelNo: string,
   whenLabel: string,
-  startAt: string,
-  endAt: string,
+  nth: number,
   over: Partial<Reservation> = {},
 ): Reservation => ({
   id,
@@ -502,35 +501,20 @@ const segmentOf = (
   marginBeforeSeconds: 10,
   marginAfterSeconds: 30,
   encodeWhenRecorded: true,
-  relay: { key: 'relay:191-1910-7001', startAt, endAt },
+  relay: {
+    key: 'relay:191-1910-7001',
+    nth,
+    of: 3,
+    wholeStartAt: '2026-08-08T04:00:00Z',
+    wholeEndAt: '2026-08-08T08:30:00Z',
+  },
   ...over,
 })
 
 export const RELAY_FIXTURES: Reservation[] = [
-  segmentOf(
-    'r-401',
-    'みなと教育1',
-    '191',
-    '08/08(土) 13:00 – 15:00',
-    '2026-08-08T04:00:00Z',
-    '2026-08-08T06:00:00Z',
-  ),
-  segmentOf(
-    'r-402',
-    '中央テレビ1',
-    '011',
-    '08/08(土) 15:00 – 16:30',
-    '2026-08-08T06:00:00Z',
-    '2026-08-08T07:30:00Z',
-  ),
-  segmentOf(
-    'r-403',
-    '中央テレビ1',
-    '011',
-    '08/08(土) 16:30 – 17:30',
-    '2026-08-08T07:30:00Z',
-    '2026-08-08T08:30:00Z',
-  ),
+  segmentOf('r-401', 'みなと教育1', '191', '08/08(土) 13:00 – 15:00', 1),
+  segmentOf('r-402', '中央テレビ1', '011', '08/08(土) 15:00 – 16:30', 2),
+  segmentOf('r-403', '中央テレビ1', '011', '08/08(土) 16:30 – 17:30', 3),
 ]
 
 export const CONTENDED_RELAY_FIXTURES: Reservation[] = [

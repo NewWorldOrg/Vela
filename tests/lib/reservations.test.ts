@@ -9,7 +9,8 @@ import {
   MARGIN_RANGE,
   leadingSegmentOf,
   linesOf,
-  relaySpanOf,
+  relayCountSaying,
+  relaySummaryOf,
   PRIORITY_RANGE,
   isDiscardable,
   isRestorable,
@@ -239,20 +240,25 @@ const plain = (id: string, over: Partial<Reservation> = {}): Reservation => ({
   ...over,
 })
 
+const WHOLE = {
+  wholeStartAt: '2026-09-28T10:00:00Z',
+  wholeEndAt: '2026-09-28T13:00:00Z',
+}
+
 const segment = (
   id: string,
-  startAt: string,
-  endAt: string,
+  nth: number,
   over: Partial<Reservation> = {},
+  of = 3,
 ): Reservation =>
-  plain(id, { relay: { key: 'relay:1-2-3', startAt, endAt }, ...over })
+  plain(id, { relay: { key: 'relay:1-2-3', nth, of, ...WHOLE }, ...over })
 
-test('中継の区切りが 2 つ以上並ぶと、1 つの塊にまとまる', () => {
+test('中継の区切りは、表示している数によらず 1 つの塊にまとまる', () => {
   const lines = linesOf([
     plain('a'),
-    segment('b', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
+    segment('b', 1),
     plain('c'),
-    segment('d', '2026-09-28T11:00:00Z', '2026-09-28T12:00:00Z'),
+    segment('d', 2),
   ])
 
   assert.deepEqual(
@@ -265,11 +271,8 @@ test('中継の区切りが 2 つ以上並ぶと、1 つの塊にまとまる', 
   )
 })
 
-test('区切りは開始の順に並ぶ', () => {
-  const lines = linesOf([
-    segment('late', '2026-09-28T11:00:00Z', '2026-09-28T12:00:00Z'),
-    segment('early', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
-  ])
+test('区切りは群の中の順に並ぶ', () => {
+  const lines = linesOf([segment('late', 3), segment('early', 2)])
 
   assert.equal(lines.length, 1)
   assert.deepEqual(
@@ -278,29 +281,24 @@ test('区切りは開始の順に並ぶ', () => {
   )
 })
 
-test('区切りが 1 つしか残っていなければ、ふつうの行のまま', () => {
-  const lines = linesOf([
-    segment('b', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
-  ])
+test('前の区切りが絞りで落ちても、残った 1 つは塊として出る', () => {
+  const lines = linesOf([segment('last', 3)])
 
-  assert.deepEqual(lines, [
-    {
-      kind: 'one',
-      reservation: segment('b', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
-    },
-  ])
+  assert.equal(lines[0].kind, 'relay')
+})
+
+test('区切りが 1 つだけの群は、ふつうの行のまま', () => {
+  const alone = segment('only', 1, {}, 1)
+
+  assert.deepEqual(linesOf([alone]), [{ kind: 'one', reservation: alone }])
 })
 
 test('別の中継の区切りは、別の塊になる', () => {
   const lines = linesOf([
-    segment('a', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
-    segment('b', '2026-09-28T11:00:00Z', '2026-09-28T12:00:00Z'),
-    segment('c', '2026-09-28T20:00:00Z', '2026-09-28T21:00:00Z', {
-      relay: {
-        key: 'relay:9-9-9',
-        startAt: '2026-09-28T20:00:00Z',
-        endAt: '2026-09-28T21:00:00Z',
-      },
+    segment('a', 1),
+    segment('b', 2),
+    segment('c', 1, {
+      relay: { key: 'relay:9-9-9', nth: 1, of: 1, ...WHOLE },
     }),
   ])
 
@@ -310,13 +308,20 @@ test('別の中継の区切りは、別の塊になる', () => {
   )
 })
 
-test('塊の時間は、最初の区切りの開始から最後の区切りの終了まで', () => {
-  assert.deepEqual(
-    relaySpanOf([
-      segment('a', '2026-09-28T10:00:00Z', '2026-09-28T11:00:00Z'),
-      segment('b', '2026-09-28T11:00:00Z', '2026-09-28T12:30:00Z'),
-    ]),
-    { startAt: '2026-09-28T10:00:00Z', endAt: '2026-09-28T12:30:00Z' },
+test('塊の数と時間は、表示している区切りでなく群の全体から言う', () => {
+  assert.deepEqual(relaySummaryOf([segment('b', 2), segment('c', 3)]), {
+    of: 3,
+    shown: 2,
+    startAt: '2026-09-28T10:00:00Z',
+    endAt: '2026-09-28T13:00:00Z',
+  })
+})
+
+test('塊の区切りの数は、全部を表示しているときだけ一言で言う', () => {
+  assert.equal(relayCountSaying({ of: 3, shown: 3 }), '区切り 3 つ')
+  assert.equal(
+    relayCountSaying({ of: 3, shown: 2 }),
+    '区切り 3 つ(うち 2 つを表示)',
   )
 })
 

@@ -1071,16 +1071,83 @@ test('a refusal that is not about a move keeps the reading it had', async () => 
   assert.equal(result.state === 'rejected' ? result.movedTo : 'ok', undefined)
 })
 
-test('a segment of a relay carries its group and its own window', async () => {
+test('a segment of a relay carries its place in the group and the span of the whole', async () => {
   const row = await only({
     broadcastGroup: { key: 'relay:131-1310-40001', role: 'relaySegment' },
   })
 
   assert.deepEqual(row.relay, {
     key: 'relay:131-1310-40001',
-    startAt: '2026-08-08T12:10:00Z',
-    endAt: '2026-08-08T13:40:00Z',
+    nth: 1,
+    of: 1,
+    wholeStartAt: '2026-08-08T12:10:00Z',
+    wholeEndAt: '2026-08-08T13:40:00Z',
   })
+})
+
+const RELAY = { key: 'relay:131-1310-40001', role: 'relaySegment' }
+
+const relaySegment = (
+  id: string,
+  startAt: string,
+  endAt: string,
+  standing: string,
+) =>
+  reservation({
+    id,
+    standing,
+    window: window(startAt, endAt),
+    broadcastGroup: RELAY,
+  })
+
+test('a relay whose first segment has left the list is still counted and spanned whole', async () => {
+  standing([
+    relaySegment(
+      's1',
+      '2026-08-08T10:00:00Z',
+      '2026-08-08T11:00:00Z',
+      'complete',
+    ),
+    relaySegment(
+      's2',
+      '2026-08-08T11:00:00Z',
+      '2026-08-08T12:00:00Z',
+      'recording',
+    ),
+    relaySegment(
+      's3',
+      '2026-08-08T12:00:00Z',
+      '2026-08-08T13:00:00Z',
+      'scheduled',
+    ),
+  ])
+
+  const rows = (await listReservations({}, new Date('2026-08-08T11:30:00Z')))
+    .items
+
+  assert.deepEqual(
+    rows.map((one) => one.id),
+    ['s2', 's3'],
+  )
+  assert.deepEqual(
+    rows.map((one) => one.relay),
+    [
+      {
+        key: RELAY.key,
+        nth: 2,
+        of: 3,
+        wholeStartAt: '2026-08-08T10:00:00Z',
+        wholeEndAt: '2026-08-08T13:00:00Z',
+      },
+      {
+        key: RELAY.key,
+        nth: 3,
+        of: 3,
+        wholeStartAt: '2026-08-08T10:00:00Z',
+        wholeEndAt: '2026-08-08T13:00:00Z',
+      },
+    ],
+  )
 })
 
 test('a reservation standing alone or on a moved broadcast carries no relay', async () => {

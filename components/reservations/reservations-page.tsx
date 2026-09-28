@@ -370,7 +370,10 @@ export function ReservationsView({
                 />,
                 ...(open
                   ? line.segments.map((one, at) =>
-                      rowOf(one, at, { nth: at + 1, of: line.segments.length }),
+                      rowOf(one, at, {
+                        nth: one.relay?.nth ?? at + 1,
+                        of: one.relay?.of ?? line.segments.length,
+                      }),
                     )
                   : []),
               ]

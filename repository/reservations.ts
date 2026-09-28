@@ -58,8 +58,10 @@ export interface EpgDrift {
 
 export interface RelaySegment {
   key: string
-  startAt: string
-  endAt: string
+  nth: number
+  of: number
+  wholeStartAt: string
+  wholeEndAt: string
 }
 
 export interface Reservation {
@@ -530,7 +532,7 @@ export function toReservation(
     recordingId,
     discardable: isDiscardable(stands),
     restorable: isRestorable(stands),
-    relay: relayOf(r),
+    relay: relayOf(r, all),
     sameBroadcast:
       r.standing === 'cancelled' && r.cancellation === 'sameBroadcast'
         ? true
@@ -538,14 +540,37 @@ export function toReservation(
   }
 }
 
-function relayOf(r: ReservationResponder): RelaySegment | undefined {
-  const group = r.broadcastGroup
+function relayOf(
+  r: ReservationResponder,
+  all: ReservationResponder[],
+): RelaySegment | undefined {
+  const key = relayKeyOf(r)
 
-  if (group.role !== 'relaySegment' || !group.key) {
+  if (key === undefined) {
     return undefined
   }
 
-  return { key: group.key, startAt: r.window.startAt, endAt: r.window.endAt }
+  const at = (moment: string) => Date.parse(moment)
+  const members = all
+    .filter((one) => relayKeyOf(one) === key)
+    .sort((left, right) => at(left.window.startAt) - at(right.window.startAt))
+  const latest = members.reduce((last, one) =>
+    at(one.window.endAt) > at(last.window.endAt) ? one : last,
+  )
+
+  return {
+    key,
+    nth: members.findIndex((one) => one.id === r.id) + 1,
+    of: members.length,
+    wholeStartAt: members[0].window.startAt,
+    wholeEndAt: latest.window.endAt,
+  }
+}
+
+function relayKeyOf(r: ReservationResponder): string | undefined {
+  const group = r.broadcastGroup
+
+  return group.role === 'relaySegment' && group.key ? group.key : undefined
 }
 
 function serviceKeyOf(r: ReservationResponder): string {
