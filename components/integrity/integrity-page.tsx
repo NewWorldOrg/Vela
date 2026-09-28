@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 
 import { shapeFor } from '@/lib/not-yet-in-this-build'
@@ -13,6 +13,10 @@ import type {
   IntegrityResult,
   SweepWrite,
 } from '@/repository/integrity'
+import type { ThumbnailWrite } from '@/repository/recordings'
+import { remadeSaying } from '@/components/recordings/thumbnail-button'
+import { noteThumbnailRedrawn } from '@/hooks/useRedrawnThumbnail'
+import { Spinner } from '@/components/vela/progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +33,7 @@ import { EmptyState } from '@/components/vela/empty-state'
 import {
   ChevronLeftIcon,
   QualityIcon,
+  RebuildIcon,
   TrashIcon,
 } from '@/components/vela/icons'
 import { ActionRow } from '@/components/vela/action-row'
@@ -61,16 +66,21 @@ const REASON_TONE: Record<IntegrityFault, string> = {
   fileMissing: 'text-lemon',
   fileEmpty: 'text-coral',
   emptyThoughComplete: 'text-coral',
+  thumbnailMissing: 'text-lemon',
 }
+
+const REDRAWS_ITS_PICTURE: readonly IntegrityFault[] = ['thumbnailMissing']
 
 export function IntegrityView({
   result,
   onRun,
   onDelete,
+  onRemake,
 }: {
   result: IntegrityResult
   onRun: () => Promise<SweepWrite>
   onDelete: (findingId: string) => Promise<FindingDiscarded>
+  onRemake: (recordingId: string) => Promise<ThumbnailWrite>
 }) {
   const { check, findings, roots } = result
   const [asked, setAsked] = useState<IntegrityFinding | null>(null)
@@ -80,6 +90,36 @@ export function IntegrityView({
     path: string
   }>()
   const discarded = thrownAway?.ranAt === ranAt ? thrownAway.path : undefined
+  const [redrawing, startRedrawing] = useTransition()
+  const [redrawnFor, setRedrawnFor] = useState<string>()
+  const [redrawn, setRedrawn] = useState<{
+    ranAt: string
+    path: string
+    drew: boolean
+    text: string
+  }>()
+  const redrawSaid = redrawn?.ranAt === ranAt ? redrawn : undefined
+
+  const redraw = (finding: IntegrityFinding) => {
+    const recordingId = finding.recordingId
+
+    if (redrawing || recordingId === undefined) {
+      return
+    }
+
+    setRedrawnFor(finding.key)
+    startRedrawing(async () => {
+      setRedrawn(undefined)
+
+      const said = remadeSaying(await onRemake(recordingId))
+
+      if (said.drew) {
+        noteThumbnailRedrawn(recordingId)
+      }
+
+      setRedrawn({ ranAt, path: finding.path, ...said })
+    })
+  }
 
   const throwAway = async (findingId: string): Promise<FindingDiscarded> => {
     const thrown = await onDelete(findingId)
@@ -194,6 +234,14 @@ export function IntegrityView({
         </Banner>
       )}
 
+      {redrawSaid && (
+        <Banner tone={redrawSaid.drew ? 'success' : 'warn'} className="mb-3.5">
+          {redrawSaid.drew
+            ? `${redrawSaid.path} のサムネイルを作り直しました。`
+            : redrawSaid.text}
+        </Banner>
+      )}
+
       {findings.length === 0 ? (
         <EmptyState spot="star" title="食い違いはありません" titleLevel={2} />
       ) : (
@@ -249,6 +297,24 @@ export function IntegrityView({
                   {finding.noticedAt}
                 </TableCell>
                 <TableCell className="align-top text-right">
+                  {REDRAWS_ITS_PICTURE.includes(finding.fault) &&
+                    finding.recordingId !== undefined && (
+                      <ActionRow>
+                        <Button
+                          variant="change"
+                          size="sm"
+                          aria-disabled={redrawing}
+                          onClick={() => redraw(finding)}
+                        >
+                          {redrawing && redrawnFor === finding.key ? (
+                            <Spinner size="control" />
+                          ) : (
+                            <RebuildIcon />
+                          )}
+                          作り直す
+                        </Button>
+                      </ActionRow>
+                    )}
                   {OWNED_BY_NO_RECORDING.includes(finding.fault) && (
                     <ActionRow>
                       <Button

@@ -7,6 +7,8 @@ import {
   discardIntegrityFinding,
   runIntegrityCheck,
 } from '@/repository/integrity'
+import type { ThumbnailWrite } from '@/repository/recordings'
+import { remakeThumbnail } from '@/repository/recordings'
 
 const INTEGRITY = '/library/integrity'
 
@@ -27,6 +29,19 @@ export async function throwStrayAway(
 
   if (result.state === 'ok') {
     revalidatePath(INTEGRITY)
+  }
+
+  return result
+}
+
+export async function redrawMissingThumbnail(
+  recordingId: string,
+): Promise<ThumbnailWrite> {
+  const result = await remakeThumbnail(recordingId)
+
+  if (result.state === 'ok') {
+    revalidatePath(`/recordings/${recordingId}`)
+    revalidatePath('/library')
   }
 
   return result

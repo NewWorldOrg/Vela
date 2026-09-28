@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getIntegrity } from '@/repository/integrity'
 import { IntegrityView } from '@/components/integrity/integrity-page'
 import {
+  redrawMissingThumbnail,
   sweepForIntegrity,
   throwStrayAway,
 } from '@/app/(app)/library/integrity/actions'
@@ -17,6 +18,7 @@ export default async function Page() {
       result={result}
       onRun={sweepForIntegrity}
       onDelete={throwStrayAway}
+      onRemake={redrawMissingThumbnail}
     />
   )
 }
