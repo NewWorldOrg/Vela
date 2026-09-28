@@ -566,6 +566,34 @@ export const スクランブルが解けずに残った録画: Story = {
   },
 }
 
+const CARRIED_ON_AFTER_A_GAP = {
+  ...all.find((r) => r.title === '手仕事の地図')!,
+  gap: { label: '欠け 3.8 秒', detail: '欠け 22:10 から 3.8 秒' },
+}
+
+export const 欠けのある録画: Story = {
+  args: {
+    result: resultOf([CARRIED_ON_AFTER_A_GAP, LEFT_SCRAMBLED]),
+    filter: {},
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const gapped = canvas.getByRole('row', { name: /手仕事の地図/ })
+
+    await expect(sayOf(gapped, OUTCOME_COLUMN)).toHaveTextContent('完全')
+
+    const mark = gapped.querySelector<HTMLElement>('[data-slot="gap-mark"]')
+
+    await expect(mark).not.toBeNull()
+    await expect(mark).toHaveTextContent('欠け 3.8 秒')
+    await expect(
+      canvas
+        .getByRole('row', { name: /波止場のブラスバンド/ })
+        .querySelector('[data-slot="gap-mark"]'),
+    ).toBeNull()
+  },
+}
+
 export const 検索0件: Story = {
   args: {
     result: { ...result, items: [], filter: { q: '該当なし' } },

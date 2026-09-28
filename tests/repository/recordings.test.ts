@@ -683,6 +683,21 @@ test('a recording that carried on after a gap says how long it missed beside its
   assert.equal(one.quality.detail, 'ドロップ 0 / 欠け 2.5 秒')
 })
 
+test('a recording that carried on after a gap carries a mark for the library row, with where each gap began', async () => {
+  const one = await only([recording(CARRIED_ON)])
+
+  assert.deepEqual(one.gap, {
+    label: '欠け 2.5 秒',
+    detail: '欠け 23:05 から 2.5 秒',
+  })
+})
+
+test('a recording with no gap carries no mark for the library row', async () => {
+  const one = await only([recording()])
+
+  assert.equal(one.gap, undefined)
+})
+
 test('a recording that carried on after a gap says where the gap began in its record, and marks it on the seek bar', async () => {
   standing([recording(CARRIED_ON)])
 
