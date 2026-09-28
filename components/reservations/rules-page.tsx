@@ -24,6 +24,7 @@ import {
   ruleConditionParts,
   ruleNarrowsAnything,
   withinRuleName,
+  exclusionPartsOf,
 } from '@/lib/rules'
 import { cn } from '@/lib/utils'
 import type { GuideChannel } from '@/repository/programs'
@@ -35,6 +36,7 @@ import type {
   RuleRetirement,
   RulesResult,
   RuleWrite,
+  RuleExclusion,
 } from '@/repository/rules'
 import {
   SEARCH_DEFAULT_PER_PAGE,
@@ -1011,11 +1013,7 @@ function RuleEditor({
 
         {preview && (
           <div className={cn('flex flex-col gap-3.5', stale && 'grayscale')}>
-            {preview.excluded > 0 && (
-              <p className="text-note text-ink-3">
-                <Count value={preview.excluded} /> 件は除外されました。
-              </p>
-            )}
+            <Excluded excluded={preview.excluded} as="p" />
             {preview.takes.length === 0 ? (
               <EmptyState
                 spot={null}
@@ -1145,11 +1143,7 @@ function RuleEditor({
                 このルールに付け替わる予約{' '}
                 <Count value={impact.changingHands} /> 件
               </span>
-              {impact.excluded > 0 && (
-                <span className="text-note text-ink-3">
-                  <Count value={impact.excluded} /> 件は除外されました。
-                </span>
-              )}
+              <Excluded excluded={impact.excluded} as="span" />
             </div>
           )}
 
@@ -1192,6 +1186,34 @@ function FormSection({
 
 function Count({ value }: { value: number }) {
   return <b className="font-code font-medium text-ink">{value}</b>
+}
+
+function Excluded({
+  excluded,
+  as: Tag,
+}: {
+  excluded: RuleExclusion
+  as: 'p' | 'span'
+}) {
+  const parts = exclusionPartsOf(excluded)
+
+  if (parts.length === 0) {
+    return null
+  }
+
+  return (
+    <Tag data-excluded="" className="text-note text-ink-3">
+      <Count value={parts.reduce((sum, part) => sum + part.count, 0)} />{' '}
+      件は除外されました(
+      {parts.map((part, at) => (
+        <span key={part.label}>
+          {at > 0 && '、'}
+          {part.label} <Count value={part.count} /> 件
+        </span>
+      ))}
+      )。
+    </Tag>
+  )
 }
 
 function Pick({

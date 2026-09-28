@@ -376,6 +376,7 @@ const rehearsal = (takes: unknown[], over: Record<string, unknown> = {}) => ({
   contendedAltogether: 0,
   excludedAsShadows: 0,
   seatsLeftOut: 0,
+  excludedAsMoved: 0,
   ...over,
 })
 
@@ -422,6 +423,21 @@ test('a preview row is named by its channel and the span it covers', async () =>
   assert.equal(preview?.takes[0].verdict, 'secured')
   assert.equal(preview?.alreadyReserved, 1)
   assert.equal(preview?.contended, 1)
+})
+
+test('a preview counts what was left out as copies apart from what was left out as moved', async () => {
+  standing()
+  store.answer = rehearsal([take()], {
+    excludedAsShadows: 2,
+    excludedAsMoved: '1',
+  })
+
+  const result = await previewRule(draft())
+
+  assert.deepEqual(result.state === 'ok' ? result.data.excluded : undefined, {
+    shadows: 2,
+    moved: 1,
+  })
 })
 
 test('a programme with no end announced says so rather than inventing one', async () => {
@@ -515,6 +531,7 @@ test('what saving would change is counted from the same draft', async () => {
     sweeping: 5,
     changingHands: 3,
     excludedAsShadows: 4,
+    excludedAsMoved: 1,
   }
 
   const result = await impactOfRule(draft(), 'r-1')
@@ -527,7 +544,7 @@ test('what saving would change is counted from the same draft', async () => {
       withdrawing: 1,
       sweeping: 5,
       changingHands: 3,
-      excluded: 4,
+      excluded: { shadows: 4, moved: 1 },
     },
   })
 })
@@ -540,6 +557,7 @@ test('what deleting would leave is counted apart from what saving would', async 
     sweeping: 3,
     changingHands: 0,
     excludedAsShadows: 0,
+    excludedAsMoved: 0,
   }
 
   const result = await impactOfRule(draft(), 'r-1')
@@ -557,6 +575,7 @@ test('a count the API spells as a string still reads as a number', async () => {
     sweeping: '7',
     changingHands: '0',
     excludedAsShadows: '0',
+    excludedAsMoved: '0',
   }
 
   const result = await impactOfRule(draft(), 'r-1')
@@ -575,6 +594,7 @@ test('an application answers with what the pass read and settled', async () => {
     withdrawn: 2,
     turnedOff: 0,
     faulted: 0,
+    excludedAsMoved: 2,
   }
 
   const result = await applyRulesNow('r-1')
@@ -589,6 +609,7 @@ test('an application answers with what the pass read and settled', async () => {
       withdrawn: 2,
       turnedOff: 0,
       faulted: 0,
+      excludedAsMoved: 2,
     },
   })
 })

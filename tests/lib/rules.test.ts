@@ -5,6 +5,7 @@ import type { SearchTerms } from '@/lib/search-condition'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import {
   NEW_RULE,
+  exclusionPartsOf,
   RULE_NAME_LONGEST,
   RULE_PARAM,
   newRuleHref,
@@ -142,4 +143,15 @@ test('a draft that narrows nothing still opens the rules screen', () => {
     newRuleHref(NOTHING),
     `/reservations/rules?${RULE_PARAM}=${NEW_RULE}`,
   )
+})
+
+test('除外は種類ごとに、0 件でない種類だけを言う', () => {
+  assert.deepEqual(exclusionPartsOf({ shadows: 2, moved: 1 }), [
+    { label: '同時放送', count: 2 },
+    { label: '移動', count: 1 },
+  ])
+  assert.deepEqual(exclusionPartsOf({ shadows: 0, moved: 3 }), [
+    { label: '移動', count: 3 },
+  ])
+  assert.deepEqual(exclusionPartsOf({ shadows: 0, moved: 0 }), [])
 })

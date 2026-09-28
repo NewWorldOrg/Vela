@@ -67,13 +67,18 @@ export interface RuleTake {
   verdict?: AllocationVerdict
 }
 
+export interface RuleExclusion {
+  shadows: number
+  moved: number
+}
+
 export interface RulePreview {
   takes: RuleTake[]
   matched: number
   making: number
   alreadyReserved: number
   contended: number
-  excluded: number
+  excluded: RuleExclusion
 }
 
 export interface RuleImpact {
@@ -81,7 +86,7 @@ export interface RuleImpact {
   withdrawing: number
   sweeping: number
   changingHands: number
-  excluded: number
+  excluded: RuleExclusion
 }
 
 export interface RuleApplication {
@@ -91,6 +96,7 @@ export interface RuleApplication {
   withdrawn: number
   turnedOff: number
   faulted: number
+  excludedAsMoved: number
 }
 
 export interface RuleRetirement {
@@ -460,7 +466,10 @@ function toPreview(
     making: toInt(preview.making),
     alreadyReserved: toInt(preview.alreadyReserved),
     contended: toInt(preview.contended),
-    excluded: toInt(preview.excludedAsShadows),
+    excluded: {
+      shadows: toInt(preview.excludedAsShadows),
+      moved: toInt(preview.excludedAsMoved),
+    },
   }
 }
 
@@ -490,7 +499,10 @@ function toImpact(impact: RuleImpactResponder): RuleImpact {
     withdrawing: toInt(impact.withdrawing),
     sweeping: toInt(impact.sweeping),
     changingHands: toInt(impact.changingHands),
-    excluded: toInt(impact.excludedAsShadows),
+    excluded: {
+      shadows: toInt(impact.excludedAsShadows),
+      moved: toInt(impact.excludedAsMoved),
+    },
   }
 }
 
@@ -502,5 +514,6 @@ function toApplication(run: RuleApplicationResponder): RuleApplication {
     withdrawn: toInt(run.withdrawn),
     turnedOff: toInt(run.turnedOff),
     faulted: toInt(run.faulted),
+    excludedAsMoved: toInt(run.excludedAsMoved),
   }
 }

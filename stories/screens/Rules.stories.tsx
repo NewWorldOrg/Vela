@@ -59,7 +59,7 @@ const PREVIEW: RulePreview = {
   making: 2,
   alreadyReserved: 1,
   contended: 1,
-  excluded: 2,
+  excluded: { shadows: 2, moved: 1 },
 }
 
 const IMPACT: RuleImpact = {
@@ -67,7 +67,7 @@ const IMPACT: RuleImpact = {
   withdrawing: 1,
   sweeping: 5,
   changingHands: 3,
-  excluded: 2,
+  excluded: { shadows: 2, moved: 1 },
 }
 
 const RETIRED: RuleRetirement = { withdrawn: 4, swept: 0 }
@@ -223,7 +223,7 @@ export const ルールを編集: Story = {
     await expect(canvas.getByText('未明のレイライン 第1話')).toBeVisible()
     await expect(canvas.getByText('クロックワークガーデン 第1話')).toBeVisible()
     await expect(canvas.getByText(/件は除外されました/)).toHaveTextContent(
-      '2 件は除外されました。',
+      '3 件は除外されました(同時放送 2 件、移動 1 件)。',
     )
 
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
@@ -241,6 +241,9 @@ export const ルールを編集: Story = {
     await expect(
       dialog.getByText(/このルールに付け替わる予約/),
     ).toHaveTextContent('このルールに付け替わる予約 3 件')
+    await expect(dialog.getByText(/件は除外されました/)).toHaveTextContent(
+      '3 件は除外されました(同時放送 2 件、移動 1 件)。',
+    )
 
     await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
 
