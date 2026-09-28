@@ -219,6 +219,37 @@ export const 完全: Story = {
   },
 }
 
+export const 追記で再開した録画は欠けを言う: Story = {
+  args: {
+    detail: {
+      ...detail('1274'),
+      quality: {
+        measured: true,
+        level: 'warning',
+        detail: 'ドロップ 0 / 欠け 3.5 秒',
+      },
+      interruptions: {
+        main: '中断 1 回 / 再開 1 回',
+        sub: '欠け 17:54 から 3.5 秒',
+      },
+      qualitySpots: [{ at: '0:09:16', packets: '欠け 3.5 秒', second: 556 }],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByText('技術情報'))
+
+    await expect(canvas.getByText('中断 1 回 / 再開 1 回')).toBeVisible()
+    await expect(canvas.getByText('欠け 17:54 から 3.5 秒')).toBeVisible()
+    await expect(canvas.getByText('欠け 3.5 秒')).toBeVisible()
+    await expect(
+      canvas.getByRole('link', { name: 'この時間帯を再生' }),
+    ).toHaveAttribute('href', '/recordings/1274?at=556')
+    await expect(canvas.queryByText('良好')).toBeNull()
+  },
+}
+
 export const 削除未完了: Story = {
   args: { detail: { ...detail('1274'), unfinishedDeletion: { filesLeft: 2 } } },
   play: async ({ canvasElement }) => {

@@ -119,6 +119,8 @@ const recording = (over: Over = {}) => ({
   unfinishedDeletion: null,
   leftScrambled: false,
   descrambledAt: null,
+  gaps: [],
+  missedMs: 0,
   ...over,
 })
 
@@ -659,6 +661,46 @@ test('the times the recorder overflowed are spelled with their thousands apart',
   standing([recording({ drops: drops({ eovfCount: 12_400 }) })])
 
   assert.equal((await getRecording('d1'))?.eoverflow, '12,400 回')
+})
+
+const CARRIED_ON = {
+  gaps: [
+    {
+      from: '2026-08-09T14:09:16.2Z',
+      until: '2026-08-09T14:09:19.7Z',
+      seconds: 3.5,
+      atSecond: 556.2,
+    },
+  ],
+  missedMs: 3500,
+  drops: drops({ quality: 'warning' }),
+}
+
+test('a recording that carried on after a gap says how long it missed beside its quality', async () => {
+  const one = await only([recording(CARRIED_ON)])
+
+  assert.equal(one.quality.level, 'warning')
+  assert.equal(one.quality.detail, 'ドロップ 0 / 欠け 3.5 秒')
+})
+
+test('a recording that carried on after a gap says where the gap began in its record, and marks it on the seek bar', async () => {
+  standing([recording(CARRIED_ON)])
+
+  const detail = await getRecording('d1')
+
+  assert.equal(detail?.interruptions?.sub, '欠け 23:09 から 3.5 秒')
+  assert.deepEqual(detail?.qualitySpots, [
+    { at: '0:09:16', packets: '欠け 3.5 秒', second: 556 },
+  ])
+})
+
+test('a recording that missed nothing says nothing about a gap', async () => {
+  standing([recording()])
+
+  const detail = await getRecording('d1')
+
+  assert.equal(detail?.interruptions?.sub, undefined)
+  assert.equal(detail?.quality.detail, 'ドロップ 0')
 })
 
 test('a recording nothing counted the overflows on carries none, not a count of zero', async () => {

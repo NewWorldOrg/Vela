@@ -3,6 +3,7 @@ import { cache } from 'react'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import {
   formatBytes,
+  formatClock,
   formatLength,
   formatMoment,
   formatMomentSpan,
@@ -43,6 +44,7 @@ type FaultResponder = components['schemas']['RecordingFaultResponder']
 type Fault = components['schemas']['RecordingFault']
 type TuneFailure = NonNullable<components['schemas']['TuneFailureKind']>
 type DropBucket = components['schemas']['DropBucketResponder']
+type GapResponder = components['schemas']['RecordingGapResponder']
 type Counted = number | string
 type Countable = Counted | null
 
@@ -252,7 +254,7 @@ export interface RecordingDetail extends Recording {
   synopsis?: string
   outcomeBody?: string
   reconcile?: { size: string; written: string; planned: string }
-  interruptions?: { main: string }
+  interruptions?: { main: string; sub?: string }
   tunerUnit?: { main: string }
   eoverflow?: string
   scramble?: { main: string }
@@ -551,6 +553,7 @@ function toDetail(
     reconcile: reconcileOf(d, base),
     interruptions: {
       main: `中断 ${d.interruptions.length} 回 / 再開 ${toInt(r.resumeCount)} 回`,
+      sub: gapsSaidOf(r.gaps),
     },
     tunerUnit: r.tunerDeviceId ? { main: r.tunerDeviceId } : undefined,
     eoverflow: overflows == null ? undefined : `${grouped(overflows)} 回`,
@@ -569,7 +572,9 @@ function toDetail(
     qualityRatio: measured
       ? ratioOf(dropped, totalPackets).toFixed(4)
       : undefined,
-    qualitySpots: spotsOf(d.positions.buckets),
+    qualitySpots: [...spotsOf(d.positions.buckets), ...gapSpotsOf(r.gaps)].sort(
+      (left, right) => left.second - right.second,
+    ),
     live: base.outcome === 'recording' ? liveOf(d, base, now) : undefined,
   }
 }
@@ -646,10 +651,47 @@ function qualityOf(
   return {
     measured: true,
     level: r.drops.quality,
-    detail: scrambled
-      ? `ドロップ ${grouped(dropped)} / スクランブル残存 ${grouped(scrambled)}`
-      : `ドロップ ${grouped(dropped)}`,
+    detail: [
+      `ドロップ ${grouped(dropped)}`,
+      scrambled ? `スクランブル残存 ${grouped(scrambled)}` : undefined,
+      missedOf(r),
+    ]
+      .filter((one): one is string => one !== undefined)
+      .join(' / '),
   }
+}
+
+function secondsOf(seconds: Counted): string {
+  return `${Number(seconds).toFixed(1)} 秒`
+}
+
+function missedOf(r: RecordingResponder): string | undefined {
+  const missed = toInt(r.missedMs)
+
+  return missed > 0 ? `欠け ${secondsOf(missed / 1000)}` : undefined
+}
+
+function gapsSaidOf(gaps: GapResponder[]): string | undefined {
+  return gaps.length === 0
+    ? undefined
+    : `欠け ${gaps
+        .map(
+          (gap) =>
+            `${formatClock(Date.parse(gap.from))} から ${secondsOf(gap.seconds)}`,
+        )
+        .join('・')}`
+}
+
+export function gapSpotsOf(gaps: GapResponder[]): QualitySpot[] {
+  return gaps.map((gap) => {
+    const second = Math.max(0, Math.floor(Number(gap.atSecond)))
+
+    return {
+      at: formatPlayhead(second),
+      packets: `欠け ${secondsOf(gap.seconds)}`,
+      second,
+    }
+  })
 }
 
 function ratioOf(dropped: number, total: number): number {

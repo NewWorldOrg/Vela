@@ -116,7 +116,7 @@ export function RecordingRecord({
             </div>
             {spots.map((spot) => (
               <div
-                key={spot.at}
+                key={`${spot.second}-${spot.packets}`}
                 className="flex flex-wrap items-center gap-3 border-b border-dashed border-line px-0.5 py-3 text-ui last:border-b-0"
               >
                 <span className="w-[7.6em] font-code font-medium whitespace-nowrap">
@@ -144,7 +144,11 @@ export function RecordingRecord({
           <DetailKeyRow label="停止理由" main={d.stopReason} plain />
         )}
         {d.interruptions && (
-          <DetailKeyRow label="中断と再開" main={d.interruptions.main} />
+          <DetailKeyRow
+            label="中断と再開"
+            main={d.interruptions.main}
+            sub={d.interruptions.sub}
+          />
         )}
         {d.scramble && (
           <DetailKeyRow
