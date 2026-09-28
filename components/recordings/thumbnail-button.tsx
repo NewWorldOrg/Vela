@@ -31,6 +31,15 @@ const DREW: Record<ThumbnailRemake, { drew: boolean; text: string }> = {
 
 const NOT_YET_DREW = { drew: false, text: NOT_YET_IN_THIS_BUILD_SAYING }
 
+export function remadeSaying(result: ThumbnailWrite): {
+  drew: boolean
+  text: string
+} {
+  return result.state === 'rejected'
+    ? { drew: false, text: result.message }
+    : shapeFor(DREW, result.remake, NOT_YET_DREW)
+}
+
 function refusing(recording: Recording): string | undefined {
   if (recording.outcome === 'recording') {
     return '録画中は作り直せません'
@@ -70,11 +79,7 @@ export function ThumbnailButton({
     startTransition(async () => {
       setNotice(undefined)
 
-      const result = await onRemake(recording.id)
-      const said =
-        result.state === 'rejected'
-          ? { drew: false, text: result.message }
-          : shapeFor(DREW, result.remake, NOT_YET_DREW)
+      const said = remadeSaying(await onRemake(recording.id))
 
       if (said.drew) {
         noteThumbnailRedrawn(recording.id)

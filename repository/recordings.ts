@@ -81,6 +81,7 @@ export interface Recording {
   description?: string
   cast?: string[]
   segments?: number
+  gap?: { label: string; detail: string }
   channel: string
   channelNo?: string
   channelLogo?: StationLogo
@@ -489,6 +490,7 @@ export function toRecording(
     description: r.programme.summary || undefined,
     cast: cast.length > 0 ? cast : undefined,
     segments,
+    gap: gapOf(r),
     genre: genresOf(r)[0],
     channel: channel?.name || serviceKeyOf(r),
     channelNo: channel?.no,
@@ -671,6 +673,13 @@ function missedOf(r: RecordingResponder): string | undefined {
   const missed = toInt(r.missedMs ?? 0)
 
   return missed > 0 ? `欠け ${secondsOf(missed / 1000)}` : undefined
+}
+
+function gapOf(r: RecordingResponder): Recording['gap'] {
+  const label = missedOf(r)
+  const detail = gapsSaidOf(gapsOf(r))
+
+  return label && detail ? { label, detail } : undefined
 }
 
 /** The gaps a recording kept; an API from before gaps were kept answers none. */

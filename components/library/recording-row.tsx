@@ -135,6 +135,16 @@ export function RecordingRow({
                   {r.segments} セグメント
                 </span>
               )}
+              {r.gap && (
+                <InFull says={r.gap.detail}>
+                  <span
+                    data-slot="gap-mark"
+                    className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[calc(9rem/16)] text-micro font-bold text-ink-2"
+                  >
+                    {r.gap.label}
+                  </span>
+                </InFull>
+              )}
               {r.note && (
                 <InFull says={r.note}>
                   <span>{r.note}</span>

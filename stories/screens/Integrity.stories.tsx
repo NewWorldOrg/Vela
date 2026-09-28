@@ -3,10 +3,12 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { FindingDiscarded, SweepWrite } from '@/repository/integrity'
+import type { ThumbnailWrite } from '@/repository/recordings'
 import {
   INTEGRITY_CLEAR_FIXTURE,
   INTEGRITY_FIXTURE,
   INTEGRITY_MORE_THAN_FIT_FIXTURE,
+  INTEGRITY_THUMBNAIL_MISSING_FIXTURE,
 } from '@/stories/fixtures/integrity'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { IntegrityView } from '@/components/integrity/integrity-page'
@@ -21,6 +23,14 @@ async function throwing(findingId: string): Promise<FindingDiscarded> {
   thrownAway.push(findingId)
 
   return { state: 'ok' }
+}
+
+const redrawnFor: string[] = []
+
+async function redrawing(recordingId: string): Promise<ThumbnailWrite> {
+  redrawnFor.push(recordingId)
+
+  return { state: 'ok', remake: 'drawn' }
 }
 
 const STILL_BEING_WRITTEN = 'このファイルは書き込み中のため、削除していません。'
@@ -45,7 +55,7 @@ const meta = {
     },
     layout: 'fullscreen',
   },
-  args: { onRun: swept, onDelete: throwing },
+  args: { onRun: swept, onDelete: throwing, onRemake: redrawing },
   decorators: [inTheApp],
 } satisfies Meta<typeof IntegrityView>
 
@@ -173,6 +183,7 @@ function SweepRefusedThenAStrayThrownAway() {
     <IntegrityView
       result={result}
       onRun={tooSoon}
+      onRemake={redrawing}
       onDelete={async (findingId): Promise<FindingDiscarded> => {
         setResult((held) => ({
           ...held,
@@ -205,6 +216,60 @@ export const 断りは片付いたあとまで残らない: Story = {
     await waitFor(() => expect(canvas.queryByText(TOO_SOON)).toBeNull())
     await expect(
       canvas.getByText(`${STRAY.path} を削除しました。`),
+    ).toBeVisible()
+  },
+}
+
+export const サムネイルが無い: Story = {
+  args: { result: INTEGRITY_THUMBNAIL_MISSING_FIXTURE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const missing = within(
+      canvas.getByRole('row', { name: /recording-4755\.jpg/ }),
+    )
+
+    redrawnFor.length = 0
+
+    await afterTheArrival(canvasElement)
+    await expect(
+      missing.getByText('サムネイルは作成済みだが画像ファイルが無い'),
+    ).toBeVisible()
+    await expect(missing.queryByRole('button', { name: '削除' })).toBeNull()
+
+    const redraw = missing.getByRole('button', { name: '作り直す' })
+
+    await expect(redraw).toHaveAttribute('data-size', 'sm')
+    await expect(
+      within(
+        canvas.getByRole('row', { name: /recording-4812\.jpg/ }),
+      ).queryByRole('button', { name: '作り直す' }),
+    ).toBeNull()
+
+    await userEvent.click(redraw)
+
+    await waitFor(() => expect(redrawnFor).toEqual(['4755']))
+    await expect(
+      await canvas.findByText(
+        'recording-4755.jpg のサムネイルを作り直しました。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const サムネイルを作り直せなかったとき: Story = {
+  args: {
+    result: INTEGRITY_THUMBNAIL_MISSING_FIXTURE,
+    onRemake: async (): Promise<ThumbnailWrite> => ({
+      state: 'ok',
+      remake: 'outOfReach',
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '作り直す' }))
+    await expect(
+      await canvas.findByText('録画ファイルに到達できません。'),
     ).toBeVisible()
   },
 }

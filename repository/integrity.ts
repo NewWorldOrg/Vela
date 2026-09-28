@@ -74,6 +74,7 @@ const REASON: Record<IntegrityFault, string> = {
   fileMissing: '録画の記録に行があるが実ファイルが無い',
   fileEmpty: '0 バイト',
   emptyThoughComplete: '0 バイト(録画は完走している)',
+  thumbnailMissing: 'サムネイルは作成済みだが画像ファイルが無い',
 }
 
 export async function getIntegrity(): Promise<IntegrityResult> {

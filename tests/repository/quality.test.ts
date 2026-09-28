@@ -441,6 +441,84 @@ test('LOCK しない異常のあるチューナーは受信不可で、タイル
   assert.equal(health?.levelLabel, '受信不可 2')
 })
 
+test('選局の失敗が続くチューナーは選局失敗で、チューナー画面と同じ理由を添え、タイルもその語で数える', async () => {
+  standing()
+  store.tuners = [
+    {
+      deviceId: 'adapter0.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+      standing: 'warning',
+      cannotLock: false,
+      trouble: 'tuneFailing',
+    },
+    {
+      deviceId: 'adapter2.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+      standing: 'warning',
+      cannotLock: false,
+      trouble: 'tuneFailing',
+    },
+    {
+      deviceId: 'adapter3.frontend0',
+      measures: measures(),
+      signal: signal(),
+      standing: 'good',
+      cannotLock: false,
+      trouble: null,
+    },
+  ]
+
+  const result = await getQuality()
+  const health = result.stats.find((one) => one.key === 'health')
+
+  assert.deepEqual(result.tuners[0].state, {
+    level: 'warn',
+    label: '選局失敗',
+    explanation:
+      '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+  })
+  assert.deepEqual(result.tuners[2].state, { level: 'good', label: '健全' })
+  assert.equal(health?.value, '1 / 3')
+  assert.equal(health?.level, 'warn')
+  assert.equal(health?.levelLabel, '選局失敗 2')
+})
+
+test('ほかの理由で割り当てが止まったチューナーは割当停止で、受信不可があればタイルは受信不可を先に言う', async () => {
+  standing()
+  store.tuners = [
+    {
+      deviceId: 'adapter0.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+      standing: 'mayNotBeWatchable',
+      cannotLock: false,
+      trouble: 'deviceFailed',
+    },
+    {
+      deviceId: 'adapter2.frontend0',
+      measures: everyMeasure({ state: 'nothingToMeasure', subjects: 0 }),
+      signal: signal(),
+      standing: 'mayNotBeWatchable',
+      cannotLock: true,
+      trouble: 'noLock',
+    },
+  ]
+
+  const result = await getQuality()
+  const health = result.stats.find((one) => one.key === 'health')
+
+  assert.deepEqual(result.tuners[0].state, {
+    level: 'bad',
+    label: '割当停止',
+    explanation:
+      '使用中にデバイスが応答しなくなった。開き直せた時点で割り当てが戻る。',
+  })
+  assert.equal(result.tuners[1].state.label, '受信不可')
+  assert.equal(health?.levelLabel, '受信不可 1')
+})
+
 test('測られていないチューナーも数のうちに残り、良好には数えない', async () => {
   standing()
   store.tuners = [
@@ -755,6 +833,68 @@ test('電波を掴めないチューナーの異常は、題と観測を回数�
   assert.equal(anomaly.applied, undefined)
   assert.equal(anomaly.restatedBy, '再掲 · チューナー')
   assert.equal(anomaly.classification, '受信不可')
+})
+
+test('選局の失敗が続くチューナーの再掲は、チューナー画面と同じ理由の文を値の行に出し、適用閾値を書かない', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      breached: 'lockRate',
+      owner: 'tuner',
+      restated: true,
+      classification: 'TuneFailing',
+      subjectKind: 'tuner',
+      subjectKey: 'adapter0.frontend0',
+      observed: 0,
+      appliedValue: 0.99,
+    }),
+  ]
+  store.restated = 1
+
+  const anomaly = (await getQuality()).anomalies.items[0]
+
+  assert.equal(anomaly.title, 'チューナーの選局が失敗している')
+  assert.equal(
+    anomaly.observed,
+    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+  )
+  assert.equal(anomaly.applied, undefined)
+  assert.equal(anomaly.level, 'warn')
+  assert.equal(anomaly.classification, '選局失敗')
+})
+
+test('ほかの理由で割り当てが止まったチューナーの再掲は割当停止で、種類ごとの理由を出す', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      breached: 'lockRate',
+      owner: 'tuner',
+      restated: true,
+      classification: 'LedgerDisagrees',
+      subjectKind: 'tuner',
+      subjectKey: 'adapter0.frontend0',
+    }),
+    incident({
+      breached: 'lockRate',
+      owner: 'tuner',
+      restated: true,
+      classification: 'Faulted',
+      subjectKind: 'tuner',
+      subjectKey: 'adapter2.frontend0',
+    }),
+  ]
+  store.restated = 2
+
+  const [disagrees, faulted] = (await getQuality()).anomalies.items
+
+  assert.equal(disagrees.title, 'チューナーの割り当てが止まっている')
+  assert.equal(
+    disagrees.observed,
+    '一覧の種別を、このチューナーは受信できない。一致するまで割り当てられない。',
+  )
+  assert.equal(disagrees.level, 'bad')
+  assert.equal(disagrees.classification, '割当停止')
+  assert.equal(faulted.observed, '理由はまだ分からない。')
 })
 
 test('英字だけの未知の分類は、生の綴りではなく汎用の語に落とす', async () => {

@@ -2248,6 +2248,7 @@ export interface components {
       | 'fileMissing'
       | 'fileEmpty'
       | 'emptyThoughComplete'
+      | 'thumbnailMissing'
     IntegrityFindingRefusedResponder: {
       /** Format: uuid */
       findingId: string
@@ -3024,6 +3025,7 @@ export interface components {
       signal: components['schemas']['QualitySignalResponder'][]
       standing: components['schemas']['QualityStanding']
       cannotLock: boolean
+      trouble: null | components['schemas']['TunerTroubleKind']
     }
     QualityVerdictResponder: {
       metric: components['schemas']['QualityMetric']
@@ -4066,6 +4068,17 @@ export interface components {
     /** @enum {string} */
     TunerState:
       'unspecified' | 'idle' | 'busy' | 'disabled' | 'faulted' | 'draining'
+    /** @enum {null|string} */
+    TunerTroubleKind:
+      | 'noLock'
+      | 'repeatedTuneFailure'
+      | 'ledgerDisagrees'
+      | 'deviceFailed'
+      | 'deviceFailedAgain'
+      | 'faulted'
+      | 'tuneFailing'
+      | 'degraded'
+      | null
     /** @enum {string} */
     TuneSystem: 'unspecified' | 'isdbT' | 'isdbSBs' | 'isdbSCs110'
     TuningParametersRequest: {

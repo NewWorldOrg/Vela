@@ -11184,7 +11184,8 @@
           "noLedgerRow",
           "fileMissing",
           "fileEmpty",
-          "emptyThoughComplete"
+          "emptyThoughComplete",
+          "thumbnailMissing"
         ],
         "type": "string"
       },
@@ -14352,7 +14353,8 @@
           "measures",
           "signal",
           "standing",
-          "cannotLock"
+          "cannotLock",
+          "trouble"
         ],
         "type": "object",
         "properties": {
@@ -14379,6 +14381,16 @@
           },
           "cannotLock": {
             "type": "boolean"
+          },
+          "trouble": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TunerTroubleKind"
+              }
+            ]
           }
         }
       },
@@ -18421,6 +18433,23 @@
           "draining"
         ],
         "type": "string"
+      },
+      "TunerTroubleKind": {
+        "enum": [
+          "noLock",
+          "repeatedTuneFailure",
+          "ledgerDisagrees",
+          "deviceFailed",
+          "deviceFailedAgain",
+          "faulted",
+          "tuneFailing",
+          "degraded",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
       },
       "TuneSystem": {
         "enum": [

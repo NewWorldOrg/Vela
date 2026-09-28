@@ -200,6 +200,7 @@ test('each fault the sweep can raise is given a reason of its own', async () => 
     'fileMissing',
     'fileEmpty',
     'emptyThoughComplete',
+    'thumbnailMissing',
   ] as const
   const reasons = new Set<string>()
 
@@ -250,6 +251,22 @@ test('a file that is gone is not weighed as empty', async () => {
 
   assert.equal(one.size, '—')
   assert.equal(one.sizeNote, '録画の記録では 15,032,385,536 B')
+})
+
+test('a thumbnail that is not there names its recording, weighs nothing and has no size to disagree with', async () => {
+  const one = await only({
+    fault: 'thumbnailMissing',
+    outputRoot: 'thumbnails',
+    path: 'recording-4755.jpg',
+    recordingId: '4755',
+    observedSize: null,
+    ledgerSize: null,
+  })
+
+  assert.equal(one.reason, 'サムネイルは作成済みだが画像ファイルが無い')
+  assert.equal(one.recordingId, '4755')
+  assert.equal(one.size, '—')
+  assert.equal(one.sizeNote, undefined)
 })
 
 test('a file that is empty is weighed, and reads as zero rather than as nothing', async () => {

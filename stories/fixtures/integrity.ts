@@ -105,3 +105,32 @@ export const INTEGRITY_MORE_THAN_FIT_FIXTURE: IntegrityResult = {
     })),
   ).flat(),
 }
+
+export const INTEGRITY_THUMBNAIL_MISSING_FIXTURE: IntegrityResult = {
+  check: CHECK,
+  total: 2,
+  roots: ROOTS,
+  findings: [
+    {
+      key: 'thumbnails/recording-4755.jpg',
+      id: '00000000-0000-4000-8000-000000000011',
+      fault: 'thumbnailMissing',
+      reason: 'サムネイルは作成済みだが画像ファイルが無い',
+      root: 'thumbnails',
+      path: 'recording-4755.jpg',
+      recordingId: '4755',
+      size: '—',
+      noticedAt: '08/08 03:10',
+    },
+    {
+      key: 'thumbnails/recording-4812.jpg',
+      id: '00000000-0000-4000-8000-000000000012',
+      fault: 'noLedgerRow',
+      reason: '録画の記録に対応する行が無い',
+      root: 'thumbnails',
+      path: 'recording-4812.jpg',
+      size: '31,204 B',
+      noticedAt: '08/08 03:10',
+    },
+  ],
+}

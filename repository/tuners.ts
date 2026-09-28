@@ -14,6 +14,14 @@ import { toInt } from '@/repository/programmes'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { SYSTEM_LABEL } from '@/repository/scan-systems'
 import { promisedEndOf, tuningLabelOf } from '@/repository/tuning'
+import {
+  DEVICE_FAILED,
+  DEVICE_FAILED_AGAIN,
+  NOT_TOLD_WHY,
+  REPEATED_TUNE_FAILURE,
+  TUNE_FAILING,
+  kindsDisagree,
+} from '@/lib/tuner-reasons'
 
 type TunerLedgerResponder = components['schemas']['TunerLedgerResponder']
 type TunerObservationResponder =
@@ -935,25 +943,19 @@ function toState(
   return { state: 'ok', stateLabel: TUNER_STATE_LABEL.ok }
 }
 
-const UNTIL_THE_DRIVER_RESTARTS = 'driver を起動し直すまで割り当てられない。'
-
-const NOT_TOLD_WHY = '理由はまだ分からない。'
-
 const FAULT_SAID: Record<
   TunerFaultKind,
   (observation: TunerObservationResponder) => string
 > = {
   unspecified: () => NOT_TOLD_WHY,
   ledgerDisagrees: (observation) =>
-    `一覧では${wordFor(KIND_TEXT, observation.faultDeclaredKind ?? 'unspecified')}、このチューナーが受信できるのは${observation.faultReceivableKinds
-      .map((kind) => wordFor(KIND_TEXT, kind))
-      .join('・')}。一致するまで割り当てられない。`,
-  deviceFailed: () =>
-    '使用中にデバイスが応答しなくなった。開き直せた時点で割り当てが戻る。',
-  deviceFailedAgain: () =>
-    `戻した直後にデバイスがまた応答しなくなった。${UNTIL_THE_DRIVER_RESTARTS}`,
-  repeatedTuneFailure: () =>
-    `同じチャンネルで続けて選局できなかった。${UNTIL_THE_DRIVER_RESTARTS}`,
+    kindsDisagree(
+      wordFor(KIND_TEXT, observation.faultDeclaredKind ?? 'unspecified'),
+      observation.faultReceivableKinds.map((kind) => wordFor(KIND_TEXT, kind)),
+    ),
+  deviceFailed: () => DEVICE_FAILED,
+  deviceFailedAgain: () => DEVICE_FAILED_AGAIN,
+  repeatedTuneFailure: () => REPEATED_TUNE_FAILURE,
 }
 
 function whyItIsNotHandedOut(observation: TunerObservationResponder): string {
@@ -966,8 +968,7 @@ function whyItIsNotHandedOut(observation: TunerObservationResponder): string {
 
 const DEGRADED_SAID: Record<TunerDegradedKind, string> = {
   unspecified: NOT_TOLD_WHY,
-  tuneFailing:
-    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+  tuneFailing: TUNE_FAILING,
 }
 
 function whyItIsNotQuiteWell(observation: TunerObservationResponder): string {

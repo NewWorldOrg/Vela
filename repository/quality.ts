@@ -12,6 +12,14 @@ import {
   wordFor,
 } from '@/lib/not-yet-in-this-build'
 import { couldNot } from '@/lib/try-again'
+import {
+  DEVICE_FAILED,
+  DEVICE_FAILED_AGAIN,
+  KINDS_DISAGREE,
+  NOT_TOLD_WHY,
+  REPEATED_TUNE_FAILURE,
+  TUNE_FAILING,
+} from '@/lib/tuner-reasons'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { toInt } from '@/repository/programmes'
@@ -33,6 +41,7 @@ type ThresholdResponder = components['schemas']['QualityThresholdResponder']
 type State = components['schemas']['QualityState']
 type Standing = components['schemas']['QualityStanding']
 type IncidentResponder = components['schemas']['QualityIncidentResponder']
+type TroubleKind = NonNullable<components['schemas']['TunerTroubleKind']>
 type IncidentOwner = components['schemas']['QualityIncidentOwner']
 type SubjectKind = components['schemas']['QualitySubjectKind']
 type SupplyResponder = components['schemas']['QualitySupplyResponder']
@@ -101,7 +110,7 @@ export interface QualityTuner {
   id: string
   device: string
   hardware: string
-  state: { level: QualityLevel; label: string }
+  state: { level: QualityLevel; label: string; explanation?: string }
   drop: QualityTunerCell
   lock: QualityTunerCell
   cnr: QualityTunerCell
@@ -337,14 +346,82 @@ const BREACH_LEVELS: Record<QualityThresholdKey, QualityLevel> = {
   supplySilence: 'unreachable',
 }
 
-const CANNOT_LOCK_CLASSIFICATION = 'NoLock'
-
-const CANNOT_LOCK_TITLE = 'チューナーが電波を掴めない'
-
 const CANNOT_LOCK_OBSERVED = '観測 3 回続けて失敗'
 
-const CLASSIFICATION_LABELS: Record<string, string> = {
-  [CANNOT_LOCK_CLASSIFICATION]: CANNOT_LOCK,
+export const OUT_OF_SERVICE = '割当停止'
+
+export const TUNE_FAILING_LABEL = '選局失敗'
+
+export const DEGRADED_LABEL = '健全性低下'
+
+interface TunerTrouble {
+  label: string
+  level: Extract<QualityLevel, 'warn' | 'bad'>
+  title: string
+  said: string
+}
+
+const OUT_OF_SERVICE_TITLE = 'チューナーの割り当てが止まっている'
+
+function outOfService(said: string): TunerTrouble {
+  return {
+    label: OUT_OF_SERVICE,
+    level: 'bad',
+    title: OUT_OF_SERVICE_TITLE,
+    said,
+  }
+}
+
+const TUNER_TROUBLES: Record<TroubleKind, TunerTrouble> = {
+  noLock: {
+    label: CANNOT_LOCK,
+    level: 'bad',
+    title: 'チューナーが電波を掴めない',
+    said: REPEATED_TUNE_FAILURE,
+  },
+  repeatedTuneFailure: outOfService(REPEATED_TUNE_FAILURE),
+  ledgerDisagrees: outOfService(KINDS_DISAGREE),
+  deviceFailed: outOfService(DEVICE_FAILED),
+  deviceFailedAgain: outOfService(DEVICE_FAILED_AGAIN),
+  faulted: outOfService(NOT_TOLD_WHY),
+  tuneFailing: {
+    label: TUNE_FAILING_LABEL,
+    level: 'warn',
+    title: 'チューナーの選局が失敗している',
+    said: TUNE_FAILING,
+  },
+  degraded: {
+    label: DEGRADED_LABEL,
+    level: 'warn',
+    title: 'チューナーの健全性が下がっている',
+    said: NOT_TOLD_WHY,
+  },
+}
+
+const TROUBLE_FIRST: string[] = [
+  CANNOT_LOCK,
+  OUT_OF_SERVICE,
+  TUNE_FAILING_LABEL,
+  DEGRADED_LABEL,
+]
+
+function troubleOf(kind: string | null | undefined): TunerTrouble | undefined {
+  return kind
+    ? shapeFor(TUNER_TROUBLES, kind as TroubleKind, undefined)
+    : undefined
+}
+
+function troubleClassifiedAs(
+  classification: string | null,
+): { kind: TroubleKind; trouble: TunerTrouble } | undefined {
+  if (!classification) {
+    return undefined
+  }
+
+  const kind = classification.charAt(0).toLowerCase() + classification.slice(1)
+  const trouble = troubleOf(kind)
+
+  return trouble ? { kind: kind as TroubleKind, trouble } : undefined
 }
 
 const RAW_CLASSIFICATION_SPELLING = /^[A-Za-z]+$/
@@ -667,22 +744,39 @@ function toAnomaly(
   known: GuideChannel[],
   names: ReadonlyMap<string, RecordingName>,
 ): QualityAnomaly {
+  const troubled =
+    one.owner === 'tuner' ? troubleClassifiedAs(one.classification) : undefined
+
+  if (troubled) {
+    return {
+      id: one.id,
+      title: troubled.trouble.title,
+      subject: subjectOf(one, known, names),
+      observed:
+        troubled.kind === 'noLock'
+          ? CANNOT_LOCK_OBSERVED
+          : troubled.trouble.said,
+      level: troubled.trouble.level,
+      levelLabel: QUALITY_LEVEL_LABEL[troubled.trouble.level],
+      restatedBy: one.restated
+        ? `再掲 · ${wordFor(OWNERS, one.owner)}`
+        : undefined,
+      classification: troubled.trouble.label,
+      when: `${formatMoment(one.detectedAt)} 発生 · ${STILL_STANDING}`,
+    }
+  }
+
   const level = shapeFor(BREACH_LEVELS, one.breached, 'unsupported')
-  const cannotLock = one.classification === CANNOT_LOCK_CLASSIFICATION
 
   return {
     id: one.id,
-    title: cannotLock ? CANNOT_LOCK_TITLE : titleOf(one),
+    title: titleOf(one),
     subject: subjectOf(one, known, names),
-    observed: cannotLock
-      ? CANNOT_LOCK_OBSERVED
-      : `${one.breached === SUPPLY_SILENCE ? '途絶' : '観測'} ${measured(
-          one.observed,
-          one.breached,
-        )}`,
-    applied: cannotLock
-      ? undefined
-      : `適用閾値 ${measured(one.appliedValue, one.breached)}`,
+    observed: `${one.breached === SUPPLY_SILENCE ? '途絶' : '観測'} ${measured(
+      one.observed,
+      one.breached,
+    )}`,
+    applied: `適用閾値 ${measured(one.appliedValue, one.breached)}`,
     level,
     levelLabel: QUALITY_LEVEL_LABEL[level],
     restatedBy: one.restated
@@ -696,10 +790,6 @@ function toAnomaly(
 function classificationOf(raw: string | null): string | undefined {
   if (!raw) {
     return undefined
-  }
-
-  if (Object.hasOwn(CLASSIFICATION_LABELS, raw)) {
-    return CLASSIFICATION_LABELS[raw]
   }
 
   return RAW_CLASSIFICATION_SPELLING.test(raw) ? NOT_YET_IN_THIS_BUILD : raw
@@ -828,10 +918,12 @@ function worstState(
   const unwell = states.filter((state) => state.level !== 'good')
   const level = worst(unwell.map((state) => state.level))
 
+  const atWorst = unwell.filter((state) => state.level === level)
+
   return (
-    unwell.find(
-      (state) => state.level === level && state.label === CANNOT_LOCK,
-    ) ?? unwell.find((state) => state.level === level)
+    TROUBLE_FIRST.map((label) =>
+      atWorst.find((state) => state.label === label),
+    ).find((state) => state !== undefined) ?? atWorst[0]
   )
 }
 
@@ -936,11 +1028,20 @@ function toTuner(one: TunerResponder): QualityTuner {
 }
 
 function tunerState(one: TunerResponder): QualityTuner['state'] {
+  const level = shapeFor(LEVEL_OF_STANDING, one.standing, 'unsupported')
+  const trouble = troubleOf(one.trouble)
+
+  if (trouble) {
+    return {
+      level: trouble.level === 'bad' ? 'bad' : worst([level, trouble.level]),
+      label: trouble.label,
+      explanation: trouble.said,
+    }
+  }
+
   if (one.cannotLock) {
     return { level: 'bad', label: CANNOT_LOCK }
   }
-
-  const level = shapeFor(LEVEL_OF_STANDING, one.standing, 'unsupported')
 
   return {
     level,
