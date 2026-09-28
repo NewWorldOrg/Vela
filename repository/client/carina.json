@@ -1623,6 +1623,16 @@
               }
             }
           },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfScanStartedResponder"
+                }
+              }
+            }
+          },
           "503": {
             "description": "Service Unavailable",
             "content": {
@@ -9308,6 +9318,7 @@
           "candidateCount",
           "selectedChannel",
           "betterChannel",
+          "reception",
           "candidates",
           "logoDeclaration",
           "logo"
@@ -9383,6 +9394,9 @@
                 "$ref": "#/components/schemas/ScanTargetResponder"
               }
             ]
+          },
+          "reception": {
+            "$ref": "#/components/schemas/ServiceReception"
           },
           "candidates": {
             "type": "array",
@@ -17081,6 +17095,14 @@
             "format": "int32"
           }
         }
+      },
+      "ServiceReception": {
+        "enum": [
+          "receivable",
+          "noTunerInService",
+          "unknown"
+        ],
+        "type": "string"
       },
       "SessionPurpose": {
         "enum": [

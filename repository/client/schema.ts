@@ -1827,6 +1827,7 @@ export interface components {
       candidateCount: number | string
       selectedChannel: null | components['schemas']['ScanTargetResponder']
       betterChannel: null | components['schemas']['ScanTargetResponder']
+      reception: components['schemas']['ServiceReception']
       candidates: components['schemas']['CandidateChannelResponder'][]
       logoDeclaration: components['schemas']['StationLogoDeclaration']
       logo: null | components['schemas']['StationLogoResponder']
@@ -3753,6 +3754,8 @@ export interface components {
       hoursOfSilence: number | string
     }
     /** @enum {string} */
+    ServiceReception: 'receivable' | 'noTunerInService' | 'unknown'
+    /** @enum {string} */
     SessionPurpose:
       | 'unspecified'
       | 'recording'
@@ -5302,6 +5305,15 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfScanRefusedResponder']
+        }
+      }
+      /** @description Unprocessable Entity */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfScanStartedResponder']
         }
       }
       /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
