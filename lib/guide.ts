@@ -412,7 +412,15 @@ export function fallsWithin(
   )
 }
 
-export function seamTopOf({
+const SEAM_SLACK_PX = 1
+
+export interface OpeningSeam {
+  top: number
+  line: boolean
+}
+
+/** 番組表の入りで覆いが割れる高さと、そこを今の線として玉が走るかどうか。 */
+export function openingSeamOf({
   nowMin,
   hourPx,
   scrollTop,
@@ -424,13 +432,16 @@ export function seamTopOf({
   scrollTop: number
   headingPx: number
   viewPx: number
-}): number {
-  if (nowMin === undefined) {
-    return viewPx / 2
+}): OpeningSeam {
+  const middle = (headingPx + viewPx) / 2
+
+  if (nowMin !== undefined) {
+    const top = headingPx + (nowMin / 60) * hourPx - scrollTop
+
+    if (Math.abs(top - middle) <= SEAM_SLACK_PX) {
+      return { top, line: true }
+    }
   }
 
-  return Math.min(
-    viewPx,
-    Math.max(headingPx, headingPx + (nowMin / 60) * hourPx - scrollTop),
-  )
+  return { top: middle, line: false }
 }

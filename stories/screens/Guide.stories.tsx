@@ -431,6 +431,117 @@ export const 現在時刻の位置で開く: Story = {
   },
 }
 
+const LATE_AT_NIGHT = {
+  ...day,
+  nowMin: (26 - 4) * 60 + 13,
+  nowLabel: '02:13',
+}
+
+const THE_LAST_MINUTE_OF_THE_DAY = {
+  ...day,
+  nowMin: 24 * 60 - 1,
+  nowLabel: '03:59',
+}
+
+const THE_FIRST_MINUTE_OF_THE_DAY = {
+  ...day,
+  nowMin: 0,
+  nowLabel: '04:00',
+  programs: PROGRAM_FIXTURES,
+}
+
+async function opensInTheMiddle(canvasElement: HTMLElement): Promise<void> {
+  await waitFor(() =>
+    expect(canvasElement.querySelector('[data-guide-opening]')).not.toBeNull(),
+  )
+
+  const opening = partOf(canvasElement, '[data-guide-opening]')
+  const scroller = partOf(canvasElement, '[data-guide-scroll]')
+  const heading = partOf(canvasElement, '[data-guide-heading]')
+    .parentElement as HTMLElement
+
+  await expect(opening.querySelector('.guide-opening-ball')).toBeNull()
+  await expect(opening.querySelector('.guide-opening-line')).toBeNull()
+  await expect(
+    parseFloat(partOf(opening, '.guide-opening-below').style.top),
+  ).toBeCloseTo((heading.offsetHeight + scroller.clientHeight) / 2, 0)
+
+  await waitFor(
+    () =>
+      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
+    { timeout: 4000 },
+  )
+
+  const grid = scroller.getBoundingClientRect()
+  const line = partOf(canvasElement, '[data-now-line]').getBoundingClientRect()
+
+  await expect(line.top).toBeGreaterThanOrEqual(grid.top)
+  await expect(line.top).toBeLessThanOrEqual(grid.bottom)
+}
+
+export const 昼は今の線から割れて開く: Story = {
+  args: { guide: day },
+  parameters: { screen: A_LAPTOP },
+  globals: { a11y: { manual: true } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-guide-opening]'),
+      ).not.toBeNull(),
+    )
+
+    const opening = partOf(canvasElement, '[data-guide-opening]')
+    const scroller = partOf(canvasElement, '[data-guide-scroll]')
+    const heading = partOf(canvasElement, '[data-guide-heading]')
+      .parentElement as HTMLElement
+    const seam = parseFloat(partOf(opening, '.guide-opening-below').style.top)
+
+    await expect(opening.querySelector('.guide-opening-ball')).not.toBeNull()
+    await expect(seam).toBeCloseTo(
+      (heading.offsetHeight + scroller.clientHeight) / 2,
+      -0.5,
+    )
+    await expect(scroller.querySelector('script')).toBeNull()
+
+    await waitFor(() => expect(opening).toHaveAttribute('data-open'), {
+      timeout: 4000,
+    })
+
+    const line = partOf(canvasElement, '[data-now-line]')
+
+    await expect(
+      line.getBoundingClientRect().top - scroller.getBoundingClientRect().top,
+    ).toBeCloseTo(seam, -0.5)
+  },
+}
+
+export const 深夜は真ん中から割れて開く: Story = {
+  args: { guide: LATE_AT_NIGHT },
+  parameters: { screen: A_LAPTOP },
+  globals: { a11y: { manual: true } },
+  play: async ({ canvasElement }) => {
+    await opensInTheMiddle(canvasElement)
+  },
+}
+
+export const 放送日の終わる間際も真ん中から割れて開く: Story = {
+  args: { guide: THE_LAST_MINUTE_OF_THE_DAY },
+  parameters: { screen: A_LAPTOP },
+  globals: { a11y: { manual: true } },
+  play: async ({ canvasElement }) => {
+    await opensInTheMiddle(canvasElement)
+  },
+}
+
+export const 放送日の始まりも真ん中から割れて開く: Story = {
+  args: { guide: THE_FIRST_MINUTE_OF_THE_DAY },
+  parameters: { screen: A_LAPTOP },
+  globals: { a11y: { manual: true } },
+  play: async ({ canvasElement }) => {
+    await opensInTheMiddle(canvasElement)
+  },
+}
+
 const A_WHILE_MIN = 6
 
 function clockAt(windowStartHour: number, min: number): string {
