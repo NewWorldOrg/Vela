@@ -96,6 +96,7 @@ export const OIDC_UNCONFIGURED: OidcConfig = {
   discoveryUrl: '',
   clientId: '',
   secretHeld: false,
+  secretLost: false,
   allowedGroups: [],
   allowedHostedDomains: [],
   admitsEveryone: true,
@@ -109,6 +110,7 @@ export const OIDC_REACHABLE: OidcConfig = {
     'https://id.example.test/common/v2.0/.well-known/openid-configuration',
   clientId: '00000000-1111-4222-8333-444444444444',
   secretHeld: true,
+  secretLost: false,
   allowedGroups: ['00000000-aaaa-4bbb-8ccc-dddddddddddd'],
   allowedHostedDomains: [],
   admitsEveryone: false,
@@ -120,6 +122,14 @@ export const OIDC_ADMITS_EVERYONE: OidcConfig = {
   ...OIDC_REACHABLE,
   allowedGroups: [],
   admitsEveryone: true,
+}
+
+export const OIDC_SECRET_LOST: OidcConfig = {
+  ...OIDC_REACHABLE,
+  configured: false,
+  secretHeld: false,
+  secretLost: true,
+  reach: 'notConfigured',
 }
 
 export const OIDC_OUT_OF_REACH: OidcConfig = {

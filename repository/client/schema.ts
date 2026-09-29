@@ -2529,6 +2529,7 @@ export interface components {
       | 'clientIdInvalid'
       | 'restrictionInvalid'
       | 'providerUnreachable'
+      | 'secretLost'
     OidcConfigRefusedResponder: {
       refusal: components['schemas']['OidcConfigRefusal']
     }
@@ -2544,6 +2545,7 @@ export interface components {
       discoveryUrl: null | string
       clientId: null | string
       secretHeld: boolean
+      secretLost: boolean
       allowedGroups: string[]
       allowedHostedDomains: string[]
       admitsEveryone: boolean

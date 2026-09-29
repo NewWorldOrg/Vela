@@ -73,6 +73,12 @@ export function OidcSettings({
         </div>
       </div>
 
+      {config.secretLost && (
+        <InlineAlert tone="danger">
+          client secret を読めなくなりました。入れ直してください。
+        </InlineAlert>
+      )}
+
       {config.admitsEveryone && (
         <InlineAlert tone="warn">
           絞り込みが設定されていないため、テナントで認証できる全員が通ります。

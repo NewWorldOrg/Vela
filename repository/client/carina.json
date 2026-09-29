@@ -12265,7 +12265,8 @@
           "discoveryUrlInvalid",
           "clientIdInvalid",
           "restrictionInvalid",
-          "providerUnreachable"
+          "providerUnreachable",
+          "secretLost"
         ],
         "type": "string"
       },
@@ -12327,6 +12328,7 @@
           "discoveryUrl",
           "clientId",
           "secretHeld",
+          "secretLost",
           "allowedGroups",
           "allowedHostedDomains",
           "admitsEveryone",
@@ -12352,6 +12354,9 @@
             ]
           },
           "secretHeld": {
+            "type": "boolean"
+          },
+          "secretLost": {
             "type": "boolean"
           },
           "allowedGroups": {
