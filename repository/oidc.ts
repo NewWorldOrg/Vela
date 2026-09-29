@@ -12,6 +12,7 @@ export interface OidcConfig {
   discoveryUrl: string
   clientId: string
   secretHeld: boolean
+  secretLost: boolean
   allowedGroups: string[]
   allowedHostedDomains: string[]
   admitsEveryone: boolean
@@ -44,6 +45,7 @@ export async function getOidcConfig(): Promise<OidcConfig> {
     discoveryUrl: held.discoveryUrl ?? '',
     clientId: held.clientId ?? '',
     secretHeld: held.secretHeld,
+    secretLost: held.secretLost,
     allowedGroups: held.allowedGroups,
     allowedHostedDomains: held.allowedHostedDomains,
     admitsEveryone: held.admitsEveryone,
@@ -88,6 +90,7 @@ const OIDC_REFUSAL: Record<OidcConfigRefusal, string> = {
   clientIdInvalid: 'client ID が空か、長すぎます。',
   restrictionInvalid:
     '許可グループか許可ドメインに、受け付けられない値が含まれています。',
+  secretLost: 'client secret を読めなくなっているため、入れ直してください。',
   providerUnreachable:
     'discovery の文書を読めなかったため、何も保存されていません。表示されている redirect URI を IdP に登録してから、discovery URL を確かめてください。',
 }

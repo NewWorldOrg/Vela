@@ -6,6 +6,7 @@ import {
   OIDC_ADMITS_EVERYONE,
   OIDC_OUT_OF_REACH,
   OIDC_REACHABLE,
+  OIDC_SECRET_LOST,
   OIDC_UNCONFIGURED,
   LONG_NAMES,
   ONLY_THIS_DEVICE,
@@ -145,6 +146,20 @@ export const 狭い幅で収まらないほどのセッション: Story = {
   parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, '端末')
+  },
+}
+
+export const ClientSecretを読めない: Story = {
+  args: { oidc: OIDC_SECRET_LOST },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText(
+        'client secret を読めなくなりました。入れ直してください。',
+      ),
+    ).toBeVisible()
   },
 }
 

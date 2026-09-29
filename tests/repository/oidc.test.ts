@@ -63,6 +63,7 @@ const HELD = {
   discoveryUrl: 'https://id.example.test/.well-known/openid-configuration',
   clientId: 'vela-client',
   secretHeld: true,
+  secretLost: false,
   allowedGroups: ['viewers'],
   allowedHostedDomains: ['example.test'],
   admitsEveryone: false,
@@ -86,6 +87,7 @@ test('the settings on screen are the ones the API holds', async () => {
     discoveryUrl: HELD.discoveryUrl,
     clientId: 'vela-client',
     secretHeld: true,
+    secretLost: false,
     allowedGroups: ['viewers'],
     allowedHostedDomains: ['example.test'],
     admitsEveryone: false,
@@ -112,6 +114,25 @@ test('settings never made are read as empty fields, not as the word null', async
 
   assert.equal(held.discoveryUrl, '')
   assert.equal(held.clientId, '')
+})
+
+test('a secret the API can no longer open is said to be lost', async () => {
+  answering(
+    200,
+    envelope({
+      ...HELD,
+      configured: false,
+      secretHeld: false,
+      secretLost: true,
+      reach: 'notConfigured',
+    }),
+  )
+
+  const held = await getOidcConfig()
+
+  assert.equal(held.secretLost, true)
+  assert.equal(held.secretHeld, false)
+  assert.equal(held.discoveryUrl, HELD.discoveryUrl)
 })
 
 test('settings the API will not give are thrown, not drawn as unset', async () => {
@@ -147,6 +168,10 @@ test('a secret typed in is sent as it was typed', async () => {
 test("a change the API refuses comes back with the reason in the screen's words, not the sentence the API wrote", async () => {
   for (const [refusal, said] of [
     ['secretRequired', '初めての保存には client secret が必要です。'],
+    [
+      'secretLost',
+      'client secret を読めなくなっているため、入れ直してください。',
+    ],
     [
       'discoveryUrlInvalid',
       'discovery URL が https で始まる URL ではないか、長すぎます。',
