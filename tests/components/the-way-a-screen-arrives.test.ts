@@ -82,6 +82,23 @@ const THE_VOCABULARY = [
   'ball-bump',
   'ball-landing',
   'ball-burst',
+  'usher-hull',
+  'usher-leap',
+  'usher-squash',
+  'usher-sway',
+  'usher-blink',
+  'usher-star',
+  'usher-spark',
+  'usher-peek',
+  'usher-peek-squash',
+  'usher-wilt',
+  'usher-blink-once',
+  'usher-star-sink',
+  'usher-sweat',
+  'usher-answer',
+  'usher-answer-sway',
+  'usher-answer-star',
+  'usher-bob',
 ]
 
 const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
@@ -796,7 +813,7 @@ test('the curtain and the lines drawn by hand end on a small echo, once', async 
     sheet.indexOf('@utility usher-arrives {'),
     sheet.indexOf('\n}\n', sheet.indexOf('@utility usher-arrives {')),
   )
-  assert.match(usher, /animation: var\(--animate-stamp\);/)
+  assert.match(usher, /animation: var\(--animate-usher-leap\);/)
 })
 
 test('every part that moves hears the switch in the settings, not the machine alone', async () => {
