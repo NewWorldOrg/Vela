@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>.keel{stroke:#356FA5}.sail{stroke:#3F6461}@media (prefers-color-scheme:dark){.keel{stroke:#8FC0EA}.sail{stroke:#96BBB4}}</style>
+  <defs><mask id="crossing"><path d="M20 32 Q20 68 50 86" stroke="#fff" fill="none" stroke-width="21" stroke-linecap="round"/></mask></defs>
+  <path class="keel" d="M20 32 Q20 68 50 86" fill="none" stroke-width="21" stroke-linecap="round"/>
+  <path class="sail" d="M82 10 Q82 64 50 86" fill="none" stroke-width="21" stroke-linecap="round"/>
+  <path d="M82 10 Q82 64 50 86" stroke="#EFB440" mask="url(#crossing)" fill="none" stroke-width="21" stroke-linecap="round"/>
+</svg>

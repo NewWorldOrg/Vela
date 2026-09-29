@@ -1,7 +1,10 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { ScreenPlaceholder } from '@/app/_components/screen-placeholder'
+
+export const metadata: Metadata = { title: 'ページが見つかりません' }
 
 export default function NotFound() {
   return (

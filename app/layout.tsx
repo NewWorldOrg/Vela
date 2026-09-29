@@ -7,7 +7,7 @@ import { THEME_HEADER, themeOf } from '@/lib/theme'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Vela',
+    template: '%s — Vela',
     default: 'Vela',
   },
   description: '録画システムのフロントエンド',
