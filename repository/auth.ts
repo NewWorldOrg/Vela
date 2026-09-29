@@ -1,3 +1,5 @@
+import { HOME_PATH } from '@/lib/path'
+
 export type AuthMethod = 'local' | 'oidc'
 
 export const LOGIN_PATH = '/login'
@@ -21,8 +23,6 @@ const SIGN_IN_OPTIONS_ENDPOINT = '/api/auth/sign-in-options'
 const LOGIN_ENDPOINT = '/api/auth/login'
 
 const LOGOUT_ENDPOINT = '/api/auth/logout'
-
-const HOME = '/'
 
 const DEFAULT_PATIENCE_SECONDS = 60
 
@@ -133,7 +133,7 @@ export function returnPathWithin(target: string | undefined): string {
     carriesAControlCharacter(target) ||
     leadsBackToTheLoginScreen(target)
   ) {
-    return HOME
+    return HOME_PATH
   }
 
   return target

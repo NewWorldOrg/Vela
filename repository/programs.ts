@@ -162,7 +162,9 @@ const KIND_OF_SYSTEM: Partial<Record<TuneSystem, ChannelKind>> = {
 export async function getGuide(
   rawKind: string | undefined,
   rawDate: string | undefined,
-  bookings: ReadonlyMap<string, ProgramBooking> = new Map(),
+  bookings:
+    | ReadonlyMap<string, ProgramBooking>
+    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
 ): Promise<GuideResult> {
   const kind: ChannelKind =
     rawKind === 'bs' || rawKind === 'cs110' ? rawKind : 'terrestrial'
@@ -176,13 +178,14 @@ export async function getGuide(
     windowStart.getTime() + WINDOW_HOURS * 60 * 60 * 1000,
   )
 
-  const [services, guide] = await Promise.all([
+  const [services, guide, marked] = await Promise.all([
     fetchServiceChannels(),
     fetchGuide({
       type: SYSTEM_OF_KIND[kind],
       from: windowStart,
       to: windowEnd,
     }),
+    bookings,
   ])
 
   const shadows = new Set(
@@ -214,7 +217,7 @@ export async function getGuide(
         toProgram(broadcast, windowStart, services, shadows, service),
       )
       .filter((program): program is Program => program !== null)
-      .map((program) => booked(program, bookings.get(program.id))),
+      .map((program) => booked(program, marked.get(program.id))),
   }
 }
 
@@ -448,7 +451,7 @@ function toProgram(
     id: programme.id,
     channelId: `${on.networkId}-${on.serviceId}`,
     title: programme.name,
-    description: programme.summary || undefined,
+    ...(programme.summary ? { description: programme.summary } : {}),
     genre: genre.slug,
     genreLabel: genre.label,
     startMin: Math.floor((shownFrom - windowStart.getTime()) / 60_000),
@@ -456,11 +459,11 @@ function toProgram(
     dateLabel: dayLabel(calendarDateOf(startsAt)),
     startLabel: clockLabel(startsAt),
     endLabel: endsAt ? clockLabel(endsAt) : '未定',
-    subtitled: programme.hasSubtitles || undefined,
+    ...(programme.hasSubtitles ? { subtitled: true } : {}),
     audio: programme.audio,
     sounds: programme.sounds,
     video: programme.video,
-    endUndecided: endsAt ? undefined : true,
+    ...(endsAt ? {} : { endUndecided: true }),
     items: programme.items,
     related: withRelatedSettled(
       [

@@ -1,18 +1,25 @@
 'use client'
 
-import { useCallback, useState, type CSSProperties } from 'react'
-
 import {
-  CURTAIN_ASKING,
-  CURTAIN_FORGETTING,
-  CURTAIN_HOLD_MS,
-  CURTAIN_IDLE,
-  FOLDS_ON_A_SIDE,
-} from '@/lib/curtain'
-import { Usher, UsherStar } from '@/components/vela/marks'
+  useCallback,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from 'react'
 
-export function askForTheCurtain(): void {
-  document.cookie = CURTAIN_ASKING
+import { CURTAIN_HOLD_MS, CURTAIN_IDLE, FOLDS_ON_A_SIDE } from '@/lib/curtain'
+import { TelevisionBoat } from '@/components/vela/marks'
+
+function nothingChanges(): () => void {
+  return () => undefined
+}
+
+function builtInTheBrowser(): boolean {
+  return false
+}
+
+function builtFromTheServer(): boolean {
+  return true
 }
 
 function movementsOf(node: HTMLElement): Animation[] {
@@ -55,8 +62,8 @@ const TWINKLES: {
     shape: 'star',
     tone: 'spark',
     at: {
-      left: '84%',
-      top: '-14%',
+      left: '112%',
+      top: '-10%',
       width: '12%',
       height: '12%',
       '--tx': '34px',
@@ -67,8 +74,8 @@ const TWINKLES: {
     shape: 'star',
     tone: 'spark',
     at: {
-      left: '40%',
-      top: '-18%',
+      left: '72%',
+      top: '-16%',
       width: '9%',
       height: '9%',
       '--tx': '-26px',
@@ -79,8 +86,8 @@ const TWINKLES: {
     shape: 'dot',
     tone: 'spark',
     at: {
-      left: '94%',
-      top: '14%',
+      left: '118%',
+      top: '20%',
       width: '8%',
       height: '8%',
       '--tx': '40px',
@@ -91,8 +98,8 @@ const TWINKLES: {
     shape: 'dot',
     tone: 'ink',
     at: {
-      left: '22%',
-      top: '4%',
+      left: '14%',
+      top: '34%',
       width: '7%',
       height: '7%',
       '--tx': '-38px',
@@ -165,18 +172,24 @@ function Side() {
 }
 
 /**
- * The curtain drawn closed in the first HTML after a sign-in: folds of cloth
- * drawn aside and tied back, while the usher pulls the cord and flies to the mark.
+ * The curtain drawn closed in the first HTML of every full load: folds of cloth
+ * drawn aside and tied back, while the app icon's television under sail pulls
+ * the cord and flies to the mark.
+ * It rises only over a page hydrated from the server's HTML, never over one
+ * built in the browser by a navigation.
  */
 export function Curtain() {
-  const [raising, setRaising] = useState<boolean>(true)
+  const fromTheServer = useSyncExternalStore(
+    nothingChanges,
+    builtInTheBrowser,
+    builtFromTheServer,
+  )
+  const [raising, setRaising] = useState<boolean>(fromTheServer)
 
   const raised = useCallback((node: HTMLDivElement | null) => {
     if (node === null) {
       return
     }
-
-    document.cookie = CURTAIN_FORGETTING
 
     const movements = movementsOf(node)
     let gone = false
@@ -215,25 +228,11 @@ export function Curtain() {
       </div>
       <div className="curtain-valance" />
       <div className="curtain-cord" />
-      <div className="curtain-usher-x">
-        <div className="curtain-usher-y">
-          <div className="curtain-usher-z">
-            <div className="curtain-usher-s">
-              <Usher
-                mood="plain"
-                edged
-                starless
-                className="curtain-usher-plain size-full"
-              />
-              <Usher
-                mood="glad"
-                edged
-                starless
-                className="curtain-usher-glad size-full"
-              />
-              <span className="curtain-usher-star block">
-                <UsherStar className="block size-full" />
-              </span>
+      <div className="curtain-boat-x">
+        <div className="curtain-boat-y">
+          <div className="curtain-boat-z">
+            <div className="curtain-boat-s">
+              <TelevisionBoat edged className="curtain-boat size-full" />
               {TWINKLES.map(({ shape, tone, at }, nth) => (
                 <span key={nth} className="curtain-twinkle block" style={at}>
                   <svg

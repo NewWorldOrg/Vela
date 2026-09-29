@@ -1,7 +1,8 @@
 import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import { Usher, type UsherMood } from '@/components/vela/marks'
+import { AnsweringUsher } from '@/components/vela/answering-usher'
+import type { UsherMood } from '@/components/vela/marks'
 
 export function EmptyState({
   usher = 'plain',
@@ -31,7 +32,7 @@ export function EmptyState({
     >
       {(usher || said) && (
         <div className="flex flex-col items-center gap-2.5">
-          {usher && <Usher mood={usher} className="usher-arrives" />}
+          {usher && <AnsweringUsher mood={usher} className="usher-arrives" />}
           {said && (
             <div className="flex flex-col items-center gap-[calc(9rem/16)]">
               {title && <Title className="heading text-h3">{title}</Title>}

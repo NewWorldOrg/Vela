@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
+import type { ProgramBooking } from '@/repository/programs'
+
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 const DAY_TURNS_AT_HOUR = 4
 
@@ -74,12 +76,15 @@ const store: {
   services: unknown[]
   programmes: ReturnType<typeof programme>[]
   refusing?: { path: string; status: number; message: string }
+  asked?: string[]
 } = { services: [], programmes: [] }
 
 const answer = async (
   path: string,
   init?: { params?: { path?: Record<string, string> } },
 ) => {
+  store.asked?.push(path)
+
   if (store.refusing?.path === path) {
     return {
       data: undefined,
@@ -709,4 +714,60 @@ test('the panel reads back what the grid was not handed, for the cell it was ope
     ),
     undefined,
   )
+})
+
+test('the guide is asked for without waiting for the bookings it marks', async () => {
+  standing()
+  store.asked = []
+
+  let arrive: (bookings: ReadonlyMap<string, ProgramBooking>) => void = () => {}
+  const bookings = new Promise<ReadonlyMap<string, ProgramBooking>>(
+    (resolve) => {
+      arrive = resolve
+    },
+  )
+  const reading = getGuide('terrestrial', broadcastDay(STARTS), bookings)
+
+  await new Promise((resolve) => setImmediate(resolve))
+
+  assert.deepEqual([...store.asked].sort(), ['/api/programs', '/api/services'])
+
+  arrive(
+    new Map([
+      [
+        idOf(CARRIED),
+        {
+          id: 'reservation-1',
+          standing: 'scheduled',
+          priority: 0,
+          marginBeforeSeconds: 0,
+          marginAfterSeconds: 0,
+          encodeWhenRecorded: false,
+        },
+      ],
+    ]),
+  )
+
+  const guide = await reading
+  store.asked = undefined
+
+  assert.equal(
+    guide.programs.find((program) => program.id === idOf(CARRIED))?.booked,
+    true,
+  )
+})
+
+test('a programme hands over no field it has nothing to say in', async () => {
+  standing()
+  store.programmes[0] = {
+    ...store.programmes[0],
+    summary: '',
+    hasSubtitles: false,
+  }
+
+  const program = await fromTheGuide(idOf(CARRIED))
+
+  for (const unsaid of ['description', 'subtitled', 'endUndecided']) {
+    assert.equal(unsaid in program, false, unsaid)
+  }
 })

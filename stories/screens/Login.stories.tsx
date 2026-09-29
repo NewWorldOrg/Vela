@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
-import { CURTAIN_COOKIE, CURTAIN_FORGETTING } from '@/lib/curtain'
 import { oidcStartHref } from '@/repository/auth'
 import { LoginView } from '@/components/login/login-page'
 import { groundOf } from '@/stories/ground-of'
@@ -187,23 +186,5 @@ export const 失敗したうえにIDプロバイダにも届かないとき: Sto
       'サインインに失敗しました。もう一度お試しください。',
     )
     await localSignInIs(canvasElement, 'expanded')
-  },
-}
-
-export const SSOで入ると最初の画面で幕が上がる: Story = {
-  args: 通常.args,
-  play: async ({ canvasElement }) => {
-    document.cookie = CURTAIN_FORGETTING
-    canvasElement.addEventListener('click', (event) => event.preventDefault(), {
-      capture: true,
-      once: true,
-    })
-
-    await userEvent.click(
-      within(canvasElement).getByRole('link', { name: 'SSO でサインイン' }),
-    )
-
-    await expect(document.cookie).toContain(`${CURTAIN_COOKIE}=raise`)
-    document.cookie = CURTAIN_FORGETTING
   },
 }
