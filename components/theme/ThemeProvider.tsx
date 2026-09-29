@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 
+import { statusBarColours } from '@/lib/app-colours'
 import { THEME_COOKIE, type ThemeMode, type ThemePreference } from '@/lib/theme'
 
 interface ThemeContextValue {
@@ -30,6 +31,43 @@ function applyClass(preference: ThemePreference) {
 
   classList.toggle('dark', preference === 'dark')
   classList.toggle('system', preference === 'system')
+}
+
+function paintStatusBar(preference: ThemePreference) {
+  const { head } = document
+
+  for (const added of head.querySelectorAll(
+    'meta[name="theme-color"][data-painted]',
+  )) {
+    added.remove()
+  }
+
+  const said = [
+    ...head.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'),
+  ]
+  const colours = statusBarColours(preference)
+
+  colours.forEach(({ media, color }, nth) => {
+    let meta = said[nth]
+
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      meta.dataset.painted = ''
+      head.append(meta)
+    }
+    meta.content = color
+    if (media) {
+      meta.media = media
+    } else {
+      meta.removeAttribute('media')
+    }
+  })
+
+  for (const extra of said.slice(colours.length)) {
+    extra.content = colours[0].color
+    extra.removeAttribute('media')
+  }
 }
 
 function systemMode(dark: boolean): ThemeMode {
@@ -75,6 +113,7 @@ export function ThemeProvider({
     setPreferenceState(next)
     writeCookie(next)
     applyClass(next)
+    paintStatusBar(next)
   }, [])
 
   return (
