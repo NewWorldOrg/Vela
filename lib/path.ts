@@ -1,3 +1,6 @@
+/** The screen the app opens on. */
+export const HOME_PATH = '/guide'
+
 export function isPathActive(pathname: string, root: string) {
   return pathname === root || pathname.startsWith(`${root}/`)
 }

@@ -86,9 +86,9 @@ test('a path inside the app is where the sign-in returns to', () => {
   }
 })
 
-test('a missing or empty return path goes home', () => {
-  assert.equal(returnPathWithin(undefined), '/')
-  assert.equal(returnPathWithin(''), '/')
+test('a missing or empty return path goes straight to the guide', () => {
+  assert.equal(returnPathWithin(undefined), '/guide')
+  assert.equal(returnPathWithin(''), '/guide')
 })
 
 test('an absolute address, on any scheme, goes home', () => {
@@ -103,7 +103,7 @@ test('an absolute address, on any scheme, goes home', () => {
     'data:text/html,<script>alert(1)</script>',
     'vbscript:msgbox(1)',
   ]) {
-    assert.equal(returnPathWithin(target), '/', target)
+    assert.equal(returnPathWithin(target), '/guide', target)
   }
 })
 
@@ -114,7 +114,7 @@ test('a protocol-relative address goes home', () => {
     '///example.test',
     '//@example.test',
   ]) {
-    assert.equal(returnPathWithin(target), '/', target)
+    assert.equal(returnPathWithin(target), '/guide', target)
   }
 })
 
@@ -126,7 +126,7 @@ test('a backslash anywhere goes home, since a browser reads it as a slash', () =
     '/\\/example.test',
     '/guide\\..\\..\\example.test',
   ]) {
-    assert.equal(returnPathWithin(target), '/', target)
+    assert.equal(returnPathWithin(target), '/guide', target)
   }
 })
 
@@ -140,7 +140,7 @@ test('a control character a browser would strip out of the address goes home', (
     '/\u001f/example.test',
     '/\u007f/example.test',
   ]) {
-    assert.equal(returnPathWithin(target), '/', JSON.stringify(target))
+    assert.equal(returnPathWithin(target), '/guide', JSON.stringify(target))
   }
 })
 
@@ -156,7 +156,7 @@ test('a path that does not start at the root of the app goes home', () => {
     '%2F%2Fexample.test',
     '%2Fguide',
   ]) {
-    assert.equal(returnPathWithin(target), '/', target)
+    assert.equal(returnPathWithin(target), '/guide', target)
   }
 })
 
@@ -169,7 +169,7 @@ test('the sign-in screen itself is never where a sign-in returns to', () => {
     '/LOGIN',
     '/Login?next=/guide',
   ]) {
-    assert.equal(returnPathWithin(target), '/', target)
+    assert.equal(returnPathWithin(target), '/guide', target)
   }
 })
 
@@ -197,9 +197,9 @@ test('the sign-in link carries the return path encoded, or home when it may not 
     loginHref('/guide?date=2026-08-08&channel=1'),
     '/login?next=%2Fguide%3Fdate%3D2026-08-08%26channel%3D1',
   )
-  assert.equal(loginHref('//example.test'), '/login?next=%2F')
-  assert.equal(loginHref('/login?next=/guide'), '/login?next=%2F')
-  assert.equal(loginHref(undefined), '/login?next=%2F')
+  assert.equal(loginHref('//example.test'), '/login?next=%2Fguide')
+  assert.equal(loginHref('/login?next=/guide'), '/login?next=%2Fguide')
+  assert.equal(loginHref(undefined), '/login?next=%2Fguide')
 })
 
 test('the identity provider link carries the return path encoded', () => {
