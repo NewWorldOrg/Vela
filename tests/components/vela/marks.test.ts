@@ -117,9 +117,12 @@ test('the drawings the usher replaced are gone', async () => {
   await assert.rejects(read('components/vela/spot-illustration.tsx'))
 })
 
-test('the usher standing on the curtain is rimmed in the ground colour', async () => {
+test('the curtain carries the television of the app icon, rimmed in the ground colour, and not the usher', async () => {
   const source = await read('components/vela/marks.tsx')
+  const curtain = await read('components/vela/curtain.tsx')
 
-  assert.match(source, /edged && \(\s*<g\s+className="stroke-bg"/)
-  assert.match(source, /className="fill-spark stroke-bg"/)
+  assert.match(source, /edged && \(\s*<g data-edge=""/)
+  assert.match(source, /'fill-spark', edged && 'stroke-bg'/)
+  assert.match(curtain, /<TelevisionBoat edged /)
+  assert.doesNotMatch(curtain, /<Usher\b/)
 })

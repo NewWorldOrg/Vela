@@ -62,9 +62,16 @@ export const 閉じた形で描かれ上がり終わると片付く: Story = {
     await expect(curtain!.querySelectorAll('.curtain-fold')).toHaveLength(
       FOLDS_ON_A_SIDE * 2,
     )
+    await expect(curtain!.querySelectorAll('[data-slot="usher"]')).toHaveLength(
+      0,
+    )
+    const boat = curtain!.querySelector('[data-slot="television-boat"]')
+    await expect(boat).not.toBeNull()
+    await expect(boat!.querySelectorAll('[data-part="leg"]')).toHaveLength(4)
     await expect(
-      curtain!.querySelectorAll('[data-slot="usher"]').length,
-    ).toBeGreaterThan(0)
+      getComputedStyle(boat!.querySelector('.curtain-boat [data-part="sail"]')!)
+        .animationName,
+    ).toBe('curtain-sail')
 
     await waitFor(() => expect(curtainOf(canvasElement)).toBeNull(), {
       timeout: 5000,
@@ -103,7 +110,7 @@ export const 開き終わった形は画面を覆わない: Story = {
     await expect(covering).toHaveLength(0)
 
     for (const faded of curtain!.querySelectorAll<HTMLElement>(
-      '.curtain-usher-z, .curtain-twinkle, .curtain-dock-ring',
+      '.curtain-boat-z, .curtain-twinkle, .curtain-dock-ring',
     )) {
       await expect(getComputedStyle(faded).opacity).toBe('0')
     }

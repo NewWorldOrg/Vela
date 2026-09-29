@@ -114,7 +114,7 @@ test('once its motion has run, nothing of the curtain is left over the page', as
     ['curtain-side', /100% \{\s*transform: translateX\(var\(--out\)\);/],
     ['curtain-valance', /100% \{\s*transform: translateY\(-170%\);/],
     ['curtain-cord', /100% \{\s*transform: translateY\(-100cqh\);/],
-    ['curtain-usher-z', /100% \{[^}]*opacity: 0;/],
+    ['curtain-boat-z', /100% \{[^}]*opacity: 0;/],
     ['curtain-twinkle', /100% \{\s*opacity: 0;/],
     ['curtain-dock', /100% \{\s*opacity: 0;/],
   ] as const) {

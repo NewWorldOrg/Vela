@@ -827,8 +827,8 @@
   --fold-w: calc(50cqw / 9);
   --fold-pinch: max(12px, 1.15cqw);
   --fold-tie: 60cqh;
-  --usher-size: clamp(150px, 27cqmin, 270px);
-  --usher-rest: 44cqh;
+  --boat-size: clamp(150px, 27cqmin, 270px);
+  --boat-rest: 44cqh;
   --mark-x: calc(22rem / 16 + env(safe-area-inset-left));
   --mark-y: calc(23rem / 16);
 
@@ -1050,7 +1050,7 @@
   & .curtain-cord {
     position: absolute;
     left: 50%;
-    top: calc(var(--usher-rest) - var(--usher-size) * 0.4 - 100cqh + 6px);
+    top: calc(var(--boat-rest) - var(--boat-size) * 0.45 - 100cqh + 6px);
     z-index: 54;
     width: 5px;
     height: 100cqh;
@@ -1073,65 +1073,80 @@
     background: var(--fold-cord);
   }
 
-  & .curtain-usher-x {
+  & .curtain-boat-x {
     position: absolute;
     left: 50%;
-    top: var(--usher-rest);
+    top: var(--boat-rest);
     z-index: 55;
     width: 0;
     height: 0;
     will-change: transform;
-    animation: curtain-usher-x 1.65s var(--curtain-hold) both;
+    animation: curtain-boat-x 1.65s var(--curtain-hold) both;
   }
 
-  & .curtain-usher-y {
+  & .curtain-boat-y {
     position: absolute;
     left: 0;
     top: 0;
     will-change: transform;
-    animation: curtain-usher-y 1.65s var(--curtain-hold) both;
+    animation: curtain-boat-y 1.65s var(--curtain-hold) both;
   }
 
-  & .curtain-usher-z {
+  & .curtain-boat-z {
     position: absolute;
-    left: calc(var(--usher-size) / -2);
-    top: calc(var(--usher-size) / -2);
-    width: var(--usher-size);
-    height: var(--usher-size);
+    left: calc(var(--boat-size) / -2);
+    top: calc(var(--boat-size) / -2);
+    width: var(--boat-size);
+    height: var(--boat-size);
     will-change: transform;
-    animation: curtain-usher-z 1.65s var(--curtain-hold) both;
+    animation: curtain-boat-z 1.65s var(--curtain-hold) both;
   }
 
-  & .curtain-usher-s {
+  & .curtain-boat-s {
     position: absolute;
     inset: 0;
     transform-origin: 50% 88%;
     will-change: transform;
-    animation: curtain-usher-s 1.65s var(--curtain-hold) both;
+    animation: curtain-boat-s 1.65s var(--curtain-hold) both;
   }
 
-  & .curtain-usher-plain,
-  & .curtain-usher-glad {
+  & .curtain-boat {
     position: absolute;
     inset: 0;
   }
 
-  & .curtain-usher-plain {
+  & .curtain-boat [data-face='plain'] {
     animation: curtain-plain 1.65s var(--curtain-hold) both;
   }
 
-  & .curtain-usher-glad {
-    opacity: 0;
+  & .curtain-boat [data-face='glad'] {
     animation: curtain-glad 1.65s var(--curtain-hold) both;
   }
 
-  & .curtain-usher-star {
-    position: absolute;
-    left: 46.2%;
-    top: 1%;
-    width: 30.8%;
-    height: 30.8%;
-    will-change: transform;
+  & .curtain-boat [data-part='rig'] {
+    transform-origin: 32px 45px;
+    animation: curtain-rig 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-boat [data-part='sail'] {
+    transform-origin: 43px 39px;
+    animation: curtain-sail 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-boat [data-part='leg'] {
+    --side: -1;
+    transform-origin: 29px 89px;
+    animation: curtain-leg 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-boat [data-part='leg'][data-side='right'] {
+    --side: 1;
+    transform-origin: 71px 89px;
+  }
+
+  & .curtain-boat [data-part='star'] {
+    transform-box: fill-box;
+    transform-origin: center;
     animation: curtain-star 1.65s var(--curtain-hold) both;
   }
 
@@ -1342,7 +1357,7 @@
   }
 }
 
-@keyframes curtain-usher-x {
+@keyframes curtain-boat-x {
   0%,
   62% {
     transform: translateX(0);
@@ -1354,7 +1369,7 @@
   }
 }
 
-@keyframes curtain-usher-y {
+@keyframes curtain-boat-y {
   0% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
@@ -1377,11 +1392,11 @@
   }
   86%,
   100% {
-    transform: translateY(calc(var(--mark-y) - var(--usher-rest)));
+    transform: translateY(calc(var(--mark-y) - var(--boat-rest)));
   }
 }
 
-@keyframes curtain-usher-z {
+@keyframes curtain-boat-z {
   0%,
   62% {
     transform: scale(1) rotate(0);
@@ -1399,7 +1414,7 @@
   }
 }
 
-@keyframes curtain-usher-s {
+@keyframes curtain-boat-s {
   0% {
     transform: scale(1, 1);
   }
@@ -1426,10 +1441,10 @@
 
 @keyframes curtain-plain {
   0%,
-  26% {
+  21% {
     opacity: 1;
   }
-  27%,
+  22%,
   100% {
     opacity: 0;
   }
@@ -1437,10 +1452,10 @@
 
 @keyframes curtain-glad {
   0%,
-  26% {
+  21% {
     opacity: 0;
   }
-  27%,
+  22%,
   100% {
     opacity: 1;
   }
@@ -1460,6 +1475,135 @@
   50%,
   100% {
     transform: scale(1.05) rotate(90deg);
+  }
+}
+
+@keyframes curtain-rig {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: ease-in;
+  }
+  15.7% {
+    transform: rotate(3deg);
+    animation-timing-function: ease-out;
+  }
+  22% {
+    transform: rotate(-7deg);
+    animation-timing-function: ease-in-out;
+  }
+  30% {
+    transform: rotate(4deg);
+    animation-timing-function: ease-in-out;
+  }
+  39% {
+    transform: rotate(-2deg);
+    animation-timing-function: ease-in-out;
+  }
+  48%,
+  62% {
+    transform: rotate(0);
+    animation-timing-function: ease-in-out;
+  }
+  74% {
+    transform: rotate(-6deg);
+    animation-timing-function: ease-in-out;
+  }
+  86%,
+  100% {
+    transform: rotate(0);
+  }
+}
+
+@keyframes curtain-sail {
+  0% {
+    transform: scale(0.62, 0.94) skewY(8deg);
+    animation-timing-function: ease-in;
+  }
+  15.7% {
+    transform: scale(0.55, 0.92) skewY(10deg);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.3);
+  }
+  21% {
+    transform: scale(1.18, 1.04) skewY(-3deg);
+    animation-timing-function: ease-in-out;
+  }
+  27% {
+    transform: scale(0.9, 1) skewY(4deg);
+    animation-timing-function: ease-in-out;
+  }
+  33% {
+    transform: scale(1.07, 1) skewY(-2.5deg);
+    animation-timing-function: ease-in-out;
+  }
+  40% {
+    transform: scale(0.97, 1) skewY(1.5deg);
+    animation-timing-function: ease-in-out;
+  }
+  48% {
+    transform: scale(1.02, 1) skewY(-0.5deg);
+    animation-timing-function: ease-in-out;
+  }
+  56% {
+    transform: none;
+    animation-timing-function: ease-in-out;
+  }
+  66% {
+    transform: scale(0.9, 1) skewY(5deg);
+    animation-timing-function: ease-in-out;
+  }
+  74% {
+    transform: scale(1.06, 1) skewY(-3deg);
+    animation-timing-function: ease-in-out;
+  }
+  82% {
+    transform: scale(0.95, 1) skewY(3deg);
+  }
+  90%,
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes curtain-leg {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: ease-in;
+  }
+  15.7% {
+    transform: rotate(calc(var(--side) * -18deg));
+    animation-timing-function: ease-out;
+  }
+  23% {
+    transform: rotate(calc(var(--side) * 22deg));
+    animation-timing-function: ease-in-out;
+  }
+  31% {
+    transform: rotate(calc(var(--side) * -14deg));
+    animation-timing-function: ease-in-out;
+  }
+  39% {
+    transform: rotate(calc(var(--side) * 9deg));
+    animation-timing-function: ease-in-out;
+  }
+  47% {
+    transform: rotate(calc(var(--side) * -5deg));
+    animation-timing-function: ease-in-out;
+  }
+  55% {
+    transform: rotate(calc(var(--side) * 2deg));
+    animation-timing-function: ease-in-out;
+  }
+  62% {
+    transform: rotate(0);
+    animation-timing-function: ease-in-out;
+  }
+  76% {
+    transform: rotate(-22deg);
+    animation-timing-function: ease-in-out;
+  }
+  86%,
+  100% {
+    transform: rotate(-12deg);
   }
 }
 
