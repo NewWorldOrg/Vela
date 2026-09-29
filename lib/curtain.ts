@@ -11,3 +11,9 @@ export const CURTAIN_FORGETTING = `${CURTAIN_COOKIE}=;path=/;max-age=0;SameSite=
 export function curtainAsked(said: string | undefined): boolean {
   return said === ASKED
 }
+
+export const CURTAIN_HOLD_MS = 800
+
+export const CURTAIN_IDLE = 'curtain-idle'
+
+export const FOLDS_ON_A_SIDE = 9

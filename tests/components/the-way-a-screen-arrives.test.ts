@@ -40,7 +40,26 @@ const NOT_SOURCE = new Set([
 
 const THE_VOCABULARY = [
   'breathe',
-  'curtain-panel',
+  'curtain-side',
+  'curtain-gather',
+  'curtain-squeeze',
+  'curtain-sway',
+  'curtain-idle',
+  'curtain-cinch-up',
+  'curtain-cinch-lo',
+  'curtain-loop',
+  'curtain-tassel',
+  'curtain-valance',
+  'curtain-cord',
+  'curtain-usher-x',
+  'curtain-usher-y',
+  'curtain-usher-z',
+  'curtain-usher-s',
+  'curtain-plain',
+  'curtain-glad',
+  'curtain-star',
+  'curtain-twinkle',
+  'curtain-dock',
   'draw',
   'ink',
   'item',
@@ -48,7 +67,6 @@ const THE_VOCABULARY = [
   'waiting-line',
   'now-pop',
   'guide-settle',
-  'curtain-line',
   'stamp',
   'swell',
   'row',
@@ -70,14 +88,13 @@ const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
 
 const THE_UTILITIES = [
   'row-arrives',
-  'curtain-panel',
+  'curtain',
   'drawn',
   'screen-rises',
   'screen-hops',
   'guide-now-pop',
   'guide-settles',
   'guide-opening',
-  'curtain-line',
   'stamps',
   'swells',
   'arrives',
@@ -91,12 +108,10 @@ const THE_UTILITIES = [
 ]
 
 const THE_MOVEMENTS_THAT_STOP = [
-  'curtain-panel',
   'draw',
   'ink',
   'now-pop',
   'guide-settle',
-  'curtain-line',
   'stamp',
   'screen-rise',
   'hop-in',
@@ -117,7 +132,7 @@ const CARRIED_BY_A_VARIABLE = 'calc(var(--d, 0s) + var(--delay, 0s)'
 const A_KEYFRAMES = /@keyframes\s+([\w-]+)\s*\{/g
 
 const AN_ARRIVAL_ANIMATION =
-  /--animate-(curtain-panel|draw|ink|now-pop|guide-settle|item|breathe|waiting-line):([\s\S]*?);/g
+  /--animate-(draw|ink|now-pop|guide-settle|item|breathe|waiting-line):([\s\S]*?);/g
 
 const A_UTILITY = /@utility\s+([\w-]+)\s*\{([\s\S]*?)\n\}/g
 
@@ -310,7 +325,7 @@ test('every movement is switched off where less of it is asked for', async () =>
     )
   }
   assert.match(
-    declared.get('curtain-panel') ?? '',
+    declared.get('curtain') ?? '',
     /:root\[data-motion='still'\] & \{\s*display: none;/,
     'the curtain is still drawn when movement is switched off, so the screen ' +
       'opens behind a panel that never leaves',
@@ -710,6 +725,7 @@ test('the spark colour is kept to the opening of the guide and the star of the m
 
   assert.deepEqual(users, [
     'components/guide/guide-opening.tsx',
+    'components/vela/curtain.tsx',
     'components/vela/marks.tsx',
   ])
 })
@@ -739,7 +755,16 @@ test('the curtain and the lines drawn by hand end on a small echo, once', async 
       'heights, and the table ripples',
   )
   assert.match(bodies.get('appear') ?? '', /65% \{[^}]*\* -0\.15/)
-  assert.match(bodies.get('curtain-panel') ?? '', /var\(--curtain-crack/)
+  assert.match(
+    bodies.get('curtain-sway') ?? '',
+    /86% \{[^}]*var\(--th\) \* -0\.07/,
+    'the hem of the curtain stops at once instead of swinging out',
+  )
+  assert.match(
+    bodies.get('curtain-tassel') ?? '',
+    /72% \{[^}]*rotate\(-4deg\)/,
+    'the tassel stops at once instead of swinging twice',
+  )
   assert.doesNotMatch(
     bodies.get('disappear') ?? '',
     /\d+% \{/,
@@ -751,7 +776,7 @@ test('the curtain and the lines drawn by hand end on a small echo, once', async 
     'utf8',
   )
 
-  assert.match(curtain, /curtain-line/)
+  assert.match(curtain, /curtain-tassel/)
 
   assert.match(
     await readFile(

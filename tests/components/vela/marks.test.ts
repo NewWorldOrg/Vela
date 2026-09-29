@@ -52,3 +52,10 @@ test('the usher moves once, and not for someone who stopped the motion', async (
 test('the drawings the usher replaced are gone', async () => {
   await assert.rejects(read('components/vela/spot-illustration.tsx'))
 })
+
+test('the usher standing on the curtain is rimmed in the ground colour', async () => {
+  const source = await read('components/vela/marks.tsx')
+
+  assert.match(source, /edged && \(\s*<g\s+className="stroke-bg"/)
+  assert.match(source, /className="fill-spark stroke-bg"/)
+})
