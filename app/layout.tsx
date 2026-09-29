@@ -1,16 +1,35 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { headers } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { statusBarColours } from '@/lib/app-colours'
 import { MOTION_HEADER, motionOf } from '@/lib/motion'
 import { THEME_HEADER, themeOf } from '@/lib/theme'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Vela',
+    template: '%s — Vela',
     default: 'Vela',
   },
   description: '録画システムのフロントエンド',
+  applicationName: 'Vela',
+  appleWebApp: {
+    capable: true,
+    title: 'Vela',
+    statusBarStyle: 'default',
+  },
+  other: { 'apple-mobile-web-app-capable': 'yes' },
+}
+
+export async function generateViewport(): Promise<Viewport> {
+  const preference = themeOf((await headers()).get(THEME_HEADER))
+
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+    themeColor: statusBarColours(preference),
+  }
 }
 
 export default async function RootLayout({

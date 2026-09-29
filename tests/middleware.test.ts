@@ -108,6 +108,10 @@ test('every page and relay passes through, and the static files do not', () => {
     '/_next/static/chunks/main.js',
     '/_next/image',
     '/favicon.ico',
+    '/icon.svg',
+    '/apple-icon.png',
+    '/manifest.webmanifest',
+    '/pwa/icon-192.png',
   ]) {
     assert.ok(!matches.test(path), path)
   }

@@ -1,17 +1,17 @@
 import { EmptyState } from '@/components/vela/empty-state'
-import type { SpotName } from '@/components/vela/spot-illustration'
+import type { UsherMood } from '@/components/vela/marks'
 import { ScreenMain } from '@/components/vela/app-shell'
 
 export function ScreenPlaceholder({
-  spot = 'antenna',
+  usher = 'plain',
   children,
 }: {
-  spot?: SpotName
+  usher?: UsherMood
   children: React.ReactNode
 }) {
   return (
     <ScreenMain className="flex items-center justify-center p-8">
-      <EmptyState spot={spot} className="max-w-[calc(420rem/16)]">
+      <EmptyState usher={usher} className="max-w-[calc(420rem/16)]">
         {children}
       </EmptyState>
     </ScreenMain>

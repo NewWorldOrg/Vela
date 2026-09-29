@@ -2,13 +2,15 @@ import type { ComponentProps, ReactNode } from 'react'
 import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
-import { SettingsIcon, VelaMark } from '@/components/vela/icons'
+import { SettingsIcon } from '@/components/vela/icons'
+import { VelaMark } from '@/components/vela/marks'
 import { iconTilt } from '@/components/vela/tactile'
 
 const TOP_BAR_HEIGHT = 'h-[calc(46rem/16)]'
 const BELOW_TOP_BAR = 'top-[calc(46rem/16)]'
 
-export const ADMIN_LIST_HEIGHT_CAP = 'max-h-[calc(100dvh-66rem/16)]'
+export const ADMIN_LIST_HEIGHT_CAP =
+  'max-h-[calc(100dvh-66rem/16-env(safe-area-inset-bottom))]'
 
 export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
   return (
@@ -16,6 +18,7 @@ export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
       data-slot="app-frame"
       className={cn(
         'dot-grid flex min-h-dvh flex-col bg-bg',
+        'pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]',
         'has-[[data-scroll=within]]:h-dvh has-[[data-scroll=within]]:overflow-hidden',
         className,
       )}
@@ -61,7 +64,7 @@ export function Brand({ className, ...props }: ComponentProps<'div'>) {
       )}
       {...props}
     >
-      <VelaMark className="size-4 text-brand" />
+      <VelaMark small className="size-4" />
       Vela
     </div>
   )

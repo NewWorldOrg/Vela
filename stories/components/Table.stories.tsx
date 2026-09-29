@@ -132,11 +132,7 @@ export const Empty: Story = {
         </TableHeader>
         <TableBody />
       </Table>
-      <EmptyState
-        spot="antenna"
-        className="mt-2.5"
-        action={<Button>スキャンを実行</Button>}
-      >
+      <EmptyState className="mt-2.5" action={<Button>スキャンを実行</Button>}>
         データがありません
       </EmptyState>
     </div>

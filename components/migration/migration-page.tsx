@@ -14,7 +14,6 @@ export function MigrationView({ result }: { result: MigrationResult | null }) {
 
       {result === null ? (
         <EmptyState
-          spot="tape"
           title="移行の記録がありません"
           titleLevel={2}
           className="mt-3.5 [word-break:auto-phrase]"

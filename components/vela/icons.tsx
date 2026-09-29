@@ -23,15 +23,6 @@ function Icon({ className, children, ...props }: IconProps) {
   )
 }
 
-export function VelaMark(props: IconProps) {
-  return (
-    <Icon strokeWidth={1.7} {...props}>
-      <path d="M12 3.2 5.4 20.4h13.2Z" />
-      <path d="M12 3.2V20.4" />
-    </Icon>
-  )
-}
-
 export function PlusIcon(props: IconProps) {
   return (
     <Icon {...props}>

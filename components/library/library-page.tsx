@@ -178,7 +178,6 @@ export function LibraryView({
         />
       ) : hasFilter ? (
         <EmptyState
-          spot="tape"
           title="条件に合う録画がありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"
@@ -209,7 +208,6 @@ export function LibraryView({
         />
       ) : (
         <EmptyState
-          spot="tape"
           title="まだ録画がありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"

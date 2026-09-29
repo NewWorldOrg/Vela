@@ -135,7 +135,6 @@ export function LiveView({
           ライブ
         </h1>
         <EmptyState
-          spot="tuner"
           titleLevel={2}
           title="チューナーが登録されていません"
           action={
@@ -192,7 +191,7 @@ export function LiveView({
         )}
         {nothingIsOn && (
           <EmptyState
-            spot={null}
+            usher={null}
             titleLevel={2}
             title="EPG をまだ取得していません"
             className="mt-3.5"
@@ -237,7 +236,7 @@ export function LiveView({
       <aside
         aria-label="チャンネル"
         className={cn(
-          'sticky top-[calc(62rem/16)] flex max-h-[calc(100dvh-102rem/16)] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          'sticky top-[calc(62rem/16)] flex max-h-[calc(100dvh-102rem/16-env(safe-area-inset-bottom))] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
           foldColumn(away, motion),
         )}
       >

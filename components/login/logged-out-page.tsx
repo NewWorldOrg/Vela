@@ -3,7 +3,8 @@ import Link from 'next/link'
 import type { AuthMethod } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
-import { SignInIcon, SuccessIcon, VelaMark } from '@/components/vela/icons'
+import { SignInIcon, SuccessIcon } from '@/components/vela/icons'
+import { VelaMark } from '@/components/vela/marks'
 
 export function LoggedOutView({ method }: { method: AuthMethod }) {
   return (
@@ -12,7 +13,7 @@ export function LoggedOutView({ method }: { method: AuthMethod }) {
         <ThemeToggle />
       </div>
       <main className="w-full max-w-[calc(390rem/16)] rounded-xl border border-line-strong bg-surface px-8 pt-[calc(34rem/16)] pb-[calc(26rem/16)] text-center shadow-pop-xl max-[480px]:px-5 max-[480px]:pt-7 max-[480px]:pb-[calc(22rem/16)]">
-        <VelaMark className="mx-auto mb-1.5 size-[calc(34rem/16)] text-brand" />
+        <VelaMark className="mx-auto mb-1.5 size-[calc(34rem/16)]" />
         <p className="heading text-[calc(23rem/16)] leading-[1.4] tracking-[0.02em]">
           Vela
         </p>

@@ -6,7 +6,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
-import { SignInIcon, VelaMark } from '@/components/vela/icons'
+import { SignInIcon } from '@/components/vela/icons'
+import { VelaMark } from '@/components/vela/marks'
 import {
   LocalSignIn,
   type LocalSignInPlacement,
@@ -33,7 +34,7 @@ export function LoginView({
         <ThemeToggle />
       </div>
       <main className="w-full max-w-[calc(390rem/16)] rounded-xl border border-line-strong bg-surface px-8 pt-[calc(34rem/16)] pb-[calc(26rem/16)] text-center shadow-pop-xl max-[480px]:px-5 max-[480px]:pt-7 max-[480px]:pb-[calc(22rem/16)]">
-        <VelaMark className="mx-auto mb-1.5 size-[calc(34rem/16)] text-brand" />
+        <VelaMark className="mx-auto mb-1.5 size-[calc(34rem/16)]" />
         <h1 className="heading text-[calc(23rem/16)] leading-[1.4] tracking-[0.02em]">
           Vela
         </h1>

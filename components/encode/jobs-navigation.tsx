@@ -63,10 +63,9 @@ export function JobsList({
           <JobsPager jobs={jobs} show={show} />
         </>
       ) : jobs.status ? (
-        <EmptyState spot="tape" title="条件に合うジョブがありません" />
+        <EmptyState title="条件に合うジョブがありません" />
       ) : (
         <EmptyState
-          spot="tape"
           title="ジョブの履歴がありません"
           action={
             <Button variant="watch" size="sm" asChild>

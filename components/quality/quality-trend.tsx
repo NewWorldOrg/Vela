@@ -167,7 +167,7 @@ export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
           <span aria-hidden="true" />
         </div>
       ) : (
-        <EmptyState spot={null} title={NOTHING} />
+        <EmptyState usher={null} title={NOTHING} />
       )}
     </Surface>
   )

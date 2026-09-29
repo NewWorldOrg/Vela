@@ -17,7 +17,7 @@ export default function AppError({ reset }: { reset: () => void }) {
 
   return (
     <EmptyState
-      spot="star"
+      usher="troubled"
       titleLevel={2}
       title="画面を表示できませんでした"
       className="mt-16 max-w-[calc(560rem/16)]"

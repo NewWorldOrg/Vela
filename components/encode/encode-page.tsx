@@ -109,7 +109,6 @@ export function EncodeView({
           />
         ) : (
           <EmptyState
-            spot="list"
             title="プロファイルがありません"
             action={<AddProfileDialog onDefine={actions.onDefineProfile} />}
           />
@@ -129,7 +128,6 @@ export function EncodeView({
           />
         ) : (
           <EmptyState
-            spot="list"
             title="保存先がありません"
             action={
               <AddDestinationDialog

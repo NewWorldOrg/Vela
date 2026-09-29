@@ -93,7 +93,6 @@ export function AuthenticationView({
 
         {others.length === 0 && (
           <EmptyState
-            spot="device"
             title="ほかの端末のセッションはありません"
             className="mt-3.5"
           />

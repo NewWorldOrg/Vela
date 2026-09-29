@@ -76,15 +76,15 @@ export const Surfaces: Story = {
 export const EmptyStates: Story = {
   render: () => (
     <div className="mx-auto grid max-w-[720px] gap-3 p-6 sm:grid-cols-2">
-      <EmptyState spot="antenna" action={<Button>スキャンを実行</Button>}>
+      <EmptyState action={<Button>スキャンを実行</Button>}>
         データがありません
       </EmptyState>
-      <EmptyState spot="tuner" action={<Button>チューナーを追加</Button>}>
+      <EmptyState action={<Button>チューナーを追加</Button>}>
         チューナーがまだ登録されていません。デバイスを接続すると、自動検出された候補が
         ここに表示されます。
       </EmptyState>
-      <EmptyState spot="tape">条件に一致する録画はありません。</EmptyState>
-      <EmptyState spot="star">予約はまだありません。</EmptyState>
+      <EmptyState>条件に一致する録画はありません。</EmptyState>
+      <EmptyState>予約はまだありません。</EmptyState>
     </div>
   ),
 }
@@ -92,10 +92,9 @@ export const EmptyStates: Story = {
 export const 空状態の四通り: Story = {
   render: () => (
     <div className="mx-auto grid max-w-[900px] gap-3 p-6 sm:grid-cols-2">
-      <EmptyState spot="antenna" />
-      <EmptyState spot="antenna" title="まだ録画がありません" />
+      <EmptyState />
+      <EmptyState title="まだ録画がありません" />
       <EmptyState
-        spot="tape"
         title="条件に合う録画がありません"
         action={
           <Button variant="halt" size="sm">
@@ -104,7 +103,6 @@ export const 空状態の四通り: Story = {
         }
       />
       <EmptyState
-        spot="star"
         title="未完了の予約はありません"
         action={
           <Button variant="halt" size="sm">
@@ -121,11 +119,7 @@ export const 空状態の四通り: Story = {
 export const EmptyStateInAColumn: Story = {
   render: () => (
     <div className="flex w-[900px] flex-col p-6">
-      <EmptyState
-        spot="tape"
-        title="条件に合う録画がありません"
-        className="max-w-[560px]"
-      >
+      <EmptyState title="条件に合う録画がありません" className="max-w-[560px]">
         条件を消すと、すべての録画が表示されます。
       </EmptyState>
     </div>
