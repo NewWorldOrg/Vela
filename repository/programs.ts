@@ -451,7 +451,7 @@ function toProgram(
     id: programme.id,
     channelId: `${on.networkId}-${on.serviceId}`,
     title: programme.name,
-    description: programme.summary || undefined,
+    ...(programme.summary ? { description: programme.summary } : {}),
     genre: genre.slug,
     genreLabel: genre.label,
     startMin: Math.floor((shownFrom - windowStart.getTime()) / 60_000),
@@ -459,11 +459,11 @@ function toProgram(
     dateLabel: dayLabel(calendarDateOf(startsAt)),
     startLabel: clockLabel(startsAt),
     endLabel: endsAt ? clockLabel(endsAt) : '未定',
-    subtitled: programme.hasSubtitles || undefined,
+    ...(programme.hasSubtitles ? { subtitled: true } : {}),
     audio: programme.audio,
     sounds: programme.sounds,
     video: programme.video,
-    endUndecided: endsAt ? undefined : true,
+    ...(endsAt ? {} : { endUndecided: true }),
     items: programme.items,
     related: withRelatedSettled(
       [

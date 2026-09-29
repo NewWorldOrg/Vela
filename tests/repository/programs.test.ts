@@ -756,3 +756,18 @@ test('the guide is asked for without waiting for the bookings it marks', async (
     true,
   )
 })
+
+test('a programme hands over no field it has nothing to say in', async () => {
+  standing()
+  store.programmes[0] = {
+    ...store.programmes[0],
+    summary: '',
+    hasSubtitles: false,
+  }
+
+  const program = await fromTheGuide(idOf(CARRIED))
+
+  for (const unsaid of ['description', 'subtitled', 'endUndecided']) {
+    assert.equal(unsaid in program, false, unsaid)
+  }
+})
