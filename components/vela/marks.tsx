@@ -129,15 +129,23 @@ const MOODS: Record<
   },
 }
 
+const SAIL_BODY = 'M29 29 A50 45 0 0 1 84 72 L29 72 Z'
+
 /**
  * The usher: a sail riding on a hull, an antenna on its head and a star above
  * its shoulder, with its face cut through the sail.
+ * `edged` rims it in the ground colour so it stands on a surface of its own colour;
+ * `starless` leaves the star to be drawn apart with `UsherStar`.
  */
 export function Usher({
   mood = 'plain',
+  edged = false,
+  starless = false,
   className,
 }: {
   mood?: UsherMood
+  edged?: boolean
+  starless?: boolean
   className?: string
 }) {
   const face = maskIdOf(useId(), 'usher')
@@ -150,7 +158,11 @@ export function Usher({
       focusable="false"
       data-slot="usher"
       data-mood={mood}
-      className={cn('size-[calc(78rem/16)] shrink-0', className)}
+      className={cn(
+        'size-[calc(78rem/16)] shrink-0',
+        edged && 'overflow-visible',
+        className,
+      )}
     >
       <defs>
         <mask id={face}>
@@ -158,6 +170,27 @@ export function Usher({
           <g fill="#000">{drawn.face}</g>
         </mask>
       </defs>
+      {edged && (
+        <g
+          className="stroke-bg"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          data-edge=""
+        >
+          <path d={drawn.antenna} strokeWidth={16} />
+          <path d={SAIL_BODY} className="fill-bg" strokeWidth={14} />
+          <rect
+            x="14"
+            y="82"
+            width="80"
+            height="16"
+            rx="8"
+            className="fill-bg"
+            strokeWidth={8}
+          />
+        </g>
+      )}
       <g className="fill-brand stroke-brand" mask={`url(#${face})`}>
         <path
           d={drawn.antenna}
@@ -166,14 +199,33 @@ export function Usher({
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path
-          d="M29 29 A50 45 0 0 1 84 72 L29 72 Z"
-          strokeWidth={6}
-          strokeLinejoin="round"
-        />
+        <path d={SAIL_BODY} strokeWidth={6} strokeLinejoin="round" />
       </g>
       <rect x="14" y="82" width="80" height="16" rx="8" className="fill-sky" />
-      <path d={drawn.star} className="fill-spark" data-star="" />
+      {!starless && <path d={drawn.star} className="fill-spark" data-star="" />}
+    </svg>
+  )
+}
+
+/**
+ * The usher's star alone, the glad one, rimmed in the ground colour.
+ */
+export function UsherStar({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="-18 -18 36 36"
+      aria-hidden="true"
+      focusable="false"
+      data-slot="usher-star"
+      className={cn('overflow-visible', className)}
+    >
+      <path
+        d={star(0, 0, 16)}
+        className="fill-spark stroke-bg"
+        strokeWidth={3}
+        strokeLinejoin="round"
+        paintOrder="stroke"
+      />
     </svg>
   )
 }
