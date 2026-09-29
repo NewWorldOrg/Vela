@@ -959,6 +959,12 @@ const config: TestRunnerConfig = {
     if (size) {
       await page.setViewportSize(size)
     }
+
+    await page.emulateMedia({
+      reducedMotion: (parameters as { lessMotion?: boolean }).lessMotion
+        ? 'reduce'
+        : null,
+    })
   },
 
   async postVisit(page: Page, context) {

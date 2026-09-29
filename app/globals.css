@@ -193,6 +193,11 @@
     --sky-soft: #e9f1f9;
     --sky-line: #c9deef;
     --spark: #efb440;
+    --fold-deep: color-mix(in oklab, var(--accent-hover) 72%, var(--ink));
+    --fold-shade: var(--accent-hover);
+    --fold-face: var(--accent);
+    --fold-lit: color-mix(in oklab, var(--accent) 70%, var(--accent-line));
+    --fold-cord: var(--bg);
     --pop: rgba(72, 60, 46, 0.22);
     --scrim: rgba(0, 0, 0, 0.32);
     --ring: 0 0 0 3px rgba(63, 100, 97, 0.2);
@@ -261,6 +266,11 @@
       --sky-soft: #26313a;
       --sky-line: #3a4b5c;
       --spark: #efb440;
+      --fold-deep: color-mix(in oklab, var(--accent-soft) 70%, var(--bg));
+      --fold-shade: var(--accent-soft);
+      --fold-face: var(--accent-line);
+      --fold-lit: color-mix(in oklab, var(--accent-line) 70%, var(--accent));
+      --fold-cord: var(--accent);
       --pop: rgba(0, 0, 0, 0.5);
       --scrim: rgba(0, 0, 0, 0.5);
       --ring: 0 0 0 3px rgba(150, 187, 180, 0.28);
@@ -270,8 +280,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-motion='moves']) {
-      --animate-curtain-panel: none;
-      --animate-curtain-line: none;
       --animate-stamp: none;
       --animate-twinkle: none;
       --animate-draw: none;
@@ -294,8 +302,6 @@
   }
 
   :root[data-motion='still'] {
-    --animate-curtain-panel: none;
-    --animate-curtain-line: none;
     --animate-stamp: none;
     --animate-twinkle: none;
     --animate-draw: none;
@@ -473,8 +479,6 @@
   --animate-surface-in: appear 200ms var(--ease-toy) backwards;
   --animate-surface-out: disappear 120ms var(--ease-toy) both;
   --animate-joining: item 0.28s var(--ease-item) both;
-  --animate-curtain-panel: curtain-panel 0.8s 0.32s both;
-  --animate-curtain-line: curtain-line 1s ease-in-out both;
   --animate-stamp: stamp 0.34s ease-out both;
   --animate-twinkle: twinkle 0.42s var(--ease-toy) both;
   --animate-draw: draw 0.6s ease-in-out both;
@@ -585,43 +589,6 @@
   position: relative;
   padding-block: 6px;
   margin-block: -6px;
-}
-
-@keyframes curtain-panel {
-  0% {
-    transform: translateX(0);
-    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.5);
-  }
-  25% {
-    transform: translateX(var(--curtain-crack, 0px));
-    animation-timing-function: cubic-bezier(0.87, 0.05, 0.02, 0.97);
-  }
-  100% {
-    transform: translateX(var(--curtain-away, 0px));
-  }
-}
-
-@keyframes curtain-line {
-  0% {
-    transform: scaleY(0);
-    opacity: 1;
-  }
-  30% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-  48% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-  60% {
-    transform: scaleY(1);
-    opacity: 0;
-  }
-  100% {
-    transform: scaleY(1);
-    opacity: 0;
-  }
 }
 
 @keyframes twinkle {
@@ -817,6 +784,17 @@
 }
 
 @utility curtain {
+  contain: strict;
+  container-type: size;
+  --curtain-hold: 0.8s;
+  --fold-w: calc(50cqw / 9);
+  --fold-pinch: max(12px, 1.15cqw);
+  --fold-tie: 60cqh;
+  --usher-size: clamp(150px, 27cqmin, 270px);
+  --usher-rest: 44cqh;
+  --mark-x: calc(22rem / 16 + env(safe-area-inset-left));
+  --mark-y: calc(23rem / 16);
+
   @media (prefers-reduced-motion: reduce) {
     :root:not([data-motion='moves']) & {
       display: none;
@@ -825,35 +803,664 @@
 
   :root[data-motion='still'] & {
     display: none;
+  }
+
+  & .curtain-half {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 50%;
+  }
+
+  & .curtain-half[data-side='right'] {
+    left: 50%;
+    transform: scaleX(-1);
+  }
+
+  & .curtain-side {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+    --out: calc(var(--fold-pinch) * -14.4 - 180px);
+    animation: curtain-side 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-fold {
+    position: absolute;
+    inset-block: 0;
+    left: calc(var(--i) * var(--fold-w));
+    width: calc(var(--fold-w) + 26px);
+    z-index: calc(var(--i) + 1);
+    will-change: transform;
+    --fold-late: calc((8 - var(--i)) * 16ms);
+    --tx: calc(var(--i) * (var(--fold-pinch) - var(--fold-w)));
+    --th: calc(var(--i) * 0.575deg);
+    --o: calc(var(--i) * var(--fold-pinch) * -0.78);
+    --su: atan2(var(--o), var(--fold-tie));
+    --sl: atan2(
+      calc(var(--i) * var(--fold-pinch) * 0.94),
+      calc(100cqh - var(--fold-tie))
+    );
+    animation: curtain-gather 0.38s
+      calc(var(--curtain-hold) + 0.26s + var(--fold-late))
+      cubic-bezier(0.5, 0, 0.15, 1) both;
+  }
+
+  & .curtain-fold:first-child {
+    left: -40px;
+    width: calc(var(--fold-w) + 66px);
+  }
+
+  & .curtain-fold-sway {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+    animation:
+      curtain-idle 2.4s calc(var(--i) * -0.14s) ease-in-out,
+      curtain-sway 0.8s calc(var(--curtain-hold) + 0.26s + var(--fold-late))
+        forwards;
+  }
+
+  & .curtain-fold-up,
+  & .curtain-fold-lo {
+    position: absolute;
+    inset-inline: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  & .curtain-fold-up {
+    top: 0;
+    height: var(--fold-tie);
+    animation: curtain-cinch-up 0.3s calc(var(--curtain-hold) + 0.92s) both;
+  }
+
+  & .curtain-fold-lo {
+    top: var(--fold-tie);
+    bottom: 0;
+    animation: curtain-cinch-lo 0.3s calc(var(--curtain-hold) + 0.92s) both;
+  }
+
+  & .curtain-fold-paint {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+    background: linear-gradient(
+      90deg,
+      var(--fold-deep) 0 7%,
+      var(--fold-shade) 7% 22%,
+      var(--fold-face) 22% 48%,
+      var(--fold-lit) 48% 57%,
+      var(--fold-face) 57% 68%,
+      var(--fold-shade) 68% 100%
+    );
+    animation: curtain-squeeze 0.38s
+      calc(var(--curtain-hold) + 0.26s + var(--fold-late))
+      cubic-bezier(0.5, 0, 0.15, 1) both;
+  }
+
+  & .curtain-fold[data-lead] .curtain-fold-paint {
+    background: linear-gradient(
+      90deg,
+      var(--fold-deep) 0 7%,
+      var(--fold-shade) 7% 22%,
+      var(--fold-face) 22% 48%,
+      var(--fold-lit) 48% 57%,
+      var(--fold-face) 57% 68%,
+      var(--fold-shade) 68% 82%,
+      var(--fold-deep) 82% 100%
+    );
+  }
+
+  & .curtain-fold-lo .curtain-fold-paint {
+    border-radius: 0 0 46% 46% / 0 0 22px 22px;
+  }
+
+  & .curtain-fold-lo .curtain-fold-paint::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 16px;
+    height: 5px;
+    background: var(--fold-lit);
+  }
+
+  & .curtain-tie {
+    position: absolute;
+    left: calc(var(--fold-pinch) * 1.38 + 4px);
+    top: var(--fold-tie);
+    z-index: 40;
+    width: 0;
+    height: 0;
+    --loop-w: calc(var(--fold-pinch) * 2.76 + 22px);
+  }
+
+  & .curtain-tie-loop {
+    position: absolute;
+    left: calc(var(--loop-w) / -2);
+    top: -10px;
+    width: var(--loop-w);
+    height: 20px;
+    border-radius: 10px;
+    transform: scaleX(0);
+    will-change: transform;
+    animation: curtain-loop 0.26s calc(var(--curtain-hold) + 0.94s) var(--ease)
+      both;
+  }
+
+  & .curtain-tassel {
+    position: absolute;
+    left: calc(var(--loop-w) / 2 - 20px);
+    top: -2px;
+    width: 40px;
+    height: 88px;
+    transform-origin: 50% 0;
+    transform: scale(0);
+    will-change: transform;
+    animation: curtain-tassel 0.7s calc(var(--curtain-hold) + 1s) both;
+  }
+
+  & .curtain-valance {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: 60;
+    height: 62px;
+    will-change: transform;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--fold-shade) 0 34px,
+      var(--fold-deep) 34px 44px,
+      var(--fold-shade) 44px 60px,
+      var(--fold-face) 60px 72px
+    );
+    animation: curtain-valance 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-valance::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 8px;
+    height: 5px;
+    background: var(--fold-lit);
+  }
+
+  & .curtain-valance::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 40px;
+    background:
+      radial-gradient(
+          circle at 50% 30px,
+          var(--fold-lit) 6px,
+          transparent 6.5px
+        ) -36px
+        0 / 72px 40px repeat-x,
+      radial-gradient(
+          ellipse 36px 26px at 50% 0,
+          var(--fold-shade) 35px,
+          transparent 36px
+        )
+        0 0 / 72px 40px repeat-x;
+  }
+
+  & .curtain-cord {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--usher-rest) - var(--usher-size) * 0.4 - 100cqh + 6px);
+    z-index: 54;
+    width: 5px;
+    height: 100cqh;
+    margin-left: -2.5px;
+    border-radius: 3px;
+    background: var(--fold-cord);
+    will-change: transform;
+    animation: curtain-cord 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-cord::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    width: 15px;
+    height: 15px;
+    margin-left: -7.5px;
+    border-radius: 50%;
+    background: var(--fold-cord);
+  }
+
+  & .curtain-usher-x {
+    position: absolute;
+    left: 50%;
+    top: var(--usher-rest);
+    z-index: 55;
+    width: 0;
+    height: 0;
+    will-change: transform;
+    animation: curtain-usher-x 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-usher-y {
+    position: absolute;
+    left: 0;
+    top: 0;
+    will-change: transform;
+    animation: curtain-usher-y 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-usher-z {
+    position: absolute;
+    left: calc(var(--usher-size) / -2);
+    top: calc(var(--usher-size) / -2);
+    width: var(--usher-size);
+    height: var(--usher-size);
+    will-change: transform;
+    animation: curtain-usher-z 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-usher-s {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 88%;
+    will-change: transform;
+    animation: curtain-usher-s 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-usher-plain,
+  & .curtain-usher-glad {
+    position: absolute;
+    inset: 0;
+  }
+
+  & .curtain-usher-plain {
+    animation: curtain-plain 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-usher-glad {
+    opacity: 0;
+    animation: curtain-glad 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-usher-star {
+    position: absolute;
+    left: 46.2%;
+    top: 1%;
+    width: 30.8%;
+    height: 30.8%;
+    will-change: transform;
+    animation: curtain-star 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-twinkle {
+    position: absolute;
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: curtain-twinkle 1.65s var(--curtain-hold) both;
+  }
+
+  & .curtain-dock {
+    position: absolute;
+    left: var(--mark-x);
+    top: var(--mark-y);
+    z-index: 70;
+    width: 0;
+    height: 0;
+  }
+
+  & .curtain-dock-ring {
+    position: absolute;
+    left: -22px;
+    top: -22px;
+    width: 44px;
+    height: 44px;
+    border: 4px solid var(--spark);
+    border-radius: 50%;
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: curtain-dock 1.65s var(--curtain-hold) both;
   }
 }
 
-@utility curtain-panel {
-  animation: var(--animate-curtain-panel);
-
-  @media (prefers-reduced-motion: reduce) {
-    :root:not([data-motion='moves']) & {
-      display: none;
-    }
+@keyframes curtain-side {
+  0% {
+    transform: translateX(0) skewX(0);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
   }
-
-  :root[data-motion='still'] & {
-    display: none;
+  15.7% {
+    transform: translateX(10px) skewX(0.5deg);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  22% {
+    transform: translateX(0) skewX(0);
+  }
+  76% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.25);
+  }
+  98%,
+  100% {
+    transform: translateX(var(--out));
   }
 }
 
-@utility curtain-line {
-  transform-origin: top;
-  animation: var(--animate-curtain-line);
-
-  @media (prefers-reduced-motion: reduce) {
-    :root:not([data-motion='moves']) & {
-      display: none;
-    }
+@keyframes curtain-gather {
+  to {
+    transform: translateX(var(--tx));
   }
+}
 
-  :root[data-motion='still'] & {
-    display: none;
+@keyframes curtain-squeeze {
+  to {
+    transform: scaleX(0.207);
+  }
+}
+
+@keyframes curtain-sway {
+  0% {
+    transform: skewX(0);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.5, 1);
+  }
+  22% {
+    transform: skewX(var(--th));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  50% {
+    transform: skewX(calc(var(--th) * -0.45));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  70% {
+    transform: skewX(calc(var(--th) * 0.2));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  86% {
+    transform: skewX(calc(var(--th) * -0.07));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    transform: skewX(0);
+  }
+}
+
+@keyframes curtain-idle {
+  0%,
+  100% {
+    transform: skewX(0);
+  }
+  30% {
+    transform: skewX(0.32deg);
+  }
+  70% {
+    transform: skewX(-0.28deg);
+  }
+}
+
+@keyframes curtain-cinch-up {
+  0% {
+    transform: skewX(0);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1);
+  }
+  55% {
+    transform: skewX(calc(var(--su) * 1.18));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    transform: skewX(var(--su));
+  }
+}
+
+@keyframes curtain-cinch-lo {
+  0% {
+    transform: translateX(0) skewX(0);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1);
+  }
+  55% {
+    transform: translateX(calc(var(--o) * 1.18)) skewX(calc(var(--sl) * 1.18));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    transform: translateX(var(--o)) skewX(var(--sl));
+  }
+}
+
+@keyframes curtain-loop {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes curtain-tassel {
+  0% {
+    transform: scale(0) rotate(0);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  22% {
+    transform: scale(1.15, 0.9) rotate(-16deg);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  48% {
+    transform: scale(1) rotate(10deg);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  72% {
+    transform: scale(1) rotate(-4deg);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes curtain-valance {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+  }
+  15.7% {
+    transform: translateY(7px);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  24% {
+    transform: translateY(-3px);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  32% {
+    transform: translateY(0);
+  }
+  76% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.5, 1);
+  }
+  80% {
+    transform: translateY(8px);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.25);
+  }
+  97%,
+  100% {
+    transform: translateY(-170%);
+  }
+}
+
+@keyframes curtain-cord {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+  }
+  15.7% {
+    transform: translateY(38px);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.3);
+  }
+  30%,
+  100% {
+    transform: translateY(-100cqh);
+  }
+}
+
+@keyframes curtain-usher-x {
+  0%,
+  62% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.35, 1);
+  }
+  86%,
+  100% {
+    transform: translateX(calc(var(--mark-x) - 50cqw));
+  }
+}
+
+@keyframes curtain-usher-y {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+  }
+  15.7% {
+    transform: translateY(38px);
+    animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  36% {
+    transform: translateY(-120px);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  47% {
+    transform: translateY(-94px);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  62% {
+    transform: translateY(-104px);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1);
+  }
+  86%,
+  100% {
+    transform: translateY(calc(var(--mark-y) - var(--usher-rest)));
+  }
+}
+
+@keyframes curtain-usher-z {
+  0%,
+  62% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.55, 0, 0.6, 1);
+  }
+  86% {
+    transform: scale(0.1) rotate(-24deg);
+    opacity: 1;
+  }
+  90%,
+  100% {
+    transform: scale(0.1) rotate(-24deg);
+    opacity: 0;
+  }
+}
+
+@keyframes curtain-usher-s {
+  0% {
+    transform: scale(1, 1);
+  }
+  15.7% {
+    transform: scale(0.92, 1.1);
+  }
+  20% {
+    transform: scale(1.14, 0.86);
+  }
+  28% {
+    transform: scale(0.88, 1.14);
+  }
+  38% {
+    transform: scale(1.06, 0.95);
+  }
+  45% {
+    transform: scale(0.98, 1.02);
+  }
+  50%,
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes curtain-plain {
+  0%,
+  26% {
+    opacity: 1;
+  }
+  27%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes curtain-glad {
+  0%,
+  26% {
+    opacity: 0;
+  }
+  27%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes curtain-star {
+  0%,
+  28% {
+    transform: scale(1) rotate(0);
+  }
+  36% {
+    transform: scale(1.7) rotate(72deg);
+  }
+  44% {
+    transform: scale(0.9) rotate(96deg);
+  }
+  50%,
+  100% {
+    transform: scale(1.05) rotate(90deg);
+  }
+}
+
+@keyframes curtain-twinkle {
+  0%,
+  31% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0);
+  }
+  37% {
+    opacity: 1;
+    transform: translate(var(--tx), var(--ty)) scale(1.2);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(calc(var(--tx) * 1.3), calc(var(--ty) * 1.3))
+      scale(0.7);
+  }
+  56%,
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--tx) * 1.4), calc(var(--ty) * 1.4)) scale(0);
+  }
+}
+
+@keyframes curtain-dock {
+  0%,
+  85% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  88% {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
   }
 }
 
