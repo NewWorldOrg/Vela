@@ -250,23 +250,14 @@ export function TunersView({
           </div>
         )}
         {result.state === 'unauthenticated' ? (
-          <EmptyState
-            spot="tuner"
-            titleLevel={2}
-            title="サインインしないと見られません"
-          />
+          <EmptyState titleLevel={2} title="サインインしないと見られません" />
         ) : restarting ? (
           <EmptyState
-            spot="tuner"
             titleLevel={2}
             title="driver の入れ替わりを待っています"
           />
         ) : (
-          <EmptyState
-            spot="tuner"
-            titleLevel={2}
-            title="状態を取得できませんでした"
-          >
+          <EmptyState titleLevel={2} title="状態を取得できませんでした">
             {result.message}
           </EmptyState>
         )}
@@ -440,7 +431,6 @@ export function TunersView({
 
             {empty && (
               <EmptyState
-                spot="tuner"
                 title="チューナーが未設定です"
                 className="border-none bg-tint-lavender"
                 action={

@@ -243,7 +243,7 @@ export function IntegrityView({
       )}
 
       {findings.length === 0 ? (
-        <EmptyState spot="star" title="食い違いはありません" titleLevel={2} />
+        <EmptyState usher="glad" title="食い違いはありません" titleLevel={2} />
       ) : (
         <Table
           className="table-fixed min-w-[calc(760rem/16)]"

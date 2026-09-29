@@ -694,7 +694,7 @@ test('the guide builds its other columns only after the opening is over', async 
   assert.match(hook, /if \(settled\) \{\s*stopGrowing = whenIdle\(grow\)/)
 })
 
-test('the spark colour is kept to the opening of the guide', async () => {
+test('the spark colour is kept to the opening of the guide and the star of the marks', async () => {
   const files = await sourceFiles('components')
   const users: string[] = []
 
@@ -708,7 +708,10 @@ test('the spark colour is kept to the opening of the guide', async () => {
     }
   }
 
-  assert.deepEqual(users, ['components/guide/guide-opening.tsx'])
+  assert.deepEqual(users, [
+    'components/guide/guide-opening.tsx',
+    'components/vela/marks.tsx',
+  ])
 })
 
 test('the opening of the guide is taken away where movement is switched off', async () => {
@@ -750,16 +753,25 @@ test('the curtain and the lines drawn by hand end on a small echo, once', async 
 
   assert.match(curtain, /curtain-line/)
 
-  for (const file of [
-    'components/vela/section-heading.tsx',
-    'components/vela/empty-state.tsx',
-  ]) {
-    assert.match(
-      await readFile(path.join(ROOT, file), 'utf8'),
-      /drawn stamps/,
-      `${file} draws its mark without the stamp at the end`,
-    )
-  }
+  assert.match(
+    await readFile(
+      path.join(ROOT, 'components/vela/section-heading.tsx'),
+      'utf8',
+    ),
+    /drawn stamps/,
+    'the section heading draws its mark without the stamp at the end',
+  )
+
+  assert.match(
+    await readFile(path.join(ROOT, 'components/vela/empty-state.tsx'), 'utf8'),
+    /usher-arrives/,
+    'the usher of an empty state arrives without its stamp',
+  )
+  const usher = sheet.slice(
+    sheet.indexOf('@utility usher-arrives {'),
+    sheet.indexOf('\n}\n', sheet.indexOf('@utility usher-arrives {')),
+  )
+  assert.match(usher, /animation: var\(--animate-stamp\);/)
 })
 
 test('every part that moves hears the switch in the settings, not the machine alone', async () => {

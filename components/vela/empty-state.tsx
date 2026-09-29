@@ -1,13 +1,10 @@
 import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import {
-  SpotIllustration,
-  type SpotName,
-} from '@/components/vela/spot-illustration'
+import { Usher, type UsherMood } from '@/components/vela/marks'
 
 export function EmptyState({
-  spot = 'antenna',
+  usher = 'plain',
   title,
   titleLevel = 3,
   action,
@@ -15,7 +12,7 @@ export function EmptyState({
   children,
   ...props
 }: ComponentProps<'div'> & {
-  spot?: SpotName | null
+  usher?: UsherMood | null
   title?: string
   titleLevel?: 2 | 3
   action?: ReactNode
@@ -32,14 +29,9 @@ export function EmptyState({
       )}
       {...props}
     >
-      {(spot || said) && (
+      {(usher || said) && (
         <div className="flex flex-col items-center gap-2.5">
-          {spot && (
-            <SpotIllustration
-              name={spot}
-              className="drawn stamps size-[calc(78rem/16)] [--stroke-length:200]"
-            />
-          )}
+          {usher && <Usher mood={usher} className="usher-arrives" />}
           {said && (
             <div className="flex flex-col items-center gap-[calc(9rem/16)]">
               {title && <Title className="heading text-h3">{title}</Title>}

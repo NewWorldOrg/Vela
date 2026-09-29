@@ -2,7 +2,8 @@ import type { ComponentProps, ReactNode } from 'react'
 import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
-import { SettingsIcon, VelaMark } from '@/components/vela/icons'
+import { SettingsIcon } from '@/components/vela/icons'
+import { VelaMark } from '@/components/vela/marks'
 import { iconTilt } from '@/components/vela/tactile'
 
 const TOP_BAR_HEIGHT = 'h-[calc(46rem/16)]'
@@ -61,7 +62,7 @@ export function Brand({ className, ...props }: ComponentProps<'div'>) {
       )}
       {...props}
     >
-      <VelaMark className="size-4 text-brand" />
+      <VelaMark small className="size-4" />
       Vela
     </div>
   )

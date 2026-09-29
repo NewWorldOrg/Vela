@@ -201,7 +201,6 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         </>
       ) : !emptyLedger ? (
         <EmptyState
-          spot="tape"
           title="条件に合う記録がありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"
@@ -219,7 +218,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         />
       ) : (
         <EmptyState
-          spot="star"
+          usher="glad"
           title="録れなかった予約はありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"

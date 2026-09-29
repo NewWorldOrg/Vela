@@ -287,7 +287,6 @@ export function ReservationsView({
 
       {items.length === 0 ? (
         <EmptyState
-          spot={total === 0 ? 'antenna' : 'star'}
           title={total === 0 ? '予約はありません' : '未完了の予約はありません'}
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"

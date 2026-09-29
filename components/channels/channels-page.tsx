@@ -74,7 +74,7 @@ function ServiceGroupSection({
         group.diagnosis ? (
           <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
         ) : (
-          <EmptyState spot="antenna" className="max-w-[calc(520rem/16)]">
+          <EmptyState className="max-w-[calc(520rem/16)]">
             {group.walk === 'never'
               ? `${group.label}はまだスキャンされていません。`
               : group.walk === 'unknown'
@@ -95,7 +95,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
       <SectionHeading mark={MarkDots}>スキャン履歴</SectionHeading>
       {history.length === 0 ? (
         <EmptyState
-          spot={null}
+          usher={null}
           title="スキャンはまだ一度も実行されていません"
         />
       ) : (
@@ -196,14 +196,12 @@ export function ChannelsView({
         {heading}
         {result.state === 'unauthenticated' ? (
           <EmptyState
-            spot="antenna"
             titleLevel={2}
             title="サインインしないと見られません"
             className="mt-4"
           />
         ) : (
           <EmptyState
-            spot="antenna"
             titleLevel={2}
             title="一覧を取得できませんでした"
             className="mt-4"
@@ -275,7 +273,6 @@ export function ChannelsView({
       <UnfoldingServices>
         {neverScanned ? (
           <EmptyState
-            spot="antenna"
             titleLevel={2}
             title="まだスキャンしていません"
             className="mt-9"

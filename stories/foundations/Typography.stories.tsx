@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface, TintPanel } from '@/components/vela/surface'
-import { SpotIllustration } from '@/components/vela/spot-illustration'
+import { Usher } from '@/components/vela/marks'
 import { StatusDot } from '@/components/vela/status'
 import { MarkRuler, MarkSlashes, MarkType } from '@/components/vela/icons'
 
@@ -59,7 +59,7 @@ export const Scale: Story = {
               チャンネルスキャン
             </HeadingRow>
           </div>
-          <SpotIllustration name="tape" className="mt-0.5 size-[70px]" />
+          <Usher className="mt-0.5 size-[70px]" />
         </Surface>
         <p className="mt-[9px] text-note text-ink-3">
           見出しは丸ゴシックの 700 のみ。字間は palt で詰め、行間は 1.45

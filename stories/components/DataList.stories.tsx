@@ -193,11 +193,7 @@ export const Empty: Story = {
           <span className="text-right">有効</span>
         </DataListHeader>
       </DataList>
-      <EmptyState
-        spot="tuner"
-        className="mt-2.5"
-        action={<Button>チューナーを追加</Button>}
-      >
+      <EmptyState className="mt-2.5" action={<Button>チューナーを追加</Button>}>
         チューナーがまだ登録されていません。デバイスを接続すると、自動検出された候補が
         ここに表示されます。
       </EmptyState>

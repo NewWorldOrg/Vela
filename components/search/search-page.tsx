@@ -455,13 +455,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
         <WaitingRows rows={6} className="mt-6" aria-label={WAITING_LABEL} />
       ) : outcome.state === 'idle' ? (
         <EmptyState
-          spot="antenna"
           title="まだ検索していません"
           className="mt-10 max-w-[calc(560rem/16)]"
         />
       ) : outcome.state === 'refused' ? (
         <EmptyState
-          spot="antenna"
           title="この条件では検索できません"
           className="mt-10 max-w-[calc(560rem/16)]"
         >
@@ -548,7 +546,6 @@ function SearchScreen({ result }: { result: SearchResult }) {
 
             {found.hits.length === 0 ? (
               <EmptyState
-                spot="antenna"
                 title="該当する番組がありません"
                 className="mt-6 max-w-[calc(560rem/16)]"
                 action={

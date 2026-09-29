@@ -85,12 +85,15 @@ export const 何も計測されていない: Story = {
       canvas.getByText('期間内に録画したチューナーがありません。'),
     ).toBeVisible()
 
-    const spots = [
-      ...canvasElement.querySelectorAll('[data-slot="empty-state"] svg'),
-    ].map((one) => one.innerHTML)
+    const moods = [
+      ...canvasElement.querySelectorAll<SVGSVGElement>(
+        '[data-slot="empty-state"] [data-slot="usher"]',
+      ),
+    ].map((usher) => usher.dataset.mood)
 
-    await expect(spots.length).toBe(3)
-    await expect(new Set(spots).size).toBe(spots.length)
+    await expect(moods.filter((mood) => mood === 'plain').length).toBe(3)
+    await expect(moods.filter((mood) => mood === 'glad').length).toBe(2)
+    await expect(moods.length).toBe(5)
   },
 }
 

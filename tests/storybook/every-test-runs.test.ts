@@ -30,6 +30,7 @@ const THE_SUITE = [
   'tests/components/the-way-a-screen-arrives.test.ts',
   'tests/components/the-width-of-a-fixed-thing.test.ts',
   'tests/components/vela/empty-state.test.ts',
+  'tests/components/vela/marks.test.ts',
   'tests/components/vela/the-way-a-select-opens.test.ts',
   'tests/hooks/useFullscreen.test.ts',
   'tests/hooks/useHeldWhileClosing.test.ts',

@@ -135,7 +135,6 @@ export function LiveView({
           ライブ
         </h1>
         <EmptyState
-          spot="tuner"
           titleLevel={2}
           title="チューナーが登録されていません"
           action={
@@ -192,7 +191,7 @@ export function LiveView({
         )}
         {nothingIsOn && (
           <EmptyState
-            spot={null}
+            usher={null}
             titleLevel={2}
             title="EPG をまだ取得していません"
             className="mt-3.5"

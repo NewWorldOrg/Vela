@@ -25,7 +25,6 @@ export function ChannelsMissing({
   if (elsewhere === undefined) {
     return (
       <EmptyState
-        spot="antenna"
         titleLevel={titleLevel}
         title="視聴できるチャンネルがありません"
         className={className}
@@ -40,7 +39,6 @@ export function ChannelsMissing({
 
   return (
     <EmptyState
-      spot="antenna"
       titleLevel={titleLevel}
       title={`${CHANNEL_KIND_LABEL[kind]}のチャンネルがありません`}
       className={className}

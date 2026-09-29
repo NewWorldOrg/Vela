@@ -222,7 +222,7 @@ function RulesScreen({
           </div>
 
           {result.items.length === 0 ? (
-            <EmptyState spot={null} title="まだルールがありません" />
+            <EmptyState usher={null} title="まだルールがありません" />
           ) : (
             <ul className="flex flex-col gap-1.5">
               {result.items.map((rule) => (
@@ -244,7 +244,7 @@ function RulesScreen({
         </section>
 
         {editing.state === 'none' ? (
-          <EmptyState spot="list" title="ルールが選ばれていません" />
+          <EmptyState title="ルールが選ばれていません" />
         ) : (
           <RuleEditor
             rule={editing.state === 'rule' ? editing.rule : undefined}
@@ -1016,7 +1016,7 @@ function RuleEditor({
             <Excluded excluded={preview.excluded} as="p" />
             {preview.takes.length === 0 ? (
               <EmptyState
-                spot={null}
+                usher={null}
                 title="いまの番組表に、この条件に一致する番組はありません"
               />
             ) : (

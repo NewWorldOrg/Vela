@@ -286,7 +286,7 @@ export function QualityView({
             warnMarkPct={result.warnMarkPct}
           />
         ) : (
-          <EmptyState spot="antenna" title="対象なし">
+          <EmptyState title="対象なし">
             期間内に地上波の録画がありません。
           </EmptyState>
         )}
@@ -300,7 +300,7 @@ export function QualityView({
             warnMarkPct={result.warnMarkPct}
           />
         ) : (
-          <EmptyState spot="dish" title="対象なし">
+          <EmptyState title="対象なし">
             期間内に BS / CS の録画がありません。
           </EmptyState>
         )}
@@ -355,7 +355,7 @@ export function QualityView({
             </TableBody>
           </Table>
         ) : (
-          <EmptyState spot="tuner" title="対象なし">
+          <EmptyState title="対象なし">
             期間内に録画したチューナーがありません。
           </EmptyState>
         )}
@@ -405,7 +405,7 @@ export function QualityView({
               ))}
             </div>
           ) : (
-            <EmptyState spot={null} title="対象なし">
+            <EmptyState usher="glad" title="対象なし">
               期間内に警告水準を超えた録画がありません。
             </EmptyState>
           )}

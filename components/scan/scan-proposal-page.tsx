@@ -197,7 +197,6 @@ export function ScanProposalView({
         {crumb}
         <PageHeading>スキャン結果の確認</PageHeading>
         <EmptyState
-          spot="antenna"
           titleLevel={2}
           title={
             result.state === 'unauthenticated'
@@ -253,7 +252,7 @@ export function ScanProposalView({
       <Summary proposal={proposal} />
 
       {proposal.empty ? (
-        <EmptyState spot="antenna" className="max-w-[calc(520rem/16)]">
+        <EmptyState className="max-w-[calc(520rem/16)]">
           今回の走査で変わるものはありませんでした。
         </EmptyState>
       ) : (

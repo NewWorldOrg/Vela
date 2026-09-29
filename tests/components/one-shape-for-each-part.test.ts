@@ -584,54 +584,61 @@ test('a spinner is one of two sizes, chosen by name and declared once', async ()
   assert.ok(spinning.length > 10, `only ${spinning.length} spinners were read`)
 })
 
-const PICTURED: [string, string, string][] = [
-  ['components/library/library-page.tsx', 'まだ録画がありません', 'tape'],
-  ['components/library/library-page.tsx', '条件に合う録画がありません', 'tape'],
-  ['components/encode/jobs-navigation.tsx', 'ジョブの履歴がありません', 'tape'],
-  ['components/encode/encode-page.tsx', 'プロファイルがありません', 'list'],
-  ['components/encode/encode-page.tsx', '保存先がありません', 'list'],
-  [
-    'components/reservations/rules-page.tsx',
-    'ルールが選ばれていません',
-    'list',
-  ],
-  ['components/integrity/integrity-page.tsx', '食い違いはありません', 'star'],
-]
-
 const NOTHING_IS_WRONG = [
   'components/integrity/integrity-page.tsx',
-  'components/reservations/reservations-page.tsx',
+  'components/quality/anomaly-list.tsx',
+  'components/quality/quality-page.tsx',
   'components/reservations/outcomes-page.tsx',
 ]
 
-test('an empty state is drawn with the picture of what is missing', async () => {
-  for (const [file, title, spot] of PICTURED) {
-    const source = await read(file)
-    const opening = source.match(
-      new RegExp(`<EmptyState\\b(?:(?!<EmptyState)[\\s\\S])*?title="${title}"`),
-    )
+const NOTHING_TO_SHOW = ['app/(app)/error.tsx', 'app/not-found.tsx']
 
-    assert.ok(opening, `${file} no longer says ${title}`)
-    assert.match(
-      opening[0],
-      new RegExp(`spot="${spot}"`),
-      `${file} draws ${title} with a picture that stands for something else`,
-    )
-  }
-})
+async function moodsIn(
+  mood: string,
+): Promise<{ file: string; opening: string }[]> {
+  const found: { file: string; opening: string }[] = []
 
-test('the star is kept for nothing being wrong', async () => {
-  for (const { file, source } of await everySource(['components'])) {
-    for (const found of source.matchAll(
-      /<EmptyState\b(?:(?!<EmptyState)[\s\S])*?spot=(?:"star"|\{[^}]*'star'[^}]*\})/g,
+  for (const { file, source } of await everySource(['app', 'components'])) {
+    for (const opening of source.matchAll(
+      new RegExp(
+        `<(?:EmptyState|ScreenPlaceholder)\\b(?:(?!<(?:EmptyState|ScreenPlaceholder)\\b)[^>])*?usher="${mood}"`,
+        'g',
+      ),
     )) {
-      assert.ok(
-        NOTHING_IS_WRONG.includes(file),
-        `${file} draws the star for an empty state that is not all clear: ` +
-          found[0].slice(0, 80),
-      )
+      found.push({ file, opening: opening[0] })
     }
   }
+
+  return found
+}
+
+test('the usher is glad only where nothing is wrong', async () => {
+  const glad = await moodsIn('glad')
+
+  for (const { file, opening } of glad) {
+    assert.ok(
+      NOTHING_IS_WRONG.includes(file),
+      `${file} is glad about an empty state that is not all clear: ` +
+        opening.slice(0, 80),
+    )
+  }
+
+  assert.deepEqual(
+    [...new Set(glad.map(({ file }) => file))].sort(),
+    NOTHING_IS_WRONG,
+    'a screen that says nothing is wrong no longer says it gladly',
+  )
+})
+
+test('the usher is troubled only where the page could not be shown', async () => {
+  const troubled = await moodsIn('troubled')
+
+  assert.deepEqual(
+    [...new Set(troubled.map(({ file }) => file))].sort(),
+    NOTHING_TO_SHOW,
+    'the troubled face is for a page that is missing or failed, and those ' +
+      'two screens are the ones that wear it',
+  )
 })
 
 const THE_ICON_TILT =
