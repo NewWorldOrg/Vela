@@ -38,12 +38,11 @@ export default async function Page({
 }) {
   const params = await searchParams
   const jar = await cookies()
-  const bookings = await listBookings()
   const [guide, collection] = await Promise.all([
     getGuide(
       typeof params.kind === 'string' ? params.kind : undefined,
       typeof params.date === 'string' ? params.date : undefined,
-      bookings,
+      listBookings(),
     ),
     getCollectionStatus(),
   ])
