@@ -1,18 +1,25 @@
 'use client'
 
-import { useCallback, useState, type CSSProperties } from 'react'
-
 import {
-  CURTAIN_ASKING,
-  CURTAIN_FORGETTING,
-  CURTAIN_HOLD_MS,
-  CURTAIN_IDLE,
-  FOLDS_ON_A_SIDE,
-} from '@/lib/curtain'
+  useCallback,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from 'react'
+
+import { CURTAIN_HOLD_MS, CURTAIN_IDLE, FOLDS_ON_A_SIDE } from '@/lib/curtain'
 import { Usher, UsherStar } from '@/components/vela/marks'
 
-export function askForTheCurtain(): void {
-  document.cookie = CURTAIN_ASKING
+function nothingChanges(): () => void {
+  return () => undefined
+}
+
+function builtInTheBrowser(): boolean {
+  return false
+}
+
+function builtFromTheServer(): boolean {
+  return true
 }
 
 function movementsOf(node: HTMLElement): Animation[] {
@@ -165,18 +172,23 @@ function Side() {
 }
 
 /**
- * The curtain drawn closed in the first HTML after a sign-in: folds of cloth
+ * The curtain drawn closed in the first HTML of every full load: folds of cloth
  * drawn aside and tied back, while the usher pulls the cord and flies to the mark.
+ * It rises only over a page hydrated from the server's HTML, never over one
+ * built in the browser by a navigation.
  */
 export function Curtain() {
-  const [raising, setRaising] = useState<boolean>(true)
+  const fromTheServer = useSyncExternalStore(
+    nothingChanges,
+    builtInTheBrowser,
+    builtFromTheServer,
+  )
+  const [raising, setRaising] = useState<boolean>(fromTheServer)
 
   const raised = useCallback((node: HTMLDivElement | null) => {
     if (node === null) {
       return
     }
-
-    document.cookie = CURTAIN_FORGETTING
 
     const movements = movementsOf(node)
     let gone = false

@@ -14,11 +14,30 @@ const ROOT = path.resolve(
 
 const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
 
-test('whether the curtain is down is decided by the request, so the first HTML already has it', async () => {
+test('every full load draws the curtain closed in the first HTML, without asking for it', async () => {
   const layout = await read('app/(app)/layout.tsx')
 
-  assert.match(layout, /cookies\(\)/)
-  assert.match(layout, /curtainAsked\(/)
+  assert.match(layout, /^\s*<Curtain \/>$/m)
+  assert.doesNotMatch(layout, /cookies\(\)|curtain.*&&/)
+  assert.doesNotMatch(await read('lib/curtain.ts'), /cookie/i)
+})
+
+test('the curtain rises only over a page hydrated from the server, never over one a navigation built', async () => {
+  const curtain = await read('components/vela/curtain.tsx')
+
+  assert.match(
+    curtain,
+    /useSyncExternalStore\(\s*nothingChanges,\s*builtInTheBrowser,\s*builtFromTheServer,?\s*\)/,
+  )
+  assert.match(
+    curtain,
+    /function builtInTheBrowser\(\): boolean \{\s*return false/,
+  )
+  assert.match(
+    curtain,
+    /function builtFromTheServer\(\): boolean \{\s*return true/,
+  )
+  assert.match(curtain, /useState<boolean>\(fromTheServer\)/)
 })
 
 test('the curtain is never lowered in the browser over a page that has been drawn', async () => {

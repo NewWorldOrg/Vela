@@ -1,13 +1,34 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
+import { useCallback } from 'react'
+import { hydrateRoot } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import { expect, waitFor } from 'storybook/test'
 
-import { CURTAIN_COOKIE, FOLDS_ON_A_SIDE } from '@/lib/curtain'
-import { Curtain, askForTheCurtain } from '@/components/vela/curtain'
+import { FOLDS_ON_A_SIDE } from '@/lib/curtain'
+import { Curtain } from '@/components/vela/curtain'
+
+function FromTheServer() {
+  const hydrated = useCallback((node: HTMLDivElement | null) => {
+    if (node === null) {
+      return
+    }
+
+    node.innerHTML = renderToString(<Curtain />)
+    const root = hydrateRoot(node, <Curtain />)
+
+    return () => {
+      setTimeout(() => root.unmount(), 0)
+    }
+  }, [])
+
+  return <div ref={hydrated} />
+}
 
 const meta = {
   title: 'Components/幕',
   component: Curtain,
   parameters: { layout: 'fullscreen' },
+  render: () => <FromTheServer />,
 } satisfies Meta<typeof Curtain>
 
 export default meta
@@ -20,14 +41,9 @@ function curtainOf(canvasElement: HTMLElement): HTMLElement | null {
   )
 }
 
-function asked(): boolean {
-  return document.cookie.includes(`${CURTAIN_COOKIE}=`)
-}
-
 function movingWith(motion: string) {
   return () => {
     document.documentElement.dataset.motion = motion
-    askForTheCurtain()
 
     return () => {
       delete document.documentElement.dataset.motion
@@ -41,7 +57,6 @@ export const 閉じた形で描かれ上がり終わると片付く: Story = {
     const curtain = curtainOf(canvasElement)
 
     await expect(curtain).not.toBeNull()
-    await expect(asked()).toBe(false)
     await expect(getComputedStyle(curtain!).display).not.toBe('none')
     await expect(getComputedStyle(curtain!).pointerEvents).toBe('none')
     await expect(curtain!.querySelectorAll('.curtain-fold')).toHaveLength(
@@ -99,20 +114,25 @@ export const 動きを切っていると幕を立てない: Story = {
   beforeEach: movingWith('still'),
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(curtainOf(canvasElement)).toBeNull())
-    await expect(asked()).toBe(false)
   },
 }
 
 export const 動きを減らす端末では幕を立てない: Story = {
   parameters: { lessMotion: true },
-  beforeEach: () => {
-    askForTheCurtain()
-  },
   play: async ({ canvasElement }) => {
     await expect(
       window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     ).toBe(true)
     await waitFor(() => expect(curtainOf(canvasElement)).toBeNull())
-    await expect(asked()).toBe(false)
+  },
+}
+
+export const 画面の移動で組まれたときは幕を立てない: Story = {
+  beforeEach: movingWith('moves'),
+  render: () => <Curtain />,
+  play: async ({ canvasElement }) => {
+    await expect(curtainOf(canvasElement)).toBeNull()
+    await new Promise((settled) => setTimeout(settled, 200))
+    await expect(curtainOf(canvasElement)).toBeNull()
   },
 }
