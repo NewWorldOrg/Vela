@@ -5,13 +5,13 @@ runs:
   steps:
     - uses: actions/setup-node@v4
       with:
-        node-version: '25'
+        node-version: '24'
     - id: modules
       uses: actions/cache@v4
       with:
         path: node_modules
-        key: node-modules-${{ runner.os }}-node25-${{ hashFiles('yarn.lock') }}
-        restore-keys: node-modules-${{ runner.os }}-node25-
+        key: node-modules-${{ runner.os }}-node24-${{ hashFiles('yarn.lock') }}
+        restore-keys: node-modules-${{ runner.os }}-node24-
     - if: steps.modules.outputs.cache-hit != 'true'
       shell: bash
       run: yarn install --frozen-lockfile
