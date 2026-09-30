@@ -54,6 +54,16 @@ docker compose exec app yarn dev
 開発サーバはコンテナの 3000 番で待ち受け、ホストの 8080 番に公開する。
 Storybook は `task storybook` で http://localhost:6006 に出る。
 
+## 配置
+
+前段にリバースプロキシを置き、同じオリジンで `/api/*` を Carina、それ以外を Vela に送る。
+Vela は `/api/*` を中継しない。
+
+- WebSocket(`/api/live/ws`)と SSE(`/api/events`)は切らず、溜めずに流す
+- `Range` は素通しにする(録画の再生とシーク)
+
+開発サーバを直接開くと、ブラウザが `/api/*` に出す要求(イベント・局のロゴ・再生・ライブ)は届かない。
+
 ## 設定
 
 | 変数 | 用途 |
