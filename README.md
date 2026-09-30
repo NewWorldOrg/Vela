@@ -87,3 +87,7 @@ task test:stories  # 全 story を実ブラウザで light と dark の両方で
 ```
 
 コーディング規約とデザインシステムは `CLAUDE.md` にある。
+
+## ライセンス
+
+AGPL-3.0-only。著作権者は NewWorldOrg。詳細は `LICENSE` を参照。
