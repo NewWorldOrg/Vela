@@ -30,9 +30,6 @@ app/                        App Router. globals.css is where the design tokens l
 app/(app)/                  Routes inside the shell. (app)/_shell/ is the top bar and
                             (app)/settings/_shell/ the admin side nav, both Client
 app/(app)/**/actions.ts     Server actions, beside the route that takes them
-app/api/events/             Relays the API's event stream so the browser can
-                            subscribe same-origin. A deployment that routes /api
-                            straight to the API answers before this is reached
 app/_components/            Parts used only under app/, too specific for components/
 components/ui/*             shadcn primitives, dressed in Vela's look
 components/vela/*           Vela's own components and hand-drawn SVG icons

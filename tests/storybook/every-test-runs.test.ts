@@ -8,9 +8,6 @@ const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
   'tests/app/a-fold-comes-with-the-page.test.ts',
-  'tests/app/api/events/route.test.ts',
-  'tests/app/api/services/logo/route.test.ts',
-  'tests/app/api/videos/route.test.ts',
   'tests/app/the-app-goes-on-the-home-screen.test.ts',
   'tests/app/the-curtain-comes-with-the-page.test.ts',
   'tests/app/the-system-theme-needs-no-script.test.ts',
