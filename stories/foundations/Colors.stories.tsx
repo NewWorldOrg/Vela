@@ -143,7 +143,7 @@ export const Palette: Story = {
           <StatusText tone="err">受信不可</StatusText>
           <StatusText tone="off">停止</StatusText>
           <Badge variant="ok">受信可</Badge>
-          <Badge variant="warn">drain 中</Badge>
+          <Badge variant="warn">停止準備中</Badge>
           <Badge variant="err">受信不可</Badge>
           <Badge variant="info">予約済み</Badge>
         </div>
