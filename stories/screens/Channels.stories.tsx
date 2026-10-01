@@ -9,12 +9,13 @@ import {
   MORE_CHANNELS_THAN_FIT,
   SATELLITE_TUNER_TURNED_OFF,
   SCAN_RUNNING,
+  SCAN_RUNNING_ON_A_LATER_BUILD,
 } from '@/repository/services.fixtures'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { ChannelsView } from '@/components/channels/channels-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
-import { tipIn } from '@/stories/pills-in-a-column'
+import { rowsOfTheTableHeaded, tipIn } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
 
 type ChannelsViewProps = ComponentProps<typeof ChannelsView>
@@ -230,6 +231,47 @@ export const スキャン中: Story = {
         running: { state: 'read', progress: SCAN_RUNNING },
       },
     },
+  },
+}
+
+export const スキャン中にこの版の知らない結果: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...CHANNELS,
+        running: { state: 'read', progress: SCAN_RUNNING_ON_A_LATER_BUILD },
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const rows = rowsOfTheTableHeaded(canvasElement, '物理ch')
+    const [row] = rows
+    const marks = rows.map((each) => {
+      const mark = each.querySelector<HTMLElement>(
+        'td:nth-child(2) > span > span:first-child',
+      )
+
+      if (!mark) {
+        throw new Error('a result is drawn without its mark')
+      }
+
+      return mark
+    })
+
+    await expect(within(row).getByText('この版がまだ知らない値')).toBeVisible()
+    await expect(within(row).queryByText('サービスを取得')).toBeNull()
+    await expect(
+      new Set(marks.map((mark) => Math.round(mark.getBoundingClientRect().x)))
+        .size,
+    ).toBe(1)
+    await expect(
+      new Set(
+        marks.map((mark) => Math.round(mark.getBoundingClientRect().width)),
+      ).size,
+    ).toBe(1)
   },
 }
 

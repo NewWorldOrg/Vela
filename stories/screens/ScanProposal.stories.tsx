@@ -5,8 +5,10 @@ import type { WriteResult } from '@/repository/services'
 import {
   MORE_ATTEMPTS_THAN_FIT,
   SCAN_PROPOSAL,
+  SCAN_RUNNING_ON_A_LATER_BUILD,
 } from '@/repository/services.fixtures'
 import { ScanProposalView } from '@/components/scan/scan-proposal-page'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheSettings } from '@/stories/frames'
 
@@ -97,6 +99,28 @@ export const サインインしていないとき: Story = {
 export const 取得できないとき: Story = {
   args: {
     result: { state: 'unavailable', message: 'driver に接続できません' },
+  },
+}
+
+export const この版の知らない結果の失敗: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      proposal: {
+        ...SCAN_PROPOSAL,
+        failures: SCAN_RUNNING_ON_A_LATER_BUILD.attempts.filter(
+          (attempt) => attempt.failure !== undefined,
+        ),
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const row = within(canvasElement).getByRole('row', { name: /57ch/ })
+
+    await expect(within(row).getByText('この版がまだ知らない値')).toBeVisible()
+    await expect(within(row).queryByText('サービスを取得')).toBeNull()
   },
 }
 

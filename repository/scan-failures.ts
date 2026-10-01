@@ -23,6 +23,10 @@ export const UNEXPECTED_STREAM: FailureClass = {
   label: '内容が食い違う',
 }
 
+export const NOT_YET_NAMED = 'notYetNamed'
+
+export type AttemptFailure = FailureClass | typeof NOT_YET_NAMED
+
 const CIRCLED = { 1: '①', 2: '②', 3: '③', 4: '④' } as const
 
 export function numbered(failure: FailureClass): string {

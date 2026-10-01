@@ -4,11 +4,12 @@ import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { StationLogo } from '@/repository/channels'
 import { stationLogoOf } from '@/repository/station-logo'
-import type { FailureClass } from '@/repository/scan-failures'
+import type { AttemptFailure, FailureClass } from '@/repository/scan-failures'
 import {
   FAILURE_CLASSES,
   INCOMPLETE_TABLES,
   LOCKED_WITHOUT_DATA,
+  NOT_YET_NAMED,
   NO_LOCK,
   UNEXPECTED_STREAM,
 } from '@/repository/scan-failures'
@@ -107,7 +108,7 @@ export interface ServiceGroup {
 export interface ScanAttemptRow {
   id: string
   channel: string
-  failure?: FailureClass
+  failure?: AttemptFailure
   streamMismatch?: string
   measurement?: Measurement
   took?: string
@@ -368,7 +369,7 @@ function toAttempt(
     failure:
       attempt.outcome === 'succeeded'
         ? undefined
-        : shapeFor(FAILURE_CLASS, attempt.outcome, undefined),
+        : shapeFor(FAILURE_CLASS, attempt.outcome, NOT_YET_NAMED),
     streamMismatch:
       attempt.outcome === 'unexpectedStream' && observed !== null
         ? `期待 TSID ${expected === null ? EMPTY_VALUE : toInt(expected)} / 受信 TSID ${toInt(observed)}`

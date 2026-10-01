@@ -12,7 +12,8 @@ import type {
 } from '@/repository/services'
 import { SCAN_SYSTEMS, SYSTEM_LABEL } from '@/repository/scan-systems'
 import { cn } from '@/lib/utils'
-import { wordFor } from '@/lib/not-yet-in-this-build'
+import { NOT_YET_IN_THIS_BUILD, wordFor } from '@/lib/not-yet-in-this-build'
+import { NOT_YET_NAMED } from '@/repository/scan-failures'
 import { signedOut } from '@/lib/signed-out'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InlineAlert } from '@/components/vela/banner'
@@ -64,6 +65,23 @@ function AttemptResult({ attempt }: { attempt: ScanAttemptRow }) {
           <CheckIcon className="size-[calc(11rem/16)] text-mint" />
         </span>
         サービスを取得
+      </span>
+    )
+  }
+
+  if (attempt.failure === NOT_YET_NAMED) {
+    return (
+      <span
+        data-slot="attempt-not-yet-named"
+        className="inline-flex items-center gap-2 text-ui text-ink-3"
+      >
+        <span
+          aria-hidden="true"
+          className="inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full bg-surface-3 font-code text-cap leading-none font-medium text-ink-3"
+        >
+          ?
+        </span>
+        {NOT_YET_IN_THIS_BUILD}
       </span>
     )
   }

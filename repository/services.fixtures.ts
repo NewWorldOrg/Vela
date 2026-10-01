@@ -15,6 +15,7 @@ import {
   INCOMPLETE_TABLES as INCOMPLETE,
   LOCKED_WITHOUT_DATA as NO_DATA,
   NO_LOCK,
+  NOT_YET_NAMED,
   UNEXPECTED_STREAM as MISMATCH,
 } from '@/repository/scan-failures'
 
@@ -295,6 +296,23 @@ export const SCAN_RUNNING: ScanRunProgress = {
       measurement: { value: '31.2 dB', percent: 78, tone: 'ok' },
       at: '08/15 03:35',
     },
+  ],
+}
+
+export const SCAN_RUNNING_ON_A_LATER_BUILD: ScanRunProgress = {
+  ...SCAN_RUNNING,
+  attempted: 5,
+  failed: 4,
+  attempts: [
+    {
+      id: 'attempt-5',
+      channel: '57ch',
+      failure: NOT_YET_NAMED,
+      measurement: { value: '28.9 dB', percent: 72, tone: 'ok' },
+      took: '9秒',
+      at: '08/15 03:37',
+    },
+    ...SCAN_RUNNING.attempts,
   ],
 }
 

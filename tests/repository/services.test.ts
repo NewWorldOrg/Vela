@@ -6,6 +6,7 @@ import {
   INCOMPLETE_TABLES,
   LOCKED_WITHOUT_DATA,
   NO_LOCK,
+  NOT_YET_NAMED,
   UNEXPECTED_STREAM,
 } from '@/repository/scan-failures'
 
@@ -1073,6 +1074,43 @@ test('every failure the API names is read into its own class', async () => {
   assert.deepEqual(
     (await proposal()).failures.map(({ failure }) => failure),
     [UNEXPECTED_STREAM, INCOMPLETE_TABLES, LOCKED_WITHOUT_DATA, NO_LOCK],
+  )
+})
+
+test('an outcome this build does not know is not read as a service that was found', async () => {
+  replies.clear()
+  replies.set('GET /api/services', ok([]))
+  standing([service()], [run({ state: 'running', finishedAt: null })])
+  progressOf(
+    'scan-1',
+    ok(
+      progress({
+        run: run({ state: 'running', finishedAt: null }),
+        attempted: 2,
+        succeeded: 1,
+        failed: 1,
+        attempts: [
+          attempt(),
+          attempt({ outcome: 'anOutcomeThisBuildHasNeverSeen' }),
+        ],
+        difference: difference(),
+      }),
+    ),
+  )
+
+  const running = (await channels()).running
+
+  if (running?.state !== 'read') {
+    throw new Error('the running scan was not read')
+  }
+
+  assert.deepEqual(
+    running.progress.attempts.map(({ failure }) => failure),
+    [NOT_YET_NAMED, undefined],
+  )
+  assert.deepEqual(
+    (await proposal()).failures.map(({ failure }) => failure),
+    [NOT_YET_NAMED],
   )
 })
 
