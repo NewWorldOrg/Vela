@@ -536,9 +536,10 @@ test('a corner off the steps is written only where a step would change the shape
     for (const found of source.matchAll(
       /\brounded(?:-[a-z]{1,2})?-\[([^\]]+)\]/g,
     )) {
-      assert.equal(
-        pxOf(found[1]),
-        A_CORNER_OFF_THE_STEPS.get(file),
+      const px = pxOf(found[1])
+
+      assert.ok(
+        px !== undefined && px === A_CORNER_OFF_THE_STEPS.get(file),
         `${file} writes ${found[0]}, a corner that is not one of the steps`,
       )
     }
