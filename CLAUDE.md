@@ -184,6 +184,11 @@ counts the tests it ran and fails on zero, because the runner sits beside the
 server it is testing and would otherwise report the exit code of whichever half
 finished first.
 
+A second workflow builds the image from the `Dockerfile` and starts it once to
+see that it serves the login page and its stylesheet. On a pull request that is
+all it does; on `master` it pushes the image to `ghcr.io/newworldorg/vela` as
+`sha-<commit>`, and leaves a tag that is already there as it is.
+
 `Taskfile.yml` is the place for a repeatable operation. Add a task rather than
 passing a longer command around by hand.
 

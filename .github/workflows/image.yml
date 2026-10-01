@@ -1,0 +1,46 @@
+name: Image
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  image:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/image
+        with:
+          tag: vela:built
+
+  publish:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: The tag is named for this commit
+        run: echo "REFERENCE=ghcr.io/${GITHUB_REPOSITORY,,}:sha-${GITHUB_SHA::12}" >> "${GITHUB_ENV}"
+      - name: Sign in to the registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: A tag that is already there is left as it is
+        id: tag
+        run: |
+          there="$(.github/publish-image.sh "${REFERENCE}" there)"
+          echo "there=${there}" >> "${GITHUB_OUTPUT}"
+      - if: steps.tag.outputs.there == 'no'
+        uses: ./.github/actions/image
+        with:
+          tag: vela:built
+      - name: The image goes out under the tag of this commit
+        if: steps.tag.outputs.there == 'no'
+        run: .github/publish-image.sh "${REFERENCE}" push vela:built

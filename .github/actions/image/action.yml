@@ -1,0 +1,21 @@
+name: Image
+description: The image the Dockerfile builds, started once to see that it serves the login page and its stylesheet
+inputs:
+  tag:
+    description: The name the image is given on this machine
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+      run: |
+        docker build \
+          --platform linux/amd64 \
+          --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+          --label "org.opencontainers.image.revision=${{ github.sha }}" \
+          --label "org.opencontainers.image.licenses=AGPL-3.0-only" \
+          --tag "${TAG}" .
+    - shell: bash
+      run: .github/image-answers.sh "${{ inputs.tag }}"
