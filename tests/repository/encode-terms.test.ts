@@ -52,3 +52,10 @@ test('エンコードの語彙は、この版が知らない値でも日本語�
     )
   }
 })
+
+test('a job whose ending the ledger would not keep says so in its own word', () => {
+  assert.equal(
+    wordFor(FAILURE_LABEL, 'endingNotKept' as EncodeFailure),
+    '結果を記録できず',
+  )
+})

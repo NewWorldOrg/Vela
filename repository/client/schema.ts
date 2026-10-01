@@ -2055,6 +2055,7 @@ export interface components {
       | 'timedOut'
       | 'destinationCollision'
       | 'headTooFar'
+      | 'endingNotKept'
     EncodeFailureResponder: {
       failure: components['schemas']['EncodeFailure']
       note: string
