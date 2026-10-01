@@ -4,6 +4,30 @@ export const VOLUME_STEP_PERCENT = 5
 
 export const SEEK_FLASH_LASTS = 700
 
+export type SeekWay = 'back' | 'forward'
+
+export interface SeekMark {
+  way: SeekWay
+  seconds: number
+  at: number
+}
+
+/** The seek mark after one more step: a step the same way while the mark is still up adds to it. */
+export function seekMarkAfter(
+  last: SeekMark | null,
+  way: SeekWay,
+  at: number,
+): SeekMark {
+  const running =
+    last !== null && last.way === way && at - last.at < SEEK_FLASH_LASTS
+
+  return {
+    way,
+    seconds: running ? last.seconds + SEEK_STEP_SECONDS : SEEK_STEP_SECONDS,
+    at,
+  }
+}
+
 export type PlayerCommand =
   | 'toggle'
   | 'back'

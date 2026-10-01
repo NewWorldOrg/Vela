@@ -6,8 +6,13 @@ import {
   KEY_CAP,
   playerCommand,
   pressedOn,
+  SEEK_FLASH_LASTS,
+  SEEK_STEP_SECONDS,
+  seekMarkAfter,
   typingIn,
   type PlayerCommand,
+  type SeekMark,
+  type SeekWay,
 } from '@/lib/player-keys'
 
 function element(
@@ -233,4 +238,60 @@ test('a command with no cap would print nothing, so every one has one', () => {
 
   assert.deepEqual(Object.keys(KEY_CAP).sort(), [...COMMANDS].sort())
   assert.equal(new Set(Object.values(KEY_CAP)).size, COMMANDS.length)
+})
+
+function stepping(steps: [SeekWay, number][]): number[] {
+  let mark: SeekMark | null = null
+
+  return steps.map(([way, at]) => {
+    mark = seekMarkAfter(mark, way, at)
+
+    return mark.seconds
+  })
+}
+
+test('the first step puts one step on the seek mark', () => {
+  assert.deepEqual(seekMarkAfter(null, 'forward', 5000), {
+    way: 'forward',
+    seconds: SEEK_STEP_SECONDS,
+    at: 5000,
+  })
+})
+
+test('steps the same way while the mark is up add to it', () => {
+  assert.deepEqual(
+    stepping([
+      ['forward', 1000],
+      ['forward', 1000 + SEEK_FLASH_LASTS - 1],
+      ['forward', 1000 + 2 * (SEEK_FLASH_LASTS - 1)],
+    ]),
+    [SEEK_STEP_SECONDS, 2 * SEEK_STEP_SECONDS, 3 * SEEK_STEP_SECONDS],
+  )
+})
+
+test('a step after the mark has gone starts the count again', () => {
+  assert.deepEqual(
+    stepping([
+      ['back', 1000],
+      ['back', 1000 + SEEK_FLASH_LASTS],
+    ]),
+    [SEEK_STEP_SECONDS, SEEK_STEP_SECONDS],
+  )
+})
+
+test('a step the other way starts the count again', () => {
+  assert.deepEqual(
+    stepping([
+      ['forward', 1000],
+      ['forward', 1100],
+      ['back', 1200],
+      ['back', 1300],
+    ]),
+    [
+      SEEK_STEP_SECONDS,
+      2 * SEEK_STEP_SECONDS,
+      SEEK_STEP_SECONDS,
+      2 * SEEK_STEP_SECONDS,
+    ],
+  )
 })

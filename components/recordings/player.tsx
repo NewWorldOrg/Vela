@@ -83,8 +83,10 @@ import {
 import {
   KEY_CAP,
   playerCommand,
-  SEEK_FLASH_LASTS,
+  seekMarkAfter,
   SEEK_STEP_SECONDS,
+  type SeekMark,
+  type SeekWay,
   VOLUME_STEP_PERCENT,
 } from '@/lib/player-keys'
 import { PlayerTip } from '@/components/recordings/player-tip'
@@ -227,7 +229,7 @@ export function Player({
     null,
   )
   const [flash, setFlash] = useState<SeekFlash | null>(null)
-  const flashedAt = useRef(0)
+  const marked = useRef<SeekMark | null>(null)
   const [buffered, setBuffered] = useState(0)
   const [said, setSaid] = useState<PlayerSaying | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -451,17 +453,13 @@ export function Player({
   const answer = (what: PlayerBezel) =>
     setBezel((last) => ({ ...what, nth: (last?.nth ?? 0) + 1 }))
 
-  const answerSeek = (way: 'back' | 'forward') => {
-    const now = Date.now()
-    const running = now - flashedAt.current < SEEK_FLASH_LASTS
+  const answerSeek = (way: SeekWay, at: number) => {
+    const mark = seekMarkAfter(marked.current, way, at)
 
-    flashedAt.current = now
+    marked.current = mark
     setFlash((last) => ({
       way,
-      seconds:
-        running && last?.way === way
-          ? last.seconds + SEEK_STEP_SECONDS
-          : SEEK_STEP_SECONDS,
+      seconds: mark.seconds,
       nth: (last?.nth ?? 0) + 1,
     }))
   }
@@ -508,8 +506,8 @@ export function Player({
     asking.current = setTimeout(() => play(at), SETTLES_BEFORE_SEEK)
   }
 
-  const step = (by: number) => {
-    answerSeek(by < 0 ? 'back' : 'forward')
+  const step = (by: number, at: number) => {
+    answerSeek(by < 0 ? 'back' : 'forward', at)
     choose((wanted.current ?? position) + by)
   }
 
@@ -549,7 +547,7 @@ export function Player({
       return
     }
 
-    step(said.answer === 'back' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS)
+    step(said.answer === 'back' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS, at)
   }
 
   const skipTheBreak = (to: number) => {
@@ -787,10 +785,10 @@ export function Player({
         toggle()
         break
       case 'back':
-        step(-SEEK_STEP_SECONDS)
+        step(-SEEK_STEP_SECONDS, event.timeStamp)
         break
       case 'forward':
-        step(SEEK_STEP_SECONDS)
+        step(SEEK_STEP_SECONDS, event.timeStamp)
         break
       case 'louder':
         stepVolume(VOLUME_STEP_PERCENT)
@@ -1050,7 +1048,9 @@ export function Player({
                     <button
                       type="button"
                       aria-label={`${SEEK_STEP_SECONDS}秒戻る`}
-                      onClick={() => step(-SEEK_STEP_SECONDS)}
+                      onClick={(event) =>
+                        step(-SEEK_STEP_SECONDS, event.timeStamp)
+                      }
                       className={PLAYER_GLYPH_BUTTON}
                     >
                       <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
@@ -1064,7 +1064,9 @@ export function Player({
                     <button
                       type="button"
                       aria-label={`${SEEK_STEP_SECONDS}秒進む`}
-                      onClick={() => step(SEEK_STEP_SECONDS)}
+                      onClick={(event) =>
+                        step(SEEK_STEP_SECONDS, event.timeStamp)
+                      }
                       className={PLAYER_GLYPH_BUTTON}
                     >
                       <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
