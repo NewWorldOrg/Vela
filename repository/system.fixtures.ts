@@ -17,6 +17,8 @@ export const DRIVER_CAPABILITIES = [
   'dropPositions',
   'storage',
   'recordingErasure',
+  'strayFileErasure',
+  'lnbPowerSwitch',
   'signalQuality.cnr',
   'signalQuality.postViterbiBitError',
   'sessionPurpose.surveyNow',
