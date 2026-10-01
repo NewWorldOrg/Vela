@@ -128,6 +128,7 @@ const THE_SUITE = [
   'tests/storybook/switches-over-the-api.test.ts',
   'tests/storybook/tables-keyed-by-the-api.test.ts',
   'tests/storybook/tap-exempt.test.ts',
+  'tests/storybook/the-story-run-is-bounded.test.ts',
 ]
 
 const ASKS_FOR_THE_RUNNER = "'node:test'"

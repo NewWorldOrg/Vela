@@ -20,7 +20,7 @@
     "codegen:fetch": "node --input-type=module -e \"const base = process.env.CARINA_API_BASE_URL; if (!base) { throw new Error('CARINA_API_BASE_URL is not set') } const response = await fetch(new URL('/openapi/v1.json', base)); if (!response.ok) { throw new Error(response.status + ' from ' + base) } const { writeFile } = await import('node:fs/promises'); await writeFile('repository/client/carina.json', await response.text())\" && yarn codegen",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test-storybook": "test-storybook",
+    "test-storybook": "test-storybook --maxWorkers=25%",
     "test-storybook:ci": "concurrently -k -s first -n SB,TEST -c magenta,blue \"http-server storybook-static --port 6006 --silent\" \"wait-on http://127.0.0.1:6006 && test-storybook --url http://127.0.0.1:6006 --maxWorkers=2 --shard=${STORYBOOK_SHARD:-1/1}\""
   },
   "dependencies": {
