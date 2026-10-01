@@ -2650,6 +2650,30 @@ export const 指で二度叩いても送る: Story = {
   },
 }
 
+export const 時計が合わせ直されても秒数は重なる: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const area = pressArea(canvasElement)
+    const wall = Date.now
+
+    await tapAt(area, 5 / 6, 2)
+    await waitFor(() =>
+      expect(seekMark(canvasElement)).toHaveTextContent('10秒'),
+    )
+
+    Date.now = () => wall() + 60_000
+
+    try {
+      await tapAt(area, 5 / 6, 1)
+      await waitFor(() =>
+        expect(seekMark(canvasElement)).toHaveTextContent('20秒'),
+      )
+    } finally {
+      Date.now = wall
+    }
+  },
+}
+
 export const 左右を一度だけ叩くと待ってから再生する: Story = {
   args: { detail: detail('1266'), pictureHref: keeping },
   play: async ({ canvasElement }) => {
