@@ -437,6 +437,35 @@ export const 中止: Story = {
   },
 }
 
+const WHERE_THE_TYPE_STEPS_UP_PX = 1440
+
+export const 字の段が上がる幅でも枠に収まる表: Story = {
+  parameters: { screen: { width: WHERE_THE_TYPE_STEPS_UP_PX, height: 1000 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const boxes = [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="table-container"]',
+      ),
+    ]
+
+    await expect(boxes).toHaveLength(3)
+
+    for (const box of boxes) {
+      const edge = box.getBoundingClientRect().right
+
+      await expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth)
+
+      for (const press of box.querySelectorAll('button')) {
+        await expect(press.getBoundingClientRect().right).toBeLessThanOrEqual(
+          edge,
+        )
+      }
+    }
+  },
+}
+
 export const 失敗だけに絞る: Story = {
   args: {
     screen: {
