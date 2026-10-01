@@ -40,7 +40,7 @@ import {
   PLAYER_BUTTON,
   PLAYER_COLUMN,
 } from '@/components/recordings/player-palette'
-import { Player } from '@/components/recordings/player'
+import { PlayerSeat } from '@/components/recordings/player-seat'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import type { QueueEncode } from '@/components/recordings/encode-button'
@@ -234,7 +234,7 @@ export function RecordingDetailView({
       </div>
 
       {watching && (
-        <Player
+        <PlayerSeat
           key={whatOpensThePlayerAnew(
             d.id,
             startAt,

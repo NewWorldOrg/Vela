@@ -1,3 +1,4 @@
+import { useSyncExternalStore, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
@@ -18,6 +19,7 @@ import {
   SUBTITLED_FRAME,
 } from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
+import { PlayerSeat } from '@/components/recordings/player-seat'
 import {
   drawCapture,
   type TakeCapture,
@@ -1033,6 +1035,78 @@ export const 一時停止中に成果物が置き換わると一時停止のま�
         { scroll: false },
       ),
     )
+  },
+}
+
+const pageRead: { artefact?: string; heard: Set<() => void> } = {
+  heard: new Set(),
+}
+
+function thePageReads(artefact: string | undefined) {
+  pageRead.artefact = artefact
+  pageRead.heard.forEach((hear) => hear())
+}
+
+function hearingThePage(hear: () => void) {
+  pageRead.heard.add(hear)
+
+  return () => {
+    pageRead.heard.delete(hear)
+  }
+}
+
+function SeatedOnThePage(args: ComponentProps<typeof Player>) {
+  const artefact = useSyncExternalStore(hearingThePage, () => pageRead.artefact)
+
+  return <PlayerSeat {...args} artefact={artefact} />
+}
+
+export const 止めた秒がアドレスと同じでも置き換わると開き直す: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 0,
+    holdsAtOnce: true,
+    pictureHref: () => DRAWN_PICTURE,
+    onAskWhichArtefact: askingWhichArtefact,
+    listenForEncodeJobs: hearingTheJobs,
+  },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1274, query: { at: '0', paused: '1' } },
+    },
+  },
+  beforeEach: () => {
+    pageRead.artefact = 'job-a'
+  },
+  render: (args) => <SeatedOnThePage {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    router.refresh.mockImplementation(() => thePageReads(standing.now))
+
+    await waitFor(() =>
+      expect(canvas.getAllByRole('button', { name: '再生' })).toHaveLength(2),
+    )
+
+    const opened = canvasElement.querySelector('video')
+
+    await theJobsSay('job-b')
+    await waitFor(() =>
+      expect(canvasElement.querySelector('video')).not.toBe(opened),
+    )
+    await expect(router.replace).not.toHaveBeenCalled()
+    await expect(router.refresh).toHaveBeenCalledTimes(1)
+
+    const reopened = canvasElement.querySelector('video')
+
+    await expect(reopened).not.toHaveAttribute('autoplay')
+    await waitFor(() =>
+      expect(canvas.getAllByRole('button', { name: '再生' })).toHaveLength(2),
+    )
+    await expect(reopened?.paused).toBe(true)
   },
 }
 

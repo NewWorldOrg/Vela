@@ -4,9 +4,11 @@ import { test } from 'node:test'
 import {
   theHoldAsked,
   theSourceAsked,
+  theAddressStands,
   whatOpensThePlayerAnew,
   whatTheStandingArtefactAsks,
   whereThatSourceOpens,
+  whichArtefactSeats,
 } from '@/lib/playback-source'
 import { BOTH_SOURCES } from '@/repository/playback-sources'
 
@@ -187,4 +189,72 @@ test('a player that opened without knowing its artefact learns it before it move
     whatTheStandingArtefactAsks(undefined, 'job-b', 'artefact', true),
     'learn',
   )
+})
+
+test('reopening at the second and the hold the address already names leaves the address where it stands', () => {
+  assert.equal(
+    theAddressStands(
+      '/recordings/1274',
+      'at=622&paused=1',
+      'artefact',
+      622.4,
+      true,
+    ),
+    true,
+  )
+  assert.equal(
+    theAddressStands('/recordings/1274', 'at=622', 'artefact', 622.9, false),
+    true,
+  )
+})
+
+test('reopening at another second, under another hold or on another source moves the address', () => {
+  assert.equal(
+    theAddressStands(
+      '/recordings/1274',
+      'at=612&paused=1',
+      'artefact',
+      622,
+      true,
+    ),
+    false,
+  )
+  assert.equal(
+    theAddressStands('/recordings/1274', 'at=622', 'artefact', 622, true),
+    false,
+  )
+  assert.equal(
+    theAddressStands(
+      '/recordings/1274',
+      'at=622&paused=1',
+      'artefact',
+      622,
+      false,
+    ),
+    false,
+  )
+  assert.equal(
+    theAddressStands('/recordings/1274', '', 'artefact', 622, false),
+    false,
+  )
+  assert.equal(
+    theAddressStands('/recordings/1274', 'at=622', 'recording', 622, false),
+    false,
+  )
+})
+
+test('the player is seated on the artefact it asked for once the page has read that one', () => {
+  assert.equal(whichArtefactSeats(undefined, 'job-b', 'job-b'), 'job-b')
+  assert.equal(whichArtefactSeats('job-b', 'job-c', 'job-c'), 'job-c')
+})
+
+test('the player keeps its seat until the page has read the artefact it asked for', () => {
+  assert.equal(whichArtefactSeats(undefined, 'job-b', 'job-a'), undefined)
+  assert.equal(whichArtefactSeats('job-b', 'job-c', 'job-b'), 'job-b')
+  assert.equal(whichArtefactSeats('job-b', 'job-c', undefined), 'job-b')
+})
+
+test('a page that reads another artefact unasked does not move the seat', () => {
+  assert.equal(whichArtefactSeats(undefined, undefined, 'job-b'), undefined)
+  assert.equal(whichArtefactSeats('job-b', 'job-b', 'job-c'), 'job-b')
 })
