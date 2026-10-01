@@ -525,6 +525,26 @@ test('a corner or a size of type that is on a step is said by the step’s name'
   }
 })
 
+const A_CORNER_OFF_THE_STEPS = new Map([['components/ui/checkbox.tsx', 6]])
+
+test('a corner off the steps is written only where a step would change the shape', async () => {
+  for (const { file, source } of await everySource()) {
+    if (THE_PLAYER.test(file)) {
+      continue
+    }
+
+    for (const found of source.matchAll(
+      /\brounded(?:-[a-z]{1,2})?-\[([^\]]+)\]/g,
+    )) {
+      assert.equal(
+        pxOf(found[1]),
+        A_CORNER_OFF_THE_STEPS.get(file),
+        `${file} writes ${found[0]}, a corner that is not one of the steps`,
+      )
+    }
+  }
+})
+
 test('a menu opens downwards and never turns round, the same as a select', async () => {
   const menu = await read('components/ui/dropdown-menu.tsx')
   const content = menu.match(
