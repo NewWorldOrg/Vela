@@ -160,3 +160,17 @@ test('the guide draws the description with the same part', async () => {
   )
   assert.match(source, /<ProgramExtended key=/)
 })
+
+test('the signal meter lets the tip draw the box it clips', async () => {
+  const source = await read('components/vela/progress.tsx')
+
+  assert.match(
+    source,
+    /<InFull says=\{channel\} wraps="[^"]*\btruncate\b/,
+    'The meter is a shared part with no client boundary of its own, so a ' +
+      'server-rendered screen may draw it. An element handed to InFull ' +
+      'from there arrives as a reference it cannot read the class of, and ' +
+      'the server and the browser draw different trees. Hand it the text ' +
+      'and name the box with `wraps`.',
+  )
+})
