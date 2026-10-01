@@ -102,6 +102,7 @@ const AUTO_RUN = {
   subject: ['complete', 'truncated'],
   stored: false,
   updatedAt: null,
+  whereArtefactsGo: 'settled',
 }
 
 const RECORDING = {
@@ -1157,7 +1158,23 @@ test('how the queue runs when nobody asked comes back with what the machine has'
     subject: ['complete', 'truncated'],
     stored: false,
     updatedAt: undefined,
+    whereArtefactsGo: 'settled',
   })
+})
+
+test('why the auto run has nowhere to put what it makes is carried as the API says it', async () => {
+  for (const where of [
+    'nothingIsDefined',
+    'moreThanOneIsOffered',
+    'theProfileIsNotOffered',
+    'aStandingThisBuildHasNeverSeen',
+  ]) {
+    store.autoRun = { ...AUTO_RUN, whereArtefactsGo: where }
+
+    const screen = await getEncodeScreen({}, NOW)
+
+    assert.equal(screen.autoRun.whereArtefactsGo, where)
+  }
 })
 
 test('a settled row says when somebody settled it', async () => {

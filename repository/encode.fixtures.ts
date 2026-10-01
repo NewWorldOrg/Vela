@@ -236,6 +236,28 @@ export const AUTO_RUN_AS_DEPLOYED: EncodeAutoRun = {
   coresThisMachineHas: 6,
   subject: ['complete', 'truncated'],
   stored: false,
+  whereArtefactsGo: 'settled',
+}
+
+export const AUTO_RUN_WITH_NO_DESTINATION: EncodeAutoRun = {
+  ...AUTO_RUN_AS_DEPLOYED,
+  whereArtefactsGo: 'nothingIsDefined',
+}
+
+export const AUTO_RUN_WITH_TWO_DESTINATIONS: EncodeAutoRun = {
+  ...AUTO_RUN_AS_DEPLOYED,
+  whereArtefactsGo: 'moreThanOneIsOffered',
+}
+
+export const AUTO_RUN_WITH_A_RETIRED_PROFILE: EncodeAutoRun = {
+  ...AUTO_RUN_AS_DEPLOYED,
+  whereArtefactsGo: 'theProfileIsNotOffered',
+}
+
+export const AUTO_RUN_STANDING_ON_A_LATER_BUILD: EncodeAutoRun = {
+  ...AUTO_RUN_AS_DEPLOYED,
+  whereArtefactsGo:
+    'aStandingThisBuildHasNeverSeen' as unknown as EncodeAutoRun['whereArtefactsGo'],
 }
 
 export const AUTO_RUN_ON_A_LATER_BUILD: EncodeAutoRun = {
@@ -280,7 +302,7 @@ export const EMPTY_ENCODE_SCREEN: EncodeScreen = {
   waiting: 0,
   failed: 0,
   spells: SPELLS_NONE,
-  autoRun: AUTO_RUN_AS_DEPLOYED,
+  autoRun: AUTO_RUN_WITH_NO_DESTINATION,
 }
 
 export function screenWith(

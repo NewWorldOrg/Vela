@@ -1,4 +1,5 @@
 import type { components } from '@/repository/client/schema'
+import type { StateTerm } from '@/lib/state-terms'
 
 export type EncodeJobStatus = components['schemas']['EncodeJobStatus']
 export type EncodeStanding = components['schemas']['EncodeStanding']
@@ -12,6 +13,7 @@ export type EncodeRemoved = components['schemas']['EncodeRemoval']
 export type EncodeSubject = NonNullable<
   components['schemas']['RecordingOutcome']
 >
+export type WhereArtefactsGo = components['schemas']['EncodeUnaskedStanding']
 
 export const ENCODE_JOB_STATUSES: EncodeJobStatus[] = [
   'queued',
@@ -83,6 +85,25 @@ export const REPLACED_LABEL = '置換済み'
 export const REPLACED_IN_FULL = '置き換え済み'
 
 export const RETIRED_LABEL = '退役'
+
+export const NOWHERE_SETTLED_TERMS: Record<
+  Exclude<WhereArtefactsGo, 'settled'>,
+  StateTerm
+> = {
+  nothingIsDefined: {
+    label: '未定義',
+    explanation: '保存先が 1 つも無く、自動実行がジョブを登録しない状態。',
+  },
+  moreThanOneIsOffered: {
+    label: '複数あり',
+    explanation: '保存先が 2 つ以上あり、自動実行がジョブを登録しない状態。',
+  },
+  theProfileIsNotOffered: {
+    label: 'プロファイル退役',
+    explanation:
+      '保存先の既定のプロファイルが退役していて、自動実行がジョブを登録しない状態。',
+  },
+}
 
 export const NOT_ASKED_FOR_LABEL = '対象外'
 

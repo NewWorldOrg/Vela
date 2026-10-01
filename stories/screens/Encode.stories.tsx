@@ -4,6 +4,10 @@ import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 import {
   AUTO_RUN_AS_DEPLOYED,
   AUTO_RUN_SETTLED,
+  AUTO_RUN_STANDING_ON_A_LATER_BUILD,
+  AUTO_RUN_WITH_A_RETIRED_PROFILE,
+  AUTO_RUN_WITH_NO_DESTINATION,
+  AUTO_RUN_WITH_TWO_DESTINATIONS,
   CANCELLED_JOB,
   COMPLETED_JOB,
   EMPTY_ENCODE_SCREEN,
@@ -19,6 +23,7 @@ import {
   SPELLS_NONE,
   SPELLS_TOO_FEW,
   STALLED_JOB,
+  SHELF_DESTINATION,
   jobsPage,
   screenWith,
 } from '@/repository/encode.fixtures'
@@ -966,6 +971,112 @@ export const 自動実行が設定済み: Story = {
 
     await expect(panel.getByText('対象')).toBeVisible()
     await expect(panel.getByText('完全・尻切れ')).toBeVisible()
+  },
+}
+
+function whereArtefactsGo(canvasElement: HTMLElement): HTMLElement {
+  const value = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="where-artefacts-go"]',
+  )
+
+  if (!value) {
+    throw new Error('the auto run panel does not say where artefacts go')
+  }
+
+  return value
+}
+
+async function saysItHasNowhereSettled(
+  canvasElement: HTMLElement,
+  word: string,
+  inFull: string,
+): Promise<void> {
+  await afterTheArrival(canvasElement)
+
+  const value = whereArtefactsGo(canvasElement)
+
+  await expect(autoRunPanel(canvasElement).getByText('保存先')).toBeVisible()
+  await expect(value).toHaveTextContent(word)
+  await expect(value.querySelector('[data-state-say]')).toHaveAttribute(
+    'data-tone',
+    'warn',
+  )
+  await expect(await tipIn(value)).toHaveTextContent(inFull)
+  await expect(
+    within(canvasElement).getByRole('switch', { name: '自動実行' }),
+  ).toBeChecked()
+}
+
+export const 自動実行の保存先が決まっている: Story = {
+  play: async ({ canvasElement }) => {
+    const value = whereArtefactsGo(canvasElement)
+
+    await expect(value).toHaveTextContent(SHELF_DESTINATION.label)
+    await expect(value.querySelector('[data-state-say]')).toBeNull()
+  },
+}
+
+export const 自動実行の保存先が決まらない_保存先がない: Story = {
+  args: { screen: EMPTY_ENCODE_SCREEN },
+  play: async ({ canvasElement }) => {
+    await saysItHasNowhereSettled(
+      canvasElement,
+      '未定義',
+      '保存先が 1 つも無く、自動実行がジョブを登録しない状態。',
+    )
+  },
+}
+
+export const 自動実行の保存先が決まらない_保存先が複数: Story = {
+  args: {
+    screen: {
+      ...ENCODE_SCREEN,
+      destinations: [
+        SHELF_DESTINATION,
+        { ...SHELF_DESTINATION, id: 'ds-3', label: '書庫' },
+      ],
+      autoRun: AUTO_RUN_WITH_TWO_DESTINATIONS,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await saysItHasNowhereSettled(
+      canvasElement,
+      '複数あり',
+      '保存先が 2 つ以上あり、自動実行がジョブを登録しない状態。',
+    )
+  },
+}
+
+export const 自動実行の保存先が決まらない_既定のプロファイルが退役: Story = {
+  args: {
+    screen: {
+      ...ENCODE_SCREEN,
+      profiles: [{ ...ENCODE_SCREEN.profiles[0], retired: true }],
+      autoRun: AUTO_RUN_WITH_A_RETIRED_PROFILE,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await saysItHasNowhereSettled(
+      canvasElement,
+      'プロファイル退役',
+      '保存先の既定のプロファイルが退役していて、自動実行がジョブを登録しない状態。',
+    )
+  },
+}
+
+export const 自動実行の保存先がこの版の知らない値: Story = {
+  args: {
+    screen: {
+      ...ENCODE_SCREEN,
+      autoRun: AUTO_RUN_STANDING_ON_A_LATER_BUILD,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const value = whereArtefactsGo(canvasElement)
+
+    await expect(value).toHaveTextContent('この版がまだ知らない値')
+    await expect(value.querySelector('[data-state-say]')).toBeNull()
+    await expect(value).not.toHaveTextContent(SHELF_DESTINATION.label)
   },
 }
 

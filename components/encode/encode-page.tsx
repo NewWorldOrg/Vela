@@ -60,6 +60,7 @@ export function EncodeView({
 }) {
   const { jobs, running, profiles, destinations, roots } = screen
   const offered = profiles.filter((profile) => !profile.retired)
+  const inUse = destinations.filter((destination) => !destination.retired)
 
   return (
     <>
@@ -94,6 +95,7 @@ export function EncodeView({
         <SectionHeading mark={MarkPill}>自動実行</SectionHeading>
         <AutoRunPanel
           autoRun={screen.autoRun}
+          destination={inUse.length === 1 ? inUse[0].label : undefined}
           onSettle={actions.onSettleAutoRun}
         />
       </section>

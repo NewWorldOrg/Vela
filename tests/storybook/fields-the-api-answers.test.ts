@@ -22,11 +22,6 @@ const WHAT_THE_ENDPOINT_ANSWERS = 'data'
 const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   {
     because:
-      'why the auto run has nowhere to put what it makes has no place on the encode screen yet; the canon has not said how the panel shows it',
-    fields: ['EncodeAutoRunResponder.whereArtefactsGo'],
-  },
-  {
-    because:
       'a trend is drawn bucket by bucket from the times each point carries, over the subject the URL asked for, and a multiplex is named by the services it carries rather than by numbers of its own',
     fields: [
       'QualityTrendChannelResponder.kind',

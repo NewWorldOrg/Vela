@@ -21,6 +21,7 @@ import type {
   EncodeResolution,
   EncodeSubject,
   EncodeSwerve,
+  WhereArtefactsGo,
 } from '@/repository/encode-terms'
 import {
   LABEL_LONGEST,
@@ -130,6 +131,7 @@ export interface EncodeAutoRun {
   subject: EncodeSubject[]
   stored: boolean
   updatedAt?: string
+  whereArtefactsGo: WhereArtefactsGo
 }
 
 export interface EncodeScreen {
@@ -701,6 +703,7 @@ function toAutoRun(one: AutoRunResponder): EncodeAutoRun {
     subject: one.subject.filter((each): each is EncodeSubject => each !== null),
     stored: one.stored,
     updatedAt: one.updatedAt ? formatMoment(one.updatedAt) : undefined,
+    whereArtefactsGo: one.whereArtefactsGo,
   }
 }
 
