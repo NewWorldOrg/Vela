@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { registerHooks } from 'node:module'
 import { beforeEach, test } from 'node:test'
 
+import { formatMoment } from '@/lib/format'
 import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
 
 interface Asked {
@@ -245,6 +246,42 @@ test('BR-AU-018: every session on the system is listed, each saying whose it is'
       ['theirs', 'nao@example.test', 'oidc', false],
       ['mine', 'operator', 'local', true],
     ],
+  )
+})
+
+test('a session says when it was last used as the one line every table writes a moment in', async () => {
+  const justNow = new Date(Date.now() - 20_000).toISOString()
+  const minutesAgo = new Date(Date.now() - 3 * 60_000).toISOString()
+  const daysAgo = new Date(Date.now() - 3 * 24 * 60 * 60_000).toISOString()
+
+  apiAnswering(
+    envelope(
+      {
+        status: true,
+        message: '',
+        data: [justNow, minutesAgo, daysAgo].map((lastUsedAt, nth) => ({
+          id: `session-${nth}`,
+          displayName: 'operator',
+          method: 'local',
+          createdAt: daysAgo,
+          lastUsedAt,
+          deviceLabel: 'curl/8.5.0',
+          current: nth === 0,
+        })),
+      },
+      200,
+    ),
+  )
+
+  const rows = await getSessions()
+
+  assert.deepEqual(
+    rows.map((row) => row.lastUsedAt),
+    [justNow, minutesAgo, daysAgo].map((at) => formatMoment(at)),
+  )
+  assert.deepEqual(
+    rows.map((row) => row.createdAt),
+    [daysAgo, daysAgo, daysAgo].map((at) => formatMoment(at)),
   )
 })
 

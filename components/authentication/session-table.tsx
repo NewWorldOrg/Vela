@@ -91,15 +91,8 @@ export function SessionTable({
             <TableCell className="font-code text-sub tabular-nums">
               {session.createdAt}
             </TableCell>
-            <TableCell>
-              <span className="font-code text-sub tabular-nums">
-                {session.lastUsed.label}
-              </span>
-              {session.lastUsed.at && (
-                <small className="block font-sans text-cap text-ink-3">
-                  {session.lastUsed.at}
-                </small>
-              )}
+            <TableCell className="font-code text-sub tabular-nums">
+              {session.lastUsedAt}
             </TableCell>
             <TableCell className="text-right">
               {session.current ? (

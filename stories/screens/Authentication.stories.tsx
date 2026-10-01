@@ -17,6 +17,7 @@ import {
 } from '@/repository/authentication.fixtures'
 import { AuthenticationView } from '@/components/authentication/authentication-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
+import { cellOf, rowsOfTheTableHeaded } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
 
 const meta = {
@@ -61,6 +62,27 @@ export const 通常: Story = {
     await expect(
       canvas.getAllByRole('button', { name: '失効させる' }),
     ).toHaveLength(SESSIONS.length - 1)
+  },
+}
+
+const TAKEN_COLUMN = 3
+
+const ONE_MOMENT = /^(\d{4}\/)?\d{2}\/\d{2}\(.\) \d{2}:\d{2}$/
+
+export const 取得日時は日時の1行だけ: Story = {
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const taken = rowsOfTheTableHeaded(canvasElement, '端末').map((row) =>
+      cellOf(row, TAKEN_COLUMN),
+    )
+
+    await expect(taken).toHaveLength(SESSIONS.length)
+
+    for (const cell of taken) {
+      await expect(cell.textContent).toMatch(ONE_MOMENT)
+      await expect(cell.childElementCount).toBe(0)
+    }
   },
 }
 

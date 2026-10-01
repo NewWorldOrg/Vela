@@ -1,3 +1,4 @@
+import { formatMoment } from '@/lib/format'
 import type { OidcConfig } from '@/repository/oidc'
 import type { SessionRow, SignedIn } from '@/repository/sessions'
 
@@ -11,13 +12,19 @@ export const SIGNED_IN_WITH_A_PROVIDER: SignedIn = {
   method: 'oidc',
 }
 
+const SEEN_ON = Date.parse('2026-08-19T02:47:00Z')
+
+function at(iso: string): string {
+  return formatMoment(iso, SEEN_ON)
+}
+
 const THIS_DEVICE: SessionRow = {
   id: 'session-this-device',
   displayName: 'aki@example.test',
   device: { name: 'Chrome / Windows', kind: 'デスクトップ' },
   method: 'oidc',
-  createdAt: '2026/08/18 09:12',
-  lastUsed: { label: 'たったいま' },
+  createdAt: at('2026-08-18T00:12:00Z'),
+  lastUsedAt: at('2026-08-19T02:46:40Z'),
   current: true,
 }
 
@@ -28,8 +35,8 @@ export const SESSIONS: SessionRow[] = [
     displayName: 'aki@example.test',
     device: { name: 'Safari / iPadOS 18', kind: 'タブレット' },
     method: 'oidc',
-    createdAt: '2026/08/16 21:40',
-    lastUsed: { label: '約 3 分前', at: '2026/08/19 11:44' },
+    createdAt: at('2026-08-16T12:40:00Z'),
+    lastUsedAt: at('2026-08-19T02:44:00Z'),
     current: false,
   },
   {
@@ -37,8 +44,8 @@ export const SESSIONS: SessionRow[] = [
     displayName: 'nao@example.test',
     device: { name: 'Firefox / macOS', kind: 'デスクトップ' },
     method: 'oidc',
-    createdAt: '2026/08/12 08:05',
-    lastUsed: { label: '2026/08/17 22:18' },
+    createdAt: at('2026-08-11T23:05:00Z'),
+    lastUsedAt: at('2026-08-17T13:18:00Z'),
     current: false,
   },
   {
@@ -46,8 +53,8 @@ export const SESSIONS: SessionRow[] = [
     displayName: 'operator',
     device: { name: 'VLC / iPadOS 18', kind: '外部プレイヤー' },
     method: 'local',
-    createdAt: '2026/08/10 19:33',
-    lastUsed: { label: '2026/08/19 06:02' },
+    createdAt: at('2026-08-10T10:33:00Z'),
+    lastUsedAt: at('2026-08-18T21:02:00Z'),
     current: false,
   },
 ]
@@ -60,10 +67,8 @@ export const MORE_SESSIONS_THAN_FIT: SessionRow[] = [
     SESSIONS.filter((session) => !session.current).map((session) => ({
       ...session,
       id: `${session.id}-${round}`,
-      createdAt: `2026/07/${String(1 + round).padStart(2, '0')} 21:40`,
-      lastUsed: {
-        label: `2026/08/${String(1 + round).padStart(2, '0')} 11:44`,
-      },
+      createdAt: at(`2026-07-${String(1 + round).padStart(2, '0')}T12:40:00Z`),
+      lastUsedAt: at(`2026-08-${String(1 + round).padStart(2, '0')}T02:44:00Z`),
     })),
   ).flat(),
 ]
@@ -76,8 +81,8 @@ export const LONG_NAMES: SessionRow[] = [
       'someone.with.a.rather.long.name@accounts.subdomain.example.test',
     device: { name: 'Safari / iPadOS 18', kind: 'タブレット' },
     method: 'oidc',
-    createdAt: '2026/08/16 21:40',
-    lastUsed: { label: '約 3 分前', at: '2026/08/19 11:44' },
+    createdAt: at('2026-08-16T12:40:00Z'),
+    lastUsedAt: at('2026-08-19T02:44:00Z'),
     current: false,
   },
   {
@@ -85,8 +90,8 @@ export const LONG_NAMES: SessionRow[] = [
     displayName: 'k3Jr9vQm2LZp8xWc4TnB7yHd0sFq6aUe1oGiRtYlMwK',
     device: { name: 'Firefox / macOS', kind: 'デスクトップ' },
     method: 'oidc',
-    createdAt: '2026/08/12 08:05',
-    lastUsed: { label: '2026/08/17 22:18' },
+    createdAt: at('2026-08-11T23:05:00Z'),
+    lastUsedAt: at('2026-08-17T13:18:00Z'),
     current: false,
   },
 ]

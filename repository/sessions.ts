@@ -9,22 +9,13 @@ import type { components } from '@/repository/client/schema'
 type PasswordRefusedResponder =
   components['schemas']['PasswordRefusedResponder']
 
-const MINUTE = 60_000
-
-const HOUR = 60 * MINUTE
-
-export interface Moment {
-  label: string
-  at?: string
-}
-
 export interface SessionRow {
   id: string
   displayName: string
   device: Device
   method: AuthMethod
   createdAt: string
-  lastUsed: Moment
+  lastUsedAt: string
   current: boolean
 }
 
@@ -53,15 +44,13 @@ export async function getSessions(): Promise<SessionRow[]> {
     throw new Error(`GET /api/auth/sessions answered ${response.status}`)
   }
 
-  const now = Date.now()
-
   return data.data.map((session) => ({
     id: session.id,
     displayName: session.displayName,
     device: describeDevice(session.deviceLabel),
     method: session.method,
     createdAt: formatMoment(session.createdAt),
-    lastUsed: momentOf(session.lastUsedAt, now),
+    lastUsedAt: formatMoment(session.lastUsedAt),
     current: session.current,
   }))
 }
@@ -136,21 +125,4 @@ function passwordRefusalOf(
   return refused === undefined
     ? fallback
     : shapeFor(PASSWORD_REFUSAL, refused.refusal, () => fallback)(refused)
-}
-
-function momentOf(iso: string, now: number): Moment {
-  const elapsed = now - Date.parse(iso)
-
-  if (elapsed < MINUTE) {
-    return { label: 'たったいま' }
-  }
-
-  if (elapsed < HOUR) {
-    return {
-      label: `約 ${Math.round(elapsed / MINUTE)} 分前`,
-      at: formatMoment(iso),
-    }
-  }
-
-  return { label: formatMoment(iso) }
 }

@@ -87,9 +87,7 @@ export function RevokeSession({
             <dt className="text-sub text-ink-3">作成</dt>
             <dd className="font-code tabular-nums">{session.createdAt}</dd>
             <dt className="text-sub text-ink-3">{WHEN_LABELS.taken}</dt>
-            <dd className="font-code tabular-nums">
-              {session.lastUsed.at ?? session.lastUsed.label}
-            </dd>
+            <dd className="font-code tabular-nums">{session.lastUsedAt}</dd>
           </dl>
 
           <span aria-live="polite">
