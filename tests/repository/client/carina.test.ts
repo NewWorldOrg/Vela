@@ -7,6 +7,7 @@ import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
 interface Asked {
   cookies: Record<string, string>
   page?: string
+  agent?: string
 }
 
 const asked: Asked = { cookies: {} }
@@ -27,7 +28,9 @@ const STOOD_IN = new Map<string, string>([
      export const headers = async () => ({
        get: (name) => name === '${RENDERED_PAGE_HEADER}'
          ? (asking().page ?? null)
-         : null,
+         : name === 'user-agent'
+           ? (asking().agent ?? null)
+           : null,
      })`,
   ],
   [
@@ -111,6 +114,7 @@ beforeEach(() => {
   sent = []
   asked.cookies = { [SESSION_COOKIE]: 'the-session-that-asked' }
   asked.page = undefined
+  asked.agent = undefined
   asking(asked)
   apiAnswering()
 })
@@ -192,6 +196,30 @@ test('a request from no session carries none', async () => {
   assert.equal(sent[0].headers.get('cookie'), null)
 })
 
+const A_TABLET =
+  'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+
+test('the browser that asked is the one named to the API, on a read and on a write', async () => {
+  asked.agent = A_TABLET
+
+  await carinaClient().GET('/api/health')
+  await carinaClient().POST('/api/epg/rebuild', {
+    body: { confirm: 'REBUILD' },
+  })
+  await revalidatingCarinaClient().GET('/api/programs', A_DAY)
+
+  assert.deepEqual(
+    sent.map((request) => request.headers.get('user-agent')),
+    [A_TABLET, A_TABLET, A_TABLET],
+  )
+})
+
+test('a request that named no browser is not given one', async () => {
+  await carinaClient().GET('/api/health')
+
+  assert.equal(sent[0].headers.get('user-agent'), null)
+})
+
 test('a session the API refuses is sent to sign in again, holding the page', async () => {
   asked.page = '/guide?date=2026-08-08'
 
@@ -239,6 +267,7 @@ test('a call from outside a request carries no session and still goes out', asyn
   assert.equal(sent.length, 1)
   assert.equal(sent[0].cache, 'no-store')
   assert.equal(sent[0].headers.get('cookie'), null)
+  assert.equal(sent[0].headers.get('user-agent'), null)
 })
 
 test('a write with nothing of its own to say still says it is json, so the API is not left to refuse the type', async () => {

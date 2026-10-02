@@ -23,6 +23,7 @@ export function revalidatingCarinaClient() {
 
 interface Asking {
   session?: string
+  agent?: string
   page?: string
 }
 
@@ -30,13 +31,17 @@ async function carrying(
   request: Request,
   send: (request: Request) => Promise<Response>,
 ): Promise<Response> {
-  const { session, page } = await asked()
+  const { session, agent, page } = await asked()
   const sent = changesState(request.method)
     ? statingItsOrigin(request)
     : new Request(request, { cache: 'no-store' })
 
   if (session) {
     sent.headers.set('cookie', session)
+  }
+
+  if (agent) {
+    sent.headers.set('user-agent', agent)
   }
 
   const response = await send(sent)
@@ -98,6 +103,7 @@ async function asked(): Promise<Asking> {
 
     return {
       session: sessionIn(jar),
+      agent: sent.get('user-agent') ?? undefined,
       page: sent.get(RENDERED_PAGE_HEADER) ?? undefined,
     }
   } catch (error) {
