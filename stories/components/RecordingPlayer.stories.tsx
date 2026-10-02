@@ -431,8 +431,11 @@ export const 再生できない_外部プレイヤーは渡すものを選べる
     )
     await expect(await screen.findByRole('menu')).toBeVisible()
     await expect(
-      screen.getAllByRole('menuitem').map((one) => one.textContent),
+      screen.getAllByRole('menuitemradio').map((one) => one.textContent),
     ).toEqual(['エンコード済み', '元のまま3.4 GB'])
+    await expect(
+      screen.getAllByRole('menuitem').map((one) => one.textContent),
+    ).toEqual(['URL をコピー'])
     await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
   },

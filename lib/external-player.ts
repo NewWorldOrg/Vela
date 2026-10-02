@@ -86,3 +86,57 @@ export function airPlayCanBeHanded(
 ): boolean {
   return plan.source === THE_ARTEFACT || plan.alternative === THE_ARTEFACT
 }
+
+export type PlayerApp = 'vlc' | 'infuse'
+
+export interface Browsing {
+  userAgent: string
+  maxTouchPoints: number
+}
+
+const THE_APPS: Record<PlayerApp, { says: string; opens: string }> = {
+  vlc: {
+    says: 'VLC で開く',
+    opens: 'vlc-x-callback://x-callback-url/stream?url=',
+  },
+  infuse: {
+    says: 'Infuse で開く',
+    opens: 'infuse://x-callback-url/play?url=',
+  },
+}
+
+const IN_THE_HAND = /\b(iPhone|iPad|iPod)\b/
+
+const A_MAC = /\bMacintosh\b/
+
+const ON_A_TOUCH_DEVICE_OF_APPLE: readonly PlayerApp[] = ['vlc', 'infuse']
+
+const ON_A_MAC: readonly PlayerApp[] = ['infuse']
+
+const NOWHERE: readonly PlayerApp[] = []
+
+/** The player apps a browser can hand a URL to, in the order they are offered. */
+export function playerAppsOn({
+  userAgent,
+  maxTouchPoints,
+}: Browsing): readonly PlayerApp[] {
+  if (IN_THE_HAND.test(userAgent)) {
+    return ON_A_TOUCH_DEVICE_OF_APPLE
+  }
+
+  if (!A_MAC.test(userAgent)) {
+    return NOWHERE
+  }
+
+  return maxTouchPoints > 1 ? ON_A_TOUCH_DEVICE_OF_APPLE : ON_A_MAC
+}
+
+export const NO_PLAYER_APPS = NOWHERE
+
+export function appSays(app: PlayerApp): string {
+  return THE_APPS[app].says
+}
+
+export function appHref(app: PlayerApp, url: string): string {
+  return `${THE_APPS[app].opens}${encodeURIComponent(url)}`
+}

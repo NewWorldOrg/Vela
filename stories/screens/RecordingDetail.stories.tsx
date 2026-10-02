@@ -26,6 +26,19 @@ import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import {
+  AN_IPAD,
+  A_MAC,
+  browsingAs,
+  closeTheHandoverMenu,
+  handedTo,
+  openTheHandoverMenu,
+  pressInTheHandoverMenu,
+  waysToHandOver,
+  whatIsHanded,
+  whatWasCopied,
+  whereItLeftFor,
+} from '@/stories/handed-over'
 import { inTheApp } from '@/stories/frames'
 
 function detail(id: string) {
@@ -1179,73 +1192,51 @@ const ENCODED_AND_RECORDED = planned({
   alternative: 'recording',
 })
 
-async function openedFromTheMenu(
-  canvasElement: HTMLElement,
-  item: string,
-): Promise<string[]> {
-  const opened: string[] = []
-  const wasOpen = window.open
+const THE_RECORDING_ITSELF_BY_TICKET =
+  /^https?:\/\/ticket:a-ticket-that-lapses@[^/]+\/api\/videos\/1274\?source=recording$/
 
-  window.open = ((href?: string | URL) => {
-    opened.push(String(href))
-
-    return null
-  }) as typeof window.open
-
-  try {
-    await userEvent.click(
-      within(canvasElement).getByRole('button', {
-        name: '外部プレイヤーで開く',
-      }),
-    )
-    await userEvent.click(
-      await screen.findByRole('menuitem', { name: new RegExp(`^${item}`) }),
-    )
-    await waitFor(() => expect(opened).toHaveLength(1))
-  } finally {
-    window.open = wasOpen
-  }
-
-  return opened
-}
-
-async function closeTheMenu() {
-  await userEvent.keyboard('{Escape}')
-  await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
-}
-
-function menuItems(): string[] {
-  return screen.getAllByRole('menuitem').map((one) => one.textContent ?? '')
-}
+const THE_ARTEFACT_BY_TICKET =
+  /^https?:\/\/ticket:a-ticket-that-lapses@[^/]+\/api\/videos\/1274\?source=artefact$/
 
 export const 外部プレイヤーはエンコード済みと元のままから選ぶ: Story = {
   args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
+    await expect(whatIsHanded()).toEqual(['エンコード済み', '元のまま3.4 GB'])
+    await expect(waysToHandOver()).toEqual(['URL をコピー'])
+    await expect(
+      screen.getByRole('menuitemradio', { name: 'エンコード済み' }),
+    ).toBeChecked()
+
     await userEvent.click(
-      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+      screen.getByRole('menuitemradio', { name: /^元のまま/ }),
     )
-    await expect(await screen.findByRole('menu')).toBeVisible()
-    await expect(menuItems()).toEqual(['エンコード済み', '元のまま3.4 GB'])
-    await closeTheMenu()
+    await expect(screen.getByRole('menu')).toBeVisible()
+    await expect(
+      screen.getByRole('menuitemradio', { name: /^元のまま/ }),
+    ).toBeChecked()
 
-    const opened = await openedFromTheMenu(canvasElement, '元のまま')
+    const copied = await whatWasCopied(async (taken) => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await waitFor(() => expect(taken).toHaveLength(1))
+    })
 
-    await expect(opened[0]).toMatch(
-      /^https?:\/\/ticket:a-ticket-that-lapses@[^/]+\/api\/videos\/1274\?source=recording$/,
-    )
+    await expect(copied[0]).toMatch(THE_RECORDING_ITSELF_BY_TICKET)
+    await expect(await canvas.findByText('URL をコピーしました')).toBeVisible()
   },
 }
 
 export const 外部プレイヤーにエンコード済みを渡す: Story = {
   args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
   play: async ({ canvasElement }) => {
-    const opened = await openedFromTheMenu(canvasElement, 'エンコード済み')
+    const copied = await whatWasCopied(async (taken) => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await waitFor(() => expect(taken).toHaveLength(1))
+    })
 
-    await expect(opened[0]).toMatch(
-      /^https?:\/\/ticket:a-ticket-that-lapses@[^/]+\/api\/videos\/1274\?source=artefact$/,
-    )
+    await expect(copied[0]).toMatch(THE_ARTEFACT_BY_TICKET)
   },
 }
 
@@ -1255,17 +1246,71 @@ export const 成果物が無い録画は外部プレイヤーに元のままだ�
     playback: planned({ source: 'recording' }),
   },
   play: async ({ canvasElement }) => {
-    await userEvent.click(
-      within(canvasElement).getByRole('button', {
-        name: '外部プレイヤーで開く',
-      }),
-    )
-
-    const menu = await screen.findByRole('menu')
+    const menu = await openTheHandoverMenu(canvasElement)
 
     await expect(menu).toBeVisible()
-    await expect(menuItems()).toEqual(['元のまま3.4 GB'])
-    await expect(menu.textContent).not.toMatch(/TS|VLC/)
-    await closeTheMenu()
+    await expect(whatIsHanded()).toEqual(['元のまま3.4 GB'])
+    await expect(screen.getByRole('menuitemradio')).toBeChecked()
+    await expect(menu.textContent).toBe('元のまま3.4 GBURL をコピー')
+    await closeTheHandoverMenu()
+  },
+}
+
+export const iPad_では外部プレイヤーのアプリで開く: Story = {
+  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
+  beforeEach: browsingAs(AN_IPAD),
+  play: async ({ canvasElement }) => {
+    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
+    await expect(waysToHandOver()).toEqual([
+      'VLC で開く',
+      'Infuse で開く',
+      'URL をコピー',
+    ])
+
+    const left = await whereItLeftFor(async (sent) => {
+      await pressInTheHandoverMenu(canvasElement, 'VLC で開く')
+      await waitFor(() => expect(sent).toHaveLength(1))
+
+      await openTheHandoverMenu(canvasElement)
+      await userEvent.click(
+        screen.getByRole('menuitemradio', { name: /^元のまま/ }),
+      )
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で開く')
+      await waitFor(() => expect(sent).toHaveLength(2))
+    })
+
+    await expect(
+      handedTo('vlc-x-callback://x-callback-url/stream?url=', left[0]),
+    ).toMatch(THE_ARTEFACT_BY_TICKET)
+    await expect(
+      handedTo('infuse://x-callback-url/play?url=', left[1]),
+    ).toMatch(THE_RECORDING_ITSELF_BY_TICKET)
+    await expect(
+      within(canvasElement).queryByText('URL をコピーしました'),
+    ).toBeNull()
+  },
+}
+
+export const Mac_では_Infuse_で開く: Story = {
+  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
+  beforeEach: browsingAs(A_MAC),
+  play: async ({ canvasElement }) => {
+    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
+    await expect(waysToHandOver()).toEqual(['Infuse で開く', 'URL をコピー'])
+    await closeTheHandoverMenu()
+  },
+}
+
+export const URL_をコピーできなかったらその場で言う: Story = {
+  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
+  play: async ({ canvasElement }) => {
+    const copied = await whatWasCopied(async () => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await expect(
+        await within(canvasElement).findByText('URL をコピーできません'),
+      ).toBeVisible()
+    }, false)
+
+    await expect(copied).toEqual([])
   },
 }
