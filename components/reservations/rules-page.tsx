@@ -35,6 +35,7 @@ import type {
   RulePreview,
   RuleRetirement,
   RulesResult,
+  RuleTake,
   RuleWrite,
   RuleExclusion,
 } from '@/repository/rules'
@@ -123,6 +124,26 @@ export interface RuleActions {
 const EVERY_KIND = 'all'
 
 const SIGNED_OUT = signedOut('操作')
+
+function refusalOf<T>(result: RuleWrite<T>): string | undefined {
+  if (result.state === 'ok') {
+    return undefined
+  }
+
+  return result.state === 'unauthenticated' ? SIGNED_OUT : result.message
+}
+
+function TakeBadge({ take }: { take: RuleTake }) {
+  if (take.alreadyReserved) {
+    return <Badge variant="mute">予約済み</Badge>
+  }
+
+  if (take.verdict === 'contended') {
+    return <Badge variant="err">競合</Badge>
+  }
+
+  return <Badge variant="ok">確保</Badge>
+}
 
 interface Named {
   field: 'name' | 'terms' | 'priority' | 'before' | 'after'
@@ -313,13 +334,7 @@ function RuleRow({
             startTransition(async () => {
               const result = await onSwitch(next)
 
-              setRefusal(
-                result.state === 'ok'
-                  ? undefined
-                  : result.state === 'unauthenticated'
-                    ? SIGNED_OUT
-                    : result.message,
-              )
+              setRefusal(refusalOf(result))
             })
           }
         />
@@ -1036,13 +1051,7 @@ function RuleEditor({
                       <span className="min-w-0 flex-1 text-ui text-ink">
                         {take.title}
                       </span>
-                      {take.alreadyReserved ? (
-                        <Badge variant="mute">予約済み</Badge>
-                      ) : take.verdict === 'contended' ? (
-                        <Badge variant="err">競合</Badge>
-                      ) : (
-                        <Badge variant="ok">確保</Badge>
-                      )}
+                      <TakeBadge take={take} />
                     </li>
                   ))}
                 </ul>

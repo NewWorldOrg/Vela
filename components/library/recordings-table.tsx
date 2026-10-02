@@ -15,6 +15,7 @@ import {
   GAP_BEFORE_STATE,
   RecordingRow,
 } from '@/components/library/recording-row'
+import { checkedOutOf } from '@/lib/selection'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { TableHead } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -67,14 +68,6 @@ const COLUMNS: Column[] = [
 
 const TABLE_MIN = '71.5rem'
 
-function pickedOutOf(shown: number, listed: number): boolean | 'indeterminate' {
-  if (shown === 0) {
-    return false
-  }
-
-  return shown === listed ? true : 'indeterminate'
-}
-
 export function RecordingsTable({
   items,
   onDelete,
@@ -97,7 +90,7 @@ export function RecordingsTable({
     if (column === COLUMNS[0]) {
       return (
         <Checkbox
-          checked={pickedOutOf(shown, items.length)}
+          checked={checkedOutOf(shown, items.length)}
           onCheckedChange={(next) =>
             onPick(
               next === true ? new Set(items.map((one) => one.id)) : new Set(),

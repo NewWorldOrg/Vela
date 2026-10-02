@@ -97,13 +97,13 @@ export function ruleConditionParts(
     )
   }
 
-  parts.push(
-    terms.channels.length === 0
-      ? 'すべてのチャンネル'
-      : terms.channels.length === 1
-        ? channelNameOf(terms.channels[0])
-        : `${terms.channels.length} チャンネル`,
-  )
+  if (terms.channels.length === 0) {
+    parts.push('すべてのチャンネル')
+  } else if (terms.channels.length === 1) {
+    parts.push(channelNameOf(terms.channels[0]))
+  } else {
+    parts.push(`${terms.channels.length} チャンネル`)
+  }
 
   return parts
 }
