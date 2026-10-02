@@ -67,14 +67,20 @@ function Length({ recording: r }: { recording: Recording }) {
   )
 }
 
+function sizeSaid(r: Recording) {
+  if (r.fileMissing) {
+    return <span className="font-sans text-ink-3">{NO_FILE_ON_DISK}</span>
+  }
+
+  if (r.sizeBytes == null) {
+    return <Dash />
+  }
+
+  return <>{formatBytes(r.sizeBytes)}</>
+}
+
 function Size({ recording: r }: { recording: Recording }) {
-  const said = r.fileMissing ? (
-    <span className="font-sans text-ink-3">{NO_FILE_ON_DISK}</span>
-  ) : r.sizeBytes == null ? (
-    <Dash />
-  ) : (
-    <>{formatBytes(r.sizeBytes)}</>
-  )
+  const said = sizeSaid(r)
 
   if (!r.sizeObservedAt) {
     return said

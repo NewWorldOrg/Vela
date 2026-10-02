@@ -200,8 +200,8 @@ export function LivePlayer({
       ? retried.count
       : undefined
 
-  const running: Running | null =
-    key === null ? null : held && held.key === key ? held : begun(key)
+  const kept = held && held.key === key ? held : null
+  const running: Running | null = key === null ? null : (kept ?? begun(key))
   const phase = running?.phase
   const fault = running?.fault ?? null
 

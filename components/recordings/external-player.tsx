@@ -108,6 +108,11 @@ async function copied(taking: Promise<Taken>): Promise<boolean> {
 
 type Said = { tone: 'done' | 'failed'; text: string }
 
+const SAID_INK: Record<'page' | 'player', Record<Said['tone'], string>> = {
+  page: { done: 'text-ink-2', failed: 'text-coral' },
+  player: { done: 'text-(--pl-ink-2)', failed: 'text-(--pl-err)' },
+}
+
 function useHandingOver() {
   const [taking, setTaking] = useState(false)
   const [said, setSaid] = useState<Said | null>(null)
@@ -163,19 +168,7 @@ function WhatHappened({
   }
 
   return (
-    <p
-      role="status"
-      className={cn(
-        'text-cap',
-        said.tone === 'done'
-          ? tone === 'player'
-            ? 'text-(--pl-ink-2)'
-            : 'text-ink-2'
-          : tone === 'player'
-            ? 'text-(--pl-err)'
-            : 'text-coral',
-      )}
-    >
+    <p role="status" className={cn('text-cap', SAID_INK[tone][said.tone])}>
       {said.text}
     </p>
   )

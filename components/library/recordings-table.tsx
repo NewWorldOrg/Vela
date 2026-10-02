@@ -67,6 +67,14 @@ const COLUMNS: Column[] = [
 
 const TABLE_MIN = '71.5rem'
 
+function pickedOutOf(shown: number, listed: number): boolean | 'indeterminate' {
+  if (shown === 0) {
+    return false
+  }
+
+  return shown === listed ? true : 'indeterminate'
+}
+
 export function RecordingsTable({
   items,
   onDelete,
@@ -84,6 +92,28 @@ export function RecordingsTable({
   const [asked, setAsked] = useState<Recording | null>(null)
   const shown = items.filter((one) => picked.has(one.id)).length
   const wait = waitsWhile(waiting)
+
+  const headOf = (column: Column) => {
+    if (column === COLUMNS[0]) {
+      return (
+        <Checkbox
+          checked={pickedOutOf(shown, items.length)}
+          onCheckedChange={(next) =>
+            onPick(
+              next === true ? new Set(items.map((one) => one.id)) : new Set(),
+            )
+          }
+          aria-label="表示中の録画をすべて選ぶ"
+        />
+      )
+    }
+
+    return column.hidden ? (
+      <span className="sr-only">{column.label}</span>
+    ) : (
+      column.label
+    )
+  }
 
   return (
     <div
@@ -119,29 +149,7 @@ export function RecordingsTable({
                   column.detail && DETAIL_CELL,
                 )}
               >
-                {column === COLUMNS[0] ? (
-                  <Checkbox
-                    checked={
-                      shown === 0
-                        ? false
-                        : shown === items.length
-                          ? true
-                          : 'indeterminate'
-                    }
-                    onCheckedChange={(next) =>
-                      onPick(
-                        next === true
-                          ? new Set(items.map((one) => one.id))
-                          : new Set(),
-                      )
-                    }
-                    aria-label="表示中の録画をすべて選ぶ"
-                  />
-                ) : column.hidden ? (
-                  <span className="sr-only">{column.label}</span>
-                ) : (
-                  column.label
-                )}
+                {headOf(column)}
               </TableHead>
             ))}
           </tr>

@@ -90,6 +90,40 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
   ),
 }
 
+function whyNothingPlays(
+  detail: RecordingDetail,
+  playback: PlaybackRead,
+): ReactNode {
+  if (detail.fileMissing) {
+    return (
+      <PlaybackNotice
+        tone="waiting"
+        mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
+        title="ファイルが見つかりません"
+      >
+        <Link href="/library/integrity" className={PLAYER_BUTTON}>
+          整合性チェックの結果へ
+        </Link>
+      </PlaybackNotice>
+    )
+  }
+
+  if (playback.state === 'refused') {
+    return REFUSED[playback.refusal]
+  }
+
+  if (playback.plan.route === 'nothing') {
+    return (
+      <PlaybackNotice
+        mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
+        title="再生できる成果物がありません"
+      />
+    )
+  }
+
+  return null
+}
+
 const OUTCOME_LABEL = {
   truncated: '尻切れ',
   failed: '失敗',
@@ -212,24 +246,7 @@ export function RecordingDetailView({
             </div>
           )}
 
-          {d.fileMissing ? (
-            <PlaybackNotice
-              tone="waiting"
-              mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
-              title="ファイルが見つかりません"
-            >
-              <Link href="/library/integrity" className={PLAYER_BUTTON}>
-                整合性チェックの結果へ
-              </Link>
-            </PlaybackNotice>
-          ) : playback.state === 'refused' ? (
-            REFUSED[playback.refusal]
-          ) : playback.plan.route === 'nothing' ? (
-            <PlaybackNotice
-              mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
-              title="再生できる成果物がありません"
-            />
-          ) : null}
+          {whyNothingPlays(d, playback)}
         </div>
       </div>
 

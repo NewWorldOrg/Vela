@@ -66,6 +66,54 @@ export function LibraryView({
       ch: null,
     })
 
+  const nothingListed = hasFilter ? (
+    <EmptyState
+      title="条件に合う録画がありません"
+      titleLevel={2}
+      className="mt-10 max-w-[calc(560rem/16)]"
+      action={
+        <div className="flex flex-wrap justify-center gap-2.5">
+          <Button variant="halt" size="sm" onClick={clearEveryCondition}>
+            条件を消す
+          </Button>
+          {filter.q &&
+            (filter.year || filter.genre || filter.state || filter.ch) && (
+              <Button
+                variant="change"
+                size="sm"
+                onClick={() =>
+                  onFiltersChange({
+                    year: null,
+                    genre: null,
+                    state: null,
+                    ch: null,
+                  })
+                }
+              >
+                キーワードだけ残す
+              </Button>
+            )}
+        </div>
+      }
+    />
+  ) : (
+    <EmptyState
+      title="まだ録画がありません"
+      titleLevel={2}
+      className="mt-10 max-w-[calc(560rem/16)]"
+      action={
+        <div className="flex flex-wrap justify-center gap-2.5">
+          <Button variant="watch" size="sm" asChild>
+            <Link href="/guide">番組表から予約する</Link>
+          </Button>
+          <Button variant="watch" size="sm" asChild>
+            <Link href="/reservations">予約一覧を見る</Link>
+          </Button>
+        </div>
+      }
+    />
+  )
+
   return (
     <ScreenMain
       scroll="within"
@@ -176,52 +224,8 @@ export function LibraryView({
           picked={picked}
           onPick={setPicked}
         />
-      ) : hasFilter ? (
-        <EmptyState
-          title="条件に合う録画がありません"
-          titleLevel={2}
-          className="mt-10 max-w-[calc(560rem/16)]"
-          action={
-            <div className="flex flex-wrap justify-center gap-2.5">
-              <Button variant="halt" size="sm" onClick={clearEveryCondition}>
-                条件を消す
-              </Button>
-              {filter.q &&
-                (filter.year || filter.genre || filter.state || filter.ch) && (
-                  <Button
-                    variant="change"
-                    size="sm"
-                    onClick={() =>
-                      onFiltersChange({
-                        year: null,
-                        genre: null,
-                        state: null,
-                        ch: null,
-                      })
-                    }
-                  >
-                    キーワードだけ残す
-                  </Button>
-                )}
-            </div>
-          }
-        />
       ) : (
-        <EmptyState
-          title="まだ録画がありません"
-          titleLevel={2}
-          className="mt-10 max-w-[calc(560rem/16)]"
-          action={
-            <div className="flex flex-wrap justify-center gap-2.5">
-              <Button variant="watch" size="sm" asChild>
-                <Link href="/guide">番組表から予約する</Link>
-              </Button>
-              <Button variant="watch" size="sm" asChild>
-                <Link href="/reservations">予約一覧を見る</Link>
-              </Button>
-            </div>
-          }
-        />
+        nothingListed
       )}
     </ScreenMain>
   )

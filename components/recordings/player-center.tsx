@@ -6,6 +6,18 @@ import { PauseGlyph, PlayGlyph, VolumeIcon } from '@/components/vela/icons'
 export type PlayerBezel =
   { was: 'play' | 'pause' } | { was: 'volume'; level: number }
 
+function BezelGlyph({ bezel }: { bezel: PlayerBezel }) {
+  if (bezel.was === 'volume') {
+    return <VolumeIcon level={bezel.level} className="size-8" />
+  }
+
+  if (bezel.was === 'play') {
+    return <PlayGlyph className="ml-[calc(2rem/16)] size-10" />
+  }
+
+  return <PauseGlyph className="size-10" />
+}
+
 export function PlayerCenter({
   standing,
   onStanding,
@@ -59,13 +71,7 @@ export function PlayerCenter({
             </span>
           )}
           <span className="absolute top-1/2 left-1/2 -mt-[calc(26rem/16)] -ml-[calc(26rem/16)] flex size-[calc(52rem/16)] animate-player-burst items-center still:animate-player-shown-briefly justify-center rounded-full bg-black/50 text-white">
-            {bezel.was === 'volume' ? (
-              <VolumeIcon level={bezel.level} className="size-8" />
-            ) : bezel.was === 'play' ? (
-              <PlayGlyph className="ml-[calc(2rem/16)] size-10" />
-            ) : (
-              <PauseGlyph className="size-10" />
-            )}
+            <BezelGlyph bezel={bezel} />
           </span>
         </span>
       )}
