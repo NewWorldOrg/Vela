@@ -160,19 +160,6 @@ function windowFace(judged: RestartWindow): Face {
   }
 }
 
-function deadlineOf(
-  restartWindow: RestartWindow | undefined,
-  phase: Phase,
-): number | undefined {
-  if (restartWindow?.state === 'restarting') {
-    return restartWindow.deadline
-  }
-
-  return restartWindow === undefined && phase.name === 'accepted'
-    ? phase.deadline
-    : undefined
-}
-
 function toFace(
   phase: Phase,
   overdue: boolean,
@@ -237,7 +224,12 @@ export function DriverRestartBanner({
   const [overdue, setOverdue] = useState(false)
   const [, startTransition] = useTransition()
 
-  const deadline = deadlineOf(restartWindow, phase)
+  const deadline =
+    restartWindow?.state === 'restarting'
+      ? restartWindow.deadline
+      : restartWindow === undefined && phase.name === 'accepted'
+        ? phase.deadline
+        : undefined
 
   const markOverdue = useCallback(() => setOverdue(true), [])
 

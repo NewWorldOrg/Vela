@@ -1,7 +1,6 @@
 import {
   RECORDING_QUALITY_SHAPES,
   recordingQualityShapeOf,
-  type RecordingQualityShape,
 } from '@/lib/recordings'
 import { LEFT_SCRAMBLED_TERM } from '@/lib/state-terms'
 import type { Recording } from '@/repository/recordings'
@@ -22,18 +21,6 @@ export const RECORDING_QUALITY_COLUMN = stateColumnFor([
   ...Object.values(RECORDING_QUALITY_SHAPES).map((shape) => shape.label),
 ])
 
-function variantOf(
-  scrambled: boolean,
-  measured: boolean,
-  shape: RecordingQualityShape,
-): RecordingQualityShape['variant'] {
-  if (scrambled) {
-    return 'err'
-  }
-
-  return measured ? shape.variant : 'mute'
-}
-
 export function QualityChip({
   recording: r,
   say = false,
@@ -53,7 +40,7 @@ export function QualityChip({
       : [measured && shape.saying]),
     ...also,
   ].filter((one): one is string => Boolean(one))
-  const variant = variantOf(scrambled, measured, shape)
+  const variant = scrambled ? 'err' : measured ? shape.variant : 'mute'
   const word = scrambled ? LEFT_SCRAMBLED_TERM.label : graded
   const bold = scrambled || measured
   const drawn = say ? (

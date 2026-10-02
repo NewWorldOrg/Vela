@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { addressWith } from '@/lib/path'
-import { checkedOutOf } from '@/lib/selection'
 import type {
   EpgDriftKind,
   ReservationsResult,
@@ -315,7 +314,13 @@ export function ReservationsView({
             <TableRow>
               <TableHead className="w-11">
                 <Checkbox
-                  checked={checkedOutOf(chosen.length, items.length)}
+                  checked={
+                    chosen.length === 0
+                      ? false
+                      : chosen.length === items.length
+                        ? true
+                        : 'indeterminate'
+                  }
                   onCheckedChange={(next) =>
                     setPicked(
                       next === true

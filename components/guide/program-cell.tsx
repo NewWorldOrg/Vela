@@ -38,14 +38,6 @@ const MARK_SAYS: Record<BookingMark, string> = {
   recording: RECORDING_IN_PROGRESS_TERM.label,
 }
 
-function sizeOf(height: number): CellSize {
-  if (height < 40) {
-    return 'xs'
-  }
-
-  return height < 72 ? 's' : 'md'
-}
-
 export const ProgramCell = memo(function ProgramCell({
   program: p,
   past,
@@ -58,7 +50,7 @@ export const ProgramCell = memo(function ProgramCell({
   onSelect: (program: Program) => void
 }) {
   const height = (p.durationMin / 60) * HOUR_PX
-  const size = sizeOf(height)
+  const size: CellSize = height < 40 ? 'xs' : height < 72 ? 's' : 'md'
   const mark = bookingMarkOf(p.booking)
 
   return (

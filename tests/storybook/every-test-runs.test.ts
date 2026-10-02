@@ -77,7 +77,6 @@ const THE_SUITE = [
   'tests/lib/reservations.test.ts',
   'tests/lib/rules.test.ts',
   'tests/lib/search-condition.test.ts',
-  'tests/lib/selection.test.ts',
   'tests/lib/signed-out.test.ts',
   'tests/lib/state-terms.test.ts',
   'tests/lib/stored-flag.test.ts',

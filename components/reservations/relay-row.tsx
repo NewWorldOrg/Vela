@@ -7,7 +7,6 @@ import {
   relaySummaryOf,
   reservationAnchor,
 } from '@/lib/reservations'
-import { checkedOutOf } from '@/lib/selection'
 import type { Reservation } from '@/repository/reservations'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -59,7 +58,13 @@ export function RelayRow({
     >
       <TableCell className="h-11 align-top">
         <Checkbox
-          checked={checkedOutOf(chosen, segments.length)}
+          checked={
+            chosen === 0
+              ? false
+              : chosen === segments.length
+                ? true
+                : 'indeterminate'
+          }
           onCheckedChange={(next) => onSelect(next === true)}
           aria-label={
             partial

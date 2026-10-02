@@ -15,7 +15,6 @@ import {
   GAP_BEFORE_STATE,
   RecordingRow,
 } from '@/components/library/recording-row'
-import { checkedOutOf } from '@/lib/selection'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { TableHead } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -86,28 +85,6 @@ export function RecordingsTable({
   const shown = items.filter((one) => picked.has(one.id)).length
   const wait = waitsWhile(waiting)
 
-  const headOf = (column: Column) => {
-    if (column === COLUMNS[0]) {
-      return (
-        <Checkbox
-          checked={checkedOutOf(shown, items.length)}
-          onCheckedChange={(next) =>
-            onPick(
-              next === true ? new Set(items.map((one) => one.id)) : new Set(),
-            )
-          }
-          aria-label="表示中の録画をすべて選ぶ"
-        />
-      )
-    }
-
-    return column.hidden ? (
-      <span className="sr-only">{column.label}</span>
-    ) : (
-      column.label
-    )
-  }
-
   return (
     <div
       data-slot="table-container"
@@ -142,7 +119,29 @@ export function RecordingsTable({
                   column.detail && DETAIL_CELL,
                 )}
               >
-                {headOf(column)}
+                {column === COLUMNS[0] ? (
+                  <Checkbox
+                    checked={
+                      shown === 0
+                        ? false
+                        : shown === items.length
+                          ? true
+                          : 'indeterminate'
+                    }
+                    onCheckedChange={(next) =>
+                      onPick(
+                        next === true
+                          ? new Set(items.map((one) => one.id))
+                          : new Set(),
+                      )
+                    }
+                    aria-label="表示中の録画をすべて選ぶ"
+                  />
+                ) : column.hidden ? (
+                  <span className="sr-only">{column.label}</span>
+                ) : (
+                  column.label
+                )}
               </TableHead>
             ))}
           </tr>

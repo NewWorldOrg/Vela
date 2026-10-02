@@ -79,14 +79,6 @@ const HEAD_TONE: Record<StatusTone, string> = {
   off: 'text-ink-2',
 }
 
-function toneWhen(broken: boolean, strained: boolean): StatusTone {
-  if (broken) {
-    return 'err'
-  }
-
-  return strained ? 'warn' : 'ok'
-}
-
 function Part({
   name,
   mark: Mark,
@@ -159,25 +151,6 @@ function Figure({ children }: { children: ReactNode }) {
   return <span className="font-code tabular-nums">{children}</span>
 }
 
-function factOf(
-  value: ReactNode,
-  names: { key: string; label: string }[] | undefined,
-): ReactNode {
-  if (names === undefined) {
-    return <b className="font-medium text-ink">{value}</b>
-  }
-
-  if (names.length === 0) {
-    return <b className="font-medium text-ink">なし</b>
-  }
-
-  return names.map((name) => (
-    <Badge key={name.key} variant="err" className="font-bold">
-      {name.label}
-    </Badge>
-  ))
-}
-
 function Fact({
   label,
   value,
@@ -190,7 +163,19 @@ function Fact({
   return (
     <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1.5">
       {label}
-      {factOf(value, names)}
+      {names !== undefined ? (
+        names.length > 0 ? (
+          names.map((name) => (
+            <Badge key={name.key} variant="err" className="font-bold">
+              {name.label}
+            </Badge>
+          ))
+        ) : (
+          <b className="font-medium text-ink">なし</b>
+        )
+      ) : (
+        <b className="font-medium text-ink">{value}</b>
+      )}
     </span>
   )
 }
@@ -273,7 +258,9 @@ export function SystemView({
         <Part
           name="API"
           mark={MarkDoubleCircle}
-          tone={toneWhen(api.state !== 'ok', degraded.length > 0)}
+          tone={
+            api.state !== 'ok' ? 'err' : degraded.length > 0 ? 'warn' : 'ok'
+          }
           head={
             api.state === 'ok'
               ? SYSTEM_STATE_LABELS.responding
@@ -422,10 +409,12 @@ function TunerPart({ reading }: { reading: Reading<TunerCensus> }) {
   }
 
   const census = reading.value
-  const tone = toneWhen(
-    census.faulted > 0,
-    census.disabled > 0 || census.drifted,
-  )
+  const tone =
+    census.faulted > 0
+      ? 'err'
+      : census.disabled > 0 || census.drifted
+        ? 'warn'
+        : 'ok'
 
   return (
     <Part
@@ -451,7 +440,7 @@ function StoragePart({ reading }: { reading: Reading<StorageCensus> }) {
   }
 
   const census = reading.value
-  const tone = toneWhen(census.unwritable > 0, census.short)
+  const tone = census.unwritable > 0 ? 'err' : census.short ? 'warn' : 'ok'
 
   return (
     <Part

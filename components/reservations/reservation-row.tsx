@@ -60,14 +60,6 @@ export interface ReservationActions {
 
 const SIGNED_OUT = signedOut('操作')
 
-function refusalOf(result: ReservationWrite): string | undefined {
-  if (result.state === 'unauthenticated') {
-    return SIGNED_OUT
-  }
-
-  return result.state === 'rejected' ? result.message : undefined
-}
-
 export function ReservationRow({
   reservation,
   nth,
@@ -103,7 +95,13 @@ export function ReservationRow({
 
       const result = await write()
 
-      setRefusal(refusalOf(result))
+      setRefusal(
+        result.state === 'unauthenticated'
+          ? SIGNED_OUT
+          : result.state === 'rejected'
+            ? result.message
+            : undefined,
+      )
     })
   }
 

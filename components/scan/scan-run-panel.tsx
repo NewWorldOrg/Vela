@@ -168,28 +168,6 @@ function ScanCounts({ progress }: { progress: ScanRunProgress }) {
   )
 }
 
-function refusalOf(result: WriteResult): string | undefined {
-  if (result.state === 'unauthenticated') {
-    return signedOut('キャンセル')
-  }
-
-  return result.state === 'rejected' ? result.message : undefined
-}
-
-function scanningOf(progress: ScanRunProgress | undefined): string {
-  if (progress === undefined) {
-    return '状況を読み取れていません'
-  }
-
-  if (progress.systems.length === 0) {
-    return '走査開始を待っています'
-  }
-
-  return progress.systems
-    .map((system) => wordFor(SYSTEM_LABEL, system))
-    .join(' · ')
-}
-
 export function ScanRunPanel({
   running,
   onCancel,
@@ -228,7 +206,14 @@ export function ScanRunPanel({
           <Spinner className="mt-[calc(3rem/16)] text-brand" />
           <div className="min-w-0 flex-1">
             <h2 className="heading text-ui leading-[1.5]">
-              スキャン中 — {scanningOf(progress)}
+              スキャン中 —{' '}
+              {progress === undefined
+                ? '状況を読み取れていません'
+                : progress.systems.length === 0
+                  ? '走査開始を待っています'
+                  : progress.systems
+                      .map((system) => wordFor(SYSTEM_LABEL, system))
+                      .join(' · ')}
             </h2>
           </div>
           <Button
@@ -241,7 +226,13 @@ export function ScanRunPanel({
 
                 const result = await onCancel(run.id)
 
-                setRefusal(refusalOf(result))
+                setRefusal(
+                  result.state === 'unauthenticated'
+                    ? signedOut('キャンセル')
+                    : result.state === 'rejected'
+                      ? result.message
+                      : undefined,
+                )
               })
             }
           >

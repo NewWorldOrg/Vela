@@ -54,19 +54,6 @@ export function JobsList({
 }) {
   const [waiting, show] = useJobsAddress()
 
-  const nothingListed = jobs.status ? (
-    <EmptyState title="条件に合うジョブがありません" />
-  ) : (
-    <EmptyState
-      title="ジョブの履歴がありません"
-      action={
-        <Button variant="watch" size="sm" asChild>
-          <Link href="/library">ライブラリを開く</Link>
-        </Button>
-      }
-    />
-  )
-
   return (
     <>
       <JobsFilter jobs={jobs} show={show} />
@@ -75,8 +62,17 @@ export function JobsList({
           <JobTable jobs={jobs.items} onCallOff={onCallOff} waiting={waiting} />
           <JobsPager jobs={jobs} show={show} />
         </>
+      ) : jobs.status ? (
+        <EmptyState title="条件に合うジョブがありません" />
       ) : (
-        nothingListed
+        <EmptyState
+          title="ジョブの履歴がありません"
+          action={
+            <Button variant="watch" size="sm" asChild>
+              <Link href="/library">ライブラリを開く</Link>
+            </Button>
+          }
+        />
       )}
     </>
   )

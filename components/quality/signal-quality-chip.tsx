@@ -25,12 +25,6 @@ export const QUALITY_LEVEL_COLUMN = stateColumnFor([
   DEGRADED_LABEL,
 ])
 
-const GRADED_VARIANT: Record<'good' | 'warn' | 'bad', 'ok' | 'warn' | 'err'> = {
-  good: 'ok',
-  warn: 'warn',
-  bad: 'err',
-}
-
 export function QualityChip({
   level,
   say = false,
@@ -43,7 +37,7 @@ export function QualityChip({
   const label = children ?? QUALITY_PILL_LABEL[level]
 
   if (level === 'good' || level === 'warn' || level === 'bad') {
-    const variant = GRADED_VARIANT[level]
+    const variant = level === 'good' ? 'ok' : level === 'warn' ? 'warn' : 'err'
 
     if (say) {
       return (

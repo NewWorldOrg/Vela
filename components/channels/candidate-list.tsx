@@ -164,13 +164,12 @@ export function CandidateList({
   const [adding, setAdding] = useState(false)
   const [removing, setRemoving] = useState<CandidateRow | null>(null)
 
-  const toRefusal = (result: WriteResult, verb: string): string | undefined => {
-    if (result.state === 'unauthenticated') {
-      return signedOut(verb)
-    }
-
-    return result.state === 'rejected' ? result.message : undefined
-  }
+  const toRefusal = (result: WriteResult, verb: string) =>
+    result.state === 'unauthenticated'
+      ? signedOut(verb)
+      : result.state === 'rejected'
+        ? result.message
+        : undefined
 
   return (
     <>

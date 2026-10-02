@@ -108,37 +108,6 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   const emptyLedger =
     total === 0 && !(filter.kind || filter.days || filter.ch || filter.rule)
 
-  const nothingListed = emptyLedger ? (
-    <EmptyState
-      usher="glad"
-      title="録れなかった予約はありません"
-      titleLevel={2}
-      className="mt-10 max-w-[calc(560rem/16)]"
-      action={
-        <Button variant="watch" size="sm" asChild>
-          <Link href="/reservations">予約一覧へ</Link>
-        </Button>
-      }
-    />
-  ) : (
-    <EmptyState
-      title="条件に合う記録がありません"
-      titleLevel={2}
-      className="mt-10 max-w-[calc(560rem/16)]"
-      action={
-        <Button
-          variant="halt"
-          size="sm"
-          onClick={() =>
-            change({ kind: null, days: null, ch: null, rule: null })
-          }
-        >
-          条件を消す
-        </Button>
-      }
-    />
-  )
-
   return (
     <ScreenMain
       scroll="within"
@@ -230,8 +199,35 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
             />
           )}
         </>
+      ) : !emptyLedger ? (
+        <EmptyState
+          title="条件に合う記録がありません"
+          titleLevel={2}
+          className="mt-10 max-w-[calc(560rem/16)]"
+          action={
+            <Button
+              variant="halt"
+              size="sm"
+              onClick={() =>
+                change({ kind: null, days: null, ch: null, rule: null })
+              }
+            >
+              条件を消す
+            </Button>
+          }
+        />
       ) : (
-        nothingListed
+        <EmptyState
+          usher="glad"
+          title="録れなかった予約はありません"
+          titleLevel={2}
+          className="mt-10 max-w-[calc(560rem/16)]"
+          action={
+            <Button variant="watch" size="sm" asChild>
+              <Link href="/reservations">予約一覧へ</Link>
+            </Button>
+          }
+        />
       )}
     </ScreenMain>
   )

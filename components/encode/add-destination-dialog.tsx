@@ -8,18 +8,6 @@ import { Button } from '@/components/ui/button'
 import { PlusIcon } from '@/components/vela/icons'
 import { DestinationDialog } from '@/components/encode/destination-dialog'
 
-function refusing(profiles: number, roots: number): string | undefined {
-  if (profiles === 0) {
-    return 'プロファイルがないため追加できません'
-  }
-
-  if (roots === 0) {
-    return '選べる出力ルートがないため追加できません'
-  }
-
-  return undefined
-}
-
 export function AddDestinationDialog({
   profiles,
   roots,
@@ -32,7 +20,12 @@ export function AddDestinationDialog({
   size?: 'default' | 'sm'
 }) {
   const [open, setOpen] = useState(false)
-  const refused = refusing(profiles.length, roots.length)
+  const refused =
+    profiles.length === 0
+      ? 'プロファイルがないため追加できません'
+      : roots.length === 0
+        ? '選べる出力ルートがないため追加できません'
+        : undefined
 
   return (
     <>

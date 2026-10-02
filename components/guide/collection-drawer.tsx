@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils'
 import type {
   CollectNowResult,
   CollectScope,
-  CollectTarget,
   CollectionStatus,
   RebuildResult,
   StreamVisitRow,
@@ -292,20 +291,6 @@ function whyNotStarted(
   return <span>{outcome.message}</span>
 }
 
-function targetsIn(
-  range: CollectRange,
-  status: CollectionStatus,
-): CollectTarget[] {
-  switch (range) {
-    case 'stream':
-      return status.streamTargets
-    case 'service':
-      return status.serviceTargets
-    case 'all':
-      return []
-  }
-}
-
 function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
   if (outcome.state === 'started') {
     return (
@@ -371,7 +356,12 @@ export function CollectionDrawer({
     return () => clearTimeout(timer)
   }, [cooldownUntil])
 
-  const targets = targetsIn(range, status)
+  const targets =
+    range === 'stream'
+      ? status.streamTargets
+      : range === 'service'
+        ? status.serviceTargets
+        : []
   const targetKey = range === 'stream' ? streamKey : serviceKey
   const target = targets.find((option) => option.value === targetKey)
   const runnable = range === 'all' || target !== undefined

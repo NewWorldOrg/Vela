@@ -85,16 +85,6 @@ const GENRE_CLASS: Record<string, string> = {
   other: 'bg-genre-other border-genre-other-line',
 }
 
-type Copied = { href: string; ok: boolean }
-
-function copySaysOf(copied: Copied | null, href: string): string {
-  if (copied?.href !== href) {
-    return 'この条件の URL をコピー'
-  }
-
-  return copied.ok ? 'コピーしました' : 'コピーできません'
-}
-
 function insteadOfHits(
   waiting: boolean,
   outcome: SearchOutcome,
@@ -135,7 +125,9 @@ export function SearchView({ result }: { result: SearchResult }) {
 function SearchScreen({ result }: { result: SearchResult }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [copied, setCopied] = useState<Copied | null>(null)
+  const [copied, setCopied] = useState<{ href: string; ok: boolean } | null>(
+    null,
+  )
   const { condition, channels, outcome } = result
 
   const [draft, setDraft] = useState<SearchDraft>(() =>
@@ -466,7 +458,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 : 'text-ink-2 hover:text-ink',
             )}
           >
-            {copySaysOf(copied, href)}
+            {copied?.href !== href
+              ? 'この条件の URL をコピー'
+              : copied.ok
+                ? 'コピーしました'
+                : 'コピーできません'}
           </button>
         </div>
 

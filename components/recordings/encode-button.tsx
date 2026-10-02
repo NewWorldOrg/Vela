@@ -57,23 +57,6 @@ function refusing(
   return undefined
 }
 
-type Notice = { queued: boolean; text: string }
-
-function noticeOf(result: EncodeWrite, again: boolean): Notice {
-  if (result.state === 'ok') {
-    return {
-      queued: true,
-      text: again ? '作り直しを登録しました。' : 'エンコードを登録しました。',
-    }
-  }
-
-  if (result.state === 'unauthenticated') {
-    return { queued: false, text: signedOut('登録') }
-  }
-
-  return { queued: false, text: result.message }
-}
-
 export function encodes(recording: Recording): boolean {
   return recording.outcome !== 'failed'
 }
@@ -92,7 +75,7 @@ export function EncodeButton({
   onQueue: QueueEncode
 }) {
   const [pending, startTransition] = useTransition()
-  const [notice, setNotice] = useState<Notice>()
+  const [notice, setNotice] = useState<{ queued: boolean; text: string }>()
   const [open, setOpen] = useState(false)
   const [destinationId, setDestinationId] = useState(
     choices.destinations[0]?.id ?? '',
@@ -108,7 +91,21 @@ export function EncodeButton({
 
       const result = await onQueue(recording.id, destination, profile, again)
 
-      setNotice(noticeOf(result, again))
+      setNotice(
+        result.state === 'ok'
+          ? {
+              queued: true,
+              text: again
+                ? '作り直しを登録しました。'
+                : 'エンコードを登録しました。',
+            }
+          : result.state === 'unauthenticated'
+            ? {
+                queued: false,
+                text: signedOut('登録'),
+              }
+            : { queued: false, text: result.message },
+      )
       setOpen(false)
     })
   }
