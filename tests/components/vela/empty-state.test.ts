@@ -42,33 +42,42 @@ async function sourceFiles(dir: string): Promise<string[]> {
   return found
 }
 
+function closeOf(source: string, from: number): number | undefined {
+  let depth = 0
+  let quote: string | null = null
+
+  for (let at = from; at < source.length; at += 1) {
+    const here = source[at]
+
+    if (quote !== null) {
+      if (here === quote) {
+        quote = null
+      }
+      continue
+    }
+
+    if (here === '"' || here === "'") {
+      quote = here
+    } else if (here === '{') {
+      depth += 1
+    } else if (here === '}') {
+      depth -= 1
+    } else if (here === '>' && depth === 0) {
+      return at
+    }
+  }
+
+  return undefined
+}
+
 function openings(source: string): string[] {
   const found: string[] = []
 
   for (const start of source.matchAll(/<EmptyState\b/g)) {
-    let depth = 0
-    let quote: string | null = null
+    const close = closeOf(source, start.index)
 
-    for (let at = start.index; at < source.length; at += 1) {
-      const here = source[at]
-
-      if (quote !== null) {
-        if (here === quote) {
-          quote = null
-        }
-        continue
-      }
-
-      if (here === '"' || here === "'") {
-        quote = here
-      } else if (here === '{') {
-        depth += 1
-      } else if (here === '}') {
-        depth -= 1
-      } else if (here === '>' && depth === 0) {
-        found.push(source.slice(start.index, at + 1))
-        break
-      }
+    if (close !== undefined) {
+      found.push(source.slice(start.index, close + 1))
     }
   }
 

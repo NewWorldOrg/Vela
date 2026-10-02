@@ -155,6 +155,8 @@ The canon is "a small digital toy". What that means in the code:
   `shadcn add`
 - Import primitives from the unified `radix-ui` package
 - `curly` is an error: a branch always has braces
+- `max-depth` is an error past three: a block nests three deep at most, and what
+  would go deeper moves into a function of its own
 - `vela/max-ternary-chain` is an error from the third: one expression chains two
   ternaries at most. Two axes become a named table, and a run of steps a function
   that returns early or an exhaustive `switch`. A longer chain passes only under

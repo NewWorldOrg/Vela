@@ -251,6 +251,33 @@ const DRAWN_BY_ONE_SHARED_PART: Record<string, string[]> = {
   Button: ['icon-sm'],
 }
 
+function assertUsedMoreThanOnce(
+  part: string,
+  group: string,
+  key: string,
+  uses: Map<string, string[]>,
+): void {
+  if (key === 'default' || (part === 'IconButton' && key === 'pop')) {
+    return
+  }
+
+  if (DRAWN_BY_ONE_SHARED_PART[part]?.includes(key)) {
+    assert.equal(
+      (uses.get(key) ?? []).length,
+      1,
+      `${part} ${group} "${key}" is no longer drawn by exactly one shared part`,
+    )
+
+    return
+  }
+
+  assert.ok(
+    (uses.get(key) ?? []).length > 1,
+    `${part} offers ${group} "${key}", which ` +
+      `${(uses.get(key) ?? []).length === 0 ? 'no screen uses' : `only ${uses.get(key)} uses`}`,
+  )
+}
+
 test('every kind and size a button offers is one the screens use more than once', async () => {
   const sources = await everySource()
 
@@ -278,24 +305,7 @@ test('every kind and size a button offers is one the screens use more than once'
       const uses = usesOf(opened, /^([\s\S]*)$/g, group)
 
       for (const key of keysOf(declared, group)) {
-        if (key === 'default' || (part === 'IconButton' && key === 'pop')) {
-          continue
-        }
-
-        if (DRAWN_BY_ONE_SHARED_PART[part]?.includes(key)) {
-          assert.equal(
-            (uses.get(key) ?? []).length,
-            1,
-            `${part} ${group} "${key}" is no longer drawn by exactly one shared part`,
-          )
-          continue
-        }
-
-        assert.ok(
-          (uses.get(key) ?? []).length > 1,
-          `${part} offers ${group} "${key}", which ` +
-            `${(uses.get(key) ?? []).length === 0 ? 'no screen uses' : `only ${uses.get(key)} uses`}`,
-        )
+        assertUsedMoreThanOnce(part, group, key, uses)
       }
     }
   }

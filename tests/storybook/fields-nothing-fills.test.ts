@@ -188,6 +188,22 @@ function readTheTree(published: string[], production: string[]): Filling {
 
   const paired = new Map<ts.Type, Set<ts.Type>>()
 
+  function handOverEachProperty(wanted: ts.Type, held: ts.Type): void {
+    for (const property of held.getProperties()) {
+      const target = wanted.getProperty(property.name)
+
+      if (target === undefined) {
+        continue
+      }
+
+      mark(target.declarations)
+      handOver(
+        checker.getTypeOfSymbol(target),
+        checker.getTypeOfSymbol(property),
+      )
+    }
+  }
+
   function handOver(wanted: ts.Type, held: ts.Type): void {
     for (const part of partsOf(wanted)) {
       const inside = whatItHolds(part)
@@ -206,20 +222,7 @@ function readTheTree(published: string[], production: string[]): Filling {
         }
 
         already.add(one)
-
-        for (const property of one.getProperties()) {
-          const target = part.getProperty(property.name)
-
-          if (target === undefined) {
-            continue
-          }
-
-          mark(target.declarations)
-          handOver(
-            checker.getTypeOfSymbol(target),
-            checker.getTypeOfSymbol(property),
-          )
-        }
+        handOverEachProperty(part, one)
 
         const from = whatItHolds(one)
 

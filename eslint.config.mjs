@@ -9,6 +9,7 @@ const config = [
     plugins: { vela },
     rules: {
       curly: ['error', 'all'],
+      'max-depth': ['error', 3],
       'vela/max-ternary-chain': ['error', { max: 2 }],
     },
   },
