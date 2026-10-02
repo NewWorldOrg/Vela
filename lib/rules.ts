@@ -20,6 +20,33 @@ export const RULE_DEFAULT_PRIORITY = 10
 
 export const RULE_TAKES_SHOWN = 20
 
+export type RuleDay =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
+
+export const RULE_DAY_OPTIONS: { value: RuleDay; label: string }[] = [
+  { value: 'monday', label: '月曜' },
+  { value: 'tuesday', label: '火曜' },
+  { value: 'wednesday', label: '水曜' },
+  { value: 'thursday', label: '木曜' },
+  { value: 'friday', label: '金曜' },
+  { value: 'saturday', label: '土曜' },
+  { value: 'sunday', label: '日曜' },
+]
+
+export type RuleConditionBeyond = [name: string, value: string]
+
+export interface RuleTerms extends SearchTerms {
+  subgenres: string[]
+  days: RuleDay[]
+  beyond: RuleConditionBeyond[]
+}
+
 const RULES_PATH = '/reservations/rules'
 
 export function newRuleHref(terms: SearchTerms): Route {
@@ -49,20 +76,33 @@ export function seriesTermsOf(
   }
 }
 
+export function ruleTermsOfSearch(terms: SearchTerms): RuleTerms {
+  return { ...terms, subgenres: [], days: [], beyond: [] }
+}
+
 export function withinRuleName(value: string): boolean {
   const named = value.trim()
 
   return named.length > 0 && named.length <= RULE_NAME_LONGEST
 }
 
-export function ruleNarrowsAnything(terms: SearchTerms): boolean {
+export function ruleNarrowsAnything(terms: RuleTerms): boolean {
   return Boolean(
     terms.q ||
     terms.exclude ||
     terms.genres.length ||
+    terms.subgenres.length ||
     terms.kind ||
-    terms.channels.length,
+    terms.channels.length ||
+    namesSomeDays(terms.days) ||
+    terms.from ||
+    terms.to ||
+    terms.beyond.length,
   )
+}
+
+function namesSomeDays(days: RuleDay[]): boolean {
+  return days.length > 0 && days.length < RULE_DAY_OPTIONS.length
 }
 
 export function ruleConditionParts(

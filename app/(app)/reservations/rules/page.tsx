@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { NEW_RULE, RULE_PARAM } from '@/lib/rules'
+import { NEW_RULE, RULE_PARAM, ruleTermsOfSearch } from '@/lib/rules'
 import {
   rawSearchConditionOf,
   readSearchCondition,
@@ -35,7 +35,9 @@ function editingOf(params: Asked, rules: Rule[]): RuleEditing {
   if (asked === NEW_RULE) {
     return {
       state: 'new',
-      terms: searchTermsOf(readSearchCondition(rawSearchConditionOf(params))),
+      terms: ruleTermsOfSearch(
+        searchTermsOf(readSearchCondition(rawSearchConditionOf(params))),
+      ),
     }
   }
 

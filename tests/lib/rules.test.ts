@@ -3,22 +3,28 @@ import { test } from 'node:test'
 
 import type { SearchTerms } from '@/lib/search-condition'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
+import type { RuleTerms } from '@/lib/rules'
 import {
   NEW_RULE,
   exclusionPartsOf,
+  RULE_DAY_OPTIONS,
   RULE_NAME_LONGEST,
   RULE_PARAM,
   newRuleHref,
   ruleConditionParts,
   ruleNarrowsAnything,
+  ruleTermsOfSearch,
   seriesTermsOf,
   withinRuleName,
 } from '@/lib/rules'
 
-const NOTHING: SearchTerms = {
+const NOTHING: RuleTerms = {
   fields: 'title,description',
   genres: [],
+  subgenres: [],
   channels: [],
+  days: [],
+  beyond: [],
 }
 
 const named = (id: string) =>
@@ -40,15 +46,38 @@ test('each condition on its own narrows the guide', () => {
   assert.equal(ruleNarrowsAnything({ ...NOTHING, genres: ['anime'] }), true)
   assert.equal(ruleNarrowsAnything({ ...NOTHING, kind: 'bs' }), true)
   assert.equal(ruleNarrowsAnything({ ...NOTHING, channels: ['4-101'] }), true)
+  assert.equal(ruleNarrowsAnything({ ...NOTHING, subgenres: ['7-0'] }), true)
+  assert.equal(ruleNarrowsAnything({ ...NOTHING, days: ['monday'] }), true)
+  assert.equal(ruleNarrowsAnything({ ...NOTHING, from: '2026-08-08' }), true)
+  assert.equal(ruleNarrowsAnything({ ...NOTHING, to: '2026-08-09' }), true)
 })
 
-test('naming where to look narrows nothing, and neither does a span', () => {
+test('a condition the screen cannot read is left for the API to weigh', () => {
+  assert.equal(
+    ruleNarrowsAnything({ ...NOTHING, beyond: [['hour', '22']] }),
+    true,
+  )
+})
+
+test('naming where to look narrows nothing, and neither does every day of the week', () => {
   assert.equal(ruleNarrowsAnything(NOTHING), false)
   assert.equal(ruleNarrowsAnything({ ...NOTHING, fields: 'title' }), false)
   assert.equal(
-    ruleNarrowsAnything({ ...NOTHING, from: '2026-08-08', to: '2026-08-09' }),
+    ruleNarrowsAnything({
+      ...NOTHING,
+      days: RULE_DAY_OPTIONS.map((option) => option.value),
+    }),
     false,
   )
+})
+
+test('what a search hands over becomes a rule with nothing added to it', () => {
+  assert.deepEqual(ruleTermsOfSearch(A_SERIES), {
+    ...A_SERIES,
+    subgenres: [],
+    days: [],
+    beyond: [],
+  })
 })
 
 test('the conditions read back in the order the form asks for them', () => {

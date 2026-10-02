@@ -35,6 +35,7 @@ import type {
   RulePreview,
   RuleRetirement,
   RulesResult,
+  RuleTerms,
   RuleWrite,
   RuleExclusion,
 } from '@/repository/rules'
@@ -53,7 +54,6 @@ import type {
   SearchField,
   SearchGenre,
   SearchKind,
-  SearchTerms,
 } from '@/repository/search-options'
 import {
   AlertDialog,
@@ -109,7 +109,7 @@ import { ScreenMain } from '@/components/vela/app-shell'
 
 export type RuleEditing =
   | { state: 'none' }
-  | { state: 'new'; terms: SearchTerms }
+  | { state: 'new'; terms: RuleTerms }
   | { state: 'rule'; rule: Rule }
 
 export interface RuleActions {
@@ -341,8 +341,13 @@ interface Entry {
   exclude: string
   fields: SearchField
   genres: SearchGenre[]
+  subgenres: RuleTerms['subgenres']
   kind?: SearchKind
   channels: string[]
+  days: RuleTerms['days']
+  from?: string
+  to?: string
+  beyond: RuleTerms['beyond']
   priority: string
   before: string
   after: string
@@ -350,15 +355,20 @@ interface Entry {
   encodeWhenRecorded: boolean
 }
 
-function entryOf(rule: Rule | undefined, terms: SearchTerms): Entry {
+function entryOf(rule: Rule | undefined, terms: RuleTerms): Entry {
   return {
     name: rule?.name ?? '',
     q: terms.q ?? '',
     exclude: terms.exclude ?? '',
     fields: terms.fields,
     genres: terms.genres,
+    subgenres: terms.subgenres,
     kind: terms.kind,
     channels: terms.channels,
+    days: terms.days,
+    from: terms.from,
+    to: terms.to,
+    beyond: terms.beyond,
     priority: String(rule?.priority ?? RULE_DEFAULT_PRIORITY),
     before: String(rule?.marginBeforeSeconds ?? 0),
     after: String(rule?.marginAfterSeconds ?? 0),
@@ -367,14 +377,19 @@ function entryOf(rule: Rule | undefined, terms: SearchTerms): Entry {
   }
 }
 
-function termsOfEntry(entry: Entry): SearchTerms {
+function termsOfEntry(entry: Entry): RuleTerms {
   return {
     q: entry.q.trim() || undefined,
     exclude: entry.exclude.trim() || undefined,
     fields: entry.fields,
     genres: entry.genres,
+    subgenres: entry.subgenres,
     kind: entry.kind,
     channels: entry.channels,
+    days: entry.days,
+    from: entry.from,
+    to: entry.to,
+    beyond: entry.beyond,
   }
 }
 
@@ -399,7 +414,7 @@ function RuleEditor({
   onClose,
 }: {
   rule?: Rule
-  terms: SearchTerms
+  terms: RuleTerms
   channels: GuideChannel[]
   actions: RuleActions
   onOpen: (id: string) => void
@@ -424,7 +439,7 @@ function RuleEditor({
     edits.current += 1
   }
 
-  const asked: SearchTerms = termsOfEntry(entry)
+  const asked: RuleTerms = termsOfEntry(entry)
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !entry.genres.includes(option.value),
   )

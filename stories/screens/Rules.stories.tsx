@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import { newRuleHref, seriesTermsOf } from '@/lib/rules'
+import { newRuleHref, ruleTermsOfSearch, seriesTermsOf } from '@/lib/rules'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type {
   Rule,
@@ -258,8 +258,13 @@ export const ルールを編集: Story = {
               exclude: '再放送',
               fields: 'title,description',
               genres: ['anime'],
+              subgenres: [],
               kind: undefined,
               channels: [],
+              days: [],
+              from: undefined,
+              to: undefined,
+              beyond: [],
             },
             priority: 20,
             enabled: true,
@@ -301,6 +306,32 @@ export const ルールを編集: Story = {
   },
 }
 
+const untouchedSaved: Saved[] = []
+
+export const 開いて保存し直しても条件は変わらない: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[3] },
+    actions: recording(untouchedSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    untouchedSaved.length = 0
+
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(
+      await dialog.findByRole('button', { name: '保存する' }),
+    )
+
+    await waitFor(() => expect(untouchedSaved).toHaveLength(1))
+    await expect(untouchedSaved[0].draft.terms).toEqual(RULE_FIXTURES[3].terms)
+  },
+}
+
 const draftSaved: Saved[] = []
 
 export const 検索から作る: Story = {
@@ -312,7 +343,10 @@ export const 検索から作る: Story = {
         exclude: undefined,
         fields: 'title,description',
         genres: [],
+        subgenres: [],
         channels: ['132-1320'],
+        days: [],
+        beyond: [],
       },
     },
     actions: recording(draftSaved, []),
@@ -355,8 +389,13 @@ export const 検索から作る: Story = {
               exclude: undefined,
               fields: 'title,description',
               genres: [],
+              subgenres: [],
               kind: undefined,
               channels: ['132-1320'],
+              days: [],
+              from: undefined,
+              to: undefined,
+              beyond: [],
             },
             priority: 10,
             enabled: true,
@@ -372,11 +411,13 @@ export const 検索から作る: Story = {
 
 const seriesSaved: Saved[] = []
 
-const HANDED_OVER = searchTermsOf(
-  searchConditionOfQuery(
-    newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101')!).split(
-      '?',
-    )[1],
+const HANDED_OVER = ruleTermsOfSearch(
+  searchTermsOf(
+    searchConditionOfQuery(
+      newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101')!).split(
+        '?',
+      )[1],
+    ),
   ),
 )
 
@@ -424,7 +465,10 @@ export const 条件のないルール: Story = {
         exclude: undefined,
         fields: 'title',
         genres: [],
+        subgenres: [],
         channels: [],
+        days: [],
+        beyond: [],
       },
     },
     actions: recording(emptySaved, []),
