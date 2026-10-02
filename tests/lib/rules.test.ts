@@ -12,11 +12,17 @@ import {
   RULE_PARAM,
   newRuleHref,
   ruleConditionParts,
+  ruleDayLabelOf,
+  ruleDaysInOrder,
   ruleNarrowsAnything,
+  rulePeriodLabelOf,
   ruleTermsOfSearch,
   seriesTermsOf,
   withinRuleName,
+  withinRulePeriod,
 } from '@/lib/rules'
+
+const A_DAY_IN_2026 = '2026-08-20T03:00:00Z'
 
 const NOTHING: RuleTerms = {
   fields: 'title,description',
@@ -88,20 +94,69 @@ test('the conditions read back in the order the form asks for them', () => {
         exclude: '再放送',
         fields: 'title',
         genres: ['anime', 'movie'],
+        subgenres: ['3-1', '8-15'],
         kind: 'bs',
         channels: ['4-101'],
+        days: ['monday', 'saturday'],
+        from: '2026-08-08',
+        to: '2026-08-31',
+        beyond: [],
       },
       named,
+      A_DAY_IN_2026,
     ),
     [
       '「新番組」',
       '除外「再放送」',
       '番組名だけ',
-      'ジャンル: アニメ/特撮・映画',
+      'ジャンル: アニメ/特撮・映画・海外ドラマ(ドラマ)・その他(ドキュメンタリー/教養)',
       'BS',
+      '曜日: 月・土',
+      '期間: 08/08(土) 〜 08/31(月)',
       '衛星第一',
     ],
   )
+})
+
+test('subgenres alone are summed up under the same heading as genres', () => {
+  assert.deepEqual(
+    ruleConditionParts({ ...NOTHING, subgenres: ['7-0'] }, named),
+    ['ジャンル: 国内アニメ(アニメ/特撮)', 'すべてのチャンネル'],
+  )
+})
+
+test('a span open at one end says which end it has', () => {
+  assert.equal(
+    rulePeriodLabelOf('2026-08-08', undefined, A_DAY_IN_2026),
+    '08/08(土) 〜',
+  )
+  assert.equal(
+    rulePeriodLabelOf(undefined, '2026-08-31', A_DAY_IN_2026),
+    '〜 08/31(月)',
+  )
+  assert.equal(
+    rulePeriodLabelOf('2026-12-20', '2027-01-10', A_DAY_IN_2026),
+    '12/20(日) 〜 2027/01/10(日)',
+  )
+})
+
+test('a span runs forward and is no longer than the API takes', () => {
+  assert.equal(withinRulePeriod(undefined, undefined), true)
+  assert.equal(withinRulePeriod('2026-08-08', undefined), true)
+  assert.equal(withinRulePeriod(undefined, '2026-08-08'), true)
+  assert.equal(withinRulePeriod('2026-08-08', '2026-08-08'), true)
+  assert.equal(withinRulePeriod('2026-08-01', '2026-08-31'), true)
+  assert.equal(withinRulePeriod('2026-08-01', '2026-09-01'), false)
+  assert.equal(withinRulePeriod('2026-08-09', '2026-08-08'), false)
+})
+
+test('days are kept in the order of the week, whatever order they were picked in', () => {
+  assert.deepEqual(ruleDaysInOrder(['sunday', 'wednesday', 'monday']), [
+    'monday',
+    'wednesday',
+    'sunday',
+  ])
+  assert.equal(ruleDayLabelOf('wednesday'), '水曜')
 })
 
 test('an unanswered condition takes no room in the summary', () => {

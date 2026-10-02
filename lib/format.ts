@@ -31,6 +31,11 @@ const WEEKDAY = new Intl.DateTimeFormat('ja-JP', {
   weekday: 'short',
 })
 
+const WEEKDAY_OF_CALENDAR = new Intl.DateTimeFormat('ja-JP', {
+  timeZone: 'UTC',
+  weekday: 'short',
+})
+
 interface Stamp {
   year: string
   month: string
@@ -95,6 +100,14 @@ export function formatDate(at: Moment) {
   const moment = stampOf(at)
 
   return `${moment.month}/${moment.day}`
+}
+
+export function formatCalendarDate(date: string, now: Moment = Date.now()) {
+  const [year, month, day] = date.split('-')
+  const weekday = WEEKDAY_OF_CALENDAR.format(new Date(`${date}T00:00:00Z`))
+  const leading = year === stampOf(now).year ? '' : `${year}/`
+
+  return `${leading}${month}/${day}(${weekday})`
 }
 
 export function formatMonth(iso: string) {

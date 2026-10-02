@@ -4,6 +4,7 @@ import { test } from 'node:test'
 
 import {
   formatBytes,
+  formatCalendarDate,
   formatClock,
   formatDate,
   formatLength,
@@ -249,3 +250,15 @@ test('formatSpan spells an elapsed span in Japanese', () => {
   assert.equal(formatSpan(32), '32秒')
   assert.equal(formatSpan(392), '6分32秒')
 })
+
+inEveryZone(
+  'formatCalendarDate spells a calendar date as it is written',
+  () => {
+    assert.equal(formatCalendarDate('2026-08-08', A_DAY_IN_2026), '08/08(土)')
+    assert.equal(formatCalendarDate('2026-01-01', A_DAY_IN_2026), '01/01(木)')
+    assert.equal(
+      formatCalendarDate('2027-01-10', A_DAY_IN_2026),
+      '2027/01/10(日)',
+    )
+  },
+)

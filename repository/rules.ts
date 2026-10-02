@@ -2,7 +2,11 @@ import { couldNot } from '@/lib/try-again'
 import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 import { broadcastDateOf, windowStartOf } from '@/lib/guide'
 import type { RuleConditionBeyond, RuleDay, RuleTerms } from '@/lib/rules'
-import { RULE_DAY_OPTIONS, RULE_TAKES_SHOWN } from '@/lib/rules'
+import {
+  RULE_DAY_OPTIONS,
+  RULE_TAKES_SHOWN,
+  ruleDaysInOrder,
+} from '@/lib/rules'
 import {
   SEARCH_DEFAULT_FIELDS,
   SEARCH_GENRE_OPTIONS,
@@ -255,7 +259,7 @@ export function ruleTermsOf(query: string): RuleTerms {
       }),
     ),
     subgenres: [...new Set(every(SUBGENRE, subgenreOf))],
-    days: daysInTheWeek(every(DAY, dayOf)),
+    days: ruleDaysInOrder(every(DAY, dayOf)),
     beyond,
   }
 }
@@ -335,12 +339,6 @@ function dayOf(named: string): RuleDay | undefined {
   return RULE_DAY_OPTIONS.find(
     (option) => option.value === named.trim().toLowerCase(),
   )?.value
-}
-
-function daysInTheWeek(named: RuleDay[]): RuleDay[] {
-  return RULE_DAY_OPTIONS.map((option) => option.value).filter((day) =>
-    named.includes(day),
-  )
 }
 
 function broadcastDayAt(named: string, past: number): string | undefined {
