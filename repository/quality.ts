@@ -274,6 +274,7 @@ interface ThresholdShape {
   unit: string
   scale: number
   exponent?: boolean
+  observedAs?: 'share' | 'whole'
 }
 
 const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
@@ -281,24 +282,33 @@ const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
     label: 'ドロップ率の警告水準',
     unit: '%',
     scale: 0.01,
+    observedAs: 'share',
   },
   packetsLostUnwatchable: {
     label: 'ドロップ率の視聴不可の恐れ',
     unit: '%',
     scale: 0.01,
+    observedAs: 'share',
   },
   packetsLeftScrambled: {
     label: 'スクランブル残存率の上限',
     unit: '%',
     scale: 0.01,
+    observedAs: 'share',
   },
   packetsLeftScrambledUnwatchable: {
     label: 'スクランブル残存率の視聴不可の恐れ',
     unit: '%',
     scale: 0.01,
+    observedAs: 'share',
   },
   overflows: { label: '取りこぼしの上限', unit: '回', scale: 1 },
-  lockRate: { label: 'lock 率の下限', unit: '%', scale: 0.01 },
+  lockRate: {
+    label: 'lock 率の下限',
+    unit: '%',
+    scale: 0.01,
+    observedAs: 'share',
+  },
   carrierToNoiseFloor: { label: 'CNR の下限', unit: 'dB', scale: 1000 },
   bitErrorRateCeiling: {
     label: 'post-Viterbi ビット誤り率の上限',
@@ -306,7 +316,12 @@ const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
     scale: 1,
     exponent: true,
   },
-  supplySilence: { label: '供給途絶の判定', unit: '分', scale: 60 },
+  supplySilence: {
+    label: '供給途絶の判定',
+    unit: '分',
+    scale: 60,
+    observedAs: 'whole',
+  },
 }
 
 const THRESHOLD_NOT_YET_SHAPED: ThresholdShape = {
@@ -772,7 +787,7 @@ function toAnomaly(
     id: one.id,
     title: titleOf(one),
     subject: subjectOf(one, known, names),
-    observed: `${one.breached === SUPPLY_SILENCE ? '途絶' : '観測'} ${measured(
+    observed: `${one.breached === SUPPLY_SILENCE ? '途絶' : '観測'} ${observedAs(
       one.observed,
       one.breached,
     )}`,
@@ -829,6 +844,20 @@ function measured(value: number | string, key: QualityThresholdKey): string {
   const shape = shapeFor(THRESHOLD_SHAPES, key, THRESHOLD_NOT_YET_SHAPED)
 
   return spelled(shown(toRatio(value), shape.scale), shape)
+}
+
+function observedAs(value: number | string, key: QualityThresholdKey): string {
+  const shape = shapeFor(THRESHOLD_SHAPES, key, THRESHOLD_NOT_YET_SHAPED)
+
+  if (shape.observedAs === 'share') {
+    return `${sharePercent(toRatio(value))}${shape.unit}`
+  }
+
+  if (shape.observedAs === 'whole') {
+    return `${Math.floor(shown(toRatio(value), shape.scale))}${shape.unit}`
+  }
+
+  return measured(value, key)
 }
 
 async function fetchThresholds(): Promise<ThresholdResponder[]> {

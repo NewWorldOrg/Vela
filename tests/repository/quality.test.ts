@@ -762,6 +762,77 @@ test('異常は、破った閾値から題を取り、観測と適用閾値を�
   assert.equal(result.anomalies.owned, 1)
 })
 
+test('異常の観測の率は、同じ画面のほかの面と同じ小数 3 桁で書く', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      id: 'scrambled',
+      breached: 'packetsLeftScrambledUnwatchable',
+      observed: 0.86443766,
+      appliedValue: 0.01,
+    }),
+    incident({
+      id: 'dropped',
+      breached: 'packetsLostWarning',
+      observed: 0.0002,
+      appliedValue: 0.0002,
+    }),
+    incident({
+      id: 'unlocked',
+      breached: 'lockRate',
+      observed: 0.62,
+      appliedValue: 0.99,
+    }),
+  ]
+
+  const said = (await getQuality()).anomalies.items.map((one) => [
+    one.observed,
+    one.applied,
+  ])
+
+  assert.deepEqual(said, [
+    ['観測 86.444%', '適用閾値 1%'],
+    ['観測 0.020%', '適用閾値 0.02%'],
+    ['観測 62.000%', '適用閾値 99%'],
+  ])
+})
+
+test('率でない観測は、単位の桁のまま書く', async () => {
+  standing()
+  store.incidents = [
+    incident({
+      id: 'weak',
+      breached: 'carrierToNoiseFloor',
+      observed: 6280,
+      appliedValue: 15000,
+    }),
+    incident({
+      id: 'erring',
+      breached: 'bitErrorRateCeiling',
+      observed: 0.022,
+      appliedValue: 0.0001,
+    }),
+    incident({
+      id: 'quiet',
+      breached: 'supplySilence',
+      silence: 'signalSamples',
+      observed: 751,
+      appliedValue: 300,
+    }),
+  ]
+
+  const said = (await getQuality()).anomalies.items.map((one) => [
+    one.observed,
+    one.applied,
+  ])
+
+  assert.deepEqual(said, [
+    ['観測 6.28dB', '適用閾値 15dB'],
+    ['観測 2.2e-2', '適用閾値 1.0e-4'],
+    ['途絶 12分', '適用閾値 5分'],
+  ])
+})
+
 test('供給途絶の異常は、どの供給が黙ったかを題に持つ', async () => {
   standing()
   store.incidents = [
