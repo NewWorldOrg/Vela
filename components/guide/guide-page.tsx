@@ -1,6 +1,13 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ReactElement,
+} from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -37,6 +44,43 @@ import { GuideGrid } from '@/components/guide/guide-grid'
 import { glyphLoadsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
 import { ScreenMain } from '@/components/vela/app-shell'
+
+function extrasStateOf(
+  shown: Program | null,
+  loaded: ProgramExtras | 'failed' | undefined,
+): 'waiting' | 'failed' | undefined {
+  if (!shown || shown.items !== undefined || typeof loaded === 'object') {
+    return undefined
+  }
+
+  return loaded === 'failed' ? 'failed' : 'waiting'
+}
+
+function nothingToLayOut(
+  guide: GuideResult,
+  channels: number,
+  programs: number,
+): ReactElement | null {
+  if (channels === 0) {
+    return (
+      <EmptyState
+        titleLevel={2}
+        title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
+        action={
+          <Button variant="watch" size="sm" asChild>
+            <Link href="/settings/channels">チャンネル設定へ</Link>
+          </Button>
+        }
+      />
+    )
+  }
+
+  if (programs === 0) {
+    return <EmptyState titleLevel={2} title="この日の番組情報がありません" />
+  }
+
+  return null
+}
 
 export function GuideView({
   guide,
@@ -172,12 +216,12 @@ export function GuideView({
   const loaded = shown ? extras[extrasKeyOf(shown)] : undefined
   const detailed =
     shown && typeof loaded === 'object' ? { ...shown, ...loaded } : shown
-  const extrasState =
-    !shown || shown.items !== undefined || typeof loaded === 'object'
-      ? undefined
-      : loaded === 'failed'
-        ? 'failed'
-        : 'waiting'
+  const extrasState = extrasStateOf(shown, loaded)
+  const nothing = nothingToLayOut(
+    guide,
+    shownGuide.channels.length,
+    shownGuide.programs.length,
+  )
 
   return (
     <ScreenMain
@@ -293,19 +337,7 @@ export function GuideView({
         </Banner>
       )}
 
-      {shownGuide.channels.length === 0 ? (
-        <EmptyState
-          titleLevel={2}
-          title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
-          action={
-            <Button variant="watch" size="sm" asChild>
-              <Link href="/settings/channels">チャンネル設定へ</Link>
-            </Button>
-          }
-        />
-      ) : shownGuide.programs.length === 0 ? (
-        <EmptyState titleLevel={2} title="この日の番組情報がありません" />
-      ) : (
+      {nothing ?? (
         <>
           <GuideGrid
             key={guide.kind}
