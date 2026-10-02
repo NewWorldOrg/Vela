@@ -80,6 +80,7 @@ const THE_SUITE = [
   'tests/lib/signed-out.test.ts',
   'tests/lib/state-terms.test.ts',
   'tests/lib/stored-flag.test.ts',
+  'tests/lib/subgenres.test.ts',
   'tests/lib/system-terms.test.ts',
   'tests/lib/theme.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',
