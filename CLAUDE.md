@@ -43,7 +43,8 @@ repository/client/          The OpenAPI document, the client generated from it, 
                             the module that carries the session
 scripts/                    codegen-verify (the client matches the document),
                             health-check (a live probe), test-alias (`@/` for
-                            the unit tests, which read no tsconfig)
+                            the unit tests, which read no tsconfig), eslint-rules
+                            (the lint rules kept here, loaded as the `vela` plugin)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
 hooks/                      React hooks shared across screens
@@ -154,6 +155,10 @@ The canon is "a small digital toy". What that means in the code:
   `shadcn add`
 - Import primitives from the unified `radix-ui` package
 - `curly` is an error: a branch always has braces
+- `vela/max-ternary-chain` is an error from the third: one expression chains two
+  ternaries at most. Two axes become a named table, and a run of steps a function
+  that returns early or an exhaustive `switch`. A longer chain passes only under
+  an `eslint-disable-next-line` that says why after `--`
 - The version is `package.json`'s. `next.config.ts` hands it to the build as
   `VELA_VERSION` and `lib/version.ts` is what reads it, so it is not written
   down a second time
