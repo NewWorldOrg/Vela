@@ -3,7 +3,11 @@ import { cookies, headers } from 'next/headers'
 import { redirect, unstable_rethrow } from 'next/navigation'
 import createClient from 'openapi-fetch'
 import type { paths } from '@/repository/client/schema'
-import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
+import {
+  RENDERED_PAGE_HEADER,
+  loginHref,
+  returnPathWithin,
+} from '@/repository/auth'
 
 const SESSION_COOKIE_NAME = 'carina_session'
 
@@ -21,6 +25,32 @@ export function revalidatingCarinaClient() {
   })
 }
 
+/** Sends whoever opened sign-in with a session the API still honours on to where they were going. */
+export async function onwardIfSignedIn(next: string | undefined) {
+  if (await sessionHolds()) {
+    redirect(returnPathWithin(next) as Route)
+  }
+}
+
+async function sessionHolds(): Promise<boolean> {
+  const who = await asked()
+
+  if (!who.session) {
+    return false
+  }
+
+  try {
+    const { response } = await createClient<paths>({
+      baseUrl: requiredBaseUrl(),
+      fetch: (request) => fetch(asFrom(request, who)),
+    }).GET('/api/auth/me')
+
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
 interface Asking {
   session?: string
   agent?: string
@@ -31,7 +61,17 @@ async function carrying(
   request: Request,
   send: (request: Request) => Promise<Response>,
 ): Promise<Response> {
-  const { session, agent, page } = await asked()
+  const who = await asked()
+  const response = await send(asFrom(request, who))
+
+  if (await refusedTheSession(response)) {
+    redirect(loginHref(who.page) as Route)
+  }
+
+  return response
+}
+
+function asFrom(request: Request, { session, agent }: Asking): Request {
   const sent = changesState(request.method)
     ? statingItsOrigin(request)
     : new Request(request, { cache: 'no-store' })
@@ -44,13 +84,7 @@ async function carrying(
     sent.headers.set('user-agent', agent)
   }
 
-  const response = await send(sent)
-
-  if (await refusedTheSession(response)) {
-    redirect(loginHref(page) as Route)
-  }
-
-  return response
+  return sent
 }
 
 async function refusedTheSession(response: Response): Promise<boolean> {

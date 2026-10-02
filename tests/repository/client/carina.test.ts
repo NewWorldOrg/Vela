@@ -76,7 +76,7 @@ function asking(who: Asked | undefined): void {
 
 process.env.CARINA_API_BASE_URL = 'http://carina.test'
 
-const { carinaClient, revalidatingCarinaClient } =
+const { carinaClient, revalidatingCarinaClient, onwardIfSignedIn } =
   await import('@/repository/client/carina')
 
 let sent: Request[] = []
@@ -91,6 +91,14 @@ function apiAnswering(...given: Response[]) {
     sent.push(request)
 
     return answers.shift() ?? body({ data: null })
+  }) as typeof fetch
+}
+
+function apiUnreachable() {
+  globalThis.fetch = (async (request: Request) => {
+    sent.push(request)
+
+    throw new TypeError('fetch failed')
   }) as typeof fetch
 }
 
@@ -287,4 +295,90 @@ test('a write that carries a body of its own keeps it, and the type it came with
 
   assert.match(sent[0].headers.get('content-type') ?? '', /application\/json/)
   assert.deepEqual(await sent[0].json(), { confirm: 'REBUILD' })
+})
+
+const SIGNED_IN = { data: { subject: 'someone', method: 'local' } }
+
+function sentTo(where: string) {
+  return (error: Error & { where?: string }) => error.where === where
+}
+
+test('someone signed in who opens sign-in is sent on to where they were going', async () => {
+  asked.agent = A_TABLET
+
+  apiAnswering(body(SIGNED_IN))
+
+  await assert.rejects(
+    () => onwardIfSignedIn('/library?sort=new'),
+    sentTo('/library?sort=new'),
+  )
+
+  assert.equal(sent.length, 1)
+  assert.equal(sent[0].url, 'http://carina.test/api/auth/me')
+  assert.equal(sent[0].cache, 'no-store')
+  assert.equal(
+    sent[0].headers.get('cookie'),
+    `${SESSION_COOKIE}=the-session-that-asked`,
+  )
+  assert.equal(sent[0].headers.get('user-agent'), A_TABLET)
+})
+
+test('signed in with nowhere named, they are sent to the screen the app opens on', async () => {
+  apiAnswering(body(SIGNED_IN))
+
+  await assert.rejects(() => onwardIfSignedIn(undefined), sentTo('/guide'))
+})
+
+test('a way on that leaves this origin, or leads back to sign-in, is not followed', async () => {
+  for (const elsewhere of [
+    'https://elsewhere.example/',
+    '//elsewhere.example/',
+    '/login?next=%2Flibrary',
+  ]) {
+    apiAnswering(body(SIGNED_IN))
+
+    await assert.rejects(() => onwardIfSignedIn(elsewhere), sentTo('/guide'))
+  }
+})
+
+test('a session the API refuses stays on sign-in, and is not sent round to it again', async () => {
+  asked.page = '/login?next=%2Flibrary'
+
+  apiAnswering(turnedAway())
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 1)
+})
+
+test('an API that answers with a failure leaves sign-in where it is', async () => {
+  apiAnswering(new Response(null, { status: 503 }))
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 1)
+})
+
+test('an API that cannot be reached leaves sign-in where it is', async () => {
+  apiUnreachable()
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 1)
+})
+
+test('with no session to ask about, the API is not asked', async () => {
+  asked.cookies = {}
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 0)
+})
+
+test('opened outside a request, sign-in stays where it is', async () => {
+  asking(undefined)
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 0)
 })

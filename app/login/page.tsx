@@ -8,6 +8,7 @@ import {
   returnPathWithin,
   type SignInOptions,
 } from '@/repository/auth'
+import { onwardIfSignedIn } from '@/repository/sessions'
 import { LoginView } from '@/components/login/login-page'
 
 export const metadata: Metadata = { title: 'サインイン' }
@@ -19,12 +20,16 @@ export default async function Page({
 }) {
   const params = await searchParams
   const next = params[RETURN_KEY]
+  const asked = typeof next === 'string' ? next : undefined
   const error = params[SIGN_IN_ERROR_KEY]
+
+  await onwardIfSignedIn(asked)
+
   const options: SignInOptions = await getSignInOptions()
 
   return (
     <LoginView
-      returnPath={returnPathWithin(typeof next === 'string' ? next : undefined)}
+      returnPath={returnPathWithin(asked)}
       options={options}
       identityProviderFailed={error === IDENTITY_PROVIDER_FAILED}
     />

@@ -6,6 +6,8 @@ import { TRY_AGAIN_LATER } from '@/lib/try-again'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 
+export { onwardIfSignedIn } from '@/repository/client/carina'
+
 type PasswordRefusedResponder =
   components['schemas']['PasswordRefusedResponder']
 
