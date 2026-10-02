@@ -210,6 +210,30 @@ function DetectionPanel({
   )
 }
 
+function NoTuners({
+  result,
+  restarting,
+}: {
+  result: Exclude<TunerScreenResult, { state: 'ok' }>
+  restarting: boolean
+}) {
+  if (result.state === 'unauthenticated') {
+    return <EmptyState titleLevel={2} title="サインインしないと見られません" />
+  }
+
+  if (restarting) {
+    return (
+      <EmptyState titleLevel={2} title="driver の入れ替わりを待っています" />
+    )
+  }
+
+  return (
+    <EmptyState titleLevel={2} title="状態を取得できませんでした">
+      {result.message}
+    </EmptyState>
+  )
+}
+
 export function TunersView({
   result,
   detection,
@@ -249,18 +273,7 @@ export function TunersView({
             />
           </div>
         )}
-        {result.state === 'unauthenticated' ? (
-          <EmptyState titleLevel={2} title="サインインしないと見られません" />
-        ) : restarting ? (
-          <EmptyState
-            titleLevel={2}
-            title="driver の入れ替わりを待っています"
-          />
-        ) : (
-          <EmptyState titleLevel={2} title="状態を取得できませんでした">
-            {result.message}
-          </EmptyState>
-        )}
+        <NoTuners result={result} restarting={Boolean(restarting)} />
       </>
     )
   }

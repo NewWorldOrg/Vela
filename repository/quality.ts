@@ -1081,6 +1081,20 @@ function signalCell(
   }
 }
 
+function countedUnder(
+  one: RecordingResponder,
+  metric: RecordingResponder['verdicts'][number]['metric'],
+) {
+  switch (metric) {
+    case 'packetsLost':
+      return one.droppedPackets
+    case 'packetsLeftScrambled':
+      return one.scrambledPackets
+    default:
+      return one.overflows
+  }
+}
+
 function toProblemRecording(
   one: RecordingResponder,
   known: GuideChannel[],
@@ -1094,12 +1108,7 @@ function toProblemRecording(
       each.standing === 'mayNotBeWatchable' || each.standing === 'warning',
   )
   const metric = breach?.metric ?? 'packetsLost'
-  const counted =
-    metric === 'packetsLost'
-      ? one.droppedPackets
-      : metric === 'packetsLeftScrambled'
-        ? one.scrambledPackets
-        : one.overflows
+  const counted = countedUnder(one, metric)
   const packets = counted == null ? undefined : toInt(counted)
   const observed =
     breach?.observed == null ? undefined : toRatio(breach.observed)

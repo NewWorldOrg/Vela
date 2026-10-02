@@ -16,6 +16,7 @@ import {
   StateSay,
   StatusCell,
   stateColumnFor,
+  type StateTone,
 } from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
@@ -56,6 +57,43 @@ function GroupHeading({ title, stat }: { title: string; stat: string }) {
   )
 }
 
+function nothingReceivedOf(group: ServiceGroup): string {
+  if (group.walk === 'never') {
+    return `${group.label}はまだスキャンされていません。`
+  }
+
+  return group.walk === 'unknown'
+    ? `${group.label}のサービスは 0 件です。直近のスキャンを読み取れなかったため、走査済みかどうかは分かりません。`
+    : `${group.label}のサービスは 0 件です。直近のスキャンでは受信できたサービスがありませんでした。`
+}
+
+function NoServices({ group }: { group: ServiceGroup }) {
+  if (group.diagnosis) {
+    return (
+      <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
+    )
+  }
+
+  return (
+    <EmptyState className="max-w-[calc(520rem/16)]">
+      {nothingReceivedOf(group)}
+    </EmptyState>
+  )
+}
+
+function runToneOf(state: ScanRun['state']): StateTone {
+  switch (state) {
+    case 'completed':
+      return 'ok'
+    case 'running':
+      return 'info'
+    case 'failed':
+      return 'err'
+    default:
+      return 'mute'
+  }
+}
+
 function ServiceGroupSection({
   group,
   actions,
@@ -71,17 +109,7 @@ function ServiceGroupSection({
       />
 
       {group.services.length === 0 ? (
-        group.diagnosis ? (
-          <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
-        ) : (
-          <EmptyState className="max-w-[calc(520rem/16)]">
-            {group.walk === 'never'
-              ? `${group.label}はまだスキャンされていません。`
-              : group.walk === 'unknown'
-                ? `${group.label}のサービスは 0 件です。直近のスキャンを読み取れなかったため、走査済みかどうかは分かりません。`
-                : `${group.label}のサービスは 0 件です。直近のスキャンでは受信できたサービスがありませんでした。`}
-          </EmptyState>
-        )
+        <NoServices group={group} />
       ) : (
         <ServiceTable services={group.services} actions={actions} />
       )}
@@ -126,18 +154,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 </TableCell>
                 <TableCell>
                   <StatusCell>
-                    <StateSay
-                      tone={
-                        run.state === 'completed'
-                          ? 'ok'
-                          : run.state === 'running'
-                            ? 'info'
-                            : run.state === 'failed'
-                              ? 'err'
-                              : 'mute'
-                      }
-                      bold
-                    >
+                    <StateSay tone={runToneOf(run.state)} bold>
                       {run.stateLabel}
                     </StateSay>
                   </StatusCell>

@@ -56,6 +56,14 @@ export function receptionOf(
   return measurement.locked ? 'locked' : 'unlocked'
 }
 
+function toneOfCnr(cnr: number): Measurement['tone'] {
+  if (cnr >= 25) {
+    return 'ok'
+  }
+
+  return cnr >= 15 ? 'warn' : 'err'
+}
+
 export function measurementOf(
   measurement: ScanMeasurementResponder | null,
 ): Measurement | undefined {
@@ -72,7 +80,7 @@ export function measurementOf(
   return {
     value: `${cnr.toFixed(1)} dB`,
     percent: Math.min(100, Math.max(0, (cnr / 40) * 100)),
-    tone: cnr >= 25 ? 'ok' : cnr >= 15 ? 'warn' : 'err',
+    tone: toneOfCnr(cnr),
   }
 }
 

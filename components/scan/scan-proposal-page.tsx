@@ -35,6 +35,19 @@ const CHANNEL_KIND_VARIANT = {
   missing: 'err',
 } as const
 
+function notShownOf(
+  state: Exclude<ScanProposalScreenResult['state'], 'ok' | 'missing'>,
+): string {
+  switch (state) {
+    case 'unauthenticated':
+      return 'サインインしないと見られません'
+    case 'unavailable':
+      return 'スキャンの結果を取得できませんでした'
+    case 'gone':
+      return 'このスキャンの結果はもう残っていません'
+  }
+}
+
 function ProposalRows({ services }: { services: ProposalService[] }) {
   return (
     <>
@@ -198,13 +211,7 @@ export function ScanProposalView({
         <PageHeading>スキャン結果の確認</PageHeading>
         <EmptyState
           titleLevel={2}
-          title={
-            result.state === 'unauthenticated'
-              ? 'サインインしないと見られません'
-              : result.state === 'unavailable'
-                ? 'スキャンの結果を取得できませんでした'
-                : 'このスキャンの結果はもう残っていません'
-          }
+          title={notShownOf(result.state)}
           className="mt-4"
           action={
             <Button variant="watch" asChild>

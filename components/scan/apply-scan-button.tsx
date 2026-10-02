@@ -9,6 +9,14 @@ import type { WriteResult } from '@/repository/services'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 
+function refusalOf(result: WriteResult): string | undefined {
+  if (result.state === 'unauthenticated') {
+    return signedOut('保存')
+  }
+
+  return result.state === 'rejected' ? result.message : undefined
+}
+
 export function ApplyScanAction({
   scanId,
   onApply,
@@ -33,13 +41,7 @@ export function ApplyScanAction({
 
               const result = await onApply(scanId)
 
-              setRefusal(
-                result.state === 'unauthenticated'
-                  ? signedOut('保存')
-                  : result.state === 'rejected'
-                    ? result.message
-                    : undefined,
-              )
+              setRefusal(refusalOf(result))
             })
           }
         >

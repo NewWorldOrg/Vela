@@ -7,6 +7,14 @@ import type { TunerWriteResult } from '@/repository/tuners'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 
+function refusalOf(result: TunerWriteResult): string | undefined {
+  if (result.state === 'unauthenticated') {
+    return signedOut('保存')
+  }
+
+  return result.state === 'rejected' ? result.message : undefined
+}
+
 export function DetectionSave({
   devices,
   onSave,
@@ -27,13 +35,7 @@ export function DetectionSave({
 
             const result = await onSave(devices)
 
-            setRefusal(
-              result.state === 'unauthenticated'
-                ? signedOut('保存')
-                : result.state === 'rejected'
-                  ? result.message
-                  : undefined,
-            )
+            setRefusal(refusalOf(result))
           })
         }
       >
