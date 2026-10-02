@@ -95,6 +95,13 @@ export const States: Story = {
   },
 }
 
+const LOGO_AT: Partial<Record<number, StationLogo>> = {
+  0: LOGO_SOLID_BLOCK,
+  3: LOGO_DARK_INK,
+  6: LOGO_FULL_COLOUR,
+  9: LOGO_NONE_BROADCAST,
+}
+
 export const ManyMissing: Story = {
   render: () => (
     <div className="mx-auto max-w-[520px] p-6">
@@ -102,16 +109,7 @@ export const ManyMissing: Story = {
       <Surface className="py-0.5">
         {Array.from({ length: 27 }, (_, nth) => {
           const no = String(11 + nth * 10).padStart(3, '0')
-          const logo =
-            nth === 0
-              ? LOGO_SOLID_BLOCK
-              : nth === 3
-                ? LOGO_DARK_INK
-                : nth === 6
-                  ? LOGO_FULL_COLOUR
-                  : nth === 9
-                    ? LOGO_NONE_BROADCAST
-                    : LOGO_NOT_YET_READ
+          const logo = LOGO_AT[nth] ?? LOGO_NOT_YET_READ
 
           return <Row key={no} no={no} name={`地上テレビ ${no}`} logo={logo} />
         })}
