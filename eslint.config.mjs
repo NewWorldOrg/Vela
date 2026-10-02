@@ -6,6 +6,7 @@ const config = [
   {
     rules: {
       curly: ['error', 'all'],
+      'no-nested-ternary': 'error',
     },
   },
   {
