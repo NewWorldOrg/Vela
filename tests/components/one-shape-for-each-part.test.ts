@@ -546,7 +546,7 @@ test('a corner off the steps is written only where a step would change the shape
   }
 })
 
-test('a menu opens downwards and never turns round, the same as a select', async () => {
+test('a menu opens downwards, and turns up only where it does not fit beneath', async () => {
   const menu = await read('components/ui/dropdown-menu.tsx')
   const content = menu.match(
     /function DropdownMenuContent\b[\s\S]*?<DropdownMenuPrimitive\.Content\b([\s\S]*?)\/>/,
@@ -555,8 +555,24 @@ test('a menu opens downwards and never turns round, the same as a select', async
   assert.ok(content, 'the shared menu no longer draws its content')
   assert.match(
     content[1],
-    /\{\.\.\.props\}[\s\S]*side="bottom"[\s\S]*avoidCollisions=\{false\}/,
+    /\{\.\.\.props\}[\s\S]*side=\{opening\?\.side \?\? 'bottom'\}[\s\S]*avoidCollisions=\{false\}/,
     'the shared menu does not hold the direction after what a caller hands it',
+  )
+
+  assert.doesNotMatch(
+    menu,
+    /scrollIntoView|scrollBy|scrollTo/,
+    'a menu sends the page, which slides a row under the finger that opened it',
+  )
+  assert.match(
+    menu,
+    /if \(open\) \{\s+setSide\('bottom'\)/,
+    'a menu no longer starts downwards each time it opens',
+  )
+  assert.match(
+    menu,
+    /content\.offsetHeight > below && above > below \? 'top' : 'bottom'/,
+    'a menu turns up for some reason other than not fitting beneath',
   )
 
   const opening: string[] = []
