@@ -26,6 +26,7 @@ import { ChevronRightIcon } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { Unfold, useUnfolding, type Unfolding } from '@/components/vela/unfold'
 import { CandidateList } from '@/components/channels/candidate-list'
+import { ServiceId } from '@/components/channels/service-id'
 import { TermTip } from '@/components/vela/term-tip'
 import { SERVICE_NO_TUNER_TERM } from '@/lib/state-terms'
 import { cn } from '@/lib/utils'
@@ -172,9 +173,12 @@ const ServiceLine = memo(function ServiceLine({
       <TableCell>
         <span className="flex min-w-0 items-center gap-2">
           <ChannelMark logo={service.logo} no={service.no} keepsTheSlot />
-          <b className="min-w-0 text-[calc(13rem/16)] font-bold">
-            {service.name}
-          </b>
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+            <b className="min-w-0 text-[calc(13rem/16)] font-bold">
+              {service.name}
+            </b>
+            <ServiceId sid={service.sid} />
+          </span>
         </span>
       </TableCell>
       <TableCell>

@@ -84,6 +84,7 @@ const THE_SUITE = [
   'tests/lib/system-terms.test.ts',
   'tests/lib/theme.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',
+  'tests/lib/tuning-entry.test.ts',
   'tests/lib/version.test.ts',
   'tests/lib/when-terms.test.ts',
   'tests/middleware.test.ts',

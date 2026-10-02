@@ -60,6 +60,19 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = {
   args: { result: { state: 'ok', proposal: SCAN_PROPOSAL } },
+  play: async ({ canvasElement }) => {
+    const said = [
+      ...canvasElement.querySelectorAll('[data-slot="service-id"]'),
+    ].map((one) => one.textContent)
+
+    await expect(said).toEqual(
+      [
+        ...SCAN_PROPOSAL.added,
+        ...SCAN_PROPOSAL.updated,
+        ...SCAN_PROPOSAL.missing,
+      ].map((service) => `SID ${service.sid}`),
+    )
+  },
 }
 
 export const 変更なし: Story = {

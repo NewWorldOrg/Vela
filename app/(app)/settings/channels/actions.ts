@@ -5,10 +5,10 @@ import { redirect } from 'next/navigation'
 
 import type {
   CandidateTuning,
+  ScanScope,
   StartScanResult,
   WriteResult,
 } from '@/repository/services'
-import type { ScanSystem } from '@/repository/scan-systems'
 import {
   addCandidateChannel,
   applyScan,
@@ -18,10 +18,8 @@ import {
   startScan,
 } from '@/repository/services'
 
-export async function beginScan(
-  systems: ScanSystem[],
-): Promise<StartScanResult> {
-  const result = await startScan(systems)
+export async function beginScan(scope: ScanScope): Promise<StartScanResult> {
+  const result = await startScan(scope)
 
   revalidatePath('/settings/channels')
 
