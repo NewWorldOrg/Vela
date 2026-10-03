@@ -58,25 +58,32 @@ export const 問題のある録画の欠け: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const rowOf = (title: string) =>
-      canvas.getByText(title).closest('div.border-b') as HTMLElement
+      within(canvas.getByText(title).closest('div.border-b') as HTMLElement)
+    const packetChip = (row: ReturnType<typeof rowOf>, reading: string) =>
+      row.getByText(reading).parentElement?.nextElementSibling
+    const gapChip = (row: ReturnType<typeof rowOf>, reading: string) =>
+      row.getByText(reading).nextElementSibling
 
-    const gapOnly = within(rowOf('週末の旅ノート'))
+    const gapOnly = rowOf('週末の旅ノート')
 
-    await expect(
-      gapOnly.getByText('ドロップ 0').parentElement,
-    ).toHaveTextContent('良好')
-    await expect(
-      gapOnly.getByText('欠け 2 回 · 12.4 秒').parentElement,
-    ).toHaveTextContent('警告水準')
+    await expect(packetChip(gapOnly, 'ドロップ 0')).toHaveTextContent('良好')
+    await expect(gapChip(gapOnly, '欠け 2 回 · 12.4 秒')).toHaveTextContent(
+      '警告水準',
+    )
 
-    const noGap = within(rowOf('みなと ニュース7'))
+    const noGap = rowOf('みなと ニュース7')
 
-    await expect(
-      noGap.getByText('欠け 0 回 · 0.0 秒').parentElement,
-    ).toHaveTextContent('良好')
-    await expect(
-      noGap.getByText('ドロップ 3,842').parentElement,
-    ).toHaveTextContent('視聴不可の恐れ')
+    await expect(packetChip(noGap, 'ドロップ 3,842')).toHaveTextContent(
+      '視聴不可の恐れ',
+    )
+    await expect(gapChip(noGap, '欠け 0 回 · 0.0 秒')).toHaveTextContent('良好')
+
+    const chips = [
+      packetChip(noGap, 'ドロップ 3,842'),
+      gapChip(noGap, '欠け 0 回 · 0.0 秒'),
+    ].map((one) => one?.getBoundingClientRect().left)
+
+    await expect(chips[0]).toBe(chips[1])
   },
 }
 
