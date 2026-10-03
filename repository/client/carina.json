@@ -10457,7 +10457,8 @@
           "capabilityUnavailable",
           "timedOut",
           "destinationCollision",
-          "headTooFar"
+          "headTooFar",
+          "endingNotKept"
         ],
         "type": "string"
       },

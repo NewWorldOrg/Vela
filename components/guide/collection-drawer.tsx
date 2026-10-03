@@ -88,18 +88,24 @@ function StreamName({ row }: { row: StreamVisitRow }) {
   )
 }
 
-function OutcomeChip({ outcome }: { outcome: StreamVisitRow['outcome'] }) {
-  const variant =
-    outcome === 'complete'
-      ? 'ok'
-      : outcome === 'basicOnly'
-        ? 'sky'
-        : outcome === 'incomplete'
-          ? 'err'
-          : 'mute'
+function outcomeVariantOf(
+  outcome: StreamVisitRow['outcome'],
+): 'ok' | 'sky' | 'err' | 'mute' {
+  switch (outcome) {
+    case 'complete':
+      return 'ok'
+    case 'basicOnly':
+      return 'sky'
+    case 'incomplete':
+      return 'err'
+    default:
+      return 'mute'
+  }
+}
 
+function OutcomeChip({ outcome }: { outcome: StreamVisitRow['outcome'] }) {
   return (
-    <Badge variant={variant}>
+    <Badge variant={outcomeVariantOf(outcome)}>
       <ChipDot />
       {wordFor(STREAM_OUTCOME_LABEL, outcome)}
     </Badge>
@@ -235,27 +241,21 @@ function LatestVisit({ status }: { status: CollectionStatus }) {
   )
 }
 
-function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
-  if (outcome.state === 'started') {
+function whyNotStarted(
+  outcome: Exclude<CollectNowResult, { state: 'started' }>,
+) {
+  if (outcome.state === 'running') {
     return (
-      <p className="mt-2 flex items-start gap-2 text-sub leading-[1.7] text-mint">
-        <SuccessIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
-        <span>
-          いますぐ集めるを受け付けました(
-          <Figure>{outcome.streams}</Figure> TS)。
-        </span>
-      </p>
-    )
-  }
-
-  const body =
-    outcome.state === 'running' ? (
       <span>
         <b className="block font-bold">
           実行中のブーストが 1 本あります(同時に 1 本まで)。
         </b>
       </span>
-    ) : outcome.state === 'cooldown' ? (
+    )
+  }
+
+  if (outcome.state === 'cooldown') {
+    return (
       <span>
         <b className="block font-bold">
           前回のブーストから間隔が空いていません。
@@ -271,22 +271,43 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
           '間隔を置いてもう一度押せます。'
         )}
       </span>
-    ) : outcome.state === 'missing' ? (
+    )
+  }
+
+  if (outcome.state === 'missing') {
+    return (
       <span>
         <b className="block font-bold">
           指定した対象は巡回の対象にありません。
         </b>
       </span>
-    ) : outcome.state === 'unauthenticated' ? (
-      <span>{signedOut('受け付け')}</span>
-    ) : (
-      <span>{outcome.message}</span>
     )
+  }
+
+  if (outcome.state === 'unauthenticated') {
+    return <span>{signedOut('受け付け')}</span>
+  }
+
+  return <span>{outcome.message}</span>
+}
+
+function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
+  if (outcome.state === 'started') {
+    return (
+      <p className="mt-2 flex items-start gap-2 text-sub leading-[1.7] text-mint">
+        <SuccessIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
+        <span>
+          いますぐ集めるを受け付けました(
+          <Figure>{outcome.streams}</Figure> TS)。
+        </span>
+      </p>
+    )
+  }
 
   return (
     <div className="mt-2 flex items-start gap-2 rounded-xl bg-lemon-soft px-[calc(13rem/16)] py-2.5 text-sub leading-[1.7] text-lemon">
       <WarningIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
-      <div className="min-w-0">{body}</div>
+      <div className="min-w-0">{whyNotStarted(outcome)}</div>
     </div>
   )
 }

@@ -1,11 +1,16 @@
 import coreWebVitals from 'eslint-config-next/core-web-vitals'
 
+import vela from './scripts/eslint-rules.mjs'
+
 const config = [
   { ignores: ['.next/**', 'storybook-static/**', 'test-results/**'] },
   ...coreWebVitals,
   {
+    plugins: { vela },
     rules: {
       curly: ['error', 'all'],
+      'max-depth': ['error', 3],
+      'vela/max-ternary-chain': ['error', { max: 2 }],
     },
   },
   {

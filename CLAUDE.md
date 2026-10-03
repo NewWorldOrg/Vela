@@ -43,7 +43,8 @@ repository/client/          The OpenAPI document, the client generated from it, 
                             the module that carries the session
 scripts/                    codegen-verify (the client matches the document),
                             health-check (a live probe), test-alias (`@/` for
-                            the unit tests, which read no tsconfig)
+                            the unit tests, which read no tsconfig), eslint-rules
+                            (the lint rules kept here, loaded as the `vela` plugin)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
 hooks/                      React hooks shared across screens
@@ -74,7 +75,7 @@ component comes with the change to its story.
 
 Tests live under `tests/`, never beside the code. `tests/lib/` and
 `tests/repository/` mirror the path of what they test, and a test reaches it
-by `@/` rather than by climbing back out. `tests/storybook/` holds the ten
+by `@/` rather than by climbing back out. `tests/storybook/` holds the eleven
 that read the source tree as text rather than importing a module — the waiver
 lists the browser probes cannot police, the `<main>` every screen goes
 through, the manifest that keeps the suite whole, the tables keyed by an
@@ -83,10 +84,11 @@ over such an enum, which have to say what to do with the rest, the fields
 the API answers with, which have to be read on their way to a screen, and
 the fields `repository/` publishes, which have to be filled in somewhere a
 story is not, the shares of scrambled or dropped packets, which are the
-API's thresholds to keep and never a fraction written down here, and the
-story runs in `package.json`, which have to say how many browsers they open
-at once. That directory has no leading dot because `tests/**/*.test.ts` does
-not match one, and those ten would go missing without a word.
+API's thresholds to keep and never a fraction written down here, the story
+runs in `package.json`, which have to say how many browsers they open at
+once, and the icons, every one of which has to be laid out in the catalogue.
+That directory has no leading dot because `tests/**/*.test.ts` does not match
+one, and those eleven would go missing without a word.
 
 ## Data access
 
@@ -153,6 +155,12 @@ The canon is "a small digital toy". What that means in the code:
   `shadcn add`
 - Import primitives from the unified `radix-ui` package
 - `curly` is an error: a branch always has braces
+- `max-depth` is an error past three: a block nests three deep at most, and what
+  would go deeper moves into a function of its own
+- `vela/max-ternary-chain` is an error from the third: one expression chains two
+  ternaries at most. Two axes become a named table, and a run of steps a function
+  that returns early or an exhaustive `switch`. A longer chain passes only under
+  an `eslint-disable-next-line` that says why after `--`
 - The version is `package.json`'s. `next.config.ts` hands it to the build as
   `VELA_VERSION` and `lib/version.ts` is what reads it, so it is not written
   down a second time

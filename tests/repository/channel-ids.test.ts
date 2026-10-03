@@ -102,20 +102,23 @@ function channelsWrittenIn(source: ts.SourceFile): string[] {
 
 test('a channel written anywhere in the tree is named the way the API names one', async () => {
   const unreadable: string[] = []
+  const files: string[] = []
 
   for (const dir of SEARCHED) {
-    for (const file of await sourceFiles(dir)) {
-      const source = ts.createSourceFile(
-        file,
-        await readFile(path.join(ROOT, file), 'utf8'),
-        ts.ScriptTarget.Latest,
-        true,
-      )
+    files.push(...(await sourceFiles(dir)))
+  }
 
-      for (const id of channelsWrittenIn(source)) {
-        if (readBack(id).join(',') !== id) {
-          unreadable.push(`${file}: ${id}`)
-        }
+  for (const file of files) {
+    const source = ts.createSourceFile(
+      file,
+      await readFile(path.join(ROOT, file), 'utf8'),
+      ts.ScriptTarget.Latest,
+      true,
+    )
+
+    for (const id of channelsWrittenIn(source)) {
+      if (readBack(id).join(',') !== id) {
+        unreadable.push(`${file}: ${id}`)
       }
     }
   }

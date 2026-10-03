@@ -40,7 +40,7 @@ import {
   PLAYER_BUTTON,
   PLAYER_COLUMN,
 } from '@/components/recordings/player-palette'
-import { Player } from '@/components/recordings/player'
+import { PlayerSeat } from '@/components/recordings/player-seat'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import type { QueueEncode } from '@/components/recordings/encode-button'
@@ -88,6 +88,40 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
       title="再生の可否を読めませんでした"
     />
   ),
+}
+
+function whyNothingPlays(
+  detail: RecordingDetail,
+  playback: PlaybackRead,
+): ReactNode {
+  if (detail.fileMissing) {
+    return (
+      <PlaybackNotice
+        tone="waiting"
+        mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
+        title="ファイルが見つかりません"
+      >
+        <Link href="/library/integrity" className={PLAYER_BUTTON}>
+          整合性チェックの結果へ
+        </Link>
+      </PlaybackNotice>
+    )
+  }
+
+  if (playback.state === 'refused') {
+    return REFUSED[playback.refusal]
+  }
+
+  if (playback.plan.route === 'nothing') {
+    return (
+      <PlaybackNotice
+        mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
+        title="再生できる成果物がありません"
+      />
+    )
+  }
+
+  return null
 }
 
 const OUTCOME_LABEL = {
@@ -212,29 +246,12 @@ export function RecordingDetailView({
             </div>
           )}
 
-          {d.fileMissing ? (
-            <PlaybackNotice
-              tone="waiting"
-              mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
-              title="ファイルが見つかりません"
-            >
-              <Link href="/library/integrity" className={PLAYER_BUTTON}>
-                整合性チェックの結果へ
-              </Link>
-            </PlaybackNotice>
-          ) : playback.state === 'refused' ? (
-            REFUSED[playback.refusal]
-          ) : playback.plan.route === 'nothing' ? (
-            <PlaybackNotice
-              mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
-              title="再生できる成果物がありません"
-            />
-          ) : null}
+          {whyNothingPlays(d, playback)}
         </div>
       </div>
 
       {watching && (
-        <Player
+        <PlayerSeat
           key={whatOpensThePlayerAnew(
             d.id,
             startAt,

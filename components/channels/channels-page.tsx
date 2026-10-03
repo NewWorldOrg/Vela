@@ -16,6 +16,7 @@ import {
   StateSay,
   StatusCell,
   stateColumnFor,
+  type StateTone,
 } from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
@@ -89,6 +90,19 @@ function ServiceGroupSection({
   )
 }
 
+function runToneOf(state: ScanRun['state']): StateTone {
+  switch (state) {
+    case 'completed':
+      return 'ok'
+    case 'running':
+      return 'info'
+    case 'failed':
+      return 'err'
+    default:
+      return 'mute'
+  }
+}
+
 function ScanHistory({ history }: { history: ScanRun[] }) {
   return (
     <section id="scan-history" className="mt-10">
@@ -126,18 +140,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
                 </TableCell>
                 <TableCell>
                   <StatusCell>
-                    <StateSay
-                      tone={
-                        run.state === 'completed'
-                          ? 'ok'
-                          : run.state === 'running'
-                            ? 'info'
-                            : run.state === 'failed'
-                              ? 'err'
-                              : 'mute'
-                      }
-                      bold
-                    >
+                    <StateSay tone={runToneOf(run.state)} bold>
                       {run.stateLabel}
                     </StateSay>
                   </StatusCell>

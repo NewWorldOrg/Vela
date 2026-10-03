@@ -70,8 +70,8 @@ export function SignalMeter({
   return (
     <div data-slot="signal-meter" className={cn('', className)} {...props}>
       <div className="mb-[calc(7rem/16)] flex items-baseline justify-between gap-3">
-        <InFull says={channel}>
-          <span className="truncate text-ui text-ink">{channel}</span>
+        <InFull says={channel} wraps="truncate text-ui text-ink">
+          {channel}
         </InFull>
         <span className="flex shrink-0 items-baseline gap-[calc(9rem/16)]">
           <b className="font-code text-ui font-medium tabular-nums">{value}</b>

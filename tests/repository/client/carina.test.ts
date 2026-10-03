@@ -7,6 +7,7 @@ import { RENDERED_PAGE_HEADER, loginHref } from '@/repository/auth'
 interface Asked {
   cookies: Record<string, string>
   page?: string
+  agent?: string
 }
 
 const asked: Asked = { cookies: {} }
@@ -27,7 +28,9 @@ const STOOD_IN = new Map<string, string>([
      export const headers = async () => ({
        get: (name) => name === '${RENDERED_PAGE_HEADER}'
          ? (asking().page ?? null)
-         : null,
+         : name === 'user-agent'
+           ? (asking().agent ?? null)
+           : null,
      })`,
   ],
   [
@@ -73,7 +76,7 @@ function asking(who: Asked | undefined): void {
 
 process.env.CARINA_API_BASE_URL = 'http://carina.test'
 
-const { carinaClient, revalidatingCarinaClient } =
+const { carinaClient, revalidatingCarinaClient, onwardIfSignedIn } =
   await import('@/repository/client/carina')
 
 let sent: Request[] = []
@@ -88,6 +91,14 @@ function apiAnswering(...given: Response[]) {
     sent.push(request)
 
     return answers.shift() ?? body({ data: null })
+  }) as typeof fetch
+}
+
+function apiUnreachable() {
+  globalThis.fetch = (async (request: Request) => {
+    sent.push(request)
+
+    throw new TypeError('fetch failed')
   }) as typeof fetch
 }
 
@@ -111,6 +122,7 @@ beforeEach(() => {
   sent = []
   asked.cookies = { [SESSION_COOKIE]: 'the-session-that-asked' }
   asked.page = undefined
+  asked.agent = undefined
   asking(asked)
   apiAnswering()
 })
@@ -192,6 +204,30 @@ test('a request from no session carries none', async () => {
   assert.equal(sent[0].headers.get('cookie'), null)
 })
 
+const A_TABLET =
+  'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+
+test('the browser that asked is the one named to the API, on a read and on a write', async () => {
+  asked.agent = A_TABLET
+
+  await carinaClient().GET('/api/health')
+  await carinaClient().POST('/api/epg/rebuild', {
+    body: { confirm: 'REBUILD' },
+  })
+  await revalidatingCarinaClient().GET('/api/programs', A_DAY)
+
+  assert.deepEqual(
+    sent.map((request) => request.headers.get('user-agent')),
+    [A_TABLET, A_TABLET, A_TABLET],
+  )
+})
+
+test('a request that named no browser is not given one', async () => {
+  await carinaClient().GET('/api/health')
+
+  assert.equal(sent[0].headers.get('user-agent'), null)
+})
+
 test('a session the API refuses is sent to sign in again, holding the page', async () => {
   asked.page = '/guide?date=2026-08-08'
 
@@ -239,6 +275,7 @@ test('a call from outside a request carries no session and still goes out', asyn
   assert.equal(sent.length, 1)
   assert.equal(sent[0].cache, 'no-store')
   assert.equal(sent[0].headers.get('cookie'), null)
+  assert.equal(sent[0].headers.get('user-agent'), null)
 })
 
 test('a write with nothing of its own to say still says it is json, so the API is not left to refuse the type', async () => {
@@ -258,4 +295,90 @@ test('a write that carries a body of its own keeps it, and the type it came with
 
   assert.match(sent[0].headers.get('content-type') ?? '', /application\/json/)
   assert.deepEqual(await sent[0].json(), { confirm: 'REBUILD' })
+})
+
+const SIGNED_IN = { data: { subject: 'someone', method: 'local' } }
+
+function sentTo(where: string) {
+  return (error: Error & { where?: string }) => error.where === where
+}
+
+test('someone signed in who opens sign-in is sent on to where they were going', async () => {
+  asked.agent = A_TABLET
+
+  apiAnswering(body(SIGNED_IN))
+
+  await assert.rejects(
+    () => onwardIfSignedIn('/library?sort=new'),
+    sentTo('/library?sort=new'),
+  )
+
+  assert.equal(sent.length, 1)
+  assert.equal(sent[0].url, 'http://carina.test/api/auth/me')
+  assert.equal(sent[0].cache, 'no-store')
+  assert.equal(
+    sent[0].headers.get('cookie'),
+    `${SESSION_COOKIE}=the-session-that-asked`,
+  )
+  assert.equal(sent[0].headers.get('user-agent'), A_TABLET)
+})
+
+test('signed in with nowhere named, they are sent to the screen the app opens on', async () => {
+  apiAnswering(body(SIGNED_IN))
+
+  await assert.rejects(() => onwardIfSignedIn(undefined), sentTo('/guide'))
+})
+
+test('a way on that leaves this origin, or leads back to sign-in, is not followed', async () => {
+  for (const elsewhere of [
+    'https://elsewhere.example/',
+    '//elsewhere.example/',
+    '/login?next=%2Flibrary',
+  ]) {
+    apiAnswering(body(SIGNED_IN))
+
+    await assert.rejects(() => onwardIfSignedIn(elsewhere), sentTo('/guide'))
+  }
+})
+
+test('a session the API refuses stays on sign-in, and is not sent round to it again', async () => {
+  asked.page = '/login?next=%2Flibrary'
+
+  apiAnswering(turnedAway())
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 1)
+})
+
+test('an API that answers with a failure leaves sign-in where it is', async () => {
+  apiAnswering(new Response(null, { status: 503 }))
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 1)
+})
+
+test('an API that cannot be reached leaves sign-in where it is', async () => {
+  apiUnreachable()
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 1)
+})
+
+test('with no session to ask about, the API is not asked', async () => {
+  asked.cookies = {}
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 0)
+})
+
+test('opened outside a request, sign-in stays where it is', async () => {
+  asking(undefined)
+
+  await onwardIfSignedIn('/library')
+
+  assert.equal(sent.length, 0)
 })

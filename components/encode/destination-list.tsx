@@ -41,7 +41,7 @@ const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
   { label: '出力ルート', width: 'calc(320rem/16)' },
   { label: '既定のプロファイル', width: 'calc(180rem/16)' },
   { label: '作成', width: 'calc(122rem/16)' },
-  { label: '操作', width: 'calc(148rem/16)', hidden: true },
+  { label: '操作', width: 'calc(192rem/16)', hidden: true },
 ]
 
 export function DestinationList({

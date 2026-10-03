@@ -10,6 +10,7 @@ import {
   RESERVATION_STANDING_TERMS,
   type StateTerm,
 } from '@/lib/state-terms'
+import { STREAM_OUTCOME_LABEL } from '@/lib/collection'
 import { Badge } from '@/components/ui/badge'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
@@ -70,12 +71,12 @@ export const Chips: Story = {
           <ChipDot />
           録画中
         </Badge>
-        <Badge variant="warn">drain 中</Badge>
+        <Badge variant="warn">停止準備中</Badge>
         <Badge variant="warn">要確認</Badge>
         <Badge variant="warn">要再検証</Badge>
         <Badge variant="err">受信不可</Badge>
         <Badge variant="ok">受信可</Badge>
-        <Badge variant="sky">BasicOnly</Badge>
+        <Badge variant="sky">{STREAM_OUTCOME_LABEL.basicOnly}</Badge>
         <Badge>ワンセグ</Badge>
         <Badge variant="mute">未計測</Badge>
       </div>

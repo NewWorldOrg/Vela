@@ -6,10 +6,61 @@ import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
+const MENU_GAP = 4
+
+interface Opening {
+  trigger: React.RefObject<HTMLButtonElement | null>
+  side: 'bottom' | 'top'
+  place: (content: HTMLElement | null) => void
+}
+
+const TheOpening = React.createContext<Opening | null>(null)
+
+function fitsBetter(
+  trigger: HTMLButtonElement | null,
+  content: HTMLElement,
+): 'bottom' | 'top' {
+  if (!trigger) {
+    return 'bottom'
+  }
+
+  const box = trigger.getBoundingClientRect()
+  const below = window.innerHeight - box.bottom - MENU_GAP
+  const above = box.top - MENU_GAP
+
+  return content.offsetHeight > below && above > below ? 'top' : 'bottom'
+}
+
 function DropdownMenu({
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
-  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+  const trigger = React.useRef<HTMLButtonElement | null>(null)
+  const [side, setSide] = React.useState<'bottom' | 'top'>('bottom')
+
+  const answer = (open: boolean) => {
+    if (open) {
+      setSide('bottom')
+    }
+
+    onOpenChange?.(open)
+  }
+
+  const place = React.useCallback((content: HTMLElement | null) => {
+    if (content) {
+      setSide(fitsBetter(trigger.current, content))
+    }
+  }, [])
+
+  return (
+    <TheOpening.Provider value={{ trigger, side, place }}>
+      <DropdownMenuPrimitive.Root
+        data-slot="dropdown-menu"
+        onOpenChange={answer}
+        {...props}
+      />
+    </TheOpening.Provider>
+  )
 }
 
 function DropdownMenuPortal({
@@ -23,19 +74,24 @@ function DropdownMenuPortal({
 function DropdownMenuTrigger({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  const opening = React.useContext(TheOpening)
+
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
       {...props}
+      ref={opening?.trigger}
     />
   )
 }
 
 function DropdownMenuContent({
   className,
-  sideOffset = 4,
+  sideOffset = MENU_GAP,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  const opening = React.useContext(TheOpening)
+
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
@@ -46,7 +102,8 @@ function DropdownMenuContent({
           className,
         )}
         {...props}
-        side="bottom"
+        ref={opening?.place}
+        side={opening?.side ?? 'bottom'}
         avoidCollisions={false}
       />
     </DropdownMenuPrimitive.Portal>
@@ -137,7 +194,7 @@ function DropdownMenuRadioItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <DotIcon className="size-2 fill-current" />
+          <DotIcon className="size-6" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}

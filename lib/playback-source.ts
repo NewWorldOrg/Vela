@@ -53,6 +53,31 @@ export function whereThatSourceOpens(
   return query ? `${pathname}?${query}` : pathname
 }
 
+/** Whether reopening there leaves the address, and with it the player, exactly as it stands. */
+export function theAddressStands(
+  pathname: string,
+  asked: string,
+  source: PlaybackSource,
+  watchingAt: number,
+  held: boolean,
+): boolean {
+  const stands = new URLSearchParams(asked).toString()
+
+  return (
+    whereThatSourceOpens(pathname, asked, source, watchingAt, held) ===
+    (stands ? `${pathname}?${stands}` : pathname)
+  )
+}
+
+/** The artefact the player is seated on, moved to the one it asked for once the page has read that one. */
+export function whichArtefactSeats(
+  seated: string | undefined,
+  asked: string | undefined,
+  read: string | undefined,
+): string | undefined {
+  return asked !== undefined && asked === read ? asked : seated
+}
+
 export function whatOpensThePlayerAnew(
   id: string,
   at: number | undefined,

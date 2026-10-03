@@ -793,8 +793,20 @@ export function SkipForwardIcon({
   return <SkipIcon seconds={seconds} {...props} />
 }
 
+function wavesOf(level: number): 0 | 1 | 2 | 3 {
+  if (level <= 0) {
+    return 0
+  }
+
+  if (level < 1 / 3) {
+    return 1
+  }
+
+  return level < 2 / 3 ? 2 : 3
+}
+
 export function VolumeIcon({ level, ...props }: IconProps & { level: number }) {
-  const waves = level <= 0 ? 0 : level < 1 / 3 ? 1 : level < 2 / 3 ? 2 : 3
+  const waves = wavesOf(level)
 
   return (
     <Icon {...props}>

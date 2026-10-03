@@ -20,6 +20,17 @@ import {
 } from '@/lib/live-wire'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { askedForLessMotion } from '@/stories/asked-for-less-motion'
+import {
+  AN_IPAD,
+  browsingAs,
+  handedTo,
+  openTheHandoverMenu,
+  pressInTheHandoverMenu,
+  waysToHandOver,
+  whatIsHanded,
+  whatWasCopied,
+  whereItLeftFor,
+} from '@/stories/handed-over'
 import type { LiveScreen } from '@/repository/live'
 import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
@@ -2637,65 +2648,99 @@ export const 送り戻しの鍵は名前にも出ない: Story = {
   },
 }
 
+const THE_CHANNEL_BY_TICKET = new RegExp(
+  `^https?://:${A_TICKET}@[^/]+/api/live/32736-1024/stream$`,
+)
+
 export const 外部プレイヤーへ渡す: Story = {
   args: { openSocket: withAPicture },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const opened: string[] = []
-    const wasOpen = window.open
+    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
+    await expect(whatIsHanded()).toEqual([])
+    await expect(waysToHandOver()).toEqual(['URL をコピー'])
 
-    window.open = ((href?: string | URL) => {
-      opened.push(String(href))
+    const copied = await whatWasCopied(async (taken) => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await waitFor(() => expect(taken).toHaveLength(1))
+    })
 
-      return null
-    }) as typeof window.open
+    await expect(copied[0]).toMatch(THE_CHANNEL_BY_TICKET)
+    await expect(
+      await within(canvasElement).findByText('URL をコピーしました'),
+    ).toBeVisible()
+  },
+}
 
-    try {
-      await userEvent.click(
-        canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
-      )
-      await waitFor(() => expect(opened).toHaveLength(1))
-    } finally {
-      window.open = wasOpen
-    }
+export const iPad_では外部プレイヤーのアプリで開く: Story = {
+  args: { openSocket: withAPicture },
+  beforeEach: browsingAs(AN_IPAD),
+  play: async ({ canvasElement }) => {
+    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
+    await expect(whatIsHanded()).toEqual([])
+    await expect(waysToHandOver()).toEqual([
+      'VLC で開く',
+      'Infuse で開く',
+      'URL をコピー',
+    ])
 
-    await expect(opened[0]).toMatch(
-      new RegExp(`^https?://:${A_TICKET}@[^/]+/api/live/32736-1024/stream$`),
-    )
+    const left = await whereItLeftFor(async (sent) => {
+      await pressInTheHandoverMenu(canvasElement, 'VLC で開く')
+      await waitFor(() => expect(sent).toHaveLength(1))
+    })
+
+    await expect(
+      handedTo('vlc-x-callback://x-callback-url/stream?url=', left[0]),
+    ).toMatch(THE_CHANNEL_BY_TICKET)
   },
 }
 
 export const 外部プレイヤーの札を断られたらその場で言う: Story = {
   args: { openSocket: withAPicture, onTakeTicket: refusingTheTicket },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const copied = await whatWasCopied(async () => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await expect(
+        await within(canvasElement).findByText(
+          'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+        ),
+      ).toBeVisible()
+    })
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
-    )
-
+    await expect(copied).toEqual([])
     await expect(
-      await canvas.findByText(
-        'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
-      ),
-    ).toBeVisible()
+      within(canvasElement).queryByText('URL をコピーできません'),
+    ).toBeNull()
+  },
+}
+
+export const アプリで開く前に札を断られたらその場で言う: Story = {
+  args: { openSocket: withAPicture, onTakeTicket: refusingTheTicket },
+  beforeEach: browsingAs(AN_IPAD),
+  play: async ({ canvasElement }) => {
+    const left = await whereItLeftFor(async () => {
+      await pressInTheHandoverMenu(canvasElement, 'VLC で開く')
+      await expect(
+        await within(canvasElement).findByText(
+          'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+        ),
+      ).toBeVisible()
+    })
+
+    await expect(left).toEqual([])
   },
 }
 
 export const 札を頼んだらサインインが切れていた: Story = {
   args: { openSocket: withAPicture, onTakeTicket: noLongerSignedIn },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(
-      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
-    )
-
-    await expect(
-      await canvas.findByText(
-        'サインインが切れているため、外部プレイヤーの札を発行できませんでした。',
-      ),
-    ).toBeVisible()
+    await whatWasCopied(async () => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await expect(
+        await within(canvasElement).findByText(
+          'サインインが切れているため、外部プレイヤーの札を発行できませんでした。',
+        ),
+      ).toBeVisible()
+    })
   },
 }
 

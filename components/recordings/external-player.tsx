@@ -5,12 +5,16 @@ import { useState, type ComponentProps, type RefObject } from 'react'
 import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import {
+  appHref,
+  appSays,
   recordingHandover,
   recordingHandoverChoices,
   ticketedHref,
   type Handover,
   type HandoverChoice,
+  type PlayerApp,
 } from '@/lib/external-player'
+import { usePlayerApps } from '@/hooks/usePlayerApps'
 import type { TicketWrite } from '@/repository/tickets'
 import type { PlaybackPlan } from '@/repository/videos'
 import { Spinner } from '@/components/vela/progress'
@@ -19,6 +23,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -37,9 +44,9 @@ const NO_AIRPLAY = 'このブラウザは AirPlay に対応していません。
 
 const SIGNED_OUT = signedOut('外部プレイヤーの札を発行')
 
-async function ticket(
-  handover: Handover,
-): Promise<{ href: string } | { refused: string }> {
+type Taken = { href: string } | { refused: string }
+
+async function ticket(handover: Handover): Promise<Taken> {
   const write = await handover.take()
 
   if (write.state === 'unauthenticated') {
@@ -57,37 +64,103 @@ async function ticket(
 
 const OPEN_EXTERNALLY = '外部プレイヤーで開く'
 
+const WHAT_IS_HANDED = '渡すもの'
+
+const COPY_THE_URL = 'URL をコピー'
+
+const COPIED = 'URL をコピーしました'
+
+const NOT_COPIED = 'URL をコピーできません'
+
+async function asText(taking: Promise<Taken>): Promise<Blob> {
+  const got = await taking
+
+  if ('refused' in got) {
+    throw new Error(got.refused)
+  }
+
+  return new Blob([got.href], { type: 'text/plain' })
+}
+
+async function copied(taking: Promise<Taken>): Promise<boolean> {
+  try {
+    if (typeof ClipboardItem === 'function') {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'text/plain': asText(taking) }),
+      ])
+
+      return true
+    }
+
+    const got = await taking
+
+    if ('refused' in got) {
+      return false
+    }
+
+    await navigator.clipboard.writeText(got.href)
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+type Said = { tone: 'done' | 'failed'; text: string }
+
+const SAID_INK: Record<'page' | 'player', Record<Said['tone'], string>> = {
+  page: { done: 'text-ink-2', failed: 'text-coral' },
+  player: { done: 'text-(--pl-ink-2)', failed: 'text-(--pl-err)' },
+}
+
 function useHandingOver() {
   const [taking, setTaking] = useState(false)
-  const [refused, setRefused] = useState<string | null>(null)
+  const [said, setSaid] = useState<Said | null>(null)
 
-  const open = async (handover: Handover) => {
-    setRefused(null)
+  const handing = async (
+    handover: Handover,
+    pass: (taking: Promise<Taken>) => Promise<Said | null>,
+  ) => {
+    setSaid(null)
     setTaking(true)
 
     try {
-      const got = await ticket(handover)
+      const asked = ticket(handover)
+      const passed = await pass(asked)
+      const got = await asked
 
-      if ('refused' in got) {
-        setRefused(got.refused)
-
-        return
-      }
-
-      window.open(got.href, '_blank', 'noopener')
+      setSaid('refused' in got ? { tone: 'failed', text: got.refused } : passed)
     } finally {
       setTaking(false)
     }
   }
 
-  return { taking, refused, open }
+  const open = (app: PlayerApp, handover: Handover) =>
+    handing(handover, async (asked) => {
+      const got = await asked
+
+      if ('href' in got) {
+        window.location.assign(appHref(app, got.href))
+      }
+
+      return null
+    })
+
+  const copy = (handover: Handover) =>
+    handing(handover, async (asked) =>
+      (await copied(asked))
+        ? { tone: 'done', text: COPIED }
+        : { tone: 'failed', text: NOT_COPIED },
+    )
+
+  return { taking, said, open, copy }
 }
 
-function Refused({
+function WhatHappened({
   said,
   tone,
 }: {
-  said: string | null
+  said: Said | null
   tone: 'page' | 'player'
 }) {
   if (!said) {
@@ -95,14 +168,8 @@ function Refused({
   }
 
   return (
-    <p
-      role="status"
-      className={cn(
-        'text-cap',
-        tone === 'player' ? 'text-(--pl-err)' : 'text-coral',
-      )}
-    >
-      {said}
+    <p role="status" className={cn('text-cap', SAID_INK[tone][said.tone])}>
+      {said.text}
     </p>
   )
 }
@@ -110,12 +177,10 @@ function Refused({
 function OpenButton({
   tone,
   taking,
-  choosing,
   ...pressed
 }: ComponentProps<'button'> & {
   tone: 'page' | 'player'
   taking: boolean
-  choosing?: boolean
 }) {
   if (tone === 'player') {
     return (
@@ -127,7 +192,7 @@ function OpenButton({
       >
         {taking && <Spinner size="control" className="mr-1.5 inline" />}
         {OPEN_EXTERNALLY}
-        {choosing && <ChevronDownIcon className="ml-1 inline size-3.5" />}
+        <ChevronDownIcon className="ml-1 inline size-3.5" />
       </button>
     )
   }
@@ -136,70 +201,103 @@ function OpenButton({
     <Button variant="watch" aria-disabled={taking} {...pressed}>
       {taking ? <Spinner size="control" /> : <DevicePlayerIcon />}
       {OPEN_EXTERNALLY}
-      {choosing && <ChevronDownIcon className="size-3.5" />}
+      <ChevronDownIcon className="size-3.5" />
     </Button>
   )
 }
 
-export function OpenExternally({
-  handover,
-  tone = 'page',
-  className,
-}: {
-  handover: Handover
-  tone?: 'page' | 'player'
-  className?: string
-}) {
-  const { taking, refused, open } = useHandingOver()
-
-  return (
-    <div className={cn('flex flex-col items-start gap-1.5', className)}>
-      <OpenButton tone={tone} taking={taking} onClick={() => open(handover)} />
-      <Refused said={refused} tone={tone} />
-    </div>
-  )
-}
-
-function OpenExternallyFrom({
+function HandoverMenu({
   choices,
+  only,
   tone = 'page',
   className,
 }: {
   choices: HandoverChoice[]
+  only: Handover
   tone?: 'page' | 'player'
   className?: string
 }) {
-  const { taking, refused, open } = useHandingOver()
+  const apps = usePlayerApps()
+  const { taking, said, open, copy } = useHandingOver()
+  const [picked, setPicked] = useState<string | undefined>(choices[0]?.source)
+  const chosen = choices.find((one) => one.source === picked) ?? choices[0]
+  const handover = chosen?.handover ?? only
+  const inset = chosen ? true : undefined
 
   return (
     <div className={cn('flex flex-col items-start gap-1.5', className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <OpenButton tone={tone} taking={taking} choosing />
+          <OpenButton tone={tone} taking={taking} />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
           aria-label={OPEN_EXTERNALLY}
           className="min-w-(--radix-dropdown-menu-trigger-width)"
         >
-          {choices.map((choice) => (
+          {chosen && (
+            <>
+              <DropdownMenuRadioGroup
+                aria-label={WHAT_IS_HANDED}
+                value={chosen.source}
+                onValueChange={setPicked}
+              >
+                {choices.map((choice) => (
+                  <DropdownMenuRadioItem
+                    key={choice.source}
+                    value={choice.source}
+                    onSelect={(pressed) => pressed.preventDefault()}
+                    className="justify-between gap-6"
+                  >
+                    <span>{choice.label}</span>
+                    {choice.size && (
+                      <span className="text-note text-ink-3 tabular-nums">
+                        {choice.size}
+                      </span>
+                    )}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+            </>
+          )}
+          {apps.map((app) => (
             <DropdownMenuItem
-              key={choice.source}
-              onSelect={() => void open(choice.handover)}
-              className="justify-between gap-6"
+              key={app}
+              inset={inset}
+              onSelect={() => void open(app, handover)}
             >
-              <span>{choice.label}</span>
-              {choice.size && (
-                <span className="text-note text-ink-3 tabular-nums">
-                  {choice.size}
-                </span>
-              )}
+              {appSays(app)}
             </DropdownMenuItem>
           ))}
+          <DropdownMenuItem inset={inset} onSelect={() => void copy(handover)}>
+            {COPY_THE_URL}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Refused said={refused} tone={tone} />
+      <WhatHappened said={said} tone={tone} />
     </div>
+  )
+}
+
+const NOTHING_TO_CHOOSE: HandoverChoice[] = []
+
+export function OpenExternally({
+  handover,
+  tone,
+  className,
+}: {
+  handover: Handover
+  tone?: 'page' | 'player'
+  className?: string
+}) {
+  return (
+    <HandoverMenu
+      choices={NOTHING_TO_CHOOSE}
+      only={handover}
+      tone={tone}
+      className={className}
+    />
   )
 }
 
@@ -221,16 +319,13 @@ export function ExternalPlayerOpener({
     recording.sizeBytes,
   )
 
-  if (choices.length === 0) {
-    return (
-      <OpenExternally
-        handover={recordingHandover(recording.id, onTakeTicket)}
-        tone={tone}
-      />
-    )
-  }
-
-  return <OpenExternallyFrom choices={choices} tone={tone} />
+  return (
+    <HandoverMenu
+      choices={choices}
+      only={recordingHandover(recording.id, onTakeTicket)}
+      tone={tone}
+    />
+  )
 }
 
 export function AirPlayButton({

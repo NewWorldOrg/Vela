@@ -43,7 +43,7 @@ interface Column {
 const STAMP_WIDTH = 'calc(122rem/16)'
 
 const COLUMNS: Column[] = [
-  { label: '番組', width: 'calc(320rem/16)' },
+  { label: '番組', width: 'calc(288rem/16)' },
   { label: '状態', width: JOB_STATUS_COLUMN },
   { label: 'プロファイル', width: 'calc(104rem/16)' },
   { label: '保存先', width: 'calc(76rem/16)' },

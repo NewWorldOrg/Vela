@@ -3,7 +3,9 @@ import { test } from 'node:test'
 
 import {
   airPlayCanBeHanded,
+  appHref,
   liveHandover,
+  playerAppsOn,
   recordingHandover,
   recordingHandoverChoices,
   ticketedHref,
@@ -241,4 +243,94 @@ test('AirPlay is handed a recording whose plan names the artefact, whichever one
 test('AirPlay is not handed a recording with no artefact to give it', () => {
   assert.equal(airPlayCanBeHanded({ source: 'recording' }), false)
   assert.equal(airPlayCanBeHanded({}), false)
+})
+
+const TICKETED = `https://ticket:${TICKET}@vela.example/api/videos/a-recording?source=recording`
+
+test('VLC is handed the whole URL, escaped, the way its x-callback takes a stream', () => {
+  assert.equal(
+    appHref('vlc', TICKETED),
+    `vlc-x-callback://x-callback-url/stream?url=https%3A%2F%2Fticket%3A${TICKET}%40vela.example%2Fapi%2Fvideos%2Fa-recording%3Fsource%3Drecording`,
+  )
+})
+
+test('Infuse is handed the whole URL, escaped, the way its x-callback plays one', () => {
+  assert.equal(
+    appHref('infuse', TICKETED),
+    `infuse://x-callback-url/play?url=https%3A%2F%2Fticket%3A${TICKET}%40vela.example%2Fapi%2Fvideos%2Fa-recording%3Fsource%3Drecording`,
+  )
+})
+
+test('what an app is handed reads back as the URL that was given', () => {
+  for (const app of ['vlc', 'infuse'] as const) {
+    assert.equal(
+      new URL(appHref(app, TICKETED)).searchParams.get('url'),
+      TICKETED,
+    )
+  }
+})
+
+const AN_IPHONE = {
+  userAgent:
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+  maxTouchPoints: 5,
+}
+
+const AN_IPAD_THAT_SAYS_SO = {
+  userAgent:
+    'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/140.0.0.0 Mobile/15E148 Safari/604.1',
+  maxTouchPoints: 5,
+}
+
+const AN_IPAD_THAT_SAYS_MAC = {
+  userAgent:
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+  maxTouchPoints: 5,
+}
+
+const A_MAC = { ...AN_IPAD_THAT_SAYS_MAC, maxTouchPoints: 0 }
+
+const A_WINDOWS_DESKTOP = {
+  userAgent:
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+  maxTouchPoints: 0,
+}
+
+const A_WINDOWS_TABLET = { ...A_WINDOWS_DESKTOP, maxTouchPoints: 10 }
+
+const A_LINUX_DESKTOP = {
+  userAgent:
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+  maxTouchPoints: 0,
+}
+
+const AN_ANDROID_PHONE = {
+  userAgent:
+    'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36',
+  maxTouchPoints: 5,
+}
+
+test('an iPhone and an iPad are offered VLC and Infuse', () => {
+  for (const device of [AN_IPHONE, AN_IPAD_THAT_SAYS_SO]) {
+    assert.deepEqual(playerAppsOn(device), ['vlc', 'infuse'])
+  }
+})
+
+test('an iPad that names itself a Mac is told apart by its touch', () => {
+  assert.deepEqual(playerAppsOn(AN_IPAD_THAT_SAYS_MAC), ['vlc', 'infuse'])
+})
+
+test('a Mac is offered Infuse alone', () => {
+  assert.deepEqual(playerAppsOn(A_MAC), ['infuse'])
+})
+
+test('a device with no app to open one in is offered none', () => {
+  for (const device of [
+    A_WINDOWS_DESKTOP,
+    A_WINDOWS_TABLET,
+    A_LINUX_DESKTOP,
+    AN_ANDROID_PHONE,
+  ]) {
+    assert.deepEqual(playerAppsOn(device), [])
+  }
 })

@@ -31,6 +31,7 @@ import {
   type PlayerSaying,
 } from '@/lib/playback-sound'
 import {
+  theAddressStands,
   whatTheStandingArtefactAsks,
   whereThatSourceOpens,
 } from '@/lib/playback-source'
@@ -140,6 +141,7 @@ export function Player({
   onKeepPosition,
   artefact,
   onAskWhichArtefact,
+  onOpenAnewWhereItStands,
   listenForEncodeJobs: listen = listenForEncodeJobs,
   startAt,
   playsAtOnce = true,
@@ -161,6 +163,7 @@ export function Player({
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   artefact?: string
   onAskWhichArtefact?: (id: string) => Promise<string | undefined>
+  onOpenAnewWhereItStands?: (artefact: string) => void
   listenForEncodeJobs?: ListenForEncodeJobs
   startAt?: number
   playsAtOnce?: boolean
@@ -682,6 +685,22 @@ export function Player({
 
       if (asks === 'reopen') {
         openedOn.current = standing
+
+        if (
+          standing !== undefined &&
+          theAddressStands(
+            pathname,
+            inTheAddress.toString(),
+            THE_ARTEFACT,
+            asItStands.current.position,
+            phase === 'paused',
+          )
+        ) {
+          onOpenAnewWhereItStands?.(standing)
+
+          return
+        }
+
         openAgain(THE_ARTEFACT, asItStands.current.position)
 
         return

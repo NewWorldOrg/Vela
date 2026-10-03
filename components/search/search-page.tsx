@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useCallback, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
@@ -8,7 +8,11 @@ import { usePathname, useRouter } from 'next/navigation'
 
 import { newRuleHref, ruleNarrowsAnything } from '@/lib/rules'
 import { cn } from '@/lib/utils'
-import type { SearchHits, SearchResult } from '@/repository/search'
+import type {
+  SearchHits,
+  SearchOutcome,
+  SearchResult,
+} from '@/repository/search'
 import {
   EMPTY_SEARCH_CONDITION,
   SEARCH_FIELD_OPTIONS,
@@ -81,6 +85,37 @@ const GENRE_CLASS: Record<string, string> = {
   other: 'bg-genre-other border-genre-other-line',
 }
 
+function insteadOfHits(
+  waiting: boolean,
+  outcome: SearchOutcome,
+): ReactElement | null {
+  if (waiting && outcome.state !== 'searched') {
+    return <WaitingRows rows={6} className="mt-6" aria-label={WAITING_LABEL} />
+  }
+
+  if (outcome.state === 'idle') {
+    return (
+      <EmptyState
+        title="まだ検索していません"
+        className="mt-10 max-w-[calc(560rem/16)]"
+      />
+    )
+  }
+
+  if (outcome.state === 'refused') {
+    return (
+      <EmptyState
+        title="この条件では検索できません"
+        className="mt-10 max-w-[calc(560rem/16)]"
+      >
+        {outcome.message}
+      </EmptyState>
+    )
+  }
+
+  return null
+}
+
 export function SearchView({ result }: { result: SearchResult }) {
   return (
     <SearchScreen key={searchTermsQueryOf(result.condition)} result={result} />
@@ -140,6 +175,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
     Boolean(terms.from || terms.to),
   ].filter((asked) => asked).length
   const found = outcome.state === 'searched' ? outcome.found : undefined
+  const instead = insteadOfHits(waiting, outcome)
   const written: string = searchQueryOf(asking)
   const href: string = written ? `${pathname}?${written}` : pathname
   const narrowing: boolean = ruleNarrowsAnything(terms)
@@ -451,22 +487,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </div>
       </section>
 
-      {waiting && outcome.state !== 'searched' ? (
-        <WaitingRows rows={6} className="mt-6" aria-label={WAITING_LABEL} />
-      ) : outcome.state === 'idle' ? (
-        <EmptyState
-          title="まだ検索していません"
-          className="mt-10 max-w-[calc(560rem/16)]"
-        />
-      ) : outcome.state === 'refused' ? (
-        <EmptyState
-          title="この条件では検索できません"
-          className="mt-10 max-w-[calc(560rem/16)]"
-        >
-          {outcome.message}
-        </EmptyState>
-      ) : (
-        found && (
+      {instead ??
+        (found && (
           <div {...waitsWhile(waiting)}>
             <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
               <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
@@ -667,8 +689,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
               </>
             )}
           </div>
-        )
-      )}
+        ))}
     </ScreenMain>
   )
 }

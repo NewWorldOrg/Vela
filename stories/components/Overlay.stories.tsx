@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, within } from 'storybook/test'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import type { Recording } from '@/repository/recordings'
 import { RECORDING_FIXTURES } from '@/stories/fixtures/recordings'
@@ -319,5 +319,93 @@ export const OpenMenu: Story = {
     await userEvent.click(off as HTMLElement)
     await expect(menu).toBeVisible()
     await expect(off).toHaveAttribute('aria-checked', 'false')
+  },
+}
+
+function ColumnsMenu() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">表示する列</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuCheckboxItem checked>放送局</DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked>録画日時</DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem>容量</DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>並びを既定に戻す</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+async function openedColumnsMenu(canvasElement: HTMLElement) {
+  const trigger = within(canvasElement).getByRole('button', {
+    name: '表示する列',
+  })
+
+  await userEvent.click(trigger)
+
+  const menu = await within(document.body).findByRole('menu')
+
+  await afterTheArrival(canvasElement)
+
+  return { trigger, menu }
+}
+
+async function closeTheColumnsMenu() {
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() =>
+    expect(within(document.body).queryByRole('menu')).toBeNull(),
+  )
+}
+
+export const 下に入りきるメニューは下に開く: Story = {
+  render: () => (
+    <div className="px-6 pt-6">
+      <ColumnsMenu />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const { trigger, menu } = await openedColumnsMenu(canvasElement)
+    const box = menu.getBoundingClientRect()
+
+    await expect(menu).toHaveAttribute('data-side', 'bottom')
+    await expect(Math.round(box.top)).toBeGreaterThanOrEqual(
+      Math.round(trigger.getBoundingClientRect().bottom),
+    )
+    await expect(Math.round(box.bottom)).toBeLessThanOrEqual(
+      Math.round(window.innerHeight),
+    )
+
+    await closeTheColumnsMenu()
+  },
+}
+
+export const 下に入りきらないメニューは上に開く: Story = {
+  render: () => (
+    <div className="px-6 pb-6">
+      <div className="h-[calc(100vh-88px)]" />
+      <ColumnsMenu />
+      <div className="h-[80vh]" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const { trigger, menu } = await openedColumnsMenu(canvasElement)
+    const box = menu.getBoundingClientRect()
+    const held = trigger.getBoundingClientRect()
+
+    await expect(window.innerHeight - held.bottom).toBeLessThan(
+      menu.offsetHeight,
+    )
+    await expect(menu).toHaveAttribute('data-side', 'top')
+    await expect(window.scrollY).toBe(0)
+    await expect(Math.round(box.top)).toBeGreaterThanOrEqual(0)
+    await expect(Math.round(box.bottom)).toBeLessThanOrEqual(
+      Math.round(held.top),
+    )
+    await expect(menu.scrollHeight).toBeLessThanOrEqual(menu.clientHeight)
+
+    await closeTheColumnsMenu()
   },
 }

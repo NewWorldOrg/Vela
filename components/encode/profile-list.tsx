@@ -48,7 +48,7 @@ const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
   { label: '品質(QP)', width: 'calc(104rem/16)' },
   { label: 'インタレース解除', width: 'calc(148rem/16)' },
   { label: '作成', width: 'calc(122rem/16)' },
-  { label: '操作', width: 'calc(148rem/16)', hidden: true },
+  { label: '操作', width: 'calc(192rem/16)', hidden: true },
 ]
 
 export function ProfileList({

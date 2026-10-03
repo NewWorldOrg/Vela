@@ -2,6 +2,7 @@
 
 import { useOptimistic, useState, useTransition } from 'react'
 
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
 import {
   NOT_YET_IN_THIS_BUILD_TERM,
@@ -9,7 +10,8 @@ import {
 } from '@/lib/state-terms'
 import { signedOut } from '@/lib/signed-out'
 import type { EncodeAutoRun, EncodeWrite } from '@/repository/encode'
-import { FEWEST_CORES } from '@/repository/encode-terms'
+import { FEWEST_CORES, NOWHERE_SETTLED_TERMS } from '@/repository/encode-terms'
+import { StateSay } from '@/components/recordings/status-cell'
 import {
   Select,
   SelectContent,
@@ -21,6 +23,7 @@ import { Switch } from '@/components/ui/switch'
 import { InlineAlert } from '@/components/vela/banner'
 import { FieldHint, FieldLabel } from '@/components/vela/field'
 import { Surface } from '@/components/vela/surface'
+import { TermTip } from '@/components/vela/term-tip'
 
 const SIGNED_OUT = signedOut('保存')
 
@@ -29,6 +32,8 @@ const RUNS_ITSELF = '自動実行'
 const MOST_CORES = '使用コア数の上限'
 
 const SUBJECT = '対象'
+
+const DESTINATION = '保存先'
 
 const STILL_AS_DEPLOYED = '既定のまま'
 
@@ -61,11 +66,39 @@ function subjectSaying(subject: EncodeAutoRun['subject']): string {
     .join('・')
 }
 
+function WhereArtefactsGoSay({
+  where,
+  destination,
+}: {
+  where: EncodeAutoRun['whereArtefactsGo']
+  destination?: string
+}) {
+  if (where === 'settled') {
+    return destination ?? EMPTY_VALUE
+  }
+
+  const term = shapeFor(NOWHERE_SETTLED_TERMS, where, undefined)
+
+  if (term === undefined) {
+    return NOT_YET_IN_THIS_BUILD
+  }
+
+  return (
+    <TermTip term={term}>
+      <StateSay tone="warn" bold>
+        {term.label}
+      </StateSay>
+    </TermTip>
+  )
+}
+
 export function AutoRunPanel({
   autoRun,
+  destination,
   onSettle,
 }: {
   autoRun: EncodeAutoRun
+  destination?: string
   onSettle: (automatically: boolean, mostCores: number) => Promise<EncodeWrite>
 }) {
   const settled: Settled = {
@@ -163,6 +196,14 @@ export function AutoRunPanel({
 
         <dt className={NAME}>{SUBJECT}</dt>
         <dd className={VALUE}>{subjectSaying(autoRun.subject)}</dd>
+
+        <dt className={NAME}>{DESTINATION}</dt>
+        <dd className={VALUE} data-slot="where-artefacts-go">
+          <WhereArtefactsGoSay
+            where={autoRun.whereArtefactsGo}
+            destination={destination}
+          />
+        </dd>
       </dl>
 
       <p className="mt-3.5 font-code text-note tabular-nums text-ink-3">
