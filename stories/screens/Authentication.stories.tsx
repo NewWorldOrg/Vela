@@ -19,6 +19,7 @@ import { AuthenticationView } from '@/components/authentication/authentication-p
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { cellOf, rowsOfTheTableHeaded } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
+import { formatMoment } from '@/lib/format'
 
 const meta = {
   title: 'Screens/設定・認証',
@@ -65,6 +66,7 @@ export const 通常: Story = {
   },
 }
 
+const CREATED_COLUMN = 2
 const TAKEN_COLUMN = 3
 
 const ONE_MOMENT = /^(\d{4}\/)?\d{2}\/\d{2}\(.\) \d{2}:\d{2}$/
@@ -129,6 +131,47 @@ export const 狭い幅で名前が長いセッション: Story = {
     await expect(subject.getBoundingClientRect().height).toBeGreaterThan(
       Number.parseFloat(getComputedStyle(subject).lineHeight),
     )
+  },
+}
+
+const LAST_YEAR = formatMoment(
+  Date.UTC(new Date().getUTCFullYear() - 1, 11, 31, 14, 59),
+)
+
+export const 年の付く日時も作成と取得日時の列に収まる: Story = {
+  args: {
+    sessions: SESSIONS.map((session) => ({
+      ...session,
+      createdAt: LAST_YEAR,
+      lastUsedAt: LAST_YEAR,
+    })),
+  },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const cells = rowsOfTheTableHeaded(canvasElement, '端末').flatMap((row) => [
+      cellOf(row, CREATED_COLUMN),
+      cellOf(row, TAKEN_COLUMN),
+    ])
+
+    await expect(cells).toHaveLength(SESSIONS.length * 2)
+
+    for (const cell of cells) {
+      const drawn = getComputedStyle(cell)
+      const room =
+        cell.clientWidth -
+        Number.parseFloat(drawn.paddingLeft) -
+        Number.parseFloat(drawn.paddingRight)
+      const words = document.createRange()
+
+      words.selectNodeContents(cell)
+
+      await expect(cell.textContent).toMatch(/^\d{4}\//)
+      await expect(words.getBoundingClientRect().width).toBeLessThanOrEqual(
+        room,
+      )
+    }
   },
 }
 

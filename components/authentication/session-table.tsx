@@ -60,8 +60,8 @@ export function SessionTable({
         widths={[
           'calc(260rem/16)',
           'calc(220rem/16)',
-          'calc(122rem/16)',
-          'calc(140rem/16)',
+          'calc(148rem/16)',
+          'calc(148rem/16)',
           'calc(140rem/16)',
         ]}
       />
