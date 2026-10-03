@@ -1,14 +1,21 @@
 import { couldNot } from '@/lib/try-again'
 import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
-import { RULE_TAKES_SHOWN } from '@/lib/rules'
-import type { SearchTerms } from '@/lib/search-condition'
+import { broadcastDateOf, windowStartOf } from '@/lib/guide'
+import type { RuleConditionBeyond, RuleDay, RuleTerms } from '@/lib/rules'
+import {
+  RULE_DAY_OPTIONS,
+  RULE_TAKES_SHOWN,
+  ruleDaysInOrder,
+} from '@/lib/rules'
 import {
   SEARCH_DEFAULT_FIELDS,
   SEARCH_GENRE_OPTIONS,
   SEARCH_KIND_OPTIONS,
+  namesAChannel,
   readSearchCondition,
   searchTermsOf,
 } from '@/lib/search-condition'
+import { subgenreOfValue } from '@/lib/subgenres'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { GuideChannel } from '@/repository/programs'
@@ -31,10 +38,12 @@ type RuleApplicationResponder =
 type RuleApplicationRefusedResponder =
   components['schemas']['RuleApplicationRefusedResponder']
 
+export type { RuleTerms }
+
 export interface Rule {
   id: string
   name: string
-  terms: SearchTerms
+  terms: RuleTerms
   priority: number
   enabled: boolean
   marginBeforeSeconds: number
@@ -45,7 +54,7 @@ export interface Rule {
 
 export interface RuleDraft {
   name: string
-  terms: SearchTerms
+  terms: RuleTerms
   priority: number
   enabled: boolean
   marginBeforeSeconds: number
@@ -124,6 +133,31 @@ const TYPE = 'type'
 
 const CHANNEL = 'channel'
 
+const SUBGENRE = 'subgenre'
+
+const DAY = 'day'
+
+const FROM = 'from'
+
+const TO = 'to'
+
+const READ_BY_THE_SCREEN = [
+  KEYWORD,
+  EXCLUDE,
+  FIELDS,
+  GENRE,
+  TYPE,
+  CHANNEL,
+  SUBGENRE,
+  DAY,
+  FROM,
+  TO,
+]
+
+const ONE_OF_A_KIND = [KEYWORD, EXCLUDE, FIELDS, TYPE, FROM, TO]
+
+const A_DAY_MS = 24 * 60 * 60 * 1000
+
 const END_UNDECIDED = '終了未定'
 
 const WRITTEN_WRONG =
@@ -134,7 +168,7 @@ const GONE = 'このルールは残っていないため、'
 const CANNOT_COUNT_TUNERS =
   'チューナーの空きを数えられないため、一致を見られませんでした。時間をおいてからお試しください。'
 
-export function ruleQueryOf(terms: SearchTerms): string {
+export function ruleQueryOf(terms: RuleTerms): string {
   const params = new URLSearchParams()
 
   if (terms.q) {
@@ -167,26 +201,98 @@ export function ruleQueryOf(terms: SearchTerms): string {
     params.append(CHANNEL, channel)
   }
 
+  for (const subgenre of terms.subgenres) {
+    params.append(SUBGENRE, subgenre)
+  }
+
+  for (const day of terms.days) {
+    params.append(DAY, `${day[0].toUpperCase()}${day.slice(1)}`)
+  }
+
+  if (terms.from) {
+    params.set(FROM, windowStartOf(terms.from).toISOString())
+  }
+
+  if (terms.to) {
+    params.set(
+      TO,
+      new Date(windowStartOf(terms.to).getTime() + A_DAY_MS).toISOString(),
+    )
+  }
+
+  for (const [name, value] of terms.beyond) {
+    if (!ONE_OF_A_KIND.includes(name) || !params.has(name)) {
+      params.append(name, value)
+    }
+  }
+
   return params.toString()
 }
 
-export function ruleTermsOf(query: string): SearchTerms {
+export function ruleTermsOf(query: string): RuleTerms {
   const params = new URLSearchParams(query)
-
-  return searchTermsOf(
-    readSearchCondition({
-      q: params.get(KEYWORD) ?? undefined,
-      exclude: params.get(EXCLUDE) ?? undefined,
-      fields: fieldsOf(params.getAll(FIELDS)),
-      genre: genresOf(params.getAll(GENRE)),
-      type: kindOf(params.get(TYPE)),
-      channel: params.getAll(CHANNEL).join(','),
-    }),
+  const beyond: RuleConditionBeyond[] = [...params].filter(
+    ([name]) => !READ_BY_THE_SCREEN.includes(name),
   )
+  const every = <T>(name: string, read: (value: string) => T | undefined) =>
+    readOrCarried(name, params.getAll(name), read, beyond)
+  const first = <T>(name: string, read: (value: string) => T | undefined) =>
+    readOrCarried(name, params.getAll(name).slice(0, 1), read, beyond)[0]
+  const fields = params.getAll(FIELDS)
+  const readable = fields.every((one) => fieldOf(one) !== undefined)
+
+  if (!readable) {
+    beyond.push(...fields.map((one): RuleConditionBeyond => [FIELDS, one]))
+  }
+
+  return {
+    ...searchTermsOf(
+      readSearchCondition({
+        q: params.get(KEYWORD) ?? undefined,
+        exclude: params.get(EXCLUDE) ?? undefined,
+        fields: readable ? fieldsOf(fields) : undefined,
+        genre: every(GENRE, genreOf),
+        type: first(TYPE, kindOf),
+        channel: every(CHANNEL, channelOf).join(','),
+        from: first(FROM, (value) => broadcastDayAt(value, 0)),
+        to: first(TO, (value) => broadcastDayAt(value, A_DAY_MS)),
+      }),
+    ),
+    subgenres: [...new Set(every(SUBGENRE, subgenreOf))],
+    days: ruleDaysInOrder(every(DAY, dayOf)),
+    beyond,
+  }
+}
+
+function readOrCarried<T>(
+  name: string,
+  values: string[],
+  read: (value: string) => T | undefined,
+  beyond: RuleConditionBeyond[],
+): T[] {
+  const kept: T[] = []
+
+  for (const value of values) {
+    const one = read(value)
+
+    if (one === undefined) {
+      beyond.push([name, value])
+    } else {
+      kept.push(one)
+    }
+  }
+
+  return kept
+}
+
+function fieldOf(named: string): 'title' | 'description' | undefined {
+  const wanted = named.toLowerCase()
+
+  return wanted === 'title' || wanted === 'description' ? wanted : undefined
 }
 
 function fieldsOf(named: string[]): string | undefined {
-  const wanted = named.map((one) => one.toLowerCase())
+  const wanted = named.map(fieldOf)
   const title = wanted.includes('title')
   const description = wanted.includes('description')
 
@@ -201,32 +307,50 @@ function fieldsOf(named: string[]): string | undefined {
   return undefined
 }
 
-function genresOf(named: string[]): string[] {
-  const kept: string[] = []
-
-  for (const one of named) {
-    const option = SEARCH_GENRE_OPTIONS.find(
-      (offered) => String(offered.kind) === one.trim(),
-    )
-
-    if (option && !kept.includes(option.value)) {
-      kept.push(option.value)
-    }
-  }
-
-  return kept
+function genreOf(named: string): string | undefined {
+  return SEARCH_GENRE_OPTIONS.find(
+    (offered) => String(offered.kind) === named.trim(),
+  )?.value
 }
 
-function kindOf(named: string | null): string | undefined {
-  if (!named) {
-    return undefined
-  }
-
+function kindOf(named: string): string | undefined {
   return SEARCH_KIND_OPTIONS.find(
     (option) =>
       SEARCH_SYSTEM_OF_KIND[option.value].toLowerCase() ===
       named.trim().toLowerCase(),
   )?.value
+}
+
+function channelOf(named: string): string | undefined {
+  return namesAChannel(named) ? named.trim() : undefined
+}
+
+function subgenreOf(named: string): string | undefined {
+  const [kind, sort, ...rest] = named.split('-').map((part) => part.trim())
+
+  if (rest.length > 0 || !/^\d+$/.test(kind) || !/^\d+$/.test(sort ?? '')) {
+    return undefined
+  }
+
+  return subgenreOfValue(`${Number(kind)}-${Number(sort)}`)?.value
+}
+
+function dayOf(named: string): RuleDay | undefined {
+  return RULE_DAY_OPTIONS.find(
+    (option) => option.value === named.trim().toLowerCase(),
+  )?.value
+}
+
+function broadcastDayAt(named: string, past: number): string | undefined {
+  const at = new Date(named.trim()).getTime()
+
+  if (Number.isNaN(at)) {
+    return undefined
+  }
+
+  const date = broadcastDateOf(new Date(at - past))
+
+  return windowStartOf(date).getTime() + past === at ? date : undefined
 }
 
 export async function listRules(): Promise<RulesResult> {

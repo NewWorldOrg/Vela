@@ -339,6 +339,8 @@ export const 別ページと同じ中身: Story = {
           day: PROGRAM_DAY,
         }}
         onReserve={args.onReserve}
+        onCancel={args.onCancel}
+        onRevise={args.onRevise}
       />
       <ProgramPanel {...args} />
     </>

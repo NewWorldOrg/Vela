@@ -133,8 +133,53 @@ const EVERY_CONDITION = {
   exclude: '再放送',
   fields: 'title' as const,
   genres: ['anime' as const, 'movie' as const],
+  subgenres: ['3-1', '8-15'],
   kind: 'bs' as const,
   channels: ['4-101'],
+  days: ['monday' as const, 'saturday' as const],
+  from: '2026-08-08',
+  to: '2026-08-31',
+  beyond: [],
+}
+
+const EVERY_CONDITION_WRITTEN =
+  '&subgenre=3-1&subgenre=8-15&day=Monday&day=Saturday' +
+  '&from=2026-08-07T19%3A00%3A00.000Z&to=2026-08-31T19%3A00%3A00.000Z'
+
+const DAY_NAMES = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+]
+
+const asTheApiReads = (name: string, value: string): string => {
+  if (name === 'from' || name === 'to') {
+    return String(new Date(value).getTime())
+  }
+
+  if (name === 'subgenre') {
+    return value.split('-').map(Number).join('-')
+  }
+
+  if (name === 'day' && /^\d$/.test(value)) {
+    return DAY_NAMES[Number(value)]
+  }
+
+  return ['day', 'type', 'fields'].includes(name) ? value.toLowerCase() : value
+}
+
+const conditionsOf = (query: string): Record<string, string[]> => {
+  const read: Record<string, string[]> = {}
+
+  for (const [name, value] of new URLSearchParams(query)) {
+    read[name] = [...(read[name] ?? []), asTheApiReads(name, value)].sort()
+  }
+
+  return read
 }
 
 const draft = (over: Record<string, unknown> = {}) => ({
@@ -179,7 +224,8 @@ test('every condition the form offers is written into the query the API holds', 
   assert.equal(
     ruleQueryOf(EVERY_CONDITION),
     'keyword=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81' +
-      '&fields=Title&genre=7&genre=6&type=IsdbSBs&channel=4-101',
+      '&fields=Title&genre=7&genre=6&type=IsdbSBs&channel=4-101' +
+      EVERY_CONDITION_WRITTEN,
   )
 })
 
@@ -187,26 +233,19 @@ test('the parts a keyword is looked for in are left out when they are the usual 
   assert.equal(
     ruleQueryOf({ ...EVERY_CONDITION, fields: 'title,description' }),
     'keyword=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81' +
-      '&genre=7&genre=6&type=IsdbSBs&channel=4-101',
+      '&genre=7&genre=6&type=IsdbSBs&channel=4-101' +
+      EVERY_CONDITION_WRITTEN,
   )
 })
 
 test('a query the API holds reads back as the conditions it was written from', () => {
-  assert.deepEqual(ruleTermsOf(ruleQueryOf(EVERY_CONDITION)), {
-    ...EVERY_CONDITION,
-    from: undefined,
-    to: undefined,
-  })
+  assert.deepEqual(ruleTermsOf(ruleQueryOf(EVERY_CONDITION)), EVERY_CONDITION)
 })
 
 test('the pair the query leaves unsaid reads back as the pair', () => {
   const terms = { ...EVERY_CONDITION, fields: 'title,description' as const }
 
-  assert.deepEqual(ruleTermsOf(ruleQueryOf(terms)), {
-    ...terms,
-    from: undefined,
-    to: undefined,
-  })
+  assert.deepEqual(ruleTermsOf(ruleQueryOf(terms)), terms)
 })
 
 test('a query naming only what it looks in reads back as narrowing nothing', () => {
@@ -215,10 +254,13 @@ test('a query naming only what it looks in reads back as narrowing nothing', () 
     exclude: undefined,
     fields: 'description',
     genres: [],
+    subgenres: [],
     kind: undefined,
     channels: [],
+    days: [],
     from: undefined,
     to: undefined,
+    beyond: [],
   })
 })
 
@@ -231,13 +273,93 @@ test('a value the API spells its own way is still read', () => {
   assert.deepEqual(terms.channels, ['4-101'])
 })
 
-test('a value the screen could not have written is left out rather than carried', () => {
-  const terms = ruleTermsOf('genre=99&type=dab&channel=nowhere')
+test('a value the screen cannot read is shown nowhere and carried as it was written', () => {
+  const query =
+    'genre=99&type=dab&channel=nowhere&subgenre=3-9&day=1&fields=0&hour=22'
+  const terms = ruleTermsOf(query)
 
   assert.deepEqual(terms.genres, [])
   assert.equal(terms.kind, undefined)
   assert.deepEqual(terms.channels, [])
+  assert.deepEqual(terms.subgenres, [])
+  assert.deepEqual(terms.days, [])
+  assert.equal(terms.fields, 'title,description')
+  assert.deepEqual(conditionsOf(ruleQueryOf(terms)), conditionsOf(query))
 })
+
+test('the days, the subgenres and the span a rule holds are read', () => {
+  const terms = ruleTermsOf(
+    'day=Saturday&day=monday&subgenre=07-00&subgenre=3-1' +
+      '&from=2026-08-08T04:00:00%2B09:00&to=2026-09-01T04:00:00%2B09:00',
+  )
+
+  assert.deepEqual(terms.days, ['monday', 'saturday'])
+  assert.deepEqual(terms.subgenres, ['7-0', '3-1'])
+  assert.equal(terms.from, '2026-08-08')
+  assert.equal(terms.to, '2026-08-31')
+  assert.deepEqual(terms.beyond, [])
+})
+
+test('a span that does not sit on the edge of a broadcast day is carried, not rounded', () => {
+  const query = 'genre=7&from=2026-08-08T10:30:00Z&to=2026-08-20T00:00:00Z'
+  const terms = ruleTermsOf(query)
+
+  assert.equal(terms.from, undefined)
+  assert.equal(terms.to, undefined)
+  assert.deepEqual(conditionsOf(ruleQueryOf(terms)), conditionsOf(query))
+})
+
+test('a one-of-a-kind condition entered on the screen replaces the one it could not read', () => {
+  const terms = ruleTermsOf(
+    'genre=7&from=2026-08-08T10:30:00Z&type=dab&fields=0&hour=22',
+  )
+
+  assert.deepEqual(
+    conditionsOf(
+      ruleQueryOf({
+        ...terms,
+        from: '2026-08-08',
+        kind: 'bs',
+        fields: 'title',
+      }),
+    ),
+    conditionsOf(
+      'genre=7&from=2026-08-07T19:00:00Z&type=IsdbSBs&fields=Title&hour=22',
+    ),
+  )
+})
+
+for (const query of [
+  'day=Monday',
+  'day=Monday&day=Wednesday&day=Friday&keyword=%E6%96%B0%E7%95%AA%E7%B5%84',
+  'subgenre=7-0&subgenre=3-1',
+  'genre=3&subgenre=7-0&day=Sunday&type=IsdbT&channel=131-1310',
+  'from=2026-08-07T19%3A00%3A00.000Z',
+  'keyword=%E6%96%B0%E7%95%AA%E7%B5%84&to=2026-08-31T19%3A00%3A00.000Z',
+  'exclude=%E5%86%8D%E6%94%BE%E9%80%81&fields=Description&day=saturday',
+  'genre=12&day=5&subgenre=3-9&hour=22-24',
+]) {
+  test(`a rule read and saved untouched keeps every condition: ${query}`, async () => {
+    standing([held({ query })])
+
+    const [rule] = (await listRules()).items
+
+    await replaceRule(rule.id, {
+      name: rule.name,
+      terms: rule.terms,
+      priority: rule.priority,
+      enabled: rule.enabled,
+      marginBeforeSeconds: rule.marginBeforeSeconds,
+      marginAfterSeconds: rule.marginAfterSeconds,
+      encodeWhenRecorded: rule.encodeWhenRecorded,
+    })
+
+    assert.deepEqual(
+      conditionsOf(bodyOf('/api/rules/{id}').query as string),
+      conditionsOf(query),
+    )
+  })
+}
 
 test('the rules the API holds arrive with their conditions read', async () => {
   standing([held(), held({ id: 'r-2', name: '映画', query: 'genre=6' })])

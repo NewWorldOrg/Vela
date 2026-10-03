@@ -22,6 +22,7 @@ import {
 const SERVICES: ServiceRow[] = [
   {
     key: '50001-1024',
+    sid: 1024,
     name: 'みなと総合1',
     no: '1',
     logo: LOGO_FULL_COLOUR,
@@ -62,6 +63,7 @@ const SERVICES: ServiceRow[] = [
   },
   {
     key: '50001-1025',
+    sid: 1025,
     name: 'みなと総合2',
     no: '1',
     logo: LOGO_NOT_YET_READ,
@@ -88,6 +90,7 @@ const SERVICES: ServiceRow[] = [
   },
   {
     key: '50001-1040',
+    sid: 1040,
     name: '中央テレビ1',
     no: '4',
     logo: LOGO_DARK_INK,
@@ -118,6 +121,7 @@ const SERVICES: ServiceRow[] = [
   },
   {
     key: '50001-1041',
+    sid: 1041,
     name: '中央テレビ2',
     no: '4',
     logo: LOGO_WIDER,
@@ -155,6 +159,7 @@ const SERVICES: ServiceRow[] = [
   },
   {
     key: '50001-1072',
+    sid: 1072,
     name: '湾岸放送1',
     no: '7',
     logo: LOGO_NONE_BROADCAST,
@@ -171,6 +176,7 @@ const SERVICES: ServiceRow[] = [
 
 export const SATELLITE_TUNER_TURNED_OFF: ServiceRow = {
   key: '50004-50111',
+  sid: 50111,
   name: '湾岸衛星',
   logo: LOGO_NOT_YET_READ,
   category: 'TV',
@@ -330,6 +336,7 @@ export const SCAN_PROPOSAL: ScanProposal = {
   added: [
     {
       key: '50001-1090',
+      sid: 1090,
       name: '東都テレビ1',
       category: 'TV',
       channels: [
@@ -344,6 +351,7 @@ export const SCAN_PROPOSAL: ScanProposal = {
   updated: [
     {
       key: '50001-1024',
+      sid: 1024,
       name: 'みなと総合1',
       no: '1',
       logo: LOGO_FULL_COLOUR,
@@ -365,6 +373,7 @@ export const SCAN_PROPOSAL: ScanProposal = {
   missing: [
     {
       key: '50001-1072',
+      sid: 1072,
       name: '湾岸放送1',
       no: '7',
       logo: LOGO_NONE_BROADCAST,

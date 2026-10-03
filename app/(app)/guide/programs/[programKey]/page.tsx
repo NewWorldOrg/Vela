@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 
+import { PROGRAMS_EVENT, RESERVATIONS_EVENT } from '@/repository/events'
 import { getProgram, primaryProgramKeyOf } from '@/repository/programs'
+import { listBookings } from '@/repository/reservations'
+import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
-import { reserveProgramme } from '@/app/(app)/guide/actions'
+import {
+  dropProgrammeReservation,
+  reserveProgramme,
+  reviseProgrammeReservation,
+} from '@/app/(app)/guide/actions'
 
 export async function generateMetadata({
   params,
@@ -21,7 +28,7 @@ export default async function Page({
   params: Promise<{ programKey: string }>
 }) {
   const { programKey } = await params
-  const detail = await getProgram(programKey)
+  const detail = await getProgram(programKey, new Date(), listBookings())
   if (!detail) {
     const primary = await primaryProgramKeyOf(programKey)
 
@@ -32,5 +39,15 @@ export default async function Page({
     notFound()
   }
 
-  return <ProgramDetailView detail={detail} onReserve={reserveProgramme} />
+  return (
+    <>
+      <RefreshOnSignal events={[PROGRAMS_EVENT, RESERVATIONS_EVENT]} />
+      <ProgramDetailView
+        detail={detail}
+        onReserve={reserveProgramme}
+        onCancel={dropProgrammeReservation}
+        onRevise={reviseProgrammeReservation}
+      />
+    </>
+  )
 }

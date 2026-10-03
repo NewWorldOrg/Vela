@@ -265,8 +265,11 @@ export async function extrasOf(
 export async function getProgram(
   id: string,
   now: Date = new Date(),
+  bookings:
+    | ReadonlyMap<string, ProgramBooking>
+    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
 ): Promise<ProgramDetail | undefined> {
-  const programme = await fetchProgramme(id)
+  const [programme, marked] = await Promise.all([fetchProgramme(id), bookings])
 
   if (!programme || programme.isShadow) {
     return undefined
@@ -289,7 +292,7 @@ export async function getProgram(
   }
 
   return {
-    program,
+    program: booked(program, marked.get(program.id)),
     day,
     channel: serviceOf(services, programme.networkId, programme.serviceId),
     nowMin: nowMinOf(now, windowStart),

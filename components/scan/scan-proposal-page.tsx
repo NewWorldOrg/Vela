@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { READABLE_LINE } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { ServiceId } from '@/components/channels/service-id'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/section-heading'
@@ -52,7 +53,10 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
                 )}
               >
                 <ChannelMark logo={service.logo} no={service.no} keepsTheSlot />
-                <span className="min-w-0">{service.name}</span>
+                <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                  <span className="min-w-0">{service.name}</span>
+                  <ServiceId sid={service.sid} />
+                </span>
               </div>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {service.channels.map((channel) => (

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, within } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import { isOnAir, relationDestinationOf } from '@/lib/guide'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
@@ -7,6 +7,7 @@ import type { ProgramDetail } from '@/repository/programs'
 import {
   NOW_MIN,
   PROGRAM_DETAIL_FIXTURES,
+  PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
 import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
@@ -24,6 +25,8 @@ const meta = {
   },
   args: {
     onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+    onCancel: fn(async (): Promise<ReservationWrite> => ({ state: 'ok' })),
+    onRevise: fn(async (): Promise<ReservationWrite> => ({ state: 'ok' })),
   },
   decorators: [inTheApp],
 } satisfies Meta<typeof ProgramDetailView>
@@ -303,6 +306,99 @@ export const 放送前: Story = {
     await expect(
       within(canvasElement).queryByRole('link', { name: 'ライブ視聴' }),
     ).toBeNull()
+  },
+}
+
+const BOOKING = PROGRAM_FIXTURES.find((program) => program.booking)!.booking!
+
+const booked: ProgramDetail = {
+  ...standard,
+  program: { ...standard.program, booked: true, booking: BOOKING },
+}
+
+const beingRecorded: ProgramDetail = {
+  ...standard,
+  program: {
+    ...standard.program,
+    booked: true,
+    booking: { ...BOOKING, standing: 'recording' },
+  },
+}
+
+export const 予約済み: Story = {
+  args: { detail: booked },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await reads(canvasElement, booked)
+
+    await expect(canvas.getByText('確保済み')).toBeVisible()
+    await expect(canvas.queryByRole('button', { name: '録画予約' })).toBeNull()
+    await expect(
+      canvas.queryByRole('link', { name: 'シリーズで予約' }),
+    ).toBeNull()
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '予約を取り消す' }),
+    )
+
+    await waitFor(() => expect(args.onCancel).toHaveBeenCalledTimes(1))
+    await expect(args.onCancel).toHaveBeenCalledWith(BOOKING.id)
+  },
+}
+
+export const 予約済みから編集を開く: Story = {
+  args: { detail: booked },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '予約を編集' }))
+
+    await expect(
+      await screen.findByRole('heading', { name: '予約を編集' }),
+    ).toBeVisible()
+  },
+}
+
+const HELD_BY_ANOTHER =
+  '録画が始まっているため、この予約は取り消せませんでした。'
+
+export const 取り消しを断られたとき: Story = {
+  args: {
+    detail: booked,
+    onCancel: fn(async (): Promise<ReservationWrite> => ({
+      state: 'rejected',
+      message: HELD_BY_ANOTHER,
+    })),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '予約を取り消す' }),
+    )
+
+    await expect(await canvas.findByText(HELD_BY_ANOTHER)).toBeVisible()
+    await expect(canvas.getByText('確保済み')).toBeVisible()
+  },
+}
+
+export const 録画中: Story = {
+  args: { detail: { ...beingRecorded, nowMin: NOW_MIN } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await reads(canvasElement, beingRecorded)
+
+    await expect(canvas.getByText('録画中')).toBeVisible()
+    await expect(canvas.queryByText('確保済み')).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '予約を取り消す' }),
+    ).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '予約を編集' }),
+    ).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
 }
 

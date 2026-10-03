@@ -6,7 +6,11 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
 
-import { newRuleHref, ruleNarrowsAnything } from '@/lib/rules'
+import {
+  newRuleHref,
+  ruleNarrowsAnything,
+  ruleTermsOfSearch,
+} from '@/lib/rules'
 import { cn } from '@/lib/utils'
 import type {
   SearchHits,
@@ -178,7 +182,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
   const instead = insteadOfHits(waiting, outcome)
   const written: string = searchQueryOf(asking)
   const href: string = written ? `${pathname}?${written}` : pathname
-  const narrowing: boolean = ruleNarrowsAnything(terms)
+  const narrowing: boolean = ruleNarrowsAnything(ruleTermsOfSearch(terms))
   const ruleHref = newRuleHref(terms)
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !draft.genres.includes(option.value),

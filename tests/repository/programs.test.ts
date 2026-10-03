@@ -757,6 +757,30 @@ test('the guide is asked for without waiting for the bookings it marks', async (
   )
 })
 
+test('a programme opened at its own address carries the booking that stands on it', async () => {
+  standing()
+
+  const booking: ProgramBooking = {
+    id: 'reservation-1',
+    standing: 'recording',
+    priority: 0,
+    marginBeforeSeconds: 0,
+    marginAfterSeconds: 0,
+    encodeWhenRecorded: false,
+  }
+  const detail = await getProgram(
+    idOf(CARRIED),
+    new Date(),
+    Promise.resolve(new Map([[idOf(CARRIED), booking]])),
+  )
+  const unmarked = await getProgram(idOf(CARRIED), new Date(), new Map())
+
+  assert.equal(detail?.program.booked, true)
+  assert.deepEqual(detail?.program.booking, booking)
+  assert.equal(unmarked?.program.booked, undefined)
+  assert.equal(unmarked?.program.booking, undefined)
+})
+
 test('a programme hands over no field it has nothing to say in', async () => {
   standing()
   store.programmes[0] = {

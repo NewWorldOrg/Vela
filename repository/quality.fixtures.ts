@@ -149,7 +149,7 @@ const ANOMALIES: QualityAnomaly[] = [
     id: 'anomaly-3',
     title: 'lock 率が下限を下回った',
     subject: 'adapter2.frontend0',
-    observed: '観測 62%',
+    observed: '観測 62.000%',
     applied: '適用閾値 99%',
     level: 'warn',
     levelLabel: '警告水準',

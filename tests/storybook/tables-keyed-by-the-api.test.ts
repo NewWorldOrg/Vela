@@ -17,8 +17,8 @@ const READ_STRAIGHT_ON_PURPOSE: {
   because: string
 }[] = [
   {
-    file: 'components/channels/add-candidate-dialog.tsx',
-    table: 'CHANNEL_RANGE',
+    file: 'lib/tuning-entry.ts',
+    table: 'TUNING_CHANNEL_RANGE',
     because:
       'the key is what the screen let the reader pick out of the list it drew, ' +
       'never a value that arrived from the API',

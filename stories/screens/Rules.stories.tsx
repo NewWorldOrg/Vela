@@ -1,7 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
+import {
+  expect,
+  fireEvent,
+  screen,
+  userEvent,
+  waitFor,
+  within,
+} from 'storybook/test'
 
-import { newRuleHref, seriesTermsOf } from '@/lib/rules'
+import { newRuleHref, ruleTermsOfSearch, seriesTermsOf } from '@/lib/rules'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type {
   Rule,
@@ -118,6 +125,19 @@ function recording(saved: Saved[], turned: [string, boolean][]): RuleActions {
   }
 }
 
+async function choose(list: string, option: string): Promise<void> {
+  await userEvent.click(screen.getByRole('combobox', { name: list }))
+  await userEvent.click(await screen.findByRole('option', { name: option }))
+
+  await afterTheArrival(document.body)
+}
+
+function picked(canvasElement: HTMLElement, kind: string): string[] {
+  return within(canvasElement)
+    .queryAllByRole('button', { name: new RegExp(`^${kind} .+ を外す$`) })
+    .map((one) => one.getAttribute('aria-label') ?? '')
+}
+
 const meta = {
   title: 'Screens/ルール',
   component: RulesView,
@@ -161,6 +181,12 @@ export const 通常: Story = {
     await expect(
       canvas.getByRole('switch', { name: 'ドラマの最終回だけ を有効にする' }),
     ).not.toBeChecked()
+
+    await expect(
+      canvas.getByRole('button', { name: /^週末の国内アニメ/ }),
+    ).toHaveTextContent(
+      /ジャンル: ドラマ・国内アニメ\(アニメ\/特撮\)・アニメ\(映画\) · 曜日: 土・日 · 期間: .*08\/08\(土\) 〜 .*08\/31\(月\) · すべてのチャンネル/,
+    )
 
     await userEvent.click(
       canvas.getByRole('switch', { name: 'ドラマの最終回だけ を有効にする' }),
@@ -258,8 +284,13 @@ export const ルールを編集: Story = {
               exclude: '再放送',
               fields: 'title,description',
               genres: ['anime'],
+              subgenres: [],
               kind: undefined,
               channels: [],
+              days: [],
+              from: undefined,
+              to: undefined,
+              beyond: [],
             },
             priority: 20,
             enabled: true,
@@ -301,6 +332,178 @@ export const ルールを編集: Story = {
   },
 }
 
+const untouchedSaved: Saved[] = []
+
+export const 開いて保存し直しても条件は変わらない: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[3] },
+    actions: recording(untouchedSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    untouchedSaved.length = 0
+
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(
+      await dialog.findByRole('button', { name: '保存する' }),
+    )
+
+    await waitFor(() => expect(untouchedSaved).toHaveLength(1))
+    await expect(untouchedSaved[0].draft.terms).toEqual(RULE_FIXTURES[3].terms)
+  },
+}
+
+const widenedSaved: Saved[] = []
+
+export const 曜日とサブジャンルと期間を足す: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[0] },
+    actions: recording(widenedSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    widenedSaved.length = 0
+
+    await choose('曜日を足す', '水曜')
+    await choose('曜日を足す', '月曜')
+    await expect(picked(canvasElement, '曜日')).toEqual([
+      '曜日 月曜 を外す',
+      '曜日 水曜 を外す',
+    ])
+
+    await userEvent.click(
+      canvas.getByRole('combobox', { name: 'サブジャンルを足す' }),
+    )
+    await expect(
+      await screen.findByRole('group', { name: 'ドラマ' }),
+    ).toBeVisible()
+    await expect(
+      screen.queryByRole('group', { name: 'アニメ/特撮' }),
+    ).toBeNull()
+    await userEvent.click(screen.getByRole('option', { name: '海外ドラマ' }))
+    await afterTheArrival(document.body)
+    await expect(picked(canvasElement, 'サブジャンル')).toEqual([
+      'サブジャンル 海外ドラマ(ドラマ) を外す',
+    ])
+
+    fireEvent.change(canvas.getByLabelText('期間の開始日'), {
+      target: { value: '2026-08-08' },
+    })
+    fireEvent.change(canvas.getByLabelText('期間の終了日'), {
+      target: { value: '2026-08-31' },
+    })
+
+    await expect(
+      canvas.getByRole('link', { name: '番組検索で見る' }),
+    ).toHaveAttribute(
+      'href',
+      '/search?q=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=anime&from=2026-08-08&to=2026-08-31',
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(
+      await dialog.findByRole('button', { name: '保存する' }),
+    )
+
+    await waitFor(() => expect(widenedSaved).toHaveLength(1))
+    await expect(widenedSaved[0].draft.terms).toEqual({
+      ...RULE_FIXTURES[0].terms,
+      kind: undefined,
+      subgenres: ['3-1'],
+      days: ['monday', 'wednesday'],
+      from: '2026-08-08',
+      to: '2026-08-31',
+    })
+  },
+}
+
+const periodSaved: Saved[] = []
+
+export const 期間は31日までで開始日から終了日へ向かう: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[0] },
+    actions: recording(periodSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const from = canvas.getByLabelText('期間の開始日')
+    const to = canvas.getByLabelText('期間の終了日')
+    const refusal =
+      '期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。'
+
+    periodSaved.length = 0
+    weighed.length = 0
+
+    fireEvent.change(from, { target: { value: '2026-08-01' } })
+    fireEvent.change(to, { target: { value: '2026-09-01' } })
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    await expect(await canvas.findByText(refusal)).toBeVisible()
+    await expect(from).toHaveAttribute('aria-invalid', 'true')
+    await expect(to).toHaveAttribute('aria-invalid', 'true')
+    await expect(screen.queryByRole('dialog')).toBeNull()
+    await expect(weighed).toEqual([])
+
+    fireEvent.change(to, { target: { value: '2026-07-31' } })
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+    await expect(canvas.getByText(refusal)).toBeVisible()
+    await expect(weighed).toEqual([])
+
+    fireEvent.change(to, { target: { value: '2026-08-31' } })
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    await waitFor(() => expect(weighed).toHaveLength(1))
+    await expect(canvas.queryByText(refusal)).toBeNull()
+  },
+}
+
+export const 曜日だけのルールは保存できる: Story = {
+  args: {
+    editing: {
+      state: 'new',
+      terms: {
+        q: undefined,
+        exclude: undefined,
+        fields: 'title,description',
+        genres: [],
+        subgenres: [],
+        channels: [],
+        days: [],
+        beyond: [],
+      },
+    },
+    actions: recording([], []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const refusal =
+      'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間のうち、1 つ以上を指定してください。'
+
+    weighed.length = 0
+
+    await userEvent.type(canvas.getByLabelText(/ルール名/), '週末だけ')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+    await expect(await canvas.findByText(refusal)).toBeVisible()
+
+    await choose('曜日を足す', '土曜')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    await waitFor(() => expect(weighed).toHaveLength(1))
+    await expect(weighed[0].draft.terms.days).toEqual(['saturday'])
+    await expect(canvas.queryByText(refusal)).toBeNull()
+  },
+}
+
 const draftSaved: Saved[] = []
 
 export const 検索から作る: Story = {
@@ -312,7 +515,10 @@ export const 検索から作る: Story = {
         exclude: undefined,
         fields: 'title,description',
         genres: [],
+        subgenres: [],
         channels: ['132-1320'],
+        days: [],
+        beyond: [],
       },
     },
     actions: recording(draftSaved, []),
@@ -355,8 +561,13 @@ export const 検索から作る: Story = {
               exclude: undefined,
               fields: 'title,description',
               genres: [],
+              subgenres: [],
               kind: undefined,
               channels: ['132-1320'],
+              days: [],
+              from: undefined,
+              to: undefined,
+              beyond: [],
             },
             priority: 10,
             enabled: true,
@@ -372,11 +583,13 @@ export const 検索から作る: Story = {
 
 const seriesSaved: Saved[] = []
 
-const HANDED_OVER = searchTermsOf(
-  searchConditionOfQuery(
-    newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101')!).split(
-      '?',
-    )[1],
+const HANDED_OVER = ruleTermsOfSearch(
+  searchTermsOf(
+    searchConditionOfQuery(
+      newRuleHref(seriesTermsOf('星のさまよいびと 第1話', '4-101')!).split(
+        '?',
+      )[1],
+    ),
   ),
 )
 
@@ -424,7 +637,10 @@ export const 条件のないルール: Story = {
         exclude: undefined,
         fields: 'title',
         genres: [],
+        subgenres: [],
         channels: [],
+        days: [],
+        beyond: [],
       },
     },
     actions: recording(emptySaved, []),
@@ -439,7 +655,7 @@ export const 条件のないルール: Story = {
 
     await expect(
       await canvas.findByText(
-        'キーワード・除外キーワード・ジャンル・種別・チャンネルのうち、1 つ以上を指定してください。',
+        'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間のうち、1 つ以上を指定してください。',
       ),
     ).toBeVisible()
     await expect(screen.queryByRole('dialog')).toBeNull()

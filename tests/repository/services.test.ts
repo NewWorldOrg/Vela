@@ -319,6 +319,7 @@ test('a service becomes the row the channel screen draws', async () => {
   const row = await onlyRow()
 
   assert.equal(row.key, '50001-1024')
+  assert.equal(row.sid, 1024)
   assert.equal(row.name, 'みなと総合1')
   assert.equal(row.no, '3')
   assert.equal(row.category, 'TV')
@@ -933,6 +934,7 @@ test('a proposal carries what was added, updated, missed and taken out of the ro
   assert.deepEqual(read.added, [
     {
       key: '50001-1024',
+      sid: 1024,
       name: 'みなと総合1',
       no: undefined,
       logo: undefined,
@@ -1176,10 +1178,13 @@ test('a scan is started over the systems asked for', async () => {
   sent.length = 0
   replies.set('POST /api/tuners/scan', ok({ scanId: 'scan-9' }))
 
-  assert.deepEqual(await startScan(['isdbT', 'isdbSBs']), {
-    state: 'started',
-    scanId: 'scan-9',
-  })
+  assert.deepEqual(
+    await startScan({ over: 'systems', systems: ['isdbT', 'isdbSBs'] }),
+    {
+      state: 'started',
+      scanId: 'scan-9',
+    },
+  )
   assert.deepEqual(sent, [
     {
       method: 'POST',
@@ -1189,6 +1194,70 @@ test('a scan is started over the systems asked for', async () => {
   ])
 })
 
+test('a scan over everything names no system, so the API walks them all', async () => {
+  replies.clear()
+  sent.length = 0
+  replies.set('POST /api/tuners/scan', ok({ scanId: 'scan-9' }))
+
+  assert.deepEqual(await startScan({ over: 'everything' }), {
+    state: 'started',
+    scanId: 'scan-9',
+  })
+  assert.deepEqual(sent, [
+    { method: 'POST', path: '/api/tuners/scan', body: {} },
+  ])
+})
+
+test('a scan over named channels sends each one as the API tunes it', async () => {
+  replies.clear()
+  sent.length = 0
+  replies.set('POST /api/tuners/scan', ok({ scanId: 'scan-9' }))
+
+  assert.deepEqual(
+    await startScan({
+      over: 'channels',
+      channels: [
+        { system: 'isdbT', physicalChannel: 21 },
+        { system: 'isdbSBs', physicalChannel: 15, transportStreamId: 16625 },
+      ],
+    }),
+    { state: 'started', scanId: 'scan-9' },
+  )
+  assert.deepEqual(sent, [
+    {
+      method: 'POST',
+      path: '/api/tuners/scan',
+      body: {
+        channels: [
+          { system: 'isdbT', physicalChannel: 21, transportStreamId: null },
+          {
+            system: 'isdbSBs',
+            physicalChannel: 15,
+            transportStreamId: 16625,
+          },
+        ],
+      },
+    },
+  ])
+})
+
+test('a scan over a channel the API does not take is refused as the entry it was', async () => {
+  replies.clear()
+  replies.set('POST /api/tuners/scan', refusing(400))
+
+  assert.deepEqual(
+    await startScan({
+      over: 'channels',
+      channels: [{ system: 'isdbT', physicalChannel: 21 }],
+    }),
+    {
+      state: 'rejected',
+      message:
+        '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。',
+    },
+  )
+})
+
 test('a scan refused because one is running points at the one that is', async () => {
   replies.clear()
   replies.set(
@@ -1196,14 +1265,14 @@ test('a scan refused because one is running points at the one that is', async ()
     refusing(409, { runningScanId: 'scan-running' }),
   )
 
-  const refused = await startScan(['isdbT'])
+  const refused = await startScan({ over: 'systems', systems: ['isdbT'] })
 
   assert.equal(refused.state, 'refused')
   assert.equal(refused.state === 'refused' && refused.scanId, 'scan-running')
 
   replies.set('POST /api/tuners/scan', refusing(409))
 
-  const blind = await startScan(['isdbT'])
+  const blind = await startScan({ over: 'systems', systems: ['isdbT'] })
 
   assert.equal(blind.state, 'refused')
   assert.equal(blind.state === 'refused' && blind.scanId, undefined)
@@ -1213,7 +1282,7 @@ test('a scan refused for want of a tuner, or for anything else, is rejected with
   replies.clear()
   replies.set('POST /api/tuners/scan', refusing(503))
 
-  const busy = await startScan(['isdbT'])
+  const busy = await startScan({ over: 'systems', systems: ['isdbT'] })
 
   assert.equal(busy.state, 'rejected')
   assert.match(
@@ -1223,7 +1292,7 @@ test('a scan refused for want of a tuner, or for anything else, is rejected with
 
   replies.set('POST /api/tuners/scan', refusing(500))
 
-  assert.deepEqual(await startScan(['isdbT']), {
+  assert.deepEqual(await startScan({ over: 'systems', systems: ['isdbT'] }), {
     state: 'rejected',
     message:
       'スキャンを開始できませんでした。しばらくしてからもう一度試してください。',
@@ -1234,7 +1303,7 @@ test('a scan over systems no tuner in service receives is refused as such', asyn
   replies.clear()
   replies.set('POST /api/tuners/scan', refusing(422))
 
-  assert.deepEqual(await startScan(['isdbSBs']), {
+  assert.deepEqual(await startScan({ over: 'systems', systems: ['isdbSBs'] }), {
     state: 'rejected',
     message:
       '対象の種別を受信できる有効なチューナーがないため、スキャンを開始できませんでした。',
@@ -1246,7 +1315,7 @@ test('a scan the API says it started without naming it is not taken as started',
   replies.set('POST /api/tuners/scan', ok(null))
 
   await assert.rejects(
-    startScan(['isdbT']),
+    startScan({ over: 'systems', systems: ['isdbT'] }),
     /POST \/api\/tuners\/scan answered 200/,
   )
 })

@@ -17,15 +17,23 @@ import {
 } from '@/lib/reservations'
 import {
   NEW_RULE,
+  RULE_DAY_OPTIONS,
   RULE_DEFAULT_PRIORITY,
   RULE_NAME_LONGEST,
   RULE_PARAM,
+  RULE_PERIOD_LONGEST_DAYS,
   RULE_TAKES_SHOWN,
   ruleConditionParts,
+  ruleDayLabelOf,
+  ruleDaysInOrder,
   ruleNarrowsAnything,
   withinRuleName,
+  withinRulePeriod,
   exclusionPartsOf,
 } from '@/lib/rules'
+import type { RuleDay } from '@/lib/rules'
+import { genreKindsOf, genreLabelOfKind } from '@/lib/search-condition'
+import { SUBGENRE_OPTIONS, subgenreLabelOf } from '@/lib/subgenres'
 import { cn } from '@/lib/utils'
 import type { GuideChannel } from '@/repository/programs'
 import type {
@@ -35,6 +43,7 @@ import type {
   RulePreview,
   RuleRetirement,
   RulesResult,
+  RuleTerms,
   RuleWrite,
   RuleExclusion,
 } from '@/repository/rules'
@@ -53,7 +62,6 @@ import type {
   SearchField,
   SearchGenre,
   SearchKind,
-  SearchTerms,
 } from '@/repository/search-options'
 import {
   AlertDialog,
@@ -79,7 +87,9 @@ import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
@@ -109,7 +119,7 @@ import { ScreenMain } from '@/components/vela/app-shell'
 
 export type RuleEditing =
   | { state: 'none' }
-  | { state: 'new'; terms: SearchTerms }
+  | { state: 'new'; terms: RuleTerms }
   | { state: 'rule'; rule: Rule }
 
 export interface RuleActions {
@@ -125,7 +135,7 @@ const EVERY_KIND = 'all'
 const SIGNED_OUT = signedOut('操作')
 
 interface Named {
-  field: 'name' | 'terms' | 'priority' | 'before' | 'after'
+  field: 'name' | 'terms' | 'period' | 'priority' | 'before' | 'after'
   text: string
 }
 
@@ -341,8 +351,13 @@ interface Entry {
   exclude: string
   fields: SearchField
   genres: SearchGenre[]
+  subgenres: RuleTerms['subgenres']
   kind?: SearchKind
   channels: string[]
+  days: RuleTerms['days']
+  from?: string
+  to?: string
+  beyond: RuleTerms['beyond']
   priority: string
   before: string
   after: string
@@ -350,15 +365,20 @@ interface Entry {
   encodeWhenRecorded: boolean
 }
 
-function entryOf(rule: Rule | undefined, terms: SearchTerms): Entry {
+function entryOf(rule: Rule | undefined, terms: RuleTerms): Entry {
   return {
     name: rule?.name ?? '',
     q: terms.q ?? '',
     exclude: terms.exclude ?? '',
     fields: terms.fields,
     genres: terms.genres,
+    subgenres: terms.subgenres,
     kind: terms.kind,
     channels: terms.channels,
+    days: terms.days,
+    from: terms.from,
+    to: terms.to,
+    beyond: terms.beyond,
     priority: String(rule?.priority ?? RULE_DEFAULT_PRIORITY),
     before: String(rule?.marginBeforeSeconds ?? 0),
     after: String(rule?.marginAfterSeconds ?? 0),
@@ -367,14 +387,19 @@ function entryOf(rule: Rule | undefined, terms: SearchTerms): Entry {
   }
 }
 
-function termsOfEntry(entry: Entry): SearchTerms {
+function termsOfEntry(entry: Entry): RuleTerms {
   return {
     q: entry.q.trim() || undefined,
     exclude: entry.exclude.trim() || undefined,
     fields: entry.fields,
     genres: entry.genres,
+    subgenres: entry.subgenres,
     kind: entry.kind,
     channels: entry.channels,
+    days: entry.days,
+    from: entry.from,
+    to: entry.to,
+    beyond: entry.beyond,
   }
 }
 
@@ -399,7 +424,7 @@ function RuleEditor({
   onClose,
 }: {
   rule?: Rule
-  terms: SearchTerms
+  terms: RuleTerms
   channels: GuideChannel[]
   actions: RuleActions
   onOpen: (id: string) => void
@@ -424,14 +449,29 @@ function RuleEditor({
     edits.current += 1
   }
 
-  const asked: SearchTerms = termsOfEntry(entry)
+  const asked: RuleTerms = termsOfEntry(entry)
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !entry.genres.includes(option.value),
   )
+  const namedGenres = genreKindsOf(entry.genres)
+  const unusedSubgenres = SEARCH_GENRE_OPTIONS.filter(
+    (genre) => !namedGenres.includes(genre.kind),
+  )
+    .map((genre) => ({
+      genre,
+      under: SUBGENRE_OPTIONS.filter(
+        (option) =>
+          option.kind === genre.kind && !entry.subgenres.includes(option.value),
+      ),
+    }))
+    .filter((group) => group.under.length > 0)
   const unusedChannels = channels.filter(
     (channel) =>
       (!entry.kind || channel.kind === entry.kind) &&
       !entry.channels.includes(channel.id),
+  )
+  const unusedDays = RULE_DAY_OPTIONS.filter(
+    (option) => !entry.days.includes(option.value),
   )
   const channelNameOf = (id: string): string =>
     channels.find((channel) => channel.id === id)?.name || id
@@ -456,7 +496,16 @@ function RuleEditor({
     if (!ruleNarrowsAnything(asked)) {
       setProblem({
         field: 'terms',
-        text: 'キーワード・除外キーワード・ジャンル・種別・チャンネルのうち、1 つ以上を指定してください。',
+        text: 'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間のうち、1 つ以上を指定してください。',
+      })
+
+      return undefined
+    }
+
+    if (!withinRulePeriod(asked.from, asked.to)) {
+      setProblem({
+        field: 'period',
+        text: `期間は開始日から終了日へ向かう最長 ${RULE_PERIOD_LONGEST_DAYS} 日の範囲で指定できます。`,
       })
 
       return undefined
@@ -811,6 +860,54 @@ function RuleEditor({
         </Field>
 
         <Field>
+          <FieldLabel>サブジャンル</FieldLabel>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
+            {entry.subgenres.map((subgenre) => (
+              <Pick
+                key={subgenre}
+                label={subgenreLabelOf(subgenre)}
+                spoken={`サブジャンル ${subgenreLabelOf(subgenre)} を外す`}
+                onRemove={() =>
+                  amend({
+                    subgenres: entry.subgenres.filter(
+                      (one) => one !== subgenre,
+                    ),
+                  })
+                }
+              />
+            ))}
+            {unusedSubgenres.length > 0 && (
+              <Select
+                value=""
+                onValueChange={(value) =>
+                  amend({ subgenres: [...entry.subgenres, value] })
+                }
+              >
+                <SelectTrigger
+                  size="sm"
+                  aria-label="サブジャンルを足す"
+                  className="w-fit rounded-full text-ink-3"
+                >
+                  ＋ サブジャンルを足す
+                </SelectTrigger>
+                <SelectContent>
+                  {unusedSubgenres.map(({ genre, under }) => (
+                    <SelectGroup key={genre.kind}>
+                      <SelectLabel>{genreLabelOfKind(genre.kind)}</SelectLabel>
+                      {under.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </span>
+        </Field>
+
+        <Field>
           <FieldLabel>対象チャンネル</FieldLabel>
           <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
             {entry.channels.map((id) => (
@@ -855,6 +952,87 @@ function RuleEditor({
               チャンネルは {SEARCH_MOST_CHANNELS} 局まで指定できます
             </FieldHint>
           )}
+        </Field>
+
+        <Field>
+          <FieldLabel>曜日</FieldLabel>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
+            {entry.days.map((day) => (
+              <Pick
+                key={day}
+                label={ruleDayLabelOf(day)}
+                spoken={`曜日 ${ruleDayLabelOf(day)} を外す`}
+                onRemove={() =>
+                  amend({ days: entry.days.filter((one) => one !== day) })
+                }
+              />
+            ))}
+            {unusedDays.length > 0 && (
+              <Select
+                value=""
+                onValueChange={(value) =>
+                  amend({
+                    days: ruleDaysInOrder([...entry.days, value as RuleDay]),
+                  })
+                }
+              >
+                <SelectTrigger
+                  size="sm"
+                  aria-label="曜日を足す"
+                  className="w-fit rounded-full text-ink-3"
+                >
+                  ＋ 曜日を足す
+                </SelectTrigger>
+                <SelectContent>
+                  {unusedDays.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </span>
+        </Field>
+
+        <Field>
+          <FieldLabel>期間</FieldLabel>
+          <span className="flex flex-wrap items-center gap-2">
+            <Input
+              type="date"
+              aria-label="期間の開始日"
+              value={entry.from ?? ''}
+              aria-invalid={problem?.field === 'period' || undefined}
+              aria-describedby={
+                problem?.field === 'period' ? 'rule-period-error' : undefined
+              }
+              onChange={(event) =>
+                amend({ from: event.target.value || undefined })
+              }
+              areaClassName="w-[calc(150rem/16)]"
+              className="h-[calc(33rem/16)] rounded-full"
+            />
+            <span className="text-sub text-ink-3">〜</span>
+            <Input
+              type="date"
+              aria-label="期間の終了日"
+              value={entry.to ?? ''}
+              aria-invalid={problem?.field === 'period' || undefined}
+              aria-describedby={
+                problem?.field === 'period' ? 'rule-period-error' : undefined
+              }
+              onChange={(event) =>
+                amend({ to: event.target.value || undefined })
+              }
+              areaClassName="w-[calc(150rem/16)]"
+              className="h-[calc(33rem/16)] rounded-full"
+            />
+          </span>
+          <span aria-live="polite">
+            {problem?.field === 'period' && (
+              <FieldError id="rule-period-error">{problem.text}</FieldError>
+            )}
+          </span>
         </Field>
 
         <span aria-live="polite">

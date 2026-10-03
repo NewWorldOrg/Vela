@@ -1,8 +1,8 @@
 import { useState, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import type { WriteResult } from '@/repository/services'
+import type { StartScanResult, WriteResult } from '@/repository/services'
 import {
   CHANNELS,
   MORE_ATTEMPTS_THAN_FIT,
@@ -26,8 +26,11 @@ const refuseWrite = async (): Promise<WriteResult> => ({
   message:
     'このスキャンはすでに終わっているため、キャンセルできませんでした。最新の状態を読み直しました。',
 })
-const refuse = async () => ({
-  state: 'refused' as const,
+const answering = (answer: StartScanResult) =>
+  fn(async (): Promise<StartScanResult> => answer)
+
+const refuse = answering({
+  state: 'refused',
   scanId: 'run-3',
   message:
     'すでにスキャンが実行中です。同時に走らせられるのは 1 本までです。実行中のスキャンを確認するか、キャンセルしてから開始してください。',
@@ -58,6 +61,156 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
+}
+
+export const サービスの行はSIDを併記する: Story = {
+  args: { result: { state: 'ok', result: CHANNELS } },
+  play: async ({ canvasElement }) => {
+    const rows = CHANNELS.groups.flatMap((group) => group.services)
+    const said = [
+      ...canvasElement.querySelectorAll('[data-slot="service-id"]'),
+    ].map((one) => one.textContent)
+
+    await expect(said).toEqual([
+      ...rows.map((row) => `SID ${row.sid}`),
+      ...CHANNELS.unattributed.map((row) => `SID ${row.sid}`),
+    ])
+  },
+}
+
+const STARTED: StartScanResult = { state: 'started', scanId: 'run-9' }
+
+export const スキャン範囲は全体と種別と物理ch指定: Story = {
+  args: {
+    result: { state: 'ok', result: CHANNELS },
+    onStart: answering(STARTED),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const range = within(canvas.getByRole('group', { name: 'スキャン範囲' }))
+
+    await expect(
+      range.getAllByRole('button').map((one) => one.textContent),
+    ).toEqual(['全体', '地上波', 'BS', 'CS110', '物理ch指定'])
+    await expect(range.getByRole('button', { name: '地上波' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await expect(canvas.queryByLabelText(/物理チャンネル/)).toBeNull()
+
+    await userEvent.click(range.getByRole('button', { name: '全体' }))
+    await userEvent.click(canvas.getByRole('button', { name: 'スキャン開始' }))
+    await waitFor(() =>
+      expect(args.onStart).toHaveBeenLastCalledWith({ over: 'everything' }),
+    )
+
+    await userEvent.click(range.getByRole('button', { name: 'BS' }))
+    await userEvent.click(canvas.getByRole('button', { name: 'スキャン開始' }))
+    await waitFor(() =>
+      expect(args.onStart).toHaveBeenLastCalledWith({
+        over: 'systems',
+        systems: ['isdbSBs'],
+      }),
+    )
+  },
+}
+
+export const 物理chを指定してスキャンする: Story = {
+  args: {
+    result: { state: 'ok', result: CHANNELS },
+    onStart: answering(STARTED),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const range = within(canvas.getByRole('group', { name: 'スキャン範囲' }))
+    const start = canvas.getByRole('button', { name: 'スキャン開始' })
+
+    await userEvent.click(range.getByRole('button', { name: '物理ch指定' }))
+
+    const channel = canvas.getByLabelText(/物理チャンネル/)
+    const widthOfTheEntry = () => channel.getBoundingClientRect().width
+    const calm = widthOfTheEntry()
+
+    await expect(canvas.queryByLabelText(/TSID/)).toBeNull()
+
+    await userEvent.click(start)
+    await expect(
+      await canvas.findByText('物理チャンネルを半角数字で入力してください。'),
+    ).toBeVisible()
+    await expect(widthOfTheEntry()).toBe(calm)
+    await expect(args.onStart).not.toHaveBeenCalled()
+
+    await userEvent.type(channel, '12')
+    await userEvent.click(start)
+    await expect(
+      await canvas.findByText('地上波の物理チャンネルは 13 〜 62 です。'),
+    ).toBeVisible()
+    await expect(args.onStart).not.toHaveBeenCalled()
+
+    await userEvent.clear(channel)
+    await userEvent.type(channel, '21')
+    await userEvent.click(start)
+    await waitFor(() =>
+      expect(args.onStart).toHaveBeenLastCalledWith({
+        over: 'channels',
+        channels: [
+          {
+            system: 'isdbT',
+            physicalChannel: 21,
+            transportStreamId: undefined,
+          },
+        ],
+      }),
+    )
+
+    await userEvent.click(
+      within(canvas.getByRole('group', { name: '方式' })).getByRole('button', {
+        name: 'BS',
+      }),
+    )
+    await userEvent.clear(channel)
+    await userEvent.type(channel, '15')
+    await userEvent.type(canvas.getByLabelText(/TSID/), '16625')
+    await userEvent.click(start)
+    await waitFor(() =>
+      expect(args.onStart).toHaveBeenLastCalledWith({
+        over: 'channels',
+        channels: [
+          { system: 'isdbSBs', physicalChannel: 15, transportStreamId: 16625 },
+        ],
+      }),
+    )
+
+    const bar = start.closest('div') as HTMLElement
+    const fields = channel.closest('[data-slot="field"]') as HTMLElement
+
+    await expect(fields.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      start.getBoundingClientRect().top,
+    )
+    await expect(bar.scrollWidth).toBeLessThanOrEqual(bar.clientWidth)
+  },
+}
+
+const TUNING_NOT_TAKEN =
+  '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。'
+
+export const 物理chの指定を断られたとき: Story = {
+  args: {
+    result: { state: 'ok', result: CHANNELS },
+    onStart: answering({ state: 'rejected', message: TUNING_NOT_TAKEN }),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const range = within(canvas.getByRole('group', { name: 'スキャン範囲' }))
+
+    await userEvent.click(range.getByRole('button', { name: '物理ch指定' }))
+    await userEvent.type(canvas.getByLabelText(/物理チャンネル/), '27')
+    await userEvent.click(canvas.getByRole('button', { name: 'スキャン開始' }))
+
+    await expect(await canvas.findByText(TUNING_NOT_TAKEN)).toBeVisible()
+    await expect(args.onStart).toHaveBeenCalledTimes(1)
+    await expect(canvas.getByLabelText(/物理チャンネル/)).toHaveValue('27')
+  },
 }
 
 export const 候補を開いた状態: Story = {

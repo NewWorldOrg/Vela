@@ -72,6 +72,7 @@ export interface CandidateRow {
 
 export interface ServiceRow {
   key: string
+  sid: number
   name: string
   no?: string
   logo?: StationLogo
@@ -157,6 +158,7 @@ export interface ProposalChannel {
 
 export interface ProposalService {
   key: string
+  sid: number
   name: string
   no?: string
   logo?: StationLogo
@@ -194,6 +196,11 @@ export type ChannelsScreenResult =
   | { state: 'ok'; result: ChannelsResult }
   | { state: 'unauthenticated' }
   | { state: 'unavailable'; message: string }
+
+export type ScanScope =
+  | { over: 'everything' }
+  | { over: 'systems'; systems: ScanSystem[] }
+  | { over: 'channels'; channels: CandidateTuning[] }
 
 export type StartScanResult =
   | { state: 'started'; scanId: string }
@@ -290,6 +297,7 @@ function toService(service: BroadcastServiceResponder): ServiceRow {
 
   return {
     key: serviceKeyOf(service),
+    sid: toInt(service.serviceId),
     name: service.name,
     ...stationMarkOf(service),
     category: wordFor(CATEGORY_LABEL, service.category),
@@ -417,6 +425,7 @@ function toProposalService(
 
   return {
     key,
+    sid: toInt(change.serviceId),
     name: change.name,
     no: mark?.no,
     logo: mark?.logo,
@@ -731,13 +740,37 @@ function refusedRunId(body: unknown): string | undefined {
   return refusal?.runningScanId ?? undefined
 }
 
-export async function startScan(
-  systems: ScanSystem[],
-): Promise<StartScanResult> {
+const TUNING_NOT_TAKEN =
+  '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。'
+
+function tuningBodyOf(tuning: CandidateTuning) {
+  return {
+    system: tuning.system,
+    physicalChannel: tuning.physicalChannel,
+    transportStreamId: tuning.transportStreamId ?? null,
+  }
+}
+
+function scanBodyOf(scope: ScanScope) {
+  switch (scope.over) {
+    case 'everything':
+      return {}
+    case 'systems':
+      return { systems: scope.systems }
+    case 'channels':
+      return { channels: scope.channels.map(tuningBodyOf) }
+  }
+}
+
+export async function startScan(scope: ScanScope): Promise<StartScanResult> {
   const { data, error, response } = await carinaClient().POST(
     '/api/tuners/scan',
-    { body: { systems } },
+    { body: scanBodyOf(scope) },
   )
+
+  if (response.status === 400) {
+    return { state: 'rejected', message: TUNING_NOT_TAKEN }
+  }
 
   if (response.status === 409) {
     return {
@@ -850,11 +883,7 @@ export async function addCandidateChannel(
     {
       params: { path: { networkId, serviceId } },
       body: {
-        tuning: {
-          system: tuning.system,
-          physicalChannel: tuning.physicalChannel,
-          transportStreamId: tuning.transportStreamId ?? null,
-        },
+        tuning: tuningBodyOf(tuning),
       },
     },
   )
@@ -862,7 +891,7 @@ export async function addCandidateChannel(
   return toWriteResult(
     response,
     {
-      400: '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。',
+      400: TUNING_NOT_TAKEN,
       404: 'このサービスが見つからないため、追加できませんでした。',
       409: 'この物理チャンネルはすでに候補として登録されています。',
       422: 'この物理チャンネルを受信できるチューナーがないため、追加できませんでした。対応する種別のチューナーが有効か確かめてください。',

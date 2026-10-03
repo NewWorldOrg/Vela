@@ -7,11 +7,11 @@ import {
   SCAN_STATE_LABEL,
   type ChannelsScreenResult,
   type ScanRun,
+  type ScanScope,
   type ServiceGroup,
   type StartScanResult,
   type WriteResult,
 } from '@/repository/services'
-import type { ScanSystem } from '@/repository/scan-systems'
 import {
   StateSay,
   StatusCell,
@@ -169,7 +169,7 @@ export function ChannelsView({
   onDelete,
 }: {
   result: ChannelsScreenResult
-  onStart: (systems: ScanSystem[]) => Promise<StartScanResult>
+  onStart: (scope: ScanScope) => Promise<StartScanResult>
   onCancel: (scanId: string) => Promise<WriteResult>
 } & CandidateActions) {
   const actions = { onSelect, onAdd, onDelete }

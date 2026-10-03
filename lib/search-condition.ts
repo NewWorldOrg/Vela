@@ -161,18 +161,21 @@ function genres(asked: string | string[] | undefined): SearchGenre[] {
   return kept
 }
 
+export function namesAChannel(value: string): boolean {
+  const read = CHANNEL_PATTERN.exec(value.trim())
+
+  return (
+    read !== null &&
+    Number(read[1]) <= HIGHEST_IDENTIFIER &&
+    Number(read[2]) <= HIGHEST_IDENTIFIER
+  )
+}
+
 function channels(asked: string | undefined): string[] {
   const kept: string[] = []
 
   for (const one of (asked ?? '').split(',')) {
-    const read = CHANNEL_PATTERN.exec(one.trim())
-
-    if (
-      read &&
-      Number(read[1]) <= HIGHEST_IDENTIFIER &&
-      Number(read[2]) <= HIGHEST_IDENTIFIER &&
-      !kept.includes(one.trim())
-    ) {
+    if (namesAChannel(one) && !kept.includes(one.trim())) {
       kept.push(one.trim())
     }
   }

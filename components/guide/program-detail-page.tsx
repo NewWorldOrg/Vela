@@ -5,16 +5,20 @@ import type { ProgramDetail } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
 import { ChevronLeftIcon } from '@/components/vela/icons'
+import type { ProgramBookingActions } from '@/components/guide/program-booking'
+import { ProgramBooking } from '@/components/guide/program-booking'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
 import { ScreenMain } from '@/components/vela/app-shell'
 
 export function ProgramDetailView({
   detail,
   onReserve,
+  onCancel,
+  onRevise,
 }: {
   detail: ProgramDetail
   onReserve: (programmeId: string) => Promise<ReservationWrite>
-}) {
+} & ProgramBookingActions) {
   const { program, channel, day, nowMin } = detail
 
   return (
@@ -37,6 +41,17 @@ export function ProgramDetailView({
             dayLabel={day.label}
             onAir={isOnAir(program, nowMin)}
             onReserve={onReserve}
+            reservation={
+              program.booking && (
+                <ProgramBooking
+                  booking={program.booking}
+                  title={program.title}
+                  channel={channel}
+                  onCancel={onCancel}
+                  onRevise={onRevise}
+                />
+              )
+            }
           />
         </section>
       </div>
