@@ -21,6 +21,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/videos/{id}/captions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The captions of a recording for ten minutes of the source it is played from, starting at the second asked for: the caption already showing there first, then every change before the second the answer covers to, each at the second of that source counted from its own zero, as a palette PNG placed on the canvas or as the screen cleared. The plan says whether there are any to ask for: it answers 409 while they are still being taken from the recording, and 404 where there are none to draw over that source. Opened with the reader's own session only, never with a ticket. */
+    get: operations['getVideoCaptions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/videos/{id}/thumbnail': {
     parameters: {
       query?: never
@@ -1412,6 +1429,11 @@ export interface components {
       message: string
       data: null | components['schemas']['BroadcastServiceResponder']
     }
+    BaseResponderOfCaptionWindowResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['CaptionWindowResponder']
+    }
     BaseResponderOfCollectionStatusResponder: {
       status: boolean
       message: string
@@ -1888,6 +1910,37 @@ export interface components {
       /** Format: date-time */
       selectedAt: string
       measurement: null | components['schemas']['ScanMeasurementResponder']
+    }
+    CaptionCanvasResponder: {
+      /** Format: int32 */
+      width: number | string
+      /** Format: int32 */
+      height: number | string
+    }
+    CaptionCueResponder: {
+      /** Format: double */
+      atSec: number | string
+      picture: null | components['schemas']['CaptionPictureResponder']
+    }
+    CaptionPictureResponder: {
+      /** Format: int32 */
+      left: number | string
+      /** Format: int32 */
+      top: number | string
+      /** Format: int32 */
+      width: number | string
+      /** Format: int32 */
+      height: number | string
+      /** Format: byte */
+      png: string
+    }
+    /** @enum {string} */
+    CaptionStanding: 'ready' | 'coming' | 'none'
+    CaptionWindowResponder: {
+      canvas: components['schemas']['CaptionCanvasResponder']
+      /** Format: double */
+      untilSec: number | string
+      cues: components['schemas']['CaptionCueResponder'][]
     }
     ChangePasswordRequest: {
       currentPassword?: null | string
@@ -2600,6 +2653,7 @@ export interface components {
       resumeAtSec: null | number | string
       sounds: components['schemas']['SoundTrack'][]
       chapters: components['schemas']['PlaybackChapterResponder'][]
+      captions: components['schemas']['CaptionStanding']
     }
     PlaybackPositionResponder: {
       recordingId: string
@@ -4187,6 +4241,67 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfPlaybackPlanResponder']
+        }
+      }
+    }
+  }
+  getVideoCaptions: {
+    parameters: {
+      query?: {
+        /** @description The second of the source the ten minutes of captions start at, counted from the source's own zero, as the player's position reads it. Seconds may be fractional, and asking for none starts at the beginning. */
+        from?: number
+        /** @description Which of the two files the captions are placed on, asked the way the plan was asked. The seconds of the artefact and of the recording itself differ by what the encode skipped at the head, so a caption is placed on the one being played. */
+        source?: 'artefact' | 'recording'
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCaptionWindowResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCaptionWindowResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCaptionWindowResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCaptionWindowResponder']
         }
       }
     }

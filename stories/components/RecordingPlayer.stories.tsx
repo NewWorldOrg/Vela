@@ -19,6 +19,12 @@ import {
   SUBTITLED_FRAME,
 } from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
+import type { ReadCaptions } from '@/components/recordings/read-captions'
+import type { CaptionWindow } from '@/lib/recording-captions'
+import {
+  CAPTION_CANVAS_FIXTURE,
+  CAPTION_PICTURE_FIXTURE,
+} from '@/stories/fixtures/captions'
 import { PlayerSeat } from '@/components/recordings/player-seat'
 import {
   drawCapture,
@@ -45,6 +51,7 @@ const ON_THE_FLY: PlaybackPlan = {
   mediaType: 'video/mp4',
   sounds: ['main'],
   chapters: [],
+  captions: 'none',
 }
 
 const IN_TWO_LANGUAGES: PlaybackPlan = {
@@ -466,7 +473,6 @@ export const エンコード済みが無い録画は_AirPlay_を置かない: St
     const canvas = within(canvasElement)
 
     await expect(canvas.queryByRole('button', { name: 'AirPlay' })).toBeNull()
-    await expect(canvas.getByRole('button', { name: '字幕' })).toBeVisible()
   },
 }
 
@@ -590,10 +596,7 @@ export const 効かない操作子: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    const subtitles = canvas.getByRole('button', { name: '字幕' })
-
-    await expect(subtitles).toBeDisabled()
-    await expect(subtitles).toHaveAttribute('aria-pressed', 'false')
+    await expect(canvas.queryByRole('button', { name: '字幕' })).toBeNull()
 
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
 
@@ -2517,12 +2520,12 @@ export const 押せない操作子にも名前は出る: Story = {
   args: { detail: detail('1266') },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).getByRole('button', { name: '字幕' }),
+      within(canvasElement).getByRole('button', { name: 'キャプチャ' }),
     ).toBeDisabled()
 
-    const said = await restOn(canvasElement, '字幕')
+    const said = await restOn(canvasElement, 'キャプチャ')
 
-    await expect(said).toHaveTextContent('字幕')
+    await expect(said).toHaveTextContent('キャプチャ')
     await expect(capsOn(said)).toEqual([])
     await expect(said).not.toHaveTextContent('これから')
   },
@@ -3064,6 +3067,266 @@ export const 動きを止めていると印は育たない: Story = {
       } else {
         root.dataset.motion = was
       }
+    }
+  },
+}
+
+const CAPTIONED: PlaybackPlan = { ...ON_THE_FLY, captions: 'ready' }
+
+const CAPTIONS_COMING: PlaybackPlan = { ...ON_THE_FLY, captions: 'coming' }
+
+const CAPTION_ALL_ALONG: CaptionWindow = {
+  canvas: CAPTION_CANVAS_FIXTURE,
+  untilSec: 600,
+  cues: [{ atSec: 0, picture: CAPTION_PICTURE_FIXTURE }],
+}
+
+const captionsAsked: string[] = []
+
+const readingTheCaptions: ReadCaptions = async (id, fromSec, source) => {
+  captionsAsked.push(`${id}/${source ?? '—'}`)
+
+  return { state: 'read', window: CAPTION_ALL_ALONG }
+}
+
+function captionLayer(canvasElement: HTMLElement): HTMLElement {
+  const layer = canvasElement.querySelector('[data-slot="player-captions"]')
+
+  if (!(layer instanceof HTMLElement)) {
+    throw new Error('the caption layer is not on the screen')
+  }
+
+  return layer
+}
+
+function captionSays(canvasElement: HTMLElement, state: string) {
+  return waitFor(
+    () =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        state,
+      ),
+    { timeout: 10000 },
+  )
+}
+
+const CAPTIONS_PLAYING = {
+  detail: detail('1266'),
+  plan: CAPTIONED,
+  startAt: 0,
+  pictureHref: () => DRAWN_PICTURE,
+  readCaptions: readingTheCaptions,
+}
+
+export const 字幕のある録画は字幕を出す: Story = {
+  args: CAPTIONS_PLAYING,
+  beforeEach: () => {
+    captionsAsked.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const toggle = within(canvasElement).getByRole('button', { name: '字幕' })
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await captionSays(canvasElement, 'shown')
+    await expect(captionsAsked[0]).toBe('1266/—')
+    await expect(captionLayer(canvasElement)).toHaveAttribute(
+      'aria-hidden',
+      'true',
+    )
+    await expect(
+      getComputedStyle(captionLayer(canvasElement)).pointerEvents,
+    ).toBe('none')
+
+    const said = await restOn(canvasElement, '字幕')
+
+    await expect(capsOn(said)).toEqual(['C'])
+  },
+}
+
+export const 字幕は再生しているソースの秒で引く: Story = {
+  args: {
+    ...CAPTIONS_PLAYING,
+    plan: { ...THE_RECORDING_ITSELF, captions: 'ready' },
+  },
+  beforeEach: () => {
+    captionsAsked.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await expect(captionsAsked[0]).toBe('1266/recording')
+  },
+}
+
+export const 字幕を切り替える: Story = {
+  args: CAPTIONS_PLAYING,
+  play: async ({ canvasElement }) => {
+    const toggle = within(canvasElement).getByRole('button', { name: '字幕' })
+    const player = board(canvasElement)
+
+    await captionSays(canvasElement, 'shown')
+
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await captionSays(canvasElement, 'off')
+
+    aim(player)
+    press(player, 'c')
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
+    await captionSays(canvasElement, 'shown')
+
+    press(player, 'c')
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'false'))
+  },
+}
+
+export const 字幕の無い録画は字幕を出さず_C_も取らない: Story = {
+  args: { ...CAPTIONS_PLAYING, plan: ON_THE_FLY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = board(canvasElement)
+
+    await showing(canvasElement)
+    await expect(canvas.queryByRole('button', { name: '字幕' })).toBeNull()
+    await expect(
+      canvasElement.querySelector('[data-slot="player-captions"]'),
+    ).toBeNull()
+
+    aim(player)
+
+    const key = new KeyboardEvent('keydown', {
+      key: 'c',
+      bubbles: true,
+      cancelable: true,
+    })
+
+    player.dispatchEvent(key)
+    await expect(key.defaultPrevented).toBe(false)
+  },
+}
+
+const captionsMade: { plan: PlaybackPlan; heard: Set<() => void> } = {
+  plan: CAPTIONS_COMING,
+  heard: new Set(),
+}
+
+function theCaptionsAre(plan: PlaybackPlan) {
+  captionsMade.plan = plan
+  captionsMade.heard.forEach((hear) => hear())
+}
+
+function hearingTheCaptions(hear: () => void) {
+  captionsMade.heard.add(hear)
+
+  return () => {
+    captionsMade.heard.delete(hear)
+  }
+}
+
+function SeatedWhileTheCaptionsAreMade(args: ComponentProps<typeof Player>) {
+  const plan = useSyncExternalStore(hearingTheCaptions, () => captionsMade.plan)
+
+  return <Player {...args} plan={plan} />
+}
+
+export const 字幕ができるまでは出さず_読み直した計画で出す: Story = {
+  args: { ...CAPTIONS_PLAYING, plan: CAPTIONS_COMING },
+  beforeEach: () => {
+    captionsMade.plan = CAPTIONS_COMING
+  },
+  render: (args) => <SeatedWhileTheCaptionsAreMade {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+    await expect(canvas.queryByRole('button', { name: '字幕' })).toBeNull()
+
+    theCaptionsAre(CAPTIONED)
+
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '字幕' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      ),
+    )
+    await captionSays(canvasElement, 'shown')
+  },
+}
+
+interface CaptionsLaid {
+  lit: number
+}
+
+const captionsLaid: CaptionsLaid[] = []
+
+const OVER_A_PICTURE = { width: 1440, height: 1080 }
+
+const capturingTheCaptions: TakeCapture = async ({ over }) => {
+  const plate = document.createElement('canvas')
+
+  plate.width = OVER_A_PICTURE.width
+  plate.height = OVER_A_PICTURE.height
+
+  const context = plate.getContext('2d') as CanvasRenderingContext2D
+
+  over?.(context, OVER_A_PICTURE)
+
+  const pixels = context.getImageData(0, 0, plate.width, plate.height).data
+  let lit = 0
+
+  for (let at = 3; at < pixels.length; at += 4) {
+    if (pixels[at] > 0) {
+      lit += 1
+    }
+  }
+
+  captionsLaid.push({ lit })
+
+  return 'saved'
+}
+
+export const キャプチャは画面のとおり字幕ごと: Story = {
+  args: { ...CAPTIONS_PLAYING, takeCapture: capturingTheCaptions },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await captionSays(canvasElement, 'shown')
+
+    captionsLaid.length = 0
+    await userEvent.click(canvas.getByRole('button', { name: 'キャプチャ' }))
+    await waitFor(() => expect(captionsLaid).toHaveLength(1))
+    await expect(captionsLaid[0].lit).toBeGreaterThan(0)
+  },
+}
+
+export const 字幕を消したキャプチャに字幕は入らない: Story = {
+  args: { ...CAPTIONS_PLAYING, takeCapture: capturingTheCaptions },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await captionSays(canvasElement, 'shown')
+    await userEvent.click(canvas.getByRole('button', { name: '字幕' }))
+    await captionSays(canvasElement, 'off')
+
+    captionsLaid.length = 0
+    await userEvent.click(canvas.getByRole('button', { name: 'キャプチャ' }))
+    await waitFor(() => expect(captionsLaid).toHaveLength(1))
+    await expect(captionsLaid[0].lit).toBe(0)
+  },
+}
+
+export const ピクチャーインピクチャーのあいだ字幕は描かない: Story = {
+  args: CAPTIONS_PLAYING,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    try {
+      pictureOut(canvasElement, true)
+      await captionSays(canvasElement, 'off')
+
+      pictureOut(canvasElement, false)
+      await captionSays(canvasElement, 'shown')
+    } finally {
+      pictureBack()
     }
   },
 }

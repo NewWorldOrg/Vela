@@ -22,6 +22,7 @@ const TRANSCODED: PlaybackPlan = {
   mediaType: 'video/mp4',
   sounds: ['main', 'secondary'],
   chapters: [],
+  captions: 'none',
 }
 
 const HANDED_OVER: PlaybackPlan = {

@@ -11,6 +11,10 @@ import {
   type PlaybackSource,
 } from '@/repository/playback-sources'
 import { BOTH_SOUNDS, type SoundTrack } from '@/repository/sounds'
+import {
+  CAPTION_STANDINGS,
+  type CaptionStanding,
+} from '@/repository/video-captions'
 import { whyNoTicket, type TicketWrite } from '@/repository/tickets'
 import {
   PLAYBACK_PROFILES,
@@ -47,6 +51,7 @@ export interface PlaybackPlan {
   resumeAtSec?: number
   sounds: SoundTrack[]
   chapters: PlaybackChapter[]
+  captions: CaptionStanding
 }
 
 export type PlaybackRefusal =
@@ -97,6 +102,7 @@ function toPlan(
       data.resumeAtSec == null ? undefined : Number(data.resumeAtSec),
     sounds: Array.isArray(data.sounds) ? [...data.sounds] : [],
     chapters: Array.isArray(data.chapters) ? data.chapters.map(toChapter) : [],
+    captions: shapeFor(CAPTION_STANDINGS, data.captions, 'none'),
   }
 }
 
