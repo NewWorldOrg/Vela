@@ -25,6 +25,7 @@ function programme(
     endLabel: end,
     hasSubtitles: false,
     sounds: 1,
+    audio: 'stereo',
     genreLabel: 'その他',
     ...over,
   }

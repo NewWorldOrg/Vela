@@ -53,6 +53,40 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = { args: { result: QUALITY } }
 
+export const 問題のある録画の欠け: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const rowOf = (title: string) =>
+      within(canvas.getByText(title).closest('div.border-b') as HTMLElement)
+    const packetChip = (row: ReturnType<typeof rowOf>, reading: string) =>
+      row.getByText(reading).parentElement?.nextElementSibling
+    const gapChip = (row: ReturnType<typeof rowOf>, reading: string) =>
+      row.getByText(reading).nextElementSibling
+
+    const gapOnly = rowOf('週末の旅ノート')
+
+    await expect(packetChip(gapOnly, 'ドロップ 0')).toHaveTextContent('良好')
+    await expect(gapChip(gapOnly, '欠け 2 回 · 12.4 秒')).toHaveTextContent(
+      '警告水準',
+    )
+
+    const noGap = rowOf('みなと ニュース7')
+
+    await expect(packetChip(noGap, 'ドロップ 3,842')).toHaveTextContent(
+      '視聴不可の恐れ',
+    )
+    await expect(gapChip(noGap, '欠け 0 回 · 0.0 秒')).toHaveTextContent('良好')
+
+    const chips = [
+      packetChip(noGap, 'ドロップ 3,842'),
+      gapChip(noGap, '欠け 0 回 · 0.0 秒'),
+    ].map((one) => one?.getBoundingClientRect().left)
+
+    await expect(chips[0]).toBe(chips[1])
+  },
+}
+
 export const 電波を掴めないチューナーの異常: Story = {
   args: { result: QUALITY },
   play: async ({ canvasElement }) => {

@@ -1,5 +1,7 @@
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 
+const SPLIT_DUAL_MONO = 'dualMono'
+
 export interface SoundChoice {
   of: string
   track: SoundTrack
@@ -30,6 +32,7 @@ export function liveSeat(
   serviceId: number | undefined,
   profile: string | undefined,
   sound: SoundTrack,
+  splitsDualMono: boolean,
 ): string | null {
   if (
     networkId === undefined ||
@@ -39,7 +42,9 @@ export function liveSeat(
     return null
   }
 
-  return `${networkId}:${serviceId}:${profile}:${sound}`
+  const seat = `${networkId}:${serviceId}:${profile}:${sound}`
+
+  return splitsDualMono ? `${seat}:${SPLIT_DUAL_MONO}` : seat
 }
 
 export function wireKey(seat: string | null, attempt: number): string | null {

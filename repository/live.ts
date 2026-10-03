@@ -7,6 +7,7 @@ import {
   type ChannelKind,
   type StationLogo,
 } from '@/repository/channels'
+import type { AudioMode } from '@/repository/announced'
 import type { Programme, ProgrammeItem } from '@/repository/programmes'
 import { fetchGuide, toInt } from '@/repository/programmes'
 import {
@@ -53,6 +54,7 @@ export interface LiveProgramme {
   endLabel?: string
   hasSubtitles: boolean
   sounds: number
+  audio: AudioMode
   genreLabel: string
 }
 
@@ -304,6 +306,7 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
       : undefined,
     hasSubtitles: programme.hasSubtitles,
     sounds: programme.sounds,
+    audio: programme.audio,
     genreLabel: genreDisplayOf(programme).label,
   }
 }

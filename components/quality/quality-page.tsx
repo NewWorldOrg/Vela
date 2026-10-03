@@ -388,17 +388,25 @@ export function QualityView({
                   <span className="block text-note text-ink-3">
                     {recording.where}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                    <span className="font-code text-note tabular-nums text-ink-2">
-                      {recording.drops}
+                  <span className="mt-1 grid grid-cols-[auto_auto] items-center justify-start justify-items-start gap-x-2.5 gap-y-1">
+                    <span className="flex flex-wrap items-center gap-x-2.5">
+                      <span className="font-code text-note tabular-nums text-ink-2">
+                        {recording.drops}
+                      </span>
+                      {recording.pct && (
+                        <b className="font-code text-ui tabular-nums">
+                          {recording.pct}
+                        </b>
+                      )}
                     </span>
-                    {recording.pct && (
-                      <b className="font-code text-ui tabular-nums">
-                        {recording.pct}
-                      </b>
-                    )}
                     <QualityChip level={recording.level}>
                       {QUALITY_LEVEL_LABEL[recording.level]}
+                    </QualityChip>
+                    <span className="font-code text-note tabular-nums text-ink-2">
+                      {recording.gap.reading}
+                    </span>
+                    <QualityChip level={recording.gap.level}>
+                      {QUALITY_LEVEL_LABEL[recording.gap.level]}
                     </QualityChip>
                   </span>
                 </div>

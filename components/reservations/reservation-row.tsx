@@ -7,6 +7,7 @@ import { useState, useTransition } from 'react'
 import { reservationAnchor } from '@/lib/reservations'
 import { signedOut } from '@/lib/signed-out'
 import type {
+  ConflictEntry,
   Reservation,
   ReservationRevision,
   ReservationWrite,
@@ -43,6 +44,8 @@ import {
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { Unfold } from '@/components/vela/unfold'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
+import { ConflictEntries } from '@/components/reservations/conflict-entries'
+import { DisplacedNotice } from '@/components/reservations/displaced-notice'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { cn } from '@/lib/utils'
@@ -86,23 +89,39 @@ export function ReservationRow({
   const restorable = reservation.restorable
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
+  const [displaced, setDisplaced] = useState<ConflictEntry[]>()
   const [editing, setEditing] = useState(false)
   const [removing, setRemoving] = useState(false)
+
+  const settle = (result: ReservationWrite) => {
+    setRefusal(
+      result.state === 'unauthenticated'
+        ? SIGNED_OUT
+        : result.state === 'rejected'
+          ? result.message
+          : undefined,
+    )
+    setDisplaced(result.state === 'ok' ? result.displaced : undefined)
+  }
 
   const run = (write: () => Promise<ReservationWrite>) => {
     startTransition(async () => {
       setRefusal(undefined)
-
-      const result = await write()
-
-      setRefusal(
-        result.state === 'unauthenticated'
-          ? SIGNED_OUT
-          : result.state === 'rejected'
-            ? result.message
-            : undefined,
-      )
+      setDisplaced(undefined)
+      settle(await write())
     })
+  }
+
+  const revise = async (id: string, revision: ReservationRevision) => {
+    setDisplaced(undefined)
+
+    const result = await actions.onRevise(id, revision)
+
+    if (result.state === 'ok') {
+      settle(result)
+    }
+
+    return result
   }
 
   return (
@@ -242,7 +261,7 @@ export function ReservationRow({
               }}
               open
               onOpenChange={setEditing}
-              onRevise={actions.onRevise}
+              onRevise={revise}
             />
           )}
         </TableCell>
@@ -301,22 +320,10 @@ export function ReservationRow({
                 <p className="mt-1 text-sub leading-relaxed whitespace-normal text-ink-2">
                   {reservation.conflict.body}
                 </p>
-                <div className="mt-2.5 space-y-1.5">
-                  {reservation.conflict.entries.map((entry) => (
-                    <div
-                      key={entry.title}
-                      className="flex flex-wrap items-center gap-3 rounded-md bg-surface-2 px-3 py-2 text-sub"
-                    >
-                      <span className="min-w-0 flex-1 font-medium">
-                        {entry.title}
-                      </span>
-                      <span className="font-code text-ink-2">{entry.meta}</span>
-                      <span className="text-ink-3">
-                        {entry.ruleName ?? entry.origin}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <ConflictEntries
+                  entries={reservation.conflict.entries}
+                  className="mt-2.5"
+                />
                 <ActionRow className="mt-2.5 max-[900px]:w-full max-[900px]:grid-flow-row">
                   <Button
                     variant="change"
@@ -356,11 +363,18 @@ export function ReservationRow({
           </TableCell>
         </TableRow>
       )}
-      {refusal && (
+      {(refusal || displaced) && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={8} className="border-b-0 px-3.5 pb-3">
+          <TableCell
+            colSpan={8}
+            className="border-b-0 px-3.5 pb-3 whitespace-normal"
+          >
             <span aria-live="polite">
-              <InlineAlert tone="warn">{refusal}</InlineAlert>
+              {refusal ? (
+                <InlineAlert tone="warn">{refusal}</InlineAlert>
+              ) : (
+                <DisplacedNotice entries={displaced} />
+              )}
             </span>
           </TableCell>
         </TableRow>

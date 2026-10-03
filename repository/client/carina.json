@@ -13171,6 +13171,35 @@
           }
         }
       },
+      "QualityGapVerdictResponder": {
+        "required": [
+          "standing",
+          "count",
+          "missedMs"
+        ],
+        "type": "object",
+        "properties": {
+          "standing": {
+            "$ref": "#/components/schemas/QualityStanding"
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "missedMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
       "QualityGroupSort": {
         "enum": [
           "worst",
@@ -13512,7 +13541,8 @@
           "totalPackets",
           "scrambledPackets",
           "overflows",
-          "verdicts"
+          "verdicts",
+          "gap"
         ],
         "type": "object",
         "properties": {
@@ -13605,6 +13635,9 @@
             "items": {
               "$ref": "#/components/schemas/QualityVerdictResponder"
             }
+          },
+          "gap": {
+            "$ref": "#/components/schemas/QualityGapVerdictResponder"
           }
         }
       },
@@ -16119,7 +16152,8 @@
           "reservation",
           "verdict",
           "instead",
-          "seatsLeftOut"
+          "seatsLeftOut",
+          "displaced"
         ],
         "type": "object",
         "properties": {
@@ -16149,6 +16183,12 @@
               "string"
             ],
             "format": "int32"
+          },
+          "displaced": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservationResponder"
+            }
           }
         }
       },

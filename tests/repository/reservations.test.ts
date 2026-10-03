@@ -1715,3 +1715,97 @@ test('a reservation ledger that will not be read throws what the API said', asyn
   store.listingStatus = 503
   await assert.rejects(() => listReservations({}), /予約を読めませんでした/)
 })
+
+const displacing = (displaced: unknown[]) => ({
+  ...settlementOf('secured'),
+  displaced,
+})
+
+test('raising a priority names the reservations it pushed into conflict, by programme, channel, clock and origin', async () => {
+  standing()
+  store.rules = [RULE]
+  store.settlement = displacing([
+    onNetwork('d1', 132, '午後のロードショー', {
+      standing: 'conflict',
+      window: window('2026-08-08T05:00:00Z', '2026-08-08T07:00:00Z'),
+    }),
+    onNetwork('d2', 133, '夕方の情報ワイド', {
+      standing: 'conflict',
+      origin: 'byRule',
+      ruleId: RULE.id,
+      window: window('2026-08-08T06:00:00Z', '2026-08-08T08:00:00Z'),
+    }),
+  ])
+
+  const result = await setReservationPriority('b2', 19)
+
+  assert.deepEqual(result, {
+    state: 'ok',
+    verdict: 'secured',
+    displaced: [
+      {
+        title: '午後のロードショー',
+        meta: `湾岸放送1 · ${formatClockSpan('2026-08-08T05:00:00Z', '2026-08-08T07:00:00Z')}`,
+        origin: '手動',
+        ruleName: undefined,
+      },
+      {
+        title: '夕方の情報ワイド',
+        meta: `みなと教育1 · ${formatClockSpan('2026-08-08T06:00:00Z', '2026-08-08T08:00:00Z')}`,
+        origin: 'ルール',
+        ruleName: '深夜アニメを追う',
+      },
+    ],
+  })
+})
+
+test('a write that pushed nothing into conflict says nothing about it', async () => {
+  standing()
+  store.settlement = displacing([])
+
+  const result = await restoreReservation('b2')
+
+  assert.deepEqual(result, { state: 'ok', verdict: 'secured' })
+  assert.equal(
+    sent.some((one) => one.path === '/api/services'),
+    false,
+  )
+})
+
+test('creating, revising and cancelling name what they pushed out the same way', async () => {
+  for (const pressed of [
+    () => createReservation('131-1310-40001'),
+    () => reviseReservation('b2', { marginAfterSeconds: 600 }),
+    () => cancelReservation('b2'),
+  ]) {
+    standing()
+    store.settlement = displacing([
+      onNetwork('d1', 132, '午後のロードショー', { standing: 'conflict' }),
+    ])
+
+    const result = await pressed()
+
+    assert.equal(result.state, 'ok')
+    assert.deepEqual(
+      result.state === 'ok' && result.displaced?.map((one) => one.title),
+      ['午後のロードショー'],
+    )
+  }
+})
+
+test('a pushed-out reservation is still named when the channels cannot be read', async () => {
+  standing()
+  store.services = null as unknown as unknown[]
+  store.settlement = displacing([
+    onNetwork('d1', 132, '午後のロードショー', { standing: 'conflict' }),
+  ])
+
+  const result = await setReservationPriority('b2', 19)
+
+  assert.equal(result.state, 'ok')
+  assert.equal(
+    result.state === 'ok' &&
+      result.displaced?.[0].meta.startsWith('132-1320 · '),
+    true,
+  )
+})

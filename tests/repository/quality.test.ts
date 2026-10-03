@@ -714,6 +714,95 @@ test('BS / CS の録画が無ければ衛星の面は空のまま', async () => 
   assert.equal(result.problemRecordings.length, 0)
 })
 
+const verdict = (over: Record<string, unknown> = {}) => ({
+  metric: 'packetsLost',
+  standing: 'good',
+  observed: 0,
+  applied: 'packetsLostWarning',
+  appliedValue: 0.0001,
+  provisional: false,
+  breached: null,
+  ...over,
+})
+
+const problemRecording = (over: Record<string, unknown> = {}) => ({
+  id: 'rec-a',
+  networkId: 32736,
+  serviceId: 1024,
+  kind: 'isdbT',
+  tunerDeviceId: 'adapter3.frontend0',
+  startedAt: '2026-09-07T12:00:00Z',
+  measuredUpdatedAt: '2026-09-07T13:00:00Z',
+  standing: 'warning',
+  droppedPackets: 0,
+  totalPackets: 100000,
+  scrambledPackets: 0,
+  overflows: 0,
+  verdicts: [
+    verdict(),
+    verdict({
+      metric: 'packetsLeftScrambled',
+      applied: 'packetsLeftScrambledWarning',
+    }),
+    verdict({ metric: 'overflows', applied: 'overflowsWarning' }),
+  ],
+  gap: { standing: 'good', count: 0, missedMs: 0 },
+  ...over,
+})
+
+test('欠けだけで入った録画は、パケットの指標を良好のまま、欠けを回数と秒で警告として出す', async () => {
+  standing()
+  store.recordings = [
+    problemRecording({
+      gap: { standing: 'warning', count: 2, missedMs: '12400' },
+    }),
+  ]
+
+  const [row] = (await getQuality()).problemRecordings
+
+  assert.equal(row.drops, 'ドロップ 0')
+  assert.equal(row.level, 'good')
+  assert.deepEqual(row.gap, { reading: '欠け 2 回 · 12.4 秒', level: 'warn' })
+})
+
+test('欠けの無い録画は、欠けを 0 回の良好として出し、パケットの指標はその指標の段で出す', async () => {
+  standing()
+  store.recordings = [
+    problemRecording({
+      standing: 'mayNotBeWatchable',
+      droppedPackets: 3842,
+      verdicts: [
+        verdict({
+          standing: 'mayNotBeWatchable',
+          observed: 0.00152,
+          breached: 'packetsLostUnwatchable',
+        }),
+      ],
+    }),
+  ]
+
+  const [row] = (await getQuality()).problemRecordings
+
+  assert.equal(row.drops, 'ドロップ 3,842')
+  assert.equal(row.pct, '0.152%')
+  assert.equal(row.level, 'bad')
+  assert.deepEqual(row.gap, { reading: '欠け 0 回 · 0.0 秒', level: 'good' })
+})
+
+test('問題のある録画のタイルは、欠けを含めた行の段で最も悪い語を言う', async () => {
+  standing()
+  store.recordings = [
+    problemRecording({
+      gap: { standing: 'warning', count: 1, missedMs: 3800 },
+    }),
+  ]
+
+  const tile = (await getQuality()).stats.find((one) => one.key === 'problem')
+
+  assert.equal(tile?.level, 'warn')
+  assert.equal(tile?.levelLabel, '警告水準')
+})
+
 const incident = (over: Record<string, unknown> = {}) => ({
   id: 'one',
   detectedAt: '2026-09-07T12:00:00Z',

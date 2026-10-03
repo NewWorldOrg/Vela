@@ -37,6 +37,7 @@ type ReadingResponder = components['schemas']['QualityReadingResponder']
 type ChannelResponder = components['schemas']['QualityChannelResponder']
 type TunerResponder = components['schemas']['QualityTunerResponder']
 type RecordingResponder = components['schemas']['QualityRecordingResponder']
+type GapVerdictResponder = components['schemas']['QualityGapVerdictResponder']
 type ThresholdResponder = components['schemas']['QualityThresholdResponder']
 type State = components['schemas']['QualityState']
 type Standing = components['schemas']['QualityStanding']
@@ -123,7 +124,8 @@ export interface QualityProblemRecording {
   where: string
   drops: string
   pct?: string
-  level: Extract<QualityLevel, 'warn' | 'bad'>
+  level: QualityLevel
+  gap: { reading: string; level: QualityLevel }
 }
 
 export interface QualityQuietSupply {
@@ -892,9 +894,9 @@ function statsOf(
       label: '問題のある録画',
       value: String(recordings.total),
       unit: '件',
-      level: worstProblem ? worstOfVerdicts(worstProblem) : undefined,
+      level: worstProblem ? worstOfRow(worstProblem) : undefined,
       levelLabel: worstProblem
-        ? QUALITY_LEVEL_LABEL[worstOfVerdicts(worstProblem)]
+        ? QUALITY_LEVEL_LABEL[worstOfRow(worstProblem)]
         : undefined,
     },
     {
@@ -1117,7 +1119,6 @@ function toProblemRecording(
 ): QualityProblemRecording {
   const id = `${toInt(one.networkId)}-${toInt(one.serviceId)}`
   const channel = known.find((each) => each.id === id)
-  const level = worstOfVerdicts(one)
   const breach = one.verdicts.find(
     (each) =>
       each.standing === 'mayNotBeWatchable' || each.standing === 'warning',
@@ -1145,7 +1146,17 @@ function toProblemRecording(
       metric === 'overflows' || observed === undefined
         ? undefined
         : `${sharePercent(observed)}%`,
-    level: level === 'bad' ? 'bad' : 'warn',
+    level: worstOfPackets(one),
+    gap: gapOf(one.gap),
+  }
+}
+
+function gapOf(gap: GapVerdictResponder): QualityProblemRecording['gap'] {
+  const seconds = (toInt(gap.missedMs) / 1000).toFixed(1)
+
+  return {
+    reading: `欠け ${toInt(gap.count)} 回 · ${seconds} 秒`,
+    level: shapeFor(LEVEL_OF_STANDING, gap.standing, 'unsupported'),
   }
 }
 
@@ -1183,13 +1194,21 @@ function levelOfTally(reading: TallyResponder): QualityLevel {
   return toInt(reading.mayNotBeWatchable) > 0 ? 'bad' : 'warn'
 }
 
-function worstOfVerdicts(one: RecordingResponder): QualityLevel {
+function worstOfRow(one: RecordingResponder): QualityLevel {
   return worst([
     shapeFor(LEVEL_OF_STANDING, one.standing, 'unsupported'),
-    ...one.verdicts.map((each) =>
-      shapeFor(LEVEL_OF_STANDING, each.standing, 'unsupported'),
-    ),
+    ...packetLevelsOf(one),
   ])
+}
+
+function worstOfPackets(one: RecordingResponder): QualityLevel {
+  return worst(packetLevelsOf(one))
+}
+
+function packetLevelsOf(one: RecordingResponder): QualityLevel[] {
+  return one.verdicts.map((each) =>
+    shapeFor(LEVEL_OF_STANDING, each.standing, 'unsupported'),
+  )
 }
 
 function worst(levels: QualityLevel[]): QualityLevel {

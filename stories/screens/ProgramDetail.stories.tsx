@@ -347,6 +347,65 @@ export const 予約済み: Story = {
   },
 }
 
+const PUSHED_OUT = [
+  {
+    title: '夜ふかしラジオ倶楽部',
+    meta: '湾岸放送1 · 22:30 – 23:30',
+    origin: '手動',
+  },
+]
+
+export const 予約して競合になった予約を示す: Story = {
+  args: {
+    detail: standard,
+    onReserve: async (): Promise<ReservationWrite> => ({
+      state: 'ok',
+      verdict: 'secured',
+      displaced: PUSHED_OUT,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.queryByText('次の予約が競合になりました。')).toBeNull()
+    await userEvent.click(canvas.getByRole('button', { name: '録画予約' }))
+
+    const notice = (
+      await canvas.findByText('次の予約が競合になりました。')
+    ).closest('[data-slot="displaced"]') as HTMLElement
+
+    await expect(notice).toHaveTextContent('夜ふかしラジオ倶楽部')
+    await expect(notice).toHaveTextContent('湾岸放送1 · 22:30 – 23:30')
+  },
+}
+
+export const 予約済みの編集で競合になった予約を示す: Story = {
+  args: {
+    detail: booked,
+    onRevise: fn(async (): Promise<ReservationWrite> => ({
+      state: 'ok',
+      verdict: 'secured',
+      displaced: PUSHED_OUT,
+    })),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '予約を編集' }))
+    const dialog = within(await screen.findByRole('dialog'))
+
+    await userEvent.click(
+      dialog.getByRole('switch', { name: 'エンコードする' }),
+    )
+    await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
+
+    await expect(
+      await canvas.findByText('次の予約が競合になりました。'),
+    ).toBeVisible()
+    await expect(canvas.getByText('確保済み')).toBeVisible()
+  },
+}
+
 export const 予約済みから編集を開く: Story = {
   args: { detail: booked },
   play: async ({ canvasElement }) => {

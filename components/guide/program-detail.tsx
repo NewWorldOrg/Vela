@@ -25,18 +25,13 @@ import { mainTitleOf } from '@/lib/program-title'
 import { newRuleHref, seriesTermsOf } from '@/lib/rules'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  ListIcon,
-  LiveIcon,
-  RecordIcon,
-  RelayIcon,
-} from '@/components/vela/icons'
+import { LiveIcon, RelayIcon } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import {
   ProgramDescription,
   ProgramExtended,
 } from '@/components/guide/program-description'
-import { ReserveButton } from '@/components/guide/reserve-button'
+import { ReservationArea } from '@/components/guide/reservation-area'
 import { InlineAlert } from '@/components/vela/banner'
 import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 
@@ -185,33 +180,12 @@ export function ProgramDetailBody({
             </Button>
           </div>
         )}
-        {reservation ?? (
-          <>
-            <div className="flex flex-wrap gap-[calc(9rem/16)]">
-              <ReserveButton programmeId={program.id} onReserve={onReserve}>
-                <RecordIcon />
-                録画予約
-              </ReserveButton>
-              {series ? (
-                <Button variant="ghost" asChild>
-                  <Link href={newRuleHref(series)}>
-                    <ListIcon />
-                    シリーズで予約
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  disabled
-                  title="番組名が読み取れないため、シリーズのルールにできません。"
-                >
-                  <ListIcon />
-                  シリーズで予約
-                </Button>
-              )}
-            </div>
-          </>
-        )}
+        <ReservationArea
+          programmeId={program.id}
+          booked={reservation}
+          seriesHref={series ? newRuleHref(series) : undefined}
+          onReserve={onReserve}
+        />
       </div>
     </div>
   )

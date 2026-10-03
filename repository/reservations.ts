@@ -21,6 +21,8 @@ import { ruleNames } from '@/repository/rules'
 import { whatItSaid } from '@/repository/said'
 
 type ReservationResponder = components['schemas']['ReservationResponder']
+type SettlementResponder =
+  components['schemas']['ReservationSettlementResponder']
 type DivergenceResponder =
   components['schemas']['ReservationDivergenceResponder']
 type DivergedField = components['schemas']['DivergedField']
@@ -99,7 +101,7 @@ export interface ReservationRevision {
 }
 
 export type ReservationWrite =
-  | { state: 'ok'; verdict?: AllocationVerdict }
+  | { state: 'ok'; verdict?: AllocationVerdict; displaced?: ConflictEntry[] }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string; movedTo?: string }
 
@@ -263,7 +265,7 @@ export async function createReservation(
 
   return toWrite(
     response,
-    data?.data?.verdict ?? undefined,
+    data?.data,
     {
       404: 'この番組は番組表にもう無いため、予約できませんでした。番組表を読み直してください。',
       409: 'この番組はすでに予約されています。取り消した予約も残るため、作り直すのではなく予約一覧から復元してください。',
@@ -302,7 +304,7 @@ export async function cancelReservation(id: string): Promise<ReservationWrite> {
 
   return toWrite(
     response,
-    data?.data?.verdict ?? undefined,
+    data?.data,
     {
       404: 'この予約は残っていないため、取り消せませんでした。',
       409: 'この予約はいま録画中か、すでに終わっているため、取り消せませんでした。最新の状態を読み直してください。',
@@ -321,7 +323,7 @@ export async function restoreReservation(
 
   return toWrite(
     response,
-    data?.data?.verdict ?? undefined,
+    data?.data,
     {
       404: 'この予約は残っていないため、復元できませんでした。',
       409: 'この予約は取り消されていないため、復元できませんでした。最新の状態を読み直してください。',
@@ -341,7 +343,7 @@ export async function setReservationPriority(
 
   return toWrite(
     response,
-    data?.data?.verdict ?? undefined,
+    data?.data,
     {
       404: 'この予約は残っていないため、優先度を変えられませんでした。',
       409: 'この予約はいま録画中か、すでに終わっているため、優先度を変えられませんでした。最新の状態を読み直してください。',
@@ -361,7 +363,7 @@ export async function reviseReservation(
 
   return toWrite(
     response,
-    data?.data?.verdict ?? undefined,
+    data?.data,
     {
       400: '入力された値がこの予約に使える範囲を外れているため、変えられませんでした。',
       404: 'この予約は残っていないため、変えられませんでした。',
@@ -437,12 +439,12 @@ async function overEach(
   return { state: 'ok', done }
 }
 
-function toWrite(
+async function toWrite(
   response: Response,
-  verdict: AllocationVerdict | undefined,
+  settled: SettlementResponder | null | undefined,
   refusals: Partial<Record<number, string>>,
   fallback: string,
-): ReservationWrite {
+): Promise<ReservationWrite> {
   if (response.status === 401) {
     return { state: 'unauthenticated' }
   }
@@ -457,7 +459,27 @@ function toWrite(
     return { state: 'rejected', message: couldNot(fallback) }
   }
 
-  return { state: 'ok', verdict }
+  const verdict = settled?.verdict ?? undefined
+  const displaced = await displacedOf(settled?.displaced ?? [])
+
+  return displaced
+    ? { state: 'ok', verdict, displaced }
+    : { state: 'ok', verdict }
+}
+
+async function displacedOf(
+  displaced: ReservationResponder[],
+): Promise<ConflictEntry[] | undefined> {
+  if (displaced.length === 0) {
+    return undefined
+  }
+
+  const [known, rules] = await Promise.all([
+    fetchServiceChannels().catch(() => []),
+    ruleNames().catch(() => new Map<string, string>()),
+  ])
+
+  return displaced.map((one) => toConflictEntry(one, known, rules))
 }
 
 async function fetchEveryReservation(): Promise<{

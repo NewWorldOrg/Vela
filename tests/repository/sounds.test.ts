@@ -9,6 +9,8 @@ import {
   MAIN_SOUND,
   soundLabel,
   soundsAnnounced,
+  soundsOnAir,
+  splitsDualMono,
   type SoundTrack,
 } from '@/repository/sounds'
 import { videoPictureHref } from '@/repository/video-paths'
@@ -65,6 +67,23 @@ test('a programme that announced no sound at all offers none', () => {
 
 test('a count larger than the sounds this build names offers only the ones it names', () => {
   assert.deepEqual([...soundsAnnounced(5)], [...BOTH_SOUNDS])
+})
+
+test('a bilingual programme on one sound offers both sides of it', () => {
+  assert.deepEqual([...soundsOnAir(1, 'dualMono')], [...BOTH_SOUNDS])
+  assert.equal(splitsDualMono(1, 'dualMono'), true)
+})
+
+test('a programme on one sound that is not bilingual offers nothing to choose between', () => {
+  for (const audio of ['mono', 'stereo', 'surround', 'undetermined'] as const) {
+    assert.deepEqual([...soundsOnAir(1, audio)], [MAIN_SOUND])
+    assert.equal(splitsDualMono(1, audio), false)
+  }
+})
+
+test('a bilingual programme that also carries a second sound is carried as it comes', () => {
+  assert.deepEqual([...soundsOnAir(2, 'dualMono')], [...BOTH_SOUNDS])
+  assert.equal(splitsDualMono(2, 'dualMono'), false)
 })
 
 test('each sound is named in Japanese', () => {
