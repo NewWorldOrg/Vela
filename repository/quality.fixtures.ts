@@ -437,7 +437,7 @@ export const QUALITY: QualityResult = {
     {
       key: 'problem',
       label: '問題のある録画',
-      value: '2',
+      value: '3',
       unit: '件',
       level: 'bad',
       levelLabel: '視聴不可の恐れ',
@@ -577,6 +577,7 @@ export const QUALITY: QualityResult = {
       drops: 'ドロップ 3,842',
       pct: '0.152%',
       level: 'bad',
+      gap: { reading: '欠け 0 回 · 0.0 秒', level: 'good' },
     },
     {
       id: 'rec-2',
@@ -585,6 +586,15 @@ export const QUALITY: QualityResult = {
       drops: 'ドロップ 812',
       pct: '0.031%',
       level: 'warn',
+      gap: { reading: '欠け 1 回 · 3.8 秒', level: 'warn' },
+    },
+    {
+      id: 'rec-3',
+      title: '週末の旅ノート',
+      where: 'みなと教育1 · 08/10 19:30',
+      drops: 'ドロップ 0',
+      level: 'good',
+      gap: { reading: '欠け 2 回 · 12.4 秒', level: 'warn' },
     },
   ],
   supplies: {

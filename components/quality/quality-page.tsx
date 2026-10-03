@@ -401,6 +401,14 @@ export function QualityView({
                       {QUALITY_LEVEL_LABEL[recording.level]}
                     </QualityChip>
                   </span>
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                    <span className="font-code text-note tabular-nums text-ink-2">
+                      {recording.gap.reading}
+                    </span>
+                    <QualityChip level={recording.gap.level}>
+                      {QUALITY_LEVEL_LABEL[recording.gap.level]}
+                    </QualityChip>
+                  </span>
                 </div>
               ))}
             </div>

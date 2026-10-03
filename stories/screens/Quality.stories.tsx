@@ -53,6 +53,33 @@ type Story = StoryObj<typeof meta>
 
 export const 通常: Story = { args: { result: QUALITY } }
 
+export const 問題のある録画の欠け: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const rowOf = (title: string) =>
+      canvas.getByText(title).closest('div.border-b') as HTMLElement
+
+    const gapOnly = within(rowOf('週末の旅ノート'))
+
+    await expect(
+      gapOnly.getByText('ドロップ 0').parentElement,
+    ).toHaveTextContent('良好')
+    await expect(
+      gapOnly.getByText('欠け 2 回 · 12.4 秒').parentElement,
+    ).toHaveTextContent('警告水準')
+
+    const noGap = within(rowOf('みなと ニュース7'))
+
+    await expect(
+      noGap.getByText('欠け 0 回 · 0.0 秒').parentElement,
+    ).toHaveTextContent('良好')
+    await expect(
+      noGap.getByText('ドロップ 3,842').parentElement,
+    ).toHaveTextContent('視聴不可の恐れ')
+  },
+}
+
 export const 電波を掴めないチューナーの異常: Story = {
   args: { result: QUALITY },
   play: async ({ canvasElement }) => {
