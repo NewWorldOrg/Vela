@@ -226,6 +226,7 @@ export function Player({
   const [position, setPosition] = useState(startAt ?? 0)
   const onTheFly = plan.transcodes
   const [streamed, setStreamed] = useState(opened.transcodes)
+  const [openings, setOpenings] = useState(0)
   const cut = useRef(false)
   const [source, setSource] = useState(() =>
     opensPlaying
@@ -481,6 +482,7 @@ export function Player({
     standsAs({ position: second, profile: quality, sound: carrying })
     setPhase('waiting')
     setStreamed(under.transcodes)
+    setOpenings((were) => were + 1)
     setSource(
       pictureHref(
         d.id,
@@ -550,7 +552,7 @@ export function Player({
     })
 
     return () => carrying.close()
-  }, [source, streamed, faceUp, feedRecording])
+  }, [source, streamed, faceUp, feedRecording, openings])
 
   const answer = (what: PlayerBezel) =>
     setBezel((last) => ({ ...what, nth: (last?.nth ?? 0) + 1 }))

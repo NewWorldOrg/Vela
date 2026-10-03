@@ -233,6 +233,16 @@ const fed: string[] = []
 
 const feeding: { events?: RecordingFeedEvents } = {}
 
+function naming(
+  id: string,
+  from: number,
+  profile?: PlaybackProfile,
+  sound?: SoundTrack,
+  source?: PlaybackSource,
+) {
+  return videoPictureHref(id, from, profile, sound, source)
+}
+
 const keptForTheFeed: FeedRecording = (_video, href, events) => {
   fed.push(href)
   feeding.events = events
@@ -550,16 +560,16 @@ export const 止めているあいだに受け取りが切れたら_次の再生
     args: {
       detail: detail('1266'),
       startAt: 600,
-      pictureHref: carryingTheSource,
+      pictureHref: naming,
       feedRecording: keptForTheFeed,
     },
     play: async ({ canvasElement }) => {
       const canvas = within(canvasElement)
+      const first = videoPictureHref('1266', 600, '1080p60')
 
-      await waitFor(() => expect(fed.at(-1)).toBe(handed.at(-1)))
+      await waitFor(() => expect(fed.at(-1)).toBe(first))
 
       const opened = fed.length
-      const first = asked.at(-1)
 
       feeding.events?.onCut()
       await expect(fed.length).toBe(opened)
@@ -568,7 +578,7 @@ export const 止めているあいだに受け取りが切れたら_次の再生
         canvas.getAllByRole('button', { name: '再生' }).at(-1) as HTMLElement,
       )
       await waitFor(() => expect(fed.length).toBe(opened + 1))
-      await expect(asked.at(-1)).toBe(first)
+      await expect(fed.at(-1)).toBe(first)
     },
   }
 
@@ -2222,7 +2232,7 @@ export const 立て直しのあいだ映っていたコマが残る: Story = {
     await waitFor(() => expect(held).toHaveAttribute('data-holding', 'true'), {
       timeout: 5000,
     })
-    await expect(picture.readyState).toBe(0)
+    await waitFor(() => expect(picture.readyState).toBe(0))
     await expect(held.width).toBe(640)
     await expect(held.height).toBe(360)
 

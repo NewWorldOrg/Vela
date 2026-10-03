@@ -213,6 +213,10 @@ class RecordingFeed implements Carrying {
   }
 
   private appended(): void {
+    if (this.settled) {
+      return
+    }
+
     const start = this.feed.start()
 
     if (start !== undefined && this.video.currentTime < start) {
