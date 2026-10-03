@@ -528,7 +528,7 @@ export async function getQuality(
     recordings,
     thresholds,
     known,
-    names,
+    carried,
     supplies,
     anomalies,
     trend,
@@ -546,6 +546,7 @@ export async function getQuality(
   ])
 
   const drawn = channels.items.map((one) => toChannel(one, known, thresholds))
+  const names = keyedAsTheLibrarySpellsIt(carried)
   const followed = subjectQuery(following)
 
   return {
@@ -582,7 +583,7 @@ export async function getQuality(
     channels: drawn.filter((one) => one.terrestrial).map(withoutKind),
     satellites: drawn.filter((one) => !one.terrestrial).map(withoutKind),
     tuners: tuners.items.map(toTuner),
-    problemRecordings: recordings.items.map((one) =>
+    problemRecordings: recordings.items.flatMap((one) =>
       toProblemRecording(one, known, names),
     ),
     supplies: {
@@ -832,7 +833,7 @@ function subjectOf(
   }
 
   if (one.subjectKind === 'recording') {
-    return names.get(one.subjectKey)?.title || named
+    return names.get(asTheLibrarySpellsIt(one.subjectKey))?.title || named
   }
 
   if (one.subjectKind === 'channel') {
@@ -1112,11 +1113,30 @@ function signalCell(
   }
 }
 
+function asTheLibrarySpellsIt(recordingId: string): string {
+  return recordingId.replace(/-/g, '').toLowerCase()
+}
+
+function keyedAsTheLibrarySpellsIt(
+  names: ReadonlyMap<string, RecordingName>,
+): ReadonlyMap<string, RecordingName> {
+  return new Map(
+    [...names].map(([id, name]) => [asTheLibrarySpellsIt(id), name]),
+  )
+}
+
 function toProblemRecording(
   one: RecordingResponder,
   known: GuideChannel[],
   names: ReadonlyMap<string, RecordingName>,
-): QualityProblemRecording {
+): QualityProblemRecording[] {
+  const recordingId = asTheLibrarySpellsIt(one.id)
+  const named = names.get(recordingId)
+
+  if (!named) {
+    return []
+  }
+
   const id = `${toInt(one.networkId)}-${toInt(one.serviceId)}`
   const channel = known.find((each) => each.id === id)
   const breach = one.verdicts.find(
@@ -1134,21 +1154,23 @@ function toProblemRecording(
   const observed =
     breach?.observed == null ? undefined : toRatio(breach.observed)
 
-  return {
-    id: one.id,
-    title: names.get(one.id)?.title ?? '',
-    where: `${channel?.name || id} · ${formatMoment(one.startedAt)}`,
-    drops:
-      packets === undefined
-        ? wordFor(METRIC_DROPS, metric)
-        : `${wordFor(METRIC_DROPS, metric)} ${grouped(packets)}`,
-    pct:
-      metric === 'overflows' || observed === undefined
-        ? undefined
-        : `${sharePercent(observed)}%`,
-    level: worstOfPackets(one),
-    gap: gapOf(one.gap),
-  }
+  return [
+    {
+      id: recordingId,
+      title: named.title,
+      where: `${channel?.name || id} · ${formatMoment(one.startedAt)}`,
+      drops:
+        packets === undefined
+          ? wordFor(METRIC_DROPS, metric)
+          : `${wordFor(METRIC_DROPS, metric)} ${grouped(packets)}`,
+      pct:
+        metric === 'overflows' || observed === undefined
+          ? undefined
+          : `${sharePercent(observed)}%`,
+      level: worstOfPackets(one),
+      gap: gapOf(one.gap),
+    },
+  ]
 }
 
 function gapOf(gap: GapVerdictResponder): QualityProblemRecording['gap'] {
