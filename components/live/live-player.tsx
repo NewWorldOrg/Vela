@@ -60,7 +60,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
-import { switchFullscreen, useFullscreen } from '@/hooks/useFullscreen'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
@@ -159,7 +159,7 @@ export function LivePlayer({
   const captions = useRef<CaptionLayer | null>(null)
   const [captioned, setCaptioned] = useState(true)
   const [shell, setShell] = useState<HTMLElement | null>(null)
-  const full = useFullscreen(shell)
+  const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
@@ -593,8 +593,6 @@ export function LivePlayer({
     }
   }
 
-  const toggleFullscreen = () => switchFullscreen(shell, video.current)
-
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const command = playerCommand(event, {
       seeks: false,
@@ -645,6 +643,7 @@ export function LivePlayer({
   return (
     <section
       ref={setShell}
+      data-fill={filled ? 'true' : undefined}
       tabIndex={-1}
       data-slot="live-player"
       data-phase={phase ?? 'idle'}
@@ -660,14 +659,14 @@ export function LivePlayer({
         className={cn(
           'relative flex items-center justify-center',
           PLAYER_FACE,
-          '[:fullscreen_&]:aspect-auto [:fullscreen_&]:max-h-none [:fullscreen_&]:min-h-0 [:fullscreen_&]:flex-1',
+          'under-full:aspect-auto under-full:max-h-none under-full:min-h-0 under-full:flex-1',
         )}
       >
         <div
           className={cn(
             'relative',
             PLAYER_PICTURE_BOX,
-            '[:fullscreen_&]:max-w-none',
+            'under-full:max-w-none',
           )}
         >
           <video

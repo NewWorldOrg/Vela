@@ -2,7 +2,9 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  holdStill,
   isInFullscreen,
+  leavesTheFill,
   subscribeToFullscreen,
   switchFullscreen,
   type FullscreenDocument,
@@ -85,89 +87,107 @@ class Shell {
   }
 }
 
-class Video {
-  entered = 0
-  readonly refuses: boolean
+class TheWindow {
+  filled = false
+  told: boolean[] = []
 
-  constructor(refuses = false) {
-    this.refuses = refuses
-  }
-
-  webkitEnterFullscreen(): void {
-    if (this.refuses) {
-      throw new DOMException('not allowed', 'InvalidStateError')
-    }
-
-    this.entered += 1
+  readonly fill = (filled: boolean): void => {
+    this.filled = filled
+    this.told.push(filled)
   }
 }
 
 const settled = () => new Promise((done) => setTimeout(done, 0))
 
-test('the player face goes fullscreen when the page can take it, and the picture is left alone', async () => {
+test('the player goes fullscreen when the page can take it, and the window is left alone', async () => {
   const page = new Page()
   const shell = new Shell('take')
-  const video = new Video()
+  const view = new TheWindow()
 
-  switchFullscreen(shell, video, page)
+  switchFullscreen(shell, false, view.fill, page)
   await settled()
 
   assert.equal(shell.asked, 1)
-  assert.equal(video.entered, 0)
+  assert.deepEqual(view.told, [])
 })
 
 test('while something is fullscreen, the switch leaves it instead', () => {
   const page = new Page()
   const shell = new Shell('take')
-  const video = new Video()
+  const view = new TheWindow()
 
   page.fullscreenElement = shell
-  switchFullscreen(shell, video, page)
+  switchFullscreen(shell, false, view.fill, page)
 
   assert.equal(page.left, 1)
   assert.equal(shell.asked, 0)
-  assert.equal(video.entered, 0)
+  assert.deepEqual(view.told, [])
 })
 
-test('a page with no element fullscreen hands the picture its own, in the same press', () => {
-  const page = new Page()
-  const video = new Video()
-
-  switchFullscreen({}, video, page)
-
-  assert.equal(video.entered, 1)
-})
-
-test('a page that says element fullscreen is not allowed hands the picture its own, in the same press', () => {
+test('while the player fills the window, the switch gives the window back', () => {
   const page = new Page()
   const shell = new Shell('take')
-  const video = new Video()
+  const view = new TheWindow()
 
-  page.fullscreenEnabled = false
-  switchFullscreen(shell, video, page)
+  switchFullscreen(shell, true, view.fill, page)
 
   assert.equal(shell.asked, 0)
-  assert.equal(video.entered, 1)
+  assert.deepEqual(view.told, [false])
 })
 
-test('a refused element fullscreen still tries the picture its own', async () => {
+test('a page with no element fullscreen fills the window, in the same press', () => {
+  const page = new Page()
+  const view = new TheWindow()
+
+  switchFullscreen({}, false, view.fill, page)
+
+  assert.deepEqual(view.told, [true])
+})
+
+test('a page that says element fullscreen is not allowed fills the window, in the same press', () => {
+  const page = new Page()
+  const shell = new Shell('take')
+  const view = new TheWindow()
+
+  page.fullscreenEnabled = false
+  switchFullscreen(shell, false, view.fill, page)
+
+  assert.equal(shell.asked, 0)
+  assert.deepEqual(view.told, [true])
+})
+
+test('a refused element fullscreen fills the window instead', async () => {
   const page = new Page()
   const shell = new Shell('refuse')
-  const video = new Video()
+  const view = new TheWindow()
 
-  switchFullscreen(shell, video, page)
+  switchFullscreen(shell, false, view.fill, page)
   await settled()
 
   assert.equal(shell.asked, 1)
-  assert.equal(video.entered, 1)
+  assert.deepEqual(view.told, [true])
 })
 
-test('with neither way there, the press does nothing and throws nothing', async () => {
+test('with no player on the page yet, the press does nothing and throws nothing', () => {
   const page = new Page()
+  const view = new TheWindow()
 
-  assert.doesNotThrow(() => switchFullscreen(null, null, page))
-  assert.doesNotThrow(() => switchFullscreen({}, {}, page))
-  assert.doesNotThrow(() => switchFullscreen({}, new Video(true), page))
-  switchFullscreen(new Shell('refuse'), new Video(true), page)
-  await settled()
+  assert.doesNotThrow(() => switchFullscreen(null, false, view.fill, page))
+  assert.deepEqual(view.told, [])
+})
+
+test('the page stops scrolling while held, and scrolls as it did once let go', () => {
+  const page = { style: { overflow: 'auto' } }
+  const letGo = holdStill(page)
+
+  assert.equal(page.style.overflow, 'hidden')
+
+  letGo()
+  assert.equal(page.style.overflow, 'auto')
+})
+
+test('Escape leaves the filled window, unless something on the page already took it', () => {
+  assert.equal(leavesTheFill({ key: 'Escape', defaultPrevented: false }), true)
+  assert.equal(leavesTheFill({ key: 'Escape', defaultPrevented: true }), false)
+  assert.equal(leavesTheFill({ key: 'f', defaultPrevented: false }), false)
 })

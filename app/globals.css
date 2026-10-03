@@ -12,6 +12,26 @@
   }
 }
 
+@custom-variant full {
+  &:fullscreen {
+    @slot;
+  }
+
+  &[data-fill] {
+    @slot;
+  }
+}
+
+@custom-variant under-full {
+  :fullscreen & {
+    @slot;
+  }
+
+  [data-fill] & {
+    @slot;
+  }
+}
+
 @custom-variant dark {
   &:where(.dark, .dark *) {
     @slot;

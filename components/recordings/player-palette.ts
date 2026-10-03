@@ -41,7 +41,8 @@ export const PLAYER_COLUMN =
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
   'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl outline-none',
-  '[&:fullscreen]:flex [&:fullscreen]:max-w-none [&:fullscreen]:flex-col [&:fullscreen]:rounded-none [&:fullscreen]:border-0 [&:fullscreen]:shadow-none',
+  'full:flex full:max-w-none full:flex-col full:rounded-none full:border-0 full:shadow-none',
+  'data-[fill]:fixed data-[fill]:inset-0 data-[fill]:z-[60] data-[fill]:m-0 data-[fill]:pt-[env(safe-area-inset-top)] data-[fill]:pr-[env(safe-area-inset-right)] data-[fill]:pb-[env(safe-area-inset-bottom)] data-[fill]:pl-[env(safe-area-inset-left)]',
 )
 
 export const PLAYER_FACE = 'aspect-video w-full'
