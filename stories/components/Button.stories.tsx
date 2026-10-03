@@ -37,7 +37,7 @@ const meta = {
     },
     size: {
       control: 'select',
-      options: ['default', 'sm', 'lg', 'icon', 'icon-sm'],
+      options: ['default', 'sm', 'lg', 'icon'],
     },
     disabled: { control: 'boolean' },
   },
@@ -223,11 +223,9 @@ export const IconOnly: Story = {
   render: () => (
     <Surface>
       <div className="flex flex-wrap items-center gap-5">
-        {(['icon', 'icon-sm'] as const).map((size) => (
-          <Button key={size} size={size} aria-label="予約を追加">
-            <PlusIcon />
-          </Button>
-        ))}
+        <Button size="icon" aria-label="予約を追加">
+          <PlusIcon />
+        </Button>
       </div>
     </Surface>
   ),

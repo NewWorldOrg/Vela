@@ -1,7 +1,6 @@
 'use client'
 
 import type { ComponentType } from 'react'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/components/theme/ThemeProvider'
+import { IconButton } from '@/components/vela/icon-button'
 import type { ThemePreference } from '@/lib/theme'
 import {
   CheckIcon,
@@ -47,14 +47,14 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
+        <IconButton
+          variant="quiet"
+          size="sm"
           aria-label="テーマ"
           className={className}
         >
-          <TriggerIcon className="size-4" />
-        </Button>
+          <TriggerIcon />
+        </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuLabel>テーマ</DropdownMenuLabel>
