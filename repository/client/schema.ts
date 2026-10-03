@@ -2734,6 +2734,13 @@ export interface components {
       kind: null | components['schemas']['TuneSystem']
       measures: components['schemas']['QualityMeasureResponder'][]
     }
+    QualityGapVerdictResponder: {
+      standing: components['schemas']['QualityStanding']
+      /** Format: int32 */
+      count: number | string
+      /** Format: int64 */
+      missedMs: number | string
+    }
     /** @enum {null|string} */
     QualityGroupSort: 'worst' | 'unmeasured' | 'subjects' | 'identity' | null
     QualityIncidentListResponder: {
@@ -2832,6 +2839,7 @@ export interface components {
       /** Format: int64 */
       overflows: number | string
       verdicts: components['schemas']['QualityVerdictResponder'][]
+      gap: components['schemas']['QualityGapVerdictResponder']
     }
     /** @enum {null|string} */
     QualityRecordingSort: 'worst' | 'startedAt' | null
@@ -3486,6 +3494,7 @@ export interface components {
       instead: components['schemas']['ReservationResponder'][]
       /** Format: int32 */
       seatsLeftOut: number | string
+      displaced: components['schemas']['ReservationResponder'][]
     }
     /** @enum {string} */
     ReservationSort: 'startAt' | 'priority'
