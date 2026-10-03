@@ -57,7 +57,8 @@
             "schema": {
               "enum": [
                 "main",
-                "secondary"
+                "secondary",
+                "third"
               ],
               "type": "string",
               "default": "main"
@@ -17948,7 +17949,8 @@
       "SoundTrack": {
         "enum": [
           "main",
-          "secondary"
+          "secondary",
+          "third"
         ],
         "type": "string"
       },

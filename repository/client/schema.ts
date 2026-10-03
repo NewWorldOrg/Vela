@@ -3934,7 +3934,7 @@ export interface components {
       reach: components['schemas']['OidcReach']
     }
     /** @enum {string} */
-    SoundTrack: 'main' | 'secondary'
+    SoundTrack: 'main' | 'secondary' | 'third'
     StartScanRequest: {
       systems?: null | components['schemas']['TuneSystem'][]
       channels?: null | components['schemas']['TuningParametersRequest'][]
@@ -4206,7 +4206,7 @@ export interface operations {
         /** @description The profile the picture is encoded in while it is transcoded as it plays. Asking for none opens at what this machine encodes at, which depends on the encoder it has and so has no fixed default here; GET /api/live/profiles names it, marked as the unasked one, and the answer is the same for a recording as it is for a live channel. */
         profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
         /** @description The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with. */
-        sound?: 'main' | 'secondary'
+        sound?: 'main' | 'secondary' | 'third'
         /** @description Which of the two files a recording can be played from is played. Asking for the artefact hands over the one encoded of this recording where there is one a browser plays, and transcodes the recording itself while playing where there is not; asking for none does the same, as it always did. Asking for the recording transcodes the recording itself while playing even where an artefact was made of it, and is refused where the recording is no longer on the disk rather than quietly handing over the artefact. Either way the transcoder is shared with live channels, so a recording asked for as it was recorded takes one of the few pictures this machine transcodes at once. The plan names the one it plays and the other one it could be asked for. */
         source?: 'artefact' | 'recording'
       }

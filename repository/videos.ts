@@ -10,7 +10,7 @@ import {
   sourceThisBuildKnows,
   type PlaybackSource,
 } from '@/repository/playback-sources'
-import { BOTH_SOUNDS, type SoundTrack } from '@/repository/sounds'
+import { EVERY_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   CAPTION_STANDINGS,
   type CaptionStanding,
@@ -112,7 +112,7 @@ export const getPlaybackPlan = cache(
     sound?: SoundTrack,
     source?: PlaybackSource,
   ): Promise<PlaybackRead> => {
-    if (sound !== undefined && !BOTH_SOUNDS.includes(sound)) {
+    if (sound !== undefined && !EVERY_SOUND.includes(sound)) {
       return { state: 'refused', refusal: 'nothingToPlay' }
     }
 

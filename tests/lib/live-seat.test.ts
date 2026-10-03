@@ -27,6 +27,11 @@ const ON_THE_SECOND_SOUND: SoundChoice = {
   track: 'secondary',
 }
 
+const ON_THE_THIRD_SOUND: SoundChoice = {
+  of: A_CHANNEL,
+  track: 'third',
+}
+
 function playing(
   announces: number,
   chosen: SoundChoice | null,
@@ -145,7 +150,44 @@ test('the seat does not move between two programmes carried the same way', () =>
   )
   assert.equal(playing(1, null, 'mono').key, playing(1, null, 'stereo').key)
   assert.equal(
-    playing(2, ON_THE_SECOND_SOUND, 'dualMono').key,
     playing(2, ON_THE_SECOND_SOUND, 'stereo').key,
+    playing(2, ON_THE_SECOND_SOUND, 'surround').key,
   )
+})
+
+test('a bilingual programme that also carries a second sound offers the third sound, and the seat says the sound is split', () => {
+  const third = playing(2, ON_THE_THIRD_SOUND, 'dualMono')
+
+  assert.equal(third.standing, ON_THE_THIRD_SOUND)
+  assert.equal(third.seat, `1:2:${A_PROFILE}:third:dualMono`)
+})
+
+test('the seat moves once when two sounds of their own become a bilingual main sound beside a second one', () => {
+  const stereo = playing(2, ON_THE_SECOND_SOUND, 'stereo')
+  const bilingual = playing(2, ON_THE_SECOND_SOUND, 'dualMono')
+
+  assert.equal(bilingual.standing, ON_THE_SECOND_SOUND)
+  assert.notEqual(bilingual.key, stereo.key)
+})
+
+test('the seat does not move when a bilingual main sound loses the second sound beside it, on the main sound', () => {
+  assert.equal(
+    playing(2, null, 'dualMono').key,
+    playing(1, null, 'dualMono').key,
+  )
+})
+
+test('leaving a bilingual programme on the third sound spends the choice, and the seat goes back to the main sound', () => {
+  for (const [count, audio] of [
+    [1, 'dualMono'],
+    [2, 'stereo'],
+  ] as const) {
+    const after = playing(count, ON_THE_THIRD_SOUND, audio)
+
+    assert.equal(after.standing, null)
+    assert.equal(
+      after.seat,
+      liveSeat(1, 2, A_PROFILE, MAIN_SOUND, audio === 'dualMono'),
+    )
+  }
 })

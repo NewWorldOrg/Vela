@@ -64,6 +64,11 @@ const IN_TWO_LANGUAGES: PlaybackPlan = {
   sounds: ['main', 'secondary'],
 }
 
+const BILINGUAL_BESIDE_A_SECOND_SOUND: PlaybackPlan = {
+  ...ON_THE_FLY,
+  sounds: ['main', 'secondary', 'third'],
+}
+
 const HANDED_OVER: PlaybackPlan = {
   ...ON_THE_FLY,
   route: 'direct',
@@ -854,6 +859,44 @@ export const 副音声を選ぶと副音声で再生し直す: Story = {
     ).toHaveAttribute('aria-pressed', 'true')
   },
 }
+
+export const 二か国語の主音声と別の音声を持つ録画は音声を三つから選べる: Story =
+  {
+    args: {
+      detail: detail('1266'),
+      plan: BILINGUAL_BESIDE_A_SECOND_SOUND,
+      startAt: 0,
+      unaskedProfile: '1080p60',
+      pictureHref: carrying,
+      onAskForTheSound: planning(BILINGUAL_BESIDE_A_SECOND_SOUND),
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() => expect(asked.at(-1)).toBe('0/1080p60/main'))
+      await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+      const sounds = await screen.findByRole('group', { name: '音声' })
+
+      await expect(
+        within(sounds)
+          .getAllByRole('button')
+          .map((one) => one.textContent),
+      ).toEqual(['主音声', '副音声', '第2音声'])
+
+      asked.length = 0
+      reasked.length = 0
+      await userEvent.click(
+        within(sounds).getByRole('button', { name: '第2音声' }),
+      )
+
+      await waitFor(() => expect(reasked).toEqual(['third']))
+      await waitFor(() => expect(asked).toEqual(['0/1080p60/third']))
+      await expect(
+        within(sounds).getByRole('button', { name: '第2音声' }),
+      ).toHaveAttribute('aria-pressed', 'true')
+    },
+  }
 
 export const 成果物を直に渡す録画でも音声を選べる: Story = {
   args: {
