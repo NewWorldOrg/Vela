@@ -70,8 +70,8 @@ export function ReservationArea({
         </div>
       )}
       {displaced && (
-        <div aria-live="polite" className="mt-2.5">
-          <DisplacedNotice entries={displaced} />
+        <div aria-live="polite" className="mt-3.5">
+          <DisplacedNotice entries={displaced} className="px-0 py-0" />
         </div>
       )}
     </DisplacedTold>
