@@ -129,6 +129,7 @@ const THE_SUITE = [
   'tests/repository/video-paths.test.ts',
   'tests/repository/videos.test.ts',
   'tests/scripts/eslint-rules.test.ts',
+  'tests/storybook/a-story-left-running-takes-nothing-with-it.test.ts',
   'tests/storybook/cursor-exempt.test.ts',
   'tests/storybook/every-icon-is-in-the-catalogue.test.ts',
   'tests/storybook/every-test-runs.test.ts',
