@@ -8,7 +8,13 @@ import {
   wireKey,
   type SoundChoice,
 } from '@/lib/live-seat'
-import { MAIN_SOUND, soundsAnnounced } from '@/repository/sounds'
+import {
+  MAIN_SOUND,
+  soundsAnnounced,
+  soundsOnAir,
+  splitsDualMono,
+} from '@/repository/sounds'
+import type { AudioMode } from '@/repository/announced'
 
 const A_CHANNEL = 'a-channel'
 
@@ -21,10 +27,20 @@ const ON_THE_SECOND_SOUND: SoundChoice = {
   track: 'secondary',
 }
 
-function playing(announces: number, chosen: SoundChoice | null) {
-  const announced = soundsAnnounced(announces)
+function playing(
+  announces: number,
+  chosen: SoundChoice | null,
+  audio: AudioMode = 'stereo',
+) {
+  const announced = soundsOnAir(announces, audio)
   const standing = soundChoiceStillStands(chosen, A_CHANNEL, announced)
-  const seat = liveSeat(1, 2, A_PROFILE, soundBeingHeard(standing))
+  const seat = liveSeat(
+    1,
+    2,
+    A_PROFILE,
+    soundBeingHeard(standing),
+    splitsDualMono(announces, audio),
+  )
 
   return { standing, seat, key: wireKey(seat, 0) }
 }
@@ -86,8 +102,50 @@ test('a retry is what moves the key, not the programme', () => {
 })
 
 test('there is no seat before the channel and the quality are known', () => {
-  assert.equal(liveSeat(undefined, 2, A_PROFILE, MAIN_SOUND), null)
-  assert.equal(liveSeat(1, undefined, A_PROFILE, MAIN_SOUND), null)
-  assert.equal(liveSeat(1, 2, undefined, MAIN_SOUND), null)
+  assert.equal(liveSeat(undefined, 2, A_PROFILE, MAIN_SOUND, false), null)
+  assert.equal(liveSeat(1, undefined, A_PROFILE, MAIN_SOUND, false), null)
+  assert.equal(liveSeat(1, 2, undefined, MAIN_SOUND, false), null)
   assert.equal(wireKey(null, 0), null)
+})
+
+test('a bilingual programme on one sound offers the second sound, and the seat says the sound is split', () => {
+  const right = playing(1, ON_THE_SECOND_SOUND, 'dualMono')
+
+  assert.equal(right.standing, ON_THE_SECOND_SOUND)
+  assert.equal(right.seat, `1:2:${A_PROFILE}:secondary:dualMono`)
+})
+
+test('the seat moves once when the next programme stops being bilingual, even on the main sound', () => {
+  const bilingual = playing(1, null, 'dualMono')
+  const stereo = playing(1, null, 'stereo')
+
+  assert.notEqual(stereo.key, bilingual.key)
+  assert.equal(stereo.seat, `1:2:${A_PROFILE}:main`)
+})
+
+test('the seat moves once when the next programme becomes bilingual', () => {
+  const stereo = playing(1, null, 'stereo')
+  const bilingual = playing(1, null, 'dualMono')
+
+  assert.notEqual(bilingual.key, stereo.key)
+})
+
+test('leaving a bilingual programme on the second sound moves the seat once, to the main sound', () => {
+  const right = playing(1, ON_THE_SECOND_SOUND, 'dualMono')
+  const after = playing(1, right.standing, 'stereo')
+
+  assert.equal(after.standing, null)
+  assert.equal(after.seat, `1:2:${A_PROFILE}:main`)
+})
+
+test('the seat does not move between two programmes carried the same way', () => {
+  assert.equal(
+    playing(1, null, 'dualMono').key,
+    playing(1, null, 'dualMono').key,
+  )
+  assert.equal(playing(1, null, 'mono').key, playing(1, null, 'stereo').key)
+  assert.equal(
+    playing(2, ON_THE_SECOND_SOUND, 'dualMono').key,
+    playing(2, ON_THE_SECOND_SOUND, 'stereo').key,
+  )
 })

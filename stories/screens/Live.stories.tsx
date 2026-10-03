@@ -31,6 +31,7 @@ import {
   whatWasCopied,
   whereItLeftFor,
 } from '@/stories/handed-over'
+import type { AudioMode } from '@/repository/announced'
 import type { LiveScreen } from '@/repository/live'
 import type { TicketWrite } from '@/repository/tickets'
 import type { LiveBacklog } from '@/repository/live-sessions'
@@ -373,6 +374,28 @@ function following(nth: number, sounds: number): LiveScreen {
     },
   }
 }
+
+function airing(nth: number, sounds: number, audio: AudioMode): LiveScreen {
+  return {
+    ...CHOSEN,
+    watching: {
+      ...CHOSEN.watching!,
+      channel: {
+        ...CHOSEN.watching!.channel,
+        now: {
+          ...CHOSEN.watching!.channel.now!,
+          id: `${CHOSEN.watching!.channel.now!.id}-${nth}`,
+          sounds,
+          audio,
+        },
+      },
+    },
+  }
+}
+
+const BILINGUAL_ON_ONE_SOUND = airing(0, 1, 'dualMono')
+
+const STEREO_ON_ONE_SOUND = airing(0, 1, 'stereo')
 
 const MANY: LiveScreen = {
   ...LIVE_SCREEN_FIXTURE,
@@ -1132,6 +1155,89 @@ export const 副音声を運ばない番組に変わったら主音声へ戻り�
     )
 
     await expect(opened).toHaveLength(3)
+  },
+}
+
+export const 二か国語の番組は音声が1本でも副音声を選べる: Story = {
+  args: { screen: BILINGUAL_ON_ONE_SOUND },
+  play: async ({ canvasElement }) => {
+    await chooseTheSecondSound(canvasElement)
+
+    await expect(
+      within(await screen.findByRole('group', { name: '音声' })).getByRole(
+        'button',
+        { name: '副音声' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 二か国語から二か国語でない番組に変わったら一度だけ張り直す: Story =
+  {
+    args: { screen: BILINGUAL_ON_ONE_SOUND },
+    render: (args) => (
+      <WhenTheProgrammeChanges
+        {...args}
+        following={[airing(1, 1, 'stereo'), airing(2, 1, 'mono')]}
+      />
+    ),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await canvas.findByText('チャンネルを準備しています')
+      await expect(opened).toHaveLength(1)
+
+      theProgrammeChanges()
+
+      await waitFor(() => expect(opened).toHaveLength(2))
+      await expect(opened[1].href).toContain('sound=main')
+
+      theProgrammeChanges()
+
+      await new Promise((settled) => setTimeout(settled, 300))
+      await expect(opened).toHaveLength(2)
+    },
+  }
+
+export const 副音声のまま二か国語でない番組に変わっても張り直しは一度: Story = {
+  args: { screen: BILINGUAL_ON_ONE_SOUND },
+  render: (args) => (
+    <WhenTheProgrammeChanges {...args} following={[airing(1, 1, 'stereo')]} />
+  ),
+  play: async ({ canvasElement }) => {
+    await chooseTheSecondSound(canvasElement)
+
+    theProgrammeChanges()
+
+    await waitFor(() => expect(opened).toHaveLength(3))
+    await expect(opened[2].href).toContain('sound=main')
+    await new Promise((settled) => setTimeout(settled, 300))
+    await expect(opened).toHaveLength(3)
+  },
+}
+
+export const 二か国語の番組に変わったら一度だけ張り直す: Story = {
+  args: { screen: STEREO_ON_ONE_SOUND },
+  render: (args) => (
+    <WhenTheProgrammeChanges {...args} following={[airing(1, 1, 'dualMono')]} />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await expect(opened).toHaveLength(1)
+
+    theProgrammeChanges()
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await expect(opened[1].href).toContain('sound=main')
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await expect(
+      within(await screen.findByRole('group', { name: '音声' }))
+        .getAllByRole('button')
+        .map((one) => one.textContent),
+    ).toEqual(['主音声', '副音声'])
   },
 }
 

@@ -5,7 +5,11 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
 import type { LiveChannel, LiveProfile } from '@/repository/live'
-import { soundsAnnounced, type SoundTrack } from '@/repository/sounds'
+import {
+  soundsOnAir,
+  splitsDualMono,
+  type SoundTrack,
+} from '@/repository/sounds'
 import {
   liveSeat,
   soundBeingHeard,
@@ -180,9 +184,11 @@ export function LivePlayer({
 
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
-  const sounds: readonly SoundTrack[] = soundsAnnounced(
-    channel?.now?.sounds ?? 0,
-  )
+  const onAir = channel?.now
+  const sounds: readonly SoundTrack[] = onAir
+    ? soundsOnAir(onAir.sounds, onAir.audio)
+    : []
+  const split = onAir ? splitsDualMono(onAir.sounds, onAir.audio) : false
   const standing = soundChoiceStillStands(chosenSound, channel?.id, sounds)
 
   if (standing !== chosenSound) {
@@ -190,7 +196,7 @@ export function LivePlayer({
   }
 
   const sound = soundBeingHeard(standing)
-  const seat = liveSeat(networkId, serviceId, profile, sound)
+  const seat = liveSeat(networkId, serviceId, profile, sound, split)
   const retried = retries && retries.of === seat ? retries : null
   const attempt = retried?.count ?? 0
   const key = wireKey(seat, attempt)

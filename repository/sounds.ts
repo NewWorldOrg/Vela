@@ -3,6 +3,8 @@ import type { components } from '@/repository/client/schema'
 
 export type SoundTrack = components['schemas']['SoundTrack']
 
+type AudioMode = components['schemas']['AudioMode']
+
 const SOUND_LABEL: Record<SoundTrack, string> = {
   main: '主音声',
   secondary: '副音声',
@@ -16,6 +18,17 @@ export const MAIN_SOUND: SoundTrack = 'main'
 
 export function soundsAnnounced(count: number): readonly SoundTrack[] {
   return BOTH_SOUNDS.slice(0, Math.max(0, count))
+}
+
+export function splitsDualMono(count: number, audio: AudioMode): boolean {
+  return count === 1 && audio === 'dualMono'
+}
+
+export function soundsOnAir(
+  count: number,
+  audio: AudioMode,
+): readonly SoundTrack[] {
+  return splitsDualMono(count, audio) ? BOTH_SOUNDS : soundsAnnounced(count)
 }
 
 export function soundLabel(track: SoundTrack): string {
