@@ -1264,6 +1264,81 @@ export const 止めた秒がアドレスと同じでも置き換わると開き�
   },
 }
 
+export const 一時停止のまま開いて読み込み中に置き換わっても一時停止のまま開き直す: Story =
+  {
+    args: {
+      detail: detail('1274'),
+      plan: WITH_AN_ARTEFACT,
+      startAt: 612,
+      holdsAtOnce: true,
+      pictureHref: carryingTheSource,
+      onAskWhichArtefact: askingWhichArtefact,
+      listenForEncodeJobs: hearingTheJobs,
+    },
+    parameters: {
+      nextjs: {
+        appDirectory: true,
+        navigation: { pathname: AT_1274, query: { at: '612', paused: '1' } },
+      },
+    },
+    beforeEach: () => {
+      pageRead.artefact = 'job-a'
+    },
+    render: (args) => <SeatedOnThePage {...args} />,
+    play: async ({ canvasElement }) => {
+      const router = getRouter()
+
+      router.refresh.mockImplementation(() => thePageReads(standing.now))
+
+      const opened = canvasElement.querySelector('video')
+
+      await expect(opened).toHaveAttribute('preload', 'auto')
+
+      await theJobsSay('job-b')
+      await waitFor(() =>
+        expect(canvasElement.querySelector('video')).not.toBe(opened),
+      )
+      await expect(router.replace).not.toHaveBeenCalled()
+      await expect(router.refresh).toHaveBeenCalledTimes(1)
+      await expect(canvasElement.querySelector('video')).not.toHaveAttribute(
+        'autoplay',
+      )
+    },
+  }
+
+export const 一時停止のまま開いて読み込み中にソースを切り替えても一時停止のまま開き直す: Story =
+  {
+    args: {
+      detail: detail('1274'),
+      plan: WITH_AN_ARTEFACT,
+      startAt: 612,
+      holdsAtOnce: true,
+      pictureHref: carryingTheSource,
+    },
+    parameters: {
+      nextjs: {
+        appDirectory: true,
+        navigation: { pathname: AT_1274, query: { at: '612', paused: '1' } },
+      },
+    },
+    play: async ({ canvasElement }) => {
+      await userEvent.click(
+        within(canvasElement).getByRole('button', { name: '設定' }),
+      )
+
+      const sources = await screen.findByRole('group', { name: 'ソース' })
+
+      await userEvent.click(
+        within(sources).getByRole('button', { name: '元のまま' }),
+      )
+
+      await expect(getRouter().replace).toHaveBeenCalledWith(
+        `${AT_1274}?at=612&paused=1&source=recording`,
+        { scroll: false },
+      )
+    },
+  }
+
 export const 一時停止中にソースを切り替えると一時停止のまま開き直す: Story = {
   args: {
     detail: detail('1274'),

@@ -754,6 +754,9 @@ export function Player({
       })
   }
 
+  const standsStill = () =>
+    phase === 'paused' || (waitsForAHand && (video.current?.paused ?? true))
+
   const openAgain = (next: PlaybackSource, at: number | undefined) => {
     router.replace(
       whereThatSourceOpens(
@@ -761,7 +764,7 @@ export function Player({
         inTheAddress.toString(),
         next,
         at,
-        phase === 'paused',
+        standsStill(),
       ) as Route,
       { scroll: false },
     )
@@ -807,7 +810,7 @@ export function Player({
             inTheAddress.toString(),
             THE_ARTEFACT,
             asItStands.current.position,
-            phase === 'paused',
+            standsStill(),
           )
         ) {
           onOpenAnewWhereItStands?.(standing)
