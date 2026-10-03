@@ -247,10 +247,6 @@ function openingsOf(tag: RegExp, source: string): string[] {
   return [...source.matchAll(tag)].map((found) => found[1] ?? found[2])
 }
 
-const DRAWN_BY_ONE_SHARED_PART: Record<string, string[]> = {
-  Button: ['icon-sm'],
-}
-
 function assertUsedMoreThanOnce(
   part: string,
   group: string,
@@ -258,16 +254,6 @@ function assertUsedMoreThanOnce(
   uses: Map<string, string[]>,
 ): void {
   if (key === 'default' || (part === 'IconButton' && key === 'pop')) {
-    return
-  }
-
-  if (DRAWN_BY_ONE_SHARED_PART[part]?.includes(key)) {
-    assert.equal(
-      (uses.get(key) ?? []).length,
-      1,
-      `${part} ${group} "${key}" is no longer drawn by exactly one shared part`,
-    )
-
     return
   }
 
