@@ -67,12 +67,12 @@ export function TuningFields({
   id,
   hold,
   className,
-  entryClassName,
+  inputAreaClassName,
 }: {
   id: string
   hold: TuningEntryHold
   className?: string
-  entryClassName?: string
+  inputAreaClassName?: string
 }) {
   const { entry, problem, amend } = hold
   const range = tuningChannelRangeOf(entry.system)
@@ -92,13 +92,14 @@ export function TuningFields({
         />
       </Field>
 
-      <Field className={entryClassName}>
+      <Field>
         <FieldLabel htmlFor={`${id}-channel`}>
           物理チャンネル
           <RequiredMark />
         </FieldLabel>
         <Input
           id={`${id}-channel`}
+          areaClassName={inputAreaClassName}
           inputMode="numeric"
           value={entry.channel}
           aria-invalid={problem?.field === 'channel' || undefined}
@@ -116,13 +117,14 @@ export function TuningFields({
       </Field>
 
       {range.ts && (
-        <Field className={entryClassName}>
+        <Field>
           <FieldLabel htmlFor={`${id}-stream`}>
             TSID
             <RequiredMark />
           </FieldLabel>
           <Input
             id={`${id}-stream`}
+            areaClassName={inputAreaClassName}
             inputMode="numeric"
             value={entry.stream}
             aria-invalid={problem?.field === 'stream' || undefined}

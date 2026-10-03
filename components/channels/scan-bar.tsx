@@ -84,7 +84,7 @@ export function ScanBar({
             id="scan"
             hold={hold}
             className="basis-full flex-row flex-wrap items-start gap-x-6 gap-y-3.5 border-t border-dashed border-line pt-3.5"
-            entryClassName="w-[calc(192rem/16)]"
+            inputAreaClassName="w-[calc(192rem/16)]"
           />
         )}
         <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-3">
