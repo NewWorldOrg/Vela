@@ -32,7 +32,7 @@ async function fillsTheWindow(
 
   await expect(captions).toHaveAttribute('data-drawn', 'yes')
   await expect(layer.width).toBe(board.width)
-  await expect(layer.bottom).toBeLessThanOrEqual(board.bottom)
+  await expect(layer.height).toBe(board.height)
 
   const bar = onTheScreen(shell, 'player-chrome').getBoundingClientRect()
 

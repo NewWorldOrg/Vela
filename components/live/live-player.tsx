@@ -643,6 +643,7 @@ export function LivePlayer({
   return (
     <section
       ref={setShell}
+      data-full={full ? 'true' : undefined}
       data-fill={filled ? 'true' : undefined}
       tabIndex={-1}
       data-slot="live-player"
@@ -659,14 +660,14 @@ export function LivePlayer({
         className={cn(
           'relative flex items-center justify-center',
           PLAYER_FACE,
-          'under-full:aspect-auto under-full:max-h-none under-full:min-h-0 under-full:flex-1',
+          '[[data-full]_&]:aspect-auto [[data-full]_&]:max-h-none [[data-full]_&]:min-h-0 [[data-full]_&]:flex-1',
         )}
       >
         <div
           className={cn(
             'relative',
             PLAYER_PICTURE_BOX,
-            'under-full:max-w-none',
+            '[[data-full]_&]:max-w-none',
           )}
         >
           <video

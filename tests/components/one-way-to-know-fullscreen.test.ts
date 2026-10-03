@@ -63,6 +63,7 @@ test('both players read and switch fullscreen through the shared hook, and say w
       /const \{\s*full,\s*filled,\s*toggle: toggleFullscreen,?\s*\} = useFullscreen\(shell\)/,
       file,
     )
+    assert.match(source, /data-full=\{full \? 'true' : undefined\}/, file)
     assert.match(source, /data-fill=\{filled \? 'true' : undefined\}/, file)
     assert.doesNotMatch(source, /setFull\(/, file)
   }

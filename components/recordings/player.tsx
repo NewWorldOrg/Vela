@@ -952,6 +952,7 @@ export function Player({
     <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
       <section
         ref={setShell}
+        data-full={full ? 'true' : undefined}
         data-fill={filled ? 'true' : undefined}
         tabIndex={-1}
         data-slot="player"
@@ -968,7 +969,7 @@ export function Player({
           className={cn(
             'relative flex items-center justify-center',
             PLAYER_FACE,
-            'under-full:aspect-auto under-full:max-h-none under-full:min-h-0 under-full:flex-1',
+            '[[data-full]_&]:aspect-auto [[data-full]_&]:max-h-none [[data-full]_&]:min-h-0 [[data-full]_&]:flex-1',
           )}
         >
           <video
@@ -1020,7 +1021,7 @@ export function Player({
               setPosition(from + at)
               standsAs({ position: from + at })
             }}
-            className={cn(PLAYER_PICTURE, 'under-full:max-w-none')}
+            className={cn(PLAYER_PICTURE, '[[data-full]_&]:max-w-none')}
           />
           <canvas
             ref={holder}
@@ -1030,7 +1031,7 @@ export function Player({
             className={cn(
               'pointer-events-none absolute inset-0 hidden data-[holding]:block',
               PLAYER_PICTURE,
-              'under-full:max-w-none',
+              '[[data-full]_&]:max-w-none',
             )}
           />
           {captioning && (
