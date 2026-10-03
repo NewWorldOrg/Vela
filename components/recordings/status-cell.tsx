@@ -61,6 +61,11 @@ export function AbleSay({ able }: { able: boolean }) {
   )
 }
 
+/** The box InFull draws around a state: a pill around a chip, a line around a said state. */
+export function tipBoxOf(say: boolean): string {
+  return say ? 'inline-flex min-w-0' : 'inline-flex rounded-full'
+}
+
 export function toneOf(variant: string): StateTone {
   if (
     variant === 'ok' ||

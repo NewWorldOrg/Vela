@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   StateSay,
   stateColumnFor,
+  tipBoxOf,
   toneOf,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
@@ -39,5 +40,11 @@ export function TunerStateChip({
     </Badge>
   )
 
-  return also ? <InFull says={also}>{drawn}</InFull> : drawn
+  return also ? (
+    <InFull says={also} wraps={tipBoxOf(say)}>
+      {drawn}
+    </InFull>
+  ) : (
+    drawn
+  )
 }
