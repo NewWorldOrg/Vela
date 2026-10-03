@@ -38,6 +38,7 @@ const THE_SUITE = [
   'tests/hooks/useReadAgain.test.ts',
   'tests/lib/app-signals.test.ts',
   'tests/lib/arrival.test.ts',
+  'tests/lib/caption-placement.test.ts',
   'tests/lib/capture-name.test.ts',
   'tests/lib/clock.test.ts',
   'tests/lib/collection.test.ts',
