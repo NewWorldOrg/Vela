@@ -50,8 +50,8 @@ lib/                        Pure functions, no React: display formatting, path
 hooks/                      React hooks shared across screens
 stories/{foundations,components,screens,theme}/
 tests/                      Every test. tests/lib/ and tests/repository/ mirror the
-                            path of what they test; tests/storybook/ holds the nine
-                            that read the source tree instead of importing a module
+                            path of what they test; tests/storybook/ holds the
+                            tests of the stories and of the story run itself
 ```
 
 A screen is layered `app/` (a Server Component fetches) → `components/{domain}/`
