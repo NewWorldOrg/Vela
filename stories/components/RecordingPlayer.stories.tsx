@@ -2376,6 +2376,73 @@ export const ピクチャーインピクチャーを断るブラウザ: Story = 
   },
 }
 
+export const ピクチャーインピクチャーを断る映像: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+    await expect(
+      canvas.getByRole('button', { name: 'ピクチャーインピクチャー' }),
+    ).toBeVisible()
+
+    Object.defineProperty(picture, 'webkitSupportsPresentationMode', {
+      value: (mode: string) => mode !== 'picture-in-picture',
+      configurable: true,
+    })
+    picture.dispatchEvent(new Event('leavepictureinpicture', { bubbles: true }))
+
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole('button', { name: 'ピクチャーインピクチャー' }),
+      ).toBeNull(),
+    )
+    await expect(canvas.getByRole('button', { name: '全画面' })).toBeVisible()
+  },
+}
+
+export const 要素の全画面が無いときは映像の全画面: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    const shell = canvasElement.querySelector(
+      '[data-slot="player"]',
+    ) as HTMLElement
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+    let entered = 0
+
+    Object.defineProperty(shell, 'requestFullscreen', {
+      value: undefined,
+      configurable: true,
+    })
+    Object.defineProperty(picture, 'webkitEnterFullscreen', {
+      value: () => {
+        entered += 1
+      },
+      configurable: true,
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
+
+    await expect(entered).toBe(1)
+    await expect(document.fullscreenElement).toBeNull()
+  },
+}
+
 function tipOf(canvasElement: HTMLElement, name: string | RegExp): HTMLElement {
   const bar = canvasElement.querySelector('[data-slot="player-chrome"]')
 

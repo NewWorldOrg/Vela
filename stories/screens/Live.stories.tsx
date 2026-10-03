@@ -2692,6 +2692,71 @@ export const ピクチャーインピクチャー: Story = {
   },
 }
 
+export const 要素の全画面が無いときは映像の全画面: Story = {
+  args: { openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    const shell = canvasElement.querySelector(
+      '[data-slot="live-player"]',
+    ) as HTMLElement
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+    let entered = 0
+
+    Object.defineProperty(shell, 'requestFullscreen', {
+      value: undefined,
+      configurable: true,
+    })
+    Object.defineProperty(picture, 'webkitEnterFullscreen', {
+      value: () => {
+        entered += 1
+      },
+      configurable: true,
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
+
+    await expect(entered).toBe(1)
+    await expect(document.fullscreenElement).toBeNull()
+  },
+}
+
+export const ピクチャーインピクチャーを断る映像: Story = {
+  args: { openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+    Object.defineProperty(picture, 'webkitSupportsPresentationMode', {
+      value: (mode: string) => mode !== 'picture-in-picture',
+      configurable: true,
+    })
+    picture.dispatchEvent(new Event('leavepictureinpicture', { bubbles: true }))
+
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole('button', { name: 'ピクチャーインピクチャー' }),
+      ).toBeNull(),
+    )
+    await expect(canvas.getByRole('button', { name: '全画面' })).toBeVisible()
+  },
+}
+
 function liveTipOf(
   canvasElement: HTMLElement,
   name: string | RegExp,

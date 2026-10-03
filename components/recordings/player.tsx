@@ -110,7 +110,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedAt, capturedName } from '@/lib/capture-name'
-import { useFullscreen } from '@/hooks/useFullscreen'
+import { switchFullscreen, useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
 import { AirPlayButton } from '@/components/recordings/external-player'
@@ -776,15 +776,7 @@ export function Player({
     }
   }
 
-  const toggleFullscreen = () => {
-    if (document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => undefined)
-
-      return
-    }
-
-    void shell?.requestFullscreen?.().catch(() => undefined)
-  }
+  const toggleFullscreen = () => switchFullscreen(shell, video.current)
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const command = playerCommand(event, {
