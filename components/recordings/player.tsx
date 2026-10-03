@@ -593,6 +593,7 @@ export function Player({
 
     if (element.paused) {
       answer({ was: 'play' })
+      setWaitsForAHand(false)
       void element.play().catch(() => setPhase('paused'))
 
       return
@@ -754,6 +755,8 @@ export function Player({
       })
   }
 
+  const standsStill = () => phase === 'paused' || waitsForAHand
+
   const openAgain = (next: PlaybackSource, at: number | undefined) => {
     router.replace(
       whereThatSourceOpens(
@@ -761,7 +764,7 @@ export function Player({
         inTheAddress.toString(),
         next,
         at,
-        phase === 'paused',
+        standsStill(),
       ) as Route,
       { scroll: false },
     )
@@ -807,7 +810,7 @@ export function Player({
             inTheAddress.toString(),
             THE_ARTEFACT,
             asItStands.current.position,
-            phase === 'paused',
+            standsStill(),
           )
         ) {
           onOpenAnewWhereItStands?.(standing)
