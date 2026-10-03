@@ -296,11 +296,18 @@ const service = (networkId: number, serviceId: number, name: string) => ({
   candidates: [],
 })
 
+const inTheLibrary = (id: string, name: string) => ({
+  id,
+  programme: { name },
+  startedAt: '2026-09-07T12:00:00Z',
+  outputRoot: 'recorded',
+})
+
 function standing() {
   sent.length = 0
   store.refusal = undefined
   store.services = [service(32736, 1024, '湾岸放送1')]
-  store.ledger = []
+  store.ledger = [inTheLibrary('rec-a', '湾岸の朝')]
   store.thresholds = SHIPPED
   store.channels = [
     { networkId: 32736, serviceId: 1024, kind: 'isdbT', measures: measures() },
@@ -789,6 +796,36 @@ test('欠けの無い録画は、欠けを 0 回の良好として出し、パ�
   assert.deepEqual(row.gap, { reading: '欠け 0 回 · 0.0 秒', level: 'good' })
 })
 
+test('問題のある録画は、区切りつきで綴られた id でもライブラリの番組名を題に持つ', async () => {
+  standing()
+  store.ledger = [inTheLibrary('0f1e2d3c4b5a69788796a5b4c3d2e1f0', '湾岸の夜')]
+  store.recordings = [
+    problemRecording({ id: '0F1E2D3C-4B5A-6978-8796-A5B4C3D2E1F0' }),
+  ]
+
+  const [row] = (await getQuality()).problemRecordings
+
+  assert.equal(
+    row.title,
+    '湾岸の夜',
+    'The quality ledger spells a recording id with separators and the ' +
+      'library without, and the row came out with no title at all.',
+  )
+  assert.equal(row.id, '0f1e2d3c4b5a69788796a5b4c3d2e1f0')
+})
+
+test('ライブラリに無い録画は、題の空いた行として出さない', async () => {
+  standing()
+  store.recordings = [problemRecording(), problemRecording({ id: 'rec-gone' })]
+
+  const rows = (await getQuality()).problemRecordings
+
+  assert.deepEqual(
+    rows.map((one) => one.title),
+    ['湾岸の朝'],
+  )
+})
+
 test('問題のある録画のタイルは、欠けを含めた行の段で最も悪い語を言う', async () => {
   standing()
   store.recordings = [
@@ -849,6 +886,21 @@ test('異常は、破った閾値から題を取り、観測と適用閾値を�
     `${formatMoment('2026-09-07T12:00:00Z')} 発生 · 継続中`,
   )
   assert.equal(result.anomalies.owned, 1)
+})
+
+test('録画の異常は、id の綴りが違ってもライブラリの番組名で呼ばれる', async () => {
+  standing()
+  store.ledger = [inTheLibrary('0f1e2d3c4b5a69788796a5b4c3d2e1f0', '湾岸の夜')]
+  store.incidents = [
+    incident({
+      subjectKind: 'recording',
+      subjectKey: '0F1E2D3C-4B5A-6978-8796-A5B4C3D2E1F0',
+    }),
+  ]
+
+  const [anomaly] = (await getQuality()).anomalies.items
+
+  assert.equal(anomaly.subject, '湾岸の夜')
 })
 
 test('異常の観測の率は、同じ画面のほかの面と同じ小数 3 桁で書く', async () => {

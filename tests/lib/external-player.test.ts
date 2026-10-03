@@ -8,9 +8,10 @@ import {
   playerAppsOn,
   recordingHandover,
   recordingHandoverChoices,
+  takeTheTicket,
   ticketedHref,
 } from '@/lib/external-player'
-import type { TicketWrite } from '@/repository/tickets'
+import { NO_TICKET, type TicketWrite } from '@/repository/tickets'
 
 const WATCHING = 'https://vela.example/live?ch=32736-1024'
 
@@ -332,5 +333,55 @@ test('a device with no app to open one in is offered none', () => {
     AN_ANDROID_PHONE,
   ]) {
     assert.deepEqual(playerAppsOn(device), [])
+  }
+})
+
+test('a ticket that is issued becomes the URL the player is handed', async () => {
+  assert.deepEqual(
+    await takeTheTicket(recordingHandover('a-recording', issued), DETAIL),
+    { href: `https://ticket:${TICKET}@vela.example/api/videos/a-recording` },
+  )
+})
+
+test('a ticket refused says why, in the words it was refused with', async () => {
+  const refused = async (): Promise<TicketWrite> => ({
+    state: 'refused',
+    message: NOT_IN_THE_LINEUP,
+  })
+
+  assert.deepEqual(await takeTheTicket(liveHandover(4, 5, refused), WATCHING), {
+    refused: NOT_IN_THE_LINEUP,
+  })
+})
+
+test('a ticket asked for after the session lapsed says so', async () => {
+  const lapsed = async (): Promise<TicketWrite> => ({
+    state: 'unauthenticated',
+  })
+
+  assert.deepEqual(
+    await takeTheTicket(recordingHandover('a-recording', lapsed), DETAIL),
+    {
+      refused:
+        'サインインが切れているため、外部プレイヤーの札を発行できませんでした。',
+    },
+  )
+})
+
+test('a ticket that never came back is refused in the words a refusal uses', async () => {
+  const unreached = async (): Promise<TicketWrite> => {
+    throw new TypeError('Failed to fetch')
+  }
+
+  for (const handover of [
+    recordingHandover('a-recording', unreached),
+    liveHandover(4, 5, unreached),
+  ]) {
+    assert.deepEqual(
+      await takeTheTicket(handover, DETAIL),
+      { refused: NO_TICKET },
+      'The request for a ticket failed on the way and nothing was said. ' +
+        'Say it where a refusal is said.',
+    )
   }
 })

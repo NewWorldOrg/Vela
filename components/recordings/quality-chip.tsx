@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   StateSay,
   stateColumnFor,
+  tipBoxOf,
   toneOf,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
@@ -58,5 +59,9 @@ export function QualityChip({
     return drawn
   }
 
-  return <InFull says={said.join('\n')}>{drawn}</InFull>
+  return (
+    <InFull says={said.join('\n')} wraps={tipBoxOf(say)}>
+      {drawn}
+    </InFull>
+  )
 }

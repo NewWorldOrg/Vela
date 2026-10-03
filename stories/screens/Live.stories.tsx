@@ -336,6 +336,10 @@ async function noLongerSignedIn(): Promise<TicketWrite> {
   return { state: 'unauthenticated' }
 }
 
+async function neverReachingTheServer(): Promise<TicketWrite> {
+  throw new TypeError('Failed to fetch')
+}
+
 const CHOSEN: LiveScreen = LIVE_SCREEN_FIXTURE
 
 const UNCHOSEN: LiveScreen = { ...LIVE_SCREEN_FIXTURE, watching: undefined }
@@ -2847,6 +2851,22 @@ export const 札を頼んだらサインインが切れていた: Story = {
         ),
       ).toBeVisible()
     })
+  },
+}
+
+export const 札を頼む通信が落ちたらその場で言う: Story = {
+  args: { openSocket: withAPicture, onTakeTicket: neverReachingTheServer },
+  play: async ({ canvasElement }) => {
+    const copied = await whatWasCopied(async () => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await expect(
+        await within(canvasElement).findByText(
+          '外部プレイヤーの札を発行できませんでした。しばらくしてからもう一度試してください。',
+        ),
+      ).toBeVisible()
+    })
+
+    await expect(copied).toEqual([])
   },
 }
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -172,5 +172,64 @@ test('the signal meter lets the tip draw the box it clips', async () => {
       'from there arrives as a reference it cannot read the class of, and ' +
       'the server and the browser draw different trees. Hand it the text ' +
       'and name the box with `wraps`.',
+  )
+})
+
+const BECOMES_A_CLIENT = /^\s*['"]use client['"]/
+
+async function partsUnder(dir: string): Promise<string[]> {
+  const found: string[] = []
+
+  for (const entry of await readdir(path.join(ROOT, dir), {
+    withFileTypes: true,
+  })) {
+    const relative = path.join(dir, entry.name)
+
+    if (entry.isDirectory()) {
+      found.push(...(await partsUnder(relative)))
+    } else if (entry.name.endsWith('.tsx')) {
+      found.push(relative)
+    }
+  }
+
+  return found
+}
+
+test('a tip drawn where the server may render it names its own box', async () => {
+  const files = [
+    ...(await partsUnder('components')),
+    ...(await partsUnder('app')),
+  ]
+  const tipped: string[] = []
+  const unboxed: string[] = []
+
+  for (const file of files) {
+    const source = await read(file)
+
+    if (BECOMES_A_CLIENT.test(source)) {
+      continue
+    }
+
+    for (const tag of source.match(/<InFull\b[^>]*>/g) ?? []) {
+      tipped.push(file)
+
+      if (!/\bwraps=/.test(tag)) {
+        unboxed.push(`${file}: ${tag.replace(/\s+/g, ' ')}`)
+      }
+    }
+  }
+
+  assert.ok(
+    tipped.length > 0,
+    'no tip was found outside a client boundary, so this test is reading the wrong tree',
+  )
+  assert.deepEqual(
+    unboxed,
+    [],
+    'These files have no client boundary of their own, so a server-rendered ' +
+      'screen may draw them. An element handed to InFull from there arrives ' +
+      'as a reference it cannot read the class of, the server wraps it in a ' +
+      'span the browser does not, and React throws the tree away. Name the ' +
+      'box with `wraps`.',
   )
 })

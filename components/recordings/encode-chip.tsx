@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   StateSay,
   stateColumnFor,
+  tipBoxOf,
   toneOf,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
@@ -67,5 +68,9 @@ export function EncodeChip({
     return drawn
   }
 
-  return <InFull says={saying}>{drawn}</InFull>
+  return (
+    <InFull says={saying} wraps={tipBoxOf(say)}>
+      {drawn}
+    </InFull>
+  )
 }

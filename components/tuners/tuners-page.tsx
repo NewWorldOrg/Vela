@@ -42,6 +42,7 @@ import {
   StateSay,
   StatusCell,
   stateColumnFor,
+  tipBoxOf,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
 import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
@@ -367,7 +368,10 @@ export function TunersView({
               <TableCell>
                 {row.session ? (
                   <StatusCell>
-                    <InFull says={whatTheSessionIs(row.session)}>
+                    <InFull
+                      says={whatTheSessionIs(row.session)}
+                      wraps={tipBoxOf(true)}
+                    >
                       <StateSay
                         tone={row.session.tone === 'recording' ? 'err' : 'info'}
                         bold
