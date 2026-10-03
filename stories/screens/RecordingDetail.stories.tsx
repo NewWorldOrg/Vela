@@ -1159,7 +1159,7 @@ export const 記録の値は札で言う: Story = {
     await userEvent.click(canvas.getByText('技術情報'))
     await afterTheArrival(canvasElement)
 
-    const pills = ['完全', '完了', '生成済み', '良好'].map((said) => {
+    const pillOf = (said: string): HTMLElement => {
       const pill = canvas.getByText(said).closest('[data-slot="badge"]')
 
       if (!(pill instanceof HTMLElement)) {
@@ -1167,19 +1167,35 @@ export const 記録の値は札で言う: Story = {
       }
 
       return pill
-    })
+    }
 
-    for (const pill of pills) {
+    const said = ['完全', '完了', '生成済み', '良好']
+
+    for (const pill of said.map(pillOf)) {
       const drawn = getComputedStyle(pill)
 
       await expect(drawn.borderTopStyle).not.toBe('none')
       await expect(parseFloat(drawn.borderTopWidth)).toBeGreaterThan(0)
     }
 
+    const measured = said.map((words) => {
+      const pill = pillOf(words)
+
+      return {
+        words,
+        height: pill.getBoundingClientRect().height,
+        connected: pill.isConnected,
+      }
+    })
+
     await expect(
-      new Set(
-        pills.map((pill) => Math.round(pill.getBoundingClientRect().height)),
-      ).size,
+      new Set(measured.map(({ height }) => Math.round(height))).size,
+      measured
+        .map(
+          ({ words, height, connected }) =>
+            `${words} ${height}px ${connected ? 'connected' : 'detached'}`,
+        )
+        .join(', '),
     ).toBe(1)
   },
 }
