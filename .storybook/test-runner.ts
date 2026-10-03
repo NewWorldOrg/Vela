@@ -1,5 +1,11 @@
 import type { Page } from 'playwright'
-import { type TestRunnerConfig, getStoryContext } from '@storybook/test-runner'
+import {
+  type TestRunnerConfig,
+  getStoryContext,
+  setupPage,
+} from '@storybook/test-runner'
+
+import { StoryTurns } from './story-turns'
 
 interface Screen {
   width: number
@@ -926,6 +932,18 @@ async function settled(rounds: number): Promise<void> {
   }
 }
 
+const turns = new StoryTurns()
+
+async function aFreshPage(left: Page): Promise<Page> {
+  const fresh = await left.context().newPage()
+
+  ;(globalThis as { page?: Page }).page = fresh
+  await setupPage(fresh, left.context())
+  await left.close()
+
+  return fresh
+}
+
 const config: TestRunnerConfig = {
   async prepare({ page, browserContext, testRunnerConfig }) {
     const target = process.env.TARGET_URL
@@ -951,7 +969,8 @@ const config: TestRunnerConfig = {
     await proveTheFooterProbeCanFail(page)
   },
 
-  async preVisit(page: Page, context) {
+  async preVisit(left: Page, context) {
+    const page = turns.begin(context.id) ? await aFreshPage(left) : left
     const { parameters } = await getStoryContext(page, context)
     const asked: Screen | undefined = (parameters as { screen?: Screen }).screen
     const size: Screen | null = asked ?? opened
@@ -968,6 +987,10 @@ const config: TestRunnerConfig = {
   },
 
   async postVisit(page: Page, context) {
+    if (!turns.end(context.id)) {
+      return
+    }
+
     await page.evaluate(settled, SETTLING_ROUNDS)
 
     const { missed, taken, overreached } =

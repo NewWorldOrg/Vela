@@ -75,7 +75,9 @@ component comes with the change to its story.
 
 Tests live under `tests/`, never beside the code. `tests/lib/` and
 `tests/repository/` mirror the path of what they test, and a test reaches it
-by `@/` rather than by climbing back out. `tests/storybook/` holds the eleven
+by `@/` rather than by climbing back out. `tests/storybook/` holds one test of
+the story run's own bookkeeping — a story still running when its time ran out
+is moved off the page before the next one starts — and the eleven
 that read the source tree as text rather than importing a module — the waiver
 lists the browser probes cannot police, the `<main>` every screen goes
 through, the manifest that keeps the suite whole, the tables keyed by an
@@ -88,7 +90,7 @@ API's thresholds to keep and never a fraction written down here, the story
 runs in `package.json`, which have to say how many browsers they open at
 once, and the icons, every one of which has to be laid out in the catalogue.
 That directory has no leading dot because `tests/**/*.test.ts` does not match
-one, and those eleven would go missing without a word.
+one, and those twelve would go missing without a word.
 
 ## Data access
 
