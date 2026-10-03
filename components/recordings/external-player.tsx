@@ -2,17 +2,17 @@
 
 import { useState, type ComponentProps, type RefObject } from 'react'
 
-import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import {
   appHref,
   appSays,
   recordingHandover,
   recordingHandoverChoices,
-  ticketedHref,
+  takeTheTicket,
   type Handover,
   type HandoverChoice,
   type PlayerApp,
+  type Taken,
 } from '@/lib/external-player'
 import { usePlayerApps } from '@/hooks/usePlayerApps'
 import type { TicketWrite } from '@/repository/tickets'
@@ -42,24 +42,8 @@ type Picker = { webkitShowPlaybackTargetPicker?: () => void }
 
 const NO_AIRPLAY = 'このブラウザは AirPlay に対応していません。'
 
-const SIGNED_OUT = signedOut('外部プレイヤーの札を発行')
-
-type Taken = { href: string } | { refused: string }
-
-async function ticket(handover: Handover): Promise<Taken> {
-  const write = await handover.take()
-
-  if (write.state === 'unauthenticated') {
-    return { refused: SIGNED_OUT }
-  }
-
-  if (write.state === 'refused') {
-    return { refused: write.message }
-  }
-
-  return {
-    href: ticketedHref(handover, window.location.href, write.ticket.inTheClear),
-  }
+function ticket(handover: Handover): Promise<Taken> {
+  return takeTheTicket(handover, window.location.href)
 }
 
 const OPEN_EXTERNALLY = '外部プレイヤーで開く'

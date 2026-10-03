@@ -1,7 +1,7 @@
 import { liveStreamHref } from '@/repository/live-paths'
 import type { TakeLiveTicket } from '@/repository/live'
 import { videoFileHref } from '@/repository/video-paths'
-import type { TicketWrite } from '@/repository/tickets'
+import { NO_TICKET, type TicketWrite } from '@/repository/tickets'
 import type { PlaybackPlan } from '@/repository/videos'
 import {
   BOTH_SOURCES,
@@ -11,6 +11,7 @@ import {
   type PlaybackSource,
 } from '@/repository/playback-sources'
 import { formatBytes } from '@/lib/format'
+import { signedOut } from '@/lib/signed-out'
 
 export interface Handover {
   path: string
@@ -29,6 +30,36 @@ export function ticketedHref(
   url.password = inTheClear
 
   return url.toString()
+}
+
+export type Taken = { href: string } | { refused: string }
+
+const SIGNED_OUT = signedOut('外部プレイヤーの札を発行')
+
+async function written(handover: Handover): Promise<TicketWrite> {
+  try {
+    return await handover.take()
+  } catch {
+    return { state: 'refused', message: NO_TICKET }
+  }
+}
+
+/** Asks for a ticket and answers with the URL to hand over, or with what to say instead. */
+export async function takeTheTicket(
+  handover: Handover,
+  base: string,
+): Promise<Taken> {
+  const write = await written(handover)
+
+  if (write.state === 'unauthenticated') {
+    return { refused: SIGNED_OUT }
+  }
+
+  if (write.state === 'refused') {
+    return { refused: write.message }
+  }
+
+  return { href: ticketedHref(handover, base, write.ticket.inTheClear) }
 }
 
 export interface HandoverChoice {
