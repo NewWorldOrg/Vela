@@ -160,7 +160,6 @@ export class CaptionSurface {
       })
     }
 
-    // A backgrounded tab gets no requestVideoFrameCallback; the sound plays on.
     if (this.reading === null) {
       this.reading = setInterval(() => this.carry(), READ_MS)
     }
