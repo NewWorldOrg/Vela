@@ -21,6 +21,7 @@ import {
 import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
+import { useTellDisplaced } from '@/components/guide/reservation-area'
 
 const SIGNED_OUT = signedOut('操作')
 
@@ -45,11 +46,13 @@ export function ProgramBooking({
 } & ProgramBookingActions) {
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
+  const tellDisplaced = useTellDisplaced()
   const [editing, setEditing] = useState(false)
 
   const drop = () => {
     startTransition(async () => {
       setRefusal(undefined)
+      tellDisplaced(undefined)
 
       const result = await onCancel(booking.id)
 
@@ -60,7 +63,21 @@ export function ProgramBooking({
             ? result.message
             : undefined,
       )
+      tellDisplaced(result.state === 'ok' ? result.displaced : undefined)
     })
+  }
+
+  const revise = async (id: string, revision: ReservationRevision) => {
+    tellDisplaced(undefined)
+
+    const result = await onRevise(id, revision)
+
+    if (result.state === 'ok') {
+      setRefusal(undefined)
+      tellDisplaced(result.displaced)
+    }
+
+    return result
   }
 
   if (booking.standing === 'recording') {
@@ -110,7 +127,7 @@ export function ProgramBooking({
           booking={{ ...booking, title }}
           open
           onOpenChange={setEditing}
-          onRevise={onRevise}
+          onRevise={revise}
         />
       )}
     </div>

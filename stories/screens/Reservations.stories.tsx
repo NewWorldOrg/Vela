@@ -159,6 +159,106 @@ export const 通常: Story = {
   },
 }
 
+const PUSHED_OUT = [
+  {
+    title: '夜ふかしラジオ倶楽部',
+    meta: '湾岸放送1 · 22:30 – 23:30',
+    origin: '手動',
+  },
+  {
+    title: '水曜ドラマ「約束の丘」',
+    meta: '中央テレビ1 · 23:00 – 24:00',
+    origin: 'ルール',
+    ruleName: 'ドラマの最終回だけ',
+  },
+]
+
+const pushingOut = async (): Promise<ReservationWrite> => ({
+  state: 'ok',
+  verdict: 'secured',
+  displaced: PUSHED_OUT,
+})
+
+export const 優先度を上げて競合になった予約を示す: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    actions: {
+      onCancel: accept,
+      onRestore: accept,
+      onRaise: pushingOut,
+      onRevise: accept,
+      onDiscard: throwing,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
+    await expect(canvas.queryByText('次の予約が競合になりました。')).toBeNull()
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'この予約の優先度を上げる' }),
+    )
+
+    const notice = (
+      await canvas.findByText('次の予約が競合になりました。')
+    ).closest('[data-slot="displaced"]') as HTMLElement
+
+    await expect(notice).toHaveTextContent('夜ふかしラジオ倶楽部')
+    await expect(notice).toHaveTextContent('湾岸放送1 · 22:30 – 23:30')
+    await expect(notice).toHaveTextContent('ドラマの最終回だけ')
+    await expect(
+      [...notice.querySelectorAll('.font-medium')].map(
+        (one) => one.textContent,
+      ),
+    ).toEqual(['夜ふかしラジオ倶楽部', '水曜ドラマ「約束の丘」'])
+  },
+}
+
+export const 優先度を上げても何も落ちなければ何も言わない: Story = {
+  args: { result: shown(RESERVATION_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'この予約の優先度を上げる' }),
+    )
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: 'この予約の優先度を上げる' }),
+      ).toBeEnabled(),
+    )
+    await expect(canvas.queryByText('次の予約が競合になりました。')).toBeNull()
+  },
+}
+
+export const 編集で競合になった予約を示す: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    actions: {
+      onCancel: accept,
+      onRestore: accept,
+      onRaise: accept,
+      onRevise: pushingOut,
+      onDiscard: throwing,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(canvas.getAllByRole('button', { name: '編集' })[0])
+    await userEvent.click(
+      await screen.findByRole('button', { name: '保存する' }),
+    )
+
+    await expect(
+      await canvas.findByText('次の予約が競合になりました。'),
+    ).toBeVisible()
+  },
+}
+
 export const 競合なし: Story = {
   args: {
     result: shown(
