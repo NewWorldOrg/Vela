@@ -1306,6 +1306,43 @@ export const 一時停止のまま開いて読み込み中に置き換わって�
     },
   }
 
+export const 一時停止のまま開いて再生を押したあとに止まって置き換わると再生として開き直す: Story =
+  {
+    args: {
+      detail: detail('1274'),
+      plan: WITH_AN_ARTEFACT,
+      startAt: 612,
+      holdsAtOnce: true,
+      pictureHref: carryingTheSource,
+      askWhy: async () => ({ kind: 'transcode' }),
+      artefact: 'job-a',
+      onAskWhichArtefact: askingWhichArtefact,
+      listenForEncodeJobs: hearingTheJobs,
+    },
+    parameters: {
+      nextjs: {
+        appDirectory: true,
+        navigation: { pathname: AT_1274, query: { at: '612', paused: '1' } },
+      },
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await userEvent.click(canvas.getAllByRole('button', { name: '再生' })[0])
+      canvasElement.querySelector('video')?.dispatchEvent(new Event('error'))
+      await waitFor(() =>
+        expect(canvasElement.querySelector('video')).not.toBeInTheDocument(),
+      )
+
+      await theJobsSay('job-b')
+      await waitFor(() =>
+        expect(getRouter().replace).toHaveBeenCalledWith(`${AT_1274}?at=612`, {
+          scroll: false,
+        }),
+      )
+    },
+  }
+
 export const 一時停止のまま開いて読み込み中にソースを切り替えても一時停止のまま開き直す: Story =
   {
     args: {
