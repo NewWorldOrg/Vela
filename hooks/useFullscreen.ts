@@ -1,6 +1,6 @@
 'use client'
 
-import { useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 
 export interface FullscreenDocument {
   readonly fullscreenElement: unknown
@@ -34,28 +34,11 @@ export interface FullscreenShell {
   requestFullscreen?: () => Promise<void>
 }
 
-declare global {
-  interface HTMLVideoElement {
-    webkitEnterFullscreen?: () => void
-  }
-}
-
-export interface FullscreenPicture {
-  webkitEnterFullscreen?: () => void
-}
-
-function enterThePicturesOwn(picture: FullscreenPicture | null): void {
-  try {
-    picture?.webkitEnterFullscreen?.()
-  } catch {
-    return
-  }
-}
-
-/** Leaves fullscreen, or takes it for the shell, or else for the picture alone where the page has no element fullscreen to give. */
+/** Leaves fullscreen, or takes it for the shell, or else fills the window with the shell where the page has no element fullscreen to give. */
 export function switchFullscreen(
   shell: FullscreenShell | null,
-  picture: FullscreenPicture | null,
+  filled: boolean,
+  fill: (filled: boolean) => void,
   on: FullscreenPage = document,
 ): void {
   if (on.fullscreenElement) {
@@ -64,23 +47,94 @@ export function switchFullscreen(
     return
   }
 
-  if (!shell?.requestFullscreen || on.fullscreenEnabled === false) {
-    enterThePicturesOwn(picture)
+  if (filled) {
+    fill(false)
 
     return
   }
 
-  void shell.requestFullscreen().catch(() => enterThePicturesOwn(picture))
+  if (!shell) {
+    return
+  }
+
+  if (!shell.requestFullscreen || on.fullscreenEnabled === false) {
+    fill(true)
+
+    return
+  }
+
+  void shell.requestFullscreen().catch(() => fill(true))
+}
+
+export interface ScrollablePage {
+  readonly style: { overflow: string }
+}
+
+/** Stops the page from scrolling, and hands back what puts it as it was. */
+export function holdStill(page: ScrollablePage): () => void {
+  const was = page.style.overflow
+
+  page.style.overflow = 'hidden'
+
+  return () => {
+    page.style.overflow = was
+  }
+}
+
+export interface PressedKey {
+  readonly key: string
+  readonly defaultPrevented: boolean
+}
+
+export function leavesTheFill(event: PressedKey): boolean {
+  return event.key === 'Escape' && !event.defaultPrevented
 }
 
 function onTheServer(): boolean {
   return false
 }
 
-export function useFullscreen(element: Element | null): boolean {
-  return useSyncExternalStore(
+export interface Fullscreen {
+  full: boolean
+  filled: boolean
+  toggle: () => void
+}
+
+/** Whether the shell is in fullscreen, either the element's own or filling the window, and the switch between them. */
+export function useFullscreen(shell: Element | null): Fullscreen {
+  const whole = useSyncExternalStore(
     subscribeToFullscreen,
-    () => isInFullscreen(element),
+    () => isInFullscreen(shell),
     onTheServer,
   )
+  const [filled, setFilled] = useState(false)
+
+  useEffect(() => {
+    if (!filled) {
+      return
+    }
+
+    const letGo = [
+      holdStill(document.documentElement),
+      holdStill(document.body),
+    ]
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (leavesTheFill(event)) {
+        setFilled(false)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      letGo.forEach((putBack) => putBack())
+    }
+  }, [filled])
+
+  return {
+    full: whole || filled,
+    filled,
+    toggle: () => switchFullscreen(shell, filled, setFilled),
+  }
 }

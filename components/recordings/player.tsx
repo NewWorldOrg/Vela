@@ -111,7 +111,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedAt, capturedName } from '@/lib/capture-name'
-import { switchFullscreen, useFullscreen } from '@/hooks/useFullscreen'
+import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
 import { AirPlayButton } from '@/components/recordings/external-player'
@@ -204,7 +204,7 @@ export function Player({
   const captioning = opened.captions === 'ready'
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
-  const full = useFullscreen(shell)
+  const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
     unaskedProfile,
@@ -890,8 +890,6 @@ export function Player({
     }
   }
 
-  const toggleFullscreen = () => switchFullscreen(shell, video.current)
-
   const toggleCaptions = () => setCaptioned((was) => !was)
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -954,6 +952,8 @@ export function Player({
     <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
       <section
         ref={setShell}
+        data-full={full ? 'true' : undefined}
+        data-fill={filled ? 'true' : undefined}
         tabIndex={-1}
         data-slot="player"
         onPointerMove={stir}
@@ -969,7 +969,7 @@ export function Player({
           className={cn(
             'relative flex items-center justify-center',
             PLAYER_FACE,
-            '[:fullscreen_&]:aspect-auto [:fullscreen_&]:max-h-none [:fullscreen_&]:min-h-0 [:fullscreen_&]:flex-1',
+            '[[data-full]_&]:aspect-auto [[data-full]_&]:max-h-none [[data-full]_&]:min-h-0 [[data-full]_&]:flex-1',
           )}
         >
           <video
@@ -1021,7 +1021,7 @@ export function Player({
               setPosition(from + at)
               standsAs({ position: from + at })
             }}
-            className={cn(PLAYER_PICTURE, '[:fullscreen_&]:max-w-none')}
+            className={cn(PLAYER_PICTURE, '[[data-full]_&]:max-w-none')}
           />
           <canvas
             ref={holder}
@@ -1031,7 +1031,7 @@ export function Player({
             className={cn(
               'pointer-events-none absolute inset-0 hidden data-[holding]:block',
               PLAYER_PICTURE,
-              '[:fullscreen_&]:max-w-none',
+              '[[data-full]_&]:max-w-none',
             )}
           />
           {captioning && (

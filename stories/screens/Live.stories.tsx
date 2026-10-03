@@ -61,6 +61,7 @@ import type {
 import { LiveView } from '@/components/live/live-page'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { inTheApp } from '@/stories/frames'
+import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'
 
 class ScriptedSocket implements LiveSocket {
   binaryType: BinaryType = 'blob'
@@ -2692,39 +2693,39 @@ export const ピクチャーインピクチャー: Story = {
   },
 }
 
-export const 要素の全画面が無いときは映像の全画面: Story = {
+export const 要素の全画面が無いときはページの中で窓いっぱいに: Story = {
   args: { openSocket: withAPicture },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
     await waitFor(() =>
       expect(captionLayer(canvasElement)).toHaveAttribute(
         'data-caption',
         'shown',
       ),
     )
+    await fillsTheWindowWithoutElementFullscreen(
+      canvasElement,
+      'live-player',
+      'live-captions',
+      'missing',
+    )
+  },
+}
 
-    const shell = canvasElement.querySelector(
-      '[data-slot="live-player"]',
-    ) as HTMLElement
-    const picture = canvasElement.querySelector('video') as HTMLVideoElement
-    let entered = 0
-
-    Object.defineProperty(shell, 'requestFullscreen', {
-      value: undefined,
-      configurable: true,
-    })
-    Object.defineProperty(picture, 'webkitEnterFullscreen', {
-      value: () => {
-        entered += 1
-      },
-      configurable: true,
-    })
-
-    await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
-
-    await expect(entered).toBe(1)
-    await expect(document.fullscreenElement).toBeNull()
+export const 要素の全画面を断られたらページの中で窓いっぱいに: Story = {
+  args: { openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+    await fillsTheWindowWithoutElementFullscreen(
+      canvasElement,
+      'live-player',
+      'live-captions',
+      'refused',
+    )
   },
 }
 

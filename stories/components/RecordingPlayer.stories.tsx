@@ -31,6 +31,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'
 import type { PlaybackFault } from '@/components/recordings/playback-fault'
 import type {
   FeedRecording,
@@ -2558,41 +2559,6 @@ export const ピクチャーインピクチャーを断る映像: Story = {
   },
 }
 
-export const 要素の全画面が無いときは映像の全画面: Story = {
-  args: {
-    detail: detail('1266'),
-    startAt: 0,
-    pictureHref: () => DRAWN_PICTURE,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await showing(canvasElement)
-
-    const shell = canvasElement.querySelector(
-      '[data-slot="player"]',
-    ) as HTMLElement
-    const picture = canvasElement.querySelector('video') as HTMLVideoElement
-    let entered = 0
-
-    Object.defineProperty(shell, 'requestFullscreen', {
-      value: undefined,
-      configurable: true,
-    })
-    Object.defineProperty(picture, 'webkitEnterFullscreen', {
-      value: () => {
-        entered += 1
-      },
-      configurable: true,
-    })
-
-    await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
-
-    await expect(entered).toBe(1)
-    await expect(document.fullscreenElement).toBeNull()
-  },
-}
-
 function tipOf(canvasElement: HTMLElement, name: string | RegExp): HTMLElement {
   const bar = canvasElement.querySelector('[data-slot="player-chrome"]')
 
@@ -3475,5 +3441,31 @@ export const ピクチャーインピクチャーのあいだ字幕は描かな�
     } finally {
       pictureBack()
     }
+  },
+}
+
+export const 要素の全画面が無いときはページの中で窓いっぱいに: Story = {
+  args: CAPTIONS_PLAYING,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await fillsTheWindowWithoutElementFullscreen(
+      canvasElement,
+      'player',
+      'player-captions',
+      'missing',
+    )
+  },
+}
+
+export const 要素の全画面を断られたらページの中で窓いっぱいに: Story = {
+  args: CAPTIONS_PLAYING,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await fillsTheWindowWithoutElementFullscreen(
+      canvasElement,
+      'player',
+      'player-captions',
+      'refused',
+    )
   },
 }

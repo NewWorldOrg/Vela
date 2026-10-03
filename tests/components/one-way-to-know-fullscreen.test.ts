@@ -54,11 +54,17 @@ test('whether a player is in fullscreen is heard in one place, and never copied 
   assert.deepEqual(listening, [])
 })
 
-test('both players read fullscreen from the shared hook', async () => {
+test('both players read and switch fullscreen through the shared hook, and say when they fill the window', async () => {
   for (const file of PLAYERS) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 
-    assert.match(source, /const full = useFullscreen\(shell\)/, file)
+    assert.match(
+      source,
+      /const \{\s*full,\s*filled,\s*toggle: toggleFullscreen,?\s*\} = useFullscreen\(shell\)/,
+      file,
+    )
+    assert.match(source, /data-full=\{full \? 'true' : undefined\}/, file)
+    assert.match(source, /data-fill=\{filled \? 'true' : undefined\}/, file)
     assert.doesNotMatch(source, /setFull\(/, file)
   }
 })
