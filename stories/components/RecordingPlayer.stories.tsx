@@ -2408,6 +2408,41 @@ export const ピクチャーインピクチャーを断る映像: Story = {
   },
 }
 
+export const 要素の全画面が無いときは映像の全画面: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    const shell = canvasElement.querySelector(
+      '[data-slot="player"]',
+    ) as HTMLElement
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+    let entered = 0
+
+    Object.defineProperty(shell, 'requestFullscreen', {
+      value: undefined,
+      configurable: true,
+    })
+    Object.defineProperty(picture, 'webkitEnterFullscreen', {
+      value: () => {
+        entered += 1
+      },
+      configurable: true,
+    })
+
+    await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
+
+    await expect(entered).toBe(1)
+    await expect(document.fullscreenElement).toBeNull()
+  },
+}
+
 function tipOf(canvasElement: HTMLElement, name: string | RegExp): HTMLElement {
   const bar = canvasElement.querySelector('[data-slot="player-chrome"]')
 

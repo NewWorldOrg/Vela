@@ -60,7 +60,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
-import { useFullscreen } from '@/hooks/useFullscreen'
+import { switchFullscreen, useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
@@ -593,15 +593,7 @@ export function LivePlayer({
     }
   }
 
-  const toggleFullscreen = () => {
-    if (document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => undefined)
-
-      return
-    }
-
-    void shell?.requestFullscreen?.().catch(() => undefined)
-  }
+  const toggleFullscreen = () => switchFullscreen(shell, video.current)
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const command = playerCommand(event, {
