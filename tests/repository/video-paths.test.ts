@@ -63,13 +63,13 @@ test('a sound the recording does not carry is refused in Japanese', () => {
   const said = whyItRefused(
     WHEN_CARRYING_A_SOUND,
     400,
-    'The broadcast this recording was made from carried one sound, so it has ' +
-      'no secondary sound to play.',
+    'The broadcast this recording was made from did not carry the sound ' +
+      'asked for, so there is nothing of it to play.',
   )
 
   assert.equal(
     said,
-    'この録画のもとになった放送は音声を 1 つしか運んでいないため、副音声を再生できません。',
+    'この録画のもとになった放送は選んだ音声を運んでいないため、再生できません。',
   )
   assert.doesNotMatch(said, /[A-Za-z]/)
 })
@@ -78,8 +78,8 @@ test('every reason the play endpoint gives for a sound is answered in Japanese',
   const heard = [
     'A recording handed over as it is carries the one sound it was encoded ' +
       'with, so there is no sound to choose. Ask for it without naming a sound.',
-    'A recording is played with the main sound the broadcast carried or with ' +
-      'its secondary sound, and with no other.',
+    'A recording is played with one of the sounds main, secondary, third, ' +
+      'or with the main one when none is named, and with no other.',
     'The sounds this recording carries could not be read: ffprobe said nothing.',
   ]
 

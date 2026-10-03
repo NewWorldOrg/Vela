@@ -1756,7 +1756,7 @@ export const 再生できない_持っていない音声を頼んだ: Story = {
     pictureHref: noPicture,
     askWhy: answering({
       kind: 'refused',
-      said: 'この録画のもとになった放送は音声を 1 つしか運んでいないため、副音声を再生できません。',
+      said: 'この録画のもとになった放送は選んだ音声を運んでいないため、再生できません。',
     }),
   },
   play: async ({ canvasElement }) => {
@@ -1765,7 +1765,7 @@ export const 再生できない_持っていない音声を頼んだ: Story = {
     await waitFor(() =>
       expect(canvas.getByText('再生を開始できませんでした')).toBeVisible(),
     )
-    await expect(canvas.getByText(/副音声を再生できません/)).toBeVisible()
+    await expect(canvas.getByText(/選んだ音声を運んでいないため/)).toBeVisible()
     await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
   },
 }
