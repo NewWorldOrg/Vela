@@ -37,14 +37,16 @@ async function fillsTheWindow(
   const bar = onTheScreen(shell, 'player-chrome').getBoundingClientRect()
 
   await expect(bar.bottom).toBeLessThanOrEqual(window.innerHeight)
-  await expect(document.documentElement.style.overflow).toBe('hidden')
+  await waitFor(() =>
+    expect(document.documentElement.style.overflow).toBe('hidden'),
+  )
   await expect(document.fullscreenElement).toBeNull()
 }
 
 async function givesTheWindowBack(shell: HTMLElement): Promise<void> {
   await waitFor(() => expect(shell).not.toHaveAttribute('data-fill'))
   await expect(getComputedStyle(shell).position).not.toBe('fixed')
-  await expect(document.documentElement.style.overflow).toBe('')
+  await waitFor(() => expect(document.documentElement.style.overflow).toBe(''))
 }
 
 /** Takes element fullscreen away from a player, then sees its fullscreen switch fill the window instead, captions and bar still drawn, and leave it again by the switch and by Escape. */
