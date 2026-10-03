@@ -188,6 +188,28 @@ export const 物理chを指定してスキャンする: Story = {
   },
 }
 
+const TUNING_NOT_TAKEN =
+  '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。'
+
+export const 物理chの指定を断られたとき: Story = {
+  args: {
+    result: { state: 'ok', result: CHANNELS },
+    onStart: answering({ state: 'rejected', message: TUNING_NOT_TAKEN }),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement)
+    const range = within(canvas.getByRole('group', { name: 'スキャン範囲' }))
+
+    await userEvent.click(range.getByRole('button', { name: '物理ch指定' }))
+    await userEvent.type(canvas.getByLabelText(/物理チャンネル/), '27')
+    await userEvent.click(canvas.getByRole('button', { name: 'スキャン開始' }))
+
+    await expect(await canvas.findByText(TUNING_NOT_TAKEN)).toBeVisible()
+    await expect(args.onStart).toHaveBeenCalledTimes(1)
+    await expect(canvas.getByLabelText(/物理チャンネル/)).toHaveValue('27')
+  },
+}
+
 export const 候補を開いた状態: Story = {
   args: { result: { state: 'ok', result: CHANNELS } },
   play: async ({ canvasElement }) => {
