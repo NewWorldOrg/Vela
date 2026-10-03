@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
   type KeyboardEvent,
@@ -126,6 +127,10 @@ import {
   readCaptions as readTheCaptions,
   type ReadCaptions,
 } from '@/components/recordings/read-captions'
+import {
+  feedRecording as feedTheRecording,
+  type FeedRecording,
+} from '@/components/recordings/recording-feed'
 
 const RESTS = 3000
 
@@ -156,6 +161,7 @@ export function Player({
   askWhy = askWhyItWouldNotPlay,
   takeCapture = takeItNow,
   readCaptions = readTheCaptions,
+  feedRecording = feedTheRecording,
 }: {
   detail: RecordingDetail
   plan: PlaybackPlan
@@ -185,6 +191,7 @@ export function Player({
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
   takeCapture?: TakeCapture
   readCaptions?: ReadCaptions
+  feedRecording?: FeedRecording
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -218,6 +225,9 @@ export function Player({
   const fromNow = useRef(from)
   const [position, setPosition] = useState(startAt ?? 0)
   const onTheFly = plan.transcodes
+  const [streamed, setStreamed] = useState(opened.transcodes)
+  const [openings, setOpenings] = useState(0)
+  const cut = useRef(false)
   const [source, setSource] = useState(() =>
     opensPlaying
       ? pictureHref(
@@ -457,6 +467,7 @@ export function Player({
 
     hold()
     setWaitsForAHand(false)
+    cut.current = false
     wanted.current = null
     attempt.current += 1
     asked.current += 1
@@ -470,6 +481,8 @@ export function Player({
     setSound(carrying)
     standsAs({ position: second, profile: quality, sound: carrying })
     setPhase('waiting')
+    setStreamed(under.transcodes)
+    setOpenings((were) => were + 1)
     setSource(
       pictureHref(
         d.id,
@@ -504,6 +517,43 @@ export function Player({
     })
   }
 
+  const noteBuffered = (ranges: TimeRanges) =>
+    setBuffered(ranges.length > 0 ? from + ranges.end(ranges.length - 1) : 0)
+
+  const feedFaulted = useEffectEvent(() => stumbled())
+
+  const feedCut = useEffectEvent(() => {
+    if (video.current?.paused ?? true) {
+      cut.current = true
+
+      return
+    }
+
+    play(asItStands.current.position)
+  })
+
+  const feedBuffered = useEffectEvent(() => {
+    if (video.current) {
+      noteBuffered(video.current.buffered)
+    }
+  })
+
+  useEffect(() => {
+    const element = video.current
+
+    if (!element || source === undefined || !streamed || !faceUp) {
+      return
+    }
+
+    const carrying = feedRecording(element, source, {
+      onFault: () => feedFaulted(),
+      onCut: () => feedCut(),
+      onBuffered: () => feedBuffered(),
+    })
+
+    return () => carrying.close()
+  }, [source, streamed, faceUp, feedRecording, openings])
+
   const answer = (what: PlayerBezel) =>
     setBezel((last) => ({ ...what, nth: (last?.nth ?? 0) + 1 }))
 
@@ -521,9 +571,22 @@ export function Player({
   const toggle = () => {
     const element = video.current
 
-    if (phase === 'idle' || phase === 'broken' || !element || !source) {
+    if (
+      phase === 'idle' ||
+      phase === 'broken' ||
+      !element ||
+      !source ||
+      cut.current
+    ) {
       answer({ was: 'play' })
       play(position)
+
+      return
+    }
+
+    if (streamed && element.ended) {
+      answer({ was: 'play' })
+      play(0)
 
       return
     }
@@ -911,7 +974,7 @@ export function Player({
         >
           <video
             ref={video}
-            src={source}
+            src={streamed ? undefined : source}
             autoPlay={source !== undefined && !waitsForAHand}
             poster={poster}
             preload={waitsForAHand ? 'auto' : 'none'}
@@ -941,13 +1004,7 @@ export function Player({
             }
             onEnded={() => setPhase('paused')}
             onError={stumbled}
-            onProgress={(event) => {
-              const ranges = event.currentTarget.buffered
-
-              setBuffered(
-                ranges.length > 0 ? from + ranges.end(ranges.length - 1) : 0,
-              )
-            }}
+            onProgress={(event) => noteBuffered(event.currentTarget.buffered)}
             onTimeUpdate={(event) => {
               if (asking.current) {
                 return
