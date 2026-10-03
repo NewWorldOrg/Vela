@@ -113,9 +113,9 @@ export function liveHandover(
 }
 
 export function airPlayCanBeHanded(
-  plan: Pick<PlaybackPlan, 'source' | 'alternative'>,
+  plan: Pick<PlaybackPlan, 'source' | 'transcodes'>,
 ): boolean {
-  return plan.source === THE_ARTEFACT || plan.alternative === THE_ARTEFACT
+  return plan.source === THE_ARTEFACT && !plan.transcodes
 }
 
 export type PlayerApp = 'vlc' | 'infuse'

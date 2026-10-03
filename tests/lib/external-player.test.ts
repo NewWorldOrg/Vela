@@ -229,21 +229,30 @@ test('a session that has lapsed carries no saying, and builds no URL either', as
   assert.deepEqual(built, [])
 })
 
-test('AirPlay is handed a recording whose plan names the artefact, whichever one is playing', () => {
+test('AirPlay is handed a recording while its artefact plays by range', () => {
   assert.equal(
-    airPlayCanBeHanded({ source: 'artefact', alternative: 'recording' }),
+    airPlayCanBeHanded({ source: 'artefact', transcodes: false }),
     true,
   )
+})
+
+test('AirPlay is not handed a recording that streams through a media source', () => {
   assert.equal(
-    airPlayCanBeHanded({ source: 'recording', alternative: 'artefact' }),
-    true,
+    airPlayCanBeHanded({ source: 'recording', transcodes: true }),
+    false,
   )
-  assert.equal(airPlayCanBeHanded({ source: 'artefact' }), true)
+  assert.equal(
+    airPlayCanBeHanded({ source: 'artefact', transcodes: true }),
+    false,
+  )
 })
 
 test('AirPlay is not handed a recording with no artefact to give it', () => {
-  assert.equal(airPlayCanBeHanded({ source: 'recording' }), false)
-  assert.equal(airPlayCanBeHanded({}), false)
+  assert.equal(
+    airPlayCanBeHanded({ source: 'recording', transcodes: false }),
+    false,
+  )
+  assert.equal(airPlayCanBeHanded({ transcodes: false }), false)
 })
 
 const TICKETED = `https://ticket:${TICKET}@vela.example/api/videos/a-recording?source=recording`

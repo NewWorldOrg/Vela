@@ -32,6 +32,10 @@ import {
 } from '@/components/recordings/take-capture'
 import { ScreenMain } from '@/components/vela/app-shell'
 import type { PlaybackFault } from '@/components/recordings/playback-fault'
+import type {
+  FeedRecording,
+  RecordingFeedEvents,
+} from '@/components/recordings/recording-feed'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -219,6 +223,23 @@ function planningWithTheSource(answer: PlaybackPlan) {
   }
 }
 
+const handedAsItIs: FeedRecording = (video, href) => {
+  video.src = href
+
+  return { close: () => {} }
+}
+
+const fed: string[] = []
+
+const feeding: { events?: RecordingFeedEvents } = {}
+
+const keptForTheFeed: FeedRecording = (_video, href, events) => {
+  fed.push(href)
+  feeding.events = events
+
+  return { close: () => {} }
+}
+
 function answering(fault: PlaybackFault) {
   return async () => fault
 }
@@ -261,6 +282,7 @@ const meta = {
     onAskForTheSound: planning(ON_THE_FLY),
     onKeepPosition: keepingThePosition,
     frameHref: drawnFrame,
+    feedRecording: handedAsItIs,
   },
   decorators: [
     (Story) => (
@@ -457,13 +479,96 @@ export const エンコード済みがある録画は_AirPlay_を置く: Story = 
   },
 }
 
-export const 元のままを再生していてもエンコード済みがあれば_AirPlay_を置く: Story =
+export const 元のままを再生しているあいだは_AirPlay_を置かない: Story = {
+  args: { detail: detail('1274'), plan: THE_RECORDING_ITSELF },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('button', { name: '設定' })).toBeVisible()
+    await expect(canvas.queryByRole('button', { name: 'AirPlay' })).toBeNull()
+  },
+}
+
+export const 元のままは映像のアドレスにせず受け取って流す: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: THE_RECORDING_ITSELF,
+    startAt: 0,
+    pictureHref: carryingTheSource,
+    feedRecording: keptForTheFeed,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(fed.at(-1)).toBe(handed.at(-1)))
+    await expect(
+      canvasElement.querySelector('video')?.getAttribute('src'),
+    ).toBeNull()
+  },
+}
+
+export const エンコード済みは映像のアドレスに渡す: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 0,
+    pictureHref: carryingTheSource,
+    feedRecording: keptForTheFeed,
+  },
+  play: async ({ canvasElement }) => {
+    fed.length = 0
+
+    await expect(canvasElement.querySelector('video')).toHaveAttribute(
+      'src',
+      handed.at(-1),
+    )
+    await expect(fed).toEqual([])
+  },
+}
+
+export const 受け取れなかったら理由を確かめて言う: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: carryingTheSource,
+    feedRecording: keptForTheFeed,
+    askWhy: answering({ kind: 'tooManyAtOnce' }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(fed.at(-1)).toBe(handed.at(-1)))
+    feeding.events?.onFault()
+    await waitFor(() =>
+      expect(
+        canvas.getByText('同時に再生できる本数の上限に達しています'),
+      ).toBeVisible(),
+    )
+  },
+}
+
+export const 止めているあいだに受け取りが切れたら_次の再生でその秒から開き直す: Story =
   {
-    args: { detail: detail('1274'), plan: THE_RECORDING_ITSELF },
+    args: {
+      detail: detail('1266'),
+      startAt: 600,
+      pictureHref: carryingTheSource,
+      feedRecording: keptForTheFeed,
+    },
     play: async ({ canvasElement }) => {
-      await expect(
-        within(canvasElement).getByRole('button', { name: 'AirPlay' }),
-      ).toBeVisible()
+      const canvas = within(canvasElement)
+
+      await waitFor(() => expect(fed.at(-1)).toBe(handed.at(-1)))
+
+      const opened = fed.length
+      const first = asked.at(-1)
+
+      feeding.events?.onCut()
+      await expect(fed.length).toBe(opened)
+
+      await userEvent.click(
+        canvas.getAllByRole('button', { name: '再生' }).at(-1) as HTMLElement,
+      )
+      await waitFor(() => expect(fed.length).toBe(opened + 1))
+      await expect(asked.at(-1)).toBe(first)
     },
   }
 
@@ -844,9 +949,11 @@ export const 元のままを再生している録画はエンコード済みに�
         '/api/videos/1274/play?from=0&profile=1080p60&source=recording',
       ),
     )
-    await expect(canvasElement.querySelector('video')).toHaveAttribute(
-      'src',
-      handed.at(-1),
+    await waitFor(() =>
+      expect(canvasElement.querySelector('video')).toHaveAttribute(
+        'src',
+        handed.at(-1),
+      ),
     )
 
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))

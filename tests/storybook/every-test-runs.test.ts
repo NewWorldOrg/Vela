@@ -76,6 +76,7 @@ const THE_SUITE = [
   'tests/lib/quality-trend.test.ts',
   'tests/lib/quality.test.ts',
   'tests/lib/recording-captions.test.ts',
+  'tests/lib/recording-stream.test.ts',
   'tests/lib/recordings.test.ts',
   'tests/lib/reservation-outcomes.test.ts',
   'tests/lib/reservations.test.ts',
