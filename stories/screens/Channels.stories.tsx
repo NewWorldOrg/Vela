@@ -128,6 +128,11 @@ export const 物理chを指定してスキャンする: Story = {
     await userEvent.click(range.getByRole('button', { name: '物理ch指定' }))
 
     const channel = canvas.getByLabelText(/物理チャンネル/)
+    const widthOfTheField = () =>
+      (
+        channel.closest('[data-slot="field"]') as HTMLElement
+      ).getBoundingClientRect().width
+    const calm = widthOfTheField()
 
     await expect(canvas.queryByLabelText(/TSID/)).toBeNull()
 
@@ -135,6 +140,7 @@ export const 物理chを指定してスキャンする: Story = {
     await expect(
       await canvas.findByText('物理チャンネルを半角数字で入力してください。'),
     ).toBeVisible()
+    await expect(widthOfTheField()).toBe(calm)
     await expect(args.onStart).not.toHaveBeenCalled()
 
     await userEvent.type(channel, '12')

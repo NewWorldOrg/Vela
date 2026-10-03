@@ -67,10 +67,12 @@ export function TuningFields({
   id,
   hold,
   className,
+  entryClassName,
 }: {
   id: string
   hold: TuningEntryHold
   className?: string
+  entryClassName?: string
 }) {
   const { entry, problem, amend } = hold
   const range = tuningChannelRangeOf(entry.system)
@@ -90,7 +92,7 @@ export function TuningFields({
         />
       </Field>
 
-      <Field>
+      <Field className={entryClassName}>
         <FieldLabel htmlFor={`${id}-channel`}>
           物理チャンネル
           <RequiredMark />
@@ -114,7 +116,7 @@ export function TuningFields({
       </Field>
 
       {range.ts && (
-        <Field>
+        <Field className={entryClassName}>
           <FieldLabel htmlFor={`${id}-stream`}>
             TSID
             <RequiredMark />
