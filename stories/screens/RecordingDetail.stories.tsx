@@ -66,6 +66,7 @@ function planned(over: Partial<PlaybackPlan> = {}): PlaybackRead {
       mediaType: 'video/mp4',
       sounds: ['main'],
       chapters: [],
+      captions: 'none',
       ...over,
     },
   }

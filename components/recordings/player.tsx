@@ -121,6 +121,11 @@ import {
   type PlaybackFault,
 } from '@/components/recordings/playback-fault'
 import { still } from '@/components/vela/tactile'
+import { RecordingCaptions } from '@/components/recordings/recording-captions'
+import {
+  readCaptions as readTheCaptions,
+  type ReadCaptions,
+} from '@/components/recordings/read-captions'
 
 const RESTS = 3000
 
@@ -150,6 +155,7 @@ export function Player({
   pictureHref = videoPictureHref,
   askWhy = askWhyItWouldNotPlay,
   takeCapture = takeItNow,
+  readCaptions = readTheCaptions,
 }: {
   detail: RecordingDetail
   plan: PlaybackPlan
@@ -178,12 +184,17 @@ export function Player({
   ) => string
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
   takeCapture?: TakeCapture
+  readCaptions?: ReadCaptions
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const inTheAddress = useSearchParams()
   const video = useRef<HTMLVideoElement>(null)
   const holder = useRef<HTMLCanvasElement>(null)
+  const overlay = useRef<HTMLCanvasElement>(null)
+  const captions = useRef<RecordingCaptions | null>(null)
+  const [captioned, setCaptioned] = useState(true)
+  const captioning = opened.captions === 'ready'
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const full = useFullscreen(shell)
@@ -204,6 +215,7 @@ export function Player({
   const opening = whereItStarts(opened, startAt ?? 0)
   const landing = useRef<number | null>(opensPlaying ? opening.land : null)
   const [from, setFrom] = useState(opensPlaying ? opening.from : 0)
+  const fromNow = useRef(from)
   const [position, setPosition] = useState(startAt ?? 0)
   const onTheFly = plan.transcodes
   const [source, setSource] = useState(() =>
@@ -224,6 +236,7 @@ export function Player({
       : redrawnHref(d.thumbnailHref, redrawnAt)
 
   const [holding, setHolding] = useState(false)
+  const heldNow = useRef(false)
 
   const [stirred, setStirred] = useState(false)
   const [onTheBar, setOnTheBar] = useState(false)
@@ -300,6 +313,7 @@ export function Player({
     const got = await takeCapture({
       video: video.current,
       name: capturedName(d.title, capturedAt(position)),
+      over: (context, size) => captions.current?.drawOn(context, size),
     })
 
     setSaid(
@@ -357,6 +371,41 @@ export function Player({
     return () => element.removeEventListener('loadedmetadata', land)
   }, [source])
 
+  const faceUp = phase !== 'broken'
+
+  useEffect(() => {
+    const element = video.current
+    const plate = overlay.current
+
+    if (!captioning || !faceUp || !element || !plate) {
+      return
+    }
+
+    const seenAt = () => {
+      if (
+        heldNow.current ||
+        element.seeking ||
+        element.readyState < element.HAVE_CURRENT_DATA ||
+        theLandingIsStillAhead(landing.current, element.currentTime)
+      ) {
+        return null
+      }
+
+      return fromNow.current + element.currentTime
+    }
+
+    const layer = new RecordingCaptions(plate, element, seenAt, (at, signal) =>
+      readCaptions(d.id, at, opened.source, signal),
+    )
+
+    captions.current = layer
+
+    return () => {
+      layer.close()
+      captions.current = null
+    }
+  }, [captioning, faceUp, d.id, opened.source, readCaptions])
+
   const aimed = useRef(false)
 
   const stir = () => {
@@ -384,6 +433,7 @@ export function Player({
     plate.width = element.videoWidth
     plate.height = element.videoHeight
     plate.getContext('2d')?.drawImage(element, 0, 0)
+    heldNow.current = true
     setHolding(true)
   }
 
@@ -413,6 +463,7 @@ export function Player({
     landing.current = starts.land
     shownUnder.current = under
     nowAsking(null)
+    fromNow.current = starts.from
     setFrom(starts.from)
     setPosition(second)
     setProfile(quality)
@@ -778,9 +829,12 @@ export function Player({
 
   const toggleFullscreen = () => switchFullscreen(shell, video.current)
 
+  const toggleCaptions = () => setCaptioned((was) => !was)
+
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const command = playerCommand(event, {
       seeks: duration > 0,
+      captions: captioning,
       aimed: aimed.current,
     })
 
@@ -812,6 +866,9 @@ export function Player({
         break
       case 'fullscreen':
         toggleFullscreen()
+        break
+      case 'captions':
+        toggleCaptions()
         break
     }
   }
@@ -873,6 +930,7 @@ export function Player({
               )
             }
             onPlaying={() => {
+              heldNow.current = false
               setHolding(false)
               setPhase('playing')
               stir()
@@ -919,6 +977,15 @@ export function Player({
               '[:fullscreen_&]:max-w-none',
             )}
           />
+          {captioning && (
+            <canvas
+              ref={overlay}
+              aria-hidden="true"
+              data-slot="player-captions"
+              data-drawn={captioned && !pip.out ? 'yes' : 'no'}
+              className="pointer-events-none absolute inset-0 size-full"
+            />
+          )}
           {!pip.out && (
             <div
               data-slot="player-press"
@@ -1137,17 +1204,26 @@ export function Player({
                     />
                   </PlayerTip>
                 )}
-                <PlayerTip name="字幕" container={shell}>
-                  <button
-                    type="button"
-                    disabled
-                    aria-label="字幕"
-                    aria-pressed={false}
-                    className={PLAYER_GLYPH_BUTTON}
+                {captioning && (
+                  <PlayerTip
+                    name="字幕"
+                    keys={[KEY_CAP.captions]}
+                    container={shell}
                   >
-                    <CaptionsGlyph />
-                  </button>
-                </PlayerTip>
+                    <button
+                      type="button"
+                      aria-label="字幕"
+                      aria-pressed={captioned}
+                      onClick={toggleCaptions}
+                      className={cn(
+                        PLAYER_GLYPH_BUTTON,
+                        captioned && PLAYER_GLYPH_BUTTON_ON,
+                      )}
+                    >
+                      <CaptionsGlyph />
+                    </button>
+                  </PlayerTip>
+                )}
                 <PlayerTip name="設定" container={shell}>
                   <PlayerSettings
                     container={shell}

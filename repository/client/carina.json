@@ -104,6 +104,93 @@
         }
       }
     },
+    "/api/videos/{id}/captions": {
+      "get": {
+        "tags": [
+          "videos"
+        ],
+        "summary": "The captions of a recording for ten minutes of the source it is played from, starting at the second asked for: the caption already showing there first, then every change before the second the answer covers to, each at the second of that source counted from its own zero, as a palette PNG placed on the canvas or as the screen cleared. The plan says whether there are any to ask for: it answers 409 while they are still being taken from the recording, and 404 where there are none to draw over that source. Opened with the reader's own session only, never with a ticket.",
+        "operationId": "getVideoCaptions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "The second of the source the ten minutes of captions start at, counted from the source's own zero, as the player's position reads it. Seconds may be fractional, and asking for none starts at the beginning.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "default": 0
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Which of the two files the captions are placed on, asked the way the plan was asked. The seconds of the artefact and of the recording itself differ by what the encode skipped at the head, so a caption is placed on the one being played.",
+            "schema": {
+              "enum": [
+                "artefact",
+                "recording"
+              ],
+              "type": "string",
+              "default": "artefact"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCaptionWindowResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCaptionWindowResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCaptionWindowResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCaptionWindowResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/videos/{id}/thumbnail": {
       "get": {
         "tags": [
@@ -7368,6 +7455,32 @@
           }
         }
       },
+      "BaseResponderOfCaptionWindowResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CaptionWindowResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfCollectionStatusResponder": {
         "required": [
           "status",
@@ -9779,6 +9892,141 @@
                 "$ref": "#/components/schemas/ScanMeasurementResponder"
               }
             ]
+          }
+        }
+      },
+      "CaptionCanvasResponder": {
+        "required": [
+          "width",
+          "height"
+        ],
+        "type": "object",
+        "properties": {
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CaptionCueResponder": {
+        "required": [
+          "atSec",
+          "picture"
+        ],
+        "type": "object",
+        "properties": {
+          "atSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "picture": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CaptionPictureResponder"
+              }
+            ]
+          }
+        }
+      },
+      "CaptionPictureResponder": {
+        "required": [
+          "left",
+          "top",
+          "width",
+          "height",
+          "png"
+        ],
+        "type": "object",
+        "properties": {
+          "left": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "top": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "png": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      },
+      "CaptionStanding": {
+        "enum": [
+          "ready",
+          "coming",
+          "none"
+        ],
+        "type": "string"
+      },
+      "CaptionWindowResponder": {
+        "required": [
+          "canvas",
+          "untilSec",
+          "cues"
+        ],
+        "type": "object",
+        "properties": {
+          "canvas": {
+            "$ref": "#/components/schemas/CaptionCanvasResponder"
+          },
+          "untilSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "cues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaptionCueResponder"
+            }
           }
         }
       },
@@ -12523,7 +12771,8 @@
           "bytes",
           "resumeAtSec",
           "sounds",
-          "chapters"
+          "chapters",
+          "captions"
         ],
         "type": "object",
         "properties": {
@@ -12597,6 +12846,9 @@
             "items": {
               "$ref": "#/components/schemas/PlaybackChapterResponder"
             }
+          },
+          "captions": {
+            "$ref": "#/components/schemas/CaptionStanding"
           }
         }
       },

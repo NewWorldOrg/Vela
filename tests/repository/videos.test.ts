@@ -133,6 +133,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
     bytes: null,
     sounds: ['main', 'secondary'],
     chapters: [],
+    captions: 'ready',
   }
 
   const read = await getPlaybackPlan('1266')
@@ -162,8 +163,30 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       resumeAtSec: undefined,
       sounds: ['main', 'secondary'],
       chapters: [],
+      captions: 'ready',
     },
   })
+})
+
+test('a word for the captions this build does not know reads as having none to draw', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+    sounds: ['main'],
+    chapters: [],
+    captions: 'translated',
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.equal(read.state === 'planned' && read.plan.captions, 'none')
 })
 
 test('the plan for a sound is asked for by naming it', async () => {
