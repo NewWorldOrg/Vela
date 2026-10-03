@@ -29,20 +29,20 @@ export const WHEN_CARRYING_A_SOUND: PlaybackAsking = {
 }
 
 export const THE_SOUNDS_COULD_NOT_BE_READ =
-  'この録画が運んでいる音声を読み取れなかったため、副音声を再生できません。'
+  'この録画が運んでいる音声を読み取れなかったため、選んだ音声を再生できません。'
 
 const REFUSAL_SAYINGS: [RegExp, string][] = [
   [
-    /has no secondary sound/i,
-    'この録画のもとになった放送は音声を 1 つしか運んでいないため、副音声を再生できません。',
+    /did not carry the sound asked for/i,
+    'この録画のもとになった放送は選んだ音声を運んでいないため、再生できません。',
   ],
   [
     /there is no sound to choose/i,
     'この録画は成果物をそのまま渡すため、音声を選べません。',
   ],
   [
-    /with the main sound the broadcast carried or with its secondary sound/i,
-    '再生できるのは主音声か副音声のどちらかです。',
+    /played with one of the sounds/i,
+    '再生できるのは主音声・副音声・第2音声のどれかです。',
   ],
   [
     /sounds this recording carries could not be read/i,
