@@ -10,10 +10,10 @@ import type { TicketWrite } from '@/repository/tickets'
 import type { PlaybackPlan } from '@/repository/videos'
 import {
   PLAYBACK_REFUSAL_HEADER,
-  PLAYBACK_REFUSAL_TOO_MANY,
   WHEN_CARRYING_A_SOUND,
   whyItRefused,
 } from '@/repository/video-paths'
+import { whatTheAnswerSays, type PlainFault } from '@/lib/playback-fault'
 import {
   ClockIcon,
   DangerIcon,
@@ -24,13 +24,6 @@ import {
 import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import { ExternalPlayerOpener } from '@/components/recordings/external-player'
-
-type PlainFault =
-  | 'leftScrambled'
-  | 'tooManyAtOnce'
-  | 'nothingToPlay'
-  | 'undecodable'
-  | 'transcode'
 
 export type PlaybackFault =
   { kind: PlainFault } | { kind: 'refused'; said: string }
@@ -53,30 +46,21 @@ export async function askWhyItWouldNotPlay(
 ): Promise<PlaybackFault> {
   try {
     const answer = await fetch(href, { cache: 'no-store' })
+    const says = whatTheAnswerSays(
+      {
+        status: answer.status,
+        refusal: answer.headers.get(PLAYBACK_REFUSAL_HEADER),
+      },
+      transcodes,
+    )
 
-    if (
-      answer.headers.get(PLAYBACK_REFUSAL_HEADER) === PLAYBACK_REFUSAL_TOO_MANY
-    ) {
-      void answer.body?.cancel()
-
-      return { kind: 'tooManyAtOnce' }
-    }
-
-    if (answer.status === 400) {
+    if (says === 'refused') {
       return { kind: 'refused', said: await refusalIn(answer) }
     }
 
     void answer.body?.cancel()
 
-    if (answer.status === 404) {
-      return { kind: 'nothingToPlay' }
-    }
-
-    if (answer.ok && !transcodes) {
-      return { kind: 'undecodable' }
-    }
-
-    return { kind: 'transcode' }
+    return { kind: says }
   } catch {
     return { kind: 'transcode' }
   }
@@ -125,6 +109,14 @@ const SAID: Record<PlainFault, Said> = {
     mark: <WarningIcon className="size-[calc(22rem/16)]" />,
     title: 'このブラウザでは再生できません',
     body: () => '成果物のコーデックをこのブラウザが復号できません。',
+    worthRetrying: false,
+    worthLeaving: true,
+  },
+  theBrowserWouldNotPlay: {
+    tone: 'gone',
+    mark: <WarningIcon className="size-[calc(22rem/16)]" />,
+    title: 'このブラウザでは再生できません',
+    body: () => 'トランスコードした映像をこのブラウザが再生できませんでした。',
     worthRetrying: false,
     worthLeaving: true,
   },

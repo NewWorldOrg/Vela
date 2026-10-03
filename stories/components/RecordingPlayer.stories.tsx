@@ -555,6 +555,36 @@ export const 受け取れなかったら理由を確かめて言う: Story = {
   },
 }
 
+export const 変換した映像をブラウザが再生できなかったら_変換の失敗とは言わない: Story =
+  {
+    args: {
+      detail: detail('1266'),
+      startAt: 0,
+      pictureHref: () => '/pwa/icon-192.png',
+      feedRecording: keptForTheFeed,
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() => expect(fed.at(-1)).toBe('/pwa/icon-192.png'))
+      feeding.events?.onFault()
+      await waitFor(() =>
+        expect(
+          canvas.getByText('このブラウザでは再生できません'),
+        ).toBeVisible(),
+      )
+      await expect(
+        canvas.getByText(
+          'トランスコードした映像をこのブラウザが再生できませんでした。',
+        ),
+      ).toBeVisible()
+      await expect(
+        canvas.queryByText('元 TS からのトランスコードに失敗しました。'),
+      ).toBeNull()
+      await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
+    },
+  }
+
 export const 止めているあいだに受け取りが切れたら_次の再生でその秒から開き直す: Story =
   {
     args: {

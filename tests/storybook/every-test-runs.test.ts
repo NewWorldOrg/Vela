@@ -65,6 +65,7 @@ const THE_SUITE = [
   'tests/lib/motion.test.ts',
   'tests/lib/not-yet-in-this-build.test.ts',
   'tests/lib/path.test.ts',
+  'tests/lib/playback-fault.test.ts',
   'tests/lib/playback-resume.test.ts',
   'tests/lib/playback-sound.test.ts',
   'tests/lib/playback-source.test.ts',
