@@ -888,6 +888,21 @@ test('異常は、破った閾値から題を取り、観測と適用閾値を�
   assert.equal(result.anomalies.owned, 1)
 })
 
+test('録画の異常は、id の綴りが違ってもライブラリの番組名で呼ばれる', async () => {
+  standing()
+  store.ledger = [inTheLibrary('0f1e2d3c4b5a69788796a5b4c3d2e1f0', '湾岸の夜')]
+  store.incidents = [
+    incident({
+      subjectKind: 'recording',
+      subjectKey: '0F1E2D3C-4B5A-6978-8796-A5B4C3D2E1F0',
+    }),
+  ]
+
+  const [anomaly] = (await getQuality()).anomalies.items
+
+  assert.equal(anomaly.subject, '湾岸の夜')
+})
+
 test('異常の観測の率は、同じ画面のほかの面と同じ小数 3 桁で書く', async () => {
   standing()
   store.incidents = [
