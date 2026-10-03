@@ -384,6 +384,7 @@ export function Player({
     const seenAt = () => {
       if (
         heldNow.current ||
+        element.seeking ||
         element.readyState < element.HAVE_CURRENT_DATA ||
         theLandingIsStillAhead(landing.current, element.currentTime)
       ) {
