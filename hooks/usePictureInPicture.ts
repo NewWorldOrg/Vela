@@ -19,6 +19,31 @@ function subscribe(onChange: () => void) {
   }
 }
 
+declare global {
+  interface HTMLVideoElement {
+    webkitSupportsPresentationMode?: (mode: string) => boolean
+  }
+}
+
+export interface FloatablePicture {
+  readonly disablePictureInPicture?: boolean
+  webkitSupportsPresentationMode?: (mode: string) => boolean
+}
+
+/** Whether a picture-in-picture button would do anything: the document has to allow it, and so does the picture itself. */
+export function offersPictureInPicture(
+  enabled: boolean | undefined,
+  picture: FloatablePicture | null,
+): boolean {
+  if (enabled !== true || picture?.disablePictureInPicture === true) {
+    return false
+  }
+
+  return (
+    picture?.webkitSupportsPresentationMode?.('picture-in-picture') !== false
+  )
+}
+
 function onTheServer(): boolean {
   return false
 }
@@ -29,8 +54,7 @@ export function usePictureInPicture(
   const offered = useSyncExternalStore(
     subscribe,
     () =>
-      document.pictureInPictureEnabled &&
-      video.current?.disablePictureInPicture !== true,
+      offersPictureInPicture(document.pictureInPictureEnabled, video.current),
     onTheServer,
   )
 

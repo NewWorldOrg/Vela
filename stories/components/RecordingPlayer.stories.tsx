@@ -2376,6 +2376,38 @@ export const ピクチャーインピクチャーを断るブラウザ: Story = 
   },
 }
 
+export const ピクチャーインピクチャーを断る映像: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+    await expect(
+      canvas.getByRole('button', { name: 'ピクチャーインピクチャー' }),
+    ).toBeVisible()
+
+    Object.defineProperty(picture, 'webkitSupportsPresentationMode', {
+      value: (mode: string) => mode !== 'picture-in-picture',
+      configurable: true,
+    })
+    picture.dispatchEvent(new Event('leavepictureinpicture', { bubbles: true }))
+
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole('button', { name: 'ピクチャーインピクチャー' }),
+      ).toBeNull(),
+    )
+    await expect(canvas.getByRole('button', { name: '全画面' })).toBeVisible()
+  },
+}
+
 function tipOf(canvasElement: HTMLElement, name: string | RegExp): HTMLElement {
   const bar = canvasElement.querySelector('[data-slot="player-chrome"]')
 

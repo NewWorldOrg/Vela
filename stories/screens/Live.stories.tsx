@@ -2692,6 +2692,35 @@ export const ピクチャーインピクチャー: Story = {
   },
 }
 
+export const ピクチャーインピクチャーを断る映像: Story = {
+  args: { openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    const picture = canvasElement.querySelector('video') as HTMLVideoElement
+
+    Object.defineProperty(picture, 'webkitSupportsPresentationMode', {
+      value: (mode: string) => mode !== 'picture-in-picture',
+      configurable: true,
+    })
+    picture.dispatchEvent(new Event('leavepictureinpicture', { bubbles: true }))
+
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole('button', { name: 'ピクチャーインピクチャー' }),
+      ).toBeNull(),
+    )
+    await expect(canvas.getByRole('button', { name: '全画面' })).toBeVisible()
+  },
+}
+
 function liveTipOf(
   canvasElement: HTMLElement,
   name: string | RegExp,

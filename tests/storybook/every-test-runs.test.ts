@@ -34,6 +34,7 @@ const THE_SUITE = [
   'tests/hooks/useHeldWhileClosing.test.ts',
   'tests/hooks/useKeptPosition.test.ts',
   'tests/hooks/useNow.test.ts',
+  'tests/hooks/usePictureInPicture.test.ts',
   'tests/hooks/useReadAgain.test.ts',
   'tests/lib/app-signals.test.ts',
   'tests/lib/arrival.test.ts',
