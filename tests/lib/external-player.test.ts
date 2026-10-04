@@ -300,20 +300,40 @@ test('VLC is handed the whole URL, escaped, the way its x-callback takes a strea
   )
 })
 
-test('Infuse is handed the whole URL, escaped, the way its x-callback plays one', () => {
+test('Infuse is handed the ticket in the query, since it refuses a URL carrying credentials', () => {
   assert.equal(
     appHref('infuse', TICKETED),
-    `infuse://x-callback-url/play?url=https%3A%2F%2Fticket%3A${TICKET}%40vela.example%2Fapi%2Fvideos%2Fa-recording%3Fsource%3Drecording`,
+    `infuse://x-callback-url/play?url=https%3A%2F%2Fvela.example%2Fapi%2Fvideos%2Fa-recording%3Fsource%3Drecording%26ticket%3D${TICKET}`,
   )
 })
 
-test('what an app is handed reads back as the URL that was given', () => {
-  for (const app of ['vlc', 'infuse'] as const) {
-    assert.equal(
-      new URL(appHref(app, TICKETED)).searchParams.get('url'),
-      TICKETED,
-    )
-  }
+test('what Infuse is handed reads back with no credentials and the ticket beside the source', () => {
+  const handed = new URL(
+    new URL(appHref('infuse', TICKETED)).searchParams.get('url') ?? '',
+  )
+
+  assert.equal(handed.username, '')
+  assert.equal(handed.password, '')
+  assert.equal(handed.origin, 'https://vela.example')
+  assert.equal(handed.pathname, '/api/videos/a-recording')
+  assert.equal(handed.searchParams.get('source'), 'recording')
+  assert.equal(handed.searchParams.get('ticket'), TICKET)
+})
+
+test('Infuse is handed a live channel with the ticket as its only query', () => {
+  const live = ticketedHref(liveHandover(32736, 1024, issued), WATCHING, TICKET)
+
+  assert.equal(
+    new URL(appHref('infuse', live)).searchParams.get('url'),
+    `https://vela.example/api/live/32736-1024/stream?ticket=${TICKET}`,
+  )
+})
+
+test('what VLC is handed reads back as the URL that was given', () => {
+  assert.equal(
+    new URL(appHref('vlc', TICKETED)).searchParams.get('url'),
+    TICKETED,
+  )
 })
 
 const AN_IPHONE = {

@@ -125,14 +125,36 @@ export interface Browsing {
   maxTouchPoints: number
 }
 
-const THE_APPS: Record<PlayerApp, { says: string; opens: string }> = {
+const TICKET_IN_THE_QUERY = 'ticket'
+
+function asItIs(ticketed: string): string {
+  return ticketed
+}
+
+function inTheQuery(ticketed: string): string {
+  const url = new URL(ticketed)
+  const ticket = decodeURIComponent(url.password)
+
+  url.username = ''
+  url.password = ''
+  url.searchParams.set(TICKET_IN_THE_QUERY, ticket)
+
+  return url.toString()
+}
+
+const THE_APPS: Record<
+  PlayerApp,
+  { says: string; opens: string; carries: (ticketed: string) => string }
+> = {
   vlc: {
     says: 'VLC で開く',
     opens: 'vlc-x-callback://x-callback-url/stream?url=',
+    carries: asItIs,
   },
   infuse: {
     says: 'Infuse で開く',
     opens: 'infuse://x-callback-url/play?url=',
+    carries: inTheQuery,
   },
 }
 
@@ -168,6 +190,9 @@ export function appSays(app: PlayerApp): string {
   return THE_APPS[app].says
 }
 
-export function appHref(app: PlayerApp, url: string): string {
-  return `${THE_APPS[app].opens}${encodeURIComponent(url)}`
+/** The URL that opens the app, handing it the ticketed URL in the form the app accepts. */
+export function appHref(app: PlayerApp, ticketed: string): string {
+  const { opens, carries } = THE_APPS[app]
+
+  return `${opens}${encodeURIComponent(carries(ticketed))}`
 }
