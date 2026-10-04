@@ -172,6 +172,7 @@ export function Player({
     id: string,
     sound: SoundTrack,
     source?: PlaybackSource,
+    decodes?: readonly BrowserDecoding[],
   ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   artefact?: string
@@ -719,7 +720,7 @@ export function Player({
 
     nowAsking(next)
 
-    void onAskForTheSound(d.id, next, plan.source)
+    void onAskForTheSound(d.id, next, plan.source, plan.decodes)
       .then((answer) => {
         if (asked.current !== mine) {
           return
@@ -829,7 +830,12 @@ export function Player({
 
       const mine = (replanned.current += 1)
 
-      void onAskForTheSound(d.id, asItStands.current.sound, plan.source)
+      void onAskForTheSound(
+        d.id,
+        asItStands.current.sound,
+        plan.source,
+        plan.decodes,
+      )
         .then((answer) => {
           if (replanned.current !== mine || answer.state !== 'planned') {
             return

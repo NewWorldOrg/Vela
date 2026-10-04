@@ -1,9 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
 
-import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
+import { H265, type BrowserDecoding } from '@/lib/browser-decodes'
 import type { EncodeWrite } from '@/repository/encode'
 import { getStandingArtefact, queueEncode } from '@/repository/encode'
 import type { PlaybackSource } from '@/repository/playback-sources'
@@ -50,10 +49,14 @@ export async function askForTheSound(
   id: string,
   sound: SoundTrack,
   source?: PlaybackSource,
+  decodes: readonly BrowserDecoding[] = [],
 ): Promise<PlaybackRead> {
-  const decodes = decodesOf((await cookies()).get(DECODES_COOKIE)?.value)
-
-  return getPlaybackPlan(id, sound, source, decodes)
+  return getPlaybackPlan(
+    id,
+    sound,
+    source,
+    decodes.filter((one) => one === H265),
+  )
 }
 
 export async function queueEncoding(

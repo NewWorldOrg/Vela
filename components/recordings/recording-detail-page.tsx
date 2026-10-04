@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import type { Route } from 'next'
 
+import type { BrowserDecoding } from '@/lib/browser-decodes'
 import { cn } from '@/lib/utils'
 import { formatLength } from '@/lib/format'
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
@@ -161,6 +162,7 @@ export function RecordingDetailView({
     id: string,
     sound: SoundTrack,
     source?: PlaybackSource,
+    decodes?: readonly BrowserDecoding[],
   ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   artefact?: string
