@@ -1,6 +1,12 @@
-import { liveStreamHref } from '@/repository/live-paths'
+import {
+  liveStreamHref,
+  liveStreamWithTicketHref,
+} from '@/repository/live-paths'
 import type { TakeLiveTicket } from '@/repository/live'
-import { videoFileHref } from '@/repository/video-paths'
+import {
+  videoFileHref,
+  videoFileWithTicketHref,
+} from '@/repository/video-paths'
 import { NO_TICKET, type TicketWrite } from '@/repository/tickets'
 import type { PlaybackPlan } from '@/repository/videos'
 import {
@@ -16,6 +22,7 @@ import { signedOut } from '@/lib/signed-out'
 export interface Handover {
   path: string
   user: string
+  named: (inTheClear: string) => string
   take: () => Promise<TicketWrite>
 }
 
@@ -32,7 +39,51 @@ export function ticketedHref(
   return url.toString()
 }
 
-export type Taken = { href: string } | { refused: string }
+export function namedHref(
+  handover: Handover,
+  base: string,
+  inTheClear: string,
+): string {
+  return new URL(handover.named(inTheClear), base).toString()
+}
+
+export type Handed = { href: string; named: string }
+
+export type Taken = Handed | { refused: string }
+
+const LONGEST_NAME = 100
+
+const NOT_IN_A_NAME = new Set(['/', '\\', '\u007f'])
+
+function inAName(character: string): string {
+  const control = (character.codePointAt(0) ?? 0) < 0x20
+
+  return control || NOT_IN_A_NAME.has(character) ? ' ' : character
+}
+
+/** The file name a player shows as the title: what is being watched, then the extension of what it is handed. */
+export function fileNameOf(
+  showing: string,
+  extension: string,
+  otherwise: string,
+): string {
+  const plain = Array.from(showing, inAName).join('').replace(/\s+/g, ' ')
+  const kept = Array.from(plain.trim()).slice(0, LONGEST_NAME).join('').trim()
+
+  return `${kept || otherwise}.${extension}`
+}
+
+const A_RECORDING = '録画'
+
+const ON_AIR = 'ライブ'
+
+const TRANSPORT_STREAM = 'ts'
+
+const AN_MP4 = 'mp4'
+
+function extensionOf(source: PlaybackSource | undefined): string {
+  return source === THE_ARTEFACT ? AN_MP4 : TRANSPORT_STREAM
+}
 
 const SIGNED_OUT = signedOut('外部プレイヤーの札を発行')
 
@@ -59,7 +110,10 @@ export async function takeTheTicket(
     return { refused: write.message }
   }
 
-  return { href: ticketedHref(handover, base, write.ticket.inTheClear) }
+  return {
+    href: ticketedHref(handover, base, write.ticket.inTheClear),
+    named: namedHref(handover, base, write.ticket.inTheClear),
+  }
 }
 
 export interface HandoverChoice {
@@ -73,10 +127,15 @@ export function recordingHandover(
   id: string,
   take: (id: string) => Promise<TicketWrite>,
   source?: PlaybackSource,
+  title = '',
 ): Handover {
+  const fileName = fileNameOf(title, extensionOf(source), A_RECORDING)
+
   return {
     path: videoFileHref(id, source),
     user: 'ticket',
+    named: (inTheClear) =>
+      videoFileWithTicketHref(id, inTheClear, fileName, source),
     take: () => take(id),
   }
 }
@@ -86,6 +145,7 @@ export function recordingHandoverChoices(
   take: (id: string) => Promise<TicketWrite>,
   plan: Pick<PlaybackPlan, 'source' | 'alternative' | 'externalPlayerSources'>,
   recordedBytes: number | null | undefined,
+  title = '',
 ): HandoverChoice[] {
   const handed = plan.externalPlayerSources ?? [plan.source, plan.alternative]
 
@@ -96,7 +156,7 @@ export function recordingHandoverChoices(
       source === THE_RECORDING_ITSELF && recordedBytes != null
         ? formatBytes(recordedBytes)
         : undefined,
-    handover: recordingHandover(id, take, source),
+    handover: recordingHandover(id, take, source, title),
   }))
 }
 
@@ -104,10 +164,20 @@ export function liveHandover(
   networkId: number,
   serviceId: number,
   take: TakeLiveTicket,
+  channel = '',
+  programme = '',
 ): Handover {
+  const fileName = fileNameOf(
+    `${channel} ${programme}`,
+    TRANSPORT_STREAM,
+    ON_AIR,
+  )
+
   return {
     path: liveStreamHref(networkId, serviceId),
     user: '',
+    named: (inTheClear) =>
+      liveStreamWithTicketHref(networkId, serviceId, inTheClear, fileName),
     take: () => take(networkId, serviceId),
   }
 }
@@ -125,36 +195,19 @@ export interface Browsing {
   maxTouchPoints: number
 }
 
-const TICKET_IN_THE_QUERY = 'ticket'
-
-function asItIs(ticketed: string): string {
-  return ticketed
-}
-
-function inTheQuery(ticketed: string): string {
-  const url = new URL(ticketed)
-  const ticket = decodeURIComponent(url.password)
-
-  url.username = ''
-  url.password = ''
-  url.searchParams.set(TICKET_IN_THE_QUERY, ticket)
-
-  return url.toString()
-}
-
 const THE_APPS: Record<
   PlayerApp,
-  { says: string; opens: string; carries: (ticketed: string) => string }
+  { says: string; opens: string; takes: keyof Handed }
 > = {
   vlc: {
     says: 'VLC で開く',
     opens: 'vlc-x-callback://x-callback-url/stream?url=',
-    carries: asItIs,
+    takes: 'href',
   },
   infuse: {
     says: 'Infuse で開く',
     opens: 'infuse://x-callback-url/play?url=',
-    carries: inTheQuery,
+    takes: 'named',
   },
 }
 
@@ -191,8 +244,8 @@ export function appSays(app: PlayerApp): string {
 }
 
 /** The URL that opens the app, handing it the ticketed URL in the form the app accepts. */
-export function appHref(app: PlayerApp, ticketed: string): string {
-  const { opens, carries } = THE_APPS[app]
+export function appHref(app: PlayerApp, handed: Handed): string {
+  const { opens, takes } = THE_APPS[app]
 
-  return `${opens}${encodeURIComponent(carries(ticketed))}`
+  return `${opens}${encodeURIComponent(handed[takes])}`
 }

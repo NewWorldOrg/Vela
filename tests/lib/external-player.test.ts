@@ -4,7 +4,9 @@ import { test } from 'node:test'
 import {
   airPlayCanBeHanded,
   appHref,
+  fileNameOf,
   liveHandover,
+  namedHref,
   playerAppsOn,
   recordingHandover,
   recordingHandoverChoices,
@@ -293,45 +295,150 @@ test('AirPlay is not handed a recording with no artefact to give it', () => {
 
 const TICKETED = `https://ticket:${TICKET}@vela.example/api/videos/a-recording?source=recording`
 
+const NAMED = `https://vela.example/api/videos/a-recording/with-ticket/${TICKET}/a-programme.ts?source=recording`
+
+const HANDED = { href: TICKETED, named: NAMED }
+
 test('VLC is handed the whole URL, escaped, the way its x-callback takes a stream', () => {
   assert.equal(
-    appHref('vlc', TICKETED),
+    appHref('vlc', HANDED),
     `vlc-x-callback://x-callback-url/stream?url=https%3A%2F%2Fticket%3A${TICKET}%40vela.example%2Fapi%2Fvideos%2Fa-recording%3Fsource%3Drecording`,
   )
 })
 
-test('Infuse is handed the ticket in the query, since it refuses a URL carrying credentials', () => {
+test('Infuse is handed the URL with the ticket in its path, since it does not send the credentials in a URL', () => {
   assert.equal(
-    appHref('infuse', TICKETED),
-    `infuse://x-callback-url/play?url=https%3A%2F%2Fvela.example%2Fapi%2Fvideos%2Fa-recording%3Fsource%3Drecording%26ticket%3D${TICKET}`,
+    new URL(appHref('infuse', HANDED)).searchParams.get('url'),
+    NAMED,
   )
 })
 
-test('what Infuse is handed reads back with no credentials and the ticket beside the source', () => {
-  const handed = new URL(
-    new URL(appHref('infuse', TICKETED)).searchParams.get('url') ?? '',
+test('a recording is named for Infuse by its title, with the ticket in the path and no credentials', () => {
+  const named = new URL(
+    namedHref(
+      recordingHandover(
+        'a-recording',
+        async () => issued(),
+        'recording',
+        '番組 の名前',
+      ),
+      DETAIL,
+      TICKET,
+    ),
   )
 
-  assert.equal(handed.username, '')
-  assert.equal(handed.password, '')
-  assert.equal(handed.origin, 'https://vela.example')
-  assert.equal(handed.pathname, '/api/videos/a-recording')
-  assert.equal(handed.searchParams.get('source'), 'recording')
-  assert.equal(handed.searchParams.get('ticket'), TICKET)
+  assert.equal(named.username, '')
+  assert.equal(named.password, '')
+  assert.equal(named.origin, 'https://vela.example')
+  assert.equal(
+    named.pathname,
+    `/api/videos/a-recording/with-ticket/${TICKET}/${encodeURIComponent('番組 の名前.ts')}`,
+  )
+  assert.equal(named.searchParams.get('source'), 'recording')
+  assert.equal(named.searchParams.get('ticket'), null)
 })
 
-test('Infuse is handed a live channel with the ticket as its only query', () => {
-  const live = ticketedHref(liveHandover(32736, 1024, issued), WATCHING, TICKET)
+test('the name ends in the extension of what is handed over', () => {
+  const name = (source?: 'artefact' | 'recording') =>
+    new URL(
+      namedHref(
+        recordingHandover('a-recording', async () => issued(), source, 'A'),
+        DETAIL,
+        TICKET,
+      ),
+    ).pathname
+      .split('/')
+      .at(-1)
+
+  assert.equal(name('artefact'), 'A.mp4')
+  assert.equal(name('recording'), 'A.ts')
+})
+
+test('every choice offered for a recording carries its title in the name', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    { source: 'artefact', alternative: 'recording' },
+    RECORDED_BYTES,
+    'A',
+  )
+
+  assert.deepEqual(
+    choices.map((one) => namedHref(one.handover, DETAIL, TICKET)),
+    [
+      `https://vela.example/api/videos/a-recording/with-ticket/${TICKET}/A.mp4?source=artefact`,
+      `https://vela.example/api/videos/a-recording/with-ticket/${TICKET}/A.ts?source=recording`,
+    ],
+  )
+})
+
+test('a live channel is named for Infuse by the channel and what is on', () => {
+  assert.equal(
+    namedHref(
+      liveHandover(32736, 1024, issued, 'チャンネル', '番組'),
+      WATCHING,
+      TICKET,
+    ),
+    `https://vela.example/api/live/32736-1024/with-ticket/${TICKET}/${encodeURIComponent('チャンネル 番組.ts')}`,
+  )
+})
+
+test('a live channel with nothing known to be on is named by the channel alone', () => {
+  assert.equal(
+    namedHref(liveHandover(32736, 1024, issued, 'チャンネル'), WATCHING, TICKET)
+      .split('/')
+      .at(-1),
+    encodeURIComponent('チャンネル.ts'),
+  )
+})
+
+test('a name keeps out what would break the path or the line, and stays short', () => {
+  assert.equal(fileNameOf(' a/b\\c\nd\u0000e ', 'ts', 'x'), 'a b c d e.ts')
+  assert.equal(fileNameOf('', 'mp4', '録画'), '録画.mp4')
+  assert.equal(fileNameOf(' / ', 'ts', 'ライブ'), 'ライブ.ts')
+  assert.equal(
+    fileNameOf('あ'.repeat(150), 'ts', 'x'),
+    `${'あ'.repeat(100)}.ts`,
+  )
+})
+
+test('a name that reads as a step out of the path stays the last part of it', () => {
+  const named = new URL(
+    namedHref(
+      recordingHandover('a-recording', async () => issued(), 'recording', '..'),
+      DETAIL,
+      TICKET,
+    ),
+  )
 
   assert.equal(
-    new URL(appHref('infuse', live)).searchParams.get('url'),
-    `https://vela.example/api/live/32736-1024/stream?ticket=${TICKET}`,
+    named.pathname,
+    `/api/videos/a-recording/with-ticket/${TICKET}/...ts`,
   )
+})
+
+test('characters that mean something in a URL are escaped in the name', () => {
+  const last = namedHref(
+    recordingHandover(
+      'a-recording',
+      async () => issued(),
+      'recording',
+      'a?b#c&d%e',
+    ),
+    DETAIL,
+    TICKET,
+  )
+
+  assert.equal(
+    new URL(last).pathname.split('/').at(-1),
+    encodeURIComponent('a?b#c&d%e.ts'),
+  )
+  assert.equal(new URL(last).searchParams.get('source'), 'recording')
 })
 
 test('what VLC is handed reads back as the URL that was given', () => {
   assert.equal(
-    new URL(appHref('vlc', TICKETED)).searchParams.get('url'),
+    new URL(appHref('vlc', HANDED)).searchParams.get('url'),
     TICKETED,
   )
 })
@@ -403,8 +510,14 @@ test('a device with no app to open one in is offered none', () => {
 
 test('a ticket that is issued becomes the URL the player is handed', async () => {
   assert.deepEqual(
-    await takeTheTicket(recordingHandover('a-recording', issued), DETAIL),
-    { href: `https://ticket:${TICKET}@vela.example/api/videos/a-recording` },
+    await takeTheTicket(
+      recordingHandover('a-recording', issued, undefined, 'A'),
+      DETAIL,
+    ),
+    {
+      href: `https://ticket:${TICKET}@vela.example/api/videos/a-recording`,
+      named: `https://vela.example/api/videos/a-recording/with-ticket/${TICKET}/A.ts`,
+    },
   )
 })
 

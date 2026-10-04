@@ -124,7 +124,7 @@ function useHandingOver() {
       const got = await asked
 
       if ('href' in got) {
-        window.location.assign(appHref(app, got.href))
+        window.location.assign(appHref(app, got))
       }
 
       return null
@@ -291,7 +291,7 @@ export function ExternalPlayerOpener({
   onTakeTicket,
   tone,
 }: {
-  recording: { id: string; sizeBytes?: number | null }
+  recording: { id: string; title: string; sizeBytes?: number | null }
   plan: Pick<PlaybackPlan, 'source' | 'alternative' | 'externalPlayerSources'>
   onTakeTicket: (id: string) => Promise<TicketWrite>
   tone?: 'page' | 'player'
@@ -301,12 +301,18 @@ export function ExternalPlayerOpener({
     onTakeTicket,
     plan,
     recording.sizeBytes,
+    recording.title,
   )
 
   return (
     <HandoverMenu
       choices={choices}
-      only={recordingHandover(recording.id, onTakeTicket)}
+      only={recordingHandover(
+        recording.id,
+        onTakeTicket,
+        undefined,
+        recording.title,
+      )}
       tone={tone}
     />
   )
