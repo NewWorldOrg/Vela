@@ -2642,6 +2642,7 @@ export interface components {
       route: components['schemas']['PlaybackRoute']
       source: components['schemas']['PlaybackSource']
       alternative: null | components['schemas']['PlaybackSource']
+      externalPlayerSources: components['schemas']['PlaybackSource'][]
       seeking: null | components['schemas']['PlaybackSeeking']
       canSeek: boolean
       transcodes: boolean
@@ -4207,8 +4208,10 @@ export interface operations {
         profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
         /** @description The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with. */
         sound?: 'main' | 'secondary' | 'third'
-        /** @description Which of the two files a recording can be played from is played. Asking for the artefact hands over the one encoded of this recording where there is one a browser plays, and transcodes the recording itself while playing where there is not; asking for none does the same, as it always did. Asking for the recording transcodes the recording itself while playing even where an artefact was made of it, and is refused where the recording is no longer on the disk rather than quietly handing over the artefact. Either way the transcoder is shared with live channels, so a recording asked for as it was recorded takes one of the few pictures this machine transcodes at once. The plan names the one it plays and the other one it could be asked for. */
+        /** @description Which of the two files a recording can be played from is played. Asking for the artefact hands over the one encoded of this recording where there is one the browser plays - H.264, or H.265 tagged hvc1 where the browser says it decodes h265 - and transcodes the recording itself while playing where there is not; asking for none does the same, as it always did. Asking for the recording transcodes the recording itself while playing even where an artefact was made of it, and is refused where the recording is no longer on the disk rather than quietly handing over the artefact. Either way the transcoder is shared with live channels, so a recording asked for as it was recorded takes one of the few pictures this machine transcodes at once. The plan names the one it plays and the other one it could be asked for, and apart from both the files an external player is handed, which no browser's decoding narrows. */
         source?: 'artefact' | 'recording'
+        /** @description The picture codings the browser asking says it decodes, each named once. H.264 is always taken to be decoded. Naming h265 lets an artefact encoded in H.265 and tagged hvc1 be handed over as it is; one tagged hev1 is still transcoded while playing. Naming none decodes H.264 alone, as it always did, and naming anything else is refused. The picture and the captions are asked for with what the plan was asked with, so that all three settle on the same file. */
+        decodes?: ('h264' | 'h265')[]
       }
       header?: never
       path: {
@@ -4252,6 +4255,8 @@ export interface operations {
         from?: number
         /** @description Which of the two files the captions are placed on, asked the way the plan was asked. The seconds of the artefact and of the recording itself differ by what the encode skipped at the head, so a caption is placed on the one being played. */
         source?: 'artefact' | 'recording'
+        /** @description The picture codings the browser says it decodes, named as the plan was asked with, so that the captions are placed on the file the plan settled on: naming h265 lets that be an artefact encoded in H.265 and tagged hvc1. */
+        decodes?: ('h264' | 'h265')[]
       }
       header?: never
       path: {
