@@ -402,6 +402,13 @@ test('a name keeps out what would break the path or the line, and stays short', 
   )
 })
 
+test('a half of a surrogate pair that stands alone does not stop the name being escaped', () => {
+  const name = fileNameOf('a\ud800b', 'ts', 'x')
+
+  assert.equal(name, 'a b.ts')
+  assert.equal(encodeURIComponent(name), 'a%20b.ts')
+})
+
 test('a name that reads as a step out of the path stays the last part of it', () => {
   const named = new URL(
     namedHref(

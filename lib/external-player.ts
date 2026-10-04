@@ -55,10 +55,14 @@ const LONGEST_NAME = 100
 
 const NOT_IN_A_NAME = new Set(['/', '\\', '\u007f'])
 
-function inAName(character: string): string {
-  const control = (character.codePointAt(0) ?? 0) < 0x20
+function unfit(code: number): boolean {
+  return code < 0x20 || (code >= 0xd800 && code <= 0xdfff)
+}
 
-  return control || NOT_IN_A_NAME.has(character) ? ' ' : character
+function inAName(character: string): string {
+  const code = character.codePointAt(0) ?? 0
+
+  return unfit(code) || NOT_IN_A_NAME.has(character) ? ' ' : character
 }
 
 /** The file name a player shows as the title: what is being watched, then the extension of what it is handed. */
