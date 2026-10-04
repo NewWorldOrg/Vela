@@ -108,6 +108,13 @@ test('a picture transcoded as it plays carries the profile and the sound', () =>
   )
 })
 
+test('the picture is asked for with what the browser told the plan it decodes', () => {
+  assert.equal(
+    videoPictureHref('1266', 0, undefined, 'main', 'artefact', ['h265']),
+    '/api/videos/1266/play?from=0&sound=main&source=artefact&decodes=h265',
+  )
+})
+
 test('an artefact handed over as it is carries the sound too, with no profile', () => {
   assert.equal(
     videoPictureHref('1266', 0, undefined, 'main'),

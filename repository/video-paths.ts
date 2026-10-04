@@ -1,3 +1,4 @@
+import type { BrowserDecoding } from '@/lib/browser-decodes'
 import { couldNot } from '@/lib/try-again'
 import type { operations } from '@/repository/client/schema'
 import type { PlaybackSource } from '@/repository/playback-sources'
@@ -74,6 +75,7 @@ export function videoPictureHref(
   profile?: PlaybackProfile,
   sound?: SoundTrack,
   source?: PlaybackSource,
+  decodes: readonly BrowserDecoding[] = [],
 ) {
   const asked = new URLSearchParams({ from: String(whole(from)) })
 
@@ -87,6 +89,10 @@ export function videoPictureHref(
 
   if (source) {
     asked.set('source', source)
+  }
+
+  for (const one of decodes) {
+    asked.append('decodes', one)
   }
 
   return `${VIDEOS}/${encodeURIComponent(id)}/play?${asked.toString()}`

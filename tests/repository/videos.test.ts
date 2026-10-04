@@ -10,6 +10,7 @@ interface Sent {
   accept?: string
   sound?: string
   source?: string
+  decodes?: string[]
   positionSec?: number
 }
 
@@ -42,15 +43,20 @@ mock.module('@/repository/client/carina', {
         path: string,
         init?: {
           headers?: { accept?: string }
-          params?: { query?: { sound?: string; source?: string } }
+          params?: {
+            query?: { sound?: string; source?: string; decodes?: string[] }
+          }
         },
       ) => {
+        const decodes = init?.params?.query?.decodes
+
         sent.push({
           method: 'GET',
           path,
           accept: init?.headers?.accept,
           sound: init?.params?.query?.sound,
           source: init?.params?.query?.source,
+          ...(decodes === undefined ? {} : { decodes }),
         })
 
         if (path === '/api/live/profiles') {
@@ -154,6 +160,8 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       route: 'onTheFly',
       source: undefined,
       alternative: undefined,
+      externalPlayerSources: undefined,
+      decodes: [],
       seeking: 'byStartingAgain',
       canSeek: false,
       transcodes: true,
@@ -166,6 +174,72 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       captions: 'ready',
     },
   })
+})
+
+test('a browser that decodes H.265 says so when asking for the plan, and the plan keeps what it was told', async () => {
+  sent.length = 0
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'direct',
+    source: 'artefact',
+    alternative: 'recording',
+    externalPlayerSources: ['artefact', 'recording'],
+    seeking: 'byRange',
+    canSeek: true,
+    transcodes: false,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: 900,
+    sounds: [],
+    chapters: [],
+    captions: 'none',
+  }
+
+  const read = await getPlaybackPlan('1267', undefined, undefined, ['h265'])
+
+  assert.deepEqual(sent, [
+    {
+      method: 'GET',
+      path: '/api/videos/{id}/play',
+      accept: 'application/json',
+      sound: undefined,
+      source: undefined,
+      decodes: ['h265'],
+    },
+  ])
+  assert.equal(read.state, 'planned')
+  assert.deepEqual(read.state === 'planned' && read.plan.decodes, ['h265'])
+  assert.deepEqual(
+    read.state === 'planned' && read.plan.externalPlayerSources,
+    ['artefact', 'recording'],
+  )
+})
+
+test('the sources an external player is handed leave out a word this build does not know', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    source: 'recording',
+    externalPlayerSources: ['artefact', 'subtitles', 'recording'],
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+    sounds: ['main'],
+    chapters: [],
+    captions: 'none',
+  }
+
+  const read = await getPlaybackPlan('1268')
+
+  assert.deepEqual(
+    read.state === 'planned' && read.plan.externalPlayerSources,
+    ['artefact', 'recording'],
+  )
 })
 
 test('a word for the captions this build does not know reads as having none to draw', async () => {

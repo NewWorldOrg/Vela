@@ -11,6 +11,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
+import type { BrowserDecoding } from '@/lib/browser-decodes'
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
 import { nextBoundaryAfter, whereTheBreakEnds } from '@/lib/player-chapters'
@@ -187,6 +188,7 @@ export function Player({
     profile?: PlaybackProfile,
     sound?: SoundTrack,
     source?: PlaybackSource,
+    decodes?: readonly BrowserDecoding[],
   ) => string
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
   takeCapture?: TakeCapture
@@ -236,6 +238,7 @@ export function Player({
           opened.transcodes ? unaskedProfile : undefined,
           soundToAsk(opened.sounds, MAIN_SOUND),
           opened.source,
+          opened.decodes,
         )
       : undefined,
   )
@@ -405,7 +408,7 @@ export function Player({
     }
 
     const layer = new RecordingCaptions(plate, element, seenAt, (at, signal) =>
-      readCaptions(d.id, at, opened.source, signal),
+      readCaptions(d.id, at, opened.source, signal, opened.decodes),
     )
 
     captions.current = layer
@@ -414,7 +417,7 @@ export function Player({
       layer.close()
       captions.current = null
     }
-  }, [captioning, faceUp, d.id, opened.source, readCaptions])
+  }, [captioning, faceUp, d.id, opened.source, opened.decodes, readCaptions])
 
   const aimed = useRef(false)
 
@@ -490,6 +493,7 @@ export function Player({
         under.transcodes ? quality : undefined,
         soundToAsk(under.sounds, carrying),
         under.source,
+        under.decodes,
       ),
     )
   }
