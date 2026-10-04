@@ -111,6 +111,42 @@ test('an encoded recording offers the artefact first and the recording with its 
   ])
 })
 
+test('an artefact this browser cannot play is still offered to an external player when the plan says it can be handed over', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    {
+      source: 'recording',
+      alternative: undefined,
+      externalPlayerSources: ['artefact', 'recording'],
+    },
+    RECORDED_BYTES,
+  )
+
+  assert.deepEqual(
+    choices.map((one) => one.source),
+    ['artefact', 'recording'],
+  )
+})
+
+test('what an external player is handed is what the plan names for it, not what this browser can switch to', () => {
+  const choices = recordingHandoverChoices(
+    'a-recording',
+    async () => issued(),
+    {
+      source: 'artefact',
+      alternative: 'recording',
+      externalPlayerSources: ['artefact'],
+    },
+    RECORDED_BYTES,
+  )
+
+  assert.deepEqual(
+    choices.map((one) => one.source),
+    ['artefact'],
+  )
+})
+
 test('the order stays the same while the recording itself is the one playing', () => {
   const choices = recordingHandoverChoices(
     'a-recording',

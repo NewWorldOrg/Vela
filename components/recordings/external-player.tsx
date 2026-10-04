@@ -292,7 +292,7 @@ export function ExternalPlayerOpener({
   tone,
 }: {
   recording: { id: string; sizeBytes?: number | null }
-  plan: Pick<PlaybackPlan, 'source' | 'alternative'>
+  plan: Pick<PlaybackPlan, 'source' | 'alternative' | 'externalPlayerSources'>
   onTakeTicket: (id: string) => Promise<TicketWrite>
   tone?: 'page' | 'player'
 }) {

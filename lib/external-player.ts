@@ -84,12 +84,12 @@ export function recordingHandover(
 export function recordingHandoverChoices(
   id: string,
   take: (id: string) => Promise<TicketWrite>,
-  plan: Pick<PlaybackPlan, 'source' | 'alternative'>,
+  plan: Pick<PlaybackPlan, 'source' | 'alternative' | 'externalPlayerSources'>,
   recordedBytes: number | null | undefined,
 ): HandoverChoice[] {
-  return BOTH_SOURCES.filter(
-    (one) => one === plan.source || one === plan.alternative,
-  ).map((source) => ({
+  const handed = plan.externalPlayerSources ?? [plan.source, plan.alternative]
+
+  return BOTH_SOURCES.filter((one) => handed.includes(one)).map((source) => ({
     source,
     label: sourceLabel(source),
     size:
