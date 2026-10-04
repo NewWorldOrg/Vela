@@ -24,6 +24,7 @@ import {
   AN_IPAD,
   browsingAs,
   handedTo,
+  namedWithTheTicket,
   openTheHandoverMenu,
   pressInTheHandoverMenu,
   waysToHandOver,
@@ -2933,6 +2934,12 @@ const THE_CHANNEL_BY_TICKET = new RegExp(
   `^https?://:${A_TICKET}@[^/]+/api/live/32736-1024/stream$`,
 )
 
+const THE_CHANNEL_NAMED_BY_WHAT_IS_ON = namedWithTheTicket(
+  '/api/live/32736-1024',
+  A_TICKET,
+  `${CHOSEN.watching?.channel.name} ${CHOSEN.watching?.channel.now?.title}.ts`,
+)
+
 export const 外部プレイヤーへ渡す: Story = {
   args: { openSocket: withAPicture },
   play: async ({ canvasElement }) => {
@@ -2967,11 +2974,17 @@ export const iPad_では外部プレイヤーのアプリで開く: Story = {
     const left = await whereItLeftFor(async (sent) => {
       await pressInTheHandoverMenu(canvasElement, 'VLC で開く')
       await waitFor(() => expect(sent).toHaveLength(1))
+
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で開く')
+      await waitFor(() => expect(sent).toHaveLength(2))
     })
 
     await expect(
       handedTo('vlc-x-callback://x-callback-url/stream?url=', left[0]),
     ).toMatch(THE_CHANNEL_BY_TICKET)
+    await expect(
+      handedTo('infuse://x-callback-url/play?url=', left[1]),
+    ).toMatch(THE_CHANNEL_NAMED_BY_WHAT_IS_ON)
   },
 }
 

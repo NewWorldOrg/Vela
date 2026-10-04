@@ -229,6 +229,8 @@ export function LiveView({
               watching.channel.networkId,
               watching.channel.serviceId,
               onTakeTicket,
+              watching.channel.name,
+              watching.channel.now?.title,
             )}
           />
         </div>

@@ -32,6 +32,7 @@ import {
   browsingAs,
   closeTheHandoverMenu,
   handedTo,
+  namedWithTheTicket,
   openTheHandoverMenu,
   pressInTheHandoverMenu,
   waysToHandOver,
@@ -1215,6 +1216,20 @@ const THE_RECORDING_ITSELF_BY_TICKET =
 const THE_ARTEFACT_BY_TICKET =
   /^https?:\/\/ticket:a-ticket-that-lapses@[^/]+\/api\/videos\/1274\?source=artefact$/
 
+const THE_RECORDING_ITSELF_NAMED_BY_ITS_TITLE = namedWithTheTicket(
+  '/api/videos/1274',
+  'a-ticket-that-lapses',
+  `${detail('1274').title}.ts`,
+  '?source=recording',
+)
+
+const THE_ARTEFACT_NAMED_BY_ITS_TITLE = namedWithTheTicket(
+  '/api/videos/1274',
+  'a-ticket-that-lapses',
+  `${detail('1274').title}.mp4`,
+  '?source=artefact',
+)
+
 export const 外部プレイヤーはエンコード済みと元のままから選ぶ: Story = {
   args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
   play: async ({ canvasElement }) => {
@@ -1301,7 +1316,7 @@ export const iPad_では外部プレイヤーのアプリで開く: Story = {
     ).toMatch(THE_ARTEFACT_BY_TICKET)
     await expect(
       handedTo('infuse://x-callback-url/play?url=', left[1]),
-    ).toMatch(THE_RECORDING_ITSELF_BY_TICKET)
+    ).toMatch(THE_RECORDING_ITSELF_NAMED_BY_ITS_TITLE)
     await expect(
       within(canvasElement).queryByText('URL をコピーしました'),
     ).toBeNull()
@@ -1314,7 +1329,15 @@ export const Mac_では_Infuse_で開く: Story = {
   play: async ({ canvasElement }) => {
     await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
     await expect(waysToHandOver()).toEqual(['Infuse で開く', 'URL をコピー'])
-    await closeTheHandoverMenu()
+
+    const left = await whereItLeftFor(async (sent) => {
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で開く')
+      await waitFor(() => expect(sent).toHaveLength(1))
+    })
+
+    await expect(
+      handedTo('infuse://x-callback-url/play?url=', left[0]),
+    ).toMatch(THE_ARTEFACT_NAMED_BY_ITS_TITLE)
   },
 }
 

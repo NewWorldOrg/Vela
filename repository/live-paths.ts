@@ -50,3 +50,13 @@ const LIVE_STREAM_PATH = '/api/live'
 export function liveStreamHref(networkId: number, serviceId: number): string {
   return `${LIVE_STREAM_PATH}/${networkId}-${serviceId}/stream`
 }
+
+/** The channel with the ticket in the path and a name at the end that a player shows as the title. */
+export function liveStreamWithTicketHref(
+  networkId: number,
+  serviceId: number,
+  ticket: string,
+  fileName: string,
+): string {
+  return `${LIVE_STREAM_PATH}/${networkId}-${serviceId}/with-ticket/${encodeURIComponent(ticket)}/${encodeURIComponent(fileName)}`
+}

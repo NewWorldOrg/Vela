@@ -106,8 +106,23 @@ export function videoFrameHref(id: string, at: number) {
   return `${VIDEOS}/${encodeURIComponent(id)}/scrub?at=${whole(at)}`
 }
 
-export function videoFileHref(id: string, source?: PlaybackSource) {
-  const file = `${VIDEOS}/${encodeURIComponent(id)}`
-
+function asked(file: string, source?: PlaybackSource) {
   return source ? `${file}?source=${source}` : file
+}
+
+export function videoFileHref(id: string, source?: PlaybackSource) {
+  return asked(`${VIDEOS}/${encodeURIComponent(id)}`, source)
+}
+
+/** The recording's file with the ticket in the path and a name at the end that a player shows as the title. */
+export function videoFileWithTicketHref(
+  id: string,
+  ticket: string,
+  fileName: string,
+  source?: PlaybackSource,
+) {
+  return asked(
+    `${VIDEOS}/${encodeURIComponent(id)}/with-ticket/${encodeURIComponent(ticket)}/${encodeURIComponent(fileName)}`,
+    source,
+  )
 }

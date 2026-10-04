@@ -146,6 +146,22 @@ export async function pressInTheHandoverMenu(
   await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
 }
 
+const MEANS_SOMETHING_IN_A_PATTERN = /[.*+?^${}()|[\]\\]/g
+
+/** The URL a player is handed with the ticket in its path and the name it shows as the title at the end. */
+export function namedWithTheTicket(
+  path: string,
+  ticket: string,
+  name: string,
+  query = '',
+): RegExp {
+  const whole = `${path}/with-ticket/${encodeURIComponent(ticket)}/${encodeURIComponent(name)}${query}`
+
+  return new RegExp(
+    `^https?://[^/@]+${whole.replace(MEANS_SOMETHING_IN_A_PATTERN, '\\$&')}$`,
+  )
+}
+
 /** The URL a player app was handed, read back out of where the page was sent. */
 export function handedTo(scheme: string, left: string): string | null {
   return left.startsWith(scheme) ? new URL(left).searchParams.get('url') : null
