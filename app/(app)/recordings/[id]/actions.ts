@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
+import { H265, type BrowserDecoding } from '@/lib/browser-decodes'
 import type { EncodeWrite } from '@/repository/encode'
 import { getStandingArtefact, queueEncode } from '@/repository/encode'
 import type { PlaybackSource } from '@/repository/playback-sources'
@@ -48,8 +49,14 @@ export async function askForTheSound(
   id: string,
   sound: SoundTrack,
   source?: PlaybackSource,
+  decodes: readonly BrowserDecoding[] = [],
 ): Promise<PlaybackRead> {
-  return getPlaybackPlan(id, sound, source)
+  return getPlaybackPlan(
+    id,
+    sound,
+    source,
+    decodes.filter((one) => one === H265),
+  )
 }
 
 export async function queueEncoding(

@@ -11,6 +11,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
+import type { BrowserDecoding } from '@/lib/browser-decodes'
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
 import { nextBoundaryAfter, whereTheBreakEnds } from '@/lib/player-chapters'
@@ -171,6 +172,7 @@ export function Player({
     id: string,
     sound: SoundTrack,
     source?: PlaybackSource,
+    decodes?: readonly BrowserDecoding[],
   ) => Promise<PlaybackRead>
   onKeepPosition: (id: string, positionSec: number) => Promise<PositionWrite>
   artefact?: string
@@ -187,6 +189,7 @@ export function Player({
     profile?: PlaybackProfile,
     sound?: SoundTrack,
     source?: PlaybackSource,
+    decodes?: readonly BrowserDecoding[],
   ) => string
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
   takeCapture?: TakeCapture
@@ -236,6 +239,7 @@ export function Player({
           opened.transcodes ? unaskedProfile : undefined,
           soundToAsk(opened.sounds, MAIN_SOUND),
           opened.source,
+          opened.decodes,
         )
       : undefined,
   )
@@ -405,7 +409,7 @@ export function Player({
     }
 
     const layer = new RecordingCaptions(plate, element, seenAt, (at, signal) =>
-      readCaptions(d.id, at, opened.source, signal),
+      readCaptions(d.id, at, opened.source, signal, opened.decodes),
     )
 
     captions.current = layer
@@ -414,7 +418,7 @@ export function Player({
       layer.close()
       captions.current = null
     }
-  }, [captioning, faceUp, d.id, opened.source, readCaptions])
+  }, [captioning, faceUp, d.id, opened.source, opened.decodes, readCaptions])
 
   const aimed = useRef(false)
 
@@ -490,6 +494,7 @@ export function Player({
         under.transcodes ? quality : undefined,
         soundToAsk(under.sounds, carrying),
         under.source,
+        under.decodes,
       ),
     )
   }
@@ -715,7 +720,7 @@ export function Player({
 
     nowAsking(next)
 
-    void onAskForTheSound(d.id, next, plan.source)
+    void onAskForTheSound(d.id, next, plan.source, plan.decodes)
       .then((answer) => {
         if (asked.current !== mine) {
           return
@@ -825,7 +830,12 @@ export function Player({
 
       const mine = (replanned.current += 1)
 
-      void onAskForTheSound(d.id, asItStands.current.sound, plan.source)
+      void onAskForTheSound(
+        d.id,
+        asItStands.current.sound,
+        plan.source,
+        plan.decodes,
+      )
         .then((answer) => {
           if (replanned.current !== mine || answer.state !== 'planned') {
             return

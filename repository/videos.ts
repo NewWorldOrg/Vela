@@ -1,5 +1,6 @@
 import { cache } from 'react'
 
+import type { BrowserDecoding } from '@/lib/browser-decodes'
 import { unaskedIn } from '@/lib/live-profiles'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
@@ -42,6 +43,8 @@ export interface PlaybackPlan {
   route: PlaybackRoute
   source?: PlaybackSource
   alternative?: PlaybackSource
+  externalPlayerSources?: PlaybackSource[]
+  decodes?: BrowserDecoding[]
   seeking?: PlaybackSeeking
   canSeek: boolean
   transcodes: boolean
@@ -84,14 +87,27 @@ function toChapter(
   }
 }
 
+function sourcesThisBuildKnows(
+  said: readonly string[] | null | undefined,
+): PlaybackSource[] | undefined {
+  if (!Array.isArray(said)) {
+    return undefined
+  }
+
+  return said.flatMap((one) => sourceThisBuildKnows(one) ?? [])
+}
+
 function toPlan(
   data: components['schemas']['PlaybackPlanResponder'],
+  decodes: BrowserDecoding[],
 ): PlaybackPlan {
   return {
     standing: data.standing,
     route: data.route,
     source: sourceThisBuildKnows(data.source),
     alternative: sourceThisBuildKnows(data.alternative ?? undefined),
+    externalPlayerSources: sourcesThisBuildKnows(data.externalPlayerSources),
+    decodes,
     seeking: data.seeking ?? undefined,
     canSeek: data.canSeek,
     transcodes: data.transcodes,
@@ -111,6 +127,7 @@ export const getPlaybackPlan = cache(
     id: string,
     sound?: SoundTrack,
     source?: PlaybackSource,
+    decodes: readonly BrowserDecoding[] = [],
   ): Promise<PlaybackRead> => {
     if (sound !== undefined && !EVERY_SOUND.includes(sound)) {
       return { state: 'refused', refusal: 'nothingToPlay' }
@@ -120,16 +137,21 @@ export const getPlaybackPlan = cache(
       return { state: 'refused', refusal: 'nothingToPlay' }
     }
 
+    const told = [...decodes]
+
     const { data, response } = await carinaClient().GET(
       '/api/videos/{id}/play',
       {
-        params: { path: { id }, query: { sound, source } },
+        params: {
+          path: { id },
+          query: { sound, source, decodes: told.length ? told : undefined },
+        },
         headers: { accept: 'application/json' },
       },
     )
 
     if (response.ok && data?.data) {
-      return { state: 'planned', plan: toPlan(data.data) }
+      return { state: 'planned', plan: toPlan(data.data, told) }
     }
 
     return {

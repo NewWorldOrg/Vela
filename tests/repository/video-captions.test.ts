@@ -25,6 +25,17 @@ test('the captions are asked for from the second on screen, on the source being 
   )
 })
 
+test('the captions are asked for with what the browser told the plan it decodes', () => {
+  assert.equal(
+    videoCaptionsHref('1266', 0, 'artefact', ['h265']),
+    '/api/videos/1266/captions?from=0&source=artefact&decodes=h265',
+  )
+  assert.equal(
+    videoCaptionsHref('1266', 0, 'artefact', []),
+    '/api/videos/1266/captions?from=0&source=artefact',
+  )
+})
+
 test('with no source named, the captions are asked for the way the plan was', () => {
   assert.equal(
     videoCaptionsHref('1266', 600),

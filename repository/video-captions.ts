@@ -1,3 +1,4 @@
+import type { BrowserDecoding } from '@/lib/browser-decodes'
 import type { components } from '@/repository/client/schema'
 import type { PlaybackSource } from '@/repository/playback-sources'
 import type { CaptionWindow, TimedCaption } from '@/lib/recording-captions'
@@ -61,6 +62,7 @@ export function videoCaptionsHref(
   id: string,
   fromSec: number,
   source?: PlaybackSource,
+  decodes: readonly BrowserDecoding[] = [],
 ): string {
   const from = Number.isFinite(fromSec)
     ? Math.max(0, Math.floor(fromSec * 1000) / 1000)
@@ -69,6 +71,10 @@ export function videoCaptionsHref(
 
   if (source) {
     asked.set('source', source)
+  }
+
+  for (const one of decodes) {
+    asked.append('decodes', one)
   }
 
   return `/api/videos/${encodeURIComponent(id)}/captions?${asked}`

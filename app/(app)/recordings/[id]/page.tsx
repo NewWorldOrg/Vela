@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import {
@@ -12,6 +13,7 @@ import {
   RECORDINGS_EVENT,
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
+import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
 import { isRecordingId } from '@/lib/recordings'
 import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
 import { theHoldAsked, theSourceAsked } from '@/lib/playback-source'
@@ -62,10 +64,12 @@ export default async function Page({
     notFound()
   }
 
+  const decodes = decodesOf((await cookies()).get(DECODES_COOKIE)?.value)
+
   const [detail, playback, unaskedProfile, encodeChoices, encodeJob, artefact] =
     await Promise.all([
       getRecording(id),
-      getPlaybackPlan(id, undefined, theSourceAsked(source)),
+      getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
       getUnaskedPlaybackProfile(),
       listEncodeChoices(),
       getLatestEncodeJob(id),

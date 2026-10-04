@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { headers } from 'next/headers'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { DecodingProbe } from '@/components/vela/decoding-probe'
 import { statusBarColours } from '@/lib/app-colours'
 import { MOTION_HEADER, motionOf } from '@/lib/motion'
 import { THEME_HEADER, themeOf } from '@/lib/theme'
@@ -67,6 +68,7 @@ export default async function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
+        <DecodingProbe />
         <ThemeProvider initialPreference={initialPreference}>
           {children}
         </ThemeProvider>
