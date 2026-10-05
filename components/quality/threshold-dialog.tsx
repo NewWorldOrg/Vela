@@ -84,12 +84,10 @@ export function ThresholdDialog({
     write(() => onSave(chosen.key, Number(amount)), '変更')
   }
 
-  const release = () => {
-    setProblem(undefined)
-    write(() => onRelease(chosen.key), '解除')
-  }
+  const release = () => write(() => onRelease(chosen.key), '解除')
 
   const write = (writing: () => Promise<QualityWrite>, what: string) => {
+    setProblem(undefined)
     setRefusal(undefined)
 
     startTransition(async () => {
@@ -120,7 +118,11 @@ export function ThresholdDialog({
         <div className="flex flex-col gap-4">
           <Field>
             <FieldLabel htmlFor="threshold-key">閾値</FieldLabel>
-            <Select value={chosen.key} onValueChange={choose}>
+            <Select
+              value={chosen.key}
+              onValueChange={choose}
+              disabled={pending}
+            >
               <SelectTrigger id="threshold-key">
                 <SelectValue />
               </SelectTrigger>
