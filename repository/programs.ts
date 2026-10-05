@@ -637,10 +637,10 @@ function durationLabelOf(programme: Programme): string | undefined {
   const rest = minutes % 60
 
   if (hours === 0) {
-    return `${rest}分`
+    return `${rest} 分`
   }
 
-  return rest === 0 ? `${hours}時間` : `${hours}時間${rest}分`
+  return rest === 0 ? `${hours} 時間` : `${hours} 時間 ${rest} 分`
 }
 
 export function clockLabel(at: Date): string {

@@ -107,7 +107,7 @@ export const 同時放送は放送中ならライブへ: Story = {
     await reads(canvasElement, args.detail)
     await expect(simulcastElsewhere.length).toBeGreaterThan(0)
 
-    const links = canvas.getAllByRole('link', { name: '同時放送を見る' })
+    const links = canvas.getAllByRole('link', { name: '同時放送へ' })
 
     await expect(links).toHaveLength(simulcastElsewhere.length)
 
@@ -134,9 +134,7 @@ export const 同時放送は放送前なら案内だけ: Story = {
     await expect(
       canvas.getAllByText(/でも同時に放送されます。/).length,
     ).toBeGreaterThan(0)
-    await expect(
-      canvas.queryByRole('link', { name: '同時放送を見る' }),
-    ).toBeNull()
+    await expect(canvas.queryByRole('link', { name: '同時放送へ' })).toBeNull()
   },
 }
 
@@ -153,9 +151,7 @@ export const 同時放送は放送後なら案内だけ: Story = {
     await expect(
       canvas.getAllByText(/でも同時に放送されます。/).length,
     ).toBeGreaterThan(0)
-    await expect(
-      canvas.queryByRole('link', { name: '同時放送を見る' }),
-    ).toBeNull()
+    await expect(canvas.queryByRole('link', { name: '同時放送へ' })).toBeNull()
   },
 }
 
@@ -175,9 +171,7 @@ export const 継続先が写しなら番組の詳細へは送らない: Story = 
     const canvas = within(canvasElement)
 
     await expect(canvas.getByText(/で継続されます。/)).toBeVisible()
-    await expect(
-      canvas.queryByRole('link', { name: '継続先を見る' }),
-    ).toBeNull()
+    await expect(canvas.queryByRole('link', { name: '継続先へ' })).toBeNull()
   },
 }
 
@@ -339,7 +333,7 @@ export const 予約済み: Story = {
     ).toBeNull()
 
     await userEvent.click(
-      canvas.getByRole('button', { name: '予約を取り消す' }),
+      canvas.getByRole('button', { name: '予約を取り消し' }),
     )
 
     await waitFor(() => expect(args.onCancel).toHaveBeenCalledTimes(1))
@@ -391,12 +385,10 @@ export const 予約済みの編集で競合になった予約を示す: Story = 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '予約を編集' }))
+    await userEvent.click(canvas.getByRole('button', { name: '予約を変更' }))
     const dialog = within(await screen.findByRole('dialog'))
 
-    await userEvent.click(
-      dialog.getByRole('switch', { name: 'エンコードする' }),
-    )
+    await userEvent.click(dialog.getByRole('switch', { name: 'エンコード' }))
     await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
 
     await expect(
@@ -411,10 +403,10 @@ export const 予約済みから編集を開く: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '予約を編集' }))
+    await userEvent.click(canvas.getByRole('button', { name: '予約を変更' }))
 
     await expect(
-      await screen.findByRole('heading', { name: '予約を編集' }),
+      await screen.findByRole('heading', { name: '予約を変更' }),
     ).toBeVisible()
   },
 }
@@ -434,7 +426,7 @@ export const 取り消しを断られたとき: Story = {
     const canvas = within(canvasElement)
 
     await userEvent.click(
-      canvas.getByRole('button', { name: '予約を取り消す' }),
+      canvas.getByRole('button', { name: '予約を取り消し' }),
     )
 
     await expect(await canvas.findByText(HELD_BY_ANOTHER)).toBeVisible()
@@ -452,10 +444,10 @@ export const 録画中: Story = {
     await expect(canvas.getByText('録画中')).toBeVisible()
     await expect(canvas.queryByText('確保済み')).toBeNull()
     await expect(
-      canvas.queryByRole('button', { name: '予約を取り消す' }),
+      canvas.queryByRole('button', { name: '予約を取り消し' }),
     ).toBeNull()
     await expect(
-      canvas.queryByRole('button', { name: '予約を編集' }),
+      canvas.queryByRole('button', { name: '予約を変更' }),
     ).toBeNull()
     await expect(canvas.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
@@ -482,7 +474,7 @@ export const 移動した放送の元の枠を予約しようとしたとき: St
 
     await expect(refused).toHaveTextContent(MOVED)
     await expect(
-      within(refused).getByRole('link', { name: '移動先を見る' }),
+      within(refused).getByRole('link', { name: '移動先へ' }),
     ).toHaveAttribute('href', '/guide/programs/131-1310-50001')
   },
 }

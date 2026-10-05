@@ -8,6 +8,7 @@ import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -56,12 +57,13 @@ export function RebuildEpgDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <RebuildIcon className="size-[calc(19rem/16)] text-coral" />
-            EPG 全削除 → 再構築
+            番組表を再構築します
           </AlertDialogTitle>
+          <AlertDialogDescription>元に戻せません。</AlertDialogDescription>
         </AlertDialogHeader>
 
         <dl className="grid grid-cols-[calc(96rem/16)_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 text-ui max-[700px]:grid-cols-1">
-          <dt className="pt-0.5 text-sub text-ink-3">消えるもの</dt>
+          <dt className="pt-0.5 text-sub text-ink-3">削除対象</dt>
           <dd className="leading-[1.7]">
             いまの番組表のデータ(未来{' '}
             <span className="font-code tabular-nums">8</span> 日+過去{' '}
@@ -72,7 +74,7 @@ export function RebuildEpgDialog({
         <div className="rounded-xl bg-mint-soft px-3.5 py-[calc(11rem/16)]">
           <div className="flex items-center gap-2 text-sub font-bold text-mint">
             <CheckIcon className="size-[calc(15rem/16)]" />
-            消えないもの
+            削除対象外
           </div>
           <ul className="mt-1 space-y-0.5 text-sub leading-[1.75] text-ink-2">
             <li className="flex gap-2">
@@ -113,7 +115,7 @@ export function RebuildEpgDialog({
           <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
           <Button variant="removeFill" disabled={pending} onClick={run}>
             <RebuildIcon />
-            全て削除して再構築する
+            すべて削除して再構築する
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

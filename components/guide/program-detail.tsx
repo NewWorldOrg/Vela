@@ -44,21 +44,21 @@ const RELATION_WORDING: Record<
       channel
         ? `放送は ${channel} で継続されます。`
         : '放送は別のチャンネルで継続されます。',
-    link: '継続先を見る',
+    link: '継続先へ',
   },
   moved: {
     lead: (channel) =>
       channel
         ? `放送枠が ${channel} に移動しています。`
         : '放送枠が移動しています。',
-    link: '移動先を見る',
+    link: '移動先へ',
   },
   shared: {
     lead: (channel) =>
       channel
         ? `${channel} でも同時に放送されます。`
         : '別のチャンネルでも同時に放送されます。',
-    link: '同時放送を見る',
+    link: '同時放送へ',
   },
 }
 

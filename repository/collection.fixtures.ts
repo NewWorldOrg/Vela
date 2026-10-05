@@ -100,7 +100,7 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
     lastCompletedLabel: '20:52',
     lastAttemptedAt: '2026-08-08T11:52:00Z',
     lastAttemptedLabel: '20:52',
-    durationLabel: '3分58秒',
+    durationLabel: '3 分 58 秒',
   },
   {
     ...row({
@@ -113,7 +113,7 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
     lastCompletedLabel: '20:22',
     lastAttemptedAt: '2026-08-08T11:22:00Z',
     lastAttemptedLabel: '20:22',
-    durationLabel: '4分12秒',
+    durationLabel: '4 分 12 秒',
   },
   {
     ...row({
@@ -125,7 +125,7 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
     lastCompletedLabel: '20:41',
     lastAttemptedAt: '2026-08-08T11:41:00Z',
     lastAttemptedLabel: '20:41',
-    durationLabel: '6分05秒',
+    durationLabel: '6 分 05 秒',
   },
   {
     ...row({
@@ -137,7 +137,7 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
     lastCompletedLabel: '20:12',
     lastAttemptedAt: '2026-08-08T11:12:00Z',
     lastAttemptedLabel: '20:12',
-    durationLabel: '3分44秒',
+    durationLabel: '3 分 44 秒',
   },
   {
     ...row({
@@ -150,7 +150,7 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
     lastCompletedLabel: '20:34',
     lastAttemptedAt: '2026-08-08T11:34:00Z',
     lastAttemptedLabel: '20:34',
-    durationLabel: '4分20秒',
+    durationLabel: '4 分 20 秒',
   },
   {
     ...row({
@@ -161,7 +161,7 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
     }),
     lastAttemptedAt: '2026-08-08T12:15:00Z',
     lastAttemptedLabel: '21:15',
-    durationLabel: '10分00秒',
+    durationLabel: '10 分 00 秒',
     consecutiveIncomplete: 3,
     notBeforeLabel: '23:25',
   },
@@ -176,7 +176,7 @@ export const COLLECTION_FIXTURES: CollectionStatus = statusOf([
     lastCompletedLabel: '19:58',
     lastAttemptedAt: '2026-08-08T10:58:00Z',
     lastAttemptedLabel: '19:58',
-    durationLabel: '4分31秒',
+    durationLabel: '4 分 31 秒',
   },
 ])
 
@@ -188,7 +188,7 @@ export const COLLECTION_ALL_COMPLETE: CollectionStatus = statusOf(
           ...stream,
           outcome: 'complete',
           lastCompletedLabel: '20:58',
-          durationLabel: '7分12秒',
+          durationLabel: '7 分 12 秒',
           consecutiveIncomplete: 0,
           notBeforeLabel: undefined,
         },
@@ -205,7 +205,7 @@ export const COLLECTION_TROUBLED: CollectionStatus = statusOf([
     }),
     lastAttemptedAt: '2026-08-08T12:15:00Z',
     lastAttemptedLabel: '21:15',
-    durationLabel: '10分00秒',
+    durationLabel: '10 分 00 秒',
     consecutiveIncomplete: 3,
     notBeforeLabel: '23:25',
   },
@@ -218,7 +218,7 @@ export const COLLECTION_TROUBLED: CollectionStatus = statusOf([
     }),
     lastAttemptedAt: '2026-08-08T11:41:00Z',
     lastAttemptedLabel: '20:41',
-    durationLabel: '10分01秒',
+    durationLabel: '10 分 01 秒',
     consecutiveIncomplete: 5,
     notBeforeLabel: '8/9(土) 01:12',
   },
@@ -253,7 +253,7 @@ export const COLLECTION_TROUBLED: CollectionStatus = statusOf([
     lastCompletedLabel: '20:52',
     lastAttemptedAt: '2026-08-08T11:52:00Z',
     lastAttemptedLabel: '20:52',
-    durationLabel: '3分58秒',
+    durationLabel: '3 分 58 秒',
   },
   {
     ...row({

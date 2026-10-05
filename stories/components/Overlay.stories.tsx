@@ -72,11 +72,11 @@ export const ConfirmDialog: Story = {
       <Surface>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="remove">EPG を削除して再取得</Button>
+            <Button variant="remove">番組表を再構築</Button>
           </DialogTrigger>
           <DialogContent showCloseButton={false}>
             <DialogHeader>
-              <DialogTitle>EPG を全て削除して作り直しますか?</DialogTitle>
+              <DialogTitle>番組表を再構築します</DialogTitle>
               <DialogDescription>
                 保存済みの番組情報{' '}
                 <b className="font-code font-medium tabular-nums text-ink">
@@ -93,7 +93,7 @@ export const ConfirmDialog: Story = {
               </DialogClose>
               <DialogClose asChild>
                 <Button variant="removeFill" size="sm">
-                  削除して再取得
+                  すべて削除して再構築する
                 </Button>
               </DialogClose>
             </DialogFooter>
@@ -109,7 +109,7 @@ export const ConfirmDialog: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(
-      canvas.getByRole('button', { name: 'EPG を削除して再取得' }),
+      canvas.getByRole('button', { name: '番組表を再構築' }),
     )
     const opened = await within(document.body).findByRole('dialog')
 

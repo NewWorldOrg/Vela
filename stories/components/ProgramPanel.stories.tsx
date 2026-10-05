@@ -284,9 +284,9 @@ export const 録画中: Story = {
     await expect(shown.getByText('録画中')).toBeVisible()
     await expect(shown.queryByText('確保済み')).toBeNull()
     await expect(
-      shown.queryByRole('button', { name: '予約を取り消す' }),
+      shown.queryByRole('button', { name: '予約を取り消し' }),
     ).toBeNull()
-    await expect(shown.queryByRole('button', { name: '予約を編集' })).toBeNull()
+    await expect(shown.queryByRole('button', { name: '予約を変更' })).toBeNull()
     await expect(shown.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
 }
@@ -315,7 +315,7 @@ export const 予約済み: Story = {
 
     await expect(shown.getByText('確保済み')).toBeVisible()
     await expect(
-      shown.getByRole('button', { name: '予約を取り消す' }),
+      shown.getByRole('button', { name: '予約を取り消し' }),
     ).toBeEnabled()
     await expect(shown.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
@@ -445,7 +445,7 @@ export const 予約の編集が上に重なる: Story = {
     const programme = await opened(canvasElement)
 
     await userEvent.click(
-      within(programme).getByRole('button', { name: '予約を編集' }),
+      within(programme).getByRole('button', { name: '予約を変更' }),
     )
 
     const surfaces = () =>
@@ -458,7 +458,7 @@ export const 予約の編集が上に重なる: Story = {
     const editing = surfaces().find((one) => one !== programme)!
 
     await expect(
-      within(editing).getByRole('heading', { name: '予約を編集' }),
+      within(editing).getByRole('heading', { name: '予約を変更' }),
     ).toBeVisible()
     await waitFor(() => expect(editing.contains(doc.activeElement)).toBe(true))
 

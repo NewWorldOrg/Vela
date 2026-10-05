@@ -259,7 +259,7 @@ export function GuideView({
           data-opens="collection"
           actions={[
             {
-              label: '収集状態を見る',
+              label: '収集状態へ',
               onClick: () => setCollectionOpen(true),
             },
           ]}
@@ -279,7 +279,7 @@ export function GuideView({
           title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
           action={
             <Button variant="watch" size="sm" asChild>
-              <Link href="/settings/channels">チャンネル設定へ</Link>
+              <Link href="/settings/channels">チャンネルへ</Link>
             </Button>
           }
         />

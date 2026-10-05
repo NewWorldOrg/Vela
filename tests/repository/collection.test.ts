@@ -581,7 +581,7 @@ test('each other answer to collecting now has a state of its own', async () => {
   assert.deepEqual(await collectNow({}), {
     state: 'rejected',
     message:
-      'いますぐ集めるを受け付けられませんでした。しばらくしてからもう一度試してください。',
+      '即時収集を受け付けられませんでした。時間をおいてからもう一度お試しください。',
   })
 })
 
@@ -599,7 +599,7 @@ test('a rebuild the API will not take says so, and a lost session is told apart'
   assert.deepEqual(await rebuildEpg(), {
     state: 'rejected',
     message:
-      '削除を受け付けられませんでした。しばらくしてからもう一度試してください。',
+      '削除を受け付けられませんでした。時間をおいてからもう一度お試しください。',
   })
 
   answering(401)
