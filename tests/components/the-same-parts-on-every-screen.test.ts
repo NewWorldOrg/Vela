@@ -54,7 +54,7 @@ const THE_EMPTY_VALUE = 'lib/empty-value.ts'
 
 const THE_TINTS = 'components/vela/surface.tsx'
 
-const THE_BAND = 'components/vela/filter-select.tsx'
+const THE_BAND = 'components/vela/band.ts'
 
 const THE_SYSTEM_TERMS = 'lib/system-terms.ts'
 
@@ -482,7 +482,9 @@ test('the controls in a filter band are one height and one size of word', async 
 
   for (const file of [
     'components/library/library-page.tsx',
-    'components/library/channel-chip.tsx',
+    'components/vela/filter-select.tsx',
+    'components/vela/sub-channel-toggle.tsx',
+    'components/guide/guide-page.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 
@@ -563,4 +565,62 @@ test('a table surface stops at its last row instead of filling the screen', asyn
     )
     assert.match(source, /min-h-0 flex-initial overflow/)
   }
+})
+
+test('the sub-channel switch is one part, wherever a screen puts it', async () => {
+  const drawn = (await everySource()).filter(({ source }) =>
+    />\s*副チャンネル\s*</.test(source),
+  )
+
+  assert.deepEqual(
+    drawn.map(({ file }) => file),
+    ['components/vela/sub-channel-toggle.tsx'],
+    'a screen draws the sub-channel switch itself instead of using the part',
+  )
+
+  for (const file of [
+    'components/guide/guide-page.tsx',
+    'components/live/live-page.tsx',
+  ]) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.match(source, /<SubChannelToggle\b/, `${file} lost the switch`)
+  }
+})
+
+test('every pick-one group is the one segmented part, its heading outside', async () => {
+  for (const file of [
+    'components/library/library-page.tsx',
+    'components/reservations/reservations-page.tsx',
+    'components/guide/guide-page.tsx',
+    'components/live/channel-kinds.tsx',
+    'components/quality/quality-page.tsx',
+    'components/quality/quality-trend.tsx',
+    'components/encode/jobs-navigation.tsx',
+    'components/channels/scan-bar.tsx',
+  ]) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.match(
+      source,
+      /<SegmentedControl\b/,
+      `${file} draws a pick-one group of its own`,
+    )
+    assert.doesNotMatch(
+      source,
+      /aria-pressed=\{[^}]*(kind|ch|show|status|range)\b/,
+      `${file} still presses its own buttons for a pick-one group`,
+    )
+  }
+
+  const select = await readFile(
+    path.join(ROOT, 'components/vela/filter-select.tsx'),
+    'utf8',
+  )
+
+  assert.doesNotMatch(
+    select,
+    /\{(label|prefix)\}:/,
+    'a select says its heading inside its value again',
+  )
 })

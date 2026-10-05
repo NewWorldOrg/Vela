@@ -25,6 +25,9 @@ import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
+import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
+import { SegmentedControl } from '@/components/vela/segmented-control'
+import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
 import {
   AntennaIcon,
   ChevronLeftIcon,
@@ -190,24 +193,14 @@ export function GuideView({
         番組表
       </h1>
       <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5">
-        <div className="inline-flex gap-1 rounded-full bg-surface-2 p-[calc(3rem/16)]">
-          {CHANNEL_KINDS.map((k) => (
-            <button
-              key={k.value}
-              type="button"
-              aria-pressed={k.value === guide.kind}
-              onClick={() =>
-                patch({ kind: k.value === 'terrestrial' ? null : k.value })
-              }
-              className={cn(
-                'tap-target cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 transition-[background-color,color] duration-150 hover:bg-surface hover:text-ink',
-                k.value === guide.kind && 'bg-brand-soft font-bold text-brand',
-              )}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          aria-label="放送の種別"
+          options={CHANNEL_KINDS}
+          value={guide.kind}
+          onValueChange={(next) =>
+            patch({ kind: next === 'terrestrial' ? null : next })
+          }
+        />
 
         <div className="flex items-center gap-2">
           <IconButton
@@ -233,7 +226,7 @@ export function GuideView({
             <button
               type="button"
               onClick={() => patch({ date: null })}
-              className="tap-target cursor-pointer rounded-full border border-edge bg-surface px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
+              className={cn(BAND_PRESS, BAND_CONTROL)}
             >
               今日
             </button>
@@ -241,33 +234,20 @@ export function GuideView({
         </div>
 
         {foldable && (
-          <button
-            type="button"
-            aria-pressed={!folded}
-            onClick={() => fold(!folded)}
-            className={cn(
-              'tap-target cursor-pointer rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg',
-              !folded && 'border-brand bg-brand-soft font-bold text-brand',
-            )}
-          >
-            副チャンネル
-          </button>
+          <SubChannelToggle shown={!folded} onShownChange={(on) => fold(!on)} />
         )}
 
         <button
           type="button"
           data-opens="collection"
           onClick={() => setCollectionOpen(true)}
-          className="tap-target ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
+          className={cn(BAND_PRESS, BAND_CONTROL, 'ml-auto max-[700px]:ml-0')}
         >
-          <AntennaIcon className="size-[calc(15rem/16)]" />
+          <AntennaIcon />
           収集状態
         </button>
-        <Link
-          href="/search"
-          className="tap-target inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
-        >
-          <SearchIcon className="size-[calc(15rem/16)]" />
+        <Link href="/search" className={cn(BAND_PRESS, BAND_CONTROL)}>
+          <SearchIcon />
           番組を検索
         </Link>
       </div>

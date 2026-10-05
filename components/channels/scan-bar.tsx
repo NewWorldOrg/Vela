@@ -70,11 +70,8 @@ export function ScanBar({
     <>
       <div className="mt-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
         <SearchIcon className="size-4 text-brand" />
-        <span className="text-ui font-medium whitespace-nowrap text-ink-2">
-          スキャン範囲
-        </span>
         <SegmentedControl
-          aria-label="スキャン範囲"
+          label="スキャン範囲"
           options={RANGES}
           value={range}
           onValueChange={(next) => setRange(next as Range)}

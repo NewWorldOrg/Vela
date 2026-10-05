@@ -642,12 +642,17 @@ export const 副チャンネルを出している: Story = {
       return box.top + box.height / 2
     }
 
-    await expect(
-      Math.abs(
-        middleOf(canvas.getByRole('button', { name: '副チャンネル' })) -
-          middleOf(canvas.getByRole('heading', { name: 'ライブ' })),
-      ),
-    ).toBeLessThan(4)
+    const toggle = canvas.getByRole('button', { name: '副チャンネル' })
+    const kinds = canvas.getByRole('group', { name: '放送の種別' })
+
+    await expect(Math.abs(middleOf(toggle) - middleOf(kinds))).toBeLessThan(4)
+    await expect(toggle.getBoundingClientRect().left).toBeGreaterThan(
+      kinds.getBoundingClientRect().right,
+    )
+    await expect(toggle.getBoundingClientRect().top).toBeGreaterThan(
+      canvas.getByRole('heading', { name: 'ライブ' }).getBoundingClientRect()
+        .bottom,
+    )
   },
 }
 

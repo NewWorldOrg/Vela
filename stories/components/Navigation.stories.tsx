@@ -80,6 +80,17 @@ export const Segmented: Story = {
               { value: 'phys', label: '物理ch指定' },
             ]}
           />
+          <SegmentedControl
+            label="表示"
+            className="mt-3"
+            value={value}
+            onValueChange={setValue}
+            options={[
+              { value: 'all', label: 'すべて' },
+              { value: 'gr', label: 'GR' },
+              { value: 'bs', label: 'BS' },
+            ]}
+          />
           <p className="mt-3 text-note text-ink-3">
             変更を受け付けない間は disabled。全体を淡くし、タブ移動からも外す。
           </p>

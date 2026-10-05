@@ -810,16 +810,19 @@ export const 絞りの帯: Story = {
   args: { result: resultOf(LONG_AND_SHORT), filter: {} },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const band = [
+    const fields = [
       canvas.getByPlaceholderText('番組名・概要・出演者で検索'),
       ...canvas.getAllByRole('combobox'),
-      canvas.getByRole('button', { name: 'すべて' }),
     ]
+    const channels = canvas.getByRole('group', { name: 'チャンネル' })
+    const every = within(channels).getByRole('button', { name: 'すべて' })
 
-    await expect(band.length).toBeGreaterThan(4)
-    await expect(new Set(band.map(heightOf)).size).toBe(1)
+    await expect(fields.length).toBeGreaterThan(3)
+    await expect(new Set([...fields, channels].map(heightOf)).size).toBe(1)
     await expect(
-      new Set(band.map((one) => getComputedStyle(one).fontSize)).size,
+      new Set([...fields, every].map((one) => getComputedStyle(one).fontSize))
+        .size,
     ).toBe(1)
+    await expect(every).toHaveAttribute('aria-pressed', 'true')
   },
 }

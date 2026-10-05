@@ -17,12 +17,15 @@ import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
-import { BAND_CONTROL, FilterSelect } from '@/components/vela/filter-select'
+import { BAND_CONTROL } from '@/components/vela/band'
+import { FilterSelect } from '@/components/vela/filter-select'
 import { LibraryIcon, SearchIcon } from '@/components/vela/icons'
-import { ChannelChip } from '@/components/library/channel-chip'
+import { SegmentedControl } from '@/components/vela/segmented-control'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import { RecordingSelection } from '@/components/library/recording-selection'
 import { ScreenMain } from '@/components/vela/app-shell'
+
+const EVERY_CHANNEL = ''
 
 export function LibraryView({
   result,
@@ -79,7 +82,7 @@ export function LibraryView({
       </div>
 
       <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-x-3.5 gap-y-3">
           <form
             className="relative min-w-[calc(180rem/16)] flex-[1_1_100%] min-[701px]:flex-[0_1_268px]"
             onSubmit={(e) => {
@@ -98,19 +101,19 @@ export function LibraryView({
             />
           </form>
           <FilterSelect
-            prefix="期間"
+            label="期間"
             value={filter.year}
             options={years.map((y) => ({ value: String(y), label: `${y} 年` }))}
             onChange={(next) => onFiltersChange({ year: next })}
           />
           <FilterSelect
-            prefix="ジャンル"
+            label="ジャンル"
             value={filter.genre}
             options={genres.map((g) => ({ value: g, label: g }))}
             onChange={(next) => onFiltersChange({ genre: next })}
           />
           <FilterSelect
-            prefix="状態"
+            label="状態"
             value={filter.state}
             options={RECORDING_STATE_FILTERS.map((f) => ({
               value: f,
@@ -138,25 +141,18 @@ export function LibraryView({
             </Button>
           )}
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
-          <span className="text-cap font-bold tracking-[0.04em] text-ink-3">
-            チャンネル
-          </span>
-          <div className="flex min-w-0 flex-wrap gap-x-1.5 gap-y-[calc(13rem/16)]">
-            <ChannelChip
-              label="すべて"
-              on={!filter.ch}
-              onClick={() => onFiltersChange({ ch: null })}
-            />
-            {channels.map((ch) => (
-              <ChannelChip
-                key={ch}
-                label={ch}
-                on={filter.ch === ch}
-                onClick={() => onFiltersChange({ ch })}
-              />
-            ))}
-          </div>
+        <div className="mt-3 border-t border-dashed border-line pt-3">
+          <SegmentedControl
+            label="チャンネル"
+            options={[
+              { value: EVERY_CHANNEL, label: 'すべて' },
+              ...channels.map((ch) => ({ value: ch, label: ch })),
+            ]}
+            value={filter.ch ?? EVERY_CHANNEL}
+            onValueChange={(next) =>
+              onFiltersChange({ ch: next === EVERY_CHANNEL ? null : next })
+            }
+          />
         </div>
       </div>
 

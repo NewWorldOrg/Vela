@@ -41,7 +41,8 @@ import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { ChangeThresholdButton } from '@/components/quality/change-threshold-button'
 import { AnomalyList } from '@/components/quality/anomaly-list'
-import { LinkSegments } from '@/components/quality/link-segments'
+import { SegmentedControl } from '@/components/vela/segmented-control'
+import { chosenOf, segmentsOf } from '@/components/quality/window-segments'
 import { QualityTrendPanel } from '@/components/quality/quality-trend'
 import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'
@@ -182,7 +183,13 @@ export function QualityView({
         設定 / <CrumbCurrent>品質</CrumbCurrent>
       </Crumb>
       <PageHeading
-        action={<LinkSegments label={PERIOD} items={result.windows} />}
+        action={
+          <SegmentedControl
+            aria-label={PERIOD}
+            options={segmentsOf(result.windows)}
+            value={chosenOf(result.windows)}
+          />
+        }
       >
         品質
       </PageHeading>
