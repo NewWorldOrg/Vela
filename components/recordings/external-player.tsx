@@ -40,21 +40,21 @@ import {
 
 type Picker = { webkitShowPlaybackTargetPicker?: () => void }
 
-const NO_AIRPLAY = 'このブラウザは AirPlay に対応していません。'
+const NO_AIRPLAY = 'このブラウザーは AirPlay に対応していません。'
 
 function ticket(handover: Handover): Promise<Taken> {
   return takeTheTicket(handover, window.location.href)
 }
 
-const OPEN_EXTERNALLY = '外部プレイヤーで開く'
+const OPEN_EXTERNALLY = '外部プレイヤーで再生'
 
-const WHAT_IS_HANDED = '渡すもの'
+const WHAT_IS_HANDED = '再生ソース'
 
 const COPY_THE_URL = 'URL をコピー'
 
-const COPIED = 'URL をコピーしました'
+const COPIED = 'URL をコピーしました。'
 
-const NOT_COPIED = 'URL をコピーできません'
+const NOT_COPIED = 'URL をコピーできませんでした。'
 
 async function asText(taking: Promise<Taken>): Promise<Blob> {
   const got = await taking

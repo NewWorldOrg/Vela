@@ -4,7 +4,7 @@ import type { components } from '@/repository/client/schema'
 export type PlaybackSource = components['schemas']['PlaybackSource']
 
 const SOURCE_LABEL: Record<PlaybackSource, string> = {
-  artefact: 'エンコード済み',
+  artefact: 'エンコード版',
   recording: '元のまま',
 }
 

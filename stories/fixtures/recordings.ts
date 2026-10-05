@@ -150,7 +150,7 @@ const RECORDINGS: Recording[] = [
     encode: 'notEncoded',
     encodeWhenRecorded: true,
     thumbnail: 'none',
-    thumbnailLabel: '作成されません',
+    thumbnailLabel: '生成対象外',
   },
   {
     id: '0412',

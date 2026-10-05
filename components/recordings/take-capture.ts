@@ -96,6 +96,6 @@ export const takeCapture: TakeCapture = async ({ video, name, over }) => {
   return 'saved'
 }
 
-export const SAID_CAPTURED = 'キャプチャを保存しました'
+export const SAID_CAPTURED = 'キャプチャを保存しました。'
 
 export const SAID_NOT_CAPTURED = 'この映像は保存できません'

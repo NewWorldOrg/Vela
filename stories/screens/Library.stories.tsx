@@ -35,7 +35,7 @@ async function throwing(id: string): Promise<RecordingDiscarded> {
 }
 
 const STILL_RECORDING =
-  'この録画はまだ書き込み中です。録画を止めてから削除してください。'
+  'この録画はまだ書き込み中のため、削除できませんでした。録画を止めてから削除してください。'
 
 const all = inProgressFirst(
   [...RECORDING_FIXTURES].sort(
@@ -69,7 +69,7 @@ async function throwingAway(ids: string[]): Promise<RecordingBatch> {
 }
 
 const meta = {
-  title: 'Screens/録画ライブラリ',
+  title: 'Screens/ライブラリ',
   component: LibraryView,
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/library' } },

@@ -469,15 +469,17 @@ export const 再生できない_外部プレイヤーは渡すものを選べる
     const canvas = within(canvasElement)
 
     await waitFor(() =>
-      expect(canvas.getByText('このブラウザでは再生できません')).toBeVisible(),
+      expect(
+        canvas.getByText('このブラウザーでは再生できません'),
+      ).toBeVisible(),
     )
     await userEvent.click(
-      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+      canvas.getByRole('button', { name: '外部プレイヤーで再生' }),
     )
     await expect(await screen.findByRole('menu')).toBeVisible()
     await expect(
       screen.getAllByRole('menuitemradio').map((one) => one.textContent),
-    ).toEqual(['エンコード済み', '元のまま3.4 GB'])
+    ).toEqual(['エンコード版', '元のまま3.4 GB'])
     await expect(
       screen.getAllByRole('menuitem').map((one) => one.textContent),
     ).toEqual(['URL をコピー'])
@@ -576,12 +578,12 @@ export const 変換した映像をブラウザが再生できなかったら_変
       feeding.events?.onFault()
       await waitFor(() =>
         expect(
-          canvas.getByText('このブラウザでは再生できません'),
+          canvas.getByText('このブラウザーでは再生できません'),
         ).toBeVisible(),
       )
       await expect(
         canvas.getByText(
-          'トランスコードした映像をこのブラウザが再生できませんでした。',
+          'トランスコードした映像をこのブラウザーが再生できませんでした。',
         ),
       ).toBeVisible()
       await expect(
@@ -991,9 +993,9 @@ export const 成果物がある録画は元のままにも切り替えられる:
       within(sources)
         .getAllByRole('button')
         .map((one) => one.textContent),
-    ).toEqual(['エンコード済み', '元のまま'])
+    ).toEqual(['エンコード版', '元のまま'])
     await expect(
-      within(sources).getByRole('button', { name: 'エンコード済み' }),
+      within(sources).getByRole('button', { name: 'エンコード版' }),
     ).toHaveAttribute('aria-pressed', 'true')
     await expect(
       within(sources).getByRole('button', { name: '元のまま' }),
@@ -1049,7 +1051,7 @@ export const 元のままを再生している録画はエンコード済みに�
     ).toHaveAttribute('aria-pressed', 'true')
 
     await userEvent.click(
-      within(sources).getByRole('button', { name: 'エンコード済み' }),
+      within(sources).getByRole('button', { name: 'エンコード版' }),
     )
 
     await expect(router.replace).toHaveBeenCalledWith(`${AT_1274}?at=0`, {
@@ -1075,7 +1077,7 @@ export const ソースを切り替えても観ていた秒から続く: Story = 
     const canvas = within(canvasElement)
     const router = getRouter()
 
-    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
     await waitFor(() =>
       expect(canvas.getByText(/^10:22 \//)).toBeInTheDocument(),
     )
@@ -1175,7 +1177,7 @@ export const 観ている最中に成果物が置き換わるとその秒から�
     const canvas = within(canvasElement)
     const router = getRouter()
 
-    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
     await waitFor(() =>
       expect(canvas.getByText(/^10:22 \//)).toBeInTheDocument(),
     )
@@ -1198,7 +1200,7 @@ async function pausedAt622(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
   const video = canvasElement.querySelector('video')
 
-  await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+  await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
   await waitFor(() => expect(canvas.getByText(/^10:22 \//)).toBeInTheDocument())
   video?.dispatchEvent(new Event('playing'))
   video?.dispatchEvent(new Event('pause'))
@@ -1868,7 +1870,7 @@ export const 再生できない_持っていない音声を頼んだ: Story = {
     pictureHref: noPicture,
     askWhy: answering({
       kind: 'refused',
-      said: 'この録画のもとになった放送は選んだ音声を運んでいないため、再生できません。',
+      said: 'この録画のもとになった放送は選んだ音声を運んでいないため、再生できませんでした。',
     }),
   },
   play: async ({ canvasElement }) => {
@@ -2019,7 +2021,7 @@ export const 送りのボタンも要求は一度: Story = {
 
     asked.length = 0
 
-    const forward = canvas.getByRole('button', { name: '10秒進む' })
+    const forward = canvas.getByRole('button', { name: '10 秒進む' })
 
     for (let i = 0; i < 5; i += 1) {
       await userEvent.click(forward)
@@ -2036,7 +2038,7 @@ export const 送りのボタンも要求は一度: Story = {
     await new Promise((rest) => setTimeout(rest, 800))
     await expect(asked).toEqual(['50/1080p60'])
 
-    await userEvent.click(canvas.getByRole('button', { name: '10秒戻る' }))
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒戻る' }))
     await waitFor(() =>
       expect(canvas.getByText('0:40 / 4:12:38')).toBeVisible(),
     )
@@ -2277,7 +2279,7 @@ export const 送り戻しの印は脇に立つ: Story = {
     press(player, 'ArrowRight')
     await waitFor(() => expect(mark()).not.toBeNull())
     await expect(mark()).toHaveAttribute('data-way', 'forward')
-    await expect(mark()).toHaveTextContent('10秒')
+    await expect(mark()).toHaveTextContent('10 秒')
     await expect(getComputedStyle(mark() as Element).animationDuration).toBe(
       '0.7s',
     )
@@ -2288,11 +2290,11 @@ export const 送り戻しの印は脇に立つ: Story = {
 
     press(player, 'ArrowRight')
     press(player, 'ArrowRight')
-    await waitFor(() => expect(mark()).toHaveTextContent('30秒'))
+    await waitFor(() => expect(mark()).toHaveTextContent('30 秒'))
 
     press(player, 'ArrowLeft')
     await waitFor(() => expect(mark()).toHaveAttribute('data-way', 'back'))
-    await expect(mark()).toHaveTextContent('10秒')
+    await expect(mark()).toHaveTextContent('10 秒')
   },
 }
 
@@ -2413,7 +2415,7 @@ export const 立て直しのあいだ映っていたコマが残る: Story = {
       timeout: 10000,
     })
 
-    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
 
     await waitFor(() => expect(held).toHaveAttribute('data-holding', 'true'), {
       timeout: 5000,
@@ -2456,7 +2458,7 @@ export const 立て直しに失敗したらコマごと断りに変わる: Story
       timeout: 10000,
     })
 
-    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
 
     await waitFor(
       () =>
@@ -2542,7 +2544,7 @@ export const キャプチャ: Story = {
       height: 360,
     })
     await expect(await litIn(got.blob as Blob)).toBeGreaterThan(0.1)
-    await expect(canvas.getByText('キャプチャを保存しました')).toBeVisible()
+    await expect(canvas.getByText('キャプチャを保存しました。')).toBeVisible()
   },
 }
 
@@ -3012,16 +3014,16 @@ export const 右を二度叩くと10秒進み_続けて叩くと重なる: Story
     await waitFor(() =>
       expect(seekMark(canvasElement)).toHaveAttribute('data-way', 'forward'),
     )
-    await expect(seekMark(canvasElement)).toHaveTextContent('10秒')
+    await expect(seekMark(canvasElement)).toHaveTextContent('10 秒')
     await expect(canvas.getByText('10:10 / 4:12:38')).toBeVisible()
 
     await tapAt(area, 5 / 6, 1)
     await waitFor(() =>
-      expect(seekMark(canvasElement)).toHaveTextContent('20秒'),
+      expect(seekMark(canvasElement)).toHaveTextContent('20 秒'),
     )
     await tapAt(area, 5 / 6, 1)
     await waitFor(() =>
-      expect(seekMark(canvasElement)).toHaveTextContent('30秒'),
+      expect(seekMark(canvasElement)).toHaveTextContent('30 秒'),
     )
     await expect(canvas.getByText('10:30 / 4:12:38')).toBeVisible()
 
@@ -3040,7 +3042,7 @@ export const 左を二度叩くと10秒戻る: Story = {
     await waitFor(() =>
       expect(seekMark(canvasElement)).toHaveAttribute('data-way', 'back'),
     )
-    await expect(seekMark(canvasElement)).toHaveTextContent('10秒')
+    await expect(seekMark(canvasElement)).toHaveTextContent('10 秒')
     await expect(canvas.getByText('9:50 / 4:12:38')).toBeVisible()
     await expect(document.fullscreenElement).toBeNull()
   },
@@ -3054,11 +3056,11 @@ export const 指で二度叩いても送る: Story = {
 
     await tapAt(area, 5 / 6, 2, 'touch')
     await waitFor(() =>
-      expect(seekMark(canvasElement)).toHaveTextContent('10秒'),
+      expect(seekMark(canvasElement)).toHaveTextContent('10 秒'),
     )
     await tapAt(area, 5 / 6, 1, 'touch')
     await waitFor(() =>
-      expect(seekMark(canvasElement)).toHaveTextContent('20秒'),
+      expect(seekMark(canvasElement)).toHaveTextContent('20 秒'),
     )
     await expect(canvas.getByText('10:20 / 4:12:38')).toBeVisible()
     await expect(getComputedStyle(area).touchAction).toBe('manipulation')
@@ -3073,7 +3075,7 @@ export const 時計が合わせ直されても秒数は重なる: Story = {
 
     await tapAt(area, 5 / 6, 2)
     await waitFor(() =>
-      expect(seekMark(canvasElement)).toHaveTextContent('10秒'),
+      expect(seekMark(canvasElement)).toHaveTextContent('10 秒'),
     )
 
     Date.now = () => wall() + 60_000
@@ -3081,7 +3083,7 @@ export const 時計が合わせ直されても秒数は重なる: Story = {
     try {
       await tapAt(area, 5 / 6, 1)
       await waitFor(() =>
-        expect(seekMark(canvasElement)).toHaveTextContent('20秒'),
+        expect(seekMark(canvasElement)).toHaveTextContent('20 秒'),
       )
     } finally {
       Date.now = wall
@@ -3196,7 +3198,7 @@ export const 閉じたCM区間では出さない: Story = {
       canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
     ).toBeNull()
 
-    await userEvent.click(canvas.getByRole('button', { name: '10秒進む' }))
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
     await waitFor(() =>
       expect(canvas.getByText('21:00 / 4:12:38')).toBeVisible(),
     )

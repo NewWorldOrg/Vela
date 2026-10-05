@@ -814,7 +814,7 @@ test('a thumbnail that was not going to be made says so', async () => {
   ])
 
   assert.equal(skipped.thumbnail, 'none')
-  assert.equal(skipped.thumbnailLabel, '作成されません')
+  assert.equal(skipped.thumbnailLabel, '生成対象外')
 
   const drawn = await only()
 
@@ -1251,7 +1251,7 @@ test('a failure this build has no name for is still said out loud', async () => 
 
   assert.equal(
     (await getRecording('d-unknown'))?.failureReason?.title,
-    'この版がまだ知らない値',
+    '未知の値',
   )
 })
 
@@ -1305,7 +1305,7 @@ test('a failure this build has no name for still says when it was noticed', asyn
 
   const detail = await getRecording('d-unknown-note')
 
-  assert.equal(detail?.failureReason?.title, 'この版がまだ知らない値')
+  assert.equal(detail?.failureReason?.title, '未知の値')
   assert.equal(
     detail?.failureReason?.noticedAt,
     formatMoment('2026-08-09T14:20:00Z'),
@@ -1447,7 +1447,7 @@ test('a status the endpoint does not name asks to try again later', async () => 
   assert.equal(result.state, 'rejected')
   assert.match(
     result.state === 'rejected' ? result.message : '',
-    /しばらくしてからもう一度試してください。$/,
+    /時間をおいてからもう一度お試しください。$/,
   )
 })
 
@@ -1592,7 +1592,7 @@ test('a refusal carrying no reason asks to try again later', async () => {
   assert.equal(result.state, 'rejected')
   assert.match(
     result.state === 'rejected' ? result.message : '',
-    /しばらくしてからもう一度試してください。$/,
+    /時間をおいてからもう一度お試しください。$/,
   )
 })
 

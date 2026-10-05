@@ -305,10 +305,10 @@ export type ThumbnailWrite =
   | { state: 'rejected'; message: string }
 
 const THUMBNAIL_REFUSAL: Partial<Record<number, string>> = {
-  400: 'この録画の指定が正しくありません。',
-  404: 'この録画は残っていません。',
-  409: '録画中はサムネイルを作り直せません。',
-  503: '録画ファイルかサムネイルの保存先に到達できません。',
+  400: 'この録画の指定が正しくないため、サムネイルを再生成できませんでした。',
+  404: 'この録画は残っていないため、サムネイルを再生成できませんでした。',
+  409: '録画中のため、サムネイルを再生成できませんでした。',
+  503: '録画ファイルかサムネイルの保存先に到達できないため、サムネイルを再生成できませんでした。',
 }
 
 export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
@@ -325,7 +325,7 @@ export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
     state: 'rejected',
     message:
       THUMBNAIL_REFUSAL[response.status] ??
-      couldNot('サムネイルを作り直せませんでした'),
+      couldNot('サムネイルを再生成できませんでした'),
   }
 }
 
@@ -342,28 +342,28 @@ export type RecordingDiscarded =
 const DISCARD_REFUSAL: Record<RecordingRefusal, string> = {
   noSuchRecording: 'この録画は残っていないため、削除できませんでした。',
   stillRecording:
-    'この録画はまだ書き込み中です。録画を止めてから削除してください。',
+    'この録画はまだ書き込み中のため、削除できませんでした。録画を止めてから削除してください。',
   beingEncoded:
-    'この録画はエンコードの待機中か実行中です。エンコードを中止するか、終わってから削除してください。',
+    'この録画はエンコードの待機中か実行中のため、削除できませんでした。エンコードを中止するか、終わってから削除してください。',
   oneIsAlreadyBeingDiscarded:
-    '別の録画の削除が進行中です。削除は同時に 1 件までのため、終わってからもう一度お試しください。',
+    '別の録画の削除が進行中のため、削除できませんでした。削除は同時に 1 件までです。終わってからもう一度お試しください。',
   rootOutOfReach:
-    '録画ファイルの保存先に到達できないため、削除を実行していません。録画ファイルは残っています。',
+    '録画ファイルの保存先に到達できないため、削除できませんでした。録画ファイルは残っています。',
   fileOutOfReach:
-    '録画ファイルに到達できないため、削除を実行していません。録画ファイルは残っています。',
+    '録画ファイルに到達できないため、削除できませんでした。録画ファイルは残っています。',
   driverUnreachable:
-    '保存先の一覧を確認できないため、削除を実行していません。録画ファイルは残っています。',
+    '保存先の一覧を確認できないため、削除できませんでした。録画ファイルは残っています。',
   driverRefused:
-    '保存先の一覧の確認を断られたため、削除を実行していません。録画ファイルは残っています。',
+    '保存先の一覧の確認を断られたため、削除できませんでした。録画ファイルは残っています。',
   filesLeftBehind:
     '一部の録画ファイルを削除できませんでした。録画の記録が残っているのは削除が終わっていないためで、もう一度削除すると残りから続きます。',
   alreadyEnded: 'この録画はすでに終わっているため、削除できませんでした。',
   notBeingWritten:
     'この録画は書き込み中ではないため、削除できませんでした。最新の状態を読み直してください。',
   nowhereToPutPictures:
-    'サムネイルの保存先に到達できないため、削除を実行していません。録画ファイルは残っています。',
+    'サムネイルの保存先に到達できないため、削除できませんでした。録画ファイルは残っています。',
   tookTooLong:
-    '保存先の確認に時間がかかりすぎたため、削除を実行していません。録画ファイルは残っています。',
+    '保存先の確認に時間がかかりすぎたため、削除できませんでした。録画ファイルは残っています。',
 }
 
 const CANNOT_DISCARD = '録画を削除できませんでした'
@@ -721,7 +721,7 @@ const THUMBNAILS: Record<
   ready: { state: 'shot' },
   pending: { state: 'pending', label: '未生成' },
   failed: { state: 'error', label: '生成失敗' },
-  skipped: { state: 'none', label: '作成されません' },
+  skipped: { state: 'none', label: '生成対象外' },
 }
 
 const THUMBNAIL_NOT_YET_KNOWN: { state: ThumbnailState; label?: string } = {

@@ -117,7 +117,7 @@ function whyNothingPlays(
     return (
       <PlaybackNotice
         mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
-        title="再生できる成果物がありません"
+        title="再生できるエンコード版がありません"
       />
     )
   }
@@ -302,7 +302,7 @@ export function RecordingDetailView({
                   href={reservationHref(d.reservationId) as Route}
                   className="tap-target font-bold text-brand underline-offset-[3px] hover:underline"
                 >
-                  この録画の予約
+                  この録画の予約へ
                 </Link>
               </>
             )}

@@ -69,7 +69,7 @@ test('a sound the recording does not carry is refused in Japanese', () => {
 
   assert.equal(
     said,
-    'この録画のもとになった放送は選んだ音声を運んでいないため、再生できません。',
+    'この録画のもとになった放送は選んだ音声を運んでいないため、再生できませんでした。',
   )
   assert.doesNotMatch(said, /[A-Za-z]/)
 })
@@ -96,7 +96,7 @@ test('a reason this build has never heard is still said in Japanese, with the st
 
   assert.equal(
     said,
-    '再生を開始できませんでした。しばらくしてからもう一度試してください。',
+    '再生を開始できませんでした。時間をおいてからもう一度お試しください。',
   )
   assert.doesNotMatch(said, /teapot/)
 })
