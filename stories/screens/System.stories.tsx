@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
 import {
-  DRIVER_CAPABILITIES,
   SYSTEM_CENSUS,
   SYSTEM_STATUS,
   VELA_VERSION,
@@ -113,7 +112,6 @@ export const 機能が足りない: Story = {
           hello: {
             protocolVersion: '1',
             instanceId: '4f1c8a926d0b4e779a351cb2e0f74d58',
-            capabilities: DRIVER_CAPABILITIES.slice(0, 12),
             draining: false,
           },
           appProtocolVersion: '2',
@@ -164,7 +162,6 @@ export const 停止準備中: Story = {
           hello: {
             protocolVersion: '1',
             instanceId: '4f1c8a926d0b4e779a351cb2e0f74d58',
-            capabilities: DRIVER_CAPABILITIES,
             draining: true,
           },
           appProtocolVersion: '1',

@@ -1,30 +1,5 @@
 import type { SystemStatus } from '@/repository/system'
 
-export const DRIVER_CAPABILITIES = [
-  'recording',
-  'live',
-  'qualityMetering',
-  'deviceDetection',
-  'sessionStopReason',
-  'tunerLedger',
-  'liveTunerToggle',
-  'typedTuning',
-  'signalQuality',
-  'gracefulRestart',
-  'recordingExtension',
-  'ccMeasurement',
-  'scrambleMeasurement',
-  'dropPositions',
-  'storage',
-  'recordingErasure',
-  'strayFileErasure',
-  'lnbPowerSwitch',
-  'signalQuality.cnr',
-  'signalQuality.postViterbiBitError',
-  'sessionPurpose.surveyNow',
-  'descrambling',
-]
-
 export const VELA_VERSION = '0.1.0'
 
 export const SYSTEM_CENSUS = {
@@ -61,7 +36,6 @@ export const SYSTEM_STATUS: SystemStatus = {
       hello: {
         protocolVersion: '1',
         instanceId: '4f1c8a926d0b4e779a351cb2e0f74d58',
-        capabilities: DRIVER_CAPABILITIES,
         draining: false,
       },
       appProtocolVersion: '1',

@@ -12,7 +12,6 @@ export type DriverConnection = 'notConnected' | 'connected' | 'draining'
 export interface DriverHello {
   protocolVersion: string
   instanceId: string | null
-  capabilities: string[]
   draining: boolean
 }
 
@@ -323,7 +322,6 @@ function toDriverStatus(responder: DriverStatusResponder): DriverStatus {
     hello: hello && {
       protocolVersion: String(hello.protocolVersion),
       instanceId: hello.instanceId,
-      capabilities: hello.capabilities,
       draining: hello.draining,
     },
     appProtocolVersion: String(responder.appProtocolVersion),

@@ -349,6 +349,11 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'StorageRootResponder.committedBytes',
     ],
   },
+  {
+    because:
+      'the screen names only what the driver lacks, which arrives as the missing list, so the list of everything the driver can do is not drawn',
+    fields: ['DriverHelloResponder.capabilities'],
+  },
 ]
 
 const NOT_ASKED_FOR_ON_PURPOSE: { because: string; routes: string[] }[] = [

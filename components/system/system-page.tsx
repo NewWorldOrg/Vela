@@ -311,19 +311,6 @@ export function SystemView({
                 {reading?.appProtocolVersion ?? EMPTY_VALUE}
               </span>
             </DetailRow>
-            <DetailRow label={SYSTEM_DETAIL_LABELS.capabilities}>
-              {reading?.hello && reading.hello.capabilities.length > 0 ? (
-                <span className="flex flex-wrap gap-1.5">
-                  {reading.hello.capabilities.map((capability) => (
-                    <Badge key={capability} variant="secondary">
-                      {capabilityLabel(capability)}
-                    </Badge>
-                  ))}
-                </span>
-              ) : (
-                NOTHING
-              )}
-            </DetailRow>
           </dl>
         </Surface>
       </section>
