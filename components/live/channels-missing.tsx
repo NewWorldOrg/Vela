@@ -30,7 +30,7 @@ export function ChannelsMissing({
         className={className}
         action={
           <Button variant="watch" size="sm" asChild>
-            <Link href="/settings/channels">チャンネル設定へ</Link>
+            <Link href="/settings/channels">チャンネルへ</Link>
           </Button>
         }
       />

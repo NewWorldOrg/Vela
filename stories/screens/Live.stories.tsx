@@ -330,7 +330,7 @@ async function refusingTheTicket(): Promise<TicketWrite> {
   return {
     state: 'refused',
     message:
-      'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+      'このチャンネルは一覧にないため、外部プレイヤーの札を発行できませんでした。',
   }
 }
 
@@ -538,7 +538,7 @@ export const 選局前: Story = {
       canvasElement.querySelector('[data-slot="live-player"]'),
     ).toBeNull()
     await expect(
-      canvas.queryByRole('button', { name: '外部プレイヤーで開く' }),
+      canvas.queryByRole('button', { name: '外部プレイヤーで再生' }),
     ).toBeNull()
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
@@ -835,7 +835,7 @@ export const 切れた線の後始末は選び直したチャンネルに触れ�
       '[data-slot="channel-list"]',
     )!
     const transcoder = () =>
-      canvas.getByText('トランスコーダ起動').closest('li')
+      canvas.getByText('トランスコーダー起動').closest('li')
 
     await waitFor(() => expect(theProbe.answers).toBeDefined())
 
@@ -968,7 +968,7 @@ export const 起動中_選局を待つ: Story = {
       'now',
     )
     await expect(
-      canvas.getByText('トランスコーダ起動').closest('li'),
+      canvas.getByText('トランスコーダー起動').closest('li'),
     ).toHaveAttribute('data-startup', 'done')
     await expect(canvas.getByText('0.0 秒')).toBeVisible()
     await expect(canvas.getByText('最初の絵').closest('li')).toHaveAttribute(
@@ -1516,11 +1516,11 @@ function refused(
 
       if (over.looks) {
         await expect(
-          canvas.getByRole('link', { name: '使用状況を見る' }),
+          canvas.getByRole('link', { name: 'チューナーへ' }),
         ).toHaveAttribute('href', '/settings/tuners')
       } else {
         await expect(
-          canvas.queryByRole('link', { name: '使用状況を見る' }),
+          canvas.queryByRole('link', { name: 'チューナーへ' }),
         ).toBeNull()
       }
 
@@ -1613,7 +1613,7 @@ export const 撤収_録画に奪われた: Story = ended(
 
 export const 撤収_driver停止処理: Story = ended(
   'driverDraining',
-  'サーバが停止処理に入りました',
+  'サーバーが停止処理に入りました',
 )
 
 export const 撤収_視聴時間の上限: Story = ended(
@@ -1657,7 +1657,7 @@ export const セッション切れ: Story = {
       await canvas.findByText('セッションが切れました'),
     ).toBeVisible()
     await expect(
-      canvas.getByRole('link', { name: 'ログイン' }),
+      canvas.getByRole('link', { name: 'サインインへ' }),
     ).toHaveAttribute('href', '/login?next=%2Flive%3Fch%3D32736-1024')
     await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
 
@@ -1789,7 +1789,7 @@ export const 再生不能: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      await canvas.findByText('このブラウザでは再生できません'),
+      await canvas.findByText('このブラウザーでは再生できません'),
     ).toBeVisible()
     await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
   },
@@ -1804,7 +1804,7 @@ export const 映像を受け付けられない: Story = {
       await canvas.findByText('映像を再生できなくなりました'),
     ).toBeVisible()
     await expect(
-      canvas.queryByText('このブラウザでは再生できません'),
+      canvas.queryByText('このブラウザーでは再生できません'),
     ).toBeNull()
     await expect(canvas.getByRole('button', { name: '再試行' })).toBeEnabled()
     await waitFor(() => expect(opened[0]?.readyState).toBe(3))
@@ -1905,7 +1905,7 @@ export const 空状態: Story = {
       canvas.getByText('視聴できるチャンネルがありません'),
     ).toBeVisible()
     await expect(
-      canvas.getByRole('link', { name: 'チャンネル設定へ' }),
+      canvas.getByRole('link', { name: 'チャンネルへ' }),
     ).toHaveAttribute('href', '/settings/channels')
     await expect(canvas.queryByRole('group', { name: '放送の種別' })).toBeNull()
 
@@ -1941,7 +1941,7 @@ export const 空状態_この種別にチャンネルが無い: Story = {
       canvas.queryByText('視聴できるチャンネルがありません'),
     ).toBeNull()
     await expect(
-      canvas.queryByRole('link', { name: 'チャンネル設定へ' }),
+      canvas.queryByRole('link', { name: 'チャンネルへ' }),
     ).toBeNull()
 
     await userEvent.click(
@@ -1983,11 +1983,9 @@ export const 空状態_チューナーなし: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    await expect(canvas.getByText('チューナーがありません')).toBeVisible()
     await expect(
-      canvas.getByText('チューナーが登録されていません'),
-    ).toBeVisible()
-    await expect(
-      canvas.getByRole('link', { name: 'チューナー設定へ' }),
+      canvas.getByRole('link', { name: 'チューナーへ' }),
     ).toHaveAttribute('href', '/settings/tuners')
 
     await expect(
@@ -2008,9 +2006,7 @@ export const 空状態_チューナーが数えられない: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await expect(
-      canvas.queryByText('チューナーが登録されていません'),
-    ).toBeNull()
+    await expect(canvas.queryByText('チューナーがありません')).toBeNull()
     await expect(
       canvasElement.querySelector('[data-slot="channel-grid"]'),
     ).not.toBeNull()
@@ -2043,9 +2039,9 @@ export const 空状態_番組情報なし: Story = {
       UNCHOSEN.channels.length,
     )
 
-    await expect(canvas.getByText('EPG をまだ取得していません')).toBeVisible()
+    await expect(canvas.getByText('まだ番組情報がありません')).toBeVisible()
     await expect(
-      canvas.getByRole('link', { name: 'EPG 取得の状況を見る' }),
+      canvas.getByRole('link', { name: '番組表へ' }),
     ).toHaveAttribute('href', '/guide')
   },
 }
@@ -2072,7 +2068,7 @@ export const 番組情報が一部だけ無いときは言わない: Story = {
 
     await expect(silent.length).toBeLessThan(UNCHOSEN.channels.length)
     await expect(silent.length).toBeGreaterThan(0)
-    await expect(canvas.queryByText('EPG をまだ取得していません')).toBeNull()
+    await expect(canvas.queryByText('まだ番組情報がありません')).toBeNull()
   },
 }
 
@@ -2707,7 +2703,7 @@ export const キャプチャは画面のとおり字幕ごと: Story = {
 
     await expect(laid[0].name).toMatch(CAPTURED_NAME)
     await expect(laid[0].lit).toBeGreaterThan(0)
-    await expect(canvas.getByText('キャプチャを保存しました')).toBeVisible()
+    await expect(canvas.getByText('キャプチャを保存しました。')).toBeVisible()
   },
 }
 
@@ -2959,7 +2955,7 @@ export const 外部プレイヤーへ渡す: Story = {
 
     await expect(copied[0]).toMatch(THE_CHANNEL_BY_TICKET)
     await expect(
-      await within(canvasElement).findByText('URL をコピーしました'),
+      await within(canvasElement).findByText('URL をコピーしました。'),
     ).toBeVisible()
   },
 }
@@ -2971,16 +2967,16 @@ export const iPad_では外部プレイヤーのアプリで開く: Story = {
     await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
     await expect(whatIsHanded()).toEqual([])
     await expect(waysToHandOver()).toEqual([
-      'VLC で開く',
-      'Infuse で開く',
+      'VLC で再生',
+      'Infuse で再生',
       'URL をコピー',
     ])
 
     const left = await whereItLeftFor(async (sent) => {
-      await pressInTheHandoverMenu(canvasElement, 'VLC で開く')
+      await pressInTheHandoverMenu(canvasElement, 'VLC で再生')
       await waitFor(() => expect(sent).toHaveLength(1))
 
-      await pressInTheHandoverMenu(canvasElement, 'Infuse で開く')
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で再生')
       await waitFor(() => expect(sent).toHaveLength(2))
     })
 
@@ -3000,14 +2996,14 @@ export const 外部プレイヤーの札を断られたらその場で言う: St
       await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
       await expect(
         await within(canvasElement).findByText(
-          'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+          'このチャンネルは一覧にないため、外部プレイヤーの札を発行できませんでした。',
         ),
       ).toBeVisible()
     })
 
     await expect(copied).toEqual([])
     await expect(
-      within(canvasElement).queryByText('URL をコピーできません'),
+      within(canvasElement).queryByText('URL をコピーできませんでした。'),
     ).toBeNull()
   },
 }
@@ -3017,10 +3013,10 @@ export const アプリで開く前に札を断られたらその場で言う: St
   beforeEach: browsingAs(AN_IPAD),
   play: async ({ canvasElement }) => {
     const left = await whereItLeftFor(async () => {
-      await pressInTheHandoverMenu(canvasElement, 'VLC で開く')
+      await pressInTheHandoverMenu(canvasElement, 'VLC で再生')
       await expect(
         await within(canvasElement).findByText(
-          'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+          'このチャンネルは一覧にないため、外部プレイヤーの札を発行できませんでした。',
         ),
       ).toBeVisible()
     })
@@ -3050,7 +3046,7 @@ export const 札を頼む通信が落ちたらその場で言う: Story = {
       await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
       await expect(
         await within(canvasElement).findByText(
-          '外部プレイヤーの札を発行できませんでした。しばらくしてからもう一度試してください。',
+          '外部プレイヤーの札を発行できませんでした。時間をおいてからもう一度お試しください。',
         ),
       ).toBeVisible()
     })
@@ -3069,7 +3065,7 @@ export const AirPlay_はライブに描かない: Story = {
     ).toBeVisible()
     await expect(canvas.queryByRole('button', { name: 'AirPlay' })).toBeNull()
     await expect(
-      canvas.getByRole('button', { name: '外部プレイヤーで開く' }),
+      canvas.getByRole('button', { name: '外部プレイヤーで再生' }),
     ).toBeVisible()
   },
 }

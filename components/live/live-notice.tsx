@@ -133,7 +133,7 @@ const ENDED: Record<LiveSupplyEnd, Said> = {
   driverDraining: {
     tone: 'waiting',
     mark: <WarningIcon className="size-[calc(22rem/16)]" />,
-    title: 'サーバが停止処理に入りました',
+    title: 'サーバーが停止処理に入りました',
     worthRetrying: true,
   },
   windowClosed: {
@@ -206,7 +206,7 @@ const APPEND_FAILED: Said = {
 const UNSUPPORTED: Said = {
   tone: 'gone',
   mark: <DisplayIcon className="size-[calc(22rem/16)]" />,
-  title: 'このブラウザでは再生できません',
+  title: 'このブラウザーでは再生できません',
   worthRetrying: false,
 }
 
@@ -277,12 +277,12 @@ export function LiveFaultNotice({
       )}
       {said.worthLooking && (
         <Link href="/settings/tuners" className={PLAYER_BUTTON}>
-          使用状況を見る
+          チューナーへ
         </Link>
       )}
       {fault.kind === 'signedOut' && (
         <Link href={loginHref(returnPath) as Route} className={PLAYER_BUTTON}>
-          ログイン
+          サインインへ
         </Link>
       )}
     </PlaybackNotice>

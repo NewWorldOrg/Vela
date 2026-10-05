@@ -14,7 +14,7 @@ export type TicketWrite =
 export const NO_TICKET = couldNot('外部プレイヤーの札を発行できませんでした')
 
 const REFUSED_WHEREVER_IT_IS_ASKED: Partial<Record<number, string>> = {
-  429: '発行の上限に達しています。しばらく待つと発行できます。',
+  429: '発行の上限に達しているため、外部プレイヤーの札を発行できませんでした。時間をおいてからもう一度お試しください。',
 }
 
 export function whyNoTicket(

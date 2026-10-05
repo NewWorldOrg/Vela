@@ -313,7 +313,7 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
 
 const TICKET_REFUSAL: Partial<Record<number, string>> = {
   400: 'このチャンネルの指定が正しくないため、外部プレイヤーの札を発行できませんでした。',
-  404: 'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+  404: 'このチャンネルは一覧にないため、外部プレイヤーの札を発行できませんでした。',
 }
 
 export type TakeLiveTicket = (

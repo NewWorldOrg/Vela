@@ -137,10 +137,10 @@ export function LiveView({
         </h1>
         <EmptyState
           titleLevel={2}
-          title="チューナーが登録されていません"
+          title="チューナーがありません"
           action={
             <Button variant="watch" size="sm" asChild>
-              <Link href="/settings/tuners">チューナー設定へ</Link>
+              <Link href="/settings/tuners">チューナーへ</Link>
             </Button>
           }
         />
@@ -181,11 +181,11 @@ export function LiveView({
           <EmptyState
             usher={null}
             titleLevel={2}
-            title="EPG をまだ取得していません"
+            title="まだ番組情報がありません"
             className="mt-3.5"
             action={
               <Button variant="watch" size="sm" asChild>
-                <Link href="/guide">EPG 取得の状況を見る</Link>
+                <Link href="/guide">番組表へ</Link>
               </Button>
             }
           />
