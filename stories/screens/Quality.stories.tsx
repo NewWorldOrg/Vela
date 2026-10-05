@@ -13,7 +13,10 @@ import {
   SATELLITES_THAT_CANNOT_LOCK,
   TWO_BROADCAST_DAYS,
 } from '@/repository/quality.fixtures'
-import type { QualityReviseThreshold } from '@/components/quality/quality-page'
+import type {
+  QualityReleaseThreshold,
+  QualityReviseThreshold,
+} from '@/components/quality/quality-page'
 import { QualityView } from '@/components/quality/quality-page'
 import {
   rowsOfTheTableHeaded,
@@ -26,6 +29,10 @@ const REFUSED =
   '警告水準が視聴不可の恐れを越えてしまうため、変更できませんでした。'
 
 const reviseThreshold = fn<QualityReviseThreshold>(async () => ({
+  state: 'ok',
+}))
+
+const releaseThreshold = fn<QualityReleaseThreshold>(async () => ({
   state: 'ok',
 }))
 
@@ -44,7 +51,10 @@ const meta = {
     },
     layout: 'fullscreen',
   },
-  args: { onReviseThreshold: reviseThreshold },
+  args: {
+    onReviseThreshold: reviseThreshold,
+    onReleaseThreshold: releaseThreshold,
+  },
   decorators: [inTheSettings],
 } satisfies Meta<typeof QualityView>
 
@@ -219,6 +229,79 @@ export const 閾値の変更を断られる: Story = {
       within(dialog).getByRole('button', { name: '変更する' }),
     )
     await waitFor(() => expect(within(dialog).getByText(REFUSED)).toBeVisible())
+  },
+}
+
+export const 閾値の出どころ: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const measured = canvas.getByText('CNR の下限').parentElement!
+
+    await expect(within(measured).getByText('実測')).toBeVisible()
+    await expect(
+      within(measured).getByText(
+        'セッション 240 件(ドロップ 18 件)· 09/01〜09/07',
+      ),
+    ).toBeVisible()
+
+    const byHand = canvas.getByText(
+      'post-Viterbi ビット誤り率の上限',
+    ).parentElement!
+
+    await expect(within(byHand).getByText('手動設定')).toBeVisible()
+    await expect(
+      within(byHand).getByText('実測 3.0e-3 · 既定 1.0e-4'),
+    ).toBeVisible()
+
+    const shipped = canvas.getByText('lock 率の下限').parentElement!
+
+    await expect(within(shipped).queryByText('実測')).toBeNull()
+    await expect(within(shipped).queryByText('手動設定')).toBeNull()
+  },
+}
+
+export const 手動設定を解除: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閾値を変更' }))
+
+    const dialog = await screen.findByRole('dialog', { name: '閾値を変更' })
+
+    await expect(
+      within(dialog).queryByRole('button', { name: '手動設定を解除' }),
+    ).toBeNull()
+
+    await userEvent.click(within(dialog).getByRole('combobox'))
+    await userEvent.click(
+      await screen.findByRole('option', {
+        name: 'post-Viterbi ビット誤り率の上限',
+      }),
+    )
+    await expect(
+      within(dialog).getByText(/既定 1\.0e-4 · 実測 3\.0e-3/),
+    ).toBeVisible()
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '手動設定を解除' }),
+    )
+    await waitFor(() =>
+      expect(args.onReleaseThreshold).toHaveBeenCalledWith(
+        'bitErrorRateCeiling',
+      ),
+    )
+  },
+}
+
+export const 局とチューナーの組の異常: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByText(/みなと総合1 · adapter0\.frontend0 · 観測 17\.2 dB/),
+    ).toBeVisible()
   },
 }
 

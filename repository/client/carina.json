@@ -13993,7 +13993,8 @@
           "channel",
           "recording",
           "transportStream",
-          "guide"
+          "guide",
+          "reception"
         ],
         "type": "string"
       },
@@ -14291,6 +14292,55 @@
           }
         }
       },
+      "QualityThresholdMeasurementResponder": {
+        "required": [
+          "value",
+          "sessions",
+          "sessionsDropped",
+          "from",
+          "until",
+          "measuredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "sessions": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "sessionsDropped": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "QualityThresholdResponder": {
         "required": [
           "key",
@@ -14305,7 +14355,9 @@
           "stored",
           "updatedAt",
           "updatedBy",
-          "lastChange"
+          "lastChange",
+          "source",
+          "measurement"
         ],
         "type": "object",
         "properties": {
@@ -14393,8 +14445,29 @@
                 "$ref": "#/components/schemas/QualityThresholdChangeResponder"
               }
             ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/QualityThresholdSource"
+          },
+          "measurement": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QualityThresholdMeasurementResponder"
+              }
+            ]
           }
         }
+      },
+      "QualityThresholdSource": {
+        "enum": [
+          "shipped",
+          "measured",
+          "byHand"
+        ],
+        "type": "string"
       },
       "QualityTrendChannelResponder": {
         "required": [
@@ -16674,6 +16747,12 @@
               "string"
             ],
             "format": "double"
+          },
+          "byHand": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },

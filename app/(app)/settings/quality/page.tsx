@@ -4,7 +4,7 @@ import { QUALITY_EVENT } from '@/repository/events'
 import { getQuality } from '@/repository/quality'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { QualityView } from '@/components/quality/quality-page'
-import { changeThreshold } from './actions'
+import { changeThreshold, letGoOfThreshold } from './actions'
 
 export const metadata: Metadata = { title: '品質' }
 
@@ -22,7 +22,11 @@ export default async function Page({
   return (
     <>
       <RefreshOnSignal events={[QUALITY_EVENT]} />
-      <QualityView result={result} onReviseThreshold={changeThreshold} />
+      <QualityView
+        result={result}
+        onReviseThreshold={changeThreshold}
+        onReleaseThreshold={letGoOfThreshold}
+      />
     </>
   )
 }

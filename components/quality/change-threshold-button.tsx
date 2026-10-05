@@ -13,9 +13,11 @@ import { ThresholdDialog } from '@/components/quality/threshold-dialog'
 export function ChangeThresholdButton({
   thresholds,
   onRevise,
+  onRelease,
 }: {
   thresholds: QualityThreshold[]
   onRevise: (key: QualityThresholdKey, amount: number) => Promise<QualityWrite>
+  onRelease: (key: QualityThresholdKey) => Promise<QualityWrite>
 }) {
   const [open, setOpen] = useState(false)
 
@@ -30,6 +32,7 @@ export function ChangeThresholdButton({
           open
           onOpenChange={setOpen}
           onSave={onRevise}
+          onRelease={onRelease}
         />
       )}
     </>

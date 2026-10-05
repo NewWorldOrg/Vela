@@ -40,11 +40,13 @@ export function ThresholdDialog({
   open,
   onOpenChange,
   onSave,
+  onRelease,
 }: {
   thresholds: QualityThreshold[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (key: QualityThresholdKey, amount: number) => Promise<QualityWrite>
+  onRelease: (key: QualityThresholdKey) => Promise<QualityWrite>
 }) {
   const [key, setKey] = useState(thresholds[0].key)
   const [amount, setAmount] = useState(thresholds[0].amount)
@@ -54,6 +56,7 @@ export function ThresholdDialog({
 
   const chosen = thresholds.find((one) => one.key === key) ?? thresholds[0]
   const range = `${chosen.lowest} 〜 ${saidWithUnit(chosen.highest, chosen.unit)}`
+  const measured = chosen.measured ? ` · 実測 ${chosen.measured}` : ''
 
   const choose = (next: string) => {
     const found = thresholds.find((one) => one.key === next) ?? thresholds[0]
@@ -78,11 +81,19 @@ export function ThresholdDialog({
       return
     }
 
+    write(() => onSave(chosen.key, Number(amount)), '変更')
+  }
+
+  const release = () => {
     setProblem(undefined)
+    write(() => onRelease(chosen.key), '解除')
+  }
+
+  const write = (writing: () => Promise<QualityWrite>, what: string) => {
     setRefusal(undefined)
 
     startTransition(async () => {
-      const result = await onSave(chosen.key, Number(amount))
+      const result = await writing()
 
       if (result.state === 'ok') {
         onOpenChange(false)
@@ -91,7 +102,7 @@ export function ThresholdDialog({
       }
 
       setRefusal(
-        result.state === 'unauthenticated' ? signedOut('変更') : result.message,
+        result.state === 'unauthenticated' ? signedOut(what) : result.message,
       )
     })
   }
@@ -139,6 +150,7 @@ export function ThresholdDialog({
             />
             <FieldHint>
               {range} · 既定 {chosen.shipped}
+              {measured}
             </FieldHint>
             <span aria-live="polite">
               {problem && (
@@ -153,6 +165,11 @@ export function ThresholdDialog({
         </div>
 
         <DialogFooter>
+          {chosen.source === 'byHand' && (
+            <Button variant="ghost" disabled={pending} onClick={release}>
+              手動設定を解除
+            </Button>
+          )}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             キャンセル
           </Button>

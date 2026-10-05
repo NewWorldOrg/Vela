@@ -3,12 +3,14 @@ import Link from 'next/link'
 
 import type { QualityLevel } from '@/lib/quality'
 import { QUALITY_LEVEL_LABEL } from '@/lib/quality'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { cn } from '@/lib/utils'
 import type {
   QualityChannel,
   QualityResult,
   QualityStat,
   QualityThresholdKey,
+  QualityThresholdSource,
   QualityTuner,
   QualityWrite,
 } from '@/repository/quality'
@@ -39,6 +41,7 @@ import {
 } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
+import { Badge } from '@/components/ui/badge'
 import { ChangeThresholdButton } from '@/components/quality/change-threshold-button'
 import { AnomalyList } from '@/components/quality/anomaly-list'
 import { SegmentedControl } from '@/components/vela/segmented-control'
@@ -152,6 +155,17 @@ export type QualityReviseThreshold = (
   amount: number,
 ) => Promise<QualityWrite>
 
+export type QualityReleaseThreshold = (
+  key: QualityThresholdKey,
+) => Promise<QualityWrite>
+
+const SOURCE_BADGES: Record<QualityThresholdSource, 'ok' | 'mute' | undefined> =
+  {
+    shipped: undefined,
+    measured: 'ok',
+    byHand: 'mute',
+  }
+
 function StateTip({
   state,
   children,
@@ -173,9 +187,11 @@ function StateTip({
 export function QualityView({
   result,
   onReviseThreshold,
+  onReleaseThreshold,
 }: {
   result: QualityResult
   onReviseThreshold: QualityReviseThreshold
+  onReleaseThreshold: QualityReleaseThreshold
 }) {
   return (
     <>
@@ -264,6 +280,16 @@ export function QualityView({
                 <span className="font-code text-ui tabular-nums text-brand">
                   {threshold.value}
                 </span>
+                {threshold.sourceLabel && (
+                  <Badge
+                    variant={
+                      shapeFor(SOURCE_BADGES, threshold.source, undefined) ??
+                      'mute'
+                    }
+                  >
+                    {threshold.sourceLabel}
+                  </Badge>
+                )}
                 {threshold.basis && (
                   <span className="w-full font-code text-note text-ink-3">
                     {threshold.basis}
@@ -277,6 +303,7 @@ export function QualityView({
               <ChangeThresholdButton
                 thresholds={result.thresholds}
                 onRevise={onReviseThreshold}
+                onRelease={onReleaseThreshold}
               />
             </div>
           )}

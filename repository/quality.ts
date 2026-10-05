@@ -1,6 +1,6 @@
 import type { Route } from 'next'
 
-import { formatMoment, formatMomentSpan } from '@/lib/format'
+import { formatDate, formatMoment, formatMomentSpan } from '@/lib/format'
 import { WHEN_MARKS } from '@/lib/when-terms'
 import type { QualityLevel } from '@/lib/quality'
 import {
@@ -43,6 +43,8 @@ type TunerResponder = components['schemas']['QualityTunerResponder']
 type RecordingResponder = components['schemas']['QualityRecordingResponder']
 type GapVerdictResponder = components['schemas']['QualityGapVerdictResponder']
 type ThresholdResponder = components['schemas']['QualityThresholdResponder']
+type MeasurementResponder =
+  components['schemas']['QualityThresholdMeasurementResponder']
 type State = components['schemas']['QualityState']
 type Standing = components['schemas']['QualityStanding']
 type IncidentResponder = components['schemas']['QualityIncidentResponder']
@@ -62,6 +64,8 @@ export type QualityTrendSubject = components['schemas']['QualityTrendSubject']
 
 export type QualityMetric = components['schemas']['QualityMetric']
 export type QualityThresholdKey = components['schemas']['QualityThresholdKey']
+export type QualityThresholdSource =
+  components['schemas']['QualityThresholdSource']
 
 export type { QualityLevel }
 
@@ -86,7 +90,10 @@ export interface QualityThreshold {
   key: QualityThresholdKey
   label: string
   value: string
+  source: QualityThresholdSource
+  sourceLabel?: string
   basis?: string
+  measured?: string
   shipped: string
   amount: string
   unit: string
@@ -461,6 +468,15 @@ const SUBJECT_KINDS: Record<SubjectKind, string> = {
   recording: '録画',
   transportStream: 'TS',
   guide: '番組表',
+  reception: '受信',
+}
+
+const RECEPTION_TUNER = '@'
+
+const SOURCE_LABELS: Record<QualityThresholdSource, string | undefined> = {
+  shipped: undefined,
+  measured: '実測',
+  byHand: '手動設定',
 }
 
 const SUPPLY_SILENCE = 'supplySilence'
@@ -485,6 +501,11 @@ export interface QualityAsking {
 export const WHEN_CHANGING_A_THRESHOLD: QualityAsking = {
   did: '変更',
   fell: '閾値を変更できませんでした',
+}
+
+export const WHEN_RELEASING_A_THRESHOLD: QualityAsking = {
+  did: '解除',
+  fell: '手動設定を解除できませんでした',
 }
 
 const REFUSAL_REASONS: [RegExp, string][] = [
@@ -602,6 +623,17 @@ export async function getQuality(
   }
 }
 
+export async function releaseThreshold(
+  key: QualityThresholdKey,
+): Promise<QualityWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/quality/thresholds/{key}',
+    { params: { path: { key } }, body: { value: null, byHand: false } },
+  )
+
+  return writtenAs(WHEN_RELEASING_A_THRESHOLD, response, error)
+}
+
 export async function reviseThreshold(
   key: QualityThresholdKey,
   amount: number,
@@ -619,6 +651,14 @@ export async function reviseThreshold(
     },
   )
 
+  return writtenAs(WHEN_CHANGING_A_THRESHOLD, response, error)
+}
+
+function writtenAs(
+  asking: QualityAsking,
+  response: Response,
+  error: unknown,
+): QualityWrite {
   if (response.status === 401) {
     return { state: 'unauthenticated' }
   }
@@ -629,11 +669,7 @@ export async function reviseThreshold(
 
   return {
     state: 'rejected',
-    message: whyItRefused(
-      WHEN_CHANGING_A_THRESHOLD,
-      response.status,
-      whatItSaid(error),
-    ),
+    message: whyItRefused(asking, response.status, whatItSaid(error)),
   }
 }
 
@@ -840,7 +876,24 @@ function subjectOf(
     return known.find((each) => each.id === one.subjectKey)?.name || named
   }
 
+  if (one.subjectKind === 'reception') {
+    return receptionOf(one.subjectKey, known) || named
+  }
+
   return named
+}
+
+function receptionOf(key: string, known: GuideChannel[]): string | undefined {
+  const at = key.lastIndexOf(RECEPTION_TUNER)
+
+  if (at <= 0 || at === key.length - 1) {
+    return undefined
+  }
+
+  const channel = key.slice(0, at)
+  const name = known.find((each) => each.id === channel)?.name || channel
+
+  return `${name} · ${key.slice(at + 1)}`
 }
 
 function measured(value: number | string, key: QualityThresholdKey): string {
@@ -1189,19 +1242,52 @@ function toThreshold(one: ThresholdResponder): QualityThreshold {
   const shape = shapeFor(THRESHOLD_SHAPES, one.key, THRESHOLD_NOT_YET_SHAPED)
   const current = shown(toRatio(one.currentValue), shape.scale)
   const shipped = spelled(shown(toRatio(one.defaultValue), shape.scale), shape)
-  const moved = toRatio(one.currentValue) !== toRatio(one.defaultValue)
+  const measured = one.measurement
+    ? spelled(shown(toRatio(one.measurement.value), shape.scale), shape)
+    : undefined
 
   return {
     key: one.key,
     label: shape.label,
     value: spelled(current, shape),
-    basis: moved ? `既定 ${shipped}` : undefined,
+    source: one.source,
+    sourceLabel: shapeFor(SOURCE_LABELS, one.source, undefined),
+    basis: basisOf(one, shipped, measured),
+    measured,
     shipped,
     amount: trimmed(current),
     unit: shape.unit,
     lowest: shown(toRatio(one.lowest), shape.scale),
     highest: shown(toRatio(one.highest), shape.scale),
   }
+}
+
+function basisOf(
+  one: ThresholdResponder,
+  shipped: string,
+  measured: string | undefined,
+): string | undefined {
+  if (one.source === 'measured' && one.measurement) {
+    return groundsOf(one.measurement)
+  }
+
+  if (one.source === 'byHand') {
+    return [measured && `実測 ${measured}`, `既定 ${shipped}`]
+      .filter(Boolean)
+      .join(' · ')
+  }
+
+  return toRatio(one.currentValue) !== toRatio(one.defaultValue)
+    ? `既定 ${shipped}`
+    : undefined
+}
+
+function groundsOf(measurement: MeasurementResponder): string {
+  const sessions = toInt(measurement.sessions)
+  const dropped = toInt(measurement.sessionsDropped)
+  const span = `${formatDate(measurement.from)}〜${formatDate(measurement.until)}`
+
+  return `セッション ${sessions} 件(ドロップ ${dropped} 件)· ${span}`
 }
 
 function readingOf(
