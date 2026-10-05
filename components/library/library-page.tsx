@@ -82,7 +82,7 @@ export function LibraryView({
       </div>
 
       <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-3">
+        <div className="flex flex-wrap items-center gap-x-3.5 gap-y-3">
           <form
             className="relative min-w-[calc(180rem/16)] flex-[1_1_100%] min-[701px]:flex-[0_1_268px]"
             onSubmit={(e) => {
