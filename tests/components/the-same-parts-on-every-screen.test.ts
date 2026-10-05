@@ -483,6 +483,7 @@ test('the controls in a filter band are one height and one size of word', async 
   for (const file of [
     'components/library/library-page.tsx',
     'components/vela/filter-select.tsx',
+    'components/vela/sub-channel-toggle.tsx',
     'components/guide/guide-page.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
@@ -563,6 +564,27 @@ test('a table surface stops at its last row instead of filling the screen', asyn
       `${file} stretches its table to the bottom of the screen and leaves an empty surface under the rows`,
     )
     assert.match(source, /min-h-0 flex-initial overflow/)
+  }
+})
+
+test('the sub-channel switch is one part, wherever a screen puts it', async () => {
+  const drawn = (await everySource()).filter(({ source }) =>
+    />\s*副チャンネル\s*</.test(source),
+  )
+
+  assert.deepEqual(
+    drawn.map(({ file }) => file),
+    ['components/vela/sub-channel-toggle.tsx'],
+    'a screen draws the sub-channel switch itself instead of using the part',
+  )
+
+  for (const file of [
+    'components/guide/guide-page.tsx',
+    'components/live/live-page.tsx',
+  ]) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.match(source, /<SubChannelToggle\b/, `${file} lost the switch`)
   }
 })
 

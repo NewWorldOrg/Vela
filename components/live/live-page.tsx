@@ -31,6 +31,7 @@ import { OpenExternally } from '@/components/recordings/external-player'
 import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
+import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
 import { ChannelList } from '@/components/live/channel-list'
 import { useFoldingChannels } from '@/components/live/channel-fold'
 import { LivePlayer } from '@/components/live/live-player'
@@ -150,32 +151,19 @@ export function LiveView({
   if (!watching) {
     return (
       <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <h1 className={cn(HEADING, 'mb-0')}>
-            <LiveIcon className="size-[calc(22rem/16)] text-brand" />
-            ライブ
-          </h1>
+        <h1 className={HEADING}>
+          <LiveIcon className="size-[calc(22rem/16)] text-brand" />
+          ライブ
+        </h1>
+        <div className="mb-3.5 flex flex-wrap items-center gap-3.5 empty:hidden">
+          <ChannelKinds kind={screen.kind} kinds={screen.kinds} onKind={kind} />
           {foldable && (
-            <button
-              type="button"
-              aria-pressed={!subsFolded}
-              onClick={() => foldSubs(!subsFolded)}
-              className={cn(
-                'tap-target ml-auto cursor-pointer rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg',
-                !subsFolded &&
-                  'border-brand bg-brand-soft font-bold text-brand',
-              )}
-            >
-              副チャンネル
-            </button>
+            <SubChannelToggle
+              shown={!subsFolded}
+              onShownChange={(on) => foldSubs(!on)}
+            />
           )}
         </div>
-        <ChannelKinds
-          kind={screen.kind}
-          kinds={screen.kinds}
-          onKind={kind}
-          className="mb-3.5"
-        />
         {screen.channels.length === 0 ? (
           <ChannelsMissing
             kind={screen.kind}

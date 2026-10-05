@@ -27,6 +27,7 @@ import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
 import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { SegmentedControl } from '@/components/vela/segmented-control'
+import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
 import {
   AntennaIcon,
   ChevronLeftIcon,
@@ -233,17 +234,7 @@ export function GuideView({
         </div>
 
         {foldable && (
-          <button
-            type="button"
-            aria-pressed={!folded}
-            onClick={() => fold(!folded)}
-            className={cn(
-              'tap-target cursor-pointer rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color,background-color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg',
-              !folded && 'border-brand bg-brand-soft font-bold text-brand',
-            )}
-          >
-            副チャンネル
-          </button>
+          <SubChannelToggle shown={!folded} onShownChange={(on) => fold(!on)} />
         )}
 
         <button
