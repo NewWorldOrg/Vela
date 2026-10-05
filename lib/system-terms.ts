@@ -5,7 +5,6 @@ export const SYSTEM_DETAIL_LABELS = {
   health: 'ヘルスの応答',
   version: 'バージョン',
   protocolVersion: 'プロトコルバージョン',
-  capabilities: 'driver の機能',
 } as const
 
 export type SystemDetail = keyof typeof SYSTEM_DETAIL_LABELS
