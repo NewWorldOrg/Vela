@@ -14,6 +14,7 @@ import { RefreshOnSignal } from '@/components/vela/app-signals'
 import type { RuleEditing } from '@/components/reservations/rules-page'
 import { RulesView } from '@/components/reservations/rules-page'
 import {
+  applyRules,
   dropRule,
   rehearseRule,
   saveRule,
@@ -70,6 +71,7 @@ export default async function Page({
           onSwitch: turnRule,
           onPreview: rehearseRule,
           onImpact: weighRule,
+          onApply: applyRules,
         }}
       />
     </>

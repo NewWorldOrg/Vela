@@ -1,4 +1,4 @@
-import { couldNot } from '@/lib/try-again'
+import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 import { broadcastDateOf, windowStartOf } from '@/lib/guide'
 import type { RuleConditionBeyond, RuleDay, RuleTerms } from '@/lib/rules'
@@ -162,9 +162,6 @@ const END_UNDECIDED = '終了未定'
 
 const WRITTEN_WRONG_TO_SAVE =
   'ルール名と条件が揃っていないため、保存できませんでした。ルール名は 1 文字以上、条件は 1 つ以上必要です。'
-
-const WRITTEN_WRONG_TO_APPLY =
-  'ルール名と条件が揃っていないため、適用できませんでした。ルール名は 1 文字以上、条件は 1 つ以上必要です。'
 
 const GONE = 'このルールは残っていないため、'
 
@@ -501,7 +498,7 @@ export async function applyRulesNow(
   return toWrite(
     response,
     () => toApplication(data!.data as RuleApplicationResponder),
-    { 400: WRITTEN_WRONG_TO_APPLY, 404: `${GONE}適用できませんでした。` },
+    {},
     'ルールを適用できませんでした。',
   )
 }
@@ -510,14 +507,20 @@ function refusedBecause(
   refusal: RuleApplicationRefusedResponder | null | undefined,
 ): string {
   if (refusal?.refusal === 'tooSoonAfterTheLastOne') {
-    const at = refusal.notBefore
-      ? `${formatMoment(refusal.notBefore)} 以降に`
-      : '時間をおいてから'
+    const again = refusal.notBefore
+      ? `${formatMoment(minuteAfter(refusal.notBefore))} 以降にもう一度お試しください。`
+      : TRY_AGAIN_LATER
 
-    return `前回の適用から間がないため、適用できませんでした。${at}もう一度お試しください。`
+    return `前回の適用から間隔が空いていないため、適用できませんでした。${again}`
   }
 
-  return 'ルールの適用がすでに実行中のため、適用できませんでした。実行中の適用がこのルールも読みます。'
+  return 'ルールの適用がすでに実行中のため、適用できませんでした。'
+}
+
+function minuteAfter(at: string): number {
+  const A_MINUTE_MS = 60 * 1000
+
+  return Math.ceil(new Date(at).getTime() / A_MINUTE_MS) * A_MINUTE_MS
 }
 
 function bodyOf(draft: RuleDraft) {

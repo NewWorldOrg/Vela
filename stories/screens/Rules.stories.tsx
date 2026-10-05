@@ -12,6 +12,7 @@ import { newRuleHref, ruleTermsOfSearch, seriesTermsOf } from '@/lib/rules'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type {
   Rule,
+  RuleApplication,
   RuleDraft,
   RuleImpact,
   RulePreview,
@@ -79,6 +80,18 @@ const IMPACT: RuleImpact = {
 
 const RETIRED: RuleRetirement = { withdrawn: 4, swept: 0 }
 
+const APPLIED: RuleApplication = {
+  read: 1840,
+  made: 3,
+  refused: 0,
+  withdrawn: 1,
+  turnedOff: 0,
+  faulted: 0,
+  excludedAsMoved: 1,
+}
+
+const applied: string[] = []
+
 const MARKED_REQUIRED = [
   '条件',
   'ルール名',
@@ -122,7 +135,46 @@ function recording(saved: Saved[], turned: [string, boolean][]): RuleActions {
 
       return { state: 'ok', data: IMPACT }
     },
+    onApply: async (id): Promise<RuleWrite<RuleApplication>> => {
+      applied.push(id)
+
+      return { state: 'ok', data: APPLIED }
+    },
   }
+}
+
+function applyingWith(
+  answer: RuleWrite<RuleApplication>,
+): Pick<RuleActions, 'onApply'> {
+  return {
+    onApply: async (id) => {
+      applied.push(id)
+
+      return answer
+    },
+  }
+}
+
+async function applyNow(canvasElement: HTMLElement): Promise<HTMLElement> {
+  const canvas = within(canvasElement)
+
+  applied.length = 0
+
+  await userEvent.click(
+    canvas.getByRole('button', { name: 'ルールを即時適用' }),
+  )
+
+  return waitFor(() => {
+    const notice = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="rule-application"]',
+    )
+
+    if (!notice) {
+      throw new Error('the notice has not come yet')
+    }
+
+    return notice
+  })
 }
 
 async function choose(list: string, option: string): Promise<void> {
@@ -915,5 +967,117 @@ export const ルールがひとつも無い: Story = {
     await expect(
       canvas.getByRole('heading', { name: 'まだルールがありません' }),
     ).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: 'ルールを即時適用' }),
+    ).toBeDisabled()
+  },
+}
+
+export const 即時適用: Story = {
+  args: { editing: { state: 'none' }, actions: recording([], []) },
+  play: async ({ canvasElement }) => {
+    const notice = await applyNow(canvasElement)
+
+    await expect(applied).toEqual(['rule-301'])
+    await expect(notice).toHaveClass('bg-mint-soft')
+    await expect(notice).toHaveTextContent(
+      'ルールを適用しました(新しく作られた予約 3 件、引っ込んだ予約 1 件)。1 件は除外されました(移動 1 件)。',
+    )
+
+    const tabs = within(canvasElement).getByRole('link', { name: 'ルール' })
+
+    await expect(notice.getBoundingClientRect().top).toBeGreaterThan(
+      tabs.getBoundingClientRect().bottom,
+    )
+  },
+}
+
+export const 即時適用で予約が作られない: Story = {
+  args: {
+    editing: { state: 'none' },
+    actions: {
+      ...recording([], []),
+      ...applyingWith({
+        state: 'ok',
+        data: { ...APPLIED, made: 0, withdrawn: 0, excludedAsMoved: 0 },
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const notice = await applyNow(canvasElement)
+
+    await expect(notice).toHaveTextContent(
+      /^ルールを適用しました\(新しく作られた予約 0 件\)。$/,
+    )
+  },
+}
+
+export const 即時適用で作成できなかった予約がある: Story = {
+  args: {
+    editing: { state: 'none' },
+    actions: {
+      ...recording([], []),
+      ...applyingWith({
+        state: 'ok',
+        data: {
+          ...APPLIED,
+          refused: 2,
+          turnedOff: 1,
+          faulted: 1,
+          excludedAsMoved: 0,
+        },
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const notice = await applyNow(canvasElement)
+
+    await expect(notice).toHaveClass('bg-lemon-soft')
+    await expect(notice).toHaveTextContent(
+      'ルールを適用しました(新しく作られた予約 3 件、引っ込んだ予約 1 件、作成できなかった予約 2 件、条件を読めず無効にしたルール 1 件、調べられなかったルール 1 件)。',
+    )
+  },
+}
+
+export const 即時適用を断られる: Story = {
+  args: {
+    editing: { state: 'none' },
+    actions: {
+      ...recording([], []),
+      ...applyingWith({
+        state: 'rejected',
+        message: 'ルールの適用がすでに実行中のため、適用できませんでした。',
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const notice = await applyNow(canvasElement)
+
+    await expect(notice).toHaveClass('bg-lemon-soft')
+    await expect(notice).toHaveTextContent(
+      'ルールの適用がすでに実行中のため、適用できませんでした。',
+    )
+  },
+}
+
+export const 有効なルールが無いと即時適用できない: Story = {
+  args: {
+    result: {
+      items: RULE_FIXTURES.map((rule) => ({ ...rule, enabled: false })),
+      total: RULE_FIXTURES.length,
+    },
+    editing: { state: 'none' },
+    actions: recording([], []),
+  },
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', {
+      name: 'ルールを即時適用',
+    })
+
+    await expect(button).toBeDisabled()
+    await expect(button).toHaveAttribute(
+      'title',
+      '有効なルールがないため、適用できません。',
+    )
   },
 }
