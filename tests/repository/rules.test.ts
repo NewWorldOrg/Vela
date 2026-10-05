@@ -438,7 +438,7 @@ test('a rule the API will not have is refused in words the screen can show', asy
   assert.equal(result.state, 'rejected')
   assert.match(
     result.state === 'rejected' ? result.message : '',
-    /^ルール名と条件が、保存できる形になっていません。/,
+    /^ルール名と条件が揃っていないため、保存できませんでした。/,
   )
 })
 
@@ -768,7 +768,7 @@ test('an application refused because one is walking says that instead', async ()
   assert.equal(result.state, 'rejected')
   assert.match(
     result.state === 'rejected' ? result.message : '',
-    /すでに走っている/,
+    /すでに実行中のため、適用できませんでした。/,
   )
 })
 

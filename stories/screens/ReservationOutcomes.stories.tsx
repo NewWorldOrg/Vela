@@ -30,7 +30,7 @@ function rowFor(cell: HTMLElement): HTMLElement {
 
 const FAILURES: [string, string][] = [
   ['金曜シネマ「星の渡り鳥」', '競合'],
-  ['午後のロードショー', '撮り逃し'],
+  ['午後のロードショー', '録り逃し'],
   ['朝のニュース', '選局失敗'],
   ['山あいの町から', '録画失敗'],
 ]
@@ -246,11 +246,12 @@ export const 空の台帳: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.getByRole('heading', { name: '録れなかった予約はありません' }),
+      canvas.getByRole('heading', { name: '録れなかった予約がありません' }),
     ).toBeInTheDocument()
-    await expect(
-      canvas.getByRole('link', { name: '予約一覧へ' }),
-    ).toHaveAttribute('href', '/reservations')
+    await expect(canvas.getByRole('link', { name: '予約へ' })).toHaveAttribute(
+      'href',
+      '/reservations',
+    )
     await expect(canvas.queryByRole('table')).toBeNull()
   },
 }
@@ -266,7 +267,7 @@ export const 絞り込んで空: Story = {
       canvas.getByRole('heading', { name: '条件に合う記録がありません' }),
     ).toBeInTheDocument()
     await expect(
-      canvas.getByRole('button', { name: '条件を消す' }),
+      canvas.getByRole('button', { name: '条件を解除' }),
     ).toBeEnabled()
   },
 }

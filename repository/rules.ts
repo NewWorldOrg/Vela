@@ -160,13 +160,16 @@ const A_DAY_MS = 24 * 60 * 60 * 1000
 
 const END_UNDECIDED = '終了未定'
 
-const WRITTEN_WRONG =
-  'ルール名と条件が、保存できる形になっていません。ルール名は 1 文字以上、条件は 1 つ以上必要です。'
+const WRITTEN_WRONG_TO_SAVE =
+  'ルール名と条件が揃っていないため、保存できませんでした。ルール名は 1 文字以上、条件は 1 つ以上必要です。'
+
+const WRITTEN_WRONG_TO_APPLY =
+  'ルール名と条件が揃っていないため、適用できませんでした。ルール名は 1 文字以上、条件は 1 つ以上必要です。'
 
 const GONE = 'このルールは残っていないため、'
 
 const CANNOT_COUNT_TUNERS =
-  'チューナーの空きを数えられないため、一致を見られませんでした。時間をおいてからお試しください。'
+  'チューナーの空きを数えられないため、一致を見られませんでした。時間をおいてからもう一度お試しください。'
 
 export function ruleQueryOf(terms: RuleTerms): string {
   const params = new URLSearchParams()
@@ -380,7 +383,7 @@ export async function createRule(draft: RuleDraft): Promise<RuleWrite<Rule>> {
   return toWrite(
     response,
     () => toRule(data!.data!),
-    { 400: WRITTEN_WRONG },
+    { 400: WRITTEN_WRONG_TO_SAVE },
     'ルールを保存できませんでした。',
   )
 }
@@ -397,7 +400,7 @@ export async function replaceRule(
   return toWrite(
     response,
     () => toRule(data!.data!),
-    { 400: WRITTEN_WRONG, 404: `${GONE}保存できませんでした。` },
+    { 400: WRITTEN_WRONG_TO_SAVE, 404: `${GONE}保存できませんでした。` },
     'ルールを保存できませんでした。',
   )
 }
@@ -472,7 +475,7 @@ export async function impactOfRule(
     {
       400: '条件が絞り込みになっていないため、影響を数えられませんでした。条件を 1 つ以上指定してください。',
       404: `${GONE}影響を数えられませんでした。`,
-      503: 'チューナーの空きを数えられないため、影響を数えられませんでした。時間をおいてからお試しください。',
+      503: 'チューナーの空きを数えられないため、影響を数えられませんでした。時間をおいてからもう一度お試しください。',
     },
     '影響を数えられませんでした。',
   )
@@ -498,7 +501,7 @@ export async function applyRulesNow(
   return toWrite(
     response,
     () => toApplication(data!.data as RuleApplicationResponder),
-    { 400: WRITTEN_WRONG, 404: `${GONE}適用できませんでした。` },
+    { 400: WRITTEN_WRONG_TO_APPLY, 404: `${GONE}適用できませんでした。` },
     'ルールを適用できませんでした。',
   )
 }
@@ -511,10 +514,10 @@ function refusedBecause(
       ? `${formatMoment(refusal.notBefore)} 以降に`
       : '時間をおいてから'
 
-    return `前回の適用から間がないため、いま適用されませんでした。${at}お試しください。`
+    return `前回の適用から間がないため、適用できませんでした。${at}もう一度お試しください。`
   }
 
-  return 'ルールの適用がすでに走っているため、この要求は重ねられませんでした。走っている適用がこのルールも読みます。'
+  return 'ルールの適用がすでに実行中のため、適用できませんでした。実行中の適用がこのルールも読みます。'
 }
 
 function bodyOf(draft: RuleDraft) {

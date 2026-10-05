@@ -100,7 +100,7 @@ function insteadOfHits(
   if (outcome.state === 'idle') {
     return (
       <EmptyState
-        title="まだ検索していません"
+        title="まだ検索結果がありません"
         className="mt-10 max-w-[calc(560rem/16)]"
       />
     )
@@ -205,7 +205,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
         <Button variant="watch" size="sm" asChild>
           <Link href="/guide">
             <ChevronLeftIcon />
-            番組表へ戻る
+            番組表へ
           </Link>
         </Button>
       </div>
@@ -222,7 +222,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
               onClick={clear}
               className="tap-target ml-auto cursor-pointer text-note text-ink-3 underline underline-offset-[3px] hover:text-ink-2"
             >
-              条件を消す
+              条件を解除
             </button>
           )}
         </div>
@@ -250,9 +250,9 @@ function SearchScreen({ result }: { result: SearchResult }) {
             />
           </ConditionRow>
 
-          <ConditionRow label="除外">
+          <ConditionRow label="除外キーワード">
             <Input
-              aria-label="除外"
+              aria-label="除外キーワード"
               value={draft.exclude}
               onChange={(event) => amend({ exclude: event.target.value })}
               areaClassName="w-[calc(300rem/16)] max-w-full"
@@ -260,14 +260,14 @@ function SearchScreen({ result }: { result: SearchResult }) {
             />
           </ConditionRow>
 
-          <ConditionRow label="探す場所">
+          <ConditionRow label="対象範囲">
             <Select
               value={draft.fields}
               onValueChange={(value) => amend({ fields: value as SearchField })}
             >
               <SelectTrigger
                 size="sm"
-                aria-label="探す場所"
+                aria-label="対象範囲"
                 className="w-fit rounded-full"
               >
                 {
@@ -308,10 +308,10 @@ function SearchScreen({ result }: { result: SearchResult }) {
               >
                 <SelectTrigger
                   size="sm"
-                  aria-label="ジャンルを足す"
+                  aria-label="ジャンルを追加"
                   className="w-fit rounded-full text-ink-3"
                 >
-                  ＋ ジャンルを足す
+                  ＋ ジャンルを追加
                 </SelectTrigger>
                 <SelectContent>
                   {unusedGenres.map((option) => (
@@ -378,10 +378,10 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 >
                   <SelectTrigger
                     size="sm"
-                    aria-label="チャンネルを足す"
+                    aria-label="チャンネルを追加"
                     className="w-fit rounded-full text-ink-3"
                   >
-                    ＋ チャンネルを足す
+                    ＋ チャンネルを追加
                   </SelectTrigger>
                   <SelectContent>
                     {unusedChannels.map((channel) => (
@@ -475,17 +475,17 @@ function SearchScreen({ result }: { result: SearchResult }) {
             <Button size="sm" asChild>
               <Link href={ruleHref}>
                 <PlusIcon />
-                この条件でルールを作る
+                この条件でルールを作成
               </Link>
             </Button>
           ) : (
             <Button
               size="sm"
               disabled
-              title="キーワード・除外キーワード・対象フィールド・ジャンル・種別・チャンネルのうち、1 つ以上を指定するとルールにできます。"
+              title="キーワード・除外キーワード・ジャンル・種別・チャンネル・期間のどれも指定していないため、ルールを作成できません。"
             >
               <PlusIcon />
-              この条件でルールを作る
+              この条件でルールを作成
             </Button>
           )}
         </div>
@@ -572,15 +572,15 @@ function SearchScreen({ result }: { result: SearchResult }) {
 
             {found.hits.length === 0 ? (
               <EmptyState
-                title="該当する番組がありません"
+                title="条件に合う番組がありません"
                 className="mt-6 max-w-[calc(560rem/16)]"
                 action={
                   <div className="flex flex-wrap justify-center gap-2">
                     <Button size="sm" variant="halt" onClick={clear}>
-                      条件を消す
+                      条件を解除
                     </Button>
                     <Button size="sm" variant="watch" asChild>
-                      <Link href="/guide">番組表へ戻る</Link>
+                      <Link href="/guide">番組表へ</Link>
                     </Button>
                   </div>
                 }

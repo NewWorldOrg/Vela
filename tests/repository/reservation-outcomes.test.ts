@@ -423,8 +423,8 @@ test('この版が知らない始め直しの結果や理由でも、行は落�
 
   const [result, reason, plain] = (await listReservationOutcomes({}, NOW)).items
 
-  assert.equal(result.retry, 'この版がまだ知らない値')
-  assert.equal(reason.retry, 'この版がまだ知らない値')
+  assert.equal(result.retry, '未知の値')
+  assert.equal(reason.retry, '未知の値')
   assert.equal(plain.retry, undefined)
 })
 

@@ -76,7 +76,7 @@ const FROM_THE_REQUIREMENTS = {
   },
   outcomeKind: {
     competing: '競合',
-    missed: '撮り逃し',
+    missed: '録り逃し',
     tuneFailure: '選局失敗',
     recordingFailure: '録画失敗',
   },

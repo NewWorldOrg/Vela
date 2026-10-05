@@ -172,7 +172,7 @@ export const 通常: Story = {
     listTurned.length = 0
 
     await expect(
-      canvas.getByRole('link', { name: '検索から作る' }),
+      canvas.getByRole('link', { name: '検索から作成' }),
     ).toHaveAttribute('href', '/search')
 
     await expect(
@@ -200,7 +200,7 @@ export const 通常: Story = {
       .getByRole('switch', { name: '深夜アニメを追う を有効にする' })
       .closest('section') as HTMLElement
     const chosen = canvas
-      .getByText('ルールが選ばれていません')
+      .getByText('選択中のルールがありません')
       .closest('[data-slot="empty-state"]') as HTMLElement
 
     if (window.innerWidth > 1060) {
@@ -231,17 +231,17 @@ export const ルールを編集: Story = {
     await expect(canvas.getByLabelText('除外キーワード')).toHaveValue('再放送')
     await expect(canvas.getByLabelText(/優先度/)).toHaveValue('20')
     await expect(
-      canvas.getByRole('switch', { name: 'エンコードする' }),
+      canvas.getByRole('switch', { name: 'エンコード' }),
     ).toBeChecked()
 
     await expect(
-      canvas.getByRole('link', { name: '番組検索で見る' }),
+      canvas.getByRole('link', { name: '番組検索へ' }),
     ).toHaveAttribute(
       'href',
       '/search?q=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=anime',
     )
 
-    await userEvent.click(canvas.getByRole('button', { name: '一致を見る' }))
+    await userEvent.click(canvas.getByRole('button', { name: '一致を表示' }))
 
     await expect(
       await canvas.findByText('星のさまよいびと 第1話'),
@@ -370,15 +370,15 @@ export const 曜日とサブジャンルと期間を足す: Story = {
 
     widenedSaved.length = 0
 
-    await choose('曜日を足す', '水曜')
-    await choose('曜日を足す', '月曜')
+    await choose('曜日を追加', '水曜')
+    await choose('曜日を追加', '月曜')
     await expect(picked(canvasElement, '曜日')).toEqual([
       '曜日 月曜 を外す',
       '曜日 水曜 を外す',
     ])
 
     await userEvent.click(
-      canvas.getByRole('combobox', { name: 'サブジャンルを足す' }),
+      canvas.getByRole('combobox', { name: 'サブジャンルを追加' }),
     )
     await expect(
       await screen.findByRole('group', { name: 'ドラマ' }),
@@ -400,7 +400,7 @@ export const 曜日とサブジャンルと期間を足す: Story = {
     })
 
     await expect(
-      canvas.getByRole('link', { name: '番組検索で見る' }),
+      canvas.getByRole('link', { name: '番組検索へ' }),
     ).toHaveAttribute(
       'href',
       '/search?q=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=anime&from=2026-08-08&to=2026-08-31',
@@ -495,7 +495,7 @@ export const 曜日だけのルールは保存できる: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
     await expect(await canvas.findByText(refusal)).toBeVisible()
 
-    await choose('曜日を足す', '土曜')
+    await choose('曜日を追加', '土曜')
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     await waitFor(() => expect(weighed).toHaveLength(1))
@@ -606,7 +606,7 @@ export const 番組詳細から作る: Story = {
     await expect(canvas.getByLabelText('キーワード')).toHaveValue(
       '星のさまよいびと',
     )
-    await expect(canvas.getByLabelText('対象フィールド')).toHaveTextContent(
+    await expect(canvas.getByLabelText('対象範囲')).toHaveTextContent(
       '番組名だけ',
     )
     await expect(canvas.getByText('衛星第一')).toBeVisible()
@@ -695,7 +695,7 @@ export const 一致を見ているあいだに条件を変えると結果は古�
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '一致を見る' }))
+    await userEvent.click(canvas.getByRole('button', { name: '一致を表示' }))
     await userEvent.type(canvas.getByLabelText('キーワード'), '2')
 
     heldPreview.release()
@@ -720,7 +720,7 @@ export const 影響を数えられないとき: Story = {
       onImpact: async (): Promise<RuleWrite<RuleImpact>> => ({
         state: 'rejected',
         message:
-          'チューナーの空きを数えられないため、影響を数えられませんでした。時間をおいてからお試しください。',
+          'チューナーの空きを数えられないため、影響を数えられませんでした。時間をおいてからもう一度お試しください。',
       }),
     },
   },
@@ -734,7 +734,7 @@ export const 影響を数えられないとき: Story = {
 
     await expect(
       await canvas.findByText(
-        'チューナーの空きを数えられないため、影響を数えられませんでした。時間をおいてからお試しください。',
+        'チューナーの空きを数えられないため、影響を数えられませんでした。時間をおいてからもう一度お試しください。',
       ),
     ).toBeVisible()
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
@@ -806,7 +806,7 @@ export const エンコードしないルール: Story = {
 
     encodeSaved.length = 0
 
-    const encode = canvas.getByRole('switch', { name: 'エンコードする' })
+    const encode = canvas.getByRole('switch', { name: 'エンコード' })
 
     await expect(encode).not.toBeChecked()
 
@@ -835,7 +835,7 @@ export const ジャンルを足すは下に開く: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const add = canvas.getByRole('combobox', { name: 'ジャンルを足す' })
+    const add = canvas.getByRole('combobox', { name: 'ジャンルを追加' })
 
     await userEvent.click(add)
 
@@ -880,7 +880,7 @@ export const 追加の置き場: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const add = canvas.getByRole('button', { name: 'ルールを追加' })
-    const fromSearch = canvas.getByRole('link', { name: '検索から作る' })
+    const fromSearch = canvas.getByRole('link', { name: '検索から作成' })
 
     await expect(add).toHaveAttribute('data-variant', 'default')
     await expect(fromSearch).toHaveAttribute('data-variant', 'watch')

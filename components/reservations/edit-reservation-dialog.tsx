@@ -164,7 +164,7 @@ export function EditReservationDialog({
     <Dialog open={open} onOpenChange={close}>
       <DialogContent onInteractOutside={(event) => event.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>予約を編集</DialogTitle>
+          <DialogTitle>予約を変更</DialogTitle>
           <DialogDescription>{booking.title}</DialogDescription>
         </DialogHeader>
 
@@ -265,7 +265,7 @@ export function EditReservationDialog({
               checked={encode}
               onCheckedChange={setEncode}
             />
-            <FieldLabel htmlFor="reservation-encode">エンコードする</FieldLabel>
+            <FieldLabel htmlFor="reservation-encode">エンコード</FieldLabel>
           </div>
 
           <span aria-live="polite">

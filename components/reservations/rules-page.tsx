@@ -205,7 +205,7 @@ function RulesScreen({
             <Button variant="watch" size="sm" asChild>
               <Link href="/search">
                 <SearchIcon />
-                検索から作る
+                検索から作成
               </Link>
             </Button>
             <Button size="sm" onClick={() => open(NEW_RULE)}>
@@ -254,7 +254,7 @@ function RulesScreen({
         </section>
 
         {editing.state === 'none' ? (
-          <EmptyState title="ルールが選ばれていません" />
+          <EmptyState title="選択中のルールがありません" />
         ) : (
           <RuleEditor
             rule={editing.state === 'rule' ? editing.rule : undefined}
@@ -759,14 +759,14 @@ function RuleEditor({
 
         <div className="grid gap-3.5 min-[701px]:grid-cols-2">
           <Field>
-            <FieldLabel>対象フィールド</FieldLabel>
+            <FieldLabel>対象範囲</FieldLabel>
             <Select
               value={entry.fields}
               onValueChange={(value) => amend({ fields: value as SearchField })}
             >
               <SelectTrigger
                 size="sm"
-                aria-label="対象フィールド"
+                aria-label="対象範囲"
                 className="w-fit rounded-full"
               >
                 {
@@ -842,10 +842,10 @@ function RuleEditor({
               >
                 <SelectTrigger
                   size="sm"
-                  aria-label="ジャンルを足す"
+                  aria-label="ジャンルを追加"
                   className="w-fit rounded-full text-ink-3"
                 >
-                  ＋ ジャンルを足す
+                  ＋ ジャンルを追加
                 </SelectTrigger>
                 <SelectContent>
                   {unusedGenres.map((option) => (
@@ -885,10 +885,10 @@ function RuleEditor({
               >
                 <SelectTrigger
                   size="sm"
-                  aria-label="サブジャンルを足す"
+                  aria-label="サブジャンルを追加"
                   className="w-fit rounded-full text-ink-3"
                 >
-                  ＋ サブジャンルを足す
+                  ＋ サブジャンルを追加
                 </SelectTrigger>
                 <SelectContent>
                   {unusedSubgenres.map(({ genre, under }) => (
@@ -908,7 +908,7 @@ function RuleEditor({
         </Field>
 
         <Field>
-          <FieldLabel>対象チャンネル</FieldLabel>
+          <FieldLabel>チャンネル</FieldLabel>
           <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
             {entry.channels.map((id) => (
               <Pick
@@ -932,10 +932,10 @@ function RuleEditor({
                 >
                   <SelectTrigger
                     size="sm"
-                    aria-label="チャンネルを足す"
+                    aria-label="チャンネルを追加"
                     className="w-fit rounded-full text-ink-3"
                   >
-                    ＋ チャンネルを足す
+                    ＋ チャンネルを追加
                   </SelectTrigger>
                   <SelectContent>
                     {unusedChannels.map((channel) => (
@@ -978,10 +978,10 @@ function RuleEditor({
               >
                 <SelectTrigger
                   size="sm"
-                  aria-label="曜日を足す"
+                  aria-label="曜日を追加"
                   className="w-fit rounded-full text-ink-3"
                 >
-                  ＋ 曜日を足す
+                  ＋ 曜日を追加
                 </SelectTrigger>
                 <SelectContent>
                   {unusedDays.map((option) => (
@@ -1149,7 +1149,7 @@ function RuleEditor({
               checked={entry.encodeWhenRecorded}
               onCheckedChange={(next) => amend({ encodeWhenRecorded: next })}
             />
-            <FieldLabel htmlFor="rule-encode">エンコードする</FieldLabel>
+            <FieldLabel htmlFor="rule-encode">エンコード</FieldLabel>
           </div>
         </div>
       </FormSection>
@@ -1166,7 +1166,7 @@ function RuleEditor({
             onClick={rehearse}
           >
             <SearchIcon />
-            一致を見る
+            一致を表示
           </Button>
           {preview && (
             <span
@@ -1185,7 +1185,7 @@ function RuleEditor({
             href={searched}
             className="tap-target ml-auto text-note font-bold text-ink-2 underline underline-offset-[3px] hover:text-ink"
           >
-            番組検索で見る
+            番組検索へ
           </Link>
         </div>
 
@@ -1193,10 +1193,7 @@ function RuleEditor({
           <div className={cn('flex flex-col gap-3.5', stale && 'grayscale')}>
             <Excluded excluded={preview.excluded} as="p" />
             {preview.takes.length === 0 ? (
-              <EmptyState
-                usher={null}
-                title="いまの番組表に、この条件に一致する番組はありません"
-              />
+              <EmptyState usher={null} title="条件に合う番組がありません" />
             ) : (
               <>
                 <ul className="flex flex-col">
@@ -1303,7 +1300,7 @@ function RuleEditor({
           onInteractOutside={(event) => event.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>この保存で予約がどう変わるか</DialogTitle>
+            <DialogTitle>このルールを保存します</DialogTitle>
             {!impact && (
               <DialogDescription>件数を数えています。</DialogDescription>
             )}

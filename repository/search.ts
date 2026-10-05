@@ -65,7 +65,7 @@ export interface SearchResult {
 }
 
 const GUARD_MESSAGE =
-  'キーワード・除外キーワードは、指定する場合は2文字以上にしてください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。'
+  'キーワード・除外キーワードは、指定する場合は 2 文字以上にしてください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。'
 
 function dayEndOf(date: string): Date {
   return new Date(windowStartOf(date).getTime() + 24 * 60 * 60 * 1000)

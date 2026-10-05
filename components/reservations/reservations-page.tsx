@@ -284,13 +284,13 @@ export function ReservationsView({
 
       {items.length === 0 ? (
         <EmptyState
-          title={total === 0 ? '予約はありません' : '未完了の予約はありません'}
+          title={total === 0 ? '予約がありません' : '未完了の予約がありません'}
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"
           action={
             total === 0 ? undefined : (
               <Button variant="halt" size="sm" onClick={onClearFilters}>
-                条件を消す
+                条件を解除
               </Button>
             )
           }
