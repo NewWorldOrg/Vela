@@ -4,7 +4,7 @@ import { expect, within } from 'storybook/test'
 import { LoggedOutView } from '@/components/login/logged-out-page'
 
 const meta = {
-  title: 'Screens/ログアウト完了',
+  title: 'Screens/サインアウト完了',
   component: LoggedOutView,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof LoggedOutView>

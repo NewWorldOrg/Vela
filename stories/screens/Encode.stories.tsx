@@ -1053,7 +1053,7 @@ export const 自動実行の保存先が決まらない_保存先がない: Stor
     await saysItHasNowhereSettled(
       canvasElement,
       '未定義',
-      '保存先が 1 つも無く、自動実行がジョブを登録しない状態。',
+      '保存先が 1 つもなく、自動実行がジョブを登録しない状態。',
     )
   },
 }

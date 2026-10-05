@@ -6,7 +6,7 @@ import { LoginView } from '@/components/login/login-page'
 import { groundOf } from '@/stories/ground-of'
 
 const meta = {
-  title: 'Screens/ログイン',
+  title: 'Screens/サインイン',
   component: LoginView,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof LoginView>

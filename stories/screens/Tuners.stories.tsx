@@ -348,7 +348,7 @@ export const LNB給電の確認で断られたら閉じずに理由を出す: St
     onSaveLnb: async () => ({
       state: 'rejected' as const,
       message:
-        'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
+        'driver に接続できないため、保存できませんでした。接続が戻ってからもう一度お試しください。',
     }),
   },
   play: async ({ canvasElement }) => {
@@ -366,7 +366,7 @@ export const LNB給電の確認で断られたら閉じずに理由を出す: St
 
     await expect(
       await within(asked).findByText(
-        'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
+        'driver に接続できないため、保存できませんでした。接続が戻ってからもう一度お試しください。',
       ),
     ).toBeVisible()
     await expect(screen.getByRole('alertdialog')).toBeVisible()

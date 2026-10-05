@@ -119,7 +119,8 @@ async function queuing(
 async function alreadyEncoded(): Promise<EncodeWrite> {
   return {
     state: 'rejected',
-    message: 'この録画はこのプロファイルですでにエンコード済みです。',
+    message:
+      'この録画はこのプロファイルですでにエンコード済みのため、登録できませんでした。',
   }
 }
 
@@ -334,7 +335,7 @@ export const スクランブル残存: Story = {
     await userEvent.click(canvas.getByText('技術情報'))
 
     await expect(canvas.getByText('未解除')).toBeVisible()
-    await expect(canvas.getByText('スクランブル残存')).toBeVisible()
+    await expect(canvas.getAllByText('スクランブル残存').at(-1)).toBeVisible()
     await expect(canvas.getByText('5,042,768 パケット')).toBeVisible()
   },
 }
@@ -370,7 +371,7 @@ export const 完全でもスクランブルが残った: Story = {
       'data-variant',
       'err',
     )
-    await expect(canvas.getAllByText('スクランブル残存')).toHaveLength(1)
+    await expect(canvas.getAllByText('スクランブル残存')).toHaveLength(2)
   },
 }
 
@@ -416,7 +417,6 @@ export const スクランブルを解除した録画: Story = {
     await expect(canvas.getByText('良好')).toBeVisible()
     await expect(canvas.queryByText('視聴不可')).toBeNull()
     await expect(canvas.queryByText('未解除')).toBeNull()
-    await expect(canvas.queryByText('スクランブル残存')).toBeNull()
     await expect(canvas.queryByText('スクランブル残存')).toBeNull()
   },
 }
@@ -872,7 +872,7 @@ export const エンコードを断られた: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'エンコード' }))
     await expect(
       await canvas.findByText(
-        'この録画はこのプロファイルですでにエンコード済みです。',
+        'この録画はこのプロファイルですでにエンコード済みのため、登録できませんでした。',
       ),
     ).toBeVisible()
   },

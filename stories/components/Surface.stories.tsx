@@ -120,7 +120,7 @@ export const EmptyStateInAColumn: Story = {
   render: () => (
     <div className="flex w-[900px] flex-col p-6">
       <EmptyState title="条件に合う録画がありません" className="max-w-[560px]">
-        条件を解除と、すべての録画が表示されます。
+        条件を解除すると、すべての録画が表示されます。
       </EmptyState>
     </div>
   ),
