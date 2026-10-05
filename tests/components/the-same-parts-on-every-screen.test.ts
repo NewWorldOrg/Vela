@@ -483,6 +483,7 @@ test('the controls in a filter band are one height and one size of word', async 
   for (const file of [
     'components/library/library-page.tsx',
     'components/vela/filter-select.tsx',
+    'components/guide/guide-page.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 

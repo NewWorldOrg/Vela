@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
+import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import {
   AntennaIcon,
@@ -224,7 +225,7 @@ export function GuideView({
             <button
               type="button"
               onClick={() => patch({ date: null })}
-              className="tap-target cursor-pointer rounded-full border border-edge bg-surface px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
+              className={cn(BAND_PRESS, BAND_CONTROL)}
             >
               今日
             </button>
@@ -249,16 +250,13 @@ export function GuideView({
           type="button"
           data-opens="collection"
           onClick={() => setCollectionOpen(true)}
-          className="tap-target ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg max-[700px]:ml-0"
+          className={cn(BAND_PRESS, BAND_CONTROL, 'ml-auto max-[700px]:ml-0')}
         >
-          <AntennaIcon className="size-[calc(15rem/16)]" />
+          <AntennaIcon />
           収集状態
         </button>
-        <Link
-          href="/search"
-          className="tap-target inline-flex items-center gap-1.5 rounded-full border border-edge bg-surface px-3.5 py-1.5 text-sub font-medium whitespace-nowrap text-ink-2 shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:text-ink hover:shadow-pop-lg"
-        >
-          <SearchIcon className="size-[calc(15rem/16)]" />
+        <Link href="/search" className={cn(BAND_PRESS, BAND_CONTROL)}>
+          <SearchIcon />
           番組を検索
         </Link>
       </div>
