@@ -394,7 +394,7 @@ test('行の状態は Carina が答える段をそのまま出し、録画が無
   assert.equal(result.tuners[0].drop.level, 'nodata')
   assert.equal(health?.value, '0 / 1')
   assert.equal(health?.level, 'warn')
-  assert.equal(health?.levelLabel, '警告水準 1')
+  assert.equal(health?.levelLabel, '警告水準 1 本')
 })
 
 test('LOCK しない異常のあるチューナーは受信不可で、タイルは最も悪い語と台数を 1 つ添える', async () => {
@@ -445,7 +445,7 @@ test('LOCK しない異常のあるチューナーは受信不可で、タイル
   assert.equal(health?.value, '1 / 4')
   assert.equal(health?.unit, '健全')
   assert.equal(health?.level, 'bad')
-  assert.equal(health?.levelLabel, '受信不可 2')
+  assert.equal(health?.levelLabel, '受信不可 2 本')
 })
 
 test('選局の失敗が続くチューナーは選局失敗で、チューナー画面と同じ理由を添え、タイルもその語で数える', async () => {
@@ -489,7 +489,7 @@ test('選局の失敗が続くチューナーは選局失敗で、チューナ�
   assert.deepEqual(result.tuners[2].state, { level: 'good', label: '健全' })
   assert.equal(health?.value, '1 / 3')
   assert.equal(health?.level, 'warn')
-  assert.equal(health?.levelLabel, '選局失敗 2')
+  assert.equal(health?.levelLabel, '選局失敗 2 本')
 })
 
 test('ほかの理由で割り当てが止まったチューナーは割当停止で、受信不可があればタイルは受信不可を先に言う', async () => {
@@ -523,7 +523,7 @@ test('ほかの理由で割り当てが止まったチューナーは割当停�
       '使用中にデバイスが応答しなくなった。開き直せた時点で割り当てが戻る。',
   })
   assert.equal(result.tuners[1].state.label, '受信不可')
-  assert.equal(health?.levelLabel, '受信不可 1')
+  assert.equal(health?.levelLabel, '受信不可 1 本')
 })
 
 test('測られていないチューナーも数のうちに残り、良好には数えない', async () => {
@@ -555,7 +555,7 @@ test('測られていないチューナーも数のうちに残り、良好に�
   assert.equal(result.tuners[0].state.label, '未計測')
   assert.equal(result.tuners[1].state.label, '未計測')
   assert.equal(health?.value, '0 / 2')
-  assert.equal(health?.levelLabel, '未計測 2')
+  assert.equal(health?.levelLabel, '未計測 2 本')
   assert.equal(health?.aside, undefined)
 })
 
@@ -593,7 +593,7 @@ test('閾値は現在値を口から取り、既定から変えていなけれ�
   assert.equal(warning?.basis, undefined)
   assert.equal(warning?.shipped, '0.02%')
   assert.equal('provisional' in (warning ?? {}), false)
-  assert.equal(silence?.value, '5分')
+  assert.equal(silence?.value, '5 分')
   assert.equal(result.warnMarkPct, 20)
 })
 
@@ -968,9 +968,9 @@ test('率でない観測は、単位の桁のまま書く', async () => {
   ])
 
   assert.deepEqual(said, [
-    ['観測 6.28dB', '適用閾値 15dB'],
+    ['観測 6.28 dB', '適用閾値 15 dB'],
     ['観測 2.2e-2', '適用閾値 1.0e-4'],
-    ['途絶 12分', '適用閾値 5分'],
+    ['途絶 12 分', '適用閾値 5 分'],
   ])
 })
 
@@ -991,8 +991,8 @@ test('供給途絶の異常は、どの供給が黙ったかを題に持つ', as
 
   assert.equal(anomaly.title, '信号品質の供給途絶')
   assert.equal(anomaly.subject, 'adapter3.frontend0')
-  assert.equal(anomaly.observed, '途絶 12分')
-  assert.equal(anomaly.applied, '適用閾値 5分')
+  assert.equal(anomaly.observed, '途絶 12 分')
+  assert.equal(anomaly.applied, '適用閾値 5 分')
   assert.equal(anomaly.levelLabel, '取得できず')
 })
 
@@ -1016,7 +1016,7 @@ test('他のドメインが持つ異常は、再掲として所有者と分類�
 
   const anomaly = (await getQuality()).anomalies.items[0]
 
-  assert.equal(anomaly.restatedBy, '再掲 · チューナー')
+  assert.equal(anomaly.restatedBy, 'チューナー')
   assert.equal(anomaly.classification, '① 信号を掴めない')
 })
 
@@ -1043,7 +1043,7 @@ test('電波を掴めないチューナーの異常は、題と観測を回数�
   assert.equal(anomaly.title, 'チューナーが電波を掴めない')
   assert.equal(anomaly.observed, '観測 3 回続けて失敗')
   assert.equal(anomaly.applied, undefined)
-  assert.equal(anomaly.restatedBy, '再掲 · チューナー')
+  assert.equal(anomaly.restatedBy, 'チューナー')
   assert.equal(anomaly.classification, '受信不可')
 })
 
@@ -1153,7 +1153,7 @@ test('この版が知らない供給や状態でも、行は落ちずに出る',
 
   const anomaly = (await getQuality()).anomalies.items[0]
 
-  assert.equal(anomaly.title, 'この版がまだ知らない値の供給途絶')
+  assert.equal(anomaly.title, '未知の値の供給途絶')
   assert.equal(anomaly.subject, '番組表')
 })
 
@@ -1416,7 +1416,7 @@ test('下が良い対象の最悪値と閾値も、画面の単位で並ぶ', as
   const [row] = (await getQuality('1', 'carrierToNoise')).trend.rows
 
   assert.equal(row.buckets[0].worst, 12.5)
-  assert.deepEqual(row.line, { value: 15, says: '15dB' })
+  assert.deepEqual(row.line, { value: 15, says: '15 dB' })
 })
 
 test('推移の横軸は両端の時刻と、期間に応じた目盛りを持つ', async () => {

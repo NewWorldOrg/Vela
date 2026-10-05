@@ -19,15 +19,15 @@ export function RecentSpells({
         className,
       )}
     >
-      <span className="heading text-ui text-ink">直近の所要</span>
+      <span className="heading text-ui text-ink">最近の所要時間</span>
       {spells.averageSeconds === undefined ? (
         <span className={SENTENCE}>
-          完了 {spells.jobs} 本。まだ {spells.fewestToAverage}{' '}
-          本に届いていません
+          完了 {spells.jobs} 件。まだ {spells.fewestToAverage}{' '}
+          件に届いていません
         </span>
       ) : (
         <span className={SENTENCE}>
-          完了 {spells.jobs} 本の平均{' '}
+          完了 {spells.jobs} 件の平均{' '}
           <span className="font-code text-[calc(15rem/16)] font-medium tabular-nums text-brand">
             {formatLength(spells.averageSeconds)}
           </span>

@@ -46,7 +46,9 @@ function SessionEndedBanner({ returnPath }: { returnPath: string }) {
   return (
     <Banner
       tone="danger"
-      actions={[{ label: 'ログイン', href: loginHref(returnPath) as Route }]}
+      actions={[
+        { label: 'サインインへ', href: loginHref(returnPath) as Route },
+      ]}
     >
       <b className="block font-bold">セッションが切れました。</b>
     </Banner>

@@ -165,7 +165,7 @@ test('the run is spelled out of the instants and the pass it is given', async ()
   )
   assert.equal(result.run.kind, '本番')
   assert.equal(result.run.rehearsals, '下見 4 回')
-  assert.equal(result.run.duration, '所要 6分42.000秒')
+  assert.equal(result.run.duration, '所要 6 分 42.000 秒')
   assert.equal(
     result.run.lastRehearsal,
     formatMoment('2026-08-09T22:41:00+09:00'),
@@ -231,7 +231,7 @@ test('a refusal nothing fell under is shown as a group with nothing in it', asyn
 
   assert.ok(empty)
   assert.equal(empty.count, '0')
-  assert.equal(empty.empty, '該当なし')
+  assert.equal(empty.empty, '対象なし')
 })
 
 test('a group is counted by the record, not by the rows that reached the page', async () => {
@@ -282,7 +282,7 @@ test('the one refusal whose name already reads as the reason adds nothing to it'
 
   assert.ok(result)
   const group = result.notTakenGroups.find(
-    (one) => one.name === '本システムに機能が無い',
+    (one) => one.name === '本システムに機能がない',
   )
 
   assert.ok(group)
@@ -299,7 +299,7 @@ test('every other group is given a reason to stand under its name', async () => 
     result.notTakenGroups
       .filter((one) => one.reason === undefined)
       .map((one) => one.name),
-    ['本システムに機能が無い'],
+    ['本システムに機能がない'],
   )
 })
 
@@ -444,7 +444,7 @@ test('a loss is said as what it was and how many it took with it', async () => {
   assert.deepEqual(result.losses[1], {
     id: 'enclosedCharacters',
     subject: '番組名の囲み文字',
-    fact: '運んだ 1,056 本の題名が元の文字に戻せない',
+    fact: '運んだ 1,056 件の題名が元の文字に戻せない',
   })
 })
 

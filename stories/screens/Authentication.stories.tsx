@@ -58,11 +58,11 @@ export const 通常: Story = {
     await expect(canvas.getByText('operator')).toBeVisible()
 
     await expect(
-      canvas.getAllByRole('button', { name: 'ログアウト' }),
+      canvas.getAllByRole('button', { name: 'サインアウト' }),
     ).toHaveLength(1)
-    await expect(
-      canvas.getAllByRole('button', { name: '失効させる' }),
-    ).toHaveLength(SESSIONS.length - 1)
+    await expect(canvas.getAllByRole('button', { name: '失効' })).toHaveLength(
+      SESSIONS.length - 1,
+    )
   },
 }
 
@@ -236,9 +236,7 @@ export const 失効の確認: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(
-      canvas.getAllByRole('button', { name: '失効させる' })[0],
-    )
+    await userEvent.click(canvas.getAllByRole('button', { name: '失効' })[0])
 
     const dialog = await within(document.body).findByRole('alertdialog')
     const description = document.getElementById(

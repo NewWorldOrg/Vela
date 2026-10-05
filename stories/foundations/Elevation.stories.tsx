@@ -45,7 +45,7 @@ export const SurfacesAndShadows: Story = {
         <div className="mb-2.5 flex flex-wrap gap-2.5">
           <Tile>
             <TileTitle>チューナー</TileTitle>
-            <TileMeta>4 台 / 3 台 稼働</TileMeta>
+            <TileMeta>4 本 / 3 本 稼働</TileMeta>
           </Tile>
           <Tile>
             <TileTitle>今日の予約</TileTitle>

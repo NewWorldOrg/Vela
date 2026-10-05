@@ -32,7 +32,7 @@ export const 通常: Story = {
         name: '画面を表示できませんでした',
       }),
     ).toBeVisible()
-    await expect(canvas.getByRole('button', { name: '読み直す' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '再試行' })).toBeVisible()
   },
 }
 
@@ -41,7 +41,7 @@ export const 読み直すと画面を取り直す: Story = {
     getRouter().refresh.mockClear()
 
     await userEvent.click(
-      within(canvasElement).getByRole('button', { name: '読み直す' }),
+      within(canvasElement).getByRole('button', { name: '再試行' }),
     )
 
     await waitFor(() => expect(args.reset).toHaveBeenCalledTimes(1))

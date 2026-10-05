@@ -21,7 +21,7 @@ function toOutcome(
 
   switch (result.state) {
     case 'ok':
-      return { failed: false, text: `${asked}しました` }
+      return { failed: false, text: `${asked}しました。` }
     case 'unauthenticated':
       return {
         failed: true,

@@ -70,11 +70,11 @@ const MOST_PER_PAGE = 200
 
 const REASON: Record<IntegrityFault, string> = {
   sizeDisagrees: '録画の記録とサイズが食い違う',
-  noLedgerRow: '録画の記録に対応する行が無い',
-  fileMissing: '録画の記録に行があるが実ファイルが無い',
+  noLedgerRow: '録画の記録に対応する行がない',
+  fileMissing: '録画の記録に行があるが実ファイルがない',
   fileEmpty: '0 バイト',
   emptyThoughComplete: '0 バイト(録画は完走している)',
-  thumbnailMissing: 'サムネイルは作成済みだが画像ファイルが無い',
+  thumbnailMissing: 'サムネイルは作成済みだが画像ファイルがない',
 }
 
 export async function getIntegrity(): Promise<IntegrityResult> {
@@ -118,9 +118,9 @@ type SweepRefused = components['schemas']['IntegritySweepRefusedResponder']
 type SweepDone = components['schemas']['IntegritySweepResponder']
 
 const ALREADY_RUNNING =
-  'いま別の整合性チェックが走っています。終わるまで待ってからもう一度お試しください。'
+  '別の整合性チェックが実行中のため、実行できませんでした。終わってからもう一度お試しください。'
 
-const TOO_SOON = '直前の整合性チェックから間がないため、まだ実行できません。'
+const TOO_SOON = '直前の整合性チェックから間がないため、実行できませんでした。'
 
 function refusalOf(
   response: Response,
@@ -150,21 +150,23 @@ type FindingRefused = components['schemas']['IntegrityFindingRefusedResponder']
 const RUN_AGAIN = '整合性チェックをもう一度実行してください。'
 
 const DISCARD_REFUSAL: Record<FindingRefusal, string> = {
-  noSuchFinding: `この検出結果はもう残っていません。${RUN_AGAIN}`,
+  noSuchFinding: `この検出結果はもう残っていないため、削除できませんでした。${RUN_AGAIN}`,
   namesARecording:
-    'このファイルは録画の記録に結び付いています。録画のほうを削除してください。',
-  nothingOnTheDisk: 'このファイルはもう保存先にありません。',
-  alreadyThrownAway: 'このファイルはすでに削除されています。',
-  noTimeWasTaken: `検出した時刻を記録する前のチェックの結果のため、削除していません。${RUN_AGAIN}`,
+    'このファイルは録画の記録に結び付いているため、削除できませんでした。録画のほうを削除してください。',
+  nothingOnTheDisk:
+    'このファイルはもう保存先にないため、削除できませんでした。',
+  alreadyThrownAway:
+    'このファイルはすでに削除されているため、削除できませんでした。',
+  noTimeWasTaken: `検出した時刻を記録する前のチェックの結果のため、削除できませんでした。${RUN_AGAIN}`,
   oneIsAlreadyBeingThrownAway:
-    '別のファイルを削除しています。終わってからもう一度お試しください。',
-  rootOutOfReach: '保存先に到達できないため、削除していません。',
-  fileChanged: `検出の後にファイルが変わったため、削除していません。${RUN_AGAIN}`,
-  stillBeingWritten: 'このファイルは書き込み中のため、削除していません。',
+    '別のファイルを削除中のため、削除できませんでした。終わってからもう一度お試しください。',
+  rootOutOfReach: '保存先に到達できないため、削除できませんでした。',
+  fileChanged: `検出の後にファイルが変わったため、削除できませんでした。${RUN_AGAIN}`,
+  stillBeingWritten: 'このファイルは書き込み中のため、削除できませんでした。',
   filesLeftBehind: 'ファイルを削除しきれませんでした。もう一度お試しください。',
-  driverUnreachable: '保存先の一覧を確認できないため、削除していません。',
-  driverRefused: '保存先の一覧の確認を断られたため、削除していません。',
-  tookTooLong: '保存先の確認に時間がかかりすぎたため、削除していません。',
+  driverUnreachable: '保存先の一覧を確認できないため、削除できませんでした。',
+  driverRefused: '保存先の一覧の確認を断られたため、削除できませんでした。',
+  tookTooLong: '保存先の確認に時間がかかりすぎたため、削除できませんでした。',
 }
 
 const CANNOT_DISCARD = 'ファイルを削除できませんでした'

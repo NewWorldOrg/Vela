@@ -279,7 +279,7 @@ export function TunersView({
         action={
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" size="sm" asChild>
-              <Link href={SCAN_HISTORY_HREF}>スキャン履歴</Link>
+              <Link href={SCAN_HISTORY_HREF}>スキャン履歴へ</Link>
             </Button>
             <Button size="sm" asChild>
               <Link href={DETECT_HREF}>
@@ -315,7 +315,7 @@ export function TunersView({
 
       <p className="mx-0.5 mt-[calc(22rem/16)] mb-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2">
         <ClockIcon className="size-[calc(15rem/16)] text-brand" />
-        健全性のしきい値{' '}
+        健全性の閾値{' '}
         <b className="font-code font-medium text-ink">
           {tuners.thresholdHours} 時間
         </b>
@@ -361,7 +361,7 @@ export function TunersView({
                 />
                 {row.draining && (
                   <span className="mt-1 block text-cap leading-[1.5] text-lemon">
-                    無効化を受付済み
+                    無効化を受け付け済み
                   </span>
                 )}
               </TableCell>
@@ -418,9 +418,7 @@ export function TunersView({
 
       {(detection !== undefined || empty) && (
         <section className="mt-9">
-          <SectionHeading mark={MarkAxis}>
-            デバイス検出 : 差分の確認
-          </SectionHeading>
+          <SectionHeading mark={MarkAxis}>デバイス検出の差分</SectionHeading>
           <div
             className={cn(
               'grid items-start gap-[calc(18rem/16)]',
@@ -435,7 +433,7 @@ export function TunersView({
 
             {empty && (
               <EmptyState
-                title="チューナーが未設定です"
+                title="チューナーがありません"
                 className="border-none bg-tint-lavender"
                 action={
                   <Button asChild>

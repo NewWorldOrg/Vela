@@ -48,7 +48,7 @@ export const Tones: Story = {
         </Banner>
         <Banner
           tone="danger"
-          actions={[{ label: '切り分けを見る', href: '/settings/quality' }]}
+          actions={[{ label: 'チャンネルへ', href: '/settings/channels' }]}
         >
           BS のサービスが 0 件です
           <span className="font-code tabular-nums">(連続 26 時間)</span>。

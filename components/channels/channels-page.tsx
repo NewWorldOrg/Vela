@@ -79,7 +79,7 @@ function ServiceGroupSection({
             {group.walk === 'never'
               ? `${group.label}はまだスキャンされていません。`
               : group.walk === 'unknown'
-                ? `${group.label}のサービスは 0 件です。直近のスキャンを読み取れなかったため、走査済みかどうかは分かりません。`
+                ? `${group.label}のサービスは 0 件です。直近のスキャンを読み取れなかったため、スキャン済みかどうかは分かりません。`
                 : `${group.label}のサービスは 0 件です。直近のスキャンでは受信できたサービスがありませんでした。`}
           </EmptyState>
         )
@@ -108,10 +108,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
     <section id="scan-history" className="mt-10">
       <SectionHeading mark={MarkDots}>スキャン履歴</SectionHeading>
       {history.length === 0 ? (
-        <EmptyState
-          usher={null}
-          title="スキャンはまだ一度も実行されていません"
-        />
+        <EmptyState usher={null} title="まだスキャン履歴がありません" />
       ) : (
         <Table
           className="table-fixed min-w-[calc(560rem/16)]"
@@ -183,7 +180,7 @@ export function ChannelsView({
         action={
           <Button variant="ghost" size="sm" asChild>
             <Link href={'/settings/channels#scan-history' as Route}>
-              スキャン履歴
+              スキャン履歴へ
             </Link>
           </Button>
         }
@@ -234,7 +231,7 @@ export function ChannelsView({
           className="mt-4"
           actions={[
             {
-              label: '切り分けを見る',
+              label: 'チャンネルへ',
               href: `/settings/channels#system-${zero.system}` as Route,
             },
           ]}
@@ -251,7 +248,7 @@ export function ChannelsView({
           className="mt-2"
           actions={[
             {
-              label: '結果を確認',
+              label: 'スキャン結果へ',
               href: `/settings/channels/scan/${channels.proposal.run.id}` as Route,
             },
           ]}
@@ -277,7 +274,7 @@ export function ChannelsView({
         {neverScanned ? (
           <EmptyState
             titleLevel={2}
-            title="まだスキャンしていません"
+            title="まだスキャン結果がありません"
             className="mt-9"
           />
         ) : (

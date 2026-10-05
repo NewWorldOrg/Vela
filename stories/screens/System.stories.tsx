@@ -145,7 +145,7 @@ export const プロバイダに届かない: Story = {
   play: async ({ canvasElement }) => {
     await tonesAre(canvasElement, { API: ['warn', '応答あり'] })
     await expect(
-      within(tileNamed(canvasElement, 'API')).getByText('ID プロバイダ'),
+      within(tileNamed(canvasElement, 'API')).getByText('ID プロバイダー'),
     ).toBeVisible()
   },
 }

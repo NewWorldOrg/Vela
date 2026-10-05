@@ -348,12 +348,15 @@ const DRIVER_OUT_OF_REACH = 'driver に接続できないため、'
 const REFUSAL_SAYINGS: [RegExp, string][] = [
   [
     /failed, so there is nothing to encode/i,
-    'この録画は失敗しているため、エンコードするものがありません。',
+    'この録画は失敗しているため、エンコードできませんでした。',
   ],
-  [/already has job/i, 'この録画のエンコードはすでに待機中か実行中です。'],
+  [
+    /already has job/i,
+    'この録画のエンコードはすでに待機中か実行中のため、登録できませんでした。',
+  ],
   [
     /already encoded with profile/i,
-    'この録画はこのプロファイルですでにエンコード済みです。',
+    'この録画はこのプロファイルですでにエンコード済みのため、登録できませんでした。',
   ],
 ]
 
@@ -374,7 +377,7 @@ const REFUSED_FIELDS: [RegExp, string][] = [
   [/\boutputRoot: the name of a root/i, 'この出力ルートは残っていない'],
   [
     /\boutputRoot: a root this process holds/i,
-    'この出力ルートには成果物を置けない',
+    'この出力ルートにはエンコードしたファイルを置けない',
   ],
   [/\bdefaultProfileId:/i, '既定のプロファイルが選ばれていない'],
   [/\bautomatically:/i, '自動実行の指定が入っていない'],

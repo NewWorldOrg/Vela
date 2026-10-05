@@ -110,7 +110,7 @@ function DeleteCandidateDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>この候補チャンネルを削除します</AlertDialogTitle>
           <AlertDialogDescription>
-            {shown?.channel} を候補から外します。
+            {shown?.channel} を候補から外します。元に戻せません。
           </AlertDialogDescription>
         </AlertDialogHeader>
         {shown?.selected && (
@@ -222,14 +222,14 @@ export function CandidateList({
                       setRefusal(
                         toRefusal(
                           await onSelect(serviceKey, candidate.id),
-                          '切替',
+                          '切り替え',
                         ),
                       )
                     })
                   }
                 >
                   <CheckIcon />
-                  これに切替
+                  切り替え
                 </Button>
               )}
               <Button

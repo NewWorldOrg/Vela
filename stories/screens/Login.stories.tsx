@@ -138,7 +138,7 @@ export const IDプロバイダに接続できない: Story = {
     await bannerSays(
       canvasElement,
       'warn',
-      '組織の ID プロバイダに接続できません。',
+      '組織の ID プロバイダーに接続できません。',
     )
     await expect(
       within(canvasElement).getByRole('link', {

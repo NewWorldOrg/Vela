@@ -263,7 +263,7 @@ test('a thumbnail that is not there names its recording, weighs nothing and has 
     ledgerSize: null,
   })
 
-  assert.equal(one.reason, 'サムネイルは作成済みだが画像ファイルが無い')
+  assert.equal(one.reason, 'サムネイルは作成済みだが画像ファイルがない')
   assert.equal(one.recordingId, '4755')
   assert.equal(one.size, '—')
   assert.equal(one.sizeNote, undefined)
@@ -394,7 +394,7 @@ test('a walk refused because one is already walking says so', async () => {
   const result = await runIntegrityCheck()
 
   assert.equal(result.state, 'refused')
-  assert.match(result.state === 'refused' ? result.message : '', /走っています/)
+  assert.match(result.state === 'refused' ? result.message : '', /実行中のため/)
 })
 
 test('a walk refused as too soon names when the next one may be asked for', async () => {
@@ -426,7 +426,7 @@ test('a refusal that says nothing asks to try again later rather than giving a s
   assert.equal(result.state, 'refused')
   assert.match(
     result.state === 'refused' ? result.message : '',
-    /しばらくしてからもう一度試してください。$/,
+    /時間をおいてからもう一度お試しください。$/,
   )
 })
 
@@ -521,7 +521,7 @@ test('a refusal this build does not know asks to try again later rather than giv
   assert.equal(result.state, 'rejected')
   assert.match(
     result.state === 'rejected' ? result.message : '',
-    /しばらくしてからもう一度試してください。$/,
+    /時間をおいてからもう一度お試しください。$/,
   )
   assert.doesNotMatch(
     result.state === 'rejected' ? result.message : '',

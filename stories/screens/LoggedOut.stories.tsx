@@ -13,16 +13,16 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const STILL_SIGNED_IN_THERE =
-  '組織の ID プロバイダからはサインアウトしていません'
+  '組織の ID プロバイダーからはサインアウトしていません'
 
 async function signedOut(canvasElement: HTMLElement): Promise<void> {
   const canvas = within(canvasElement)
 
   await expect(
-    canvas.getByRole('heading', { level: 1, name: 'ログアウトしました' }),
+    canvas.getByRole('heading', { level: 1, name: 'サインアウトしました' }),
   ).toBeVisible()
   await expect(
-    canvas.getByRole('link', { name: 'もう一度ログイン' }),
+    canvas.getByRole('link', { name: 'サインインへ' }),
   ).toHaveAttribute('href', '/login')
 }
 

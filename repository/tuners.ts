@@ -258,7 +258,7 @@ export async function setHoursOfSilence(
   if (body === undefined) {
     return {
       state: 'rejected',
-      message: couldNot('しきい値を変えられませんでした'),
+      message: couldNot('閾値を変えられませんでした'),
     }
   }
 
@@ -266,7 +266,7 @@ export async function setHoursOfSilence(
     ? { state: 'ok' }
     : {
         state: 'rejected',
-        message: `しきい値は ${SILENCE_RANGE.least} 〜 ${SILENCE_RANGE.most} 時間です。`,
+        message: `閾値は ${SILENCE_RANGE.least} 〜 ${SILENCE_RANGE.most} 時間です。`,
       }
 }
 
@@ -459,7 +459,9 @@ export async function saveDetectedTuners(
   if (ledgerBody?.data == null) {
     return {
       state: 'rejected',
-      message: couldNot('保存前の一覧を読み取れなかったため、保存していません'),
+      message: couldNot(
+        '保存前の一覧を読み取れなかったため、保存できませんでした',
+      ),
     }
   }
 
@@ -525,7 +527,7 @@ export async function setLnbPower(
   if (response.status === 404) {
     return {
       state: 'rejected',
-      message: `${deviceId} は保存された一覧にないため、保存していません。デバイスを検出してから保存してください。`,
+      message: `${deviceId} は保存された一覧にないため、保存できませんでした。デバイスを検出してから保存してください。`,
     }
   }
 
@@ -560,9 +562,9 @@ function toSaveRefusal(
 
 const REFUSAL_BY_PREFIX: Partial<Record<string, string>> = {
   ledgerChanged:
-    'チューナーの一覧が保存のあいだに変わったため、保存していません。検出し直してから保存してください。',
+    'チューナーの一覧が保存のあいだに変わったため、保存できませんでした。検出し直してから保存してください。',
   unknownDevice:
-    '確認した検出結果が古くなっています。接続が変わったため保存されていません。もう一度検出してください。',
+    '接続が変わって検出結果が古くなったため、保存できませんでした。もう一度検出してください。',
   undeterminedKind:
     '種別を判定できないデバイスが含まれるため、保存できませんでした。デバイスの状態を確かめてから検出し直してください。',
   ledgerUnwritable:
@@ -586,7 +588,7 @@ function isDisabled(
 
 const DETECTION_REFUSAL: Partial<Record<number, string>> = {
   501: 'driver がデバイス検出に対応していないため、保存できませんでした。',
-  503: 'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
+  503: 'driver に接続できないため、保存できませんでした。接続が戻ってからもう一度お試しください。',
 }
 
 const KIND_TEXT: Record<TunerKind, string> = {
@@ -763,7 +765,7 @@ function toReachNotice(
         : `${system.label}のサービスをいま受信できていません。${lastSeen}`,
     actions: [
       {
-        label: '切り分けを見る',
+        label: 'チャンネルへ',
         href: `/settings/channels#system-${system.system}` as Route,
       },
     ],
@@ -776,7 +778,7 @@ function toNoServiceNotice(system: SystemReach): TunerNotice {
     body: `${system.label}のサービスが 0 件です。`,
     actions: [
       {
-        label: '切り分けを見る',
+        label: 'チャンネルへ',
         href: `/settings/channels#system-${system.system}` as Route,
       },
     ],

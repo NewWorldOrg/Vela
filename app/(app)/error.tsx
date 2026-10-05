@@ -23,11 +23,11 @@ export default function AppError({ reset }: { reset: () => void }) {
       className="mt-16 max-w-[calc(560rem/16)]"
       action={
         <Button variant="change" size="sm" onClick={readAgain}>
-          読み直す
+          再試行
         </Button>
       }
     >
-      一時的な不調の可能性があります。読み直しても直らないときは、しばらくおいてから開き直してください。
+      一時的な不調の可能性があります。再試行しても直らないときは、時間をおいてからもう一度お試しください。
     </EmptyState>
   )
 }

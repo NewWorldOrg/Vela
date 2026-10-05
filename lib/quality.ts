@@ -25,7 +25,7 @@ export const QUALITY_PILL_LABEL: Record<QualityLevel, string> = {
 }
 
 export function saidWithUnit(value: number | string, unit: string): string {
-  return unit === '%' ? `${value}${unit}` : `${value} ${unit}`
+  return unit === '%' || unit === '' ? `${value}${unit}` : `${value} ${unit}`
 }
 
 export function thresholdProblem(
@@ -37,11 +37,11 @@ export function thresholdProblem(
   const amount = Number(typed.trim())
 
   if (typed.trim() === '' || !Number.isFinite(amount)) {
-    return '数値を入力してください'
+    return '数値を入力してください。'
   }
 
   if (amount < lowest || amount > highest) {
-    return `${lowest} 〜 ${saidWithUnit(highest, unit)} の範囲で入力してください`
+    return `値は ${lowest} 〜 ${saidWithUnit(highest, unit)} です。`
   }
 
   return undefined

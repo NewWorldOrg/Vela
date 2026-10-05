@@ -51,13 +51,13 @@ export function AuthenticationView({
 
       {oidc.reach === 'outOfReach' && (
         <Banner tone="danger" className="mt-3.5">
-          ID プロバイダの discovery 文書を読めていないため、OIDC
+          ID プロバイダーの discovery 文書を読めていないため、OIDC
           でのサインインは通りません。
         </Banner>
       )}
 
       <section className="mt-[calc(26rem/16)]">
-        <SectionHeading mark={KeyIcon}>ID プロバイダ(OIDC)</SectionHeading>
+        <SectionHeading mark={KeyIcon}>ID プロバイダー(OIDC)</SectionHeading>
         <OidcSettings config={oidc} onSave={onSaveOidc} />
       </section>
 
@@ -93,7 +93,7 @@ export function AuthenticationView({
 
         {others.length === 0 && (
           <EmptyState
-            title="ほかの端末のセッションはありません"
+            title="ほかの端末のセッションがありません"
             className="mt-3.5"
           />
         )}

@@ -113,8 +113,8 @@ const THRESHOLDS: QualityThreshold[] = [
   {
     key: 'supplySilence',
     label: '供給途絶の判定',
-    value: '5分',
-    shipped: '5分',
+    value: '5 分',
+    shipped: '5 分',
     amount: '5',
     unit: '分',
     lowest: 0.016666,
@@ -139,8 +139,8 @@ const ANOMALIES: QualityAnomaly[] = [
     id: 'anomaly-2',
     title: '信号品質の供給途絶',
     subject: 'adapter0.frontend0',
-    observed: '途絶 10分',
-    applied: '適用閾値 5分',
+    observed: '途絶 10 分',
+    applied: '適用閾値 5 分',
     level: 'unreachable',
     levelLabel: '取得できず',
     when: '08/10 09:34 発生 · 継続中',
@@ -153,7 +153,7 @@ const ANOMALIES: QualityAnomaly[] = [
     applied: '適用閾値 99%',
     level: 'warn',
     levelLabel: '警告水準',
-    restatedBy: '再掲 · チューナー',
+    restatedBy: 'チューナー',
     classification: '① 信号を掴めない',
     when: '08/09 18:41 発生 · 継続中',
   },
@@ -164,7 +164,7 @@ const ANOMALIES: QualityAnomaly[] = [
     observed: '観測 3 回続けて失敗',
     level: 'warn',
     levelLabel: '警告水準',
-    restatedBy: '再掲 · チューナー',
+    restatedBy: 'チューナー',
     classification: '受信不可',
     when: '08/10 07:12 発生 · 継続中',
   },
@@ -432,7 +432,7 @@ export const QUALITY: QualityResult = {
       unit: '%',
       level: 'warn',
       levelLabel: '警告水準',
-      foot: '録画 14 本 / うち未計測 3 本',
+      foot: '録画 14 件 / うち未計測 3 件',
     },
     {
       key: 'problem',
@@ -449,7 +449,7 @@ export const QUALITY: QualityResult = {
       unit: '%',
       level: 'good',
       levelLabel: '良好',
-      aside: '録画 11 本を計測',
+      aside: '録画 11 件を計測',
     },
     {
       key: 'health',
@@ -457,7 +457,7 @@ export const QUALITY: QualityResult = {
       value: '2 / 4',
       unit: '健全',
       level: 'bad',
-      levelLabel: '視聴不可 1',
+      levelLabel: '視聴不可 1 本',
       foot: '信号品質 未計測',
     },
   ],
@@ -471,7 +471,7 @@ export const QUALITY: QualityResult = {
       dropRate: '0.152%',
       barPct: 100,
       level: 'bad',
-      note: '録画 2 本を計測',
+      note: '録画 2 件を計測',
     },
     {
       id: '32737-1032',
@@ -480,7 +480,7 @@ export const QUALITY: QualityResult = {
       dropRate: '0.031%',
       barPct: 31,
       level: 'warn',
-      note: '録画 1 本を計測',
+      note: '録画 1 件を計測',
     },
     {
       id: '32738-1040',
@@ -489,7 +489,7 @@ export const QUALITY: QualityResult = {
       dropRate: '0.002%',
       barPct: 2,
       level: 'good',
-      note: '録画 3 本を計測',
+      note: '録画 3 件を計測',
     },
     {
       id: '32739-1048',
@@ -498,7 +498,7 @@ export const QUALITY: QualityResult = {
       dropRate: '0.003%',
       barPct: 3,
       level: 'good',
-      note: '録画 2 本を計測',
+      note: '録画 2 件を計測',
     },
     {
       id: '32740-1056',
@@ -507,7 +507,7 @@ export const QUALITY: QualityResult = {
       dropRate: '0.002%',
       barPct: 2,
       level: 'good',
-      note: '録画 2 本を計測',
+      note: '録画 2 件を計測',
     },
     {
       id: '32741-1064',
@@ -516,14 +516,14 @@ export const QUALITY: QualityResult = {
       dropRate: '0.006%',
       barPct: 6,
       level: 'good',
-      note: '録画 1 本を計測',
+      note: '録画 1 件を計測',
     },
     {
       id: '32742-1072',
       name: 'シティ MX1',
       no: '141',
       level: 'unmeasured',
-      note: '録画 3 本 / うち未計測 3 本',
+      note: '録画 3 件 / うち未計測 3 件',
     },
   ],
   satellites: [],
@@ -531,7 +531,7 @@ export const QUALITY: QualityResult = {
     {
       id: 'adapter1.frontend0',
       device: 'adapter1.frontend0',
-      hardware: '録画 9 本を計測',
+      hardware: '録画 9 件を計測',
       state: { level: 'good', label: '健全' },
       drop: { value: '0.002', unit: '%', level: 'good' },
       lock: NOT_SAMPLED,
@@ -541,7 +541,7 @@ export const QUALITY: QualityResult = {
     {
       id: 'adapter1.frontend1',
       device: 'adapter1.frontend1',
-      hardware: '録画 4 本を計測',
+      hardware: '録画 4 件を計測',
       state: { level: 'good', label: '健全' },
       drop: { value: '0.001', unit: '%', level: 'good' },
       lock: NOT_SAMPLED,
@@ -551,7 +551,7 @@ export const QUALITY: QualityResult = {
     {
       id: 'adapter3.frontend0',
       device: 'adapter3.frontend0',
-      hardware: '録画 2 本を計測',
+      hardware: '録画 2 件を計測',
       state: { level: 'bad', label: '視聴不可' },
       drop: { value: '0.152', unit: '%', level: 'bad' },
       lock: NOT_SAMPLED,
@@ -561,7 +561,7 @@ export const QUALITY: QualityResult = {
     {
       id: 'adapter3.frontend1',
       device: 'adapter3.frontend1',
-      hardware: '録画 3 本 / うち未計測 3 本',
+      hardware: '録画 3 件 / うち未計測 3 件',
       state: { level: 'unmeasured', label: '未計測' },
       drop: NOT_SAMPLED,
       lock: NOT_SAMPLED,
@@ -636,7 +636,7 @@ export const NOTHING_MEASURED: QualityResult = {
       label: '直近 30 日のドロップ率',
       level: 'unmeasured',
       levelLabel: '未計測',
-      foot: '録画 0 本',
+      foot: '録画 0 件',
     },
     {
       key: 'problem',
@@ -649,7 +649,7 @@ export const NOTHING_MEASURED: QualityResult = {
       label: 'スクランブル残存率',
       level: 'unmeasured',
       levelLabel: '未計測',
-      aside: '録画 0 本',
+      aside: '録画 0 件',
     },
     {
       key: 'health',
@@ -681,7 +681,7 @@ const UNMEASURED_CHANNELS: QualityChannel[] = [
 ].map(({ recordings, ...channel }): QualityChannel => ({
   ...channel,
   level: 'unmeasured',
-  note: `録画 ${recordings} 本 / うち未計測 ${recordings} 本`,
+  note: `録画 ${recordings} 件 / うち未計測 ${recordings} 件`,
 }))
 
 const UNMEASURED_SATELLITES: QualityChannel[] = [
@@ -690,7 +690,7 @@ const UNMEASURED_SATELLITES: QualityChannel[] = [
 ].map(({ recordings, ...channel }): QualityChannel => ({
   ...channel,
   level: 'unmeasured',
-  note: `録画 ${recordings} 本 / うち未計測 ${recordings} 本`,
+  note: `録画 ${recordings} 件 / うち未計測 ${recordings} 件`,
 }))
 
 const UNMEASURED_TUNERS: QualityTuner[] = [
@@ -701,7 +701,7 @@ const UNMEASURED_TUNERS: QualityTuner[] = [
 ].map(({ device, recordings }): QualityTuner => ({
   id: device,
   device,
-  hardware: `録画 ${recordings} 本 / うち未計測 ${recordings} 本`,
+  hardware: `録画 ${recordings} 件 / うち未計測 ${recordings} 件`,
   state: { level: 'unmeasured', label: '未計測' },
   drop: NOT_SAMPLED,
   lock: NOT_SAMPLED,
@@ -726,21 +726,21 @@ export const EVERY_ROW_UNMEASURED: QualityResult = {
       label: '直近 24 時間のドロップ率',
       level: 'unmeasured',
       levelLabel: '未計測',
-      foot: '録画 36 本 / うち未計測 36 本',
+      foot: '録画 36 件 / うち未計測 36 件',
     },
     {
       key: 'problem',
       label: '問題のある録画',
       level: 'unmeasured',
       levelLabel: '未計測',
-      foot: '録画 36 本 / うち未計測 36 本',
+      foot: '録画 36 件 / うち未計測 36 件',
     },
     {
       key: 'scramble',
       label: 'スクランブル残存率',
       level: 'unmeasured',
       levelLabel: '未計測',
-      aside: '録画 36 本 / うち未計測 36 本',
+      aside: '録画 36 件 / うち未計測 36 件',
     },
     {
       key: 'health',
@@ -748,7 +748,7 @@ export const EVERY_ROW_UNMEASURED: QualityResult = {
       value: '0 / 4',
       unit: '健全',
       level: 'unmeasured',
-      levelLabel: '未計測 4',
+      levelLabel: '未計測 4 本',
       foot: '信号品質 未計測',
     },
   ],
@@ -778,7 +778,7 @@ export const SATELLITES_THAT_CANNOT_LOCK: QualityResult = {
           value: '0 / 3',
           unit: '健全',
           level: 'bad',
-          levelLabel: '受信不可 2',
+          levelLabel: '受信不可 2 本',
         }
       : stat,
   ),
@@ -786,7 +786,7 @@ export const SATELLITES_THAT_CANNOT_LOCK: QualityResult = {
     {
       id: 'adapter0.frontend0',
       device: 'adapter0.frontend0',
-      hardware: '録画 0 本',
+      hardware: '録画 0 件',
       state: { level: 'bad', label: '受信不可' },
       drop: NOTHING_RECORDED,
       lock: NOT_SAMPLED,
@@ -796,7 +796,7 @@ export const SATELLITES_THAT_CANNOT_LOCK: QualityResult = {
     {
       id: 'adapter2.frontend0',
       device: 'adapter2.frontend0',
-      hardware: '録画 0 本',
+      hardware: '録画 0 件',
       state: { level: 'bad', label: '受信不可' },
       drop: NOTHING_RECORDED,
       lock: NOT_SAMPLED,
@@ -806,7 +806,7 @@ export const SATELLITES_THAT_CANNOT_LOCK: QualityResult = {
     {
       id: 'adapter3.frontend0',
       device: 'adapter3.frontend0',
-      hardware: '録画 0 本',
+      hardware: '録画 0 件',
       state: { level: 'warn', label: '警告水準' },
       drop: NOTHING_RECORDED,
       lock: { level: 'good', sub: '09/27 21:40 取得' },
@@ -829,7 +829,7 @@ export const SATELLITES_FAILING_TO_TUNE: QualityResult = {
           value: '1 / 3',
           unit: '健全',
           level: 'warn',
-          levelLabel: '選局失敗 2',
+          levelLabel: '選局失敗 2 本',
         }
       : stat,
   ),
@@ -837,7 +837,7 @@ export const SATELLITES_FAILING_TO_TUNE: QualityResult = {
     {
       id: 'adapter0.frontend0',
       device: 'adapter0.frontend0',
-      hardware: '録画 0 本',
+      hardware: '録画 0 件',
       state: { level: 'warn', label: '選局失敗', explanation: FAILING_TO_TUNE },
       drop: NOTHING_RECORDED,
       lock: NOT_SAMPLED,
@@ -847,7 +847,7 @@ export const SATELLITES_FAILING_TO_TUNE: QualityResult = {
     {
       id: 'adapter2.frontend0',
       device: 'adapter2.frontend0',
-      hardware: '録画 0 本',
+      hardware: '録画 0 件',
       state: { level: 'warn', label: '選局失敗', explanation: FAILING_TO_TUNE },
       drop: NOTHING_RECORDED,
       lock: NOT_SAMPLED,
@@ -857,7 +857,7 @@ export const SATELLITES_FAILING_TO_TUNE: QualityResult = {
     {
       id: 'adapter3.frontend0',
       device: 'adapter3.frontend0',
-      hardware: '録画 0 本',
+      hardware: '録画 0 件',
       state: { level: 'good', label: '健全' },
       drop: NOTHING_RECORDED,
       lock: { level: 'good', sub: '09/27 21:40 取得' },
@@ -874,7 +874,7 @@ export const SATELLITES_FAILING_TO_TUNE: QualityResult = {
         observed: FAILING_TO_TUNE,
         level: 'warn',
         levelLabel: '警告水準',
-        restatedBy: '再掲 · チューナー',
+        restatedBy: 'チューナー',
         classification: '選局失敗',
         when: '09/28 20:32 発生 · 継続中',
       },

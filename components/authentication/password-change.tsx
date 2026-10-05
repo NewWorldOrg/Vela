@@ -83,11 +83,10 @@ export function ChangePassword({
               <LockIcon className="size-[calc(19rem/16)] text-coral" />
               ローカルアカウントのパスワードを変更します
             </AlertDialogTitle>
-            {username && (
-              <AlertDialogDescription>
-                ユーザー名 {username} のパスワードを変更します。
-              </AlertDialogDescription>
-            )}
+            <AlertDialogDescription>
+              {username && `ユーザー名 ${username} のパスワードを変更します。`}
+              ほかの端末のセッションは失効します。
+            </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="flex flex-col gap-3.5">
@@ -127,7 +126,7 @@ export function ChangePassword({
             </Button>
             <Button variant="remove" disabled={pending || !ready} onClick={run}>
               <LockIcon />
-              変更してほかの端末を失効させる
+              変更する
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

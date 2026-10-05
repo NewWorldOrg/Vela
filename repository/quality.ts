@@ -3,7 +3,11 @@ import type { Route } from 'next'
 import { formatMoment, formatMomentSpan } from '@/lib/format'
 import { WHEN_MARKS } from '@/lib/when-terms'
 import type { QualityLevel } from '@/lib/quality'
-import { QUALITY_LEVEL_LABEL, QUALITY_PILL_LABEL } from '@/lib/quality'
+import {
+  QUALITY_LEVEL_LABEL,
+  QUALITY_PILL_LABEL,
+  saidWithUnit,
+} from '@/lib/quality'
 import type { TrendAxis } from '@/lib/quality-trend'
 import { trendAxis } from '@/lib/quality-trend'
 import {
@@ -455,7 +459,7 @@ const SUBJECT_KINDS: Record<SubjectKind, string> = {
   tuner: 'チューナー',
   channel: 'チャンネル',
   recording: '録画',
-  transportStream: '多重',
+  transportStream: 'TS',
   guide: '番組表',
 }
 
@@ -776,9 +780,7 @@ function toAnomaly(
           : troubled.trouble.said,
       level: troubled.trouble.level,
       levelLabel: QUALITY_LEVEL_LABEL[troubled.trouble.level],
-      restatedBy: one.restated
-        ? `再掲 · ${wordFor(OWNERS, one.owner)}`
-        : undefined,
+      restatedBy: one.restated ? wordFor(OWNERS, one.owner) : undefined,
       classification: troubled.trouble.label,
       when: `${formatMoment(one.detectedAt)} 発生 · ${STILL_STANDING}`,
     }
@@ -797,9 +799,7 @@ function toAnomaly(
     applied: `適用閾値 ${measured(one.appliedValue, one.breached)}`,
     level,
     levelLabel: QUALITY_LEVEL_LABEL[level],
-    restatedBy: one.restated
-      ? `再掲 · ${wordFor(OWNERS, one.owner)}`
-      : undefined,
+    restatedBy: one.restated ? wordFor(OWNERS, one.owner) : undefined,
     classification: classificationOf(one.classification),
     when: `${formatMoment(one.detectedAt)} 発生 · ${STILL_STANDING}`,
   }
@@ -857,7 +857,10 @@ function observedAs(value: number | string, key: QualityThresholdKey): string {
   }
 
   if (shape.observedAs === 'whole') {
-    return `${Math.floor(shown(toRatio(value), shape.scale))}${shape.unit}`
+    return saidWithUnit(
+      Math.floor(shown(toRatio(value), shape.scale)),
+      shape.unit,
+    )
   }
 
   return measured(value, key)
@@ -938,7 +941,7 @@ function healthStat(
       level: worstShown.level,
       levelLabel: `${worstShown.label} ${
         states.filter((state) => state.label === worstShown.label).length
-      }`,
+      } 本`,
     }),
     foot,
   }
@@ -983,12 +986,12 @@ function countedIn(reading: ReadingResponder): string {
   const subjects = toInt(reading.subjects)
 
   if (subjects === 0) {
-    return '録画 0 本'
+    return '録画 0 件'
   }
 
   return unmeasured === 0
-    ? `録画 ${toInt(reading.measured)} 本を計測`
-    : `録画 ${subjects} 本 / うち未計測 ${unmeasured} 本`
+    ? `録画 ${toInt(reading.measured)} 件を計測`
+    : `録画 ${subjects} 件 / うち未計測 ${unmeasured} 件`
 }
 
 function everySignalUnmeasured(signal: SignalResponder[]): boolean {
@@ -1024,7 +1027,7 @@ function toChannel(
         ? undefined
         : Math.min(100, (share / ceiling) * 100),
     level,
-    note: drop ? countedIn(drop) : '録画 0 本',
+    note: drop ? countedIn(drop) : '録画 0 件',
   }
 }
 
@@ -1050,7 +1053,7 @@ function toTuner(one: TunerResponder): QualityTuner {
   return {
     id: device || 'unnamed',
     device: device || '対象なし',
-    hardware: drop ? countedIn(drop) : '録画 0 本',
+    hardware: drop ? countedIn(drop) : '録画 0 件',
     state: tunerState(one),
     drop: shareCell(drop),
     lock: signalCell(one.signal, 'lockRate'),
@@ -1267,7 +1270,7 @@ function stored(amount: number, scale: number): number {
 function spelled(value: number, shape: ThresholdShape): string {
   return shape.exponent
     ? value.toExponential(1)
-    : `${trimmed(value)}${shape.unit}`
+    : saidWithUnit(trimmed(value), shape.unit)
 }
 
 function trimmed(value: number): string {

@@ -9,7 +9,7 @@ test('a capability is named the way the screen that uses it names it', () => {
   assert.equal(capabilityLabel('recording'), '録画')
   assert.equal(capabilityLabel('descrambling'), 'スクランブル解除')
   assert.equal(capabilityLabel('dropPositions'), 'ドロップ発生位置')
-  assert.equal(capabilityLabel('strayFileErasure'), '記録に無いファイルの削除')
+  assert.equal(capabilityLabel('strayFileErasure'), '記録にないファイルの削除')
   assert.equal(capabilityLabel('lnbPowerSwitch'), 'LNB 給電の切り替え')
 })
 

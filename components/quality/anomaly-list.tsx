@@ -8,7 +8,7 @@ import { QualityChip } from '@/components/quality/signal-quality-chip'
 
 const HEADING = '異常一覧'
 
-const NOTHING = '対象なし'
+const NOTHING = '対象がありません'
 
 const NOTHING_UNSETTLED = '解消していない異常はありません。'
 
@@ -23,7 +23,9 @@ function AnomalyRow({ anomaly }: { anomaly: QualityAnomaly }) {
       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <b className="text-ui font-bold">{anomaly.title}</b>
         {anomaly.restatedBy ? (
-          <Badge variant="mute">{anomaly.restatedBy}</Badge>
+          <Badge variant="mute" title={anomaly.restatedBy}>
+            再掲
+          </Badge>
         ) : (
           <QualityChip level={anomaly.level}>{anomaly.levelLabel}</QualityChip>
         )}

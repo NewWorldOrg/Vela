@@ -51,7 +51,7 @@ export function LoginView({
               tone="warn"
               className="mb-4 gap-[calc(9rem/16)] px-3.5 py-[calc(11rem/16)] text-left"
             >
-              組織の ID プロバイダに接続できません。
+              組織の ID プロバイダーに接続できません。
             </Banner>
           )
         )}

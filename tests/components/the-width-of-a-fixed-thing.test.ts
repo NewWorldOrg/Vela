@@ -181,7 +181,7 @@ test('a rehearsal is the migration word; a rule looks at its matches', async () 
     )
   }
 
-  assert.match(await read(THE_RULES), /一致を見る/)
+  assert.match(await read(THE_RULES), /一致を表示/)
 })
 
 async function sourcesUnder(dir: string): Promise<string[]> {

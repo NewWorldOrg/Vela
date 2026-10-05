@@ -174,20 +174,17 @@ export function IntegrityView({
           </SectionHeading>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(150rem/16),1fr))] gap-2.5">
             <DetailStat
-              label="走査したルート"
+              label="確認したルート"
               value={String(check.rootsWalked)}
             />
+            <DetailStat label="読込ファイル" value={String(check.filesRead)} />
             <DetailStat
-              label="読んだファイル"
-              value={String(check.filesRead)}
-            />
-            <DetailStat
-              label="判定した録画の記録"
+              label="判定済みの録画"
               value={String(check.ledgerRowsJudged)}
               unit={`/ ${check.ledgerRowsRead}`}
             />
             <DetailStat
-              label="書き込み中で判定せず"
+              label="判定保留(書き込み中)"
               value={String(check.ledgerRowsStillWriting)}
             />
           </div>
@@ -213,7 +210,7 @@ export function IntegrityView({
               <b className="font-code text-[calc(13rem/16)] font-medium">
                 {root.name}
               </b>
-              {!root.writable && <Badge variant="err">書き込めません</Badge>}
+              {!root.writable && <Badge variant="err">書込不可</Badge>}
               <span className="text-ink-2">
                 空き <span className="font-code">{root.free}</span> / 全体{' '}
                 <span className="font-code">{root.total}</span>
@@ -237,13 +234,13 @@ export function IntegrityView({
       {redrawSaid && (
         <Banner tone={redrawSaid.drew ? 'success' : 'warn'} className="mb-3.5">
           {redrawSaid.drew
-            ? `${redrawSaid.path} のサムネイルを作り直しました。`
+            ? `${redrawSaid.path} のサムネイルを再生成しました。`
             : redrawSaid.text}
         </Banner>
       )}
 
       {findings.length === 0 ? (
-        <EmptyState usher="glad" title="食い違いはありません" titleLevel={2} />
+        <EmptyState usher="glad" title="食い違いがありません" titleLevel={2} />
       ) : (
         <Table
           className="table-fixed min-w-[calc(760rem/16)]"
@@ -311,7 +308,7 @@ export function IntegrityView({
                           ) : (
                             <RebuildIcon />
                           )}
-                          作り直す
+                          再生成
                         </Button>
                       </ActionRow>
                     )}

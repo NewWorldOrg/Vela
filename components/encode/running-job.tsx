@@ -82,7 +82,7 @@ export function RunningJob({
         {job.title !== undefined && (
           <Button variant="watch" size="sm" asChild>
             <Link href={`/recordings/${job.recordingId}` as Route}>
-              録画詳細を開く
+              録画詳細へ
             </Link>
           </Button>
         )}

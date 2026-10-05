@@ -69,7 +69,7 @@ export function JobsList({
           title="ジョブの履歴がありません"
           action={
             <Button variant="watch" size="sm" asChild>
-              <Link href="/library">ライブラリを開く</Link>
+              <Link href="/library">ライブラリへ</Link>
             </Button>
           }
         />

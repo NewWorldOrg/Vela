@@ -1,4 +1,4 @@
-export const NOT_YET_IN_THIS_BUILD = 'この版がまだ知らない値'
+export const NOT_YET_IN_THIS_BUILD = '未知の値'
 
 export const NOT_YET_IN_THIS_BUILD_SAYING = 'この版がまだ知らない値です。'
 
