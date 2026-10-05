@@ -231,7 +231,7 @@ export function ChannelsView({
           className="mt-4"
           actions={[
             {
-              label: 'チャンネルへ',
+              label: '失敗内訳へ',
               href: `/settings/channels#system-${zero.system}` as Route,
             },
           ]}
