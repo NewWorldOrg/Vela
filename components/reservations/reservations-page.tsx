@@ -239,11 +239,8 @@ export function ReservationsView({
       />
 
       <div className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
-        <span className="text-ui font-medium whitespace-nowrap text-ink-2">
-          表示
-        </span>
         <SegmentedControl
-          aria-label="表示"
+          label="表示"
           options={SHOW_OPTIONS}
           value={filter.show === EVERY ? EVERY : UNSETTLED}
           onValueChange={onShowChange}

@@ -7,7 +7,8 @@ import { MarkStar } from '@/components/vela/icons'
 import { InFull } from '@/components/vela/in-full'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
-import { LinkSegments } from '@/components/quality/link-segments'
+import { SegmentedControl } from '@/components/vela/segmented-control'
+import { chosenOf, segmentsOf } from '@/components/quality/window-segments'
 
 const HEADING = '推移'
 
@@ -152,10 +153,11 @@ export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
   return (
     <Surface>
       <SectionHeading mark={MarkStar}>{HEADING}</SectionHeading>
-      <LinkSegments
-        label={SUBJECT}
-        items={trend.subjects}
-        className="mb-3 flex-wrap gap-y-[calc(13rem/16)] rounded-xl"
+      <SegmentedControl
+        aria-label={SUBJECT}
+        options={segmentsOf(trend.subjects)}
+        value={chosenOf(trend.subjects)}
+        className="mb-3"
       />
       {trend.rows.length > 0 ? (
         <div className="grid grid-cols-[minmax(0,min(8.5rem,30%))_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">

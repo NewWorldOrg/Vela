@@ -116,11 +116,8 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
       <ReservationTabs current="outcomes" />
 
       <div className="mb-3.5 flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
-        <span className="text-ui font-medium whitespace-nowrap text-ink-2">
-          分類
-        </span>
         <SegmentedControl
-          aria-label="分類"
+          label="分類"
           options={KIND_OPTIONS}
           value={filter.kind ?? EVERY}
           onValueChange={(next) =>
@@ -128,19 +125,19 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           }
         />
         <FilterSelect
-          prefix="期間"
+          label="期間"
           value={filter.days}
           options={OUTCOME_SPANS}
           onChange={(next) => change({ days: next })}
         />
         <FilterSelect
-          prefix="チャンネル"
+          label="チャンネル"
           value={filter.ch}
           options={channels}
           onChange={(next) => change({ ch: next })}
         />
         <FilterSelect
-          prefix="ルール"
+          label="ルール"
           value={filter.rule}
           options={rules}
           onChange={(next) => change({ rule: next })}

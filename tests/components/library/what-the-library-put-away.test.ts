@@ -26,7 +26,7 @@ const PUT_AWAY: { what: string; spelt: RegExp; caught: string }[] = [
   {
     what: 'a selector of the order the rows come in',
     spelt: /並び替え|並べ替え|並び順|\bsortBy\b|\bonSort\b|[?&]sort=/,
-    caught: '<FilterSelect prefix="並び替え" />',
+    caught: '<FilterSelect label="並び替え" />',
   },
   {
     what: 'a selector of how many rows a page shows',

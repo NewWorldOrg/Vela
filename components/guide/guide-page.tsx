@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
+import { SegmentedControl } from '@/components/vela/segmented-control'
 import {
   AntennaIcon,
   ChevronLeftIcon,
@@ -190,24 +191,14 @@ export function GuideView({
         番組表
       </h1>
       <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5">
-        <div className="inline-flex gap-1 rounded-full bg-surface-2 p-[calc(3rem/16)]">
-          {CHANNEL_KINDS.map((k) => (
-            <button
-              key={k.value}
-              type="button"
-              aria-pressed={k.value === guide.kind}
-              onClick={() =>
-                patch({ kind: k.value === 'terrestrial' ? null : k.value })
-              }
-              className={cn(
-                'tap-target cursor-pointer rounded-full border-none bg-transparent px-3 py-1 text-sub font-medium whitespace-nowrap text-ink-2 transition-[background-color,color] duration-150 hover:bg-surface hover:text-ink',
-                k.value === guide.kind && 'bg-brand-soft font-bold text-brand',
-              )}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          aria-label="放送の種別"
+          options={CHANNEL_KINDS}
+          value={guide.kind}
+          onValueChange={(next) =>
+            patch({ kind: next === 'terrestrial' ? null : next })
+          }
+        />
 
         <div className="flex items-center gap-2">
           <IconButton
