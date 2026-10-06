@@ -135,8 +135,15 @@ const page = (items: unknown[], over: Over = {}) => ({
   currentPage: 1,
   lastPage: 1,
   perPage: 200,
+  next: null,
   ...over,
 })
+
+const pageFromAnOlderStore = (items: unknown[], over: Over = {}) => {
+  const { next: _unsaid, ...older } = page(items, over)
+
+  return older
+}
 
 const detailOf = (one: unknown, over: Over = {}) => ({
   recording: one,
@@ -199,7 +206,13 @@ mock.module('@/repository/client/carina', {
           }
         }
 
-        const wanted = Number(init?.params?.query?.page ?? 1)
+        const after = init?.params?.query?.after
+        const wanted =
+          after === undefined
+            ? Number(init?.params?.query?.page ?? 1)
+            : store.pages.findIndex(
+                (one) => (one as { next?: unknown }).next === after,
+              ) + 2
 
         return {
           data: { data: store.pages[wanted - 1] },
@@ -822,11 +835,49 @@ test('a thumbnail that was not going to be made says so', async () => {
   assert.equal(drawn.thumbnailLabel, undefined)
 })
 
-test('every page the store names is walked, not only the first', async () => {
+test('every page is walked by the next the page before it names, not only the first', async () => {
   standing()
   store.pages = [
-    page([recording({ id: 'a1' })], { total: 2, currentPage: 1, lastPage: 2 }),
+    page([recording({ id: 'a1' })], {
+      total: 2,
+      currentPage: 1,
+      lastPage: 2,
+      next: 'after-a1',
+    }),
     page([recording({ id: 'a2' })], { total: 2, currentPage: 2, lastPage: 2 }),
+  ]
+
+  const result = await listRecordings({})
+  const listings = asked.filter((one) => one.path === '/api/recordings')
+
+  assert.deepEqual(
+    result.items.map((one) => one.id),
+    ['a1', 'a2'],
+  )
+  assert.equal(result.total, 2)
+  assert.deepEqual(
+    listings.map((one) => one.query.after),
+    [undefined, 'after-a1'],
+  )
+  assert.deepEqual(
+    listings.map((one) => one.query.page),
+    [undefined, undefined],
+  )
+})
+
+test('a store that names no next is walked by page number, as before', async () => {
+  standing()
+  store.pages = [
+    pageFromAnOlderStore([recording({ id: 'a1' })], {
+      total: 2,
+      currentPage: 1,
+      lastPage: 2,
+    }),
+    pageFromAnOlderStore([recording({ id: 'a2' })], {
+      total: 2,
+      currentPage: 2,
+      lastPage: 2,
+    }),
   ]
 
   const result = await listRecordings({})
@@ -835,12 +886,11 @@ test('every page the store names is walked, not only the first', async () => {
     result.items.map((one) => one.id),
     ['a1', 'a2'],
   )
-  assert.equal(result.total, 2)
   assert.deepEqual(
     asked
       .filter((one) => one.path === '/api/recordings')
       .map((one) => one.query.page),
-    [1, 2],
+    [undefined, 2],
   )
 })
 
@@ -852,7 +902,7 @@ test('a recording still being written comes first, however long ago it started',
         recording({ id: 'a1', startedAt: '2026-08-10T14:00:00Z' }),
         recording({ id: 'a2', startedAt: '2026-08-10T13:00:00Z' }),
       ],
-      { total: 3, currentPage: 1, lastPage: 2 },
+      { total: 3, currentPage: 1, lastPage: 2, next: 'after-a2' },
     ),
     page(
       [

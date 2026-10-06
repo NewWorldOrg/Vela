@@ -434,20 +434,38 @@ interface EveryRecording {
   total: number
 }
 
+interface ListingPlace {
+  page?: number
+  after?: string
+}
+
+function placeAfter(
+  next: string | null | undefined,
+  lastPage: Counted,
+  asked: ListingPlace,
+): ListingPlace | undefined {
+  if (next !== undefined) {
+    return next === null ? undefined : { after: next }
+  }
+
+  const page = (asked.page ?? 1) + 1
+
+  return page <= toInt(lastPage) ? { page } : undefined
+}
+
 async function fetchEveryRecording(): Promise<EveryRecording> {
   const items: RecordingResponder[] = []
   let total = 0
-  let page = 1
-  let lastPage = 1
+  let place: ListingPlace | undefined = {}
 
-  do {
+  while (place) {
     const { data, error } = await carinaClient().GET('/api/recordings', {
       params: {
         query: {
           sort: 'startedAt',
           descending: true,
-          page,
           perPage: MOST_PER_PAGE,
+          ...place,
         },
       },
     })
@@ -458,9 +476,8 @@ async function fetchEveryRecording(): Promise<EveryRecording> {
 
     items.push(...data.data.items)
     total = toInt(data.data.total)
-    lastPage = toInt(data.data.lastPage)
-    page += 1
-  } while (page <= lastPage)
+    place = placeAfter(data.data.next, data.data.lastPage, place)
+  }
 
   return { items, total }
 }
