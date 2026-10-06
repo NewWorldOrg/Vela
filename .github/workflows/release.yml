@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The tag names the version package.json declares
+        run: |
+          declared="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "v${declared}" ]; then
+            echo "the tag ${GITHUB_REF_NAME} is not v${declared}, the version package.json declares" >&2
+            exit 1
+          fi
+      - name: Sign in to the registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+      - name: The release names the image master already published, and nothing is built
+        run: .github/release-image.sh "ghcr.io/${GITHUB_REPOSITORY,,}" "sha-$(git rev-parse HEAD | cut -c 1-12)" "${GITHUB_REF_NAME}"
