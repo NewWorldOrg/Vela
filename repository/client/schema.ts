@@ -2922,7 +2922,12 @@ export interface components {
       | 'unreachable'
     /** @enum {string} */
     QualitySubjectKind:
-      'tuner' | 'channel' | 'recording' | 'transportStream' | 'guide'
+      | 'tuner'
+      | 'channel'
+      | 'recording'
+      | 'transportStream'
+      | 'guide'
+      | 'reception'
     QualitySummaryResponder: {
       period: components['schemas']['QualityPeriodResponder']
       /** Format: int32 */
@@ -2998,6 +3003,20 @@ export interface components {
     QualityThresholdListResponder: {
       items: components['schemas']['QualityThresholdResponder'][]
     }
+    QualityThresholdMeasurementResponder: {
+      /** Format: double */
+      value: number | string
+      /** Format: int64 */
+      sessions: number | string
+      /** Format: int64 */
+      sessionsDropped: number | string
+      /** Format: date-time */
+      from: string
+      /** Format: date-time */
+      until: string
+      /** Format: date-time */
+      measuredAt: string
+    }
     QualityThresholdResponder: {
       key: components['schemas']['QualityThresholdKey']
       metric: null | components['schemas']['QualityMetric']
@@ -3019,7 +3038,12 @@ export interface components {
       updatedBy: null | string
       lastChange:
         null | components['schemas']['QualityThresholdChangeResponder']
+      source: components['schemas']['QualityThresholdSource']
+      measurement:
+        null | components['schemas']['QualityThresholdMeasurementResponder']
     }
+    /** @enum {string} */
+    QualityThresholdSource: 'shipped' | 'measured' | 'byHand'
     QualityTrendChannelResponder: {
       /** Format: int32 */
       networkId: number | string
@@ -3607,6 +3631,7 @@ export interface components {
     ReviseQualityThresholdRequest: {
       /** Format: double */
       value: null | number | string
+      byHand?: null | boolean
     }
     ReviseReservationRequest: {
       /** Format: int32 */

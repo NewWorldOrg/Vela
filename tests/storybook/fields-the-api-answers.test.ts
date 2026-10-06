@@ -167,6 +167,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'QualityTallyResponder.unreachable',
       'QualityTallyResponder.unsupported',
       'QualityTallyResponder.warning',
+      'QualityThresholdMeasurementResponder.measuredAt',
       'QualityThresholdResponder.lastChange',
       'QualityThresholdResponder.metric',
       'QualityThresholdResponder.sense',
@@ -184,7 +185,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'every threshold is still the value it shipped with rather than one settled from what was measured, so the mark that says so is always on and says nothing, and the count of what it was settled from is always nought',
+      'where a threshold came from is read from its source and what it was measured from from its measurement, so the provisional mark and the count beside it would say the same thing a second time, and the screens other than the thresholds do not say where a level came from',
     fields: [
       'QualityIncidentResponder.appliedProvisional',
       'QualitySummaryResponder.provisional',

@@ -8,9 +8,7 @@ import type {
   QualityChannel,
   QualityResult,
   QualityStat,
-  QualityThresholdKey,
   QualityTuner,
-  QualityWrite,
 } from '@/repository/quality'
 import { TermTip } from '@/components/vela/term-tip'
 import { StatusCell } from '@/components/recordings/status-cell'
@@ -33,13 +31,13 @@ import { EmptyState } from '@/components/vela/empty-state'
 import {
   ChevronRightIcon,
   MarkDots,
-  MarkPill,
   MarkSlashes,
   MarkSplit,
 } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
-import { ChangeThresholdButton } from '@/components/quality/change-threshold-button'
+import type { QualitySaveThresholds } from '@/components/quality/threshold-panel'
+import { ThresholdPanel } from '@/components/quality/threshold-panel'
 import { AnomalyList } from '@/components/quality/anomaly-list'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { chosenOf, segmentsOf } from '@/components/quality/window-segments'
@@ -147,11 +145,6 @@ function ChannelMeters({
   )
 }
 
-export type QualityReviseThreshold = (
-  key: QualityThresholdKey,
-  amount: number,
-) => Promise<QualityWrite>
-
 function StateTip({
   state,
   children,
@@ -172,10 +165,10 @@ function StateTip({
 
 export function QualityView({
   result,
-  onReviseThreshold,
+  onSaveThresholds,
 }: {
   result: QualityResult
-  onReviseThreshold: QualityReviseThreshold
+  onSaveThresholds: QualitySaveThresholds
 }) {
   return (
     <>
@@ -252,35 +245,10 @@ export function QualityView({
       </div>
 
       <div className="mt-3.5 grid gap-2.5 min-[900px]:grid-cols-2">
-        <Surface>
-          <SectionHeading mark={MarkPill}>適用中の閾値</SectionHeading>
-          <div className="space-y-2">
-            {result.thresholds.map((threshold) => (
-              <div
-                key={threshold.key}
-                className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0"
-              >
-                <span className="text-ui font-bold">{threshold.label}</span>
-                <span className="font-code text-ui tabular-nums text-brand">
-                  {threshold.value}
-                </span>
-                {threshold.basis && (
-                  <span className="w-full font-code text-note text-ink-3">
-                    {threshold.basis}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-          {result.thresholds.length > 0 && (
-            <div className="mt-3 flex justify-end border-t border-dashed border-line pt-3">
-              <ChangeThresholdButton
-                thresholds={result.thresholds}
-                onRevise={onReviseThreshold}
-              />
-            </div>
-          )}
-        </Surface>
+        <ThresholdPanel
+          thresholds={result.thresholds}
+          onSave={onSaveThresholds}
+        />
 
         <QualityTrendPanel trend={result.trend} />
       </div>
