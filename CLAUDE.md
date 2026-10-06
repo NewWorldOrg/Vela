@@ -55,9 +55,8 @@ tests/                      Every test. tests/lib/ and tests/repository/ mirror 
 ```
 
 A screen is layered `app/` (a Server Component fetches) → `components/{domain}/`
-→ `repository/` → `repository/client/`. The URL is the
-source of state. Fetching data or syncing initial values in a `useEffect` is not
-allowed.
+→ `repository/` → `repository/client/`. The URL is the source of state. Fetching
+data or syncing initial values in a `useEffect` is not allowed.
 
 What the URL holds is the state a second person opening the link would need, and
 that a reload has to bring back: filters, paging, sort, the search conditions. A
@@ -65,63 +64,49 @@ disclosure — which row of a list is unfolded — is not that, and putting it t
 buys a server round trip for content the page was already drawn with. It is held
 in client state instead.
 
-The design system lives outside this repository and is not mirrored here. Where a
-screen's wording or shape is in question, the answer is there, not in whatever
-copy is at hand: a stale copy has already been used once to undo wording the
-design side had deliberately changed.
+The design system is kept outside this repository. Where a screen's wording or
+shape is in question, the answer is there, not in whatever copy is at hand; the
+Design System section below is what it means for the code.
 
 Stories live under `stories/`, never beside the component. A change to a
 component comes with the change to its story.
 
-Tests live under `tests/`, never beside the code. `tests/lib/` and
-`tests/repository/` mirror the path of what they test, and a test reaches it
-by `@/` rather than by climbing back out. `tests/storybook/` holds one test of
-the story run's own bookkeeping — a story still running when its time ran out
-is moved off the page before the next one starts — and the eleven
-that read the source tree as text rather than importing a module — the waiver
-lists the browser probes cannot police, the `<main>` every screen goes
-through, the manifest that keeps the suite whole, the tables keyed by an
-enum the API owns, which have to be read through a fallback, the switches
-over such an enum, which have to say what to do with the rest, the fields
-the API answers with, which have to be read on their way to a screen, and
-the fields `repository/` publishes, which have to be filled in somewhere a
-story is not, the shares of scrambled or dropped packets, which are the
-API's thresholds to keep and never a fraction written down here, the story
-runs in `package.json`, which have to say how many browsers they open at
-once, and the icons, every one of which has to be laid out in the catalogue.
-That directory has no leading dot because `tests/**/*.test.ts` does not match
-one, and those twelve would go missing without a word.
+Tests live under `tests/`, never beside the code, and reach what they test by
+`@/` rather than by climbing back out. `tests/storybook/` holds the tests of the
+story run's own bookkeeping and the tests that read the source tree as text
+rather than importing a module; each of those holds one rule across every file,
+and its name says which. That directory has no leading dot because
+`tests/**/*.test.ts` does not match one, and its tests would go missing without a
+word.
 
 ## Data access
 
 `repository/` is the only type boundary. A module there either calls the API
 through the generated client or answers from a fixture module beside it, and a
-screen cannot tell which — which is what lets a screen be built and reviewed
-before its endpoint exists, and lets the swap be a change to one file.
+screen cannot tell which, so the swap is a change to one file.
 
 The client carries the browser's session, which it reads with `next/headers`, so
 every module that reaches the API is server-only. A Client Component may take
 **types** from `repository/` but never a value out of one of those modules — the
 build stops with the import trace that got it there, and nothing before `next
 build` catches it. Constants a screen needs therefore live in modules that do not
-reach the API: `channels`, `events`, `scan-systems`, `scan-failures`,
-`search-options`.
+reach the API.
 
 Nothing outside `repository/` may import the generated client, or `openapi-fetch`
 directly. ESLint enforces both.
 
 `repository/client/carina.json` is the OpenAPI document and `schema.ts` the client
 generated from it. Both are committed, so `git diff` after a refetch is how the
-contract moving becomes visible. `codegen:fetch` overwrites the document with what
-the running API serves and regenerates; `codegen:verify` regenerates from the
-committed document into a scratch file and fails on any difference, which needs
-nothing running and so is what CI runs. Nothing notices on its own that the
-contract moved — refetching is a deliberate act, which is survivable because
-contract changes upstream are additive only.
+contract moving becomes visible. Nothing notices on its own that the contract
+moved — refetching is a deliberate act, which is survivable because contract
+changes upstream are additive only.
 
 Dates on screen are spelled in `Asia/Tokyo`, named in `lib/format.ts` rather than
 taken from `TZ`, so a server and a browser give the same answer and a container
 without `TZ` does not quietly serve times nine hours out.
+
+`CARINA_API_BASE_URL` has no default in the code, so an unset base URL fails
+instead of addressing the wrong process. Keep it that way.
 
 ## Design System
 
@@ -177,51 +162,35 @@ docker compose exec app yarn typecheck        # tsc --noEmit
 docker compose exec app yarn test             # node --test over tests/**/*.test.ts
 docker compose exec app yarn build            # next build
 docker compose exec app yarn build-storybook  # a static Storybook
-task test:stories                             # build + test-runner, a11y included
+task test:stories                             # build + test-runner, light and dark, a11y included
 ```
 
 `yarn test` is Node's own runner over the TypeScript sources, so there is no test
 framework to install. A module under `repository/` is tested by standing in for
 `repository/client/carina` with `mock.module` and letting everything between it
-and the screen run for real; every test names what it tests by `@/`, and
-`scripts/test-alias.mjs` is what makes that resolve outside the bundler.
-`task test:stories` runs the Storybook test-runner in a Playwright image
-against a statically served build, which is where every story is rendered in a
-real browser and checked for a11y violations.
+and the screen run for real; `scripts/test-alias.mjs` is what makes `@/` resolve
+outside the bundler. `task test:stories` runs the Storybook test-runner in a
+Playwright image (the `storybook-runner` service, behind a compose profile)
+against a statically served build, where every story is rendered in a real
+browser and checked for a11y violations.
 
-GitHub Actions runs lint, typecheck, the unit tests, the codegen check, the
-build and the story run, on push and pull request to `master`. The story job
-counts the tests it ran and fails on zero, because the runner sits beside the
-server it is testing and would otherwise report the exit code of whichever half
-finished first.
-
-A second workflow builds the image from the `Dockerfile` and starts it once to
-see that it serves the login page and its stylesheet. On a pull request that is
-all it does; on `master` it pushes the image to `ghcr.io/newworldorg/vela` as
-`sha-<commit>`, and leaves a tag that is already there as it is.
+GitHub Actions runs lint, typecheck, the unit tests, the codegen check, the build
+and the story run, on push and pull request to `master`. The story job counts the
+tests it ran and fails on zero, because the runner sits beside the server it is
+testing and would otherwise report the exit code of whichever half finished
+first. A second workflow builds the image and starts it once to see that it serves
+the login page and its stylesheet, and on `master` publishes it.
 
 `Taskfile.yml` is the place for a repeatable operation. Add a task rather than
 passing a longer command around by hand.
-
-## Development environment
-
-One `app` service on the repository mounted at `/code`, publishing the dev server
-on 8080 and Storybook on 6006, plus a `storybook-runner` service behind a profile
-that exists only for `task test:stories`.
-
-`CARINA_API_BASE_URL` has no default in the code — an unset base URL fails
-instead of addressing the wrong process — so compose supplies one.
-`DEV_ALLOWED_ORIGINS` feeds `allowedDevOrigins` and takes host names without a
-port; without the host the browser actually uses, the dev server refuses the
-chunks and the HMR socket.
 
 ## Screens
 
 The shell carries every route. The viewing side — guide, live, library,
 reservations, search — sits in the top nav; the admin side sits in the side nav
-under settings: tuners, channels and their scans, encoding, quality, migration,
-authentication and system. Login and the signed-out notice sit outside the shell.
+under settings: system, tuners, channels and their scans, encoding, quality,
+authentication, display and migration. Login and the signed-out notice sit
+outside the shell.
 
-Screens land one domain at a time, each finished through to merge before the next
-one starts, and each carries its own `components/{domain}/`, its own
-`repository/` module and its own stories.
+Each domain carries its own `components/{domain}/`, its own `repository/` module
+and its own stories.
