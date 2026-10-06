@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 import type {
   Rule,
+  RuleApplication,
   RuleDraft,
   RuleImpact,
   RulePreview,
@@ -11,6 +12,7 @@ import type {
   RuleWrite,
 } from '@/repository/rules'
 import {
+  applyRulesNow,
   createRule,
   deleteRule,
   impactOfRule,
@@ -70,4 +72,14 @@ export async function weighRule(
   id?: string,
 ): Promise<RuleWrite<RuleImpact>> {
   return impactOfRule(draft, id)
+}
+
+export async function applyRules(
+  id: string,
+): Promise<RuleWrite<RuleApplication>> {
+  const result = await applyRulesNow(id)
+
+  written()
+
+  return result
 }

@@ -234,3 +234,36 @@ export function exclusionPartsOf(excluded: {
     { label: '移動', count: excluded.moved },
   ].filter((part) => part.count > 0)
 }
+
+export interface RuleApplicationPart {
+  label: string
+  count: number
+}
+
+interface RuleApplicationCounts {
+  made: number
+  withdrawn: number
+  refused: number
+  turnedOff: number
+  faulted: number
+}
+
+export function ruleApplicationPartsOf(
+  applied: RuleApplicationCounts,
+): RuleApplicationPart[] {
+  return [
+    { label: '新しく作られた予約', count: applied.made },
+    ...[
+      { label: '引っ込んだ予約', count: applied.withdrawn },
+      { label: '作成できなかった予約', count: applied.refused },
+      { label: '条件を読めず無効にしたルール', count: applied.turnedOff },
+      { label: '調べられなかったルール', count: applied.faulted },
+    ].filter((part) => part.count > 0),
+  ]
+}
+
+export function ruleApplicationFellShort(
+  applied: RuleApplicationCounts,
+): boolean {
+  return applied.refused + applied.turnedOff + applied.faulted > 0
+}
