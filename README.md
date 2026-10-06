@@ -6,29 +6,10 @@
 
 ## 構成
 
-Next.js の App Router。
-画面はサーバコンポーネントが取得し、クライアントへ渡す。
-**URL がそのまま状態**で、絞り込み・ページ・並び順はすべて URL に載る。
-
-```
-app/                画面。ルーティングと、取得を行うサーバコンポーネント
-components/{領域}/  その領域の画面と、画面を組む部品
-components/vela/    このプロジェクト固有の部品とアイコン
-components/ui/      素の UI 部品
-repository/         データ取得。API と話すのはここだけ
-repository/client/  OpenAPI 文書と、そこから生成したクライアント
-lib/                React に依らない純粋な関数
-hooks/              画面をまたいで使うフック
-stories/            Storybook
-tests/              テスト。lib と repository は対象のパスをそのまま写す
-scripts/            生成物の検証、疎通確認
-```
-
-画面は `app/` → `components/{領域}/` → `repository/` → `repository/client/` の順に重なる。
-**API と話すのは `repository/` だけ**で、その外から生成クライアントを import することは eslint が禁じている。
-
-バックエンドの OpenAPI 文書と、そこから生成したクライアントは**どちらもコミットする**。
-契約が動いたことが `git diff` に出る。
+Next.js(App Router)のサーバ。
+画面はサーバ側で Carina の API から取得して描く(接続先は `CARINA_API_BASE_URL`)。
+ブラウザが自分で出す要求(イベント・局のロゴ・再生・ライブ)は、`/api/*` として前段のプロキシから Carina に届く。
+ディレクトリの構成、ビルド・試験のコマンド、コードの決まり、デザインシステムは `CLAUDE.md` にある。
 
 ## 必要なもの
 
@@ -62,13 +43,16 @@ Vela は `/api/*` を中継しない。
 - WebSocket(`/api/live/ws`)と SSE(`/api/events`)は切らず、溜めずに流す
 - `Range` は素通しにする(録画の再生とシーク)
 
-開発サーバを直接開くと、ブラウザが `/api/*` に出す要求(イベント・局のロゴ・再生・ライブ)は届かない。
+開発サーバを直接開くと、ブラウザが `/api/*` に出す要求は届かない。
 
 ## イメージ
 
 `master` に入るたびに、CI が `ghcr.io/newworldorg/vela` へ `sha-<commit>` のタグで出す。
 `<commit>` はそのコミットの先頭 12 桁で、対応する CPU は amd64 だけ。
 一度出したタグの中身は変わらない。
+
+イメージは 3000 番で待ち受け、uid 1001 で動く。
+起動するときに `CARINA_API_BASE_URL` を渡す。
 
 ## 設定
 
@@ -80,10 +64,12 @@ Vela は `/api/*` を中継しない。
 `CARINA_API_BASE_URL` にコード側の既定値は無く、未設定のまま API へ届く要求が来ると失敗する。
 開発では compose が渡すので、書かなくても立ち上がる。
 
-`DEV_ALLOWED_ORIGINS` にブラウザが実際に使うホスト名が無いと、
-開発サーバはチャンクと HMR の接続を拒む(既定は `localhost,127.0.0.1`)。
+`DEV_ALLOWED_ORIGINS` にブラウザが実際に使うホスト名が無いと、開発サーバはチャンクと HMR の接続を拒む(既定は `localhost,127.0.0.1`)。
 
 ## API クライアント
+
+バックエンドの OpenAPI 文書と、そこから生成したクライアントは**どちらもコミットする**。
+契約が動いたことが `git diff` に出る。
 
 ```bash
 docker compose exec app yarn codegen:fetch    # 文書を取り直して型を作り直す
@@ -92,17 +78,6 @@ docker compose exec app yarn codegen:verify   # コミット済みの文書か�
 
 `codegen:fetch` は稼働中のバックエンドが要る。
 `codegen:verify` は何も動いていなくても走るため、CI が回すのはこちら。
-
-## 開発
-
-```bash
-task lint          # eslint + prettier --check
-task typecheck     # tsc --noEmit
-task test          # 単体テスト
-task test:stories  # 全 story を実ブラウザで light と dark の両方で描画し、a11y も見る
-```
-
-コーディング規約とデザインシステムは `CLAUDE.md` にある。
 
 ## ライセンス
 
