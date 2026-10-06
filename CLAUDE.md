@@ -180,7 +180,10 @@ and the story run, on push and pull request to `master`. The story job counts th
 tests it ran and fails on zero, because the runner sits beside the server it is
 testing and would otherwise report the exit code of whichever half finished
 first. A second workflow builds the image and starts it once to see that it serves
-the login page and its stylesheet, and on `master` publishes it.
+the login page and its stylesheet, and on `master` publishes it. A third, on a `v*`
+tag, builds nothing: it refuses a tag that is not the version `package.json`
+declares, and gives the image that commit was already published under the
+release's tag and `latest`.
 
 `THIRD-PARTY-NOTICES.md` is checked by the image build. The `notices` stage of the
 `Dockerfile` runs `next build` again with browser source maps, and
