@@ -183,7 +183,9 @@ first. A second workflow builds the image and starts it once to see that it serv
 the login page and its stylesheet, and on `master` publishes it. A third, on a `v*`
 tag, builds nothing: it refuses a tag that is not the version `package.json`
 declares, and gives the image that commit was already published under the
-release's tag and `latest`.
+release's tag, and `latest` when the release is the newest one that is not a
+prerelease; `.github/release-latest.sh` makes that call and its `prove` runs on
+every push.
 
 `THIRD-PARTY-NOTICES.md` is checked by the image build. The `notices` stage of the
 `Dockerfile` runs `next build` again with browser source maps, and
