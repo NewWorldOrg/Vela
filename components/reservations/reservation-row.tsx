@@ -201,7 +201,7 @@ export function ReservationRow({
               <Button variant="watch" size="sm" asChild>
                 <Link href={`/recordings/${reservation.recordingId}`}>
                   <LibraryIcon />
-                  この予約の録画
+                  この予約の録画へ
                 </Link>
               </Button>
             )}
@@ -223,7 +223,7 @@ export function ReservationRow({
                 onClick={() => setEditing(true)}
               >
                 <EditIcon />
-                編集
+                変更
               </Button>
             )}
             {cancellable && (
@@ -234,7 +234,7 @@ export function ReservationRow({
                 onClick={() => run(() => actions.onCancel(reservation.id))}
               >
                 <CloseIcon />
-                取り消す
+                取り消し
               </Button>
             )}
             {reservation.discardable && (
@@ -288,7 +288,7 @@ export function ReservationRow({
             <span>
               予約の記録が消えます。元に戻せません。
               {reservation.standing === 'cancelled' &&
-                '取り消した記録も無くなるため、この番組はふたたびルールの対象になります。'}
+                '取り消した記録もなくなるため、この番組はふたたびルールの対象になります。'}
             </span>
           </p>
           <AlertDialogFooter>
@@ -340,7 +340,7 @@ export function ReservationRow({
                     }
                   >
                     <ChevronUpIcon />
-                    この予約の優先度を上げる
+                    この予約を優先
                   </Button>
                   <Button
                     variant="halt"
@@ -349,12 +349,12 @@ export function ReservationRow({
                     onClick={() => run(() => actions.onCancel(reservation.id))}
                   >
                     <CloseIcon />
-                    この予約を取り消す
+                    この予約を取り消し
                   </Button>
                   <Button variant="watch" size="sm" asChild>
                     <Link href="/settings/tuners">
                       <TunerIcon />
-                      チューナーの使用状況を見る
+                      チューナーへ
                     </Link>
                   </Button>
                 </ActionRow>

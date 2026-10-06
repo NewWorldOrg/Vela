@@ -126,7 +126,7 @@ export const 空状態の三つの表情: Story = {
   render: () => (
     <div className="mx-auto grid max-w-[900px] gap-3 p-6 sm:grid-cols-3">
       <EmptyState title="まだ録画がありません" />
-      <EmptyState usher="glad" title="食い違いはありません" />
+      <EmptyState usher="glad" title="食い違いがありません" />
       <EmptyState usher="troubled" title="ページが見つかりません" />
     </div>
   ),

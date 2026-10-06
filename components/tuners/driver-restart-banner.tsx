@@ -16,7 +16,7 @@ import { Banner } from '@/components/vela/banner'
 
 const RESTART = 'driver を再起動'
 
-const REREAD = '状態を読み直す'
+const REREAD = '状態を再取得'
 
 const TICK_MS = 2000
 
@@ -91,12 +91,12 @@ function refusalFace(refusal: Refusal): Face {
     case 'unsupported':
       return {
         tone: 'danger',
-        body: 'この driver は再起動の要求に対応していません。driver を更新してください。',
+        body: 'この driver は再起動の要求に対応していないため、再起動を要求できませんでした。driver を更新してください。',
       }
     case 'mismatched':
       return {
         tone: 'danger',
-        body: 'driver は再起動に対応していると名乗りましたが、要求には応答しません。driver と API のビルドが揃っていません。',
+        body: 'driver が要求に応答しないため、再起動を要求できませんでした。driver と API のビルドが揃っていません。',
       }
     case 'refused':
       return {

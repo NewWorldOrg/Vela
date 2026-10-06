@@ -115,8 +115,8 @@ async function counts(
   waiting: number,
   failed: number,
 ) {
-  await expect(canvas.getByText(`待機 ${waiting} 本`)).toBeVisible()
-  await expect(canvas.getByText(`失敗 ${failed} 本`)).toBeVisible()
+  await expect(canvas.getByText(`待機 ${waiting} 件`)).toBeVisible()
+  await expect(canvas.getByText(`失敗 ${failed} 件`)).toBeVisible()
 }
 
 function spellsLine(canvasElement: HTMLElement) {
@@ -162,7 +162,7 @@ export const 通常: Story = {
 
     const jobs = within(canvas.getAllByRole('table')[0])
 
-    await expect(canvas.getByText('ジョブの現在地')).toBeVisible()
+    await expect(canvas.getByText('ジョブの状況')).toBeVisible()
     await expect(jobs.getAllByRole('button', { name: '中止' })).toHaveLength(2)
     await expect(jobs.getByText('録画削除済み')).toBeVisible()
     await counts(canvas, 1, 1)
@@ -183,7 +183,7 @@ export const 空の状態: Story = {
     await expect(destination).toBeDisabled()
     await expect(destination).toHaveAttribute(
       'title',
-      'プロファイルがないため追加できません',
+      'プロファイルがないため、追加できません。',
     )
   },
 }
@@ -355,7 +355,9 @@ export const 停滞: Story = {
     const canvas = within(canvasElement)
 
     await expect(canvas.getAllByText('停滞').length).toBeGreaterThan(0)
-    await expect(canvas.getAllByText('停滞 12分34秒').length).toBeGreaterThan(0)
+    await expect(
+      canvas.getAllByText('停滞 12 分 34 秒').length,
+    ).toBeGreaterThan(0)
     await expect(
       canvas.getAllByText('GPU に到達できない').length,
     ).toBeGreaterThan(0)
@@ -591,7 +593,7 @@ export const 保存先の追加を断られる: Story = {
         ({
           state: 'rejected',
           message:
-            'この出力ルートには成果物を置けないため、保存できませんでした。',
+            'この出力ルートにはエンコードしたファイルを置けないため、保存できませんでした。',
         }) as const,
     },
   },
@@ -611,7 +613,7 @@ export const 保存先の追加を断られる: Story = {
 
     await expect(
       await within(dialog).findByText(
-        'この出力ルートには成果物を置けないため、保存できませんでした。',
+        'この出力ルートにはエンコードしたファイルを置けないため、保存できませんでした。',
       ),
     ).toBeVisible()
   },
@@ -919,8 +921,8 @@ export const 所要の平均: Story = {
   play: async ({ canvasElement }) => {
     const spells = spellsLine(canvasElement)
 
-    await expect(spells.getByText('直近の所要')).toBeVisible()
-    await expect(spells.getByText('完了 5 本の平均')).toBeVisible()
+    await expect(spells.getByText('最近の所要時間')).toBeVisible()
+    await expect(spells.getByText('完了 5 件の平均')).toBeVisible()
     await expect(spells.getByText('25:23')).toBeVisible()
     await expect(spells.queryByText(/直近 20 本まで/)).toBeNull()
     await expect(
@@ -935,7 +937,7 @@ export const 所要がまだ言えない: Story = {
     const spells = spellsLine(canvasElement)
 
     await expect(
-      spells.getByText('完了 2 本。まだ 3 本に届いていません'),
+      spells.getByText('完了 2 件。まだ 3 件に届いていません'),
     ).toBeVisible()
   },
 }
@@ -946,7 +948,7 @@ export const 完了したジョブがない: Story = {
     const spells = spellsLine(canvasElement)
 
     await expect(
-      spells.getByText('完了 0 本。まだ 3 本に届いていません'),
+      spells.getByText('完了 0 件。まだ 3 件に届いていません'),
     ).toBeVisible()
     await expect(spells.queryByText(/〜/)).toBeNull()
   },
@@ -1051,7 +1053,7 @@ export const 自動実行の保存先が決まらない_保存先がない: Stor
     await saysItHasNowhereSettled(
       canvasElement,
       '未定義',
-      '保存先が 1 つも無く、自動実行がジョブを登録しない状態。',
+      '保存先が 1 つもなく、自動実行がジョブを登録しない状態。',
     )
   },
 }
@@ -1087,7 +1089,7 @@ export const 自動実行の保存先が決まらない_既定のプロファイ
   play: async ({ canvasElement }) => {
     await saysItHasNowhereSettled(
       canvasElement,
-      'プロファイル退役',
+      '退役済み',
       '保存先の既定のプロファイルが退役していて、自動実行がジョブを登録しない状態。',
     )
   },
@@ -1103,7 +1105,7 @@ export const 自動実行の保存先がこの版の知らない値: Story = {
   play: async ({ canvasElement }) => {
     const value = whereArtefactsGo(canvasElement)
 
-    await expect(value).toHaveTextContent('この版がまだ知らない値')
+    await expect(value).toHaveTextContent('未知の値')
     await expect(value.querySelector('[data-state-say]')).toBeNull()
     await expect(value).not.toHaveTextContent(SHELF_DESTINATION.label)
   },
@@ -1230,7 +1232,7 @@ export const 対象にこの版が知らない値が来る: Story = {
     const panel = autoRunPanel(canvasElement)
 
     await expect(panel.getByText('対象')).toBeVisible()
-    await expect(panel.getByText('完全・この版がまだ知らない値')).toBeVisible()
+    await expect(panel.getByText('完全・未知の値')).toBeVisible()
   },
 }
 
@@ -1240,7 +1242,7 @@ export const 対象に何も入っていない: Story = {
     const panel = autoRunPanel(canvasElement)
 
     await expect(panel.getByText('対象')).toBeVisible()
-    await expect(panel.getByText('この版がまだ知らない値')).toBeVisible()
+    await expect(panel.getByText('未知の値')).toBeVisible()
   },
 }
 

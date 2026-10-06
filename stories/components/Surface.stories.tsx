@@ -39,7 +39,7 @@ export const Surfaces: Story = {
       <div className="flex flex-wrap gap-2.5">
         <Tile>
           <TileTitle>チューナー</TileTitle>
-          <TileMeta>4 台 / 3 台 稼働</TileMeta>
+          <TileMeta>4 本 / 3 本 稼働</TileMeta>
         </Tile>
         <Tile>
           <TileTitle>今日の予約</TileTitle>
@@ -98,15 +98,15 @@ export const 空状態の四通り: Story = {
         title="条件に合う録画がありません"
         action={
           <Button variant="halt" size="sm">
-            条件を消す
+            条件を解除
           </Button>
         }
       />
       <EmptyState
-        title="未完了の予約はありません"
+        title="未完了の予約がありません"
         action={
           <Button variant="halt" size="sm">
-            条件を消す
+            条件を解除
           </Button>
         }
       >
@@ -120,7 +120,7 @@ export const EmptyStateInAColumn: Story = {
   render: () => (
     <div className="flex w-[900px] flex-col p-6">
       <EmptyState title="条件に合う録画がありません" className="max-w-[560px]">
-        条件を消すと、すべての録画が表示されます。
+        条件を解除すると、すべての録画が表示されます。
       </EmptyState>
     </div>
   ),

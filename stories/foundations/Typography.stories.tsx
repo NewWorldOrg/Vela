@@ -44,7 +44,7 @@ export const Scale: Story = {
               className="heading text-h1"
               spec="Zen Maru 22 / 700 / palt"
             >
-              録画ライブラリ
+              ライブラリ
             </HeadingRow>
             <HeadingRow
               className="heading text-h2"

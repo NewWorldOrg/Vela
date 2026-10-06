@@ -122,7 +122,7 @@ export const SCAN_STATE_LABEL: Record<ScanState, string> = {
   running: '実行中',
   completed: '完了',
   failed: '失敗',
-  cancelled: 'キャンセル',
+  cancelled: '中止',
   interrupted: '中断',
 }
 
@@ -246,19 +246,20 @@ function toRotation(
   if (candidate.rotationState === 'needsAttention') {
     return {
       dropped: true,
-      label: `要確認 · 連続失敗 ${failures} 回`,
-      note: '巡回対象から外しました',
+      label: '要確認',
+      note: `連続失敗 ${failures} 回 · 巡回対象から外しました`,
     }
   }
 
   if (candidate.rotationState === 'backingOff') {
     return {
       dropped: false,
-      label: `再試行待ち · 連続失敗 ${failures} 回`,
-      note:
+      label: '再試行待ち',
+      note: `連続失敗 ${failures} 回 · ${
         candidate.nextAttemptAt === null
           ? '間隔を空けて試し直します'
-          : `次の試行 ${formatMoment(candidate.nextAttemptAt)}`,
+          : `次の試行 ${formatMoment(candidate.nextAttemptAt)}`
+      }`,
     }
   }
 
@@ -504,7 +505,7 @@ function toDiagnosis(
     counts,
     verdict:
       only &&
-      `走査した ${attempts.length} 件すべてが「${only.class.no} ${only.class.label}」で止まっています。`,
+      `スキャンした ${attempts.length} 件すべてが「${only.class.no} ${only.class.label}」で止まっています。`,
   }
 }
 
@@ -740,8 +741,9 @@ function refusedRunId(body: unknown): string | undefined {
   return refusal?.runningScanId ?? undefined
 }
 
-const TUNING_NOT_TAKEN =
-  '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。'
+function tuningNotTaken(action: string): string {
+  return `物理チャンネルの指定が正しくないため、${action}できませんでした。値を確かめてください。`
+}
 
 function tuningBodyOf(tuning: CandidateTuning) {
   return {
@@ -769,7 +771,7 @@ export async function startScan(scope: ScanScope): Promise<StartScanResult> {
   )
 
   if (response.status === 400) {
-    return { state: 'rejected', message: TUNING_NOT_TAKEN }
+    return { state: 'rejected', message: tuningNotTaken('スキャンを開始') }
   }
 
   if (response.status === 409) {
@@ -777,7 +779,7 @@ export async function startScan(scope: ScanScope): Promise<StartScanResult> {
       state: 'refused',
       scanId: refusedRunId(error ?? data),
       message:
-        'すでにスキャンが実行中です。同時に走らせられるのは 1 本までです。実行中のスキャンを確認するか、キャンセルしてから開始してください。',
+        'すでにスキャンが実行中のため、開始できませんでした。同時に実行できるのは 1 本までです。実行中のスキャンを確認するか、中止してから開始してください。',
     }
   }
 
@@ -793,7 +795,7 @@ export async function startScan(scope: ScanScope): Promise<StartScanResult> {
     return {
       state: 'rejected',
       message:
-        '対象の種別に使えるチューナーが空いていません。録画・ライブ・EPG 収集が優先されるため、空きが出てから開始してください。',
+        '対象の種別に使えるチューナーが空いていないため、スキャンを開始できませんでした。録画・ライブ・EPG 収集が優先されます。空きが出てから開始してください。',
     }
   }
 
@@ -840,12 +842,12 @@ export async function cancelScan(scanId: string): Promise<WriteResult> {
   )
 
   const ended =
-    'このスキャンはすでに終わっているため、キャンセルできませんでした。最新の状態を読み直しました。'
+    'このスキャンはすでに終わっているため、中止できませんでした。最新の状態を読み直しました。'
 
   return toWriteResult(
     response,
     { 404: ended, 409: ended },
-    'スキャンをキャンセルできませんでした。',
+    'スキャンを中止できませんでした。',
   )
 }
 
@@ -859,7 +861,7 @@ export async function applyScan(scanId: string): Promise<WriteResult> {
     response,
     {
       404: 'このスキャンは残っていないため、保存できませんでした。',
-      409: 'このスキャンの差分は別の保存が処理しています。この操作では何も書き換えられていません。少し待ってから状態を読み直してください。',
+      409: 'このスキャンの差分は別の保存が処理中のため、保存できませんでした。この操作では何も書き換えられていません。少し待ってから状態を読み直してください。',
       410: 'このスキャンの差分はもう保持されていないため、保存できませんでした。別の保存が先に完了した可能性があります。チャンネル一覧を確かめ、反映されていなければスキャンし直してください。',
     },
     'スキャンの結果を保存できませんでした。',
@@ -891,11 +893,11 @@ export async function addCandidateChannel(
   return toWriteResult(
     response,
     {
-      400: TUNING_NOT_TAKEN,
+      400: tuningNotTaken('追加'),
       404: 'このサービスが見つからないため、追加できませんでした。',
-      409: 'この物理チャンネルはすでに候補として登録されています。',
+      409: 'この物理チャンネルはすでに候補として登録されているため、追加できませんでした。',
       422: 'この物理チャンネルを受信できるチューナーがないため、追加できませんでした。対応する種別のチューナーが有効か確かめてください。',
-      503: 'driver に接続できないため、受信できるか確かめられませんでした。追加されていません。',
+      503: 'driver に接続できないため、追加できませんでした。受信できるかを確かめられていません。',
     },
     '候補チャンネルを追加できませんでした。',
   )
@@ -916,7 +918,7 @@ export async function deleteCandidateChannel(
     response,
     {
       404: 'この候補チャンネルは残っていないため、削除できませんでした。',
-      409: 'この候補チャンネルは別のサービスのものです。削除されていません。',
+      409: 'この候補チャンネルは別のサービスのものであるため、削除できませんでした。',
     },
     '候補チャンネルを削除できませんでした。',
   )

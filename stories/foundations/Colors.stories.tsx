@@ -55,7 +55,7 @@ const TINTS: { tint: TintName; label: string; value: string; unit: string }[] =
   [
     { tint: 'lavender', label: 'チューナー', value: '3 / 4', unit: '稼働中' },
     { tint: 'salmon', label: '今日の予約', value: '6', unit: '件' },
-    { tint: 'butter', label: '録画', value: '248', unit: '本' },
+    { tint: 'butter', label: '録画', value: '248', unit: '件' },
     { tint: 'sage', label: 'ドロップ率', value: '0.004', unit: '%' },
     { tint: 'sky', label: 'EPG 鮮度', value: '7.5', unit: '日先まで' },
     { tint: 'blush', label: '保存領域', value: '6.4', unit: 'TB 使用' },

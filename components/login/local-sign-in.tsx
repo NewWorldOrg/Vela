@@ -34,7 +34,7 @@ export function SignInNoticeAlert({ notice }: { notice: SignInNotice }) {
   if (notice.kind === 'unavailable') {
     return (
       <InlineAlert tone="warn" className="text-balance">
-        サインインの要求が届きませんでした。時間をおいてもう一度お試しください。
+        サインインの要求が届きませんでした。時間をおいてからもう一度お試しください。
       </InlineAlert>
     )
   }

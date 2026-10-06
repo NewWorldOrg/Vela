@@ -185,7 +185,7 @@ export const 一部だけ未計測: Story = {
     const canvas = within(canvasElement)
 
     await expect(canvas.getByText('計測の供給が途絶しています')).toBeVisible()
-    await expect(canvas.getByText('録画 11 本を計測')).toBeVisible()
+    await expect(canvas.getByText('録画 11 件を計測')).toBeVisible()
     await expect(canvas.getAllByText('良好').length).toBeGreaterThan(0)
     await expect(canvas.getAllByText('未計測').length).toBeGreaterThan(0)
     await expect(
@@ -387,7 +387,7 @@ export const 受信不可のチューナーと録画の無い信号の警告: St
       ?.closest('[data-slot="surface"]')
 
     await expect(tile).toHaveTextContent('0 / 3')
-    await expect(tile).toHaveTextContent('受信不可 2')
+    await expect(tile).toHaveTextContent('受信不可 2 本')
     await expect(tile).not.toHaveTextContent('対象なし')
 
     const rows = rowsOfTheTableHeaded(canvasElement, 'チューナー')
@@ -409,7 +409,7 @@ export const 選局の失敗が続く衛星チューナー: Story = {
       .find((one) => one.closest('[data-slot="section-heading"]') === null)
       ?.closest('[data-slot="surface"]')
 
-    await expect(tile).toHaveTextContent('選局失敗 2')
+    await expect(tile).toHaveTextContent('選局失敗 2 本')
 
     const rows = rowsOfTheTableHeaded(canvasElement, 'チューナー')
 

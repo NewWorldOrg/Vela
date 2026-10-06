@@ -30,16 +30,16 @@ export const WHEN_CARRYING_A_SOUND: PlaybackAsking = {
 }
 
 export const THE_SOUNDS_COULD_NOT_BE_READ =
-  'この録画が運んでいる音声を読み取れなかったため、選んだ音声を再生できません。'
+  'この録画が運んでいる音声を読み取れなかったため、選んだ音声を再生できませんでした。'
 
 const REFUSAL_SAYINGS: [RegExp, string][] = [
   [
     /did not carry the sound asked for/i,
-    'この録画のもとになった放送は選んだ音声を運んでいないため、再生できません。',
+    'この録画のもとになった放送は選んだ音声を運んでいないため、再生できませんでした。',
   ],
   [
     /there is no sound to choose/i,
-    'この録画は成果物をそのまま渡すため、音声を選べません。',
+    'この録画はエンコードしたファイルをそのまま渡すため、音声を選べませんでした。',
   ],
   [
     /played with one of the sounds/i,

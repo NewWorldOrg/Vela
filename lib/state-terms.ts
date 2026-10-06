@@ -48,7 +48,7 @@ export const RESERVATION_STANDING_TERMS: Record<
     explanation:
       '取り消された予約。記録は残り、同じ番組の予約は一覧から復元できます。',
   },
-  missed: { label: '撮り逃し', explanation: NOTHING_STARTED },
+  missed: { label: '録り逃し', explanation: NOTHING_STARTED },
   complete: { label: '完了', explanation: FILLED_THE_WINDOW },
   truncated: { label: '尻切れ', explanation: CUT_SHORT },
   failed: { label: '失敗', explanation: NOTHING_KEPT },
@@ -69,7 +69,7 @@ export const RESERVATION_OUTCOME_KIND_TERMS: Record<
     label: '競合',
     explanation: '同じ時間帯にチューナーの空きがなく、録画されなかった予約。',
   },
-  missed: { label: '撮り逃し', explanation: NOTHING_STARTED },
+  missed: { label: '録り逃し', explanation: NOTHING_STARTED },
   tuneFailure: {
     label: '選局失敗',
     explanation: '選局できず、録画が始まらなかった予約。',
@@ -85,12 +85,12 @@ export const RESERVATION_OUTCOME_KIND_TERMS: Record<
   },
   programmeGone: {
     label: '番組消失',
-    explanation: '予約した番組が番組表から無くなったため、取り消された予約。',
+    explanation: '予約した番組が番組表からなくなったため、取り消された予約。',
   },
   programmeReturned: {
     label: '番組復帰',
     explanation:
-      '番組表から無くなっていた番組が戻ったため、取り消しから戻された予約。',
+      '番組表からなくなっていた番組が戻ったため、取り消しから戻された予約。',
   },
   retried: {
     label: '再試行',
@@ -130,7 +130,7 @@ export const RESERVATION_EPG_DIVERGED_TERM: StateTerm = {
 export const RESERVATION_EPG_MISSING_TERM: StateTerm = {
   label: '番組消失',
   explanation:
-    '予約した番組が番組表から無くなった状態。番組表に戻れば予約も戻ります。',
+    '予約した番組が番組表からなくなった状態。番組表に戻れば予約も戻ります。',
 }
 
 export const RESERVATION_SAME_BROADCAST_TERM: StateTerm = {

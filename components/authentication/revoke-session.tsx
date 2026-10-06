@@ -59,7 +59,7 @@ export function RevokeSession({
         }}
       >
         <CloseIcon />
-        失効させる
+        失効
       </Button>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
@@ -70,7 +70,7 @@ export function RevokeSession({
               このセッションを失効させます
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {session.device.name}のセッションを失効させます
+              {session.device.name}のセッションを失効させます。元に戻せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
 

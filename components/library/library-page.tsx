@@ -77,7 +77,7 @@ export function LibraryView({
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
         <h1 className="heading flex items-center gap-2 text-[calc(20rem/16)]">
           <LibraryIcon className="size-[calc(18rem/16)] text-brand" />
-          録画ライブラリ
+          ライブラリ
         </h1>
       </div>
 
@@ -137,7 +137,7 @@ export function LibraryView({
           </span>
           {hasFilter && (
             <Button variant="halt" size="sm" onClick={clearEveryCondition}>
-              条件を消す
+              条件を解除
             </Button>
           )}
         </div>
@@ -180,7 +180,7 @@ export function LibraryView({
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
               <Button variant="halt" size="sm" onClick={clearEveryCondition}>
-                条件を消す
+                条件を解除
               </Button>
               {filter.q &&
                 (filter.year || filter.genre || filter.state || filter.ch) && (
@@ -196,7 +196,7 @@ export function LibraryView({
                       })
                     }
                   >
-                    キーワードだけ残す
+                    キーワード以外を解除
                   </Button>
                 )}
             </div>
@@ -210,10 +210,10 @@ export function LibraryView({
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
               <Button variant="watch" size="sm" asChild>
-                <Link href="/guide">番組表から予約する</Link>
+                <Link href="/guide">番組表へ</Link>
               </Button>
               <Button variant="watch" size="sm" asChild>
-                <Link href="/reservations">予約一覧を見る</Link>
+                <Link href="/reservations">予約へ</Link>
               </Button>
             </div>
           }

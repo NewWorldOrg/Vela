@@ -37,7 +37,7 @@ export function PlayerSeekFlash({ flash }: { flash?: SeekFlash }) {
         ))}
       </span>
       <span className="font-code text-sub leading-none font-medium text-white tabular-nums">
-        {flash.seconds}秒
+        {flash.seconds} 秒
       </span>
     </div>
   )

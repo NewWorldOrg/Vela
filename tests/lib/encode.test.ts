@@ -150,7 +150,7 @@ test('a failure class this build does not know is still said', () => {
       'failed',
       true,
     ),
-    { main: '失敗', sub: 'この版がまだ知らない値', cancels: false },
+    { main: '失敗', sub: '未知の値', cancels: false },
   )
 })
 
@@ -169,7 +169,7 @@ test('a status or a standing this build does not know is still said', () => {
       'somethingNew' as Parameters<typeof encodeRowOf>[1],
       true,
     ),
-    { main: 'この版がまだ知らない値', cancels: false },
+    { main: '未知の値', cancels: false },
   )
 })
 
@@ -237,7 +237,7 @@ test('a rate control value is a whole number from 0 to 51', () => {
   assert.equal(rateControlProblem('22'), undefined)
   assert.equal(rateControlProblem('0'), undefined)
   assert.equal(rateControlProblem('51'), undefined)
-  assert.equal(rateControlProblem('52'), '0 〜 51 です。')
+  assert.equal(rateControlProblem('52'), '品質は 0 〜 51 です。')
   assert.equal(rateControlProblem('2.5'), '半角数字で入力してください。')
   assert.equal(rateControlProblem(''), '半角数字で入力してください。')
 })

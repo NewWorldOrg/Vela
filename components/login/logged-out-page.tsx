@@ -18,16 +18,16 @@ export function LoggedOutView({ method }: { method: AuthMethod }) {
           Vela
         </p>
         <h1 className="heading mt-1 text-[calc(17rem/16)] leading-[1.5]">
-          ログアウトしました
+          サインアウトしました
         </h1>
         <p className="mt-px mb-2 text-[calc(13rem/16)] text-ink-2">
-          この端末のセッションを削除しました
+          この端末のセッションを削除しました。
         </p>
         <div className="mx-auto mb-[calc(18rem/16)] w-14 border-t border-dashed border-line-strong" />
         <div className="mb-4 flex items-start gap-[calc(9rem/16)] rounded-lg bg-mint-soft px-3.5 py-[calc(11rem/16)] text-left text-sub text-mint">
           <SuccessIcon className="mt-[calc(3rem/16)] size-4" />
           <span className="text-balance [word-break:auto-phrase]">
-            ほかの端末はログインしたままです
+            ほかの端末はサインインしたままです
           </span>
         </div>
         <Button
@@ -37,12 +37,12 @@ export function LoggedOutView({ method }: { method: AuthMethod }) {
         >
           <Link href="/login">
             <SignInIcon className="size-4" />
-            もう一度ログイン
+            サインインへ
           </Link>
         </Button>
         {method === 'oidc' && (
           <p className="mt-[calc(15rem/16)] text-note leading-[1.7] text-ink-3">
-            組織の ID プロバイダからはサインアウトしていません
+            組織の ID プロバイダーからはサインアウトしていません
           </p>
         )}
       </main>

@@ -19,7 +19,7 @@ export function ZeroDiagnosisPanel({
           </h3>
           <p className="mt-px text-sub text-ink-2">
             直近スキャン({diagnosis.scannedAt} · {diagnosis.attempted}{' '}
-            件走査)の失敗内訳
+            件スキャン)の失敗内訳
           </p>
         </div>
       </div>

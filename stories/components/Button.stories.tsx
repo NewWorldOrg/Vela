@@ -20,7 +20,7 @@ const meta = {
   title: 'Components/Button',
   component: Button,
   parameters: { layout: 'centered' },
-  args: { children: '編集' },
+  args: { children: '変更' },
   argTypes: {
     variant: {
       control: 'select',
@@ -62,11 +62,11 @@ export const Variants: Story = {
         </Button>
         <Button {...args} variant="change">
           <EditIcon />
-          編集
+          変更
         </Button>
         <Button {...args} variant="halt">
           <CloseIcon />
-          取り消す
+          取り消し
         </Button>
         <Button {...args} variant="remove">
           <TrashIcon />
@@ -121,7 +121,7 @@ function StateRow({
           予約を追加
         </Button>
         <Button variant="outline" className={extra}>
-          編集
+          変更
         </Button>
         <Button variant="ghost" className={extra ? QUIET[extra] : undefined}>
           詳細
@@ -149,7 +149,7 @@ export const States: Story = {
             予約を追加
           </Button>
           <Button variant="outline" disabled>
-            編集
+            変更
           </Button>
           <Button variant="ghost" disabled>
             詳細

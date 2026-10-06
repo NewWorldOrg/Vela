@@ -146,7 +146,7 @@ export function formatSpan(sec: number) {
   const m = Math.floor(sec / 60)
   const s = Math.round(sec % 60)
 
-  return m > 0 ? `${m}分${s}秒` : `${s}秒`
+  return m > 0 ? `${m} 分 ${s} 秒` : `${s} 秒`
 }
 
 export function formatSpanToTheMillisecond(ms: number) {
@@ -155,7 +155,7 @@ export function formatSpanToTheMillisecond(ms: number) {
   const s = whole % 60
   const rest = String(ms % 1000).padStart(3, '0')
 
-  return m > 0 ? `${m}分${s}.${rest}秒` : `${s}.${rest}秒`
+  return m > 0 ? `${m} 分 ${s}.${rest} 秒` : `${s}.${rest} 秒`
 }
 
 export function formatClockSpan(startIso: string, endIso: string) {

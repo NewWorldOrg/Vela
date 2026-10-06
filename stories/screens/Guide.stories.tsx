@@ -1117,7 +1117,7 @@ export const 健全性バナー2項目: Story = {
       'ほかに 1 チャンネルが 8 日先まで届いていません。',
     )
     await expect(
-      canvas.getByRole('button', { name: '収集状態を見る' }),
+      canvas.getByRole('button', { name: '収集状態へ' }),
     ).toBeInTheDocument()
   },
 }

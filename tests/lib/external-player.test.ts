@@ -20,7 +20,7 @@ const WATCHING = 'https://vela.example/live?ch=32736-1024'
 const TICKET = 'Kk3Zq7Xm-a-ticket-that-lapses-in-thirty-secs'
 
 const NOT_IN_THE_LINEUP =
-  'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。'
+  'このチャンネルは一覧にないため、外部プレイヤーの札を発行できませんでした。'
 
 async function issued(): Promise<TicketWrite> {
   return {
@@ -103,7 +103,7 @@ test('an encoded recording offers the artefact first and the recording with its 
   assert.deepEqual(
     choices.map(({ source, label, size }) => ({ source, label, size })),
     [
-      { source: 'artefact', label: 'エンコード済み', size: undefined },
+      { source: 'artefact', label: 'エンコード版', size: undefined },
       { source: 'recording', label: '元のまま', size: '15.7 GB' },
     ],
   )

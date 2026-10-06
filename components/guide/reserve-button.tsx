@@ -91,7 +91,7 @@ export function ReserveButton({
                   href={`/guide/programs/${notice.movedTo}` as Route}
                   className="tap-target ml-[calc(9rem/16)] font-bold whitespace-nowrap underline underline-offset-[3px]"
                 >
-                  移動先を見る
+                  移動先へ
                 </Link>
               )}
             </InlineAlert>

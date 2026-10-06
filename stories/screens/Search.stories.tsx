@@ -200,9 +200,9 @@ export const 入力前: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await expect(canvas.getByText('まだ検索していません')).toBeVisible()
+    await expect(canvas.getByText('まだ検索結果がありません')).toBeVisible()
     await expect(
-      canvas.getByRole('button', { name: 'この条件でルールを作る' }),
+      canvas.getByRole('button', { name: 'この条件でルールを作成' }),
     ).toBeDisabled()
     await saysNothingItCannotKeep(canvas)
   },
@@ -333,13 +333,13 @@ export const 該当なし: Story = {
     const canvas = within(canvasElement)
 
     const empty = canvas
-      .getByText('該当する番組がありません')
+      .getByText('条件に合う番組がありません')
       .closest<HTMLElement>('[data-slot="empty-state"]')
 
     await expect(empty).not.toBeNull()
     await expect(
       within(empty as HTMLElement).getByRole('button', {
-        name: '条件を消す',
+        name: '条件を解除',
       }),
     ).toBeVisible()
     await saysNothingItCannotKeep(canvas)
@@ -354,14 +354,14 @@ export const 条件不備: Story = {
       outcome: {
         state: 'refused',
         message:
-          'キーワード・除外キーワードは、指定する場合は2文字以上にしてください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。',
+          'キーワード・除外キーワードは、指定する場合は 2 文字以上にしてください。期間は開始日から終了日へ向かう最長 31 日の範囲で指定できます。',
       },
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await expect(canvas.getByText(/2文字以上にしてください/)).toBeVisible()
+    await expect(canvas.getByText(/2 文字以上にしてください/)).toBeVisible()
     await saysNothingItCannotKeep(canvas)
   },
 }
@@ -378,7 +378,7 @@ export const ジャンルを2つ選ぶ: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await choose('ジャンルを足す', 'ニュース/報道')
+    await choose('ジャンルを追加', 'ニュース/報道')
 
     await waitFor(async () => {
       await expect(
@@ -386,7 +386,7 @@ export const ジャンルを2つ選ぶ: Story = {
       ).toBeVisible()
     })
 
-    await choose('ジャンルを足す', 'ドキュメンタリー/教養')
+    await choose('ジャンルを追加', 'ドキュメンタリー/教養')
 
     await waitFor(async () => {
       await expect(
@@ -406,8 +406,8 @@ export const ジャンルを2つ選ぶ: Story = {
     ])
 
     await expect(
-      canvas.getByRole('combobox', { name: 'ジャンルを足す' }),
-    ).toHaveTextContent('＋ ジャンルを足す')
+      canvas.getByRole('combobox', { name: 'ジャンルを追加' }),
+    ).toHaveTextContent('＋ ジャンルを追加')
 
     await expect(canvas.getByText('1 件の条件を指定しています')).toBeVisible()
   },
@@ -441,7 +441,7 @@ export const ジャンルを外す: Story = {
       }),
     ).toBeVisible()
 
-    await choose('ジャンルを足す', 'ニュース/報道')
+    await choose('ジャンルを追加', 'ニュース/報道')
 
     await waitFor(async () => {
       await expect(
@@ -510,21 +510,21 @@ export const 条件は押すまで走らず押すとまとめて走る: Story = 
     await stillNothingAskedFor('キーワード')
 
     await userEvent.type(
-      canvas.getByRole('textbox', { name: '除外' }),
+      canvas.getByRole('textbox', { name: '除外キーワード' }),
       ' 再放送 ',
     )
-    await stillNothingAskedFor('除外')
+    await stillNothingAskedFor('除外キーワード')
 
-    await choose('探す場所', '番組名だけ')
-    await stillNothingAskedFor('探す場所')
+    await choose('対象範囲', '番組名だけ')
+    await stillNothingAskedFor('対象範囲')
 
-    await choose('ジャンルを足す', '映画')
+    await choose('ジャンルを追加', '映画')
     await stillNothingAskedFor('ジャンル')
 
     await choose('種別', '地上波')
     await stillNothingAskedFor('種別')
 
-    await choose('チャンネルを足す', '中央テレビ1')
+    await choose('チャンネルを追加', '中央テレビ1')
     await stillNothingAskedFor('チャンネル')
 
     fillDate(canvas.getByLabelText('期間の開始日'), '2026-08-09')
@@ -576,7 +576,7 @@ export const 欄でEnterを押しても検索が走る: Story = {
     })
 
     await userEvent.type(
-      canvas.getByRole('textbox', { name: '除外' }),
+      canvas.getByRole('textbox', { name: '除外キーワード' }),
       '再放送{enter}',
     )
 
@@ -762,10 +762,10 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
     await expect(canvas.queryByText(/件の条件を指定しています/)).toBeNull()
 
     await expect(
-      canvas.queryByRole('link', { name: 'この条件でルールを作る' }),
+      canvas.queryByRole('link', { name: 'この条件でルールを作成' }),
     ).toBeNull()
     await expect(
-      canvas.getByRole('button', { name: 'この条件でルールを作る' }),
+      canvas.getByRole('button', { name: 'この条件でルールを作成' }),
     ).toBeDisabled()
 
     await userEvent.type(
@@ -778,7 +778,7 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
     })
     await expect(canvas.getByText('/search?q=夏+絶景')).toBeVisible()
 
-    await choose('ジャンルを足す', '映画')
+    await choose('ジャンルを追加', '映画')
 
     await waitFor(async () => {
       await expect(canvas.getByText('2 件の条件を指定しています')).toBeVisible()
@@ -788,7 +788,7 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
     ).toBeVisible()
 
     await expect(
-      canvas.getByRole('link', { name: 'この条件でルールを作る' }),
+      canvas.getByRole('link', { name: 'この条件でルールを作成' }),
     ).toHaveAttribute(
       'href',
       '/reservations/rules?rule=new&q=%E5%A4%8F+%E7%B5%B6%E6%99%AF&genre=movie',
@@ -824,11 +824,11 @@ export const 開いた住所の条件が欄に入っている: Story = {
     await expect(
       canvas.getByRole('textbox', { name: 'キーワード' }),
     ).toHaveValue('夏 絶景')
-    await expect(canvas.getByRole('textbox', { name: '除外' })).toHaveValue(
-      '再放送',
-    )
     await expect(
-      canvas.getByRole('combobox', { name: '探す場所' }),
+      canvas.getByRole('textbox', { name: '除外キーワード' }),
+    ).toHaveValue('再放送')
+    await expect(
+      canvas.getByRole('combobox', { name: '対象範囲' }),
     ).toHaveTextContent('番組名だけ')
     await expect(
       canvas.getByRole('combobox', { name: '種別' }),
@@ -881,7 +881,7 @@ export const 戻ると前の条件が欄に戻る: Story = {
         canvas.getByRole('textbox', { name: 'キーワード' }),
       ).toHaveValue('')
     })
-    await expect(canvas.getByText('まだ検索していません')).toBeVisible()
+    await expect(canvas.getByText('まだ検索結果がありません')).toBeVisible()
 
     await userEvent.click(
       canvas.getByRole('button', { name: 'ブラウザの進む' }),
@@ -911,9 +911,9 @@ export const 住所が空でも条件を消すと欄が空になる: Story = {
       canvas.getByRole('textbox', { name: 'キーワード' }),
       '夏 絶景',
     )
-    await choose('ジャンルを足す', '映画')
+    await choose('ジャンルを追加', '映画')
 
-    await userEvent.click(canvas.getByRole('button', { name: '条件を消す' }))
+    await userEvent.click(canvas.getByRole('button', { name: '条件を解除' }))
 
     await waitFor(async () => {
       await expect(
@@ -1016,7 +1016,7 @@ export const 種別を戻すとチャンネルも戻る: Story = {
 
     await waitFor(async () => {
       await expect(
-        canvas.queryByRole('combobox', { name: 'チャンネルを足す' }),
+        canvas.queryByRole('combobox', { name: 'チャンネルを追加' }),
       ).toBeNull()
     })
 
@@ -1024,11 +1024,11 @@ export const 種別を戻すとチャンネルも戻る: Story = {
 
     await waitFor(async () => {
       await expect(
-        canvas.getByRole('combobox', { name: 'チャンネルを足す' }),
+        canvas.getByRole('combobox', { name: 'チャンネルを追加' }),
       ).toBeVisible()
     })
 
-    await choose('チャンネルを足す', '中央テレビ1')
+    await choose('チャンネルを追加', '中央テレビ1')
 
     await expect(
       canvas.getByRole('button', { name: 'チャンネル 中央テレビ1 を外す' }),
@@ -1064,7 +1064,7 @@ export const 条件を消すと入力欄も空になる: Story = {
       canvas.getByRole('textbox', { name: 'キーワード' }),
       '夏 絶景',
     )
-    await userEvent.click(canvas.getByRole('button', { name: '条件を消す' }))
+    await userEvent.click(canvas.getByRole('button', { name: '条件を解除' }))
 
     await waitFor(async () => {
       await expect(
@@ -1079,7 +1079,7 @@ export const 条件を消すと入力欄も空になる: Story = {
     await expect(router.replace).toHaveBeenLastCalledWith('/search', {
       scroll: false,
     })
-    await expect(canvas.getByText('まだ検索していません')).toBeVisible()
+    await expect(canvas.getByText('まだ検索結果がありません')).toBeVisible()
     await expect(canvas.queryByText('検索結果')).toBeNull()
   },
 }
@@ -1096,16 +1096,16 @@ export const 探す場所だけでは条件に数えない: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await choose('探す場所', '番組名だけ')
+    await choose('対象範囲', '番組名だけ')
 
     await waitFor(async () => {
       await expect(
-        canvas.getByRole('button', { name: '条件を消す' }),
+        canvas.getByRole('button', { name: '条件を解除' }),
       ).toBeVisible()
     })
 
     await expect(canvas.queryByText(/件の条件を指定しています/)).toBeNull()
-    await expect(canvas.getByText('まだ検索していません')).toBeVisible()
+    await expect(canvas.getByText('まだ検索結果がありません')).toBeVisible()
   },
 }
 
@@ -1126,7 +1126,7 @@ export const チャンネルは上限で足せなくなる: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.queryByRole('combobox', { name: 'チャンネルを足す' }),
+      canvas.queryByRole('combobox', { name: 'チャンネルを追加' }),
     ).toBeNull()
 
     await expect(canvas.getByText(/局まで指定できます/)).toBeVisible()

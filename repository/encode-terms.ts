@@ -92,14 +92,14 @@ export const NOWHERE_SETTLED_TERMS: Record<
 > = {
   nothingIsDefined: {
     label: '未定義',
-    explanation: '保存先が 1 つも無く、自動実行がジョブを登録しない状態。',
+    explanation: '保存先が 1 つもなく、自動実行がジョブを登録しない状態。',
   },
   moreThanOneIsOffered: {
     label: '複数あり',
     explanation: '保存先が 2 つ以上あり、自動実行がジョブを登録しない状態。',
   },
   theProfileIsNotOffered: {
-    label: 'プロファイル退役',
+    label: '退役済み',
     explanation:
       '保存先の既定のプロファイルが退役していて、自動実行がジョブを登録しない状態。',
   },

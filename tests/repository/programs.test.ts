@@ -229,7 +229,7 @@ test('what the broadcaster sent beyond the summary reaches the guide', async () 
       channelLabel: '9 みなと教育1',
     },
   ])
-  assert.equal(program.durationLabel, '1時間30分')
+  assert.equal(program.durationLabel, '1 時間 30 分')
 })
 
 test('what the broadcast announced about its sound and picture reaches the guide', async () => {

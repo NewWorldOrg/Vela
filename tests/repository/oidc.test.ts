@@ -203,7 +203,7 @@ test('a refusal this build has no words for says the status rather than the sent
 
   assert.deepEqual(await saveOidcConfig(CHANGE), {
     state: 'refused',
-    message: 'しばらくしてからもう一度試してください。',
+    message: '時間をおいてからもう一度お試しください。',
   })
 })
 
@@ -217,7 +217,7 @@ test('a refusal with nothing said, or an answer with nothing in it, says the sta
 
     assert.deepEqual(await saveOidcConfig(CHANGE), {
       state: 'refused',
-      message: 'しばらくしてからもう一度試してください。',
+      message: '時間をおいてからもう一度お試しください。',
     })
   }
 })

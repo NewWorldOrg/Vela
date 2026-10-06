@@ -14,7 +14,7 @@ const HEADING = '推移'
 
 const SUBJECT = '対象'
 
-const NOTHING = '対象なし'
+const NOTHING = '対象がありません'
 
 const TALL = 'h-[calc(56rem/16)]'
 

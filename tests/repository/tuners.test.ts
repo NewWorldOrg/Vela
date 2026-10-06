@@ -358,7 +358,7 @@ test('a system the API calls silent is put on the screen as the API judged it', 
         SEEN_AT,
       )} です。`,
       actions: [
-        { label: '切り分けを見る', href: '/settings/channels#system-isdbT' },
+        { label: 'チャンネルへ', href: '/settings/channels#system-isdbT' },
       ],
     },
   ])
@@ -436,7 +436,7 @@ test('a system a tuner receives but that has no service at all is said to have n
       tone: 'warn',
       body: 'BSのサービスが 0 件です。',
       actions: [
-        { label: '切り分けを見る', href: '/settings/channels#system-isdbSBs' },
+        { label: 'チャンネルへ', href: '/settings/channels#system-isdbSBs' },
       ],
     },
     {
@@ -444,7 +444,7 @@ test('a system a tuner receives but that has no service at all is said to have n
       body: 'CS110のサービスが 0 件です。',
       actions: [
         {
-          label: '切り分けを見る',
+          label: 'チャンネルへ',
           href: '/settings/channels#system-isdbSCs110',
         },
       ],
@@ -639,7 +639,7 @@ test('a switch the API will not take says what the API answered', async () => {
 
     assert.deepEqual(await setTunerDisabled(DEVICE, true), {
       state: 'unavailable',
-      message: 'しばらくしてからもう一度試してください。',
+      message: '時間をおいてからもう一度お試しください。',
     })
   }
 })
@@ -937,7 +937,7 @@ test('a detection the API will not give says what it answered', async () => {
 
     assert.deepEqual(await getDetectedTuners(), {
       state: 'unavailable',
-      message: 'しばらくしてからもう一度試してください。',
+      message: '時間をおいてからもう一度お試しください。',
     })
   }
 
@@ -1033,7 +1033,7 @@ test('nothing is saved when the ledger before it cannot be read', async () => {
   assert.deepEqual(await saveDetectedTuners([DEVICE]), {
     state: 'rejected',
     message:
-      '保存前の一覧を読み取れなかったため、保存していません。しばらくしてからもう一度試してください。',
+      '保存前の一覧を読み取れなかったため、保存できませんでした。時間をおいてからもう一度お試しください。',
   })
   assert.equal(savedTuners(), undefined)
 
@@ -1066,7 +1066,7 @@ test('a save the API refuses is said in the words of why it refused', async () =
     [
       400,
       'somethingNew: x',
-      /保存できませんでした。しばらくしてからもう一度試してください。/,
+      /保存できませんでした。時間をおいてからもう一度お試しください。/,
     ],
   ] as const) {
     standing()
@@ -1201,7 +1201,7 @@ test('power the API refuses is said in the words of why it refused', async () =>
     [
       400,
       'rejected: x',
-      /LNB 給電を保存できませんでした。しばらくしてからもう一度試してください。/,
+      /LNB 給電を保存できませんでした。時間をおいてからもう一度お試しください。/,
     ],
   ] as const) {
     standing()
@@ -1244,6 +1244,6 @@ test('a detection saved over a ledger that changed since it was read is refused 
   assert.deepEqual(await saveDetectedTuners([DEVICE]), {
     state: 'rejected',
     message:
-      'チューナーの一覧が保存のあいだに変わったため、保存していません。検出し直してから保存してください。',
+      'チューナーの一覧が保存のあいだに変わったため、保存できませんでした。検出し直してから保存してください。',
   })
 })

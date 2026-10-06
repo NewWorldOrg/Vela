@@ -40,18 +40,22 @@ const AGAIN = '再エンコード'
 
 const MAKING_IT_AGAIN = '再エンコード'
 
-const WHAT_IT_REPLACES = 'いまの成果物は新しいものに置き換わります。'
+const ENCODE_CONFIRMED = 'エンコードする'
+
+const AGAIN_CONFIRMED = '再エンコードする'
+
+const WHAT_IT_REPLACES = 'いまのエンコード版は新しいものに置き換わります。'
 
 function refusing(
   recording: Recording,
   choices: EncodeChoices,
 ): string | undefined {
   if (recording.outcome === 'recording') {
-    return '録画中はエンコードできません'
+    return '録画中のため、エンコードできません。'
   }
 
   if (choices.destinations.length === 0) {
-    return '保存先がないためエンコードできません'
+    return '保存先がないため、エンコードできません。'
   }
 
   return undefined
@@ -96,7 +100,7 @@ export function EncodeButton({
           ? {
               queued: true,
               text: again
-                ? '作り直しを登録しました。'
+                ? '再エンコードを登録しました。'
                 : 'エンコードを登録しました。',
             }
           : result.state === 'unauthenticated'
@@ -212,7 +216,7 @@ export function EncodeButton({
               onClick={() => queue(destinationId, profileId || undefined)}
             >
               <EncodeIcon />
-              {again ? AGAIN : ENCODE}
+              {again ? AGAIN_CONFIRMED : ENCODE_CONFIRMED}
             </Button>
           </DialogFooter>
         </DialogContent>

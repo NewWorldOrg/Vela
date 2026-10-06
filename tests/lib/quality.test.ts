@@ -4,23 +4,17 @@ import { test } from 'node:test'
 import { thresholdProblem } from '@/lib/quality'
 
 test('空欄と数でないものは、送る前に断る', () => {
-  assert.equal(thresholdProblem('', 0, 100, '%'), '数値を入力してください')
-  assert.equal(thresholdProblem('  ', 0, 100, '%'), '数値を入力してください')
+  assert.equal(thresholdProblem('', 0, 100, '%'), '数値を入力してください。')
+  assert.equal(thresholdProblem('  ', 0, 100, '%'), '数値を入力してください。')
   assert.equal(
     thresholdProblem('たくさん', 0, 100, '%'),
-    '数値を入力してください',
+    '数値を入力してください。',
   )
 })
 
 test('範囲の外は、その範囲を言って断る', () => {
-  assert.equal(
-    thresholdProblem('101', 0, 100, '%'),
-    '0 〜 100% の範囲で入力してください',
-  )
-  assert.equal(
-    thresholdProblem('-1', 0, 100, '%'),
-    '0 〜 100% の範囲で入力してください',
-  )
+  assert.equal(thresholdProblem('101', 0, 100, '%'), '値は 0 〜 100% です。')
+  assert.equal(thresholdProblem('-1', 0, 100, '%'), '値は 0 〜 100% です。')
 })
 
 test('端も範囲の内', () => {

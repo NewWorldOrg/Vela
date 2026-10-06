@@ -612,7 +612,7 @@ test('a channel the lineup does not carry is refused in Japanese', async () => {
   assert.deepEqual(write, {
     state: 'refused',
     message:
-      'このチャンネルは一覧に無いため、外部プレイヤーの札を発行できませんでした。',
+      'このチャンネルは一覧にないため、外部プレイヤーの札を発行できませんでした。',
   })
 })
 
@@ -631,7 +631,7 @@ test('asking for too many tickets is refused in Japanese', async () => {
 
   assert.equal(
     write.state === 'refused' && write.message,
-    '発行の上限に達しています。しばらく待つと発行できます。',
+    '発行の上限に達しているため、外部プレイヤーの札を発行できませんでした。時間をおいてからもう一度お試しください。',
   )
 })
 
@@ -642,6 +642,6 @@ test('a refusal with no saying of its own still says what happened', async () =>
 
   assert.equal(
     write.state === 'refused' && write.message,
-    '外部プレイヤーの札を発行できませんでした。しばらくしてからもう一度試してください。',
+    '外部プレイヤーの札を発行できませんでした。時間をおいてからもう一度お試しください。',
   )
 })

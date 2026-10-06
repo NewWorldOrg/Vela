@@ -6,7 +6,7 @@ import { LoginView } from '@/components/login/login-page'
 import { groundOf } from '@/stories/ground-of'
 
 const meta = {
-  title: 'Screens/ログイン',
+  title: 'Screens/サインイン',
   component: LoginView,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof LoginView>
@@ -138,7 +138,7 @@ export const IDプロバイダに接続できない: Story = {
     await bannerSays(
       canvasElement,
       'warn',
-      '組織の ID プロバイダに接続できません。',
+      '組織の ID プロバイダーに接続できません。',
     )
     await expect(
       within(canvasElement).getByRole('link', {

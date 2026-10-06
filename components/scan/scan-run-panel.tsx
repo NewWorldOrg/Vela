@@ -140,7 +140,7 @@ function ScanCounts({ progress }: { progress: ScanRunProgress }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-[calc(18rem/16)] gap-y-1.5 text-sub text-ink-3">
       <span>
-        走査済み{' '}
+        スキャン済み{' '}
         <b className="font-code text-ui font-medium tabular-nums text-ink">
           {progress.attempted}
         </b>{' '}
@@ -198,7 +198,7 @@ export function ScanRunPanel({
             }
           />
           <span className="text-note text-ink-3">
-            スキャン中は変更できません
+            スキャン中のため、変更できません。
           </span>
         </div>
 
@@ -208,9 +208,9 @@ export function ScanRunPanel({
             <h2 className="heading text-ui leading-[1.5]">
               スキャン中 —{' '}
               {progress === undefined
-                ? '状況を読み取れていません'
+                ? '状況不明'
                 : progress.systems.length === 0
-                  ? '走査開始を待っています'
+                  ? 'スキャン開始待ち'
                   : progress.systems
                       .map((system) => wordFor(SYSTEM_LABEL, system))
                       .join(' · ')}
@@ -228,7 +228,7 @@ export function ScanRunPanel({
 
                 setRefusal(
                   result.state === 'unauthenticated'
-                    ? signedOut('キャンセル')
+                    ? signedOut('中止')
                     : result.state === 'rejected'
                       ? result.message
                       : undefined,
@@ -236,7 +236,7 @@ export function ScanRunPanel({
               })
             }
           >
-            キャンセル
+            中止
           </Button>
         </div>
 
@@ -253,7 +253,7 @@ export function ScanRunPanel({
 
       {progress && progress.attempts.length > 0 && (
         <section className="mt-[calc(22rem/16)]">
-          <SectionHeading mark={MarkAxis}>走査結果(順次)</SectionHeading>
+          <SectionHeading mark={MarkAxis}>スキャン結果(順次)</SectionHeading>
           <FailureLegend />
           <ScanAttemptsTable attempts={progress.attempts} />
         </section>

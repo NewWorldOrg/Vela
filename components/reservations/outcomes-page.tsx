@@ -209,19 +209,19 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
                 change({ kind: null, days: null, ch: null, rule: null })
               }
             >
-              条件を消す
+              条件を解除
             </Button>
           }
         />
       ) : (
         <EmptyState
           usher="glad"
-          title="録れなかった予約はありません"
+          title="録れなかった予約がありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <Button variant="watch" size="sm" asChild>
-              <Link href="/reservations">予約一覧へ</Link>
+              <Link href="/reservations">予約へ</Link>
             </Button>
           }
         />

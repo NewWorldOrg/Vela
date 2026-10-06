@@ -82,7 +82,7 @@ export function ReservationSelection({
           run(actions.onCancelAll, (done) => `${done} 件を取り消しました。`)
         }
       >
-        取り消す
+        取り消し
       </Button>
       <Button
         variant="remove"
@@ -125,7 +125,7 @@ export function ReservationSelection({
             <span>
               予約の記録が消えます。元に戻せません。
               {chosen.some((one) => one.standing === 'cancelled') &&
-                '取り消した記録も無くなるため、その番組はふたたびルールの対象になります。'}
+                '取り消した記録もなくなるため、その番組はふたたびルールの対象になります。'}
             </span>
           </p>
           <AlertDialogFooter>

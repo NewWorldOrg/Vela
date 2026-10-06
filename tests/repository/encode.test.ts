@@ -646,25 +646,25 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     WHEN_QUEUEING,
     409,
     `Recording ${RECORDING.id} failed, so there is nothing to encode.`,
-    'この録画は失敗しているため、エンコードするものがありません。',
+    'この録画は失敗しているため、エンコードできませんでした。',
   ],
   [
     WHEN_QUEUEING,
     409,
     `Recording ${RECORDING.id} already has job ${RUNNING.id} running; it is not queued twice.`,
-    'この録画のエンコードはすでに待機中か実行中です。',
+    'この録画のエンコードはすでに待機中か実行中のため、登録できませんでした。',
   ],
   [
     WHEN_QUEUEING,
     409,
     `Recording ${RECORDING.id} already has job ${RUNNING.id} waiting; it is not queued twice.`,
-    'この録画のエンコードはすでに待機中か実行中です。',
+    'この録画のエンコードはすでに待機中か実行中のため、登録できませんでした。',
   ],
   [
     WHEN_QUEUEING,
     409,
     `Recording ${RECORDING.id} was already encoded with profile ${PROFILE.id} by job ${COMPLETED.id}, and a second artefact would only collide with the first.`,
-    'この録画はこのプロファイルですでにエンコード済みです。',
+    'この録画はこのプロファイルですでにエンコード済みのため、登録できませんでした。',
   ],
   [
     WHEN_CALLING_OFF,
@@ -808,7 +808,7 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     WHEN_SAVING_A_DESTINATION,
     400,
     'outputRoot: a root this process holds for writing; the roots the recordings are read from take no artefact.',
-    'この出力ルートには成果物を置けないため、保存できませんでした。',
+    'この出力ルートにはエンコードしたファイルを置けないため、保存できませんでした。',
   ],
   [
     WHEN_SAVING_A_DESTINATION,
@@ -838,7 +838,7 @@ const REFUSED: [typeof WHEN_QUEUEING, number, string, string][] = [
     WHEN_CHANGING_A_DESTINATION,
     400,
     'outputRoot: a root this process holds for writing; the roots the recordings are read from take no artefact.',
-    'この出力ルートには成果物を置けないため、変更できませんでした。',
+    'この出力ルートにはエンコードしたファイルを置けないため、変更できませんでした。',
   ],
   [
     WHEN_CHANGING_A_DESTINATION,
@@ -914,15 +914,15 @@ test('a refusal nothing accounts for is a number, and never the sentence the API
       500,
       'The ledger would not take the profile.',
     ),
-    'プロファイルを保存できませんでした。しばらくしてからもう一度試してください。',
+    'プロファイルを保存できませんでした。時間をおいてからもう一度お試しください。',
   )
   assert.equal(
     whyItRefused(WHEN_QUEUEING, 500, undefined),
-    'エンコードを登録できませんでした。しばらくしてからもう一度試してください。',
+    'エンコードを登録できませんでした。時間をおいてからもう一度お試しください。',
   )
   assert.equal(
     whyItRefused(WHEN_REMOVING_A_DESTINATION, 502, 'Bad Gateway'),
-    '保存先を撤去できませんでした。しばらくしてからもう一度試してください。',
+    '保存先を撤去できませんでした。時間をおいてからもう一度お試しください。',
   )
 })
 
@@ -1015,7 +1015,8 @@ test('a destination refused for its root says so, and one the driver cannot vouc
     'outputRoot: a root this process holds for writing; the roots the recordings are read from take no artefact.'
   assert.deepEqual(await defineDestination(draft), {
     state: 'rejected',
-    message: 'この出力ルートには成果物を置けないため、保存できませんでした。',
+    message:
+      'この出力ルートにはエンコードしたファイルを置けないため、保存できませんでした。',
   })
 
   store.writeStatus = 503
@@ -1049,7 +1050,7 @@ test('a profile refused for a value out of range names the field, and an unaccou
   assert.deepEqual(await defineProfile(draft), {
     state: 'rejected',
     message:
-      'プロファイルを保存できませんでした。しばらくしてからもう一度試してください。',
+      'プロファイルを保存できませんでした。時間をおいてからもう一度お試しください。',
   })
 
   store.writeStatus = 401
@@ -1085,7 +1086,7 @@ test('a job the ledger no longer holds cannot be called off, and says so', async
   assert.deepEqual(await callOffEncode(RUNNING.id), {
     state: 'rejected',
     message:
-      'このジョブを中止できませんでした。しばらくしてからもう一度試してください。',
+      'このジョブを中止できませんでした。時間をおいてからもう一度お試しください。',
   })
 
   store.writeStatus = 401
@@ -1244,6 +1245,6 @@ test('the auto-run refused for a field names that field in Japanese', () => {
   )
   assert.equal(
     whyItRefused(WHEN_SETTLING_THE_AUTO_RUN, 500, 'Something else entirely.'),
-    '自動実行の設定を保存できませんでした。しばらくしてからもう一度試してください。',
+    '自動実行の設定を保存できませんでした。時間をおいてからもう一度お試しください。',
   )
 })

@@ -25,7 +25,7 @@ import {
 
 const SIGNED_OUT = signedOut('操作')
 
-const OUT_OF_RANGE = `しきい値は ${SILENCE_RANGE.least} 〜 ${SILENCE_RANGE.most} 時間の半角数字です。`
+const OUT_OF_RANGE = `閾値は ${SILENCE_RANGE.least} 〜 ${SILENCE_RANGE.most} 時間の半角数字です。`
 
 export function ThresholdDialog({
   hours,
@@ -75,11 +75,11 @@ export function ThresholdDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onInteractOutside={(event) => event.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>健全性のしきい値を変更</DialogTitle>
+          <DialogTitle>健全性の閾値を変更</DialogTitle>
         </DialogHeader>
 
         <Field>
-          <FieldLabel htmlFor="tuner-threshold">しきい値(時間)</FieldLabel>
+          <FieldLabel htmlFor="tuner-threshold">閾値(時間)</FieldLabel>
           <Input
             id="tuner-threshold"
             inputMode="numeric"

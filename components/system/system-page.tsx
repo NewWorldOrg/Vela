@@ -62,7 +62,7 @@ const NOT_YET_KNOWN_CONNECTION: (typeof CONNECTION)[DriverConnection] = {
 }
 
 const DEGRADED_LABEL: Record<string, string> = {
-  oidc: 'ID プロバイダ',
+  oidc: 'ID プロバイダー',
 }
 
 const PANEL_TONE: Record<StatusTone, string> = {
@@ -267,9 +267,7 @@ export function SystemView({
               : SYSTEM_STATE_LABELS.notResponding
           }
         >
-          {api.state === 'ok' && (
-            <Fact label="低下している機能" names={degraded} />
-          )}
+          {api.state === 'ok' && <Fact label="機能低下" names={degraded} />}
         </Part>
 
         <DriverPart result={driver} />
@@ -374,7 +372,7 @@ function DriverReading({ status }: { status: DriverStatus }) {
 
   return (
     <Part name="driver" mark={MarkSplit} tone={tone} head={connection.label}>
-      <Fact label="不足している機能" names={missing} />
+      <Fact label="機能不足" names={missing} />
       {status.driverUpdateRequired && (
         <span
           className={cn(
@@ -438,7 +436,7 @@ function StoragePart({ reading }: { reading: Reading<StorageCensus> }) {
       head={<Figure>{formatBytes(census.freeBytes)}</Figure>}
       unit={`空き / ${formatBytes(census.totalBytes)}`}
     >
-      <Fact label="録画中" value={<Figure>{census.inFlight} 本</Figure>} />
+      <Fact label="録画中" value={<Figure>{census.inFlight} 件</Figure>} />
     </Part>
   )
 }

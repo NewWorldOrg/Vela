@@ -1189,13 +1189,13 @@ export function Player({
               {duration > 0 && (
                 <>
                   <PlayerTip
-                    name={`${SEEK_STEP_SECONDS}秒戻る`}
+                    name={`${SEEK_STEP_SECONDS} 秒戻る`}
                     keys={[KEY_CAP.back]}
                     container={shell}
                   >
                     <button
                       type="button"
-                      aria-label={`${SEEK_STEP_SECONDS}秒戻る`}
+                      aria-label={`${SEEK_STEP_SECONDS} 秒戻る`}
                       onClick={(event) =>
                         step(-SEEK_STEP_SECONDS, event.timeStamp)
                       }
@@ -1205,13 +1205,13 @@ export function Player({
                     </button>
                   </PlayerTip>
                   <PlayerTip
-                    name={`${SEEK_STEP_SECONDS}秒進む`}
+                    name={`${SEEK_STEP_SECONDS} 秒進む`}
                     keys={[KEY_CAP.forward]}
                     container={shell}
                   >
                     <button
                       type="button"
-                      aria-label={`${SEEK_STEP_SECONDS}秒進む`}
+                      aria-label={`${SEEK_STEP_SECONDS} 秒進む`}
                       onClick={(event) =>
                         step(SEEK_STEP_SECONDS, event.timeStamp)
                       }

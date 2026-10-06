@@ -248,7 +248,8 @@ function whyNotStarted(
     return (
       <span>
         <b className="block font-bold">
-          実行中のブーストが 1 本あります(同時に 1 本まで)。
+          実行中の即時収集があるため、受け付けられませんでした(同時に 1
+          本まで)。
         </b>
       </span>
     )
@@ -258,17 +259,17 @@ function whyNotStarted(
     return (
       <span>
         <b className="block font-bold">
-          前回のブーストから間隔が空いていません。
+          前回の即時収集から間隔が空いていないため、受け付けられませんでした。
         </b>
         {outcome.notBeforeLabel ? (
           <>
             <span className="font-code tabular-nums">
               {outcome.notBeforeLabel}
             </span>{' '}
-            以降にもう一度押せます。
+            以降にもう一度お試しください。
           </>
         ) : (
-          '間隔を置いてもう一度押せます。'
+          '時間をおいてからもう一度お試しください。'
         )}
       </span>
     )
@@ -278,7 +279,7 @@ function whyNotStarted(
     return (
       <span>
         <b className="block font-bold">
-          指定した対象は巡回の対象にありません。
+          指定した対象は巡回の対象にないため、受け付けられませんでした。
         </b>
       </span>
     )
@@ -297,7 +298,7 @@ function CollectOutcomeLine({ outcome }: { outcome: CollectNowResult }) {
       <p className="mt-2 flex items-start gap-2 text-sub leading-[1.7] text-mint">
         <SuccessIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
         <span>
-          いますぐ集めるを受け付けました(
+          即時収集を受け付けました(
           <Figure>{outcome.streams}</Figure> TS)。
         </span>
       </p>
@@ -429,7 +430,7 @@ export function CollectionDrawer({
           <SectionCap icon={ClockIcon}>現在の収集</SectionCap>
           <LatestVisit status={status} />
 
-          <SectionCap icon={CollectIcon}>いますぐ集める</SectionCap>
+          <SectionCap icon={CollectIcon}>即時収集</SectionCap>
           <div className="flex flex-wrap items-center gap-x-[calc(9rem/16)] gap-y-2">
             <span className="text-note font-bold whitespace-nowrap text-ink-3">
               集める範囲
@@ -477,11 +478,11 @@ export function CollectionDrawer({
               onClick={run}
             >
               <AntennaIcon />
-              いますぐ集める
+              即時収集を実行
             </Button>
             {coolingDown && (
               <p className="min-w-[calc(180rem/16)] flex-1 text-note leading-[1.7] text-ink-3">
-                終わってから、間隔を置いてもう一度押せます。
+                終わってから、間隔をおいてもう一度押せます。
               </p>
             )}
           </div>
@@ -518,7 +519,7 @@ export function CollectionDrawer({
               </div>
             ))}
             {status.streams.length === 0 && (
-              <EmptyState usher={null} title="訪問記録はまだありません" />
+              <EmptyState usher={null} title="まだ訪問記録がありません" />
             )}
           </div>
 
@@ -545,7 +546,7 @@ export function CollectionDrawer({
               onClick={() => setRebuildOpen(true)}
             >
               <RebuildIcon />
-              EPG 全削除 → 再構築
+              番組表を再構築
             </Button>
           </div>
           <span aria-live="polite">

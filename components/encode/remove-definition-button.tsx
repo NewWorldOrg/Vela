@@ -75,7 +75,8 @@ export function RemoveDefinitionButton({
           <AlertDialogHeader>
             <AlertDialogTitle>この{kind}を撤去します</AlertDialogTitle>
             <AlertDialogDescription>
-              <b className="font-bold text-ink">{label}</b>
+              <b className="block font-bold text-ink">{label}</b>
+              元に戻せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <span aria-live="polite">

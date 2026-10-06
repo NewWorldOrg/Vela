@@ -42,7 +42,7 @@ export function RunCheckButton({
         }
       >
         <SearchIcon />
-        いま実行する
+        整合性チェックを実行
       </Button>
       {(refusal !== undefined || found !== undefined) && (
         <span aria-live="polite" className="mt-2 block basis-full">

@@ -303,7 +303,7 @@ export async function collectNow(
   if (streams === undefined) {
     return {
       state: 'rejected',
-      message: couldNot('いますぐ集めるを受け付けられませんでした'),
+      message: couldNot('即時収集を受け付けられませんでした'),
     }
   }
 
@@ -524,6 +524,6 @@ function spanLabel(milliseconds: number): string {
   const seconds = total % 60
 
   return minutes > 0
-    ? `${minutes}分${String(seconds).padStart(2, '0')}秒`
-    : `${seconds}秒`
+    ? `${minutes} 分 ${String(seconds).padStart(2, '0')} 秒`
+    : `${seconds} 秒`
 }

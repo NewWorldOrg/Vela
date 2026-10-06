@@ -24,7 +24,7 @@ const accept = async (): Promise<WriteResult> => ({ state: 'ok' })
 const refuseWrite = async (): Promise<WriteResult> => ({
   state: 'rejected',
   message:
-    'このスキャンはすでに終わっているため、キャンセルできませんでした。最新の状態を読み直しました。',
+    'このスキャンはすでに終わっているため、中止できませんでした。最新の状態を読み直しました。',
 })
 const answering = (answer: StartScanResult) =>
   fn(async (): Promise<StartScanResult> => answer)
@@ -33,7 +33,7 @@ const refuse = answering({
   state: 'refused',
   scanId: 'run-3',
   message:
-    'すでにスキャンが実行中です。同時に走らせられるのは 1 本までです。実行中のスキャンを確認するか、キャンセルしてから開始してください。',
+    'すでにスキャンが実行中のため、開始できませんでした。同時に実行できるのは 1 本までです。実行中のスキャンを確認するか、中止してから開始してください。',
 })
 
 const meta = {
@@ -192,7 +192,7 @@ export const 物理chを指定してスキャンする: Story = {
 }
 
 const TUNING_NOT_TAKEN =
-  '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。'
+  '物理チャンネルの指定が正しくないため、スキャンを開始できませんでした。値を確かめてください。'
 
 export const 物理chの指定を断られたとき: Story = {
   args: {
@@ -414,7 +414,7 @@ export const スキャン中にこの版の知らない結果: Story = {
       return mark
     })
 
-    await expect(within(row).getByText('この版がまだ知らない値')).toBeVisible()
+    await expect(within(row).getByText('未知の値')).toBeVisible()
     await expect(within(row).queryByText('サービスを取得')).toBeNull()
     await expect(
       new Set(marks.map((mark) => Math.round(mark.getBoundingClientRect().x)))

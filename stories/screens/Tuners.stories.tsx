@@ -160,7 +160,7 @@ export const 再起動中で読めない: Story = {
   args: {
     result: {
       state: 'unavailable',
-      message: 'しばらくしてからもう一度試してください。',
+      message: '時間をおいてからもう一度お試しください。',
     },
     restartWindow: {
       state: 'restarting',
@@ -348,7 +348,7 @@ export const LNB給電の確認で断られたら閉じずに理由を出す: St
     onSaveLnb: async () => ({
       state: 'rejected' as const,
       message:
-        'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
+        'driver に接続できないため、保存できませんでした。接続が戻ってからもう一度お試しください。',
     }),
   },
   play: async ({ canvasElement }) => {
@@ -366,7 +366,7 @@ export const LNB給電の確認で断られたら閉じずに理由を出す: St
 
     await expect(
       await within(asked).findByText(
-        'driver に接続できないため、保存できませんでした。接続が戻ってから試してください。',
+        'driver に接続できないため、保存できませんでした。接続が戻ってからもう一度お試しください。',
       ),
     ).toBeVisible()
     await expect(screen.getByRole('alertdialog')).toBeVisible()
@@ -435,7 +435,7 @@ export const サービスが0件の種別を最上部で言う: Story = {
             body: 'BSのサービスが 0 件です。',
             actions: [
               {
-                label: '切り分けを見る',
+                label: 'チャンネルへ',
                 href: '/settings/channels#system-isdbSBs',
               },
             ],
@@ -445,7 +445,7 @@ export const サービスが0件の種別を最上部で言う: Story = {
             body: 'CS110のサービスが 0 件です。',
             actions: [
               {
-                label: '切り分けを見る',
+                label: 'チャンネルへ',
                 href: '/settings/channels#system-isdbSCs110',
               },
             ],
@@ -460,7 +460,7 @@ export const サービスが0件の種別を最上部で言う: Story = {
     await afterTheArrival(canvasElement)
     await expect(canvas.getByText('BSのサービスが 0 件です。')).toBeVisible()
     await expect(
-      canvas.getAllByRole('link', { name: '切り分けを見る' })[0],
+      canvas.getAllByRole('link', { name: 'チャンネルへ' })[0],
     ).toHaveAttribute('href', '/settings/channels#system-isdbSBs')
   },
 }

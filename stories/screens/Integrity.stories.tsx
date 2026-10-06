@@ -33,12 +33,13 @@ async function redrawing(recordingId: string): Promise<ThumbnailWrite> {
   return { state: 'ok', remake: 'drawn' }
 }
 
-const STILL_BEING_WRITTEN = 'このファイルは書き込み中のため、削除していません。'
+const STILL_BEING_WRITTEN =
+  'このファイルは書き込み中のため、削除できませんでした。'
 
 const STRAY = INTEGRITY_FIXTURE.findings[0]
 
 const TOO_SOON =
-  '直前の整合性チェックから間がないため、まだ実行できません。次に実行できるのは 08/08 03:15 です。'
+  '直前の整合性チェックから間がないため、実行できませんでした。次に実行できるのは 08/08 03:15 です。'
 
 const tooSoon = async (): Promise<SweepWrite> => ({
   state: 'refused',
@@ -202,7 +203,9 @@ export const 断りは片付いたあとまで残らない: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: 'いま実行する' }))
+    await userEvent.click(
+      canvas.getByRole('button', { name: '整合性チェックを実行' }),
+    )
     await expect(await canvas.findByText(TOO_SOON)).toBeVisible()
 
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
@@ -232,17 +235,17 @@ export const サムネイルが無い: Story = {
 
     await afterTheArrival(canvasElement)
     await expect(
-      missing.getByText('サムネイルは作成済みだが画像ファイルが無い'),
+      missing.getByText('サムネイルは作成済みだが画像ファイルがない'),
     ).toBeVisible()
     await expect(missing.queryByRole('button', { name: '削除' })).toBeNull()
 
-    const redraw = missing.getByRole('button', { name: '作り直す' })
+    const redraw = missing.getByRole('button', { name: '再生成' })
 
     await expect(redraw).toHaveAttribute('data-size', 'sm')
     await expect(
       within(
         canvas.getByRole('row', { name: /recording-4812\.jpg/ }),
-      ).queryByRole('button', { name: '作り直す' }),
+      ).queryByRole('button', { name: '再生成' }),
     ).toBeNull()
 
     await userEvent.click(redraw)
@@ -250,7 +253,7 @@ export const サムネイルが無い: Story = {
     await waitFor(() => expect(redrawnFor).toEqual(['4755']))
     await expect(
       await canvas.findByText(
-        'recording-4755.jpg のサムネイルを作り直しました。',
+        'recording-4755.jpg のサムネイルを再生成しました。',
       ),
     ).toBeVisible()
   },
@@ -267,9 +270,11 @@ export const サムネイルを作り直せなかったとき: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '作り直す' }))
+    await userEvent.click(canvas.getByRole('button', { name: '再生成' }))
     await expect(
-      await canvas.findByText('録画ファイルに到達できません。'),
+      await canvas.findByText(
+        '録画ファイルに到達できないため、サムネイルを再生成できませんでした。',
+      ),
     ).toBeVisible()
   },
 }

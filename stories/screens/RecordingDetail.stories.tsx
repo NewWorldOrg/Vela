@@ -92,7 +92,8 @@ function stillDrawing(): Promise<ThumbnailWrite> {
 async function outOfReach(): Promise<ThumbnailWrite> {
   return {
     state: 'rejected',
-    message: '録画ファイルかサムネイルの保存先に到達できません。',
+    message:
+      '録画ファイルかサムネイルの保存先に到達できないため、サムネイルを再生成できませんでした。',
   }
 }
 
@@ -118,7 +119,8 @@ async function queuing(
 async function alreadyEncoded(): Promise<EncodeWrite> {
   return {
     state: 'rejected',
-    message: 'この録画はこのプロファイルですでにエンコード済みです。',
+    message:
+      'この録画はこのプロファイルですでにエンコード済みのため、登録できませんでした。',
   }
 }
 
@@ -195,7 +197,7 @@ export const 完全: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.getByRole('link', { name: 'この録画の予約' }),
+      canvas.getByRole('link', { name: 'この録画の予約へ' }),
     ).toHaveAttribute('href', '/reservations?show=all#reservation-r-309')
 
     const record = canvasElement.querySelector('details')
@@ -333,7 +335,7 @@ export const スクランブル残存: Story = {
     await userEvent.click(canvas.getByText('技術情報'))
 
     await expect(canvas.getByText('未解除')).toBeVisible()
-    await expect(canvas.getByText('解除できなかったスクランブル')).toBeVisible()
+    await expect(canvas.getAllByText('スクランブル残存').at(-1)).toBeVisible()
     await expect(canvas.getByText('5,042,768 パケット')).toBeVisible()
   },
 }
@@ -369,7 +371,7 @@ export const 完全でもスクランブルが残った: Story = {
       'data-variant',
       'err',
     )
-    await expect(canvas.getAllByText('スクランブル残存')).toHaveLength(1)
+    await expect(canvas.getAllByText('スクランブル残存')).toHaveLength(2)
   },
 }
 
@@ -415,7 +417,6 @@ export const スクランブルを解除した録画: Story = {
     await expect(canvas.getByText('良好')).toBeVisible()
     await expect(canvas.queryByText('視聴不可')).toBeNull()
     await expect(canvas.queryByText('未解除')).toBeNull()
-    await expect(canvas.queryByText('解除できなかったスクランブル')).toBeNull()
     await expect(canvas.queryByText('スクランブル残存')).toBeNull()
   },
 }
@@ -565,7 +566,10 @@ export const 録画中: Story = {
     const remove = canvas.getByRole('button', { name: '削除' })
 
     await expect(remove).toBeDisabled()
-    await expect(remove).toHaveAttribute('title', '録画中は削除できません')
+    await expect(remove).toHaveAttribute(
+      'title',
+      '録画中のため、削除できません。',
+    )
 
     await expect(canvas.getByText('録画中は再生できません')).toBeVisible()
   },
@@ -577,7 +581,7 @@ export const 未計測: Story = {
 
     await expect(canvas.getByText('湾岸放送1')).toBeVisible()
     await expect(
-      canvas.queryByRole('link', { name: 'この録画の予約' }),
+      canvas.queryByRole('link', { name: 'この録画の予約へ' }),
     ).toBeNull()
 
     await userEvent.click(canvas.getByText('技術情報'))
@@ -658,7 +662,7 @@ export const 成果物がある録画は元のままに切り替えられる: St
     await afterTheArrival(canvasElement)
 
     await expect(
-      within(sources).getByRole('button', { name: 'エンコード済み' }),
+      within(sources).getByRole('button', { name: 'エンコード版' }),
     ).toHaveAttribute('aria-pressed', 'true')
 
     await userEvent.click(
@@ -696,14 +700,14 @@ export const サムネイルを作り直す: Story = {
 
     redrawn.length = 0
 
-    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを再生成' })
 
     await expect(redraw).toBeEnabled()
     await userEvent.click(redraw)
     await waitFor(() => expect(redrawn).toEqual(['1274']))
 
     await expect(
-      await canvas.findByText('サムネイルを作り直しました。'),
+      await canvas.findByText('サムネイルを再生成しました。'),
     ).toBeVisible()
 
     await waitFor(() =>
@@ -715,7 +719,7 @@ export const サムネイルを作り直す: Story = {
     await userEvent.click(canvas.getByText('技術情報'))
     await expect(canvas.getByText('生成済み')).toBeVisible()
     await expect(
-      canvas.getAllByRole('button', { name: 'サムネイルを作り直す' }),
+      canvas.getAllByRole('button', { name: 'サムネイルを再生成' }),
     ).toHaveLength(1)
   },
 }
@@ -723,7 +727,7 @@ export const サムネイルを作り直している最中: Story = {
   args: { detail: detail('1274'), onRemakeThumbnail: stillDrawing },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを再生成' })
 
     await userEvent.click(redraw)
 
@@ -734,22 +738,25 @@ export const サムネイルを作り直せない: Story = {
   args: { detail: detail('1291'), playback: refused('stillRecording') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを再生成' })
 
     await expect(redraw).toBeDisabled()
-    await expect(redraw).toHaveAttribute('title', '録画中は作り直せません')
+    await expect(redraw).toHaveAttribute(
+      'title',
+      '録画中のため、再生成できません。',
+    )
   },
 }
 export const 作り直せないファイル不在: Story = {
   args: { detail: detail('0731') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを再生成' })
 
     await expect(redraw).toBeDisabled()
     await expect(redraw).toHaveAttribute(
       'title',
-      'ファイルが見つからないため作り直せません',
+      'ファイルが見つからないため、再生成できません。',
     )
   },
 }
@@ -757,12 +764,12 @@ export const 作り直せない中身なし: Story = {
   args: { detail: { ...detail('1274'), sizeBytes: 0 } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const redraw = canvas.getByRole('button', { name: 'サムネイルを作り直す' })
+    const redraw = canvas.getByRole('button', { name: 'サムネイルを再生成' })
 
     await expect(redraw).toBeDisabled()
     await expect(redraw).toHaveAttribute(
       'title',
-      '中身が書かれていないため作り直せません',
+      '中身が書かれていないため、再生成できません。',
     )
   },
 }
@@ -772,7 +779,7 @@ export const 作り直しの操作子を出さない: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.queryByRole('button', { name: 'サムネイルを作り直す' }),
+      canvas.queryByRole('button', { name: 'サムネイルを再生成' }),
     ).toBeNull()
   },
 }
@@ -782,12 +789,12 @@ export const サムネイルを作り直せなかった: Story = {
     const canvas = within(canvasElement)
 
     await userEvent.click(
-      canvas.getByRole('button', { name: 'サムネイルを作り直す' }),
+      canvas.getByRole('button', { name: 'サムネイルを再生成' }),
     )
 
     await expect(
       await canvas.findByText(
-        '録画ファイルかサムネイルの保存先に到達できません。',
+        '録画ファイルかサムネイルの保存先に到達できないため、サムネイルを再生成できませんでした。',
       ),
     ).toBeVisible()
   },
@@ -798,11 +805,11 @@ export const 作り直しても絵が取れなかった: Story = {
     const canvas = within(canvasElement)
 
     await userEvent.click(
-      canvas.getByRole('button', { name: 'サムネイルを作り直す' }),
+      canvas.getByRole('button', { name: 'サムネイルを再生成' }),
     )
 
     await expect(
-      await canvas.findByText('サムネイルを作り直せませんでした。'),
+      await canvas.findByText('サムネイルを再生成できませんでした。'),
     ).toBeVisible()
 
     await expect(
@@ -849,7 +856,7 @@ export const エンコードの保存先を選ぶ: Story = {
 
     await expect(within(dialog).getByText('棚')).toBeVisible()
     await userEvent.click(
-      within(dialog).getByRole('button', { name: 'エンコード' }),
+      within(dialog).getByRole('button', { name: 'エンコードする' }),
     )
     await waitFor(() =>
       expect(queued).toEqual([['1274', 'ds-1', undefined, false]]),
@@ -865,7 +872,7 @@ export const エンコードを断られた: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'エンコード' }))
     await expect(
       await canvas.findByText(
-        'この録画はこのプロファイルですでにエンコード済みです。',
+        'この録画はこのプロファイルですでにエンコード済みのため、登録できませんでした。',
       ),
     ).toBeVisible()
   },
@@ -895,7 +902,7 @@ export const エンコードの保存先がない: Story = {
     await expect(encode).toBeDisabled()
     await expect(encode).toHaveAttribute(
       'title',
-      '保存先がないためエンコードできません',
+      '保存先がないため、エンコードできません。',
     )
   },
 }
@@ -910,7 +917,7 @@ export const 録画中はエンコードできない: Story = {
     await expect(encode).toBeDisabled()
     await expect(encode).toHaveAttribute(
       'title',
-      '録画中はエンコードできません',
+      '録画中のため、エンコードできません。',
     )
   },
 }
@@ -1085,18 +1092,20 @@ export const 成果物がある録画は再エンコードと言う: Story = {
     await afterTheArrival(canvasElement)
 
     await expect(
-      within(dialog).getByText('いまの成果物は新しいものに置き換わります。'),
+      within(dialog).getByText(
+        'いまのエンコード版は新しいものに置き換わります。',
+      ),
     ).toBeVisible()
     await expect(queued).toEqual([])
 
     await userEvent.click(
-      within(dialog).getByRole('button', { name: '再エンコード' }),
+      within(dialog).getByRole('button', { name: '再エンコードする' }),
     )
     await waitFor(() =>
       expect(queued).toEqual([['1274', 'ds-1', undefined, true]]),
     )
     await expect(
-      await canvas.findByText('作り直しを登録しました。'),
+      await canvas.findByText('再エンコードを登録しました。'),
     ).toBeVisible()
   },
 }
@@ -1120,8 +1129,8 @@ export const 成果物がない録画はこれまでどおり登録する: Story
 }
 
 const THE_ACTIONS = [
-  '外部プレイヤーで開く',
-  'サムネイルを作り直す',
+  '外部プレイヤーで再生',
+  'サムネイルを再生成',
   'エンコード',
   '削除',
 ]
@@ -1236,10 +1245,10 @@ export const 外部プレイヤーはエンコード済みと元のままから�
     const canvas = within(canvasElement)
 
     await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
-    await expect(whatIsHanded()).toEqual(['エンコード済み', '元のまま3.4 GB'])
+    await expect(whatIsHanded()).toEqual(['エンコード版', '元のまま3.4 GB'])
     await expect(waysToHandOver()).toEqual(['URL をコピー'])
     await expect(
-      screen.getByRole('menuitemradio', { name: 'エンコード済み' }),
+      screen.getByRole('menuitemradio', { name: 'エンコード版' }),
     ).toBeChecked()
 
     await userEvent.click(
@@ -1256,7 +1265,9 @@ export const 外部プレイヤーはエンコード済みと元のままから�
     })
 
     await expect(copied[0]).toMatch(THE_RECORDING_ITSELF_BY_TICKET)
-    await expect(await canvas.findByText('URL をコピーしました')).toBeVisible()
+    await expect(
+      await canvas.findByText('URL をコピーしました。'),
+    ).toBeVisible()
   },
 }
 
@@ -1294,20 +1305,20 @@ export const iPad_では外部プレイヤーのアプリで開く: Story = {
   play: async ({ canvasElement }) => {
     await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
     await expect(waysToHandOver()).toEqual([
-      'VLC で開く',
-      'Infuse で開く',
+      'VLC で再生',
+      'Infuse で再生',
       'URL をコピー',
     ])
 
     const left = await whereItLeftFor(async (sent) => {
-      await pressInTheHandoverMenu(canvasElement, 'VLC で開く')
+      await pressInTheHandoverMenu(canvasElement, 'VLC で再生')
       await waitFor(() => expect(sent).toHaveLength(1))
 
       await openTheHandoverMenu(canvasElement)
       await userEvent.click(
         screen.getByRole('menuitemradio', { name: /^元のまま/ }),
       )
-      await pressInTheHandoverMenu(canvasElement, 'Infuse で開く')
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で再生')
       await waitFor(() => expect(sent).toHaveLength(2))
     })
 
@@ -1318,7 +1329,7 @@ export const iPad_では外部プレイヤーのアプリで開く: Story = {
       handedTo('infuse://x-callback-url/play?url=', left[1]),
     ).toMatch(THE_RECORDING_ITSELF_NAMED_BY_ITS_TITLE)
     await expect(
-      within(canvasElement).queryByText('URL をコピーしました'),
+      within(canvasElement).queryByText('URL をコピーしました。'),
     ).toBeNull()
   },
 }
@@ -1328,10 +1339,10 @@ export const Mac_では_Infuse_で開く: Story = {
   beforeEach: browsingAs(A_MAC),
   play: async ({ canvasElement }) => {
     await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
-    await expect(waysToHandOver()).toEqual(['Infuse で開く', 'URL をコピー'])
+    await expect(waysToHandOver()).toEqual(['Infuse で再生', 'URL をコピー'])
 
     const left = await whereItLeftFor(async (sent) => {
-      await pressInTheHandoverMenu(canvasElement, 'Infuse で開く')
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で再生')
       await waitFor(() => expect(sent).toHaveLength(1))
     })
 
@@ -1347,7 +1358,9 @@ export const URL_をコピーできなかったらその場で言う: Story = {
     const copied = await whatWasCopied(async () => {
       await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
       await expect(
-        await within(canvasElement).findByText('URL をコピーできません'),
+        await within(canvasElement).findByText(
+          'URL をコピーできませんでした。',
+        ),
       ).toBeVisible()
     }, false)
 

@@ -151,14 +151,11 @@ export function RecordingRecord({
           />
         )}
         {d.scramble && (
-          <DetailKeyRow
-            label="解除できなかったスクランブル"
-            main={d.scramble.main}
-          />
+          <DetailKeyRow label="スクランブル残存" main={d.scramble.main} />
         )}
         {d.eoverflow && <DetailKeyRow label="取りこぼし" main={d.eoverflow} />}
         {d.tunerUnit && (
-          <DetailKeyRow label="使ったチューナー" main={d.tunerUnit.main} />
+          <DetailKeyRow label="使用チューナー" main={d.tunerUnit.main} />
         )}
 
         <Caption>
@@ -169,7 +166,7 @@ export function RecordingRecord({
           <>
             <DetailKeyRow label="ファイル" main={d.reconcile.size} />
             <DetailKeyRow
-              label="書かれた長さ"
+              label="長さ(実績)"
               main={d.reconcile.written}
               sub={`予定 ${d.reconcile.planned}`}
             />

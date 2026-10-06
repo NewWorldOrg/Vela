@@ -28,10 +28,10 @@ import { MigrationRunRow } from '@/components/migration/migration-run-row'
 const NOT_TAKEN_COLUMNS: { label: string; width: string }[] = [
   { label: '対象', width: 'calc(220rem/16)' },
   { label: '母集団', width: 'calc(160rem/16)' },
-  { label: '記録した事実', width: 'calc(480rem/16)' },
+  { label: '記録内容', width: 'calc(480rem/16)' },
 ]
 
-const NO_LOSSES = '該当なし'
+const NO_LOSSES = '対象なし'
 
 export function MigrationReport({ result }: { result: MigrationResult }) {
   const { run } = result
@@ -85,13 +85,13 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               <div className="flex flex-wrap items-center gap-2">
                 <MigrationCountCell
                   tint="bg-tint-sage"
-                  label="取り込んだ"
+                  label="取り込み済み"
                   value={population.taken}
                   unit={population.unit}
                 />
                 <MigrationCountCell
                   tint="bg-tint-salmon"
-                  label="取り込まなかった"
+                  label="未取り込み"
                   value={population.notTaken}
                   unit={population.unit}
                 />
@@ -129,9 +129,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkType}>
-          取り込まなかったものの明細
-        </SectionHeading>
+        <SectionHeading mark={MarkType}>未取り込みの明細</SectionHeading>
         <Table
           className="table-fixed min-w-[calc(860rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
@@ -199,9 +197,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkSlashes}>
-          運んだものに残った欠け
-        </SectionHeading>
+        <SectionHeading mark={MarkSlashes}>移行後の欠落</SectionHeading>
         <div className="space-y-2">
           {result.losses.map((loss) => (
             <Surface key={loss.id} className="text-ui">

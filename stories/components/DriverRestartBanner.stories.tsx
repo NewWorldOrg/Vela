@@ -106,12 +106,12 @@ export const driver未接続: Story = {
 
 export const driverが未対応: Story = {
   args: { onRestart: answering({ state: 'unsupported' }) },
-  play: press('再起動の要求に対応していません'),
+  play: press('再起動の要求に対応していないため'),
 }
 
 export const ビルドが揃っていない: Story = {
   args: { onRestart: answering({ state: 'mismatched' }) },
-  play: press('要求には応答しません'),
+  play: press('要求に応答しないため'),
 }
 
 export const サインインが切れている: Story = {

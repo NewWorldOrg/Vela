@@ -197,7 +197,7 @@ export const 優先度を上げて競合になった予約を示す: Story = {
     await expect(canvas.queryByText('次の予約が競合になりました。')).toBeNull()
 
     await userEvent.click(
-      canvas.getByRole('button', { name: 'この予約の優先度を上げる' }),
+      canvas.getByRole('button', { name: 'この予約を優先' }),
     )
 
     const notice = (
@@ -222,11 +222,11 @@ export const 優先度を上げても何も落ちなければ何も言わない:
 
     await afterTheArrival(canvasElement)
     await userEvent.click(
-      canvas.getByRole('button', { name: 'この予約の優先度を上げる' }),
+      canvas.getByRole('button', { name: 'この予約を優先' }),
     )
     await waitFor(() =>
       expect(
-        canvas.getByRole('button', { name: 'この予約の優先度を上げる' }),
+        canvas.getByRole('button', { name: 'この予約を優先' }),
       ).toBeEnabled(),
     )
     await expect(canvas.queryByText('次の予約が競合になりました。')).toBeNull()
@@ -248,12 +248,10 @@ export const 編集で競合になった予約を示す: Story = {
     const canvas = within(canvasElement)
 
     await afterTheArrival(canvasElement)
-    await userEvent.click(canvas.getAllByRole('button', { name: '編集' })[0])
+    await userEvent.click(canvas.getAllByRole('button', { name: '変更' })[0])
     const dialog = within(await screen.findByRole('dialog'))
 
-    await userEvent.click(
-      dialog.getByRole('switch', { name: 'エンコードする' }),
-    )
+    await userEvent.click(dialog.getByRole('switch', { name: 'エンコード' }))
     await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
 
     await expect(
@@ -281,20 +279,20 @@ export const 終わった予約: Story = {
 
     await expect(
       canvas
-        .getAllByRole('link', { name: 'この予約の録画' })
+        .getAllByRole('link', { name: 'この予約の録画へ' })
         .map((one) => one.getAttribute('href')),
     ).toEqual(['/recordings/1247', '/recordings/1274'])
 
     for (const [title, state] of [
       ['朝のニュース', '取消済み'],
       ['山あいの町から', '確保済み'],
-      ['午後のロードショー', '撮り逃し'],
+      ['午後のロードショー', '録り逃し'],
     ]) {
       const row = rowFor(canvas.getByText(title))
 
       await expect(within(row).getByText(state)).toBeInTheDocument()
       await expect(
-        within(row).queryByRole('link', { name: 'この予約の録画' }),
+        within(row).queryByRole('link', { name: 'この予約の録画へ' }),
       ).toBeNull()
     }
 
@@ -305,7 +303,7 @@ export const 終わった予約: Story = {
       await tipIn(cellOf(removed, THE_STATE_COLUMN)),
     ).toHaveTextContent('完了')
     await expect(
-      within(removed).queryByRole('link', { name: 'この予約の録画' }),
+      within(removed).queryByRole('link', { name: 'この予約の録画へ' }),
     ).toBeNull()
 
     for (const title of ['週末キッチンの手帖', '真夜中の音楽室']) {
@@ -392,7 +390,7 @@ export const 録画が削除された予約: Story = {
     }
 
     await expect(
-      canvas.queryAllByRole('link', { name: 'この予約の録画' }),
+      canvas.queryAllByRole('link', { name: 'この予約の録画へ' }),
     ).toEqual([])
   },
 }
@@ -446,7 +444,7 @@ const STANDING_WORDS = {
   scheduled: '確保済み',
   conflict: '競合',
   cancelled: '取消済み',
-  missed: '撮り逃し',
+  missed: '録り逃し',
   recording: '録画中',
   complete: '完了',
   truncated: '尻切れ',
@@ -497,10 +495,10 @@ export const 未完了が一件も無い: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.getByRole('heading', { name: '未完了の予約はありません' }),
+      canvas.getByRole('heading', { name: '未完了の予約がありません' }),
     ).toBeVisible()
     await expect(
-      canvas.getByRole('button', { name: '条件を消す' }),
+      canvas.getByRole('button', { name: '条件を解除' }),
     ).toBeEnabled()
     await expect(canvas.queryByRole('table')).toBeNull()
   },
@@ -512,10 +510,10 @@ export const 予約が一件も無い: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.getByRole('heading', { name: '予約はありません' }),
+      canvas.getByRole('heading', { name: '予約がありません' }),
     ).toBeVisible()
     await expect(
-      canvas.queryByRole('button', { name: '条件を消す' }),
+      canvas.queryByRole('button', { name: '条件を解除' }),
     ).toBeNull()
     await expect(canvas.getByRole('link', { name: '予約を追加' })).toBeVisible()
   },
@@ -566,7 +564,7 @@ export const 一括で選んで削除する: Story = {
     const bar = within(chosenBar(canvas))
 
     await expect(bar.getByText('2')).toBeVisible()
-    await expect(bar.getByRole('button', { name: '取り消す' })).toBeDisabled()
+    await expect(bar.getByRole('button', { name: '取り消し' })).toBeDisabled()
 
     await userEvent.click(bar.getByRole('button', { name: '削除' }))
 
@@ -598,7 +596,7 @@ export const 一括で選んで取り消す: Story = {
 
     const whole = within(chosenBar(canvas))
 
-    await expect(whole.getByRole('button', { name: '取り消す' })).toBeDisabled()
+    await expect(whole.getByRole('button', { name: '取り消し' })).toBeDisabled()
     await expect(whole.getByRole('button', { name: '削除' })).toBeDisabled()
 
     await userEvent.click(all)
@@ -613,7 +611,7 @@ export const 一括で選んで取り消す: Story = {
 
     await expect(some.getByRole('button', { name: '削除' })).toBeDisabled()
 
-    await userEvent.click(some.getByRole('button', { name: '取り消す' }))
+    await userEvent.click(some.getByRole('button', { name: '取り消し' }))
     await waitFor(() => expect(cancelledTogether).toEqual(['r-301', 'r-302']))
   },
 }
@@ -720,7 +718,7 @@ export const 予約ごとにエンコードを切り替える: Story = {
 
     await userEvent.click(
       within(rowFor(canvas.getByText('深夜アニメ劇場'))).getByRole('button', {
-        name: '編集',
+        name: '変更',
       }),
     )
 
@@ -729,7 +727,7 @@ export const 予約ごとにエンコードを切り替える: Story = {
     await afterTheArrival(canvasElement)
 
     await expect(
-      first.getByRole('switch', { name: 'エンコードする' }),
+      first.getByRole('switch', { name: 'エンコード' }),
     ).toBeChecked()
 
     await userEvent.click(first.getByRole('button', { name: 'キャンセル' }))
@@ -738,14 +736,14 @@ export const 予約ごとにエンコードを切り替える: Story = {
     await userEvent.click(
       within(rowFor(canvas.getByText('ナイター中継 延長あり'))).getByRole(
         'button',
-        { name: '編集' },
+        { name: '変更' },
       ),
     )
 
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    const encode = dialog.getByRole('switch', { name: 'エンコードする' })
+    const encode = dialog.getByRole('switch', { name: 'エンコード' })
 
     await expect(encode).not.toBeChecked()
 
@@ -778,7 +776,7 @@ export const 必須の欄は印が付いていて空では保存できない: St
 
     await userEvent.click(
       within(rowFor(canvas.getByText('深夜アニメ劇場'))).getByRole('button', {
-        name: '編集',
+        name: '変更',
       }),
     )
 
@@ -926,7 +924,7 @@ export const 中継で分かれた放送: Story = {
 
       await expect(row).toHaveAttribute('id', `reservation-${id}`)
       await expect(
-        within(row).getByRole('button', { name: '取り消す' }),
+        within(row).getByRole('button', { name: '取り消し' }),
       ).toBeVisible()
     }
 

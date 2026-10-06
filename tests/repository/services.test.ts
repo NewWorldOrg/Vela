@@ -420,8 +420,8 @@ test('a candidate taken out of the rotation is counted as needing attention', as
 
   assert.deepEqual(row.candidates[1].rotation, {
     dropped: true,
-    label: '要確認 · 連続失敗 12 回',
-    note: '巡回対象から外しました',
+    label: '要確認',
+    note: '連続失敗 12 回 · 巡回対象から外しました',
   })
   assert.equal(row.needsAttentionCount, 1)
 })
@@ -450,10 +450,13 @@ test('a candidate backing off says when it is tried next, or that it will be', a
 
   assert.deepEqual(row.candidates[0].rotation, {
     dropped: false,
-    label: '再試行待ち · 連続失敗 3 回',
-    note: `次の試行 ${formatMoment(next)}`,
+    label: '再試行待ち',
+    note: `連続失敗 3 回 · 次の試行 ${formatMoment(next)}`,
   })
-  assert.equal(row.candidates[1].rotation?.note, '間隔を空けて試し直します')
+  assert.equal(
+    row.candidates[1].rotation?.note,
+    '連続失敗 4 回 · 間隔を空けて試し直します',
+  )
   assert.equal(row.needsAttentionCount, 0)
 })
 
@@ -598,14 +601,14 @@ test('a refusal the API sends in its body is read as the screen being unavailabl
   replies.set('GET /api/services', refusing(500))
   assert.deepEqual(await getChannels(), {
     state: 'unavailable',
-    message: 'しばらくしてからもう一度試してください。',
+    message: '時間をおいてからもう一度お試しください。',
   })
 
   standing()
   replies.set('GET /api/tuners/scan-runs', refusing(503))
   assert.deepEqual(await getChannels(), {
     state: 'unavailable',
-    message: 'しばらくしてからもう一度試してください。',
+    message: '時間をおいてからもう一度お試しください。',
   })
 })
 
@@ -717,7 +720,7 @@ test('an empty group is diagnosed from the last finished run that walked it', as
       { class: INCOMPLETE_TABLES, count: 0 },
       { class: UNEXPECTED_STREAM, count: 0 },
     ],
-    verdict: '走査した 2 件すべてが「1 信号を掴めない」で止まっています。',
+    verdict: 'スキャンした 2 件すべてが「1 信号を掴めない」で止まっています。',
   })
   assert.equal(isdbSBs.diagnosis?.attempted, 1)
   assert.equal(isdbSCs110.diagnosis, undefined)
@@ -837,7 +840,7 @@ test('a running scan the API could not describe is still shown, with why', async
       reason: undefined,
     },
     message:
-      'スキャンの状況を読み取れませんでした。しばらくしてからもう一度試してください。',
+      'スキャンの状況を読み取れませんでした。時間をおいてからもう一度お試しください。',
   })
 
   standing([service()], [run({ state: 'running', finishedAt: null })])
@@ -1159,14 +1162,14 @@ test('a proposal that cannot be opened says why', async () => {
   assert.deepEqual(await getScanProposal('scan-1'), {
     state: 'unavailable',
     message:
-      'スキャンの状況を読み取れませんでした。しばらくしてからもう一度試してください。',
+      'スキャンの状況を読み取れませんでした。時間をおいてからもう一度お試しください。',
   })
 
   progressOf('scan-1', { status: 502 })
   assert.deepEqual(await getScanProposal('scan-1'), {
     state: 'unavailable',
     message:
-      'スキャンの状況を読み取れませんでした。しばらくしてからもう一度試してください。',
+      'スキャンの状況を読み取れませんでした。時間をおいてからもう一度お試しください。',
   })
 
   progressOf('scan-1', ok(progress()))
@@ -1253,7 +1256,7 @@ test('a scan over a channel the API does not take is refused as the entry it was
     {
       state: 'rejected',
       message:
-        '物理チャンネルの指定が受け付けられませんでした。値を確かめてください。',
+        '物理チャンネルの指定が正しくないため、スキャンを開始できませんでした。値を確かめてください。',
     },
   )
 })
@@ -1287,7 +1290,7 @@ test('a scan refused for want of a tuner, or for anything else, is rejected with
   assert.equal(busy.state, 'rejected')
   assert.match(
     busy.state === 'rejected' ? busy.message : '',
-    /チューナーが空いていません/,
+    /チューナーが空いていないため/,
   )
 
   replies.set('POST /api/tuners/scan', refusing(500))
@@ -1295,7 +1298,7 @@ test('a scan refused for want of a tuner, or for anything else, is rejected with
   assert.deepEqual(await startScan({ over: 'systems', systems: ['isdbT'] }), {
     state: 'rejected',
     message:
-      'スキャンを開始できませんでした。しばらくしてからもう一度試してください。',
+      'スキャンを開始できませんでした。時間をおいてからもう一度お試しください。',
   })
 })
 
@@ -1332,7 +1335,7 @@ const WRITES: {
     call: () => cancelScan('scan-1'),
     sent: { method: 'POST', path: '/api/tuners/scan/scan-1/cancel' },
     refusals: { 404: /すでに終わっている/, 409: /すでに終わっている/ },
-    fallback: 'スキャンをキャンセルできませんでした。',
+    fallback: 'スキャンを中止できませんでした。',
   },
   {
     name: 'applying a scan',
@@ -1340,7 +1343,7 @@ const WRITES: {
     sent: { method: 'POST', path: '/api/tuners/scan/scan-1/apply' },
     refusals: {
       404: /残っていない/,
-      409: /別の保存が処理しています/,
+      409: /別の保存が処理中のため/,
       410: /もう保持されていない/,
     },
     fallback: 'スキャンの結果を保存できませんでした。',
@@ -1366,7 +1369,7 @@ const WRITES: {
     refusals: {
       400: /物理チャンネルの指定/,
       404: /サービスが見つからない/,
-      409: /すでに候補として登録されています/,
+      409: /すでに候補として登録されているため/,
       422: /受信できるチューナーがない/,
       503: /driver に接続できない/,
     },
@@ -1430,7 +1433,7 @@ for (const write of WRITES) {
     replies.set(key, refusing(500))
     assert.deepEqual(await write.call(), {
       state: 'rejected',
-      message: `${write.fallback.replace(/。$/, '')}。しばらくしてからもう一度試してください。`,
+      message: `${write.fallback.replace(/。$/, '')}。時間をおいてからもう一度お試しください。`,
     })
 
     replies.set(key, { status: 401 })

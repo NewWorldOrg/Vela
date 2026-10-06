@@ -176,7 +176,7 @@ export const getUnaskedPlaybackProfile = cache(
 const TICKET_REFUSAL: Partial<Record<number, string>> = {
   400: 'この録画の指定が正しくないため、外部プレイヤーの札を発行できませんでした。',
   404: 'この録画は残っていないため、外部プレイヤーの札を発行できませんでした。',
-  409: 'この録画はまだ書き込み中のため、外部プレイヤーの札を発行できません。',
+  409: 'この録画はまだ書き込み中のため、外部プレイヤーの札を発行できませんでした。',
 }
 
 export async function takePlaybackTicket(id: string): Promise<TicketWrite> {

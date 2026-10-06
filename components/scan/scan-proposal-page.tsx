@@ -106,10 +106,11 @@ function DepartureRows({ departures }: { departures: RotationDeparture[] }) {
               {departure.channel}
             </span>
             <Badge variant="warn" className="font-bold">
-              要確認 · 連続失敗 {departure.consecutiveFailures} 回
+              要確認
             </Badge>
             <span className="font-code text-cap tabular-nums text-ink-3">
-              {departure.since} から
+              連続失敗 {departure.consecutiveFailures} 回 · {departure.since}{' '}
+              から
             </span>
             <span className="ml-auto font-code text-cap text-ink-3">
               {departure.key}
@@ -199,7 +200,7 @@ export function ScanProposalView({
     return (
       <>
         {crumb}
-        <PageHeading>スキャン結果の確認</PageHeading>
+        <PageHeading>スキャン結果</PageHeading>
         <EmptyState
           titleLevel={2}
           title={
@@ -212,7 +213,7 @@ export function ScanProposalView({
           className="mt-4"
           action={
             <Button variant="watch" asChild>
-              <Link href={'/settings/channels' as Route}>チャンネルへ戻る</Link>
+              <Link href={'/settings/channels' as Route}>チャンネルへ</Link>
             </Button>
           }
         >
@@ -231,13 +232,13 @@ export function ScanProposalView({
   return (
     <>
       {crumb}
-      <PageHeading>スキャン結果の確認</PageHeading>
+      <PageHeading>スキャン結果</PageHeading>
 
       <div className="mt-4 flex flex-wrap items-start gap-3 rounded-xl bg-surface px-[calc(18rem/16)] py-4">
         <SearchIcon className="mt-1 size-[calc(17rem/16)] shrink-0 text-brand" />
         <div className="min-w-0 flex-1">
           <h2 className="heading text-ui leading-[1.5]">
-            走査が{proposal.run.stateLabel}しました
+            スキャン{proposal.run.stateLabel}
           </h2>
           <p className="text-ui text-ink-2">
             {proposal.run.finishedAt ?? proposal.run.startedAt} · 所要{' '}
@@ -257,7 +258,7 @@ export function ScanProposalView({
 
       {proposal.empty ? (
         <EmptyState className="max-w-[calc(520rem/16)]">
-          今回の走査で変わるものはありませんでした。
+          今回のスキャンで変わるものはありませんでした。
         </EmptyState>
       ) : (
         <>

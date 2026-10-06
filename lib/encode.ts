@@ -146,7 +146,7 @@ export function rateControlProblem(value: string): string | undefined {
   const read = Number(trimmed)
 
   if (read < RATE_CONTROL_FINEST || read > RATE_CONTROL_COARSEST) {
-    return `${RATE_CONTROL_FINEST} 〜 ${RATE_CONTROL_COARSEST} です。`
+    return `品質は ${RATE_CONTROL_FINEST} 〜 ${RATE_CONTROL_COARSEST} です。`
   }
 
   return undefined

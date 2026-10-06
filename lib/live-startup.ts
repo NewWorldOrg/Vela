@@ -23,7 +23,7 @@ export const STARTUP_ROWS: {
   {
     segment: 'transcoderStarted',
     begins: 'transcoderStarted',
-    label: 'トランスコーダ起動',
+    label: 'トランスコーダー起動',
   },
   { segment: 'firstPicture', begins: 'initReached', label: '最初の絵' },
 ]

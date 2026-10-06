@@ -22,9 +22,9 @@ export function AddDestinationDialog({
   const [open, setOpen] = useState(false)
   const refused =
     profiles.length === 0
-      ? 'プロファイルがないため追加できません'
+      ? 'プロファイルがないため、追加できません。'
       : roots.length === 0
-        ? '選べる出力ルートがないため追加できません'
+        ? '選べる出力ルートがないため、追加できません。'
         : undefined
 
   return (

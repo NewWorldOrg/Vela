@@ -1,5 +1,5 @@
 /** What a refusal says when nothing more is known about why: a wording for the reader, never a status code. */
-export const TRY_AGAIN_LATER = 'しばらくしてからもう一度試してください。'
+export const TRY_AGAIN_LATER = '時間をおいてからもう一度お試しください。'
 
 /** The whole sentence for a failure that has no lead of its own on the screen. */
 export const IT_DID_NOT_WORK = `うまくいきませんでした。${TRY_AGAIN_LATER}`

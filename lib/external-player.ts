@@ -204,12 +204,12 @@ const THE_APPS: Record<
   { says: string; opens: string; takes: keyof Handed }
 > = {
   vlc: {
-    says: 'VLC で開く',
+    says: 'VLC で再生',
     opens: 'vlc-x-callback://x-callback-url/stream?url=',
     takes: 'href',
   },
   infuse: {
-    says: 'Infuse で開く',
+    says: 'Infuse で再生',
     opens: 'infuse://x-callback-url/play?url=',
     takes: 'named',
   },

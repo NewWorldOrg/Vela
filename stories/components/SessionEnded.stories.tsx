@@ -112,7 +112,7 @@ export const 番組表: Story = {
     await expect(retries).toHaveLength(0)
     await expect(streams).toHaveLength(1)
     await expect(
-      canvas.getByRole('link', { name: 'ログイン' }),
+      canvas.getByRole('link', { name: 'サインインへ' }),
     ).toHaveAttribute('href', '/login?next=%2Fguide')
   },
 }
@@ -137,7 +137,7 @@ export const 絞り込んだ番組表: Story = {
     await waitFor(() => canvas.getByText(ENDED))
 
     await expect(
-      canvas.getByRole('link', { name: 'ログイン' }),
+      canvas.getByRole('link', { name: 'サインインへ' }),
     ).toHaveAttribute(
       'href',
       '/login?next=%2Fguide%3Fkind%3Dbs%26date%3D2026-08-19',

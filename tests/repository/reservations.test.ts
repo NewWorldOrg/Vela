@@ -536,7 +536,7 @@ test('a field the guide moved that this build cannot name is still said out loud
   })
 
   assert.deepEqual(one.epg?.changes, [
-    { field: 'この版がまだ知らない値', before: '—', after: 'あとの値' },
+    { field: '未知の値', before: '—', after: 'あとの値' },
   ])
 })
 
@@ -1007,7 +1007,7 @@ test('a broadcast the guide no longer holds is refused before it is asked for', 
   assert.deepEqual(result, {
     state: 'rejected',
     message:
-      'この番組は番組表にもう無いため、予約できませんでした。番組表を読み直してください。',
+      'この番組は番組表にもうないため、予約できませんでした。番組表を読み直してください。',
   })
   assert.equal(
     sent.some((one) => one.method === 'POST'),
@@ -1024,7 +1024,7 @@ test('a broadcast already reserved is sent back to the list, not reserved twice'
   assert.deepEqual(result, {
     state: 'rejected',
     message:
-      'この番組はすでに予約されています。取り消した予約も残るため、作り直すのではなく予約一覧から復元してください。',
+      'この番組はすでに予約されているため、予約できませんでした。取り消した予約は予約一覧から復元してください。',
   })
 })
 
@@ -1236,7 +1236,7 @@ test('a status with no reading of its own keeps the number beside it', async () 
   assert.deepEqual(result, {
     state: 'rejected',
     message:
-      '予約を復元できませんでした。しばらくしてからもう一度試してください。',
+      '予約を復元できませんでした。時間をおいてからもう一度お試しください。',
   })
 })
 
@@ -1541,7 +1541,7 @@ test('a refusal with no reason of its own asks to try again later', async () => 
   assert.equal(result.state, 'rejected')
   assert.match(
     result.state === 'rejected' ? result.message : '',
-    /しばらくしてからもう一度試してください。$/,
+    /時間をおいてからもう一度お試しください。$/,
   )
 })
 

@@ -202,7 +202,7 @@ export function RecordingRow({
           <Button
             variant="remove"
             size="sm"
-            title={deletable ? undefined : '録画中は削除できません'}
+            title={deletable ? undefined : '録画中のため、削除できません。'}
             disabled={!deletable}
             onClick={onDelete}
           >
@@ -219,7 +219,7 @@ export function RecordingRow({
       >
         <Link
           href={`/recordings/${r.id}`}
-          aria-label="詳細へ"
+          aria-label="録画詳細へ"
           onClick={(event) => event.stopPropagation()}
           className={cn(
             DETAIL_CELL,

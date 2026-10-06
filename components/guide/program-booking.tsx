@@ -109,11 +109,11 @@ export function ProgramBooking({
         <ActionRow>
           <Button variant="change" size="sm" onClick={() => setEditing(true)}>
             <EditIcon />
-            予約を編集
+            予約を変更
           </Button>
           <Button variant="halt" size="sm" disabled={pending} onClick={drop}>
             <CloseIcon />
-            予約を取り消す
+            予約を取り消し
           </Button>
         </ActionRow>
         {refusal && (

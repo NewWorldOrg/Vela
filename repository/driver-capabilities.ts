@@ -35,7 +35,7 @@ const CAPABILITY_LABEL: Record<string, string> = {
   recordingExtension: '録画の延長',
   storage: '保存先',
   recordingErasure: '録画の削除',
-  strayFileErasure: '記録に無いファイルの削除',
+  strayFileErasure: '記録にないファイルの削除',
   lnbPowerSwitch: 'LNB 給電の切り替え',
 }
 

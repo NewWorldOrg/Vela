@@ -18,15 +18,21 @@ import { RebuildIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 
 const DREW: Record<ThumbnailRemake, { drew: boolean; text: string }> = {
-  drawn: { drew: true, text: 'サムネイルを作り直しました。' },
+  drawn: { drew: true, text: 'サムネイルを再生成しました。' },
   skipped: { drew: false, text: 'この録画にサムネイルは作成されません。' },
-  failed: { drew: false, text: 'サムネイルを作り直せませんでした。' },
-  nothingToAskAbout: { drew: false, text: 'この録画は残っていません。' },
+  failed: { drew: false, text: 'サムネイルを再生成できませんでした。' },
+  nothingToAskAbout: {
+    drew: false,
+    text: 'この録画は残っていないため、サムネイルを再生成できませんでした。',
+  },
   nowhereToPutThem: {
     drew: false,
-    text: 'サムネイルの保存先に到達できません。',
+    text: 'サムネイルの保存先に到達できないため、サムネイルを再生成できませんでした。',
   },
-  outOfReach: { drew: false, text: '録画ファイルに到達できません。' },
+  outOfReach: {
+    drew: false,
+    text: '録画ファイルに到達できないため、サムネイルを再生成できませんでした。',
+  },
 }
 
 const NOT_YET_DREW = { drew: false, text: NOT_YET_IN_THIS_BUILD_SAYING }
@@ -42,15 +48,15 @@ export function remadeSaying(result: ThumbnailWrite): {
 
 function refusing(recording: Recording): string | undefined {
   if (recording.outcome === 'recording') {
-    return '録画中は作り直せません'
+    return '録画中のため、再生成できません。'
   }
 
   if (recording.fileMissing) {
-    return 'ファイルが見つからないため作り直せません'
+    return 'ファイルが見つからないため、再生成できません。'
   }
 
   if (recording.sizeBytes === 0) {
-    return '中身が書かれていないため作り直せません'
+    return '中身が書かれていないため、再生成できません。'
   }
 
   return undefined
@@ -99,7 +105,7 @@ export function ThumbnailButton({
         onClick={redraw}
       >
         {pending ? <Spinner size="control" /> : <RebuildIcon />}
-        サムネイルを作り直す
+        サムネイルを再生成
       </Button>
       {notice && (
         <p

@@ -80,7 +80,7 @@ const UNREADABLE = '移行記録を読めませんでした'
 
 const MOST_PER_PAGE = 500
 
-const NOTHING_IN_THIS_GROUP = '該当なし'
+const NOTHING_IN_THIS_GROUP = '対象なし'
 
 interface PopulationShape {
   name: string
@@ -93,7 +93,7 @@ const POPULATION_SHAPES: Record<Population, PopulationShape> = {
   recordings: {
     name: '録画',
     source: 'recorded',
-    unit: '本',
+    unit: '件',
     link: { href: '/library', label: 'ライブラリへ' },
   },
   recordingFiles: {
@@ -105,7 +105,7 @@ const POPULATION_SHAPES: Record<Population, PopulationShape> = {
     name: 'ルール',
     source: 'rule',
     unit: '件',
-    link: { href: '/reservations/rules', label: 'ルール一覧へ' },
+    link: { href: '/reservations/rules', label: 'ルールへ' },
   },
   reservations: { name: '予約', source: 'reserve', unit: '件' },
   channelDefinitions: { name: 'チャンネル定義', source: 'channel', unit: '件' },
@@ -124,7 +124,7 @@ const REFUSAL_LABEL: Record<Refusal, string> = {
   orphan: '孤児',
   unidentifiable: '同定不能',
   inexpressible: '型として表現不能',
-  noSuchFeature: '本システムに機能が無い',
+  noSuchFeature: '本システムに機能がない',
   outOfScope: '対象外',
 }
 
@@ -132,8 +132,8 @@ const THE_NAME_IS_ALREADY_THE_REASON = null
 
 const REFUSAL_REASON: Record<Refusal, string | null> = {
   reallyEmpty: '記録されたサイズに対して実ファイルが空',
-  fileMissing: '台帳に行があるが実ファイルが無い',
-  orphan: '対応する台帳の行が無い',
+  fileMissing: '台帳に行があるが実ファイルがない',
+  orphan: '対応する台帳の行がない',
   unidentifiable: '再スキャン結果と対応が付かない',
   inexpressible: 'この種別は本システムの型に存在しない',
   noSuchFeature: THE_NAME_IS_ALREADY_THE_REASON,
@@ -158,7 +158,7 @@ const LOSS_SHAPES: Record<LossSubject, LossShape> = {
   },
   enclosedCharacters: {
     subject: '番組名の囲み文字',
-    fact: (affected) => `運んだ ${affected} 本の題名が元の文字に戻せない`,
+    fact: (affected) => `運んだ ${affected} 件の題名が元の文字に戻せない`,
   },
   dayBoundary: {
     subject: '曜日で絞ったルール',

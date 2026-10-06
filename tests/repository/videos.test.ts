@@ -633,7 +633,7 @@ test('a refused ticket is worded, and the status is not left to speak', async ()
   assert.equal(write.state, 'refused')
   assert.equal(
     write.state === 'refused' && write.message,
-    '発行の上限に達しています。しばらく待つと発行できます。',
+    '発行の上限に達しているため、外部プレイヤーの札を発行できませんでした。時間をおいてからもう一度お試しください。',
   )
 })
 
@@ -652,7 +652,7 @@ test('a status nobody worded still says something', async () => {
 
   assert.equal(
     write.state === 'refused' && write.message,
-    '外部プレイヤーの札を発行できませんでした。しばらくしてからもう一度試してください。',
+    '外部プレイヤーの札を発行できませんでした。時間をおいてからもう一度お試しください。',
   )
 })
 

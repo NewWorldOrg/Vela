@@ -16,7 +16,7 @@ const GONE =
   'このスキャンの差分はもう保持されていないため、保存できませんでした。別の保存が先に完了した可能性があります。チャンネル一覧を確かめ、反映されていなければスキャンし直してください。'
 
 const HELD =
-  'このスキャンの差分は別の保存が処理しています。この操作では何も書き換えられていません。少し待ってから状態を読み直してください。'
+  'このスキャンの差分は別の保存が処理中のため、保存できませんでした。この操作では何も書き換えられていません。少し待ってから状態を読み直してください。'
 
 const accept = async (): Promise<WriteResult> => ({ state: 'ok' })
 const refuse = async (): Promise<WriteResult> => ({
@@ -132,7 +132,7 @@ export const この版の知らない結果の失敗: Story = {
 
     const row = within(canvasElement).getByRole('row', { name: /57ch/ })
 
-    await expect(within(row).getByText('この版がまだ知らない値')).toBeVisible()
+    await expect(within(row).getByText('未知の値')).toBeVisible()
     await expect(within(row).queryByText('サービスを取得')).toBeNull()
   },
 }

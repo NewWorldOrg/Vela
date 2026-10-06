@@ -180,13 +180,13 @@ for (const zone of ZONES) {
 }
 
 test('a span shown to the millisecond keeps the three digits it was given', () => {
-  assert.equal(formatSpanToTheMillisecond(0), '0.000秒')
-  assert.equal(formatSpanToTheMillisecond(7), '0.007秒')
-  assert.equal(formatSpanToTheMillisecond(482), '0.482秒')
-  assert.equal(formatSpanToTheMillisecond(1000), '1.000秒')
-  assert.equal(formatSpanToTheMillisecond(59999), '59.999秒')
-  assert.equal(formatSpanToTheMillisecond(60000), '1分0.000秒')
-  assert.equal(formatSpanToTheMillisecond(402000 + 250), '6分42.250秒')
+  assert.equal(formatSpanToTheMillisecond(0), '0.000 秒')
+  assert.equal(formatSpanToTheMillisecond(7), '0.007 秒')
+  assert.equal(formatSpanToTheMillisecond(482), '0.482 秒')
+  assert.equal(formatSpanToTheMillisecond(1000), '1.000 秒')
+  assert.equal(formatSpanToTheMillisecond(59999), '59.999 秒')
+  assert.equal(formatSpanToTheMillisecond(60000), '1 分 0.000 秒')
+  assert.equal(formatSpanToTheMillisecond(402000 + 250), '6 分 42.250 秒')
 })
 
 test('the summer of a zone that keeps daylight saving does not shift it', () => {
@@ -247,8 +247,8 @@ test('formatLength drops the hour when there is none', () => {
 })
 
 test('formatSpan spells an elapsed span in Japanese', () => {
-  assert.equal(formatSpan(32), '32秒')
-  assert.equal(formatSpan(392), '6分32秒')
+  assert.equal(formatSpan(32), '32 秒')
+  assert.equal(formatSpan(392), '6 分 32 秒')
 })
 
 inEveryZone(

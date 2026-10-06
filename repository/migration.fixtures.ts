@@ -8,7 +8,7 @@ export const MIGRATION: MigrationResult = {
     rehearsals: '下見 4 回',
     startedAt: '2026/08/10 03:12',
     finishedAt: '2026/08/10 03:18',
-    duration: '所要 6分42秒',
+    duration: '所要 6 分 42 秒',
     source: '現行の録画システム',
     lastRehearsal: '2026/08/09 22:41',
   },
@@ -17,7 +17,7 @@ export const MIGRATION: MigrationResult = {
       name: '録画',
       source: 'recorded',
       total: '31',
-      unit: '本',
+      unit: '件',
       taken: '29',
       notTaken: '2',
       unclassified: '0',
@@ -40,7 +40,7 @@ export const MIGRATION: MigrationResult = {
       taken: '7',
       notTaken: '1',
       unclassified: '0',
-      link: { href: '/reservations/rules', label: 'ルール一覧へ' },
+      link: { href: '/reservations/rules', label: 'ルールへ' },
     },
     {
       name: '予約',
@@ -87,7 +87,7 @@ export const MIGRATION: MigrationResult = {
       name: 'ファイル不在',
       count: '1',
       unit: '件',
-      reason: '台帳に行があるが実ファイルが無い',
+      reason: '台帳に行があるが実ファイルがない',
       rows: [
         {
           id: 'nt-3',
@@ -101,7 +101,7 @@ export const MIGRATION: MigrationResult = {
       name: '孤児',
       count: '4',
       unit: '件',
-      reason: '対応する台帳の行が無い',
+      reason: '対応する台帳の行がない',
       rows: [
         {
           id: 'nt-4',
@@ -176,11 +176,11 @@ export const MIGRATION: MigrationResult = {
       ],
     },
     {
-      name: '本システムに機能が無い',
+      name: '本システムに機能がない',
       count: '0',
       unit: '件',
       rows: [],
-      empty: '該当なし',
+      empty: '対象なし',
     },
     {
       name: '対象外',
@@ -204,7 +204,7 @@ export const MIGRATION: MigrationResult = {
     {
       id: 'enclosedCharacters',
       subject: '番組名の囲み文字',
-      fact: '運んだ 24 本の題名が元の文字に戻せない',
+      fact: '運んだ 24 件の題名が元の文字に戻せない',
     },
   ],
 }

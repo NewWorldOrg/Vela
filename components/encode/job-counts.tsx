@@ -11,8 +11,8 @@ export function JobCounts({
 }) {
   return (
     <div data-slot="job-counts" className={className}>
-      <Badge variant="info">待機 {waiting} 本</Badge>
-      <Badge variant="err">失敗 {failed} 本</Badge>
+      <Badge variant="info">待機 {waiting} 件</Badge>
+      <Badge variant="err">失敗 {failed} 件</Badge>
     </div>
   )
 }

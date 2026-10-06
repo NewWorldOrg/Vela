@@ -11,7 +11,7 @@ interface Navigating {
   removeEventListener(type: 'navigate', heard: (leaving: Leaving) => void): void
 }
 
-const OPEN_EXTERNALLY = '外部プレイヤーで開く'
+const OPEN_EXTERNALLY = '外部プレイヤーで再生'
 
 export const AN_IPAD: Browsing = {
   userAgent:

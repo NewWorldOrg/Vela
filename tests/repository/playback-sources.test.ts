@@ -67,7 +67,7 @@ test('the two sources are the artefact and the recording itself', () => {
 })
 
 test('each source is named in Japanese, and neither says how it is made', () => {
-  assert.equal(sourceLabel('artefact'), 'エンコード済み')
+  assert.equal(sourceLabel('artefact'), 'エンコード版')
   assert.equal(sourceLabel('recording'), '元のまま')
 
   for (const source of BOTH_SOURCES) {

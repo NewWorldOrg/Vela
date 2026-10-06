@@ -76,20 +76,20 @@ const pressCollect =
     const canvas = within(canvasElement)
 
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'いますぐ集める' }),
+      await canvas.findByRole('button', { name: '即時収集を実行' }),
     )
     await waitFor(() => canvas.getByText(expected, { exact: false }))
   }
 
 export const 受け付けた: Story = {
-  play: pressCollect('いますぐ集めるを受け付けました'),
+  play: pressCollect('即時収集を受け付けました'),
 }
 
 export const ガード非活性: Story = {
   args: {
     onCollectNow: answering({ state: 'running' }),
   },
-  play: pressCollect('実行中のブーストが 1 本あります'),
+  play: pressCollect('実行中の即時収集があるため'),
 }
 
 export const 全削除の確認: Story = {
@@ -130,7 +130,9 @@ export const 確認の上のEscは確認だけを閉じる: Story = {
     const canvas = within(canvasElement)
 
     await showed(canvasElement)
-    await userEvent.click(canvas.getByRole('button', { name: /全削除/ }))
+    await userEvent.click(
+      canvas.getByRole('button', { name: '番組表を再構築' }),
+    )
     await screen.findByRole('alertdialog')
 
     await userEvent.keyboard('{Escape}')
@@ -147,7 +149,7 @@ export const 訪問の記録がひとつも無い: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.getByRole('heading', { name: '訪問記録はまだありません' }),
+      canvas.getByRole('heading', { name: 'まだ訪問記録がありません' }),
     ).toBeVisible()
   },
 }
