@@ -44,6 +44,12 @@ export const CODEC_LABEL: Record<EncodeCodec, string> = {
   h265: 'H.265',
 }
 
+export function codecThisBuildKnows(
+  said: string | null | undefined,
+): EncodeCodec | undefined {
+  return (Object.keys(CODEC_LABEL) as EncodeCodec[]).find((one) => one === said)
+}
+
 export const RESOLUTION_LABEL: Record<EncodeResolution, string> = {
   asSource: 'ソースのまま',
   fullHd: '1920×1080(フル HD)',

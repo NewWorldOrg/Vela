@@ -172,6 +172,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       sounds: ['main', 'secondary'],
       chapters: [],
       captions: 'ready',
+      artefactCodec: undefined,
     },
   })
 })
@@ -357,6 +358,26 @@ const WITH_AN_ARTEFACT = {
   sounds: [],
   chapters: [],
 }
+
+test('the plan names the codec its artefact was encoded in, as read off the file', async () => {
+  store.planStatus = 200
+  store.plan = { ...WITH_AN_ARTEFACT, artefactFile: { codec: 'h265' } }
+
+  const read = await getPlaybackPlan('r-encoded-in-h265')
+
+  assert.equal(read.state === 'planned' && read.plan.artefactCodec, 'h265')
+})
+
+test('a codec this build does not know, or a file nobody read, leaves the codec unsaid', async () => {
+  for (const artefactFile of [{ codec: 'av1' }, null, undefined]) {
+    store.planStatus = 200
+    store.plan = { ...WITH_AN_ARTEFACT, artefactFile }
+
+    const read = await getPlaybackPlan(`r-codec-${String(artefactFile)}`)
+
+    assert.equal(read.state === 'planned' && read.plan.artefactCodec, undefined)
+  }
+})
 
 test('the plan names what it plays and what else it could have played', async () => {
   store.planStatus = 200

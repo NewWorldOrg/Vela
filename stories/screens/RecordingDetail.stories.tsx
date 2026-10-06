@@ -616,6 +616,7 @@ export const Range直配信: Story = {
       canSeek: true,
       transcodes: false,
       bytes: 3_490_550_128,
+      artefactCodec: 'h264',
     }),
   },
   play: async ({ canvasElement }) => {
@@ -626,6 +627,53 @@ export const Range直配信: Story = {
     const source = canvas.getByRole('group', { name: '再生ソース' })
 
     await expect(within(source).getByText(/^H\.264/)).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+  },
+}
+
+export const H265のエンコード版を再生できないブラウザ: Story = {
+  args: {
+    detail: detail('1274'),
+    playback: planned({ artefactCodec: 'h265' }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByText('技術情報'))
+
+    const source = canvas.getByRole('group', { name: '再生ソース' })
+
+    await expect(within(source).getByText('H.265')).not.toHaveAttribute(
+      'aria-current',
+    )
+    await expect(within(source).getByText(/^元 TS/)).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+  },
+}
+
+export const コーデックが分からないエンコード版: Story = {
+  args: {
+    detail: detail('1274'),
+    playback: planned({
+      route: 'direct',
+      seeking: 'byRange',
+      canSeek: true,
+      transcodes: false,
+      bytes: 3_490_550_128,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByText('技術情報'))
+
+    const source = canvas.getByRole('group', { name: '再生ソース' })
+
+    await expect(within(source).getByText('エンコード版')).toHaveAttribute(
       'aria-current',
       'true',
     )
