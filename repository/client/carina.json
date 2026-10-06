@@ -5651,6 +5651,96 @@
             }
           },
           {
+            "name": "mark",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "HighDefinition",
+                  "StandardDefinition",
+                  "Progressive",
+                  "Widescreen",
+                  "MultiView",
+                  "SignLanguage",
+                  "Captioned",
+                  "Interactive",
+                  "DataBroadcast",
+                  "Stereo",
+                  "Bilingual",
+                  "MultipleAudio",
+                  "AudioDescription",
+                  "SurroundStereo",
+                  "BModeStereo",
+                  "News",
+                  "Weather",
+                  "Traffic",
+                  "Film",
+                  "Free",
+                  "Paid",
+                  "ParentalLock",
+                  "FirstPart",
+                  "SecondPart",
+                  "Rerun",
+                  "New",
+                  "Premiere",
+                  "Final",
+                  "Live",
+                  "Shopping",
+                  "VoiceCast",
+                  "Dubbed",
+                  "PayPerView"
+                ],
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "excludeMark",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "HighDefinition",
+                  "StandardDefinition",
+                  "Progressive",
+                  "Widescreen",
+                  "MultiView",
+                  "SignLanguage",
+                  "Captioned",
+                  "Interactive",
+                  "DataBroadcast",
+                  "Stereo",
+                  "Bilingual",
+                  "MultipleAudio",
+                  "AudioDescription",
+                  "SurroundStereo",
+                  "BModeStereo",
+                  "News",
+                  "Weather",
+                  "Traffic",
+                  "Film",
+                  "Free",
+                  "Paid",
+                  "ParentalLock",
+                  "FirstPart",
+                  "SecondPart",
+                  "Rerun",
+                  "New",
+                  "Premiere",
+                  "Final",
+                  "Live",
+                  "Shopping",
+                  "VoiceCast",
+                  "Dubbed",
+                  "PayPerView"
+                ],
+                "type": "string"
+              }
+            }
+          },
+          {
             "name": "type",
             "in": "query",
             "schema": {
@@ -12300,7 +12390,8 @@
         "enum": [
           "duplicateAvoidance",
           "enclosedCharacters",
-          "dayBoundary"
+          "dayBoundary",
+          "markWords"
         ],
         "type": "string"
       },
