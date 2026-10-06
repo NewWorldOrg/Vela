@@ -510,8 +510,9 @@ export const 印と除外する印を足す: Story = {
     await userEvent.click(
       canvas.getByRole('combobox', { name: '除外する印を追加' }),
     )
+    const rerun = await screen.findByRole('option', { name: '再放送' })
     await expect(screen.queryByRole('option', { name: '新番組' })).toBeNull()
-    await userEvent.click(await screen.findByRole('option', { name: '再放送' }))
+    await userEvent.click(rerun)
     await afterTheArrival(document.body)
     await expect(picked(canvasElement, '除外する印')).toEqual([
       '除外する印 再放送 を外す',
