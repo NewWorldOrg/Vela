@@ -86,3 +86,6 @@ docker compose exec app yarn codegen:verify   # コミット済みの文書か�
 
 ライセンスは AGPL-3.0-only で、著作権者は NewWorldOrg である。
 詳細は `LICENSE` にある。
+
+イメージに同梱した他のソフトウェアとそのライセンスは、`THIRD-PARTY-NOTICES.md` に載せている。
+イメージの中では、`LICENSE`・`THIRD-PARTY-NOTICES.md`・同梱物のライセンス全文が `/usr/share/doc/vela/` にある。

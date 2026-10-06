@@ -44,7 +44,8 @@ repository/client/          The OpenAPI document, the client generated from it, 
 scripts/                    codegen-verify (the client matches the document),
                             health-check (a live probe), test-alias (`@/` for
                             the unit tests, which read no tsconfig), eslint-rules
-                            (the lint rules kept here, loaded as the `vela` plugin)
+                            (the lint rules kept here, loaded as the `vela` plugin),
+                            third-party-notices (the licenses the image carries)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
 hooks/                      React hooks shared across screens
@@ -180,6 +181,21 @@ tests it ran and fails on zero, because the runner sits beside the server it is
 testing and would otherwise report the exit code of whichever half finished
 first. A second workflow builds the image and starts it once to see that it serves
 the login page and its stylesheet, and on `master` publishes it.
+
+`THIRD-PARTY-NOTICES.md` is checked by the image build. The `notices` stage of the
+`Dockerfile` runs `next build` again with browser source maps, and
+`scripts/third-party-notices.mjs` reads what was traced into `.next/standalone`
+and what the source maps attribute to `node_modules`, writes the license of each
+package into the image, and fails when the npm table differs. A package that
+ships no license text, the ones Next.js builds into `dist/compiled` included,
+needs one under `scripts/third-party-notices/npm/`, unless its `package.json`
+names an author and a license whose text is under
+`scripts/third-party-notices/spdx/`. Tailwind CSS is
+named in the script, because the stylesheet it generates maps back to nothing in
+it. A font under `public/fonts` needs its license under
+`scripts/third-party-notices/fonts/`. The trace leaves `sharp` out: nothing uses
+`next/image`, and sharp's prebuilt libvips is LGPL, whose source the image would
+then have to carry.
 
 `Taskfile.yml` is the place for a repeatable operation. Add a task rather than
 passing a longer command around by hand.

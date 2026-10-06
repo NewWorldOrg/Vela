@@ -11,6 +11,10 @@ const { version } = JSON.parse(
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  outputFileTracingExcludes: {
+    '*': ['node_modules/sharp/**', 'node_modules/@img/**'],
+  },
+  productionBrowserSourceMaps: process.env.VELA_BROWSER_SOURCE_MAPS === '1',
   reactStrictMode: true,
   typedRoutes: true,
   env: { VELA_VERSION: version },
