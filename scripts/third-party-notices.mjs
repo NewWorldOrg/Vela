@@ -16,7 +16,7 @@ const traced = join(built, 'standalone')
 const notices = join(root, 'THIRD-PARTY-NOTICES.md')
 const tableHeading = '## npm packages'
 const emittedByTheBuild = ['node_modules/tailwindcss']
-const licenseFile = /^(licen[cs]e|copying|notice)/i
+const licenseFile = /^(licen[cs]e|copying|notice)|\.legal\.txt$/i
 
 function fail(message) {
   console.error(message)
@@ -214,13 +214,27 @@ function nameOf(directory) {
     : segments.at(-1)
 }
 
+function licenseFilesIn(directory) {
+  const entries = readdirSync(directory, { withFileTypes: true })
+  const own = entries
+    .filter((entry) => entry.isFile() && licenseFile.test(entry.name))
+    .map((entry) => entry.name)
+  const inParts = entries
+    .filter((entry) => entry.isDirectory() && entry.name !== 'node_modules')
+    .flatMap((entry) =>
+      readdirSync(join(directory, entry.name), { withFileTypes: true })
+        .filter((file) => file.isFile() && licenseFile.test(file.name))
+        .map((file) => `${entry.name}/${file.name}`),
+    )
+
+  return [...own, ...inParts]
+}
+
 function describe(directory) {
   const manifestFile = join(root, directory, 'package.json')
   const manifest = existsSync(manifestFile) ? readJson(manifestFile) : {}
 
-  const files = readdirSync(join(root, directory)).filter((file) =>
-    licenseFile.test(file),
-  )
+  const files = licenseFilesIn(join(root, directory))
   const license = licenseOf(manifest)
 
   return {
@@ -236,24 +250,29 @@ function describe(directory) {
   }
 }
 
-function generatedLicense(record) {
+function writtenLicense(record) {
+  const override = join(texts, 'npm', `${record.name}.txt`)
+
+  if (existsSync(override)) {
+    return readFileSync(override, 'utf8')
+  }
+
   const template = join(texts, 'spdx', `${record.license}.txt`)
 
-  if (!record.license || !existsSync(template)) {
+  if (!record.license || !existsSync(template) || !record.author) {
     fail(
-      `${record.name} ${record.version} carries no license file and is licensed as '${record.license}', which has no text at scripts/third-party-notices/spdx/`,
+      `${record.name} ${record.version} carries no license file, and its package.json does not name both a license with a text at scripts/third-party-notices/spdx/ and an author: put its license at scripts/third-party-notices/npm/${record.name}.txt`,
     )
   }
 
-  const by = record.author ? `, by ${record.author}` : ''
-
-  return `${record.name} ${record.version} states its license as ${record.license}${by}, and carries no license file.\n\n${readFileSync(template, 'utf8')}`
+  return `${record.name} ${record.version} states its license as ${record.license}, by ${record.author}, and carries no license file.\n\n${readFileSync(template, 'utf8')}`
 }
 
 function write(record, destination) {
   mkdirSync(destination, { recursive: true })
 
   for (const file of record.files) {
+    mkdirSync(dirname(join(destination, file)), { recursive: true })
     copyFileSync(join(root, record.directory, file), join(destination, file))
   }
 
@@ -267,8 +286,10 @@ function write(record, destination) {
     )
   }
 
-  if (!record.vendored && record.files.length === 0) {
-    writeFileSync(join(destination, 'LICENSE'), generatedLicense(record))
+  const override = existsSync(join(texts, 'npm', `${record.name}.txt`))
+
+  if (override || record.files.length === 0) {
+    writeFileSync(join(destination, 'LICENSE'), writtenLicense(record))
   }
 }
 

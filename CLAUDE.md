@@ -186,7 +186,11 @@ the login page and its stylesheet, and on `master` publishes it.
 `Dockerfile` runs `next build` again with browser source maps, and
 `scripts/third-party-notices.mjs` reads what was traced into `.next/standalone`
 and what the source maps attribute to `node_modules`, writes the license of each
-package into the image, and fails when the npm table differs. Tailwind CSS is
+package into the image, and fails when the npm table differs. A package that
+ships no license text, the ones Next.js builds into `dist/compiled` included,
+needs one under `scripts/third-party-notices/npm/`, unless its `package.json`
+names an author and a license whose text is under
+`scripts/third-party-notices/spdx/`. Tailwind CSS is
 named in the script, because the stylesheet it generates maps back to nothing in
 it. A font under `public/fonts` needs its license under
 `scripts/third-party-notices/fonts/`. The trace leaves `sharp` out: nothing uses
