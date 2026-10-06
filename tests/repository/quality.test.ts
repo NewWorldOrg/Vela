@@ -26,6 +26,7 @@ const store: {
   supplies: unknown[] | undefined
   trend: unknown
   refusal?: { status: number; message: string }
+  refusing: Record<string, { status: number; message: string }>
   askedFor: unknown
 } = {
   trend: null,
@@ -41,6 +42,7 @@ const store: {
   owned: 0,
   restated: 0,
   supplies: [],
+  refusing: {},
   askedFor: undefined,
 }
 
@@ -273,10 +275,13 @@ mock.module('@/repository/client/carina', {
           body: init?.body,
         })
 
-        if (store.refusal) {
+        const refusal =
+          store.refusal ?? store.refusing[String(init?.params?.path?.key)]
+
+        if (refusal) {
           return {
-            error: { message: store.refusal.message },
-            response: answered(store.refusal.status),
+            error: { message: refusal.message },
+            response: answered(refusal.status),
           }
         }
 
@@ -286,7 +291,7 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getQuality, releaseThreshold, reviseThreshold } =
+const { getQuality, releaseThreshold, reviseThreshold, saveThresholds } =
   await import('@/repository/quality')
 
 const service = (networkId: number, serviceId: number, name: string) => ({
@@ -309,6 +314,7 @@ const inTheLibrary = (id: string, name: string) => ({
 function standing() {
   sent.length = 0
   store.refusal = undefined
+  store.refusing = {}
   store.services = [service(32736, 1024, '湾岸放送1')]
   store.ledger = [inTheLibrary('rec-a', '湾岸の朝')]
   store.thresholds = SHIPPED
@@ -1591,4 +1597,115 @@ test('推移の見出しにも、閾値にも、要約にも、異常にも暫�
   const result = await getQuality()
 
   assert.doesNotMatch(JSON.stringify(result), /暫定|根拠/)
+})
+
+test('警告水準は、越えてはならない視聴不可の恐れを名指す', async () => {
+  standing()
+
+  const thresholds = (await getQuality()).thresholds
+  const atMostOf = (key: string) =>
+    thresholds.find((one) => one.key === key)?.atMost
+
+  assert.equal(atMostOf('packetsLostWarning'), 'packetsLostUnwatchable')
+  assert.equal(
+    atMostOf('packetsLeftScrambled'),
+    'packetsLeftScrambledUnwatchable',
+  )
+  assert.equal(atMostOf('packetsLostUnwatchable'), undefined)
+  assert.equal(atMostOf('lockRate'), undefined)
+})
+
+test('手動設定の閾値は、解除したときに戻る値を画面の単位で持つ', async () => {
+  standing()
+  store.thresholds = SHIPPED.map((one) => {
+    if (one.key === 'carrierToNoiseFloor') {
+      return {
+        ...one,
+        currentValue: 21000,
+        source: 'byHand',
+        measurement: measuredOver(18600),
+      }
+    }
+
+    return one.key === 'lockRate'
+      ? { ...one, currentValue: 0.95, source: 'byHand' }
+      : one
+  })
+
+  const thresholds = (await getQuality()).thresholds
+  const releasedOf = (key: string) =>
+    thresholds.find((one) => one.key === key)?.releasedAmount
+
+  assert.equal(releasedOf('carrierToNoiseFloor'), '18.6')
+  assert.equal(releasedOf('lockRate'), '99')
+  assert.equal(releasedOf('packetsLostWarning'), undefined)
+})
+
+test('ビット誤り率の欄の値は、小さくても桁を落とさない', async () => {
+  standing()
+  store.thresholds = SHIPPED.map((one) =>
+    one.key === 'bitErrorRateCeiling'
+      ? { ...one, currentValue: 3.2e-7, source: 'measured' }
+      : one,
+  )
+
+  const ceiling = (await getQuality()).thresholds.find(
+    (one) => one.key === 'bitErrorRateCeiling',
+  )
+
+  assert.equal(ceiling?.value, '3.2e-7')
+  assert.equal(ceiling?.amount, '3.2e-7')
+})
+
+test('まとめて保存すると、渡した順に 1 行ずつ送り、行ごとの結果を返す', async () => {
+  standing()
+  store.refusing = {
+    packetsLostWarning: {
+      status: 400,
+      message:
+        'A reading passes the warning level before it passes the unwatchable one, so PacketsLostWarning cannot be moved past the level beside it.',
+    },
+  }
+
+  const saved = await saveThresholds([
+    { kind: 'revise', key: 'packetsLostUnwatchable', amount: 0.5 },
+    { kind: 'revise', key: 'packetsLostWarning', amount: 0.6 },
+    { kind: 'release', key: 'lockRate' },
+  ])
+
+  assert.deepEqual(
+    sent.map((one) => [one.path, one.body]),
+    [
+      ['/api/quality/thresholds/packetsLostUnwatchable', { value: 0.005 }],
+      ['/api/quality/thresholds/packetsLostWarning', { value: 0.006 }],
+      ['/api/quality/thresholds/lockRate', { value: null, byHand: false }],
+    ],
+  )
+  assert.deepEqual(saved, [
+    { key: 'packetsLostUnwatchable', write: { state: 'ok' } },
+    {
+      key: 'packetsLostWarning',
+      write: {
+        state: 'rejected',
+        message:
+          '警告水準が視聴不可の恐れを越えてしまうため、変更できませんでした。',
+      },
+    },
+    { key: 'lockRate', write: { state: 'ok' } },
+  ])
+})
+
+test('まとめて保存の途中でサインインが切れたら、そこで送るのをやめる', async () => {
+  standing()
+  store.refusing = { overflows: { status: 401, message: '' } }
+
+  const saved = await saveThresholds([
+    { kind: 'revise', key: 'overflows', amount: 2 },
+    { kind: 'revise', key: 'lockRate', amount: 95 },
+  ])
+
+  assert.equal(sent.length, 1)
+  assert.deepEqual(saved, [
+    { key: 'overflows', write: { state: 'unauthenticated' } },
+  ])
 })

@@ -2,26 +2,18 @@
 
 import { revalidatePath } from 'next/cache'
 
-import type { QualityThresholdKey, QualityWrite } from '@/repository/quality'
-import { releaseThreshold, reviseThreshold } from '@/repository/quality'
+import type {
+  QualityThresholdSaved,
+  QualityThresholdWrite,
+} from '@/repository/quality'
+import { saveThresholds } from '@/repository/quality'
 
-export async function changeThreshold(
-  key: QualityThresholdKey,
-  amount: number,
-): Promise<QualityWrite> {
-  const result = await reviseThreshold(key, amount)
-
-  revalidatePath('/settings/quality')
-
-  return result
-}
-
-export async function letGoOfThreshold(
-  key: QualityThresholdKey,
-): Promise<QualityWrite> {
-  const result = await releaseThreshold(key)
+export async function changeThresholds(
+  writes: QualityThresholdWrite[],
+): Promise<QualityThresholdSaved[]> {
+  const saved = await saveThresholds(writes)
 
   revalidatePath('/settings/quality')
 
-  return result
+  return saved
 }

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   A_WEEK,
@@ -13,11 +13,8 @@ import {
   SATELLITES_THAT_CANNOT_LOCK,
   TWO_BROADCAST_DAYS,
 } from '@/repository/quality.fixtures'
-import type {
-  QualityReleaseThreshold,
-  QualityReviseThreshold,
-} from '@/components/quality/quality-page'
 import { QualityView } from '@/components/quality/quality-page'
+import type { QualitySaveThresholds } from '@/components/quality/threshold-panel'
 import {
   rowsOfTheTableHeaded,
   saysItWithoutAnEdge,
@@ -28,18 +25,31 @@ import { inTheSettings } from '@/stories/frames'
 const REFUSED =
   '警告水準が視聴不可の恐れを越えてしまうため、変更できませんでした。'
 
-const reviseThreshold = fn<QualityReviseThreshold>(async () => ({
-  state: 'ok',
-}))
+const saveThresholds = fn<QualitySaveThresholds>(async (writes) =>
+  writes.map((one) => ({ key: one.key, write: { state: 'ok' } })),
+)
 
-const releaseThreshold = fn<QualityReleaseThreshold>(async () => ({
-  state: 'ok',
-}))
+const refusesTheLockRate = fn<QualitySaveThresholds>(async (writes) =>
+  writes.map((one) => ({
+    key: one.key,
+    write:
+      one.key === 'lockRate'
+        ? { state: 'rejected', message: REFUSED }
+        : { state: 'ok' },
+  })),
+)
 
-const refusesTheThreshold = fn<QualityReviseThreshold>(async () => ({
-  state: 'rejected',
-  message: REFUSED,
-}))
+const signedOutOnTheFirst = fn<QualitySaveThresholds>(async (writes) => [
+  { key: writes[0].key, write: { state: 'unauthenticated' } },
+])
+
+const rowOf = (input: HTMLElement) =>
+  within(input.closest<HTMLElement>('[data-slot="threshold-row"]')!)
+
+const retyped = async (input: HTMLElement, text: string) => {
+  await userEvent.clear(input)
+  await userEvent.type(input, text)
+}
 
 const meta = {
   title: 'Screens/設定・品質',
@@ -52,8 +62,7 @@ const meta = {
     layout: 'fullscreen',
   },
   args: {
-    onReviseThreshold: reviseThreshold,
-    onReleaseThreshold: releaseThreshold,
+    onSaveThresholds: saveThresholds,
   },
   decorators: [inTheSettings],
 } satisfies Meta<typeof QualityView>
@@ -204,31 +213,123 @@ export const 一部だけ未計測: Story = {
   },
 }
 
-export const 閾値を変更: Story = {
+export const 閾値をまとめて変更: Story = {
   args: { result: QUALITY },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.queryAllByRole('textbox')).toHaveLength(0)
+    await userEvent.click(canvas.getByRole('button', { name: '変更' }))
+
+    const warning = canvas.getByLabelText('ドロップ率の警告水準')
+
+    await expect(canvas.getAllByRole('textbox')).toHaveLength(9)
+    await expect(warning).toHaveFocus()
+    await expect(warning).toHaveValue('0.02')
+    await expect(canvas.getByRole('button', { name: '保存' })).toBeDisabled()
+
+    await retyped(warning, '0.02')
+    await expect(canvas.getByRole('button', { name: '保存' })).toBeDisabled()
+
+    await retyped(warning, '0.5')
+    await retyped(canvas.getByLabelText('ドロップ率の視聴不可の恐れ'), '1')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    await waitFor(() =>
+      expect(args.onSaveThresholds).toHaveBeenCalledWith([
+        { kind: 'revise', key: 'packetsLostUnwatchable', amount: 1 },
+        { kind: 'revise', key: 'packetsLostWarning', amount: 0.5 },
+      ]),
+    )
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '変更' })).toHaveFocus(),
+    )
+    await expect(canvas.getByText('保存しました。')).toBeVisible()
+    await expect(canvas.queryAllByRole('textbox')).toHaveLength(0)
+  },
+}
+
+export const 閾値の誤りは行ごとに出る: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '変更' }))
+
+    const lock = canvas.getByLabelText('lock 率の下限')
+    const warning = canvas.getByLabelText('ドロップ率の警告水準')
+
+    await retyped(lock, '101')
+    await retyped(warning, '0.5')
+    await expect(rowOf(lock).queryByText('値は 0 〜 100% です。')).toBeNull()
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    await expect(rowOf(lock).getByText('値は 0 〜 100% です。')).toBeVisible()
+    await expect(lock).toHaveAttribute('aria-invalid', 'true')
+    await expect(
+      rowOf(warning).getByText(
+        '値は ドロップ率の視聴不可の恐れ(0.1%)以下です。',
+      ),
+    ).toBeVisible()
+    await expect(args.onSaveThresholds).not.toHaveBeenCalled()
+
+    await retyped(lock, '98')
+    await expect(rowOf(lock).queryByText('値は 0 〜 100% です。')).toBeNull()
+  },
+}
+
+export const 閾値の一部を断られる: Story = {
+  args: { result: QUALITY, onSaveThresholds: refusesTheLockRate },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '閾値を変更' }))
+    await userEvent.click(canvas.getByRole('button', { name: '変更' }))
+
+    const overflows = canvas.getByLabelText('取りこぼしの上限')
+    const lock = canvas.getByLabelText('lock 率の下限')
+
+    await retyped(overflows, '5')
+    await retyped(lock, '95')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    await waitFor(() => expect(rowOf(lock).getByText(REFUSED)).toBeVisible())
+    await expect(rowOf(overflows).getByText('保存しました。')).toBeVisible()
+    await expect(lock).toHaveValue('95')
+    await expect(canvas.getByRole('button', { name: '保存' })).toBeVisible()
+  },
+}
+
+export const 閾値の保存でサインインが切れる: Story = {
+  args: { result: QUALITY, onSaveThresholds: signedOutOnTheFirst },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '変更' }))
+    await retyped(canvas.getByLabelText('lock 率の下限'), '95')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
     await waitFor(() =>
-      expect(screen.getByRole('dialog', { name: '閾値を変更' })).toBeVisible(),
+      expect(
+        canvas.getByText('サインインが切れているため、保存できませんでした。'),
+      ).toBeVisible(),
     )
   },
 }
 
-export const 閾値の変更を断られる: Story = {
-  args: { result: QUALITY, onReviseThreshold: refusesTheThreshold },
-  play: async ({ canvasElement }) => {
+export const 閾値の変更をキャンセル: Story = {
+  args: { result: QUALITY },
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '閾値を変更' }))
+    await userEvent.click(canvas.getByRole('button', { name: '変更' }))
+    await retyped(canvas.getByLabelText('lock 率の下限'), '95')
+    await userEvent.click(canvas.getByRole('button', { name: 'キャンセル' }))
 
-    const dialog = await screen.findByRole('dialog', { name: '閾値を変更' })
+    await expect(canvas.queryAllByRole('textbox')).toHaveLength(0)
+    await expect(args.onSaveThresholds).not.toHaveBeenCalled()
 
-    await userEvent.click(
-      within(dialog).getByRole('button', { name: '変更する' }),
-    )
-    await waitFor(() => expect(within(dialog).getByText(REFUSED)).toBeVisible())
+    await userEvent.click(canvas.getByRole('button', { name: '変更' }))
+    await expect(canvas.getByLabelText('lock 率の下限')).toHaveValue('99')
   },
 }
 
@@ -266,30 +367,30 @@ export const 手動設定を解除: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '閾値を変更' }))
+    await userEvent.click(canvas.getByRole('button', { name: '変更' }))
 
-    const dialog = await screen.findByRole('dialog', { name: '閾値を変更' })
+    const ceiling = canvas.getByLabelText('post-Viterbi ビット誤り率の上限')
+    const row = rowOf(ceiling)
 
     await expect(
-      within(dialog).queryByRole('button', { name: '手動設定を解除' }),
+      rowOf(canvas.getByLabelText('lock 率の下限')).queryByRole('button'),
     ).toBeNull()
 
-    await userEvent.click(within(dialog).getByRole('combobox'))
-    await userEvent.click(
-      await screen.findByRole('option', {
-        name: 'post-Viterbi ビット誤り率の上限',
-      }),
-    )
-    await expect(
-      within(dialog).getByText(/既定 1\.0e-4 · 実測 3\.0e-3/),
-    ).toBeVisible()
-    await userEvent.click(
-      within(dialog).getByRole('button', { name: '手動設定を解除' }),
-    )
+    await userEvent.click(row.getByRole('button', { name: '手動設定を解除' }))
+    await expect(ceiling).toBeDisabled()
+    await expect(ceiling).toHaveValue('0.003')
+
+    await userEvent.click(row.getByRole('button', { name: '取り消し' }))
+    await expect(ceiling).toBeEnabled()
+    await expect(ceiling).toHaveValue('0.005')
+
+    await userEvent.click(row.getByRole('button', { name: '手動設定を解除' }))
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
     await waitFor(() =>
-      expect(args.onReleaseThreshold).toHaveBeenCalledWith(
-        'bitErrorRateCeiling',
-      ),
+      expect(args.onSaveThresholds).toHaveBeenCalledWith([
+        { kind: 'release', key: 'bitErrorRateCeiling' },
+      ]),
     )
   },
 }

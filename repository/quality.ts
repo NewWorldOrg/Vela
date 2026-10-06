@@ -96,9 +96,20 @@ export interface QualityThreshold {
   measured?: string
   shipped: string
   amount: string
+  releasedAmount?: string
+  atMost?: QualityThresholdKey
   unit: string
   lowest: number
   highest: number
+}
+
+export type QualityThresholdWrite =
+  | { kind: 'revise'; key: QualityThresholdKey; amount: number }
+  | { kind: 'release'; key: QualityThresholdKey }
+
+export interface QualityThresholdSaved {
+  key: QualityThresholdKey
+  write: QualityWrite
 }
 
 export interface QualityChannel {
@@ -288,6 +299,7 @@ interface ThresholdShape {
   scale: number
   exponent?: boolean
   observedAs?: 'share' | 'whole'
+  atMost?: QualityThresholdKey
 }
 
 const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
@@ -296,6 +308,7 @@ const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
     unit: '%',
     scale: 0.01,
     observedAs: 'share',
+    atMost: 'packetsLostUnwatchable',
   },
   packetsLostUnwatchable: {
     label: 'ドロップ率の視聴不可の恐れ',
@@ -308,6 +321,7 @@ const THRESHOLD_SHAPES: Record<QualityThresholdKey, ThresholdShape> = {
     unit: '%',
     scale: 0.01,
     observedAs: 'share',
+    atMost: 'packetsLeftScrambledUnwatchable',
   },
   packetsLeftScrambledUnwatchable: {
     label: 'スクランブル残存率の視聴不可の恐れ',
@@ -652,6 +666,27 @@ export async function reviseThreshold(
   )
 
   return writtenAs(WHEN_CHANGING_A_THRESHOLD, response, error)
+}
+
+export async function saveThresholds(
+  writes: QualityThresholdWrite[],
+): Promise<QualityThresholdSaved[]> {
+  const saved: QualityThresholdSaved[] = []
+
+  for (const one of writes) {
+    const write =
+      one.kind === 'release'
+        ? await releaseThreshold(one.key)
+        : await reviseThreshold(one.key, one.amount)
+
+    saved.push({ key: one.key, write })
+
+    if (write.state === 'unauthenticated') {
+      break
+    }
+  }
+
+  return saved
 }
 
 function writtenAs(
@@ -1242,9 +1277,12 @@ function toThreshold(one: ThresholdResponder): QualityThreshold {
   const shape = shapeFor(THRESHOLD_SHAPES, one.key, THRESHOLD_NOT_YET_SHAPED)
   const current = shown(toRatio(one.currentValue), shape.scale)
   const shipped = spelled(shown(toRatio(one.defaultValue), shape.scale), shape)
-  const measured = one.measurement
-    ? spelled(shown(toRatio(one.measurement.value), shape.scale), shape)
+  const measuredAt = one.measurement
+    ? shown(toRatio(one.measurement.value), shape.scale)
     : undefined
+  const measured =
+    measuredAt === undefined ? undefined : spelled(measuredAt, shape)
+  const releasedTo = measuredAt ?? shown(toRatio(one.defaultValue), shape.scale)
 
   return {
     key: one.key,
@@ -1255,7 +1293,10 @@ function toThreshold(one: ThresholdResponder): QualityThreshold {
     basis: basisOf(one, shipped, measured),
     measured,
     shipped,
-    amount: trimmed(current),
+    amount: typedAs(current, shape),
+    releasedAmount:
+      one.source === 'byHand' ? typedAs(releasedTo, shape) : undefined,
+    atMost: shape.atMost,
     unit: shape.unit,
     lowest: shown(toRatio(one.lowest), shape.scale),
     highest: shown(toRatio(one.highest), shape.scale),
@@ -1361,6 +1402,10 @@ function spelled(value: number, shape: ThresholdShape): string {
 
 function trimmed(value: number): string {
   return String(Number(value.toFixed(6)))
+}
+
+function typedAs(value: number, shape: ThresholdShape): string {
+  return shape.exponent ? String(value) : trimmed(value)
 }
 
 async function fetchTrend(
