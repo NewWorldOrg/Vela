@@ -295,7 +295,7 @@ export const 閾値の一部を断られる: Story = {
     await waitFor(() => expect(rowOf(lock).getByText(REFUSED)).toBeVisible())
     await expect(rowOf(overflows).getByText('保存しました。')).toBeVisible()
     await expect(lock).toHaveValue('95')
-    await expect(canvas.getByRole('button', { name: '保存' })).toBeVisible()
+    await expect(canvas.getByRole('button', { name: '保存' })).toHaveFocus()
   },
 }
 

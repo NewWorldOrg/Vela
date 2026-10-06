@@ -196,7 +196,7 @@ export function ThresholdPanel({
                 >
                   キャンセル
                 </Button>
-                <Button type="submit" disabled={!changed || pending}>
+                <Button type="submit" disabled={!changed}>
                   保存
                 </Button>
               </>
@@ -239,6 +239,7 @@ function ThresholdRow({
 }) {
   const id = `threshold-${threshold.key}`
   const errorId = `${id}-error`
+  const nameId = `${id}-name`
   const said =
     problem ?? (outcome?.state === 'refused' ? outcome.message : undefined)
   const released = draft?.kind === 'released'
@@ -250,7 +251,7 @@ function ThresholdRow({
     >
       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
         {editing ? (
-          <label htmlFor={id} className="text-ui font-bold">
+          <label id={nameId} htmlFor={id} className="text-ui font-bold">
             {threshold.label}
           </label>
         ) : (
@@ -286,7 +287,8 @@ function ThresholdRow({
                 areaClassName="w-[calc(150rem/16)]"
                 className="font-code tabular-nums"
                 value={shownInForm(threshold, draft)}
-                disabled={pending || released}
+                readOnly={pending}
+                disabled={released}
                 aria-invalid={said ? true : undefined}
                 aria-describedby={said ? errorId : undefined}
                 onChange={(event) =>
@@ -303,6 +305,7 @@ function ThresholdRow({
                 variant="halt"
                 size="sm"
                 className="ml-auto"
+                aria-describedby={nameId}
                 disabled={pending}
                 onClick={() =>
                   onDraft(released ? undefined : { kind: 'released' })

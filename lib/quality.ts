@@ -85,7 +85,7 @@ export function shownInForm(
 export function isChanged(
   threshold: QualityThreshold,
   draft: ThresholdDraft | undefined,
-): draft is ThresholdDraft {
+): boolean {
   if (draft === undefined) {
     return false
   }
@@ -195,7 +195,7 @@ function writeOf(
   threshold: QualityThreshold,
   draft: ThresholdDraft | undefined,
 ): QualityThresholdWrite[] {
-  if (!isChanged(threshold, draft)) {
+  if (draft === undefined || !isChanged(threshold, draft)) {
     return []
   }
 
