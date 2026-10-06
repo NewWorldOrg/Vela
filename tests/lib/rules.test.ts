@@ -11,6 +11,8 @@ import {
   RULE_NAME_LONGEST,
   RULE_PARAM,
   newRuleHref,
+  ruleApplicationFellShort,
+  ruleApplicationPartsOf,
   ruleConditionParts,
   ruleDayLabelOf,
   ruleDaysInOrder,
@@ -238,4 +240,63 @@ test('除外は種類ごとに、0 件でない種類だけを言う', () => {
     { label: '移動', count: 3 },
   ])
   assert.deepEqual(exclusionPartsOf({ shadows: 0, moved: 0 }), [])
+})
+
+const APPLIED_CLEANLY = {
+  made: 0,
+  withdrawn: 0,
+  refused: 0,
+  turnedOff: 0,
+  faulted: 0,
+}
+
+test('an application always says how many reservations it made, even none', () => {
+  assert.deepEqual(ruleApplicationPartsOf(APPLIED_CLEANLY), [
+    { label: '新しく作られた予約', count: 0 },
+  ])
+  assert.equal(ruleApplicationFellShort(APPLIED_CLEANLY), false)
+})
+
+test('an application names the rest only when it counted any of them, in a fixed order', () => {
+  const applied = {
+    made: 3,
+    withdrawn: 1,
+    refused: 2,
+    turnedOff: 1,
+    faulted: 4,
+  }
+
+  assert.deepEqual(ruleApplicationPartsOf(applied), [
+    { label: '新しく作られた予約', count: 3 },
+    { label: '引っ込んだ予約', count: 1 },
+    { label: '作成できなかった予約', count: 2 },
+    { label: '条件を読めず無効にしたルール', count: 1 },
+    { label: '調べられなかったルール', count: 4 },
+  ])
+  assert.deepEqual(
+    ruleApplicationPartsOf({ ...APPLIED_CLEANLY, made: 2, withdrawn: 1 }),
+    [
+      { label: '新しく作られた予約', count: 2 },
+      { label: '引っ込んだ予約', count: 1 },
+    ],
+  )
+})
+
+test('an application fell short when a reservation was not made or a rule was not read', () => {
+  assert.equal(
+    ruleApplicationFellShort({ ...APPLIED_CLEANLY, made: 2, withdrawn: 5 }),
+    false,
+  )
+  assert.equal(
+    ruleApplicationFellShort({ ...APPLIED_CLEANLY, refused: 1 }),
+    true,
+  )
+  assert.equal(
+    ruleApplicationFellShort({ ...APPLIED_CLEANLY, turnedOff: 1 }),
+    true,
+  )
+  assert.equal(
+    ruleApplicationFellShort({ ...APPLIED_CLEANLY, faulted: 1 }),
+    true,
+  )
 })

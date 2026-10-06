@@ -26,6 +26,8 @@ import {
   ruleConditionParts,
   ruleDayLabelOf,
   ruleDaysInOrder,
+  ruleApplicationFellShort,
+  ruleApplicationPartsOf,
   ruleNarrowsAnything,
   withinRuleName,
   withinRulePeriod,
@@ -38,6 +40,7 @@ import { cn } from '@/lib/utils'
 import type { GuideChannel } from '@/repository/programs'
 import type {
   Rule,
+  RuleApplication,
   RuleDraft,
   RuleImpact,
   RulePreview,
@@ -108,9 +111,11 @@ import {
   FilterIcon,
   ListIcon,
   PlusIcon,
+  RebuildIcon,
   ReservationIcon,
   SearchIcon,
   SettingsIcon,
+  SuccessIcon,
   TrashIcon,
   WarningIcon,
 } from '@/components/vela/icons'
@@ -128,11 +133,14 @@ export interface RuleActions {
   onSwitch: (id: string, enabled: boolean) => Promise<RuleWrite<number>>
   onPreview: (draft: RuleDraft, id?: string) => Promise<RuleWrite<RulePreview>>
   onImpact: (draft: RuleDraft, id?: string) => Promise<RuleWrite<RuleImpact>>
+  onApply: (id: string) => Promise<RuleWrite<RuleApplication>>
 }
 
 const EVERY_KIND = 'all'
 
 const SIGNED_OUT = signedOut('操作')
+
+const NOTHING_TO_APPLY = '有効なルールがないため、適用できません。'
 
 interface Named {
   field: 'name' | 'terms' | 'period' | 'priority' | 'before' | 'after'
@@ -195,26 +203,49 @@ function RulesScreen({
   const enabled = result.items.filter((rule) => rule.enabled).length
   const channelNameOf = (id: string): string =>
     channels.find((channel) => channel.id === id)?.name || id
+  const [applied, setApplied] = useState<RuleWrite<RuleApplication>>()
+  const [applying, startApplying] = useTransition()
+  const anEnabledRule = result.items.find((rule) => rule.enabled)
+  const apply = (id: string) => {
+    setApplied(undefined)
+    startApplying(async () => setApplied(await actions.onApply(id)))
+  }
 
   return (
     <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
       <ReservationTabs
         current="rules"
         action={
-          <ActionRow>
-            <Button variant="watch" size="sm" asChild>
-              <Link href="/search">
-                <SearchIcon />
-                検索から作成
-              </Link>
+          <span className="flex flex-wrap items-start justify-end gap-[calc(9rem/16)]">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={applying || !anEnabledRule}
+              title={anEnabledRule ? undefined : NOTHING_TO_APPLY}
+              onClick={() => anEnabledRule && apply(anEnabledRule.id)}
+            >
+              <RebuildIcon />
+              ルールを即時適用
             </Button>
-            <Button size="sm" onClick={() => open(NEW_RULE)}>
-              <PlusIcon />
-              ルールを追加
-            </Button>
-          </ActionRow>
+            <ActionRow>
+              <Button variant="watch" size="sm" asChild>
+                <Link href="/search">
+                  <SearchIcon />
+                  検索から作成
+                </Link>
+              </Button>
+              <Button size="sm" onClick={() => open(NEW_RULE)}>
+                <PlusIcon />
+                ルールを追加
+              </Button>
+            </ActionRow>
+          </span>
         }
       />
+
+      <div aria-live="polite">
+        {applied && <RuleApplicationNotice outcome={applied} />}
+      </div>
 
       <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(calc(280rem/16),calc(360rem/16))_1fr]">
         <section className="rounded-lg bg-surface px-4 py-3.5">
@@ -1356,6 +1387,64 @@ function FormSection({
       </h3>
       {children}
     </section>
+  )
+}
+
+function RuleApplicationNotice({
+  outcome,
+}: {
+  outcome: RuleWrite<RuleApplication>
+}) {
+  if (outcome.state !== 'ok') {
+    return (
+      <AppliedLine fellShort>
+        {outcome.state === 'unauthenticated'
+          ? signedOut('適用')
+          : outcome.message}
+      </AppliedLine>
+    )
+  }
+
+  return (
+    <AppliedLine fellShort={ruleApplicationFellShort(outcome.data)}>
+      <span className="block">
+        ルールを適用しました(
+        {ruleApplicationPartsOf(outcome.data).map((part, at) => (
+          <span key={part.label}>
+            {at > 0 && '、'}
+            {part.label} <Count value={part.count} /> 件
+          </span>
+        ))}
+        )。
+      </span>
+      <Excluded
+        excluded={{ shadows: 0, moved: outcome.data.excludedAsMoved }}
+        as="span"
+      />
+    </AppliedLine>
+  )
+}
+
+function AppliedLine({
+  fellShort,
+  children,
+}: {
+  fellShort: boolean
+  children: ReactNode
+}) {
+  const Icon = fellShort ? WarningIcon : SuccessIcon
+
+  return (
+    <div
+      data-slot="rule-application"
+      className={cn(
+        'mb-3.5 flex items-start gap-2 rounded-xl px-[calc(13rem/16)] py-2.5 text-sub leading-[1.7]',
+        fellShort ? 'bg-lemon-soft text-lemon' : 'bg-mint-soft text-mint',
+      )}
+    >
+      <Icon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
+      <div className="min-w-0">{children}</div>
+    </div>
   )
 }
 

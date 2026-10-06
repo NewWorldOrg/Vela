@@ -768,8 +768,80 @@ test('an application refused because one is walking says that instead', async ()
   assert.equal(result.state, 'rejected')
   assert.match(
     result.state === 'rejected' ? result.message : '',
-    /すでに実行中のため、適用できませんでした。/,
+    /^ルールの適用がすでに実行中のため、適用できませんでした。$/,
   )
+})
+
+test('an application refused because a recalculation is walking says the same', async () => {
+  standing()
+  store.status = 409
+  store.answer = {
+    refusal: 'aRecalculationIsAlreadyRunning',
+    runningApplyId: null,
+    notBefore: null,
+  }
+
+  const result = await applyRulesNow('r-1')
+
+  assert.deepEqual(result, {
+    state: 'rejected',
+    message: 'ルールの適用がすでに実行中のため、適用できませんでした。',
+  })
+})
+
+test('an application asked for too soon names the minute it may be asked again, rounded up', async () => {
+  standing()
+  store.status = 409
+  store.answer = {
+    refusal: 'tooSoonAfterTheLastOne',
+    runningApplyId: null,
+    notBefore: '2026-08-09T13:05:30Z',
+  }
+
+  const result = await applyRulesNow('r-1')
+
+  assert.deepEqual(result, {
+    state: 'rejected',
+    message: `前回の適用から間隔が空いていないため、適用できませんでした。${formatMoment('2026-08-09T13:06:00Z')} 以降にもう一度お試しください。`,
+  })
+})
+
+test('an application asked for too soon without a moment says to wait', async () => {
+  standing()
+  store.status = 409
+  store.answer = {
+    refusal: 'tooSoonAfterTheLastOne',
+    runningApplyId: null,
+    notBefore: null,
+  }
+
+  const result = await applyRulesNow('r-1')
+
+  assert.deepEqual(result, {
+    state: 'rejected',
+    message:
+      '前回の適用から間隔が空いていないため、適用できませんでした。時間をおいてからもう一度お試しください。',
+  })
+})
+
+test('an application the API turns down for any other reason says it could not apply', async () => {
+  for (const status of [400, 404, 500, 503]) {
+    standing()
+    store.status = status
+    store.answer = null
+
+    assert.deepEqual(await applyRulesNow('r-1'), {
+      state: 'rejected',
+      message:
+        'ルールを適用できませんでした。時間をおいてからもう一度お試しください。',
+    })
+  }
+
+  standing()
+  store.status = 401
+  store.answer = null
+
+  assert.deepEqual(await applyRulesNow('r-1'), { state: 'unauthenticated' })
 })
 
 test('rules that cannot be read throw what the API said about them', async () => {
