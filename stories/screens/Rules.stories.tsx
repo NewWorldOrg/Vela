@@ -239,6 +239,11 @@ export const 通常: Story = {
     ).toHaveTextContent(
       /ジャンル: ドラマ・国内アニメ\(アニメ\/特撮\)・アニメ\(映画\) · 曜日: 土・日 · 期間: .*08\/08\(土\) 〜 .*08\/31\(月\) · すべてのチャンネル/,
     )
+    await expect(
+      canvas.getByRole('button', { name: /^新番組のアニメ/ }),
+    ).toHaveTextContent(
+      /ジャンル: 国内アニメ\(アニメ\/特撮\) · 地上波 · 印: 新番組 · 除外する印: 再放送 · すべてのチャンネル/,
+    )
 
     await userEvent.click(
       canvas.getByRole('switch', { name: 'ドラマの最終回だけ を有効にする' }),
@@ -340,6 +345,8 @@ export const ルールを編集: Story = {
               kind: undefined,
               channels: [],
               days: [],
+              marks: [],
+              excludedMarks: [],
               from: undefined,
               to: undefined,
               beyond: [],
@@ -473,9 +480,99 @@ export const 曜日とサブジャンルと期間を足す: Story = {
       kind: undefined,
       subgenres: ['3-1'],
       days: ['monday', 'wednesday'],
+      marks: [],
+      excludedMarks: [],
       from: '2026-08-08',
       to: '2026-08-31',
     })
+  },
+}
+
+const markedSaved: Saved[] = []
+
+export const 印と除外する印を足す: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[1] },
+    actions: recording(markedSaved, []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    markedSaved.length = 0
+
+    await choose('印を追加', '初放送')
+    await choose('印を追加', '新番組')
+    await expect(picked(canvasElement, '印')).toEqual([
+      '印 新番組 を外す',
+      '印 初放送 を外す',
+    ])
+
+    await userEvent.click(
+      canvas.getByRole('combobox', { name: '除外する印を追加' }),
+    )
+    await expect(screen.queryByRole('option', { name: '新番組' })).toBeNull()
+    await userEvent.click(await screen.findByRole('option', { name: '再放送' }))
+    await afterTheArrival(document.body)
+    await expect(picked(canvasElement, '除外する印')).toEqual([
+      '除外する印 再放送 を外す',
+    ])
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '印 初放送 を外す' }),
+    )
+    await expect(picked(canvasElement, '印')).toEqual(['印 新番組 を外す'])
+
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    const dialog = within(await screen.findByRole('dialog'))
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(
+      await dialog.findByRole('button', { name: '保存する' }),
+    )
+
+    await waitFor(() => expect(markedSaved).toHaveLength(1))
+    await expect(markedSaved[0].draft.terms).toEqual({
+      ...RULE_FIXTURES[1].terms,
+      kind: undefined,
+      marks: ['New'],
+      excludedMarks: ['Rerun'],
+      from: undefined,
+      to: undefined,
+    })
+  },
+}
+
+export const 印だけのルールは保存できる: Story = {
+  args: {
+    editing: {
+      state: 'new',
+      terms: {
+        q: undefined,
+        exclude: undefined,
+        fields: 'title,description',
+        genres: [],
+        subgenres: [],
+        channels: [],
+        days: [],
+        marks: [],
+        excludedMarks: [],
+        beyond: [],
+      },
+    },
+    actions: recording([], []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    weighed.length = 0
+
+    await userEvent.type(canvas.getByLabelText(/ルール名/), '新番組')
+    await choose('印を追加', '新番組')
+    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+
+    await waitFor(() => expect(weighed).toHaveLength(1))
+    await expect(weighed[0].draft.terms.marks).toEqual(['New'])
   },
 }
 
@@ -531,6 +628,8 @@ export const 曜日だけのルールは保存できる: Story = {
         subgenres: [],
         channels: [],
         days: [],
+        marks: [],
+        excludedMarks: [],
         beyond: [],
       },
     },
@@ -539,7 +638,7 @@ export const 曜日だけのルールは保存できる: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const refusal =
-      'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間のうち、1 つ以上を指定してください。'
+      'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間・印・除外する印のうち、1 つ以上を指定してください。'
 
     weighed.length = 0
 
@@ -570,6 +669,8 @@ export const 検索から作る: Story = {
         subgenres: [],
         channels: ['132-1320'],
         days: [],
+        marks: [],
+        excludedMarks: [],
         beyond: [],
       },
     },
@@ -617,6 +718,8 @@ export const 検索から作る: Story = {
               kind: undefined,
               channels: ['132-1320'],
               days: [],
+              marks: [],
+              excludedMarks: [],
               from: undefined,
               to: undefined,
               beyond: [],
@@ -692,6 +795,8 @@ export const 条件のないルール: Story = {
         subgenres: [],
         channels: [],
         days: [],
+        marks: [],
+        excludedMarks: [],
         beyond: [],
       },
     },
@@ -707,7 +812,7 @@ export const 条件のないルール: Story = {
 
     await expect(
       await canvas.findByText(
-        'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間のうち、1 つ以上を指定してください。',
+        'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間・印・除外する印のうち、1 つ以上を指定してください。',
       ),
     ).toBeVisible()
     await expect(screen.queryByRole('dialog')).toBeNull()

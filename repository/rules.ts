@@ -1,11 +1,18 @@
 import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 import { broadcastDateOf, windowStartOf } from '@/lib/guide'
-import type { RuleConditionBeyond, RuleDay, RuleTerms } from '@/lib/rules'
+import type {
+  RuleConditionBeyond,
+  RuleDay,
+  RuleMark,
+  RuleTerms,
+} from '@/lib/rules'
 import {
   RULE_DAY_OPTIONS,
+  RULE_MARK_OPTIONS,
   RULE_TAKES_SHOWN,
   ruleDaysInOrder,
+  ruleMarksInOrder,
 } from '@/lib/rules'
 import {
   SEARCH_DEFAULT_FIELDS,
@@ -137,6 +144,10 @@ const SUBGENRE = 'subgenre'
 
 const DAY = 'day'
 
+const MARK = 'mark'
+
+const EXCLUDE_MARK = 'excludeMark'
+
 const FROM = 'from'
 
 const TO = 'to'
@@ -150,6 +161,8 @@ const READ_BY_THE_SCREEN = [
   CHANNEL,
   SUBGENRE,
   DAY,
+  MARK,
+  EXCLUDE_MARK,
   FROM,
   TO,
 ]
@@ -209,6 +222,14 @@ export function ruleQueryOf(terms: RuleTerms): string {
     params.append(DAY, `${day[0].toUpperCase()}${day.slice(1)}`)
   }
 
+  for (const mark of terms.marks) {
+    params.append(MARK, mark)
+  }
+
+  for (const mark of terms.excludedMarks) {
+    params.append(EXCLUDE_MARK, mark)
+  }
+
   if (terms.from) {
     params.set(FROM, windowStartOf(terms.from).toISOString())
   }
@@ -260,6 +281,8 @@ export function ruleTermsOf(query: string): RuleTerms {
     ),
     subgenres: [...new Set(every(SUBGENRE, subgenreOf))],
     days: ruleDaysInOrder(every(DAY, dayOf)),
+    marks: ruleMarksInOrder(every(MARK, markOf)),
+    excludedMarks: ruleMarksInOrder(every(EXCLUDE_MARK, markOf)),
     beyond,
   }
 }
@@ -338,6 +361,12 @@ function subgenreOf(named: string): string | undefined {
 function dayOf(named: string): RuleDay | undefined {
   return RULE_DAY_OPTIONS.find(
     (option) => option.value === named.trim().toLowerCase(),
+  )?.value
+}
+
+function markOf(named: string): RuleMark | undefined {
+  return RULE_MARK_OPTIONS.find(
+    (option) => option.value.toLowerCase() === named.trim().toLowerCase(),
   )?.value
 }
 
