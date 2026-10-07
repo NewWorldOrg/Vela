@@ -20,6 +20,11 @@ import type {
   TunerCensus,
 } from '@/repository/system'
 import { capabilityLabel } from '@/repository/driver-capabilities'
+import type {
+  SegmentSettings,
+  SegmentSettingsWrite,
+} from '@/repository/segments'
+import { DeveloperFeatures } from '@/components/system/developer-features'
 import { Badge } from '@/components/ui/badge'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { Banner } from '@/components/vela/banner'
@@ -223,9 +228,13 @@ const NOTHING = <span className="text-ink-3">{EMPTY_VALUE}</span>
 export function SystemView({
   status,
   velaVersion,
+  segmentSettings,
+  onSettleLearning,
 }: {
   status: SystemStatus
   velaVersion: string
+  segmentSettings: Reading<SegmentSettings>
+  onSettleLearning: (learning: boolean) => Promise<SegmentSettingsWrite>
 }) {
   const { api, driver } = status
   const trouble = api.state === 'ok' ? null : API_TROUBLE[api.state]
@@ -312,6 +321,11 @@ export function SystemView({
           </dl>
         </Surface>
       </section>
+
+      <DeveloperFeatures
+        settings={segmentSettings}
+        onSettleLearning={onSettleLearning}
+      />
     </>
   )
 }

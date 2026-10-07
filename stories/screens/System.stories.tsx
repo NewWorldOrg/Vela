@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, within } from 'storybook/test'
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
+import { LEARNING_OFF, LEARNING_ON } from '@/repository/segments.fixtures'
+import type { SegmentSettingsWrite } from '@/repository/segments'
 import {
   SYSTEM_CENSUS,
   SYSTEM_STATUS,
@@ -10,6 +12,10 @@ import { SystemView } from '@/components/system/system-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
 import { groundOf } from '@/stories/ground-of'
+
+const settleLearning = fn<(learning: boolean) => Promise<SegmentSettingsWrite>>(
+  async () => ({ state: 'ok' }),
+)
 
 const meta = {
   title: 'Screens/設定・システム',
@@ -21,7 +27,12 @@ const meta = {
     },
     layout: 'fullscreen',
   },
-  args: { velaVersion: VELA_VERSION },
+  args: {
+    status: SYSTEM_STATUS,
+    velaVersion: VELA_VERSION,
+    segmentSettings: LEARNING_OFF,
+    onSettleLearning: (learning) => settleLearning(learning),
+  },
   decorators: [inTheSettings],
 } satisfies Meta<typeof SystemView>
 
@@ -234,6 +245,7 @@ export const 保存先が書けない: Story = {
 
 export const API接続なし: Story = {
   args: {
+    segmentSettings: { state: 'unavailable' },
     status: {
       api: { state: 'unreachable' },
       driver: { state: 'unreachable' },
@@ -256,5 +268,118 @@ export const API接続なし: Story = {
     await expect(within(canvasElement).getByRole('alert')).toHaveTextContent(
       'API に接続できません',
     )
+
+    const section = developerFeatures(canvasElement)
+
+    await expect(section.getByText(LEARNING)).toBeVisible()
+    await expect(section.getByText('状態不明')).toBeVisible()
+    await expect(section.queryByRole('switch')).toBeNull()
+  },
+}
+
+const LEARNING = 'CM・OP・ED の学習'
+
+const NOT_SAVED = '変更を保存できませんでした。'
+
+function developerFeatures(canvasElement: HTMLElement) {
+  const section = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="developer-features"]',
+  )
+
+  if (!section) {
+    throw new Error('the developer features are not on the screen')
+  }
+
+  return within(section)
+}
+
+function learningSwitch(canvasElement: HTMLElement): HTMLElement {
+  return developerFeatures(canvasElement).getByRole('switch', {
+    name: LEARNING,
+  })
+}
+
+async function sitsBesideItsName(canvasElement: HTMLElement): Promise<void> {
+  const name = developerFeatures(canvasElement)
+    .getByText(LEARNING)
+    .getBoundingClientRect()
+  const toggle = learningSwitch(canvasElement).getBoundingClientRect()
+
+  await expect(toggle.left).toBeGreaterThan(name.right)
+  await expect(toggle.top).toBeLessThan(name.bottom)
+  await expect(toggle.bottom).toBeGreaterThan(name.top)
+}
+
+export const 学習が切: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const section = canvasElement.querySelector(
+      '[data-slot="developer-features"]',
+    )
+    const heading = canvas.getByRole('heading', { name: '開発者機能' })
+
+    await expect(heading).toBeVisible()
+    await expect(learningSwitch(canvasElement)).not.toBeChecked()
+    await expect(section?.textContent).toBe(`開発者機能${LEARNING}`)
+    await expect(
+      canvas
+        .getByRole('heading', { name: '詳細' })
+        .compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    await expect(section?.nextElementSibling).toBeNull()
+    await sitsBesideItsName(canvasElement)
+  },
+}
+
+export const 学習が入: Story = {
+  args: { segmentSettings: LEARNING_ON },
+  play: async ({ canvasElement }) => {
+    await expect(learningSwitch(canvasElement)).toBeChecked()
+  },
+}
+
+export const 学習を入れる: Story = {
+  play: async ({ canvasElement }) => {
+    settleLearning.mockClear()
+
+    await userEvent.click(learningSwitch(canvasElement))
+
+    await waitFor(() => expect(settleLearning).toHaveBeenCalledWith(true))
+    await expect(settleLearning).toHaveBeenCalledTimes(1)
+    await expect(
+      developerFeatures(canvasElement).queryByRole('alertdialog'),
+    ).toBeNull()
+  },
+}
+
+export const 学習の変更を保存できない: Story = {
+  args: {
+    segmentSettings: LEARNING_ON,
+    onSettleLearning: async () => ({ state: 'notSaved' }) as const,
+  },
+  play: async ({ canvasElement }) => {
+    const section = developerFeatures(canvasElement)
+
+    await userEvent.click(learningSwitch(canvasElement))
+
+    const said = await section.findByText(NOT_SAVED)
+
+    await expect(said).toBeVisible()
+    await waitFor(() => expect(learningSwitch(canvasElement)).toBeChecked())
+    await expect(said.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      learningSwitch(canvasElement).getBoundingClientRect().top,
+    )
+    await expect(said.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      section
+        .getByRole('heading', { name: '開発者機能' })
+        .getBoundingClientRect().bottom,
+    )
+  },
+}
+
+export const 狭い幅の開発者機能: Story = {
+  parameters: { screen: { width: 390, height: 844 } },
+  play: async ({ canvasElement }) => {
+    await sitsBesideItsName(canvasElement)
   },
 }
