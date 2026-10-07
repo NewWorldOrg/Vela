@@ -10,6 +10,9 @@ import { encodeRowOf } from '@/lib/encode'
 import type { RecordingDetail } from '@/repository/recordings'
 import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import type { PlaybackPlan } from '@/repository/videos'
+import { CODEC_LABEL } from '@/repository/encode-terms'
+import { wordFor } from '@/lib/not-yet-in-this-build'
+import { sourceLabel, THE_ARTEFACT } from '@/repository/playback-sources'
 import { Badge } from '@/components/ui/badge'
 import { ChipDot } from '@/components/vela/status'
 import { ChevronRightIcon, QualityIcon } from '@/components/vela/icons'
@@ -214,6 +217,9 @@ function SourceRow({
 }) {
   const tsLabel =
     d.sizeBytes == null ? '元 TS' : `元 TS ${formatBytes(d.sizeBytes)}`
+  const encodedLabel = plan.artefactCodec
+    ? wordFor(CODEC_LABEL, plan.artefactCodec)
+    : sourceLabel(THE_ARTEFACT)
 
   if (d.encode !== 'completed') {
     return (
@@ -234,7 +240,7 @@ function SourceRow({
         aria-label="再生ソース"
         className="inline-flex gap-1 rounded-full border border-line p-0.5"
       >
-        {['H.264', tsLabel].map((label, index) => {
+        {[encodedLabel, tsLabel].map((label, index) => {
           const inUse = index === (plan.transcodes ? 1 : 0)
 
           return (

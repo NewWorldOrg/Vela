@@ -2630,6 +2630,9 @@ export interface components {
       /** Format: int64 */
       after: number | string
     }
+    PlaybackArtefactFileResponder: {
+      codec: components['schemas']['EncodeCodec']
+    }
     PlaybackChapterResponder: {
       /** Format: double */
       startsAtSec: number | string
@@ -2655,6 +2658,8 @@ export interface components {
       sounds: components['schemas']['SoundTrack'][]
       chapters: components['schemas']['PlaybackChapterResponder'][]
       captions: components['schemas']['CaptionStanding']
+      artefactFile:
+        null | components['schemas']['PlaybackArtefactFileResponder']
     }
     PlaybackPositionResponder: {
       recordingId: string
@@ -3246,6 +3251,7 @@ export interface components {
       lastPage: number | string
       /** Format: int32 */
       perPage: number | string
+      next: null | string
     }
     /** @enum {null|string} */
     RecordingOutcome: 'complete' | 'truncated' | 'failed' | null
@@ -7129,6 +7135,7 @@ export interface operations {
         descending?: boolean
         page?: number | string
         perPage?: number | string
+        after?: string
       }
       header?: never
       path?: never

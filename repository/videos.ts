@@ -4,6 +4,10 @@ import type { BrowserDecoding } from '@/lib/browser-decodes'
 import { unaskedIn } from '@/lib/live-profiles'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
+import {
+  codecThisBuildKnows,
+  type EncodeCodec,
+} from '@/repository/encode-terms'
 import type { components } from '@/repository/client/schema'
 import { fetchLiveProfiles } from '@/repository/live'
 import {
@@ -55,6 +59,7 @@ export interface PlaybackPlan {
   sounds: SoundTrack[]
   chapters: PlaybackChapter[]
   captions: CaptionStanding
+  artefactCodec?: EncodeCodec
 }
 
 export type PlaybackRefusal =
@@ -119,6 +124,7 @@ function toPlan(
     sounds: Array.isArray(data.sounds) ? [...data.sounds] : [],
     chapters: Array.isArray(data.chapters) ? data.chapters.map(toChapter) : [],
     captions: shapeFor(CAPTION_STANDINGS, data.captions, 'none'),
+    artefactCodec: codecThisBuildKnows(data.artefactFile?.codec),
   }
 }
 
