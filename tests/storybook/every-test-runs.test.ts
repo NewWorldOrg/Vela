@@ -120,6 +120,7 @@ const THE_SUITE = [
   'tests/repository/said.test.ts',
   'tests/repository/scan-systems.test.ts',
   'tests/repository/search.test.ts',
+  'tests/repository/segments.test.ts',
   'tests/repository/services.test.ts',
   'tests/repository/sessions.test.ts',
   'tests/repository/sounds.test.ts',
