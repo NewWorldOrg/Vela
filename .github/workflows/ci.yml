@@ -42,6 +42,13 @@ jobs:
       - uses: ./.github/actions/setup
       - run: yarn build
 
+  release-tags:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: A prerelease never takes latest, and latest names the newest release that is not one
+        run: .github/release-latest.sh prove
+
   stories:
     runs-on: ubuntu-latest
     strategy:
