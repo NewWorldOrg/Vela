@@ -7,6 +7,7 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/(app)/settings/system/actions.test.ts',
   'tests/app/a-fold-comes-with-the-page.test.ts',
   'tests/app/the-app-goes-on-the-home-screen.test.ts',
   'tests/app/the-curtain-comes-with-the-page.test.ts',

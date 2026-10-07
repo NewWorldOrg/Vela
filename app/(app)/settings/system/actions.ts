@@ -12,7 +12,9 @@ export async function settleTheLearning(
 ): Promise<SegmentSettingsWrite> {
   const result = await settleLearning(learning)
 
-  revalidatePath(SYSTEM)
+  if (result.state === 'ok') {
+    revalidatePath(SYSTEM)
+  }
 
   return result
 }
