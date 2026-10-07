@@ -22,11 +22,48 @@ export type RuleDay =
   | 'saturday'
   | 'sunday'
 
+export type RuleMark =
+  | 'New'
+  | 'Premiere'
+  | 'Final'
+  | 'Rerun'
+  | 'FirstPart'
+  | 'SecondPart'
+  | 'Live'
+  | 'Film'
+  | 'News'
+  | 'Weather'
+  | 'Traffic'
+  | 'Shopping'
+  | 'VoiceCast'
+  | 'Dubbed'
+  | 'Captioned'
+  | 'SignLanguage'
+  | 'AudioDescription'
+  | 'Bilingual'
+  | 'MultipleAudio'
+  | 'Stereo'
+  | 'SurroundStereo'
+  | 'BModeStereo'
+  | 'HighDefinition'
+  | 'StandardDefinition'
+  | 'Progressive'
+  | 'Widescreen'
+  | 'MultiView'
+  | 'DataBroadcast'
+  | 'Interactive'
+  | 'Free'
+  | 'Paid'
+  | 'PayPerView'
+  | 'ParentalLock'
+
 export type RuleConditionBeyond = [name: string, value: string]
 
 export interface RuleTerms extends SearchTerms {
   subgenres: string[]
   days: RuleDay[]
+  marks: RuleMark[]
+  excludedMarks: RuleMark[]
   beyond: RuleConditionBeyond[]
 }
 
@@ -52,6 +89,42 @@ export const RULE_DAY_OPTIONS: {
   { value: 'friday', label: '金曜', short: '金' },
   { value: 'saturday', label: '土曜', short: '土' },
   { value: 'sunday', label: '日曜', short: '日' },
+]
+
+export const RULE_MARK_OPTIONS: { value: RuleMark; label: string }[] = [
+  { value: 'New', label: '新番組' },
+  { value: 'Premiere', label: '初放送' },
+  { value: 'Final', label: '最終回' },
+  { value: 'Rerun', label: '再放送' },
+  { value: 'FirstPart', label: '前編' },
+  { value: 'SecondPart', label: '後編' },
+  { value: 'Live', label: '生放送' },
+  { value: 'Film', label: '映画' },
+  { value: 'News', label: 'ニュース' },
+  { value: 'Weather', label: '天気予報' },
+  { value: 'Traffic', label: '交通情報' },
+  { value: 'Shopping', label: '通信販売' },
+  { value: 'VoiceCast', label: '声の出演' },
+  { value: 'Dubbed', label: '吹替' },
+  { value: 'Captioned', label: '字幕' },
+  { value: 'SignLanguage', label: '手話' },
+  { value: 'AudioDescription', label: '解説放送' },
+  { value: 'Bilingual', label: '二カ国語' },
+  { value: 'MultipleAudio', label: '多重音声' },
+  { value: 'Stereo', label: 'ステレオ' },
+  { value: 'SurroundStereo', label: 'サラウンドステレオ' },
+  { value: 'BModeStereo', label: '圧縮 B モードステレオ' },
+  { value: 'HighDefinition', label: 'ハイビジョン' },
+  { value: 'StandardDefinition', label: '標準画質' },
+  { value: 'Progressive', label: 'プログレッシブ' },
+  { value: 'Widescreen', label: 'ワイド' },
+  { value: 'MultiView', label: 'マルチビュー' },
+  { value: 'DataBroadcast', label: 'データ放送' },
+  { value: 'Interactive', label: '双方向放送' },
+  { value: 'Free', label: '無料放送' },
+  { value: 'Paid', label: '有料放送' },
+  { value: 'PayPerView', label: 'ペイパービュー' },
+  { value: 'ParentalLock', label: '視聴制限' },
 ]
 
 export const RULE_PERIOD_LONGEST_DAYS = 31
@@ -90,7 +163,14 @@ export function seriesTermsOf(
 }
 
 export function ruleTermsOfSearch(terms: SearchTerms): RuleTerms {
-  return { ...terms, subgenres: [], days: [], beyond: [] }
+  return {
+    ...terms,
+    subgenres: [],
+    days: [],
+    marks: [],
+    excludedMarks: [],
+    beyond: [],
+  }
 }
 
 export function withinRuleName(value: string): boolean {
@@ -108,6 +188,8 @@ export function ruleNarrowsAnything(terms: RuleTerms): boolean {
     terms.kind ||
     terms.channels.length ||
     namesSomeDays(terms.days) ||
+    terms.marks.length ||
+    terms.excludedMarks.length ||
     terms.from ||
     terms.to ||
     terms.beyond.length,
@@ -126,6 +208,22 @@ export function ruleDaysInOrder(days: RuleDay[]): RuleDay[] {
 
 export function ruleDayLabelOf(day: RuleDay): string {
   return RULE_DAY_OPTIONS.find((option) => option.value === day)?.label ?? day
+}
+
+export function ruleMarksInOrder(marks: RuleMark[]): RuleMark[] {
+  return RULE_MARK_OPTIONS.map((option) => option.value).filter((mark) =>
+    marks.includes(mark),
+  )
+}
+
+export function ruleMarkLabelOf(mark: RuleMark): string {
+  return (
+    RULE_MARK_OPTIONS.find((option) => option.value === mark)?.label ?? mark
+  )
+}
+
+function markLabelsOf(marks: RuleMark[]): string {
+  return ruleMarksInOrder(marks).map(ruleMarkLabelOf).join('・')
 }
 
 export function withinRulePeriod(
@@ -203,6 +301,14 @@ export function ruleConditionParts(
     ).map((option) => option.short)
 
     parts.push(`曜日: ${days.join('・')}`)
+  }
+
+  if (terms.marks.length > 0) {
+    parts.push(`印: ${markLabelsOf(terms.marks)}`)
+  }
+
+  if (terms.excludedMarks.length > 0) {
+    parts.push(`除外する印: ${markLabelsOf(terms.excludedMarks)}`)
   }
 
   if (terms.from || terms.to) {

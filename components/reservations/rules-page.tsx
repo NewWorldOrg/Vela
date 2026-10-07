@@ -19,6 +19,7 @@ import {
   NEW_RULE,
   RULE_DAY_OPTIONS,
   RULE_DEFAULT_PRIORITY,
+  RULE_MARK_OPTIONS,
   RULE_NAME_LONGEST,
   RULE_PARAM,
   RULE_PERIOD_LONGEST_DAYS,
@@ -26,6 +27,8 @@ import {
   ruleConditionParts,
   ruleDayLabelOf,
   ruleDaysInOrder,
+  ruleMarkLabelOf,
+  ruleMarksInOrder,
   ruleApplicationFellShort,
   ruleApplicationPartsOf,
   ruleNarrowsAnything,
@@ -33,7 +36,7 @@ import {
   withinRulePeriod,
   exclusionPartsOf,
 } from '@/lib/rules'
-import type { RuleDay } from '@/lib/rules'
+import type { RuleDay, RuleMark } from '@/lib/rules'
 import { genreKindsOf, genreLabelOfKind } from '@/lib/search-condition'
 import { SUBGENRE_OPTIONS, subgenreLabelOf } from '@/lib/subgenres'
 import { cn } from '@/lib/utils'
@@ -386,6 +389,8 @@ interface Entry {
   kind?: SearchKind
   channels: string[]
   days: RuleTerms['days']
+  marks: RuleTerms['marks']
+  excludedMarks: RuleTerms['excludedMarks']
   from?: string
   to?: string
   beyond: RuleTerms['beyond']
@@ -407,6 +412,8 @@ function entryOf(rule: Rule | undefined, terms: RuleTerms): Entry {
     kind: terms.kind,
     channels: terms.channels,
     days: terms.days,
+    marks: terms.marks,
+    excludedMarks: terms.excludedMarks,
     from: terms.from,
     to: terms.to,
     beyond: terms.beyond,
@@ -428,6 +435,8 @@ function termsOfEntry(entry: Entry): RuleTerms {
     kind: entry.kind,
     channels: entry.channels,
     days: entry.days,
+    marks: entry.marks,
+    excludedMarks: entry.excludedMarks,
     from: entry.from,
     to: entry.to,
     beyond: entry.beyond,
@@ -504,6 +513,11 @@ function RuleEditor({
   const unusedDays = RULE_DAY_OPTIONS.filter(
     (option) => !entry.days.includes(option.value),
   )
+  const unnamedMarks = RULE_MARK_OPTIONS.filter(
+    (option) =>
+      !entry.marks.includes(option.value) &&
+      !entry.excludedMarks.includes(option.value),
+  )
   const channelNameOf = (id: string): string =>
     channels.find((channel) => channel.id === id)?.name || id
   const written = searchQueryOf({
@@ -527,7 +541,7 @@ function RuleEditor({
     if (!ruleNarrowsAnything(asked)) {
       setProblem({
         field: 'terms',
-        text: 'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間のうち、1 つ以上を指定してください。',
+        text: 'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間・印・除外する印のうち、1 つ以上を指定してください。',
       })
 
       return undefined
@@ -1026,6 +1040,20 @@ function RuleEditor({
           </span>
         </Field>
 
+        <MarkField
+          label="印"
+          marks={entry.marks}
+          offered={unnamedMarks}
+          onChange={(marks) => amend({ marks })}
+        />
+
+        <MarkField
+          label="除外する印"
+          marks={entry.excludedMarks}
+          offered={unnamedMarks}
+          onChange={(excludedMarks) => amend({ excludedMarks })}
+        />
+
         <Field>
           <FieldLabel>期間</FieldLabel>
           <span className="flex flex-wrap items-center gap-2">
@@ -1477,6 +1505,57 @@ function Excluded({
       ))}
       )。
     </Tag>
+  )
+}
+
+function MarkField({
+  label,
+  marks,
+  offered,
+  onChange,
+}: {
+  label: string
+  marks: RuleMark[]
+  offered: { value: RuleMark; label: string }[]
+  onChange: (marks: RuleMark[]) => void
+}) {
+  return (
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
+        {marks.map((mark) => (
+          <Pick
+            key={mark}
+            label={ruleMarkLabelOf(mark)}
+            spoken={`${label} ${ruleMarkLabelOf(mark)} を外す`}
+            onRemove={() => onChange(marks.filter((one) => one !== mark))}
+          />
+        ))}
+        {offered.length > 0 && (
+          <Select
+            value=""
+            onValueChange={(value) =>
+              onChange(ruleMarksInOrder([...marks, value as RuleMark]))
+            }
+          >
+            <SelectTrigger
+              size="sm"
+              aria-label={`${label}を追加`}
+              className="w-fit rounded-full text-ink-3"
+            >
+              ＋ {label}を追加
+            </SelectTrigger>
+            <SelectContent>
+              {offered.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </span>
+    </Field>
   )
 }
 

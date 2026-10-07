@@ -165,6 +165,11 @@ const LOSS_SHAPES: Record<LossSubject, LossShape> = {
     fact: (affected) =>
       `運んだ ${affected} 件のルールで、深夜 0 時から 4 時の番組の曜日が 1 日ずれる`,
   },
+  markWords: {
+    subject: 'ルールの印の語',
+    fact: (affected) =>
+      `運んだ ${affected} 件のルールで、印の語を番組の印の条件に置き換えた`,
+  },
 }
 
 const LOSS_NOT_YET_SHAPED: LossShape = {

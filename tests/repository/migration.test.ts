@@ -465,6 +465,23 @@ test('the day boundary is said as the rules whose day slid by one', async () => 
   })
 })
 
+test('the mark words are said as the rules whose words became marks', async () => {
+  standing([
+    page([detail()], {
+      losses: [loss({ subject: 'markWords', affected: 2 })],
+    }),
+  ])
+
+  const result = await getMigration()
+
+  assert.ok(result)
+  assert.deepEqual(result.losses[0], {
+    id: 'markWords',
+    subject: 'ルールの印の語',
+    fact: '運んだ 2 件のルールで、印の語を番組の印の条件に置き換えた',
+  })
+})
+
 test('a record that carries no loss is left with none', async () => {
   standing([page([detail()], { losses: [] })])
 

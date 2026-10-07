@@ -8,6 +8,7 @@ import {
   NEW_RULE,
   exclusionPartsOf,
   RULE_DAY_OPTIONS,
+  RULE_MARK_OPTIONS,
   RULE_NAME_LONGEST,
   RULE_PARAM,
   newRuleHref,
@@ -16,6 +17,8 @@ import {
   ruleConditionParts,
   ruleDayLabelOf,
   ruleDaysInOrder,
+  ruleMarkLabelOf,
+  ruleMarksInOrder,
   ruleNarrowsAnything,
   rulePeriodLabelOf,
   ruleTermsOfSearch,
@@ -32,6 +35,8 @@ const NOTHING: RuleTerms = {
   subgenres: [],
   channels: [],
   days: [],
+  marks: [],
+  excludedMarks: [],
   beyond: [],
 }
 
@@ -56,6 +61,11 @@ test('each condition on its own narrows the guide', () => {
   assert.equal(ruleNarrowsAnything({ ...NOTHING, channels: ['4-101'] }), true)
   assert.equal(ruleNarrowsAnything({ ...NOTHING, subgenres: ['7-0'] }), true)
   assert.equal(ruleNarrowsAnything({ ...NOTHING, days: ['monday'] }), true)
+  assert.equal(ruleNarrowsAnything({ ...NOTHING, marks: ['New'] }), true)
+  assert.equal(
+    ruleNarrowsAnything({ ...NOTHING, excludedMarks: ['Rerun'] }),
+    true,
+  )
   assert.equal(ruleNarrowsAnything({ ...NOTHING, from: '2026-08-08' }), true)
   assert.equal(ruleNarrowsAnything({ ...NOTHING, to: '2026-08-09' }), true)
 })
@@ -84,6 +94,8 @@ test('what a search hands over becomes a rule with nothing added to it', () => {
     ...A_SERIES,
     subgenres: [],
     days: [],
+    marks: [],
+    excludedMarks: [],
     beyond: [],
   })
 })
@@ -100,6 +112,8 @@ test('the conditions read back in the order the form asks for them', () => {
         kind: 'bs',
         channels: ['4-101'],
         days: ['monday', 'saturday'],
+        marks: ['New', 'Premiere'],
+        excludedMarks: ['Rerun'],
         from: '2026-08-08',
         to: '2026-08-31',
         beyond: [],
@@ -114,9 +128,40 @@ test('the conditions read back in the order the form asks for them', () => {
       'ジャンル: アニメ/特撮・映画・海外ドラマ(ドラマ)・その他(ドキュメンタリー/教養)',
       'BS',
       '曜日: 月・土',
+      '印: 新番組・初放送',
+      '除外する印: 再放送',
       '期間: 08/08(土) 〜 08/31(月)',
       '衛星第一',
     ],
+  )
+})
+
+test('marks are named by what they mean, in the order the form offers them', () => {
+  assert.deepEqual(ruleMarksInOrder(['Rerun', 'New', 'Captioned']), [
+    'New',
+    'Rerun',
+    'Captioned',
+  ])
+  assert.equal(ruleMarkLabelOf('New'), '新番組')
+  assert.equal(ruleMarkLabelOf('BModeStereo'), '圧縮 B モードステレオ')
+  assert.equal(ruleMarkLabelOf('ParentalLock'), '視聴制限')
+})
+
+test('every mark the guide reads has one place among the choices', () => {
+  const values = RULE_MARK_OPTIONS.map((option) => option.value)
+
+  assert.equal(values.length, 33)
+  assert.equal(new Set(values).size, values.length)
+  assert.equal(
+    new Set(RULE_MARK_OPTIONS.map((option) => option.label)).size,
+    values.length,
+  )
+})
+
+test('a rule that leaves out a mark without asking for one is summed up by that alone', () => {
+  assert.deepEqual(
+    ruleConditionParts({ ...NOTHING, excludedMarks: ['Rerun'] }, named),
+    ['除外する印: 再放送', 'すべてのチャンネル'],
   )
 })
 

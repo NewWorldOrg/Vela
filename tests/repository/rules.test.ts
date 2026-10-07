@@ -137,6 +137,8 @@ const EVERY_CONDITION = {
   kind: 'bs' as const,
   channels: ['4-101'],
   days: ['monday' as const, 'saturday' as const],
+  marks: ['New' as const, 'Premiere' as const],
+  excludedMarks: ['Rerun' as const],
   from: '2026-08-08',
   to: '2026-08-31',
   beyond: [],
@@ -144,6 +146,7 @@ const EVERY_CONDITION = {
 
 const EVERY_CONDITION_WRITTEN =
   '&subgenre=3-1&subgenre=8-15&day=Monday&day=Saturday' +
+  '&mark=New&mark=Premiere&excludeMark=Rerun' +
   '&from=2026-08-07T19%3A00%3A00.000Z&to=2026-08-31T19%3A00%3A00.000Z'
 
 const DAY_NAMES = [
@@ -169,7 +172,9 @@ const asTheApiReads = (name: string, value: string): string => {
     return DAY_NAMES[Number(value)]
   }
 
-  return ['day', 'type', 'fields'].includes(name) ? value.toLowerCase() : value
+  return ['day', 'type', 'fields', 'mark', 'excludeMark'].includes(name)
+    ? value.toLowerCase()
+    : value
 }
 
 const conditionsOf = (query: string): Record<string, string[]> => {
@@ -258,6 +263,8 @@ test('a query naming only what it looks in reads back as narrowing nothing', () 
     kind: undefined,
     channels: [],
     days: [],
+    marks: [],
+    excludedMarks: [],
     from: undefined,
     to: undefined,
     beyond: [],
@@ -298,6 +305,37 @@ test('the days, the subgenres and the span a rule holds are read', () => {
   assert.equal(terms.from, '2026-08-08')
   assert.equal(terms.to, '2026-08-31')
   assert.deepEqual(terms.beyond, [])
+})
+
+test('the marks a rule asks for and leaves out are read in the order the form offers them', () => {
+  const terms = ruleTermsOf(
+    'mark=rerun&mark=NEW&mark=New&excludeMark=final&excludeMark=Captioned',
+  )
+
+  assert.deepEqual(terms.marks, ['New', 'Rerun'])
+  assert.deepEqual(terms.excludedMarks, ['Final', 'Captioned'])
+  assert.deepEqual(terms.beyond, [])
+})
+
+test('a mark the screen does not know is carried as it was written', () => {
+  const query = 'genre=7&mark=Sparkling&excludeMark=26'
+  const terms = ruleTermsOf(query)
+
+  assert.deepEqual(terms.marks, [])
+  assert.deepEqual(terms.excludedMarks, [])
+  assert.deepEqual(conditionsOf(ruleQueryOf(terms)), conditionsOf(query))
+})
+
+test('the rule carried over to look for new series reads as its marks', () => {
+  const terms = ruleTermsOf(
+    'subgenre=7-0&mark=New&excludeMark=Rerun&type=IsdbT',
+  )
+
+  assert.deepEqual(terms.marks, ['New'])
+  assert.deepEqual(terms.excludedMarks, ['Rerun'])
+  assert.deepEqual(terms.subgenres, ['7-0'])
+  assert.equal(terms.kind, 'terrestrial')
+  assert.equal(terms.q, undefined)
 })
 
 test('a span that does not sit on the edge of a broadcast day is carried, not rounded', () => {
