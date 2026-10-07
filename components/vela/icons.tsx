@@ -94,6 +94,16 @@ export function EncodeIcon(props: IconProps) {
   )
 }
 
+export function SegmentsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3.6 16.2h16.8M8 14v4.4M16 14v4.4" />
+      <path d="M8 11.2C9.8 3.8 14.2 3.8 16 11.2" />
+      <path d="m16 11.2 1.1-2.3M16 11.2l-2.1-1.5" />
+    </Icon>
+  )
+}
+
 export function QualityIcon(props: IconProps) {
   return (
     <Icon {...props}>

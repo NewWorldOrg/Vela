@@ -52,6 +52,7 @@ const NAVIGATION: [string, ComponentType<IconProps>][] = [
   ['TunerSatelliteIcon', Icons.TunerSatelliteIcon],
   ['ChannelIcon', Icons.ChannelIcon],
   ['EncodeIcon', Icons.EncodeIcon],
+  ['SegmentsIcon', Icons.SegmentsIcon],
   ['QualityIcon', Icons.QualityIcon],
   ['SystemIcon', Icons.SystemIcon],
   ['DisplayIcon', Icons.DisplayIcon],
