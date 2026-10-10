@@ -31,10 +31,10 @@ export type UsedKeyGroup = 'basic' | 'data-button' | 'numeric-tuning'
 
 export const GRID: Size = { width: 960, height: 540 }
 
-export const RESOLUTIONS: Record<string, Size> = {
-  '960x540': { width: 960, height: 540 },
-  '720x480': { width: 720, height: 480 },
-}
+export const RESOLUTIONS = new Map<string, Size>([
+  ['960x540', { width: 960, height: 540 }],
+  ['720x480', { width: 720, height: 480 }],
+])
 
 /** The longest value of one declaration the converter reads; a longer one is ignored. */
 export const MOST_VALUE_LENGTH = 256
@@ -502,7 +502,7 @@ const MAPPER_LIST: [string, Mapper][] = [
   ],
 ]
 
-const MAPPERS: Record<string, Mapper> = Object.fromEntries(MAPPER_LIST)
+const MAPPERS = new Map<string, Mapper>(MAPPER_LIST)
 
 export interface ConvertedStyle {
   css: string
@@ -522,7 +522,7 @@ export function cssOf(
       continue
     }
 
-    const mapper = MAPPERS[property]
+    const mapper = MAPPERS.get(property)
     const mapped = mapper ? mapper(value, palette) : null
 
     if (!mapper) {
@@ -568,16 +568,16 @@ export interface BmlFeatures {
   clut?: string
 }
 
-const NAV_FEATURE: Record<
+const NAV_FEATURE = new Map<
   string,
   'navIndex' | 'navUp' | 'navDown' | 'navLeft' | 'navRight'
-> = {
-  'nav-index': 'navIndex',
-  'nav-up': 'navUp',
-  'nav-down': 'navDown',
-  'nav-left': 'navLeft',
-  'nav-right': 'navRight',
-}
+>([
+  ['nav-index', 'navIndex'],
+  ['nav-up', 'navUp'],
+  ['nav-down', 'navDown'],
+  ['nav-left', 'navLeft'],
+  ['nav-right', 'navRight'],
+])
 
 const USED_KEY_GROUPS: string[] = ['basic', 'data-button', 'numeric-tuning']
 
@@ -611,7 +611,7 @@ export function featuresOf(values: Map<string, string>): BmlFeatures {
   const features: BmlFeatures = {}
 
   values.forEach((value, property) => {
-    const nav = NAV_FEATURE[property]
+    const nav = NAV_FEATURE.get(property)
 
     if (nav && /^\d+$/.test(value.trim())) {
       features[nav] = Number(value)
@@ -619,8 +619,9 @@ export function featuresOf(values: Map<string, string>): BmlFeatures {
   })
 
   const used = values.get('used-key-list')
-  const resolution =
-    RESOLUTIONS[values.get('resolution')?.trim().toLowerCase() ?? '']
+  const resolution = RESOLUTIONS.get(
+    values.get('resolution')?.trim().toLowerCase() ?? '',
+  )
   const aspect = values.get('display-aspect-ratio')?.trim().toLowerCase()
   const clut = values.get('clut')
 

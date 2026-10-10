@@ -67,20 +67,20 @@ export function keysOf(groups: UsedKeyGroup[]): BmlKey[] {
   return BML_KEYS.filter((key) => taken.has(key))
 }
 
-const KEYBOARD: Record<string, BmlKey> = {
-  arrowup: 'up',
-  arrowdown: 'down',
-  arrowleft: 'left',
-  arrowright: 'right',
-  enter: 'enter',
-  backspace: 'back',
-  b: 'blue',
-  r: 'red',
-  g: 'green',
-  y: 'yellow',
-  d: 'd',
-  ...Object.fromEntries(DIGITS.map((digit) => [digit, digit])),
-}
+const KEYBOARD = new Map<string, BmlKey>([
+  ['arrowup', 'up'],
+  ['arrowdown', 'down'],
+  ['arrowleft', 'left'],
+  ['arrowright', 'right'],
+  ['enter', 'enter'],
+  ['backspace', 'back'],
+  ['b', 'blue'],
+  ['r', 'red'],
+  ['g', 'green'],
+  ['y', 'yellow'],
+  ['d', 'd'],
+  ...DIGITS.map((digit): [string, BmlKey] => [digit, digit]),
+])
 
 /** The remote control's key a key on the keyboard stands for, or null. A key held with Ctrl, Meta or Alt is the browser's. */
 export function keyFromKeyboard(press: {
@@ -97,7 +97,7 @@ export function keyFromKeyboard(press: {
     return null
   }
 
-  return KEYBOARD[press.key.toLowerCase()] ?? null
+  return KEYBOARD.get(press.key.toLowerCase()) ?? null
 }
 
 export function isBmlKey(value: unknown): value is BmlKey {

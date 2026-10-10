@@ -5,7 +5,6 @@ import type { BmlResource } from '@/lib/bml/resources'
 import {
   BML_PROPERTIES,
   DEFAULT_USED_KEYS,
-  RESOLUTIONS,
   cssOf,
   cssSheetOf,
   declarationsOf,
@@ -108,15 +107,17 @@ const TEXT = 3
 
 const CDATA = 4
 
-const HTML_TAG: Record<string, HtmlTag> = {
-  body: 'div',
-  div: 'div',
-  p: 'p',
-  span: 'span',
-  br: 'br',
-  a: 'a',
-  input: 'input',
-}
+const HTML_TAG = new Map<string, HtmlTag>([
+  ['body', 'div'],
+  ['div', 'div'],
+  ['p', 'p'],
+  ['span', 'span'],
+  ['br', 'br'],
+  ['a', 'a'],
+  ['input', 'input'],
+])
+
+const DEFAULT_RESOLUTION: Size = { width: 960, height: 540 }
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/x-arib-png'])
 
@@ -187,7 +188,7 @@ class Conversion {
 
   private palette: Palette = paletteOf(null)
 
-  private resolution: Size = RESOLUTIONS['960x540']
+  private resolution: Size = DEFAULT_RESOLUTION
 
   videoRect: Rect | null = null
 
@@ -372,7 +373,7 @@ class Conversion {
       return this.image(node, node.getAttribute('src'))
     }
 
-    const tag = HTML_TAG[name]
+    const tag = HTML_TAG.get(name)
 
     if (!tag) {
       this.warnings.add(`unsupported element: ${name}`)
@@ -573,7 +574,7 @@ export function convertBml(
   const features = conversion.cascade(body)
   const styleSheet = conversion.styleSheet()
   const converted = conversion.convert(body, { left: 0, top: 0 }) as PageElement
-  const resolution = features.resolution ?? RESOLUTIONS['960x540']
+  const resolution = features.resolution ?? DEFAULT_RESOLUTION
 
   return {
     read: 'page',

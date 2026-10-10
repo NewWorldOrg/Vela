@@ -378,3 +378,21 @@ test('a BML document with no body is malformed', () => {
     { read: 'malformed', why: 'no body' },
   )
 })
+
+test('an element named after something every object inherits is still an element BML does not have', () => {
+  const page = read(
+    bml(
+      '<constructor id="c">x</constructor><toString id="t"/>',
+      '',
+      'resolution: constructor',
+    ),
+  )
+
+  assert.equal(byId(page, 'c').tag, 'div')
+  assert.equal(byId(page, 't').tag, 'div')
+  assert.deepEqual(page.resolution, { width: 960, height: 540 })
+  assert.deepEqual(page.warnings, [
+    'unsupported element: constructor',
+    'unsupported element: tostring',
+  ])
+})

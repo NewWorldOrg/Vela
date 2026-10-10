@@ -442,3 +442,22 @@ test('a style sheet full of comments that never close is read at once', () => {
 
   assert.deepEqual(sheet.rules, [])
 })
+
+test('a property or a value named after something every object inherits is only unsupported', () => {
+  assert.deepEqual(css('constructor: 1; __proto__: 2; tostring: 3'), {
+    css: '',
+    warnings: [
+      'unsupported property: constructor',
+      'unsupported property: tostring',
+    ],
+  })
+  assert.deepEqual(
+    featuresOf(
+      new Map([
+        ['resolution', 'constructor'],
+        ['constructor', '1'],
+      ]),
+    ),
+    {},
+  )
+})
