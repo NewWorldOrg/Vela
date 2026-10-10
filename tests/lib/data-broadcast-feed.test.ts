@@ -538,3 +538,29 @@ test('a runtime that opens is handed the modules the catalog lists, the one befo
     [[0, 2]],
   )
 })
+
+test('a replay that comes as the wire opens, its catalog newest and its modules older, can be opened at once', () => {
+  const { feed } = quietFeed()
+
+  feed.offer(catalogPayload(CATALOG), at(50))
+  feed.offer(modulePayload(moduleOf(0)), at(20))
+  feed.offer(modulePayload(moduleOf(1)), at(35))
+  feed.advance(56)
+
+  assert.equal(feed.availability, 'ready')
+  assert.deepEqual(feed.forTheCatalog.map((module) => module.id).sort(), [0, 1])
+})
+
+test('a catalog and a module of the same time taken in either order both count', () => {
+  for (const catalogFirst of [true, false]) {
+    const { feed } = quietFeed()
+    const catalog = catalogPayload(CATALOG)
+    const startup = modulePayload(moduleOf(0))
+
+    feed.offer(catalogFirst ? catalog : startup, at(10))
+    feed.offer(catalogFirst ? startup : catalog, at(10))
+    feed.advance(10)
+
+    assert.equal(feed.availability, 'ready', `catalog first: ${catalogFirst}`)
+  }
+})
