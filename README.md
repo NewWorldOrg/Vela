@@ -85,6 +85,17 @@ docker compose exec app yarn codegen:verify   # コミット済みの文書か�
 `codegen:fetch` には、動いているバックエンドが要る。
 `codegen:verify` は何も動いていなくても実行できるので、CI ではこちらを実行する。
 
+## データ放送のランタイム
+
+データ放送の文書は、別オリジンの枠の中で 1 本のスクリプトが描く。
+そのスクリプトは `lib/bml/` と `components/data-broadcast/` から組み、`components/data-broadcast/runtime-script.generated.ts` として**コミットする**。
+どちらかを変えたら組み直す。
+組み直していないと単体試験が落ちる。
+
+```bash
+docker compose exec app yarn bml-runtime   # ランタイムを組み直す
+```
+
 ## ライセンス
 
 ライセンスは AGPL-3.0-only で、著作権者は NewWorldOrg である。
