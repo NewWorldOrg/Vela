@@ -288,9 +288,11 @@ export const 放送の文書から届かないもの: Story = {
 function Keypad({
   layout,
   numbers: shownFirst,
+  tall = 520,
 }: {
   layout: 'band' | 'column'
   numbers: boolean
+  tall?: number
 }) {
   const [numbers, setNumbers] = useState(shownFirst)
   const [pressed, setPressed] = useState<string[]>([])
@@ -312,7 +314,9 @@ function Keypad({
           {keypad}
         </div>
       ) : (
-        <div className="relative h-[520px] w-[400px] bg-black">{keypad}</div>
+        <div className="relative w-[400px] bg-black" style={{ height: tall }}>
+          {keypad}
+        </div>
       )}
     </div>
   )
@@ -370,7 +374,9 @@ export const キーパッド_列: Story = {
     })
 
     await expect(keypad.getBoundingClientRect().width).toBe(170)
-    await userEvent.click(within(keypad).getByRole('button', { name: '数字' }))
+    await userEvent.click(
+      within(keypad).getByRole('button', { name: '123 数字' }),
+    )
     await expect(keypad).toHaveAttribute('data-face', 'numbers')
   },
 }
@@ -454,5 +460,31 @@ export const 読み込み直した枠は壊れたものとして閉じる: Story
       },
     )
     await expect(group).toHaveAttribute('data-readies', '1')
+  },
+}
+
+export const キーパッド_列_縦が足りない: Story = {
+  render: () => <Keypad layout="column" numbers={false} tall={240} />,
+  play: async ({ canvasElement }) => {
+    const keypad = within(canvasElement).getByRole('group', {
+      name: 'データ放送のリモコン',
+    })
+    const up = within(keypad).getByRole('button', { name: '上' })
+
+    await expect(getComputedStyle(keypad).overflowY).toBe('auto')
+    await expect(keypad.scrollHeight).toBeGreaterThan(keypad.clientHeight)
+    await expect(up.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      keypad.getBoundingClientRect().top,
+    )
+
+    keypad.scrollTop = keypad.scrollHeight
+
+    const last = within(keypad).getByRole('button', { name: '123 数字' })
+
+    await waitFor(() =>
+      expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        keypad.getBoundingClientRect().bottom,
+      ),
+    )
   },
 }

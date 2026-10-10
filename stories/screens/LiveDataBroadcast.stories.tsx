@@ -238,6 +238,11 @@ export const 開いている_PC: Story = {
 
     await expect(keypad).toHaveAttribute('data-layout', 'band')
     await expect(keypad.getBoundingClientRect().height).toBe(120)
+
+    const says = onTheScreen(canvasElement, 'data-broadcast-says')
+
+    await expect(says).toHaveAttribute('role', 'status')
+    await expect(says).toHaveTextContent('')
     await expect(
       within(keypad)
         .getAllByRole('button')
@@ -253,7 +258,7 @@ export const 開いている_PC: Story = {
       '赤',
       '緑',
       '黄',
-      '数字',
+      '123 数字',
     ])
   },
 }
@@ -373,7 +378,9 @@ export const キーパッドで押す: Story = {
       onTheScreen(canvasElement, 'live-player'),
     )
 
-    await userEvent.click(within(keypad).getByRole('button', { name: '数字' }))
+    await userEvent.click(
+      within(keypad).getByRole('button', { name: '123 数字' }),
+    )
     await expect(keypad).toHaveAttribute('data-face', 'numbers')
     await expect(
       within(keypad)
@@ -450,9 +457,13 @@ export const 受信中: Story = {
     await opened(canvasElement)
     press(player, 'Enter')
 
-    await expect(
-      await canvas.findByText(SAID_RECEIVING, {}, { timeout: 6000 }),
-    ).toBeVisible()
+    const says = onTheScreen(canvasElement, 'data-broadcast-says')
+
+    await expect(says).toHaveTextContent('')
+    await waitFor(() => expect(says).toHaveTextContent(SAID_RECEIVING), {
+      timeout: 6000,
+    })
+    await expect(onTheScreen(canvasElement, 'data-broadcast-says')).toBe(says)
     await expect(onTheScreen(canvasElement, 'player-picture')).toHaveAttribute(
       'data-rect',
       AT_THE_START,
@@ -469,7 +480,7 @@ export const キーボードで面を切り替えても鍵が効く: Story = {
 
     const keypad = canvas.getByRole('group', { name: 'データ放送のリモコン' })
 
-    within(keypad).getByRole('button', { name: '数字' }).focus()
+    within(keypad).getByRole('button', { name: '123 数字' }).focus()
     await userEvent.keyboard('{Enter}')
     await expect(keypad).toHaveAttribute('data-face', 'numbers')
     await expect(document.activeElement).toBe(player)

@@ -129,15 +129,17 @@ export function DataBroadcastFace({
   return (
     <>
       <BmlFrame onReady={ready} onMessage={onMessage} className="z-[1]" />
-      {says && (
-        <p
-          role="status"
-          data-slot="data-broadcast-says"
-          className="pointer-events-none absolute inset-x-0 bottom-[30%] z-[2] mx-auto w-fit max-w-[88%] rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
-        >
-          {says}
-        </p>
-      )}
+      <p
+        role="status"
+        data-slot="data-broadcast-says"
+        className="pointer-events-none absolute inset-x-0 bottom-[30%] z-[2] flex justify-center"
+      >
+        {says && (
+          <span className="max-w-[88%] rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)">
+            {says}
+          </span>
+        )}
+      </p>
     </>
   )
 }
@@ -328,7 +330,7 @@ function Digits({ pressing }: { pressing: Pressing }) {
 const LAYOUT: Record<Layout, string> = {
   band: 'flex h-[120px] w-max min-w-full items-center justify-center gap-[22px] px-4 @max-[600px]:gap-3 @max-[600px]:px-3',
   column:
-    'absolute inset-y-0 right-0 z-10 flex w-[170px] flex-col items-center justify-center gap-3.5 pb-[60px]',
+    'absolute inset-y-0 right-0 z-10 flex w-[170px] flex-col items-center justify-center-safe gap-3.5 overflow-y-auto pt-3 pb-[60px] *:shrink-0',
 }
 
 /** The remote control's keys on screen: a band under the player's box, or a column at the right in fullscreen. `123` turns it to the numbers, and `←` back; the key pressed to turn it goes away with its face, so the focus is handed back to the player first. */
@@ -362,7 +364,7 @@ export function DataBroadcastKeypad({
   )
   const toNumbers = (
     <KeyButton
-      name="数字"
+      name="123 数字"
       pressing={pressing}
       onPress={() => turn(true)}
       className="px-4 font-code"
