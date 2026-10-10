@@ -40,6 +40,7 @@ const THE_SUITE = [
   'tests/lib/app-signals.test.ts',
   'tests/lib/arrival.test.ts',
   'tests/lib/bml/catalog.test.ts',
+  'tests/lib/bml/palette.test.ts',
   'tests/lib/bml/paths.test.ts',
   'tests/lib/bml/resources.test.ts',
   'tests/lib/browser-decodes.test.ts',
