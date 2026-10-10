@@ -36,6 +36,9 @@ export const RESOLUTIONS: Record<string, Size> = {
   '720x480': { width: 720, height: 480 },
 }
 
+/** The longest value of one declaration the converter reads; a longer one is ignored. */
+export const MOST_VALUE_LENGTH = 256
+
 export const DEFAULT_USED_KEYS: UsedKeyGroup[] = ['basic', 'data-button']
 
 export const FONT_FAMILIES = ['Data Broadcast', 'Broadcast Marks'] as const
@@ -93,10 +96,13 @@ export function declarationsOf(text: string): Declaration[] {
     }
 
     const property = part.slice(0, colon).trim().toLowerCase()
-    const value = part
-      .slice(colon + 1)
-      .replace(/!\s*important\s*$/i, '')
-      .trim()
+    const raw = part.slice(colon + 1)
+
+    if (raw.length > MOST_VALUE_LENGTH) {
+      return []
+    }
+
+    const value = raw.replace(/!\s*important\s*$/i, '').trim()
 
     return /^-?[a-z][a-z0-9-]*$/.test(property) && value.length > 0
       ? [{ property, value }]
@@ -148,7 +154,24 @@ export function selectorOf(text: string): Selector | null {
 }
 
 function stripComments(text: string): string {
-  return text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/<!--|-->/g, ' ')
+  const kept: string[] = []
+  let at = 0
+
+  while (at < text.length) {
+    const open = text.indexOf('/*', at)
+
+    if (open < 0) {
+      kept.push(text.slice(at))
+      break
+    }
+
+    const close = text.indexOf('*/', open + 2)
+
+    kept.push(text.slice(at, open), ' ')
+    at = close < 0 ? text.length : close + 2
+  }
+
+  return kept.join('').replace(/\x3C!--|--\x3E/g, ' ')
 }
 
 function blockEnd(text: string, open: number): number {
@@ -178,17 +201,17 @@ export function styleSheetOf(source: string): StyleSheet {
 
   while (at < text.length) {
     const open = text.indexOf('{', at)
-    const statement = text.indexOf(';', at)
 
     if (open < 0) {
       break
     }
 
     const head = text.slice(at, open).trim()
+    const statement = head.indexOf(';')
 
-    if (head.startsWith('@') && statement >= 0 && statement < open) {
+    if (head.startsWith('@') && statement >= 0) {
       warnings.push(`unsupported at-rule: ${head.split(/\s/)[0]}`)
-      at = statement + 1
+      at += text.slice(at, open).indexOf(';') + 1
       continue
     }
 
@@ -368,8 +391,32 @@ const BORDER_STYLES = [
   'outset',
 ]
 
-const CLIP =
-  /^(rect\(\s*-?\d+(?:px)?\s*,?\s*-?\d+(?:px)?\s*,?\s*-?\d+(?:px)?\s*,?\s*-?\d+(?:px)?\s*\)|auto)$/i
+function insideOf(value: string, opening: string): string | null {
+  const lowered = value.trim().toLowerCase()
+
+  return lowered.startsWith(opening) && lowered.endsWith(')')
+    ? value.trim().slice(opening.length, -1)
+    : null
+}
+
+function clipOf(value: string): string | null {
+  const lowered = value.trim().toLowerCase()
+
+  if (lowered === 'auto' || lowered === 'inherit') {
+    return lowered
+  }
+
+  const inside = insideOf(value, 'rect(')
+  const edges = inside
+    ?.split(',')
+    .flatMap((part) => part.trim().split(/\s+/))
+    .filter((part) => part.length > 0)
+    .map((part) => length(part, ['auto']))
+
+  return edges && edges.length === 4 && edges.every((edge) => edge !== null)
+    ? `rect(${edges.join(', ')})`
+    : null
+}
 
 const SIDES = ['top', 'right', 'bottom', 'left'] as const
 
@@ -400,10 +447,7 @@ const MAPPER_LIST: [string, Mapper][] = [
     'overflow',
     as('overflow', (value) => keyword(value, ['hidden', 'visible'])),
   ],
-  [
-    'clip',
-    as('clip', (value) => (CLIP.test(value.trim()) ? value.trim() : null)),
-  ],
+  ['clip', as('clip', clipOf)],
   ['padding', as('padding', lengths)],
   ['margin', as('margin', lengths)],
   ['border-width', as('border-width', lengths)],
@@ -550,9 +594,16 @@ function usedKeysOf(value: string): UsedKeyGroup[] | undefined {
 }
 
 function urlOf(value: string): string | undefined {
-  const url = /^url\(\s*(['"]?)(.*?)\1\s*\)$/i.exec(value.trim())
+  const inside = insideOf(value, 'url(')?.trim()
+  const quote = inside?.[0]
+  const quoted =
+    inside !== undefined &&
+    inside.length >= 2 &&
+    (quote === '"' || quote === "'") &&
+    inside.endsWith(quote)
+  const url = quoted ? inside.slice(1, -1) : inside
 
-  return url && url[2].length > 0 ? url[2] : undefined
+  return url && url.length > 0 ? url : undefined
 }
 
 /** BML's own properties among the declarations an element ends with, each read into the value the runtime uses. One that cannot be read is left out. */

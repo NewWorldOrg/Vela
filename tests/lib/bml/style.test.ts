@@ -361,3 +361,84 @@ test('the ground around the video is as wide as the plane is beyond each side of
     },
   )
 })
+
+function within10ms(run: () => unknown): unknown {
+  const started = performance.now()
+  const answer = run()
+
+  assert.ok(performance.now() - started < 10, 'answered within 10 ms')
+
+  return answer
+}
+
+test('a clip is read as four edges, with commas or without, and anything else is refused', () => {
+  assert.equal(
+    css('clip: rect(1px 2px 3px 4px)').css,
+    'clip: rect(1px, 2px, 3px, 4px)',
+  )
+  assert.equal(
+    css('clip: RECT(0, auto, 3px, 4)').css,
+    'clip: rect(0px, auto, 3px, 4px)',
+  )
+  assert.equal(css('clip: auto').css, 'clip: auto')
+  assert.deepEqual(css('clip: rect(1px, 2px, 3px)'), {
+    css: '',
+    warnings: ['unsupported value of clip'],
+  })
+  assert.deepEqual(css('clip: rect(1px, 2px, 3px, 4px) x'), {
+    css: '',
+    warnings: ['unsupported value of clip'],
+  })
+})
+
+test('a colour table is named by url, quoted or not', () => {
+  for (const value of [
+    'url(a.clt)',
+    'url("a.clt")',
+    "url( 'a.clt' )",
+    'URL(a.clt)',
+  ]) {
+    assert.deepEqual(
+      featuresOf(new Map([['clut', value]])),
+      { clut: 'a.clt' },
+      value,
+    )
+  }
+
+  assert.deepEqual(featuresOf(new Map([['clut', 'url()']])), {})
+  assert.deepEqual(featuresOf(new Map([['clut', 'url("a.clt)']])), {
+    clut: '"a.clt',
+  })
+})
+
+test('a hostile value is answered at once: long values are ignored, and clips and urls are not read by backtracking', () => {
+  const clip = `clip: rect(${'1'.repeat(800)}x`
+  const url = `url(${' '.repeat(4000)}x`
+
+  assert.deepEqual(
+    within10ms(() => css(clip)),
+    { css: '', warnings: [] },
+  )
+  assert.deepEqual(
+    within10ms(() =>
+      cssOf([{ property: 'clip', value: `rect(${'1'.repeat(800)}x` }], FIXED),
+    ),
+    { css: '', warnings: ['unsupported value of clip'] },
+  )
+  assert.deepEqual(
+    within10ms(() => featuresOf(new Map([['clut', url]]))),
+    {},
+  )
+  assert.deepEqual(
+    within10ms(() => declarationsOf(`left: ${'1'.repeat(257)}px; top: 1px`)),
+    [{ property: 'top', value: '1px' }],
+  )
+})
+
+test('a style sheet full of comments that never close is read at once', () => {
+  const sheet = within10ms(() => styleSheetOf('/*'.repeat(10_000))) as {
+    rules: unknown[]
+  }
+
+  assert.deepEqual(sheet.rules, [])
+})
