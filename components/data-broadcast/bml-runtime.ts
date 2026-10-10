@@ -1,5 +1,6 @@
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import {
+  BML_LIMITS,
   convertBml,
   parseBml,
   type BmlPage,
@@ -39,6 +40,8 @@ const IMAGE_TYPE: Partial<Record<BmlResource['kind'], string>> = {
 }
 
 export type RuntimeWindow = Window & typeof globalThis
+
+export type Mount = (page: BmlPage, plane: HTMLElement) => MountedPage
 
 interface Shown {
   page: BmlPage
@@ -83,11 +86,19 @@ export class BmlRuntime {
     run: () => this.say({ kind: 'unsupported', what: 'script' }),
   }
 
-  constructor(window: RuntimeWindow, plane: HTMLElement, playerOrigin: string) {
+  private readonly mount: Mount
+
+  constructor(
+    window: RuntimeWindow,
+    plane: HTMLElement,
+    playerOrigin: string,
+    mount: Mount = mountPage,
+  ) {
     this.window = window
     this.plane = plane
     this.playerOrigin = playerOrigin
     this.parser = new window.DOMParser() as unknown as XmlParser
+    this.mount = mount
   }
 
   receive(event: MessageEvent): void {
@@ -214,6 +225,33 @@ export class BmlRuntime {
 
   private show(address: BmlAddress, resource: BmlResource): void {
     const urls: string[] = []
+
+    try {
+      const page = this.read(address, resource, urls)
+
+      if (!page) {
+        this.discard(urls)
+        this.fail('malformed')
+
+        return
+      }
+
+      this.draw(page, urls)
+    } catch {
+      this.discard(urls)
+      this.fail('malformed')
+    }
+  }
+
+  private read(
+    address: BmlAddress,
+    resource: BmlResource,
+    urls: string[],
+  ): BmlPage | null {
+    if (resource.body.length > BML_LIMITS.documentBytes) {
+      return null
+    }
+
     const root = parseBml(new TextDecoder().decode(resource.body), this.parser)
     const reading = root
       ? convertBml(root, {
@@ -223,15 +261,10 @@ export class BmlRuntime {
         })
       : null
 
-    if (!reading || reading.read !== 'page') {
-      urls.forEach((url) => URL.revokeObjectURL(url))
-      this.fail('malformed')
+    return reading?.read === 'page' ? reading.page : null
+  }
 
-      return
-    }
-
-    const { page } = reading
-
+  private draw(page: BmlPage, urls: string[]): void {
     this.unmount()
     page.warnings.forEach((warning) => this.warn(warning))
 
@@ -239,7 +272,7 @@ export class BmlRuntime {
 
     this.shown = {
       page,
-      mounted: mountPage(page, this.plane),
+      mounted: this.mount(page, this.plane),
       navigation,
       focused: null,
       urls,
@@ -253,6 +286,10 @@ export class BmlRuntime {
         : null,
     })
     this.say({ kind: 'usedKeys', keys: keysOf(page.usedKeys) })
+  }
+
+  private discard(urls: string[]): void {
+    urls.forEach((url) => URL.revokeObjectURL(url))
   }
 
   private urlOf(
