@@ -26,12 +26,32 @@ export interface BmlCatalog {
 
 export const CATALOG_BYTE = 0x01
 
-type Cbor = number | string | boolean | null | Cbor[] | Map<string, Cbor>
+type Cbor =
+  number | string | boolean | null | Uint8Array | Cbor[] | Map<string, Cbor>
 
-const MOST_DEPTH = 8
+const MOST_DEPTH = 16
 
 const MOST_ITEMS = 1 << 16
 
+const INDEFINITE = 31
+
+const BREAK = 0xff
+
+function halfFloat(bits: number): number {
+  const sign = bits & 0x8000 ? -1 : 1
+  const exponent = (bits >> 10) & 0x1f
+  const fraction = bits & 0x03ff
+
+  if (exponent === 0) {
+    return sign * fraction * 2 ** -24
+  }
+
+  return exponent === 0x1f
+    ? sign * (fraction ? Number.NaN : Number.POSITIVE_INFINITY)
+    : sign * (1 + fraction / 1024) * 2 ** (exponent - 15)
+}
+
+/** Reads every kind of CBOR item, so that a value of a kind the catalog does not use can be passed over. Only lengths and nesting past the limits, reserved codes and a payload cut short are refused. */
 class CborReader {
   private at = 0
 
@@ -57,22 +77,42 @@ class CborReader {
 
     const head = this.byte()
     const major = head >> 5
-    const length = this.argument(head & 0x1f)
+    const info = head & 0x1f
+
+    if (major === 7) {
+      return this.simple(info)
+    }
+
+    if (info === INDEFINITE) {
+      return this.indefinite(major, depth)
+    }
+
+    const argument = this.argument(info)
 
     switch (major) {
       case 0:
-        return length
+        return argument
+      case 1:
+        return argument === null ? null : -1 - argument
+      case 2:
+        return this.take(this.length(argument)).slice()
       case 3:
-        return this.text.decode(this.take(length))
+        return this.text.decode(this.take(this.length(argument)))
       case 4:
-        return this.items(length, depth)
+        return this.items(this.length(argument), depth)
       case 5:
-        return this.entries(length, depth)
-      case 7:
-        return this.simple(head & 0x1f)
+        return this.entries(this.length(argument), depth)
       default:
-        throw new RangeError('unsupported item')
+        return this.read(depth + 1)
     }
+  }
+
+  private length(argument: number | null): number {
+    if (argument === null || argument > this.bytes.length) {
+      throw new RangeError('too long')
+    }
+
+    return argument
   }
 
   private items(length: number, depth: number): Cbor[] {
@@ -91,32 +131,104 @@ class CborReader {
     const map = new Map<string, Cbor>()
 
     for (let index = 0; index < length; index += 1) {
-      const key = this.read(depth + 1)
-
-      if (typeof key !== 'string') {
-        throw new RangeError('a key is not text')
-      }
-
-      map.set(key, this.read(depth + 1))
+      this.entry(map, depth)
     }
 
     return map
   }
 
-  private simple(code: number): Cbor {
-    switch (code) {
+  private entry(map: Map<string, Cbor>, depth: number): void {
+    const key = this.read(depth + 1)
+    const value = this.read(depth + 1)
+
+    if (typeof key === 'string') {
+      map.set(key, value)
+    }
+  }
+
+  private indefinite(major: number, depth: number): Cbor {
+    switch (major) {
+      case 2:
+      case 3:
+        return this.chunks(major)
+      case 4:
+        return this.untilBreak(() => this.read(depth + 1))
+      case 5: {
+        const map = new Map<string, Cbor>()
+
+        this.untilBreak(() => this.entry(map, depth))
+
+        return map
+      }
+      default:
+        throw new RangeError('indefinite length where none is allowed')
+    }
+  }
+
+  private untilBreak<T>(each: () => T): T[] {
+    const read: T[] = []
+
+    while (this.bytes[this.at] !== BREAK) {
+      if (read.length >= MOST_ITEMS) {
+        throw new RangeError('too many items')
+      }
+
+      read.push(each())
+    }
+
+    this.advance(1)
+
+    return read
+  }
+
+  private chunks(major: number): Cbor {
+    const parts = this.untilBreak(() => {
+      const head = this.byte()
+
+      if (head >> 5 !== major || (head & 0x1f) === INDEFINITE) {
+        throw new RangeError('a chunk of another kind')
+      }
+
+      return this.take(this.length(this.argument(head & 0x1f)))
+    })
+    const joined = new Uint8Array(
+      parts.reduce((sum, part) => sum + part.length, 0),
+    )
+    let at = 0
+
+    parts.forEach((part) => {
+      joined.set(part, at)
+      at += part.length
+    })
+
+    return major === 3 ? this.text.decode(joined) : joined
+  }
+
+  private simple(info: number): Cbor {
+    switch (info) {
       case 20:
         return false
       case 21:
         return true
-      case 22:
+      case 24:
+        this.byte()
         return null
+      case 25:
+        return halfFloat(this.view.getUint16(this.advance(2)))
+      case 26:
+        return this.view.getFloat32(this.advance(4))
+      case 27:
+        return this.view.getFloat64(this.advance(8))
       default:
-        throw new RangeError('unsupported simple value')
+        if (info >= 28) {
+          throw new RangeError('reserved or misplaced code')
+        }
+
+        return null
     }
   }
 
-  private argument(info: number): number {
+  private argument(info: number): number | null {
     if (info < 24) {
       return info
     }
@@ -133,14 +245,10 @@ class CborReader {
         const value =
           this.view.getUint32(at) * 2 ** 32 + this.view.getUint32(at + 4)
 
-        if (!Number.isSafeInteger(value)) {
-          throw new RangeError('too large')
-        }
-
-        return value
+        return Number.isSafeInteger(value) ? value : null
       }
       default:
-        throw new RangeError('indefinite or reserved length')
+        throw new RangeError('reserved length')
     }
   }
 

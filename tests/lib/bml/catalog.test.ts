@@ -108,18 +108,103 @@ test('a payload that is not a catalog, is cut short or runs on is not read', () 
   assert.equal(readCatalog(Uint8Array.from([...whole, 0x00])), null)
 })
 
-test('CBOR the side channel never writes is refused: indefinite lengths, byte strings, keys that are not text, floats', () => {
-  assert.equal(readCatalog(new Uint8Array([0x01, 0xbf, 0xff])), null)
+test('a top-level item that is not a map is not a catalog, whatever kind it is', () => {
   assert.equal(readCatalog(new Uint8Array([0x01, 0x41, 0x00])), null)
-  assert.equal(readCatalog(new Uint8Array([0x01, 0xa1, 0x01, 0x01])), null)
+  assert.equal(readCatalog(new Uint8Array([0x01, 0x20])), null)
   assert.equal(
     readCatalog(new Uint8Array([0x01, 0xfb, 0, 0, 0, 0, 0, 0, 0, 0])),
     null,
   )
+  assert.equal(readCatalog(new Uint8Array([0x01, 0xa1, 0x01, 0x01])), null)
+  assert.equal(readCatalog(new Uint8Array([0x01, 0xbf, 0xff])), null)
 })
 
-test('nesting past what a catalog needs is refused rather than followed', () => {
-  const deep = [0x01, ...Array(64).fill(0x81), 0x00]
+const KNOWN = [
+  ...key('service'),
+  0x02,
+  ...key('entryTag'),
+  0x18,
+  0x40,
+  ...key('autoStart'),
+  0xf4,
+  ...key('startup'),
+  0x61,
+  0x61,
+  ...key('carousels'),
+  0x80,
+]
+
+const READ = {
+  service: 2,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: 'a',
+  carousels: [],
+}
+
+test('a key the catalog does not know is passed over whatever kind of value it holds', () => {
+  const unknown: [string, number[]][] = [
+    ['a negative integer', [0x38, 0x63]],
+    [
+      'a 64-bit integer past what is safe',
+      [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
+    ],
+    ['a byte string', [0x43, 1, 2, 3]],
+    ['a half float', [0xf9, 0x3c, 0x00]],
+    ['a single float', [0xfa, 0x3f, 0xc0, 0x00, 0x00]],
+    ['a double float', [0xfb, 0x40, 0x09, 0x21, 0xfb, 0x54, 0x44, 0x2d, 0x18]],
+    ['a tag', [0xc1, 0x1a, 0x5a, 0x00, 0x00, 0x00]],
+    ['undefined and a one-byte simple value', [0x82, 0xf7, 0xf8, 0x20]],
+    ['a map keyed by integers', [0xa2, 0x01, 0x02, 0x20, 0x41, 0x00]],
+    ['an indefinite array', [0x9f, 0x01, 0x9f, 0xff, 0xff]],
+    ['an indefinite map', [0xbf, 0x61, 0x78, 0x01, 0x01, 0x02, 0xff]],
+    [
+      'an indefinite text in chunks',
+      [0x7f, 0x61, 0x61, 0x62, 0x62, 0x62, 0xff],
+    ],
+    ['an indefinite byte string in chunks', [0x5f, 0x41, 0x01, 0x40, 0xff]],
+    ['twelve levels of nesting', [...Array(12).fill(0x81), 0x00]],
+  ]
+
+  for (const [kind, value] of unknown) {
+    const payload = Uint8Array.from([
+      0x01,
+      0xa6,
+      ...KNOWN,
+      ...key('later'),
+      ...value,
+    ])
+
+    assert.deepEqual(readCatalog(payload), READ, kind)
+  }
+})
+
+test('what is not CBOR at all is refused: reserved codes, a break out of place, chunks of another kind', () => {
+  const broken: [string, number[]][] = [
+    ['a reserved length', [0x1c]],
+    ['a reserved simple code', [0xfc]],
+    ['a break with nothing to end', [0xff]],
+    ['an indefinite integer', [0x1f]],
+    ['a text chunk inside a byte string', [0x5f, 0x61, 0x61, 0xff]],
+    ['a text that is not UTF-8', [0x61, 0xff]],
+    ['an indefinite array never ended', [0x9f, 0x01]],
+  ]
+
+  for (const [kind, value] of broken) {
+    const payload = Uint8Array.from([
+      0x01,
+      0xa6,
+      ...KNOWN,
+      ...key('later'),
+      ...value,
+    ])
+
+    assert.equal(readCatalog(payload), null, kind)
+  }
+})
+
+test('nesting past sixteen levels is refused rather than followed', () => {
+  const deep = [0x01, ...Array(17).fill(0x81), 0x00]
 
   assert.equal(readCatalog(Uint8Array.from(deep)), null)
 })
