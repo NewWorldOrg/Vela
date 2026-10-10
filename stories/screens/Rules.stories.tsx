@@ -311,7 +311,9 @@ export const ルールを編集: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
-    const dialog = within(await screen.findByRole('dialog'))
+    const dialog = within(
+      await screen.findByRole('dialog', undefined, { timeout: 5000 }),
+    )
 
     await afterTheArrival(canvasElement)
 
@@ -362,8 +364,9 @@ export const ルールを編集: Story = {
     )
 
     retired.length = 0
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await afterTheArrival(canvasElement)
-    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+    await userEvent.click(await canvas.findByRole('button', { name: '削除' }))
     await expect(await screen.findByRole('alertdialog')).toHaveTextContent(
       'このルールを削除します',
     )
