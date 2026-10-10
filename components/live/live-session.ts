@@ -84,6 +84,7 @@ export function openLiveSession(
   let headerGiven = false
   let lastPicturePts = -1
   let lastCaptionPts = -1
+  let lastBroadcastPts = -1
   let laying: LiveSocket | null = null
   let laid: ReturnType<typeof setTimeout> | null = null
   let carrying: LiveSocket = openSocket(href)
@@ -172,7 +173,10 @@ export function openLiveSession(
         break
       }
       case 'dataBroadcast':
-        events.onDataBroadcast(frame.payload, frame.pts)
+        if (socket === carrying && frame.pts >= lastBroadcastPts) {
+          lastBroadcastPts = frame.pts
+          events.onDataBroadcast(frame.payload, frame.pts)
+        }
         break
       case 'control':
         heard(socket, frame.payload)

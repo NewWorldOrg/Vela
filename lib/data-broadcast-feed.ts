@@ -16,6 +16,8 @@ export const MOST_HELD_BYTES = 64 * 1024 * 1024
 
 export const MOST_HELD_EVENTS = 256
 
+export const MOST_WAITING_FRAMES = 4096
+
 const EVENT_HEAD = 19
 
 /** An event message as the side channel carries it: when it fires is on the same 90 kHz clock as the frames. */
@@ -105,6 +107,7 @@ export type DataBroadcastChange =
 
 interface Waiting {
   pts: number
+  bytes: number
   said: Exclude<DataBroadcastSaid, { said: 'unknown' }>
 }
 
@@ -140,6 +143,8 @@ export class DataBroadcastFeed {
 
   private held = 0
 
+  private waitingBytes = 0
+
   private carried: BmlCatalog | null = null
 
   private said: DataBroadcastAvailability = 'absent'
@@ -150,7 +155,7 @@ export class DataBroadcastFeed {
     this.warn = warn
   }
 
-  /** Takes one payload of the side channel at its time. A module larger than a module may be is dropped here. */
+  /** Takes one payload of the side channel at its time. A module larger than a module may be is dropped here, and what waits is held to the same 64 MiB and to a count, the oldest let go first but never the newest catalog. */
   offer(payload: Uint8Array, pts: number): void {
     if (
       payload[0] === DATA_BROADCAST_BYTE.module &&
@@ -175,7 +180,36 @@ export class DataBroadcastFeed {
       at -= 1
     }
 
-    this.waiting.splice(at, 0, { pts, said })
+    this.waiting.splice(at, 0, { pts, bytes: payload.length, said })
+    this.waitingBytes += payload.length
+    this.trim()
+  }
+
+  private trim(): void {
+    let dropped = 0
+
+    while (
+      this.waitingBytes > MOST_HELD_BYTES ||
+      this.waiting.length > MOST_WAITING_FRAMES
+    ) {
+      const newestCatalog = this.waiting.findLastIndex(
+        (waiting) => waiting.said.said === 'catalog',
+      )
+      const oldest = newestCatalog === 0 ? 1 : 0
+
+      if (oldest >= this.waiting.length) {
+        break
+      }
+
+      const [gone] = this.waiting.splice(oldest, 1)
+
+      this.waitingBytes -= gone.bytes
+      dropped += 1
+    }
+
+    if (dropped > 0) {
+      this.warn(`${dropped} waiting frame(s) were dropped, the oldest first`)
+    }
   }
 
   /** Lets every frame whose time the playhead has reached take effect, in the order of their times. */
@@ -186,6 +220,7 @@ export class DataBroadcastFeed {
     ) {
       const due = this.waiting.shift() as Waiting
 
+      this.waitingBytes -= due.bytes
       this.apply(due.said)
     }
   }
@@ -193,6 +228,7 @@ export class DataBroadcastFeed {
   /** Forgets everything, as when the wire is opened again. */
   reset(): void {
     this.waiting.length = 0
+    this.waitingBytes = 0
     this.modules.clear()
     this.heard.length = 0
     this.seen.clear()
@@ -232,6 +268,10 @@ export class DataBroadcastFeed {
 
   get pending(): number {
     return this.waiting.length
+  }
+
+  get pendingBytes(): number {
+    return this.waitingBytes
   }
 
   private apply(said: Waiting['said']): void {

@@ -529,16 +529,27 @@ test('a canvas is taken from whichever wire announces it', (context) => {
   assert.equal(heard.canvases, 1)
 })
 
-test('data broadcast frames are handed on with their time, from the fresh wire as well, whose replay the feed takes as it is', (context) => {
+test('data broadcast frames are taken only from the wire being carried, and none older than the last one handed on, so the replay on a fresh wire is not handed on again', (context) => {
   const { wires, heard } = bench(context)
 
   wires[0].header()
-  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x04)))
+  wires[0].picture(A_FRAGMENT)
+  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x01, 0)))
+  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x02, 0)))
   context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+
   wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x01, 0)))
+  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT * 2, Uint8Array.of(0x03)))
+  wires[1].picture(A_FRAGMENT * 2)
+  wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x02, 0)))
+  wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT * 2, Uint8Array.of(0x03)))
+  wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT * 3, Uint8Array.of(0x04)))
 
   assert.deepEqual(heard.broadcast, [
-    [0x04, A_FRAGMENT],
     [0x01, A_FRAGMENT],
+    [0x02, A_FRAGMENT],
+    [0x03, A_FRAGMENT * 2],
+    [0x03, A_FRAGMENT * 2],
+    [0x04, A_FRAGMENT * 3],
   ])
 })

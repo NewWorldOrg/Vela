@@ -8,6 +8,7 @@ import {
   MOST_HELD_BYTES,
   MOST_HELD_EVENTS,
   MOST_MODULE_BYTES,
+  MOST_WAITING_FRAMES,
   readDataBroadcast,
   type DataBroadcastChange,
 } from '@/lib/data-broadcast-feed'
@@ -334,6 +335,7 @@ test('a module that would take what is held past 64 MiB is dropped with a warnin
 
   for (const id of [1, 2, 3, 4]) {
     feed.offer(sizedModule(id, quarter), at(1))
+    feed.advance(1)
   }
 
   feed.offer(sizedModule(5, 64), at(2))
@@ -344,6 +346,7 @@ test('a module that would take what is held past 64 MiB is dropped with a warnin
   assert.equal(warned.length, 1)
 
   feed.offer(sizedModule(4, quarter - 64), at(3))
+  feed.advance(3)
   feed.offer(sizedModule(5, 64), at(3))
   feed.advance(3)
 
@@ -417,4 +420,72 @@ test('a reset forgets everything, including what was waiting, and says so', () =
   assert.equal(feed.availability, 'absent')
   assert.equal(feed.pending, 0)
   assert.deepEqual(heard, ['reset'])
+})
+
+test('frames that wait while the picture is paused are held to 64 MiB, the oldest let go first', () => {
+  const { feed, warned } = quietFeed()
+  const quarter = MOST_HELD_BYTES / 4
+
+  for (const id of [1, 2, 3, 4, 5]) {
+    feed.offer(sizedModule(id, quarter), at(100 + id))
+  }
+
+  assert.equal(feed.pending, 4)
+  assert.equal(feed.pendingBytes, MOST_HELD_BYTES)
+  assert.equal(warned.length, 1)
+
+  feed.advance(200)
+
+  assert.deepEqual(
+    feed.heldModules.map((module) => module.id),
+    [2, 3, 4, 5],
+  )
+})
+
+test('no more frames wait than the count allows, and the newest catalog is never the one let go', () => {
+  const { feed } = quietFeed()
+
+  feed.offer(catalogPayload(CATALOG), at(100))
+
+  for (let nth = 0; nth < MOST_WAITING_FRAMES; nth += 1) {
+    feed.offer(eventPayload({ id: nth }), at(101 + nth))
+  }
+
+  assert.equal(feed.pending, MOST_WAITING_FRAMES)
+
+  feed.advance(100 + MOST_WAITING_FRAMES + 1)
+
+  assert.deepEqual(feed.catalog, CATALOG)
+})
+
+test('an older catalog that waits is let go before a newer one', () => {
+  const { feed } = quietFeed()
+  const older = { ...CATALOG, startup: '/40/0001/page1.bml' }
+
+  feed.offer(catalogPayload(older), at(100))
+  feed.offer(catalogPayload(CATALOG), at(101))
+
+  for (let nth = 0; nth < MOST_WAITING_FRAMES - 1; nth += 1) {
+    feed.offer(eventPayload({ id: nth }), at(102 + nth))
+  }
+
+  const heard: string[] = []
+
+  feed.subscribe((change) =>
+    heard.push(
+      change.kind === 'catalog' ? change.catalog.startup : change.kind,
+    ),
+  )
+  feed.advance(102 + MOST_WAITING_FRAMES)
+
+  assert.deepEqual(heard, ['/40/0000/startup.bml'])
+})
+
+test('a reset lets go of what was waiting, bytes and all', () => {
+  const { feed } = quietFeed()
+
+  feed.offer(sizedModule(1, 1024), at(100))
+  feed.reset()
+
+  assert.equal(feed.pendingBytes, 0)
 })
