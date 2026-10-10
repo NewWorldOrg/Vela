@@ -3,6 +3,7 @@
 import { useEffect, useEffectEvent, useRef, type ReactNode } from 'react'
 
 import type { BmlKey } from '@/lib/bml/keys'
+import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
 import type { RuntimeMessage } from '@/lib/bml/messages'
 import type { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
 import { KEY_CAP } from '@/lib/player-keys'
@@ -62,6 +63,12 @@ export function DataBroadcastToggle({
   )
 }
 
+function hand(send: SendToRuntime, module: BmlModule): void {
+  const handed = moduleToHand(module)
+
+  send({ kind: 'module', module: handed.module }, handed.transfer)
+}
+
 /** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. */
 export function DataBroadcastFace({
   feed,
@@ -107,14 +114,14 @@ export function DataBroadcastFace({
       send({ kind: 'catalog', catalog })
     }
 
-    feed.heldModules.forEach((module) => send({ kind: 'module', module }))
+    feed.heldModules.forEach((module) => hand(send, module))
     send({ kind: 'open' })
     onRuntime(send)
     letGo.current = feed.subscribe((change) => {
       if (change.kind === 'catalog') {
         send({ kind: 'catalog', catalog: change.catalog })
       } else if (change.kind === 'module') {
-        send({ kind: 'module', module: change.module })
+        hand(send, change.module)
       }
     })
   }

@@ -197,3 +197,19 @@ export function moduleOf(value: unknown): BmlModule | null {
     resources: carried.resources,
   }
 }
+
+/** A copy of a module whose every body owns a buffer of its own, with those buffers, so it can be handed to the runtime's frame by transfer and copied only once. */
+export function moduleToHand(module: BmlModule): {
+  module: BmlModule
+  transfer: ArrayBuffer[]
+} {
+  const resources = module.resources.map((resource) => ({
+    ...resource,
+    body: resource.body.slice(),
+  }))
+
+  return {
+    module: { ...module, resources },
+    transfer: resources.map((resource) => resource.body.buffer as ArrayBuffer),
+  }
+}
