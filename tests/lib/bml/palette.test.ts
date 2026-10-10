@@ -24,7 +24,7 @@ test('an index outside the palette is no colour', () => {
   assert.equal(colourOf(fixed, 1.5), null)
 })
 
-test('a lookup table in RGB lays its entries over the indices it names', () => {
+test('assumed layout: one byte of flags (type, depth, region, range), the 8-bit range as two bytes, then R G B alpha for each entry when the type bit is set', () => {
   const clut = readClut(
     Uint8Array.from([0xc8, 128, 129, 10, 20, 30, 255, 40, 50, 60, 128]),
   )
@@ -36,38 +36,70 @@ test('a lookup table in RGB lays its entries over the indices it names', () => {
   assert.equal(colourOf(palette, 7), 'rgb(255 255 255)')
 })
 
-test('a lookup table in YCbCr is turned into RGB', () => {
+test('assumed layout: with the type bit clear an entry is Y Cb Cr alpha, read as BT.709 in the video range', () => {
   const clut = readClut(
     Uint8Array.from([
-      0x48, 17, 19, 235, 128, 128, 255, 16, 128, 128, 255, 126, 128, 128, 255,
+      0x48, 140, 142, 235, 128, 128, 255, 16, 128, 128, 255, 126, 128, 128, 255,
     ]),
   )
   const palette = paletteOf(clut)
 
-  assert.equal(colourOf(palette, 17), 'rgb(255 255 255)')
-  assert.equal(colourOf(palette, 18), 'rgb(0 0 0)')
-  assert.equal(colourOf(palette, 19), 'rgb(128 128 128)')
+  assert.equal(colourOf(palette, 140), 'rgb(255 255 255)')
+  assert.equal(colourOf(palette, 141), 'rgb(0 0 0)')
+  assert.equal(colourOf(palette, 142), 'rgb(128 128 128)')
 })
 
-test('a table that states no range covers its whole depth, and a stated region is stepped over', () => {
+test('a document’s table defines 128 and above only: the common fixed colours below are not its to change', () => {
+  const entries = Array.from({ length: 4 }, (_, index) => [
+    index,
+    index,
+    index,
+    255,
+  ])
+  const palette = paletteOf(
+    readClut(Uint8Array.from([0xc8, 126, 129, ...entries.flat()])),
+  )
+
+  assert.equal(colourOf(palette, 126), 'rgb(255 170 255 / 0.502)')
+  assert.equal(colourOf(palette, 127), 'rgb(255 255 85 / 0.502)')
+  assert.equal(colourOf(palette, 128), 'rgb(2 2 2)')
+  assert.equal(colourOf(palette, 129), 'rgb(3 3 3)')
+  assert.equal(
+    colourOf(
+      paletteOf(readClut(Uint8Array.from([0xc8, 1, 1, 9, 9, 9, 255]))),
+      1,
+    ),
+    'rgb(255 0 0)',
+  )
+})
+
+test('assumed layout: a table that states no range covers its whole depth, and a stated region is four 16-bit corners stepped over', () => {
   const sixteen = Array.from({ length: 16 }, (_, index) => [index, 0, 0, 255])
   const whole = readClut(Uint8Array.from([0xa0, ...sixteen.flat()]))
   const regioned = readClut(
-    Uint8Array.from([0xd8, 0, 0, 0, 0, 3, 0xc0, 2, 0x1c, 5, 5, 1, 2, 3, 255]),
+    Uint8Array.from([
+      0xd8, 0, 0, 0, 0, 3, 0xc0, 2, 0x1c, 200, 200, 1, 2, 3, 255,
+    ]),
   )
 
   assert.equal(whole?.from, 0)
   assert.equal(whole?.colours.length, 64)
-  assert.equal(colourOf(paletteOf(regioned), 5), 'rgb(1 2 3)')
+  assert.equal(regioned?.from, 200)
+  assert.equal(colourOf(paletteOf(regioned), 200), 'rgb(1 2 3)')
 })
 
-test('a 4-bit table states its range in one byte', () => {
-  const clut = readClut(
+test('assumed layout: a 4-bit table states its range as two nibbles, a 2-bit table as the top two pairs of bits', () => {
+  const four = readClut(
     Uint8Array.from([0xa8, 0x23, 1, 1, 1, 255, 2, 2, 2, 255]),
   )
+  const two = readClut(
+    Uint8Array.from([0x88, 0x60, 1, 1, 1, 255, 2, 2, 2, 255]),
+  )
 
-  assert.equal(clut?.from, 2)
-  assert.equal(colourOf(paletteOf(clut), 3), 'rgb(2 2 2)')
+  assert.equal(four?.from, 2)
+  assert.equal(four?.colours.length, 8)
+  assert.equal(two?.from, 1)
+  assert.equal(two?.colours.length, 8)
 })
 
 test('a table cut short, with its range backwards or of a depth that does not exist, is not read', () => {
