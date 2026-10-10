@@ -65,7 +65,7 @@ function rangeOf(
   depth: number,
   stated: boolean,
 ): { from: number; to: number; next: number } | null {
-  const bits = [2, 4, 8][depth]
+  const bits = [4, 8][depth]
 
   if (bits === undefined) {
     return null
@@ -85,9 +85,7 @@ function rangeOf(
     return null
   }
 
-  return bits === 4
-    ? { from: bytes[at] >> 4, to: bytes[at] & 0x0f, next: at + 1 }
-    : { from: bytes[at] >> 6, to: (bytes[at] >> 4) & 0x03, next: at + 1 }
+  return { from: bytes[at] >> 4, to: bytes[at] & 0x0f, next: at + 1 }
 }
 
 /** Reads a colour lookup table resource: its entries from the index they start at, or null when it is not one. */

@@ -327,7 +327,7 @@ test('colours are read from the document’s own lookup table, and the fixed col
     resourcesOf({
       '/40/0000/a.clt': [
         'binary',
-        Uint8Array.from([0xc8, 128, 128, 9, 8, 7, 255]),
+        Uint8Array.from([0xa8, 128, 128, 9, 8, 7, 255]),
       ],
     }),
   )
@@ -500,4 +500,26 @@ test('a document longer than the converter takes is not read at all', () => {
     parseBml(bml(' '.repeat(BML_LIMITS.documentBytes)), parser),
     null,
   )
+})
+
+test('a colour table named by a bare, a ./ or a ../ path is found beside the document, as a broadcast names it', () => {
+  const table = Uint8Array.from([0x28, 0x80, 0x80, 235, 128, 128, 255])
+
+  for (const named of ['top.clt', './top.clt', '../0000/top.clt']) {
+    const page = read(
+      bml(
+        '<p id="p" style="color-index: 128">x</p><object id="o" type="image/X-arib-png" data="../0001/x.png"/>',
+        '',
+        `clut: url(${named})`,
+      ),
+      resourcesOf({
+        '/40/0000/top.clt': ['binary', table],
+        '/40/0001/x.png': ['png', new Uint8Array([0x89])],
+      }),
+    )
+
+    assert.equal(byId(page, 'p').style, 'color: rgb(255 255 255)')
+    assert.equal(attribute(byId(page, 'o'), 'src'), 'blob:test/x.png')
+    assert.deepEqual(page.warnings, [])
+  }
 })
