@@ -489,3 +489,52 @@ test('a reset lets go of what was waiting, bytes and all', () => {
 
   assert.equal(feed.pendingBytes, 0)
 })
+
+test('a module of an older version does not take the place of the version the catalog lists', () => {
+  const { feed } = quietFeed()
+
+  feed.offer(catalogPayload(CATALOG), at(1))
+  feed.offer(modulePayload(moduleOf(0, 1)), at(2))
+  feed.offer(modulePayload(moduleOf(0, 0)), at(3))
+  feed.advance(3)
+
+  assert.deepEqual(
+    feed.heldModules.map((module) => module.version),
+    [1],
+  )
+})
+
+test('a runtime that opens is handed the modules the catalog lists, the one before kept while the listed version has not come', () => {
+  const { feed } = quietFeed()
+  const moved: BmlCatalog = {
+    ...CATALOG,
+    carousels: [
+      {
+        ...CATALOG.carousels[0],
+        modules: [
+          { ...CATALOG.carousels[0].modules[0], version: 2 },
+          CATALOG.carousels[0].modules[1],
+        ],
+      },
+    ],
+  }
+
+  feed.offer(catalogPayload(CATALOG), at(1))
+  feed.offer(modulePayload(moduleOf(0, 1)), at(2))
+  feed.offer(catalogPayload(moved), at(3))
+  feed.offer(modulePayload(moduleOf(7)), at(4))
+  feed.advance(4)
+
+  assert.deepEqual(
+    feed.forTheCatalog.map((module) => [module.id, module.version]),
+    [[0, 1]],
+  )
+
+  feed.offer(modulePayload(moduleOf(0, 2)), at(5))
+  feed.advance(5)
+
+  assert.deepEqual(
+    feed.forTheCatalog.map((module) => [module.id, module.version]),
+    [[0, 2]],
+  )
+})

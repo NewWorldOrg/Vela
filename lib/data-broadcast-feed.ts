@@ -1,4 +1,9 @@
-import { readCatalog, type BmlCatalog } from '@/lib/bml/catalog'
+import {
+  readCatalog,
+  staysListed,
+  takesThePlace,
+  type BmlCatalog,
+} from '@/lib/bml/catalog'
 import { addressOf } from '@/lib/bml/paths'
 import { readModule, type BmlModule } from '@/lib/bml/resources'
 import { ptsSeconds } from '@/lib/live-wire'
@@ -258,6 +263,15 @@ export class DataBroadcastFeed {
     return [...this.modules.values()].map((held) => held.module)
   }
 
+  /** The modules to hand a runtime that opens now, after the catalog: each the catalog lists, at its version or the one before while that has not come. */
+  get forTheCatalog(): BmlModule[] {
+    const catalog = this.carried
+
+    return this.heldModules.filter(
+      (module) => !catalog || staysListed(catalog, module.tag, module.id),
+    )
+  }
+
   get heldBytes(): number {
     return this.held
   }
@@ -296,15 +310,8 @@ export class DataBroadcastFeed {
   }
 
   private catalogue(catalog: BmlCatalog): void {
-    const listed = new Set<string>()
-
-    catalog.carousels.forEach((carousel) =>
-      carousel.modules.forEach((module) =>
-        listed.add(moduleKey(carousel.tag, module.id)),
-      ),
-    )
     this.modules.forEach((held, key) => {
-      if (!listed.has(key)) {
+      if (!staysListed(catalog, held.module.tag, held.module.id)) {
         this.modules.delete(key)
         this.held -= held.bytes
       }
@@ -315,6 +322,11 @@ export class DataBroadcastFeed {
 
   private keep(module: BmlModule, bytes: number): void {
     const key = moduleKey(module.tag, module.id)
+
+    if (!takesThePlace(this.carried, this.modules.get(key)?.module, module)) {
+      return
+    }
+
     const before = this.modules.get(key)?.bytes ?? 0
 
     if (this.held - before + bytes > MOST_HELD_BYTES) {

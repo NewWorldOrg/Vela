@@ -114,7 +114,7 @@ export function DataBroadcastFace({
       send({ kind: 'catalog', catalog })
     }
 
-    feed.heldModules.forEach((module) => hand(send, module))
+    feed.forTheCatalog.forEach((module) => hand(send, module))
     send({ kind: 'open' })
     onRuntime(send)
     letGo.current = feed.subscribe((change) => {
