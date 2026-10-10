@@ -90,9 +90,6 @@ export function DataBroadcastFace({
   }, [])
 
   const ready = async (send: SendToRuntime) => {
-    letGo.current?.()
-    letGo.current = null
-
     const fonts = await fontsForTheRuntime()
 
     if (!alive.current) {

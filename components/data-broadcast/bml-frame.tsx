@@ -26,7 +26,7 @@ function stays(): () => void {
   return () => {}
 }
 
-/** The sandboxed frame the data broadcast runtime draws in. It hands the player a way to talk to it once it has loaded, and passes on only what the runtime may say. */
+/** The sandboxed frame the data broadcast runtime draws in. It hands the player a way to talk to it once, when the runtime first loads, and passes on only what the runtime may say. A frame that loads a second time has been navigated away from the runtime: nothing more is sent to it or taken from it, and it is said to be broken. */
 export function BmlFrame({
   onReady,
   onMessage,
@@ -47,9 +47,14 @@ export function BmlFrame({
     [origin],
   )
   const heard = useEffectEvent(onMessage)
+  const loads = useRef(0)
 
   useEffect(() => {
     const listen = (event: MessageEvent) => {
+      if (loads.current !== 1) {
+        return
+      }
+
       const message = runtimeMessageFrom(
         { origin: event.origin, source: event.source, data: event.data },
         frame.current?.contentWindow,
@@ -77,12 +82,22 @@ export function BmlFrame({
       sandbox={RUNTIME_SANDBOX}
       tabIndex={-1}
       onLoad={() => {
+        loads.current += 1
+
         const runtime = frame.current?.contentWindow
 
+        if (loads.current > 1) {
+          onMessage({ kind: 'error', reason: 'malformed' })
+
+          return
+        }
+
         if (runtime) {
-          onReady((message, transfer = []) =>
-            runtime.postMessage(message, '*', transfer),
-          )
+          onReady((message, transfer = []) => {
+            if (loads.current === 1) {
+              runtime.postMessage(message, '*', transfer)
+            }
+          })
         }
       }}
       className={cn(

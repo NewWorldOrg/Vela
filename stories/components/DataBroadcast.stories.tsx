@@ -402,3 +402,57 @@ export const キーパッド_列_数字: Story = {
     ])
   },
 }
+
+function Reloaded() {
+  const [readies, setReadies] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+
+  return (
+    <div
+      className="p-6"
+      role="group"
+      aria-label="読み込み直した枠"
+      data-readies={readies}
+      data-error={error ?? undefined}
+    >
+      <div className={cn(PLAYER_FACE, 'relative w-96')}>
+        <BmlFrame
+          onReady={(send) => {
+            setReadies((before) => before + 1)
+            send({ kind: 'catalog', catalog: DATA_BROADCAST_CATALOG })
+          }}
+          onMessage={(message) => {
+            if (message.kind === 'error') {
+              setError(message.reason)
+            }
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+export const 読み込み直した枠は壊れたものとして閉じる: Story = {
+  render: () => <Reloaded />,
+  play: async ({ canvasElement }) => {
+    const group = within(canvasElement).getByRole('group', {
+      name: '読み込み直した枠',
+    })
+    const frame = canvasElement.querySelector('iframe') as HTMLIFrameElement
+
+    await waitFor(() => expect(group).toHaveAttribute('data-readies', '1'), {
+      timeout: 5000,
+    })
+    await expect(group).not.toHaveAttribute('data-error')
+
+    frame.setAttribute('srcdoc', '<!doctype html><p>another page</p>')
+
+    await waitFor(
+      () => expect(group).toHaveAttribute('data-error', 'malformed'),
+      {
+        timeout: 5000,
+      },
+    )
+    await expect(group).toHaveAttribute('data-readies', '1')
+  },
+}
