@@ -529,7 +529,7 @@ test('a canvas is taken from whichever wire announces it', (context) => {
   assert.equal(heard.canvases, 1)
 })
 
-test('data broadcast frames are taken only from the wire being carried, so the replay on a fresh wire before it carries is not handed on again', (context) => {
+test('data broadcast frames are handed on from a fresh wire as soon as it opens, and none from a wire that was let go', (context) => {
   const { wires, heard } = bench(context)
 
   wires[0].header()
@@ -539,13 +539,14 @@ test('data broadcast frames are taken only from the wire being carried, so the r
 
   wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x01, 0)))
   wires[1].carry(frameOf('dataBroadcast', 9, Uint8Array.of(0x02, 0)))
-  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT * 2, Uint8Array.of(0x03)))
   wires[1].picture(A_FRAGMENT * 2)
+  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT * 2, Uint8Array.of(0x03)))
   wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT * 3, Uint8Array.of(0x04)))
 
   assert.deepEqual(heard.broadcast, [
     [0x01, A_FRAGMENT],
-    [0x03, A_FRAGMENT * 2],
+    [0x01, A_FRAGMENT],
+    [0x02, 9],
     [0x04, A_FRAGMENT * 3],
   ])
 })

@@ -134,7 +134,7 @@ export type Warn = (warning: string) => void
 const warnOnTheConsole: Warn = (warning) =>
   console.warn(`data broadcast: ${warning}`)
 
-/** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. A module whose version the catalog moved on is held until the new version comes. */
+/** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. A module whose version the catalog moved on is held until the new version comes. What comes twice, from whichever wire, is taken once: a catalog the same as the one held, a module of the version held, an event already heard. */
 export class DataBroadcastFeed {
   private readonly waiting: Waiting[] = []
 
@@ -151,6 +151,8 @@ export class DataBroadcastFeed {
   private waitingBytes = 0
 
   private carried: BmlCatalog | null = null
+
+  private carriedAs: string | null = null
 
   private said: DataBroadcastAvailability = 'absent'
 
@@ -239,6 +241,7 @@ export class DataBroadcastFeed {
     this.seen.clear()
     this.held = 0
     this.carried = null
+    this.carriedAs = null
     this.said = 'absent'
     this.tell({ kind: 'reset' })
   }
@@ -303,6 +306,7 @@ export class DataBroadcastFeed {
         this.modules.clear()
         this.held = 0
         this.carried = null
+        this.carriedAs = null
         this.said = 'none'
         this.tell({ kind: 'none' })
         return
@@ -310,6 +314,13 @@ export class DataBroadcastFeed {
   }
 
   private catalogue(catalog: BmlCatalog): void {
+    const said = JSON.stringify(catalog)
+
+    if (said === this.carriedAs) {
+      return
+    }
+
+    this.carriedAs = said
     this.modules.forEach((held, key) => {
       if (!staysListed(catalog, held.module.tag, held.module.id)) {
         this.modules.delete(key)
@@ -322,8 +333,12 @@ export class DataBroadcastFeed {
 
   private keep(module: BmlModule, bytes: number): void {
     const key = moduleKey(module.tag, module.id)
+    const standing = this.modules.get(key)?.module
 
-    if (!takesThePlace(this.carried, this.modules.get(key)?.module, module)) {
+    if (
+      standing?.version === module.version ||
+      !takesThePlace(this.carried, standing, module)
+    ) {
       return
     }
 

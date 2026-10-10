@@ -172,9 +172,7 @@ export function openLiveSession(
         break
       }
       case 'dataBroadcast':
-        if (socket === carrying) {
-          events.onDataBroadcast(frame.payload, frame.pts)
-        }
+        events.onDataBroadcast(frame.payload, frame.pts)
         break
       case 'control':
         heard(socket, frame.payload)

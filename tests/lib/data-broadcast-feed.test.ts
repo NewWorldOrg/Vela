@@ -87,7 +87,7 @@ function eventPayload({
   return payload
 }
 
-function sizedModule(id: number, bytes: number): Uint8Array {
+function sizedModule(id: number, bytes: number, version = 1): Uint8Array {
   const payload = new Uint8Array(bytes)
   const view = new DataView(payload.buffer)
   const path = new TextEncoder().encode('big.bin')
@@ -95,7 +95,7 @@ function sizedModule(id: number, bytes: number): Uint8Array {
   payload[0] = 0x02
   payload[1] = 0x40
   view.setUint16(2, id)
-  payload[4] = 1
+  payload[4] = version
   view.setUint16(5, path.length)
   payload.set(path, 7)
   payload[7 + path.length] = 6
@@ -345,7 +345,7 @@ test('a module that would take what is held past 64 MiB is dropped with a warnin
   assert.equal(feed.heldModules.length, 4)
   assert.equal(warned.length, 1)
 
-  feed.offer(sizedModule(4, quarter - 64), at(3))
+  feed.offer(sizedModule(4, quarter - 64, 2), at(3))
   feed.advance(3)
   feed.offer(sizedModule(5, 64), at(3))
   feed.advance(3)
@@ -563,4 +563,61 @@ test('a catalog and a module of the same time taken in either order both count',
 
     assert.equal(feed.availability, 'ready', `catalog first: ${catalogFirst}`)
   }
+})
+
+test('a replay that comes twice, as when a wire is laid again, is passed on once', () => {
+  const { feed } = quietFeed()
+  const heard: string[] = []
+
+  feed.subscribe((change) =>
+    heard.push(
+      change.kind === 'module'
+        ? `module ${change.module.id} v${change.module.version}`
+        : change.kind,
+    ),
+  )
+
+  for (const time of [10, 20]) {
+    feed.offer(catalogPayload(CATALOG), at(time))
+    feed.offer(modulePayload(moduleOf(0)), at(time - 5))
+    feed.offer(modulePayload(moduleOf(1)), at(time - 3))
+    feed.advance(time)
+  }
+
+  assert.deepEqual(heard, ['module 0 v1', 'module 1 v1', 'catalog'])
+  assert.equal(feed.availability, 'ready')
+})
+
+test('a catalog that changes is taken even when it comes beside a replay of the old one', () => {
+  const { feed } = quietFeed()
+  const moved: BmlCatalog = {
+    ...CATALOG,
+    startup: '/40/0001/page1.bml',
+  }
+
+  feed.offer(catalogPayload(CATALOG), at(1))
+  feed.offer(catalogPayload(moved), at(2))
+  feed.offer(catalogPayload(moved), at(3))
+  feed.advance(3)
+
+  assert.equal(feed.catalog?.startup, '/40/0001/page1.bml')
+})
+
+test('a wire opened again after a reset brings the broadcast back from its replay alone', () => {
+  const { feed } = quietFeed()
+  const replay = () => {
+    feed.offer(catalogPayload(CATALOG), at(30))
+    feed.offer(modulePayload(moduleOf(0)), at(12))
+  }
+
+  replay()
+  feed.advance(31)
+  feed.reset()
+
+  assert.equal(feed.availability, 'absent')
+
+  replay()
+  feed.advance(31)
+
+  assert.equal(feed.availability, 'ready')
 })
