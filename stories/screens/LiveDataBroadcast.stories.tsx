@@ -494,3 +494,45 @@ export const キーボードで面を切り替えても鍵が効く: Story = {
     await shrunkTo(canvasElement, ON_THE_WEATHER)
   },
 }
+
+export const 開いてもページは動かない: Story = {
+  parameters: { screen: { width: 1024, height: 600 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = onTheScreen(canvasElement, 'live-player')
+    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+
+    await afterTheArrival(canvasElement)
+    window.scrollTo(0, 120)
+    await waitFor(() => expect(window.scrollY).toBe(120))
+
+    const top = player.getBoundingClientRect().top
+
+    await userEvent.click(toggle)
+    await shrunkTo(canvasElement, AT_THE_START)
+
+    const keypad = canvas.getByRole('group', { name: 'データ放送のリモコン' })
+
+    await userEvent.click(within(keypad).getByRole('button', { name: '下' }))
+    await userEvent.click(
+      within(keypad).getByRole('button', { name: '123 数字' }),
+    )
+    await userEvent.click(
+      within(keypad).getByRole('button', { name: '数字を閉じる' }),
+    )
+    press(player, 'ArrowUp')
+    press(player, 'Backspace')
+
+    await expect(window.scrollY).toBe(120)
+    await expect(player.getBoundingClientRect().top).toBe(top)
+
+    press(player, 'd')
+    await shrunkTo(canvasElement)
+    press(player, 'd')
+    await shrunkTo(canvasElement, AT_THE_START)
+
+    await expect(window.scrollY).toBe(120)
+    await expect(player.getBoundingClientRect().top).toBe(top)
+    window.scrollTo(0, 0)
+  },
+}
