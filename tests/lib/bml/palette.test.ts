@@ -49,7 +49,7 @@ test('with the type bit clear an entry is Y Cb Cr alpha, read as BT.709 in the v
   assert.equal(colourOf(palette, 142), 'rgb(128 128 128)')
 })
 
-test('a document’s table defines 128 and above only: the common fixed colours below are not its to change', () => {
+test('a document’s table sets every index it names, below 128 and among the first sixteen as well, and leaves the rest as the common fixed colours', () => {
   const entries = Array.from({ length: 4 }, (_, index) => [
     index,
     index,
@@ -60,17 +60,18 @@ test('a document’s table defines 128 and above only: the common fixed colours 
     readClut(Uint8Array.from([0xa8, 126, 129, ...entries.flat()])),
   )
 
-  assert.equal(colourOf(palette, 126), 'rgb(255 170 255 / 0.502)')
-  assert.equal(colourOf(palette, 127), 'rgb(255 255 85 / 0.502)')
+  assert.equal(colourOf(palette, 125), 'rgb(255 170 170 / 0.502)')
+  assert.equal(colourOf(palette, 126), 'rgb(0 0 0)')
+  assert.equal(colourOf(palette, 127), 'rgb(1 1 1)')
   assert.equal(colourOf(palette, 128), 'rgb(2 2 2)')
   assert.equal(colourOf(palette, 129), 'rgb(3 3 3)')
-  assert.equal(
-    colourOf(
-      paletteOf(readClut(Uint8Array.from([0xa8, 1, 1, 9, 9, 9, 255]))),
-      1,
-    ),
-    'rgb(255 0 0)',
-  )
+  assert.equal(colourOf(palette, 130), 'rgb(0 0 0 / 0)')
+
+  const low = paletteOf(readClut(Uint8Array.from([0xa8, 1, 1, 9, 9, 9, 255])))
+
+  assert.equal(colourOf(low, 0), 'rgb(0 0 0)')
+  assert.equal(colourOf(low, 1), 'rgb(9 9 9)')
+  assert.equal(colourOf(low, 2), 'rgb(0 255 0)')
 })
 
 test('a table that states no range covers its whole depth, and a stated region is four 16-bit corners stepped over', () => {
