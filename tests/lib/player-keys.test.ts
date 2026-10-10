@@ -6,10 +6,12 @@ import {
   KEY_CAP,
   playerCommand,
   pressedOn,
+  routeKey,
   SEEK_FLASH_LASTS,
   SEEK_STEP_SECONDS,
   seekMarkAfter,
   typingIn,
+  type OpenBroadcast,
   type PlayerCommand,
   type SeekMark,
   type SeekWay,
@@ -206,6 +208,7 @@ const PRESSED: Record<string, string> = {
   M: 'm',
   F: 'f',
   C: 'c',
+  D: 'd',
 }
 
 test('every cap a bubble prints is a key the player really takes', () => {
@@ -216,7 +219,7 @@ test('every cap a bubble prints is a key the player really takes', () => {
     assert.equal(
       playerCommand(
         { key, target: THE_PLAYER },
-        { seeks: true, captions: true },
+        { seeks: true, captions: true, dataBroadcast: true },
       ),
       command,
       `${cap} does not call ${command}`,
@@ -234,6 +237,7 @@ test('a command with no cap would print nothing, so every one has one', () => {
     'mute',
     'fullscreen',
     'captions',
+    'dataBroadcast',
   ]
 
   assert.deepEqual(Object.keys(KEY_CAP).sort(), [...COMMANDS].sort())
@@ -293,5 +297,173 @@ test('a step the other way starts the count again', () => {
       SEEK_STEP_SECONDS,
       2 * SEEK_STEP_SECONDS,
     ],
+  )
+})
+
+const LIVE = { seeks: false, captions: true, dataBroadcast: true }
+
+const EVERY_KEY: OpenBroadcast = {
+  usedKeys: [
+    'up',
+    'down',
+    'left',
+    'right',
+    'enter',
+    'back',
+    'd',
+    'blue',
+    'red',
+    'green',
+    'yellow',
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+  ],
+}
+
+function routed(
+  key: string,
+  broadcast: OpenBroadcast | null,
+  target: unknown = THE_PLAYER,
+) {
+  return routeKey({ key, target }, LIVE, broadcast)
+}
+
+test('while a broadcast is open, the keys of the remote control go to its document', () => {
+  for (const [key, meant] of [
+    ['ArrowUp', 'up'],
+    ['ArrowDown', 'down'],
+    ['ArrowLeft', 'left'],
+    ['ArrowRight', 'right'],
+    ['Enter', 'enter'],
+    ['Backspace', 'back'],
+    ['b', 'blue'],
+    ['R', 'red'],
+    ['g', 'green'],
+    ['y', 'yellow'],
+    ['0', '0'],
+    ['7', '7'],
+  ]) {
+    assert.deepEqual(routed(key, EVERY_KEY), {
+      to: 'dataBroadcast',
+      key: meant,
+    })
+  }
+})
+
+test('while a broadcast is open, the player keeps its own keys', () => {
+  assert.deepEqual(routed(' ', EVERY_KEY), { to: 'player', command: 'toggle' })
+  assert.deepEqual(routed('k', EVERY_KEY), { to: 'player', command: 'toggle' })
+  assert.deepEqual(routed('m', EVERY_KEY), { to: 'player', command: 'mute' })
+  assert.deepEqual(routed('f', EVERY_KEY), {
+    to: 'player',
+    command: 'fullscreen',
+  })
+  assert.deepEqual(routed('c', EVERY_KEY), {
+    to: 'player',
+    command: 'captions',
+  })
+  assert.deepEqual(routed('d', EVERY_KEY), {
+    to: 'player',
+    command: 'dataBroadcast',
+  })
+  assert.equal(routed('Escape', EVERY_KEY), null)
+})
+
+test('a recording still seeks with J and L while a broadcast is open', () => {
+  assert.deepEqual(
+    routeKey({ key: 'j', target: THE_PLAYER }, { seeks: true }, EVERY_KEY),
+    { to: 'player', command: 'back' },
+  )
+  assert.deepEqual(
+    routeKey({ key: 'l', target: THE_PLAYER }, { seeks: true }, EVERY_KEY),
+    { to: 'player', command: 'forward' },
+  )
+})
+
+test('a key the document says it does not use goes to the player, but an arrow neither seeks nor changes the volume', () => {
+  const basicOnly: OpenBroadcast = {
+    usedKeys: ['up', 'down', 'left', 'right', 'enter', 'back', 'd'],
+  }
+  const noArrows: OpenBroadcast = { usedKeys: ['enter', 'back'] }
+
+  assert.equal(routed('b', basicOnly), null)
+  assert.equal(routed('5', basicOnly), null)
+  assert.equal(routed('ArrowUp', noArrows), null)
+  assert.equal(routed('ArrowDown', noArrows), null)
+  assert.equal(
+    routeKey(
+      { key: 'ArrowLeft', target: THE_PLAYER },
+      { seeks: true },
+      noArrows,
+    ),
+    null,
+  )
+  assert.deepEqual(routed('Enter', noArrows), {
+    to: 'dataBroadcast',
+    key: 'enter',
+  })
+})
+
+test('while a broadcast is closed, its keys belong to the player as before', () => {
+  assert.deepEqual(routed('ArrowUp', null), { to: 'player', command: 'louder' })
+  assert.deepEqual(routed('ArrowDown', null), {
+    to: 'player',
+    command: 'quieter',
+  })
+  assert.equal(routed('ArrowLeft', null), null)
+  assert.equal(routed('Enter', null), null)
+  assert.equal(routed('b', null), null)
+  assert.deepEqual(routed('d', null), {
+    to: 'player',
+    command: 'dataBroadcast',
+  })
+})
+
+test('D is not taken while there is no broadcast to open', () => {
+  assert.equal(
+    routeKey(
+      { key: 'd', target: THE_PLAYER },
+      { seeks: false, captions: true },
+      null,
+    ),
+    null,
+  )
+})
+
+test('Enter and Space on a focused button press that button, not the document', () => {
+  const button = element('BUTTON')
+
+  assert.equal(routed('Enter', EVERY_KEY, button), null)
+  assert.equal(routed(' ', EVERY_KEY, button), null)
+  assert.deepEqual(routed('ArrowUp', EVERY_KEY, button), {
+    to: 'dataBroadcast',
+    key: 'up',
+  })
+})
+
+test('nothing is taken while typing, or with Ctrl, Meta or Alt held', () => {
+  assert.equal(
+    routed('ArrowUp', EVERY_KEY, element('INPUT', { type: 'text' })),
+    null,
+  )
+  assert.equal(
+    routeKey({ key: 'b', ctrlKey: true, target: THE_PLAYER }, LIVE, EVERY_KEY),
+    null,
+  )
+  assert.equal(
+    routeKey({ key: 'r', metaKey: true, target: THE_PLAYER }, LIVE, EVERY_KEY),
+    null,
+  )
+  assert.equal(
+    routeKey({ key: '1', altKey: true, target: THE_PLAYER }, LIVE, EVERY_KEY),
+    null,
   )
 })
