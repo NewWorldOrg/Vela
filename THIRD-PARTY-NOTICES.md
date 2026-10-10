@@ -92,8 +92,9 @@ carries, and the license files Next.js ships with them, are under
 | File | Font | License |
 | --- | --- | --- |
 | `public/fonts/broadcast-marks.woff2` | Noto Sans CJK JP 2.004, subset to the broadcast marks. Copyright © 2014-2021 Adobe | OFL-1.1 |
+| `public/fonts/data-broadcast.woff2` | Kosugi Maru 4.002, subset to JIS X 0208 and the ARIB additional symbols. Copyright 2010 The Kosugi Maru Project Authors | Apache-2.0 |
 
-The license is at `/usr/share/doc/vela/fonts/broadcast-marks.woff2.txt`.
+Each license is at `/usr/share/doc/vela/fonts/<file>.txt`.
 
 ## The base image
 
