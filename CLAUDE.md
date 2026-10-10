@@ -211,9 +211,9 @@ passing a longer command around by hand.
 
 The shell carries every route. The viewing side — guide, live, library,
 reservations, search — sits in the top nav; the admin side sits in the side nav
-under settings: system, tuners, channels and their scans, encoding, quality,
-authentication, display and migration. Login and the signed-out notice sit
-outside the shell.
+under settings: system, tuners, channels and their scans, encoding, the CM, OP
+and ED segments, quality, authentication, display and migration. Login and the
+signed-out notice sit outside the shell.
 
 Each domain carries its own `components/{domain}/`, its own `repository/` module
 and its own stories.

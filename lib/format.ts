@@ -149,6 +149,28 @@ export function formatSpan(sec: number) {
   return m > 0 ? `${m} 分 ${s} 秒` : `${s} 秒`
 }
 
+const HOURS_WITHOUT_MINUTES = 10
+
+export function formatHours(sec: number) {
+  const whole = Math.max(0, Math.floor(sec))
+  const h = Math.floor(whole / 3600)
+  const m = Math.floor((whole % 3600) / 60)
+
+  if (whole === 0) {
+    return '0 時間'
+  }
+
+  if (h >= HOURS_WITHOUT_MINUTES || (h > 0 && m === 0)) {
+    return `${h} 時間`
+  }
+
+  if (h > 0) {
+    return `${h} 時間 ${m} 分`
+  }
+
+  return m > 0 ? `${m} 分` : `${whole} 秒`
+}
+
 export function formatSpanToTheMillisecond(ms: number) {
   const whole = Math.floor(ms / 1000)
   const m = Math.floor(whole / 60)
