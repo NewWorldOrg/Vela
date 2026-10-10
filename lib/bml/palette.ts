@@ -1,5 +1,7 @@
 export const PALETTE_SIZE = 256
 
+const INDEXED_DEPTHS = new Set([1, 2, 4, 8])
+
 const CHANNELS = 4
 
 const COMMON_FIXED =
@@ -224,6 +226,7 @@ export function withPalette(png: Uint8Array, palette: Palette): Uint8Array {
     !chunks ||
     header?.type !== 'IHDR' ||
     png[header.at + 8 + 9] !== INDEXED ||
+    !INDEXED_DEPTHS.has(png[header.at + 8 + 8]) ||
     chunks.some((each) => each.type === 'PLTE')
   ) {
     return png

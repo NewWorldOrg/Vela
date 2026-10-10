@@ -182,3 +182,11 @@ test('an indexed PNG that carries its own transparency is given the colours only
   assert.deepEqual([...chunks[2].data], [0, 255])
   assert.ok(chunks.every((each) => each.sound))
 })
+
+test('an indexed PNG of a bit depth an indexed PNG cannot have is left as it is', () => {
+  const odd = png(3)
+
+  odd[8 + 8 + 8] = 31
+
+  assert.equal(withPalette(odd, paletteOf(null)), odd)
+})
