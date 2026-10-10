@@ -45,7 +45,9 @@ scripts/                    codegen-verify (the client matches the document),
                             health-check (a live probe), test-alias (`@/` for
                             the unit tests, which read no tsconfig), eslint-rules
                             (the lint rules kept here, loaded as the `vela` plugin),
-                            third-party-notices (the licenses the image carries)
+                            third-party-notices (the licenses the image carries),
+                            bml-runtime (the data broadcast runtime, bundled into
+                            the one script its sandboxed frame is given)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
 hooks/                      React hooks shared across screens
