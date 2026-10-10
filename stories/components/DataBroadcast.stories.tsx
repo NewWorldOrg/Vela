@@ -363,6 +363,7 @@ export const キーパッド_帯_数字: Story = {
       '7 0',
     )
     await expect(keypad.getBoundingClientRect().height).toBe(120)
+    await expect(keypad.scrollHeight).toBeLessThanOrEqual(keypad.clientHeight)
   },
 }
 

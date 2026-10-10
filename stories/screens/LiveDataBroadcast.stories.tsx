@@ -238,6 +238,8 @@ export const 開いている_PC: Story = {
 
     await expect(keypad).toHaveAttribute('data-layout', 'band')
     await expect(keypad.getBoundingClientRect().height).toBe(120)
+    await expect(getComputedStyle(keypad).overflowY).toBe('hidden')
+    await expect(keypad.scrollHeight).toBeLessThanOrEqual(keypad.clientHeight)
 
     const says = onTheScreen(canvasElement, 'data-broadcast-says')
 
@@ -276,6 +278,7 @@ export const 開いている_縦の_iPad: Story = {
     await expect(keypad.getBoundingClientRect().right).toBeLessThanOrEqual(
       board.getBoundingClientRect().right,
     )
+    await expect(keypad.scrollHeight).toBeLessThanOrEqual(keypad.clientHeight)
     await expect(keypad.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       board.getBoundingClientRect().bottom,
     )

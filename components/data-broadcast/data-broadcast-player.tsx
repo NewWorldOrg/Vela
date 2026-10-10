@@ -328,7 +328,7 @@ function Digits({ pressing }: { pressing: Pressing }) {
 }
 
 const LAYOUT: Record<Layout, string> = {
-  band: 'flex h-[120px] w-max min-w-full items-center justify-center gap-[22px] px-4 @max-[600px]:gap-3 @max-[600px]:px-3',
+  band: 'flex h-full w-max min-w-full items-center justify-center gap-[22px] px-4 @max-[600px]:gap-3 @max-[600px]:px-3',
   column:
     'absolute inset-y-0 right-0 z-10 flex w-[170px] flex-col items-center justify-center-safe gap-3.5 overflow-y-auto pt-3 pb-[60px] *:shrink-0',
 }
@@ -411,7 +411,7 @@ export function DataBroadcastKeypad({
       data-face={numbers ? 'numbers' : 'keys'}
       className={
         layout === 'band'
-          ? '@container h-[120px] shrink-0 overflow-x-auto border-t border-line bg-surface'
+          ? '@container h-[120px] shrink-0 overflow-x-auto overflow-y-hidden border-t border-line bg-surface'
           : LAYOUT.column
       }
     >
