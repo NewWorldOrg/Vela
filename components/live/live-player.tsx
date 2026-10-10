@@ -18,7 +18,13 @@ import {
   type SoundChoice,
 } from '@/lib/live-seat'
 import { liveWireHref } from '@/repository/live-paths'
-import { KEY_CAP, playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import { KEY_CAP, routeKey, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
+import {
+  SAID_FAILED,
+  dataBroadcastSays,
+  pictureTransform,
+} from '@/lib/data-broadcast-view'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
 import {
@@ -60,12 +66,20 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
+import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
   type PlayerBezel,
 } from '@/components/recordings/player-center'
+
+import {
+  DataBroadcastFace,
+  DataBroadcastKeypad,
+  DataBroadcastToggle,
+  KEYPAD_COLUMN,
+} from '@/components/data-broadcast/data-broadcast-player'
 
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
@@ -158,6 +172,7 @@ export function LivePlayer({
   const overlay = useRef<HTMLCanvasElement>(null)
   const captions = useRef<CaptionLayer | null>(null)
   const [captioned, setCaptioned] = useState(true)
+  const [broadcastFeed] = useState(() => new DataBroadcastFeed())
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
@@ -210,6 +225,7 @@ export function LivePlayer({
     key === null ? null : held && held.key === key ? held : begun(key)
   const phase = running?.phase
   const fault = running?.fault ?? null
+  const broadcast = useDataBroadcast(broadcastFeed, key)
 
   useEffect(
     () => () => {
@@ -295,6 +311,7 @@ export function LivePlayer({
       : null
 
     captions.current = layer
+    broadcastFeed.reset()
 
     const session = openLiveSession(
       wireHref(networkId, serviceId, profile, sound),
@@ -316,6 +333,10 @@ export function LivePlayer({
         },
         onCaptionCanvas: (canvas) => layer?.canvasOf(canvas),
         onCaption: (picture, pts) => layer?.offer(picture, pts),
+        onDataBroadcast: (payload, pts) => {
+          broadcastFeed.offer(payload, pts)
+          broadcastFeed.advance(element.currentTime)
+        },
         onProgress: (reported) =>
           change((was) => ({
             ...was,
@@ -331,6 +352,11 @@ export function LivePlayer({
         },
       },
       openSocket,
+    )
+
+    const following = setInterval(
+      () => broadcastFeed.advance(element.currentTime),
+      TICK_MS,
     )
 
     const ticking = setInterval(() => {
@@ -461,12 +487,15 @@ export function LivePlayer({
     return () => {
       gone = true
       clearInterval(ticking)
+      clearInterval(following)
       session.leave()
       feed.close()
       layer?.close()
       captions.current = null
+      broadcastFeed.reset()
     }
   }, [
+    broadcastFeed,
     key,
     networkId,
     serviceId,
@@ -506,6 +535,7 @@ export function LivePlayer({
       over: (context, size) => captions.current?.drawOn(context, size),
     })
 
+    broadcast.quiet()
     setSaid(
       got === 'saved'
         ? { text: SAID_CAPTURED, tone: 'ok' }
@@ -548,6 +578,24 @@ export function LivePlayer({
   }
 
   const toggleCaptions = () => setCaptioned((was) => !was)
+
+  const toggleBroadcast = () => {
+    shell?.focus({ preventScroll: true })
+    broadcast.toggle()
+  }
+
+  const hearBroadcast: typeof broadcast.hear = (message) => {
+    if (message.kind === 'error') {
+      stir()
+    }
+
+    broadcast.hear(message)
+  }
+
+  const aimAtTheKeypad = () => {
+    aimed.current = true
+    shell?.focus({ preventScroll: true })
+  }
 
   const chooseVolume = (next: number) => {
     const element = video.current
@@ -594,20 +642,32 @@ export function LivePlayer({
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    const command = playerCommand(event, {
-      seeks: false,
-      captions: true,
-      aimed: aimed.current,
-    })
+    const route = routeKey(
+      event,
+      {
+        seeks: false,
+        captions: true,
+        dataBroadcast: broadcast.offered,
+        aimed: aimed.current,
+      },
+      broadcast.view.open ? { usedKeys: broadcast.view.usedKeys } : null,
+    )
 
-    if (!command) {
+    if (!route) {
+      return
+    }
+
+    event.preventDefault()
+
+    if (route.to === 'dataBroadcast') {
+      broadcast.press(route.key)
+
       return
     }
 
     stir()
-    event.preventDefault()
 
-    switch (command) {
+    switch (route.command) {
       case 'toggle':
         toggle()
         break
@@ -626,6 +686,9 @@ export function LivePlayer({
       case 'captions':
         toggleCaptions()
         break
+      case 'dataBroadcast':
+        toggleBroadcast()
+        break
       default:
         break
     }
@@ -639,6 +702,11 @@ export function LivePlayer({
 
   const latency = running?.latency
   const losing = running?.losing ?? false
+  const opened = broadcast.view.open
+  const beside = opened && full
+  const barSaid = broadcast.view.failed
+    ? { text: SAID_FAILED, tone: 'err' as const }
+    : said
 
   return (
     <section
@@ -664,46 +732,86 @@ export function LivePlayer({
         )}
       >
         <div
+          data-slot="player-stage-area"
           className={cn(
-            'relative',
-            PLAYER_PICTURE_BOX,
-            '[[data-full]_&]:max-w-none',
+            'absolute inset-0 flex items-center justify-center [container-type:size]',
+            beside && KEYPAD_COLUMN,
           )}
         >
-          <video
-            ref={video}
-            playsInline
-            onPlaying={() => {
-              heard((was) => ({ ...was, phase: 'playing' }))
-              stir()
-            }}
-            onPause={() =>
-              heard((was) =>
-                was.phase === 'playing' ? { ...was, phase: 'paused' } : was,
-              )
-            }
-            onWaiting={() => {
-              if (phase === 'playing') {
-                stalls.current += 1
-              }
-
-              heard((was) =>
-                was.phase === 'playing' ? { ...was, phase: 'buffering' } : was,
-              )
-            }}
+          <div
+            data-slot="player-stage"
             className={cn(
-              'size-full object-contain',
-              !hasPicture && 'invisible',
+              'relative',
+              opened
+                ? 'aspect-video w-[min(100cqw,calc(100cqh*16/9))]'
+                : PLAYER_PICTURE_BOX,
             )}
-          />
-          <canvas
-            ref={overlay}
-            aria-hidden="true"
-            data-slot="live-captions"
-            data-drawn={captionsDrawn ? 'yes' : 'no'}
-            className="pointer-events-none absolute inset-0 size-full"
-          />
+          >
+            <div
+              data-slot="player-picture"
+              data-rect={
+                broadcast.view.rect
+                  ? Object.values(broadcast.view.rect).join(',')
+                  : undefined
+              }
+              style={{ transform: pictureTransform(broadcast.view.rect) }}
+              className="relative size-full origin-top-left transition-transform duration-200 ease-out still:transition-none"
+            >
+              <video
+                ref={video}
+                playsInline
+                onPlaying={() => {
+                  heard((was) => ({ ...was, phase: 'playing' }))
+                  stir()
+                }}
+                onPause={() =>
+                  heard((was) =>
+                    was.phase === 'playing' ? { ...was, phase: 'paused' } : was,
+                  )
+                }
+                onWaiting={() => {
+                  if (phase === 'playing') {
+                    stalls.current += 1
+                  }
+
+                  heard((was) =>
+                    was.phase === 'playing'
+                      ? { ...was, phase: 'buffering' }
+                      : was,
+                  )
+                }}
+                className={cn(
+                  'size-full object-contain',
+                  !hasPicture && 'invisible',
+                )}
+              />
+              <canvas
+                ref={overlay}
+                aria-hidden="true"
+                data-slot="live-captions"
+                data-drawn={captionsDrawn ? 'yes' : 'no'}
+                className="pointer-events-none absolute inset-0 size-full"
+              />
+            </div>
+            {opened && (
+              <DataBroadcastFace
+                feed={broadcastFeed}
+                onRuntime={broadcast.connect}
+                onMessage={hearBroadcast}
+                says={dataBroadcastSays(broadcast.view)}
+              />
+            )}
+          </div>
         </div>
+        {beside && (
+          <DataBroadcastKeypad
+            layout="column"
+            numbers={broadcast.view.numbers}
+            onNumbers={broadcast.showNumbers}
+            onKey={broadcast.press}
+            onAim={aimAtTheKeypad}
+          />
+        )}
         {hasPicture && !pip.out && (
           <div
             data-slot="player-press"
@@ -823,15 +931,17 @@ export function LivePlayer({
             'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
           )}
         >
-          {said && (
+          {barSaid && (
             <p
               role="status"
               className={cn(
                 'mb-2 text-cap font-medium',
-                said.tone === 'ok' ? 'text-(--pl-ok-ink)' : 'text-(--pl-err)',
+                barSaid.tone === 'ok'
+                  ? 'text-(--pl-ok-ink)'
+                  : 'text-(--pl-err)',
               )}
             >
-              {said.text}
+              {barSaid.text}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
@@ -917,6 +1027,13 @@ export function LivePlayer({
                   <CaptionsGlyph />
                 </button>
               </PlayerTip>
+              {broadcast.offered && (
+                <DataBroadcastToggle
+                  open={opened}
+                  onToggle={toggleBroadcast}
+                  container={shell}
+                />
+              )}
               <PlayerTip name="設定" container={shell}>
                 <LiveSettings
                   container={shell}
@@ -985,6 +1102,15 @@ export function LivePlayer({
           </div>
         </div>
       </div>
+      {opened && !full && (
+        <DataBroadcastKeypad
+          layout="band"
+          numbers={broadcast.view.numbers}
+          onNumbers={broadcast.showNumbers}
+          onKey={broadcast.press}
+          onAim={aimAtTheKeypad}
+        />
+      )}
     </section>
   )
 }

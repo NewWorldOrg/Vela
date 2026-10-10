@@ -100,6 +100,7 @@ function bench(context: TestContext) {
     headers: [] as Uint8Array[],
     pictures: [] as number[],
     captions: [] as number[],
+    broadcast: [] as [number, number][],
     canvases: 0,
     progress: 0,
     refusals: 0,
@@ -114,6 +115,7 @@ function bench(context: TestContext) {
       heard.canvases += 1
     },
     onCaption: (_picture, pts) => heard.captions.push(pts),
+    onDataBroadcast: (payload, pts) => heard.broadcast.push([payload[0], pts]),
     onProgress: () => {
       heard.progress += 1
     },
@@ -525,4 +527,18 @@ test('a canvas is taken from whichever wire announces it', (context) => {
   )
 
   assert.equal(heard.canvases, 1)
+})
+
+test('data broadcast frames are handed on with their time, from the fresh wire as well, whose replay the feed takes as it is', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x04)))
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+  wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x01, 0)))
+
+  assert.deepEqual(heard.broadcast, [
+    [0x04, A_FRAGMENT],
+    [0x01, A_FRAGMENT],
+  ])
 })
