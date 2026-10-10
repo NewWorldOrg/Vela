@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { DOMParser } from '@xmldom/xmldom'
 
 import {
+  BML_LIMITS,
   convertBml,
   parseBml,
   type BmlPage,
@@ -395,4 +396,79 @@ test('an element named after something every object inherits is still an element
     'unsupported element: constructor',
     'unsupported element: tostring',
   ])
+})
+
+function readsAs(source: string, resources?: Map<string, BmlResource>) {
+  const root = parseBml(source, parser)
+
+  assert.ok(root)
+
+  return convertBml(root, {
+    address: ADDRESS,
+    lookup: (address) => resources?.get(pathOf(address)),
+    image: (resource) => `blob:test/${resource.path}`,
+  })
+}
+
+test('a document of more elements than the converter takes is malformed', () => {
+  const reading = readsAs(bml('<br/>'.repeat(BML_LIMITS.elements + 1)))
+
+  assert.deepEqual(reading, { read: 'malformed', why: 'too many elements' })
+})
+
+test('a document nested deeper than the converter takes is malformed rather than overflowing the stack', () => {
+  const depth = BML_LIMITS.depth + 1
+  const reading = readsAs(
+    bml(`${'<div>'.repeat(depth)}${'</div>'.repeat(depth)}`),
+  )
+
+  assert.deepEqual(reading, { read: 'malformed', why: 'nested too deep' })
+})
+
+test('a style sheet of more rules than the converter takes is malformed', () => {
+  const rules = 'p { left: 1px }\n'.repeat(BML_LIMITS.rules + 1)
+
+  assert.deepEqual(readsAs(bml('', `<style>${rules}</style>`)), {
+    read: 'malformed',
+    why: 'too many rules',
+  })
+})
+
+test('style sheets larger together than a document may be are malformed', () => {
+  const big = `p { left: 1px }${' '.repeat(BML_LIMITS.documentBytes)}`
+
+  assert.deepEqual(
+    readsAs(
+      bml('', '<link rel="stylesheet" href="s.css"/>'),
+      resourcesOf({ '/40/0000/s.css': ['css', big] }),
+    ),
+    { read: 'malformed', why: 'too many bytes' },
+  )
+})
+
+test('more images, or more image bytes, than the converter takes are malformed', () => {
+  const many = '<img src="a.jpg"/>'.repeat(BML_LIMITS.images + 1)
+  const one = new Uint8Array(BML_LIMITS.imageBytes / 2 + 1)
+
+  assert.deepEqual(
+    readsAs(
+      bml(many),
+      resourcesOf({ '/40/0000/a.jpg': ['jpeg', new Uint8Array(1)] }),
+    ),
+    { read: 'malformed', why: 'too many images' },
+  )
+  assert.deepEqual(
+    readsAs(
+      bml('<img src="a.jpg"/><img src="a.jpg"/>'),
+      resourcesOf({ '/40/0000/a.jpg': ['jpeg', one] }),
+    ),
+    { read: 'malformed', why: 'too many imageBytes' },
+  )
+})
+
+test('a document longer than the converter takes is not read at all', () => {
+  assert.equal(
+    parseBml(bml(' '.repeat(BML_LIMITS.documentBytes)), parser),
+    null,
+  )
 })

@@ -117,6 +117,18 @@ const HTML_TAG = new Map<string, HtmlTag>([
   ['input', 'input'],
 ])
 
+/** How much of a document the converter takes: past any of these, the document is malformed. */
+export const BML_LIMITS = {
+  documentBytes: 4 * 1024 * 1024,
+  elements: 20_000,
+  depth: 256,
+  rules: 5_000,
+  images: 64,
+  imageBytes: 32 * 1024 * 1024,
+} as const
+
+class TooLarge extends Error {}
+
 const DEFAULT_RESOLUTION: Size = { width: 960, height: 540 }
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/x-arib-png'])
@@ -138,6 +150,10 @@ export function parseBml(
   source: string,
   parser: XmlParser,
 ): XmlElementLike | null {
+  if (source.length > BML_LIMITS.documentBytes) {
+    return null
+  }
+
   try {
     const parsed = parser.parseFromString(source, 'application/xml')
     const root = parsed.documentElement
@@ -196,24 +212,49 @@ class Conversion {
     this.context = context
   }
 
-  gather(node: XmlElementLike, inHead: boolean): void {
+  gather(node: XmlElementLike, inHead: boolean, depth = 1): void {
+    if (depth > BML_LIMITS.depth) {
+      throw new TooLarge('nested too deep')
+    }
+
     for (const child of elementsIn(node)) {
       const name = nameOf(child)
+
+      this.counted('elements', 1, BML_LIMITS.elements)
 
       if (GATHERED.has(name)) {
         this.take(name, child)
       } else if (inHead && !QUIET_IN_HEAD.has(name)) {
         this.warnings.add(`unsupported element: ${name}`)
       } else if (!inHead) {
-        this.gather(child, false)
+        this.gather(child, false, depth + 1)
       }
     }
+  }
+
+  private readonly totals = { elements: 0, bytes: 0, images: 0, imageBytes: 0 }
+
+  private counted(
+    what: keyof Conversion['totals'],
+    more: number,
+    most: number,
+  ): void {
+    this.totals[what] += more
+
+    if (this.totals[what] > most) {
+      throw new TooLarge(`too many ${what}`)
+    }
+  }
+
+  private sheet(text: string): void {
+    this.counted('bytes', text.length, BML_LIMITS.documentBytes)
+    this.sheets.push(text)
   }
 
   private take(name: string, node: XmlElementLike): void {
     switch (name) {
       case 'style':
-        this.sheets.push(textOf(node))
+        this.sheet(textOf(node))
         return
       case 'link':
         this.link(node)
@@ -231,7 +272,7 @@ class Conversion {
     const resource = href ? this.resource(href) : undefined
 
     if (resource?.kind === 'css') {
-      this.sheets.push(new TextDecoder().decode(resource.body))
+      this.sheet(new TextDecoder().decode(resource.body))
     } else {
       this.warnings.add('missing style sheet')
     }
@@ -277,6 +318,10 @@ class Conversion {
       sheet.warnings.forEach((w) => this.warnings.add(w)),
     )
     this.rules = sheets.flatMap((sheet) => sheet.rules)
+
+    if (this.rules.length > BML_LIMITS.rules) {
+      throw new TooLarge('too many rules')
+    }
     this.cascadeInto(body, null)
 
     const features = featuresOf(this.cascaded.get(body) ?? new Map())
@@ -533,6 +578,11 @@ class Conversion {
   private image(node: XmlElementLike, reference: string | null): PageElement {
     const resource = reference ? this.resource(reference) : undefined
     const drawable = resource?.kind === 'jpeg' || resource?.kind === 'png'
+
+    if (drawable && resource) {
+      this.counted('images', 1, BML_LIMITS.images)
+      this.counted('imageBytes', resource.body.length, BML_LIMITS.imageBytes)
+    }
     const url =
       drawable && resource ? this.context.image(resource, this.palette) : null
 
@@ -563,6 +613,22 @@ export function convertBml(
     return { read: 'malformed', why: 'no body' }
   }
 
+  try {
+    return { read: 'page', page: pageOf(head, body, context) }
+  } catch (error) {
+    if (error instanceof TooLarge) {
+      return { read: 'malformed', why: error.message }
+    }
+
+    throw error
+  }
+}
+
+function pageOf(
+  head: XmlElementLike | undefined,
+  body: XmlElementLike,
+  context: DocumentContext,
+): BmlPage {
   const conversion = new Conversion(context)
 
   if (head) {
@@ -577,19 +643,16 @@ export function convertBml(
   const resolution = features.resolution ?? DEFAULT_RESOLUTION
 
   return {
-    read: 'page',
-    page: {
-      address: context.address,
-      body: converted,
-      styleSheet,
-      scripts: conversion.scripts,
-      events: conversion.events,
-      resolution,
-      aspect: features.aspect ?? '16v9',
-      palette: conversion.paletteInUse,
-      videoRect: conversion.videoRect,
-      usedKeys: features.usedKeys ?? DEFAULT_USED_KEYS,
-      warnings: [...conversion.warnings],
-    },
+    address: context.address,
+    body: converted,
+    styleSheet,
+    scripts: conversion.scripts,
+    events: conversion.events,
+    resolution,
+    aspect: features.aspect ?? '16v9',
+    palette: conversion.paletteInUse,
+    videoRect: conversion.videoRect,
+    usedKeys: features.usedKeys ?? DEFAULT_USED_KEYS,
+    warnings: [...conversion.warnings],
   }
 }
