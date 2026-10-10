@@ -17,7 +17,7 @@ export const UNSUPPORTED_LASTS_MS = 3000
 /** The keys a document takes until it says otherwise: `basic` and `data-button`. */
 export const KEYS_UNTIL_TOLD = keysOf(['basic', 'data-button'])
 
-/** What the player shows of a data broadcast. `waits` and `notices` only count up, so a timer started for one wait or one notice cannot end a later one. */
+/** What the player shows of a data broadcast. `waits` and `notices` name the latest wait and notice, so a timer started for one of them cannot end a later one. */
 export interface DataBroadcastView {
   open: boolean
   rect: Rect | null
@@ -59,7 +59,7 @@ function closed(
 export type DataBroadcastStep =
   | { on: 'toggle'; availability: DataBroadcastAvailability }
   | { on: 'availability'; availability: DataBroadcastAvailability }
-  | { on: 'runtime'; message: RuntimeMessage }
+  | { on: 'runtime'; message: RuntimeMessage; nth?: number }
   | { on: 'slow'; waits: number }
   | { on: 'faded'; notices: number }
   | { on: 'numbers'; shown: boolean }
@@ -76,6 +76,7 @@ export function offersDataBroadcast(
 function heard(
   view: DataBroadcastView,
   message: RuntimeMessage,
+  nth: number | undefined,
 ): DataBroadcastView {
   switch (message.kind) {
     case 'videoRect':
@@ -84,10 +85,10 @@ function heard(
       return { ...view, usedKeys: message.keys }
     case 'waiting':
       return message.waiting
-        ? { ...view, waiting: true, slow: false, waits: view.waits + 1 }
+        ? { ...view, waiting: true, slow: false, waits: nth ?? view.waits + 1 }
         : { ...view, waiting: false, slow: false }
     case 'unsupported':
-      return { ...view, unsupported: true, notices: view.notices + 1 }
+      return { ...view, unsupported: true, notices: nth ?? view.notices + 1 }
     case 'exit':
       return closed(view)
     case 'error':
@@ -110,7 +111,7 @@ export function dataBroadcastAfter(
     case 'availability':
       return view.open && step.availability === 'none' ? closed(view) : view
     case 'runtime':
-      return view.open ? heard(view, step.message) : view
+      return view.open ? heard(view, step.message, step.nth) : view
     case 'slow':
       return view.waiting && view.waits === step.waits
         ? { ...view, slow: true }

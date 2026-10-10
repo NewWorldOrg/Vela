@@ -17,6 +17,7 @@ import {
   type SendToRuntime,
 } from '@/components/data-broadcast/bml-frame'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
+import { DataBroadcastKeypad } from '@/components/data-broadcast/data-broadcast-player'
 import {
   PLAYER_BOARD,
   PLAYER_FACE,
@@ -281,5 +282,123 @@ export const 放送の文書から届かないもの: Story = {
       'connect-src',
     )
     await expect(report.getAttribute('data-violations')).toContain('img-src')
+  },
+}
+
+function Keypad({
+  layout,
+  numbers: shownFirst,
+}: {
+  layout: 'band' | 'column'
+  numbers: boolean
+}) {
+  const [numbers, setNumbers] = useState(shownFirst)
+  const [pressed, setPressed] = useState<string[]>([])
+  const keypad = (
+    <DataBroadcastKeypad
+      layout={layout}
+      numbers={numbers}
+      onNumbers={setNumbers}
+      onKey={(key) => setPressed((before) => [...before, key])}
+      onAim={() => undefined}
+    />
+  )
+
+  return (
+    <div className="p-6" data-pressed={pressed.join(' ')}>
+      {layout === 'band' ? (
+        <div className={cn(PLAYER_BOARD)}>
+          <div className={cn(PLAYER_FACE, 'bg-(--pl-video)')} />
+          {keypad}
+        </div>
+      ) : (
+        <div className="relative h-[520px] w-[400px] bg-black">{keypad}</div>
+      )}
+    </div>
+  )
+}
+
+export const キーパッド_帯: Story = {
+  parameters: { screen: { width: 1200, height: 900 } },
+  render: () => <Keypad layout="band" numbers={false} />,
+  play: async ({ canvasElement }) => {
+    const keypad = within(canvasElement).getByRole('group', {
+      name: 'データ放送のリモコン',
+    })
+    const tray = canvasElement.querySelector('[data-pressed]')
+
+    for (const name of ['上', '右', '下', '左', '決定', '戻る', '青', '黄']) {
+      await userEvent.click(within(keypad).getByRole('button', { name }))
+    }
+
+    await expect(tray).toHaveAttribute(
+      'data-pressed',
+      'up right down left enter back blue yellow',
+    )
+
+    for (const button of within(keypad).getAllByRole('button')) {
+      const { width, height } = button.getBoundingClientRect()
+
+      await expect(Math.min(width, height)).toBeGreaterThanOrEqual(44)
+    }
+  },
+}
+
+export const キーパッド_帯_数字: Story = {
+  parameters: { screen: { width: 1200, height: 900 } },
+  render: () => <Keypad layout="band" numbers />,
+  play: async ({ canvasElement }) => {
+    const keypad = within(canvasElement).getByRole('group', {
+      name: 'データ放送のリモコン',
+    })
+
+    await userEvent.click(within(keypad).getByRole('button', { name: '7' }))
+    await userEvent.click(within(keypad).getByRole('button', { name: '0' }))
+    await expect(canvasElement.querySelector('[data-pressed]')).toHaveAttribute(
+      'data-pressed',
+      '7 0',
+    )
+    await expect(keypad.getBoundingClientRect().height).toBe(120)
+  },
+}
+
+export const キーパッド_列: Story = {
+  render: () => <Keypad layout="column" numbers={false} />,
+  play: async ({ canvasElement }) => {
+    const keypad = within(canvasElement).getByRole('group', {
+      name: 'データ放送のリモコン',
+    })
+
+    await expect(keypad.getBoundingClientRect().width).toBe(170)
+    await userEvent.click(within(keypad).getByRole('button', { name: '数字' }))
+    await expect(keypad).toHaveAttribute('data-face', 'numbers')
+  },
+}
+
+export const キーパッド_列_数字: Story = {
+  render: () => <Keypad layout="column" numbers />,
+  play: async ({ canvasElement }) => {
+    const keypad = within(canvasElement).getByRole('group', {
+      name: 'データ放送のリモコン',
+    })
+
+    await expect(
+      within(keypad)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '数字を閉じる',
+      '0',
+      '決定',
+    ])
   },
 }
