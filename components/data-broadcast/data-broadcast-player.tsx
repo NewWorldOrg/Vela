@@ -324,7 +324,7 @@ const LAYOUT: Record<Layout, string> = {
     'absolute inset-y-0 right-0 z-10 flex w-[170px] flex-col items-center justify-center gap-3.5 pb-[60px]',
 }
 
-/** The remote control's keys on screen: a band under the player's box, or a column at the right in fullscreen. `123` turns it to the numbers, and `←` back. */
+/** The remote control's keys on screen: a band under the player's box, or a column at the right in fullscreen. `123` turns it to the numbers, and `←` back; the key pressed to turn it goes away with its face, so the focus is handed back to the player first. */
 export function DataBroadcastKeypad({
   layout,
   numbers,
@@ -339,6 +339,10 @@ export function DataBroadcastKeypad({
   onAim: () => void
 }) {
   const pressing: Pressing = { layout, onKey, onAim }
+  const turn = (shown: boolean) => {
+    onAim()
+    onNumbers(shown)
+  }
   const back = (
     <KeyButton
       name="戻る"
@@ -353,7 +357,7 @@ export function DataBroadcastKeypad({
     <KeyButton
       name="数字"
       pressing={pressing}
-      onPress={() => onNumbers(true)}
+      onPress={() => turn(true)}
       className="px-4 font-code"
     >
       123
@@ -363,7 +367,7 @@ export function DataBroadcastKeypad({
     <KeyButton
       name="数字を閉じる"
       pressing={pressing}
-      onPress={() => onNumbers(false)}
+      onPress={() => turn(false)}
       className="size-11"
     >
       <ChevronLeftIcon className="size-5" />

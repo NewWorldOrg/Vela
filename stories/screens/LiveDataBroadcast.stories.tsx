@@ -459,3 +459,27 @@ export const 受信中: Story = {
     )
   },
 }
+
+export const キーボードで面を切り替えても鍵が効く: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = onTheScreen(canvasElement, 'live-player')
+
+    await opened(canvasElement)
+
+    const keypad = canvas.getByRole('group', { name: 'データ放送のリモコン' })
+
+    within(keypad).getByRole('button', { name: '数字' }).focus()
+    await userEvent.keyboard('{Enter}')
+    await expect(keypad).toHaveAttribute('data-face', 'numbers')
+    await expect(document.activeElement).toBe(player)
+
+    within(keypad).getByRole('button', { name: '数字を閉じる' }).focus()
+    await userEvent.keyboard('{Enter}')
+    await expect(keypad).toHaveAttribute('data-face', 'keys')
+    await expect(document.activeElement).toBe(player)
+
+    await userEvent.keyboard('{ArrowDown}{Enter}')
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+  },
+}
