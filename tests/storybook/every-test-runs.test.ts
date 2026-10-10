@@ -43,6 +43,7 @@ const THE_SUITE = [
   'tests/lib/bml/palette.test.ts',
   'tests/lib/bml/paths.test.ts',
   'tests/lib/bml/resources.test.ts',
+  'tests/lib/bml/style.test.ts',
   'tests/lib/browser-decodes.test.ts',
   'tests/lib/caption-placement.test.ts',
   'tests/lib/capture-name.test.ts',
