@@ -522,7 +522,7 @@ class Conversion {
         return address ? [['data-bml-href', pathOf(address)]] : []
       }
 
-      return [[`data-bml-${lowered}`, value]]
+      return [[`data-bml-attr-${lowered}`, value]]
     })
   }
 

@@ -104,7 +104,7 @@ test('the body becomes a div, and each BML element of the body the HTML element 
   )
   assert.equal(attribute(byId(page, 'i'), 'value'), 'v')
   assert.equal(attribute(byId(page, 'i'), 'maxlength'), '4')
-  assert.equal(attribute(byId(page, 'i'), 'data-bml-type'), 'text')
+  assert.equal(attribute(byId(page, 'i'), 'data-bml-attr-type'), 'text')
   assert.deepEqual(page.warnings, [])
 })
 
@@ -128,9 +128,9 @@ test('handlers and other attributes are kept only as inert data, and a link only
   assert.deepEqual(p.attributes, [
     ['id', 'p'],
     ['class', 'a b'],
-    ['data-bml-onclick', 'go()'],
-    ['data-bml-onfocus', 'lit()'],
-    ['data-bml-accesskey', 'B'],
+    ['data-bml-attr-onclick', 'go()'],
+    ['data-bml-attr-onfocus', 'lit()'],
+    ['data-bml-attr-accesskey', 'B'],
   ])
   assert.equal(p.style, 'left: 1px')
   assert.equal(attribute(byId(page, 'a'), 'data-bml-href'), '/40/0001/news.bml')
@@ -242,7 +242,7 @@ test('a video object becomes a clear hole, and its rectangle is where it stands 
   assert.equal(hole.tag, 'div')
   assert.equal(hole.bmlTag, 'object')
   assert.equal(attribute(hole, 'data-bml-video'), '')
-  assert.equal(attribute(hole, 'data-bml-type'), 'video/X-arib-mpeg2')
+  assert.equal(attribute(hole, 'data-bml-attr-type'), 'video/X-arib-mpeg2')
   assert.deepEqual(page.videoRect, {
     left: 120,
     top: 60,
@@ -378,6 +378,25 @@ test('a BML document with no body is malformed', () => {
     }),
     { read: 'malformed', why: 'no body' },
   )
+})
+
+test('the document’s own attributes cannot stand in for the runtime’s, whatever they are named', () => {
+  const page = read(
+    bml(
+      '<p id="p" tag="x" focus="" active="" hole="" video="" nav-index="1" data-bml-focus="">x</p>',
+    ),
+  )
+
+  assert.deepEqual(byId(page, 'p').attributes, [
+    ['id', 'p'],
+    ['data-bml-attr-tag', 'x'],
+    ['data-bml-attr-focus', ''],
+    ['data-bml-attr-active', ''],
+    ['data-bml-attr-hole', ''],
+    ['data-bml-attr-video', ''],
+    ['data-bml-attr-nav-index', '1'],
+    ['data-bml-attr-data-bml-focus', ''],
+  ])
 })
 
 test('an element named after something every object inherits is still an element BML does not have', () => {

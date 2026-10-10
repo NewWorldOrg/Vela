@@ -346,7 +346,7 @@ export class BmlRuntime {
       ACTIVE_MS,
     )
 
-    const handler = element.getAttribute('data-bml-onclick')
+    const handler = element.getAttribute('data-bml-attr-onclick')
     const href = element.getAttribute('data-bml-href')
     const target = href ? addressOf(href) : null
 

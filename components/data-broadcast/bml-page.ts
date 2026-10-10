@@ -8,6 +8,8 @@ export interface MountedPage {
 
 const HTML_ATTRIBUTES = new Set(['id', 'class', 'value', 'maxlength'])
 
+const RUNTIME_ATTRIBUTES = new Set(['data-bml-href', 'data-bml-video'])
+
 const NAV_ATTRIBUTE: [keyof PageElement['nav'], string][] = [
   ['index', 'data-bml-nav-index'],
   ['up', 'data-bml-nav-up'],
@@ -21,7 +23,11 @@ function kept(name: string, value: string): boolean {
     return value.startsWith('blob:')
   }
 
-  return HTML_ATTRIBUTES.has(name) || /^data-bml-[a-z0-9_-]+$/.test(name)
+  return (
+    HTML_ATTRIBUTES.has(name) ||
+    RUNTIME_ATTRIBUTES.has(name) ||
+    /^data-bml-attr-[a-z][a-z0-9_-]*$/.test(name)
+  )
 }
 
 function build(
