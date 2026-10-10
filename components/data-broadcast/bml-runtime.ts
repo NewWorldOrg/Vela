@@ -200,14 +200,18 @@ export class BmlRuntime {
   }
 
   private launch(address: BmlAddress, opening: boolean): void {
+    const arrived = this.modules.has(moduleKey(address.tag, address.module))
+
+    if (!arrived && !opening) {
+      this.waitFor(address)
+
+      return
+    }
+
     const resource = this.lookup(address)
 
     if (!resource) {
-      if (opening) {
-        this.fail('missing')
-      } else {
-        this.waitFor(address)
-      }
+      this.fail('missing')
 
       return
     }

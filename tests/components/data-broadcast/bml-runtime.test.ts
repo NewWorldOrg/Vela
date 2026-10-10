@@ -201,6 +201,46 @@ test('opening with no catalog, or no start document, says it is missing', () => 
   assert.deepEqual(empty.said, [{ kind: 'error', reason: 'missing' }])
 })
 
+test('a link into a module that has not arrived waits for it, then opens', () => {
+  const { said, send } = opened()
+
+  said.length = 0
+  send({ kind: 'key', key: 'enter' })
+
+  assert.deepEqual(said, [{ kind: 'waiting', waiting: true }])
+
+  send({ kind: 'module', module: module(1, { 'next.bml': ['bml', NEXT] }) })
+
+  assert.deepEqual(said.slice(1, 3), [
+    { kind: 'waiting', waiting: false },
+    { kind: 'videoRect', rect: { left: 0, top: 0, width: 320, height: 180 } },
+  ])
+})
+
+test('a link to a resource its arrived module does not hold is missing, not waited for', () => {
+  const { said, send } = opened()
+
+  said.length = 0
+  send({ kind: 'key', key: 'down' })
+  send({ kind: 'key', key: 'enter' })
+
+  assert.deepEqual(said, [{ kind: 'error', reason: 'missing' }])
+})
+
+test('a module that arrives without the resource waited for ends the wait as missing', () => {
+  const { said, send } = opened()
+
+  said.length = 0
+  send({ kind: 'key', key: 'enter' })
+  send({ kind: 'module', module: module(1, { 'other.bml': ['bml', NEXT] }) })
+
+  assert.deepEqual(said, [
+    { kind: 'waiting', waiting: true },
+    { kind: 'waiting', waiting: false },
+    { kind: 'error', reason: 'missing' },
+  ])
+})
+
 test('deciding on an element with a handler says scripts are not supported yet', () => {
   const { said, send } = opened()
 
