@@ -398,6 +398,16 @@ test('an element named after something every object inherits is still an element
   ])
 })
 
+test('a video object that starts off the plane keeps its far edges where the document put them', () => {
+  const page = read(
+    bml(
+      '<object type="video/X-arib-mpeg2" style="left: -20px; top: -10px; width: 100px; height: 60px"/>',
+    ),
+  )
+
+  assert.deepEqual(page.videoRect, { left: 0, top: 0, width: 80, height: 50 })
+})
+
 function readsAs(source: string, resources?: Map<string, BmlResource>) {
   const root = parseBml(source, parser)
 

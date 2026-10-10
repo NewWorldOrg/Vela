@@ -565,10 +565,12 @@ class Conversion {
       return null
     }
 
-    const left = Math.max(0, offset.left + (pixelsOf(values.get('left')) ?? 0))
-    const top = Math.max(0, offset.top + (pixelsOf(values.get('top')) ?? 0))
-    const right = Math.min(this.resolution.width, left + width)
-    const bottom = Math.min(this.resolution.height, top + height)
+    const placedLeft = offset.left + (pixelsOf(values.get('left')) ?? 0)
+    const placedTop = offset.top + (pixelsOf(values.get('top')) ?? 0)
+    const left = Math.max(0, placedLeft)
+    const top = Math.max(0, placedTop)
+    const right = Math.min(this.resolution.width, placedLeft + width)
+    const bottom = Math.min(this.resolution.height, placedTop + height)
 
     return right > left && bottom > top
       ? { left, top, width: right - left, height: bottom - top }
