@@ -252,10 +252,11 @@ export interface OpenBroadcast {
 export type KeyRoute =
   | { to: 'player'; command: PlayerCommand }
   | { to: 'dataBroadcast'; key: BmlKey }
+  | { to: 'nowhere' }
 
 const ARROWS = new Set<BmlKey>(['up', 'down', 'left', 'right'])
 
-/** Where a key goes: to an open data broadcast when its document uses it, or else to the player as before. Arrows do not seek or change the volume while a broadcast is open, whether its document uses them or not. */
+/** Where a key goes: to an open data broadcast when its document uses it, or else to the player as before. Arrows are taken only once the player has been aimed at, as the player takes them, and while a broadcast is open they neither seek nor change the volume: one its document does not use goes nowhere, so the page does not scroll either. */
 export function routeKey(
   press: KeyPress,
   offered: PlayerKeysOffered,
@@ -266,7 +267,13 @@ export function routeKey(
   if (broadcast && key !== null && key !== 'd') {
     const on = pressedOn(press.target)
 
-    if (typingIn(on) || answersItself(on, press.key)) {
+    const arrow = ARROWS.has(key)
+
+    if (
+      typingIn(on) ||
+      answersItself(on, press.key) ||
+      (arrow && offered.aimed === false)
+    ) {
       return null
     }
 
@@ -274,8 +281,8 @@ export function routeKey(
       return { to: 'dataBroadcast', key }
     }
 
-    if (ARROWS.has(key)) {
-      return null
+    if (arrow) {
+      return { to: 'nowhere' }
     }
   }
 

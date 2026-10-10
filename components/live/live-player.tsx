@@ -659,6 +659,10 @@ export function LivePlayer({
 
     event.preventDefault()
 
+    if (route.to === 'nowhere') {
+      return
+    }
+
     if (route.to === 'dataBroadcast') {
       broadcast.press(route.key)
 

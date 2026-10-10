@@ -396,15 +396,15 @@ test('a key the document says it does not use goes to the player, but an arrow n
 
   assert.equal(routed('b', basicOnly), null)
   assert.equal(routed('5', basicOnly), null)
-  assert.equal(routed('ArrowUp', noArrows), null)
-  assert.equal(routed('ArrowDown', noArrows), null)
-  assert.equal(
+  assert.deepEqual(routed('ArrowUp', noArrows), { to: 'nowhere' })
+  assert.deepEqual(routed('ArrowDown', noArrows), { to: 'nowhere' })
+  assert.deepEqual(
     routeKey(
       { key: 'ArrowLeft', target: THE_PLAYER },
       { seeks: true },
       noArrows,
     ),
-    null,
+    { to: 'nowhere' },
   )
   assert.deepEqual(routed('Enter', noArrows), {
     to: 'dataBroadcast',
@@ -465,5 +465,28 @@ test('nothing is taken while typing, or with Ctrl, Meta or Alt held', () => {
   assert.equal(
     routeKey({ key: '1', altKey: true, target: THE_PLAYER }, LIVE, EVERY_KEY),
     null,
+  )
+})
+
+test('an arrow goes to the document only once the player has been aimed at, as it goes to the player', () => {
+  const unaimed = { ...LIVE, aimed: false }
+
+  assert.equal(
+    routeKey({ key: 'ArrowDown', target: THE_PLAYER }, unaimed, EVERY_KEY),
+    null,
+  )
+  assert.equal(
+    routeKey({ key: 'ArrowUp', target: THE_PLAYER }, unaimed, {
+      usedKeys: ['enter'],
+    }),
+    null,
+  )
+  assert.deepEqual(
+    routeKey({ key: 'Enter', target: THE_PLAYER }, unaimed, EVERY_KEY),
+    { to: 'dataBroadcast', key: 'enter' },
+  )
+  assert.deepEqual(
+    routeKey({ key: 'ArrowDown', target: THE_PLAYER }, LIVE, EVERY_KEY),
+    { to: 'dataBroadcast', key: 'down' },
   )
 })
