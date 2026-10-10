@@ -19,9 +19,13 @@ function attribute(value: string): string {
     .replace(/>/g, '&gt;')
 }
 
-/** The `srcdoc` of the runtime's frame: its policy, the origin it takes messages from, its base style and its script. */
+const BREAKS_OUT = /<!--|<\/?script/i
+
+/** The `srcdoc` of the runtime's frame: its policy, the origin it takes messages from, its base style and its script. A script that could end or reopen the element it is written into is refused. */
 export function runtimeDocument(playerOrigin: string, script: string): string {
-  const inline = script.replace(/<\/(script)/gi, '<\\/$1')
+  if (BREAKS_OUT.test(script)) {
+    throw new Error('the script would break out of its element')
+  }
 
   return [
     '<!doctype html>',
@@ -29,6 +33,6 @@ export function runtimeDocument(playerOrigin: string, script: string): string {
     `<meta http-equiv="Content-Security-Policy" content="${attribute(RUNTIME_POLICY)}">`,
     `<meta name="${PLAYER_ORIGIN_META}" content="${attribute(playerOrigin)}">`,
     `<style>${BASE_STYLE}</style>`,
-    `</head><body><div id="${PLANE_ID}"></div><script>${inline}</script></body></html>`,
+    `</head><body><div id="${PLANE_ID}"></div><script>${script}</script></body></html>`,
   ].join('')
 }

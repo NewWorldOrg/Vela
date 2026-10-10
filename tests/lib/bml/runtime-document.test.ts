@@ -45,15 +45,22 @@ test('the document carries its policy, the origin it listens to, its base style,
   )
 })
 
-test('neither the origin nor the script can close the element they are written into', () => {
-  const source = runtimeDocument(
-    '"><script>bad()</script>',
-    'const a = "</script><script>bad()</script>"',
-  )
+test('the origin cannot close the attribute it is written into', () => {
+  const source = runtimeDocument('"><script>bad()</script>', 'start()')
 
-  assert.equal(source.match(/<\/script/gi)?.length, 1)
-  assert.ok(source.endsWith('</script></body></html>'))
   assert.ok(
     source.includes('content="&quot;&gt;&lt;script&gt;bad()&lt;/script&gt;"'),
   )
+  assert.equal(source.match(/<script/gi)?.length, 1)
+})
+
+test('a script that could end its element, open another or start an HTML comment inside it is refused', () => {
+  for (const script of [
+    'a = "</script>"',
+    'a = "</SCRIPT "',
+    'a = "<script>"',
+    'a = "<!--"',
+  ]) {
+    assert.throws(() => runtimeDocument('https://vela.example', script), script)
+  }
 })
