@@ -15,7 +15,9 @@ import { LiveView } from '@/components/live/live-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import {
   DATA_BROADCAST_CATALOG,
+  SCRIPTED_CATALOG,
   dataBroadcastModules,
+  scriptedModules,
 } from '@/stories/fixtures/data-broadcast'
 import { inTheApp } from '@/stories/frames'
 
@@ -92,6 +94,11 @@ function broken(module: BmlModule): BmlModule {
     ),
   }
 }
+
+const SCRIPTED = [
+  catalogPayload(SCRIPTED_CATALOG),
+  ...scriptedModules().map(modulePayload),
+]
 
 const NONE = Uint8Array.of(0x04)
 
@@ -611,5 +618,32 @@ export const 開いてもページは動かない: Story = {
     await expect(window.scrollY).toBe(120)
     await expect(player.getBoundingClientRect().top).toBe(top)
     window.scrollTo(0, 0)
+  },
+}
+
+export const スクリプトが長すぎると閉じる: Story = {
+  args: { openSocket: carrying(...SCRIPTED) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = onTheScreen(canvasElement, 'live-player')
+    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+
+    await afterTheArrival(canvasElement)
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    await userEvent.click(toggle)
+    await shrunkTo(canvasElement, AT_THE_START)
+
+    press(player, 'ArrowDown')
+    press(player, 'Enter')
+
+    await expect(
+      await canvas.findByText(SAID_FAILED, {}, { timeout: 8000 }),
+    ).toBeVisible()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+    await shrunkTo(canvasElement)
+
+    await userEvent.click(toggle)
+    await shrunkTo(canvasElement, AT_THE_START)
   },
 }

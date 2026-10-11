@@ -123,7 +123,7 @@ export function DataBroadcastFace({
   const alive = useRef(false)
   const letGo = useRef<(() => void) | null>(null)
   const gone = useEffectEvent(() => onRuntime(null))
-  const heard = useEffectEvent((message: RuntimeMessage) => {
+  const heard = (message: RuntimeMessage) => {
     const storage = storageOf()
     const service = feed.catalog?.service
 
@@ -132,7 +132,7 @@ export function DataBroadcastFace({
     }
 
     onMessage(message)
-  })
+  }
 
   useEffect(() => {
     alive.current = true
