@@ -290,7 +290,7 @@ function Keypad({
   numbers: shownFirst,
   tall = 520,
 }: {
-  layout: 'band' | 'column'
+  layout: 'panel' | 'column'
   numbers: boolean
   tall?: number
 }) {
@@ -308,9 +308,11 @@ function Keypad({
 
   return (
     <div className="p-6" data-pressed={pressed.join(' ')}>
-      {layout === 'band' ? (
-        <div className={cn(PLAYER_BOARD)}>
-          <div className={cn(PLAYER_FACE, 'bg-(--pl-video)')} />
+      {layout === 'panel' ? (
+        <div>
+          <div data-slot="board" className={cn(PLAYER_BOARD)}>
+            <div className={cn(PLAYER_FACE, 'bg-(--pl-video)')} />
+          </div>
           {keypad}
         </div>
       ) : (
@@ -322,13 +324,33 @@ function Keypad({
   )
 }
 
-export const キーパッド_帯: Story = {
-  parameters: { screen: { width: 1200, height: 900 } },
-  render: () => <Keypad layout="band" numbers={false} />,
+async function joinedUnderTheBoard(canvasElement: HTMLElement) {
+  const keypad = within(canvasElement).getByRole('group', {
+    name: 'データ放送のリモコン',
+  })
+  const board = canvasElement.querySelector(
+    '[data-slot="board"]',
+  ) as HTMLElement
+  const panel = keypad.getBoundingClientRect()
+  const box = board.getBoundingClientRect()
+
+  await expect(panel.top).toBe(box.bottom - 1)
+  await expect(
+    Math.abs(panel.left + panel.width / 2 - (box.left + box.width / 2)),
+  ).toBeLessThan(1)
+  await expect(panel.height).toBe(165)
+  await expect(panel.width).toBeGreaterThan(380)
+  await expect(panel.width).toBeLessThan(440)
+  await expect(getComputedStyle(keypad).backgroundColor).toBe('rgb(21, 20, 24)')
+
+  return keypad
+}
+
+export const キーパッド_パネル: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Keypad layout="panel" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const keypad = within(canvasElement).getByRole('group', {
-      name: 'データ放送のリモコン',
-    })
+    const keypad = await joinedUnderTheBoard(canvasElement)
     const tray = canvasElement.querySelector('[data-pressed]')
 
     for (const name of ['上', '右', '下', '左', '決定', '戻る', '青', '黄']) {
@@ -348,13 +370,31 @@ export const キーパッド_帯: Story = {
   },
 }
 
-export const キーパッド_帯_数字: Story = {
-  parameters: { screen: { width: 1200, height: 900 } },
-  render: () => <Keypad layout="band" numbers />,
+export const キーパッド_パネル_数字: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Keypad layout="panel" numbers />,
   play: async ({ canvasElement }) => {
-    const keypad = within(canvasElement).getByRole('group', {
-      name: 'データ放送のリモコン',
-    })
+    const keypad = await joinedUnderTheBoard(canvasElement)
+    const { width } = keypad.getBoundingClientRect()
+
+    await expect(
+      within(keypad)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual([
+      '1',
+      '2',
+      '3',
+      '数字を閉じる',
+      '4',
+      '5',
+      '6',
+      '0',
+      '7',
+      '8',
+      '9',
+      '決定',
+    ])
 
     await userEvent.click(within(keypad).getByRole('button', { name: '7' }))
     await userEvent.click(within(keypad).getByRole('button', { name: '0' }))
@@ -362,8 +402,13 @@ export const キーパッド_帯_数字: Story = {
       'data-pressed',
       '7 0',
     )
-    await expect(keypad.getBoundingClientRect().height).toBe(120)
-    await expect(keypad.scrollHeight).toBeLessThanOrEqual(keypad.clientHeight)
+
+    await userEvent.click(
+      within(keypad).getByRole('button', { name: '数字を閉じる' }),
+    )
+    await expect(keypad).toHaveAttribute('data-face', 'keys')
+    await expect(keypad.getBoundingClientRect().width).toBe(width)
+    await expect(keypad.getBoundingClientRect().height).toBe(165)
   },
 }
 
@@ -474,9 +519,9 @@ export const キーパッド_列_縦が足りない: Story = {
 
     await expect(getComputedStyle(keypad).overflowY).toBe('auto')
     await expect(keypad.scrollHeight).toBeGreaterThan(keypad.clientHeight)
-    await expect(up.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-      keypad.getBoundingClientRect().top,
-    )
+    await expect(
+      (up.parentElement as HTMLElement).getBoundingClientRect().top,
+    ).toBeGreaterThanOrEqual(keypad.getBoundingClientRect().top)
 
     keypad.scrollTop = keypad.scrollHeight
 

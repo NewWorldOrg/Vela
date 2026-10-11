@@ -227,20 +227,32 @@ export const 開ける: Story = {
   },
 }
 
-export const 開いている_PC: Story = {
-  parameters: { screen: { width: 1280, height: 900 } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+async function underTheBoard(canvasElement: HTMLElement) {
+  const keypad = within(canvasElement).getByRole('group', {
+    name: 'データ放送のリモコン',
+  })
+  const panel = keypad.getBoundingClientRect()
+  const box = onTheScreen(canvasElement, 'live-player').getBoundingClientRect()
 
+  await expect(keypad).toHaveAttribute('data-layout', 'panel')
+  await expect(panel.top).toBe(box.bottom - 1)
+  await expect(
+    Math.abs(panel.left + panel.width / 2 - (box.left + box.width / 2)),
+  ).toBeLessThan(1)
+  await expect(panel.height).toBe(165)
+  await expect(panel.width).toBeLessThan(440)
+  await expect(getComputedStyle(keypad).backgroundColor).toBe('rgb(21, 20, 24)')
+  await expect(panel.bottom).toBeLessThanOrEqual(window.innerHeight)
+
+  return keypad
+}
+
+export const 開いている_PC: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  play: async ({ canvasElement }) => {
     await opened(canvasElement)
 
-    const keypad = canvas.getByRole('group', { name: 'データ放送のリモコン' })
-
-    await expect(keypad).toHaveAttribute('data-layout', 'band')
-    await expect(keypad.getBoundingClientRect().height).toBe(120)
-    await expect(getComputedStyle(keypad).overflowY).toBe('hidden')
-    await expect(keypad.scrollHeight).toBeLessThanOrEqual(keypad.clientHeight)
-
+    const keypad = await underTheBoard(canvasElement)
     const says = onTheScreen(canvasElement, 'data-broadcast-says')
 
     await expect(says).toHaveAttribute('role', 'status')
@@ -252,9 +264,9 @@ export const 開いている_PC: Story = {
     ).toEqual([
       '戻る',
       '上',
-      '左',
-      '下',
       '右',
+      '下',
+      '左',
       '決定',
       '青',
       '赤',
@@ -266,22 +278,10 @@ export const 開いている_PC: Story = {
 }
 
 export const 開いている_縦の_iPad: Story = {
-  parameters: { screen: { width: 768, height: 1024 } },
+  parameters: { screen: { width: 820, height: 1180 } },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
     await opened(canvasElement)
-
-    const keypad = canvas.getByRole('group', { name: 'データ放送のリモコン' })
-    const board = onTheScreen(canvasElement, 'live-player')
-
-    await expect(keypad.getBoundingClientRect().right).toBeLessThanOrEqual(
-      board.getBoundingClientRect().right,
-    )
-    await expect(keypad.scrollHeight).toBeLessThanOrEqual(keypad.clientHeight)
-    await expect(keypad.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-      board.getBoundingClientRect().bottom,
-    )
+    await underTheBoard(canvasElement)
   },
 }
 
@@ -390,17 +390,17 @@ export const キーパッドで押す: Story = {
         .getAllByRole('button')
         .map((button) => button.getAttribute('aria-label')),
     ).toEqual([
-      '数字を閉じる',
       '1',
       '2',
       '3',
+      '数字を閉じる',
       '4',
       '5',
       '6',
+      '0',
       '7',
       '8',
       '9',
-      '0',
       '決定',
     ])
 
