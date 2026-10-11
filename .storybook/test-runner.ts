@@ -934,6 +934,19 @@ async function settled(rounds: number): Promise<void> {
 
 const turns = new StoryTurns()
 
+const touched = new WeakSet<Page>()
+
+/** Gives the page a finger for its pointer: `(pointer: coarse)` holds from here on, so a page that was touched is left for a fresh one before a story for a mouse. */
+async function touchScreen(page: Page): Promise<void> {
+  const session = await page.context().newCDPSession(page)
+
+  await session.send('Emulation.setTouchEmulationEnabled', {
+    enabled: true,
+    maxTouchPoints: 5,
+  })
+  touched.add(page)
+}
+
 async function aFreshPage(left: Page): Promise<Page> {
   const fresh = await left.context().newPage()
 
@@ -970,10 +983,17 @@ const config: TestRunnerConfig = {
   },
 
   async preVisit(left: Page, context) {
-    const page = turns.begin(context.id) ? await aFreshPage(left) : left
-    const { parameters } = await getStoryContext(page, context)
+    const turned = turns.begin(context.id) ? await aFreshPage(left) : left
+    const { parameters } = await getStoryContext(turned, context)
     const asked: Screen | undefined = (parameters as { screen?: Screen }).screen
     const size: Screen | null = asked ?? opened
+    const coarse = (parameters as { coarse?: boolean }).coarse === true
+    const page =
+      !coarse && touched.has(turned) ? await aFreshPage(turned) : turned
+
+    if (coarse && !touched.has(page)) {
+      await touchScreen(page)
+    }
 
     if (size) {
       await page.setViewportSize(size)

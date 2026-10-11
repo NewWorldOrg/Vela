@@ -17,7 +17,10 @@ import {
   type SendToRuntime,
 } from '@/components/data-broadcast/bml-frame'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
-import { DataBroadcastKeypad } from '@/components/data-broadcast/data-broadcast-player'
+import {
+  DataBroadcastBand,
+  type BandFit,
+} from '@/components/data-broadcast/data-broadcast-player'
 import {
   PLAYER_BOARD,
   PLAYER_FACE,
@@ -285,84 +288,236 @@ export const 放送の文書から届かないもの: Story = {
   },
 }
 
-function Keypad({
-  layout,
+function Band({
+  fit,
   numbers: shownFirst,
-  tall = 520,
 }: {
-  layout: 'panel' | 'column'
+  fit: BandFit
   numbers: boolean
-  tall?: number
 }) {
   const [numbers, setNumbers] = useState(shownFirst)
   const [pressed, setPressed] = useState<string[]>([])
-  const keypad = (
-    <DataBroadcastKeypad
-      layout={layout}
-      numbers={numbers}
-      onNumbers={setNumbers}
-      onKey={(key) => setPressed((before) => [...before, key])}
-      onAim={() => undefined}
-    />
-  )
 
   return (
     <div className="p-6" data-pressed={pressed.join(' ')}>
-      {layout === 'panel' ? (
-        <div>
-          <div data-slot="board" className={cn(PLAYER_BOARD)}>
-            <div className={cn(PLAYER_FACE, 'bg-(--pl-video)')} />
-          </div>
-          {keypad}
-        </div>
-      ) : (
-        <div className="relative w-[400px] bg-black" style={{ height: tall }}>
-          {keypad}
-        </div>
-      )}
+      <div data-slot="board" className={cn(PLAYER_BOARD, 'bg-(--pl-bg)')}>
+        <DataBroadcastBand
+          fit={fit}
+          numbers={numbers}
+          onNumbers={setNumbers}
+          onKey={(key) => setPressed((before) => [...before, key])}
+          onAim={() => undefined}
+        />
+      </div>
     </div>
   )
 }
 
-async function joinedUnderTheBoard(canvasElement: HTMLElement) {
-  const keypad = within(canvasElement).getByRole('group', {
-    name: 'データ放送のリモコン',
-  })
-  const board = canvasElement.querySelector(
-    '[data-slot="board"]',
-  ) as HTMLElement
-  const panel = keypad.getBoundingClientRect()
-  const box = board.getBoundingClientRect()
+const KEYS = [
+  '戻る',
+  '上',
+  '下',
+  '左',
+  '右',
+  '決定',
+  '青',
+  '赤',
+  '緑',
+  '黄',
+  '123 数字',
+]
 
-  await expect(panel.top).toBe(box.bottom - 1)
-  await expect(
-    Math.abs(panel.left + panel.width / 2 - (box.left + box.width / 2)),
-  ).toBeLessThan(1)
-  await expect(panel.height).toBe(165)
-  await expect(panel.width).toBeGreaterThan(380)
-  await expect(panel.width).toBeLessThan(440)
-  await expect(getComputedStyle(keypad).backgroundColor).toBe('rgb(21, 20, 24)')
+const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
-  return keypad
+interface Measures {
+  band: number
+  pill: [number, number]
+  disc: number
+  enter: number
+  dot: number
+  pitch: number
+  key: number
+  keyPitch: number
 }
 
-export const キーパッド_パネル: Story = {
+const MEASURED: Record<BandFit, Measures> = {
+  fine: {
+    band: 84,
+    pill: [52, 40],
+    disc: 72,
+    enter: 32,
+    dot: 32,
+    pitch: 42,
+    key: 40,
+    keyPitch: 44,
+  },
+  coarse: {
+    band: 120,
+    pill: [60, 44],
+    disc: 104,
+    enter: 44,
+    dot: 40,
+    pitch: 48,
+    key: 44,
+    keyPitch: 48,
+  },
+  'coarse-full': {
+    band: 104,
+    pill: [60, 44],
+    disc: 88,
+    enter: 40,
+    dot: 40,
+    pitch: 48,
+    key: 44,
+    keyPitch: 48,
+  },
+}
+
+function named(band: HTMLElement): string[] {
+  return within(band)
+    .getAllByRole('button')
+    .map((button) => button.getAttribute('aria-label') ?? button.textContent)
+}
+
+function pitchOf(buttons: HTMLElement[]): number {
+  const [first, second] = buttons.map((button) =>
+    button.getBoundingClientRect(),
+  )
+
+  return second.left - first.left
+}
+
+/** The band as the mock draws it for this fit: its height, each key's size, and the pitch of the dots and the digits. */
+async function asTheMock(canvasElement: HTMLElement, fit: BandFit) {
+  const band = within(canvasElement).getByRole('group', {
+    name: 'データ放送のリモコン',
+  })
+  const keys = within(band)
+  const want = MEASURED[fit]
+  const box = band.getBoundingClientRect()
+  const board = (
+    canvasElement.querySelector('[data-slot="board"]') as HTMLElement
+  ).getBoundingClientRect()
+  const disc = keys.getByRole('group', { name: '十字' }).getBoundingClientRect()
+  const back = keys
+    .getByRole('button', { name: '戻る' })
+    .getBoundingClientRect()
+  const enter = keys
+    .getByRole('button', { name: '決定' })
+    .getBoundingClientRect()
+  const dots = ['青', '赤', '緑', '黄'].map((name) =>
+    keys.getByRole('button', { name }),
+  )
+  const dot = dots[0].getBoundingClientRect()
+
+  await expect(band).toHaveAttribute('data-fit', fit)
+  await expect(box.height).toBe(want.band)
+  await expect(box.width).toBe(board.width - 2)
+  await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
+  await expect([back.width, back.height]).toEqual(want.pill)
+  await expect([disc.width, disc.height]).toEqual([want.disc, want.disc])
+  await expect([enter.width, enter.height]).toEqual([want.enter, want.enter])
+  await expect(
+    Math.abs(enter.left + enter.width / 2 - (disc.left + disc.width / 2)),
+  ).toBeLessThan(1)
+  await expect(dots[0].querySelector('i')?.getBoundingClientRect().width).toBe(
+    want.dot,
+  )
+  await expect(dot.height).toBe(44)
+  await expect(pitchOf(dots)).toBe(want.pitch)
+  await expect(
+    Math.abs(disc.top + disc.height / 2 - (box.top + box.height / 2)),
+  ).toBeLessThan(1)
+
+  return band
+}
+
+async function digitsAsTheMock(band: HTMLElement, fit: BandFit) {
+  const keys = within(band)
+  const want = MEASURED[fit]
+  const digits = DIGITS.map((name) => keys.getByRole('button', { name }))
+  const one = digits[0].getBoundingClientRect()
+  const toNumbers = keys
+    .getByRole('button', { name: '123 数字' })
+    .getBoundingClientRect()
+
+  await expect(band).toHaveAttribute('data-face', 'numbers')
+  await expect(keys.getByRole('button', { name: '123 数字' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  )
+  await expect([one.width, one.height]).toEqual([want.key, want.key])
+  await expect(pitchOf(digits)).toBe(want.keyPitch)
+  await expect(one.left).toBeGreaterThan(toNumbers.right)
+
+  return { digits, toNumbers }
+}
+
+export const 帯_PC: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <Keypad layout="panel" numbers={false} />,
+  render: () => <Band fit="fine" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const keypad = await joinedUnderTheBoard(canvasElement)
+    const band = await asTheMock(canvasElement, 'fine')
     const tray = canvasElement.querySelector('[data-pressed]')
 
+    await expect(named(band)).toEqual(KEYS)
+
     for (const name of ['上', '右', '下', '左', '決定', '戻る', '青', '黄']) {
-      await userEvent.click(within(keypad).getByRole('button', { name }))
+      await userEvent.click(within(band).getByRole('button', { name }))
     }
 
     await expect(tray).toHaveAttribute(
       'data-pressed',
       'up right down left enter back blue yellow',
     )
+  },
+}
 
-    for (const button of within(keypad).getAllByRole('button')) {
+export const 帯_PC_数字: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Band fit="fine" numbers />,
+  play: async ({ canvasElement }) => {
+    const band = await asTheMock(canvasElement, 'fine')
+    const { digits, toNumbers } = await digitsAsTheMock(band, 'fine')
+
+    await expect(named(band)).toEqual([...KEYS, ...DIGITS])
+    await expect(digits[0].getBoundingClientRect().top).toBe(
+      toNumbers.top + (toNumbers.height - 40) / 2,
+    )
+
+    await userEvent.click(within(band).getByRole('button', { name: '7' }))
+    await userEvent.click(within(band).getByRole('button', { name: '0' }))
+    await expect(canvasElement.querySelector('[data-pressed]')).toHaveAttribute(
+      'data-pressed',
+      '7 0',
+    )
+
+    await userEvent.click(
+      within(band).getByRole('button', { name: '123 数字' }),
+    )
+    await expect(band).toHaveAttribute('data-face', 'keys')
+    await expect(named(band)).toEqual(KEYS)
+    await expect(band.getBoundingClientRect().height).toBe(84)
+  },
+}
+
+export const 帯_iPad_窓: Story = {
+  parameters: { screen: { width: 820, height: 1180 } },
+  render: () => <Band fit="coarse" numbers={false} />,
+  play: async ({ canvasElement }) => {
+    const band = await asTheMock(canvasElement, 'coarse')
+
+    await expect(named(band)).toEqual(KEYS)
+
+    for (const button of within(band).getAllByRole('button')) {
+      if (
+        ['青', '赤', '緑', '黄'].includes(
+          button.getAttribute('aria-label') ?? '',
+        )
+      ) {
+        continue
+      }
+
       const { width, height } = button.getBoundingClientRect()
 
       await expect(Math.min(width, height)).toBeGreaterThanOrEqual(44)
@@ -370,88 +525,53 @@ export const キーパッド_パネル: Story = {
   },
 }
 
-export const キーパッド_パネル_数字: Story = {
-  parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <Keypad layout="panel" numbers />,
+export const 帯_iPad_窓_数字: Story = {
+  parameters: { screen: { width: 820, height: 1180 } },
+  render: () => <Band fit="coarse" numbers />,
   play: async ({ canvasElement }) => {
-    const keypad = await joinedUnderTheBoard(canvasElement)
-    const { width } = keypad.getBoundingClientRect()
+    const band = await asTheMock(canvasElement, 'coarse')
+    const keys = within(band)
+    const digits = DIGITS.map((name) => keys.getByRole('button', { name }))
+    const one = digits[0].getBoundingClientRect()
+    const blue = keys
+      .getByRole('button', { name: '青' })
+      .getBoundingClientRect()
+    const toNumbers = keys
+      .getByRole('button', { name: '123 数字' })
+      .getBoundingClientRect()
 
-    await expect(
-      within(keypad)
-        .getAllByRole('button')
-        .map((button) => button.getAttribute('aria-label')),
-    ).toEqual([
-      '1',
-      '2',
-      '3',
-      '数字を閉じる',
-      '4',
-      '5',
-      '6',
-      '0',
-      '7',
-      '8',
-      '9',
-      '決定',
-    ])
+    await expect(band).toHaveAttribute('data-face', 'numbers')
+    await expect([one.width, one.height]).toEqual([44, 44])
+    await expect(pitchOf(digits)).toBe(48)
+    await expect(one.top).toBeGreaterThanOrEqual(toNumbers.bottom)
+    await expect(Math.abs(one.left - blue.left)).toBeLessThan(1)
+    await expect(band.getBoundingClientRect().height).toBe(120)
 
-    await userEvent.click(within(keypad).getByRole('button', { name: '7' }))
-    await userEvent.click(within(keypad).getByRole('button', { name: '0' }))
-    await expect(canvasElement.querySelector('[data-pressed]')).toHaveAttribute(
-      'data-pressed',
-      '7 0',
-    )
-
-    await userEvent.click(
-      within(keypad).getByRole('button', { name: '数字を閉じる' }),
-    )
-    await expect(keypad).toHaveAttribute('data-face', 'keys')
-    await expect(keypad.getBoundingClientRect().width).toBe(width)
-    await expect(keypad.getBoundingClientRect().height).toBe(165)
+    await userEvent.click(keys.getByRole('button', { name: '123 数字' }))
+    await expect(band).toHaveAttribute('data-face', 'keys')
+    await expect(band.getBoundingClientRect().height).toBe(120)
   },
 }
 
-export const キーパッド_列: Story = {
-  render: () => <Keypad layout="column" numbers={false} />,
+export const 帯_iPad_全画面: Story = {
+  parameters: { screen: { width: 1180, height: 820 } },
+  render: () => <Band fit="coarse-full" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const keypad = within(canvasElement).getByRole('group', {
-      name: 'データ放送のリモコン',
-    })
+    const band = await asTheMock(canvasElement, 'coarse-full')
 
-    await expect(keypad.getBoundingClientRect().width).toBe(170)
-    await userEvent.click(
-      within(keypad).getByRole('button', { name: '123 数字' }),
-    )
-    await expect(keypad).toHaveAttribute('data-face', 'numbers')
+    await expect(named(band)).toEqual(KEYS)
   },
 }
 
-export const キーパッド_列_数字: Story = {
-  render: () => <Keypad layout="column" numbers />,
+export const 帯_iPad_全画面_数字: Story = {
+  parameters: { screen: { width: 1180, height: 820 } },
+  render: () => <Band fit="coarse-full" numbers />,
   play: async ({ canvasElement }) => {
-    const keypad = within(canvasElement).getByRole('group', {
-      name: 'データ放送のリモコン',
-    })
+    const band = await asTheMock(canvasElement, 'coarse-full')
+    const { digits, toNumbers } = await digitsAsTheMock(band, 'coarse-full')
 
-    await expect(
-      within(keypad)
-        .getAllByRole('button')
-        .map((button) => button.getAttribute('aria-label')),
-    ).toEqual([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '数字を閉じる',
-      '0',
-      '決定',
-    ])
+    await expect(digits[0].getBoundingClientRect().top).toBe(toNumbers.top)
+    await expect(band.getBoundingClientRect().height).toBe(104)
   },
 }
 
@@ -506,31 +626,5 @@ export const 読み込み直した枠は壊れたものとして閉じる: Story
       },
     )
     await expect(group).toHaveAttribute('data-readies', '1')
-  },
-}
-
-export const キーパッド_列_縦が足りない: Story = {
-  render: () => <Keypad layout="column" numbers={false} tall={240} />,
-  play: async ({ canvasElement }) => {
-    const keypad = within(canvasElement).getByRole('group', {
-      name: 'データ放送のリモコン',
-    })
-    const up = within(keypad).getByRole('button', { name: '上' })
-
-    await expect(getComputedStyle(keypad).overflowY).toBe('auto')
-    await expect(keypad.scrollHeight).toBeGreaterThan(keypad.clientHeight)
-    await expect(
-      (up.parentElement as HTMLElement).getBoundingClientRect().top,
-    ).toBeGreaterThanOrEqual(keypad.getBoundingClientRect().top)
-
-    keypad.scrollTop = keypad.scrollHeight
-
-    const last = within(keypad).getByRole('button', { name: '123 数字' })
-
-    await waitFor(() =>
-      expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-        keypad.getBoundingClientRect().bottom,
-      ),
-    )
   },
 }

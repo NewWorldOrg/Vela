@@ -66,6 +66,7 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
+import { useCoarsePointer } from '@/hooks/useCoarsePointer'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
@@ -75,11 +76,11 @@ import {
 } from '@/components/recordings/player-center'
 
 import {
+  DataBroadcastBand,
   DataBroadcastFace,
-  DataBroadcastKeypad,
   DataBroadcastToggle,
-  KEYPAD_COLUMN,
-  PLAYER_COLUMN_OVER_THE_KEYPAD,
+  PLAYER_COLUMN_OVER_THE_BAND,
+  type BandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
 
 import { CaptionLayer } from '@/components/live/live-captions'
@@ -96,6 +97,15 @@ import { LiveSettings } from '@/components/live/live-settings'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
 const RESTS = 3000
+
+/** Which band the player draws out: a mouse gets the one over the picture, a finger the one under the box, and a finger in fullscreen the one over the picture again, sized for the finger. */
+function bandFit(coarse: boolean, full: boolean): BandFit {
+  if (!coarse) {
+    return 'fine'
+  }
+
+  return full ? 'coarse-full' : 'coarse'
+}
 
 const TICK_MS = 250
 
@@ -176,6 +186,7 @@ export function LivePlayer({
   const [broadcastFeed] = useState(() => new DataBroadcastFeed())
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
+  const coarse = useCoarsePointer()
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
@@ -708,7 +719,9 @@ export function LivePlayer({
   const latency = running?.latency
   const losing = running?.losing ?? false
   const opened = broadcast.view.open
-  const beside = opened && full
+  const fit = bandFit(coarse, full)
+  const underTheBox = opened && fit === 'coarse'
+  const overThePicture = opened && !underTheBox
   const barSaid = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' as const }
     : said
@@ -728,12 +741,10 @@ export function LivePlayer({
           aimed.current = true
         }}
         onKeyDown={onKeyDown}
-        className={cn(
-          PLAYER_BOARD,
-          opened && !full && PLAYER_COLUMN_OVER_THE_KEYPAD,
-        )}
+        className={cn(PLAYER_BOARD, underTheBox && PLAYER_COLUMN_OVER_THE_BAND)}
       >
         <div
+          data-slot="player-face"
           className={cn(
             'relative flex items-center justify-center',
             PLAYER_FACE,
@@ -742,10 +753,7 @@ export function LivePlayer({
         >
           <div
             data-slot="player-stage-area"
-            className={cn(
-              'absolute inset-0 flex items-center justify-center [container-type:size]',
-              beside && KEYPAD_COLUMN,
-            )}
+            className="absolute inset-0 flex items-center justify-center [container-type:size]"
           >
             <div
               data-slot="player-stage"
@@ -814,15 +822,6 @@ export function LivePlayer({
               )}
             </div>
           </div>
-          {beside && (
-            <DataBroadcastKeypad
-              layout="column"
-              numbers={broadcast.view.numbers}
-              onNumbers={broadcast.showNumbers}
-              onKey={broadcast.press}
-              onAim={aimAtTheKeypad}
-            />
-          )}
           {hasPicture && !pip.out && (
             <div
               data-slot="player-press"
@@ -933,198 +932,220 @@ export function LivePlayer({
               }
             }}
             onBlur={() => setFocused(false)}
-            style={{ backgroundImage: PLAYER_SCRIM }}
+            style={{
+              backgroundImage: overThePicture ? 'none' : PLAYER_SCRIM,
+            }}
             className={cn(
-              'absolute inset-x-0 bottom-0 z-10 px-4 pt-12 pb-3 max-[700px]:px-3',
+              'absolute inset-x-0 bottom-0 z-10',
+              overThePicture && 'bg-(--pl-bg)',
               'pointer-events-none translate-y-2 opacity-0',
               PLAYER_CHROME_FADE,
               'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
               'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
             )}
           >
-            {barSaid && (
-              <p
-                role="status"
-                className={cn(
-                  'mb-2 text-cap font-medium',
-                  barSaid.tone === 'ok'
-                    ? 'text-(--pl-ok-ink)'
-                    : 'text-(--pl-err)',
-                )}
-              >
-                {barSaid.text}
-              </p>
+            {overThePicture && (
+              <DataBroadcastBand
+                fit={fit}
+                numbers={broadcast.view.numbers}
+                onNumbers={broadcast.showNumbers}
+                onKey={broadcast.press}
+                onAim={aimAtTheKeypad}
+              />
             )}
-            <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
-              <PlayerTip
-                name={phase === 'playing' ? '一時停止' : '再生'}
-                keys={[KEY_CAP.toggle]}
-                container={shell}
-              >
-                <button
-                  type="button"
-                  aria-label={phase === 'playing' ? '一時停止' : '再生'}
-                  disabled={!hasPicture}
-                  onClick={toggle}
-                  className={PLAYER_GLYPH_BUTTON}
-                >
-                  {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
-                </button>
-              </PlayerTip>
-              <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
-                <button
-                  type="button"
-                  aria-label="消音"
-                  aria-pressed={muted}
-                  onClick={() => mute(!muted)}
-                  className={cn(
-                    PLAYER_GLYPH_BUTTON,
-                    muted && PLAYER_GLYPH_BUTTON_ON,
-                  )}
-                >
-                  <VolumeIcon level={muted ? 0 : volume} />
-                </button>
-              </PlayerTip>
-              <PlayerTip
-                name="音量"
-                keys={[KEY_CAP.louder, KEY_CAP.quieter]}
-                container={shell}
-              >
-                <PlayerVolume
-                  level={muted ? 0 : volume}
-                  onChoose={chooseVolume}
-                />
-              </PlayerTip>
-              {latency !== undefined && (
-                <span
-                  data-slot="live-latency"
-                  data-tone={latencyTone(latency, losing)}
-                  className={cn(
-                    'inline-flex items-center gap-[calc(7rem/16)] rounded-full border px-3 py-[calc(3rem/16)] text-note font-medium whitespace-nowrap',
-                    LATENCY_TONE[latencyTone(latency, losing)],
-                  )}
-                >
-                  <i
-                    aria-hidden="true"
-                    className="size-[calc(7rem/16)] shrink-0 rounded-full bg-current"
-                  />
-                  遅延 <span className="font-code">{latency.toFixed(1)}</span>{' '}
-                  秒
-                  {running?.catchingUp && (
-                    <span className="text-(--pl-ink-2)">
-                      / 再生レート{' '}
-                      <span className="font-code">
-                        {CATCH_UP_RATE.toFixed(2)}
-                      </span>
-                    </span>
-                  )}
-                </span>
+            <div
+              data-slot="player-controls"
+              className={cn(
+                'px-4 pb-3 max-[700px]:px-3',
+                overThePicture ? 'pt-3' : 'pt-12',
               )}
-              <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+            >
+              {barSaid && (
+                <p
+                  role="status"
+                  className={cn(
+                    'mb-2 text-cap font-medium',
+                    barSaid.tone === 'ok'
+                      ? 'text-(--pl-ok-ink)'
+                      : 'text-(--pl-err)',
+                  )}
+                >
+                  {barSaid.text}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
                 <PlayerTip
-                  name="字幕"
-                  keys={[KEY_CAP.captions]}
+                  name={phase === 'playing' ? '一時停止' : '再生'}
+                  keys={[KEY_CAP.toggle]}
                   container={shell}
                 >
                   <button
                     type="button"
-                    aria-label="字幕"
-                    aria-pressed={captioned}
-                    onClick={toggleCaptions}
+                    aria-label={phase === 'playing' ? '一時停止' : '再生'}
+                    disabled={!hasPicture}
+                    onClick={toggle}
+                    className={PLAYER_GLYPH_BUTTON}
+                  >
+                    {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
+                  </button>
+                </PlayerTip>
+                <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
+                  <button
+                    type="button"
+                    aria-label="消音"
+                    aria-pressed={muted}
+                    onClick={() => mute(!muted)}
                     className={cn(
                       PLAYER_GLYPH_BUTTON,
-                      captioned && PLAYER_GLYPH_BUTTON_ON,
+                      muted && PLAYER_GLYPH_BUTTON_ON,
                     )}
                   >
-                    <CaptionsGlyph />
+                    <VolumeIcon level={muted ? 0 : volume} />
                   </button>
                 </PlayerTip>
-                {broadcast.offered && (
-                  <DataBroadcastToggle
-                    open={opened}
-                    onToggle={toggleBroadcast}
-                    container={shell}
-                  />
-                )}
-                <PlayerTip name="設定" container={shell}>
-                  <LiveSettings
-                    container={shell}
-                    onOpenChange={setSettingsOpen}
-                    profiles={profiles}
-                    profile={profile}
-                    onChooseProfile={setProfile}
-                    sounds={sounds}
-                    sound={sound}
-                    onChooseSound={(next) => {
-                      if (channel) {
-                        setChosenSound({ of: channel.id, track: next })
-                      }
-                    }}
-                    dropped={running?.dropped}
-                    droppedByThoseStillWatching={
-                      running?.droppedByThoseStillWatching
-                    }
-                    lostOnTheWayIn={running?.lostOnTheWayIn}
-                  />
-                </PlayerTip>
-                <PlayerTip name="キャプチャ" container={shell}>
-                  <button
-                    type="button"
-                    aria-label="キャプチャ"
-                    disabled={!hasPicture}
-                    onClick={capture}
-                    className={PLAYER_GLYPH_BUTTON}
-                  >
-                    <CaptureIcon />
-                  </button>
-                </PlayerTip>
-                {pip.offered && (
-                  <PlayerTip name="ピクチャーインピクチャー" container={shell}>
-                    <button
-                      type="button"
-                      aria-label="ピクチャーインピクチャー"
-                      aria-pressed={pip.out}
-                      disabled={!hasPicture}
-                      onClick={pip.toggle}
-                      className={cn(
-                        PLAYER_GLYPH_BUTTON,
-                        pip.out && PLAYER_GLYPH_BUTTON_ON,
-                      )}
-                    >
-                      <PictureInPictureIcon />
-                    </button>
-                  </PlayerTip>
-                )}
                 <PlayerTip
-                  name="全画面"
-                  keys={[KEY_CAP.fullscreen]}
+                  name="音量"
+                  keys={[KEY_CAP.louder, KEY_CAP.quieter]}
                   container={shell}
                 >
-                  <button
-                    type="button"
-                    aria-label="全画面"
-                    aria-pressed={full}
-                    onClick={toggleFullscreen}
-                    className={PLAYER_GLYPH_BUTTON}
-                  >
-                    <FullscreenIcon leaving={full} />
-                  </button>
+                  <PlayerVolume
+                    level={muted ? 0 : volume}
+                    onChoose={chooseVolume}
+                  />
                 </PlayerTip>
+                {latency !== undefined && (
+                  <span
+                    data-slot="live-latency"
+                    data-tone={latencyTone(latency, losing)}
+                    className={cn(
+                      'inline-flex items-center gap-[calc(7rem/16)] rounded-full border px-3 py-[calc(3rem/16)] text-note font-medium whitespace-nowrap',
+                      LATENCY_TONE[latencyTone(latency, losing)],
+                    )}
+                  >
+                    <i
+                      aria-hidden="true"
+                      className="size-[calc(7rem/16)] shrink-0 rounded-full bg-current"
+                    />
+                    遅延 <span className="font-code">{latency.toFixed(1)}</span>{' '}
+                    秒
+                    {running?.catchingUp && (
+                      <span className="text-(--pl-ink-2)">
+                        / 再生レート{' '}
+                        <span className="font-code">
+                          {CATCH_UP_RATE.toFixed(2)}
+                        </span>
+                      </span>
+                    )}
+                  </span>
+                )}
+                <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+                  <PlayerTip
+                    name="字幕"
+                    keys={[KEY_CAP.captions]}
+                    container={shell}
+                  >
+                    <button
+                      type="button"
+                      aria-label="字幕"
+                      aria-pressed={captioned}
+                      onClick={toggleCaptions}
+                      className={cn(
+                        PLAYER_GLYPH_BUTTON,
+                        captioned && PLAYER_GLYPH_BUTTON_ON,
+                      )}
+                    >
+                      <CaptionsGlyph />
+                    </button>
+                  </PlayerTip>
+                  {broadcast.offered && (
+                    <DataBroadcastToggle
+                      open={opened}
+                      onToggle={toggleBroadcast}
+                      container={shell}
+                    />
+                  )}
+                  <PlayerTip name="設定" container={shell}>
+                    <LiveSettings
+                      container={shell}
+                      onOpenChange={setSettingsOpen}
+                      profiles={profiles}
+                      profile={profile}
+                      onChooseProfile={setProfile}
+                      sounds={sounds}
+                      sound={sound}
+                      onChooseSound={(next) => {
+                        if (channel) {
+                          setChosenSound({ of: channel.id, track: next })
+                        }
+                      }}
+                      dropped={running?.dropped}
+                      droppedByThoseStillWatching={
+                        running?.droppedByThoseStillWatching
+                      }
+                      lostOnTheWayIn={running?.lostOnTheWayIn}
+                    />
+                  </PlayerTip>
+                  <PlayerTip name="キャプチャ" container={shell}>
+                    <button
+                      type="button"
+                      aria-label="キャプチャ"
+                      disabled={!hasPicture}
+                      onClick={capture}
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <CaptureIcon />
+                    </button>
+                  </PlayerTip>
+                  {pip.offered && (
+                    <PlayerTip
+                      name="ピクチャーインピクチャー"
+                      container={shell}
+                    >
+                      <button
+                        type="button"
+                        aria-label="ピクチャーインピクチャー"
+                        aria-pressed={pip.out}
+                        disabled={!hasPicture}
+                        onClick={pip.toggle}
+                        className={cn(
+                          PLAYER_GLYPH_BUTTON,
+                          pip.out && PLAYER_GLYPH_BUTTON_ON,
+                        )}
+                      >
+                        <PictureInPictureIcon />
+                      </button>
+                    </PlayerTip>
+                  )}
+                  <PlayerTip
+                    name="全画面"
+                    keys={[KEY_CAP.fullscreen]}
+                    container={shell}
+                  >
+                    <button
+                      type="button"
+                      aria-label="全画面"
+                      aria-pressed={full}
+                      onClick={toggleFullscreen}
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <FullscreenIcon leaving={full} />
+                    </button>
+                  </PlayerTip>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        {underTheBox && (
+          <DataBroadcastBand
+            fit="coarse"
+            numbers={broadcast.view.numbers}
+            onNumbers={broadcast.showNumbers}
+            onKey={broadcast.press}
+            onAim={aimAtTheKeypad}
+          />
+        )}
       </section>
-      {opened && !full && (
-        <DataBroadcastKeypad
-          layout="panel"
-          numbers={broadcast.view.numbers}
-          onNumbers={broadcast.showNumbers}
-          onKey={broadcast.press}
-          onAim={aimAtTheKeypad}
-          onKeyDown={onKeyDown}
-        />
-      )}
     </div>
   )
 }

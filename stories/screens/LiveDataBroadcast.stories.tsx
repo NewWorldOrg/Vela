@@ -227,24 +227,82 @@ export const 開ける: Story = {
   },
 }
 
-async function underTheBoard(canvasElement: HTMLElement) {
-  const keypad = within(canvasElement).getByRole('group', {
+const KEYS = [
+  '戻る',
+  '上',
+  '下',
+  '左',
+  '右',
+  '決定',
+  '青',
+  '赤',
+  '緑',
+  '黄',
+  '123 数字',
+]
+
+function stirs(player: HTMLElement) {
+  player.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
+}
+
+/** The pointer goes from the bar's control to the panel under the player, as React reads a leave: `pointerout` with where it went. */
+function leaves(canvasElement: HTMLElement, control: HTMLElement) {
+  control.dispatchEvent(
+    new PointerEvent('pointerout', {
+      bubbles: true,
+      relatedTarget: onTheScreen(canvasElement, 'now-next'),
+    }),
+  )
+}
+
+/** The band drawn out of the control bar over the picture: joined to the bar's top, both on one opaque face, and gone with the bar. */
+async function overThePicture(
+  canvasElement: HTMLElement,
+  fit: string,
+  height: number,
+) {
+  const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
   })
-  const panel = keypad.getBoundingClientRect()
-  const box = onTheScreen(canvasElement, 'live-player').getBoundingClientRect()
+  const chrome = onTheScreen(canvasElement, 'player-chrome')
+  const controls = onTheScreen(canvasElement, 'player-controls')
+  const box = band.getBoundingClientRect()
+  const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
 
-  await expect(keypad).toHaveAttribute('data-layout', 'panel')
-  await expect(panel.top).toBe(box.bottom - 1)
-  await expect(
-    Math.abs(panel.left + panel.width / 2 - (box.left + box.width / 2)),
-  ).toBeLessThan(1)
-  await expect(panel.height).toBe(165)
-  await expect(panel.width).toBeLessThan(440)
-  await expect(getComputedStyle(keypad).backgroundColor).toBe('rgb(21, 20, 24)')
-  await expect(panel.bottom).toBeLessThanOrEqual(window.innerHeight)
+  await expect(band).toHaveAttribute('data-fit', fit)
+  await expect(box.height).toBe(height)
+  await expect(box.bottom).toBe(controls.getBoundingClientRect().top)
+  await expect(box.bottom).toBeLessThan(face.bottom)
+  await expect(box.top).toBeGreaterThan(face.top)
+  await expect(chrome.contains(band)).toBe(true)
+  await expect(getComputedStyle(chrome).backgroundColor).toBe('rgb(21, 20, 24)')
+  await expect(getComputedStyle(chrome).backgroundImage).toBe('none')
+  await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
+  await expect(chrome).toHaveAttribute('data-up', 'true')
 
-  return keypad
+  return band
+}
+
+async function goneWithTheBar(canvasElement: HTMLElement) {
+  const player = onTheScreen(canvasElement, 'live-player')
+  const chrome = onTheScreen(canvasElement, 'player-chrome')
+  const band = within(canvasElement).getByRole('group', {
+    name: 'データ放送のリモコン',
+  })
+
+  leaves(
+    canvasElement,
+    within(canvasElement).getByRole('button', { name: 'データ放送' }),
+  )
+  await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'), {
+    timeout: 5000,
+  })
+  await waitFor(() => expect(getComputedStyle(chrome).opacity).toBe('0'))
+  await expect(band.isConnected).toBe(true)
+
+  stirs(player)
+  await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
+  await waitFor(() => expect(getComputedStyle(chrome).opacity).toBe('1'))
 }
 
 export const 開いている_PC: Story = {
@@ -252,41 +310,63 @@ export const 開いている_PC: Story = {
   play: async ({ canvasElement }) => {
     await opened(canvasElement)
 
-    const keypad = await underTheBoard(canvasElement)
+    const band = await overThePicture(canvasElement, 'fine', 84)
     const says = onTheScreen(canvasElement, 'data-broadcast-says')
 
     await expect(says).toHaveAttribute('role', 'status')
     await expect(says).toHaveTextContent('')
     await expect(
-      within(keypad)
+      within(band)
         .getAllByRole('button')
         .map((button) => button.getAttribute('aria-label')),
-    ).toEqual([
-      '戻る',
-      '上',
-      '右',
-      '下',
-      '左',
-      '決定',
-      '青',
-      '赤',
-      '緑',
-      '黄',
-      '123 数字',
-    ])
+    ).toEqual(KEYS)
+    await goneWithTheBar(canvasElement)
   },
 }
 
 export const 開いている_縦の_iPad: Story = {
-  parameters: { screen: { width: 820, height: 1180 } },
+  parameters: { screen: { width: 820, height: 1180 }, coarse: true },
   play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
     await opened(canvasElement)
-    await underTheBoard(canvasElement)
+
+    const band = canvas.getByRole('group', { name: 'データ放送のリモコン' })
+    const player = onTheScreen(canvasElement, 'live-player')
+    const face = onTheScreen(
+      canvasElement,
+      'player-face',
+    ).getBoundingClientRect()
+    const chrome = onTheScreen(canvasElement, 'player-chrome')
+    const box = band.getBoundingClientRect()
+    const shell = player.getBoundingClientRect()
+
+    await expect(band).toHaveAttribute('data-fit', 'coarse')
+    await expect(box.height).toBe(120)
+    await expect(box.top).toBe(face.bottom)
+    await expect(box.bottom).toBe(shell.bottom - 1)
+    await expect(box.width).toBe(face.width)
+    await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight)
+    await expect(chrome.contains(band)).toBe(false)
+    await expect(getComputedStyle(chrome).backgroundImage).not.toBe('none')
+    await expect(
+      onTheScreen(canvasElement, 'now-next').getBoundingClientRect().top,
+    ).toBeGreaterThanOrEqual(shell.bottom)
+
+    leaves(canvasElement, canvas.getByRole('button', { name: 'データ放送' }))
+    await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'), {
+      timeout: 5000,
+    })
+    await expect(band.getBoundingClientRect().height).toBe(120)
+    await expect(getComputedStyle(band).opacity).toBe('1')
+
+    stirs(player)
+    await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
   },
 }
 
 export const 開いている_横の_iPad_全画面: Story = {
-  parameters: { screen: { width: 1180, height: 820 } },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const board = onTheScreen(canvasElement, 'live-player')
@@ -300,25 +380,25 @@ export const 開いている_横の_iPad_全画面: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
     await waitFor(() => expect(board).toHaveAttribute('data-fill', 'true'))
 
-    const keypad = await canvas.findByRole('group', {
-      name: 'データ放送のリモコン',
-    })
-    const area = onTheScreen(canvasElement, 'player-stage-area')
+    const band = await overThePicture(canvasElement, 'coarse-full', 104)
     const stage = onTheScreen(canvasElement, 'player-stage')
+    const { width, height, right } = stage.getBoundingClientRect()
 
-    await expect(keypad).toHaveAttribute('data-layout', 'column')
-    await expect(keypad.getBoundingClientRect().width).toBe(170)
-    await expect(keypad.getBoundingClientRect().right).toBe(window.innerWidth)
-    await expect(area.getBoundingClientRect().right).toBe(
-      window.innerWidth - 170,
-    )
-    await expect(stage.getBoundingClientRect().right).toBeLessThanOrEqual(
-      keypad.getBoundingClientRect().left,
-    )
-
-    const { width, height } = stage.getBoundingClientRect()
-
+    await expect(right).toBe(window.innerWidth)
     await expect(Math.abs(width / height - 16 / 9)).toBeLessThan(0.01)
+    await expect(band.getBoundingClientRect().width).toBe(window.innerWidth)
+
+    await userEvent.click(
+      within(band).getByRole('button', { name: '123 数字' }),
+    )
+    await expect(band.getBoundingClientRect().height).toBe(104)
+    await expect(
+      within(band).getByRole('button', { name: '0' }).getBoundingClientRect()
+        .top,
+    ).toBe(
+      within(band).getByRole('button', { name: '青' }).getBoundingClientRect()
+        .top,
+    )
   },
 }
 
@@ -388,24 +468,18 @@ export const キーパッドで押す: Story = {
     await expect(
       within(keypad)
         .getAllByRole('button')
-        .map((button) => button.getAttribute('aria-label')),
-    ).toEqual([
-      '1',
-      '2',
-      '3',
-      '数字を閉じる',
-      '4',
-      '5',
-      '6',
-      '0',
-      '7',
-      '8',
-      '9',
-      '決定',
-    ])
+        .map(
+          (button) => button.getAttribute('aria-label') ?? button.textContent,
+        ),
+    ).toEqual([...KEYS, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
+
+    await userEvent.click(within(keypad).getByRole('button', { name: '7' }))
+    await expect(document.activeElement).toBe(
+      onTheScreen(canvasElement, 'live-player'),
+    )
 
     await userEvent.click(
-      within(keypad).getByRole('button', { name: '数字を閉じる' }),
+      within(keypad).getByRole('button', { name: '123 数字' }),
     )
     await expect(keypad).toHaveAttribute('data-face', 'keys')
   },
@@ -488,7 +562,7 @@ export const キーボードで面を切り替えても鍵が効く: Story = {
     await expect(keypad).toHaveAttribute('data-face', 'numbers')
     await expect(document.activeElement).toBe(player)
 
-    within(keypad).getByRole('button', { name: '数字を閉じる' }).focus()
+    within(keypad).getByRole('button', { name: '123 数字' }).focus()
     await userEvent.keyboard('{Enter}')
     await expect(keypad).toHaveAttribute('data-face', 'keys')
     await expect(document.activeElement).toBe(player)
@@ -521,7 +595,7 @@ export const 開いてもページは動かない: Story = {
       within(keypad).getByRole('button', { name: '123 数字' }),
     )
     await userEvent.click(
-      within(keypad).getByRole('button', { name: '数字を閉じる' }),
+      within(keypad).getByRole('button', { name: '123 数字' }),
     )
     press(player, 'ArrowUp')
     press(player, 'Backspace')

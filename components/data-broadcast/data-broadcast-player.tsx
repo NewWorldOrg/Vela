@@ -4,7 +4,7 @@ import {
   useEffect,
   useEffectEvent,
   useRef,
-  type KeyboardEvent,
+  type CSSProperties,
   type ReactNode,
 } from 'react'
 
@@ -36,9 +36,6 @@ import { pressable } from '@/components/vela/tactile'
 export const DATA_BROADCAST_NAME = 'データ放送'
 
 export const KEYPAD_NAME = 'データ放送のリモコン'
-
-/** The width the keypad's column takes from the right of the screen in fullscreen. */
-export const KEYPAD_COLUMN = 'right-[170px]'
 
 /** The control on the player's bar that opens and closes the data broadcast. */
 export function DataBroadcastToggle({
@@ -150,23 +147,89 @@ export function DataBroadcastFace({
   )
 }
 
-type Layout = 'panel' | 'column'
+/** How the band is pressed: a mouse (`pointer: fine`), a finger in the window, or a finger in fullscreen. */
+export type BandFit = 'fine' | 'coarse' | 'coarse-full'
 
-/** The height the keypad's panel adds under the player's box: its keys, 140px for the disc, and 12px above and below. Its keys take a fixed 382px across, so the panel keeps its size when it turns to the numbers. */
-export const KEYPAD_PANEL_HEIGHT = 164
+/** The band's height by its fit. A finger in the window gets two rows under the player's box; the others lie over the picture. */
+export const BAND_HEIGHT: Record<BandFit, number> = {
+  fine: 84,
+  coarse: 120,
+  'coarse-full': 104,
+}
 
-/** The player's column while the panel is under it: the window holds the picture and the panel together, 210px and the panel's 164px. */
-export const PLAYER_COLUMN_OVER_THE_KEYPAD =
-  'max-w-[calc((100dvh_-_374px)*16/9)]'
+/** The player's column while the band is under its box: the window holds the picture, the 210px around it and the band's 120px. */
+export const PLAYER_COLUMN_OVER_THE_BAND = 'max-w-[calc((100dvh_-_330px)*16/9)]'
 
-const KEY_SHAPE = cn(
-  'flex h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10 px-3 text-sub font-bold text-(--pl-ink) select-none hover:bg-white/20 focus-visible:shadow-ring focus-visible:outline-none active:translate-x-px active:translate-y-px active:bg-white/25',
-  'transition-[translate,background-color] duration-150 ease-toy',
+/** Each fit's measures, taken from the mock as they are: the pills, the disc and its wedges, the arrows, Enter, the colour dots and the digits. */
+const MEASURES: Record<BandFit, CSSProperties> = {
+  fine: {
+    '--band-h': '84px',
+    '--pill-h': '40px',
+    '--pill-w': '52px',
+    '--disc': '72px',
+    '--wedge': '40px',
+    '--reach': '23px',
+    '--arrow': '14px',
+    '--ok': '32px',
+    '--ok-font': 'calc(11rem / 16)',
+    '--dot': '32px',
+    '--pitch': '42px',
+    '--key': '40px',
+    '--key-pitch': '44px',
+  } as CSSProperties,
+  coarse: {
+    '--band-h': '120px',
+    '--pill-h': '44px',
+    '--pill-w': '60px',
+    '--disc': '104px',
+    '--wedge': '56px',
+    '--reach': '35px',
+    '--arrow': '16px',
+    '--ok': '44px',
+    '--ok-font': 'calc(13rem / 16)',
+    '--dot': '40px',
+    '--pitch': '48px',
+    '--key': '44px',
+    '--key-pitch': '48px',
+  } as CSSProperties,
+  'coarse-full': {
+    '--band-h': '104px',
+    '--pill-h': '44px',
+    '--pill-w': '60px',
+    '--disc': '88px',
+    '--wedge': '48px',
+    '--reach': '29px',
+    '--arrow': '16px',
+    '--ok': '40px',
+    '--ok-font': 'calc(13rem / 16)',
+    '--dot': '40px',
+    '--pitch': '48px',
+    '--key': '44px',
+    '--key-pitch': '48px',
+  } as CSSProperties,
+}
+
+const SINKS =
+  'transition-[translate,background-color,border-color,color] duration-150 ease-toy active:translate-x-px active:translate-y-px'
+
+const KEY_LOOK = cn(
+  'relative flex shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10 font-bold text-(--pl-ink) select-none hover:bg-white/20 focus-visible:shadow-ring focus-visible:outline-none active:bg-white/25',
+  SINKS,
   pressable,
 )
 
-const ENTER_LOOK =
-  'border-transparent bg-(--pl-accent) text-(--pl-bg) hover:bg-(--pl-accent-ink) active:bg-(--pl-accent)'
+const PILL = cn(
+  KEY_LOOK,
+  'h-(--pill-h) w-(--pill-w) text-[calc(13rem/16)] leading-none after:absolute after:-inset-x-[2px] after:-inset-y-[4px] after:content-[""]',
+)
+
+const PILL_ON = 'border-white bg-white/28 text-white hover:bg-white/28'
+
+const ENTER_LOOK = cn(
+  'absolute top-1/2 left-1/2 z-[1] flex size-(--ok) -translate-1/2 items-center justify-center rounded-full bg-(--pl-accent) text-[length:var(--ok-font)] leading-none font-bold tracking-[-0.02em] text-(--pl-bg) select-none hover:bg-(--pl-accent-ink) focus-visible:shadow-ring focus-visible:outline-none active:translate-[calc(-50%+1px)] active:bg-(--pl-accent)',
+  'transition-[translate,background-color] duration-150 ease-toy',
+  pressable,
+)
 
 type Way = 'up' | 'down' | 'left' | 'right'
 
@@ -174,132 +237,86 @@ const WEDGES: { way: Way; name: string; shift: string; glyph: ReactNode }[] = [
   {
     way: 'up',
     name: '上',
-    shift: '0px, -48px',
-    glyph: <ChevronUpIcon className="size-[22px]" />,
-  },
-  {
-    way: 'right',
-    name: '右',
-    shift: '48px, 0px',
-    glyph: <ChevronRightIcon className="size-[22px]" />,
+    shift: '0, calc(var(--reach) * -1)',
+    glyph: <ChevronUpIcon className="size-(--arrow)" />,
   },
   {
     way: 'down',
     name: '下',
-    shift: '0px, 48px',
-    glyph: <ChevronDownIcon className="size-[22px]" />,
+    shift: '0, var(--reach)',
+    glyph: <ChevronDownIcon className="size-(--arrow)" />,
   },
   {
     way: 'left',
     name: '左',
-    shift: '-48px, 0px',
-    glyph: <ChevronLeftIcon className="size-[22px]" />,
+    shift: 'calc(var(--reach) * -1), 0',
+    glyph: <ChevronLeftIcon className="size-(--arrow)" />,
+  },
+  {
+    way: 'right',
+    name: '右',
+    shift: 'var(--reach), 0',
+    glyph: <ChevronRightIcon className="size-(--arrow)" />,
   },
 ]
 
 const COLOURS: { key: BmlKey; name: string; fill: string }[] = [
-  {
-    key: 'blue',
-    name: '青',
-    fill: 'bg-(--remote-blue) hover:bg-(--remote-blue) active:bg-(--remote-blue)',
-  },
-  {
-    key: 'red',
-    name: '赤',
-    fill: 'bg-(--remote-red) hover:bg-(--remote-red) active:bg-(--remote-red)',
-  },
-  {
-    key: 'green',
-    name: '緑',
-    fill: 'bg-(--remote-green) hover:bg-(--remote-green) active:bg-(--remote-green)',
-  },
-  {
-    key: 'yellow',
-    name: '黄',
-    fill: 'bg-(--remote-yellow) hover:bg-(--remote-yellow) active:bg-(--remote-yellow)',
-  },
+  { key: 'blue', name: '青', fill: 'bg-(--remote-blue)' },
+  { key: 'red', name: '赤', fill: 'bg-(--remote-red)' },
+  { key: 'green', name: '緑', fill: 'bg-(--remote-green)' },
+  { key: 'yellow', name: '黄', fill: 'bg-(--remote-yellow)' },
 ]
+
+const DIGITS: BmlKey[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
 interface Pressing {
   onKey: (key: BmlKey) => void
   onAim: () => void
 }
 
-function KeyButton({
-  name,
-  pressing,
-  onPress,
-  className,
-  children,
-}: {
-  name: string
-  pressing: Pressing
-  onPress: () => void
-  className?: string
-  children?: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={name}
-      onMouseDown={(event) => {
-        event.preventDefault()
-        pressing.onAim()
-      }}
-      onClick={onPress}
-      className={cn(KEY_SHAPE, className)}
-    >
-      {children}
-    </button>
-  )
+/** A key pressed by the pointer keeps the focus on the player, so the keyboard goes on working after it. */
+function aiming(pressing: Pressing) {
+  return (event: { preventDefault: () => void }) => {
+    event.preventDefault()
+    pressing.onAim()
+  }
 }
 
-/** The cross as a remote control draws it: one disc split into four wedges on its diagonals, each a press of its own, with Enter at its heart. */
+/** The cross as a remote control has it: one disc, with the four arrows each a wedge of it and Enter at its heart. The wedges reach past the circle and are clipped by it, so a press anywhere in a quarter is that arrow. */
 function Disc({ pressing }: { pressing: Pressing }) {
   return (
-    <div className="relative size-[140px] shrink-0 overflow-hidden rounded-full bg-white/8 ring-1 ring-white/22 ring-inset">
+    <div
+      role="group"
+      aria-label="十字"
+      data-tap-exempt="a wedge of the disc is the press, as wide as the quarter it fills; the cross through its arrow is narrower than the sector"
+      className="relative size-(--disc) shrink-0 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/26 ring-inset"
+    >
       {WEDGES.map((wedge) => (
         <button
           key={wedge.way}
           type="button"
           aria-label={wedge.name}
-          onMouseDown={(event) => {
-            event.preventDefault()
-            pressing.onAim()
-          }}
+          onMouseDown={aiming(pressing)}
           onClick={() => pressing.onKey(wedge.way)}
           style={{
             transform: `translate(-50%, -50%) translate(${wedge.shift}) rotate(45deg)`,
           }}
           className={cn(
-            'absolute top-1/2 left-1/2 flex size-[71px] items-center justify-center text-(--pl-ink) transition-colors duration-150 ease-out select-none hover:bg-white/8 focus-visible:bg-white/16 focus-visible:outline-none active:bg-white/16 [&_svg]:transition-transform active:[&_svg]:translate-y-px',
+            'absolute top-1/2 left-1/2 flex size-(--wedge) items-center justify-center text-(--pl-ink) transition-colors duration-150 ease-out select-none hover:bg-white/8 focus-visible:bg-white/16 focus-visible:outline-none active:bg-white/16 [&_svg]:transition-transform active:[&_svg]:translate-y-px',
             pressable,
           )}
         >
-          <span className="-rotate-45">{wedge.glyph}</span>
+          <span className="block -rotate-45 [&_svg]:stroke-[2.4]">
+            {wedge.glyph}
+          </span>
         </button>
       ))}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 h-px w-[200px] -translate-1/2 rotate-45 bg-white/14"
-      />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 h-px w-[200px] -translate-1/2 -rotate-45 bg-white/14"
-      />
       <button
         type="button"
         aria-label="決定"
-        onMouseDown={(event) => {
-          event.preventDefault()
-          pressing.onAim()
-        }}
+        onMouseDown={aiming(pressing)}
         onClick={() => pressing.onKey('enter')}
-        className={cn(
-          'absolute top-1/2 left-1/2 z-[1] flex size-[52px] -translate-1/2 items-center justify-center rounded-full text-sub font-bold transition-[translate,background-color] duration-150 ease-toy select-none focus-visible:shadow-ring focus-visible:outline-none active:translate-[calc(-50%+1px)]',
-          ENTER_LOOK,
-          pressable,
-        )}
+        className={ENTER_LOOK}
       >
         決定
       </button>
@@ -307,178 +324,137 @@ function Disc({ pressing }: { pressing: Pressing }) {
   )
 }
 
+/** The four colour keys as the remote has them: a dot of the colour and nothing written on it. The press reaches halfway to the neighbour. */
 function Colours({ pressing }: { pressing: Pressing }) {
   return (
-    <div className="grid shrink-0 grid-cols-2 gap-[8px]">
+    <div className="flex h-[44px] shrink-0 items-center gap-[calc(var(--pitch)-var(--dot))]">
       {COLOURS.map((colour) => (
-        <KeyButton
+        <button
           key={colour.key}
-          name={colour.name}
-          pressing={pressing}
-          onPress={() => pressing.onKey(colour.key)}
-          className={cn('size-[44px] px-0', colour.fill)}
-        />
+          type="button"
+          aria-label={colour.name}
+          onMouseDown={aiming(pressing)}
+          onClick={() => pressing.onKey(colour.key)}
+          className={cn(
+            'relative flex h-[44px] w-(--dot) shrink-0 items-center justify-center select-none after:absolute after:inset-y-0 after:-inset-x-[calc((var(--pitch)-var(--dot))/2)] after:content-[""] focus-visible:outline-none focus-visible:[&_i]:shadow-ring active:[&_i]:translate-x-px active:[&_i]:translate-y-px',
+            pressable,
+          )}
+        >
+          <i
+            className={cn(
+              'block size-(--dot) rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,.35)] transition-[translate] duration-150 ease-toy',
+              colour.fill,
+            )}
+          />
+        </button>
       ))}
     </div>
   )
 }
 
-function Digit({ digit, pressing }: { digit: BmlKey; pressing: Pressing }) {
+/** The digits 1 to 9 and 0 in one row, drawn out to the right of `123`. */
+function Digits({ pressing }: { pressing: Pressing }) {
   return (
-    <KeyButton
-      name={digit}
-      pressing={pressing}
-      onPress={() => pressing.onKey(digit)}
-      className="size-[44px] px-0 font-code"
+    <div
+      role="group"
+      aria-label="数字"
+      className="flex shrink-0 gap-[calc(var(--key-pitch)-var(--key))]"
     >
-      {digit}
-    </KeyButton>
-  )
-}
-
-/** The numbers: in the panel three rows of four, 1 to 9 with `←`, `0` and Enter down the right, so the panel keeps its size; in the column four rows of three, as a telephone has them. */
-function Numbers({
-  layout,
-  pressing,
-  back,
-}: {
-  layout: Layout
-  pressing: Pressing
-  back: ReactNode
-}) {
-  const enter = (
-    <KeyButton
-      name="決定"
-      pressing={pressing}
-      onPress={() => pressing.onKey('enter')}
-      className={cn('size-[44px] px-0', ENTER_LOOK)}
-    >
-      決定
-    </KeyButton>
-  )
-  const digit = (value: BmlKey) => (
-    <Digit key={value} digit={value} pressing={pressing} />
-  )
-
-  if (layout === 'column') {
-    return (
-      <div className="grid grid-cols-3 gap-[8px]">
-        {(['1', '2', '3', '4', '5', '6', '7', '8', '9'] as BmlKey[]).map(digit)}
-        {back}
-        {digit('0')}
-        {enter}
-      </div>
-    )
-  }
-
-  return (
-    <div className="grid grid-cols-4 gap-x-[8px] gap-y-[4px]">
-      {(['1', '2', '3'] as BmlKey[]).map(digit)}
-      {back}
-      {(['4', '5', '6'] as BmlKey[]).map(digit)}
-      {digit('0')}
-      {(['7', '8', '9'] as BmlKey[]).map(digit)}
-      {enter}
+      {DIGITS.map((digit) => (
+        <button
+          key={digit}
+          type="button"
+          onMouseDown={aiming(pressing)}
+          onClick={() => pressing.onKey(digit)}
+          className={cn(
+            KEY_LOOK,
+            'size-(--key) font-code text-[calc(15rem/16)] leading-none after:absolute after:-inset-[2px] after:content-[""]',
+          )}
+        >
+          {digit}
+        </button>
+      ))}
     </div>
   )
 }
 
-const LAYOUT: Record<Layout, string> = {
-  panel:
-    'relative mx-auto -mt-px w-max rounded-b-xl border border-t-0 border-line-strong bg-(--pl-bg) px-[16px] py-[12px] shadow-pop-xl',
-  column:
-    'absolute inset-y-0 right-0 z-10 flex w-[170px] flex-col items-center justify-center-safe gap-[14px] overflow-y-auto bg-[rgba(6,5,9,0.6)] pt-[12px] pb-[60px] *:shrink-0',
-}
-
-/** The remote control's keys on screen: a black panel of its own width joined under the player's box, or the same keys down a column at the right in fullscreen. `123` turns it to the numbers, and `←` back; the key pressed to turn it goes away with its face, so the focus is handed back to the player first. */
-export function DataBroadcastKeypad({
-  layout,
+/** The remote control's keys drawn out of the control bar as a band: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. The fit decides the measures and whether the digits take a second row. */
+export function DataBroadcastBand({
+  fit,
   numbers,
   onNumbers,
   onKey,
   onAim,
-  onKeyDown,
 }: {
-  layout: Layout
+  fit: BandFit
   numbers: boolean
   onNumbers: (shown: boolean) => void
   onKey: (key: BmlKey) => void
   onAim: () => void
-  onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void
 }) {
   const pressing: Pressing = { onKey, onAim }
-  const turn = (shown: boolean) => {
-    onAim()
-    onNumbers(shown)
-  }
   const back = (
-    <KeyButton
-      name="戻る"
-      pressing={pressing}
-      onPress={() => onKey('back')}
-      className="w-[52px] px-0"
+    <button
+      type="button"
+      aria-label="戻る"
+      onMouseDown={aiming(pressing)}
+      onClick={() => onKey('back')}
+      className={PILL}
     >
       戻る
-    </KeyButton>
+    </button>
   )
   const toNumbers = (
-    <KeyButton
-      name="123 数字"
-      pressing={pressing}
-      onPress={() => turn(true)}
-      className="w-[52px] px-0 font-code"
+    <button
+      type="button"
+      aria-label="123 数字"
+      aria-expanded={numbers}
+      onMouseDown={aiming(pressing)}
+      onClick={() => {
+        onAim()
+        onNumbers(!numbers)
+      }}
+      className={cn(PILL, 'font-code text-title', numbers && PILL_ON)}
     >
       123
-    </KeyButton>
+    </button>
   )
-  const fromNumbers = (
-    <KeyButton
-      name="数字を閉じる"
-      pressing={pressing}
-      onPress={() => turn(false)}
-      className="size-[44px] px-0"
-    >
-      <ChevronLeftIcon className="size-5" />
-    </KeyButton>
-  )
-  const keys =
-    layout === 'panel' ? (
-      <div className="flex items-center gap-[14px]">
-        {back}
-        <Disc pressing={pressing} />
-        <Colours pressing={pressing} />
-        {toNumbers}
-      </div>
-    ) : (
-      <>
-        <Disc pressing={pressing} />
-        <Colours pressing={pressing} />
-        <div className="flex gap-[10px]">
-          {back}
-          {toNumbers}
-        </div>
-      </>
-    )
-  const digits = (
-    <Numbers layout={layout} pressing={pressing} back={fromNumbers} />
-  )
+  const digits = numbers && <Digits pressing={pressing} />
 
   return (
     <div
       role="group"
       aria-label={KEYPAD_NAME}
-      data-slot="data-broadcast-keypad"
-      data-layout={layout}
+      data-slot="data-broadcast-band"
+      data-fit={fit}
       data-face={numbers ? 'numbers' : 'keys'}
-      onKeyDown={onKeyDown}
-      className={LAYOUT[layout]}
+      data-tap-exempt={
+        fit === 'fine'
+          ? 'the band for a mouse has mouse-sized keys; a finger is given the coarse band'
+          : undefined
+      }
+      style={MEASURES[fit]}
+      className={cn(
+        'flex min-h-(--band-h) items-center justify-center gap-[16px] bg-(--pl-bg) px-[16px] text-(--pl-ink)',
+        fit !== 'coarse' && 'flex-wrap',
+      )}
     >
-      {layout === 'panel' ? (
-        <div className="flex h-[140px] w-[382px] items-center justify-center">
-          {numbers ? digits : keys}
+      {back}
+      <Disc pressing={pressing} />
+      {fit === 'coarse' ? (
+        <div className="flex flex-col items-start gap-[8px]">
+          <div className="flex h-[56px] items-center gap-[16px]">
+            <Colours pressing={pressing} />
+            {toNumbers}
+          </div>
+          {digits && <div className="flex h-[56px] items-center">{digits}</div>}
         </div>
       ) : (
-        <>{numbers ? digits : keys}</>
+        <>
+          <Colours pressing={pressing} />
+          {toNumbers}
+          {digits}
+        </>
       )}
     </div>
   )
