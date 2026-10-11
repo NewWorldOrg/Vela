@@ -3,7 +3,6 @@ import { paletteOf, readClut, type Palette } from '@/lib/bml/palette'
 import { pathOf, resolveReference, type BmlAddress } from '@/lib/bml/paths'
 import type { BmlResource } from '@/lib/bml/resources'
 import {
-  BML_PROPERTIES,
   DEFAULT_USED_KEYS,
   cssOf,
   cssSheetOf,
@@ -60,6 +59,7 @@ export interface PageElement {
   attributes: [string, string][]
   style: string
   nav: NavLinks
+  declarations: Record<string, string>
   children: PageNode[]
 }
 
@@ -136,10 +136,6 @@ const IMAGE_TYPES = new Set(['image/jpeg', 'image/x-arib-png'])
 const QUIET_IN_HEAD = new Set(['title', 'meta'])
 
 const GATHERED = new Set(['style', 'link', 'script', 'bevent'])
-
-const GEOMETRY = ['left', 'top', 'width', 'height']
-
-const WATCHED = new Set([...BML_PROPERTIES, ...GEOMETRY])
 
 const KEPT_ATTRIBUTES = new Set(['id', 'class'])
 
@@ -375,9 +371,7 @@ class Conversion {
       ...picked.flatMap(({ rule }) => rule.declarations),
       ...inline,
     ]) {
-      if (WATCHED.has(property)) {
-        values.set(property, value)
-      }
+      values.set(property, value)
     }
 
     this.cascaded.set(node, values)
@@ -492,6 +486,7 @@ class Conversion {
         left: features.navLeft,
         right: features.navRight,
       },
+      declarations: Object.fromEntries(values),
       children,
     }
   }

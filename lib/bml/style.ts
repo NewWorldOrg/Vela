@@ -357,13 +357,13 @@ function keyword(value: string, allowed: string[]): string | null {
   return allowed.includes(lowered) || lowered === 'inherit' ? lowered : null
 }
 
-type Mapper = (value: string, palette: Palette) => string[] | null
+type Mapper = (value: string, palette: Palette) => [string, string][] | null
 
 function as(property: string, read: (value: string) => string | null): Mapper {
   return (value) => {
     const css = read(value)
 
-    return css === null ? null : [`${property}: ${css}`]
+    return css === null ? null : [[property, css]]
   }
 }
 
@@ -374,7 +374,7 @@ function colour(...properties: string[]): Mapper {
 
     return css === null
       ? null
-      : properties.map((property) => `${property}: ${css}`)
+      : properties.map((property): [string, string] => [property, css])
   }
 }
 
@@ -478,7 +478,7 @@ const MAPPER_LIST: [string, Mapper][] = [
   ['border-color-index', colour('border-color')],
   ['color-index', colour('color')],
   ['background-color-index', colour('background-color', '--bml-background')],
-  ['font-family', () => [`font-family: ${FONT_STACK}`]],
+  ['font-family', () => [['font-family', FONT_STACK]]],
   ['font-size', as('font-size', (value) => length(value))],
   [
     'font-weight',
@@ -509,12 +509,17 @@ export interface ConvertedStyle {
   warnings: string[]
 }
 
-/** The CSS of a block of BML declarations. BML's own properties are left for the runtime; a property or value it does not take is dropped with a warning. */
-export function cssOf(
+export interface ConvertedPairs {
+  pairs: [string, string][]
+  warnings: string[]
+}
+
+/** The CSS properties and values of a block of BML declarations, each as a pair. BML's own properties are left for the runtime; a property or value it does not take is dropped with a warning. */
+export function cssPairsOf(
   declarations: Declaration[],
   palette: Palette,
-): ConvertedStyle {
-  const css: string[] = []
+): ConvertedPairs {
+  const pairs: [string, string][] = []
   const warnings: string[] = []
 
   for (const { property, value } of declarations) {
@@ -531,10 +536,23 @@ export function cssOf(
       warnings.push(`unsupported value of ${property}`)
     }
 
-    css.push(...(mapped ?? []))
+    pairs.push(...(mapped ?? []))
   }
 
-  return { css: css.join('; '), warnings }
+  return { pairs, warnings }
+}
+
+/** The CSS of a block of BML declarations, as one declaration list. */
+export function cssOf(
+  declarations: Declaration[],
+  palette: Palette,
+): ConvertedStyle {
+  const converted = cssPairsOf(declarations, palette)
+
+  return {
+    css: converted.pairs.map(([name, css]) => `${name}: ${css}`).join('; '),
+    warnings: converted.warnings,
+  }
 }
 
 /** The converted style sheet: each rule's selectors in the converted page, and its declarations as CSS. */

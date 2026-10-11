@@ -1,6 +1,13 @@
 import type { Rect } from '@/lib/caption-placement'
 import { catalogOf, type BmlCatalog } from '@/lib/bml/catalog'
+import { broadcastEventOf, type BroadcastEvent } from '@/lib/bml/event-message'
 import { isBmlKey, type BmlKey } from '@/lib/bml/keys'
+import {
+  MOST_MEMORY_BYTES,
+  MOST_MEMORY_ENTRIES,
+  MOST_MEMORY_NAME,
+  type MemoryEntries,
+} from '@/lib/bml/memory'
 import { moduleOf, type BmlModule } from '@/lib/bml/resources'
 import { FONT_FAMILIES, GRID } from '@/lib/bml/style'
 
@@ -24,6 +31,8 @@ export type PlayerMessage =
   | { kind: 'key'; key: BmlKey }
   | { kind: 'clock'; seconds: number }
   | { kind: 'programme'; programme: Programme }
+  | { kind: 'memory'; entries: MemoryEntries }
+  | { kind: 'event'; event: BroadcastEvent }
   | { kind: 'open' }
   | { kind: 'close' }
 
@@ -31,11 +40,18 @@ export const RUNTIME_ERRORS = ['malformed', 'missing', 'undecoded'] as const
 
 export type RuntimeError = (typeof RUNTIME_ERRORS)[number]
 
+/** Where a script run stands: `running` when one starts, `done` when it ends in time, `overran` when it ended past the time a run may take. */
+export const SCRIPT_STATES = ['running', 'done', 'overran'] as const
+
+export type ScriptState = (typeof SCRIPT_STATES)[number]
+
 export type RuntimeMessage =
   | { kind: 'videoRect'; rect: Rect | null }
   | { kind: 'usedKeys'; keys: BmlKey[] }
   | { kind: 'waiting'; waiting: boolean }
   | { kind: 'unsupported'; what: string }
+  | { kind: 'memory'; name: string; value: string | null }
+  | { kind: 'script'; state: ScriptState }
   | { kind: 'exit' }
   | { kind: 'error'; reason: RuntimeError }
 
@@ -88,10 +104,47 @@ export function gridRectOf(value: unknown): Rect | null {
   return inside ? { left, top, width, height } : null
 }
 
+function isMemoryName(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= MOST_MEMORY_NAME
+  )
+}
+
+function isMemoryValue(value: unknown): value is string {
+  return typeof value === 'string' && value.length <= MOST_MEMORY_BYTES
+}
+
+function memoryEntriesOf(value: unknown): MemoryEntries | null {
+  if (!Array.isArray(value) || value.length > MOST_MEMORY_ENTRIES) {
+    return null
+  }
+
+  const fits = value.every(
+    (entry) =>
+      Array.isArray(entry) &&
+      entry.length === 2 &&
+      isMemoryName(entry[0]) &&
+      isMemoryValue(entry[1]),
+  )
+
+  return fits ? value.map((entry) => [entry[0], entry[1]]) : null
+}
+
 function runtimeMessageOf(data: unknown): RuntimeMessage | null {
   const message = recordOf(data)
 
   switch (message?.kind) {
+    case 'memory':
+      return isMemoryName(message.name) &&
+        (message.value === null || isMemoryValue(message.value))
+        ? { kind: 'memory', name: message.name, value: message.value }
+        : null
+    case 'script':
+      return SCRIPT_STATES.includes(message.state as ScriptState)
+        ? { kind: 'script', state: message.state as ScriptState }
+        : null
     case 'videoRect': {
       const rect = message.rect === null ? null : gridRectOf(message.rect)
 
@@ -202,6 +255,16 @@ function playerMessageOf(data: unknown): PlayerMessage | null {
       const programme = programmeOf(message.programme)
 
       return programme ? { kind: 'programme', programme } : null
+    }
+    case 'memory': {
+      const entries = memoryEntriesOf(message.entries)
+
+      return entries ? { kind: 'memory', entries } : null
+    }
+    case 'event': {
+      const event = broadcastEventOf(message.event)
+
+      return event ? { kind: 'event', event } : null
     }
     case 'open':
       return { kind: 'open' }

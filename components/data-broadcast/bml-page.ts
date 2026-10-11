@@ -1,9 +1,21 @@
 import type { BmlPage, PageElement, PageNode } from '@/lib/bml/document'
 import { videoHole } from '@/lib/bml/style'
 
+/** A drawn page: its body, its elements by `nav-index` and by id, the page element each was drawn from, and the style element the runtime writes a script's focus and active styles into. */
 export interface MountedPage {
   body: HTMLElement
   byNavIndex: Map<number, HTMLElement>
+  byId: Map<string, HTMLElement>
+  nodes: Map<HTMLElement, PageElement>
+  states: HTMLStyleElement
+}
+
+interface Building {
+  document: Document
+  byNavIndex: Map<number, HTMLElement>
+  byId: Map<string, HTMLElement>
+  nodes: Map<HTMLElement, PageElement>
+  count: number
 }
 
 const HTML_ATTRIBUTES = new Set(['id', 'class', 'value', 'maxlength'])
@@ -30,18 +42,24 @@ function kept(name: string, value: string): boolean {
   )
 }
 
-function build(
-  node: PageNode,
-  document: Document,
-  byNavIndex: Map<number, HTMLElement>,
-): Node {
+function build(node: PageNode, building: Building): Node {
+  const { document, byNavIndex, byId, nodes } = building
+
   if (node.kind === 'text') {
     return document.createTextNode(node.text)
   }
 
   const element = document.createElement(node.tag)
+  const id = node.attributes.find(([name]) => name === 'id')?.[1]
 
   element.setAttribute('data-bml-tag', node.bmlTag)
+  element.setAttribute('data-bml-n', String(building.count))
+  building.count += 1
+  nodes.set(element, node)
+
+  if (id !== undefined && !byId.has(id)) {
+    byId.set(id, element)
+  }
   node.attributes
     .filter(([name, value]) => kept(name, value))
     .forEach(([name, value]) => element.setAttribute(name, value))
@@ -66,9 +84,7 @@ function build(
     byNavIndex.set(node.nav.index, element)
   }
 
-  node.children.forEach((child) =>
-    element.append(build(child, document, byNavIndex)),
-  )
+  node.children.forEach((child) => element.append(build(child, building)))
 
   return element
 }
@@ -77,11 +93,18 @@ function build(
 export function mountPage(page: BmlPage, plane: HTMLElement): MountedPage {
   const document = plane.ownerDocument
   const style = document.createElement('style')
-  const byNavIndex = new Map<number, HTMLElement>()
-  const body = build(page.body, document, byNavIndex) as HTMLElement
+  const states = document.createElement('style')
+  const building: Building = {
+    document,
+    byNavIndex: new Map(),
+    byId: new Map(),
+    nodes: new Map(),
+    count: 0,
+  }
+  const body = build(page.body, building) as HTMLElement
 
   style.textContent = page.styleSheet
-  plane.replaceChildren(style, body)
+  plane.replaceChildren(style, states, body)
   plane.style.width = `${page.resolution.width}px`
   plane.style.height = `${page.resolution.height}px`
 
@@ -92,5 +115,11 @@ export function mountPage(page: BmlPage, plane: HTMLElement): MountedPage {
     )
   }
 
-  return { body, byNavIndex }
+  return {
+    body,
+    byNavIndex: building.byNavIndex,
+    byId: building.byId,
+    nodes: building.nodes,
+    states,
+  }
 }
