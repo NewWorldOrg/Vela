@@ -23,7 +23,7 @@ export const MOST_HELD_EVENTS = 256
 
 export const MOST_WAITING_FRAMES = 4096
 
-const EVENT_HEAD = 19
+const EVENT_HEAD = 17
 
 /** An event message as the side channel carries it: when it fires is on the same 90 kHz clock as the frames. */
 export interface BroadcastEvent {
@@ -55,7 +55,7 @@ function readEvent(payload: Uint8Array): BroadcastEvent | null {
     payload.byteLength,
   )
   const timeKind = payload[6]
-  const length = view.getUint16(17)
+  const length = view.getUint16(15)
 
   if (
     (timeKind !== TIME_KIND.immediate && timeKind !== TIME_KIND.npt) ||

@@ -71,7 +71,7 @@ function eventPayload({
   fires?: number
   data?: number[]
 } = {}): Uint8Array {
-  const payload = new Uint8Array(19 + data.length)
+  const payload = new Uint8Array(17 + data.length)
   const view = new DataView(payload.buffer)
 
   payload[0] = 0x03
@@ -81,8 +81,8 @@ function eventPayload({
   payload[6] = timeKind
   view.setUint32(7, Math.floor(fires / 2 ** 32))
   view.setUint32(11, fires % 2 ** 32)
-  view.setUint16(17, data.length)
-  payload.set(data, 19)
+  view.setUint16(15, data.length)
+  payload.set(data, 17)
 
   return payload
 }
@@ -153,7 +153,7 @@ test('an event message is read with its group, id, type, time and private data',
 })
 
 test('an event message with a length that does not match, or an unknown time kind, is not read', () => {
-  const short = eventPayload().subarray(0, 20)
+  const short = eventPayload().subarray(0, 18)
 
   assert.deepEqual(readDataBroadcast(short), { said: 'unknown' })
   assert.deepEqual(readDataBroadcast(eventPayload({ timeKind: 3 })), {
