@@ -11,6 +11,7 @@ import type {
 import {
   DATA_BROADCAST_CLOSED,
   RECEIVING_SAID_AFTER_MS,
+  SCRIPT_GIVEN_UP_AFTER_MS,
   UNSUPPORTED_LASTS_MS,
   dataBroadcastAfter,
   offersDataBroadcast,
@@ -96,6 +97,13 @@ export function useDataBroadcast(
       setTimeout(
         () => step({ on: 'faded', notices: nth }),
         UNSUPPORTED_LASTS_MS,
+      )
+    }
+
+    if (message.kind === 'script' && message.state === 'running') {
+      setTimeout(
+        () => step({ on: 'overran', scripting: nth }),
+        SCRIPT_GIVEN_UP_AFTER_MS,
       )
     }
   }

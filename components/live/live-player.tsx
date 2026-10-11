@@ -815,6 +815,7 @@ export function LivePlayer({
               {opened && (
                 <DataBroadcastFace
                   feed={broadcastFeed}
+                  startsAt={onAir ? Date.parse(onAir.startsAt) / 1000 : null}
                   onRuntime={broadcast.connect}
                   onMessage={hearBroadcast}
                   says={dataBroadcastSays(broadcast.view)}

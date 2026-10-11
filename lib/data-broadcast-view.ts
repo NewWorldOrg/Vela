@@ -1,6 +1,7 @@
 import type { Rect } from '@/lib/caption-placement'
 import { keysOf, type BmlKey } from '@/lib/bml/keys'
-import type { RuntimeMessage } from '@/lib/bml/messages'
+import type { RuntimeMessage, ScriptState } from '@/lib/bml/messages'
+import { MOST_RUN_MS } from '@/lib/bml/scripts'
 import { GRID } from '@/lib/bml/style'
 import type { DataBroadcastAvailability } from '@/lib/data-broadcast-feed'
 
@@ -14,10 +15,13 @@ export const RECEIVING_SAID_AFTER_MS = 3000
 
 export const UNSUPPORTED_LASTS_MS = 3000
 
+/** How long a script may run before the frame is given up on: the runtime's own limit. */
+export const SCRIPT_GIVEN_UP_AFTER_MS = MOST_RUN_MS
+
 /** The keys a document takes until it says otherwise: `basic` and `data-button`. */
 export const KEYS_UNTIL_TOLD = keysOf(['basic', 'data-button'])
 
-/** What the player shows of a data broadcast. `waits` and `notices` name the latest wait and notice, so a timer started for one of them cannot end a later one. */
+/** What the player shows of a data broadcast. `waits`, `notices` and `scripting` name the latest wait, notice and script run, so a timer started for one of them cannot end a later one. */
 export interface DataBroadcastView {
   open: boolean
   rect: Rect | null
@@ -29,6 +33,7 @@ export interface DataBroadcastView {
   numbers: boolean
   waits: number
   notices: number
+  scripting: number
 }
 
 export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
@@ -42,6 +47,7 @@ export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
   numbers: false,
   waits: 0,
   notices: 0,
+  scripting: 0,
 }
 
 function closed(
@@ -62,6 +68,7 @@ export type DataBroadcastStep =
   | { on: 'runtime'; message: RuntimeMessage; nth?: number }
   | { on: 'slow'; waits: number }
   | { on: 'faded'; notices: number }
+  | { on: 'overran'; scripting: number }
   | { on: 'numbers'; shown: boolean }
   | { on: 'quiet' }
 
@@ -89,9 +96,29 @@ function heard(
         : { ...view, waiting: false, slow: false }
     case 'unsupported':
       return { ...view, unsupported: true, notices: nth ?? view.notices + 1 }
+    case 'script':
+      return scripted(view, message.state, nth)
+    case 'memory':
+      return view
     case 'exit':
       return closed(view)
     case 'error':
+      return closed(view, { failed: true })
+  }
+}
+
+/** A script run that starts is remembered until it ends; one the runtime says overran closes the broadcast as broken, as the frame is remade around it. */
+function scripted(
+  view: DataBroadcastView,
+  state: ScriptState,
+  nth: number | undefined,
+): DataBroadcastView {
+  switch (state) {
+    case 'running':
+      return { ...view, scripting: nth ?? view.scripting + 1 }
+    case 'done':
+      return { ...view, scripting: 0 }
+    case 'overran':
       return closed(view, { failed: true })
   }
 }
@@ -119,6 +146,10 @@ export function dataBroadcastAfter(
     case 'faded':
       return view.unsupported && view.notices === step.notices
         ? { ...view, unsupported: false }
+        : view
+    case 'overran':
+      return view.open && view.scripting === step.scripting
+        ? closed(view, { failed: true })
         : view
     case 'numbers':
       return view.open ? { ...view, numbers: step.shown } : view

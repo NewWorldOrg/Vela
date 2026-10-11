@@ -69,6 +69,11 @@ export function resolveReference(
   return inModule ? named(base.tag, hex(base.module, 4), inModule[1]) : null
 }
 
+/** The path of a module, such as `/40/0001`. */
+export function modulePathOf(tag: number, module: number): string {
+  return `/${hex(tag, 2)}/${hex(module, 4)}`
+}
+
 export interface BmlModuleAddress {
   tag: number
   module: number

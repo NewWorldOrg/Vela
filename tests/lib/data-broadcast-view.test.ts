@@ -234,3 +234,71 @@ test('the picture box is laid over the rectangle by its share of the grid', () =
     'translate(0%, 0%) scale(1, 1)',
   )
 })
+
+test('a script run that starts is remembered until it ends, and one that overruns closes the broadcast as broken', () => {
+  const running: DataBroadcastStep = {
+    on: 'runtime',
+    message: { kind: 'script', state: 'running' },
+    nth: 3,
+  }
+  const done: DataBroadcastStep = {
+    on: 'runtime',
+    message: { kind: 'script', state: 'done' },
+    nth: 4,
+  }
+
+  assert.equal(after(OPEN, running).scripting, 3)
+  assert.equal(after(OPEN, running, done).scripting, 0)
+
+  const overran = after(OPEN, running, {
+    on: 'runtime',
+    message: { kind: 'script', state: 'overran' },
+    nth: 4,
+  })
+
+  assert.equal(overran.open, false)
+  assert.equal(overran.failed, true)
+})
+
+test('the timer of a script run gives it up only while that run is still the one running', () => {
+  const running = (nth: number): DataBroadcastStep => ({
+    on: 'runtime',
+    message: { kind: 'script', state: 'running' },
+    nth,
+  })
+  const done = (nth: number): DataBroadcastStep => ({
+    on: 'runtime',
+    message: { kind: 'script', state: 'done' },
+    nth,
+  })
+
+  const givenUp = after(OPEN, running(3), { on: 'overran', scripting: 3 })
+
+  assert.equal(givenUp.open, false)
+  assert.equal(givenUp.failed, true)
+
+  const ended = after(OPEN, running(3), done(4), {
+    on: 'overran',
+    scripting: 3,
+  })
+
+  assert.equal(ended.open, true)
+  assert.equal(ended.failed, false)
+
+  const later = after(OPEN, running(3), done(4), running(5), {
+    on: 'overran',
+    scripting: 3,
+  })
+
+  assert.equal(later.open, true)
+  assert.equal(later.scripting, 5)
+})
+
+test('what the runtime asks to keep changes nothing of the view', () => {
+  const kept = after(OPEN, {
+    on: 'runtime',
+    message: { kind: 'memory', name: 'visits', value: '1' },
+  })
+
+  assert.deepEqual(kept, after(OPEN))
+})

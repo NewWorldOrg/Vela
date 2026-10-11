@@ -66,12 +66,18 @@ export type ScriptGlobals = Record<string, unknown>
 /** How long one run of a script may take before the frame is remade around it. */
 export const MOST_RUN_MS = 2000
 
+const GIVEN = new WeakMap<object, ScriptGlobals>()
+
+/** What a scope was given, for an evaluator that builds a global scope of its own rather than running `with` the scope. */
+export function givenOf(scope: object): ScriptGlobals {
+  return GIVEN.get(scope) ?? {}
+}
+
 /** The object a document's code is run `with`: a name the runtime gives resolves to what it gave, a name the frame must not be reached by resolves to nothing, and every other name goes on to the frame's own globals, where the document's declarations live. */
 export function scopeOf(globals: ScriptGlobals): object {
   const given = new Map(Object.entries(globals))
   const hidden = new Set<string>(SHADOWED_GLOBALS)
-
-  return new Proxy(Object.create(null) as Record<string, unknown>, {
+  const scope = new Proxy(Object.create(null) as Record<string, unknown>, {
     has(_, name) {
       return typeof name === 'string' && (given.has(name) || hidden.has(name))
     },
@@ -91,6 +97,10 @@ export function scopeOf(globals: ScriptGlobals): object {
       return undefined
     },
   })
+
+  GIVEN.set(scope, { ...globals })
+
+  return scope
 }
 
 /** Runs one piece of a document's code with its scope, and throws what it threw. */

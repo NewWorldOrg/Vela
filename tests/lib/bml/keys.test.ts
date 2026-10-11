@@ -120,6 +120,7 @@ function element(nav: NavLinks, children: PageElement[] = []): PageElement {
     attributes: [],
     style: '',
     nav,
+    declarations: {},
     children,
   }
 }
