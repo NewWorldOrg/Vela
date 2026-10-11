@@ -18,7 +18,13 @@ import {
   type SoundChoice,
 } from '@/lib/live-seat'
 import { liveWireHref } from '@/repository/live-paths'
-import { KEY_CAP, playerCommand, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import { KEY_CAP, routeKey, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
+import {
+  SAID_FAILED,
+  dataBroadcastSays,
+  pictureTransform,
+} from '@/lib/data-broadcast-view'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
 import {
@@ -60,12 +66,21 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
+import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
   PlayerCenter,
   type PlayerBezel,
 } from '@/components/recordings/player-center'
+
+import {
+  DataBroadcastFace,
+  DataBroadcastKeypad,
+  DataBroadcastToggle,
+  KEYPAD_COLUMN,
+  PLAYER_COLUMN_OVER_THE_KEYPAD,
+} from '@/components/data-broadcast/data-broadcast-player'
 
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
@@ -158,6 +173,7 @@ export function LivePlayer({
   const overlay = useRef<HTMLCanvasElement>(null)
   const captions = useRef<CaptionLayer | null>(null)
   const [captioned, setCaptioned] = useState(true)
+  const [broadcastFeed] = useState(() => new DataBroadcastFeed())
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
@@ -210,6 +226,7 @@ export function LivePlayer({
     key === null ? null : held && held.key === key ? held : begun(key)
   const phase = running?.phase
   const fault = running?.fault ?? null
+  const broadcast = useDataBroadcast(broadcastFeed, key)
 
   useEffect(
     () => () => {
@@ -295,6 +312,7 @@ export function LivePlayer({
       : null
 
     captions.current = layer
+    broadcastFeed.reset()
 
     const session = openLiveSession(
       wireHref(networkId, serviceId, profile, sound),
@@ -316,6 +334,10 @@ export function LivePlayer({
         },
         onCaptionCanvas: (canvas) => layer?.canvasOf(canvas),
         onCaption: (picture, pts) => layer?.offer(picture, pts),
+        onDataBroadcast: (payload, pts) => {
+          broadcastFeed.offer(payload, pts)
+          broadcastFeed.advance(element.currentTime)
+        },
         onProgress: (reported) =>
           change((was) => ({
             ...was,
@@ -331,6 +353,11 @@ export function LivePlayer({
         },
       },
       openSocket,
+    )
+
+    const following = setInterval(
+      () => broadcastFeed.advance(element.currentTime),
+      TICK_MS,
     )
 
     const ticking = setInterval(() => {
@@ -461,12 +488,15 @@ export function LivePlayer({
     return () => {
       gone = true
       clearInterval(ticking)
+      clearInterval(following)
       session.leave()
       feed.close()
       layer?.close()
       captions.current = null
+      broadcastFeed.reset()
     }
   }, [
+    broadcastFeed,
     key,
     networkId,
     serviceId,
@@ -506,6 +536,7 @@ export function LivePlayer({
       over: (context, size) => captions.current?.drawOn(context, size),
     })
 
+    broadcast.quiet()
     setSaid(
       got === 'saved'
         ? { text: SAID_CAPTURED, tone: 'ok' }
@@ -548,6 +579,24 @@ export function LivePlayer({
   }
 
   const toggleCaptions = () => setCaptioned((was) => !was)
+
+  const toggleBroadcast = () => {
+    shell?.focus({ preventScroll: true })
+    broadcast.toggle()
+  }
+
+  const hearBroadcast: typeof broadcast.hear = (message) => {
+    if (message.kind === 'error') {
+      stir()
+    }
+
+    broadcast.hear(message)
+  }
+
+  const aimAtTheKeypad = () => {
+    aimed.current = true
+    shell?.focus({ preventScroll: true })
+  }
 
   const chooseVolume = (next: number) => {
     const element = video.current
@@ -594,20 +643,36 @@ export function LivePlayer({
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    const command = playerCommand(event, {
-      seeks: false,
-      captions: true,
-      aimed: aimed.current,
-    })
+    const route = routeKey(
+      event,
+      {
+        seeks: false,
+        captions: true,
+        dataBroadcast: broadcast.offered,
+        aimed: aimed.current,
+      },
+      broadcast.view.open ? { usedKeys: broadcast.view.usedKeys } : null,
+    )
 
-    if (!command) {
+    if (!route) {
+      return
+    }
+
+    event.preventDefault()
+
+    if (route.to === 'nowhere') {
+      return
+    }
+
+    if (route.to === 'dataBroadcast') {
+      broadcast.press(route.key)
+
       return
     }
 
     stir()
-    event.preventDefault()
 
-    switch (command) {
+    switch (route.command) {
       case 'toggle':
         toggle()
         break
@@ -626,6 +691,9 @@ export function LivePlayer({
       case 'captions':
         toggleCaptions()
         break
+      case 'dataBroadcast':
+        toggleBroadcast()
+        break
       default:
         break
     }
@@ -639,352 +707,424 @@ export function LivePlayer({
 
   const latency = running?.latency
   const losing = running?.losing ?? false
+  const opened = broadcast.view.open
+  const beside = opened && full
+  const barSaid = broadcast.view.failed
+    ? { text: SAID_FAILED, tone: 'err' as const }
+    : said
 
   return (
-    <section
-      ref={setShell}
-      data-full={full ? 'true' : undefined}
-      data-fill={filled ? 'true' : undefined}
-      tabIndex={-1}
-      data-slot="live-player"
-      data-phase={phase ?? 'idle'}
-      onPointerMove={stir}
-      onPointerLeave={stir}
-      onPointerDown={() => {
-        aimed.current = true
-      }}
-      onKeyDown={onKeyDown}
-      className={PLAYER_BOARD}
-    >
-      <div
+    <div data-slot="live-player-frame" className="w-full">
+      <section
+        ref={setShell}
+        data-full={full ? 'true' : undefined}
+        data-fill={filled ? 'true' : undefined}
+        tabIndex={-1}
+        data-slot="live-player"
+        data-phase={phase ?? 'idle'}
+        onPointerMove={stir}
+        onPointerLeave={stir}
+        onPointerDown={() => {
+          aimed.current = true
+        }}
+        onKeyDown={onKeyDown}
         className={cn(
-          'relative flex items-center justify-center',
-          PLAYER_FACE,
-          '[[data-full]_&]:aspect-auto [[data-full]_&]:max-h-none [[data-full]_&]:min-h-0 [[data-full]_&]:flex-1',
+          PLAYER_BOARD,
+          opened && !full && PLAYER_COLUMN_OVER_THE_KEYPAD,
         )}
       >
         <div
           className={cn(
-            'relative',
-            PLAYER_PICTURE_BOX,
-            '[[data-full]_&]:max-w-none',
+            'relative flex items-center justify-center',
+            PLAYER_FACE,
+            '[[data-full]_&]:aspect-auto [[data-full]_&]:max-h-none [[data-full]_&]:min-h-0 [[data-full]_&]:flex-1',
           )}
         >
-          <video
-            ref={video}
-            playsInline
-            onPlaying={() => {
-              heard((was) => ({ ...was, phase: 'playing' }))
-              stir()
-            }}
-            onPause={() =>
-              heard((was) =>
-                was.phase === 'playing' ? { ...was, phase: 'paused' } : was,
-              )
-            }
-            onWaiting={() => {
-              if (phase === 'playing') {
-                stalls.current += 1
-              }
-
-              heard((was) =>
-                was.phase === 'playing' ? { ...was, phase: 'buffering' } : was,
-              )
-            }}
-            className={cn(
-              'size-full object-contain',
-              !hasPicture && 'invisible',
-            )}
-          />
-          <canvas
-            ref={overlay}
-            aria-hidden="true"
-            data-slot="live-captions"
-            data-drawn={captionsDrawn ? 'yes' : 'no'}
-            className="pointer-events-none absolute inset-0 size-full"
-          />
-        </div>
-        {hasPicture && !pip.out && (
           <div
-            data-slot="player-press"
-            onMouseDown={(event) => {
-              event.preventDefault()
-              dismissing.current = settingsOpen
-              shell?.focus({ preventScroll: true })
-            }}
-            onClick={() => {
-              if (dismissing.current) {
-                dismissing.current = false
-
-                return
-              }
-
-              toggle()
-            }}
-            onDoubleClick={toggleFullscreen}
-            data-up={chromeUp ? 'true' : undefined}
-            className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
-          />
-        )}
-        {hasPicture && (
-          <PlayerCenter
-            standing={!pip.out && phase === 'paused' ? 'play' : undefined}
-            onStanding={() => {
-              shell?.focus({ preventScroll: true })
-              toggle()
-            }}
-            bezel={bezel ?? undefined}
-          />
-        )}
-        {channel && running && phase !== 'faulted' && (
-          <div
-            data-slot="live-title"
-            data-up={chromeUp ? 'true' : undefined}
-            style={{ backgroundImage: PLAYER_SCRIM_TOP }}
+            data-slot="player-stage-area"
             className={cn(
-              'pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-3 pb-10',
-              '-translate-y-2 opacity-0',
-              PLAYER_CHROME_FADE,
-              'data-[up]:translate-y-0 data-[up]:opacity-100',
+              'absolute inset-0 flex items-center justify-center [container-type:size]',
+              beside && KEYPAD_COLUMN,
             )}
           >
-            <span className="text-sub text-white">
-              <b className="font-bold">
-                {channel.no && (
-                  <span className="mr-1.5 font-code font-medium">
-                    {channel.no}
-                  </span>
-                )}
-                {channel.name}
-              </b>{' '}
-              {phase === 'starting' ? '準備中' : '生放送'}
-            </span>
+            <div
+              data-slot="player-stage"
+              className={cn(
+                'relative',
+                opened
+                  ? 'aspect-video w-[min(100cqw,calc(100cqh*16/9))]'
+                  : PLAYER_PICTURE_BOX,
+              )}
+            >
+              <div
+                data-slot="player-picture"
+                data-rect={
+                  broadcast.view.rect
+                    ? Object.values(broadcast.view.rect).join(',')
+                    : undefined
+                }
+                style={{ transform: pictureTransform(broadcast.view.rect) }}
+                className="relative size-full origin-top-left transition-transform duration-200 ease-out still:transition-none"
+              >
+                <video
+                  ref={video}
+                  playsInline
+                  onPlaying={() => {
+                    heard((was) => ({ ...was, phase: 'playing' }))
+                    stir()
+                  }}
+                  onPause={() =>
+                    heard((was) =>
+                      was.phase === 'playing'
+                        ? { ...was, phase: 'paused' }
+                        : was,
+                    )
+                  }
+                  onWaiting={() => {
+                    if (phase === 'playing') {
+                      stalls.current += 1
+                    }
+
+                    heard((was) =>
+                      was.phase === 'playing'
+                        ? { ...was, phase: 'buffering' }
+                        : was,
+                    )
+                  }}
+                  className={cn(
+                    'size-full object-contain',
+                    !hasPicture && 'invisible',
+                  )}
+                />
+                <canvas
+                  ref={overlay}
+                  aria-hidden="true"
+                  data-slot="live-captions"
+                  data-drawn={captionsDrawn ? 'yes' : 'no'}
+                  className="pointer-events-none absolute inset-0 size-full"
+                />
+              </div>
+              {opened && (
+                <DataBroadcastFace
+                  feed={broadcastFeed}
+                  onRuntime={broadcast.connect}
+                  onMessage={hearBroadcast}
+                  says={dataBroadcastSays(broadcast.view)}
+                />
+              )}
+            </div>
           </div>
-        )}
-        {running && phase === 'starting' && (
-          <LiveStartupSteps
-            startup={running.startup}
-            elapsedMs={running.elapsedMs}
-            reconnecting={reconnecting}
-          />
-        )}
-        {pip.out && (
-          <p
-            role="status"
-            className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
-          >
-            ピクチャーインピクチャーで再生中
-          </p>
-        )}
-        {!pip.out && phase === 'buffering' && (
-          <p
-            role="status"
-            className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
-          >
-            <Spinner className="text-(--pl-accent)" />
-            バッファリング中
-          </p>
-        )}
-        {phase === 'faulted' && fault && (
-          <LiveFaultNotice
-            fault={fault}
-            onRetry={() =>
-              seat &&
-              setRetries({ of: seat, count: attempt + 1, after: fault.kind })
-            }
-            returnPath={returnPath}
-            className="absolute inset-0 flex flex-col items-center justify-center"
-          />
-        )}
-        <div
-          data-slot="player-chrome"
-          hidden={key === null || phase === 'faulted'}
-          data-up={chromeUp ? 'true' : undefined}
-          onPointerEnter={() => setOnTheBar(true)}
-          onPointerLeave={() => setOnTheBar(false)}
-          onFocus={(event) => {
-            const reached =
-              event.target instanceof Element &&
-              event.target.matches(':focus-visible')
-
-            setFocused(reached)
-
-            if (reached) {
-              aimed.current = true
-            }
-          }}
-          onBlur={() => setFocused(false)}
-          style={{ backgroundImage: PLAYER_SCRIM }}
-          className={cn(
-            'absolute inset-x-0 bottom-0 z-10 px-4 pt-12 pb-3 max-[700px]:px-3',
-            'pointer-events-none translate-y-2 opacity-0',
-            PLAYER_CHROME_FADE,
-            'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
-            'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
+          {beside && (
+            <DataBroadcastKeypad
+              layout="column"
+              numbers={broadcast.view.numbers}
+              onNumbers={broadcast.showNumbers}
+              onKey={broadcast.press}
+              onAim={aimAtTheKeypad}
+            />
           )}
-        >
-          {said && (
+          {hasPicture && !pip.out && (
+            <div
+              data-slot="player-press"
+              onMouseDown={(event) => {
+                event.preventDefault()
+                dismissing.current = settingsOpen
+                shell?.focus({ preventScroll: true })
+              }}
+              onClick={() => {
+                if (dismissing.current) {
+                  dismissing.current = false
+
+                  return
+                }
+
+                toggle()
+              }}
+              onDoubleClick={toggleFullscreen}
+              data-up={chromeUp ? 'true' : undefined}
+              className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
+            />
+          )}
+          {hasPicture && (
+            <PlayerCenter
+              standing={!pip.out && phase === 'paused' ? 'play' : undefined}
+              onStanding={() => {
+                shell?.focus({ preventScroll: true })
+                toggle()
+              }}
+              bezel={bezel ?? undefined}
+            />
+          )}
+          {channel && running && phase !== 'faulted' && (
+            <div
+              data-slot="live-title"
+              data-up={chromeUp ? 'true' : undefined}
+              style={{ backgroundImage: PLAYER_SCRIM_TOP }}
+              className={cn(
+                'pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-3 pb-10',
+                '-translate-y-2 opacity-0',
+                PLAYER_CHROME_FADE,
+                'data-[up]:translate-y-0 data-[up]:opacity-100',
+              )}
+            >
+              <span className="text-sub text-white">
+                <b className="font-bold">
+                  {channel.no && (
+                    <span className="mr-1.5 font-code font-medium">
+                      {channel.no}
+                    </span>
+                  )}
+                  {channel.name}
+                </b>{' '}
+                {phase === 'starting' ? '準備中' : '生放送'}
+              </span>
+            </div>
+          )}
+          {running && phase === 'starting' && (
+            <LiveStartupSteps
+              startup={running.startup}
+              elapsedMs={running.elapsedMs}
+              reconnecting={reconnecting}
+            />
+          )}
+          {pip.out && (
             <p
               role="status"
-              className={cn(
-                'mb-2 text-cap font-medium',
-                said.tone === 'ok' ? 'text-(--pl-ok-ink)' : 'text-(--pl-err)',
-              )}
+              className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
             >
-              {said.text}
+              ピクチャーインピクチャーで再生中
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
-            <PlayerTip
-              name={phase === 'playing' ? '一時停止' : '再生'}
-              keys={[KEY_CAP.toggle]}
-              container={shell}
+          {!pip.out && phase === 'buffering' && (
+            <p
+              role="status"
+              className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
             >
-              <button
-                type="button"
-                aria-label={phase === 'playing' ? '一時停止' : '再生'}
-                disabled={!hasPicture}
-                onClick={toggle}
-                className={PLAYER_GLYPH_BUTTON}
-              >
-                {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
-              </button>
-            </PlayerTip>
-            <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
-              <button
-                type="button"
-                aria-label="消音"
-                aria-pressed={muted}
-                onClick={() => mute(!muted)}
-                className={cn(
-                  PLAYER_GLYPH_BUTTON,
-                  muted && PLAYER_GLYPH_BUTTON_ON,
-                )}
-              >
-                <VolumeIcon level={muted ? 0 : volume} />
-              </button>
-            </PlayerTip>
-            <PlayerTip
-              name="音量"
-              keys={[KEY_CAP.louder, KEY_CAP.quieter]}
-              container={shell}
-            >
-              <PlayerVolume
-                level={muted ? 0 : volume}
-                onChoose={chooseVolume}
-              />
-            </PlayerTip>
-            {latency !== undefined && (
-              <span
-                data-slot="live-latency"
-                data-tone={latencyTone(latency, losing)}
-                className={cn(
-                  'inline-flex items-center gap-[calc(7rem/16)] rounded-full border px-3 py-[calc(3rem/16)] text-note font-medium whitespace-nowrap',
-                  LATENCY_TONE[latencyTone(latency, losing)],
-                )}
-              >
-                <i
-                  aria-hidden="true"
-                  className="size-[calc(7rem/16)] shrink-0 rounded-full bg-current"
-                />
-                遅延 <span className="font-code">{latency.toFixed(1)}</span> 秒
-                {running?.catchingUp && (
-                  <span className="text-(--pl-ink-2)">
-                    / 再生レート{' '}
-                    <span className="font-code">
-                      {CATCH_UP_RATE.toFixed(2)}
-                    </span>
-                  </span>
-                )}
-              </span>
+              <Spinner className="text-(--pl-accent)" />
+              バッファリング中
+            </p>
+          )}
+          {phase === 'faulted' && fault && (
+            <LiveFaultNotice
+              fault={fault}
+              onRetry={() =>
+                seat &&
+                setRetries({ of: seat, count: attempt + 1, after: fault.kind })
+              }
+              returnPath={returnPath}
+              className="absolute inset-0 flex flex-col items-center justify-center"
+            />
+          )}
+          <div
+            data-slot="player-chrome"
+            hidden={key === null || phase === 'faulted'}
+            data-up={chromeUp ? 'true' : undefined}
+            onPointerEnter={() => setOnTheBar(true)}
+            onPointerLeave={() => setOnTheBar(false)}
+            onFocus={(event) => {
+              const reached =
+                event.target instanceof Element &&
+                event.target.matches(':focus-visible')
+
+              setFocused(reached)
+
+              if (reached) {
+                aimed.current = true
+              }
+            }}
+            onBlur={() => setFocused(false)}
+            style={{ backgroundImage: PLAYER_SCRIM }}
+            className={cn(
+              'absolute inset-x-0 bottom-0 z-10 px-4 pt-12 pb-3 max-[700px]:px-3',
+              'pointer-events-none translate-y-2 opacity-0',
+              PLAYER_CHROME_FADE,
+              'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
+              'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
             )}
-            <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+          >
+            {barSaid && (
+              <p
+                role="status"
+                className={cn(
+                  'mb-2 text-cap font-medium',
+                  barSaid.tone === 'ok'
+                    ? 'text-(--pl-ok-ink)'
+                    : 'text-(--pl-err)',
+                )}
+              >
+                {barSaid.text}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
               <PlayerTip
-                name="字幕"
-                keys={[KEY_CAP.captions]}
+                name={phase === 'playing' ? '一時停止' : '再生'}
+                keys={[KEY_CAP.toggle]}
                 container={shell}
               >
                 <button
                   type="button"
-                  aria-label="字幕"
-                  aria-pressed={captioned}
-                  onClick={toggleCaptions}
+                  aria-label={phase === 'playing' ? '一時停止' : '再生'}
+                  disabled={!hasPicture}
+                  onClick={toggle}
+                  className={PLAYER_GLYPH_BUTTON}
+                >
+                  {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
+                </button>
+              </PlayerTip>
+              <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
+                <button
+                  type="button"
+                  aria-label="消音"
+                  aria-pressed={muted}
+                  onClick={() => mute(!muted)}
                   className={cn(
                     PLAYER_GLYPH_BUTTON,
-                    captioned && PLAYER_GLYPH_BUTTON_ON,
+                    muted && PLAYER_GLYPH_BUTTON_ON,
                   )}
                 >
-                  <CaptionsGlyph />
+                  <VolumeIcon level={muted ? 0 : volume} />
                 </button>
               </PlayerTip>
-              <PlayerTip name="設定" container={shell}>
-                <LiveSettings
-                  container={shell}
-                  onOpenChange={setSettingsOpen}
-                  profiles={profiles}
-                  profile={profile}
-                  onChooseProfile={setProfile}
-                  sounds={sounds}
-                  sound={sound}
-                  onChooseSound={(next) => {
-                    if (channel) {
-                      setChosenSound({ of: channel.id, track: next })
-                    }
-                  }}
-                  dropped={running?.dropped}
-                  droppedByThoseStillWatching={
-                    running?.droppedByThoseStillWatching
-                  }
-                  lostOnTheWayIn={running?.lostOnTheWayIn}
-                />
-              </PlayerTip>
-              <PlayerTip name="キャプチャ" container={shell}>
-                <button
-                  type="button"
-                  aria-label="キャプチャ"
-                  disabled={!hasPicture}
-                  onClick={capture}
-                  className={PLAYER_GLYPH_BUTTON}
-                >
-                  <CaptureIcon />
-                </button>
-              </PlayerTip>
-              {pip.offered && (
-                <PlayerTip name="ピクチャーインピクチャー" container={shell}>
-                  <button
-                    type="button"
-                    aria-label="ピクチャーインピクチャー"
-                    aria-pressed={pip.out}
-                    disabled={!hasPicture}
-                    onClick={pip.toggle}
-                    className={cn(
-                      PLAYER_GLYPH_BUTTON,
-                      pip.out && PLAYER_GLYPH_BUTTON_ON,
-                    )}
-                  >
-                    <PictureInPictureIcon />
-                  </button>
-                </PlayerTip>
-              )}
               <PlayerTip
-                name="全画面"
-                keys={[KEY_CAP.fullscreen]}
+                name="音量"
+                keys={[KEY_CAP.louder, KEY_CAP.quieter]}
                 container={shell}
               >
-                <button
-                  type="button"
-                  aria-label="全画面"
-                  aria-pressed={full}
-                  onClick={toggleFullscreen}
-                  className={PLAYER_GLYPH_BUTTON}
-                >
-                  <FullscreenIcon leaving={full} />
-                </button>
+                <PlayerVolume
+                  level={muted ? 0 : volume}
+                  onChoose={chooseVolume}
+                />
               </PlayerTip>
+              {latency !== undefined && (
+                <span
+                  data-slot="live-latency"
+                  data-tone={latencyTone(latency, losing)}
+                  className={cn(
+                    'inline-flex items-center gap-[calc(7rem/16)] rounded-full border px-3 py-[calc(3rem/16)] text-note font-medium whitespace-nowrap',
+                    LATENCY_TONE[latencyTone(latency, losing)],
+                  )}
+                >
+                  <i
+                    aria-hidden="true"
+                    className="size-[calc(7rem/16)] shrink-0 rounded-full bg-current"
+                  />
+                  遅延 <span className="font-code">{latency.toFixed(1)}</span>{' '}
+                  秒
+                  {running?.catchingUp && (
+                    <span className="text-(--pl-ink-2)">
+                      / 再生レート{' '}
+                      <span className="font-code">
+                        {CATCH_UP_RATE.toFixed(2)}
+                      </span>
+                    </span>
+                  )}
+                </span>
+              )}
+              <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+                <PlayerTip
+                  name="字幕"
+                  keys={[KEY_CAP.captions]}
+                  container={shell}
+                >
+                  <button
+                    type="button"
+                    aria-label="字幕"
+                    aria-pressed={captioned}
+                    onClick={toggleCaptions}
+                    className={cn(
+                      PLAYER_GLYPH_BUTTON,
+                      captioned && PLAYER_GLYPH_BUTTON_ON,
+                    )}
+                  >
+                    <CaptionsGlyph />
+                  </button>
+                </PlayerTip>
+                {broadcast.offered && (
+                  <DataBroadcastToggle
+                    open={opened}
+                    onToggle={toggleBroadcast}
+                    container={shell}
+                  />
+                )}
+                <PlayerTip name="設定" container={shell}>
+                  <LiveSettings
+                    container={shell}
+                    onOpenChange={setSettingsOpen}
+                    profiles={profiles}
+                    profile={profile}
+                    onChooseProfile={setProfile}
+                    sounds={sounds}
+                    sound={sound}
+                    onChooseSound={(next) => {
+                      if (channel) {
+                        setChosenSound({ of: channel.id, track: next })
+                      }
+                    }}
+                    dropped={running?.dropped}
+                    droppedByThoseStillWatching={
+                      running?.droppedByThoseStillWatching
+                    }
+                    lostOnTheWayIn={running?.lostOnTheWayIn}
+                  />
+                </PlayerTip>
+                <PlayerTip name="キャプチャ" container={shell}>
+                  <button
+                    type="button"
+                    aria-label="キャプチャ"
+                    disabled={!hasPicture}
+                    onClick={capture}
+                    className={PLAYER_GLYPH_BUTTON}
+                  >
+                    <CaptureIcon />
+                  </button>
+                </PlayerTip>
+                {pip.offered && (
+                  <PlayerTip name="ピクチャーインピクチャー" container={shell}>
+                    <button
+                      type="button"
+                      aria-label="ピクチャーインピクチャー"
+                      aria-pressed={pip.out}
+                      disabled={!hasPicture}
+                      onClick={pip.toggle}
+                      className={cn(
+                        PLAYER_GLYPH_BUTTON,
+                        pip.out && PLAYER_GLYPH_BUTTON_ON,
+                      )}
+                    >
+                      <PictureInPictureIcon />
+                    </button>
+                  </PlayerTip>
+                )}
+                <PlayerTip
+                  name="全画面"
+                  keys={[KEY_CAP.fullscreen]}
+                  container={shell}
+                >
+                  <button
+                    type="button"
+                    aria-label="全画面"
+                    aria-pressed={full}
+                    onClick={toggleFullscreen}
+                    className={PLAYER_GLYPH_BUTTON}
+                  >
+                    <FullscreenIcon leaving={full} />
+                  </button>
+                </PlayerTip>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+      {opened && !full && (
+        <DataBroadcastKeypad
+          layout="panel"
+          numbers={broadcast.view.numbers}
+          onNumbers={broadcast.showNumbers}
+          onKey={broadcast.press}
+          onAim={aimAtTheKeypad}
+          onKeyDown={onKeyDown}
+        />
+      )}
+    </div>
   )
 }

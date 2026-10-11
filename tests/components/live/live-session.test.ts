@@ -100,6 +100,7 @@ function bench(context: TestContext) {
     headers: [] as Uint8Array[],
     pictures: [] as number[],
     captions: [] as number[],
+    broadcast: [] as [number, number][],
     canvases: 0,
     progress: 0,
     refusals: 0,
@@ -114,6 +115,7 @@ function bench(context: TestContext) {
       heard.canvases += 1
     },
     onCaption: (_picture, pts) => heard.captions.push(pts),
+    onDataBroadcast: (payload, pts) => heard.broadcast.push([payload[0], pts]),
     onProgress: () => {
       heard.progress += 1
     },
@@ -525,4 +527,42 @@ test('a canvas is taken from whichever wire announces it', (context) => {
   )
 
   assert.equal(heard.canvases, 1)
+})
+
+test('data broadcast frames are handed on from a fresh wire as soon as it opens, and none from a wire that was let go', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x01, 0)))
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+
+  wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT, Uint8Array.of(0x01, 0)))
+  wires[1].carry(frameOf('dataBroadcast', 9, Uint8Array.of(0x02, 0)))
+  wires[1].picture(A_FRAGMENT * 2)
+  wires[0].carry(frameOf('dataBroadcast', A_FRAGMENT * 2, Uint8Array.of(0x03)))
+  wires[1].carry(frameOf('dataBroadcast', A_FRAGMENT * 3, Uint8Array.of(0x04)))
+
+  assert.deepEqual(heard.broadcast, [
+    [0x01, A_FRAGMENT],
+    [0x01, A_FRAGMENT],
+    [0x02, 9],
+    [0x04, A_FRAGMENT * 3],
+  ])
+})
+
+test('what a wire replays as it opens, before any picture and older than the catalog it follows, is all handed on', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].carry(frameOf('dataBroadcast', 900, Uint8Array.of(0x01, 0)))
+  wires[0].carry(frameOf('dataBroadcast', 300, Uint8Array.of(0x02, 0)))
+  wires[0].carry(frameOf('dataBroadcast', 600, Uint8Array.of(0x02, 1)))
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+
+  assert.deepEqual(heard.broadcast, [
+    [0x01, 900],
+    [0x02, 300],
+    [0x02, 600],
+  ])
 })

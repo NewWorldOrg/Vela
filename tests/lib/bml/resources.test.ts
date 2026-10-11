@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   modulePayload,
   moduleOf,
+  moduleToHand,
   readModule,
   type BmlModule,
 } from '@/lib/bml/resources'
@@ -133,4 +134,23 @@ test('a module handed over in a message keeps its shape, and anything else is no
     }),
     null,
   )
+})
+
+test('a module handed to the frame is a copy whose bodies each own the buffer handed over, and what is held is left whole', () => {
+  const payload = modulePayload(MODULE)
+  const held = readModule(payload) as BmlModule
+  const handed = moduleToHand(held)
+
+  assert.deepEqual(handed.module, held)
+  assert.equal(handed.transfer.length, held.resources.length)
+  handed.module.resources.forEach((resource, index) => {
+    assert.equal(resource.body.buffer, handed.transfer[index])
+    assert.equal(resource.body.byteOffset, 0)
+    assert.equal(resource.body.buffer.byteLength, resource.body.length)
+  })
+
+  structuredClone(handed.module, { transfer: handed.transfer })
+
+  assert.equal(handed.transfer[0].byteLength, 0)
+  assert.deepEqual(held, readModule(payload))
 })

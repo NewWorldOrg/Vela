@@ -314,3 +314,59 @@ test('what does not come from the player’s window in Vela’s origin is not he
 
   assert.deepEqual(said, [{ kind: 'error', reason: 'missing' }])
 })
+
+function versioned(id: number, version: number, body: string): BmlModule {
+  return { ...module(id, { 'startup.bml': ['bml', body] }), version }
+}
+
+function listing(version: number): BmlCatalog {
+  return {
+    ...CATALOG,
+    carousels: [
+      {
+        ...CATALOG.carousels[0],
+        modules: [{ id: 0, version, size: 0, resources: [] }],
+      },
+    ],
+  }
+}
+
+test('the start document held stays while the catalog lists a newer version that has not come, and gives way when it comes', () => {
+  const first = bml(
+    '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>',
+  )
+  const second = bml(
+    '<object type="video/X-arib-mpeg2" style="left: 480px; top: 270px; width: 480px; height: 270px"/>',
+  )
+  const { said, send } = frame()
+
+  send({ kind: 'catalog', catalog: listing(1) })
+  send({ kind: 'module', module: versioned(0, 1, first) })
+  send({ kind: 'catalog', catalog: listing(2) })
+  send({ kind: 'open' })
+
+  assert.deepEqual(said[0], {
+    kind: 'videoRect',
+    rect: { left: 0, top: 0, width: 480, height: 270 },
+  })
+
+  send({ kind: 'module', module: versioned(0, 2, second) })
+  send({ kind: 'module', module: versioned(0, 1, first) })
+  send({ kind: 'open' })
+
+  assert.deepEqual(said.at(-2), {
+    kind: 'videoRect',
+    rect: { left: 480, top: 270, width: 480, height: 270 },
+  })
+})
+
+test('a module the catalog stops listing is let go', () => {
+  const { said, send } = frame()
+
+  send({ kind: 'catalog', catalog: CATALOG })
+  send({ kind: 'module', module: module(0, { 'startup.bml': ['bml', NEXT] }) })
+  send({ kind: 'catalog', catalog: { ...CATALOG, carousels: [] } })
+  send({ kind: 'open' })
+
+  assert.deepEqual(said, [{ kind: 'error', reason: 'missing' }])
+})

@@ -32,6 +32,7 @@ const NAVIGATION: [string, ComponentType<IconProps>][] = [
   ['FullscreenIcon', () => <Icons.FullscreenIcon />],
   ['FullscreenIcon (leaving)', () => <Icons.FullscreenIcon leaving />],
   ['CaptionsGlyph', Icons.CaptionsGlyph],
+  ['DataBroadcastIcon', Icons.DataBroadcastIcon],
   ['AirPlayIcon', Icons.AirPlayIcon],
   ['CaptureIcon', Icons.CaptureIcon],
   ['PictureInPictureIcon', Icons.PictureInPictureIcon],

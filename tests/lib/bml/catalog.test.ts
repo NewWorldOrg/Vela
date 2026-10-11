@@ -4,7 +4,10 @@ import { test } from 'node:test'
 import {
   catalogOf,
   catalogPayload,
+  listedVersion,
   readCatalog,
+  staysListed,
+  takesThePlace,
   type BmlCatalog,
 } from '@/lib/bml/catalog'
 
@@ -235,5 +238,30 @@ test('a value of the wrong type anywhere makes it not a catalog', () => {
       ],
     }),
     null,
+  )
+})
+
+test('the version listed for a module is read from any carousel of its tag, and none for a module not listed', () => {
+  assert.equal(listedVersion(CATALOG, 0x40, 0), 2)
+  assert.equal(listedVersion(CATALOG, 0x40, 1), 0)
+  assert.equal(listedVersion(CATALOG, 0x40, 9), undefined)
+  assert.equal(listedVersion(CATALOG, 0x72, 0), undefined)
+  assert.equal(listedVersion(null, 0x40, 0), undefined)
+  assert.equal(staysListed(CATALOG, 0x40, 0), true)
+  assert.equal(staysListed(CATALOG, 0x41, 0), false)
+})
+
+test('a module that comes takes the place of the one held unless the one held is already the version listed', () => {
+  const came = (version: number) => ({ tag: 0x40, id: 0, version })
+
+  assert.equal(takesThePlace(CATALOG, undefined, came(1)), true)
+  assert.equal(takesThePlace(CATALOG, { version: 1 }, came(2)), true)
+  assert.equal(takesThePlace(CATALOG, { version: 1 }, came(3)), true)
+  assert.equal(takesThePlace(CATALOG, { version: 2 }, came(1)), false)
+  assert.equal(takesThePlace(CATALOG, { version: 2 }, came(2)), true)
+  assert.equal(takesThePlace(null, { version: 2 }, came(1)), true)
+  assert.equal(
+    takesThePlace(CATALOG, { version: 2 }, { tag: 0x40, id: 9, version: 1 }),
+    true,
   )
 })

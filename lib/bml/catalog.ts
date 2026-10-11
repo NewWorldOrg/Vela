@@ -476,6 +476,43 @@ class CborWriter {
   }
 }
 
+/** The version the catalog lists for a module, or undefined when it does not list the module. */
+export function listedVersion(
+  catalog: BmlCatalog | null,
+  tag: number,
+  id: number,
+): number | undefined {
+  return catalog?.carousels
+    .filter((carousel) => carousel.tag === tag)
+    .flatMap((carousel) => carousel.modules)
+    .find((module) => module.id === id)?.version
+}
+
+/** Whether a module stays held when a catalog comes: when the catalog lists it, at whatever version, as the one held is kept until the version listed comes. */
+export function staysListed(
+  catalog: BmlCatalog,
+  tag: number,
+  id: number,
+): boolean {
+  return listedVersion(catalog, tag, id) !== undefined
+}
+
+/** Whether a module that comes takes the place of the one held: always, unless the one held is the version the catalog lists and the one that came is not. */
+export function takesThePlace(
+  catalog: BmlCatalog | null,
+  held: { version: number } | undefined,
+  came: { tag: number; id: number; version: number },
+): boolean {
+  const listed = listedVersion(catalog, came.tag, came.id)
+
+  return (
+    held === undefined ||
+    listed === undefined ||
+    came.version === listed ||
+    held.version !== listed
+  )
+}
+
 /** Writes a catalog the way the side channel carries it. */
 export function catalogPayload(catalog: BmlCatalog): Uint8Array {
   const body = new CborWriter().value(catalog).bytes()
