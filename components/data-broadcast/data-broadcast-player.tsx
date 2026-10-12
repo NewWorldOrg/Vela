@@ -631,7 +631,7 @@ export const HYBRIDCAST_NAME = 'Hybridcast'
 
 export const CLOSE_HYBRIDCAST_NAME = 'Hybridcast を閉じる'
 
-/** The Hybridcast application running, at the band's left: the station and `Hybridcast`, and `閉じる`, which goes back to the documents. It takes what room the keys leave, keeps one more gap before them so that `閉じる` is not read as one of them, and the station's name is cut short before the keys move. */
+/** The Hybridcast application running, at the band's left: the station and `Hybridcast`, and `閉じる`, which goes back to the documents. It takes what room the keys leave. Where the station and `Hybridcast` do not fit on one line, `Hybridcast` goes under the station, and only a station that does not fit on its own line is cut short, before the keys move. */
 function OnTheBand({
   station,
   onClose,
@@ -646,9 +646,9 @@ function OnTheBand({
       role="group"
       aria-label={HYBRIDCAST_NAME}
       data-slot="hybridcast-on-the-band"
-      className="flex min-w-0 grow basis-0 items-center gap-(--row-gap) pr-(--gap)"
+      className="flex min-w-0 grow basis-0 items-center gap-(--row-gap)"
     >
-      <p className="flex min-w-0 items-baseline gap-[0.4em] text-[length:var(--key-font)] leading-tight whitespace-nowrap text-(--pl-ink)">
+      <p className="flex min-w-0 flex-wrap items-baseline gap-x-[0.4em] text-[length:var(--key-font)] leading-tight whitespace-nowrap text-(--pl-ink)">
         {station && <b className="min-w-0 truncate font-bold">{station}</b>}
         <span className="shrink-0">{HYBRIDCAST_NAME}</span>
       </p>

@@ -1055,6 +1055,24 @@ export const Hybridcast: Story = {
   },
 }
 
+export const Hybridcast_起動中_PC: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+
+    const group = await runningOnTheBand(canvasElement)
+    const name = group.querySelector('b') as HTMLElement
+
+    await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth)
+    await shrunkTo(canvasElement)
+  },
+}
+
 export const Hybridcast_iPad: Story = {
   parameters: { screen: { width: 820, height: 1180 }, coarse: true },
   args: {
@@ -1073,6 +1091,9 @@ export const Hybridcast_iPad: Story = {
       .getByRole('button', { name: '戻る' })
       .getBoundingClientRect()
 
+    const name = group.querySelector('b') as HTMLElement
+
+    await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth)
     await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
     await expect(close.right).toBeLessThanOrEqual(back.left)
     await expect(Math.abs(close.top - back.top)).toBeLessThan(1)

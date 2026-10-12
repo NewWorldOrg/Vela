@@ -803,6 +803,28 @@ export const 帯_iPad_全画面_数字: Story = {
 
 const STATION = 'みなと総合1'
 
+/** The station's name is cut short only when it has no more room to take: then `閉じる` stands one gap from `戻る`, with nothing free between them. `Hybridcast` is never cut. */
+async function cutOnlyWithoutRoom(band: HTMLElement, u: number) {
+  const group = within(band).getByRole('group', { name: 'Hybridcast' })
+  const name = group.querySelector('b') as HTMLElement
+  const said = name.nextElementSibling as HTMLElement
+  const close = within(group)
+    .getByRole('button', { name: 'Hybridcast を閉じる' })
+    .getBoundingClientRect()
+  const back = within(band)
+    .getByRole('button', { name: '戻る' })
+    .getBoundingClientRect()
+
+  await expect(said).toHaveTextContent('Hybridcast')
+  await expect(said.scrollWidth).toBeLessThanOrEqual(said.clientWidth)
+
+  if (name.scrollWidth > name.clientWidth) {
+    await near(back.left - close.right, MOCK.gap * u)
+  }
+
+  return { name, cut: name.scrollWidth > name.clientWidth }
+}
+
 /** The band while a Hybridcast application runs: the station and Hybridcast at its left, `閉じる` at a finger's size beside them, the keys where the mock puts them, and `閉じる` taking it away. */
 async function withTheApplication(canvasElement: HTMLElement, fit: BandFit) {
   const { band, u } = await asTheMock(canvasElement, fit)
@@ -824,7 +846,8 @@ async function withTheApplication(canvasElement: HTMLElement, fit: BandFit) {
   )
   await expect(
     back.getBoundingClientRect().left - close.getBoundingClientRect().right,
-  ).toBeGreaterThanOrEqual(MOCK.gap * 2 * u - 0.6)
+  ).toBeGreaterThanOrEqual(MOCK.gap * u - 0.6)
+  await cutOnlyWithoutRoom(band, u)
   await near(
     close.getBoundingClientRect().top,
     back.getBoundingClientRect().top,
@@ -837,10 +860,18 @@ async function withTheApplication(canvasElement: HTMLElement, fit: BandFit) {
   await expect(named(band)).toEqual(KEYS)
 }
 
+async function nameWhole(canvasElement: HTMLElement, fit: BandFit) {
+  const { band, u } = await asTheMock(canvasElement, fit)
+  const { cut } = await cutOnlyWithoutRoom(band, u)
+
+  await expect(cut).toBe(false)
+}
+
 export const 帯_Hybridcast_PC: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
   render: () => <Band fit="fine" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
+    await nameWhole(canvasElement, 'fine')
     await withTheApplication(canvasElement, 'fine')
   },
 }
@@ -849,6 +880,7 @@ export const 帯_Hybridcast_iPad_窓: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
   render: () => <Band fit="coarse" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
+    await nameWhole(canvasElement, 'coarse')
     await withTheApplication(canvasElement, 'coarse')
   },
 }
@@ -857,31 +889,50 @@ export const 帯_Hybridcast_iPad_全画面: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
   render: () => <Band fit="coarse-full" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
+    await nameWhole(canvasElement, 'coarse-full')
     await withTheApplication(canvasElement, 'coarse-full')
   },
 }
 
+const LONG_STATION = 'とても長い名前の放送局のチャンネル第一テレビジョン'
+
+/** A long station's name: cut short where the keys leave no room for it, as on a finger's window, with `Hybridcast` whole under it and `閉じる` one gap from `戻る`; whole where there is room, as in fullscreen and on a wide player. */
+async function longName(
+  canvasElement: HTMLElement,
+  fit: BandFit,
+  cut: boolean,
+) {
+  const { band, u } = await asTheMock(canvasElement, fit)
+  const found = await cutOnlyWithoutRoom(band, u)
+
+  await expect(found.cut).toBe(cut)
+  await expect(named(band)).toEqual(['Hybridcast を閉じる', ...KEYS])
+  await fingerSized(band)
+}
+
 export const 帯_Hybridcast_長い局名: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
+  render: () => <Band fit="coarse" numbers={false} station={LONG_STATION} />,
+  play: async ({ canvasElement }) => {
+    await longName(canvasElement, 'coarse', true)
+  },
+}
+
+export const 帯_Hybridcast_長い局名_iPad_全画面: Story = {
+  parameters: { screen: { width: 1180, height: 820 } },
   render: () => (
-    <Band
-      fit="coarse"
-      numbers={false}
-      station="とても長い名前の放送局のチャンネル第一テレビジョン"
-    />
+    <Band fit="coarse-full" numbers={false} station={LONG_STATION} />
   ),
   play: async ({ canvasElement }) => {
-    const { band } = await asTheMock(canvasElement, 'coarse')
-    const name = within(band)
-      .getByRole('group', { name: 'Hybridcast' })
-      .querySelector('b') as HTMLElement
-    const said = name.nextElementSibling as HTMLElement
+    await longName(canvasElement, 'coarse-full', false)
+  },
+}
 
-    await expect(name.scrollWidth).toBeGreaterThan(name.clientWidth)
-    await expect(said).toHaveTextContent('Hybridcast')
-    await expect(said.scrollWidth).toBeLessThanOrEqual(said.clientWidth)
-    await expect(named(band)).toEqual(['Hybridcast を閉じる', ...KEYS])
-    await fingerSized(band)
+export const 帯_Hybridcast_長い局名_PC: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Band fit="fine" numbers={false} station={LONG_STATION} />,
+  play: async ({ canvasElement }) => {
+    await longName(canvasElement, 'fine', false)
   },
 }
 
