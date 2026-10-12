@@ -5,11 +5,15 @@ export interface FlagSpelling {
 
 export const FOLD_SPELLING: FlagSpelling = { yes: 'folded', no: 'open' }
 
+export const AUTO_OPEN_SPELLING: FlagSpelling = { yes: 'opens', no: 'waits' }
+
 export const GUIDE_SUB_CHANNELS_FOLDED = 'vela-guide-sub-channels-folded'
 
 export const LIVE_CHANNELS_FOLDED = 'vela-live-channels-folded'
 
 export const LIVE_SUB_CHANNELS_FOLDED = 'vela-live-sub-channels-folded'
+
+export const DATA_BROADCAST_AUTO_OPEN = 'vela-data-broadcast-auto-open'
 
 const KEPT_S = 31536000
 

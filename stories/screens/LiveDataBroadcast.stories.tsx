@@ -76,6 +76,11 @@ function carrying(...broadcast: Uint8Array[]): OpenSocket {
 
 const CATALOG = catalogPayload(DATA_BROADCAST_CATALOG)
 
+const ASKING_TO_START = catalogPayload({
+  ...DATA_BROADCAST_CATALOG,
+  autoStart: true,
+})
+
 function modules(only?: number[]): Uint8Array[] {
   return dataBroadcastModules()
     .filter((module) => !only || only.includes(module.id))
@@ -203,6 +208,51 @@ export const まだ届いていない: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'データ放送' }),
     ).toBeNull()
+  },
+}
+
+export const 自動で開く: Story = {
+  args: {
+    openSocket: carrying(ASKING_TO_START, ...modules()),
+    autoOpensDataBroadcast: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+
+    await afterTheArrival(canvasElement)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await shrunkTo(canvasElement, AT_THE_START)
+
+    await userEvent.click(toggle)
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await shrunkTo(canvasElement)
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+  },
+}
+
+export const 設定が切なら自動で開かない: Story = {
+  args: { openSocket: carrying(ASKING_TO_START, ...modules()) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+
+    await afterTheArrival(canvasElement)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+  },
+}
+
+export const 放送が求めていなければ自動で開かない: Story = {
+  args: { autoOpensDataBroadcast: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+
+    await afterTheArrival(canvasElement)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
   },
 }
 

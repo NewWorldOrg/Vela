@@ -20,6 +20,7 @@ import {
 import { liveWireHref } from '@/repository/live-paths'
 import { KEY_CAP, routeKey, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
 import { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
+import { AUTO_OPEN_SPELLING, DATA_BROADCAST_AUTO_OPEN } from '@/lib/stored-flag'
 import {
   SAID_FAILED,
   dataBroadcastSays,
@@ -68,6 +69,7 @@ import {
 import { capturedName, capturedOn } from '@/lib/capture-name'
 import { useCoarsePointer } from '@/hooks/useCoarsePointer'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
+import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
@@ -163,6 +165,7 @@ export function LivePlayer({
   wireHref = liveWireHref,
   startupDeadlineMs = STARTUP_DEADLINE_MS,
   takeCapture = takeItNow,
+  autoOpensDataBroadcast = false,
 }: {
   channel?: LiveChannel
   profiles: LiveProfile[]
@@ -178,6 +181,7 @@ export function LivePlayer({
   ) => string
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
+  autoOpensDataBroadcast?: boolean
 }) {
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -237,7 +241,15 @@ export function LivePlayer({
     key === null ? null : held && held.key === key ? held : begun(key)
   const phase = running?.phase
   const fault = running?.fault ?? null
-  const broadcast = useDataBroadcast(broadcastFeed, key)
+  const [autoOpens] = useStoredFlag(
+    DATA_BROADCAST_AUTO_OPEN,
+    AUTO_OPEN_SPELLING,
+    autoOpensDataBroadcast,
+  )
+  const broadcast = useDataBroadcast(broadcastFeed, key, {
+    autoOpens,
+    programme: onAir?.startsAt ?? '',
+  })
 
   useEffect(
     () => () => {
