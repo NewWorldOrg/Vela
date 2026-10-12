@@ -427,6 +427,103 @@ test('a key goes to the focused element’s handler with its code, and the handl
   )
 })
 
+const KEYS = [
+  'up',
+  'down',
+  'left',
+  'right',
+  'enter',
+  'back',
+  'd',
+  'blue',
+  'red',
+  'green',
+  'yellow',
+]
+
+const LEAVING_EARLY = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>browser.launchDocument("/60/0000/later.bml"); function init() { browser.launchDocument("~/0001/next.bml") }</script>',
+).replace('<body>', '<body onload="init()">')
+
+test('a document that moves on to a module still awaited runs none of the rest of itself, not its onload either', () => {
+  const { send, heard, forget } = opened(LEAVING_EARLY, [
+    module(1, { 'next.bml': ['bml', NEXT] }),
+  ])
+
+  assert.deepEqual(heard(), [{ kind: 'waiting', waiting: true }])
+  forget()
+  send({
+    kind: 'module',
+    module: module(
+      0,
+      { 'later.bml': ['bml', bml('<p id="later">l</p>')] },
+      0x60,
+    ),
+  })
+
+  assert.deepEqual(heard(), [
+    { kind: 'waiting', waiting: false },
+    { kind: 'videoRect', rect: null },
+    { kind: 'usedKeys', keys: KEYS },
+  ])
+})
+
+const NAMING_ONLOAD = bml(
+  '<p id="p">p</p>',
+  '<script>function onload() { document.getElementById("p").firstChild.data = "loaded" }</script>',
+).replace('<body>', '<body onload="onload()">')
+
+test('a document may name its own onload function, as the frame’s own has already happened', () => {
+  const { element } = opened(NAMING_ONLOAD)
+
+  assert.equal(element('p')?.text, 'loaded')
+})
+
+const QUITTING = bml(
+  '<p id="q" onclick="browser.quitDocument()" style="nav-index: 0">q</p>',
+)
+
+test('a document that quits is taken down and the player is told to close', () => {
+  const { send, heard, element, forget } = opened(QUITTING)
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+
+  assert.deepEqual(heard(), [{ kind: 'exit' }])
+  assert.equal(element('q'), null)
+})
+
+const ASKING = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>browser.Ureg[0] = [browser.isBeingBroadcast("~/0001/x.bml"), browser.isBeingBroadcast("/60/0000"), browser.isBeingBroadcast("/40/0007/x.bml"), browser.isBeingBroadcast("/70/0000/x.bml")].join(",")</script>',
+)
+
+test('whether a module is being broadcast is answered from the catalog', () => {
+  const { runtime } = opened(ASKING)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], '1,1,0,0')
+})
+
+const HANDLING = bml(
+  '<div id="c" onkeydown="document.getElementById(\'p\').firstChild.data = \'key \' + document.currentEvent.keyCode"><p id="p">p</p></div>' +
+    '<p id="n" style="nav-index: 0; nav-down: 0">n</p>',
+  '<script>function init() { document.getElementById("c").focus() }</script>',
+).replace('<body>', '<body onload="init()">')
+
+test('a script may focus an element without a nav-index, which then takes the keys while the arrows lead nowhere', () => {
+  const { send, element, focused } = opened(HANDLING)
+
+  assert.equal(focused(), 'c')
+
+  send({ kind: 'key', key: 'down' })
+
+  assert.equal(focused(), 'c')
+  assert.equal(element('p')?.text, 'key 2')
+})
+
 const PROBING = bml(
   '<p id="p" style="nav-index: 0">p</p>',
   '<script>' +

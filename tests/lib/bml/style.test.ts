@@ -22,6 +22,43 @@ const FIXED = paletteOf(null)
 
 const css = (text: string) => cssOf(declarationsOf(text), FIXED)
 
+test('a background image named as url() is drawn from the blob the resolver answers, one it has no image for leaves no declaration, and none is none', () => {
+  const images = (reference: string) =>
+    reference === 'bg.jpg' ? 'blob:test/bg.jpg' : null
+  const with_ = (text: string) => cssOf(declarationsOf(text), FIXED, images)
+
+  assert.equal(
+    with_('background-image: url(bg.jpg)').css,
+    'background-image: url("blob:test/bg.jpg")',
+  )
+  assert.equal(
+    with_("background-image: url( 'bg.jpg' )").css,
+    'background-image: url("blob:test/bg.jpg")',
+  )
+  assert.deepEqual(with_('background-image: url(none.jpg)'), {
+    css: '',
+    warnings: [],
+  })
+  assert.equal(with_('background-image: none').css, 'background-image: none')
+  assert.deepEqual(with_('background-image: url("a b.jpg")').warnings, [
+    'unsupported value of background-image',
+  ])
+  assert.deepEqual(with_('background-image: bg.jpg').warnings, [
+    'unsupported value of background-image',
+  ])
+  assert.deepEqual(css('background-image: url(bg.jpg)'), {
+    css: '',
+    warnings: [],
+  })
+})
+
+test('a colour index may be inherit', () => {
+  assert.equal(
+    css('color-index: inherit; background-color-index: Inherit').css,
+    'color: inherit; background-color: inherit; --bml-background: inherit',
+  )
+})
+
 test('declarations are read by name in lower case, a separator inside brackets or quotes is not a break, and !important is dropped', () => {
   assert.deepEqual(
     declarationsOf(

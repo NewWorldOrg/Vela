@@ -17,6 +17,8 @@ type Browser = Record<string, (...args: unknown[]) => unknown> & {
   Greg: string[]
 }
 
+const LISTED: Record<string, boolean> = { '/40/0001': true, '/40/0009': false }
+
 function host(over: Partial<BrowserHost> = {}) {
   const calls: string[] = []
   const unsupported: string[] = []
@@ -39,6 +41,8 @@ function host(over: Partial<BrowserHost> = {}) {
       startsAt: 1_700_000_000,
     }),
     hasComponent: (tag) => tag === 0x40,
+    listed: (reference) => LISTED[String(reference)] ?? null,
+    quit: () => calls.push('quit'),
     memory: new PersistentMemory(),
     registers: { Ureg: registersOf(), Greg: registersOf() },
     startTimer: (code, everyMs, times) => {
@@ -72,6 +76,29 @@ test('launching a document throws out of the script once the host took the refer
   assert.throws(() => browser.reloadActiveDocument(), DocumentLeft)
   assert.deepEqual(calls, ['launch next.bml', 'launch nowhere', 'reload'])
   assert.equal(browser.getActiveDocument(), '/40/0000/startup.bml')
+})
+
+test('quitting the document throws out of the script once the host was told', () => {
+  const { browser, calls } = host()
+
+  assert.throws(() => browser.quitDocument(), DocumentLeft)
+  assert.deepEqual(calls, ['quit'])
+})
+
+test('whether a module is being broadcast is 1 or 0 by the catalog, and fails for a reference that names no module', () => {
+  const { browser } = host()
+
+  assert.equal(browser.isBeingBroadcast('/40/0001'), 1)
+  assert.equal(browser.isBeingBroadcast('/40/0009'), 0)
+  assert.ok(Number.isNaN(browser.isBeingBroadcast(3)))
+})
+
+test('the PPP connection is refused like the rest of the communication', () => {
+  const { browser, unsupported } = host()
+
+  assert.ok(Number.isNaN(browser.connectPPP('isp', 'user', 'pass')))
+  assert.ok(Number.isNaN(browser.disconnectPPP()))
+  assert.deepEqual(unsupported, ['connectPPP', 'disconnectPPP'])
 })
 
 test('the version, the support of a group and the tuning are answered', () => {

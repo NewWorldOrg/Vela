@@ -47,6 +47,9 @@ const TEXT_NODE = 3
 
 const SIDE_NAMES = new Set(['up', 'down', 'left', 'right'])
 
+/** BML's own properties a script may set that change nothing in how the page is drawn here. */
+const QUIET_PROPERTIES = new Set(['grayscale-color-index'])
+
 const STATE_MARK: Record<Exclude<StyleState, 'normal'>, string> = {
   focus: 'data-bml-focus',
   active: 'data-bml-active',
@@ -174,7 +177,11 @@ class Inner {
       return
     }
 
-    const converted = cssPairsOf([{ property, value }], this.palette)
+    const converted = cssPairsOf(
+      [{ property, value }],
+      this.palette,
+      (reference) => this.pictureUrl(reference),
+    )
 
     converted.warnings.forEach((warning) => this.hooks.warn(warning))
 
@@ -217,9 +224,23 @@ class Inner {
       .join('\n')
   }
 
+  private pictureUrl(reference: string): string | null {
+    const url = this.hooks.image(reference)
+
+    if (!url) {
+      this.hooks.warn('missing image')
+    }
+
+    return url
+  }
+
   private feature(element: HTMLElement, property: string, value: string): void {
     const features = featuresOf(new Map([[property, value]]))
     const page = this.stage.nodes.get(element)
+
+    if (QUIET_PROPERTIES.has(property)) {
+      return
+    }
 
     if (property === 'used-key-list') {
       if (features.usedKeys) {

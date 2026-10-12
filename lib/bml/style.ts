@@ -357,7 +357,16 @@ function keyword(value: string, allowed: string[]): string | null {
   return allowed.includes(lowered) || lowered === 'inherit' ? lowered : null
 }
 
-type Mapper = (value: string, palette: Palette) => [string, string][] | null
+/** Answers the `blob:` URL of an image a declaration names, or null when there is no such image. */
+export type ImageResolver = (reference: string) => string | null
+
+const NO_IMAGES: ImageResolver = () => null
+
+type Mapper = (
+  value: string,
+  palette: Palette,
+  images: ImageResolver,
+) => [string, string][] | null
 
 function as(property: string, read: (value: string) => string | null): Mapper {
   return (value) => {
@@ -367,10 +376,19 @@ function as(property: string, read: (value: string) => string | null): Mapper {
   }
 }
 
+function colourValue(value: string, palette: Palette): string | null {
+  const trimmed = value.trim()
+
+  if (trimmed.toLowerCase() === 'inherit') {
+    return 'inherit'
+  }
+
+  return /^\d+$/.test(trimmed) ? colourOf(palette, Number(trimmed)) : null
+}
+
 function colour(...properties: string[]): Mapper {
   return (value, palette) => {
-    const index = Number(value)
-    const css = /^\d+$/.test(value.trim()) ? colourOf(palette, index) : null
+    const css = colourValue(value, palette)
 
     return css === null
       ? null
@@ -416,6 +434,40 @@ function clipOf(value: string): string | null {
   return edges && edges.length === 4 && edges.every((edge) => edge !== null)
     ? `rect(${edges.join(', ')})`
     : null
+}
+
+/** The reference inside `url(...)`, with or without quotes, or null when the value is not one. */
+export function urlReferenceOf(value: string): string | null {
+  const inside = insideOf(value, 'url(')?.trim()
+
+  if (inside === undefined || inside.length === 0) {
+    return null
+  }
+
+  const quote = inside[0]
+  const quoted =
+    (quote === '"' || quote === "'") && inside.endsWith(quote)
+      ? inside.slice(1, -1)
+      : inside
+
+  return quoted.length > 0 && !/[\s"']/.test(quoted) ? quoted : null
+}
+
+/** `background-image` named as `url(...)` becomes the image's `blob:` URL; one that is not there leaves no declaration, the resolver having said so. */
+const backgroundImage: Mapper = (value, _palette, images) => {
+  if (value.trim().toLowerCase() === 'none') {
+    return [['background-image', 'none']]
+  }
+
+  const reference = urlReferenceOf(value)
+
+  if (reference === null) {
+    return null
+  }
+
+  const url = images(reference)
+
+  return url ? [['background-image', `url("${url}")`]] : []
 }
 
 const SIDES = ['top', 'right', 'bottom', 'left'] as const
@@ -478,6 +530,7 @@ const MAPPER_LIST: [string, Mapper][] = [
   ['border-color-index', colour('border-color')],
   ['color-index', colour('color')],
   ['background-color-index', colour('background-color', '--bml-background')],
+  ['background-image', backgroundImage],
   ['font-family', () => [['font-family', FONT_STACK]]],
   ['font-size', as('font-size', (value) => length(value))],
   [
@@ -518,6 +571,7 @@ export interface ConvertedPairs {
 export function cssPairsOf(
   declarations: Declaration[],
   palette: Palette,
+  images: ImageResolver = NO_IMAGES,
 ): ConvertedPairs {
   const pairs: [string, string][] = []
   const warnings: string[] = []
@@ -528,7 +582,7 @@ export function cssPairsOf(
     }
 
     const mapper = MAPPERS.get(property)
-    const mapped = mapper ? mapper(value, palette) : null
+    const mapped = mapper ? mapper(value, palette, images) : null
 
     if (!mapper) {
       warnings.push(`unsupported property: ${property}`)
@@ -546,8 +600,9 @@ export function cssPairsOf(
 export function cssOf(
   declarations: Declaration[],
   palette: Palette,
+  images: ImageResolver = NO_IMAGES,
 ): ConvertedStyle {
-  const converted = cssPairsOf(declarations, palette)
+  const converted = cssPairsOf(declarations, palette, images)
 
   return {
     css: converted.pairs.map(([name, css]) => `${name}: ${css}`).join('; '),
@@ -559,10 +614,11 @@ export function cssOf(
 export function cssSheetOf(
   sheet: StyleSheet,
   palette: Palette,
+  images: ImageResolver = NO_IMAGES,
 ): ConvertedStyle {
   const warnings: string[] = []
   const css = sheet.rules.flatMap((rule) => {
-    const converted = cssOf(rule.declarations, palette)
+    const converted = cssOf(rule.declarations, palette, images)
 
     warnings.push(...converted.warnings)
 

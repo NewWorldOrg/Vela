@@ -13,6 +13,8 @@ export interface BrowserHost {
   npt(): number | null
   programme(): Programme | null
   hasComponent(tag: number): boolean
+  listed(reference: unknown): boolean | null
+  quit(): void
   memory: PersistentMemory
   registers: { Ureg: string[]; Greg: string[] }
   startTimer(code: unknown, everyMs: unknown, times: unknown): number
@@ -29,6 +31,7 @@ export interface BrowserHost {
 export const SUPPORTED_FUNCTIONS = [
   'launchDocument',
   'reloadActiveDocument',
+  'quitDocument',
   'getActiveDocument',
   'getBrowserVersion',
   'getBrowserSupport',
@@ -43,6 +46,7 @@ export const SUPPORTED_FUNCTIONS = [
   'getProgramID',
   'getTuningStatus',
   'detectComponent',
+  'isBeingBroadcast',
   'isSupportedMedia',
   'getIRDID',
   'epgGetEventStartTime',
@@ -83,6 +87,9 @@ export const REFUSED_FUNCTIONS = [
   'getConnectionType',
   'setISPParams',
   'getISPParams',
+  'connectPPP',
+  'connectPPPWithISPParams',
+  'disconnectPPP',
   'saveHttpServerFileAs',
   'saveHttpServerFile',
   'sendHttpServerFileAs',
@@ -257,6 +264,11 @@ function supported(host: BrowserHost): Record<string, Answer> {
 
       throw new DocumentLeft()
     },
+    quitDocument: () => {
+      host.quit()
+
+      throw new DocumentLeft()
+    },
     getActiveDocument: () => host.activeDocument(),
     getBrowserVersion: () => [BROWSER_NAME, ...BROWSER_VERSION],
     getBrowserSupport: (provider: unknown, name: unknown, ...info: unknown[]) =>
@@ -286,6 +298,11 @@ function supported(host: BrowserHost): Record<string, Answer> {
       const tag = componentTag(reference)
 
       return tag === null ? FAILED : Number(host.hasComponent(tag))
+    },
+    isBeingBroadcast: (reference: unknown) => {
+      const listed = host.listed(reference)
+
+      return listed === null ? FAILED : Number(listed)
     },
     isSupportedMedia: () => 0,
     getIRDID: () => null,

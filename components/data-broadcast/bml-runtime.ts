@@ -102,7 +102,7 @@ interface Shown {
   document: BmlDocument
   scope: ScriptScope
   navigation: Navigation
-  focused: number | null
+  focused: HTMLElement | null
   urls: string[]
   usedKeys: UsedKeyGroup[]
 }
@@ -112,7 +112,7 @@ interface Timer {
   left: number | null
 }
 
-type Leaving = { to: BmlAddress } | { reload: true }
+type Leaving = { to: BmlAddress } | { reload: true } | { quit: true }
 
 function moduleKey(tag: number, id: number): string {
   return `${tag}/${id}`
@@ -471,7 +471,7 @@ export class BmlRuntime {
     this.start(shown)
   }
 
-  /** Runs the document's scripts and its body's `onload`, then settles its focus and tells the player of it, unless a script moved on. */
+  /** Runs the document's scripts and its body's `onload`, then settles its focus where they did not, and tells the player of it, unless a script moved on. */
   private start(shown: Shown): void {
     for (const script of shown.page.scripts) {
       const code =
@@ -494,7 +494,9 @@ export class BmlRuntime {
       return
     }
 
-    this.focus(firstFocus(shown.navigation), false)
+    if (shown.focused === null) {
+      this.focus(this.elementAt(shown, firstFocus(shown.navigation)), false)
+    }
     this.say({
       kind: 'videoRect',
       rect: shown.page.videoRect
@@ -581,6 +583,10 @@ export class BmlRuntime {
       hasComponent: (tag) =>
         this.catalog?.carousels.some((carousel) => carousel.tag === tag) ??
         false,
+      listed: (reference) => this.listed(reference),
+      quit: () => {
+        this.leaving = { quit: true }
+      },
       memory: this.memory,
       registers: this.registers,
       startTimer: (code, everyMs, times) =>
@@ -626,7 +632,7 @@ export class BmlRuntime {
     return true
   }
 
-  /** Runs one piece of the document's code, telling the player when it starts and ends so that one that runs too long is seen. True when the document is still the one shown and has not asked to move on. */
+  /** Runs one piece of the document's code, telling the player when it starts and ends so that one that runs too long is seen. True when the document is still the one shown and has not asked to move on, to a document there already or to one still awaited. */
   private execute(code: string, event: BmlEvent | null): boolean {
     const shown = this.shown
 
@@ -656,7 +662,9 @@ export class BmlRuntime {
       this.settle()
     }
 
-    return this.shown === shown && this.leaving === null
+    return (
+      this.shown === shown && this.leaving === null && this.pending === null
+    )
   }
 
   /** Moves to the document a script asked for, once the script has ended; a document that moves on at once from its own scripts is followed only so far. */
@@ -675,7 +683,9 @@ export class BmlRuntime {
       this.leaving = null
       launches += 1
 
-      if ('reload' in leaving) {
+      if ('quit' in leaving) {
+        this.quit()
+      } else if ('reload' in leaving) {
         this.reload()
       } else {
         this.launch(leaving.to, false)
@@ -688,6 +698,33 @@ export class BmlRuntime {
       this.leaving = null
       this.fail('malformed')
     }
+  }
+
+  /** Ends the broadcast's documents as one of them asked: the plane is cleared and the player is told to close. */
+  private quit(): void {
+    this.close()
+    this.say({ kind: 'exit' })
+  }
+
+  /** Whether the module a reference names is in the catalog now; null when the reference names no module. */
+  private listed(reference: unknown): boolean | null {
+    const base = this.shown?.page.address
+    const address =
+      typeof reference === 'string' && base
+        ? moduleAddressOf(reference, base)
+        : null
+
+    if (!address) {
+      return null
+    }
+
+    return (
+      this.catalog?.carousels.some(
+        (carousel) =>
+          carousel.tag === address.tag &&
+          carousel.modules.some((module) => module.id === address.module),
+      ) ?? false
+    )
   }
 
   private reload(): void {
@@ -969,41 +1006,42 @@ export class BmlRuntime {
     })
   }
 
+  /** A script may focus any element of the page, with a `nav-index` or without: one without takes the keys but the arrows lead nowhere from it. */
   private focusOn(element: HTMLElement | null): void {
     const shown = this.shown
 
-    if (!shown) {
+    if (!shown || (element !== null && !shown.mounted.nodes.has(element))) {
       return
     }
 
-    const index =
-      element === null
-        ? null
-        : (shown.mounted.nodes.get(element)?.nav.index ?? null)
+    this.focus(element, true)
+  }
 
-    if (
-      element !== null &&
-      (index === null || shown.mounted.byNavIndex.get(index) !== element)
-    ) {
-      return
-    }
+  private elementAt(shown: Shown, index: number | null): HTMLElement | null {
+    return index === null ? null : (shown.mounted.byNavIndex.get(index) ?? null)
+  }
 
-    this.focus(index, true)
+  /** The `nav-index` the focus is at, or null when nothing is focused or the focused element has none the arrows go by. */
+  private navIndexOf(shown: Shown): number | null {
+    const focused = shown.focused
+    const index = focused ? shown.mounted.nodes.get(focused)?.nav.index : null
+
+    return index !== undefined &&
+      index !== null &&
+      shown.mounted.byNavIndex.get(index) === focused
+      ? index
+      : null
   }
 
   /** Moves the focus, running `onblur` on the element it leaves and `onfocus` on the one it reaches when asked to. */
-  private focus(index: number | null, telling: boolean): void {
+  private focus(to: HTMLElement | null, telling: boolean): void {
     const shown = this.shown
 
     if (!shown) {
       return
     }
 
-    const from =
-      shown.focused === null
-        ? undefined
-        : shown.mounted.byNavIndex.get(shown.focused)
-    const to = index === null ? undefined : shown.mounted.byNavIndex.get(index)
+    const from = shown.focused
     const onblur = from && telling ? handlerOf(from, 'onblur') : null
 
     if (
@@ -1019,15 +1057,15 @@ export class BmlRuntime {
 
     from?.removeAttribute('data-bml-focus')
     to?.setAttribute('data-bml-focus', '')
-    shown.focused = index
-    shown.document.focusedIs(to ?? null)
+    shown.focused = to
+    shown.document.focusedIs(to)
 
     const onfocus = to && telling ? handlerOf(to, 'onfocus') : null
 
     if (onfocus) {
       this.execute(onfocus, {
         type: 'focus',
-        target: shown.document.elementTarget(to ?? null),
+        target: shown.document.elementTarget(to),
       })
     }
   }
@@ -1043,12 +1081,16 @@ export class BmlRuntime {
       return
     }
 
-    const answer = answerTo(key, shown.navigation, shown.focused)
+    const focused = shown.focused
+    const answer = answerTo(key, shown.navigation, this.navIndexOf(shown))
+    const decides =
+      answer.answer === 'decided' ||
+      (answer.answer === 'pressed' && key === 'enter' && focused !== null)
 
     if (answer.answer === 'moved') {
-      this.focus(answer.to, true)
-    } else if (answer.answer === 'decided') {
-      this.decide(shown.mounted.byNavIndex.get(answer.on))
+      this.focus(this.elementAt(shown, answer.to), true)
+    } else if (decides) {
+      this.decide(focused ?? undefined)
     } else if (answer.answer === 'pressed') {
       this.accessKey(shown, key)
     }
@@ -1064,10 +1106,7 @@ export class BmlRuntime {
     phase: 'keydown' | 'keyup',
     key: BmlKey,
   ): boolean {
-    const focused =
-      shown.focused === null
-        ? undefined
-        : shown.mounted.byNavIndex.get(shown.focused)
+    const focused = shown.focused
     const handler = focused ? handlerOf(focused, `on${phase}`) : null
 
     if (!focused || !handler) {
@@ -1084,9 +1123,9 @@ export class BmlRuntime {
   }
 
   private accessKey(shown: Shown, key: BmlKey): void {
-    for (const [index, element] of shown.mounted.byNavIndex) {
+    for (const element of shown.mounted.byNavIndex.values()) {
       if (handlerOf(element, 'accesskey') === key) {
-        this.focus(index, true)
+        this.focus(element, true)
 
         return
       }

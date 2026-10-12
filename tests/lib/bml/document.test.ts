@@ -294,7 +294,7 @@ test('an image object and an img element draw the resource as a blob, and sound 
   assert.deepEqual(page.warnings, [])
 })
 
-test('an image that is not there, is not a picture, or is a kind not drawn holds its place as a div with a warning', () => {
+test('an image that is not there or is not a picture stays an img without a source, with a warning, and an object of a kind not drawn holds its place as a div', () => {
   const page = read(
     bml(
       '<object id="gone" type="image/jpeg" data="none.jpg"/><object id="text" type="image/jpeg" data="s.css"/><object id="mng" type="image/X-arib-mng" data="m.mng"/><object id="other" type="application/X-arib-x"/>',
@@ -305,7 +305,12 @@ test('an image that is not there, is not a picture, or is a kind not drawn holds
     }),
   )
 
-  for (const id of ['gone', 'text', 'mng', 'other']) {
+  for (const id of ['gone', 'text']) {
+    assert.equal(byId(page, id).tag, 'img', id)
+    assert.equal(attribute(byId(page, id), 'src'), undefined, id)
+  }
+
+  for (const id of ['mng', 'other']) {
     assert.equal(byId(page, id).tag, 'div', id)
   }
 
@@ -315,6 +320,27 @@ test('an image that is not there, is not a picture, or is a kind not drawn holds
     'unsupported object: image/x-arib-mng',
     'unsupported object: application/x-arib-x',
   ])
+})
+
+test('a background image in the style sheet or inline is drawn from the document’s resources and counted with its images', () => {
+  const page = read(
+    bml(
+      '<div id="a" style="background-image: url(bg.jpg)">a</div><div id="b" style="background-image: url(none.jpg)">b</div>',
+      '<style>body { background-image: url(/40/0000/bg.jpg) }</style>',
+    ),
+    resourcesOf({ '/40/0000/bg.jpg': ['jpeg', 'x'] }),
+  )
+
+  assert.equal(
+    page.styleSheet,
+    '[data-bml-tag="body"] { background-image: url("blob:test/bg.jpg") }',
+  )
+  assert.equal(
+    byId(page, 'a').style,
+    'background-image: url("blob:test/bg.jpg")',
+  )
+  assert.equal(byId(page, 'b').style, '')
+  assert.deepEqual(page.warnings, ['missing image'])
 })
 
 test('colours are read from the document’s own lookup table, and the fixed colours otherwise', () => {

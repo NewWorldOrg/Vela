@@ -58,7 +58,6 @@ export const SHADOWED_GLOBALS = [
   'customElements',
   'onerror',
   'onmessage',
-  'onload',
 ] as const
 
 export type ScriptGlobals = Record<string, unknown>
