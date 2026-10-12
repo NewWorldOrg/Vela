@@ -40,6 +40,7 @@ export interface BmlEvent {
   messageId?: number
   messageVersion?: number
   privateData?: string
+  esRef?: string
 }
 
 const ELEMENT_NODE = 1

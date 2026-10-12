@@ -8,6 +8,7 @@ import {
   MOST_MEMORY_NAME,
   type MemoryEntries,
 } from '@/lib/bml/memory'
+import { nptReadingOf, type NptReading } from '@/lib/bml/npt'
 import { moduleOf, type BmlModule } from '@/lib/bml/resources'
 import { FONT_FAMILIES, GRID } from '@/lib/bml/style'
 
@@ -36,6 +37,7 @@ export type PlayerMessage =
   | { kind: 'programme'; programme: Programme }
   | { kind: 'memory'; entries: MemoryEntries }
   | { kind: 'event'; event: BroadcastEvent }
+  | { kind: 'npt'; reading: NptReading }
   | { kind: 'open' }
   | { kind: 'close' }
 
@@ -272,6 +274,11 @@ function playerMessageOf(data: unknown): PlayerMessage | null {
       const event = broadcastEventOf(message.event)
 
       return event ? { kind: 'event', event } : null
+    }
+    case 'npt': {
+      const reading = nptReadingOf(message.reading)
+
+      return reading ? { kind: 'npt', reading } : null
     }
     case 'open':
       return { kind: 'open' }
