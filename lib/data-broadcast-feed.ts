@@ -104,6 +104,14 @@ export type DataBroadcastChange =
   | { kind: 'none' }
   | { kind: 'reset' }
 
+/** What a player holds of a data broadcast, from the live side channel or a recording's routes alike: whether it can be opened, the catalog, the modules to hand a runtime that opens, and the changes as they come. */
+export interface DataBroadcastHeld {
+  readonly availability: DataBroadcastAvailability
+  readonly catalog: BmlCatalog | null
+  readonly forTheCatalog: BmlModule[]
+  subscribe(listener: (change: DataBroadcastChange) => void): () => void
+}
+
 interface Waiting {
   pts: number
   bytes: number
@@ -136,7 +144,7 @@ function dueAt(said: DataBroadcastSaid, pts: number): number {
 }
 
 /** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. An event message is passed on when it fires, once. A module whose version the catalog moved on is held until the new version comes. What comes twice, from whichever wire, is taken once: a catalog the same as the one held, a module of the version held, an event already heard. */
-export class DataBroadcastFeed {
+export class DataBroadcastFeed implements DataBroadcastHeld {
   private readonly waiting: Waiting[] = []
 
   private readonly modules = new Map<string, Held>()

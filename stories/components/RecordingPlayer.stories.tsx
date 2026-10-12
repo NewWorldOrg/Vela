@@ -37,6 +37,17 @@ import type {
   FeedRecording,
   RecordingFeedEvents,
 } from '@/components/recordings/recording-feed'
+import { modulePayload } from '@/lib/bml/resources'
+import type { DataBroadcastTimeline } from '@/lib/recording-data-broadcast'
+import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
+import type {
+  ReadDataBroadcast,
+  ReadDataBroadcastModule,
+} from '@/components/recordings/read-data-broadcast'
+import {
+  DATA_BROADCAST_CATALOG,
+  dataBroadcastModules,
+} from '@/stories/fixtures/data-broadcast'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -3624,5 +3635,197 @@ export const 要素の全画面を断られたらページの中で窓いっぱ�
       'player-captions',
       'refused',
     )
+  },
+}
+
+/** The catalog of a recording that carried the self-made broadcast throughout: both modules in effect from the first second to the last. */
+const BROADCAST_THROUGHOUT: DataBroadcastTimeline = {
+  entryTag: DATA_BROADCAST_CATALOG.entryTag,
+  autoStart: DATA_BROADCAST_CATALOG.autoStart,
+  startup: DATA_BROADCAST_CATALOG.startup,
+  incomplete: false,
+  carousels: DATA_BROADCAST_CATALOG.carousels.map((carousel) => ({
+    tag: carousel.tag,
+    downloadId: carousel.downloadId,
+    versions: carousel.modules.map((module) => ({
+      id: module.id,
+      version: module.version,
+      fromSec: 0,
+      toSec: 600,
+      size: 0,
+    })),
+  })),
+  events: [],
+}
+
+const broadcastAsked: string[] = []
+
+function readingTheBroadcast(
+  answer: DataBroadcastRead = { state: 'read', timeline: BROADCAST_THROUGHOUT },
+): ReadDataBroadcast {
+  return async (id, source) => {
+    broadcastAsked.push(`${id}/${source ?? '—'}`)
+
+    return answer
+  }
+}
+
+const readingTheModules: ReadDataBroadcastModule = async (id, placed) => {
+  const found = dataBroadcastModules().find(
+    (one) =>
+      one.tag === placed.tag &&
+      one.id === placed.id &&
+      one.version === placed.version,
+  )
+
+  return found ? modulePayload(found) : null
+}
+
+const BROADCAST_PLAYING = {
+  detail: { ...detail('1266'), service: { networkId: 32736, serviceId: 1024 } },
+  plan: HANDED_OVER,
+  startAt: 0,
+  pictureHref: () => DRAWN_PICTURE,
+  readDataBroadcast: readingTheBroadcast(),
+  readDataBroadcastModule: readingTheModules,
+}
+
+function pictureOf(canvasElement: HTMLElement): HTMLElement {
+  const picture = canvasElement.querySelector('[data-slot="player-picture"]')
+
+  if (!(picture instanceof HTMLElement)) {
+    throw new Error('the picture is not on the screen')
+  }
+
+  return picture
+}
+
+export const データ放送のある録画は操作子を置く: Story = {
+  args: BROADCAST_PLAYING,
+  beforeEach: () => {
+    broadcastAsked.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(broadcastAsked[0]).toBe('1266/—')
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+    await expect(pictureOf(canvasElement)).not.toHaveAttribute('data-rect')
+
+    const row = toggle.closest('div')
+
+    await expect(
+      within(row as HTMLElement)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(expect.arrayContaining(['データ放送', '設定', '全画面']))
+  },
+}
+
+export const データ放送を開くと面と帯が出て映像が縮む: Story = {
+  args: BROADCAST_PLAYING,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await userEvent.click(toggle)
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(
+      () =>
+        expect(pictureOf(canvasElement)).toHaveAttribute(
+          'data-rect',
+          '560,60,360,203',
+        ),
+      { timeout: 5000 },
+    )
+    await expect(
+      canvas.getByRole('group', { name: 'データ放送のリモコン' }),
+    ).toBeVisible()
+    await expect(canvasElement.querySelector('iframe')).not.toBeNull()
+
+    await userEvent.click(toggle)
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await waitFor(() =>
+      expect(pictureOf(canvasElement)).not.toHaveAttribute('data-rect'),
+    )
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+  },
+}
+
+export const データ放送を自動で開く: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    autoOpensDataBroadcast: true,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: { ...BROADCAST_THROUGHOUT, autoStart: true },
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
+    await expect(canvasElement.querySelector('iframe')).not.toBeNull()
+  },
+}
+
+export const データ放送の無い録画は操作子を置かない: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    readDataBroadcast: readingTheBroadcast({ state: 'none' }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByRole('button', { name: '設定' })
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    await expect(
+      canvas.queryByRole('button', { name: 'データ放送' }),
+    ).toBeNull()
+  },
+}
+
+export const データ放送の起動文書がまだ無い時刻では操作子を置かない: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: {
+        ...BROADCAST_THROUGHOUT,
+        incomplete: true,
+        carousels: BROADCAST_THROUGHOUT.carousels.map((carousel) => ({
+          ...carousel,
+          versions: carousel.versions.map((version) =>
+            version.id === 0 ? { ...version, fromSec: 300 } : version,
+          ),
+        })),
+      },
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByRole('button', { name: '設定' })
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    await expect(
+      canvas.queryByRole('button', { name: 'データ放送' }),
+    ).toBeNull()
   },
 }

@@ -73,6 +73,12 @@ export interface UnfinishedDeletion {
   filesLeft?: number
 }
 
+/** The service a recording was taken from, as the broadcast names it. */
+export interface BroadcastService {
+  networkId: number
+  serviceId: number
+}
+
 export interface Recording {
   id: string
   reservationId?: string
@@ -88,6 +94,7 @@ export interface Recording {
   genre?: string
   year: number
   startedAt: string
+  service?: BroadcastService
   recordedAtLabel: string
   recordedAtNote?: string
   recordedRange: string
@@ -514,6 +521,10 @@ export function toRecording(
     channelLogo: channel?.logo,
     year: Number(jst(startedAt).year),
     startedAt: r.startedAt,
+    service: {
+      networkId: toInt(r.programme.networkId),
+      serviceId: toInt(r.programme.serviceId),
+    },
     recordedAtLabel: formatMoment(startedAt, now),
     recordedAtNote: outcome === 'recording' ? 'いま' : undefined,
     recordedRange: recordedRangeOf(r, outcome),

@@ -348,6 +348,30 @@ test('a module the catalog stops listing is let go', () => {
   assert.deepEqual(heard(), [{ kind: 'error', reason: 'missing' }])
 })
 
+test('a page whose module the catalog stops listing gives way to the start document', () => {
+  const { heard, send, forget } = opened(STARTUP, [
+    module(1, { 'next.bml': ['bml', NEXT] }),
+  ])
+
+  send({ kind: 'key', key: 'enter' })
+  forget()
+  send({
+    kind: 'catalog',
+    catalog: {
+      ...CATALOG,
+      carousels: [
+        { ...CATALOG.carousels[0], modules: [CATALOG.carousels[0].modules[0]] },
+        CATALOG.carousels[1],
+      ],
+    },
+  })
+
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'videoRect'),
+    [{ kind: 'videoRect', rect: START_RECT }],
+  )
+})
+
 const ENTRY = bml(
   '<p id="hidden">nothing to see</p>',
   '<bevent><beitem id="d" type="DataButtonPressed" subscribe="subscribe" onoccur="browser.launchDocument(\'/60/0000/startup.bml\', \'cut\')"/></bevent>',

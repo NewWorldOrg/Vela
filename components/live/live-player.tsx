@@ -82,7 +82,7 @@ import {
   DataBroadcastFace,
   DataBroadcastToggle,
   PLAYER_COLUMN_OVER_THE_BAND,
-  type BandFit,
+  bandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
 
 import { CaptionLayer } from '@/components/live/live-captions'
@@ -99,15 +99,6 @@ import { LiveSettings } from '@/components/live/live-settings'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
 const RESTS = 3000
-
-/** Which band the player draws out: a mouse gets the one over the picture, a finger the one under the box, and a finger in fullscreen the one over the picture again, sized for the finger. */
-function bandFit(coarse: boolean, full: boolean): BandFit {
-  if (!coarse) {
-    return 'fine'
-  }
-
-  return full ? 'coarse-full' : 'coarse'
-}
 
 const TICK_MS = 250
 

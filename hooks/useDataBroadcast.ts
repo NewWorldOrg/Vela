@@ -6,7 +6,7 @@ import type { BmlKey } from '@/lib/bml/keys'
 import type { RuntimeMessage } from '@/lib/bml/messages'
 import type {
   DataBroadcastAvailability,
-  DataBroadcastFeed,
+  DataBroadcastHeld,
 } from '@/lib/data-broadcast-feed'
 import {
   DATA_BROADCAST_CLOSED,
@@ -61,7 +61,7 @@ function openedIn(
 
 /** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime. What is shown belongs to one session, so a new channel starts closed. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. */
 export function useDataBroadcast(
-  feed: DataBroadcastFeed,
+  feed: DataBroadcastHeld,
   session: string | null,
   { autoOpens, programme }: AutoOpens = BY_HAND_ONLY,
 ): DataBroadcast {
