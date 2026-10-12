@@ -96,6 +96,8 @@ docker compose exec app yarn codegen:verify   # コミット済みの文書か�
 docker compose exec app yarn bml-runtime   # ランタイムを組み直す
 ```
 
+放送向けの字(データ放送の面・番組名の放送マーク)は `public/fonts/denpa-font.woff2`(Denpa Font)で、`sh scripts/fetch-denpa-font.sh` が版を固定して取り直し、sha256 を確かめる。
+
 ## ライセンス
 
 ライセンスは AGPL-3.0-only で、著作権者は NewWorldOrg である。

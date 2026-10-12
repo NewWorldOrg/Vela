@@ -91,8 +91,7 @@ carries, and the license files Next.js ships with them, are under
 
 | File | Font | License |
 | --- | --- | --- |
-| `public/fonts/broadcast-marks.woff2` | Noto Sans CJK JP 2.004, subset to the broadcast marks. Copyright © 2014-2021 Adobe | OFL-1.1 |
-| `public/fonts/data-broadcast.woff2` | Kosugi Maru 4.002, subset to JIS X 0208 and the ARIB additional symbols. Copyright 2010 The Kosugi Maru Project Authors | Apache-2.0 |
+| `public/fonts/denpa-font.woff2` | Denpa Font 3.2, a monospaced round gothic for broadcast captions, data broadcasting and programme guides. Copyright 2022 The BIZ UDGothic Project Authors, Copyright (c) 2026 danything | OFL-1.1 |
 
 Each license is at `/usr/share/doc/vela/fonts/<file>.txt`.
 

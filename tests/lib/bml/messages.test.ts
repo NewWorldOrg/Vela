@@ -124,7 +124,7 @@ test('what the player may say is taken from the parent window in Vela’s origin
     version: 1,
     resources: [{ path: 'a.bml', kind: 'bml', body: new Uint8Array([1]) }],
   }
-  const fonts = [{ family: 'Data Broadcast', bytes: new ArrayBuffer(4) }]
+  const fonts = [{ family: 'Denpa Font', bytes: new ArrayBuffer(4) }]
   const said: unknown[] = [
     { kind: 'catalog', catalog: CATALOG },
     { kind: 'module', module: carried },
@@ -176,13 +176,13 @@ test('a kind the player may not say, or a shape that does not fit, is dropped', 
     },
     {
       kind: 'font',
-      fonts: [{ family: 'Data Broadcast', bytes: new Uint8Array(1) }],
+      fonts: [{ family: 'Denpa Font', bytes: new Uint8Array(1) }],
     },
     {
       kind: 'font',
       fonts: [
         {
-          family: 'Data Broadcast',
+          family: 'Denpa Font',
           bytes: new ArrayBuffer(4 * 1024 * 1024 + 1),
         },
       ],
