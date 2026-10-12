@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
-import { AUTO_OPEN_LABEL } from '@/lib/viewing'
-import { DATA_BROADCAST_AUTO_OPEN, forgettingCookie } from '@/lib/stored-flag'
+import { AUTO_OPEN_LABEL, LINE_LABEL, RECEIVER_ID_LABEL } from '@/lib/viewing'
+import {
+  DATA_BROADCAST_AUTO_OPEN,
+  DATA_BROADCAST_LINE,
+  DATA_BROADCAST_RECEIVER_ID,
+  forgettingCookie,
+} from '@/lib/stored-flag'
 import { ViewingView } from '@/components/viewing/viewing-page'
 import { inTheSettings } from '@/stories/frames'
 
@@ -18,21 +23,31 @@ const meta = {
   },
   decorators: [inTheSettings],
   beforeEach: () => {
-    document.cookie = forgettingCookie(DATA_BROADCAST_AUTO_OPEN)
+    forgetTheSettings()
 
-    return () => {
-      document.cookie = forgettingCookie(DATA_BROADCAST_AUTO_OPEN)
-    }
+    return forgetTheSettings
   },
 } satisfies Meta<typeof ViewingView>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-function cookie(): string | undefined {
+const SETTINGS = [
+  DATA_BROADCAST_AUTO_OPEN,
+  DATA_BROADCAST_LINE,
+  DATA_BROADCAST_RECEIVER_ID,
+]
+
+function forgetTheSettings() {
+  SETTINGS.forEach((key) => {
+    document.cookie = forgettingCookie(key)
+  })
+}
+
+function cookie(key = DATA_BROADCAST_AUTO_OPEN): string | undefined {
   return document.cookie
     .split('; ')
-    .find((one) => one.startsWith(`${DATA_BROADCAST_AUTO_OPEN}=`))
+    .find((one) => one.startsWith(`${key}=`))
     ?.split('=')[1]
 }
 
@@ -63,6 +78,50 @@ export const 自動で開く: Story = {
 
     await expect(
       canvas.getByRole('switch', { name: AUTO_OPEN_LABEL }),
+    ).toBeChecked()
+  },
+}
+
+export const 通信と識別子: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const line = canvas.getByRole('switch', { name: LINE_LABEL })
+    const receiverId = canvas.getByRole('switch', { name: RECEIVER_ID_LABEL })
+
+    await expect(line).not.toBeChecked()
+    await expect(receiverId).not.toBeChecked()
+    await expect(receiverId).toBeDisabled()
+
+    await userEvent.click(line)
+
+    await expect(line).toBeChecked()
+    await expect(cookie(DATA_BROADCAST_LINE)).toBe('allows')
+    await expect(receiverId).toBeEnabled()
+
+    await userEvent.click(receiverId)
+
+    await expect(receiverId).toBeChecked()
+    await expect(cookie(DATA_BROADCAST_RECEIVER_ID)).toBe('hands')
+
+    await userEvent.click(line)
+
+    await expect(line).not.toBeChecked()
+    await expect(cookie(DATA_BROADCAST_LINE)).toBe('refuses')
+    await expect(receiverId).not.toBeChecked()
+    await expect(receiverId).toBeDisabled()
+    await expect(cookie(DATA_BROADCAST_RECEIVER_ID)).toBe('keeps')
+  },
+}
+
+export const 通信を許可している: Story = {
+  args: { allowsTheLine: true, handsTheReceiverId: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('switch', { name: LINE_LABEL })).toBeChecked()
+    await expect(
+      canvas.getByRole('switch', { name: RECEIVER_ID_LABEL }),
     ).toBeChecked()
   },
 }
