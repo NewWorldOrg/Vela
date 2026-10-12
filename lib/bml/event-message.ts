@@ -1,4 +1,4 @@
-/** An event message as the side channel carries it: when it fires is on the same 90 kHz clock as the frames. */
+/** An event message as the side channel carries it: when it fires is on the same 90 kHz clock as the frames, and the component tag of the stream it came on when the sender names it. */
 export interface BroadcastEvent {
   group: number
   id: number
@@ -6,9 +6,18 @@ export interface BroadcastEvent {
   immediate: boolean
   at: number
   privateData: Uint8Array
+  componentTag?: number
 }
 
 export const MOST_PRIVATE_DATA_BYTES = 0xffff
+
+export function isComponentTag(value: unknown): value is number {
+  return (
+    Number.isInteger(value) &&
+    (value as number) >= 0 &&
+    (value as number) <= 0xff
+  )
+}
 
 function isWord(value: unknown): value is number {
   return (
@@ -34,7 +43,8 @@ export function broadcastEventOf(value: unknown): BroadcastEvent | null {
     !Number.isSafeInteger(event.at) ||
     (event.at as number) < 0 ||
     !(event.privateData instanceof Uint8Array) ||
-    event.privateData.length > MOST_PRIVATE_DATA_BYTES
+    event.privateData.length > MOST_PRIVATE_DATA_BYTES ||
+    (event.componentTag !== undefined && !isComponentTag(event.componentTag))
   ) {
     return null
   }
@@ -46,5 +56,8 @@ export function broadcastEventOf(value: unknown): BroadcastEvent | null {
     immediate: event.immediate,
     at: event.at as number,
     privateData: event.privateData,
+    ...(event.componentTag === undefined
+      ? {}
+      : { componentTag: event.componentTag }),
   }
 }

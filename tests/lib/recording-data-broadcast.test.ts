@@ -233,6 +233,32 @@ test('the catalog answered is read into a timeline, its events in the order they
   assert.deepEqual([...timeline.events[0].privateData], [97, 98])
 })
 
+test('an event answered with the component tag of its stream keeps it, and one answered with null or none names no stream', () => {
+  const timeline = timelineOf({
+    ...ANSWERED,
+    events: [
+      { ...ANSWERED.events[0], componentTag: 0x5e },
+      { ...ANSWERED.events[1], componentTag: null },
+    ],
+  })
+
+  assert.ok(timeline)
+  assert.deepEqual(
+    timeline.events.map((one) => one.componentTag),
+    [undefined, 0x5e],
+  )
+  assert.equal(broadcastEventOf(timeline.events[1]).componentTag, 0x5e)
+  assert.equal('componentTag' in broadcastEventOf(timeline.events[0]), false)
+  assert.equal('componentTag' in (timelineOf(ANSWERED)?.events[0] ?? {}), false)
+  assert.equal(
+    timelineOf({
+      ...ANSWERED,
+      events: [{ ...ANSWERED.events[0], componentTag: 0x100 }],
+    }),
+    null,
+  )
+})
+
 test('an answer whose shape is not a catalog is not read', () => {
   assert.equal(timelineOf(null), null)
   assert.equal(timelineOf({ ...ANSWERED, startup: 7 }), null)

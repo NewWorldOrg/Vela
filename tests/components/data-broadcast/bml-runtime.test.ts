@@ -796,6 +796,27 @@ const LISTENING_BY_STREAM = bml(
     '</bevent>',
 )
 
+test('an event message that names its stream reaches only the item whose es_ref names that stream, though the catalog does not carry it', () => {
+  const { runtime, send } = opened(LISTENING_BY_STREAM)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+  const event = (componentTag: number) => ({
+    group: 0,
+    id: 7,
+    type: 1,
+    immediate: true,
+    at: 0,
+    privateData: new Uint8Array(0),
+    componentTag,
+  })
+
+  send({ kind: 'event', event: event(0x72) })
+  assert.equal(registers[0], 'elsewhere ')
+
+  send({ kind: 'event', event: event(0x40) })
+  assert.equal(registers[0], 'elsewhere carried ')
+})
+
 test('an event message reaches the item whose es_ref names a stream the broadcast carries, and a module in a new version reaches only the subscribed items that name it', () => {
   const { runtime, send } = opened(LISTENING_BY_STREAM, [
     module(1, { 'one.bml': ['bml', NEXT] }),

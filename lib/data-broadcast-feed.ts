@@ -59,11 +59,12 @@ function readEvent(payload: Uint8Array): BroadcastEvent | null {
     payload.byteLength,
   )
   const timeKind = payload[6]
-  const length = view.getUint16(15)
+  const end = EVENT_HEAD + view.getUint16(15)
+  const tagged = payload.length === end + 1
 
   if (
     (timeKind !== TIME_KIND.immediate && timeKind !== TIME_KIND.npt) ||
-    EVENT_HEAD + length !== payload.length
+    (payload.length !== end && !tagged)
   ) {
     return null
   }
@@ -74,7 +75,8 @@ function readEvent(payload: Uint8Array): BroadcastEvent | null {
     type: payload[5],
     immediate: timeKind === TIME_KIND.immediate,
     at: view.getUint32(7) * 2 ** 32 + view.getUint32(11),
-    privateData: payload.slice(EVENT_HEAD),
+    privateData: payload.slice(EVENT_HEAD, end),
+    ...(tagged ? { componentTag: payload[end] } : {}),
   }
 }
 
@@ -172,7 +174,7 @@ function moduleKey(tag: number, id: number): string {
 }
 
 function eventKey(event: BroadcastEvent): string {
-  return `${event.group}/${event.id}/${event.type}/${event.at}`
+  return `${event.componentTag ?? ''}/${event.group}/${event.id}/${event.type}/${event.at}`
 }
 
 export type Warn = (warning: string) => void

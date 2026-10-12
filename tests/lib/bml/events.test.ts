@@ -162,6 +162,32 @@ test('an item with an es_ref listens only when it names a stream the broadcast c
   assert.equal(listensFor(item(''), EVENT, [0x40]), false)
 })
 
+test('an event message that names its stream reaches only the items whose es_ref names that stream, carousel or not', () => {
+  const item = (reference?: string) =>
+    eventItemsOf([
+      {
+        id: 'm',
+        type: 'EventMessageFired',
+        attributes: [
+          ...(reference === undefined
+            ? []
+            : ([['es_ref', reference]] as [string, string][])),
+          ['message_group_id', '0'],
+        ],
+      },
+    ])[0]
+  const onEvents = { ...EVENT, componentTag: 0x5e }
+  const onCarousel = { ...EVENT, componentTag: 0x40 }
+
+  assert.equal(listensFor(item('/5E'), onEvents, [0x40]), true)
+  assert.equal(listensFor(item('/5e'), onEvents, []), true)
+  assert.equal(listensFor(item('/40'), onEvents, [0x40]), false)
+  assert.equal(listensFor(item('/5E'), onCarousel, [0x40]), false)
+  assert.equal(listensFor(item('/40'), onCarousel, [0x40]), true)
+  assert.equal(listensFor(item(), onEvents, [0x40]), true)
+  assert.equal(listensFor(item('5E'), onEvents, [0x40]), false)
+})
+
 test('an item names a module by an absolute path or one within the carousel', () => {
   const item = (reference?: string) =>
     eventItemsOf([
