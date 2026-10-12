@@ -20,6 +20,7 @@ export interface Stage {
 export interface DocumentHooks {
   moveFocus(element: HTMLElement | null): void
   navChanged(): void
+  seenChanged(): void
   usedKeys(groups: UsedKeyGroup[]): void
   image(reference: string): string | null
   resolve(reference: string): string | null
@@ -426,6 +427,25 @@ export class BmlElement {
     return Array.from(this.#element.childNodes)
       .map((child) => this.#inner.wrap(child))
       .filter((child): child is BmlElement | BmlText => child !== null)
+  }
+
+  /** The body's `invisible`: while it is set, nothing of the page is shown and the video stays whole, as an entry document waits for the data button. */
+  get invisible(): boolean {
+    return this.#element.getAttribute('data-bml-attr-invisible') !== null
+  }
+
+  set invisible(value: unknown) {
+    if (this.#element.getAttribute('data-bml-tag') !== 'body') {
+      return
+    }
+
+    if (value) {
+      this.#element.setAttribute('data-bml-attr-invisible', 'invisible')
+    } else {
+      this.#element.removeAttribute('data-bml-attr-invisible')
+    }
+
+    this.#inner.hooks.seenChanged()
   }
 
   get normalStyle(): object {

@@ -918,6 +918,85 @@ test('a document reads the tables of its module', () => {
   assert.equal(registers[0], '2:b:2:4')
 })
 
+const TABLE_GONE = bml(
+  '<p id="p">p</p>',
+  '<script>' +
+    'var b = new BinaryTable("gone.bin", "0,U:1B");' +
+    'browser.Ureg[0] = b == null ? "none" : "table";' +
+    '</script>',
+)
+
+test('a table whose file is not in the module is null, as a receiver answers', () => {
+  const { runtime } = opened(TABLE_GONE)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], 'none')
+})
+
+const LOCKING_ELSEWHERE = bml(
+  '<p id="p">p</p>',
+  '<bevent>' +
+    '<beitem id="l" type="ModuleLocked" module_ref="/40/0009" subscribe="subscribe" onoccur="browser.Ureg[1] = \'locked:\' + document.currentEvent.status + \':\' + document.currentEvent.moduleRef"/>' +
+    '</bevent>' +
+    '<script>' +
+    'browser.Ureg[0] = [browser.lockModuleOnMemoryEx("/70/0001"), browser.lockModuleOnMemoryEx("/40/0009"), browser.lockModuleOnMemoryEx("~/0001")].join(",");' +
+    '</script>',
+)
+
+test('locking a module no component carries answers -3, one the carousel does not list is heard of as not found, and one awaited is heard of when it comes', () => {
+  const { runtime, send, timers } = opened(LOCKING_ELSEWHERE)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], '-3,1,1')
+  timers.tick(0)
+  assert.equal(registers[1], 'locked:-2:/40/0009')
+
+  send({ kind: 'module', module: module(1, { 'next.bml': ['bml', NEXT] }) })
+  assert.equal(
+    (runtime as unknown as { locked: Set<string> }).locked.has('64/1'),
+    true,
+  )
+})
+
+const GETTING_READY = bml(
+  '<p id="p">p</p>',
+  '<bevent>' +
+    '<beitem id="d" type="DataButtonPressed" onoccur="browser.Ureg[0] += \'pressed \'; document.getElementById(\'body\').invisible = false"/>' +
+    '</bevent>' +
+    '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>' +
+    '<script>browser.setInterval("document.getElementById(\'d\').subscribe = true", 3000, 1)</script>',
+).replace('<body>', '<body id="body" invisible="invisible">')
+
+test('an entry document that listens for the data button only once it is ready hears the press then, shows itself and is pressed no more, and the video is whole until it shows itself', () => {
+  const { runtime, timers, heard, element } = opened(GETTING_READY)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.deepEqual(heard()[0], { kind: 'videoRect', rect: null })
+
+  for (let round = 0; round < 5; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[0], '')
+  timers.tick(3000)
+  timers.tick(500)
+  assert.equal(registers[0], 'pressed ')
+  assert.equal(element('body')?.getAttribute('data-bml-attr-invisible'), null)
+  assert.deepEqual(heard().at(-1), {
+    kind: 'videoRect',
+    rect: { left: 0, top: 0, width: 480, height: 270 },
+  })
+
+  for (let round = 0; round < 10; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[0], 'pressed ')
+})
+
 const LOADED = bml(
   '<p id="p" style="nav-index: 0">p</p>',
   '<script>browser.Ureg[0] = "script"</script>',
@@ -983,7 +1062,7 @@ const NEVER_READY = bml('<p id="hidden">entry</p>').replace(
   '<body invisible="invisible" onkeydown="browser.Ureg[0] += \'d\'" style="nav-index: 0">',
 )
 
-test('an entry document that never shows anything is given the data button a few times, then left', () => {
+test('an entry document that never shows anything is given the data button for some seconds, then left', () => {
   const { runtime, timers } = opened(NEVER_READY)
   const registers = (runtime as unknown as { registers: { Ureg: string[] } })
     .registers.Ureg
@@ -992,7 +1071,13 @@ test('an entry document that never shows anything is given the data button a few
     timers.tick(500)
   }
 
-  assert.equal(registers[0], 'dddddd')
+  assert.equal(registers[0], 'd'.repeat(11))
+
+  for (let round = 0; round < 20; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[0], 'd'.repeat(20))
 })
 
 const MIXED = bml(

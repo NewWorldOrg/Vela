@@ -762,6 +762,7 @@ export const BASE_STYLE = [
   `[data-bml-tag="body"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; font-family: ${FONT_STACK}; font-size: 24px; line-height: 1.5; color: rgb(255 255 255); background-color: transparent !important; }`,
   '[data-bml-tag="body"]::before { content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; background-color: var(--bml-background, transparent); border: 0 solid var(--bml-background, transparent); }',
   '[data-bml-tag="body"][data-bml-hole]::before { background-color: transparent; border-width: var(--bml-hole-top) var(--bml-hole-right) var(--bml-hole-bottom) var(--bml-hole-left); }',
+  '[data-bml-tag="body"][data-bml-attr-invisible] { visibility: hidden; }',
   '[data-bml-tag="div"], [data-bml-tag="p"], [data-bml-tag="object"], [data-bml-tag="img"], [data-bml-tag="input"] { position: absolute; overflow: hidden; }',
   '[data-bml-video] { background: transparent !important; }',
   'img[data-bml-tag] { display: block; }',

@@ -52,9 +52,17 @@ function host(over: Partial<BrowserHost> = {}) {
     },
     stopTimer: (id) => id === 5,
     sleep: (ms) => calls.push(`sleep ${String(ms)}`),
-    lock: (reference) => (reference === 'nowhere' ? 'bad' : 'held'),
+    lock: (reference) =>
+      reference === 'nowhere'
+        ? 'bad'
+        : reference === '/70/0001'
+          ? 'noComponent'
+          : 'held',
     unlock: (reference) => calls.push(`unlock ${String(reference)}`),
-    lockedModules: () => ['/40/0001'],
+    lockedModules: () => [
+      { path: '/40/0001', held: true },
+      { path: '/40/0002', held: false },
+    ],
     unsupported: (what) => unsupported.push(what),
     warn: (what) => warnings.push(what),
     ...over,
@@ -175,9 +183,13 @@ test('timers, sleep and the module locks go to the host', () => {
   assert.equal(browser.sleep(100), 1)
   assert.equal(browser.lockModuleOnMemory('~/0001'), 1)
   assert.ok(Number.isNaN(browser.lockModuleOnMemoryEx('nowhere')))
+  assert.equal(browser.lockModuleOnMemoryEx('/70/0001'), -3)
   assert.equal(browser.unlockModuleOnMemory('~/0001'), 1)
   assert.equal(browser.unlockAllModulesOnMemory(), 1)
-  assert.deepEqual(browser.getLockedModuleInfo(), [['/40/0001', 1, 1]])
+  assert.deepEqual(browser.getLockedModuleInfo(), [
+    ['/40/0001', 2, 1],
+    ['/40/0002', 2, 2],
+  ])
   assert.deepEqual(calls, [
     'timer tick() 500 3',
     'sleep 100',

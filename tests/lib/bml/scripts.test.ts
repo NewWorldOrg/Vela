@@ -7,6 +7,7 @@ import {
   ScriptScope,
   givenOf,
   scopeOf,
+  withoutTableNew,
 } from '@/lib/bml/scripts'
 
 function run(code: string, scope: object): unknown {
@@ -67,4 +68,13 @@ test('a run is done, left when the document was left, or failed with what was th
   assert.equal(failed.outcome, 'failed')
   assert.equal(failed.tookMs, 5)
   assert.ok(failed.outcome === 'failed' && failed.error instanceof TypeError)
+})
+
+test('new is taken off the table constructors, so that a table that cannot be made may be null', () => {
+  assert.equal(
+    withoutTableNew(
+      'var a = new BinaryTable("t.btb", "0,U:1B"); var b = new  CSVTable ("t.csv", "U:1B"); var c = new Date();',
+    ),
+    'var a = BinaryTable("t.btb", "0,U:1B"); var b = CSVTable("t.csv", "U:1B"); var c = new Date();',
+  )
 })

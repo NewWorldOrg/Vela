@@ -102,6 +102,13 @@ export function scopeOf(globals: ScriptGlobals): object {
   return scope
 }
 
+const TABLE_CONSTRUCTION = /\bnew\s+(BinaryTable|CSVTable)\s*\(/g
+
+/** A document's code with `new` taken off `BinaryTable` and `CSVTable`: the runtime answers null for a table it cannot make, which a constructor called with `new` cannot. */
+export function withoutTableNew(code: string): string {
+  return code.replace(TABLE_CONSTRUCTION, '$1(')
+}
+
 /** Runs one piece of a document's code with its scope, and throws what it threw. */
 export type Evaluate = (code: string, scope: object) => void
 
@@ -128,7 +135,7 @@ export class ScriptScope {
     const started = this.now()
 
     try {
-      this.evaluate(code, this.scope)
+      this.evaluate(withoutTableNew(code), this.scope)
 
       return { outcome: 'done', tookMs: this.now() - started }
     } catch (error) {

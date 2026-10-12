@@ -79,7 +79,11 @@ const MOST_SLEEP_MS = 1000
 /** How often the data button is pressed again on an entry document that still cannot be seen: one that readies itself on timers after its scripts, as a viewer presses it a moment after tuning in. */
 const DATA_BUTTON_EVERY_MS = 500
 
-const MOST_DATA_BUTTON_PRESSES = 6
+const MOST_DATA_BUTTON_PRESSES = 20
+
+const LOCKED = 0
+
+const NOT_FOUND = -2
 
 const IMAGE_TYPE: Partial<Record<BmlResource['kind'], string>> = {
   jpeg: 'image/jpeg',
@@ -116,6 +120,12 @@ type Leaving = { to: BmlAddress } | { reload: true } | { quit: true }
 
 function moduleKey(tag: number, id: number): string {
   return `${tag}/${id}`
+}
+
+function moduleOfKey(key: string): [number, number] {
+  const [tag, id] = key.split('/')
+
+  return [Number(tag), Number(id)]
 }
 
 function handlerOf(element: HTMLElement, name: string): string | null {
@@ -296,7 +306,7 @@ export class BmlRuntime {
     }
 
     if (this.locked.has(key)) {
-      this.moduleLocked(module)
+      this.moduleLocked(module, LOCKED)
     }
   }
 
@@ -334,7 +344,7 @@ export class BmlRuntime {
     this.unmount()
   }
 
-  /** Presses the data button on a document that cannot be seen, so that an entry document moves on to its face, and again a moment later while it still cannot be seen, up to a few times. */
+  /** Presses the data button on a document that cannot be seen, so that an entry document moves on to its face, and again every moment while it still cannot be seen, for some seconds: an entry document that takes a while to get ready, locking modules first, takes the press once it is. */
   private nudge(): void {
     const shown = this.shown
 
@@ -497,13 +507,21 @@ export class BmlRuntime {
     if (shown.focused === null) {
       this.focus(this.elementAt(shown, firstFocus(shown.navigation)), false)
     }
+    this.tellVideoRect(shown)
+    this.say({ kind: 'usedKeys', keys: keysOf(shown.usedKeys) })
+  }
+
+  /** Where the video goes on the page's grid; whole while the page cannot be seen, as the receiver shows the video alone until an entry document shows itself. */
+  private tellVideoRect(shown: Shown): void {
+    const rect = shown.page.videoRect
+
     this.say({
       kind: 'videoRect',
-      rect: shown.page.videoRect
-        ? onGrid(shown.page.videoRect, shown.page.resolution, shown.page.aspect)
-        : null,
+      rect:
+        rect && !shown.document.cannotBeSeen()
+          ? onGrid(rect, shown.page.resolution, shown.page.aspect)
+          : null,
     })
-    this.say({ kind: 'usedKeys', keys: keysOf(shown.usedKeys) })
   }
 
   private scriptAt(path: string): string | null {
@@ -545,6 +563,11 @@ export class BmlRuntime {
     return {
       moveFocus: (element) => this.focusOn(element),
       navChanged: () => this.renavigate(),
+      seenChanged: () => {
+        if (this.shown) {
+          this.tellVideoRect(this.shown)
+        }
+      },
       usedKeys: (groups) => {
         if (this.shown) {
           this.shown.usedKeys = groups
@@ -596,9 +619,10 @@ export class BmlRuntime {
       lock: (reference) => this.lock(reference),
       unlock: (reference) => this.unlock(reference),
       lockedModules: () =>
-        [...this.modules.values()]
-          .filter((module) => this.locked.has(moduleKey(module.tag, module.id)))
-          .map((module) => modulePathOf(module.tag, module.id)),
+        [...this.locked].map((key) => ({
+          path: modulePathOf(...moduleOfKey(key)),
+          held: this.modules.has(key),
+        })),
       unsupported: (what) => this.say({ kind: 'unsupported', what }),
       warn: (what) => this.warn(what),
     }
@@ -760,6 +784,7 @@ export class BmlRuntime {
     }
   }
 
+  /** One press of the data button: the items listening for it hear it, and a document with no such item gets the key. */
   private dataButtonPressed(): void {
     const shown = this.shown
 
@@ -788,13 +813,17 @@ export class BmlRuntime {
     }
   }
 
-  private moduleLocked(module: BmlModule): void {
+  /** Tells the document a module it asked to lock is held, or is not in the carousel at all. */
+  private moduleLocked(
+    module: { tag: number; id: number },
+    status: number,
+  ): void {
     const base = this.shown?.page.address
 
     if (base) {
       this.occur(
         'ModuleLocked',
-        { status: 0, moduleRef: modulePathOf(module.tag, module.id) },
+        { status, moduleRef: modulePathOf(module.tag, module.id) },
         (item) => namesModule(item, base, module),
       )
     }
@@ -827,8 +856,27 @@ export class BmlRuntime {
       return 'bad'
     }
 
+    const carousel = this.catalog?.carousels.find(
+      (listed) => listed.tag === address.tag,
+    )
+
+    if (!carousel) {
+      return 'noComponent'
+    }
+
     const key = moduleKey(address.tag, address.module)
     const held = this.modules.get(key)
+    const listed = carousel.modules.some(
+      (module) => module.id === address.module,
+    )
+
+    if (!held && !listed) {
+      this.window.setTimeout(() => {
+        this.moduleLocked({ tag: address.tag, id: address.module }, NOT_FOUND)
+      }, 0)
+
+      return 'absent'
+    }
 
     this.locked.add(key)
 
@@ -838,7 +886,7 @@ export class BmlRuntime {
 
     this.window.setTimeout(() => {
       if (this.locked.has(key)) {
-        this.moduleLocked(held)
+        this.moduleLocked(held, LOCKED)
       }
     }, 0)
 

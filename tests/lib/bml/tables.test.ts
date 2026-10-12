@@ -256,7 +256,7 @@ test('a search that is not one answers NaN: a bad row, a missing array, no condi
   assert.ok(Number.isNaN(table.search(0, 1, 'x', 32, 9, true, 1, into)))
 })
 
-test('the table classes read the resources the runtime holds, and a resource that is not there gives an empty table', () => {
+test('the table classes read the resources the runtime holds, and a resource that is not there or a structure that is not one gives no table', () => {
   const held = new Map<string, Uint8Array>([
     ['names.csv', new TextEncoder().encode('1,a\n2,b\n')],
     ['pairs.bin', Uint8Array.from([1, 2, 3, 4])],
@@ -268,21 +268,18 @@ test('the table classes read the resources the runtime holds, and a resource tha
     return body ? { body, text: String(reference).endsWith('.csv') } : null
   })
 
-  const csv = new CSVTable('names.csv', 'U:1B,S:1V')
-  const binary = new BinaryTable('pairs.bin', '0,U:1B,U:1B')
-  const lines = new BinaryTable('lines.bin', '1,S:1B')
-  const missing = new CSVTable('gone.csv', 'U:1B')
-  const malformed = new CSVTable('names.csv', 'nonsense')
-  const unstructured = new BinaryTable('pairs.bin', 'nonsense')
+  const csv = CSVTable('names.csv', 'U:1B,S:1V')
+  const binary = BinaryTable('pairs.bin', '0,U:1B,U:1B')
+  const lines = BinaryTable('lines.bin', '1,S:1B')
 
-  assert.equal(csv.nrow, 2)
-  assert.equal(csv.toString(1, 1), 'b')
-  assert.equal(binary.nrow, 2)
-  assert.equal(binary.toNumber(1, 0), 3)
-  assert.deepEqual(lines.toArray(0, lines.nrow), [['A'], ['C']])
-  assert.equal(missing.nrow, 0)
-  assert.equal(malformed.nrow, 0)
-  assert.equal(malformed.ncolumn, 0)
-  assert.equal(unstructured.nrow, 0)
-  csv.close()
+  assert.equal(csv?.nrow, 2)
+  assert.equal(csv?.toString(1, 1), 'b')
+  assert.equal(binary?.nrow, 2)
+  assert.equal(binary?.toNumber(1, 0), 3)
+  assert.deepEqual(lines?.toArray(0, lines.nrow), [['A'], ['C']])
+  assert.equal(CSVTable('gone.csv', 'U:1B'), null)
+  assert.equal(BinaryTable('gone.bin', '0,U:1B'), null)
+  assert.equal(CSVTable('names.csv', 'nonsense'), null)
+  assert.equal(BinaryTable('pairs.bin', 'nonsense'), null)
+  csv?.close()
 })
