@@ -710,6 +710,34 @@ export const 開いてもページは動かない: Story = {
   },
 }
 
+export const キーで開いても矢印でページは動かない: Story = {
+  parameters: { screen: { width: 1024, height: 600 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = onTheScreen(canvasElement, 'live-player')
+    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const pressed = (key: string) =>
+      !player.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+      )
+
+    await afterTheArrival(canvasElement)
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    window.scrollTo(0, 120)
+    await waitFor(() => expect(window.scrollY).toBe(120))
+
+    await expect(pressed('d')).toBe(true)
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
+    await shrunkTo(canvasElement, AT_THE_START)
+
+    await expect(pressed('ArrowDown')).toBe(true)
+    await expect(pressed('Enter')).toBe(true)
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+    await expect(window.scrollY).toBe(120)
+    window.scrollTo(0, 0)
+  },
+}
+
 export const スクリプトが長すぎると閉じる: Story = {
   args: { openSocket: carrying(...SCRIPTED) },
   play: async ({ canvasElement }) => {

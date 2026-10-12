@@ -350,30 +350,30 @@ export interface TableSource {
 
 export type TableLookup = (reference: unknown) => TableSource | null
 
-/** The `BinaryTable` and `CSVTable` constructors a document calls, over the resources the runtime holds. A table that is not there, or a structure that is not one, has no rows. */
+/** The `BinaryTable` and `CSVTable` a document makes, over the resources the runtime holds: a table that is not there, or a structure that is not one, is null, as a receiver answers when it cannot generate one. A script writes `new` before them, which the runtime takes away before running it, as `new` cannot answer null. */
 export function tableClassesOf(lookup: TableLookup) {
-  class BinaryTable extends Table {
-    constructor(reference: unknown, structure: unknown) {
-      const read = tableStructureOf(structure)
-      const source = read ? lookup(reference) : null
+  const BinaryTable = (
+    reference: unknown,
+    structure: unknown,
+  ): Table | null => {
+    const read = tableStructureOf(structure)
+    const source = read ? lookup(reference) : null
 
-      super(
-        read && source ? binaryRowsOf(source.body, read) : [],
-        columnsOf(read?.fields ?? []),
-      )
-    }
+    return read && source
+      ? new Table(binaryRowsOf(source.body, read), columnsOf(read.fields))
+      : null
   }
 
-  class CSVTable extends Table {
-    constructor(reference: unknown, structure: unknown) {
-      const fields = fieldsOf(structure) ?? []
-      const source = fields.length > 0 ? lookup(reference) : null
+  const CSVTable = (reference: unknown, structure: unknown): Table | null => {
+    const fields = fieldsOf(structure) ?? []
+    const source = fields.length > 0 ? lookup(reference) : null
 
-      super(
-        source ? csvRowsOf(BROADCAST_TEXT.decode(source.body), fields) : [],
-        columnsOf(fields),
-      )
-    }
+    return source
+      ? new Table(
+          csvRowsOf(BROADCAST_TEXT.decode(source.body), fields),
+          columnsOf(fields),
+        )
+      : null
   }
 
   return { BinaryTable, CSVTable }

@@ -2,7 +2,8 @@ import { readArray, writeArray, type PersistentMemory } from '@/lib/bml/memory'
 import type { Programme } from '@/lib/bml/messages'
 import { DocumentLeft } from '@/lib/bml/scripts'
 
-export type LockAnswer = 'held' | 'waiting' | 'bad'
+/** What locking a module came to: held already, awaited from the carousel, absent from the carousel (the document hears of it as `ModuleLocked` with status -2), carried by no component, or named badly. */
+export type LockAnswer = 'held' | 'waiting' | 'absent' | 'noComponent' | 'bad'
 
 /** What the runtime gives `browser.*` to work with. */
 export interface BrowserHost {
@@ -13,6 +14,8 @@ export interface BrowserHost {
   npt(): number | null
   programme(): Programme | null
   hasComponent(tag: number): boolean
+  listed(reference: unknown): boolean | null
+  quit(): void
   memory: PersistentMemory
   registers: { Ureg: string[]; Greg: string[] }
   startTimer(code: unknown, everyMs: unknown, times: unknown): number
@@ -20,7 +23,7 @@ export interface BrowserHost {
   sleep(ms: unknown): void
   lock(reference: unknown): LockAnswer
   unlock(reference: unknown): void
-  lockedModules(): string[]
+  lockedModules(): { path: string; held: boolean }[]
   unsupported(what: string): void
   warn(what: string): void
 }
@@ -29,6 +32,7 @@ export interface BrowserHost {
 export const SUPPORTED_FUNCTIONS = [
   'launchDocument',
   'reloadActiveDocument',
+  'quitDocument',
   'getActiveDocument',
   'getBrowserVersion',
   'getBrowserSupport',
@@ -43,6 +47,7 @@ export const SUPPORTED_FUNCTIONS = [
   'getProgramID',
   'getTuningStatus',
   'detectComponent',
+  'isBeingBroadcast',
   'isSupportedMedia',
   'getIRDID',
   'epgGetEventStartTime',
@@ -70,6 +75,17 @@ export const IGNORED_FUNCTIONS = [
   'unlockScreen',
 ] as const
 
+/** What a document asks of the line, the provider and the applications beyond the broadcast before it offers them: answered as a receiver without a line answers, with a warning and nothing told to the player, as the viewer has asked for nothing. */
+export const UNCONNECTED_QUERIES = [
+  'confirmIPNetwork',
+  'isIPConnected',
+  'getConnectionType',
+  'getISPParams',
+  'getDelayedTransmissionData',
+  'getReceivedAIT',
+  'X_DPA_getComBrowserUA',
+] as const
+
 /** Communication, the stored services and the applications beyond the broadcast: these fail, and the player is told the operation is not supported. */
 export const REFUSED_FUNCTIONS = [
   'connect',
@@ -78,25 +94,21 @@ export const REFUSED_FUNCTIONS = [
   'receiveTextData',
   'transmitTextDataOverIP',
   'sendTextDataOverIP',
-  'confirmIPNetwork',
-  'isIPConnected',
-  'getConnectionType',
   'setISPParams',
-  'getISPParams',
+  'connectPPP',
+  'connectPPPWithISPParams',
+  'disconnectPPP',
   'saveHttpServerFileAs',
   'saveHttpServerFile',
   'sendHttpServerFileAs',
   'setDelayedTransmissionData',
-  'getDelayedTransmissionData',
   'startResidentApp',
   'startExtraBrowser',
   'launchDocumentRestricted',
   'startAITControlledApp',
   'startReceivingAIT',
-  'getReceivedAIT',
   'X_DPA_startResidentApp',
   'X_DPA_launchDocWithLink',
-  'X_DPA_getComBrowserUA',
   'X_DPA_writeCproBM',
   'epgTune',
   'epgTuneToComponent',
@@ -243,6 +255,18 @@ function componentTag(reference: unknown): number | null {
   return found ? parseInt(found[1], 16) : null
 }
 
+const NO_COMPONENT = -3
+
+function lockAnswerOf(host: BrowserHost, reference: unknown): number {
+  const answer = host.lock(reference)
+
+  if (answer === 'bad') {
+    return FAILED
+  }
+
+  return answer === 'noComponent' ? NO_COMPONENT : DONE
+}
+
 function supported(host: BrowserHost): Record<string, Answer> {
   return {
     launchDocument: (reference: unknown) => {
@@ -254,6 +278,11 @@ function supported(host: BrowserHost): Record<string, Answer> {
     },
     reloadActiveDocument: () => {
       host.reload()
+
+      throw new DocumentLeft()
+    },
+    quitDocument: () => {
+      host.quit()
 
       throw new DocumentLeft()
     },
@@ -287,6 +316,11 @@ function supported(host: BrowserHost): Record<string, Answer> {
 
       return tag === null ? FAILED : Number(host.hasComponent(tag))
     },
+    isBeingBroadcast: (reference: unknown) => {
+      const listed = host.listed(reference)
+
+      return listed === null ? FAILED : Number(listed)
+    },
     isSupportedMedia: () => 0,
     getIRDID: () => null,
     epgGetEventStartTime: () => {
@@ -298,10 +332,8 @@ function supported(host: BrowserHost): Record<string, Answer> {
       readArray(host.memory, name, structure),
     writePersistentArray: (name: unknown, structure: unknown, data: unknown) =>
       writeArray(host.memory, name, structure, data) ? DONE : FAILED,
-    lockModuleOnMemory: (reference: unknown) =>
-      host.lock(reference) === 'bad' ? FAILED : DONE,
-    lockModuleOnMemoryEx: (reference: unknown) =>
-      host.lock(reference) === 'bad' ? FAILED : DONE,
+    lockModuleOnMemory: (reference: unknown) => lockAnswerOf(host, reference),
+    lockModuleOnMemoryEx: (reference: unknown) => lockAnswerOf(host, reference),
     unlockModuleOnMemory: (reference: unknown) => {
       host.unlock(reference)
 
@@ -318,7 +350,9 @@ function supported(host: BrowserHost): Record<string, Answer> {
       return DONE
     },
     getLockedModuleInfo: () =>
-      host.lockedModules().map((module) => [module, 1, 1]),
+      host
+        .lockedModules()
+        .map((module) => [module.path, 2, module.held ? 1 : 2]),
     random: (most: unknown) =>
       1 + Math.floor(Math.random() * Math.max(1, count(most))),
   }
@@ -339,6 +373,13 @@ export function browserOf(host: BrowserHost): object {
 
   IGNORED_FUNCTIONS.forEach((name) => {
     known[name] = () => DONE
+  })
+  UNCONNECTED_QUERIES.forEach((name) => {
+    known[name] = () => {
+      host.warn(`not connected: ${name}`)
+
+      return FAILED
+    }
   })
   REFUSED_FUNCTIONS.forEach((name) => {
     known[name] = () => {

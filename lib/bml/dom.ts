@@ -20,6 +20,7 @@ export interface Stage {
 export interface DocumentHooks {
   moveFocus(element: HTMLElement | null): void
   navChanged(): void
+  seenChanged(): void
   usedKeys(groups: UsedKeyGroup[]): void
   image(reference: string): string | null
   resolve(reference: string): string | null
@@ -46,6 +47,9 @@ const ELEMENT_NODE = 1
 const TEXT_NODE = 3
 
 const SIDE_NAMES = new Set(['up', 'down', 'left', 'right'])
+
+/** BML's own properties a script may set that change nothing in how the page is drawn here. */
+const QUIET_PROPERTIES = new Set(['grayscale-color-index'])
 
 const STATE_MARK: Record<Exclude<StyleState, 'normal'>, string> = {
   focus: 'data-bml-focus',
@@ -174,7 +178,11 @@ class Inner {
       return
     }
 
-    const converted = cssPairsOf([{ property, value }], this.palette)
+    const converted = cssPairsOf(
+      [{ property, value }],
+      this.palette,
+      (reference) => this.pictureUrl(reference),
+    )
 
     converted.warnings.forEach((warning) => this.hooks.warn(warning))
 
@@ -217,9 +225,23 @@ class Inner {
       .join('\n')
   }
 
+  private pictureUrl(reference: string): string | null {
+    const url = this.hooks.image(reference)
+
+    if (!url) {
+      this.hooks.warn(`missing image: ${reference}`)
+    }
+
+    return url
+  }
+
   private feature(element: HTMLElement, property: string, value: string): void {
     const features = featuresOf(new Map([[property, value]]))
     const page = this.stage.nodes.get(element)
+
+    if (QUIET_PROPERTIES.has(property)) {
+      return
+    }
 
     if (property === 'used-key-list') {
       if (features.usedKeys) {
@@ -263,7 +285,7 @@ class Inner {
     this.references.set(element, reference)
 
     if (!url || element.getAttribute('data-bml-tag') === null) {
-      this.hooks.warn('missing image')
+      this.hooks.warn(`missing image: ${reference}`)
 
       return
     }
@@ -407,6 +429,25 @@ export class BmlElement {
       .filter((child): child is BmlElement | BmlText => child !== null)
   }
 
+  /** The body's `invisible`: while it is set, nothing of the page is shown and the video stays whole, as an entry document waits for the data button. */
+  get invisible(): boolean {
+    return this.#element.getAttribute('data-bml-attr-invisible') !== null
+  }
+
+  set invisible(value: unknown) {
+    if (this.#element.getAttribute('data-bml-tag') !== 'body') {
+      return
+    }
+
+    if (value) {
+      this.#element.setAttribute('data-bml-attr-invisible', 'invisible')
+    } else {
+      this.#element.removeAttribute('data-bml-attr-invisible')
+    }
+
+    this.#inner.hooks.seenChanged()
+  }
+
   get normalStyle(): object {
     return this.#styles.normal
   }
@@ -429,8 +470,13 @@ export class BmlElement {
     }
   }
 
+  /** The image's reference: what a script last set, or else what the document wrote, as a script reads it back to build the name of a sibling image. */
   get data(): string {
-    return this.#inner.references.get(this.#element) ?? ''
+    return (
+      this.#inner.references.get(this.#element) ??
+      this.#element.getAttribute('data-bml-ref') ??
+      ''
+    )
   }
 
   set data(reference: unknown) {

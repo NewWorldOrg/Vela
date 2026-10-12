@@ -427,6 +427,103 @@ test('a key goes to the focused element’s handler with its code, and the handl
   )
 })
 
+const KEYS = [
+  'up',
+  'down',
+  'left',
+  'right',
+  'enter',
+  'back',
+  'd',
+  'blue',
+  'red',
+  'green',
+  'yellow',
+]
+
+const LEAVING_EARLY = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>browser.launchDocument("/60/0000/later.bml"); function init() { browser.launchDocument("~/0001/next.bml") }</script>',
+).replace('<body>', '<body onload="init()">')
+
+test('a document that moves on to a module still awaited runs none of the rest of itself, not its onload either', () => {
+  const { send, heard, forget } = opened(LEAVING_EARLY, [
+    module(1, { 'next.bml': ['bml', NEXT] }),
+  ])
+
+  assert.deepEqual(heard(), [{ kind: 'waiting', waiting: true }])
+  forget()
+  send({
+    kind: 'module',
+    module: module(
+      0,
+      { 'later.bml': ['bml', bml('<p id="later">l</p>')] },
+      0x60,
+    ),
+  })
+
+  assert.deepEqual(heard(), [
+    { kind: 'waiting', waiting: false },
+    { kind: 'videoRect', rect: null },
+    { kind: 'usedKeys', keys: KEYS },
+  ])
+})
+
+const NAMING_ONLOAD = bml(
+  '<p id="p">p</p>',
+  '<script>function onload() { document.getElementById("p").firstChild.data = "loaded" }</script>',
+).replace('<body>', '<body onload="onload()">')
+
+test('a document may name its own onload function, as the frame’s own has already happened', () => {
+  const { element } = opened(NAMING_ONLOAD)
+
+  assert.equal(element('p')?.text, 'loaded')
+})
+
+const QUITTING = bml(
+  '<p id="q" onclick="browser.quitDocument()" style="nav-index: 0">q</p>',
+)
+
+test('a document that quits is taken down and the player is told to close', () => {
+  const { send, heard, element, forget } = opened(QUITTING)
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+
+  assert.deepEqual(heard(), [{ kind: 'exit' }])
+  assert.equal(element('q'), null)
+})
+
+const ASKING = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>browser.Ureg[0] = [browser.isBeingBroadcast("~/0001/x.bml"), browser.isBeingBroadcast("/60/0000"), browser.isBeingBroadcast("/40/0007/x.bml"), browser.isBeingBroadcast("/70/0000/x.bml")].join(",")</script>',
+)
+
+test('whether a module is being broadcast is answered from the catalog', () => {
+  const { runtime } = opened(ASKING)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], '1,1,0,0')
+})
+
+const HANDLING = bml(
+  '<div id="c" onkeydown="document.getElementById(\'p\').firstChild.data = \'key \' + document.currentEvent.keyCode"><p id="p">p</p></div>' +
+    '<p id="n" style="nav-index: 0; nav-down: 0">n</p>',
+  '<script>function init() { document.getElementById("c").focus() }</script>',
+).replace('<body>', '<body onload="init()">')
+
+test('a script may focus an element without a nav-index, which then takes the keys while the arrows lead nowhere', () => {
+  const { send, element, focused } = opened(HANDLING)
+
+  assert.equal(focused(), 'c')
+
+  send({ kind: 'key', key: 'down' })
+
+  assert.equal(focused(), 'c')
+  assert.equal(element('p')?.text, 'key 2')
+})
+
 const PROBING = bml(
   '<p id="p" style="nav-index: 0">p</p>',
   '<script>' +
@@ -821,6 +918,107 @@ test('a document reads the tables of its module', () => {
   assert.equal(registers[0], '2:b:2:4')
 })
 
+const PICTURED = bml(
+  '<object id="i" type="image/X-arib-png" data="pic.png"/>',
+  '<script>' +
+    'var i = document.getElementById("i");' +
+    'var before = i.data;' +
+    'i.data = before.substring(0, 3) + "2.png";' +
+    'browser.Ureg[0] = before + ":" + i.data;' +
+    '</script>',
+)
+
+test('a script reads the reference the document gave an image and what it set afterwards', () => {
+  const { runtime, warnings } = opened(PICTURED)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], 'pic.png:pic2.png')
+  assert.deepEqual(warnings, [
+    'data broadcast: missing image: pic.png',
+    'data broadcast: missing image: pic2.png',
+  ])
+})
+
+const TABLE_GONE = bml(
+  '<p id="p">p</p>',
+  '<script>' +
+    'var b = new BinaryTable("gone.bin", "0,U:1B");' +
+    'browser.Ureg[0] = b == null ? "none" : "table";' +
+    '</script>',
+)
+
+test('a table whose file is not in the module is null, as a receiver answers', () => {
+  const { runtime } = opened(TABLE_GONE)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], 'none')
+})
+
+const LOCKING_ELSEWHERE = bml(
+  '<p id="p">p</p>',
+  '<bevent>' +
+    '<beitem id="l" type="ModuleLocked" module_ref="/40/0009" subscribe="subscribe" onoccur="browser.Ureg[1] = \'locked:\' + document.currentEvent.status + \':\' + document.currentEvent.moduleRef"/>' +
+    '</bevent>' +
+    '<script>' +
+    'browser.Ureg[0] = [browser.lockModuleOnMemoryEx("/70/0001"), browser.lockModuleOnMemoryEx("/40/0009"), browser.lockModuleOnMemoryEx("~/0001")].join(",");' +
+    '</script>',
+)
+
+test('locking a module no component carries answers -3, one the carousel does not list is heard of as not found, and one awaited is heard of when it comes', () => {
+  const { runtime, send, timers } = opened(LOCKING_ELSEWHERE)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], '-3,1,1')
+  timers.tick(0)
+  assert.equal(registers[1], 'locked:-2:/40/0009')
+
+  send({ kind: 'module', module: module(1, { 'next.bml': ['bml', NEXT] }) })
+  assert.equal(
+    (runtime as unknown as { locked: Set<string> }).locked.has('64/1'),
+    true,
+  )
+})
+
+const GETTING_READY = bml(
+  '<p id="p">p</p>' +
+    '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>',
+  '<bevent>' +
+    '<beitem id="d" type="DataButtonPressed" onoccur="browser.Ureg[0] += \'pressed \'; document.getElementById(\'body\').invisible = false"/>' +
+    '</bevent>' +
+    '<script>browser.setInterval("document.getElementById(\'d\').subscribe = true", 3000, 1)</script>',
+).replace('<body>', '<body id="body" invisible="invisible">')
+
+test('an entry document that listens for the data button only once it is ready hears the press then, shows itself and is pressed no more, and the video is whole until it shows itself', () => {
+  const { runtime, timers, heard, element } = opened(GETTING_READY)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.deepEqual(heard()[0], { kind: 'videoRect', rect: null })
+
+  for (let round = 0; round < 5; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[0], '')
+  timers.tick(3000)
+  timers.tick(500)
+  assert.equal(registers[0], 'pressed ')
+  assert.equal(element('body')?.getAttribute('data-bml-attr-invisible'), null)
+  assert.deepEqual(heard().at(-1), {
+    kind: 'videoRect',
+    rect: { left: 0, top: 0, width: 480, height: 270 },
+  })
+
+  for (let round = 0; round < 10; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[0], 'pressed ')
+})
+
 const LOADED = bml(
   '<p id="p" style="nav-index: 0">p</p>',
   '<script>browser.Ureg[0] = "script"</script>',
@@ -886,7 +1084,7 @@ const NEVER_READY = bml('<p id="hidden">entry</p>').replace(
   '<body invisible="invisible" onkeydown="browser.Ureg[0] += \'d\'" style="nav-index: 0">',
 )
 
-test('an entry document that never shows anything is given the data button a few times, then left', () => {
+test('an entry document that never shows anything is given the data button for some seconds, then left', () => {
   const { runtime, timers } = opened(NEVER_READY)
   const registers = (runtime as unknown as { registers: { Ureg: string[] } })
     .registers.Ureg
@@ -895,7 +1093,13 @@ test('an entry document that never shows anything is given the data button a few
     timers.tick(500)
   }
 
-  assert.equal(registers[0], 'dddddd')
+  assert.equal(registers[0], 'd'.repeat(11))
+
+  for (let round = 0; round < 20; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[0], 'd'.repeat(20))
 })
 
 const MIXED = bml(

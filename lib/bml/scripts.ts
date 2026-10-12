@@ -1,3 +1,5 @@
+import { Realm } from '@/lib/bml/realm'
+
 /** Thrown out of `browser.launchDocument` and `reloadActiveDocument`, so the script that left its document runs no further. */
 export class DocumentLeft extends Error {
   constructor() {
@@ -58,7 +60,6 @@ export const SHADOWED_GLOBALS = [
   'customElements',
   'onerror',
   'onmessage',
-  'onload',
 ] as const
 
 export type ScriptGlobals = Record<string, unknown>
@@ -103,6 +104,13 @@ export function scopeOf(globals: ScriptGlobals): object {
   return scope
 }
 
+const TABLE_CONSTRUCTION = /\bnew\s+(BinaryTable|CSVTable)\s*\(/g
+
+/** A document's code with `new` taken off `BinaryTable` and `CSVTable`: the runtime answers null for a table it cannot make, which a constructor called with `new` cannot. */
+export function withoutTableNew(code: string): string {
+  return code.replace(TABLE_CONSTRUCTION, '$1(')
+}
+
 /** Runs one piece of a document's code with its scope, and throws what it threw. */
 export type Evaluate = (code: string, scope: object) => void
 
@@ -111,7 +119,7 @@ export type ScriptOutcome =
   | { outcome: 'left'; tookMs: number }
   | { outcome: 'failed'; error: unknown; tookMs: number }
 
-/** Runs a document's scripts and handlers one at a time, timing each. */
+/** Runs a document's scripts and handlers one at a time, timing each, with the document's writes on the built-ins in place only while its code runs. */
 export class ScriptScope {
   private readonly evaluate: Evaluate
 
@@ -119,17 +127,27 @@ export class ScriptScope {
 
   private readonly now: () => number
 
-  constructor(evaluate: Evaluate, scope: object, now: () => number) {
+  private readonly realm: Realm
+
+  constructor(
+    evaluate: Evaluate,
+    scope: object,
+    now: () => number,
+    realm: Realm = new Realm([]),
+  ) {
     this.evaluate = evaluate
     this.scope = scope
     this.now = now
+    this.realm = realm
   }
 
   run(code: string): ScriptOutcome {
     const started = this.now()
 
+    this.realm.enter()
+
     try {
-      this.evaluate(code, this.scope)
+      this.evaluate(withoutTableNew(code), this.scope)
 
       return { outcome: 'done', tookMs: this.now() - started }
     } catch (error) {
@@ -138,6 +156,8 @@ export class ScriptScope {
       return error instanceof DocumentLeft
         ? { outcome: 'left', tookMs }
         : { outcome: 'failed', error, tookMs }
+    } finally {
+      this.realm.leave()
     }
   }
 }

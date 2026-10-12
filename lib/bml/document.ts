@@ -6,6 +6,7 @@ import {
   DEFAULT_USED_KEYS,
   cssOf,
   cssSheetOf,
+  type ImageResolver,
   declarationsOf,
   featuresOf,
   matches,
@@ -123,7 +124,7 @@ export const BML_LIMITS = {
   elements: 20_000,
   depth: 256,
   rules: 5_000,
-  images: 64,
+  images: 512,
   imageBytes: 32 * 1024 * 1024,
 } as const
 
@@ -386,6 +387,7 @@ class Conversion {
     const converted = cssSheetOf(
       { rules: this.rules, warnings: [] },
       this.palette,
+      this.images,
     )
 
     converted.warnings.forEach((w) => this.warnings.add(w))
@@ -476,6 +478,7 @@ class Conversion {
     const inline = cssOf(
       declarationsOf(node.getAttribute('style') ?? ''),
       this.palette,
+      this.images,
     )
 
     inline.warnings.forEach((w) => this.warnings.add(w))
@@ -579,8 +582,19 @@ class Conversion {
       : null
   }
 
+  /** An image element is an `img` even when its picture is not there yet, so that a script may give it one later. */
   private image(node: XmlElementLike, reference: string | null): PageElement {
-    const resource = reference ? this.resource(reference) : undefined
+    const url = reference ? this.urlOf(reference) : null
+    const extra: [string, string][] = reference
+      ? [['data-bml-ref', reference]]
+      : []
+
+    return this.shaped(node, 'img', [], url ? [...extra, ['src', url]] : extra)
+  }
+
+  /** The URL an image is drawn from, counted against the document's images; a reference to no image, or to one of a kind not drawn, is a warning and no URL. */
+  private urlOf(reference: string): string | null {
+    const resource = this.resource(reference)
     const drawable = resource?.kind === 'jpeg' || resource?.kind === 'png'
 
     if (drawable && resource) {
@@ -591,11 +605,17 @@ class Conversion {
       drawable && resource ? this.context.image(resource, this.palette) : null
 
     if (!url) {
-      this.warnings.add(resource ? 'unsupported image' : 'missing image')
+      this.warnings.add(
+        resource
+          ? `unsupported image: ${reference}`
+          : `missing image: ${reference}`,
+      )
     }
 
-    return this.shaped(node, url ? 'img' : 'div', [], url ? [['src', url]] : [])
+    return url
   }
+
+  private readonly images: ImageResolver = (reference) => this.urlOf(reference)
 }
 
 function compareSpecificity(

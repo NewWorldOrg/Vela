@@ -290,3 +290,11 @@ export function routeKey(
 
   return command ? { to: 'player', command } : null
 }
+
+/** Whether a key taken by the player shows that the keyboard is working it: opening or closing the data broadcast, or a key handed to it. Arrows are taken from then on, so that the page does not scroll under an open broadcast. */
+export function aimsAtThePlayer(route: KeyRoute): boolean {
+  return (
+    route.to === 'dataBroadcast' ||
+    (route.to === 'player' && route.command === 'dataBroadcast')
+  )
+}

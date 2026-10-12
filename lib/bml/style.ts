@@ -234,7 +234,7 @@ function ruleOf(head: string, block: string, warnings: string[]): StyleRule[] {
     const selector = selectorOf(text)
 
     if (!selector) {
-      warnings.push('unsupported selector')
+      warnings.push(`unsupported selector: ${text.trim()}`)
     }
 
     return selector ? [selector] : []
@@ -357,7 +357,16 @@ function keyword(value: string, allowed: string[]): string | null {
   return allowed.includes(lowered) || lowered === 'inherit' ? lowered : null
 }
 
-type Mapper = (value: string, palette: Palette) => [string, string][] | null
+/** Answers the `blob:` URL of an image a declaration names, or null when there is no such image. */
+export type ImageResolver = (reference: string) => string | null
+
+const NO_IMAGES: ImageResolver = () => null
+
+type Mapper = (
+  value: string,
+  palette: Palette,
+  images: ImageResolver,
+) => [string, string][] | null
 
 function as(property: string, read: (value: string) => string | null): Mapper {
   return (value) => {
@@ -367,10 +376,19 @@ function as(property: string, read: (value: string) => string | null): Mapper {
   }
 }
 
+function colourValue(value: string, palette: Palette): string | null {
+  const trimmed = value.trim()
+
+  if (trimmed.toLowerCase() === 'inherit') {
+    return 'inherit'
+  }
+
+  return /^\d+$/.test(trimmed) ? colourOf(palette, Number(trimmed)) : null
+}
+
 function colour(...properties: string[]): Mapper {
   return (value, palette) => {
-    const index = Number(value)
-    const css = /^\d+$/.test(value.trim()) ? colourOf(palette, index) : null
+    const css = colourValue(value, palette)
 
     return css === null
       ? null
@@ -416,6 +434,48 @@ function clipOf(value: string): string | null {
   return edges && edges.length === 4 && edges.every((edge) => edge !== null)
     ? `rect(${edges.join(', ')})`
     : null
+}
+
+/** The reference inside `url(...)`, with or without quotes, or null when the value is not one. */
+export function urlReferenceOf(value: string): string | null {
+  const inside = insideOf(value, 'url(')?.trim()
+
+  if (inside === undefined || inside.length === 0) {
+    return null
+  }
+
+  const quote = inside[0]
+  const quoted =
+    (quote === '"' || quote === "'") && inside.endsWith(quote)
+      ? inside.slice(1, -1)
+      : inside
+
+  return quoted.length > 0 && !/[\s"']/.test(quoted) ? quoted : null
+}
+
+/** `background-image` named as `url(...)` becomes the image's `blob:` URL; one that is not there leaves no declaration, the resolver having said so. */
+const backgroundImage: Mapper = (value, _palette, images) => {
+  if (value.trim().toLowerCase() === 'none') {
+    return [
+      ['background-image', 'none'],
+      ['--bml-background-image', 'none'],
+    ]
+  }
+
+  const reference = urlReferenceOf(value)
+
+  if (reference === null) {
+    return null
+  }
+
+  const url = images(reference)
+
+  return url
+    ? [
+        ['background-image', `url("${url}")`],
+        ['--bml-background-image', `url("${url}")`],
+      ]
+    : []
 }
 
 const SIDES = ['top', 'right', 'bottom', 'left'] as const
@@ -478,6 +538,7 @@ const MAPPER_LIST: [string, Mapper][] = [
   ['border-color-index', colour('border-color')],
   ['color-index', colour('color')],
   ['background-color-index', colour('background-color', '--bml-background')],
+  ['background-image', backgroundImage],
   ['font-family', () => [['font-family', FONT_STACK]]],
   ['font-size', as('font-size', (value) => length(value))],
   [
@@ -518,6 +579,7 @@ export interface ConvertedPairs {
 export function cssPairsOf(
   declarations: Declaration[],
   palette: Palette,
+  images: ImageResolver = NO_IMAGES,
 ): ConvertedPairs {
   const pairs: [string, string][] = []
   const warnings: string[] = []
@@ -528,7 +590,7 @@ export function cssPairsOf(
     }
 
     const mapper = MAPPERS.get(property)
-    const mapped = mapper ? mapper(value, palette) : null
+    const mapped = mapper ? mapper(value, palette, images) : null
 
     if (!mapper) {
       warnings.push(`unsupported property: ${property}`)
@@ -546,8 +608,9 @@ export function cssPairsOf(
 export function cssOf(
   declarations: Declaration[],
   palette: Palette,
+  images: ImageResolver = NO_IMAGES,
 ): ConvertedStyle {
-  const converted = cssPairsOf(declarations, palette)
+  const converted = cssPairsOf(declarations, palette, images)
 
   return {
     css: converted.pairs.map(([name, css]) => `${name}: ${css}`).join('; '),
@@ -559,10 +622,11 @@ export function cssOf(
 export function cssSheetOf(
   sheet: StyleSheet,
   palette: Palette,
+  images: ImageResolver = NO_IMAGES,
 ): ConvertedStyle {
   const warnings: string[] = []
   const css = sheet.rules.flatMap((rule) => {
-    const converted = cssOf(rule.declarations, palette)
+    const converted = cssOf(rule.declarations, palette, images)
 
     warnings.push(...converted.warnings)
 
@@ -703,16 +767,17 @@ export const BASE_STYLE = [
   'html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }',
   '#bml-plane { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; }',
   '[data-bml-tag] { margin: 0; padding: 0; border: 0 solid; }',
-  `[data-bml-tag="body"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; font-family: ${FONT_STACK}; font-size: 24px; line-height: 1.5; color: rgb(255 255 255); background-color: transparent !important; }`,
-  '[data-bml-tag="body"]::before { content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; background-color: var(--bml-background, transparent); border: 0 solid var(--bml-background, transparent); }',
-  '[data-bml-tag="body"][data-bml-hole]::before { background-color: transparent; border-width: var(--bml-hole-top) var(--bml-hole-right) var(--bml-hole-bottom) var(--bml-hole-left); }',
+  `[data-bml-tag="body"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; font-family: ${FONT_STACK}; font-size: 24px; line-height: 1.5; color: rgb(255 255 255); background-color: transparent !important; background-image: none !important; }`,
+  '[data-bml-tag="body"]::before { content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; border: 0 solid transparent; background-color: var(--bml-background, transparent); background-image: var(--bml-background-image, none); background-origin: border-box; }',
+  '[data-bml-tag="body"][data-bml-hole]::before { border-width: var(--bml-hole-top) var(--bml-hole-right) var(--bml-hole-bottom) var(--bml-hole-left); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }',
+  '[data-bml-tag="body"][data-bml-attr-invisible] { visibility: hidden; }',
   '[data-bml-tag="div"], [data-bml-tag="p"], [data-bml-tag="object"], [data-bml-tag="img"], [data-bml-tag="input"] { position: absolute; overflow: hidden; }',
   '[data-bml-video] { background: transparent !important; }',
   'img[data-bml-tag] { display: block; }',
   'input[data-bml-tag] { background: transparent; color: inherit; font: inherit; outline: none; }',
 ].join('\n')
 
-/** The widths of the page's own ground around the video's rectangle, which is left clear. */
+/** Where the video's rectangle lies inside the page, cut out of the page's own ground, its colour and its picture alike. */
 export function videoHole(
   rect: Rect,
   resolution: Size,

@@ -95,6 +95,7 @@ import {
 } from '@/components/recordings/player-palette'
 import {
   KEY_CAP,
+  aimsAtThePlayer,
   routeKey,
   seekMarkAfter,
   SEEK_STEP_SECONDS,
@@ -1014,6 +1015,10 @@ export function Player({
     }
 
     event.preventDefault()
+
+    if (aimsAtThePlayer(route)) {
+      aimed.current = true
+    }
 
     if (route.to === 'nowhere') {
       return

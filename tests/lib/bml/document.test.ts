@@ -251,6 +251,37 @@ test('a video object becomes a clear hole, and its rectangle is where it stands 
   })
 })
 
+test('a video object placed by a class of a style sheet linked from another module gives its rectangle, and the body’s background picture is left to the ground the rectangle is cut from', () => {
+  const page = read(
+    bml(
+      '<div><object id="v" class="frame" data="/-1" type="video/X-arib-mpeg2" streamstatus="play" remain="remain"></object><object data="/-1" type="audio/X-arib-mpeg2-aac" streamstatus="play" remain="remain"></object></div>',
+      '<title/><link href="~/1000/look.css"/>',
+    ),
+    resourcesOf({
+      '/40/1000/look.css': [
+        'css',
+        'body{\n\tbackground-image:url(/40/1000/ground.jpg);\n\tresolution:960x540;display-aspect-ratio:16v9;\n}\ndiv{\twidth:960px;height:540px;\t}\n/**********\n*frame\n***********/\n.frame{top:14px;left:336px;width:600px;height:337px;}',
+      ],
+      '/40/1000/ground.jpg': ['jpeg', 'x'],
+    }),
+  )
+
+  assert.equal(attribute(byId(page, 'v'), 'data-bml-video'), '')
+  assert.deepEqual(page.videoRect, {
+    left: 336,
+    top: 14,
+    width: 600,
+    height: 337,
+  })
+  assert.ok(
+    page.styleSheet.includes(
+      '--bml-background-image: url("blob:test/ground.jpg")',
+    ),
+    page.styleSheet,
+  )
+  assert.deepEqual(page.warnings, [])
+})
+
 test('a video object reaching past the plane is cut to it, and one without a size gives no rectangle', () => {
   const past = read(
     bml(
@@ -288,13 +319,14 @@ test('an image object and an img element draw the resource as a blob, and sound 
   assert.equal(attribute(byId(page, 'j'), 'src'), 'blob:test/a.jpg')
   assert.equal(byId(page, 'j').style, 'left: 1px')
   assert.equal(attribute(byId(page, 'p'), 'src'), 'blob:test/b.png')
+  assert.equal(attribute(byId(page, 'p'), 'data-bml-ref'), '~/0001/b.png')
   assert.equal(byId(page, 'i').tag, 'img')
   assert.equal(attribute(byId(page, 'i'), 'src'), 'blob:test/a.jpg')
   assert.equal(elements(page.body).length, 4)
   assert.deepEqual(page.warnings, [])
 })
 
-test('an image that is not there, is not a picture, or is a kind not drawn holds its place as a div with a warning', () => {
+test('an image that is not there or is not a picture stays an img without a source, with a warning, and an object of a kind not drawn holds its place as a div', () => {
   const page = read(
     bml(
       '<object id="gone" type="image/jpeg" data="none.jpg"/><object id="text" type="image/jpeg" data="s.css"/><object id="mng" type="image/X-arib-mng" data="m.mng"/><object id="other" type="application/X-arib-x"/>',
@@ -305,16 +337,42 @@ test('an image that is not there, is not a picture, or is a kind not drawn holds
     }),
   )
 
-  for (const id of ['gone', 'text', 'mng', 'other']) {
+  for (const id of ['gone', 'text']) {
+    assert.equal(byId(page, id).tag, 'img', id)
+    assert.equal(attribute(byId(page, id), 'src'), undefined, id)
+  }
+
+  for (const id of ['mng', 'other']) {
     assert.equal(byId(page, id).tag, 'div', id)
   }
 
   assert.deepEqual(page.warnings, [
-    'missing image',
-    'unsupported image',
+    'missing image: none.jpg',
+    'unsupported image: s.css',
     'unsupported object: image/x-arib-mng',
     'unsupported object: application/x-arib-x',
   ])
+})
+
+test('a background image in the style sheet or inline is drawn from the document’s resources and counted with its images', () => {
+  const page = read(
+    bml(
+      '<div id="a" style="background-image: url(bg.jpg)">a</div><div id="b" style="background-image: url(none.jpg)">b</div>',
+      '<style>body { background-image: url(/40/0000/bg.jpg) }</style>',
+    ),
+    resourcesOf({ '/40/0000/bg.jpg': ['jpeg', 'x'] }),
+  )
+
+  assert.equal(
+    page.styleSheet,
+    '[data-bml-tag="body"] { background-image: url("blob:test/bg.jpg"); --bml-background-image: url("blob:test/bg.jpg") }',
+  )
+  assert.equal(
+    byId(page, 'a').style,
+    'background-image: url("blob:test/bg.jpg"); --bml-background-image: url("blob:test/bg.jpg")',
+  )
+  assert.equal(byId(page, 'b').style, '')
+  assert.deepEqual(page.warnings, ['missing image: none.jpg'])
 })
 
 test('colours are read from the document’s own lookup table, and the fixed colours otherwise', () => {
