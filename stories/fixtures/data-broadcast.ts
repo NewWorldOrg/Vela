@@ -69,7 +69,7 @@ p.panel { padding: 12px 16px; font-size: 22px; line-height: 32px; color-index: 1
 div.colours p { top: 0px; width: 100px; height: 40px; font-size: 22px; line-height: 40px; text-align: center; color-index: 7; }`
 
 const SAMPLE_CLUT = [
-  0xc8, 128, 133, 22, 44, 70, 255, 240, 236, 226, 255, 63, 100, 97, 255, 232,
+  0xa8, 128, 133, 22, 44, 70, 255, 240, 236, 226, 255, 63, 100, 97, 255, 232,
   196, 92, 255, 40, 36, 48, 255, 255, 255, 255, 255,
 ]
 

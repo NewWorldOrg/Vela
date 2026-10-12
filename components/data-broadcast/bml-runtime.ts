@@ -1,4 +1,4 @@
-import type { BmlCatalog } from '@/lib/bml/catalog'
+import { staysListed, takesThePlace, type BmlCatalog } from '@/lib/bml/catalog'
 import {
   BML_LIMITS,
   convertBml,
@@ -142,15 +142,8 @@ export class BmlRuntime {
   }
 
   private catalogue(catalog: BmlCatalog): void {
-    const listed = new Map<string, number>()
-
-    catalog.carousels.forEach((carousel) =>
-      carousel.modules.forEach((module) =>
-        listed.set(moduleKey(carousel.tag, module.id), module.version),
-      ),
-    )
     this.modules.forEach((module, key) => {
-      if (listed.get(key) !== module.version) {
+      if (!staysListed(catalog, module.tag, module.id)) {
         this.modules.delete(key)
       }
     })
@@ -158,7 +151,13 @@ export class BmlRuntime {
   }
 
   private keep(module: BmlModule): void {
-    this.modules.set(moduleKey(module.tag, module.id), module)
+    const key = moduleKey(module.tag, module.id)
+
+    if (!takesThePlace(this.catalog, this.modules.get(key), module)) {
+      return
+    }
+
+    this.modules.set(key, module)
 
     const pending = this.pending
 

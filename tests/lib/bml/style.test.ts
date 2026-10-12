@@ -162,7 +162,7 @@ test('a colour is named by its index in the palette', () => {
   assert.equal(css('border-color-index: 2').css, 'border-color: rgb(0 255 0)')
 
   const palette = paletteOf(
-    readClut(Uint8Array.from([0xc8, 200, 200, 1, 2, 3, 255])),
+    readClut(Uint8Array.from([0xa8, 200, 200, 1, 2, 3, 255])),
   )
 
   assert.equal(

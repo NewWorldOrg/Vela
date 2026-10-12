@@ -42,6 +42,7 @@ export interface LiveSessionEvents {
   onPicture: (payload: Uint8Array, pts: number) => void
   onCaptionCanvas: (canvas: CaptionCanvas) => void
   onCaption: (picture: CaptionPicture | null, pts: number) => void
+  onDataBroadcast: (payload: Uint8Array, pts: number) => void
   onProgress: (startup: LiveStartup) => void
   onRefusal: (
     refusal: LiveRefusal,
@@ -170,6 +171,9 @@ export function openLiveSession(
         }
         break
       }
+      case 'dataBroadcast':
+        events.onDataBroadcast(frame.payload, frame.pts)
+        break
       case 'control':
         heard(socket, frame.payload)
         break

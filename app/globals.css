@@ -111,6 +111,10 @@
     --pl-done: #9fd9be;
     --pl-warn: #e5ba6c;
     --pl-err: #ec9a93;
+    --remote-blue: #3a78c8;
+    --remote-red: #d8443c;
+    --remote-green: #2e9e5b;
+    --remote-yellow: #f0c235;
     --pl-scrim: linear-gradient(
       to top,
       rgba(6, 5, 9, 0.92) 0%,

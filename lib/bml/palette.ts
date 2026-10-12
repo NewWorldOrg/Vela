@@ -1,7 +1,6 @@
 export const PALETTE_SIZE = 256
 
 /** The first index a document's lookup table may define; below it are the common fixed colours. */
-export const FIRST_DOCUMENT_COLOUR = 128
 
 const INDEXED_DEPTHS = new Set([1, 2, 4, 8])
 
@@ -65,7 +64,7 @@ function rangeOf(
   depth: number,
   stated: boolean,
 ): { from: number; to: number; next: number } | null {
-  const bits = [2, 4, 8][depth]
+  const bits = [4, 8][depth]
 
   if (bits === undefined) {
     return null
@@ -85,9 +84,7 @@ function rangeOf(
     return null
   }
 
-  return bits === 4
-    ? { from: bytes[at] >> 4, to: bytes[at] & 0x0f, next: at + 1 }
-    : { from: bytes[at] >> 6, to: (bytes[at] >> 4) & 0x03, next: at + 1 }
+  return { from: bytes[at] >> 4, to: bytes[at] & 0x0f, next: at + 1 }
 }
 
 /** Reads a colour lookup table resource: its entries from the index they start at, or null when it is not one. */
@@ -125,20 +122,15 @@ export function readClut(bytes: Uint8Array): ClutEntries | null {
   return { from: range.from, colours }
 }
 
-/** The common fixed colours, with a document's lookup table laid over the indices it names from 128 on. The common fixed colours themselves are not the document's to change. */
+/** The common fixed colours, with a document's lookup table laid over every index it names. An index the table does not name keeps its common fixed colour. */
 export function paletteOf(clut: ClutEntries | null): Palette {
   const colours = commonFixed()
 
   if (clut) {
-    const from = Math.max(clut.from, FIRST_DOCUMENT_COLOUR)
-    const skipped = (from - clut.from) * CHANNELS
-    const room = (PALETTE_SIZE - from) * CHANNELS
+    const room = (PALETTE_SIZE - clut.from) * CHANNELS
 
-    if (skipped < clut.colours.length && room > 0) {
-      colours.set(
-        clut.colours.subarray(skipped, skipped + room),
-        from * CHANNELS,
-      )
+    if (room > 0) {
+      colours.set(clut.colours.subarray(0, room), clut.from * CHANNELS)
     }
   }
 
