@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import { Realm } from '@/lib/bml/realm'
 import {
   DocumentLeft,
   SHADOWED_GLOBALS,
@@ -77,4 +78,28 @@ test('new is taken off the table constructors, so that a table that cannot be ma
     ),
     'var a = BinaryTable("t.btb", "0,U:1B"); var b = CSVTable("t.csv", "U:1B"); var c = new Date();',
   )
+})
+
+test("a run puts the document's writes on the built-ins in place only while its code runs", () => {
+  const target: { trim?: string } = {}
+  const realm = new Realm([target])
+  const seen: string[] = []
+  const scope = new ScriptScope(
+    (code) => {
+      if (code === 'write') {
+        target.trim = 'theirs'
+      }
+
+      seen.push(`${code}:${String(target.trim)}`)
+    },
+    {},
+    () => 0,
+    realm,
+  )
+
+  scope.run('write')
+  assert.equal(target.trim, undefined)
+  scope.run('read')
+  assert.equal(target.trim, undefined)
+  assert.deepEqual(seen, ['write:theirs', 'read:theirs'])
 })

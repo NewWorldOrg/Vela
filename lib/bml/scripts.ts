@@ -1,3 +1,5 @@
+import { Realm } from '@/lib/bml/realm'
+
 /** Thrown out of `browser.launchDocument` and `reloadActiveDocument`, so the script that left its document runs no further. */
 export class DocumentLeft extends Error {
   constructor() {
@@ -117,7 +119,7 @@ export type ScriptOutcome =
   | { outcome: 'left'; tookMs: number }
   | { outcome: 'failed'; error: unknown; tookMs: number }
 
-/** Runs a document's scripts and handlers one at a time, timing each. */
+/** Runs a document's scripts and handlers one at a time, timing each, with the document's writes on the built-ins in place only while its code runs. */
 export class ScriptScope {
   private readonly evaluate: Evaluate
 
@@ -125,14 +127,24 @@ export class ScriptScope {
 
   private readonly now: () => number
 
-  constructor(evaluate: Evaluate, scope: object, now: () => number) {
+  private readonly realm: Realm
+
+  constructor(
+    evaluate: Evaluate,
+    scope: object,
+    now: () => number,
+    realm: Realm = new Realm([]),
+  ) {
     this.evaluate = evaluate
     this.scope = scope
     this.now = now
+    this.realm = realm
   }
 
   run(code: string): ScriptOutcome {
     const started = this.now()
+
+    this.realm.enter()
 
     try {
       this.evaluate(withoutTableNew(code), this.scope)
@@ -144,6 +156,8 @@ export class ScriptScope {
       return error instanceof DocumentLeft
         ? { outcome: 'left', tookMs }
         : { outcome: 'failed', error, tookMs }
+    } finally {
+      this.realm.leave()
     }
   }
 }

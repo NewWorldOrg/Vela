@@ -108,8 +108,8 @@ test('a style sheet keeps the rules it takes and warns of the rest, comments and
   assert.deepEqual(sheet.warnings, [
     'unsupported at-rule: @charset',
     'unsupported at-rule: @media',
-    'unsupported selector',
-    'unsupported selector',
+    'unsupported selector: div > p',
+    'unsupported selector: a:hover',
   ])
 })
 

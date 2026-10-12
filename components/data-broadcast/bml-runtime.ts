@@ -49,6 +49,7 @@ import {
   resolveReference,
   type BmlAddress,
 } from '@/lib/bml/paths'
+import { builtinsOf, Realm } from '@/lib/bml/realm'
 import type { BmlModule, BmlResource } from '@/lib/bml/resources'
 import { PLANE_ID, PLAYER_ORIGIN_META } from '@/lib/bml/runtime-document'
 import {
@@ -98,6 +99,7 @@ export interface RuntimeOptions {
   mount?: Mount
   evaluate?: Evaluate
   now?: () => number
+  realm?: Realm
 }
 
 interface Shown {
@@ -158,6 +160,8 @@ export class BmlRuntime {
 
   private readonly now: () => number
 
+  private readonly realm: Realm
+
   private catalog: BmlCatalog | null = null
 
   private shown: Shown | null = null
@@ -193,6 +197,7 @@ export class BmlRuntime {
     this.mount = options.mount ?? mountPage
     this.evaluate = options.evaluate ?? frameEvaluator(window)
     this.now = options.now ?? (() => Date.now())
+    this.realm = options.realm ?? new Realm([])
     this.memory = new PersistentMemory((name, value) =>
       this.say({ kind: 'memory', name, value }),
     )
@@ -469,6 +474,7 @@ export class BmlRuntime {
         this.evaluate,
         scopeOf(this.globalsOf(document)),
         this.now,
+        this.realm,
       ),
       navigation: navigationOf(page.body),
       focused: null,
@@ -1269,6 +1275,7 @@ export function startBmlRuntime(window: RuntimeWindow): BmlRuntime | null {
 
   const runtime = new BmlRuntime(window, plane, origin, {
     now: () => window.performance.now(),
+    realm: new Realm(builtinsOf(window)),
   })
 
   window.addEventListener('message', (event) => runtime.receive(event))

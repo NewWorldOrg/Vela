@@ -50,6 +50,7 @@ const THE_SUITE = [
   'tests/lib/bml/messages.test.ts',
   'tests/lib/bml/palette.test.ts',
   'tests/lib/bml/paths.test.ts',
+  'tests/lib/bml/realm.test.ts',
   'tests/lib/bml/resources.test.ts',
   'tests/lib/bml/runtime-document.test.ts',
   'tests/lib/bml/scripts.test.ts',

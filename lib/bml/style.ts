@@ -234,7 +234,7 @@ function ruleOf(head: string, block: string, warnings: string[]): StyleRule[] {
     const selector = selectorOf(text)
 
     if (!selector) {
-      warnings.push('unsupported selector')
+      warnings.push(`unsupported selector: ${text.trim()}`)
     }
 
     return selector ? [selector] : []
