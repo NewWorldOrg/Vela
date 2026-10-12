@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import type { RuntimeMessage } from '@/lib/bml/messages'
 import {
   DATA_BROADCAST_CLOSED,
   KEYS_UNTIL_TOLD,
   SAID_LINE_OFF,
   SAID_RECEIVING,
+  SAID_UNOPENED,
   SAID_UNREACHED,
   SAID_UNSUPPORTED,
   dataBroadcastAfter,
@@ -432,4 +434,136 @@ test('requests over the line change nothing of the view', () => {
     }),
     open,
   )
+})
+
+const AIT = 'http://hc.example.test/p/a.ait'
+
+const START = { ait: AIT, orgId: 16, appId: 1 }
+
+const GREG = Array.from({ length: 64 }, (_, at) =>
+  at === 44 ? 'nhk:back' : '',
+)
+
+function runtime(message: RuntimeMessage, nth: number): DataBroadcastStep {
+  return { on: 'runtime', message, nth }
+}
+
+const STARTING = runtime({ kind: 'startApp', start: START, greg: GREG }, 7)
+
+test('a start the documents ask for closes them for the application, keeps the shared registers, and lays the picture back over the whole box', () => {
+  const view = after(
+    OPEN,
+    runtime(
+      { kind: 'videoRect', rect: { left: 0, top: 0, width: 480, height: 270 } },
+      1,
+    ),
+    STARTING,
+  )
+
+  assert.equal(view.open, true)
+  assert.deepEqual(view.hybridcast, { start: START, nth: 7, address: null })
+  assert.deepEqual(view.greg, GREG)
+  assert.equal(view.rect, null)
+  assert.equal(dataBroadcastSays(view), null)
+})
+
+test('the application started is kept with the address its frame opens, and only for the start it answers', () => {
+  const started = after(OPEN, STARTING, {
+    on: 'appStarted',
+    nth: 7,
+    address: '/api/live/a/app/t/p/index.html',
+  })
+
+  assert.equal(started.hybridcast?.address, '/api/live/a/app/t/p/index.html')
+  assert.deepEqual(
+    after(OPEN, STARTING, { on: 'appStarted', nth: 6, address: '/x' })
+      .hybridcast?.address,
+    null,
+  )
+})
+
+test('an application that did not open goes back to the documents, is said once, and is not asked for again while open', () => {
+  const view = after(OPEN, STARTING, { on: 'appUnopened', nth: 7 })
+
+  assert.equal(view.open, true)
+  assert.equal(view.hybridcast, null)
+  assert.deepEqual(view.greg, GREG)
+  assert.deepEqual(view.failedStarts, [START])
+  assert.equal(dataBroadcastSays(view), SAID_UNOPENED)
+
+  const faded = dataBroadcastAfter(view, {
+    on: 'appFaded',
+    appNotices: view.appNotices,
+  })
+
+  assert.equal(dataBroadcastSays(faded), null)
+})
+
+test('ten failed starts one after another are said once while open, and again only after it is opened again', () => {
+  let view = after(OPEN)
+
+  for (let nth = 1; nth <= 10; nth += 1) {
+    view = dataBroadcastAfter(view, runtime({ kind: 'unopened' }, nth))
+
+    if (nth === 1) {
+      assert.equal(dataBroadcastSays(view), SAID_UNOPENED)
+      view = dataBroadcastAfter(view, { on: 'appFaded', appNotices: 1 })
+    }
+  }
+
+  assert.equal(dataBroadcastSays(view), null)
+
+  const again = after(
+    OPEN,
+    { on: 'toggle', availability: 'ready' },
+    OPEN,
+    runtime({ kind: 'unopened' }, 11),
+  )
+
+  assert.equal(dataBroadcastSays(again), SAID_UNOPENED)
+})
+
+test('closing the application, or the data button while it runs, goes back to the documents with the shared registers, and an answer for it after that is not taken', () => {
+  for (const closing of [
+    { on: 'appClosed' },
+    { on: 'toggle', availability: 'ready' },
+  ] as DataBroadcastStep[]) {
+    const view = after(OPEN, STARTING, closing)
+
+    assert.equal(view.open, true)
+    assert.equal(view.hybridcast, null)
+    assert.deepEqual(view.greg, GREG)
+    assert.deepEqual(view.failedStarts, [])
+
+    const late = dataBroadcastAfter(view, { on: 'appUnopened', nth: 7 })
+
+    assert.equal(late, view)
+  }
+})
+
+test('closing the broadcast, or losing it, ends the application and forgets the registers and the starts that failed', () => {
+  const failed = after(OPEN, STARTING, { on: 'appUnopened', nth: 7 })
+  const running = after(OPEN, STARTING)
+
+  for (const view of [
+    dataBroadcastAfter(failed, { on: 'toggle', availability: 'ready' }),
+    dataBroadcastAfter(running, { on: 'availability', availability: 'none' }),
+  ]) {
+    assert.equal(view.open, false)
+    assert.equal(view.hybridcast, null)
+    assert.equal(view.greg, null)
+    assert.deepEqual(view.failedStarts, [])
+  }
+})
+
+test('what the documents say after they were closed for the application is not taken, as they are gone', () => {
+  const running = after(OPEN, STARTING)
+
+  for (const message of [
+    { kind: 'error', reason: 'malformed' },
+    { kind: 'exit' },
+    { kind: 'unsupported', what: 'x' },
+  ] as RuntimeMessage[]) {
+    assert.equal(dataBroadcastAfter(running, runtime(message, 9)), running)
+  }
 })
