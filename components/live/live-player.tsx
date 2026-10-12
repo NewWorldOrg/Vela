@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
@@ -17,7 +17,7 @@ import {
   wireKey,
   type SoundChoice,
 } from '@/lib/live-seat'
-import { liveWireHref } from '@/repository/live-paths'
+import { liveChannelOf, liveWireHref } from '@/repository/live-paths'
 import {
   KEY_CAP,
   aimsAtThePlayer,
@@ -25,7 +25,14 @@ import {
   VOLUME_STEP_PERCENT,
 } from '@/lib/player-keys'
 import { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
-import { AUTO_OPEN_SPELLING, DATA_BROADCAST_AUTO_OPEN } from '@/lib/stored-flag'
+import {
+  AUTO_OPEN_SPELLING,
+  DATA_BROADCAST_AUTO_OPEN,
+  DATA_BROADCAST_LINE,
+  DATA_BROADCAST_RECEIVER_ID,
+  LINE_SPELLING,
+  RECEIVER_ID_SPELLING,
+} from '@/lib/stored-flag'
 import {
   SAID_FAILED,
   dataBroadcastSays,
@@ -89,6 +96,9 @@ import {
   PLAYER_COLUMN_OVER_THE_BAND,
   bandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
+import { liveLine } from '@/lib/data-broadcast-line'
+import { liveLineRelay } from '@/components/data-broadcast/line-relay'
+import type { LineRelay } from '@/repository/live-data-broadcast'
 
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
@@ -162,6 +172,7 @@ export function LivePlayer({
   startupDeadlineMs = STARTUP_DEADLINE_MS,
   takeCapture = takeItNow,
   autoOpensDataBroadcast = false,
+  lineRelayOf = liveLineRelay,
 }: {
   channel?: LiveChannel
   profiles: LiveProfile[]
@@ -178,6 +189,7 @@ export function LivePlayer({
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
   autoOpensDataBroadcast?: boolean
+  lineRelayOf?: (channel: string) => LineRelay
 }) {
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -246,6 +258,29 @@ export function LivePlayer({
     autoOpens,
     programme: onAir?.startsAt ?? '',
   })
+  const [allowsTheLine] = useStoredFlag(
+    DATA_BROADCAST_LINE,
+    LINE_SPELLING,
+    false,
+  )
+  const [handsTheReceiverId] = useStoredFlag(
+    DATA_BROADCAST_RECEIVER_ID,
+    RECEIVER_ID_SPELLING,
+    false,
+  )
+  const relay = useMemo(
+    () =>
+      networkId === undefined || serviceId === undefined
+        ? null
+        : lineRelayOf(liveChannelOf(networkId, serviceId)),
+    [networkId, serviceId, lineRelayOf],
+  )
+  const line = liveLine(
+    allowsTheLine,
+    handsTheReceiverId,
+    broadcast.receiverId,
+    relay,
+  )
 
   useEffect(
     () => () => {
@@ -831,6 +866,7 @@ export function LivePlayer({
                     network: networkId ?? null,
                     startsAt: onAir ? Date.parse(onAir.startsAt) / 1000 : null,
                   }}
+                  line={line}
                   onRuntime={broadcast.connect}
                   onMessage={hearBroadcast}
                   says={dataBroadcastSays(broadcast.view)}

@@ -8,8 +8,10 @@ import {
   type ReactNode,
 } from 'react'
 
-import type { BmlCatalog } from '@/lib/bml/catalog'
+import { catalogWithoutReceiverId, type BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlKey } from '@/lib/bml/keys'
+import { unreached, type TransmitAnswer } from '@/lib/bml/line'
+import { NO_LINE, type DataBroadcastLine } from '@/lib/data-broadcast-line'
 import {
   keepMemory,
   memoryEntriesOf,
@@ -38,6 +40,10 @@ import {
   DataBroadcastIcon,
 } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
+import {
+  transmitAnswerOf,
+  type Relayed,
+} from '@/repository/live-data-broadcast'
 
 export const DATA_BROADCAST_NAME = 'データ放送'
 
@@ -103,7 +109,7 @@ function catalogued(
 ): void {
   const storage = storageOf()
 
-  send({ kind: 'catalog', catalog })
+  send({ kind: 'catalog', catalog: catalogWithoutReceiverId(catalog) })
   send({
     kind: 'memory',
     entries: storage ? memoryEntriesOf(storage, catalog.service) : [],
@@ -120,39 +126,140 @@ function catalogued(
   })
 }
 
+/** What the viewer is told of a transmission through the relay: the setting refusing the line, the broadcaster's server not reached, or nothing. */
+function saidOf(relayed: Relayed<TransmitAnswer>): RuntimeMessage | null {
+  if (relayed.said === 'off') {
+    return { kind: 'line', said: 'off' }
+  }
+
+  return relayed.said === 'unreached' || unreached(relayed.answer)
+    ? { kind: 'line', said: 'unreached' }
+    : null
+}
+
 /** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. */
 export function DataBroadcastFace({
   feed,
   onAir = NOTHING_ON_AIR,
+  line = NO_LINE,
   onRuntime,
   onMessage,
   says,
 }: {
   feed: DataBroadcastHeld
   onAir?: OnAir
+  line?: DataBroadcastLine
   onRuntime: (send: SendToRuntime | null) => void
   onMessage: (message: RuntimeMessage) => void
   says: string | null
 }) {
   const alive = useRef(false)
   const letGo = useRef<(() => void) | null>(null)
+  const runtime = useRef<SendToRuntime | null>(null)
   const gone = useEffectEvent(() => onRuntime(null))
+  const lineNow = useRef(line)
+  const tell = useRef(onMessage)
+  const lineState = line.state
+  const receiverId = line.receiverId
+
+  const transmit = async (
+    send: SendToRuntime,
+    message: Extract<RuntimeMessage, { kind: 'transmit' }>,
+  ) => {
+    const { state, relay } = lineNow.current
+    const answered: Relayed<TransmitAnswer> =
+      relay && state === 'on'
+        ? await relay.transmit(message.uri, message.text, message.charset)
+        : { said: state === 'off' ? 'off' : 'unreached' }
+    const said = saidOf(answered)
+
+    if (!alive.current) {
+      return
+    }
+
+    send({
+      kind: 'transmitted',
+      id: message.id,
+      answer: transmitAnswerOf(answered),
+    })
+
+    if (said) {
+      tell.current(said)
+    }
+  }
+
+  const fetchOverTheLine = async (
+    send: SendToRuntime,
+    message: Extract<RuntimeMessage, { kind: 'fetch' }>,
+  ) => {
+    const { state, relay } = lineNow.current
+    const fetched: Relayed<BmlModule> =
+      relay && state === 'on'
+        ? await relay.fetch(message.uri)
+        : { said: state === 'off' ? 'off' : 'unreached' }
+
+    if (!alive.current) {
+      return
+    }
+
+    if (fetched.said === 'answered') {
+      const handed = moduleToHand(fetched.answer)
+
+      send(
+        { kind: 'fetched', id: message.id, module: handed.module },
+        handed.transfer,
+      )
+
+      return
+    }
+
+    send({ kind: 'fetched', id: message.id, module: null })
+    tell.current({ kind: 'line', said: fetched.said })
+  }
+
   const heard = (message: RuntimeMessage) => {
     const storage = storageOf()
     const service = feed.catalog?.service
+    const send = runtime.current
 
     if (message.kind === 'memory' && storage && service !== undefined) {
       keepMemory(storage, service, message.name, message.value)
+    }
+
+    if (message.kind === 'transmit') {
+      if (send) {
+        void transmit(send, message)
+      }
+
+      return
+    }
+
+    if (message.kind === 'fetch') {
+      if (send) {
+        void fetchOverTheLine(send, message)
+      }
+
+      return
     }
 
     onMessage(message)
   }
 
   useEffect(() => {
+    lineNow.current = line
+    tell.current = onMessage
+  })
+
+  useEffect(() => {
+    runtime.current?.({ kind: 'line', line: lineState, receiverId })
+  }, [lineState, receiverId])
+
+  useEffect(() => {
     alive.current = true
 
     return () => {
       alive.current = false
+      runtime.current = null
       letGo.current?.()
       letGo.current = null
       gone()
@@ -179,7 +286,12 @@ export function DataBroadcastFace({
 
     feed.forTheCatalog.forEach((module) => hand(send, module))
     feed.nptReadings.forEach((reading) => send({ kind: 'npt', reading }))
+
+    const { state, receiverId: given } = lineNow.current
+
+    send({ kind: 'line', line: state, receiverId: given })
     send({ kind: 'open' })
+    runtime.current = send
     onRuntime(send)
     letGo.current = feed.subscribe((change) => {
       if (change.kind === 'catalog') {

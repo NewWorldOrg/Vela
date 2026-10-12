@@ -339,6 +339,94 @@ export function scriptedModules(): BmlModule[] {
   ]
 }
 
+const CHECKING = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+function check() {
+  var answer = browser.transmitTextDataOverIP('http://example.test/check.txt', '', 'EUC-JP');
+  if (answer[0] == 1 && answer[1] == 200) { browser.launchDocument('http://example.test/bml/top.bml', 'cut'); }
+}
+]]></script>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128" onload="check()">
+<object type="video/X-arib-mpeg2" style="left: 560px; top: 60px; width: 360px; height: 203px"/>
+<p class="panel" style="left: 40px; top: 60px; width: 480px; height: 203px">通信の見本</p>
+</body>
+</bml>`
+
+const OVER_THE_LINE = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="style/top.css" type="text/css"/>
+</head>
+<body style="background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 40px; top: 60px; width: 360px; height: 203px"/>
+<p class="panel" style="left: 440px; top: 60px; width: 480px; height: 203px">通信で取った見本のページ</p>
+</body>
+</bml>`
+
+const OVER_THE_LINE_CSS =
+  '.panel { color-index: 129; background-color-index: 130; }'
+
+export const LINE_CATALOG: BmlCatalog = {
+  service: 1026,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** The module of a self-made data broadcast that checks the line as it loads and moves to a page over the line when the check is answered. */
+export function lineModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', CHECKING),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+  ]
+}
+
+/** What the line answers for the self-made pages: the page and its style sheet, each as a module of one resource. */
+export const OVER_THE_LINE_PAGES: Record<string, BmlModule> = {
+  'http://example.test/bml/top.bml': {
+    tag: 0,
+    id: 0,
+    version: 0,
+    resources: [resource('top.bml', 'bml', OVER_THE_LINE)],
+  },
+  'http://example.test/bml/style/top.css': {
+    tag: 0,
+    id: 0,
+    version: 0,
+    resources: [resource('top.css', 'css', OVER_THE_LINE_CSS)],
+  },
+}
+
 /** A script that tries, from inside the runtime's frame, what a document must not reach, and tells the player what happened. */
 export const SANDBOX_PROBE = `
 const report = { violations: [] }
