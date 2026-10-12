@@ -352,7 +352,10 @@ export type TableLookup = (reference: unknown) => TableSource | null
 
 /** The `BinaryTable` and `CSVTable` a document makes, over the resources the runtime holds: a table that is not there, or a structure that is not one, is null, as a receiver answers when it cannot generate one. A script writes `new` before them, which the runtime takes away before running it, as `new` cannot answer null. */
 export function tableClassesOf(lookup: TableLookup) {
-  const BinaryTable = (reference: unknown, structure: unknown): Table | null => {
+  const BinaryTable = (
+    reference: unknown,
+    structure: unknown,
+  ): Table | null => {
     const read = tableStructureOf(structure)
     const source = read ? lookup(reference) : null
 

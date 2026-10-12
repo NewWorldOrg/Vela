@@ -918,6 +918,28 @@ test('a document reads the tables of its module', () => {
   assert.equal(registers[0], '2:b:2:4')
 })
 
+const PICTURED = bml(
+  '<object id="i" type="image/X-arib-png" data="pic.png"/>',
+  '<script>' +
+    'var i = document.getElementById("i");' +
+    'var before = i.data;' +
+    'i.data = before.substring(0, 3) + "2.png";' +
+    'browser.Ureg[0] = before + ":" + i.data;' +
+    '</script>',
+)
+
+test('a script reads the reference the document gave an image and what it set afterwards', () => {
+  const { runtime, warnings } = opened(PICTURED)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], 'pic.png:pic2.png')
+  assert.deepEqual(warnings, [
+    'data broadcast: missing image: pic.png',
+    'data broadcast: missing image: pic2.png',
+  ])
+})
+
 const TABLE_GONE = bml(
   '<p id="p">p</p>',
   '<script>' +

@@ -288,6 +288,7 @@ test('an image object and an img element draw the resource as a blob, and sound 
   assert.equal(attribute(byId(page, 'j'), 'src'), 'blob:test/a.jpg')
   assert.equal(byId(page, 'j').style, 'left: 1px')
   assert.equal(attribute(byId(page, 'p'), 'src'), 'blob:test/b.png')
+  assert.equal(attribute(byId(page, 'p'), 'data-bml-ref'), '~/0001/b.png')
   assert.equal(byId(page, 'i').tag, 'img')
   assert.equal(attribute(byId(page, 'i'), 'src'), 'blob:test/a.jpg')
   assert.equal(elements(page.body).length, 4)
@@ -315,8 +316,8 @@ test('an image that is not there or is not a picture stays an img without a sour
   }
 
   assert.deepEqual(page.warnings, [
-    'missing image',
-    'unsupported image',
+    'missing image: none.jpg',
+    'unsupported image: s.css',
     'unsupported object: image/x-arib-mng',
     'unsupported object: application/x-arib-x',
   ])
@@ -340,7 +341,7 @@ test('a background image in the style sheet or inline is drawn from the document
     'background-image: url("blob:test/bg.jpg")',
   )
   assert.equal(byId(page, 'b').style, '')
-  assert.deepEqual(page.warnings, ['missing image'])
+  assert.deepEqual(page.warnings, ['missing image: none.jpg'])
 })
 
 test('colours are read from the document’s own lookup table, and the fixed colours otherwise', () => {

@@ -329,8 +329,7 @@ function supported(host: BrowserHost): Record<string, Answer> {
     writePersistentArray: (name: unknown, structure: unknown, data: unknown) =>
       writeArray(host.memory, name, structure, data) ? DONE : FAILED,
     lockModuleOnMemory: (reference: unknown) => lockAnswerOf(host, reference),
-    lockModuleOnMemoryEx: (reference: unknown) =>
-      lockAnswerOf(host, reference),
+    lockModuleOnMemoryEx: (reference: unknown) => lockAnswerOf(host, reference),
     unlockModuleOnMemory: (reference: unknown) => {
       host.unlock(reference)
 

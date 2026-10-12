@@ -229,7 +229,7 @@ class Inner {
     const url = this.hooks.image(reference)
 
     if (!url) {
-      this.hooks.warn('missing image')
+      this.hooks.warn(`missing image: ${reference}`)
     }
 
     return url
@@ -285,7 +285,7 @@ class Inner {
     this.references.set(element, reference)
 
     if (!url || element.getAttribute('data-bml-tag') === null) {
-      this.hooks.warn('missing image')
+      this.hooks.warn(`missing image: ${reference}`)
 
       return
     }
@@ -470,8 +470,13 @@ export class BmlElement {
     }
   }
 
+  /** The image's reference: what a script last set, or else what the document wrote, as a script reads it back to build the name of a sibling image. */
   get data(): string {
-    return this.#inner.references.get(this.#element) ?? ''
+    return (
+      this.#inner.references.get(this.#element) ??
+      this.#element.getAttribute('data-bml-ref') ??
+      ''
+    )
   }
 
   set data(reference: unknown) {

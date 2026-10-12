@@ -20,7 +20,11 @@ interface Building {
 
 const HTML_ATTRIBUTES = new Set(['id', 'class', 'value', 'maxlength'])
 
-const RUNTIME_ATTRIBUTES = new Set(['data-bml-href', 'data-bml-video'])
+const RUNTIME_ATTRIBUTES = new Set([
+  'data-bml-href',
+  'data-bml-ref',
+  'data-bml-video',
+])
 
 const NAV_ATTRIBUTE: [keyof PageElement['nav'], string][] = [
   ['index', 'data-bml-nav-index'],

@@ -585,8 +585,11 @@ class Conversion {
   /** An image element is an `img` even when its picture is not there yet, so that a script may give it one later. */
   private image(node: XmlElementLike, reference: string | null): PageElement {
     const url = reference ? this.urlOf(reference) : null
+    const extra: [string, string][] = reference
+      ? [['data-bml-ref', reference]]
+      : []
 
-    return this.shaped(node, 'img', [], url ? [['src', url]] : [])
+    return this.shaped(node, 'img', [], url ? [...extra, ['src', url]] : extra)
   }
 
   /** The URL an image is drawn from, counted against the document's images; a reference to no image, or to one of a kind not drawn, is a warning and no URL. */
@@ -602,7 +605,11 @@ class Conversion {
       drawable && resource ? this.context.image(resource, this.palette) : null
 
     if (!url) {
-      this.warnings.add(resource ? 'unsupported image' : 'missing image')
+      this.warnings.add(
+        resource
+          ? `unsupported image: ${reference}`
+          : `missing image: ${reference}`,
+      )
     }
 
     return url
