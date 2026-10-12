@@ -1640,3 +1640,202 @@ test('the bundled face is loaded with its line box as tall as its em square', (t
     },
   ])
 })
+
+const AIT = 'http://hc.example.test/p/a.ait'
+
+const APP_ENTRY = 'http://hc.example.test/p/index.html'
+
+const STARTS_BY_ITSELF = {
+  orgId: 16,
+  appId: 1,
+  controlCode: 1,
+  entryUrl: APP_ENTRY,
+}
+
+/** A document opened with Hybridcast allowed, the starts the player says failed, and the shared registers it was handed, if any. */
+function withHybridcast(
+  startup: string,
+  {
+    allowed = true,
+    failed = [],
+    greg,
+  }: {
+    allowed?: boolean
+    failed?: { ait: string; orgId: number; appId: number }[]
+    greg?: string[]
+  } = {},
+) {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', startup] }),
+  })
+  opening.send({ kind: 'line', line: 'on', receiverId: null })
+  opening.send({ kind: 'hybridcast', allowed, failed })
+
+  if (greg) {
+    opening.send({ kind: 'greg', greg })
+  }
+
+  opening.send({ kind: 'open' })
+
+  const registers = (
+    opening.runtime as unknown as {
+      registers: { Ureg: string[]; Greg: string[] }
+    }
+  ).registers
+
+  return { ...opening, Ureg: registers.Ureg, Greg: registers.Greg }
+}
+
+const RECEIVING = bml(
+  '<p id="p" style="nav-index: 0" onclick="' +
+    'var r = browser.getReceivedAIT(&quot;' +
+    AIT +
+    '&quot;);' +
+    'browser.Ureg[1] = typeof r === &quot;number&quot; ? String(r) : r[1].join(&quot;,&quot;);' +
+    '">p</p>',
+  '<script>browser.Ureg[0] = String(browser.startReceivingAIT("' +
+    AIT +
+    '"))</script>',
+)
+
+test('an AIT asked to be received is read through the player while the script goes on, answered 0 until it is in, and forgotten when the document changes', () => {
+  const { heard, send, Ureg, forget } = withHybridcast(RECEIVING)
+
+  assert.equal(Ureg[0], '1')
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'ait'),
+    [{ kind: 'ait', id: 1, uri: AIT }],
+  )
+
+  send({ kind: 'key', key: 'enter' })
+  assert.equal(Ureg[1], '0')
+
+  send({ kind: 'aitRead', id: 1, applications: [STARTS_BY_ITSELF] })
+  send({ kind: 'key', key: 'enter' })
+  assert.equal(Ureg[1], `10,1,1,${APP_ENTRY}`)
+
+  forget()
+  send({ kind: 'close' })
+  send({ kind: 'open' })
+  send({ kind: 'key', key: 'enter' })
+  assert.equal(Ureg[1], '0')
+})
+
+test('an AIT that could not be read is answered -1', () => {
+  const { send, Ureg } = withHybridcast(RECEIVING)
+
+  send({ kind: 'aitRead', id: 1, applications: null })
+  send({ kind: 'key', key: 'enter' })
+  assert.equal(Ureg[1], '-1')
+})
+
+const STARTING = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>' +
+    'browser.Greg[44] = "nhk:back";' +
+    'browser.Ureg[1] = String(Number(browser.Ureg[1] || "0") + 1);' +
+    'browser.Ureg[0] = String(browser.startAITControlledApp("10", "1", "' +
+    AIT +
+    '"));' +
+    'browser.Ureg[2] = "after";' +
+    '</script>',
+)
+
+test('starting an application waits on the AIT read again, then closes the documents and asks the player to start it with the shared registers, and the script goes no further', () => {
+  const { heard, send, Ureg, plane, forget } = withHybridcast(STARTING)
+
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'ait'),
+    [{ kind: 'ait', id: 1, uri: AIT }],
+  )
+
+  forget()
+  send({ kind: 'aitRead', id: 1, applications: [STARTS_BY_ITSELF] })
+
+  const started = heard().find((message) => message.kind === 'startApp')
+
+  assert.deepEqual(
+    started && started.kind === 'startApp' ? started.start : null,
+    { ait: AIT, orgId: 16, appId: 1 },
+  )
+  assert.equal(
+    started && started.kind === 'startApp' ? started.greg[44] : null,
+    'nhk:back',
+  )
+  assert.equal(
+    started && started.kind === 'startApp' ? started.greg.length : 0,
+    64,
+  )
+  assert.deepEqual(Ureg.slice(0, 3), ['', '2', ''])
+  assert.equal(plane.childNodes.length, 0)
+})
+
+test('an application the AIT does not name to start by itself fails, the player is told it did not open, and the script goes on', () => {
+  const { heard, send, Ureg, forget } = withHybridcast(STARTING)
+
+  forget()
+  send({
+    kind: 'aitRead',
+    id: 1,
+    applications: [{ ...STARTS_BY_ITSELF, controlCode: 2 }],
+  })
+
+  assert.deepEqual(Ureg.slice(0, 3), ['NaN', '2', 'after'])
+  assert.deepEqual(
+    heard().filter(
+      (message) => message.kind === 'unopened' || message.kind === 'startApp',
+    ),
+    [{ kind: 'unopened' }],
+  )
+})
+
+test('an application that failed to start while the broadcast was open is not asked for again', () => {
+  const { heard, Ureg } = withHybridcast(STARTING, {
+    failed: [{ ait: AIT, orgId: 16, appId: 1 }],
+  })
+
+  assert.deepEqual(Ureg.slice(0, 3), ['NaN', '1', 'after'])
+  assert.equal(
+    heard().some((message) => message.kind === 'ait'),
+    false,
+  )
+  assert.equal(
+    heard().some((message) => message.kind === 'unopened'),
+    true,
+  )
+})
+
+test('while Hybridcast is not allowed, starting an application is not supported and nothing is read', () => {
+  const { heard, Ureg } = withHybridcast(STARTING, { allowed: false })
+
+  assert.deepEqual(Ureg.slice(0, 3), ['NaN', '1', 'after'])
+  assert.deepEqual(
+    heard().filter(
+      (message) =>
+        message.kind === 'ait' ||
+        message.kind === 'unopened' ||
+        message.kind === 'unsupported',
+    ),
+    [{ kind: 'unsupported', what: 'startAITControlledApp' }],
+  )
+})
+
+const COMING_BACK = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>browser.Ureg[0] = browser.Greg[61] + "/" + browser.Greg[0]</script>',
+)
+
+test('the shared registers handed back as the documents open again are what the documents read', () => {
+  const greg = Array.from({ length: 64 }, () => '')
+
+  greg[61] = 'nhk:1'
+
+  const { Ureg, Greg } = withHybridcast(COMING_BACK, { greg })
+
+  assert.equal(Ureg[0], 'nhk:1/')
+  assert.equal(Greg.length, 64)
+})

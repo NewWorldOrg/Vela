@@ -42,6 +42,7 @@ const THE_SUITE = [
   'tests/hooks/useReadAgain.test.ts',
   'tests/lib/app-signals.test.ts',
   'tests/lib/arrival.test.ts',
+  'tests/lib/bml/ait.test.ts',
   'tests/lib/bml/browser.test.ts',
   'tests/lib/bml/catalog.test.ts',
   'tests/lib/bml/document.test.ts',

@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   IGNORED_FUNCTIONS,
   LINE_FUNCTIONS,
+  MAKER_ID,
   REFUSED_FUNCTIONS,
   UNCONNECTED_QUERIES,
   SUPPORTED_FUNCTIONS,
@@ -11,6 +12,7 @@ import {
   registersOf,
   type BrowserHost,
 } from '@/lib/bml/browser'
+import { CONTROL_CODE, type AitApplication } from '@/lib/bml/ait'
 import { answerOf, type LineState } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
 import { DocumentLeft, LineAwaited } from '@/lib/bml/scripts'
@@ -79,6 +81,18 @@ function host(over: Partial<BrowserHost> = {}) {
       return answerOf(1, 200, 'ok')
     },
     lineOff: (what) => lineOff.push(what),
+    hybridcast: () => false,
+    receiveAit: (uri) => {
+      calls.push(`receive ${uri}`)
+
+      return uri !== 'http://hc.example.test/too-many.ait'
+    },
+    receivedAit: () => undefined,
+    readAit: () => null,
+    startApplication: (start) =>
+      calls.push(`start ${start.ait} ${start.orgId} ${start.appId}`),
+    unopened: () => calls.push('unopened'),
+    failedBefore: () => false,
     ...over,
   }
 
@@ -467,4 +481,189 @@ test('a document over the line is told it came by the line, and one of the broad
   assert.equal(broadcast.getBrowserStatus('TerrP', 'IRDState', 'Broadcast'), 1)
   assert.ok(Number.isNaN(broadcast.getBrowserStatus('TerrP', 'IRDState', 'x')))
   assert.ok(Number.isNaN(broadcast.getBrowserStatus('TerrP', 'Other', 'Link')))
+})
+
+const AIT = 'http://hc.example.test/p/a.ait'
+
+const STARTS_BY_ITSELF: AitApplication = {
+  orgId: 16,
+  appId: 1,
+  controlCode: CONTROL_CODE.autostart,
+  entryUrl: 'http://hc.example.test/p/index.html',
+}
+
+function hybridcast(over: Partial<BrowserHost> = {}) {
+  return lined('on', { hybridcast: () => true, ...over })
+}
+
+const HYBRIDCAST_QUERIES: [string, ...string[]][] = [
+  ['APIGroup', 'AITControlledApp.Start'],
+  ['AITControlledAppEngineFunction', 'IPTV-F', 'HTML5_ph0'],
+  ['AITTransportMethod', 'XML', 'HTTP'],
+]
+
+test('Hybridcast is supported only while the viewer allows it, and only the HTML5 engine of phase 0 and the AIT in XML over HTTP', () => {
+  const allowed = hybridcast().browser
+  const refused = lined('on').browser
+
+  for (const [name, ...info] of HYBRIDCAST_QUERIES) {
+    assert.equal(allowed.getBrowserSupport('ARIB', name, ...info), 1, name)
+    assert.equal(refused.getBrowserSupport('ARIB', name, ...info), 0, name)
+  }
+
+  assert.equal(
+    allowed.getBrowserSupport(
+      'ARIB',
+      'AITControlledAppEngineFunction',
+      'IPTV-F',
+      'HTML5_ph1',
+    ),
+    0,
+  )
+  assert.equal(
+    allowed.getBrowserSupport('ARIB', 'AITTransportMethod', 'Section', 'DC'),
+    0,
+  )
+  assert.equal(
+    allowed.getBrowserSupport('other', 'APIGroup', 'AITControlledApp.Start'),
+    0,
+  )
+})
+
+test('the resident application of Hybridcast answers five items with no maker named, and is ignored as before while Hybridcast is not allowed', () => {
+  const answer = hybridcast().browser.getResidentAppVersion('AITControlledApp')
+
+  assert.deepEqual(answer, [MAKER_ID, 'Vela', '1', '0', ''])
+  assert.equal(MAKER_ID, '')
+  assert.equal(hybridcast().browser.getResidentAppVersion('VOD'), 1)
+  assert.equal(lined('on').browser.getResidentAppVersion('AITControlledApp'), 1)
+})
+
+test('receiving an AIT starts reading it and answers 1 at once, and fails for an address that is not on the line or when too many are kept', () => {
+  const { browser, calls } = hybridcast()
+
+  assert.equal(browser.startReceivingAIT(AIT), 1)
+  assert.ok(Number.isNaN(browser.startReceivingAIT('/40/0000/a.ait')))
+  assert.ok(Number.isNaN(browser.startReceivingAIT()))
+  assert.ok(
+    Number.isNaN(
+      browser.startReceivingAIT('http://hc.example.test/too-many.ait'),
+    ),
+  )
+  assert.deepEqual(calls, [
+    `receive ${AIT}`,
+    'receive http://hc.example.test/too-many.ait',
+  ])
+})
+
+test('an AIT received is answered as the type and its applications, 0 while it is read or was never asked for, -1 when it failed, and NaN without an address', () => {
+  const kept = new Map<string, ReturnType<BrowserHost['receivedAit']>>([
+    [AIT, [STARTS_BY_ITSELF]],
+    ['http://hc.example.test/waiting.ait', 'waiting'],
+    ['http://hc.example.test/failed.ait', 'failed'],
+  ])
+  const { browser } = hybridcast({ receivedAit: (uri) => kept.get(uri) })
+  const received = browser.getReceivedAIT(AIT) as unknown[][]
+
+  assert.equal(received[0][0], 0x0010)
+  assert.deepEqual(received[1], [
+    '10',
+    '1',
+    1,
+    'http://hc.example.test/p/index.html',
+  ])
+  assert.equal(browser.getReceivedAIT('http://hc.example.test/waiting.ait'), 0)
+  assert.equal(browser.getReceivedAIT('http://hc.example.test/never.ait'), 0)
+  assert.equal(browser.getReceivedAIT('http://hc.example.test/failed.ait'), -1)
+  assert.ok(Number.isNaN(browser.getReceivedAIT()))
+})
+
+test('starting an application of an AIT read again, named in hexadecimal, asks the player to start it and leaves the script', () => {
+  const read: string[] = []
+  const { browser, calls } = hybridcast({
+    readAit: (uri) => {
+      read.push(uri)
+
+      return [STARTS_BY_ITSELF]
+    },
+  })
+
+  assert.throws(
+    () => browser.startAITControlledApp('10', '1', AIT),
+    DocumentLeft,
+  )
+  assert.deepEqual(read, [AIT])
+  assert.deepEqual(calls, [`start ${AIT} 16 1`])
+})
+
+test('starting an application fails, and the player is told it did not open, when the AIT names none to start by these identifiers, cannot be read, or has no address', () => {
+  const presentOnly: AitApplication = {
+    ...STARTS_BY_ITSELF,
+    controlCode: CONTROL_CODE.present,
+  }
+  const cases: [BrowserHost['readAit'], unknown[]][] = [
+    [() => [STARTS_BY_ITSELF], ['10', '2', AIT]],
+    [() => [STARTS_BY_ITSELF], ['16', '1', AIT]],
+    [() => [presentOnly], ['10', '1', AIT]],
+    [() => null, ['10', '1', AIT]],
+    [() => [STARTS_BY_ITSELF], ['10', '1']],
+    [() => [STARTS_BY_ITSELF], ['0x10', '1', AIT]],
+  ]
+
+  for (const [readAit, args] of cases) {
+    const { browser, calls } = hybridcast({ readAit })
+
+    assert.ok(
+      Number.isNaN(browser.startAITControlledApp(...args)),
+      String(args),
+    )
+    assert.deepEqual(calls, ['unopened'], String(args))
+  }
+})
+
+test('an application that failed to start before is not started again while the broadcast stays open, and is said not to open', () => {
+  const read: string[] = []
+  const { browser, calls } = hybridcast({
+    readAit: (uri) => {
+      read.push(uri)
+
+      return [STARTS_BY_ITSELF]
+    },
+    failedBefore: (start) =>
+      start.ait === AIT && start.orgId === 16 && start.appId === 1,
+  })
+
+  assert.ok(Number.isNaN(browser.startAITControlledApp('10', '1', AIT)))
+  assert.deepEqual(read, [])
+  assert.deepEqual(calls, ['unopened'])
+})
+
+test('starting an application whose AIT is awaited stops the script, to be run again with it', () => {
+  const { browser, calls } = hybridcast({
+    readAit: () => {
+      throw new LineAwaited()
+    },
+  })
+
+  assert.throws(
+    () => browser.startAITControlledApp('10', '1', AIT),
+    LineAwaited,
+  )
+  assert.deepEqual(calls, [])
+})
+
+test('while Hybridcast is not allowed, receiving and starting fail as unsupported, and asking what was received fails quietly', () => {
+  for (const line of ['on', 'off', 'none'] as const) {
+    const { browser, calls, unsupported, warnings } = lined(line)
+
+    assert.ok(Number.isNaN(browser.startReceivingAIT(AIT)))
+    assert.ok(Number.isNaN(browser.startAITControlledApp('10', '1', AIT)))
+    assert.ok(Number.isNaN(browser.getReceivedAIT(AIT)))
+    assert.deepEqual(unsupported, [
+      'startReceivingAIT',
+      'startAITControlledApp',
+    ])
+    assert.deepEqual(warnings, ['not connected: getReceivedAIT'])
+    assert.deepEqual(calls, [])
+  }
 })

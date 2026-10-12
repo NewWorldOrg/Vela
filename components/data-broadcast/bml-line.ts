@@ -1,10 +1,20 @@
+import type { AitApplication } from '@/lib/bml/ait'
+import type { AitReception } from '@/lib/bml/browser'
 import { RELAY_FAILED, type TransmitAnswer } from '@/lib/bml/line'
 import { lineAddressOf } from '@/lib/bml/paths'
 import type { BmlModule, BmlResource } from '@/lib/bml/resources'
 import { LineAwaited } from '@/lib/bml/scripts'
 
-/** The most transmissions one run of a script is answered; past them it is answered as if the relay failed. */
+/** The most answers over the line one run of a script is given, transmissions and AITs together; past them it is answered as if the relay failed. */
 export const MOST_TRANSMITS_IN_A_RUN = 8
+
+/** The most AITs a document asks to receive and is answered about at once. */
+export const MOST_RECEIVED_AITS = 8
+
+/** What a run waited on and was given: the answer to a transmission, or the applications of an AIT read again, null when it could not be read. */
+export type LineAnswer =
+  | { to: 'transmit'; answer: TransmitAnswer }
+  | { to: 'ait'; applications: AitApplication[] | null }
 
 /** The most runs left waiting on the line at once. */
 export const MOST_AWAITED = 4
@@ -17,7 +27,7 @@ export const MOST_FETCHED = 256
 
 /** One run of a script: the answers it is given back in order, the transmission it is waiting on, and the timers it started, which are stopped when it waits so that its run again does not start them twice. */
 export interface LineCall {
-  answers: TransmitAnswer[]
+  answers: LineAnswer[]
   used: number
   asked: number | null
   timers: number[]
@@ -27,7 +37,7 @@ export interface LineCall {
 export interface Awaited<Seen> {
   seen: Seen
   code: string
-  answers: TransmitAnswer[]
+  answers: LineAnswer[]
   then: (() => void) | null
 }
 
@@ -40,7 +50,8 @@ export type AskOverTheLine = (
         text: string
         charset: string
       }
-    | { kind: 'fetch'; id: number; uri: string },
+    | { kind: 'fetch'; id: number; uri: string }
+    | { kind: 'ait'; id: number; uri: string },
 ) => void
 
 /** What the runtime asks over the line through the player and what came back: the answers that runs wait on, and the documents and resources fetched, by URL. A fetch that failed is kept as null so it is not asked again. */
@@ -57,12 +68,16 @@ export class LineRequests<Seen> {
 
   private readonly fetched = new Map<string, BmlResource | null>()
 
+  private readonly receiving = new Map<number, string>()
+
+  private readonly received = new Map<string, AitReception>()
+
   constructor(ask: AskOverTheLine) {
     this.ask = ask
   }
 
   /** Starts a run that is given back `answers` in order. */
-  begin(answers: TransmitAnswer[] = []): LineCall {
+  begin(answers: LineAnswer[] = []): LineCall {
     const call: LineCall = { answers, used: 0, asked: null, timers: [] }
 
     this.calls.push(call)
@@ -95,10 +110,67 @@ export class LineRequests<Seen> {
 
   /** What the run going on now gets from a transmission: the answer it had before if it is being run again, or, the first time, the request goes out and the run stops to wait. */
   transmit(uri: string, text: string, charset: string): TransmitAnswer {
+    const given = this.awaitAnswer((id) =>
+      this.ask({ kind: 'transmit', id, uri, text, charset }),
+    )
+
+    return given?.to === 'transmit' ? given.answer : RELAY_FAILED
+  }
+
+  /** What the run going on now gets from reading an AIT again, the same way as a transmission: its applications, or null when it could not be read. */
+  readAit(uri: string): AitApplication[] | null {
+    const given = this.awaitAnswer((id) => this.ask({ kind: 'ait', id, uri }))
+
+    return given?.to === 'ait' ? given.applications : null
+  }
+
+  /** Starts reading an AIT a document asked to receive, unless it is being read already; the run goes on. False when too many are kept already. */
+  receiveAit(uri: string): boolean {
+    if (this.received.get(uri) === 'waiting') {
+      return true
+    }
+
+    if (!this.received.has(uri) && this.received.size >= MOST_RECEIVED_AITS) {
+      return false
+    }
+
+    const id = this.next()
+
+    this.received.set(uri, 'waiting')
+    this.receiving.set(id, uri)
+    this.ask({ kind: 'ait', id, uri })
+
+    return true
+  }
+
+  /** What reading an AIT asked to be received has come to, or undefined when it was not asked for. */
+  receivedAit(uri: string): AitReception | undefined {
+    return this.received.get(uri)
+  }
+
+  /** Keeps an AIT that was read for a document that asked to receive it; one a run waited on instead is that run, with the AIT added to what it is given back. */
+  aitRead(
+    id: number,
+    applications: AitApplication[] | null,
+  ): Awaited<Seen> | null {
+    const uri = this.receiving.get(id)
+
+    if (uri === undefined) {
+      return this.answered(id, { to: 'ait', applications })
+    }
+
+    this.receiving.delete(id)
+    this.received.set(uri, applications ?? 'failed')
+
+    return null
+  }
+
+  /** The answer the run going on now had before if it is being run again, or, the first time, the request goes out and the run stops to wait. Null when there is no run, the answer given back is for another kind of request, or the run has asked too much already. */
+  private awaitAnswer(ask: (id: number) => void): LineAnswer | null {
     const call = this.calls[this.calls.length - 1]
 
     if (!call) {
-      return RELAY_FAILED
+      return null
     }
 
     if (call.used < call.answers.length) {
@@ -117,17 +189,17 @@ export class LineRequests<Seen> {
       call.answers.length >= MOST_TRANSMITS_IN_A_RUN ||
       this.awaited.size >= MOST_AWAITED
     ) {
-      return RELAY_FAILED
+      return null
     }
 
     call.asked = this.next()
-    this.ask({ kind: 'transmit', id: call.asked, uri, text, charset })
+    ask(call.asked)
 
     throw new LineAwaited()
   }
 
   /** The run that waited on the answer, with the answer added to those it is given back, or null when nothing waits on it. */
-  answered(id: number, answer: TransmitAnswer): Awaited<Seen> | null {
+  answered(id: number, answer: LineAnswer): Awaited<Seen> | null {
     const awaited = this.awaited.get(id)
 
     if (!awaited) {
@@ -204,10 +276,12 @@ export class LineRequests<Seen> {
     return this.fetching.size > 0
   }
 
-  /** Forgets every run that waits and every fetch on its way, as the document they belong to is gone. What was fetched is kept. */
+  /** Forgets every run that waits, every fetch on its way and every AIT asked to be received, as the document they belong to is gone. What was fetched is kept. */
   drop(): void {
     this.awaited.clear()
     this.fetching.clear()
+    this.receiving.clear()
+    this.received.clear()
   }
 
   /** Forgets everything, as the broadcast is closed. */

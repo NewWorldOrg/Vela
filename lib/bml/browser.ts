@@ -1,4 +1,12 @@
 import {
+  applicationToStart,
+  hexIdOf,
+  isAitUri,
+  receivedAitOf,
+  type AitApplication,
+  type AppStart,
+} from '@/lib/bml/ait'
+import {
   ETHERNET_DHCP,
   IP_CONNECTED,
   MOST_CHARSET,
@@ -17,6 +25,9 @@ import { DocumentLeft } from '@/lib/bml/scripts'
 
 /** What locking a module came to: held already, awaited from the carousel, absent from the carousel (the document hears of it as `ModuleLocked` with status -2), carried by no component, or named badly. */
 export type LockAnswer = 'held' | 'waiting' | 'absent' | 'noComponent' | 'bad'
+
+/** What reading an AIT that a document asked to receive has come to: still being read, failed, or its applications. */
+export type AitReception = 'waiting' | 'failed' | AitApplication[]
 
 /** What the runtime gives `browser.*` to work with. */
 export interface BrowserHost {
@@ -44,6 +55,13 @@ export interface BrowserHost {
   overTheLine(): boolean
   transmit(uri: string, text: string, charset: string): TransmitAnswer
   lineOff(what: string): void
+  hybridcast(): boolean
+  receiveAit(uri: string): boolean
+  receivedAit(uri: string): AitReception | undefined
+  readAit(uri: string): AitApplication[] | null
+  startApplication(start: AppStart): void
+  unopened(): void
+  failedBefore(start: AppStart): boolean
 }
 
 /** The functions a broadcast's document may call and get an answer from. */
@@ -78,6 +96,10 @@ export const SUPPORTED_FUNCTIONS = [
   'unlockAllModulesOnMemory',
   'getLockedModuleInfo',
   'random',
+  'getResidentAppVersion',
+  'startReceivingAIT',
+  'getReceivedAIT',
+  'startAITControlledApp',
 ] as const
 
 /** Called, these do nothing and say they succeeded. */
@@ -88,7 +110,6 @@ export const IGNORED_FUNCTIONS = [
   'unloadDRCS',
   'setCachedResourceMode',
   'setFullDataDisplayArea',
-  'getResidentAppVersion',
   'lockScreen',
   'unlockScreen',
 ] as const
@@ -100,7 +121,6 @@ export const UNCONNECTED_QUERIES = [
   'getConnectionType',
   'getISPParams',
   'getDelayedTransmissionData',
-  'getReceivedAIT',
   'X_DPA_getComBrowserUA',
 ] as const
 
@@ -121,8 +141,6 @@ export const REFUSED_FUNCTIONS = [
   'startResidentApp',
   'startExtraBrowser',
   'launchDocumentRestricted',
-  'startAITControlledApp',
-  'startReceivingAIT',
   'X_DPA_startResidentApp',
   'X_DPA_launchDocWithLink',
   'X_DPA_writeCproBM',
@@ -170,6 +188,34 @@ const BML_VERSIONS = new Set(['1.0', '2.0', '3.0'])
 export const BROWSER_NAME = 'Vela'
 
 export const BROWSER_VERSION = ['1', '0', '0']
+
+/** The maker this receiver names itself as where Hybridcast asks. No maker is named: a broadcaster's list holds the IDs of real makers, and naming one would pass for that maker's receiver. */
+export const MAKER_ID = ''
+
+/** The resident application `getResidentAppVersion` answers for while Hybridcast is allowed: the engine of the applications an AIT controls. */
+const HYBRIDCAST_ENGINE = 'AITControlledApp'
+
+/** What `getResidentAppVersion` answers for that engine: the maker, the model, the major and minor versions, and the name the IPTV Forum assigns, which this receiver has none of (IPTVFJ STD-0013 5.3.1). */
+const HYBRIDCAST_ENGINE_VERSION = [
+  MAKER_ID,
+  BROWSER_NAME,
+  BROWSER_VERSION[0],
+  BROWSER_VERSION[1],
+  '',
+]
+
+/** What `getBrowserSupport` is told yes to while Hybridcast is allowed: the group of functions that start an application, the HTML5 engine of phase 0, and the AIT in XML over HTTP (IPTVFJ STD-0010 appendix A.1). */
+const HYBRIDCAST_SUPPORT: Partial<Record<string, readonly string[]>> = {
+  AITControlledAppEngineFunction: ['IPTV-F', 'HTML5_ph0'],
+  AITTransportMethod: ['XML', 'HTTP'],
+}
+
+const HYBRIDCAST_GROUP = 'AITControlledApp.Start'
+
+/** What `getReceivedAIT` answers while the AIT is still being read, and when reading it failed. */
+const NOT_RECEIVED_YET = 0
+
+const NOT_RECEIVED = -1
 
 export const REGISTERS = 64
 
@@ -228,13 +274,31 @@ function programmeId(host: BrowserHost, which: unknown): string | null {
   return typeof id === 'number' ? hex(id) : null
 }
 
-function groupSupported(group: unknown, line: LineState): boolean {
+/** What a document may be told it can use: the line while it is used, and Hybridcast while the viewer allows it. */
+interface Offered {
+  line: LineState
+  hybridcast: boolean
+}
+
+function groupSupported(group: unknown, offered: Offered): boolean {
   if (typeof group !== 'string') {
     return false
   }
 
   return (
-    SUPPORTED_GROUPS.has(group) || (line === 'on' && LINE_GROUPS.has(group))
+    SUPPORTED_GROUPS.has(group) ||
+    (offered.line === 'on' && LINE_GROUPS.has(group)) ||
+    (offered.hybridcast && group === HYBRIDCAST_GROUP)
+  )
+}
+
+function hybridcastSupported(name: unknown, info: unknown[]): boolean {
+  const supported = typeof name === 'string' ? HYBRIDCAST_SUPPORT[name] : null
+
+  return (
+    !!supported &&
+    info.length === supported.length &&
+    supported.every((item, at) => info[at] === item)
   )
 }
 
@@ -242,7 +306,7 @@ function supportOf(
   provider: unknown,
   name: unknown,
   info: unknown[],
-  line: LineState,
+  offered: Offered,
 ): number {
   if (provider !== 'ARIB') {
     return 0
@@ -250,14 +314,14 @@ function supportOf(
 
   switch (name) {
     case 'APIGroup':
-      return Number(groupSupported(info[0], line))
+      return Number(groupSupported(info[0], offered))
     case 'BMLversion':
       return info.length === 0 ||
         (typeof info[0] === 'string' && BML_VERSIONS.has(info[0]))
         ? 1
         : 0
     default:
-      return 0
+      return Number(offered.hybridcast && hybridcastSupported(name, info))
   }
 }
 
@@ -394,6 +458,87 @@ function refuseTheLine(host: BrowserHost, name: string): unknown {
     : FAILED
 }
 
+/** What `getReceivedAIT` answers: the AIT as a document reads it once it is in, 0 while it is read or was never asked for, and -1 when reading it failed. Without an address it asks after an AIT of the broadcast, which this receiver does not watch. */
+function receivedAit(host: BrowserHost, uri: unknown): unknown {
+  if (!host.hybridcast()) {
+    host.warn('not connected: getReceivedAIT')
+
+    return FAILED
+  }
+
+  if (!isAitUri(uri)) {
+    return FAILED
+  }
+
+  const reception = host.receivedAit(uri)
+
+  if (reception === 'failed') {
+    return NOT_RECEIVED
+  }
+
+  return Array.isArray(reception) ? receivedAitOf(reception) : NOT_RECEIVED_YET
+}
+
+function receiveAit(host: BrowserHost, uri: unknown): number {
+  if (!host.hybridcast()) {
+    host.unsupported('startReceivingAIT')
+
+    return FAILED
+  }
+
+  if (!isAitUri(uri)) {
+    return FAILED
+  }
+
+  return host.receiveAit(uri) ? DONE : FAILED
+}
+
+/** The application to start, named by a document: the AIT by its address and both identifiers in hexadecimal, or null when one of them is not that. */
+function startOf(
+  orgId: unknown,
+  appId: unknown,
+  uri: unknown,
+): AppStart | null {
+  const org = hexIdOf(orgId)
+  const app = hexIdOf(appId)
+
+  return org !== null && app !== null && isAitUri(uri)
+    ? { ait: uri, orgId: org, appId: app }
+    : null
+}
+
+/** Reads the AIT again and asks the player to start the application both identifiers name, when it is one to start by itself; the script goes no further. Otherwise it fails and the player is told the application did not open. One that failed to start before is not tried again. */
+function startApplication(
+  host: BrowserHost,
+  orgId: unknown,
+  appId: unknown,
+  uri: unknown,
+): unknown {
+  if (!host.hybridcast()) {
+    host.unsupported('startAITControlledApp')
+
+    return FAILED
+  }
+
+  const start = startOf(orgId, appId, uri)
+  const applications =
+    start && !host.failedBefore(start) ? host.readAit(start.ait) : null
+  const found =
+    start && applications
+      ? applicationToStart(applications, start.orgId, start.appId)
+      : null
+
+  if (!start || !found) {
+    host.unopened()
+
+    return FAILED
+  }
+
+  host.startApplication(start)
+
+  throw new DocumentLeft()
+}
+
 function lockAnswerOf(host: BrowserHost, reference: unknown): number {
   const answer = host.lock(reference)
 
@@ -426,7 +571,10 @@ function supported(host: BrowserHost): Record<string, Answer> {
     getActiveDocument: () => host.activeDocument(),
     getBrowserVersion: () => [BROWSER_NAME, ...BROWSER_VERSION],
     getBrowserSupport: (provider: unknown, name: unknown, ...info: unknown[]) =>
-      supportOf(provider, name, info, host.line()),
+      supportOf(provider, name, info, {
+        line: host.line(),
+        hybridcast: host.hybridcast(),
+      }),
     getBrowserStatus: (provider: unknown, name: unknown, info: unknown) =>
       browserStatus(host, provider, name, info),
     getNPT: () => host.npt() ?? FAILED,
@@ -495,6 +643,14 @@ function supported(host: BrowserHost): Record<string, Answer> {
         .map((module) => [module.path, 2, module.held ? 1 : 2]),
     random: (most: unknown) =>
       1 + Math.floor(Math.random() * Math.max(1, count(most))),
+    getResidentAppVersion: (name: unknown) =>
+      name === HYBRIDCAST_ENGINE && host.hybridcast()
+        ? [...HYBRIDCAST_ENGINE_VERSION]
+        : DONE,
+    startReceivingAIT: (uri: unknown) => receiveAit(host, uri),
+    getReceivedAIT: (uri: unknown) => receivedAit(host, uri),
+    startAITControlledApp: (orgId: unknown, appId: unknown, uri: unknown) =>
+      startApplication(host, orgId, appId, uri),
   }
 }
 
