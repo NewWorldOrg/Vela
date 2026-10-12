@@ -201,16 +201,26 @@ export class FakeTimers {
     { every: number; run: () => void }
   >()
 
-  private readonly timeouts: { at: number; run: () => void }[] = []
+  private readonly timeouts: { id: number; at: number; run: () => void }[] = []
 
   private ids = 0
 
   now = 0
 
   setTimeout(run: () => void, ms: number): number {
-    this.timeouts.push({ at: this.now + ms, run })
+    const id = (this.ids += 1)
 
-    return (this.ids += 1)
+    this.timeouts.push({ id, at: this.now + ms, run })
+
+    return id
+  }
+
+  clearTimeout(id: number): void {
+    const at = this.timeouts.findIndex((timeout) => timeout.id === id)
+
+    if (at >= 0) {
+      this.timeouts.splice(at, 1)
+    }
   }
 
   setInterval(run: () => void, every: number): number {
@@ -296,6 +306,7 @@ export function fakeFrame(playerOrigin: string): FakeFrame {
     innerHeight: 540,
     console: { warn: (line: string) => warnings.push(line) },
     setTimeout: (run: () => void, ms: number) => timers.setTimeout(run, ms),
+    clearTimeout: (id: number) => timers.clearTimeout(id),
     setInterval: (run: () => void, ms: number) => timers.setInterval(run, ms),
     clearInterval: (id: number) => timers.clearInterval(id),
     document,

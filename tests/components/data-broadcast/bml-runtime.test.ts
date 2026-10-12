@@ -351,7 +351,7 @@ test('a module the catalog stops listing is let go', () => {
 const ENTRY = bml(
   '<p id="hidden">nothing to see</p>',
   '<bevent><beitem id="d" type="DataButtonPressed" subscribe="subscribe" onoccur="browser.launchDocument(\'/60/0000/startup.bml\', \'cut\')"/></bevent>',
-)
+).replace('<body>', '<body invisible="invisible">')
 
 const FACE = bml(
   '<object type="video/X-arib-mpeg2" style="left: 560px; top: 60px; width: 360px; height: 203px"/>' +
@@ -487,10 +487,10 @@ test('a timer runs its code at each interval for as many times as asked, and is 
 const REMEMBERING = bml(
   '<p id="p">p</p>',
   '<script>' +
-    'var visits = browser.readPersistentArray("visits", "U:8B");' +
-    'var count = visits ? visits[0] + 1 : 1;' +
-    'browser.Ureg[0] = String(browser.writePersistentArray("visits", "U:8B", [count]));' +
-    'browser.Ureg[1] = String(browser.writePersistentArray("big", "S:16V", [new Array(70000).join("x")]));' +
+    'var visits = browser.readPersistentArray("visits", "U:1B");' +
+    'var count = visits[0] + 1;' +
+    'browser.Ureg[0] = String(browser.writePersistentArray("visits", "U:1B", [count]));' +
+    'browser.Ureg[1] = String(browser.writePersistentArray("big", "S:2V", [new Array(70).join("x")]));' +
     '</script>',
 )
 
@@ -502,7 +502,7 @@ test('what a document writes to the persistent memory is handed to the player, w
   assert.deepEqual(heard()[0], {
     kind: 'memory',
     name: 'visits',
-    value: JSON.stringify({ structure: 'U:8B', data: [1] }),
+    value: 'AQ==',
   })
   assert.equal(registers[0], '1')
   assert.equal(registers[1], 'NaN')
@@ -510,14 +510,14 @@ test('what a document writes to the persistent memory is handed to the player, w
   forget()
   send({
     kind: 'memory',
-    entries: [['visits', JSON.stringify({ structure: 'U:8B', data: [41] })]],
+    entries: [['visits', 'KQ==']],
   })
   send({ kind: 'open' })
 
   assert.deepEqual(heard()[0], {
     kind: 'memory',
     name: 'visits',
-    value: JSON.stringify({ structure: 'U:8B', data: [42] }),
+    value: 'Kg==',
   })
 })
 
@@ -716,8 +716,8 @@ test('a digit focuses the element whose access key it is', () => {
 const TABLED = bml(
   '<p id="p">p</p>',
   '<script>' +
-    'var t = new CSVTable("table.csv", "U:8B,S:16V");' +
-    'var b = new BinaryTable("table.bin", "U:8B,U:8B");' +
+    'var t = new CSVTable("table.csv", "U:1B,S:1V");' +
+    'var b = new BinaryTable("table.bin", "0,U:1B,U:1B");' +
     'browser.Ureg[0] = t.nrow + ":" + t.toString(1, 1) + ":" + b.nrow + ":" + b.toNumber(1, 1);' +
     '</script>',
 )
@@ -751,4 +751,190 @@ test('the body’s onload runs after the scripts and before the focus settles', 
 
   assert.equal(registers[0], 'script load:load')
   assert.deepEqual(heard()[0], { kind: 'videoRect', rect: null })
+})
+
+const ENTRY_LATER = bml(
+  '<p id="hidden">entry</p>',
+  '<bevent><beitem id="pressed" type="DataButtonPressed" subscribe="subscribe" onoccur="go()"/></bevent>' +
+    '<script>' +
+    'var ready = false; var presses = 0;' +
+    'function go() { presses += 1; browser.Ureg[0] = String(presses); if (ready) { browser.launchDocument("/60/0000/startup.bml", "cut") } }' +
+    'browser.setInterval("ready = true", 300, 1);' +
+    '</script>',
+).replace('<body>', '<body invisible="invisible">')
+
+test('an entry document marked invisible that readies itself on a timer is given the data button again a moment later, and the face it then launches is not', () => {
+  const { runtime, heard, element, timers } = opened(ENTRY_LATER, [
+    module(0, { 'startup.bml': ['bml', FACE] }, 0x60),
+  ])
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], '1')
+  assert.ok(element('hidden'))
+
+  timers.tick(300)
+  assert.equal(registers[0], '1')
+
+  timers.tick(200)
+  assert.equal(registers[0], '2')
+  assert.equal(element('hidden'), null)
+  assert.ok(element('menu'))
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'videoRect'),
+    [
+      { kind: 'videoRect', rect: null },
+      {
+        kind: 'videoRect',
+        rect: { left: 560, top: 60, width: 360, height: 203 },
+      },
+    ],
+  )
+
+  timers.tick(500)
+  timers.tick(500)
+  assert.ok(element('menu'))
+})
+
+const NEVER_READY = bml('<p id="hidden">entry</p>').replace(
+  '<body>',
+  '<body invisible="invisible" onkeydown="browser.Ureg[0] += \'d\'" style="nav-index: 0">',
+)
+
+test('an entry document that never shows anything is given the data button a few times, then left', () => {
+  const { runtime, timers } = opened(NEVER_READY)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  for (let round = 0; round < 10; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[0], 'dddddd')
+})
+
+const MIXED = bml(
+  '<p id="face">face</p>',
+  '<script>' +
+    'var a = browser.getBrowserSupport("ARIB", "APIGroup", "Ctrl.Basic");' +
+    'var b = browser.noSuchThing(1);' +
+    'var c = browser.getProgramID(3);' +
+    'var d = browser.detectComponent("/40") + "" + browser.detectComponent("/50");' +
+    'browser.Ureg[0] = [a, b, c, d].join(",");' +
+    'var start = new Date(2026, 0, 1, 0, 0, 0);' +
+    'var later = browser.addDate(start, 90, 2);' +
+    'browser.Ureg[1] = [browser.subDate(later, start, 1), browser.subDate(later, start, 2), browser.subDate(later, start, 3), browser.subDate(start, later, 4), browser.subDate(later, start, 0), browser.addDate("x", 1, 1)].join(",");' +
+    'undefinedThing.property = 1;' +
+    'browser.Ureg[2] = "not reached";' +
+    '</script>' +
+    '<script>browser.Ureg[3] = "next script"</script>',
+)
+
+test('a face whose script calls what is not supported, asks after the programme and the dates, then fails, stays standing and the next script runs', () => {
+  const made = opened()
+  const { runtime, send, forget, heard, element, warnings } = made
+
+  forget()
+  send({
+    kind: 'programme',
+    programme: {
+      service: 1024,
+      event: null,
+      network: 32736,
+      stream: null,
+      startsAt: null,
+    },
+  })
+  send({ kind: 'module', module: module(0, { 'startup.bml': ['bml', MIXED] }) })
+  send({ kind: 'open' })
+
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], '1,NaN,0x7fe0,10')
+  assert.equal(registers[1], '5400,90,1,0,5400000,NaN')
+  assert.equal(registers[2], '')
+  assert.equal(registers[3], 'next script')
+  assert.ok(element('face'))
+  assert.deepEqual(heard(), [
+    { kind: 'videoRect', rect: null },
+    {
+      kind: 'usedKeys',
+      keys: [
+        'up',
+        'down',
+        'left',
+        'right',
+        'enter',
+        'back',
+        'd',
+        'blue',
+        'red',
+        'green',
+        'yellow',
+      ],
+    },
+  ])
+  assert.ok(
+    warnings.some((line) =>
+      line.includes('unsupported browser function: noSuchThing'),
+    ),
+  )
+  assert.ok(
+    warnings.some((line) => /script failed: ReferenceError: /.test(line)),
+  )
+})
+
+const SUBSCRIBING = bml(
+  '<p id="p">p</p>',
+  '<bevent>' +
+    '<beitem id="l" type="ModuleLocked" onoccur="browser.Ureg[0] = \'locked:\' + document.currentEvent.moduleRef"/>' +
+    '<beitem id="m" type="EventMessageFired" message_group_id="0" message_id="7" subscribe="subscribe" onoccur="browser.Ureg[1] = \'fired\'"/>' +
+    '</bevent>' +
+    '<script>' +
+    'var item = document.getElementById("l");' +
+    'item.moduleRef = "~/0001"; item.subscribe = true;' +
+    'var fired = document.getElementById("m");' +
+    'browser.Ureg[2] = [fired.messageGroupId, fired.messageId, fired.messageVersion, item.moduleRef, item.esRef].join(",");' +
+    'fired.messageId = 8;' +
+    'browser.lockModuleOnMemoryEx("~/0001");' +
+    '</script>',
+)
+
+test('a script may set what a beitem listens for: a module named afterwards reaches it, and a message id changed afterwards is the one listened for', () => {
+  const { runtime, send, timers } = opened(SUBSCRIBING, [
+    module(1, { 'next.bml': ['bml', NEXT] }),
+  ])
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  timers.tick(0)
+  assert.equal(registers[0], 'locked:/40/0001')
+  assert.equal(registers[2], '0,7,NaN,~/0001,')
+
+  send({
+    kind: 'event',
+    event: {
+      group: 0,
+      id: 7,
+      type: 1,
+      immediate: true,
+      at: 0,
+      privateData: new Uint8Array(0),
+    },
+  })
+  assert.equal(registers[1], '')
+
+  send({
+    kind: 'event',
+    event: {
+      group: 0,
+      id: 8,
+      type: 1,
+      immediate: true,
+      at: 0,
+      privateData: new Uint8Array(0),
+    },
+  })
+  assert.equal(registers[1], 'fired')
 })

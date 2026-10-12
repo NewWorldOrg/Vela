@@ -510,7 +510,26 @@ export class BmlElement {
   }
 }
 
-/** A `beitem` as a script reads it: its id and type, and whether it is subscribed. */
+/** The attributes of a `beitem` a script reads and writes by name, those read as numbers marked. */
+const ITEM_PROPERTIES: Record<string, { attribute: string; number: boolean }> =
+  {
+    esRef: { attribute: 'es_ref', number: false },
+    moduleRef: { attribute: 'module_ref', number: false },
+    peripheralRef: { attribute: 'peripheral_ref', number: false },
+    languageCode: { attribute: 'language_code', number: false },
+    timeMode: { attribute: 'time_mode', number: false },
+    timeValue: { attribute: 'time_value', number: false },
+    objectId: { attribute: 'object_id', number: false },
+    segmentId: { attribute: 'segment_id', number: false },
+    messageGroupId: { attribute: 'message_group_id', number: true },
+    messageId: { attribute: 'message_id', number: true },
+    messageVersion: { attribute: 'message_version', number: true },
+    registerId: { attribute: 'register_id', number: true },
+    serviceId: { attribute: 'service_id', number: true },
+    eventId: { attribute: 'event_id', number: true },
+  }
+
+/** A `beitem` as a script reads it: its id and type, what it listens for, and whether it is subscribed. */
 export class BmlEventItem {
   readonly #item: EventItem
 
@@ -547,7 +566,31 @@ export class BmlEventItem {
       ? (this.#item.attributes.get(name.toLowerCase()) ?? null)
       : null
   }
+
+  setAttribute(name: unknown, value: unknown): void {
+    if (typeof name === 'string' && /^[a-z][a-z0-9_]*$/i.test(name)) {
+      this.#item.attributes.set(name.toLowerCase(), String(value))
+    }
+  }
 }
+
+Object.entries(ITEM_PROPERTIES).forEach(([name, { attribute, number }]) => {
+  Object.defineProperty(BmlEventItem.prototype, name, {
+    enumerable: true,
+    get(this: BmlEventItem): string | number | null {
+      const value = this.getAttribute(attribute)
+
+      if (value === null) {
+        return number ? Number.NaN : null
+      }
+
+      return number ? Number(value) : value
+    },
+    set(this: BmlEventItem, value: unknown) {
+      this.setAttribute(attribute, value)
+    },
+  })
+})
 
 /** The `document` a script sees: a way to its elements and events by id, the focus and the event being handled. */
 export class ScriptedDocument {
@@ -602,6 +645,16 @@ export class BmlDocument {
 
   focusedIs(element: HTMLElement | null): void {
     this.inner.focused = element
+  }
+
+  /** Whether the page is one nothing of can be seen: its body is marked invisible or its visibility is hidden, as an entry document that waits for the data button is. */
+  cannotBeSeen(): boolean {
+    const body = this.inner.stage.body
+
+    return (
+      body.getAttribute('data-bml-attr-invisible') !== null ||
+      this.inner.styleOf(body, 'normal', 'visibility') === 'hidden'
+    )
   }
 
   /** An element as a handler reads it for `currentEvent.target`. */

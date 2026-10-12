@@ -226,9 +226,9 @@ function onKey() {
   if (code == 24) { remember(); }
 }
 function remember() {
-  var kept = browser.readPersistentArray("visits", "U:16B");
+  var kept = browser.readPersistentArray("visits", "U:2B");
   visits = (kept ? kept[0] : 0) + 1;
-  browser.writePersistentArray("visits", "U:16B", [visits]);
+  browser.writePersistentArray("visits", "U:2B", [visits]);
   document.getElementById("visits").firstChild.data = "きょう " + visits + " 回目";
 }
 function ticked() {

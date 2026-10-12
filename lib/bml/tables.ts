@@ -1,130 +1,55 @@
-import { columnsOf, fieldsOf, type Field } from '@/lib/bml/structure'
+import {
+  BROADCAST_TEXT,
+  BitReader,
+  readCells,
+  type Cell,
+} from '@/lib/bml/fields'
+import {
+  columnsOf,
+  fieldsOf,
+  tableStructureOf,
+  type Field,
+  type TableStructure,
+} from '@/lib/bml/structure'
+import { isZipCode, zipIncludes } from '@/lib/bml/zipcode'
 
-export type Cell = number | string | boolean
+export type { Cell } from '@/lib/bml/fields'
 
 export const MOST_ROWS = 65536
 
-function decoder(): TextDecoder {
-  try {
-    return new TextDecoder('euc-jp')
-  } catch {
-    return new TextDecoder('utf-8')
-  }
-}
-
-class BitReader {
-  private at = 0
-
-  private readonly bytes: Uint8Array
-
-  constructor(bytes: Uint8Array) {
-    this.bytes = bytes
-  }
-
-  get left(): number {
-    return this.bytes.length * 8 - this.at
-  }
-
-  bits(count: number): number {
-    let value = 0
-
-    for (let read = 0; read < count; read += 1) {
-      const byte = this.bytes[this.at >> 3]
-      const bit = (byte >> (7 - (this.at & 7))) & 1
-
-      value = value * 2 + bit
-      this.at += 1
-    }
-
-    return value
-  }
-
-  bytesOf(count: number): Uint8Array {
-    const taken = new Uint8Array(count)
-
-    for (let index = 0; index < count; index += 1) {
-      taken[index] = this.bits(8)
-    }
-
-    return taken
-  }
-}
-
-function signed(value: number, bits: number): number {
-  return bits > 0 && value >= 2 ** (bits - 1) ? value - 2 ** bits : value
-}
-
-function zip(value: number): string {
-  return String(value).padStart(7, '0')
-}
-
-function readCell(
-  reader: BitReader,
-  field: Field,
-  text: TextDecoder,
-): Cell | undefined {
-  if (field.type === 'S') {
-    if (field.unit === 'V' && reader.left < field.length) {
-      return undefined
-    }
-
-    const bytes =
-      field.unit === 'V'
-        ? reader.bits(field.length)
-        : Math.floor(field.length / 8)
-
-    return reader.left >= bytes * 8
-      ? text.decode(reader.bytesOf(bytes))
-      : undefined
-  }
-
-  if (reader.left < field.length) {
-    return undefined
-  }
-
-  const value = reader.bits(field.length)
-
-  switch (field.type) {
-    case 'I':
-      return signed(value, field.length)
-    case 'B':
-      return value !== 0
-    case 'Z':
-      return zip(value)
-    default:
-      return value
-  }
-}
-
-/** The rows of a binary table: each field read in turn, bit by bit, until the bytes run out. A row cut short is left out. */
-export function binaryRowsOf(bytes: Uint8Array, fields: Field[]): Cell[][] {
-  const reader = new BitReader(bytes)
-  const text = decoder()
+/** The rows of a binary table: each row begins with its length when the structure says so, and its fields are read in turn. A row cut short is left out, and so is everything after it. */
+export function binaryRowsOf(
+  bytes: Uint8Array,
+  structure: TableStructure,
+): Cell[][] {
   const rows: Cell[][] = []
-  const width = fields.reduce((sum, field) => sum + field.length, 0)
+  let at = 0
 
-  while (reader.left > 0 && width > 0 && rows.length < MOST_ROWS) {
-    const row: Cell[] = []
-    let whole = true
+  while (at < bytes.length && rows.length < MOST_ROWS) {
+    const head = structure.rowLength
+    const length =
+      head > 0 && at + head <= bytes.length
+        ? new BitReader(bytes.subarray(at, at + head)).bits(head * 8)
+        : null
 
-    for (const field of fields) {
-      const cell = readCell(reader, field, text)
-
-      if (cell === undefined) {
-        whole = false
-        break
-      }
-
-      if (field.type !== 'P') {
-        row.push(cell)
-      }
+    if (head > 0 && length === null) {
+      break
     }
 
-    if (!whole) {
+    const from = at + head
+    const block =
+      length === null
+        ? bytes.subarray(from)
+        : bytes.subarray(from, from + length)
+    const reader = new BitReader(block)
+    const row = readCells(reader, structure.fields, BROADCAST_TEXT)
+
+    if (!row) {
       break
     }
 
     rows.push(row)
+    at = from + (length ?? reader.bytesTaken)
   }
 
   return rows
@@ -165,80 +90,176 @@ export function csvRowsOf(source: string, fields: Field[]): Cell[][] {
     })
 }
 
-const COMPARE: Record<number, (cell: Cell, compared: Cell) => boolean> = {
+type Compare = (cell: Cell, compared: unknown) => boolean
+
+function masked(value: number, field: Field): number {
+  const bits = field.unit === 'b' ? field.length : field.length * 8
+
+  return bits >= 32 ? value >>> 0 : value & (2 ** bits - 1)
+}
+
+/** How numbers are compared by value. */
+const NUMERIC: Record<number, (cell: number, compared: number) => boolean> = {
   0: (cell, compared) => cell === compared,
   1: (cell, compared) => cell !== compared,
   2: (cell, compared) => cell < compared,
   3: (cell, compared) => cell <= compared,
   4: (cell, compared) => cell > compared,
   5: (cell, compared) => cell >= compared,
-  6: (cell, compared) => String(cell).includes(String(compared)),
+}
+
+/** How numbers are compared bit by bit: the condition holds when a bit of the result is set within the width of the field. */
+const BITWISE: Record<number, (cell: number, compared: number) => number> = {
+  6: (cell, compared) => cell & compared,
+  7: (cell, compared) => cell | compared,
+  8: (cell, compared) => cell ^ compared,
+  9: (cell, compared) => ~(cell & compared),
+  10: (cell, compared) => ~(cell | compared),
+  11: (cell, compared) => ~(cell ^ compared),
+}
+
+/** How text is compared: whole, by a part, by its start or its end, and the two denials. */
+const TEXT: Record<number, (cell: string, compared: string) => boolean> = {
+  32: (cell, compared) => cell === compared,
+  33: (cell, compared) => cell.includes(compared),
+  34: (cell, compared) => cell.startsWith(compared),
+  35: (cell, compared) => cell.endsWith(compared),
+  36: (cell, compared) => cell !== compared,
+  37: (cell, compared) => !cell.includes(compared),
+}
+
+const TRUTH: Record<number, (cell: boolean, compared: boolean) => boolean> = {
+  64: (cell, compared) => cell === compared,
+  65: (cell, compared) => cell !== compared,
+}
+
+const ZIP: Record<number, boolean> = { 96: true, 97: false }
+
+function numericCompare(operator: number, field: Field): Compare | null {
+  const byValue = NUMERIC[operator]
+  const byBits = BITWISE[operator]
+
+  if (byValue) {
+    return (cell, compared) => byValue(Number(cell), Number(compared))
+  }
+
+  return byBits
+    ? (cell, compared) =>
+        masked(byBits(Number(cell), Number(compared)), field) !== 0
+    : null
+}
+
+/** The comparison an operator names for a column, or null when the operator is not one for that column's kind. */
+function compareOf(operator: number, field: Field): Compare | null {
+  switch (field.type) {
+    case 'U':
+    case 'I':
+      return numericCompare(operator, field)
+    case 'S':
+      return TEXT[operator]
+        ? (cell, compared) => TEXT[operator](String(cell), String(compared))
+        : null
+    case 'B':
+      return TRUTH[operator]
+        ? (cell, compared) => TRUTH[operator](Boolean(cell), Boolean(compared))
+        : null
+    case 'Z':
+      return operator in ZIP
+        ? (cell, compared) =>
+            isZipCode(cell) && zipIncludes(cell, compared) === ZIP[operator]
+        : null
+    default:
+      return null
+  }
 }
 
 interface Condition {
   column: number
-  compared: Cell
-  operator: number
-  joinedByOr: boolean
+  compared: unknown
+  compare: Compare
 }
 
-function conditionsOf(args: unknown[]): Condition[] | null {
-  if (args.length % 4 !== 0) {
+interface Search {
+  startRow: number
+  conditions: Condition[]
+  anyOf: boolean
+  limit: number
+  into: unknown[]
+}
+
+const CONDITION_ARGS = 3
+
+const TAIL_ARGS = 3
+
+function searchOf(columns: Field[], args: unknown[]): Search | null {
+  const [startRow, ...rest] = args
+  const count = (rest.length - TAIL_ARGS) / CONDITION_ARGS
+  const [anyOf, limit, into] = rest.slice(-TAIL_ARGS)
+
+  if (
+    !Number.isInteger(startRow) ||
+    (startRow as number) < 0 ||
+    !Number.isInteger(count) ||
+    count < 1 ||
+    !Number.isInteger(limit) ||
+    (limit as number) < 1 ||
+    !Array.isArray(into)
+  ) {
     return null
   }
 
   const conditions: Condition[] = []
 
-  for (let at = 0; at < args.length; at += 4) {
-    const [column, compared, operator, logic] = args.slice(at, at + 4)
+  for (let at = 0; at < count * CONDITION_ARGS; at += CONDITION_ARGS) {
+    const [column, compared, operator] = rest.slice(at, at + CONDITION_ARGS)
+    const field = typeof column === 'number' ? columns[column] : undefined
+    const compare =
+      field && typeof operator === 'number' ? compareOf(operator, field) : null
 
-    if (
-      typeof column !== 'number' ||
-      typeof operator !== 'number' ||
-      !(operator in COMPARE) ||
-      (typeof compared !== 'number' &&
-        typeof compared !== 'string' &&
-        typeof compared !== 'boolean')
-    ) {
+    if (!compare) {
       return null
     }
 
-    conditions.push({ column, compared, operator, joinedByOr: logic === 1 })
+    conditions.push({ column: column as number, compared, compare })
   }
 
-  return conditions
-}
-
-function joined(
-  result: boolean,
-  holds: boolean,
-  by: 'first' | 'and' | 'or',
-): boolean {
-  switch (by) {
-    case 'first':
-      return holds
-    case 'and':
-      return result && holds
-    case 'or':
-      return result || holds
+  return {
+    startRow: startRow as number,
+    conditions,
+    anyOf: Boolean(anyOf),
+    limit: limit as number,
+    into,
   }
 }
 
-function matches(row: Cell[], conditions: Condition[]): boolean {
-  let result = false
-  let by: 'first' | 'and' | 'or' = 'first'
+function holds(row: Cell[], condition: Condition): boolean {
+  return condition.compare(row[condition.column], condition.compared)
+}
 
-  for (const condition of conditions) {
-    const holds = COMPARE[condition.operator](
-      row[condition.column],
-      condition.compared,
+function matches(row: Cell[], search: Search): boolean {
+  return search.anyOf
+    ? search.conditions.some((condition) => holds(row, condition))
+    : search.conditions.every((condition) => holds(row, condition))
+}
+
+/** A row as a search gives it back: a zip code column becomes whether the row's conditions on it held, and false where there was none. */
+function found(row: Cell[], search: Search): unknown[] {
+  return row.map((cell, column) => {
+    if (!isZipCode(cell)) {
+      return cell
+    }
+
+    const on = search.conditions.filter(
+      (condition) => condition.column === column,
     )
+    const held = on.filter((condition) => holds(row, condition)).length
 
-    result = joined(result, holds, by)
-    by = condition.joinedByOr ? 'or' : 'and'
-  }
+    return held > 0 && (search.anyOf || held === on.length)
+  })
+}
 
-  return result
+function plain(cell: Cell | undefined): number | string | boolean | undefined {
+  return isZipCode(cell) ? undefined : cell
 }
 
 /** A table a document reads: rows of cells, each cell by its row and column. */
@@ -249,10 +270,13 @@ export class Table {
 
   private readonly rows: Cell[][]
 
-  constructor(rows: Cell[][], columns: number) {
+  private readonly columns: Field[]
+
+  constructor(rows: Cell[][], columns: Field[]) {
     this.rows = rows
+    this.columns = columns
     this.nrow = rows.length
-    this.ncolumn = columns
+    this.ncolumn = columns.length
   }
 
   close(): void {}
@@ -264,57 +288,58 @@ export class Table {
   }
 
   toNumber(row: unknown, column: unknown): number {
-    const cell = this.cell(row, column)
+    const cell = plain(this.cell(row, column))
 
     return cell === undefined ? Number.NaN : Number(cell)
   }
 
   toString(row: unknown, column: unknown): string | null {
-    const cell = this.cell(row, column)
+    const cell = plain(this.cell(row, column))
 
     return cell === undefined ? null : String(cell)
   }
 
-  toArray(startRow: unknown, numRow: unknown): Cell[][] | null {
-    if (typeof startRow !== 'number' || typeof numRow !== 'number') {
+  /** The rows from one for as many as asked, as far as the table goes; a zip code is given as null. */
+  toArray(startRow: unknown, numRow: unknown): unknown[][] | null {
+    if (
+      !Number.isInteger(startRow) ||
+      !Number.isInteger(numRow) ||
+      (startRow as number) < 0 ||
+      (numRow as number) < 0
+    ) {
       return null
     }
 
-    const taken = this.rows.slice(startRow, startRow + numRow)
+    const from = startRow as number
 
-    return taken.length > 0 ? taken.map((row) => [...row]) : null
+    return this.rows
+      .slice(from, from + (numRow as number))
+      .map((row) => row.map((cell) => plain(cell) ?? null))
   }
 
-  /** Searches from a row by conditions of four each (column, compared, operator, logic), then a limit, the columns to give and the array to fill with them. The number of rows found, or -1 when the call is not one. */
-  search(startRow: unknown, ...rest: unknown[]): number {
-    const [limit, resultColumns, resultArray] = rest.slice(-3)
-    const conditions = conditionsOf(rest.slice(0, -3))
+  /** Searches from a row by conditions of three each (column, compared, operator), then whether any one condition is enough, how many rows to find and the array to fill with them. The row at which the count was reached, -1 when the table ended first, or NaN when the call is not one. */
+  search(...args: unknown[]): number {
+    const search = searchOf(this.columns, args)
 
-    if (
-      typeof startRow !== 'number' ||
-      !conditions ||
-      typeof limit !== 'number' ||
-      !Array.isArray(resultColumns) ||
-      !Array.isArray(resultArray)
-    ) {
-      return -1
+    if (!search) {
+      return Number.NaN
     }
 
-    const most = limit > 0 ? limit : Number.POSITIVE_INFINITY
-    const found = this.rows
-      .slice(Math.max(0, startRow))
-      .filter((row) => matches(row, conditions))
-      .slice(0, most)
+    search.into.length = 0
 
-    found.forEach((row) =>
-      resultArray.push(
-        resultColumns.map((column) =>
-          typeof column === 'number' ? row[column] : undefined,
-        ),
-      ),
-    )
+    for (let at = search.startRow; at < this.rows.length; at += 1) {
+      if (!matches(this.rows[at], search)) {
+        continue
+      }
 
-    return found.length
+      search.into.push(found(this.rows[at], search))
+
+      if (search.into.length >= search.limit) {
+        return at
+      }
+    }
+
+    return -1
   }
 }
 
@@ -325,30 +350,28 @@ export interface TableSource {
 
 export type TableLookup = (reference: unknown) => TableSource | null
 
-/** The `BinaryTable` and `CSVTable` constructors a document calls, over the resources the runtime holds. A table that is not there has no rows. */
+/** The `BinaryTable` and `CSVTable` constructors a document calls, over the resources the runtime holds. A table that is not there, or a structure that is not one, has no rows. */
 export function tableClassesOf(lookup: TableLookup) {
   class BinaryTable extends Table {
     constructor(reference: unknown, structure: unknown) {
-      const fields =
-        typeof structure === 'string' ? (fieldsOf(structure) ?? []) : []
-      const source = fields.length > 0 ? lookup(reference) : null
+      const read = tableStructureOf(structure)
+      const source = read ? lookup(reference) : null
 
       super(
-        source ? binaryRowsOf(source.body, fields) : [],
-        columnsOf(fields).length,
+        read && source ? binaryRowsOf(source.body, read) : [],
+        columnsOf(read?.fields ?? []),
       )
     }
   }
 
   class CSVTable extends Table {
     constructor(reference: unknown, structure: unknown) {
-      const fields =
-        typeof structure === 'string' ? (fieldsOf(structure) ?? []) : []
+      const fields = fieldsOf(structure) ?? []
       const source = fields.length > 0 ? lookup(reference) : null
 
       super(
-        source ? csvRowsOf(decoder().decode(source.body), fields) : [],
-        columnsOf(fields).length,
+        source ? csvRowsOf(BROADCAST_TEXT.decode(source.body), fields) : [],
+        columnsOf(fields),
       )
     }
   }

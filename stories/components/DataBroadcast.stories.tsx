@@ -241,18 +241,12 @@ export const スクリプトで切り替わるページ: Story = {
 
     await press(board, 'y')
     await waitFor(() =>
-      expect(board).toHaveAttribute(
-        'data-memory',
-        'visits={"structure":"U:16B","data":[1]}',
-      ),
+      expect(board).toHaveAttribute('data-memory', 'visits=AAE='),
     )
 
     await press(board, 'y')
     await waitFor(() =>
-      expect(board).toHaveAttribute(
-        'data-memory',
-        'visits={"structure":"U:16B","data":[2]}',
-      ),
+      expect(board).toHaveAttribute('data-memory', 'visits=AAI='),
     )
 
     await press(board, 'g')

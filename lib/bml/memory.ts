@@ -1,4 +1,5 @@
-import { columnsOf, fieldsOf, fitsField } from '@/lib/bml/structure'
+import { BitReader, UTF8, readCells, writeCells } from '@/lib/bml/fields'
+import { fieldsOf, fitsField } from '@/lib/bml/structure'
 
 /** How much one broadcaster may keep, over every name together. */
 export const MOST_MEMORY_BYTES = 64 * 1024
@@ -7,6 +8,10 @@ export const MOST_MEMORY_NAME = 256
 
 export const MOST_MEMORY_ENTRIES = 1024
 
+/** What one name holds: a block of this many bytes, read as zeros until written. */
+export const AREA_BYTES = 64
+
+/** A broadcaster's memory as the player keeps it: each name with its block, written out as base64. */
 export type MemoryEntries = [string, string][]
 
 /** The part of `Storage` the player keeps a broadcaster's memory in. */
@@ -69,15 +74,33 @@ export function keepMemory(
 
 const utf8 = new TextEncoder()
 
-function bytesOf(text: string): number {
-  return utf8.encode(text).length
+function bytesOfName(name: string): number {
+  return utf8.encode(name).length
+}
+
+/** A block written out as base64, the form the player keeps. */
+export function blockToText(block: Uint8Array): string {
+  return btoa(Array.from(block, (byte) => String.fromCharCode(byte)).join(''))
+}
+
+/** A block read back from base64, or null when the text is not one. */
+export function blockOfText(text: string): Uint8Array | null {
+  try {
+    const decoded = atob(text)
+
+    return decoded.length <= AREA_BYTES
+      ? Uint8Array.from(decoded, (char) => char.charCodeAt(0))
+      : null
+  } catch {
+    return null
+  }
 }
 
 export type OnWrite = (name: string, value: string | null) => void
 
-/** The runtime's copy of one broadcaster's memory: what the player handed it, and what the document writes, within the limit. */
+/** The runtime's copy of one broadcaster's memory: what the player handed it, and what the document writes, within the limit. A name never written reads as a block of zeros. */
 export class PersistentMemory {
-  private readonly entries = new Map<string, string>()
+  private readonly entries = new Map<string, Uint8Array>()
 
   private held = 0
 
@@ -91,9 +114,12 @@ export class PersistentMemory {
     this.entries.clear()
     this.held = 0
     entries.forEach(([name, value]) => {
-      if (this.held + bytesOf(name) + bytesOf(value) <= MOST_MEMORY_BYTES) {
-        this.entries.set(name, value)
-        this.held += bytesOf(name) + bytesOf(value)
+      const block = blockOfText(value)
+      const size = bytesOfName(name) + (block?.length ?? 0)
+
+      if (block && this.held + size <= MOST_MEMORY_BYTES) {
+        this.entries.set(name, block)
+        this.held += size
       }
     })
   }
@@ -102,84 +128,74 @@ export class PersistentMemory {
     return this.held
   }
 
-  read(name: string): string | undefined {
-    return this.entries.get(name)
+  /** The block under a name, zeros when none was written. */
+  read(name: string): Uint8Array {
+    const block = new Uint8Array(AREA_BYTES)
+
+    block.set(this.entries.get(name) ?? [])
+
+    return block
   }
 
-  /** Writes when the broadcaster's total stays within the limit; false, and nothing changed, otherwise. */
-  write(name: string, value: string): boolean {
-    if (name.length === 0 || name.length > MOST_MEMORY_NAME) {
+  has(name: string): boolean {
+    return this.entries.has(name)
+  }
+
+  /** Writes a block under a name when it fits its area and the broadcaster's total stays within the limit; false, and nothing changed, otherwise. */
+  write(name: string, block: Uint8Array): boolean {
+    if (
+      name.length === 0 ||
+      name.length > MOST_MEMORY_NAME ||
+      block.length > AREA_BYTES
+    ) {
       return false
     }
 
     const before = this.entries.has(name)
-      ? bytesOf(name) + bytesOf(this.entries.get(name) as string)
+      ? bytesOfName(name) + (this.entries.get(name) as Uint8Array).length
       : 0
-    const after = bytesOf(name) + bytesOf(value)
+    const after = bytesOfName(name) + block.length
 
     if (this.held - before + after > MOST_MEMORY_BYTES) {
       return false
     }
 
-    this.entries.set(name, value)
+    this.entries.set(name, block)
     this.held += after - before
-    this.onWrite(name, value)
+    this.onWrite(name, blockToText(block))
 
     return true
   }
 }
 
-interface Kept {
-  structure: string
-  data: unknown[]
-}
-
-function keptOf(value: string | undefined): Kept | null {
-  if (value === undefined) {
-    return null
-  }
-
-  try {
-    const kept = JSON.parse(value) as Partial<Kept> | null
-
-    return kept &&
-      typeof kept === 'object' &&
-      typeof kept.structure === 'string' &&
-      Array.isArray(kept.data)
-      ? { structure: kept.structure, data: kept.data }
-      : null
-  } catch {
-    return null
-  }
-}
-
-/** The array a document wrote under a name with the same structure, or null. */
+/** The values a document reads under a name as a structure says, or null when the structure is not one. */
 export function readArray(
   memory: PersistentMemory,
   name: unknown,
   structure: unknown,
 ): unknown[] | null {
-  if (typeof name !== 'string' || typeof structure !== 'string') {
+  const fields = fieldsOf(structure)
+
+  if (typeof name !== 'string' || !fields) {
     return null
   }
 
-  const kept = keptOf(memory.read(name))
-
-  return kept && kept.structure === structure ? [...kept.data] : null
+  return readCells(new BitReader(memory.read(name)), fields, UTF8)
 }
 
-/** Writes an array under a name with its structure; false when the data does not fit the structure or the limit. */
+/** Writes values under a name as a structure says; false when the values do not fit the structure, the area or the limit. */
 export function writeArray(
   memory: PersistentMemory,
   name: unknown,
   structure: unknown,
   data: unknown,
 ): boolean {
-  const fields = typeof structure === 'string' ? fieldsOf(structure) : null
-  const columns = fields ? columnsOf(fields) : null
+  const fields = fieldsOf(structure)
+  const columns = fields?.filter((field) => field.type !== 'P')
 
   if (
     typeof name !== 'string' ||
+    !fields ||
     !columns ||
     !Array.isArray(data) ||
     data.length !== columns.length ||
@@ -188,5 +204,7 @@ export function writeArray(
     return false
   }
 
-  return memory.write(name, JSON.stringify({ structure, data }))
+  const block = writeCells(fields, data, UTF8)
+
+  return block !== null && memory.write(name, block)
 }

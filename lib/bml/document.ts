@@ -139,6 +139,9 @@ const GATHERED = new Set(['style', 'link', 'script', 'bevent'])
 
 const KEPT_ATTRIBUTES = new Set(['id', 'class'])
 
+/** The elements a script writes its text into through `firstChild.data`: one left empty, as `<![CDATA[]]>` leaves it, is given an empty text node to write into. */
+const HOLDS_TEXT = new Set<HtmlTag>(['p', 'span', 'a'])
+
 const INPUT_ATTRIBUTES = new Set(['value', 'maxlength'])
 
 /** Reads a document's text as XML: its `bml` root, or null when it is not well formed or not BML. */
@@ -437,8 +440,12 @@ class Conversion {
     const children = Array.from(node.childNodes).flatMap((child) =>
       this.child(child, within),
     )
+    const held =
+      children.length === 0 && HOLDS_TEXT.has(tag)
+        ? [{ kind: 'text', text: '' } as PageText]
+        : children
 
-    return this.shaped(node, tag, children)
+    return this.shaped(node, tag, held)
   }
 
   private child(

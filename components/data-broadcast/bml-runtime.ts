@@ -76,6 +76,11 @@ const LEAST_INTERVAL_MS = 10
 
 const MOST_SLEEP_MS = 1000
 
+/** How often the data button is pressed again on an entry document that still cannot be seen: one that readies itself on timers after its scripts, as a viewer presses it a moment after tuning in. */
+const DATA_BUTTON_EVERY_MS = 500
+
+const MOST_DATA_BUTTON_PRESSES = 6
+
 const IMAGE_TYPE: Partial<Record<BmlResource['kind'], string>> = {
   jpeg: 'image/jpeg',
   png: 'image/png',
@@ -156,6 +161,10 @@ export class BmlRuntime {
   private settling = false
 
   private timerIds = 0
+
+  private presses = 0
+
+  private pressing: number | null = null
 
   clock: number | null = null
 
@@ -253,6 +262,8 @@ export class BmlRuntime {
 
     if (pending && pending.tag === module.tag && pending.module === module.id) {
       this.launch(pending, false)
+      this.presses = 0
+      this.nudge()
 
       return
     }
@@ -291,12 +302,45 @@ export class BmlRuntime {
     }
 
     this.launch(startup, true)
-    this.dataButtonPressed()
+    this.presses = 0
+    this.nudge()
   }
 
   private close(): void {
     this.waitFor(null)
     this.unmount()
+  }
+
+  /** Presses the data button on a document that cannot be seen, so that an entry document moves on to its face, and again a moment later while it still cannot be seen, up to a few times. */
+  private nudge(): void {
+    const shown = this.shown
+
+    this.stopNudging()
+
+    if (
+      !shown ||
+      !shown.document.cannotBeSeen() ||
+      this.presses >= MOST_DATA_BUTTON_PRESSES
+    ) {
+      return
+    }
+
+    this.presses += 1
+    this.dataButtonPressed()
+
+    if (this.shown === shown && shown.document.cannotBeSeen()) {
+      this.pressing = this.window.setTimeout(
+        () => this.nudge(),
+        DATA_BUTTON_EVERY_MS,
+      )
+    }
+  }
+
+  private stopNudging(): void {
+    if (this.pressing !== null) {
+      this.window.clearTimeout(this.pressing)
+      this.pressing = null
+    }
   }
 
   private launch(address: BmlAddress, opening: boolean): void {
@@ -511,6 +555,9 @@ export class BmlRuntime {
       relativeTime: () => this.relativeTime(),
       npt: () => null,
       programme: () => this.programme,
+      hasComponent: (tag) =>
+        this.catalog?.carousels.some((carousel) => carousel.tag === tag) ??
+        false,
       memory: this.memory,
       registers: this.registers,
       startTimer: (code, everyMs, times) =>
@@ -579,7 +626,7 @@ export class BmlRuntime {
     })
 
     if (outcome.outcome === 'failed') {
-      this.warn(`script failed: ${nameOf(outcome.error)}`)
+      this.warn(`script failed: ${describe(outcome.error)}`)
     }
 
     if (this.depth === 0) {
@@ -852,6 +899,7 @@ export class BmlRuntime {
 
   private unmount(): void {
     this.stopTimers()
+    this.stopNudging()
     this.locked.clear()
     this.shown?.urls.forEach((url) => URL.revokeObjectURL(url))
     this.shown = null
@@ -1077,8 +1125,21 @@ export class BmlRuntime {
   }
 }
 
-function nameOf(error: unknown): string {
-  return error instanceof Error ? error.name : 'Error'
+const MOST_REASON = 200
+
+/** An error as the console is told of it: its name and the start of its message. */
+function describe(error: unknown): string {
+  const thrown = error as { name?: unknown; message?: unknown } | null
+  const name =
+    typeof thrown?.name === 'string' && thrown.name.length > 0
+      ? thrown.name
+      : 'Error'
+  const reason =
+    typeof thrown?.message === 'string'
+      ? thrown.message.replace(/\s+/g, ' ').slice(0, MOST_REASON)
+      : ''
+
+  return reason.length > 0 ? `${name}: ${reason}` : name
 }
 
 /** Starts the runtime in the frame's own window, taking messages only from the origin written into its document. */

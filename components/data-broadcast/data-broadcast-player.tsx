@@ -87,11 +87,19 @@ function storageOf(): MemoryStorage | null {
   }
 }
 
+/** What the player knows of the programme the broadcast belongs to: its network and when it began. */
+export interface OnAir {
+  network: number | null
+  startsAt: number | null
+}
+
+const NOTHING_ON_AIR: OnAir = { network: null, startsAt: null }
+
 /** Hands the runtime the catalog, and with it what the player keeps for that broadcaster and the programme on air. */
 function catalogued(
   send: SendToRuntime,
   catalog: BmlCatalog,
-  startsAt: number | null,
+  onAir: OnAir,
 ): void {
   const storage = storageOf()
 
@@ -102,20 +110,26 @@ function catalogued(
   })
   send({
     kind: 'programme',
-    programme: { service: catalog.service, event: null, startsAt },
+    programme: {
+      service: catalog.service,
+      event: null,
+      network: onAir.network,
+      stream: null,
+      startsAt: onAir.startsAt,
+    },
   })
 }
 
 /** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. */
 export function DataBroadcastFace({
   feed,
-  startsAt = null,
+  onAir = NOTHING_ON_AIR,
   onRuntime,
   onMessage,
   says,
 }: {
   feed: DataBroadcastFeed
-  startsAt?: number | null
+  onAir?: OnAir
   onRuntime: (send: SendToRuntime | null) => void
   onMessage: (message: RuntimeMessage) => void
   says: string | null
@@ -160,7 +174,7 @@ export function DataBroadcastFace({
     const catalog = feed.catalog
 
     if (catalog) {
-      catalogued(send, catalog, startsAt)
+      catalogued(send, catalog, onAir)
     }
 
     feed.forTheCatalog.forEach((module) => hand(send, module))
@@ -168,7 +182,7 @@ export function DataBroadcastFace({
     onRuntime(send)
     letGo.current = feed.subscribe((change) => {
       if (change.kind === 'catalog') {
-        catalogued(send, change.catalog, startsAt)
+        catalogued(send, change.catalog, onAir)
       } else if (change.kind === 'module') {
         hand(send, change.module)
       }

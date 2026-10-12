@@ -12,6 +12,7 @@ export interface BrowserHost {
   relativeTime(): number | null
   npt(): number | null
   programme(): Programme | null
+  hasComponent(tag: number): boolean
   memory: PersistentMemory
   registers: { Ureg: string[]; Greg: string[] }
   startTimer(code: unknown, everyMs: unknown, times: unknown): number
@@ -37,8 +38,13 @@ export const SUPPORTED_FUNCTIONS = [
   'setInterval',
   'clearTimer',
   'sleep',
+  'addDate',
+  'subDate',
   'getProgramID',
   'getTuningStatus',
+  'detectComponent',
+  'isSupportedMedia',
+  'getIRDID',
   'epgGetEventStartTime',
   'readPersistentArray',
   'writePersistentArray',
@@ -60,9 +66,11 @@ export const IGNORED_FUNCTIONS = [
   'setCachedResourceMode',
   'setFullDataDisplayArea',
   'getResidentAppVersion',
+  'lockScreen',
+  'unlockScreen',
 ] as const
 
-/** Communication and the stored services: these fail, and the player is told the operation is not supported. */
+/** Communication, the stored services and the applications beyond the broadcast: these fail, and the player is told the operation is not supported. */
 export const REFUSED_FUNCTIONS = [
   'connect',
   'disconnect',
@@ -83,6 +91,9 @@ export const REFUSED_FUNCTIONS = [
   'startResidentApp',
   'startExtraBrowser',
   'launchDocumentRestricted',
+  'startAITControlledApp',
+  'startReceivingAIT',
+  'getReceivedAIT',
   'X_DPA_startResidentApp',
   'X_DPA_launchDocWithLink',
   'X_DPA_getComBrowserUA',
@@ -110,6 +121,9 @@ const SUPPORTED_GROUPS = new Set([
   'Misc.Random',
 ])
 
+/** The versions of the language a document may ask after and be told yes. */
+const BML_VERSIONS = new Set(['1.0', '2.0', '3.0'])
+
 export const BROWSER_NAME = 'Vela'
 
 export const BROWSER_VERSION = ['1', '0', '0']
@@ -124,11 +138,22 @@ export const PROGRAM_ID = {
   stream: 4,
 } as const
 
+/** The units `addDate` and `subDate` count in: seconds to weeks, and milliseconds for anything else. */
+const UNIT_MS: Record<number, number> = {
+  1: 1000,
+  2: 60_000,
+  3: 3_600_000,
+  4: 86_400_000,
+  5: 604_800_000,
+}
+
 /** The 1 a function answers when it did what was asked. */
 export const DONE = 1
 
 /** The NaN a function answers when it could not do what was asked. */
 export const FAILED = Number.NaN
+
+const COMPONENT = /^\/([0-9a-f]{2})(?:\/|$)/i
 
 function hex(value: number): string {
   return `0x${value.toString(16).padStart(4, '0')}`
@@ -149,13 +174,73 @@ function programmeId(host: BrowserHost, which: unknown): string | null {
     return null
   }
 
-  if (which === PROGRAM_ID.service) {
-    return hex(programme.service)
+  const ids: Record<number, number | null> = {
+    [PROGRAM_ID.event]: programme.event,
+    [PROGRAM_ID.service]: programme.service,
+    [PROGRAM_ID.network]: programme.network,
+    [PROGRAM_ID.stream]: programme.stream,
+  }
+  const id = typeof which === 'number' ? ids[which] : undefined
+
+  return typeof id === 'number' ? hex(id) : null
+}
+
+function supportOf(provider: unknown, name: unknown, info: unknown[]): number {
+  if (provider !== 'ARIB') {
+    return 0
   }
 
-  return which === PROGRAM_ID.event && programme.event !== null
-    ? hex(programme.event)
-    : null
+  switch (name) {
+    case 'APIGroup':
+      return typeof info[0] === 'string' && SUPPORTED_GROUPS.has(info[0])
+        ? 1
+        : 0
+    case 'BMLversion':
+      return info.length === 0 ||
+        (typeof info[0] === 'string' && BML_VERSIONS.has(info[0]))
+        ? 1
+        : 0
+    default:
+      return 0
+  }
+}
+
+function msOf(date: unknown): number | null {
+  const time =
+    typeof date === 'object' &&
+    date !== null &&
+    typeof (date as Date).getTime === 'function'
+      ? (date as Date).getTime()
+      : Number.NaN
+
+  return Number.isFinite(time) ? time : null
+}
+
+function unitOf(unit: unknown): number {
+  return (typeof unit === 'number' && UNIT_MS[unit]) || 1
+}
+
+function addDate(date: unknown, offset: unknown, unit: unknown): unknown {
+  const from = msOf(date)
+
+  return from !== null && typeof offset === 'number' && Number.isFinite(offset)
+    ? new Date(from + offset * unitOf(unit))
+    : FAILED
+}
+
+function subDate(later: unknown, earlier: unknown, unit: unknown): number {
+  const from = msOf(later)
+  const to = msOf(earlier)
+
+  return from !== null && to !== null
+    ? Math.trunc((from - to) / unitOf(unit))
+    : FAILED
+}
+
+function componentTag(reference: unknown): number | null {
+  const found = typeof reference === 'string' ? COMPONENT.exec(reference) : null
+
+  return found ? parseInt(found[1], 16) : null
 }
 
 function supported(host: BrowserHost): Record<string, Answer> {
@@ -174,12 +259,8 @@ function supported(host: BrowserHost): Record<string, Answer> {
     },
     getActiveDocument: () => host.activeDocument(),
     getBrowserVersion: () => [BROWSER_NAME, ...BROWSER_VERSION],
-    getBrowserSupport: (provider: unknown, group: unknown) =>
-      provider === 'ARIB' &&
-      typeof group === 'string' &&
-      SUPPORTED_GROUPS.has(group)
-        ? 1
-        : 0,
+    getBrowserSupport: (provider: unknown, name: unknown, ...info: unknown[]) =>
+      supportOf(provider, name, info),
     getBrowserStatus: (provider: unknown, name: unknown) => {
       host.warn(
         `unsupported browser status: ${String(provider)} ${String(name)}`,
@@ -197,8 +278,17 @@ function supported(host: BrowserHost): Record<string, Answer> {
 
       return DONE
     },
+    addDate,
+    subDate,
     getProgramID: (which: unknown) => programmeId(host, which),
     getTuningStatus: () => 1,
+    detectComponent: (reference: unknown) => {
+      const tag = componentTag(reference)
+
+      return tag === null ? FAILED : Number(host.hasComponent(tag))
+    },
+    isSupportedMedia: () => 0,
+    getIRDID: () => null,
     epgGetEventStartTime: () => {
       const startsAt = host.programme()?.startsAt
 

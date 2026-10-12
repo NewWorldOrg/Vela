@@ -18,9 +18,12 @@ export interface FontBytes {
   bytes: ArrayBuffer
 }
 
+/** The programme on air as a document asks after it: its ids, which a recording may lack, and when it began. */
 export interface Programme {
   service: number
   event: number | null
+  network: number | null
+  stream: number | null
   startsAt: number | null
 }
 
@@ -217,10 +220,14 @@ function programmeOf(value: unknown): Programme | null {
   return programme &&
     Number.isSafeInteger(programme.service) &&
     either(programme.event) &&
+    either(programme.network) &&
+    either(programme.stream) &&
     either(programme.startsAt)
     ? {
         service: programme.service as number,
         event: programme.event as number | null,
+        network: programme.network as number | null,
+        stream: programme.stream as number | null,
         startsAt: programme.startsAt as number | null,
       }
     : null

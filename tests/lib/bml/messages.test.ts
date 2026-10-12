@@ -133,7 +133,13 @@ test('what the player may say is taken from the parent window in Vela’s origin
     { kind: 'clock', seconds: 12.5 },
     {
       kind: 'programme',
-      programme: { service: 1024, event: 7, startsAt: null },
+      programme: {
+        service: 1024,
+        event: 7,
+        network: 32736,
+        stream: null,
+        startsAt: null,
+      },
     },
     { kind: 'open' },
     { kind: 'close' },
@@ -185,11 +191,23 @@ test('a kind the player may not say, or a shape that does not fit, is dropped', 
     { kind: 'clock', seconds: Number.NaN },
     {
       kind: 'programme',
-      programme: { service: 'x', event: null, startsAt: null },
+      programme: {
+        service: 'x',
+        event: null,
+        network: null,
+        stream: null,
+        startsAt: null,
+      },
     },
     {
       kind: 'programme',
-      programme: { service: 1, event: 1.5, startsAt: null },
+      programme: {
+        service: 1,
+        event: 1.5,
+        network: null,
+        stream: null,
+        startsAt: null,
+      },
     },
   ]
 
