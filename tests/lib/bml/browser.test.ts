@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import {
   IGNORED_FUNCTIONS,
+  LINE_FUNCTIONS,
   REFUSED_FUNCTIONS,
   UNCONNECTED_QUERIES,
   SUPPORTED_FUNCTIONS,
@@ -10,8 +11,9 @@ import {
   registersOf,
   type BrowserHost,
 } from '@/lib/bml/browser'
+import { answerOf, type LineState } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
-import { DocumentLeft } from '@/lib/bml/scripts'
+import { DocumentLeft, LineAwaited } from '@/lib/bml/scripts'
 
 type Browser = Record<string, (...args: unknown[]) => unknown> & {
   Ureg: string[]
@@ -24,6 +26,8 @@ function host(over: Partial<BrowserHost> = {}) {
   const calls: string[] = []
   const unsupported: string[] = []
   const warnings: string[] = []
+  const lineOff: string[] = []
+  const sent: string[][] = []
   const made: BrowserHost = {
     launch: (reference) => {
       calls.push(`launch ${String(reference)}`)
@@ -66,6 +70,15 @@ function host(over: Partial<BrowserHost> = {}) {
     ],
     unsupported: (what) => unsupported.push(what),
     warn: (what) => warnings.push(what),
+    line: () => 'none',
+    receiverId: () => null,
+    overTheLine: () => false,
+    transmit: (uri, text, charset) => {
+      sent.push([uri, text, charset])
+
+      return answerOf(1, 200, 'ok')
+    },
+    lineOff: (what) => lineOff.push(what),
     ...over,
   }
 
@@ -74,6 +87,8 @@ function host(over: Partial<BrowserHost> = {}) {
     calls,
     unsupported,
     warnings,
+    lineOff,
+    sent,
   }
 }
 
@@ -134,7 +149,7 @@ test('a page that asks after the line as it loads is answered as a receiver with
     false,
   )
   assert.ok(
-    (REFUSED_FUNCTIONS as readonly string[]).includes('transmitTextDataOverIP'),
+    (LINE_FUNCTIONS as readonly string[]).includes('transmitTextDataOverIP'),
   )
 })
 
@@ -279,4 +294,169 @@ test('every supported function is there, and the registers are the host’s', ()
   assert.equal(browser.Ureg[0], 'kept')
   ;(browser as Record<string, unknown>).Ureg = 'replaced'
   assert.equal(browser.Ureg[0], 'kept')
+})
+
+function lined(line: LineState, over: Partial<BrowserHost> = {}) {
+  return host({
+    line: () => line,
+    receiverId: () => 'a1b2c3d4e5f6',
+    ...over,
+  })
+}
+
+const LINE_GROUPS = ['Com.IP', 'Com.IP.Transmit', 'Com.IP.GetType']
+
+test('the line is supported, connected over Ethernet with DHCP, only while it is used', () => {
+  const on = lined('on')
+
+  for (const group of LINE_GROUPS) {
+    assert.equal(
+      on.browser.getBrowserSupport('ARIB', 'APIGroup', group),
+      1,
+      group,
+    )
+  }
+
+  assert.equal(
+    on.browser.getBrowserSupport('ARIB', 'APIGroup', 'Com.IP.Connect'),
+    0,
+  )
+  assert.equal(
+    on.browser.getBrowserSupport('ARIB', 'APIGroup', 'Com.IP.Params'),
+    0,
+  )
+  assert.equal(on.browser.isIPConnected(), 1)
+  assert.equal(on.browser.getConnectionType(), 403)
+  assert.equal(on.browser.disconnectPPP(), 1)
+  assert.deepEqual(on.unsupported, [])
+  assert.deepEqual(on.lineOff, [])
+
+  for (const state of ['off', 'none'] as const) {
+    const { browser } = lined(state)
+
+    for (const group of LINE_GROUPS) {
+      assert.equal(
+        browser.getBrowserSupport('ARIB', 'APIGroup', group),
+        0,
+        `${state} ${group}`,
+      )
+    }
+
+    assert.ok(Number.isNaN(browser.isIPConnected()), state)
+    assert.ok(Number.isNaN(browser.getConnectionType()), state)
+  }
+})
+
+test('the card’s ID is answered for its type only while the line is used and the viewer hands it over', () => {
+  const on = lined('on').browser
+
+  assert.equal(on.getIRDID(5), 'a1b2c3d4e5f6')
+  assert.equal(on.getIRDID('5'), 'a1b2c3d4e5f6')
+  assert.equal(on.getIRDID(13), null)
+  assert.equal(on.getIRDID(0xf0001), null)
+  assert.equal(on.getIRDID('0xE0001'), null)
+  assert.equal(on.getIRDID(), null)
+  assert.equal(
+    lined('on', { receiverId: () => null }).browser.getIRDID(5),
+    null,
+  )
+  assert.equal(lined('off').browser.getIRDID(5), null)
+  assert.equal(lined('none').browser.getIRDID(5), null)
+})
+
+test('a transmission while the line is used goes to the host and is answered as the result, the HTTP status and the body', () => {
+  const { browser, sent } = lined('on')
+
+  assert.deepEqual(
+    browser.transmitTextDataOverIP('http://example.test/a#b', '', 'EUC-JP'),
+    [1, 200, 'ok'],
+  )
+  assert.deepEqual(
+    browser.transmitTextDataOverIP('https://example.test/b', null, 'EUC-JP'),
+    [1, 200, 'ok'],
+  )
+  assert.deepEqual(sent, [
+    ['http://example.test/a', '', 'EUC-JP'],
+    ['https://example.test/b', '', 'EUC-JP'],
+  ])
+})
+
+test('a transmission to somewhere the line does not go, or too long, is a bad argument and is not sent', () => {
+  const { browser, sent } = lined('on')
+  const bad = (answer: unknown) =>
+    Array.isArray(answer) && answer[0] === -1 && answer[2] === ''
+
+  assert.ok(
+    bad(browser.transmitTextDataOverIP('ftp://example.test/', '', 'EUC-JP')),
+  )
+  assert.ok(bad(browser.transmitTextDataOverIP('/40/0000/a', '', 'EUC-JP')))
+  assert.ok(bad(browser.transmitTextDataOverIP(3, '', 'EUC-JP')))
+  assert.ok(
+    bad(
+      browser.transmitTextDataOverIP(
+        'http://example.test/',
+        'x'.repeat(16 * 1024 + 1),
+        'EUC-JP',
+      ),
+    ),
+  )
+  assert.ok(bad(browser.transmitTextDataOverIP('http://example.test/', '', 3)))
+  assert.deepEqual(sent, [])
+})
+
+test('a transmission whose answer is awaited stops the script', () => {
+  const { browser } = lined('on', {
+    transmit: () => {
+      throw new LineAwaited()
+    },
+  })
+
+  assert.throws(
+    () => browser.transmitTextDataOverIP('http://example.test/', '', 'EUC-JP'),
+    LineAwaited,
+  )
+})
+
+test('with the setting off, what uses the line fails as before and the player is told the setting is off, not that it is unsupported', () => {
+  const { browser, sent, lineOff, unsupported } = lined('off')
+
+  assert.ok(
+    Number.isNaN(
+      browser.transmitTextDataOverIP('http://example.test/', '', 'EUC-JP'),
+    ),
+  )
+  assert.ok(Number.isNaN(browser.disconnectPPP()))
+  assert.deepEqual(lineOff, ['transmitTextDataOverIP', 'disconnectPPP'])
+  assert.deepEqual(unsupported, [])
+  assert.deepEqual(sent, [])
+})
+
+test('where there is no line, a transmission times out and is not supported', () => {
+  const { browser, sent, lineOff, unsupported } = lined('none')
+  const answer = browser.transmitTextDataOverIP(
+    'http://example.test/',
+    '',
+    'EUC-JP',
+  ) as unknown[]
+
+  assert.equal(answer[0], -3)
+  assert.ok(Number.isNaN(answer[1]))
+  assert.equal(answer[2], '')
+  assert.deepEqual(unsupported, ['transmitTextDataOverIP'])
+  assert.deepEqual(lineOff, [])
+  assert.deepEqual(sent, [])
+})
+
+test('a document over the line is told it came by the line, and one of the broadcast that it came by the broadcast', () => {
+  const over = lined('on', { overTheLine: () => true }).browser
+  const broadcast = lined('on').browser
+
+  assert.equal(over.isBeingBroadcast('HTTPServer'), 1)
+  assert.equal(over.getBrowserStatus('TerrP', 'IRDState', 'Link'), 1)
+  assert.equal(over.getBrowserStatus('TerrP', 'IRDState', 'Broadcast'), 0)
+  assert.equal(broadcast.isBeingBroadcast('HTTPServer'), 0)
+  assert.equal(broadcast.getBrowserStatus('TerrP', 'IRDState', 'Link'), 0)
+  assert.equal(broadcast.getBrowserStatus('TerrP', 'IRDState', 'Broadcast'), 1)
+  assert.ok(Number.isNaN(broadcast.getBrowserStatus('TerrP', 'IRDState', 'x')))
+  assert.ok(Number.isNaN(broadcast.getBrowserStatus('TerrP', 'Other', 'Link')))
 })

@@ -1,6 +1,6 @@
 import type { Rect } from '@/lib/caption-placement'
 import { keysOf, type BmlKey } from '@/lib/bml/keys'
-import type { RuntimeMessage, ScriptState } from '@/lib/bml/messages'
+import type { LineSaid, RuntimeMessage, ScriptState } from '@/lib/bml/messages'
 import { MOST_RUN_MS } from '@/lib/bml/scripts'
 import { GRID } from '@/lib/bml/style'
 import type { DataBroadcastAvailability } from '@/lib/data-broadcast-feed'
@@ -10,6 +10,13 @@ export const SAID_RECEIVING = 'ページを受信しています。'
 export const SAID_UNSUPPORTED = 'この操作には対応していません。'
 
 export const SAID_FAILED = 'データ放送を表示できませんでした。'
+
+export const SAID_LINE_OFF = '通信は設定で切になっています。'
+
+export const SAID_UNREACHED = '放送局のサーバにつながりませんでした。'
+
+/** How long a word about the line stays: as long as one about an unsupported operation. */
+export const LINE_SAID_LASTS_MS = 3000
 
 export const RECEIVING_SAID_AFTER_MS = 3000
 
@@ -21,7 +28,7 @@ export const SCRIPT_GIVEN_UP_AFTER_MS = MOST_RUN_MS
 /** The keys a document takes until it says otherwise: `basic` and `data-button`. */
 export const KEYS_UNTIL_TOLD = keysOf(['basic', 'data-button'])
 
-/** What the player shows of a data broadcast. `waits`, `notices` and `scripting` name the latest wait, notice and script run, so a timer started for one of them cannot end a later one. */
+/** What the player shows of a data broadcast. `waits`, `notices`, `lineNotices` and `scripting` name the latest wait, notice, word about the line and script run, so a timer started for one of them cannot end a later one. `lineOffSaid` is whether the setting refusing the line has been said while open, as it is said once. */
 export interface DataBroadcastView {
   open: boolean
   rect: Rect | null
@@ -31,8 +38,11 @@ export interface DataBroadcastView {
   unsupported: boolean
   failed: boolean
   numbers: boolean
+  line: LineSaid | null
+  lineOffSaid: boolean
   waits: number
   notices: number
+  lineNotices: number
   scripting: number
 }
 
@@ -45,8 +55,11 @@ export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
   unsupported: false,
   failed: false,
   numbers: false,
+  line: null,
+  lineOffSaid: false,
   waits: 0,
   notices: 0,
+  lineNotices: 0,
   scripting: 0,
 }
 
@@ -58,6 +71,7 @@ function closed(
     ...DATA_BROADCAST_CLOSED,
     waits: view.waits,
     notices: view.notices,
+    lineNotices: view.lineNotices,
     ...over,
   }
 }
@@ -69,6 +83,7 @@ export type DataBroadcastStep =
   | { on: 'runtime'; message: RuntimeMessage; nth?: number }
   | { on: 'slow'; waits: number }
   | { on: 'faded'; notices: number }
+  | { on: 'lineFaded'; lineNotices: number }
   | { on: 'overran'; scripting: number }
   | { on: 'numbers'; shown: boolean }
   | { on: 'quiet' }
@@ -118,6 +133,11 @@ function heard(
         : { ...view, waiting: false, slow: false }
     case 'unsupported':
       return { ...view, unsupported: true, notices: nth ?? view.notices + 1 }
+    case 'line':
+      return saidOfTheLine(view, message.said, nth)
+    case 'transmit':
+    case 'fetch':
+      return view
     case 'script':
       return scripted(view, message.state, nth)
     case 'memory':
@@ -126,6 +146,24 @@ function heard(
       return closed(view)
     case 'error':
       return closed(view, { failed: true })
+  }
+}
+
+/** A word about the line: the setting refusing it is said once while open, the server not reached each time it is not. */
+function saidOfTheLine(
+  view: DataBroadcastView,
+  said: LineSaid,
+  nth: number | undefined,
+): DataBroadcastView {
+  if (said === 'off' && view.lineOffSaid) {
+    return view
+  }
+
+  return {
+    ...view,
+    line: said,
+    lineOffSaid: view.lineOffSaid || said === 'off',
+    lineNotices: nth ?? view.lineNotices + 1,
   }
 }
 
@@ -173,6 +211,10 @@ export function dataBroadcastAfter(
       return view.unsupported && view.notices === step.notices
         ? { ...view, unsupported: false }
         : view
+    case 'lineFaded':
+      return view.line !== null && view.lineNotices === step.lineNotices
+        ? { ...view, line: null }
+        : view
     case 'overran':
       return view.open && view.scripting === step.scripting
         ? closed(view, { failed: true })
@@ -184,7 +226,12 @@ export function dataBroadcastAfter(
   }
 }
 
-/** The one line the face says at its bottom, if any: an unsupported operation first, as it answers what was just pressed. */
+const SAID_OF_THE_LINE: Record<LineSaid, string> = {
+  off: SAID_LINE_OFF,
+  unreached: SAID_UNREACHED,
+}
+
+/** The one line the face says at its bottom, if any: an unsupported operation first, as it answers what was just pressed, then a word about the line. */
 export function dataBroadcastSays(view: DataBroadcastView): string | null {
   if (!view.open) {
     return null
@@ -192,6 +239,10 @@ export function dataBroadcastSays(view: DataBroadcastView): string | null {
 
   if (view.unsupported) {
     return SAID_UNSUPPORTED
+  }
+
+  if (view.line) {
+    return SAID_OF_THE_LINE[view.line]
   }
 
   return view.slow ? SAID_RECEIVING : null

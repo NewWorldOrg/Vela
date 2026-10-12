@@ -8,6 +8,14 @@ export class DocumentLeft extends Error {
   }
 }
 
+/** Thrown out of `browser.transmitTextDataOverIP` when the answer is still on its way: the script stops there, and is run again from its start once the answer is in, with the answers it has had given back in the order it asked. */
+export class LineAwaited extends Error {
+  constructor() {
+    super('the answer over the line is awaited')
+    this.name = 'LineAwaited'
+  }
+}
+
 /** What a script may not reach by name: the frame's own window and what it opens onto, each resolved to nothing inside a document's scope. */
 export const SHADOWED_GLOBALS = [
   'window',
@@ -117,6 +125,7 @@ export type Evaluate = (code: string, scope: object) => void
 export type ScriptOutcome =
   | { outcome: 'done'; tookMs: number }
   | { outcome: 'left'; tookMs: number }
+  | { outcome: 'awaiting'; tookMs: number }
   | { outcome: 'failed'; error: unknown; tookMs: number }
 
 /** Runs a document's scripts and handlers one at a time, timing each, with the document's writes on the built-ins in place only while its code runs. */
@@ -153,8 +162,12 @@ export class ScriptScope {
     } catch (error) {
       const tookMs = this.now() - started
 
-      return error instanceof DocumentLeft
-        ? { outcome: 'left', tookMs }
+      if (error instanceof DocumentLeft) {
+        return { outcome: 'left', tookMs }
+      }
+
+      return error instanceof LineAwaited
+        ? { outcome: 'awaiting', tookMs }
         : { outcome: 'failed', error, tookMs }
     } finally {
       this.realm.leave()

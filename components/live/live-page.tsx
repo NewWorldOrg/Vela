@@ -34,6 +34,7 @@ import { ChannelKinds } from '@/components/live/channel-kinds'
 import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
 import { ChannelList } from '@/components/live/channel-list'
 import { useFoldingChannels } from '@/components/live/channel-fold'
+import type { LineRelay } from '@/repository/live-data-broadcast'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
 import type { TakeCapture } from '@/components/recordings/take-capture'
@@ -57,6 +58,7 @@ export function LiveView({
   channelsFolded = false,
   subChannelsFolded = false,
   autoOpensDataBroadcast = false,
+  lineRelayOf,
 }: {
   screen: LiveScreen
   onTakeTicket: TakeLiveTicket
@@ -69,6 +71,7 @@ export function LiveView({
   channelsFolded?: boolean
   autoOpensDataBroadcast?: boolean
   subChannelsFolded?: boolean
+  lineRelayOf?: (channel: string) => LineRelay
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -212,6 +215,7 @@ export function LiveView({
           startupDeadlineMs={startupDeadlineMs}
           takeCapture={takeCapture}
           autoOpensDataBroadcast={autoOpensDataBroadcast}
+          lineRelayOf={lineRelayOf}
         />
         <NowNext watching={watching} />
         <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)]">

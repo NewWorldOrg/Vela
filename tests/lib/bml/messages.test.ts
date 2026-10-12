@@ -299,3 +299,128 @@ test('the player’s memory and event messages are taken when they fit, and drop
     assert.equal(fromPlayer(data), null, JSON.stringify(data).slice(0, 40))
   }
 })
+
+test('the runtime’s requests over the line are taken when they ask an http or https URL within the limits', () => {
+  const said: unknown[] = [
+    {
+      kind: 'transmit',
+      id: 1,
+      uri: 'http://example.test/a?b=1',
+      text: 'x=1',
+      charset: 'EUC-JP',
+    },
+    { kind: 'fetch', id: 2, uri: 'https://example.test/top.bml' },
+    { kind: 'line', said: 'off' },
+    { kind: 'line', said: 'unreached' },
+  ]
+
+  for (const data of said) {
+    assert.deepEqual(fromRuntime(data), data)
+  }
+
+  const dropped: unknown[] = [
+    {
+      kind: 'transmit',
+      id: 0,
+      uri: 'http://example.test/',
+      text: '',
+      charset: 'EUC-JP',
+    },
+    {
+      kind: 'transmit',
+      id: 1,
+      uri: 'ftp://example.test/',
+      text: '',
+      charset: 'EUC-JP',
+    },
+    {
+      kind: 'transmit',
+      id: 1,
+      uri: 'http://example.test/#a',
+      text: '',
+      charset: 'EUC-JP',
+    },
+    { kind: 'transmit', id: 1, uri: '/40/0000/a', text: '', charset: 'EUC-JP' },
+    {
+      kind: 'transmit',
+      id: 1,
+      uri: 'http://example.test/',
+      text: 'x'.repeat(16 * 1024 + 1),
+      charset: 'EUC-JP',
+    },
+    {
+      kind: 'transmit',
+      id: 1,
+      uri: 'http://example.test/',
+      text: 3,
+      charset: 'EUC-JP',
+    },
+    { kind: 'fetch', id: 1.5, uri: 'http://example.test/' },
+    { kind: 'fetch', id: 1, uri: 'javascript:alert(1)' },
+    { kind: 'line', said: 'on' },
+  ]
+
+  for (const data of dropped) {
+    assert.equal(fromRuntime(data), null, JSON.stringify(data))
+  }
+})
+
+test('the player’s line, answers and fetched modules are taken when they fit, and dropped when they do not', () => {
+  const carried = {
+    tag: 0,
+    id: 0,
+    version: 0,
+    resources: [{ path: 'top.bml', kind: 'bml', body: new Uint8Array([1]) }],
+  }
+  const said: unknown[] = [
+    { kind: 'line', line: 'on', receiverId: 'a1b2c3d4e5f6' },
+    { kind: 'line', line: 'off', receiverId: null },
+    { kind: 'line', line: 'none', receiverId: null },
+    {
+      kind: 'transmitted',
+      id: 1,
+      answer: { result: 1, status: 404, body: 'not here' },
+    },
+    { kind: 'fetched', id: 2, module: carried },
+    { kind: 'fetched', id: 3, module: null },
+  ]
+
+  for (const data of said) {
+    assert.deepEqual(fromPlayer(data), data)
+  }
+
+  const failed = fromPlayer({
+    kind: 'transmitted',
+    id: 1,
+    answer: { result: Number.NaN, status: Number.NaN, body: '' },
+  })
+
+  assert.equal(failed?.kind, 'transmitted')
+
+  const dropped: unknown[] = [
+    { kind: 'line', line: 'maybe', receiverId: null },
+    { kind: 'line', line: 'on', receiverId: '1234' },
+    { kind: 'line', line: 'on' },
+    {
+      kind: 'transmitted',
+      id: 1,
+      answer: { result: 1.5, status: 200, body: '' },
+    },
+    {
+      kind: 'transmitted',
+      id: 1,
+      answer: { result: Number.POSITIVE_INFINITY, status: 200, body: '' },
+    },
+    { kind: 'transmitted', id: 1, answer: { result: 1, status: 200 } },
+    {
+      kind: 'transmitted',
+      id: 0,
+      answer: { result: 1, status: 200, body: '' },
+    },
+    { kind: 'fetched', id: 2, module: { tag: 0 } },
+  ]
+
+  for (const data of dropped) {
+    assert.equal(fromPlayer(data), null, JSON.stringify(data))
+  }
+})

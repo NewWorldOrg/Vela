@@ -10,6 +10,7 @@ import type {
 } from '@/lib/data-broadcast-feed'
 import {
   DATA_BROADCAST_CLOSED,
+  LINE_SAID_LASTS_MS,
   RECEIVING_SAID_AFTER_MS,
   SCRIPT_GIVEN_UP_AFTER_MS,
   UNSUPPORTED_LASTS_MS,
@@ -39,6 +40,7 @@ export interface DataBroadcast {
   availability: DataBroadcastAvailability
   view: DataBroadcastView
   offered: boolean
+  receiverId: string | null
   connect: (send: SendToRuntime | null) => void
   toggle: () => void
   press: (key: BmlKey) => void
@@ -140,6 +142,13 @@ export function useDataBroadcast(
       )
     }
 
+    if (message.kind === 'line') {
+      setTimeout(
+        () => step({ on: 'lineFaded', lineNotices: nth }),
+        LINE_SAID_LASTS_MS,
+      )
+    }
+
     if (message.kind === 'script' && message.state === 'running') {
       setTimeout(
         () => step({ on: 'overran', scripting: nth }),
@@ -152,6 +161,7 @@ export function useDataBroadcast(
     availability,
     view,
     offered: offersDataBroadcast(availability, view),
+    receiverId: catalog?.receiverId ?? null,
     connect: (send) => {
       runtime.current = send
     },

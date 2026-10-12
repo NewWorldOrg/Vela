@@ -4,7 +4,9 @@ import { test } from 'node:test'
 import {
   DATA_BROADCAST_CLOSED,
   KEYS_UNTIL_TOLD,
+  SAID_LINE_OFF,
   SAID_RECEIVING,
+  SAID_UNREACHED,
   SAID_UNSUPPORTED,
   dataBroadcastAfter,
   dataBroadcastSays,
@@ -360,4 +362,74 @@ test('what the runtime asks to keep changes nothing of the view', () => {
   })
 
   assert.deepEqual(kept, after(OPEN))
+})
+
+test('the setting refusing the line is said once while open, and again only after it is opened again', () => {
+  const off: DataBroadcastStep = {
+    on: 'runtime',
+    message: { kind: 'line', said: 'off' },
+  }
+  const once = after(OPEN, off)
+
+  assert.equal(dataBroadcastSays(once), SAID_LINE_OFF)
+
+  const faded = dataBroadcastAfter(once, {
+    on: 'lineFaded',
+    lineNotices: once.lineNotices,
+  })
+
+  assert.equal(dataBroadcastSays(faded), null)
+  assert.equal(dataBroadcastSays(dataBroadcastAfter(faded, off)), null)
+
+  const reopened = [OPEN, OPEN, off].reduce(dataBroadcastAfter, faded)
+
+  assert.equal(dataBroadcastSays(reopened), SAID_LINE_OFF)
+})
+
+test('a server not reached is said each time, for its own three seconds, and an unsupported operation goes before it', () => {
+  const unreached: DataBroadcastStep = {
+    on: 'runtime',
+    message: { kind: 'line', said: 'unreached' },
+  }
+  const once = after(OPEN, unreached)
+  const twice = dataBroadcastAfter(
+    dataBroadcastAfter(once, {
+      on: 'lineFaded',
+      lineNotices: once.lineNotices,
+    }),
+    unreached,
+  )
+
+  assert.equal(dataBroadcastSays(once), SAID_UNREACHED)
+  assert.equal(dataBroadcastSays(twice), SAID_UNREACHED)
+  assert.equal(
+    dataBroadcastSays(
+      dataBroadcastAfter(twice, {
+        on: 'lineFaded',
+        lineNotices: once.lineNotices,
+      }),
+    ),
+    SAID_UNREACHED,
+  )
+  assert.equal(
+    dataBroadcastSays(
+      dataBroadcastAfter(twice, {
+        on: 'runtime',
+        message: { kind: 'unsupported', what: 'script' },
+      }),
+    ),
+    SAID_UNSUPPORTED,
+  )
+})
+
+test('requests over the line change nothing of the view', () => {
+  const open = after(OPEN)
+
+  assert.equal(
+    dataBroadcastAfter(open, {
+      on: 'runtime',
+      message: { kind: 'fetch', id: 1, uri: 'http://example.test/' },
+    }),
+    open,
+  )
 })

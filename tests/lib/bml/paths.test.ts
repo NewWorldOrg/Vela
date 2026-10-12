@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { addressOf, pathOf, resolveReference } from '@/lib/bml/paths'
+import {
+  OVER_THE_LINE,
+  addressOf,
+  lineAddressOf,
+  locationOf,
+  pathOf,
+  resolveReference,
+} from '@/lib/bml/paths'
 
 const BASE = { tag: 0x40, module: 0x0002, name: 'startup.bml' }
 
@@ -73,10 +80,63 @@ test('the current service may be named in full, and a fragment is not part of th
   })
 })
 
-test('another service, the network and anything unreadable lead nowhere', () => {
+test('another service and anything unreadable lead nowhere', () => {
   assert.equal(resolveReference('arib-dc://1.2.3/40/0001/x.bml', BASE), null)
-  assert.equal(resolveReference('https://example.com/a.png', BASE), null)
   assert.equal(resolveReference('javascript:alert(1)', BASE), null)
   assert.equal(resolveReference('a/b.png', BASE), null)
   assert.equal(resolveReference('', BASE), null)
+})
+
+const OVER = lineAddressOf('http://example.test/bml/top/startup.bml?x=1#a')
+
+test('a URL over the line is an address with no carousel, without its fragment and with its query', () => {
+  assert.deepEqual(OVER, {
+    tag: OVER_THE_LINE,
+    module: OVER_THE_LINE,
+    name: 'startup.bml',
+    url: 'http://example.test/bml/top/startup.bml?x=1',
+  })
+  assert.equal(pathOf(OVER!), 'http://example.test/bml/top/startup.bml?x=1')
+  assert.equal(lineAddressOf('ftp://example.test/a'), null)
+  assert.equal(lineAddressOf('javascript:alert(1)'), null)
+  assert.equal(lineAddressOf('startup.bml'), null)
+  assert.equal(lineAddressOf(`http://example.test/${'a'.repeat(2048)}`), null)
+})
+
+test('a document of the broadcast reaches a URL over the line by naming it in full', () => {
+  assert.deepEqual(resolveReference('https://example.test/a.bml', BASE), {
+    tag: OVER_THE_LINE,
+    module: OVER_THE_LINE,
+    name: 'a.bml',
+    url: 'https://example.test/a.bml',
+  })
+})
+
+test('a reference in a document over the line is read against its URL, and one into the broadcast is read as before', () => {
+  const resolved = (reference: string) =>
+    resolveReference(reference, OVER!)?.url ?? null
+
+  assert.equal(resolved('next.bml'), 'http://example.test/bml/top/next.bml')
+  assert.equal(resolved('../img/a.png'), 'http://example.test/bml/img/a.png')
+  assert.equal(resolved('/x.css'), 'http://example.test/x.css')
+  assert.equal(resolved('https://other.test/y.bml'), 'https://other.test/y.bml')
+  assert.equal(resolved('javascript:alert(1)'), null)
+  assert.deepEqual(
+    resolveReference('arib-dc://-1.-1.-1/40/0001/x.bml', OVER!),
+    { tag: 0x40, module: 1, name: 'x.bml' },
+  )
+})
+
+test('a path a page was given is a path in the carousel or a URL over the line', () => {
+  assert.deepEqual(locationOf('/40/0000/startup.bml'), {
+    tag: 0x40,
+    module: 0,
+    name: 'startup.bml',
+  })
+  assert.equal(
+    locationOf('http://example.test/a.bml')?.url,
+    'http://example.test/a.bml',
+  )
+  assert.equal(addressOf('http://example.test/a.bml'), null)
+  assert.equal(locationOf('a.bml'), null)
 })

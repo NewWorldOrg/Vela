@@ -3,12 +3,22 @@ import { catalogOf, type BmlCatalog } from '@/lib/bml/catalog'
 import { broadcastEventOf, type BroadcastEvent } from '@/lib/bml/event-message'
 import { isBmlKey, type BmlKey } from '@/lib/bml/keys'
 import {
+  LINE_STATES,
+  MOST_CHARSET,
+  MOST_TRANSMIT_BODY,
+  MOST_TRANSMIT_TEXT,
+  receiverIdOf,
+  type LineState,
+  type TransmitAnswer,
+} from '@/lib/bml/line'
+import {
   MOST_MEMORY_BYTES,
   MOST_MEMORY_ENTRIES,
   MOST_MEMORY_NAME,
   type MemoryEntries,
 } from '@/lib/bml/memory'
 import { nptReadingOf, type NptReading } from '@/lib/bml/npt'
+import { MOST_URL, lineAddressOf } from '@/lib/bml/paths'
 import { moduleOf, type BmlModule } from '@/lib/bml/resources'
 import { FONT_FAMILIES, GRID } from '@/lib/bml/style'
 
@@ -38,6 +48,9 @@ export type PlayerMessage =
   | { kind: 'memory'; entries: MemoryEntries }
   | { kind: 'event'; event: BroadcastEvent }
   | { kind: 'npt'; reading: NptReading }
+  | { kind: 'line'; line: LineState; receiverId: string | null }
+  | { kind: 'transmitted'; id: number; answer: TransmitAnswer }
+  | { kind: 'fetched'; id: number; module: BmlModule | null }
   | { kind: 'open' }
   | { kind: 'close' }
 
@@ -59,6 +72,14 @@ export type RuntimeMessage =
   | { kind: 'script'; state: ScriptState }
   | { kind: 'exit' }
   | { kind: 'error'; reason: RuntimeError }
+  | { kind: 'transmit'; id: number; uri: string; text: string; charset: string }
+  | { kind: 'fetch'; id: number; uri: string }
+  | { kind: 'line'; said: LineSaid }
+
+/** What the viewer is told of the line: the setting refuses it, or the broadcaster's server could not be reached. */
+export const LINE_SAYINGS = ['off', 'unreached'] as const
+
+export type LineSaid = (typeof LINE_SAYINGS)[number]
 
 /** How a sandboxed document without `allow-same-origin` names its origin. */
 export const RUNTIME_ORIGIN = 'null'
@@ -137,10 +158,46 @@ function memoryEntriesOf(value: unknown): MemoryEntries | null {
   return fits ? value.map((entry) => [entry[0], entry[1]]) : null
 }
 
+function isRequestId(value: unknown): value is number {
+  return Number.isSafeInteger(value) && (value as number) > 0
+}
+
+/** A URL a runtime may ask over the line, written as the runtime writes it: `http:` or `https:`, without a fragment. */
+function isLineUri(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length <= MOST_URL &&
+    lineAddressOf(value)?.url === value
+  )
+}
+
+function transmitOf(message: Record<string, unknown>): RuntimeMessage | null {
+  const { id, uri, text, charset } = message
+
+  return isRequestId(id) &&
+    isLineUri(uri) &&
+    typeof text === 'string' &&
+    text.length <= MOST_TRANSMIT_TEXT &&
+    typeof charset === 'string' &&
+    charset.length <= MOST_CHARSET
+    ? { kind: 'transmit', id, uri, text, charset }
+    : null
+}
+
 function runtimeMessageOf(data: unknown): RuntimeMessage | null {
   const message = recordOf(data)
 
   switch (message?.kind) {
+    case 'transmit':
+      return transmitOf(message)
+    case 'fetch':
+      return isRequestId(message.id) && isLineUri(message.uri)
+        ? { kind: 'fetch', id: message.id, uri: message.uri }
+        : null
+    case 'line':
+      return LINE_SAYINGS.includes(message.said as LineSaid)
+        ? { kind: 'line', said: message.said as LineSaid }
+        : null
     case 'memory':
       return isMemoryName(message.name) &&
         (message.value === null || isMemoryValue(message.value))
@@ -235,10 +292,58 @@ function programmeOf(value: unknown): Programme | null {
     : null
 }
 
+/** A number of an answer, which may be NaN where there is none, but nothing else that is not finite. */
+function isAnswerNumber(value: unknown): value is number {
+  return typeof value === 'number' && !Number.isFinite(value)
+    ? Number.isNaN(value)
+    : Number.isSafeInteger(value)
+}
+
+function answerOf(value: unknown): TransmitAnswer | null {
+  const answer = recordOf(value)
+
+  return answer &&
+    isAnswerNumber(answer.result) &&
+    isAnswerNumber(answer.status) &&
+    typeof answer.body === 'string' &&
+    answer.body.length <= MOST_TRANSMIT_BODY
+    ? { result: answer.result, status: answer.status, body: answer.body }
+    : null
+}
+
+function lineOf(message: Record<string, unknown>): PlayerMessage | null {
+  const receiverId =
+    message.receiverId === null ? null : receiverIdOf(message.receiverId)
+
+  return LINE_STATES.includes(message.line as LineState) &&
+    (message.receiverId === null || receiverId !== null)
+    ? { kind: 'line', line: message.line as LineState, receiverId }
+    : null
+}
+
+function fetchedOf(message: Record<string, unknown>): PlayerMessage | null {
+  const carried = message.module === null ? null : moduleOf(message.module)
+
+  return isRequestId(message.id) && (message.module === null || carried)
+    ? { kind: 'fetched', id: message.id, module: carried }
+    : null
+}
+
 function playerMessageOf(data: unknown): PlayerMessage | null {
   const message = recordOf(data)
 
   switch (message?.kind) {
+    case 'line':
+      return lineOf(message)
+    case 'transmitted': {
+      const answer = answerOf(message.answer)
+
+      return isRequestId(message.id) && answer
+        ? { kind: 'transmitted', id: message.id, answer }
+        : null
+    }
+    case 'fetched':
+      return fetchedOf(message)
     case 'catalog': {
       const catalog = catalogOf(message.catalog)
 

@@ -1302,3 +1302,262 @@ test('getNPT reads the NPT of the stream carrying the document in whole millisec
   shown.execute('read()', null)
   assert.equal(registers[5], '2500')
 })
+
+function overTheLine(
+  startup: string,
+  line: 'on' | 'off' | 'none',
+  receiverId: string | null = null,
+) {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', startup] }),
+  })
+  opening.send({ kind: 'line', line, receiverId })
+  opening.send({ kind: 'open' })
+
+  return {
+    ...opening,
+    registers: (opening.runtime as unknown as { registers: { Ureg: string[] } })
+      .registers.Ureg,
+  }
+}
+
+const ANSWERED = { result: 1, status: 200, body: 'ok' }
+
+const CHECKING = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>' +
+    'browser.Ureg[1] = String(Number(browser.Ureg[1] || "0") + 1);' +
+    'var r = browser.transmitTextDataOverIP("http://example.test/check#x", "", "EUC-JP");' +
+    'browser.Ureg[0] = r.join(",");' +
+    '</script>' +
+    '<script>browser.Ureg[2] = "after"</script>',
+).replace('<body>', '<body onload="browser.Ureg[3] = \'loaded\'">')
+
+test('a transmission stops the script until its answer is in, then the script runs again from its start with the answer, and the rest of the document after it', () => {
+  const { heard, send, registers, forget } = overTheLine(CHECKING, 'on')
+
+  assert.deepEqual(heard(), [
+    {
+      kind: 'transmit',
+      id: 1,
+      uri: 'http://example.test/check',
+      text: '',
+      charset: 'EUC-JP',
+    },
+  ])
+  assert.deepEqual(registers.slice(0, 4), ['', '1', '', ''])
+
+  forget()
+  send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+
+  assert.deepEqual(registers.slice(0, 4), ['1,200,ok', '2', 'after', 'loaded'])
+  assert.deepEqual(
+    heard().map((message) => message.kind),
+    ['videoRect', 'usedKeys'],
+  )
+})
+
+test('an answer nothing waits on, or one for a page no longer shown, runs nothing', () => {
+  const { send, registers } = overTheLine(CHECKING, 'on')
+
+  send({ kind: 'transmitted', id: 7, answer: ANSWERED })
+  assert.equal(registers[1], '1')
+
+  send({ kind: 'close' })
+  send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+  assert.equal(registers[1], '1')
+  assert.equal(registers[0], '')
+})
+
+const TWICE = bml(
+  '<p id="p" style="nav-index: 0" onclick="' +
+    "browser.setInterval(&quot;browser.Ureg[2] = 'tick'&quot;, 1000, 0);" +
+    'var a = browser.transmitTextDataOverIP(&quot;http://example.test/a&quot;, &quot;x=1&quot;, &quot;EUC-JP&quot;);' +
+    'var b = browser.transmitTextDataOverIP(&quot;http://example.test/b&quot;, &quot;&quot;, &quot;EUC-JP&quot;);' +
+    'browser.Ureg[0] = a[2] + &quot;/&quot; + b[2];' +
+    'browser.Ureg[1] = String(Number(browser.Ureg[1] || &quot;0&quot;) + 1);' +
+    '">p</p>',
+)
+
+test('a handler that transmits twice is answered both in the order it asked, and a timer it started before waiting is not started twice', () => {
+  const { heard, send, registers, forget, timers } = overTheLine(TWICE, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+
+  assert.deepEqual(heard(), [
+    {
+      kind: 'transmit',
+      id: 1,
+      uri: 'http://example.test/a',
+      text: 'x=1',
+      charset: 'EUC-JP',
+    },
+  ])
+
+  forget()
+  send({
+    kind: 'transmitted',
+    id: 1,
+    answer: { result: 1, status: 200, body: 'first' },
+  })
+
+  assert.deepEqual(heard(), [
+    {
+      kind: 'transmit',
+      id: 2,
+      uri: 'http://example.test/b',
+      text: '',
+      charset: 'EUC-JP',
+    },
+  ])
+  assert.equal(registers[0], '')
+  assert.equal(timers.pending, 0)
+
+  send({
+    kind: 'transmitted',
+    id: 2,
+    answer: { result: 1, status: 404, body: 'second' },
+  })
+
+  assert.equal(registers[0], 'first/second')
+  assert.equal(registers[1], '1')
+  assert.equal(timers.pending, 1)
+})
+
+const SETTING_OFF = bml(
+  '<p id="p">p</p>',
+  '<script>' +
+    'var r = browser.transmitTextDataOverIP("http://example.test/check", "", "EUC-JP");' +
+    'browser.Ureg[0] = String(r);' +
+    'browser.Ureg[1] = String(browser.launchDocument("http://example.test/top.bml"));' +
+    'browser.Ureg[2] = [browser.getBrowserSupport("ARIB", "APIGroup", "Com.IP"), browser.isIPConnected(), browser.getIRDID(5)].join(",");' +
+    '</script>',
+)
+
+test('with the setting off nothing goes over the line, the document is answered as before and the player is told the setting is off', () => {
+  const { heard, registers } = overTheLine(SETTING_OFF, 'off', 'a1b2c3d4e5f6')
+
+  assert.equal(registers[0], 'NaN')
+  assert.equal(registers[1], 'NaN')
+  assert.equal(registers[2], '0,NaN,')
+  assert.deepEqual(
+    heard().filter(
+      (message) => message.kind !== 'videoRect' && message.kind !== 'usedKeys',
+    ),
+    [
+      { kind: 'line', said: 'off' },
+      { kind: 'line', said: 'off' },
+    ],
+  )
+})
+
+test('where there is no line, as in a recording, a transmission times out and the player is told it is not supported', () => {
+  const { heard, registers } = overTheLine(SETTING_OFF, 'none')
+
+  assert.equal(registers[0], '-3,NaN,')
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'unsupported'),
+    [
+      { kind: 'unsupported', what: 'transmitTextDataOverIP' },
+      { kind: 'unsupported', what: 'launchDocument' },
+    ],
+  )
+  assert.equal(
+    heard().some((message) => message.kind === 'transmit'),
+    false,
+  )
+})
+
+const IDENTIFIED = bml(
+  '<p id="p">p</p>',
+  '<script>browser.Ureg[0] = [browser.getIRDID(5), browser.getIRDID(13), browser.getBrowserSupport("ARIB", "APIGroup", "Com.IP.Transmit"), browser.getConnectionType()].join(",")</script>',
+)
+
+test('the card’s ID the player hands with the line is what the document is told, and the line is there', () => {
+  assert.equal(
+    overTheLine(IDENTIFIED, 'on', 'a1b2c3d4e5f6').registers[0],
+    'a1b2c3d4e5f6,,1,403',
+  )
+  assert.equal(overTheLine(IDENTIFIED, 'on').registers[0], ',,1,403')
+})
+
+const TO_THE_LINE = bml(
+  '<p id="go" style="nav-index: 0" onclick="browser.launchDocument(&quot;http://example.test/bml/top.bml&quot;)">go</p>',
+)
+
+const TOP = bml(
+  '<p id="top" style="nav-index: 0">top</p><a id="next" href="next.bml" style="nav-index: 1">next</a>',
+  '<script src="lib/s.js"></script>',
+)
+
+const SCRIPT =
+  'browser.Ureg[0] = [browser.isBeingBroadcast("HTTPServer"), browser.getBrowserStatus("TerrP", "IRDState", "Link"), browser.getActiveDocument()].join(",")'
+
+function fetchedModule(resources: Record<string, [ResourceKind, string]>) {
+  return module(0, resources, 0, 0)
+}
+
+test('a document over the line is fetched through the player, with the scripts it names read against its URL, and is told it came by the line', () => {
+  const { heard, send, registers, forget, element } = overTheLine(
+    TO_THE_LINE,
+    'on',
+  )
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+
+  assert.deepEqual(heard(), [
+    { kind: 'fetch', id: 1, uri: 'http://example.test/bml/top.bml' },
+    { kind: 'waiting', waiting: true },
+  ])
+
+  forget()
+  send({
+    kind: 'fetched',
+    id: 1,
+    module: fetchedModule({ 'top.bml': ['bml', TOP] }),
+  })
+
+  assert.deepEqual(heard(), [
+    { kind: 'fetch', id: 2, uri: 'http://example.test/bml/lib/s.js' },
+  ])
+  assert.ok(element('go'))
+
+  forget()
+  send({
+    kind: 'fetched',
+    id: 2,
+    module: fetchedModule({ 's.js': ['script', SCRIPT] }),
+  })
+
+  assert.equal(element('go'), null)
+  assert.ok(element('top'))
+  assert.equal(registers[0], '1,1,http://example.test/bml/top.bml')
+  assert.deepEqual(heard()[0], { kind: 'waiting', waiting: false })
+})
+
+test('a document over the line that could not be fetched leaves the page as it was', () => {
+  const { heard, send, forget, element } = overTheLine(TO_THE_LINE, 'on')
+
+  send({ kind: 'key', key: 'enter' })
+  forget()
+  send({ kind: 'fetched', id: 1, module: null })
+
+  assert.deepEqual(heard(), [{ kind: 'waiting', waiting: false }])
+  assert.ok(element('go'))
+})
+
+test('with the setting off a document over the line is not fetched', () => {
+  const { heard, send, forget, element } = overTheLine(TO_THE_LINE, 'off')
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+
+  assert.deepEqual(heard(), [{ kind: 'line', said: 'off' }])
+  assert.ok(element('go'))
+})

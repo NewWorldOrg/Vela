@@ -1,8 +1,18 @@
+/** Where a resource is: a module of the carousel, or a document fetched over the line, which has `url` and no carousel (its tag and module are `OVER_THE_LINE`). */
 export interface BmlAddress {
   tag: number
   module: number
   name: string
+  url?: string
 }
+
+/** The tag and module of a document fetched over the line, which no carousel uses. */
+export const OVER_THE_LINE = -1
+
+/** The longest URL a document may ask the line for. */
+export const MOST_URL = 2048
+
+const ON_THE_LINE = /^https?:\/\//i
 
 const ABSOLUTE = /^\/([0-9a-f]{2})\/([0-9a-f]{4})\/([^/]+)$/i
 
@@ -36,7 +46,10 @@ function hex(value: number, digits: number): string {
 }
 
 export function pathOf(address: BmlAddress): string {
-  return `/${hex(address.tag, 2)}/${hex(address.module, 4)}/${address.name}`
+  return (
+    address.url ??
+    `/${hex(address.tag, 2)}/${hex(address.module, 4)}/${address.name}`
+  )
 }
 
 function withoutFragment(reference: string): string {
@@ -45,13 +58,49 @@ function withoutFragment(reference: string): string {
   return (at < 0 ? reference : reference.slice(0, at)).trim()
 }
 
-/** Where a reference in a document at `base` points: absolute, `~/` within the carousel, `../` beside the module, or a name within the module. Another service, or a scheme it cannot reach, is null. */
+/** The address of an `http:` or `https:` URL, without its fragment and with its query, or null when it is not one. */
+export function lineAddressOf(
+  reference: string,
+  base?: string,
+): BmlAddress | null {
+  let url: URL
+
+  try {
+    url = new URL(reference.trim(), base)
+  } catch {
+    return null
+  }
+
+  url.hash = ''
+
+  const href = url.href
+
+  if (!ON_THE_LINE.test(href) || href.length > MOST_URL) {
+    return null
+  }
+
+  const name = url.pathname.slice(url.pathname.lastIndexOf('/') + 1)
+
+  return { tag: OVER_THE_LINE, module: OVER_THE_LINE, name, url: href }
+}
+
+/** The address of a path a page was given: an absolute path in the carousel or a URL over the line. */
+export function locationOf(path: string): BmlAddress | null {
+  return ON_THE_LINE.test(path.trim()) ? lineAddressOf(path) : addressOf(path)
+}
+
+/** Where a reference in a document at `base` points: absolute, `~/` within the carousel, `../` beside the module, or a name within the module; an `http:` or `https:` URL, or any reference but an `arib-dc:` one in a document fetched over the line, is a URL resolved against that document's. Another service, or a scheme it cannot reach, is null. */
 export function resolveReference(
   reference: string,
   base: BmlAddress,
 ): BmlAddress | null {
   const plain = withoutFragment(reference)
   const service = IN_THIS_SERVICE.exec(plain)
+
+  if (!service && (base.url !== undefined || ON_THE_LINE.test(plain))) {
+    return lineAddressOf(reference, base.url)
+  }
+
   const path = service ? service[1] : plain
 
   const inCarousel = IN_THE_CAROUSEL.exec(path) ?? BESIDE.exec(path)

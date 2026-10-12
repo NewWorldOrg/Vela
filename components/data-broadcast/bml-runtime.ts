@@ -31,6 +31,7 @@ import {
   type BmlKey,
   type Navigation,
 } from '@/lib/bml/keys'
+import type { LineState, TransmitAnswer } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
 import {
   playerMessageFrom,
@@ -44,6 +45,7 @@ import { nptMilliseconds, type NptReading } from '@/lib/bml/npt'
 import { withPalette, type Palette } from '@/lib/bml/palette'
 import {
   addressOf,
+  locationOf,
   moduleAddressOf,
   modulePathOf,
   pathOf,
@@ -64,6 +66,7 @@ import {
 import { onGrid, planeIn, type UsedKeyGroup } from '@/lib/bml/style'
 import { tableClassesOf } from '@/lib/bml/tables'
 import { frameEvaluator } from '@/components/data-broadcast/bml-evaluator'
+import { LineRequests } from '@/components/data-broadcast/bml-line'
 import {
   mountPage,
   type MountedPage,
@@ -129,6 +132,12 @@ interface Timer {
 
 type Leaving = { to: BmlAddress } | { reload: true } | { quit: true }
 
+/** Where a run that waits on the line was: the page and the event it ran for. */
+interface Seen {
+  shown: Shown
+  event: BmlEvent | null
+}
+
 function moduleKey(tag: number, id: number): string {
   return `${tag}/${id}`
 }
@@ -191,6 +200,12 @@ export class BmlRuntime {
 
   private pressing: number | null = null
 
+  private line: LineState = 'none'
+
+  private receiverId: string | null = null
+
+  private readonly requests: LineRequests<Seen>
+
   clock: number | null = null
 
   programme: Programme | null = null
@@ -212,6 +227,7 @@ export class BmlRuntime {
     this.memory = new PersistentMemory((name, value) =>
       this.say({ kind: 'memory', name, value }),
     )
+    this.requests = new LineRequests((ask) => this.say(ask))
   }
 
   receive(event: MessageEvent): void {
@@ -257,6 +273,16 @@ export class BmlRuntime {
           takenAt: this.now(),
         })
         this.nptReferred()
+        return
+      case 'line':
+        this.line = message.line
+        this.receiverId = message.receiverId
+        return
+      case 'transmitted':
+        this.answered(message.id, message.answer)
+        return
+      case 'fetched':
+        this.took(message.id, message.module)
         return
       case 'open':
         this.open()
@@ -343,6 +369,10 @@ export class BmlRuntime {
   }
 
   lookup(address: BmlAddress): BmlResource | undefined {
+    if (address.url !== undefined) {
+      return this.requests.resource(address.url)
+    }
+
     return this.modules
       .get(moduleKey(address.tag, address.module))
       ?.resources.find((resource) => resource.path === address.name)
@@ -365,6 +395,7 @@ export class BmlRuntime {
   private close(): void {
     this.waitFor(null)
     this.unmount()
+    this.requests.clear()
   }
 
   /** Presses the data button on a document that cannot be seen, so that an entry document moves on to its face, and again every moment while it still cannot be seen, for some seconds: an entry document that takes a while to get ready, locking modules first, takes the press once it is. */
@@ -400,6 +431,12 @@ export class BmlRuntime {
   }
 
   private launch(address: BmlAddress, opening: boolean): void {
+    if (address.url !== undefined) {
+      this.launchOverTheLine(address, address.url)
+
+      return
+    }
+
     const arrived = this.modules.has(moduleKey(address.tag, address.module))
 
     if (!arrived && !opening) {
@@ -427,11 +464,50 @@ export class BmlRuntime {
     this.show(address, resource)
   }
 
+  /** A document over the line is fetched through the player, and waited for like a module of the carousel. One that could not be fetched, or is not a document, leaves the page as it is. */
+  private launchOverTheLine(address: BmlAddress, url: string): void {
+    if (this.line !== 'on') {
+      this.refuseTheLine('launchDocument')
+
+      return
+    }
+
+    if (!this.requests.has(url)) {
+      this.requests.fetch([url])
+      this.waitFor(address)
+
+      return
+    }
+
+    const resource = this.requests.resource(url)
+
+    if (resource?.kind !== 'bml') {
+      this.waitFor(null)
+      this.warn(`not a document over the line: ${url}`)
+
+      return
+    }
+
+    this.show(address, resource)
+  }
+
+  /** A function that uses the line, called while it is not used: the player is told the setting refuses it, or, where there is no line, that the operation is not supported. */
+  private refuseTheLine(what: string): void {
+    if (this.line === 'off') {
+      this.say({ kind: 'line', said: 'off' })
+
+      return
+    }
+
+    this.say({ kind: 'unsupported', what })
+  }
+
   private show(address: BmlAddress, resource: BmlResource): void {
     const urls: string[] = []
+    const missing = new Set<string>()
 
     try {
-      const page = this.read(address, resource, urls)
+      const page = this.read(address, resource, urls, missing)
 
       if (!page) {
         this.discard(urls)
@@ -440,6 +516,21 @@ export class BmlRuntime {
         return
       }
 
+      this.missingScripts(page, missing)
+
+      if (missing.size > 0) {
+        this.discard(urls)
+        this.requests.fetch(missing)
+        this.waitFor(this.requests.waiting ? address : null)
+
+        if (!this.requests.waiting) {
+          this.show(address, resource)
+        }
+
+        return
+      }
+
+      this.waitFor(null)
       this.draw(page, urls)
     } catch {
       this.discard(urls)
@@ -447,10 +538,22 @@ export class BmlRuntime {
     }
   }
 
+  /** The scripts of a page over the line that are not fetched yet. */
+  private missingScripts(page: BmlPage, missing: Set<string>): void {
+    page.scripts.forEach((script) => {
+      const url = 'src' in script ? locationOf(script.src)?.url : undefined
+
+      if (url !== undefined && !this.requests.has(url)) {
+        missing.add(url)
+      }
+    })
+  }
+
   private read(
     address: BmlAddress,
     resource: BmlResource,
     urls: string[],
+    missing: Set<string>,
   ): BmlPage | null {
     if (resource.body.length > BML_LIMITS.documentBytes) {
       return null
@@ -460,7 +563,13 @@ export class BmlRuntime {
     const reading = root
       ? convertBml(root, {
           address,
-          lookup: (wanted) => this.lookup(wanted),
+          lookup: (wanted) => {
+            if (wanted.url !== undefined && !this.requests.has(wanted.url)) {
+              missing.add(wanted.url)
+            }
+
+            return this.lookup(wanted)
+          },
           image: (image, palette) => this.urlOf(image, palette, urls),
         })
       : null
@@ -507,28 +616,44 @@ export class BmlRuntime {
   }
 
   /** Runs the document's scripts and its body's `onload`, then settles its focus where they did not, and tells the player of it, unless a script moved on. */
-  private start(shown: Shown): void {
-    for (const script of shown.page.scripts) {
+  private start(shown: Shown, from = 0): void {
+    const scripts = shown.page.scripts
+
+    for (let at = from; at < scripts.length; at += 1) {
+      const script = scripts[at]
       const code =
         'source' in script ? script.source : this.scriptAt(script.src)
 
       if (code === null) {
         this.warn('missing script')
-      } else if (!this.execute(code, null) || this.shown !== shown) {
+      } else if (
+        !this.execute(code, null, () => this.start(shown, at + 1)) ||
+        this.shown !== shown
+      ) {
         return
       }
     }
 
+    this.loaded(shown)
+  }
+
+  private loaded(shown: Shown): void {
     const onload = handlerOf(shown.mounted.body, 'onload')
 
     if (
       onload &&
-      (!this.execute(onload, { type: 'load', target: null }) ||
+      (!this.execute(onload, { type: 'load', target: null }, () =>
+        this.settleFocus(shown),
+      ) ||
         this.shown !== shown)
     ) {
       return
     }
 
+    this.settleFocus(shown)
+  }
+
+  private settleFocus(shown: Shown): void {
     if (shown.focused === null) {
       this.focus(this.elementAt(shown, firstFocus(shown.navigation)), false)
     }
@@ -555,7 +680,7 @@ export class BmlRuntime {
   }
 
   private scriptAt(path: string): string | null {
-    const address = addressOf(path)
+    const address = locationOf(path)
     const resource = address ? this.lookup(address) : undefined
 
     return resource &&
@@ -655,6 +780,15 @@ export class BmlRuntime {
         })),
       unsupported: (what) => this.say({ kind: 'unsupported', what }),
       warn: (what) => this.warn(what),
+      line: () => this.line,
+      receiverId: () => this.receiverId,
+      overTheLine: () => this.shown?.page.address.url !== undefined,
+      transmit: (uri, text, charset) =>
+        this.requests.transmit(uri, text, charset),
+      lineOff: (what) => {
+        this.warn(`the line is off: ${what}`)
+        this.say({ kind: 'line', said: 'off' })
+      },
     }
   }
 
@@ -681,13 +815,24 @@ export class BmlRuntime {
       return false
     }
 
+    if (address.url !== undefined && this.line !== 'on') {
+      this.refuseTheLine('launchDocument')
+
+      return false
+    }
+
     this.leaving = { to: address }
 
     return true
   }
 
-  /** Runs one piece of the document's code, telling the player when it starts and ends so that one that runs too long is seen. True when the document is still the one shown and has not asked to move on, to a document there already or to one still awaited. */
-  private execute(code: string, event: BmlEvent | null): boolean {
+  /** Runs one piece of the document's code, telling the player when it starts and ends so that one that runs too long is seen. True when the document is still the one shown and has not asked to move on, to a document there already or to one still awaited, and the code is not waiting on the line. One that waits is run again with `answers` once the answer is in, and `then` after it. */
+  private execute(
+    code: string,
+    event: BmlEvent | null,
+    then: (() => void) | null = null,
+    answers: TransmitAnswer[] = [],
+  ): boolean {
     const shown = this.shown
 
     if (!shown) {
@@ -697,11 +842,15 @@ export class BmlRuntime {
     this.say({ kind: 'script', state: 'running' })
     this.depth += 1
 
+    const call = this.requests.begin(answers)
     const outcome =
       event === null
         ? shown.scope.run(code)
         : shown.document.during(event, () => shown.scope.run(code))
 
+    this.requests
+      .end(call, { shown, event }, code, then)
+      .forEach((timer) => this.stopTimer(timer))
     this.depth -= 1
     this.say({
       kind: 'script',
@@ -717,8 +866,46 @@ export class BmlRuntime {
     }
 
     return (
-      this.shown === shown && this.leaving === null && this.pending === null
+      this.shown === shown &&
+      this.leaving === null &&
+      this.pending === null &&
+      call.asked === null
     )
+  }
+
+  /** Runs again the code that waited on the line, now that its answer is in, if its page is still the one shown, and what was to follow it. */
+  private answered(id: number, answer: TransmitAnswer): void {
+    const awaited = this.requests.answered(id, answer)
+    const shown = awaited?.seen.shown
+
+    if (!awaited || !shown || shown !== this.shown) {
+      return
+    }
+
+    if (
+      this.execute(
+        awaited.code,
+        awaited.seen.event,
+        awaited.then,
+        awaited.answers,
+      ) &&
+      this.shown === shown
+    ) {
+      awaited.then?.()
+    }
+  }
+
+  /** Keeps what a fetch brought, and opens the document that waited on it once nothing else is on its way. */
+  private took(id: number, module: BmlModule | null): void {
+    const pending = this.pending
+
+    if (!this.requests.took(id, module) || pending?.url === undefined) {
+      return
+    }
+
+    this.launch(pending, false)
+    this.presses = 0
+    this.nudge()
   }
 
   /** Moves to the document a script asked for, once the script has ended; a document that moves on at once from its own scripts is followed only so far. */
@@ -1016,6 +1203,7 @@ export class BmlRuntime {
     )
 
     this.timers.set(id, { handle, left })
+    this.requests.started(id)
 
     return id
   }
@@ -1092,6 +1280,7 @@ export class BmlRuntime {
   }
 
   private unmount(): void {
+    this.requests.drop()
     this.stopTimers()
     this.stopNudging()
     this.locked.clear()
@@ -1278,22 +1467,25 @@ export class BmlRuntime {
 
     const handler = handlerOf(element, 'onclick')
     const href = element.getAttribute('data-bml-href')
-    const target = href ? addressOf(href) : null
+    const target = href ? locationOf(href) : null
+    const follow = target ? () => this.launch(target, false) : null
 
     if (
       handler &&
-      (!this.execute(handler, {
-        type: 'click',
-        target: shown.document.elementTarget(element),
-      }) ||
+      (!this.execute(
+        handler,
+        {
+          type: 'click',
+          target: shown.document.elementTarget(element),
+        },
+        follow,
+      ) ||
         this.shown !== shown)
     ) {
       return
     }
 
-    if (target) {
-      this.launch(target, false)
-    }
+    follow?.()
   }
 
   private waitFor(address: BmlAddress | null): void {

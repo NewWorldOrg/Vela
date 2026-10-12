@@ -1,3 +1,5 @@
+import { receiverIdOf } from '@/lib/bml/line'
+
 export interface CatalogResource {
   path: string
   type: string
@@ -22,6 +24,7 @@ export interface BmlCatalog {
   autoStart: boolean
   startup: string
   carousels: CatalogCarousel[]
+  receiverId?: string
 }
 
 export const CATALOG_BYTE = 0x01
@@ -380,7 +383,7 @@ function carouselOf(value: unknown): CatalogCarousel | null {
   return { tag: carousel.tag, downloadId: carousel.downloadId, modules }
 }
 
-/** The catalog a decoded value or a message carries, or null when its shape is not one. Keys it does not know are left out. */
+/** The catalog a decoded value or a message carries, or null when its shape is not one. Keys it does not know are left out, and so is a card's ID that is not twelve hexadecimal digits. */
 export function catalogOf(value: unknown): BmlCatalog | null {
   const catalog = recordOf(value)
   const carousels = catalog && listOf(catalog.carousels, carouselOf)
@@ -396,12 +399,26 @@ export function catalogOf(value: unknown): BmlCatalog | null {
     return null
   }
 
+  const receiverId = receiverIdOf(catalog.receiverId)
+
   return {
     service: catalog.service,
     entryTag: catalog.entryTag,
     autoStart: catalog.autoStart,
     startup: catalog.startup,
     carousels,
+    ...(receiverId ? { receiverId } : {}),
+  }
+}
+
+/** The catalog without the card's ID, which is handed to a document only by the line's own message. */
+export function catalogWithoutReceiverId(catalog: BmlCatalog): BmlCatalog {
+  return {
+    service: catalog.service,
+    entryTag: catalog.entryTag,
+    autoStart: catalog.autoStart,
+    startup: catalog.startup,
+    carousels: catalog.carousels,
   }
 }
 

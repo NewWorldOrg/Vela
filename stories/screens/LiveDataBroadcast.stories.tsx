@@ -3,12 +3,25 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import { catalogPayload } from '@/lib/bml/catalog'
 import { modulePayload, type BmlModule } from '@/lib/bml/resources'
-import { SAID_FAILED, SAID_RECEIVING } from '@/lib/data-broadcast-view'
+import type { TransmitAnswer } from '@/lib/bml/line'
+import {
+  SAID_FAILED,
+  SAID_LINE_OFF,
+  SAID_RECEIVING,
+  SAID_UNREACHED,
+} from '@/lib/data-broadcast-view'
+import {
+  DATA_BROADCAST_LINE,
+  LINE_SPELLING,
+  forgettingCookie,
+  storingCookie,
+} from '@/lib/stored-flag'
 import { frameOf, progressPayload, type LiveStartup } from '@/lib/live-wire'
 import {
   LIVE_NOW_FIXTURE,
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
+import type { LineRelay } from '@/repository/live-data-broadcast'
 import type { TicketWrite } from '@/repository/tickets'
 import {
   BAND_MAX_SCALE,
@@ -20,8 +33,11 @@ import { LiveView } from '@/components/live/live-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import {
   DATA_BROADCAST_CATALOG,
+  LINE_CATALOG,
+  OVER_THE_LINE_PAGES,
   SCRIPTED_CATALOG,
   dataBroadcastModules,
+  lineModules,
   scriptedModules,
 } from '@/stories/fixtures/data-broadcast'
 import { inTheApp } from '@/stories/frames'
@@ -762,5 +778,120 @@ export const スクリプトが長すぎると閉じる: Story = {
 
     await userEvent.click(toggle)
     await shrunkTo(canvasElement, AT_THE_START)
+  },
+}
+
+const LINE = [catalogPayload(LINE_CATALOG), ...lineModules().map(modulePayload)]
+
+/** What the documents asked over the line in a story: each transmission with its channel, and each URL fetched. */
+interface AskedOverTheLine {
+  transmitted: string[][]
+  fetched: string[]
+}
+
+const asked: AskedOverTheLine = { transmitted: [], fetched: [] }
+
+/** A relay that answers every transmission with `answer` and every fetch from the self-made pages, and notes what it was asked. */
+function relayAnswering(answer: TransmitAnswer) {
+  return (channel: string): LineRelay => ({
+    transmit: async (uri, text, charset) => {
+      asked.transmitted.push([channel, uri, text, charset])
+
+      return { said: 'answered', answer }
+    },
+    fetch: async (uri) => {
+      asked.fetched.push(uri)
+
+      const page = OVER_THE_LINE_PAGES[uri]
+
+      return page ? { said: 'answered', answer: page } : { said: 'unreached' }
+    },
+  })
+}
+
+function lineSetTo(allowed: boolean) {
+  return () => {
+    asked.transmitted.length = 0
+    asked.fetched.length = 0
+    document.cookie = allowed
+      ? storingCookie(DATA_BROADCAST_LINE, LINE_SPELLING.yes)
+      : forgettingCookie(DATA_BROADCAST_LINE)
+
+    return () => {
+      document.cookie = forgettingCookie(DATA_BROADCAST_LINE)
+    }
+  }
+}
+
+async function openedOnTheLine(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+  const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+
+  await afterTheArrival(canvasElement)
+  canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+  await userEvent.click(toggle)
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+}
+
+export const 通信を使うページ: Story = {
+  args: {
+    openSocket: carrying(...LINE),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+
+    await expect(asked.transmitted).toEqual([
+      ['32736-1024', 'http://example.test/check.txt', '', 'EUC-JP'],
+    ])
+    await expect(asked.fetched).toEqual([
+      'http://example.test/bml/top.bml',
+      'http://example.test/bml/style/top.css',
+    ])
+    await expect(
+      onTheScreen(canvasElement, 'data-broadcast-says'),
+    ).toHaveTextContent('')
+  },
+}
+
+export const 通信が設定で切: Story = {
+  args: {
+    openSocket: carrying(...LINE),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(false),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+
+    const says = onTheScreen(canvasElement, 'data-broadcast-says')
+
+    await waitFor(() => expect(says).toHaveTextContent(SAID_LINE_OFF), {
+      timeout: 5000,
+    })
+    await shrunkTo(canvasElement, AT_THE_START)
+    await expect(asked.transmitted).toEqual([])
+    await expect(asked.fetched).toEqual([])
+  },
+}
+
+export const 放送局のサーバにつながらない: Story = {
+  args: {
+    openSocket: carrying(...LINE),
+    lineRelayOf: relayAnswering({ result: -400, status: Number.NaN, body: '' }),
+  },
+  beforeEach: lineSetTo(true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+
+    const says = onTheScreen(canvasElement, 'data-broadcast-says')
+
+    await waitFor(() => expect(says).toHaveTextContent(SAID_UNREACHED), {
+      timeout: 5000,
+    })
+    await shrunkTo(canvasElement, AT_THE_START)
+    await expect(asked.transmitted.length).toBe(1)
+    await expect(asked.fetched).toEqual([])
   },
 }

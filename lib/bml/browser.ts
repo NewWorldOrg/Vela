@@ -1,4 +1,17 @@
+import {
+  CARD_ID_TYPE,
+  ETHERNET_DHCP,
+  IP_CONNECTED,
+  MOST_CHARSET,
+  MOST_TRANSMIT_TEXT,
+  TRANSMIT_RESULT,
+  answerOf,
+  transmitted,
+  type LineState,
+  type TransmitAnswer,
+} from '@/lib/bml/line'
 import { readArray, writeArray, type PersistentMemory } from '@/lib/bml/memory'
+import { lineAddressOf } from '@/lib/bml/paths'
 import type { Programme } from '@/lib/bml/messages'
 import { DocumentLeft } from '@/lib/bml/scripts'
 
@@ -26,6 +39,11 @@ export interface BrowserHost {
   lockedModules(): { path: string; held: boolean }[]
   unsupported(what: string): void
   warn(what: string): void
+  line(): LineState
+  receiverId(): string | null
+  overTheLine(): boolean
+  transmit(uri: string, text: string, charset: string): TransmitAnswer
+  lineOff(what: string): void
 }
 
 /** The functions a broadcast's document may call and get an answer from. */
@@ -75,7 +93,7 @@ export const IGNORED_FUNCTIONS = [
   'unlockScreen',
 ] as const
 
-/** What a document asks of the line, the provider and the applications beyond the broadcast before it offers them: answered as a receiver without a line answers, with a warning and nothing told to the player, as the viewer has asked for nothing. */
+/** What a document asks of the line, the provider and the applications beyond the broadcast before it offers them: answered as a receiver without a line answers, with a warning and nothing told to the player, as the viewer has asked for nothing. While the line is used, `isIPConnected` and `getConnectionType` say it is there. */
 export const UNCONNECTED_QUERIES = [
   'confirmIPNetwork',
   'isIPConnected',
@@ -92,12 +110,10 @@ export const REFUSED_FUNCTIONS = [
   'disconnect',
   'sendTextData',
   'receiveTextData',
-  'transmitTextDataOverIP',
   'sendTextDataOverIP',
   'setISPParams',
   'connectPPP',
   'connectPPPWithISPParams',
-  'disconnectPPP',
   'saveHttpServerFileAs',
   'saveHttpServerFile',
   'sendHttpServerFileAs',
@@ -122,6 +138,21 @@ export const REFUSED_FUNCTIONS = [
   'saveStorageFile',
   'loadStorageFile',
 ] as const
+
+/** What uses the line: these work while it is used. Otherwise they fail, and the player is told the setting refuses the line, or, where there is none, that the operation is not supported. */
+export const LINE_FUNCTIONS = [
+  'transmitTextDataOverIP',
+  'disconnectPPP',
+] as const
+
+/** What the queries about the line answer while it is used. */
+const LINE_ANSWERS: Partial<Record<string, number>> = {
+  isIPConnected: IP_CONNECTED,
+  getConnectionType: ETHERNET_DHCP,
+}
+
+/** The groups of functions that use the line, supported while it is used: sending text over it and asking its type. Connecting by PPP and its parameters are not. */
+const LINE_GROUPS = new Set(['Com.IP', 'Com.IP.Transmit', 'Com.IP.GetType'])
 
 const SUPPORTED_GROUPS = new Set([
   'Ctrl.Basic',
@@ -197,16 +228,29 @@ function programmeId(host: BrowserHost, which: unknown): string | null {
   return typeof id === 'number' ? hex(id) : null
 }
 
-function supportOf(provider: unknown, name: unknown, info: unknown[]): number {
+function groupSupported(group: unknown, line: LineState): boolean {
+  if (typeof group !== 'string') {
+    return false
+  }
+
+  return (
+    SUPPORTED_GROUPS.has(group) || (line === 'on' && LINE_GROUPS.has(group))
+  )
+}
+
+function supportOf(
+  provider: unknown,
+  name: unknown,
+  info: unknown[],
+  line: LineState,
+): number {
   if (provider !== 'ARIB') {
     return 0
   }
 
   switch (name) {
     case 'APIGroup':
-      return typeof info[0] === 'string' && SUPPORTED_GROUPS.has(info[0])
-        ? 1
-        : 0
+      return Number(groupSupported(info[0], line))
     case 'BMLversion':
       return info.length === 0 ||
         (typeof info[0] === 'string' && BML_VERSIONS.has(info[0]))
@@ -257,6 +301,97 @@ function componentTag(reference: unknown): number | null {
 
 const NO_COMPONENT = -3
 
+/** The `getIRDID` type asked for, written as a number or as a string of one, such as `"0xE0001"`. */
+function idTypeOf(type: unknown): number {
+  if (typeof type === 'number') {
+    return type
+  }
+
+  return typeof type === 'string' && type.trim() !== ''
+    ? Number(type)
+    : Number.NaN
+}
+
+/** The card's ID, only for the type that asks for it, while the line is used and the viewer has allowed the ID to be handed over. */
+function receiverIdFor(host: BrowserHost, type: unknown): string | null {
+  return host.line() === 'on' && idTypeOf(type) === CARD_ID_TYPE
+    ? host.receiverId()
+    : null
+}
+
+/** Whether the document shown came over the line (`Link`) or with the broadcast (`Broadcast`), as `getBrowserStatus("TerrP", "IRDState", …)` asks. */
+function irdState(host: BrowserHost, state: unknown): number {
+  switch (state) {
+    case 'Link':
+      return Number(host.overTheLine())
+    case 'Broadcast':
+      return Number(!host.overTheLine())
+    default:
+      return FAILED
+  }
+}
+
+function browserStatus(
+  host: BrowserHost,
+  provider: unknown,
+  name: unknown,
+  info: unknown,
+): number {
+  if (provider === 'TerrP' && name === 'IRDState') {
+    return irdState(host, info)
+  }
+
+  host.warn(`unsupported browser status: ${String(provider)} ${String(name)}`)
+
+  return FAILED
+}
+
+const BAD_ARGUMENT = transmitted(answerOf(TRANSMIT_RESULT.badArgument))
+
+/** Sends text over the line and answers what came back. Where there is no line, it timed out; where the setting refuses the line, it failed as before. */
+function transmit(
+  host: BrowserHost,
+  uri: unknown,
+  text: unknown,
+  charset: unknown,
+): unknown {
+  const line = host.line()
+
+  if (line !== 'on') {
+    return refuseTheLine(host, 'transmitTextDataOverIP')
+  }
+
+  const sent = text === undefined || text === null ? '' : text
+  const address = typeof uri === 'string' ? lineAddressOf(uri) : null
+
+  if (
+    !address?.url ||
+    typeof sent !== 'string' ||
+    sent.length > MOST_TRANSMIT_TEXT ||
+    typeof charset !== 'string' ||
+    charset.length > MOST_CHARSET
+  ) {
+    return BAD_ARGUMENT
+  }
+
+  return transmitted(host.transmit(address.url, sent, charset))
+}
+
+/** A function that uses the line, called while it is not used: where there is none the player is told it is not supported and a transmission timed out; where the setting refuses it the player is told so and it fails. */
+function refuseTheLine(host: BrowserHost, name: string): unknown {
+  if (host.line() === 'off') {
+    host.lineOff(name)
+
+    return FAILED
+  }
+
+  host.unsupported(name)
+
+  return name === 'transmitTextDataOverIP'
+    ? transmitted(answerOf(TRANSMIT_RESULT.timedOut))
+    : FAILED
+}
+
 function lockAnswerOf(host: BrowserHost, reference: unknown): number {
   const answer = host.lock(reference)
 
@@ -289,14 +424,9 @@ function supported(host: BrowserHost): Record<string, Answer> {
     getActiveDocument: () => host.activeDocument(),
     getBrowserVersion: () => [BROWSER_NAME, ...BROWSER_VERSION],
     getBrowserSupport: (provider: unknown, name: unknown, ...info: unknown[]) =>
-      supportOf(provider, name, info),
-    getBrowserStatus: (provider: unknown, name: unknown) => {
-      host.warn(
-        `unsupported browser status: ${String(provider)} ${String(name)}`,
-      )
-
-      return FAILED
-    },
+      supportOf(provider, name, info, host.line()),
+    getBrowserStatus: (provider: unknown, name: unknown, info: unknown) =>
+      browserStatus(host, provider, name, info),
     getNPT: () => host.npt() ?? FAILED,
     getProgramRelativeTime: () => host.relativeTime() ?? FAILED,
     setInterval: (code: unknown, everyMs: unknown, times: unknown) =>
@@ -317,12 +447,20 @@ function supported(host: BrowserHost): Record<string, Answer> {
       return tag === null ? FAILED : Number(host.hasComponent(tag))
     },
     isBeingBroadcast: (reference: unknown) => {
+      if (reference === 'HTTPServer') {
+        return Number(host.overTheLine())
+      }
+
       const listed = host.listed(reference)
 
       return listed === null ? FAILED : Number(listed)
     },
     isSupportedMedia: () => 0,
-    getIRDID: () => null,
+    getIRDID: (type: unknown) => receiverIdFor(host, type),
+    transmitTextDataOverIP: (uri: unknown, text: unknown, charset: unknown) =>
+      transmit(host, uri, text, charset),
+    disconnectPPP: () =>
+      host.line() === 'on' ? DONE : refuseTheLine(host, 'disconnectPPP'),
     epgGetEventStartTime: () => {
       const startsAt = host.programme()?.startsAt
 
@@ -376,6 +514,12 @@ export function browserOf(host: BrowserHost): object {
   })
   UNCONNECTED_QUERIES.forEach((name) => {
     known[name] = () => {
+      const answer = LINE_ANSWERS[name]
+
+      if (answer !== undefined && host.line() === 'on') {
+        return answer
+      }
+
       host.warn(`not connected: ${name}`)
 
       return FAILED

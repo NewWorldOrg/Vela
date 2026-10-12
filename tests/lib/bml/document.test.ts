@@ -120,7 +120,7 @@ test('an element BML does not have becomes a div and is warned of, its content k
 test('handlers and other attributes are kept only as inert data, and a link only as the path it leads to', () => {
   const page = read(
     bml(
-      '<p id="p" class="a b" onclick="go()" onfocus="lit()" accesskey="B" style="left: 1px"><a id="a" href="~/0001/news.bml#top" onclick="x()">n</a><a id="away" href="https://example.com/">w</a></p>',
+      '<p id="p" class="a b" onclick="go()" onfocus="lit()" accesskey="B" style="left: 1px"><a id="a" href="~/0001/news.bml#top" onclick="x()">n</a><a id="away" href="https://example.com/">w</a><a id="script" href="javascript:go()">s</a></p>',
     ),
   )
   const p = byId(page, 'p')
@@ -135,7 +135,11 @@ test('handlers and other attributes are kept only as inert data, and a link only
   assert.equal(p.style, 'left: 1px')
   assert.equal(attribute(byId(page, 'a'), 'data-bml-href'), '/40/0001/news.bml')
   assert.equal(attribute(byId(page, 'a'), 'onclick'), undefined)
-  assert.equal(attribute(byId(page, 'away'), 'data-bml-href'), undefined)
+  assert.equal(
+    attribute(byId(page, 'away'), 'data-bml-href'),
+    'https://example.com/',
+  )
+  assert.equal(attribute(byId(page, 'script'), 'data-bml-href'), undefined)
 })
 
 test('the head gives its style sheets, linked or inline, its scripts and its events, and is not drawn', () => {
