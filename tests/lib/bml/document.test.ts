@@ -251,6 +251,37 @@ test('a video object becomes a clear hole, and its rectangle is where it stands 
   })
 })
 
+test('a video object placed by a class of a style sheet linked from another module gives its rectangle, and the body’s background picture is left to the ground the rectangle is cut from', () => {
+  const page = read(
+    bml(
+      '<div><object id="v" class="frame" data="/-1" type="video/X-arib-mpeg2" streamstatus="play" remain="remain"></object><object data="/-1" type="audio/X-arib-mpeg2-aac" streamstatus="play" remain="remain"></object></div>',
+      '<title/><link href="~/1000/look.css"/>',
+    ),
+    resourcesOf({
+      '/40/1000/look.css': [
+        'css',
+        'body{\n\tbackground-image:url(/40/1000/ground.jpg);\n\tresolution:960x540;display-aspect-ratio:16v9;\n}\ndiv{\twidth:960px;height:540px;\t}\n/**********\n*frame\n***********/\n.frame{top:14px;left:336px;width:600px;height:337px;}',
+      ],
+      '/40/1000/ground.jpg': ['jpeg', 'x'],
+    }),
+  )
+
+  assert.equal(attribute(byId(page, 'v'), 'data-bml-video'), '')
+  assert.deepEqual(page.videoRect, {
+    left: 336,
+    top: 14,
+    width: 600,
+    height: 337,
+  })
+  assert.ok(
+    page.styleSheet.includes(
+      '--bml-background-image: url("blob:test/ground.jpg")',
+    ),
+    page.styleSheet,
+  )
+  assert.deepEqual(page.warnings, [])
+})
+
 test('a video object reaching past the plane is cut to it, and one without a size gives no rectangle', () => {
   const past = read(
     bml(
@@ -334,11 +365,11 @@ test('a background image in the style sheet or inline is drawn from the document
 
   assert.equal(
     page.styleSheet,
-    '[data-bml-tag="body"] { background-image: url("blob:test/bg.jpg") }',
+    '[data-bml-tag="body"] { background-image: url("blob:test/bg.jpg"); --bml-background-image: url("blob:test/bg.jpg") }',
   )
   assert.equal(
     byId(page, 'a').style,
-    'background-image: url("blob:test/bg.jpg")',
+    'background-image: url("blob:test/bg.jpg"); --bml-background-image: url("blob:test/bg.jpg")',
   )
   assert.equal(byId(page, 'b').style, '')
   assert.deepEqual(page.warnings, ['missing image: none.jpg'])

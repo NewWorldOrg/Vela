@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import { paletteOf, readClut } from '@/lib/bml/palette'
 import {
+  BASE_STYLE,
   cssOf,
   cssSelectorOf,
   cssSheetOf,
@@ -29,17 +30,20 @@ test('a background image named as url() is drawn from the blob the resolver answ
 
   assert.equal(
     with_('background-image: url(bg.jpg)').css,
-    'background-image: url("blob:test/bg.jpg")',
+    'background-image: url("blob:test/bg.jpg"); --bml-background-image: url("blob:test/bg.jpg")',
   )
   assert.equal(
     with_("background-image: url( 'bg.jpg' )").css,
-    'background-image: url("blob:test/bg.jpg")',
+    'background-image: url("blob:test/bg.jpg"); --bml-background-image: url("blob:test/bg.jpg")',
   )
   assert.deepEqual(with_('background-image: url(none.jpg)'), {
     css: '',
     warnings: [],
   })
-  assert.equal(with_('background-image: none').css, 'background-image: none')
+  assert.equal(
+    with_('background-image: none').css,
+    'background-image: none; --bml-background-image: none',
+  )
   assert.deepEqual(with_('background-image: url("a b.jpg")').warnings, [
     'unsupported value of background-image',
   ])
@@ -396,6 +400,25 @@ test('the ground around the video is as wide as the plane is beyond each side of
       '--bml-hole-bottom': '480px',
       '--bml-hole-left': '10px',
     },
+  )
+})
+
+test('the body’s colour and picture are both drawn on the ground, and the ground is cut where the video lies', () => {
+  const rules = BASE_STYLE.split('\n')
+  const ruleOf = (selector: string) =>
+    rules.find((rule) => rule.startsWith(`${selector} {`)) ?? ''
+
+  assert.match(
+    ruleOf('[data-bml-tag="body"]'),
+    /background-color: transparent !important; background-image: none !important;/,
+  )
+  assert.match(
+    ruleOf('[data-bml-tag="body"]::before'),
+    /background-color: var\(--bml-background, transparent\); background-image: var\(--bml-background-image, none\); background-origin: border-box;/,
+  )
+  assert.match(
+    ruleOf('[data-bml-tag="body"][data-bml-hole]::before'),
+    /border-width: var\(--bml-hole-top\) var\(--bml-hole-right\) var\(--bml-hole-bottom\) var\(--bml-hole-left\); .*mask: linear-gradient\(#000 0 0\) content-box exclude, linear-gradient\(#000 0 0\);/,
   )
 })
 

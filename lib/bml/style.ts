@@ -456,7 +456,10 @@ export function urlReferenceOf(value: string): string | null {
 /** `background-image` named as `url(...)` becomes the image's `blob:` URL; one that is not there leaves no declaration, the resolver having said so. */
 const backgroundImage: Mapper = (value, _palette, images) => {
   if (value.trim().toLowerCase() === 'none') {
-    return [['background-image', 'none']]
+    return [
+      ['background-image', 'none'],
+      ['--bml-background-image', 'none'],
+    ]
   }
 
   const reference = urlReferenceOf(value)
@@ -467,7 +470,12 @@ const backgroundImage: Mapper = (value, _palette, images) => {
 
   const url = images(reference)
 
-  return url ? [['background-image', `url("${url}")`]] : []
+  return url
+    ? [
+        ['background-image', `url("${url}")`],
+        ['--bml-background-image', `url("${url}")`],
+      ]
+    : []
 }
 
 const SIDES = ['top', 'right', 'bottom', 'left'] as const
@@ -759,9 +767,9 @@ export const BASE_STYLE = [
   'html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }',
   '#bml-plane { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; }',
   '[data-bml-tag] { margin: 0; padding: 0; border: 0 solid; }',
-  `[data-bml-tag="body"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; font-family: ${FONT_STACK}; font-size: 24px; line-height: 1.5; color: rgb(255 255 255); background-color: transparent !important; }`,
-  '[data-bml-tag="body"]::before { content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; background-color: var(--bml-background, transparent); border: 0 solid var(--bml-background, transparent); }',
-  '[data-bml-tag="body"][data-bml-hole]::before { background-color: transparent; border-width: var(--bml-hole-top) var(--bml-hole-right) var(--bml-hole-bottom) var(--bml-hole-left); }',
+  `[data-bml-tag="body"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; font-family: ${FONT_STACK}; font-size: 24px; line-height: 1.5; color: rgb(255 255 255); background-color: transparent !important; background-image: none !important; }`,
+  '[data-bml-tag="body"]::before { content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; border: 0 solid transparent; background-color: var(--bml-background, transparent); background-image: var(--bml-background-image, none); background-origin: border-box; }',
+  '[data-bml-tag="body"][data-bml-hole]::before { border-width: var(--bml-hole-top) var(--bml-hole-right) var(--bml-hole-bottom) var(--bml-hole-left); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }',
   '[data-bml-tag="body"][data-bml-attr-invisible] { visibility: hidden; }',
   '[data-bml-tag="div"], [data-bml-tag="p"], [data-bml-tag="object"], [data-bml-tag="img"], [data-bml-tag="input"] { position: absolute; overflow: hidden; }',
   '[data-bml-video] { background: transparent !important; }',
@@ -769,7 +777,7 @@ export const BASE_STYLE = [
   'input[data-bml-tag] { background: transparent; color: inherit; font: inherit; outline: none; }',
 ].join('\n')
 
-/** The widths of the page's own ground around the video's rectangle, which is left clear. */
+/** Where the video's rectangle lies inside the page, cut out of the page's own ground, its colour and its picture alike. */
 export function videoHole(
   rect: Rect,
   resolution: Size,
