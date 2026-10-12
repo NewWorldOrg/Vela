@@ -41,7 +41,7 @@ export const MOST_VALUE_LENGTH = 256
 
 export const DEFAULT_USED_KEYS: UsedKeyGroup[] = ['basic', 'data-button']
 
-export const FONT_FAMILIES = ['Data Broadcast', 'Broadcast Marks'] as const
+export const FONT_FAMILIES = ['Denpa Font'] as const
 
 const FONT_STACK = `${FONT_FAMILIES.map((family) => `"${family}"`).join(', ')}, sans-serif`
 

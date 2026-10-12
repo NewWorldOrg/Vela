@@ -142,10 +142,10 @@ test('position, size, box, text and display properties are written as CSS', () =
   }
 })
 
-test('every font family is the bundled round gothic, with the broadcast marks behind it', () => {
+test('every font family is the bundled round gothic', () => {
   assert.equal(
     css('font-family: 丸ゴシック').css,
-    'font-family: "Data Broadcast", "Broadcast Marks", sans-serif',
+    'font-family: "Denpa Font", sans-serif',
   )
 })
 

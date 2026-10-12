@@ -86,7 +86,7 @@ export function newcomersOf(
 }
 
 export const GUIDE_FACES = [
-  '400 1em "Broadcast Marks"',
+  '400 1em "Denpa Font"',
   '400 1em "Zen Kaku Gothic New"',
   '500 1em "Zen Kaku Gothic New"',
   '700 1em "Zen Kaku Gothic New"',

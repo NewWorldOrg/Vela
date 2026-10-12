@@ -1,8 +1,7 @@
 import type { FontBytes, FontFamily } from '@/lib/bml/messages'
 
 export const FONT_FILES: Record<FontFamily, string> = {
-  'Data Broadcast': '/fonts/data-broadcast.woff2',
-  'Broadcast Marks': '/fonts/broadcast-marks.woff2',
+  'Denpa Font': '/fonts/denpa-font.woff2',
 }
 
 async function bytesOf(family: FontFamily): Promise<FontBytes | null> {

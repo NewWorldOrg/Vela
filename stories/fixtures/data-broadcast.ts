@@ -359,7 +359,7 @@ window.addEventListener('message', async () => {
     const image = new Image()
     image.onload = () => done('loaded')
     image.onerror = () => fail({ name: 'refused' })
-    image.src = '/fonts/broadcast-marks.woff2'
+    image.src = '/fonts/denpa-font.woff2'
   }))
   report.origin = self.origin
   parent.postMessage({ probe: report }, '*')
