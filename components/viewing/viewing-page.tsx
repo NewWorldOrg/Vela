@@ -5,6 +5,8 @@ import type { ReactNode } from 'react'
 import {
   AUTO_OPEN_HINT,
   AUTO_OPEN_LABEL,
+  HYBRIDCAST_HINT,
+  HYBRIDCAST_LABEL,
   LINE_HINT,
   LINE_LABEL,
   RECEIVER_ID_HINT,
@@ -13,8 +15,10 @@ import {
 import {
   AUTO_OPEN_SPELLING,
   DATA_BROADCAST_AUTO_OPEN,
+  DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  HYBRIDCAST_SPELLING,
   LINE_SPELLING,
   RECEIVER_ID_SPELLING,
 } from '@/lib/stored-flag'
@@ -31,6 +35,8 @@ const AUTO_OPEN_ID = 'viewing-data-broadcast-auto-open'
 const LINE_ID = 'viewing-data-broadcast-line'
 
 const RECEIVER_ID_ID = 'viewing-data-broadcast-receiver-id'
+
+const HYBRIDCAST_ID = 'viewing-data-broadcast-hybridcast'
 
 /** One row of the page: the name on the left, the switch on the right and one sentence under the name; a row after the first is set off by a dashed rule. */
 function Row({
@@ -64,15 +70,17 @@ function Row({
   )
 }
 
-/** The viewing settings. The card's ID can be handed over only while the line is allowed, so turning the line off turns it off too. */
+/** The viewing settings. The card's ID can be handed over, and Hybridcast allowed, only while the line is allowed, so turning the line off turns both off too. */
 export function ViewingView({
   autoOpensDataBroadcast = false,
   allowsTheLine = false,
   handsTheReceiverId = false,
+  allowsHybridcast = false,
 }: {
   autoOpensDataBroadcast?: boolean
   allowsTheLine?: boolean
   handsTheReceiverId?: boolean
+  allowsHybridcast?: boolean
 }) {
   const [autoOpens, setAutoOpens] = useStoredFlag(
     DATA_BROADCAST_AUTO_OPEN,
@@ -88,6 +96,11 @@ export function ViewingView({
     DATA_BROADCAST_RECEIVER_ID,
     RECEIVER_ID_SPELLING,
     handsTheReceiverId,
+  )
+  const [hybridcast, setHybridcast] = useStoredFlag(
+    DATA_BROADCAST_HYBRIDCAST,
+    HYBRIDCAST_SPELLING,
+    allowsHybridcast,
   )
 
   return (
@@ -119,6 +132,10 @@ export function ViewingView({
                 setHands(false)
               }
 
+              if (!next && hybridcast) {
+                setHybridcast(false)
+              }
+
               setAllows(next)
             }}
           />
@@ -133,6 +150,14 @@ export function ViewingView({
             checked={allows && hands}
             disabled={!allows}
             onCheckedChange={setHands}
+          />
+        </Row>
+        <Row id={HYBRIDCAST_ID} label={HYBRIDCAST_LABEL} hint={HYBRIDCAST_HINT}>
+          <Switch
+            id={HYBRIDCAST_ID}
+            checked={allows && hybridcast}
+            disabled={!allows}
+            onCheckedChange={setHybridcast}
           />
         </Row>
       </Surface>
