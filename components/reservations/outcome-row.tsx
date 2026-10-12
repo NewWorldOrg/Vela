@@ -4,11 +4,8 @@ import type { ReservationOutcome } from '@/repository/reservation-outcomes'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { TableCell, TableRow } from '@/components/ui/table'
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ListIcon,
-} from '@/components/vela/icons'
+import { OriginCell } from '@/components/reservations/origin-cell'
+import { ChevronDownIcon, ChevronRightIcon } from '@/components/vela/icons'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { OutcomeKindChip } from '@/components/reservations/outcome-kind-chip'
 import { Unfold } from '@/components/vela/unfold'
@@ -65,16 +62,7 @@ export function OutcomeRow({
         <TableCell className="align-top font-code text-ink-2">
           {outcome.whenLabel}
         </TableCell>
-        <TableCell className="align-top">
-          {outcome.ruleName ? (
-            <span className="inline-flex items-center gap-1.5 text-ui text-ink-2">
-              <ListIcon className="size-3" />
-              {outcome.ruleName}
-            </span>
-          ) : (
-            <span className="text-ink-2">{outcome.origin}</span>
-          )}
-        </TableCell>
+        <OriginCell origin={outcome.origin} ruleName={outcome.ruleName} />
         <TableCell className="text-right align-top font-code tabular-nums text-ink-2">
           {outcome.priority}
         </TableCell>
