@@ -56,7 +56,7 @@ const COLUMNS: {
   { label: '番組', width: 'calc(260rem/16)' },
   { label: 'チャンネル', width: 'calc(150rem/16)' },
   { label: WHEN_LABELS.broadcast, width: 'calc(190rem/16)' },
-  { label: '由来', width: 'calc(140rem/16)' },
+  { label: '由来', width: 'calc(180rem/16)' },
   { label: '状態', width: RESERVATION_STATE_COLUMN },
   { label: '操作', width: 'calc(360rem/16)', hidden: true },
 ]

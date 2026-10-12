@@ -997,3 +997,56 @@ export const 同じ放送の予約があるため取り消した予約: Story = 
     await expect(cellOf(byHand, THE_STATE_COLUMN)).toHaveTextContent('取消済み')
   },
 }
+
+const THE_ORIGIN_COLUMN = 5
+
+const A_LONG_RULE_NAME =
+  '毎週の深夜アニメの新番組の第一話だけを録って、学習に使い終えたら動画を消しておく'
+
+const LONG_ORIGIN_FIXTURES: Reservation[] = RESERVATION_FIXTURES.map((one) => ({
+  ...one,
+  origin: 'ルール',
+  ruleName: A_LONG_RULE_NAME,
+}))
+
+async function theOriginStaysInItsColumn(
+  canvasElement: HTMLElement,
+): Promise<void> {
+  await afterTheArrival(canvasElement)
+
+  const canvas = within(canvasElement)
+  const rows = canvas
+    .getAllByRole('row')
+    .filter((row) => within(row).queryByText(A_LONG_RULE_NAME) !== null)
+
+  await expect(rows.length).toBeGreaterThan(1)
+
+  for (const row of rows) {
+    const origin = cellOf(row, THE_ORIGIN_COLUMN)
+    const name = within(origin).getByText(A_LONG_RULE_NAME)
+    const said = name.getBoundingClientRect()
+    const cell = origin.getBoundingClientRect()
+    const next = cellOf(row, THE_STATE_COLUMN).getBoundingClientRect()
+    const line = parseFloat(getComputedStyle(name).lineHeight)
+
+    await expect(said.left).toBeGreaterThanOrEqual(cell.left)
+    await expect(said.right).toBeLessThanOrEqual(cell.right)
+    await expect(cell.right).toBeLessThanOrEqual(next.left)
+    await expect(said.height).toBeGreaterThanOrEqual(line * 2)
+  }
+}
+
+export const 長い由来: Story = {
+  args: { result: shown(LONG_ORIGIN_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    await theOriginStaysInItsColumn(canvasElement)
+  },
+}
+
+export const 狭い幅での長い由来: Story = {
+  args: { result: shown(LONG_ORIGIN_FIXTURES) },
+  parameters: { screen: { width: 1180, height: 820 } },
+  play: async ({ canvasElement }) => {
+    await theOriginStaysInItsColumn(canvasElement)
+  },
+}
