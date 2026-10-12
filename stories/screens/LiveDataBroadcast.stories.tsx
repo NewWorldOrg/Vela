@@ -10,6 +10,11 @@ import {
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
 import type { TicketWrite } from '@/repository/tickets'
+import {
+  BAND_MAX_SCALE,
+  BAND_MOCK_WIDTH,
+  BAND_UNDER_THE_BOX,
+} from '@/components/data-broadcast/data-broadcast-player'
 import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
@@ -312,29 +317,43 @@ function leaves(canvasElement: HTMLElement, control: HTMLElement) {
   )
 }
 
-/** The band drawn out of the control bar over the picture: joined to the bar's top, both on one opaque face, and gone with the bar. */
-async function overThePicture(
-  canvasElement: HTMLElement,
-  fit: string,
-  height: number,
-) {
+/** One mock pixel at this player's width: the mock's own below its width, growing with the player, and one and a half at most. */
+function unit(playerWidth: number): number {
+  return Math.min(BAND_MAX_SCALE, Math.max(1, playerWidth / BAND_MOCK_WIDTH))
+}
+
+async function near(got: number, want: number) {
+  await expect(Math.abs(got - want)).toBeLessThan(0.6)
+}
+
+/** The band drawn out of the control bar over the picture: standing on the bar's top, the scrim under both from the player's bottom up, the bar's own face gone, and the whole gone with the bar. */
+async function overThePicture(canvasElement: HTMLElement, fit: string) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
   })
   const chrome = onTheScreen(canvasElement, 'player-chrome')
   const controls = onTheScreen(canvasElement, 'player-controls')
+  const scrim = onTheScreen(canvasElement, 'data-broadcast-scrim')
   const box = band.getBoundingClientRect()
   const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
+  const u = unit(face.width)
 
   await expect(band).toHaveAttribute('data-fit', fit)
-  await expect(box.height).toBe(height)
-  await expect(box.bottom).toBe(controls.getBoundingClientRect().top)
+  await near(box.height, 136 * u)
+  await near(box.bottom, controls.getBoundingClientRect().top)
   await expect(box.bottom).toBeLessThan(face.bottom)
   await expect(box.top).toBeGreaterThan(face.top)
   await expect(chrome.contains(band)).toBe(true)
-  await expect(getComputedStyle(chrome).backgroundColor).toBe('rgb(21, 20, 24)')
+  await expect(getComputedStyle(chrome).backgroundColor).toBe(
+    'rgba(0, 0, 0, 0)',
+  )
   await expect(getComputedStyle(chrome).backgroundImage).toBe('none')
-  await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
+  await expect(getComputedStyle(band).backgroundColor).toBe('rgba(0, 0, 0, 0)')
+  await near(scrim.getBoundingClientRect().height, 256 * u)
+  await near(scrim.getBoundingClientRect().bottom, face.bottom)
+  await expect(getComputedStyle(scrim).backgroundImage).toContain(
+    'linear-gradient',
+  )
   await expect(chrome).toHaveAttribute('data-up', 'true')
 
   return band
@@ -367,7 +386,7 @@ export const 開いている_PC: Story = {
   play: async ({ canvasElement }) => {
     await opened(canvasElement)
 
-    const band = await overThePicture(canvasElement, 'fine', 84)
+    const band = await overThePicture(canvasElement, 'fine')
     const says = onTheScreen(canvasElement, 'data-broadcast-says')
 
     await expect(says).toHaveAttribute('role', 'status')
@@ -378,6 +397,26 @@ export const 開いている_PC: Story = {
         .map((button) => button.getAttribute('aria-label')),
     ).toEqual(KEYS)
     await goneWithTheBar(canvasElement)
+  },
+}
+
+export const 開いている_PC_広い: Story = {
+  parameters: { screen: { width: 2400, height: 1200 } },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+
+    const band = await overThePicture(canvasElement, 'fine')
+    const face = onTheScreen(
+      canvasElement,
+      'player-face',
+    ).getBoundingClientRect()
+
+    await expect(unit(face.width)).toBeGreaterThan(1)
+    await userEvent.click(
+      within(band).getByRole('button', { name: '123 数字' }),
+    )
+    await expect(band).toHaveAttribute('data-face', 'numbers')
+    await near(band.getBoundingClientRect().height, 136 * unit(face.width))
   },
 }
 
@@ -399,7 +438,7 @@ export const 開いている_縦の_iPad: Story = {
     const shell = player.getBoundingClientRect()
 
     await expect(band).toHaveAttribute('data-fit', 'coarse')
-    await expect(box.height).toBe(120)
+    await expect(box.height).toBe(BAND_UNDER_THE_BOX)
     await expect(box.top).toBe(face.bottom)
     await expect(box.bottom).toBe(shell.bottom - 1)
     await expect(box.width).toBe(face.width)
@@ -414,7 +453,7 @@ export const 開いている_縦の_iPad: Story = {
     await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'), {
       timeout: 5000,
     })
-    await expect(band.getBoundingClientRect().height).toBe(120)
+    await expect(band.getBoundingClientRect().height).toBe(BAND_UNDER_THE_BOX)
     await expect(getComputedStyle(band).opacity).toBe('1')
 
     stirs(player)
@@ -437,7 +476,7 @@ export const 開いている_横の_iPad_全画面: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
     await waitFor(() => expect(board).toHaveAttribute('data-fill', 'true'))
 
-    const band = await overThePicture(canvasElement, 'coarse-full', 104)
+    const band = await overThePicture(canvasElement, 'coarse-full')
     const stage = onTheScreen(canvasElement, 'player-stage')
     const { width, height, right } = stage.getBoundingClientRect()
 
@@ -448,7 +487,7 @@ export const 開いている_横の_iPad_全画面: Story = {
     await userEvent.click(
       within(band).getByRole('button', { name: '123 数字' }),
     )
-    await expect(band.getBoundingClientRect().height).toBe(104)
+    await near(band.getBoundingClientRect().height, 136 * unit(width))
     await expect(
       within(band).getByRole('button', { name: '0' }).getBoundingClientRect()
         .top,

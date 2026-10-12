@@ -953,7 +953,6 @@ export function LivePlayer({
             }}
             className={cn(
               'absolute inset-x-0 bottom-0 z-10',
-              overThePicture && 'bg-(--pl-bg)',
               'pointer-events-none translate-y-2 opacity-0',
               PLAYER_CHROME_FADE,
               'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',

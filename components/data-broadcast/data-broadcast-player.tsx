@@ -209,67 +209,53 @@ export function DataBroadcastFace({
   )
 }
 
-/** How the band is pressed: a mouse (`pointer: fine`), a finger in the window, or a finger in fullscreen. */
+/** Where the band is pressed: by a mouse (`pointer: fine`), by a finger in the window, or by a finger in fullscreen. */
 export type BandFit = 'fine' | 'coarse' | 'coarse-full'
 
-/** The band's height by its fit. A finger in the window gets two rows under the player's box; the others lie over the picture. */
-export const BAND_HEIGHT: Record<BandFit, number> = {
-  fine: 84,
-  coarse: 120,
-  'coarse-full': 104,
+/** The width of the mock's player. The band is drawn at the mock's measures there and grows with the player, up to one and a half times the mock. */
+export const BAND_MOCK_WIDTH = 1174
+
+export const BAND_MAX_SCALE = 1.5
+
+/** The band under the box, in the finger's window: the keys' row with 12px above and below, at the mock's measures. */
+export const BAND_UNDER_THE_BOX = 160
+
+/** The player's column while the band is under its box: the window holds the picture, the 210px around it and the band. */
+export const PLAYER_COLUMN_OVER_THE_BAND = 'max-w-[calc((100dvh_-_370px)*16/9)]'
+
+/** One mock pixel, measured against the player's width: the mock's size at its width and below, growing with the player, and no more than one and a half times the mock. */
+const UNIT = `clamp(1px, 100cqw / ${BAND_MOCK_WIDTH}, ${BAND_MAX_SCALE}px)`
+
+function mock(px: number): string {
+  return `calc(${px} * var(--u))`
 }
 
-/** The player's column while the band is under its box: the window holds the picture, the 210px around it and the band's 120px. */
-export const PLAYER_COLUMN_OVER_THE_BAND = 'max-w-[calc((100dvh_-_330px)*16/9)]'
+/** The mock's measures: the band and its scrim, the pills, the disc and its wedges, the arrows, Enter, the colour dots and the digits. */
+const MEASURES = {
+  '--u': UNIT,
+  '--band': mock(136),
+  '--scrim': mock(256),
+  '--gap': mock(20),
+  '--row-gap': mock(12),
+  '--pill-h': mock(44),
+  '--pill-w': mock(56),
+  '--pill-font': mock(13),
+  '--disc': mock(136),
+  '--wedge': mock(75),
+  '--reach': mock(45),
+  '--arrow': mock(22),
+  '--ok': mock(48),
+  '--ok-font': mock(13),
+  '--dot': mock(44),
+  '--pitch': mock(54),
+  '--key': mock(44),
+  '--key-pitch': mock(52),
+  '--key-font': mock(15),
+} as CSSProperties
 
-/** Each fit's measures, taken from the mock as they are: the pills, the disc and its wedges, the arrows, Enter, the colour dots and the digits. */
-const MEASURES: Record<BandFit, CSSProperties> = {
-  fine: {
-    '--band-h': '84px',
-    '--pill-h': '40px',
-    '--pill-w': '52px',
-    '--disc': '72px',
-    '--wedge': '40px',
-    '--reach': '23px',
-    '--arrow': '14px',
-    '--ok': '32px',
-    '--ok-font': 'calc(11rem / 16)',
-    '--dot': '32px',
-    '--pitch': '42px',
-    '--key': '40px',
-    '--key-pitch': '44px',
-  } as CSSProperties,
-  coarse: {
-    '--band-h': '120px',
-    '--pill-h': '44px',
-    '--pill-w': '60px',
-    '--disc': '104px',
-    '--wedge': '56px',
-    '--reach': '35px',
-    '--arrow': '16px',
-    '--ok': '44px',
-    '--ok-font': 'calc(13rem / 16)',
-    '--dot': '40px',
-    '--pitch': '48px',
-    '--key': '44px',
-    '--key-pitch': '48px',
-  } as CSSProperties,
-  'coarse-full': {
-    '--band-h': '104px',
-    '--pill-h': '44px',
-    '--pill-w': '60px',
-    '--disc': '88px',
-    '--wedge': '48px',
-    '--reach': '29px',
-    '--arrow': '16px',
-    '--ok': '40px',
-    '--ok-font': 'calc(13rem / 16)',
-    '--dot': '40px',
-    '--pitch': '48px',
-    '--key': '44px',
-    '--key-pitch': '48px',
-  } as CSSProperties,
-}
+/** The scrim under the band and the control bar, as the mock lays it: one gradient from the player's bottom up. */
+const SCRIM =
+  'linear-gradient(to top, rgba(6,5,9,.92) 0%, rgba(6,5,9,.86) 30%, rgba(6,5,9,.8) 62%, rgba(6,5,9,.5) 78%, rgba(6,5,9,.18) 92%, rgba(6,5,9,0) 100%)'
 
 const SINKS =
   'transition-[translate,background-color,border-color,color] duration-150 ease-toy active:translate-x-px active:translate-y-px'
@@ -282,7 +268,7 @@ const KEY_LOOK = cn(
 
 const PILL = cn(
   KEY_LOOK,
-  'h-(--pill-h) w-(--pill-w) text-[calc(13rem/16)] leading-none after:absolute after:-inset-x-[2px] after:-inset-y-[4px] after:content-[""]',
+  'h-(--pill-h) w-(--pill-w) text-[length:var(--pill-font)] leading-none after:absolute after:-inset-x-[2px] after:-inset-y-[4px] after:content-[""]',
 )
 
 const PILL_ON = 'border-white bg-white/28 text-white hover:bg-white/28'
@@ -292,6 +278,9 @@ const ENTER_LOOK = cn(
   'transition-[translate,background-color] duration-150 ease-toy',
   pressable,
 )
+
+const DIAGONALS =
+  'before:absolute before:top-1/2 before:left-1/2 before:h-px before:w-[150%] before:-translate-1/2 before:rotate-45 before:bg-white/16 before:content-[""] after:absolute after:top-1/2 after:left-1/2 after:h-px after:w-[150%] after:-translate-1/2 after:-rotate-45 after:bg-white/16 after:content-[""]'
 
 type Way = 'up' | 'down' | 'left' | 'right'
 
@@ -344,14 +333,17 @@ function aiming(pressing: Pressing) {
   }
 }
 
-/** The cross as a remote control has it: one disc, with the four arrows each a wedge of it and Enter at its heart. The wedges reach past the circle and are clipped by it, so a press anywhere in a quarter is that arrow. */
+/** The cross as a remote control has it: one disc with its two diagonals drawn, the four arrows each a wedge of it and Enter at its heart. The wedges reach past the circle and are clipped by it, so a press anywhere in a quarter is that arrow. */
 function Disc({ pressing }: { pressing: Pressing }) {
   return (
     <div
       role="group"
       aria-label="十字"
       data-tap-exempt="a wedge of the disc is the press, as wide as the quarter it fills; the cross through its arrow is narrower than the sector"
-      className="relative size-(--disc) shrink-0 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/26 ring-inset"
+      className={cn(
+        'relative size-(--disc) shrink-0 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/26 ring-inset',
+        DIAGONALS,
+      )}
     >
       {WEDGES.map((wedge) => (
         <button
@@ -368,7 +360,7 @@ function Disc({ pressing }: { pressing: Pressing }) {
             pressable,
           )}
         >
-          <span className="block -rotate-45 [&_svg]:stroke-[2.4]">
+          <span className="block -rotate-45 [&_svg]:stroke-[2]">
             {wedge.glyph}
           </span>
         </button>
@@ -389,7 +381,7 @@ function Disc({ pressing }: { pressing: Pressing }) {
 /** The four colour keys as the remote has them: a dot of the colour and nothing written on it. The press reaches halfway to the neighbour. */
 function Colours({ pressing }: { pressing: Pressing }) {
   return (
-    <div className="flex h-[44px] shrink-0 items-center gap-[calc(var(--pitch)-var(--dot))]">
+    <div className="flex h-(--dot) shrink-0 items-center gap-[calc(var(--pitch)-var(--dot))]">
       {COLOURS.map((colour) => (
         <button
           key={colour.key}
@@ -398,7 +390,7 @@ function Colours({ pressing }: { pressing: Pressing }) {
           onMouseDown={aiming(pressing)}
           onClick={() => pressing.onKey(colour.key)}
           className={cn(
-            'relative flex h-[44px] w-(--dot) shrink-0 items-center justify-center select-none after:absolute after:inset-y-0 after:-inset-x-[calc((var(--pitch)-var(--dot))/2)] after:content-[""] focus-visible:outline-none focus-visible:[&_i]:shadow-ring active:[&_i]:translate-x-px active:[&_i]:translate-y-px',
+            'relative flex size-(--dot) shrink-0 items-center justify-center select-none after:absolute after:inset-y-0 after:-inset-x-[calc((var(--pitch)-var(--dot))/2)] after:content-[""] focus-visible:outline-none focus-visible:[&_i]:shadow-ring active:[&_i]:translate-x-px active:[&_i]:translate-y-px',
             pressable,
           )}
         >
@@ -414,7 +406,7 @@ function Colours({ pressing }: { pressing: Pressing }) {
   )
 }
 
-/** The digits 1 to 9 and 0 in one row, drawn out to the right of `123`. */
+/** The digits 1 to 9 and 0 in one row, drawn out to the right of `123`, or on the row above it when the band has no room beside. */
 function Digits({ pressing }: { pressing: Pressing }) {
   return (
     <div
@@ -430,7 +422,7 @@ function Digits({ pressing }: { pressing: Pressing }) {
           onClick={() => pressing.onKey(digit)}
           className={cn(
             KEY_LOOK,
-            'size-(--key) font-code text-[calc(15rem/16)] leading-none after:absolute after:-inset-[2px] after:content-[""]',
+            'size-(--key) font-code text-[length:var(--key-font)] leading-none after:absolute after:-inset-[2px] after:content-[""]',
           )}
         >
           {digit}
@@ -440,7 +432,7 @@ function Digits({ pressing }: { pressing: Pressing }) {
   )
 }
 
-/** The remote control's keys drawn out of the control bar as a band: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. The fit decides the measures and whether the digits take a second row. */
+/** The remote control's keys drawn out of the control bar as a band, right over the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. Over the picture the band stands on the bar with the scrim under both; a finger in the window gets it under the player's box on the box's own black. Everything is measured against the player's width. */
 export function DataBroadcastBand({
   fit,
   numbers,
@@ -455,69 +447,58 @@ export function DataBroadcastBand({
   onAim: () => void
 }) {
   const pressing: Pressing = { onKey, onAim }
-  const back = (
-    <button
-      type="button"
-      aria-label="戻る"
-      onMouseDown={aiming(pressing)}
-      onClick={() => onKey('back')}
-      className={PILL}
-    >
-      戻る
-    </button>
-  )
-  const toNumbers = (
-    <button
-      type="button"
-      aria-label="123 数字"
-      aria-expanded={numbers}
-      onMouseDown={aiming(pressing)}
-      onClick={() => {
-        onAim()
-        onNumbers(!numbers)
-      }}
-      className={cn(PILL, 'font-code text-title', numbers && PILL_ON)}
-    >
-      123
-    </button>
-  )
-  const digits = numbers && <Digits pressing={pressing} />
+  const underTheBox = fit === 'coarse'
 
   return (
-    <div
-      role="group"
-      aria-label={KEYPAD_NAME}
-      data-slot="data-broadcast-band"
-      data-fit={fit}
-      data-face={numbers ? 'numbers' : 'keys'}
-      data-tap-exempt={
-        fit === 'fine'
-          ? 'the band for a mouse has mouse-sized keys; a finger is given the coarse band'
-          : undefined
-      }
-      style={MEASURES[fit]}
-      className={cn(
-        'flex min-h-(--band-h) items-center justify-center gap-[16px] bg-(--pl-bg) px-[16px] text-(--pl-ink)',
-        fit !== 'coarse' && 'flex-wrap',
-      )}
-    >
-      {back}
-      <Disc pressing={pressing} />
-      {fit === 'coarse' ? (
-        <div className="flex flex-col items-start gap-[8px]">
-          <div className="flex h-[56px] items-center gap-[16px]">
-            <Colours pressing={pressing} />
-            {toNumbers}
-          </div>
-          {digits && <div className="flex h-[56px] items-center">{digits}</div>}
-        </div>
-      ) : (
-        <>
-          <Colours pressing={pressing} />
-          {toNumbers}
-          {digits}
-        </>
-      )}
+    <div className="[container-type:inline-size]">
+      <div
+        role="group"
+        aria-label={KEYPAD_NAME}
+        data-slot="data-broadcast-band"
+        data-fit={fit}
+        data-face={numbers ? 'numbers' : 'keys'}
+        style={MEASURES}
+        className={cn(
+          'flex flex-wrap-reverse items-center justify-end gap-x-(--gap) gap-y-(--row-gap) px-4 text-(--pl-ink) max-[700px]:px-3',
+          underTheBox
+            ? 'min-h-[calc(var(--band)+var(--row-gap)*2)] bg-(--pl-bg) py-(--row-gap)'
+            : 'min-h-(--band)',
+        )}
+      >
+        {!underTheBox && (
+          <div
+            aria-hidden
+            data-slot="data-broadcast-scrim"
+            style={{ backgroundImage: SCRIM }}
+            className="pointer-events-none absolute inset-x-0 bottom-0 -z-[1] h-(--scrim)"
+          />
+        )}
+        <button
+          type="button"
+          aria-label="戻る"
+          onMouseDown={aiming(pressing)}
+          onClick={() => onKey('back')}
+          className={PILL}
+        >
+          戻る
+        </button>
+        <Disc pressing={pressing} />
+        <Colours pressing={pressing} />
+        <button
+          type="button"
+          aria-label="123 数字"
+          aria-expanded={numbers}
+          onMouseDown={aiming(pressing)}
+          onClick={() => {
+            onAim()
+            onNumbers(!numbers)
+          }}
+          className={cn(PILL, 'font-code', numbers && PILL_ON)}
+        >
+          123
+        </button>
+        {numbers && <Digits pressing={pressing} />}
+      </div>
     </div>
   )
 }
