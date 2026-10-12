@@ -4,7 +4,13 @@ import { mock, test } from 'node:test'
 import { BmlRuntime } from '@/components/data-broadcast/bml-runtime'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { ReceiverId } from '@/lib/bml/line'
-import type { PlayerMessage, RuntimeMessage } from '@/lib/bml/messages'
+import {
+  MOST_REGISTER,
+  RUNTIME_ORIGIN,
+  runtimeMessageFrom,
+  type PlayerMessage,
+  type RuntimeMessage,
+} from '@/lib/bml/messages'
 import type { BmlModule, ResourceKind } from '@/lib/bml/resources'
 import {
   fakeFrame,
@@ -1838,4 +1844,57 @@ test('the shared registers handed back as the documents open again are what the 
 
   assert.equal(Ureg[0], 'nhk:1/')
   assert.equal(Greg.length, 64)
+})
+
+const LEAVING_ODD_REGISTERS = bml(
+  '<p id="p" style="nav-index: 0">p</p>',
+  '<script>' +
+    'browser.Greg[3] = new Array(2001).join("x");' +
+    'browser.Greg[4] = 7;' +
+    'browser.Greg[5] = null;' +
+    'browser.startAITControlledApp("10", "1", "' +
+    AIT +
+    '");' +
+    '</script>',
+)
+
+test('the shared registers are handed over as strings no longer than the most a register carries, whatever a document left in them, so that the player takes the start', () => {
+  const { heard, send, forget } = withHybridcast(LEAVING_ODD_REGISTERS)
+
+  forget()
+  send({ kind: 'aitRead', id: 1, applications: [STARTS_BY_ITSELF] })
+
+  const started = heard().find((message) => message.kind === 'startApp')
+  const greg = started && started.kind === 'startApp' ? started.greg : []
+
+  assert.equal(greg.length, 64)
+  assert.equal(greg[3].length, MOST_REGISTER)
+  assert.equal(greg[4], '7')
+  assert.equal(greg[5], '')
+  assert.deepEqual(
+    runtimeMessageFrom(
+      { origin: RUNTIME_ORIGIN, source: 'frame', data: started },
+      'frame',
+    ),
+    started,
+  )
+})
+
+test('a start the player would not take leaves the documents as they are and is said not to open', () => {
+  const runtime = withHybridcast(STARTING)
+  const leave = (
+    runtime.runtime as unknown as {
+      startApplication(start: {
+        ait: string
+        orgId: number
+        appId: number
+      }): void
+    }
+  ).startApplication.bind(runtime.runtime)
+
+  runtime.forget()
+  leave({ ait: AIT, orgId: 16, appId: 0x10000 })
+
+  assert.deepEqual(runtime.heard(), [{ kind: 'unopened' }])
+  assert.notEqual(runtime.plane.childNodes.length, 0)
 })

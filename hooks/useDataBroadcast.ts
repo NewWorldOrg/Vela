@@ -22,16 +22,8 @@ import {
   type DataBroadcastStep,
   type DataBroadcastView,
 } from '@/lib/data-broadcast-view'
-import type {
-  HybridcastTicket,
-  Relayed,
-} from '@/repository/live-data-broadcast'
+import type { StartApplication } from '@/lib/data-broadcast-line'
 import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
-
-/** How the player asks Carina to start the application the documents asked for. */
-export type StartApplication = (
-  start: AppStart,
-) => Promise<Relayed<HybridcastTicket>>
 
 interface Kept {
   of: string | null

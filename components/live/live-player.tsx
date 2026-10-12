@@ -100,7 +100,7 @@ import {
   PLAYER_COLUMN_OVER_THE_BAND,
   bandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
-import { liveLine } from '@/lib/data-broadcast-line'
+import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
 import { liveLineRelay } from '@/components/data-broadcast/line-relay'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 
@@ -265,15 +265,6 @@ export function LivePlayer({
         : lineRelayOf(liveChannelOf(networkId, serviceId)),
     [networkId, serviceId, lineRelayOf],
   )
-  const broadcast = useDataBroadcast(
-    broadcastFeed,
-    key,
-    {
-      autoOpens,
-      programme: onAir?.startsAt ?? '',
-    },
-    relay?.startApplication ?? null,
-  )
   const [allowsTheLine] = useStoredFlag(
     DATA_BROADCAST_LINE,
     LINE_SPELLING,
@@ -294,6 +285,15 @@ export function LivePlayer({
     { allowsTheLine, handsTheReceiverId, allowsHybridcast },
     receiverId,
     relay,
+  )
+  const broadcast = useDataBroadcast(
+    broadcastFeed,
+    key,
+    {
+      autoOpens,
+      programme: onAir?.startsAt ?? '',
+    },
+    applicationStarter(line),
   )
 
   useEffect(

@@ -2,7 +2,14 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import type { ReceiverId } from '@/lib/bml/line'
-import { NO_LINE, liveLine, type LineSettings } from '@/lib/data-broadcast-line'
+import type { RuntimeMessage } from '@/lib/bml/messages'
+import {
+  NO_LINE,
+  applicationStarter,
+  liveLine,
+  takenFromTheDocuments,
+  type LineSettings,
+} from '@/lib/data-broadcast-line'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 
 const RELAY: LineRelay = {
@@ -58,4 +65,39 @@ test('a recording has no line, no ID and no Hybridcast', () => {
     hybridcast: false,
     relay: null,
   })
+})
+
+test('an application is started through the relay only while Hybridcast is allowed', () => {
+  const allowed = liveLine(allowing(true, false, true), null, RELAY)
+
+  assert.equal(applicationStarter(allowed), RELAY.startApplication)
+  assert.equal(
+    applicationStarter(liveLine(allowing(true, false, false), null, RELAY)),
+    null,
+  )
+  assert.equal(
+    applicationStarter(liveLine(allowing(false, false, true), null, RELAY)),
+    null,
+  )
+  assert.equal(
+    applicationStarter(liveLine(allowing(true, false, true), null, null)),
+    null,
+  )
+  assert.equal(applicationStarter(NO_LINE), null)
+})
+
+test('a start the documents ask for is taken only while Hybridcast is allowed, and everything else they say as before', () => {
+  const start: RuntimeMessage = {
+    kind: 'startApp',
+    start: { ait: 'http://hc.example.test/a.ait', orgId: 16, appId: 1 },
+    greg: Array.from({ length: 64 }, () => ''),
+  }
+  const allowed = liveLine(allowing(true, false, true), null, RELAY)
+  const refused = liveLine(allowing(true, false, false), null, RELAY)
+
+  assert.equal(takenFromTheDocuments(start, allowed), true)
+  assert.equal(takenFromTheDocuments(start, refused), false)
+  assert.equal(takenFromTheDocuments(start, NO_LINE), false)
+  assert.equal(takenFromTheDocuments({ kind: 'unopened' }, refused), true)
+  assert.equal(takenFromTheDocuments({ kind: 'exit' }, NO_LINE), true)
 })

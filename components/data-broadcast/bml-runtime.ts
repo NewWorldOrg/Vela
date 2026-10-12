@@ -4,7 +4,7 @@ import {
   type BrowserHost,
   type LockAnswer,
 } from '@/lib/bml/browser'
-import { sameStart, type AppStart } from '@/lib/bml/ait'
+import { appStartOf, sameStart, type AppStart } from '@/lib/bml/ait'
 import { staysListed, takesThePlace, type BmlCatalog } from '@/lib/bml/catalog'
 import {
   BML_LIMITS,
@@ -35,7 +35,10 @@ import {
 import type { LineState, ReceiverId } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
 import {
+  MOST_REGISTER,
+  SHARED_REGISTERS,
   playerMessageFrom,
+  sharedRegistersOf,
   type FontBytes,
   type PlayerMessage,
   type Programme,
@@ -992,12 +995,21 @@ export class BmlRuntime {
     this.say({ kind: 'exit' })
   }
 
-  /** Ends the broadcast's documents to start the application a document asked for, handing the player the shared registers so that the application, and the documents when they come back, read what was written. */
+  /** Ends the broadcast's documents to start the application a document asked for, handing the player the shared registers so that the application, and the documents when they come back, read what was written. Each register goes as a string no longer than the most one carries, whatever a document left in it. A start the player would not take leaves the documents as they are, and is said not to open. */
   private startApplication(start: AppStart): void {
-    const greg = [...this.registers.Greg]
+    const greg = Array.from({ length: SHARED_REGISTERS }, (_, at) =>
+      registerText(this.registers.Greg[at]),
+    )
+    const asked = appStartOf(start)
+
+    if (!asked || !sharedRegistersOf(greg)) {
+      this.say({ kind: 'unopened' })
+
+      return
+    }
 
     this.close()
-    this.say({ kind: 'startApp', start, greg })
+    this.say({ kind: 'startApp', start: asked, greg })
   }
 
   /** Whether the module a reference names is in the catalog now; null when the reference names no module. */
@@ -1567,6 +1579,18 @@ export class BmlRuntime {
 }
 
 const MOST_REASON = 200
+
+/** What a shared register holds, as the player is handed it: a string, cut at the most a register carries. Anything a document left that is not a string, a number or a truth value is empty. */
+function registerText(value: unknown): string {
+  const text =
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+      ? String(value)
+      : ''
+
+  return text.slice(0, MOST_REGISTER)
+}
 
 /** An error as the console is told of it: its name and the start of its message. */
 function describe(error: unknown): string {

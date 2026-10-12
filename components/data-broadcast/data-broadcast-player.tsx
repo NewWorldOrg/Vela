@@ -12,7 +12,11 @@ import type { AitApplication, AppStart } from '@/lib/bml/ait'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlKey } from '@/lib/bml/keys'
 import { unreached, type TransmitAnswer } from '@/lib/bml/line'
-import { NO_LINE, type DataBroadcastLine } from '@/lib/data-broadcast-line'
+import {
+  NO_LINE,
+  takenFromTheDocuments,
+  type DataBroadcastLine,
+} from '@/lib/data-broadcast-line'
 import {
   keepMemory,
   memoryEntriesOf,
@@ -272,6 +276,10 @@ export function DataBroadcastFace({
         void readAit(send, message)
       }
 
+      return
+    }
+
+    if (!takenFromTheDocuments(message, lineNow.current)) {
       return
     }
 
