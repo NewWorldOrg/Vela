@@ -297,3 +297,39 @@ export const 札の並び: Story = {
     ).toBeGreaterThan(1)
   },
 }
+
+const ORIGIN_COLUMN = 4
+
+const A_LONG_RULE_NAME =
+  '毎週の深夜アニメの新番組の第一話だけを録って、学習に使い終えたら動画を消しておく'
+
+export const 長い由来: Story = {
+  args: {
+    result: outcomeLedger(
+      OUTCOME_FIXTURES.map((one) => ({
+        ...one,
+        origin: 'ルール',
+        ruleName: A_LONG_RULE_NAME,
+      })),
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const rows = canvas.getAllByRole('row').slice(1)
+
+    await expect(rows.length).toBe(OUTCOME_FIXTURES.length)
+
+    for (const row of rows) {
+      const origin = cellOf(row, ORIGIN_COLUMN)
+      const name = within(origin).getByText(A_LONG_RULE_NAME)
+      const said = name.getBoundingClientRect()
+      const cell = origin.getBoundingClientRect()
+      const next = cellOf(row, ORIGIN_COLUMN + 1).getBoundingClientRect()
+      const line = parseFloat(getComputedStyle(name).lineHeight)
+
+      await expect(said.right).toBeLessThanOrEqual(cell.right)
+      await expect(cell.right).toBeLessThanOrEqual(next.left)
+      await expect(said.height).toBeGreaterThanOrEqual(line * 2)
+    }
+  },
+}

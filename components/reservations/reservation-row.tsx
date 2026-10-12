@@ -25,6 +25,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
+import { OriginCell } from '@/components/reservations/origin-cell'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
@@ -35,7 +36,6 @@ import {
   CloseIcon,
   EditIcon,
   LibraryIcon,
-  ListIcon,
   RebuildIcon,
   TrashIcon,
   TunerIcon,
@@ -180,16 +180,10 @@ export function ReservationRow({
         <TableCell className="align-top font-code text-ink-2">
           {reservation.whenLabel}
         </TableCell>
-        <TableCell className="align-top">
-          {reservation.ruleName ? (
-            <span className="inline-flex items-center gap-1.5 text-ui text-ink-2">
-              <ListIcon className="size-3" />
-              {reservation.ruleName}
-            </span>
-          ) : (
-            <span className="text-ink-2">{reservation.origin}</span>
-          )}
-        </TableCell>
+        <OriginCell
+          origin={reservation.origin}
+          ruleName={reservation.ruleName}
+        />
         <TableCell className="align-top">
           <StatusCell>
             <ReservationStateChip reservation={reservation} say />
