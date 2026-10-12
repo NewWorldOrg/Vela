@@ -373,7 +373,11 @@ test('the player’s line, answers and fetched modules are taken when they fit, 
     resources: [{ path: 'top.bml', kind: 'bml', body: new Uint8Array([1]) }],
   }
   const said: unknown[] = [
-    { kind: 'line', line: 'on', receiverId: 'a1b2c3d4e5f6' },
+    {
+      kind: 'line',
+      line: 'on',
+      receiverId: { caSystemId: 5, cardId: 'a1b2c3d4e5f6' },
+    },
     { kind: 'line', line: 'off', receiverId: null },
     { kind: 'line', line: 'none', receiverId: null },
     {
@@ -400,6 +404,22 @@ test('the player’s line, answers and fetched modules are taken when they fit, 
   const dropped: unknown[] = [
     { kind: 'line', line: 'maybe', receiverId: null },
     { kind: 'line', line: 'on', receiverId: '1234' },
+    { kind: 'line', line: 'on', receiverId: 'a1b2c3d4e5f6' },
+    {
+      kind: 'line',
+      line: 'on',
+      receiverId: { caSystemId: 5, cardId: '1234' },
+    },
+    {
+      kind: 'line',
+      line: 'on',
+      receiverId: { caSystemId: 0, cardId: 'a1b2c3d4e5f6' },
+    },
+    {
+      kind: 'line',
+      line: 'on',
+      receiverId: { caSystemId: 0x10000, cardId: 'a1b2c3d4e5f6' },
+    },
     { kind: 'line', line: 'on' },
     {
       kind: 'transmitted',

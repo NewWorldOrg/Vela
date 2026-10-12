@@ -1,5 +1,4 @@
 import {
-  CARD_ID_TYPE,
   ETHERNET_DHCP,
   IP_CONNECTED,
   MOST_CHARSET,
@@ -8,6 +7,7 @@ import {
   answerOf,
   transmitted,
   type LineState,
+  type ReceiverId,
   type TransmitAnswer,
 } from '@/lib/bml/line'
 import { readArray, writeArray, type PersistentMemory } from '@/lib/bml/memory'
@@ -40,7 +40,7 @@ export interface BrowserHost {
   unsupported(what: string): void
   warn(what: string): void
   line(): LineState
-  receiverId(): string | null
+  receiverId(): ReceiverId | null
   overTheLine(): boolean
   transmit(uri: string, text: string, charset: string): TransmitAnswer
   lineOff(what: string): void
@@ -312,10 +312,12 @@ function idTypeOf(type: unknown): number {
     : Number.NaN
 }
 
-/** The card's ID, only for the type that asks for it, while the line is used and the viewer has allowed the ID to be handed over. */
+/** The card's ID, only for the type that names the card's CA system (ARIB STD-B24 vol. 2), while the line is used and the viewer has allowed the ID to be handed over. */
 function receiverIdFor(host: BrowserHost, type: unknown): string | null {
-  return host.line() === 'on' && idTypeOf(type) === CARD_ID_TYPE
-    ? host.receiverId()
+  const given = host.line() === 'on' ? host.receiverId() : null
+
+  return given !== null && idTypeOf(type) === given.caSystemId
+    ? given.cardId
     : null
 }
 

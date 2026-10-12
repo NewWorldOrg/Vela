@@ -3,7 +3,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import { catalogPayload } from '@/lib/bml/catalog'
 import { modulePayload, type BmlModule } from '@/lib/bml/resources'
-import type { TransmitAnswer } from '@/lib/bml/line'
+import type { ReceiverId, TransmitAnswer } from '@/lib/bml/line'
 import {
   SAID_FAILED,
   SAID_LINE_OFF,
@@ -12,7 +12,9 @@ import {
 } from '@/lib/data-broadcast-view'
 import {
   DATA_BROADCAST_LINE,
+  DATA_BROADCAST_RECEIVER_ID,
   LINE_SPELLING,
+  RECEIVER_ID_SPELLING,
   forgettingCookie,
   storingCookie,
 } from '@/lib/stored-flag'
@@ -791,8 +793,11 @@ interface AskedOverTheLine {
 
 const asked: AskedOverTheLine = { transmitted: [], fetched: [] }
 
-/** A relay that answers every transmission with `answer` and every fetch from the self-made pages, and notes what it was asked. */
-function relayAnswering(answer: TransmitAnswer) {
+/** A relay that answers every transmission with `answer` and every fetch from the self-made pages, names `receiverId` as the receiver's identifier, and notes what it was asked. */
+function relayAnswering(
+  answer: TransmitAnswer,
+  receiverId: ReceiverId | null = null,
+) {
   return (channel: string): LineRelay => ({
     transmit: async (uri, text, charset) => {
       asked.transmitted.push([channel, uri, text, charset])
@@ -806,19 +811,24 @@ function relayAnswering(answer: TransmitAnswer) {
 
       return page ? { said: 'answered', answer: page } : { said: 'unreached' }
     },
+    receiverId: async () => receiverId,
   })
 }
 
-function lineSetTo(allowed: boolean) {
+function lineSetTo(allowed: boolean, handsTheReceiverId = false) {
   return () => {
     asked.transmitted.length = 0
     asked.fetched.length = 0
     document.cookie = allowed
       ? storingCookie(DATA_BROADCAST_LINE, LINE_SPELLING.yes)
       : forgettingCookie(DATA_BROADCAST_LINE)
+    document.cookie = handsTheReceiverId
+      ? storingCookie(DATA_BROADCAST_RECEIVER_ID, RECEIVER_ID_SPELLING.yes)
+      : forgettingCookie(DATA_BROADCAST_RECEIVER_ID)
 
     return () => {
       document.cookie = forgettingCookie(DATA_BROADCAST_LINE)
+      document.cookie = forgettingCookie(DATA_BROADCAST_RECEIVER_ID)
     }
   }
 }
@@ -853,6 +863,40 @@ export const 通信を使うページ: Story = {
     await expect(
       onTheScreen(canvasElement, 'data-broadcast-says'),
     ).toHaveTextContent('')
+  },
+}
+
+const CARD: ReceiverId = { caSystemId: 5, cardId: '0A0B0C0D0E0F' }
+
+export const 識別子を渡す: Story = {
+  args: {
+    openSocket: carrying(...LINE),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }, CARD),
+  },
+  beforeEach: lineSetTo(true, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+
+    await expect(asked.transmitted).toEqual([
+      ['32736-1024', 'http://example.test/check.txt', CARD.cardId, 'EUC-JP'],
+    ])
+  },
+}
+
+export const 識別子は設定で渡さない: Story = {
+  args: {
+    openSocket: carrying(...LINE),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }, CARD),
+  },
+  beforeEach: lineSetTo(true, false),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+
+    await expect(asked.transmitted).toEqual([
+      ['32736-1024', 'http://example.test/check.txt', '', 'EUC-JP'],
+    ])
   },
 }
 

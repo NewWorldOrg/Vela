@@ -4,7 +4,6 @@ import { test } from 'node:test'
 import {
   catalogOf,
   catalogPayload,
-  catalogWithoutReceiverId,
   listedVersion,
   readCatalog,
   staysListed,
@@ -267,12 +266,9 @@ test('a module that comes takes the place of the one held unless the one held is
   )
 })
 
-test('the card’s ID the catalog carries is read when it is twelve hexadecimal digits, and is not handed to the runtime with the catalog', () => {
+test('a catalog never carries the card’s ID, which Carina names on a route of its own', () => {
   const identified = { ...CATALOG, receiverId: 'A1b2c3d4e5f6' }
 
-  assert.deepEqual(readCatalog(catalogPayload(identified)), identified)
-  assert.deepEqual(catalogOf({ ...CATALOG, receiverId: '12345' }), CATALOG)
-  assert.deepEqual(catalogOf({ ...CATALOG, receiverId: 1234 }), CATALOG)
-  assert.deepEqual(catalogWithoutReceiverId(identified), CATALOG)
-  assert.equal('receiverId' in catalogWithoutReceiverId(identified), false)
+  assert.deepEqual(catalogOf(identified), CATALOG)
+  assert.equal('receiverId' in (catalogOf(identified) ?? {}), false)
 })

@@ -1,12 +1,22 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, within } from 'storybook/test'
+import { useCallback } from 'react'
+import { hydrateRoot } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 
-import { AUTO_OPEN_LABEL, LINE_LABEL, RECEIVER_ID_LABEL } from '@/lib/viewing'
+import {
+  AUTO_OPEN_LABEL,
+  LINE_LABEL,
+  RECEIVER_ID_LABEL,
+  viewingSettingsOf,
+} from '@/lib/viewing'
 import {
   DATA_BROADCAST_AUTO_OPEN,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  cookieIn,
   forgettingCookie,
+  storingCookie,
 } from '@/lib/stored-flag'
 import { ViewingView } from '@/components/viewing/viewing-page'
 import { inTheSettings } from '@/stories/frames'
@@ -123,5 +133,99 @@ export const 通信を許可している: Story = {
     await expect(
       canvas.getByRole('switch', { name: RECEIVER_ID_LABEL }),
     ).toBeChecked()
+  },
+}
+
+/** What hydrating the page's server HTML said was wrong with it, for the play to read. */
+const heardWhileHydrating: string[] = []
+
+/** The page as the server draws it from the cookies, then hydrated in the browser that holds the same cookies. */
+function FromTheServer() {
+  const hydrated = useCallback((node: HTMLDivElement | null) => {
+    if (node === null) {
+      return
+    }
+
+    const settings = viewingSettingsOf((key) => cookieIn(document.cookie, key))
+    const page = <ViewingView {...settings} />
+
+    node.innerHTML = renderToString(page)
+    const root = hydrateRoot(node, page, {
+      onRecoverableError: (error) => {
+        heardWhileHydrating.push(String(error))
+      },
+    })
+
+    return () => {
+      setTimeout(() => root.unmount(), 0)
+    }
+  }, [])
+
+  return <div ref={hydrated} />
+}
+
+function storedBeforeTheServerDraws(said: Record<string, string>) {
+  return () => {
+    forgetTheSettings()
+    heardWhileHydrating.length = 0
+    Object.entries(said).forEach(([key, value]) => {
+      document.cookie = storingCookie(key, value)
+    })
+
+    return forgetTheSettings
+  }
+}
+
+async function hydratedWith(
+  canvasElement: HTMLElement,
+  line: boolean,
+  receiverId: boolean,
+) {
+  const canvas = within(canvasElement)
+  const lineSwitch = await canvas.findByRole('switch', { name: LINE_LABEL })
+  const receiverIdSwitch = canvas.getByRole('switch', {
+    name: RECEIVER_ID_LABEL,
+  })
+
+  await waitFor(() =>
+    expect(
+      Object.keys(lineSwitch).some((key) => key.startsWith('__reactFiber')),
+    ).toBe(true),
+  )
+  await expect(heardWhileHydrating).toEqual([])
+  await expect(lineSwitch).toHaveAttribute('aria-checked', String(line))
+  await expect(receiverIdSwitch).toHaveAttribute(
+    'aria-checked',
+    String(receiverId),
+  )
+
+  return { lineSwitch, receiverIdSwitch }
+}
+
+export const サーバの絵から組み上がる: Story = {
+  args: {},
+  render: () => <FromTheServer />,
+  beforeEach: storedBeforeTheServerDraws({
+    [DATA_BROADCAST_LINE]: 'allows',
+    [DATA_BROADCAST_RECEIVER_ID]: 'hands',
+  }),
+  play: async ({ canvasElement }) => {
+    const { receiverIdSwitch } = await hydratedWith(canvasElement, true, true)
+
+    await expect(receiverIdSwitch).toBeEnabled()
+  },
+}
+
+export const サーバの絵から組み上がる_通信が切: Story = {
+  args: {},
+  render: () => <FromTheServer />,
+  beforeEach: storedBeforeTheServerDraws({
+    [DATA_BROADCAST_LINE]: 'refuses',
+    [DATA_BROADCAST_RECEIVER_ID]: 'hands',
+  }),
+  play: async ({ canvasElement }) => {
+    const { receiverIdSwitch } = await hydratedWith(canvasElement, false, false)
+
+    await expect(receiverIdSwitch).toBeDisabled()
   },
 }

@@ -41,14 +41,31 @@ export const IP_CONNECTED = 1
 /** What `getConnectionType` answers while the line is used: Ethernet with DHCP. */
 export const ETHERNET_DHCP = 403
 
-/** The `getIRDID` type that asks for the B-CAS card's ID, its CA system id. */
-export const CARD_ID_TYPE = 5
+/** The receiver's identifier a document may be given: the CA system of the card Carina's driver last heard from, which is the `getIRDID` type that asks for it, and the card's ID as twelve hexadecimal digits. */
+export interface ReceiverId {
+  caSystemId: number
+  cardId: string
+}
 
-const RECEIVER_ID = /^[0-9a-f]{12}$/i
+const CARD_ID = /^[0-9a-f]{12}$/i
 
-/** The card's ID as twelve hexadecimal digits, or null when the value is not one. */
-export function receiverIdOf(value: unknown): string | null {
-  return typeof value === 'string' && RECEIVER_ID.test(value) ? value : null
+const MOST_CA_SYSTEM_ID = 0xffff
+
+/** The receiver's identifier, or null when the value is not one. */
+export function receiverIdOf(value: unknown): ReceiverId | null {
+  if (typeof value !== 'object' || value === null) {
+    return null
+  }
+
+  const { caSystemId, cardId } = value as Record<string, unknown>
+
+  return Number.isSafeInteger(caSystemId) &&
+    (caSystemId as number) > 0 &&
+    (caSystemId as number) <= MOST_CA_SYSTEM_ID &&
+    typeof cardId === 'string' &&
+    CARD_ID.test(cardId)
+    ? { caSystemId: caSystemId as number, cardId }
+    : null
 }
 
 export function answerOf(

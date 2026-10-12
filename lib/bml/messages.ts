@@ -9,6 +9,7 @@ import {
   MOST_TRANSMIT_TEXT,
   receiverIdOf,
   type LineState,
+  type ReceiverId,
   type TransmitAnswer,
 } from '@/lib/bml/line'
 import {
@@ -48,7 +49,7 @@ export type PlayerMessage =
   | { kind: 'memory'; entries: MemoryEntries }
   | { kind: 'event'; event: BroadcastEvent }
   | { kind: 'npt'; reading: NptReading }
-  | { kind: 'line'; line: LineState; receiverId: string | null }
+  | { kind: 'line'; line: LineState; receiverId: ReceiverId | null }
   | { kind: 'transmitted'; id: number; answer: TransmitAnswer }
   | { kind: 'fetched'; id: number; module: BmlModule | null }
   | { kind: 'open' }

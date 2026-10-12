@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 
-import { catalogWithoutReceiverId, type BmlCatalog } from '@/lib/bml/catalog'
+import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlKey } from '@/lib/bml/keys'
 import { unreached, type TransmitAnswer } from '@/lib/bml/line'
 import { NO_LINE, type DataBroadcastLine } from '@/lib/data-broadcast-line'
@@ -109,7 +109,7 @@ function catalogued(
 ): void {
   const storage = storageOf()
 
-  send({ kind: 'catalog', catalog: catalogWithoutReceiverId(catalog) })
+  send({ kind: 'catalog', catalog })
   send({
     kind: 'memory',
     entries: storage ? memoryEntriesOf(storage, catalog.service) : [],

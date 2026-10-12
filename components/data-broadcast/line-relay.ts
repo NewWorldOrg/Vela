@@ -1,7 +1,9 @@
 import {
   fetchRelayed,
   liveDataBroadcastFetchHref,
+  liveDataBroadcastReceiverIdHref,
   liveDataBroadcastTransmitHref,
+  receiverIdRelayed,
   transmitRelayed,
   type LineRelay,
 } from '@/repository/live-data-broadcast'
@@ -56,6 +58,21 @@ export function liveLineRelay(
         )
       } catch {
         return { said: 'unreached' }
+      }
+    },
+    receiverId: async () => {
+      try {
+        const answer = await send(liveDataBroadcastReceiverIdHref(channel), {
+          ...asking(),
+          headers: { accept: 'application/json' },
+        })
+
+        return receiverIdRelayed(
+          answer.status,
+          answer.ok ? await answer.json() : undefined,
+        )
+      } catch {
+        return null
       }
     },
   }

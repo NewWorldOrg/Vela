@@ -3,6 +3,7 @@ import { mock, test } from 'node:test'
 
 import { BmlRuntime } from '@/components/data-broadcast/bml-runtime'
 import type { BmlCatalog } from '@/lib/bml/catalog'
+import type { ReceiverId } from '@/lib/bml/line'
 import type { PlayerMessage, RuntimeMessage } from '@/lib/bml/messages'
 import type { BmlModule, ResourceKind } from '@/lib/bml/resources'
 import {
@@ -1324,10 +1325,12 @@ test('getNPT reads the NPT of the stream carrying the document in whole millisec
   assert.equal(registers[5], '2500')
 })
 
+const B_CAS: ReceiverId = { caSystemId: 5, cardId: 'a1b2c3d4e5f6' }
+
 function overTheLine(
   startup: string,
   line: 'on' | 'off' | 'none',
-  receiverId: string | null = null,
+  receiverId: ReceiverId | null = null,
 ) {
   const opening = frame()
 
@@ -1461,7 +1464,7 @@ const SETTING_OFF = bml(
 )
 
 test('with the setting off nothing goes over the line, the document is answered as before and the player is told the setting is off', () => {
-  const { heard, registers } = overTheLine(SETTING_OFF, 'off', 'a1b2c3d4e5f6')
+  const { heard, registers } = overTheLine(SETTING_OFF, 'off', B_CAS)
 
   assert.equal(registers[0], 'NaN')
   assert.equal(registers[1], 'NaN')
@@ -1496,15 +1499,20 @@ test('where there is no line, as in a recording, a transmission times out and th
 
 const IDENTIFIED = bml(
   '<p id="p">p</p>',
-  '<script>browser.Ureg[0] = [browser.getIRDID(5), browser.getIRDID(13), browser.getBrowserSupport("ARIB", "APIGroup", "Com.IP.Transmit"), browser.getConnectionType()].join(",")</script>',
+  '<script>browser.Ureg[0] = [browser.getIRDID(5), browser.getIRDID(13), browser.getIRDID(0xF0001), browser.getBrowserSupport("ARIB", "APIGroup", "Com.IP.Transmit"), browser.getConnectionType()].join(",")</script>',
 )
 
-test('the card’s ID the player hands with the line is what the document is told, and the line is there', () => {
+test('the card’s ID the player hands with the line is what the document is told for the card’s CA system, and the line is there', () => {
   assert.equal(
-    overTheLine(IDENTIFIED, 'on', 'a1b2c3d4e5f6').registers[0],
-    'a1b2c3d4e5f6,,1,403',
+    overTheLine(IDENTIFIED, 'on', B_CAS).registers[0],
+    'a1b2c3d4e5f6,,,1,403',
   )
-  assert.equal(overTheLine(IDENTIFIED, 'on').registers[0], ',,1,403')
+  assert.equal(
+    overTheLine(IDENTIFIED, 'on', { caSystemId: 13, cardId: 'a1b2c3d4e5f6' })
+      .registers[0],
+    ',a1b2c3d4e5f6,,1,403',
+  )
+  assert.equal(overTheLine(IDENTIFIED, 'on').registers[0], ',,,1,403')
 })
 
 const TO_THE_LINE = bml(

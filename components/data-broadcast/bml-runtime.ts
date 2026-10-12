@@ -31,7 +31,7 @@ import {
   type BmlKey,
   type Navigation,
 } from '@/lib/bml/keys'
-import type { LineState, TransmitAnswer } from '@/lib/bml/line'
+import type { LineState, ReceiverId, TransmitAnswer } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
 import {
   playerMessageFrom,
@@ -202,7 +202,7 @@ export class BmlRuntime {
 
   private line: LineState = 'none'
 
-  private receiverId: string | null = null
+  private receiverId: ReceiverId | null = null
 
   private readonly requests: LineRequests<Seen>
 

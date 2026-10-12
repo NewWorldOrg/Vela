@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import type { ReceiverId } from '@/lib/bml/line'
 import { NO_LINE, liveLine } from '@/lib/data-broadcast-line'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 
 const RELAY: LineRelay = {
   transmit: async () => ({ said: 'unreached' }),
   fetch: async () => ({ said: 'unreached' }),
+  receiverId: async () => null,
 }
 
-const CARD = 'a1b2c3d4e5f6'
+const CARD: ReceiverId = { caSystemId: 5, cardId: 'a1b2c3d4e5f6' }
 
 test('live, the line is used only when the viewer allows it', () => {
   assert.equal(liveLine(true, false, CARD, RELAY).state, 'on')
