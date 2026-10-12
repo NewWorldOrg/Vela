@@ -9,6 +9,7 @@ import {
   dataBroadcastAfter,
   dataBroadcastSays,
   offersDataBroadcast,
+  opensByItself,
   pictureTransform,
   type DataBroadcastStep,
   type DataBroadcastView,
@@ -38,6 +39,64 @@ test('it opens only when it can be opened, and the toggle closes it again', () =
   assert.equal(
     after(OPEN, { on: 'toggle', availability: 'absent' }).open,
     false,
+  )
+})
+
+const ASKED: Parameters<typeof opensByItself>[1] = {
+  autoOpens: true,
+  autoStart: true,
+  availability: 'ready',
+  openedThisProgramme: false,
+}
+
+test('it does not open by itself until the setting says so', () => {
+  assert.equal(
+    opensByItself(DATA_BROADCAST_CLOSED, { ...ASKED, autoOpens: false }),
+    false,
+  )
+  assert.equal(opensByItself(DATA_BROADCAST_CLOSED, ASKED), true)
+})
+
+test('with the setting on, it opens by itself only when the catalog asks and the start document is in', () => {
+  assert.equal(
+    opensByItself(DATA_BROADCAST_CLOSED, { ...ASKED, autoStart: false }),
+    false,
+  )
+  assert.equal(
+    opensByItself(DATA_BROADCAST_CLOSED, { ...ASKED, availability: 'absent' }),
+    false,
+  )
+  assert.equal(
+    opensByItself(DATA_BROADCAST_CLOSED, { ...ASKED, availability: 'none' }),
+    false,
+  )
+})
+
+test('once it was open during the programme, it does not open by itself again, so one closed by hand stays closed', () => {
+  assert.equal(opensByItself(after(OPEN), ASKED), false)
+  assert.equal(
+    opensByItself(DATA_BROADCAST_CLOSED, {
+      ...ASKED,
+      openedThisProgramme: true,
+    }),
+    false,
+  )
+})
+
+test('opening by itself is the same as opening by hand, and leaves an open one alone', () => {
+  const byItself = after({ on: 'autoStart', availability: 'ready' })
+
+  assert.deepEqual(byItself, after(OPEN))
+  assert.equal(after({ on: 'autoStart', availability: 'absent' }).open, false)
+
+  const open = after(OPEN, {
+    on: 'runtime',
+    message: { kind: 'usedKeys', keys: ['up'] },
+  })
+
+  assert.equal(
+    dataBroadcastAfter(open, { on: 'autoStart', availability: 'ready' }),
+    open,
   )
 })
 

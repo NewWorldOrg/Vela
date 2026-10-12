@@ -56,6 +56,7 @@ export function LiveView({
   takeCapture,
   channelsFolded = false,
   subChannelsFolded = false,
+  autoOpensDataBroadcast = false,
 }: {
   screen: LiveScreen
   onTakeTicket: TakeLiveTicket
@@ -66,6 +67,7 @@ export function LiveView({
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
   channelsFolded?: boolean
+  autoOpensDataBroadcast?: boolean
   subChannelsFolded?: boolean
 }) {
   const router = useRouter()
@@ -209,6 +211,7 @@ export function LiveView({
           askBacklog={askBacklog}
           startupDeadlineMs={startupDeadlineMs}
           takeCapture={takeCapture}
+          autoOpensDataBroadcast={autoOpensDataBroadcast}
         />
         <NowNext watching={watching} />
         <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)]">

@@ -15,6 +15,7 @@ import {
   UNSUPPORTED_LASTS_MS,
   dataBroadcastAfter,
   offersDataBroadcast,
+  opensByItself,
   type DataBroadcastStep,
   type DataBroadcastView,
 } from '@/lib/data-broadcast-view'
@@ -23,7 +24,16 @@ import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
 interface Kept {
   of: string | null
   view: DataBroadcastView
+  openedIn: string | null
 }
+
+/** Whether the broadcast opens by itself, and the programme being watched, so that one closed by hand stays closed until the programme changes. */
+export interface AutoOpens {
+  autoOpens: boolean
+  programme: string
+}
+
+const BY_HAND_ONLY: AutoOpens = { autoOpens: false, programme: '' }
 
 export interface DataBroadcast {
   availability: DataBroadcastAvailability
@@ -39,10 +49,21 @@ export interface DataBroadcast {
 
 const unreachable = () => 'absent' as const
 
-/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime. What is shown belongs to one session, so a new channel starts closed. */
+const noCatalog = () => null
+
+function openedIn(
+  view: DataBroadcastView,
+  programme: string,
+  before: string | null,
+): string | null {
+  return view.open ? programme : before
+}
+
+/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime. What is shown belongs to one session, so a new channel starts closed. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. */
 export function useDataBroadcast(
   feed: DataBroadcastFeed,
   session: string | null,
+  { autoOpens, programme }: AutoOpens = BY_HAND_ONLY,
 ): DataBroadcast {
   const subscribe = useCallback(
     (onChange: () => void) => feed.subscribe(onChange),
@@ -53,31 +74,50 @@ export function useDataBroadcast(
     () => feed.availability,
     unreachable,
   )
+  const catalog = useSyncExternalStore(subscribe, () => feed.catalog, noCatalog)
   const [kept, setKept] = useState<Kept>({
     of: session,
     view: DATA_BROADCAST_CLOSED,
+    openedIn: null,
   })
   const runtime = useRef<SendToRuntime | null>(null)
   const count = useRef(0)
 
-  const standing = kept.of === session ? kept.view : DATA_BROADCAST_CLOSED
-  const view = dataBroadcastAfter(standing, {
+  const sameSession = kept.of === session
+  const standing = sameSession ? kept.view : DATA_BROADCAST_CLOSED
+  const before = sameSession ? kept.openedIn : null
+  const settled = dataBroadcastAfter(standing, {
     on: 'availability',
     availability,
   })
+  const view = opensByItself(settled, {
+    autoOpens,
+    autoStart: catalog?.autoStart ?? false,
+    availability,
+    openedThisProgramme: before === programme,
+  })
+    ? dataBroadcastAfter(settled, { on: 'autoStart', availability })
+    : settled
+  const opened = openedIn(view, programme, before)
 
-  if (kept.of !== session || view !== kept.view) {
-    setKept({ of: session, view })
+  if (!sameSession || view !== kept.view || opened !== kept.openedIn) {
+    setKept({ of: session, view, openedIn: opened })
   }
 
   const step = (what: DataBroadcastStep) =>
-    setKept((was) => ({
-      of: session,
-      view: dataBroadcastAfter(
-        was.of === session ? was.view : DATA_BROADCAST_CLOSED,
+    setKept((was) => {
+      const same = was.of === session
+      const next = dataBroadcastAfter(
+        same ? was.view : DATA_BROADCAST_CLOSED,
         what,
-      ),
-    }))
+      )
+
+      return {
+        of: session,
+        view: next,
+        openedIn: openedIn(next, programme, same ? was.openedIn : null),
+      }
+    })
 
   const hear = (message: RuntimeMessage) => {
     count.current += 1

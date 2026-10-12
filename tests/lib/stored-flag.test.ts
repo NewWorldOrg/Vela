@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  AUTO_OPEN_SPELLING,
   FOLD_SPELLING,
   cookieIn,
   flagOf,
@@ -14,6 +15,12 @@ test('a flag is on only when the cookie says the word for yes', () => {
   assert.equal(flagOf('open', FOLD_SPELLING), false)
   assert.equal(flagOf(undefined, FOLD_SPELLING), false)
   assert.equal(flagOf('Folded', FOLD_SPELLING), false)
+})
+
+test('the data broadcast opens by itself only when the cookie says so, and not until it is set', () => {
+  assert.equal(flagOf('opens', AUTO_OPEN_SPELLING), true)
+  assert.equal(flagOf('waits', AUTO_OPEN_SPELLING), false)
+  assert.equal(flagOf(undefined, AUTO_OPEN_SPELLING), false)
 })
 
 test('the browser reads back the cookie the server reads', () => {

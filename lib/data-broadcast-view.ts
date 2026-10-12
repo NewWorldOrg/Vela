@@ -64,6 +64,7 @@ function closed(
 
 export type DataBroadcastStep =
   | { on: 'toggle'; availability: DataBroadcastAvailability }
+  | { on: 'autoStart'; availability: DataBroadcastAvailability }
   | { on: 'availability'; availability: DataBroadcastAvailability }
   | { on: 'runtime'; message: RuntimeMessage; nth?: number }
   | { on: 'slow'; waits: number }
@@ -71,6 +72,27 @@ export type DataBroadcastStep =
   | { on: 'overran'; scripting: number }
   | { on: 'numbers'; shown: boolean }
   | { on: 'quiet' }
+
+/** What decides whether the broadcast opens by itself: the setting, what the catalog asks, whether it can be opened, and whether it was open during this programme already, as one closed by hand stays closed until the programme changes. */
+export interface AutoOpening {
+  autoOpens: boolean
+  autoStart: boolean
+  availability: DataBroadcastAvailability
+  openedThisProgramme: boolean
+}
+
+export function opensByItself(
+  view: DataBroadcastView,
+  asked: AutoOpening,
+): boolean {
+  return (
+    asked.autoOpens &&
+    asked.autoStart &&
+    asked.availability === 'ready' &&
+    !view.open &&
+    !asked.openedThisProgramme
+  )
+}
 
 /** Whether the player puts the control on its bar: when the broadcast can be opened, and while it is open so that it can be closed. */
 export function offersDataBroadcast(
@@ -135,6 +157,10 @@ export function dataBroadcastAfter(
       }
 
       return step.availability === 'ready' ? closed(view, { open: true }) : view
+    case 'autoStart':
+      return !view.open && step.availability === 'ready'
+        ? closed(view, { open: true })
+        : view
     case 'availability':
       return view.open && step.availability === 'none' ? closed(view) : view
     case 'runtime':
