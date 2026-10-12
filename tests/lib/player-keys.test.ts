@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  aimsAtThePlayer,
   answersItself,
   KEY_CAP,
   playerCommand,
@@ -487,6 +488,26 @@ test('an arrow goes to the document only once the player has been aimed at, as i
   )
   assert.deepEqual(
     routeKey({ key: 'ArrowDown', target: THE_PLAYER }, LIVE, EVERY_KEY),
+    { to: 'dataBroadcast', key: 'down' },
+  )
+})
+
+test('opening the broadcast by its key, or a key handed to it, aims at the player, so the arrows after it go to the document and the page does not scroll', () => {
+  const unaimed = { ...LIVE, aimed: false }
+  const opening = routeKey({ key: 'd', target: THE_PLAYER }, unaimed, null)
+
+  assert.deepEqual(opening, { to: 'player', command: 'dataBroadcast' })
+  assert.ok(opening && aimsAtThePlayer(opening))
+  assert.equal(aimsAtThePlayer({ to: 'dataBroadcast', key: 'enter' }), true)
+  assert.equal(aimsAtThePlayer({ to: 'player', command: 'louder' }), false)
+  assert.equal(aimsAtThePlayer({ to: 'player', command: 'toggle' }), false)
+  assert.equal(aimsAtThePlayer({ to: 'nowhere' }), false)
+  assert.deepEqual(
+    routeKey(
+      { key: 'ArrowDown', target: THE_PLAYER },
+      { ...unaimed, aimed: true },
+      EVERY_KEY,
+    ),
     { to: 'dataBroadcast', key: 'down' },
   )
 })

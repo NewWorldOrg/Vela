@@ -18,7 +18,12 @@ import {
   type SoundChoice,
 } from '@/lib/live-seat'
 import { liveWireHref } from '@/repository/live-paths'
-import { KEY_CAP, routeKey, VOLUME_STEP_PERCENT } from '@/lib/player-keys'
+import {
+  KEY_CAP,
+  aimsAtThePlayer,
+  routeKey,
+  VOLUME_STEP_PERCENT,
+} from '@/lib/player-keys'
 import { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
 import { AUTO_OPEN_SPELLING, DATA_BROADCAST_AUTO_OPEN } from '@/lib/stored-flag'
 import {
@@ -673,6 +678,10 @@ export function LivePlayer({
     }
 
     event.preventDefault()
+
+    if (aimsAtThePlayer(route)) {
+      aimed.current = true
+    }
 
     if (route.to === 'nowhere') {
       return
