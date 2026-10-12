@@ -87,6 +87,34 @@ function eventPayload({
   return payload
 }
 
+function nptPayload({
+  tag = 0x40,
+  stc = at(10),
+  npt = at(100),
+  numerator = 1,
+  denominator = 1,
+}: {
+  tag?: number
+  stc?: number
+  npt?: number
+  numerator?: number
+  denominator?: number
+} = {}): Uint8Array {
+  const payload = new Uint8Array(22)
+  const view = new DataView(payload.buffer)
+
+  payload[0] = 0x05
+  payload[1] = tag
+  view.setUint32(2, Math.floor(stc / 2 ** 32))
+  view.setUint32(6, stc % 2 ** 32)
+  view.setUint32(10, Math.floor(npt / 2 ** 32))
+  view.setUint32(14, npt % 2 ** 32)
+  view.setUint16(18, numerator)
+  view.setUint16(20, denominator)
+
+  return payload
+}
+
 function sizedModule(id: number, bytes: number, version = 1): Uint8Array {
   const payload = new Uint8Array(bytes)
   const view = new DataView(payload.buffer)
@@ -125,7 +153,7 @@ test('each kind of frame is read by its first byte', () => {
   assert.equal(carried.module.id, 1)
 
   assert.deepEqual(readDataBroadcast(NONE), { said: 'none' })
-  assert.deepEqual(readDataBroadcast(Uint8Array.of(0x05)), { said: 'unknown' })
+  assert.deepEqual(readDataBroadcast(Uint8Array.of(0x06)), { said: 'unknown' })
   assert.deepEqual(readDataBroadcast(Uint8Array.of(0x04, 0)), {
     said: 'unknown',
   })
@@ -736,4 +764,137 @@ test('a catalog whose versions moved on passes on only the modules that changed,
     ['catalog', 'module 1 v2'],
   )
   assert.equal(feed.availability, 'ready')
+})
+
+test('an NPT reference is read with its stream, the moment it names, the NPT then and its scale', () => {
+  assert.deepEqual(
+    readDataBroadcast(
+      nptPayload({
+        tag: 0x72,
+        stc: 2 ** 33 + 5,
+        npt: 2 ** 33 - 1,
+        numerator: 3,
+        denominator: 2,
+      }),
+    ),
+    {
+      said: 'npt',
+      reference: {
+        tag: 0x72,
+        stc: 2 ** 33 + 5,
+        npt: 2 ** 33 - 1,
+        numerator: 3,
+        denominator: 2,
+      },
+    },
+  )
+})
+
+test('an NPT reference of the wrong length, a zero scale or an NPT past thirty-three bits is not read', () => {
+  const long = new Uint8Array(23)
+
+  long.set(nptPayload())
+
+  for (const payload of [
+    nptPayload().slice(0, 21),
+    long,
+    nptPayload({ numerator: 0 }),
+    nptPayload({ denominator: 0 }),
+    nptPayload({ npt: 2 ** 33 }),
+  ]) {
+    assert.deepEqual(readDataBroadcast(payload), { said: 'unknown' })
+  }
+})
+
+test('an NPT reference takes effect when the playhead reaches the moment it names, and is passed on read at the playhead in milliseconds', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(nptPayload({ stc: at(10), npt: at(100) }), at(4))
+  feed.advance(9.9)
+
+  assert.equal(heard.length, 0)
+  assert.deepEqual(feed.nptReadings, [])
+
+  feed.advance(10.5)
+
+  assert.deepEqual(heard, [
+    { kind: 'npt', reading: { tag: 0x40, milliseconds: 100_500, rate: 1 } },
+  ])
+
+  feed.advance(12)
+
+  assert.deepEqual(feed.nptReadings, [
+    { tag: 0x40, milliseconds: 102_000, rate: 1 },
+  ])
+})
+
+test('an NPT reference sent again is passed on once, one that moves is passed on again, and each stream keeps its own', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(nptPayload({ stc: at(1), npt: 0 }), at(1))
+  feed.offer(nptPayload({ stc: at(1), npt: 0 }), at(2))
+  feed.offer(
+    nptPayload({
+      tag: 0x72,
+      stc: at(2),
+      npt: at(50),
+      numerator: 1,
+      denominator: 2,
+    }),
+    at(2),
+  )
+  feed.offer(nptPayload({ stc: at(3), npt: at(30) }), at(3))
+  feed.advance(4)
+
+  assert.deepEqual(
+    heard.map((change) => (change.kind === 'npt' ? change.reading.tag : null)),
+    [0x40, 0x72, 0x40],
+  )
+  assert.deepEqual(feed.nptReadings, [
+    { tag: 0x40, milliseconds: 31_000, rate: 1 },
+    { tag: 0x72, milliseconds: 51_000, rate: 0.5 },
+  ])
+})
+
+test('none and a reset forget the NPT references', () => {
+  const { feed } = quietFeed()
+
+  feed.offer(nptPayload({ stc: at(1) }), at(1))
+  feed.advance(1)
+  feed.offer(NONE, at(2))
+  feed.advance(2)
+
+  assert.deepEqual(feed.nptReadings, [])
+
+  feed.offer(nptPayload({ stc: at(3) }), at(3))
+  feed.advance(3)
+  feed.reset()
+
+  assert.deepEqual(feed.nptReadings, [])
+})
+
+test('an event message that fires at a moment of the programme and the NPT reference that names it reach the listener in the order of their moments', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(nptPayload({ stc: at(6), npt: 0 }), at(5))
+  feed.offer(eventPayload({ timeKind: 2, fires: at(8) }), at(5))
+  feed.advance(7)
+
+  assert.deepEqual(
+    heard.map((change) => change.kind),
+    ['npt'],
+  )
+
+  feed.advance(8)
+
+  assert.deepEqual(
+    heard.map((change) => change.kind),
+    ['npt', 'event'],
+  )
 })

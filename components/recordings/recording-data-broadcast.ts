@@ -7,6 +7,7 @@ import {
   type DataBroadcastAvailability,
   type DataBroadcastChange,
   type DataBroadcastHeld,
+  type NptReading,
   type Warn,
 } from '@/lib/data-broadcast-feed'
 import {
@@ -158,6 +159,11 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
 
   get forTheCatalog(): BmlModule[] {
     return [...this.held.values()]
+  }
+
+  /** A recording keeps no NPT reference: its event messages already carry the moments they fire at. */
+  get nptReadings(): NptReading[] {
+    return []
   }
 
   get incomplete(): boolean {
