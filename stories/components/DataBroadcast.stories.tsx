@@ -18,6 +18,8 @@ import {
 } from '@/components/data-broadcast/bml-frame'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
 import {
+  BAND_MAX_SCALE,
+  BAND_MOCK_WIDTH,
   DataBroadcastBand,
   type BandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
@@ -345,6 +347,7 @@ export const 放送の文書から届かないもの: Story = {
   },
 }
 
+/** A player's box with the band drawn out of it, as the live player lays it: over the picture it stands in the bar's place on the box's bottom, with the bar's row under it; a finger in the window gets it under the box. */
 function Band({
   fit,
   numbers: shownFirst,
@@ -354,17 +357,34 @@ function Band({
 }) {
   const [numbers, setNumbers] = useState(shownFirst)
   const [pressed, setPressed] = useState<string[]>([])
+  const band = (
+    <DataBroadcastBand
+      fit={fit}
+      numbers={numbers}
+      onNumbers={setNumbers}
+      onKey={(key) => setPressed((before) => [...before, key])}
+      onAim={() => undefined}
+    />
+  )
 
   return (
     <div className="p-6" data-pressed={pressed.join(' ')}>
-      <div data-slot="board" className={cn(PLAYER_BOARD, 'bg-(--pl-bg)')}>
-        <DataBroadcastBand
-          fit={fit}
-          numbers={numbers}
-          onNumbers={setNumbers}
-          onKey={(key) => setPressed((before) => [...before, key])}
-          onAim={() => undefined}
-        />
+      <div data-slot="board" className={PLAYER_BOARD}>
+        <div data-slot="face" className={cn(PLAYER_FACE, 'relative')}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={DRAWN_FRAME}
+            alt=""
+            className="absolute inset-0 size-full object-cover"
+          />
+          {fit !== 'coarse' && (
+            <div className="absolute inset-x-0 bottom-0 z-10">
+              {band}
+              <div data-slot="bar" className="h-16" />
+            </div>
+          )}
+        </div>
+        {fit === 'coarse' && band}
       </div>
     </div>
   )
@@ -386,48 +406,23 @@ const KEYS = [
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
-interface Measures {
-  band: number
-  pill: [number, number]
-  disc: number
-  enter: number
-  dot: number
-  pitch: number
-  key: number
-  keyPitch: number
+/** The mock's measures at its player's width: the band, the pills, the disc, Enter, the dots and the digits, and the pitch of the dots and the digits. */
+const MOCK = {
+  band: 136,
+  scrim: 256,
+  pill: [56, 44],
+  disc: 136,
+  enter: 48,
+  dot: 44,
+  pitch: 54,
+  key: 44,
+  keyPitch: 52,
+  gap: 20,
 }
 
-const MEASURED: Record<BandFit, Measures> = {
-  fine: {
-    band: 84,
-    pill: [52, 40],
-    disc: 72,
-    enter: 32,
-    dot: 32,
-    pitch: 42,
-    key: 40,
-    keyPitch: 44,
-  },
-  coarse: {
-    band: 120,
-    pill: [60, 44],
-    disc: 104,
-    enter: 44,
-    dot: 40,
-    pitch: 48,
-    key: 44,
-    keyPitch: 48,
-  },
-  'coarse-full': {
-    band: 104,
-    pill: [60, 44],
-    disc: 88,
-    enter: 40,
-    dot: 40,
-    pitch: 48,
-    key: 44,
-    keyPitch: 48,
-  },
+/** One mock pixel at this player's width: the mock's own below its width, growing with the player, and one and a half at most. */
+function unit(playerWidth: number): number {
+  return Math.min(BAND_MAX_SCALE, Math.max(1, playerWidth / BAND_MOCK_WIDTH))
 }
 
 function named(band: HTMLElement): string[] {
@@ -444,17 +439,21 @@ function pitchOf(buttons: HTMLElement[]): number {
   return second.left - first.left
 }
 
-/** The band as the mock draws it for this fit: its height, each key's size, and the pitch of the dots and the digits. */
+async function near(got: number, want: number) {
+  await expect(Math.abs(got - want)).toBeLessThan(0.6)
+}
+
+/** The band as the mock draws it, scaled to this player: each key's size, the pitch of the dots, the row's height, and its right edge 16px in from the player's. */
 async function asTheMock(canvasElement: HTMLElement, fit: BandFit) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
   })
   const keys = within(band)
-  const want = MEASURED[fit]
   const box = band.getBoundingClientRect()
-  const board = (
-    canvasElement.querySelector('[data-slot="board"]') as HTMLElement
+  const face = (
+    canvasElement.querySelector('[data-slot="face"]') as HTMLElement
   ).getBoundingClientRect()
+  const u = unit(face.width)
   const disc = keys.getByRole('group', { name: '十字' }).getBoundingClientRect()
   const back = keys
     .getByRole('button', { name: '戻る' })
@@ -466,32 +465,64 @@ async function asTheMock(canvasElement: HTMLElement, fit: BandFit) {
     keys.getByRole('button', { name }),
   )
   const dot = dots[0].getBoundingClientRect()
+  const buttons = keys.getAllByRole('button')
+  const rightmost = buttons[buttons.length - 1].getBoundingClientRect()
 
   await expect(band).toHaveAttribute('data-fit', fit)
-  await expect(box.height).toBe(want.band)
-  await expect(box.width).toBe(board.width - 2)
-  await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
-  await expect([back.width, back.height]).toEqual(want.pill)
-  await expect([disc.width, disc.height]).toEqual([want.disc, want.disc])
-  await expect([enter.width, enter.height]).toEqual([want.enter, want.enter])
-  await expect(
-    Math.abs(enter.left + enter.width / 2 - (disc.left + disc.width / 2)),
-  ).toBeLessThan(1)
-  await expect(dots[0].querySelector('i')?.getBoundingClientRect().width).toBe(
-    want.dot,
+  await near(box.width, face.width)
+  await near(
+    box.right - rightmost.right,
+    parseFloat(getComputedStyle(band).paddingRight),
   )
-  await expect(dot.height).toBe(44)
-  await expect(pitchOf(dots)).toBe(want.pitch)
-  await expect(
-    Math.abs(disc.top + disc.height / 2 - (box.top + box.height / 2)),
-  ).toBeLessThan(1)
+  await near(back.width, MOCK.pill[0] * u)
+  await near(back.height, MOCK.pill[1] * u)
+  await near(disc.width, MOCK.disc * u)
+  await near(disc.height, MOCK.disc * u)
+  await near(disc.left - back.right, MOCK.gap * u)
+  await near(enter.width, MOCK.enter * u)
+  await near(enter.left + enter.width / 2, disc.left + disc.width / 2)
+  await near(enter.top + enter.height / 2, disc.top + disc.height / 2)
+  await near(
+    dots[0].querySelector('i')?.getBoundingClientRect().width ?? 0,
+    MOCK.dot * u,
+  )
+  await near(dot.height, MOCK.dot * u)
+  await near(pitchOf(dots), MOCK.pitch * u)
+  await near(disc.top + disc.height / 2, back.top + back.height / 2)
+  await near(disc.top + disc.height / 2, dot.top + dot.height / 2)
 
-  return band
+  if (fit === 'coarse') {
+    await near(box.top, face.bottom)
+    await near(box.bottom - disc.bottom, 12 * u)
+    await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
+    await expect(
+      canvasElement.querySelector('[data-slot="data-broadcast-scrim"]'),
+    ).toBeNull()
+  } else {
+    const scrim = canvasElement.querySelector(
+      '[data-slot="data-broadcast-scrim"]',
+    ) as HTMLElement
+    const bar = (
+      canvasElement.querySelector('[data-slot="bar"]') as HTMLElement
+    ).getBoundingClientRect()
+
+    await near(disc.bottom, bar.top)
+    await near(scrim.getBoundingClientRect().height, MOCK.scrim * u)
+    await near(scrim.getBoundingClientRect().bottom, face.bottom)
+    await expect(getComputedStyle(scrim).backgroundImage).toContain(
+      'linear-gradient',
+    )
+    await expect(getComputedStyle(band).backgroundColor).toBe(
+      'rgba(0, 0, 0, 0)',
+    )
+  }
+
+  return { band, u }
 }
 
-async function digitsAsTheMock(band: HTMLElement, fit: BandFit) {
+/** The digits as the mock draws them: 44px discs at a 52px pitch, scaled, beside `123` when there is room and on the row above it when there is not. */
+async function digitsAsTheMock(band: HTMLElement, u: number) {
   const keys = within(band)
-  const want = MEASURED[fit]
   const digits = DIGITS.map((name) => keys.getByRole('button', { name }))
   const one = digits[0].getBoundingClientRect()
   const toNumbers = keys
@@ -503,21 +534,46 @@ async function digitsAsTheMock(band: HTMLElement, fit: BandFit) {
     'aria-expanded',
     'true',
   )
-  await expect([one.width, one.height]).toEqual([want.key, want.key])
-  await expect(pitchOf(digits)).toBe(want.keyPitch)
-  await expect(one.left).toBeGreaterThan(toNumbers.right)
+  await near(one.width, MOCK.key * u)
+  await near(one.height, MOCK.key * u)
+  await near(pitchOf(digits), MOCK.keyPitch * u)
 
   return { digits, toNumbers }
+}
+
+async function beside(band: HTMLElement, u: number) {
+  const { digits, toNumbers } = await digitsAsTheMock(band, u)
+  const one = digits[0].getBoundingClientRect()
+
+  await near(one.left - toNumbers.right, MOCK.gap * u)
+  await near(one.top + one.height / 2, toNumbers.top + toNumbers.height / 2)
+}
+
+async function above(band: HTMLElement, u: number) {
+  const { digits, toNumbers } = await digitsAsTheMock(band, u)
+  const last = digits[9].getBoundingClientRect()
+
+  await expect(last.bottom).toBeLessThanOrEqual(toNumbers.top)
+  await near(last.right, toNumbers.right)
+}
+
+async function fingerSized(band: HTMLElement) {
+  for (const button of within(band).getAllByRole('button')) {
+    const { width, height } = button.getBoundingClientRect()
+
+    await expect(Math.min(width, height)).toBeGreaterThanOrEqual(44)
+  }
 }
 
 export const 帯_PC: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
   render: () => <Band fit="fine" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const band = await asTheMock(canvasElement, 'fine')
+    const { band } = await asTheMock(canvasElement, 'fine')
     const tray = canvasElement.querySelector('[data-pressed]')
 
     await expect(named(band)).toEqual(KEYS)
+    await fingerSized(band)
 
     for (const name of ['上', '右', '下', '左', '決定', '戻る', '青', '黄']) {
       await userEvent.click(within(band).getByRole('button', { name }))
@@ -534,13 +590,10 @@ export const 帯_PC_数字: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
   render: () => <Band fit="fine" numbers />,
   play: async ({ canvasElement }) => {
-    const band = await asTheMock(canvasElement, 'fine')
-    const { digits, toNumbers } = await digitsAsTheMock(band, 'fine')
+    const { band, u } = await asTheMock(canvasElement, 'fine')
 
+    await beside(band, u)
     await expect(named(band)).toEqual([...KEYS, ...DIGITS])
-    await expect(digits[0].getBoundingClientRect().top).toBe(
-      toNumbers.top + (toNumbers.height - 40) / 2,
-    )
 
     await userEvent.click(within(band).getByRole('button', { name: '7' }))
     await userEvent.click(within(band).getByRole('button', { name: '0' }))
@@ -554,7 +607,28 @@ export const 帯_PC_数字: Story = {
     )
     await expect(band).toHaveAttribute('data-face', 'keys')
     await expect(named(band)).toEqual(KEYS)
-    await expect(band.getBoundingClientRect().height).toBe(84)
+    await near(band.getBoundingClientRect().height, MOCK.band * u)
+  },
+}
+
+export const 帯_PC_広い: Story = {
+  parameters: { screen: { width: 2400, height: 1200 } },
+  render: () => <Band fit="fine" numbers={false} />,
+  play: async ({ canvasElement }) => {
+    const { band, u } = await asTheMock(canvasElement, 'fine')
+
+    await expect(u).toBeGreaterThan(1)
+    await expect(named(band)).toEqual(KEYS)
+  },
+}
+
+export const 帯_PC_広い_数字: Story = {
+  parameters: { screen: { width: 2400, height: 1200 } },
+  render: () => <Band fit="fine" numbers />,
+  play: async ({ canvasElement }) => {
+    const { band, u } = await asTheMock(canvasElement, 'fine')
+
+    await beside(band, u)
   },
 }
 
@@ -562,23 +636,11 @@ export const 帯_iPad_窓: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
   render: () => <Band fit="coarse" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const band = await asTheMock(canvasElement, 'coarse')
+    const { band, u } = await asTheMock(canvasElement, 'coarse')
 
+    await expect(u).toBe(1)
     await expect(named(band)).toEqual(KEYS)
-
-    for (const button of within(band).getAllByRole('button')) {
-      if (
-        ['青', '赤', '緑', '黄'].includes(
-          button.getAttribute('aria-label') ?? '',
-        )
-      ) {
-        continue
-      }
-
-      const { width, height } = button.getBoundingClientRect()
-
-      await expect(Math.min(width, height)).toBeGreaterThanOrEqual(44)
-    }
+    await fingerSized(band)
   },
 }
 
@@ -586,27 +648,20 @@ export const 帯_iPad_窓_数字: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
   render: () => <Band fit="coarse" numbers />,
   play: async ({ canvasElement }) => {
-    const band = await asTheMock(canvasElement, 'coarse')
-    const keys = within(band)
-    const digits = DIGITS.map((name) => keys.getByRole('button', { name }))
-    const one = digits[0].getBoundingClientRect()
-    const blue = keys
-      .getByRole('button', { name: '青' })
-      .getBoundingClientRect()
-    const toNumbers = keys
-      .getByRole('button', { name: '123 数字' })
-      .getBoundingClientRect()
+    const { band, u } = await asTheMock(canvasElement, 'coarse')
+    const face = (
+      canvasElement.querySelector('[data-slot="face"]') as HTMLElement
+    ).getBoundingClientRect()
 
-    await expect(band).toHaveAttribute('data-face', 'numbers')
-    await expect([one.width, one.height]).toEqual([44, 44])
-    await expect(pitchOf(digits)).toBe(48)
-    await expect(one.top).toBeGreaterThanOrEqual(toNumbers.bottom)
-    await expect(Math.abs(one.left - blue.left)).toBeLessThan(1)
-    await expect(band.getBoundingClientRect().height).toBe(120)
+    await above(band, u)
+    await near(band.getBoundingClientRect().top, face.bottom)
+    await near(band.getBoundingClientRect().height, MOCK.band + 24 + 12 + 44)
 
-    await userEvent.click(keys.getByRole('button', { name: '123 数字' }))
+    await userEvent.click(
+      within(band).getByRole('button', { name: '123 数字' }),
+    )
     await expect(band).toHaveAttribute('data-face', 'keys')
-    await expect(band.getBoundingClientRect().height).toBe(120)
+    await near(band.getBoundingClientRect().height, MOCK.band + 24)
   },
 }
 
@@ -614,9 +669,10 @@ export const 帯_iPad_全画面: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
   render: () => <Band fit="coarse-full" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const band = await asTheMock(canvasElement, 'coarse-full')
+    const { band } = await asTheMock(canvasElement, 'coarse-full')
 
     await expect(named(band)).toEqual(KEYS)
+    await fingerSized(band)
   },
 }
 
@@ -624,11 +680,13 @@ export const 帯_iPad_全画面_数字: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
   render: () => <Band fit="coarse-full" numbers />,
   play: async ({ canvasElement }) => {
-    const band = await asTheMock(canvasElement, 'coarse-full')
-    const { digits, toNumbers } = await digitsAsTheMock(band, 'coarse-full')
+    const { band, u } = await asTheMock(canvasElement, 'coarse-full')
+    const bar = (
+      canvasElement.querySelector('[data-slot="bar"]') as HTMLElement
+    ).getBoundingClientRect()
 
-    await expect(digits[0].getBoundingClientRect().top).toBe(toNumbers.top)
-    await expect(band.getBoundingClientRect().height).toBe(104)
+    await beside(band, u)
+    await near(band.getBoundingClientRect().bottom, bar.top)
   },
 }
 
