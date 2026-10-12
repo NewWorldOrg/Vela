@@ -961,11 +961,11 @@ test('locking a module no component carries answers -3, one the carousel does no
 })
 
 const GETTING_READY = bml(
-  '<p id="p">p</p>',
+  '<p id="p">p</p>' +
+    '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>',
   '<bevent>' +
     '<beitem id="d" type="DataButtonPressed" onoccur="browser.Ureg[0] += \'pressed \'; document.getElementById(\'body\').invisible = false"/>' +
     '</bevent>' +
-    '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>' +
     '<script>browser.setInterval("document.getElementById(\'d\').subscribe = true", 3000, 1)</script>',
 ).replace('<body>', '<body id="body" invisible="invisible">')
 
