@@ -17,7 +17,7 @@ import {
 } from '@/lib/bml/memory'
 import type { RuntimeMessage } from '@/lib/bml/messages'
 import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
-import type { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
+import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
 import { KEY_CAP } from '@/lib/player-keys'
 import { cn } from '@/lib/utils'
 import {
@@ -128,7 +128,7 @@ export function DataBroadcastFace({
   onMessage,
   says,
 }: {
-  feed: DataBroadcastFeed
+  feed: DataBroadcastHeld
   onAir?: OnAir
   onRuntime: (send: SendToRuntime | null) => void
   onMessage: (message: RuntimeMessage) => void
@@ -211,6 +211,15 @@ export function DataBroadcastFace({
 
 /** Where the band is pressed: by a mouse (`pointer: fine`), by a finger in the window, or by a finger in fullscreen. */
 export type BandFit = 'fine' | 'coarse' | 'coarse-full'
+
+/** Which band the player draws out: a mouse gets the one over the picture, a finger the one under the box, and a finger in fullscreen the one over the picture again, sized for the finger. */
+export function bandFit(coarse: boolean, full: boolean): BandFit {
+  if (!coarse) {
+    return 'fine'
+  }
+
+  return full ? 'coarse-full' : 'coarse'
+}
 
 /** The width of the mock's player. The band is drawn at the mock's measures there and grows with the player, up to one and a half times the mock. */
 export const BAND_MOCK_WIDTH = 1174

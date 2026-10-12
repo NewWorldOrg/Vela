@@ -151,6 +151,7 @@ export function RecordingDetailView({
   onCallOffEncode,
   startAt,
   startsHeld = false,
+  autoOpensDataBroadcast = false,
 }: {
   detail: RecordingDetail
   playback: PlaybackRead
@@ -173,6 +174,7 @@ export function RecordingDetailView({
   onCallOffEncode: (id: string) => Promise<EncodeWrite>
   startAt?: number
   startsHeld?: boolean
+  autoOpensDataBroadcast?: boolean
 }) {
   const plays =
     !d.fileMissing &&
@@ -271,6 +273,7 @@ export function RecordingDetailView({
           startAt={opens.at}
           playsAtOnce={opens.playing}
           holdsAtOnce={opens.held}
+          autoOpensDataBroadcast={autoOpensDataBroadcast}
         />
       )}
 

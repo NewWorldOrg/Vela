@@ -12,6 +12,12 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
 import type { BrowserDecoding } from '@/lib/browser-decodes'
+import {
+  SAID_FAILED,
+  dataBroadcastSays,
+  pictureTransform,
+} from '@/lib/data-broadcast-view'
+import { AUTO_OPEN_SPELLING, DATA_BROADCAST_AUTO_OPEN } from '@/lib/stored-flag'
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
 import { nextBoundaryAfter, whereTheBreakEnds } from '@/lib/player-chapters'
@@ -44,7 +50,10 @@ import type {
   PlaybackRead,
   PositionWrite,
 } from '@/repository/videos'
+import { useCoarsePointer } from '@/hooks/useCoarsePointer'
+import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useKeptPosition } from '@/hooks/useKeptPosition'
+import { useStoredFlag } from '@/hooks/useStoredFlag'
 import {
   useStandingArtefact,
   type ListenForEncodeJobs,
@@ -81,11 +90,12 @@ import {
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
   PLAYER_PICTURE,
+  PLAYER_PICTURE_BOX,
   PLAYER_SCRIM,
 } from '@/components/recordings/player-palette'
 import {
   KEY_CAP,
-  playerCommand,
+  routeKey,
   seekMarkAfter,
   SEEK_STEP_SECONDS,
   type SeekMark,
@@ -132,10 +142,27 @@ import {
   feedRecording as feedTheRecording,
   type FeedRecording,
 } from '@/components/recordings/recording-feed'
+import { RecordingDataBroadcast } from '@/components/recordings/recording-data-broadcast'
+import {
+  readDataBroadcast as readTheDataBroadcast,
+  readDataBroadcastModule as readTheModule,
+  type ReadDataBroadcast,
+  type ReadDataBroadcastModule,
+} from '@/components/recordings/read-data-broadcast'
+import {
+  DataBroadcastBand,
+  DataBroadcastFace,
+  DataBroadcastToggle,
+  PLAYER_COLUMN_OVER_THE_BAND,
+  bandFit,
+} from '@/components/data-broadcast/data-broadcast-player'
 
 const RESTS = 3000
 
 const SETTLES_BEFORE_SEEK = 400
+
+/** How often the data broadcast is told where the playhead is. */
+const FOLLOWS_EVERY_MS = 250
 
 type Phase = 'idle' | 'waiting' | 'playing' | 'paused' | 'diagnosing' | 'broken'
 
@@ -163,6 +190,9 @@ export function Player({
   takeCapture = takeItNow,
   readCaptions = readTheCaptions,
   feedRecording = feedTheRecording,
+  readDataBroadcast = readTheDataBroadcast,
+  readDataBroadcastModule = readTheModule,
+  autoOpensDataBroadcast = false,
 }: {
   detail: RecordingDetail
   plan: PlaybackPlan
@@ -195,6 +225,9 @@ export function Player({
   takeCapture?: TakeCapture
   readCaptions?: ReadCaptions
   feedRecording?: FeedRecording
+  readDataBroadcast?: ReadDataBroadcast
+  readDataBroadcastModule?: ReadDataBroadcastModule
+  autoOpensDataBroadcast?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -205,9 +238,28 @@ export function Player({
   const captions = useRef<RecordingCaptions | null>(null)
   const [captioned, setCaptioned] = useState(true)
   const captioning = opened.captions === 'ready'
+  const [broadcastFeed] = useState(
+    () =>
+      new RecordingDataBroadcast(
+        (signal) =>
+          readDataBroadcast(d.id, opened.source, signal, opened.decodes),
+        (placed, signal) => readDataBroadcastModule(d.id, placed, signal),
+        d.service?.serviceId ?? 0,
+      ),
+  )
+  const [autoOpens] = useStoredFlag(
+    DATA_BROADCAST_AUTO_OPEN,
+    AUTO_OPEN_SPELLING,
+    autoOpensDataBroadcast,
+  )
+  const broadcast = useDataBroadcast(broadcastFeed, d.id, {
+    autoOpens,
+    programme: d.startedAt,
+  })
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
+  const coarse = useCoarsePointer()
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
     unaskedProfile,
@@ -330,6 +382,7 @@ export function Player({
       over: (context, size) => captions.current?.drawOn(context, size),
     })
 
+    broadcast.quiet()
     setSaid(
       got === 'saved'
         ? { text: SAID_CAPTURED, tone: 'ok' }
@@ -387,25 +440,46 @@ export function Player({
 
   const faceUp = phase !== 'broken'
 
+  /** The second of the source on screen, or null while a frame is held, a seek is landing or nothing is decoded yet. */
+  const seenAt = () => {
+    const element = video.current
+
+    if (
+      !element ||
+      heldNow.current ||
+      element.seeking ||
+      element.readyState < element.HAVE_CURRENT_DATA ||
+      theLandingIsStillAhead(landing.current, element.currentTime)
+    ) {
+      return null
+    }
+
+    return fromNow.current + element.currentTime
+  }
+
+  useEffect(() => {
+    broadcastFeed.start()
+
+    const following = setInterval(() => {
+      const second = seenAt()
+
+      if (second !== null) {
+        broadcastFeed.advance(second)
+      }
+    }, FOLLOWS_EVERY_MS)
+
+    return () => {
+      clearInterval(following)
+      broadcastFeed.close()
+    }
+  }, [broadcastFeed])
+
   useEffect(() => {
     const element = video.current
     const plate = overlay.current
 
     if (!captioning || !faceUp || !element || !plate) {
       return
-    }
-
-    const seenAt = () => {
-      if (
-        heldNow.current ||
-        element.seeking ||
-        element.readyState < element.HAVE_CURRENT_DATA ||
-        theLandingIsStillAhead(landing.current, element.currentTime)
-      ) {
-        return null
-      }
-
-      return fromNow.current + element.currentTime
     }
 
     const layer = new RecordingCaptions(plate, element, seenAt, (at, signal) =>
@@ -905,21 +979,55 @@ export function Player({
 
   const toggleCaptions = () => setCaptioned((was) => !was)
 
-  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    const command = playerCommand(event, {
-      seeks: duration > 0,
-      captions: captioning,
-      aimed: aimed.current,
-    })
+  const toggleBroadcast = () => {
+    shell?.focus({ preventScroll: true })
+    broadcast.toggle()
+  }
 
-    if (!command) {
+  const hearBroadcast: typeof broadcast.hear = (message) => {
+    if (message.kind === 'error') {
+      stir()
+    }
+
+    broadcast.hear(message)
+  }
+
+  const aimAtTheKeypad = () => {
+    aimed.current = true
+    shell?.focus({ preventScroll: true })
+  }
+
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    const route = routeKey(
+      event,
+      {
+        seeks: duration > 0,
+        captions: captioning,
+        dataBroadcast: broadcast.offered,
+        aimed: aimed.current,
+      },
+      broadcast.view.open ? { usedKeys: broadcast.view.usedKeys } : null,
+    )
+
+    if (!route) {
+      return
+    }
+
+    event.preventDefault()
+
+    if (route.to === 'nowhere') {
+      return
+    }
+
+    if (route.to === 'dataBroadcast') {
+      broadcast.press(route.key)
+
       return
     }
 
     stir()
-    event.preventDefault()
 
-    switch (command) {
+    switch (route.command) {
       case 'toggle':
         toggle()
         break
@@ -944,8 +1052,19 @@ export function Player({
       case 'captions':
         toggleCaptions()
         break
+      case 'dataBroadcast':
+        toggleBroadcast()
+        break
     }
   }
+
+  const faceShown = broadcast.view.open
+  const fit = bandFit(coarse, full)
+  const underTheBox = faceShown && fit === 'coarse'
+  const overThePicture = faceShown && !underTheBox
+  const barSaid: PlayerSaying | null = broadcast.view.failed
+    ? { text: SAID_FAILED, tone: 'err' }
+    : said
 
   if (phase === 'broken') {
     return (
@@ -976,7 +1095,7 @@ export function Player({
         }}
         onKeyDown={onKeyDown}
         data-up={chromeUp ? 'true' : undefined}
-        className={PLAYER_BOARD}
+        className={cn(PLAYER_BOARD, underTheBox && PLAYER_COLUMN_OVER_THE_BAND)}
       >
         <div
           className={cn(
@@ -985,77 +1104,117 @@ export function Player({
             '[[data-full]_&]:aspect-auto [[data-full]_&]:max-h-none [[data-full]_&]:min-h-0 [[data-full]_&]:flex-1',
           )}
         >
-          <video
-            ref={video}
-            src={streamed ? undefined : source}
-            autoPlay={source !== undefined && !waitsForAHand}
-            poster={poster}
-            preload={waitsForAHand ? 'auto' : 'none'}
-            playsInline
-            onLoadedMetadata={(event) => {
-              event.currentTarget.playbackRate = Number(speed)
-              event.currentTarget.volume = volume
-              event.currentTarget.muted = muted
-            }}
-            onSeeked={() => {
-              landing.current = null
-            }}
-            onLoadedData={() =>
-              setPhase((was) =>
-                was === 'waiting' && !holding ? 'paused' : was,
-              )
-            }
-            onPlaying={() => {
-              heldNow.current = false
-              setHolding(false)
-              setPhase('playing')
-              stir()
-            }}
-            onWaiting={() => setPhase('waiting')}
-            onPause={() =>
-              setPhase((was) => (was === 'waiting' ? was : 'paused'))
-            }
-            onEnded={() => setPhase('paused')}
-            onError={stumbled}
-            onProgress={(event) => noteBuffered(event.currentTarget.buffered)}
-            onTimeUpdate={(event) => {
-              if (asking.current) {
-                return
-              }
+          <div
+            data-slot="player-stage-area"
+            className="absolute inset-0 flex items-center justify-center [container-type:size]"
+          >
+            <div
+              data-slot="player-stage"
+              className={cn(
+                'relative',
+                faceShown
+                  ? 'aspect-video w-[min(100cqw,calc(100cqh*16/9))]'
+                  : PLAYER_PICTURE_BOX,
+              )}
+            >
+              <div
+                data-slot="player-picture"
+                data-rect={
+                  broadcast.view.rect
+                    ? Object.values(broadcast.view.rect).join(',')
+                    : undefined
+                }
+                style={{ transform: pictureTransform(broadcast.view.rect) }}
+                className="relative size-full origin-top-left transition-transform duration-200 ease-out still:transition-none"
+              >
+                <video
+                  ref={video}
+                  src={streamed ? undefined : source}
+                  autoPlay={source !== undefined && !waitsForAHand}
+                  poster={poster}
+                  preload={waitsForAHand ? 'auto' : 'none'}
+                  playsInline
+                  onLoadedMetadata={(event) => {
+                    event.currentTarget.playbackRate = Number(speed)
+                    event.currentTarget.volume = volume
+                    event.currentTarget.muted = muted
+                  }}
+                  onSeeked={() => {
+                    landing.current = null
+                  }}
+                  onLoadedData={() =>
+                    setPhase((was) =>
+                      was === 'waiting' && !holding ? 'paused' : was,
+                    )
+                  }
+                  onPlaying={() => {
+                    heldNow.current = false
+                    setHolding(false)
+                    setPhase('playing')
+                    stir()
+                  }}
+                  onWaiting={() => setPhase('waiting')}
+                  onPause={() =>
+                    setPhase((was) => (was === 'waiting' ? was : 'paused'))
+                  }
+                  onEnded={() => setPhase('paused')}
+                  onError={stumbled}
+                  onProgress={(event) =>
+                    noteBuffered(event.currentTarget.buffered)
+                  }
+                  onTimeUpdate={(event) => {
+                    if (asking.current) {
+                      return
+                    }
 
-              const at = event.currentTarget.currentTime
+                    const at = event.currentTarget.currentTime
 
-              if (theLandingIsStillAhead(landing.current, at)) {
-                return
-              }
+                    if (theLandingIsStillAhead(landing.current, at)) {
+                      return
+                    }
 
-              landing.current = null
-              wanted.current = null
-              setPosition(from + at)
-              standsAs({ position: from + at })
-            }}
-            className={cn(PLAYER_PICTURE, '[[data-full]_&]:max-w-none')}
-          />
-          <canvas
-            ref={holder}
-            aria-hidden="true"
-            data-slot="player-held-frame"
-            data-holding={holding ? 'true' : undefined}
-            className={cn(
-              'pointer-events-none absolute inset-0 hidden data-[holding]:block',
-              PLAYER_PICTURE,
-              '[[data-full]_&]:max-w-none',
-            )}
-          />
-          {captioning && (
-            <canvas
-              ref={overlay}
-              aria-hidden="true"
-              data-slot="player-captions"
-              data-drawn={captioned && !pip.out ? 'yes' : 'no'}
-              className="pointer-events-none absolute inset-0 size-full"
-            />
-          )}
+                    landing.current = null
+                    wanted.current = null
+                    setPosition(from + at)
+                    standsAs({ position: from + at })
+                  }}
+                  className={cn(PLAYER_PICTURE, '[[data-full]_&]:max-w-none')}
+                />
+                <canvas
+                  ref={holder}
+                  aria-hidden="true"
+                  data-slot="player-held-frame"
+                  data-holding={holding ? 'true' : undefined}
+                  className={cn(
+                    'pointer-events-none absolute inset-0 hidden data-[holding]:block',
+                    PLAYER_PICTURE,
+                    '[[data-full]_&]:max-w-none',
+                  )}
+                />
+                {captioning && (
+                  <canvas
+                    ref={overlay}
+                    aria-hidden="true"
+                    data-slot="player-captions"
+                    data-drawn={captioned && !pip.out ? 'yes' : 'no'}
+                    className="pointer-events-none absolute inset-0 size-full"
+                  />
+                )}
+              </div>
+              {faceShown && (
+                <DataBroadcastFace
+                  feed={broadcastFeed}
+                  onAir={{
+                    network: d.service?.networkId ?? null,
+                    startsAt: Date.parse(d.startedAt) / 1000,
+                  }}
+                  onRuntime={broadcast.connect}
+                  onMessage={hearBroadcast}
+                  says={dataBroadcastSays(broadcast.view)}
+                />
+              )}
+            </div>
+          </div>
           {!pip.out && (
             <div
               data-slot="player-press"
@@ -1138,226 +1297,266 @@ export function Player({
               }
             }}
             onBlur={() => setHeld(false)}
-            style={{ backgroundImage: PLAYER_SCRIM }}
+            style={{
+              backgroundImage: overThePicture ? 'none' : PLAYER_SCRIM,
+            }}
             className={cn(
-              'absolute inset-x-0 bottom-0 z-10 px-4 pt-14 pb-3 max-[700px]:px-3',
+              'absolute inset-x-0 bottom-0 z-10',
               'pointer-events-none translate-y-2 opacity-0',
               PLAYER_CHROME_FADE,
               'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
               'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
             )}
           >
-            {duration > 0 && (
-              <PlayerSeek
-                id={d.id}
-                duration={duration}
-                position={position}
-                buffered={buffered}
-                drops={drops}
-                chapters={chapters}
-                onChoose={choose}
-                onScrubbing={setScrubbingAt}
-                frameHref={frameHref}
+            {overThePicture && (
+              <DataBroadcastBand
+                fit={fit}
+                numbers={broadcast.view.numbers}
+                onNumbers={broadcast.showNumbers}
+                onKey={broadcast.press}
+                onAim={aimAtTheKeypad}
               />
             )}
-            {said && (
-              <p
-                role="status"
-                className={cn(
-                  'mt-2 text-cap font-medium',
-                  said.tone === 'ok' ? 'text-(--pl-ok-ink)' : 'text-(--pl-err)',
-                )}
-              >
-                {said.text}
-              </p>
-            )}
-            <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-2">
-              <PlayerTip
-                name={phase === 'playing' ? '一時停止' : '再生'}
-                keys={[KEY_CAP.toggle]}
-                container={shell}
-              >
-                <button
-                  type="button"
-                  aria-label={phase === 'playing' ? '一時停止' : '再生'}
-                  onClick={toggle}
-                  className={PLAYER_GLYPH_BUTTON}
-                >
-                  {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
-                </button>
-              </PlayerTip>
-              {duration > 0 && (
-                <>
-                  <PlayerTip
-                    name={`${SEEK_STEP_SECONDS} 秒戻る`}
-                    keys={[KEY_CAP.back]}
-                    container={shell}
-                  >
-                    <button
-                      type="button"
-                      aria-label={`${SEEK_STEP_SECONDS} 秒戻る`}
-                      onClick={(event) =>
-                        step(-SEEK_STEP_SECONDS, event.timeStamp)
-                      }
-                      className={PLAYER_GLYPH_BUTTON}
-                    >
-                      <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
-                    </button>
-                  </PlayerTip>
-                  <PlayerTip
-                    name={`${SEEK_STEP_SECONDS} 秒進む`}
-                    keys={[KEY_CAP.forward]}
-                    container={shell}
-                  >
-                    <button
-                      type="button"
-                      aria-label={`${SEEK_STEP_SECONDS} 秒進む`}
-                      onClick={(event) =>
-                        step(SEEK_STEP_SECONDS, event.timeStamp)
-                      }
-                      className={PLAYER_GLYPH_BUTTON}
-                    >
-                      <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
-                    </button>
-                  </PlayerTip>
-                </>
+            <div
+              data-slot="player-controls"
+              className={cn(
+                'px-4 pb-3 max-[700px]:px-3',
+                overThePicture ? 'pt-3' : 'pt-14',
               )}
-              <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
-                <button
-                  type="button"
-                  aria-label="消音"
-                  aria-pressed={muted}
-                  onClick={() => mute(!muted)}
+            >
+              {duration > 0 && (
+                <PlayerSeek
+                  id={d.id}
+                  duration={duration}
+                  position={position}
+                  buffered={buffered}
+                  drops={drops}
+                  chapters={chapters}
+                  onChoose={choose}
+                  onScrubbing={setScrubbingAt}
+                  frameHref={frameHref}
+                />
+              )}
+              {barSaid && (
+                <p
+                  role="status"
                   className={cn(
-                    PLAYER_GLYPH_BUTTON,
-                    muted && PLAYER_GLYPH_BUTTON_ON,
+                    'mt-2 text-cap font-medium',
+                    barSaid.tone === 'ok'
+                      ? 'text-(--pl-ok-ink)'
+                      : 'text-(--pl-err)',
                   )}
                 >
-                  <VolumeIcon level={muted ? 0 : volume} />
-                </button>
-              </PlayerTip>
-              <PlayerTip
-                name="音量"
-                keys={[KEY_CAP.louder, KEY_CAP.quieter]}
-                container={shell}
-              >
-                <PlayerVolume
-                  level={muted ? 0 : volume}
-                  onChoose={chooseVolume}
-                />
-              </PlayerTip>
-              <span className="ml-2 font-code text-[calc(13rem/16)] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
-                {formatPlayerTime(scrubbingAt ?? position)} /{' '}
-                {formatPlayerTime(duration)}
-              </span>
-              {chapters.length > 0 && (
-                <button
-                  type="button"
-                  disabled={nextChapterAt === undefined}
-                  onClick={() =>
-                    nextChapterAt !== undefined && choose(nextChapterAt)
-                  }
-                  className={cn(PLAYER_BUTTON, 'ml-2')}
-                >
-                  次のチャプターへ
-                </button>
+                  {barSaid.text}
+                </p>
               )}
-              <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
-                {airPlayCanBeHanded(plan) && (
-                  <PlayerTip name="AirPlay" container={shell}>
-                    <AirPlayButton
-                      handover={recordingHandover(d.id, onTakeTicket)}
-                      video={video}
-                      onRefused={(message) =>
-                        setSaid({ text: message, tone: 'err' })
-                      }
-                    />
-                  </PlayerTip>
-                )}
-                {captioning && (
-                  <PlayerTip
-                    name="字幕"
-                    keys={[KEY_CAP.captions]}
-                    container={shell}
-                  >
-                    <button
-                      type="button"
-                      aria-label="字幕"
-                      aria-pressed={captioned}
-                      onClick={toggleCaptions}
-                      className={cn(
-                        PLAYER_GLYPH_BUTTON,
-                        captioned && PLAYER_GLYPH_BUTTON_ON,
-                      )}
-                    >
-                      <CaptionsGlyph />
-                    </button>
-                  </PlayerTip>
-                )}
-                <PlayerTip name="設定" container={shell}>
-                  <PlayerSettings
-                    container={shell}
-                    onOpenChange={setSettingsOpen}
-                    profile={profile}
-                    onChooseProfile={chooseProfile}
-                    onTheFly={onTheFly}
-                    speed={speed}
-                    onChooseSpeed={chooseSpeed}
-                    sounds={plan.sounds}
-                    sound={pendingSound ?? sound}
-                    onChooseSound={chooseSound}
-                    source={plan.source}
-                    alternative={plan.alternative}
-                    onChooseSource={chooseSource}
-                  />
-                </PlayerTip>
-                <PlayerTip name="キャプチャ" container={shell}>
-                  <button
-                    type="button"
-                    aria-label="キャプチャ"
-                    disabled={!framed}
-                    onClick={capture}
-                    className={PLAYER_GLYPH_BUTTON}
-                  >
-                    <CaptureIcon />
-                  </button>
-                </PlayerTip>
-                {pip.offered && (
-                  <PlayerTip name="ピクチャーインピクチャー" container={shell}>
-                    <button
-                      type="button"
-                      aria-label="ピクチャーインピクチャー"
-                      aria-pressed={pip.out}
-                      disabled={!framed}
-                      onClick={pip.toggle}
-                      className={cn(
-                        PLAYER_GLYPH_BUTTON,
-                        pip.out && PLAYER_GLYPH_BUTTON_ON,
-                      )}
-                    >
-                      <PictureInPictureIcon />
-                    </button>
-                  </PlayerTip>
-                )}
+              <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-2">
                 <PlayerTip
-                  name="全画面"
-                  keys={[KEY_CAP.fullscreen]}
+                  name={phase === 'playing' ? '一時停止' : '再生'}
+                  keys={[KEY_CAP.toggle]}
                   container={shell}
                 >
                   <button
                     type="button"
-                    aria-label="全画面"
-                    aria-pressed={full}
-                    onClick={toggleFullscreen}
+                    aria-label={phase === 'playing' ? '一時停止' : '再生'}
+                    onClick={toggle}
                     className={PLAYER_GLYPH_BUTTON}
                   >
-                    <FullscreenIcon leaving={full} />
+                    {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
                   </button>
                 </PlayerTip>
+                {duration > 0 && (
+                  <>
+                    <PlayerTip
+                      name={`${SEEK_STEP_SECONDS} 秒戻る`}
+                      keys={[KEY_CAP.back]}
+                      container={shell}
+                    >
+                      <button
+                        type="button"
+                        aria-label={`${SEEK_STEP_SECONDS} 秒戻る`}
+                        onClick={(event) =>
+                          step(-SEEK_STEP_SECONDS, event.timeStamp)
+                        }
+                        className={PLAYER_GLYPH_BUTTON}
+                      >
+                        <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
+                      </button>
+                    </PlayerTip>
+                    <PlayerTip
+                      name={`${SEEK_STEP_SECONDS} 秒進む`}
+                      keys={[KEY_CAP.forward]}
+                      container={shell}
+                    >
+                      <button
+                        type="button"
+                        aria-label={`${SEEK_STEP_SECONDS} 秒進む`}
+                        onClick={(event) =>
+                          step(SEEK_STEP_SECONDS, event.timeStamp)
+                        }
+                        className={PLAYER_GLYPH_BUTTON}
+                      >
+                        <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
+                      </button>
+                    </PlayerTip>
+                  </>
+                )}
+                <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
+                  <button
+                    type="button"
+                    aria-label="消音"
+                    aria-pressed={muted}
+                    onClick={() => mute(!muted)}
+                    className={cn(
+                      PLAYER_GLYPH_BUTTON,
+                      muted && PLAYER_GLYPH_BUTTON_ON,
+                    )}
+                  >
+                    <VolumeIcon level={muted ? 0 : volume} />
+                  </button>
+                </PlayerTip>
+                <PlayerTip
+                  name="音量"
+                  keys={[KEY_CAP.louder, KEY_CAP.quieter]}
+                  container={shell}
+                >
+                  <PlayerVolume
+                    level={muted ? 0 : volume}
+                    onChoose={chooseVolume}
+                  />
+                </PlayerTip>
+                <span className="ml-2 font-code text-[calc(13rem/16)] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
+                  {formatPlayerTime(scrubbingAt ?? position)} /{' '}
+                  {formatPlayerTime(duration)}
+                </span>
+                {chapters.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={nextChapterAt === undefined}
+                    onClick={() =>
+                      nextChapterAt !== undefined && choose(nextChapterAt)
+                    }
+                    className={cn(PLAYER_BUTTON, 'ml-2')}
+                  >
+                    次のチャプターへ
+                  </button>
+                )}
+                <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+                  {airPlayCanBeHanded(plan) && (
+                    <PlayerTip name="AirPlay" container={shell}>
+                      <AirPlayButton
+                        handover={recordingHandover(d.id, onTakeTicket)}
+                        video={video}
+                        onRefused={(message) =>
+                          setSaid({ text: message, tone: 'err' })
+                        }
+                      />
+                    </PlayerTip>
+                  )}
+                  {captioning && (
+                    <PlayerTip
+                      name="字幕"
+                      keys={[KEY_CAP.captions]}
+                      container={shell}
+                    >
+                      <button
+                        type="button"
+                        aria-label="字幕"
+                        aria-pressed={captioned}
+                        onClick={toggleCaptions}
+                        className={cn(
+                          PLAYER_GLYPH_BUTTON,
+                          captioned && PLAYER_GLYPH_BUTTON_ON,
+                        )}
+                      >
+                        <CaptionsGlyph />
+                      </button>
+                    </PlayerTip>
+                  )}
+                  {broadcast.offered && (
+                    <DataBroadcastToggle
+                      open={faceShown}
+                      onToggle={toggleBroadcast}
+                      container={shell}
+                    />
+                  )}
+                  <PlayerTip name="設定" container={shell}>
+                    <PlayerSettings
+                      container={shell}
+                      onOpenChange={setSettingsOpen}
+                      profile={profile}
+                      onChooseProfile={chooseProfile}
+                      onTheFly={onTheFly}
+                      speed={speed}
+                      onChooseSpeed={chooseSpeed}
+                      sounds={plan.sounds}
+                      sound={pendingSound ?? sound}
+                      onChooseSound={chooseSound}
+                      source={plan.source}
+                      alternative={plan.alternative}
+                      onChooseSource={chooseSource}
+                    />
+                  </PlayerTip>
+                  <PlayerTip name="キャプチャ" container={shell}>
+                    <button
+                      type="button"
+                      aria-label="キャプチャ"
+                      disabled={!framed}
+                      onClick={capture}
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <CaptureIcon />
+                    </button>
+                  </PlayerTip>
+                  {pip.offered && (
+                    <PlayerTip
+                      name="ピクチャーインピクチャー"
+                      container={shell}
+                    >
+                      <button
+                        type="button"
+                        aria-label="ピクチャーインピクチャー"
+                        aria-pressed={pip.out}
+                        disabled={!framed}
+                        onClick={pip.toggle}
+                        className={cn(
+                          PLAYER_GLYPH_BUTTON,
+                          pip.out && PLAYER_GLYPH_BUTTON_ON,
+                        )}
+                      >
+                        <PictureInPictureIcon />
+                      </button>
+                    </PlayerTip>
+                  )}
+                  <PlayerTip
+                    name="全画面"
+                    keys={[KEY_CAP.fullscreen]}
+                    container={shell}
+                  >
+                    <button
+                      type="button"
+                      aria-label="全画面"
+                      aria-pressed={full}
+                      onClick={toggleFullscreen}
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <FullscreenIcon leaving={full} />
+                    </button>
+                  </PlayerTip>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        {underTheBox && (
+          <DataBroadcastBand
+            fit="coarse"
+            numbers={broadcast.view.numbers}
+            onNumbers={broadcast.showNumbers}
+            onKey={broadcast.press}
+            onAim={aimAtTheKeypad}
+          />
+        )}
       </section>
     </div>
   )

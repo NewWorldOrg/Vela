@@ -246,6 +246,29 @@ export class BmlRuntime {
     })
     this.catalog = catalog
     gone.forEach((module) => this.moduleChanged(module, 1))
+    this.leaveWhatIsGone(gone)
+  }
+
+  /** A page whose module the catalog no longer lists gives way to the start document, unless its own handler for the module going already moved elsewhere. */
+  private leaveWhatIsGone(gone: BmlModule[]): void {
+    const shown = this.shown
+    const startup = this.catalog ? addressOf(this.catalog.startup) : null
+    const address = shown?.page.address
+
+    if (
+      !shown ||
+      !address ||
+      !startup ||
+      !gone.some(
+        (module) => module.tag === address.tag && module.id === address.module,
+      )
+    ) {
+      return
+    }
+
+    this.launch(startup, false)
+    this.presses = 0
+    this.nudge()
   }
 
   private keep(module: BmlModule): void {
