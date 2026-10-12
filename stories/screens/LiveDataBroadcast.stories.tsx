@@ -806,6 +806,7 @@ function relayAnswering(answer: TransmitAnswer) {
 
       return page ? { said: 'answered', answer: page } : { said: 'unreached' }
     },
+    receiverId: async () => null,
   })
 }
 

@@ -5,7 +5,9 @@ import { modulePayload } from '@/lib/bml/resources'
 import {
   fetchRelayed,
   liveDataBroadcastFetchHref,
+  liveDataBroadcastReceiverIdHref,
   liveDataBroadcastTransmitHref,
+  receiverIdRelayed,
   transmitAnswerOf,
   transmitRelayed,
 } from '@/repository/live-data-broadcast'
@@ -80,4 +82,34 @@ test('a fetch answered is the module the relay sent, and the setting off or anyt
   assert.deepEqual(fetchRelayed(200, new Uint8Array([9, 9])), {
     said: 'unreached',
   })
+})
+
+test('the receiver’s identifier is asked of Carina for the channel watched live', () => {
+  assert.equal(
+    liveDataBroadcastReceiverIdHref('32736-1024'),
+    '/api/live/32736-1024/data-broadcast/receiver-id',
+  )
+})
+
+test('the identifier Carina names is the card’s CA system and its twelve hexadecimal digits, and anything else names none', () => {
+  const card = { caSystemId: 5, cardId: '0A0B0C0D0E0F' }
+
+  assert.deepEqual(
+    receiverIdRelayed(200, { status: 'success', data: card }),
+    card,
+  )
+  assert.equal(receiverIdRelayed(403, { data: card }), null)
+  assert.equal(receiverIdRelayed(404, { data: null }), null)
+  assert.equal(receiverIdRelayed(200, { data: null }), null)
+  assert.equal(receiverIdRelayed(200, null), null)
+  assert.equal(
+    receiverIdRelayed(200, { data: { caSystemId: 5, cardId: '0A0B0C' } }),
+    null,
+  )
+  assert.equal(
+    receiverIdRelayed(200, {
+      data: { caSystemId: '5', cardId: '0A0B0C0D0E0F' },
+    }),
+    null,
+  )
 })

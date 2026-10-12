@@ -40,7 +40,6 @@ export interface DataBroadcast {
   availability: DataBroadcastAvailability
   view: DataBroadcastView
   offered: boolean
-  receiverId: string | null
   connect: (send: SendToRuntime | null) => void
   toggle: () => void
   press: (key: BmlKey) => void
@@ -161,7 +160,6 @@ export function useDataBroadcast(
     availability,
     view,
     offered: offersDataBroadcast(availability, view),
-    receiverId: catalog?.receiverId ?? null,
     connect: (send) => {
       runtime.current = send
     },

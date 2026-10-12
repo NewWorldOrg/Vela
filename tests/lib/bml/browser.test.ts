@@ -299,7 +299,7 @@ test('every supported function is there, and the registers are the host’s', ()
 function lined(line: LineState, over: Partial<BrowserHost> = {}) {
   return host({
     line: () => line,
-    receiverId: () => 'a1b2c3d4e5f6',
+    receiverId: () => ({ caSystemId: 5, cardId: 'a1b2c3d4e5f6' }),
     ...over,
   })
 }
@@ -347,7 +347,7 @@ test('the line is supported, connected over Ethernet with DHCP, only while it is
   }
 })
 
-test('the card’s ID is answered for its type only while the line is used and the viewer hands it over', () => {
+test('the card’s ID is answered for the type that names its CA system only while the line is used and the viewer hands it over', () => {
   const on = lined('on').browser
 
   assert.equal(on.getIRDID(5), 'a1b2c3d4e5f6')
@@ -362,6 +362,14 @@ test('the card’s ID is answered for its type only while the line is used and t
   )
   assert.equal(lined('off').browser.getIRDID(5), null)
   assert.equal(lined('none').browser.getIRDID(5), null)
+
+  const another = lined('on', {
+    receiverId: () => ({ caSystemId: 13, cardId: '0a0b0c0d0e0f' }),
+  }).browser
+
+  assert.equal(another.getIRDID(13), '0a0b0c0d0e0f')
+  assert.equal(another.getIRDID('0x000D'), '0a0b0c0d0e0f')
+  assert.equal(another.getIRDID(5), null)
 })
 
 test('a transmission while the line is used goes to the host and is answered as the result, the HTTP status and the body', () => {

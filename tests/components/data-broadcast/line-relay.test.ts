@@ -108,3 +108,36 @@ test('a document is fetched through the relay of the channel and read as a modul
   )
   assert.equal(asked[0].init.method, undefined)
 })
+
+test('the receiver’s identifier is asked of Carina for the channel, and handed back only when it names one', async () => {
+  const card = { caSystemId: 5, cardId: '0A0B0C0D0E0F' }
+  const { relay, asked } = relayAnswering(() =>
+    json(200, { status: 'success', data: card }),
+  )
+
+  assert.deepEqual(await relay.receiverId(), card)
+  assert.equal(
+    asked[0].input,
+    '/api/live/32736-1024/data-broadcast/receiver-id',
+  )
+  assert.equal(asked[0].init.method, undefined)
+  assert.equal(asked[0].init.credentials, 'same-origin')
+  assert.equal(asked[0].init.cache, 'no-store')
+})
+
+test('an identifier kept back, missing or unreachable is none', async () => {
+  assert.equal(
+    await relayAnswering(() => json(403, { data: null })).relay.receiverId(),
+    null,
+  )
+  assert.equal(
+    await relayAnswering(() => json(404, { data: null })).relay.receiverId(),
+    null,
+  )
+  assert.equal(
+    await relayAnswering(() => {
+      throw new TypeError('failed to fetch')
+    }).relay.receiverId(),
+    null,
+  )
+})

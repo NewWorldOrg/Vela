@@ -82,6 +82,7 @@ import { capturedName, capturedOn } from '@/lib/capture-name'
 import { useCoarsePointer } from '@/hooks/useCoarsePointer'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
+import { useReceiverId } from '@/hooks/useReceiverId'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import {
@@ -275,12 +276,8 @@ export function LivePlayer({
         : lineRelayOf(liveChannelOf(networkId, serviceId)),
     [networkId, serviceId, lineRelayOf],
   )
-  const line = liveLine(
-    allowsTheLine,
-    handsTheReceiverId,
-    broadcast.receiverId,
-    relay,
-  )
+  const receiverId = useReceiverId(relay, allowsTheLine && handsTheReceiverId)
+  const line = liveLine(allowsTheLine, handsTheReceiverId, receiverId, relay)
 
   useEffect(
     () => () => {

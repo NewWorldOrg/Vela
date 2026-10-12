@@ -2,6 +2,8 @@ import {
   MOST_TRANSMIT_BODY,
   RELAY_FAILED,
   answerOf,
+  receiverIdOf,
+  type ReceiverId,
   type TransmitAnswer,
 } from '@/lib/bml/line'
 import { readModule, type BmlModule } from '@/lib/bml/resources'
@@ -18,6 +20,7 @@ export interface LineRelay {
     charset: string,
   ): Promise<Relayed<TransmitAnswer>>
   fetch(uri: string): Promise<Relayed<BmlModule>>
+  receiverId(): Promise<ReceiverId | null>
 }
 
 /** The route a document's text is sent to the broadcaster's server through, for the channel watched live. */
@@ -31,6 +34,11 @@ export function liveDataBroadcastFetchHref(
   uri: string,
 ): string {
   return `/api/live/${encodeURIComponent(channel)}/data-broadcast/fetch?${new URLSearchParams({ uri }).toString()}`
+}
+
+/** The route Carina names the receiver's identifier on, for the channel watched live: the CA system and the ID of the card its driver last heard from, answered only while the browser's cookies allow the line and hand the identifier over. */
+export function liveDataBroadcastReceiverIdHref(channel: string): string {
+  return `/api/live/${encodeURIComponent(channel)}/data-broadcast/receiver-id`
 }
 
 const OFF = 403
@@ -92,4 +100,14 @@ export function transmitAnswerOf(
   relayed: Relayed<TransmitAnswer>,
 ): TransmitAnswer {
   return relayed.said === 'answered' ? relayed.answer : RELAY_FAILED
+}
+
+/** The identifier Carina named, from its status and its JSON answer. Anything but a success in the shape it has names none. */
+export function receiverIdRelayed(
+  status: number,
+  answer: unknown,
+): ReceiverId | null {
+  return status === 200
+    ? receiverIdOf((answer as { data?: unknown } | null)?.data)
+    : null
 }
