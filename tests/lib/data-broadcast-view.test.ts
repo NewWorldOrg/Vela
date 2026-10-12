@@ -487,6 +487,7 @@ test('an application that did not open goes back to the documents, is said once,
 
   assert.equal(view.open, true)
   assert.equal(view.hybridcast, null)
+  assert.equal(view.returns, 1)
   assert.deepEqual(view.greg, GREG)
   assert.deepEqual(view.failedStarts, [START])
   assert.equal(dataBroadcastSays(view), SAID_UNOPENED)
@@ -532,6 +533,7 @@ test('closing the application, or the data button while it runs, goes back to th
 
     assert.equal(view.open, true)
     assert.equal(view.hybridcast, null)
+    assert.equal(view.returns, 1)
     assert.deepEqual(view.greg, GREG)
     assert.deepEqual(view.failedStarts, [])
 

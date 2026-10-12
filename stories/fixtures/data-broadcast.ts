@@ -427,6 +427,57 @@ export const OVER_THE_LINE_PAGES: Record<string, BmlModule> = {
   },
 }
 
+/** The AIT the self-made Hybridcast page names, and the application in it, as Carina answers them. */
+export const HYBRIDCAST_AIT = 'http://example.test/hc/app.ait'
+
+export const HYBRIDCAST_APPLICATION = {
+  orgId: 16,
+  appId: 1,
+  controlCode: 1,
+  entryUrl: 'http://example.test/hc/index.html',
+}
+
+const STARTS_AN_APPLICATION = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+function start() {
+  if (browser.getBrowserSupport('ARIB', 'APIGroup', 'AITControlledApp.Start') != 1) { return; }
+  if (browser.Greg[44] == 'back' && browser.Ureg[0] != 'asking') { return; }
+  browser.Ureg[0] = 'asking';
+  browser.Greg[44] = 'back';
+  browser.startAITControlledApp('10', '1', '${HYBRIDCAST_AIT}');
+}
+]]></script>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128" onload="start()">
+<object type="video/X-arib-mpeg2" style="left: 560px; top: 60px; width: 360px; height: 203px"/>
+<p class="panel" style="left: 40px; top: 60px; width: 480px; height: 203px">Hybridcast の見本</p>
+</body>
+</bml>`
+
+/** A self-made data broadcast whose entry document starts a Hybridcast application as it opens, unless the shared registers say it came back from one. The script runs again from its start once the AIT is in, so it tells its own mark in the shared registers from one left by the documents before it by a mark in its own. */
+export const HYBRIDCAST_CATALOG: BmlCatalog = {
+  ...LINE_CATALOG,
+  service: 1027,
+}
+
+export function hybridcastModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', STARTS_AN_APPLICATION),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+  ]
+}
+
 /** A script that tries, from inside the runtime's frame, what a document must not reach, and tells the player what happened. */
 export const SANDBOX_PROBE = `
 const report = { violations: [] }

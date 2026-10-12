@@ -68,6 +68,7 @@ export interface DataBroadcastView {
   unopenedSaid: boolean
   appNotices: number
   failedStarts: readonly AppStart[]
+  returns: number
 }
 
 export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
@@ -91,6 +92,7 @@ export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
   unopenedSaid: false,
   appNotices: 0,
   failedStarts: [],
+  returns: 0,
 }
 
 function closed(
@@ -232,9 +234,11 @@ function saidUnopened(
       }
 }
 
-/** Back to the documents from the application, keeping the shared registers for them. */
+/** Back to the documents from the application, keeping the shared registers for them. `returns` counts the times they came back, as the documents closed themselves for the application and are drawn afresh each time, even when the application never got as far as the screen. */
 function backToTheDocuments(view: DataBroadcastView): DataBroadcastView {
-  return view.hybridcast ? { ...view, hybridcast: null } : view
+  return view.hybridcast
+    ? { ...view, hybridcast: null, returns: view.returns + 1 }
+    : view
 }
 
 /** The start Carina refused or could not make: back to the documents, said once, and not asked for again while open. */
@@ -247,13 +251,12 @@ function unopenedApp(view: DataBroadcastView, nth: number): DataBroadcastView {
 
   return saidUnopened(
     {
-      ...view,
-      hybridcast: null,
+      ...backToTheDocuments(view),
       failedStarts: [...view.failedStarts, app.start].slice(
         -MOST_FAILED_STARTS,
       ),
     },
-    undefined,
+    nth,
   )
 }
 

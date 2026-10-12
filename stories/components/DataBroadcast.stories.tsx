@@ -454,12 +454,15 @@ export const 文字の大きさと同じ高さの行: Story = {
 function Band({
   fit,
   numbers: shownFirst,
+  station,
 }: {
   fit: BandFit
   numbers: boolean
+  station?: string
 }) {
   const [numbers, setNumbers] = useState(shownFirst)
   const [pressed, setPressed] = useState<string[]>([])
+  const [running, setRunning] = useState(station !== undefined)
   const band = (
     <DataBroadcastBand
       fit={fit}
@@ -467,6 +470,11 @@ function Band({
       onNumbers={setNumbers}
       onKey={(key) => setPressed((before) => [...before, key])}
       onAim={() => undefined}
+      application={
+        running && station !== undefined
+          ? { station, onClose: () => setRunning(false) }
+          : null
+      }
     />
   )
 
@@ -790,6 +798,90 @@ export const 帯_iPad_全画面_数字: Story = {
 
     await beside(band, u)
     await near(band.getBoundingClientRect().bottom, bar.top)
+  },
+}
+
+const STATION = 'みなと総合1'
+
+/** The band while a Hybridcast application runs: the station and Hybridcast at its left, `閉じる` at a finger's size beside them, the keys where the mock puts them, and `閉じる` taking it away. */
+async function withTheApplication(canvasElement: HTMLElement, fit: BandFit) {
+  const { band, u } = await asTheMock(canvasElement, fit)
+  const group = within(band).getByRole('group', { name: 'Hybridcast' })
+  const close = within(group).getByRole('button', {
+    name: 'Hybridcast を閉じる',
+  })
+  const back = within(band).getByRole('button', { name: '戻る' })
+  const shown = group.getBoundingClientRect()
+
+  await expect(group).toHaveTextContent(`${STATION}Hybridcast`)
+  await expect(close).toHaveTextContent('閉じる')
+  await expect(named(band)).toEqual(['Hybridcast を閉じる', ...KEYS])
+  await fingerSized(band)
+  await near(
+    shown.left,
+    band.getBoundingClientRect().left +
+      parseFloat(getComputedStyle(band).paddingLeft),
+  )
+  await expect(
+    back.getBoundingClientRect().left - close.getBoundingClientRect().right,
+  ).toBeGreaterThanOrEqual(MOCK.gap * 2 * u - 0.6)
+  await near(
+    close.getBoundingClientRect().top,
+    back.getBoundingClientRect().top,
+  )
+
+  await userEvent.click(close)
+  await expect(
+    within(band).queryByRole('group', { name: 'Hybridcast' }),
+  ).toBeNull()
+  await expect(named(band)).toEqual(KEYS)
+}
+
+export const 帯_Hybridcast_PC: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Band fit="fine" numbers={false} station={STATION} />,
+  play: async ({ canvasElement }) => {
+    await withTheApplication(canvasElement, 'fine')
+  },
+}
+
+export const 帯_Hybridcast_iPad_窓: Story = {
+  parameters: { screen: { width: 820, height: 1180 } },
+  render: () => <Band fit="coarse" numbers={false} station={STATION} />,
+  play: async ({ canvasElement }) => {
+    await withTheApplication(canvasElement, 'coarse')
+  },
+}
+
+export const 帯_Hybridcast_iPad_全画面: Story = {
+  parameters: { screen: { width: 1180, height: 820 } },
+  render: () => <Band fit="coarse-full" numbers={false} station={STATION} />,
+  play: async ({ canvasElement }) => {
+    await withTheApplication(canvasElement, 'coarse-full')
+  },
+}
+
+export const 帯_Hybridcast_長い局名: Story = {
+  parameters: { screen: { width: 820, height: 1180 } },
+  render: () => (
+    <Band
+      fit="coarse"
+      numbers={false}
+      station="とても長い名前の放送局のチャンネル第一テレビジョン"
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const { band } = await asTheMock(canvasElement, 'coarse')
+    const name = within(band)
+      .getByRole('group', { name: 'Hybridcast' })
+      .querySelector('b') as HTMLElement
+    const said = name.nextElementSibling as HTMLElement
+
+    await expect(name.scrollWidth).toBeGreaterThan(name.clientWidth)
+    await expect(said).toHaveTextContent('Hybridcast')
+    await expect(said.scrollWidth).toBeLessThanOrEqual(said.clientWidth)
+    await expect(named(band)).toEqual(['Hybridcast を閉じる', ...KEYS])
+    await fingerSized(band)
   },
 }
 
