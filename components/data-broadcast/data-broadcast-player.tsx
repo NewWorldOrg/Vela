@@ -178,6 +178,7 @@ export function DataBroadcastFace({
     }
 
     feed.forTheCatalog.forEach((module) => hand(send, module))
+    feed.nptReadings.forEach((reading) => send({ kind: 'npt', reading }))
     send({ kind: 'open' })
     onRuntime(send)
     letGo.current = feed.subscribe((change) => {
@@ -187,6 +188,8 @@ export function DataBroadcastFace({
         hand(send, change.module)
       } else if (change.kind === 'event') {
         send({ kind: 'event', event: change.event })
+      } else if (change.kind === 'npt') {
+        send({ kind: 'npt', reading: change.reading })
       }
     })
   }

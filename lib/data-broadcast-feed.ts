@@ -5,17 +5,25 @@ import {
   type BmlCatalog,
 } from '@/lib/bml/catalog'
 import type { BroadcastEvent } from '@/lib/bml/event-message'
+import {
+  NPT_MODULUS,
+  nptReadingAt,
+  type NptReading,
+  type NptReference,
+} from '@/lib/bml/npt'
 import { addressOf } from '@/lib/bml/paths'
 import { readModule, type BmlModule } from '@/lib/bml/resources'
 import { ptsSeconds } from '@/lib/live-wire'
 
 export type { BroadcastEvent } from '@/lib/bml/event-message'
+export type { NptReading, NptReference } from '@/lib/bml/npt'
 
 export const DATA_BROADCAST_BYTE = {
   catalog: 0x01,
   module: 0x02,
   event: 0x03,
   none: 0x04,
+  npt: 0x05,
 } as const
 
 export const MOST_MODULE_BYTES = 16 * 1024 * 1024
@@ -28,11 +36,14 @@ export const MOST_WAITING_FRAMES = 4096
 
 const EVENT_HEAD = 17
 
+const NPT_LENGTH = 22
+
 export type DataBroadcastSaid =
   | { said: 'catalog'; catalog: BmlCatalog }
   | { said: 'module'; module: BmlModule; bytes: number }
   | { said: 'event'; event: BroadcastEvent }
   | { said: 'none' }
+  | { said: 'npt'; reference: NptReference }
   | { said: 'unknown' }
 
 const TIME_KIND = { immediate: 1, npt: 2 } as const
@@ -67,6 +78,32 @@ function readEvent(payload: Uint8Array): BroadcastEvent | null {
   }
 }
 
+function readNpt(payload: Uint8Array): NptReference | null {
+  if (payload.length !== NPT_LENGTH) {
+    return null
+  }
+
+  const view = new DataView(
+    payload.buffer,
+    payload.byteOffset,
+    payload.byteLength,
+  )
+  const reference = {
+    tag: payload[1],
+    stc: view.getUint32(2) * 2 ** 32 + view.getUint32(6),
+    npt: view.getUint32(10) * 2 ** 32 + view.getUint32(14),
+    numerator: view.getUint16(18),
+    denominator: view.getUint16(20),
+  }
+
+  return Number.isSafeInteger(reference.stc) &&
+    reference.npt < NPT_MODULUS &&
+    reference.numerator > 0 &&
+    reference.denominator > 0
+    ? reference
+    : null
+}
+
 /** Reads one payload of the side channel's data broadcast frames by its kind byte. */
 export function readDataBroadcast(payload: Uint8Array): DataBroadcastSaid {
   switch (payload[0]) {
@@ -89,6 +126,11 @@ export function readDataBroadcast(payload: Uint8Array): DataBroadcastSaid {
     }
     case DATA_BROADCAST_BYTE.none:
       return payload.length === 1 ? { said: 'none' } : { said: 'unknown' }
+    case DATA_BROADCAST_BYTE.npt: {
+      const reference = readNpt(payload)
+
+      return reference ? { said: 'npt', reference } : { said: 'unknown' }
+    }
     default:
       return { said: 'unknown' }
   }
@@ -101,14 +143,16 @@ export type DataBroadcastChange =
   | { kind: 'catalog'; catalog: BmlCatalog }
   | { kind: 'module'; module: BmlModule }
   | { kind: 'event'; event: BroadcastEvent }
+  | { kind: 'npt'; reading: NptReading }
   | { kind: 'none' }
   | { kind: 'reset' }
 
-/** What a player holds of a data broadcast, from the live side channel or a recording's routes alike: whether it can be opened, the catalog, the modules to hand a runtime that opens, and the changes as they come. */
+/** What a player holds of a data broadcast, from the live side channel or a recording's routes alike: whether it can be opened, the catalog, the modules and each stream's NPT to hand a runtime that opens, and the changes as they come. */
 export interface DataBroadcastHeld {
   readonly availability: DataBroadcastAvailability
   readonly catalog: BmlCatalog | null
   readonly forTheCatalog: BmlModule[]
+  readonly nptReadings: NptReading[]
   subscribe(listener: (change: DataBroadcastChange) => void): () => void
 }
 
@@ -136,14 +180,29 @@ export type Warn = (warning: string) => void
 const warnOnTheConsole: Warn = (warning) =>
   console.warn(`data broadcast: ${warning}`)
 
-/** When a frame takes effect: at its own time, or for an event message that fires at a moment of the programme, at that moment when it is later. */
+/** When a frame takes effect: at its own time, or for an event message that fires at a moment of the programme and for an NPT reference that names a moment, at that moment when it is later. */
 function dueAt(said: DataBroadcastSaid, pts: number): number {
-  return said.said === 'event' && !said.event.immediate
-    ? Math.max(pts, said.event.at)
-    : pts
+  if (said.said === 'event' && !said.event.immediate) {
+    return Math.max(pts, said.event.at)
+  }
+
+  return said.said === 'npt' ? Math.max(pts, said.reference.stc) : pts
 }
 
-/** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. An event message is passed on when it fires, once. A module whose version the catalog moved on is held until the new version comes. What comes twice, from whichever wire, is taken once: a catalog the same as the one held, a module of the version held, an event already heard. */
+function sameReference(
+  held: NptReference | undefined,
+  reference: NptReference,
+): boolean {
+  return (
+    held !== undefined &&
+    held.stc === reference.stc &&
+    held.npt === reference.npt &&
+    held.numerator === reference.numerator &&
+    held.denominator === reference.denominator
+  )
+}
+
+/** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. An event message is passed on when it fires, once, and a stream's NPT reference when the moment it names comes, read at the playhead. A module whose version the catalog moved on is held until the new version comes. What comes twice, from whichever wire, is taken once: a catalog the same as the one held, a module of the version held, an event already heard. */
 export class DataBroadcastFeed implements DataBroadcastHeld {
   private readonly waiting: Waiting[] = []
 
@@ -152,6 +211,10 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
   private readonly heard: BroadcastEvent[] = []
 
   private readonly seen = new Set<string>()
+
+  private readonly references = new Map<number, NptReference>()
+
+  private playhead = 0
 
   private readonly listeners = new Set<(change: DataBroadcastChange) => void>()
 
@@ -231,6 +294,8 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
 
   /** Lets every frame whose time the playhead has reached take effect, in the order of their times. */
   advance(seconds: number): void {
+    this.playhead = seconds
+
     while (
       this.waiting.length > 0 &&
       ptsSeconds(this.waiting[0].pts) <= seconds
@@ -249,6 +314,7 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     this.modules.clear()
     this.heard.length = 0
     this.seen.clear()
+    this.references.clear()
     this.held = 0
     this.carried = null
     this.carriedAs = null
@@ -285,6 +351,13 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     )
   }
 
+  /** Each stream's NPT, in the order of their tags, read at the playhead. */
+  get nptReadings(): NptReading[] {
+    return [...this.references.values()]
+      .sort((one, other) => one.tag - other.tag)
+      .map((reference) => nptReadingAt(reference, this.playhead))
+  }
+
   get heldBytes(): number {
     return this.held
   }
@@ -312,8 +385,12 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
       case 'event':
         this.hear(said.event)
         return
+      case 'npt':
+        this.refer(said.reference)
+        return
       case 'none':
         this.modules.clear()
+        this.references.clear()
         this.held = 0
         this.carried = null
         this.carriedAs = null
@@ -384,6 +461,18 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     }
 
     this.tell({ kind: 'event', event })
+  }
+
+  private refer(reference: NptReference): void {
+    if (sameReference(this.references.get(reference.tag), reference)) {
+      return
+    }
+
+    this.references.set(reference.tag, reference)
+    this.tell({
+      kind: 'npt',
+      reading: nptReadingAt(reference, this.playhead),
+    })
   }
 
   private settle(): void {

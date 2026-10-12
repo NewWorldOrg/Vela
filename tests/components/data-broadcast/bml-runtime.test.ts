@@ -1227,3 +1227,78 @@ test('a script may set what a beitem listens for: a module named afterwards reac
   })
   assert.equal(registers[1], 'fired')
 })
+
+const LISTENING_FOR_NPT = bml(
+  '<p>npt</p>',
+  '<bevent>' +
+    '<beitem id="own" type="NPTReferred" subscribe="subscribe" onoccur="browser.Ureg[0] += document.currentEvent.status + \':\' + document.currentEvent.esRef + \':\' + browser.getNPT() + \' \'"/>' +
+    '<beitem id="other" type="NPTReferred" es_ref="/60" subscribe="subscribe" onoccur="browser.Ureg[1] += document.currentEvent.esRef + \' \'"/>' +
+    '<beitem id="quiet" type="NPTReferred" onoccur="browser.Ureg[2] += \'quiet \'"/>' +
+    '</bevent>',
+)
+
+test('an NPTReferred item hears once that the NPT of the stream it names can be read, the stream carrying the document when it names none', () => {
+  const { runtime, send, timers } = opened(LISTENING_FOR_NPT)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  timers.tick(0)
+  assert.deepEqual(registers.slice(0, 3), ['', '', ''])
+
+  send({ kind: 'npt', reading: { tag: 0x40, milliseconds: 5_000, rate: 1 } })
+  send({ kind: 'npt', reading: { tag: 0x40, milliseconds: 9_000, rate: 1 } })
+  assert.equal(registers[0], '0:/40:5000 ')
+  assert.equal(registers[1], '')
+
+  send({ kind: 'npt', reading: { tag: 0x60, milliseconds: 0, rate: 1 } })
+  assert.equal(registers[1], '/60 ')
+  assert.equal(registers[2], '')
+})
+
+test('a document opened after the NPT came hears of it once it has started', () => {
+  const opening = frame()
+  const registers = (
+    opening.runtime as unknown as { registers: { Ureg: string[] } }
+  ).registers.Ureg
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', LISTENING_FOR_NPT] }),
+  })
+  opening.send({
+    kind: 'npt',
+    reading: { tag: 0x40, milliseconds: 1_000, rate: 1 },
+  })
+  opening.send({ kind: 'open' })
+  assert.equal(registers[0], '')
+
+  opening.timers.tick(0)
+  assert.equal(registers[0], '0:/40:1000 ')
+})
+
+test('getNPT reads the NPT of the stream carrying the document in whole milliseconds, running on from when it came at its rate, and fails while there is none', () => {
+  const { runtime, send, timers } = opened(
+    bml(
+      '<p>npt</p>',
+      '<script>function read() { browser.Ureg[5] = String(browser.getNPT()) }</script>',
+    ),
+  )
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+  const shown = runtime as unknown as {
+    execute: (code: string, event: null) => boolean
+  }
+
+  shown.execute('read()', null)
+  assert.equal(registers[5], 'NaN')
+
+  send({ kind: 'npt', reading: { tag: 0x60, milliseconds: 100, rate: 1 } })
+  shown.execute('read()', null)
+  assert.equal(registers[5], '100')
+
+  send({ kind: 'npt', reading: { tag: 0x40, milliseconds: 2_000, rate: 0.5 } })
+  timers.tick(1_001)
+  shown.execute('read()', null)
+  assert.equal(registers[5], '2500')
+})

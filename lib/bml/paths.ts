@@ -69,6 +69,11 @@ export function resolveReference(
   return inModule ? named(base.tag, hex(base.module, 4), inModule[1]) : null
 }
 
+/** The path of a stream, such as `/40`. */
+export function streamPathOf(tag: number): string {
+  return `/${hex(tag, 2)}`
+}
+
 /** The path of a module, such as `/40/0001`. */
 export function modulePathOf(tag: number, module: number): string {
   return `/${hex(tag, 2)}/${hex(module, 4)}`

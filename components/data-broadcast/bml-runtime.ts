@@ -40,6 +40,7 @@ import {
   type RuntimeError,
   type RuntimeMessage,
 } from '@/lib/bml/messages'
+import { nptMilliseconds, type NptReading } from '@/lib/bml/npt'
 import { withPalette, type Palette } from '@/lib/bml/palette'
 import {
   addressOf,
@@ -47,6 +48,8 @@ import {
   modulePathOf,
   pathOf,
   resolveReference,
+  streamPathOf,
+  streamTagOf,
   type BmlAddress,
 } from '@/lib/bml/paths'
 import { builtinsOf, Realm } from '@/lib/bml/realm'
@@ -111,6 +114,12 @@ interface Shown {
   focused: HTMLElement | null
   urls: string[]
   usedKeys: UsedKeyGroup[]
+  nptTold: Set<EventItem>
+}
+
+interface HeldNpt {
+  reading: NptReading
+  takenAt: number
 }
 
 interface Timer {
@@ -149,6 +158,8 @@ export class BmlRuntime {
   private readonly locked = new Set<string>()
 
   private readonly timers = new Map<number, Timer>()
+
+  private readonly npt = new Map<number, HeldNpt>()
 
   private readonly registers = { Ureg: registersOf(), Greg: registersOf() }
 
@@ -239,6 +250,13 @@ export class BmlRuntime {
         return
       case 'event':
         this.fired(message.event)
+        return
+      case 'npt':
+        this.npt.set(message.reading.tag, {
+          reading: message.reading,
+          takenAt: this.now(),
+        })
+        this.nptReferred()
         return
       case 'open':
         this.open()
@@ -480,6 +498,7 @@ export class BmlRuntime {
       focused: null,
       urls,
       usedKeys: page.usedKeys,
+      nptTold: new Set(),
     }
 
     this.shown = shown
@@ -515,6 +534,11 @@ export class BmlRuntime {
     }
     this.tellVideoRect(shown)
     this.say({ kind: 'usedKeys', keys: keysOf(shown.usedKeys) })
+    this.window.setTimeout(() => {
+      if (this.shown === shown) {
+        this.nptReferred()
+      }
+    }, 0)
   }
 
   /** Where the video goes on the page's grid; whole while the page cannot be seen, as the receiver shows the video alone until an entry document shows itself. */
@@ -607,7 +631,7 @@ export class BmlRuntime {
       activeDocument: () =>
         this.shown ? pathOf(this.shown.page.address) : null,
       relativeTime: () => this.relativeTime(),
-      npt: () => null,
+      npt: () => this.nptNow(),
       programme: () => this.programme,
       hasComponent: (tag) =>
         this.catalog?.carousels.some((carousel) => carousel.tag === tag) ??
@@ -832,6 +856,59 @@ export class BmlRuntime {
         { status, moduleRef: modulePathOf(module.tag, module.id) },
         (item) => namesModule(item, base, module),
       )
+    }
+  }
+
+  /** The NPT of the stream carrying the document shown, or of the first stream that has one, in whole milliseconds now. */
+  private nptNow(): number | null {
+    const tag = this.shown?.page.address.tag
+    const held =
+      (tag === undefined ? undefined : this.npt.get(tag)) ??
+      [...this.npt.entries()].sort(([one], [other]) => one - other)[0]?.[1]
+
+    return held
+      ? nptMilliseconds(held.reading, this.now() - held.takenAt)
+      : null
+  }
+
+  /** The stream an `NPTReferred` item names, or the one carrying the document when it names none. */
+  private nptStreamOf(item: EventItem, shown: Shown): number | null {
+    const reference = item.attributes.get('es_ref')
+
+    return reference === undefined
+      ? shown.page.address.tag
+      : streamTagOf(reference)
+  }
+
+  /** Tells each `NPTReferred` item of the document shown, once, that the NPT of the stream it names can be read. */
+  private nptReferred(): void {
+    const shown = this.shown
+
+    if (!shown) {
+      return
+    }
+
+    const due = new Map<EventItem, number>()
+
+    listening(shown.document.items, 'NPTReferred').forEach((item) => {
+      const stream = this.nptStreamOf(item, shown)
+
+      if (!shown.nptTold.has(item) && stream !== null && this.npt.has(stream)) {
+        due.set(item, stream)
+      }
+    })
+    due.forEach((_, item) => shown.nptTold.add(item))
+
+    for (const stream of new Set(due.values())) {
+      this.occur(
+        'NPTReferred',
+        { status: 0, esRef: streamPathOf(stream) },
+        (item) => due.get(item) === stream,
+      )
+
+      if (this.shown !== shown) {
+        return
+      }
     }
   }
 

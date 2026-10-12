@@ -273,6 +273,13 @@ test('the player’s memory and event messages are taken when they fit, and drop
     kind: 'event',
     event,
   })
+  assert.deepEqual(
+    fromPlayer({
+      kind: 'npt',
+      reading: { tag: 0x40, milliseconds: 5_000, rate: 1 },
+    }),
+    { kind: 'npt', reading: { tag: 0x40, milliseconds: 5_000, rate: 1 } },
+  )
 
   const dropped: unknown[] = [
     { kind: 'memory', entries: [['a']] },
@@ -284,6 +291,8 @@ test('the player’s memory and event messages are taken when they fit, and drop
     { kind: 'event', event: { ...event, at: -1 } },
     { kind: 'event', event: { ...event, privateData: [1, 2] } },
     { kind: 'event' },
+    { kind: 'npt', reading: { tag: 0x40, milliseconds: -1, rate: 1 } },
+    { kind: 'npt' },
   ]
 
   for (const data of dropped) {
