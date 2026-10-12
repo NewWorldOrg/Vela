@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 
 VERSION=v3.2
 WOFF2_SHA256=31092c9261b0eed95e0a422a892b607885dcbf3a38509f792e0a5a6dff187c7d
-RELEASE="https://github.com/danything/denpa-font/releases/download/$VERSION"
+RELEASE="https://github.com/NewWorldOrg/denpa-font/releases/download/$VERSION"
 OUT=public/fonts/denpa-font.woff2
 
 work=$(mktemp -d)
