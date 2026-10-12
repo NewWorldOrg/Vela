@@ -140,6 +140,28 @@ test('an event message is listened for by group, and by id and version unless le
   assert.equal(listensFor(item([]), EVENT), true)
 })
 
+test('an item with an es_ref listens only when it names a stream the broadcast carries', () => {
+  const item = (reference: string) =>
+    eventItemsOf([
+      {
+        id: 'm',
+        type: 'EventMessageFired',
+        attributes: [
+          ['es_ref', reference],
+          ['message_group_id', '0'],
+        ],
+      },
+    ])[0]
+
+  assert.equal(listensFor(item('/40'), EVENT, [0x40, 0x60]), true)
+  assert.equal(listensFor(item('/60/0001'), EVENT, [0x40, 0x60]), true)
+  assert.equal(listensFor(item('arib-dc://-1.-1.-1/40'), EVENT, [0x40]), true)
+  assert.equal(listensFor(item('/72'), EVENT, [0x40, 0x60]), false)
+  assert.equal(listensFor(item('/40'), EVENT), false)
+  assert.equal(listensFor(item('40'), EVENT, [0x40]), false)
+  assert.equal(listensFor(item(''), EVENT, [0x40]), false)
+})
+
 test('an item names a module by an absolute path or one within the carousel', () => {
   const item = (reference?: string) =>
     eventItemsOf([

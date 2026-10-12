@@ -185,6 +185,8 @@ export function DataBroadcastFace({
         catalogued(send, change.catalog, onAir)
       } else if (change.kind === 'module') {
         hand(send, change.module)
+      } else if (change.kind === 'event') {
+        send({ kind: 'event', event: change.event })
       }
     })
   }

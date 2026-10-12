@@ -664,6 +664,67 @@ test('a module that comes in a new version, an event message and a locked module
   assert.equal(registers[2], '')
 })
 
+const LISTENING_BY_STREAM = bml(
+  '<p>listening</p>',
+  '<bevent>' +
+    '<beitem id="carried" type="EventMessageFired" es_ref="/40" message_group_id="0" message_id="7" subscribe="subscribe" onoccur="browser.Ureg[0] += \'carried \'"/>' +
+    '<beitem id="elsewhere" type="EventMessageFired" es_ref="/72" message_group_id="0" message_id="7" subscribe="subscribe" onoccur="browser.Ureg[0] += \'elsewhere \'"/>' +
+    '<beitem id="one" type="ModuleUpdated" module_ref="/40/0001" subscribe="subscribe" onoccur="browser.Ureg[1] += \'one \'"/>' +
+    '<beitem id="two" type="ModuleUpdated" module_ref="/60/0000" subscribe="subscribe" onoccur="browser.Ureg[1] += \'two \'"/>' +
+    '<beitem id="quiet" type="ModuleUpdated" module_ref="/40/0001" onoccur="browser.Ureg[1] += \'quiet \'"/>' +
+    '</bevent>',
+)
+
+test('an event message reaches the item whose es_ref names a stream the broadcast carries, and a module in a new version reaches only the subscribed items that name it', () => {
+  const { runtime, send } = opened(LISTENING_BY_STREAM, [
+    module(1, { 'one.bml': ['bml', NEXT] }),
+    module(0, { 'two.bml': ['bml', NEXT] }, 0x60),
+  ])
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  send({
+    kind: 'event',
+    event: {
+      group: 0,
+      id: 7,
+      type: 1,
+      immediate: false,
+      at: 90_000,
+      privateData: new Uint8Array(0),
+    },
+  })
+  assert.equal(registers[0], 'carried ')
+
+  send({
+    kind: 'catalog',
+    catalog: {
+      ...CATALOG,
+      carousels: [
+        {
+          ...CATALOG.carousels[0],
+          modules: [
+            { id: 0, version: 1, size: 0, resources: [] },
+            { id: 1, version: 2, size: 0, resources: [] },
+          ],
+        },
+        CATALOG.carousels[1],
+      ],
+    },
+  })
+  send({
+    kind: 'module',
+    module: module(0, { 'two.bml': ['bml', NEXT] }, 0x60),
+  })
+  assert.equal(registers[1], '')
+
+  send({
+    kind: 'module',
+    module: module(1, { 'one.bml': ['bml', NEXT] }, 0x40, 2),
+  })
+  assert.equal(registers[1], 'one ')
+})
+
 const RELOADING = bml(
   '<p id="p" style="nav-index: 0" onclick="browser.reloadActiveDocument()">p</p>',
   '<script>browser.Greg[0] = String(Number(browser.Greg[0] || "0") + 1); browser.Ureg[0] = browser.getActiveDocument()</script>',
