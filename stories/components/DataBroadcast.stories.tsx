@@ -25,10 +25,14 @@ import {
   PLAYER_BOARD,
   PLAYER_FACE,
 } from '@/components/recordings/player-palette'
+import type { BmlCatalog } from '@/lib/bml/catalog'
+import type { BmlModule } from '@/lib/bml/resources'
 import {
   DATA_BROADCAST_CATALOG,
   SANDBOX_PROBE,
+  SCRIPTED_CATALOG,
   dataBroadcastModules,
+  scriptedModules,
 } from '@/stories/fixtures/data-broadcast'
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
@@ -61,9 +65,17 @@ function said(rect: Rect | null): string {
     : 'whole'
 }
 
-function Board({ withheld = [] }: { withheld?: number[] }) {
+function Board({
+  withheld = [],
+  catalog = DATA_BROADCAST_CATALOG,
+  broadcast = dataBroadcastModules,
+}: {
+  withheld?: number[]
+  catalog?: BmlCatalog
+  broadcast?: () => BmlModule[]
+}) {
   const runtime = useRef<SendToRuntime | null>(null)
-  const modules = useMemo(() => dataBroadcastModules(), [])
+  const modules = useMemo(() => broadcast(), [broadcast])
   const [rect, setRect] = useState<Rect | null>(null)
   const [heard, setHeard] = useState<Record<string, string>>({})
 
@@ -84,7 +96,7 @@ function Board({ withheld = [] }: { withheld?: number[] }) {
       { kind: 'font', fonts },
       fonts.map((font) => font.bytes),
     )
-    send({ kind: 'catalog', catalog: DATA_BROADCAST_CATALOG })
+    send({ kind: 'catalog', catalog })
     deliver(false)
     send({ kind: 'open' })
   }
@@ -107,6 +119,11 @@ function Board({ withheld = [] }: { withheld?: number[] }) {
         return
       case 'unsupported':
         note('unsupported', message.what)
+        return
+      case 'memory':
+        note('memory', `${message.name}=${message.value ?? ''}`)
+        return
+      case 'script':
         return
       case 'exit':
         note('exit', 'true')
@@ -197,15 +214,55 @@ export const 焦点の移動と決定: Story = {
     await rectIs('560,60,360,203')
 
     await press(board, '{ArrowDown}{ArrowDown}{ArrowDown}{Enter}')
+    await waitFor(() => expect(board).toHaveAttribute('data-waiting', 'true'))
+    await expect(board).toHaveAttribute('data-video-rect', '560,60,360,203')
+    await rectIs('600,300,320,180')
+    await expect(board).toHaveAttribute('data-waiting', 'false')
+    await expect(board).not.toHaveAttribute('data-error')
+  },
+}
+
+export const スクリプトで切り替わるページ: Story = {
+  render: () => (
+    <Board catalog={SCRIPTED_CATALOG} broadcast={scriptedModules} />
+  ),
+  play: async ({ canvasElement }) => {
+    const board = within(canvasElement).getByRole('group', {
+      name: 'データ放送',
+    })
+    const rectIs = (value: string) =>
+      waitFor(() => expect(board).toHaveAttribute('data-video-rect', value), {
+        timeout: 5000,
+      })
+
+    await rectIs('560,60,360,203')
+    await expect(board).toHaveAttribute('data-used-keys', OPENED)
+    await expect(board).not.toHaveAttribute('data-error')
+
+    await press(board, 'y')
     await waitFor(() =>
-      expect(board).toHaveAttribute('data-unsupported', 'script'),
+      expect(board).toHaveAttribute('data-memory', 'visits=AAE='),
+    )
+
+    await press(board, 'y')
+    await waitFor(() =>
+      expect(board).toHaveAttribute('data-memory', 'visits=AAI='),
+    )
+
+    await press(board, 'g')
+    await waitFor(() =>
+      expect(board).toHaveAttribute(
+        'data-unsupported',
+        'transmitTextDataOverIP',
+      ),
     )
     await expect(board).toHaveAttribute('data-video-rect', '560,60,360,203')
 
-    await press(board, '{ArrowUp}{ArrowUp}{Enter}')
-    await waitFor(() => expect(board).toHaveAttribute('data-waiting', 'true'))
-    await rectIs('600,300,320,180')
-    await expect(board).toHaveAttribute('data-waiting', 'false')
+    await press(board, '{Enter}')
+    await rectIs('40,300,320,180')
+
+    await press(board, '{Enter}')
+    await rectIs('560,60,360,203')
     await expect(board).not.toHaveAttribute('data-error')
   },
 }

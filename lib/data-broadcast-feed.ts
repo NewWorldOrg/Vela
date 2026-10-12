@@ -4,9 +4,12 @@ import {
   takesThePlace,
   type BmlCatalog,
 } from '@/lib/bml/catalog'
+import type { BroadcastEvent } from '@/lib/bml/event-message'
 import { addressOf } from '@/lib/bml/paths'
 import { readModule, type BmlModule } from '@/lib/bml/resources'
 import { ptsSeconds } from '@/lib/live-wire'
+
+export type { BroadcastEvent } from '@/lib/bml/event-message'
 
 export const DATA_BROADCAST_BYTE = {
   catalog: 0x01,
@@ -24,16 +27,6 @@ export const MOST_HELD_EVENTS = 256
 export const MOST_WAITING_FRAMES = 4096
 
 const EVENT_HEAD = 17
-
-/** An event message as the side channel carries it: when it fires is on the same 90 kHz clock as the frames. */
-export interface BroadcastEvent {
-  group: number
-  id: number
-  type: number
-  immediate: boolean
-  at: number
-  privateData: Uint8Array
-}
 
 export type DataBroadcastSaid =
   | { said: 'catalog'; catalog: BmlCatalog }

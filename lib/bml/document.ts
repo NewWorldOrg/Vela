@@ -3,7 +3,6 @@ import { paletteOf, readClut, type Palette } from '@/lib/bml/palette'
 import { pathOf, resolveReference, type BmlAddress } from '@/lib/bml/paths'
 import type { BmlResource } from '@/lib/bml/resources'
 import {
-  BML_PROPERTIES,
   DEFAULT_USED_KEYS,
   cssOf,
   cssSheetOf,
@@ -60,6 +59,7 @@ export interface PageElement {
   attributes: [string, string][]
   style: string
   nav: NavLinks
+  declarations: Record<string, string>
   children: PageNode[]
 }
 
@@ -137,11 +137,10 @@ const QUIET_IN_HEAD = new Set(['title', 'meta'])
 
 const GATHERED = new Set(['style', 'link', 'script', 'bevent'])
 
-const GEOMETRY = ['left', 'top', 'width', 'height']
-
-const WATCHED = new Set([...BML_PROPERTIES, ...GEOMETRY])
-
 const KEPT_ATTRIBUTES = new Set(['id', 'class'])
+
+/** The elements a script writes its text into through `firstChild.data`: one left empty, as `<![CDATA[]]>` leaves it, is given an empty text node to write into. */
+const HOLDS_TEXT = new Set<HtmlTag>(['p', 'span', 'a'])
 
 const INPUT_ATTRIBUTES = new Set(['value', 'maxlength'])
 
@@ -375,9 +374,7 @@ class Conversion {
       ...picked.flatMap(({ rule }) => rule.declarations),
       ...inline,
     ]) {
-      if (WATCHED.has(property)) {
-        values.set(property, value)
-      }
+      values.set(property, value)
     }
 
     this.cascaded.set(node, values)
@@ -443,8 +440,12 @@ class Conversion {
     const children = Array.from(node.childNodes).flatMap((child) =>
       this.child(child, within),
     )
+    const held =
+      children.length === 0 && HOLDS_TEXT.has(tag)
+        ? [{ kind: 'text', text: '' } as PageText]
+        : children
 
-    return this.shaped(node, tag, children)
+    return this.shaped(node, tag, held)
   }
 
   private child(
@@ -492,6 +493,7 @@ class Conversion {
         left: features.navLeft,
         right: features.navRight,
       },
+      declarations: Object.fromEntries(values),
       children,
     }
   }

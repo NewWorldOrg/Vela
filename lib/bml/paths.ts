@@ -68,3 +68,38 @@ export function resolveReference(
 
   return inModule ? named(base.tag, hex(base.module, 4), inModule[1]) : null
 }
+
+/** The path of a module, such as `/40/0001`. */
+export function modulePathOf(tag: number, module: number): string {
+  return `/${hex(tag, 2)}/${hex(module, 4)}`
+}
+
+export interface BmlModuleAddress {
+  tag: number
+  module: number
+}
+
+const MODULE_ABSOLUTE = /^\/([0-9a-f]{2})\/([0-9a-f]{4})(?:\/[^/]*)?$/i
+
+const MODULE_IN_THE_CAROUSEL = /^(?:~|\.\.)\/([0-9a-f]{4})(?:\/[^/]*)?$/i
+
+/** The module a `module_ref` such as `/40/0001`, `~/0001` or `../0001` names, with or without a resource after it, or null. */
+export function moduleAddressOf(
+  reference: string,
+  base: BmlAddress,
+): BmlModuleAddress | null {
+  const plain = withoutFragment(reference)
+  const service = IN_THIS_SERVICE.exec(plain)
+  const path = service ? service[1] : plain
+  const absolute = MODULE_ABSOLUTE.exec(path)
+
+  if (absolute) {
+    return { tag: parseInt(absolute[1], 16), module: parseInt(absolute[2], 16) }
+  }
+
+  const inCarousel = MODULE_IN_THE_CAROUSEL.exec(path)
+
+  return inCarousel
+    ? { tag: base.tag, module: parseInt(inCarousel[1], 16) }
+    : null
+}

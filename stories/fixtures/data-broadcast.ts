@@ -194,6 +194,151 @@ export function dataBroadcastModules(): BmlModule[] {
   ]
 }
 
+const ENTRY = `${PROLOGUE}
+<bml>
+<head>
+<title>入口</title>
+<bevent><beitem id="pressed" type="DataButtonPressed" subscribe="subscribe" onoccur="browser.launchDocument('/60/0000/startup.bml', 'cut')"/></bevent>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; visibility: hidden">
+<p id="nothing">入口</p>
+</body>
+</bml>`
+
+const FACE = `${PROLOGUE}
+<bml>
+<head>
+<title>見本</title>
+<link rel="stylesheet" href="/40/0000/sample.css" type="text/css"/>
+<script><![CDATA[
+var shown = "news";
+var visits = 0;
+function show(id) {
+  document.getElementById(shown).normalStyle.visibility = "hidden";
+  shown = id;
+  document.getElementById(id).normalStyle.visibility = "visible";
+}
+function onKey() {
+  var code = document.currentEvent.keyCode;
+  if (code == 21) { show("news"); }
+  if (code == 22) { show("weather"); }
+  if (code == 23) { browser.transmitTextDataOverIP("https://example.invalid/", "", ""); }
+  if (code == 24) { remember(); }
+}
+function remember() {
+  var kept = browser.readPersistentArray("visits", "U:2B");
+  visits = (kept ? kept[0] : 0) + 1;
+  browser.writePersistentArray("visits", "U:2B", [visits]);
+  document.getElementById("visits").firstChild.data = "きょう " + visits + " 回目";
+}
+function ticked() {
+  var count = document.getElementById("count");
+  count.firstChild.data = String(Number(count.firstChild.data) + 1);
+}
+function spin() {
+  var until = new Date().getTime() + 2600;
+  while (new Date().getTime() < until) {}
+}
+browser.setInterval("ticked()", 1000, 60);
+]]></script>
+</head>
+<body style="clut: url(/40/0000/sample.clt); background-color-index: 128; used-key-list: basic data-button">
+<object type="video/X-arib-mpeg2" style="left: 560px; top: 60px; width: 360px; height: 203px"/>
+<p id="title" style="left: 40px; top: 20px; width: 500px; height: 48px; font-size: 32px; line-height: 48px; color-index: 129">見本テレビ データ放送</p>
+<div style="left: 40px; top: 96px; width: 440px; height: 220px">
+<p id="more" class="menu" style="left: 0px; top: 0px; nav-index: 0; nav-down: 1" onkeydown="onKey()" onclick="browser.launchDocument('~/0001/second.bml', 'cut')">つづきのページへ</p>
+<p id="slow" class="menu" style="left: 0px; top: 72px; nav-index: 1; nav-up: 0" onkeydown="onKey()" onclick="spin()">時間のかかる処理</p>
+</div>
+<p id="news" class="panel" style="left: 560px; top: 290px; width: 360px; height: 96px">ニュース<br/>青で表示</p>
+<p id="weather" class="panel" style="left: 560px; top: 290px; width: 360px; height: 96px; visibility: hidden">天気<br/>赤で表示</p>
+<p id="visits" style="left: 40px; top: 400px; width: 440px; height: 40px; font-size: 24px; line-height: 40px; color-index: 129">黄で数える</p>
+<p id="count" style="left: 40px; top: 440px; width: 100px; height: 40px; font-size: 24px; line-height: 40px; color-index: 129">0</p>
+</body>
+</bml>`
+
+const SECOND = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="/40/0000/sample.css" type="text/css"/>
+</head>
+<body style="clut: url(/40/0000/sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 40px; top: 300px; width: 320px; height: 180px"/>
+<p class="panel" style="left: 40px; top: 60px; width: 880px; height: 200px">つづきのページ<br/>スクリプトで移ってきた</p>
+<p id="back" class="menu" style="left: 440px; top: 300px; nav-index: 0" onclick="browser.launchDocument('/60/0000/startup.bml', 'cut')">もどる</p>
+</body>
+</bml>`
+
+export const SCRIPTED_CATALOG: BmlCatalog = {
+  service: 1025,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+      ],
+    },
+    {
+      tag: 0x60,
+      downloadId: 2,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [{ path: 'startup.bml', type: 'text/X-arib-bml' }],
+        },
+        {
+          id: 0x0001,
+          version: 1,
+          size: 0,
+          resources: [{ path: 'second.bml', type: 'text/X-arib-bml' }],
+        },
+      ],
+    },
+  ],
+}
+
+/** The modules of a self-made data broadcast built the way a broadcaster's is: an entry document that cannot be seen and moves to the face when the data button is pressed, a face whose scripts switch panels on the colour keys, count in the persistent memory, tick a timer, call a function that is not supported and move to a second page, and that second page. */
+export function scriptedModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', ENTRY),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+    {
+      tag: 0x60,
+      id: 0x0000,
+      version: 1,
+      resources: [resource('startup.bml', 'bml', FACE)],
+    },
+    {
+      tag: 0x60,
+      id: 0x0001,
+      version: 1,
+      resources: [resource('second.bml', 'bml', SECOND)],
+    },
+  ]
+}
+
 /** A script that tries, from inside the runtime's frame, what a document must not reach, and tells the player what happened. */
 export const SANDBOX_PROBE = `
 const report = { violations: [] }

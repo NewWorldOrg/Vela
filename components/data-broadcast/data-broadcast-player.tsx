@@ -8,9 +8,15 @@ import {
   type ReactNode,
 } from 'react'
 
+import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlKey } from '@/lib/bml/keys'
-import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
+import {
+  keepMemory,
+  memoryEntriesOf,
+  type MemoryStorage,
+} from '@/lib/bml/memory'
 import type { RuntimeMessage } from '@/lib/bml/messages'
+import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
 import type { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
 import { KEY_CAP } from '@/lib/player-keys'
 import { cn } from '@/lib/utils'
@@ -72,14 +78,58 @@ function hand(send: SendToRuntime, module: BmlModule): void {
   send({ kind: 'module', module: handed.module }, handed.transfer)
 }
 
-/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. */
+/** The browser's storage, where a broadcaster's memory is kept between sessions, or null where it cannot be reached. */
+function storageOf(): MemoryStorage | null {
+  try {
+    return window.localStorage
+  } catch {
+    return null
+  }
+}
+
+/** What the player knows of the programme the broadcast belongs to: its network and when it began. */
+export interface OnAir {
+  network: number | null
+  startsAt: number | null
+}
+
+const NOTHING_ON_AIR: OnAir = { network: null, startsAt: null }
+
+/** Hands the runtime the catalog, and with it what the player keeps for that broadcaster and the programme on air. */
+function catalogued(
+  send: SendToRuntime,
+  catalog: BmlCatalog,
+  onAir: OnAir,
+): void {
+  const storage = storageOf()
+
+  send({ kind: 'catalog', catalog })
+  send({
+    kind: 'memory',
+    entries: storage ? memoryEntriesOf(storage, catalog.service) : [],
+  })
+  send({
+    kind: 'programme',
+    programme: {
+      service: catalog.service,
+      event: null,
+      network: onAir.network,
+      stream: null,
+      startsAt: onAir.startsAt,
+    },
+  })
+}
+
+/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. */
 export function DataBroadcastFace({
   feed,
+  onAir = NOTHING_ON_AIR,
   onRuntime,
   onMessage,
   says,
 }: {
   feed: DataBroadcastFeed
+  onAir?: OnAir
   onRuntime: (send: SendToRuntime | null) => void
   onMessage: (message: RuntimeMessage) => void
   says: string | null
@@ -87,6 +137,16 @@ export function DataBroadcastFace({
   const alive = useRef(false)
   const letGo = useRef<(() => void) | null>(null)
   const gone = useEffectEvent(() => onRuntime(null))
+  const heard = (message: RuntimeMessage) => {
+    const storage = storageOf()
+    const service = feed.catalog?.service
+
+    if (message.kind === 'memory' && storage && service !== undefined) {
+      keepMemory(storage, service, message.name, message.value)
+    }
+
+    onMessage(message)
+  }
 
   useEffect(() => {
     alive.current = true
@@ -114,7 +174,7 @@ export function DataBroadcastFace({
     const catalog = feed.catalog
 
     if (catalog) {
-      send({ kind: 'catalog', catalog })
+      catalogued(send, catalog, onAir)
     }
 
     feed.forTheCatalog.forEach((module) => hand(send, module))
@@ -122,7 +182,7 @@ export function DataBroadcastFace({
     onRuntime(send)
     letGo.current = feed.subscribe((change) => {
       if (change.kind === 'catalog') {
-        send({ kind: 'catalog', catalog: change.catalog })
+        catalogued(send, change.catalog, onAir)
       } else if (change.kind === 'module') {
         hand(send, change.module)
       }
@@ -131,7 +191,7 @@ export function DataBroadcastFace({
 
   return (
     <>
-      <BmlFrame onReady={ready} onMessage={onMessage} className="z-[1]" />
+      <BmlFrame onReady={ready} onMessage={heard} className="z-[1]" />
       <p
         role="status"
         data-slot="data-broadcast-says"

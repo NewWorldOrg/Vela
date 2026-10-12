@@ -1,0 +1,70 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+
+import {
+  DocumentLeft,
+  SHADOWED_GLOBALS,
+  ScriptScope,
+  givenOf,
+  scopeOf,
+} from '@/lib/bml/scripts'
+
+function run(code: string, scope: object): unknown {
+  return new Function('scope', `with (scope) { return (${code}) }`)(scope)
+}
+
+test('a name the scope was given resolves to it, one the frame must not be reached by resolves to nothing, and the rest fall through', () => {
+  const document = { getElementById: () => 'wrapped' }
+  const scope = scopeOf({ document, browser: { ok: 1 } })
+
+  assert.equal(run('document.getElementById("a")', scope), 'wrapped')
+  assert.equal(run('browser.ok', scope), 1)
+  assert.equal(run('typeof Math', scope), 'object')
+
+  for (const name of SHADOWED_GLOBALS) {
+    assert.equal(run(`typeof ${name}`, scope), 'undefined', name)
+  }
+
+  assert.equal(
+    run('(document = 1, document.getElementById("a"))', scope),
+    'wrapped',
+  )
+  assert.equal(run('(delete window, typeof window)', scope), 'undefined')
+  assert.deepEqual(Object.keys(givenOf(scope)), ['document', 'browser'])
+})
+
+test('the scope does not say what it holds', () => {
+  const scope = scopeOf({ browser: {} }) as Record<string, unknown>
+
+  assert.equal(Object.keys(scope).length, 0)
+  assert.equal(Object.getOwnPropertyDescriptor(scope, 'browser'), undefined)
+  assert.equal(scope[Symbol.unscopables as unknown as string], undefined)
+})
+
+test('a run is done, left when the document was left, or failed with what was thrown, each timed', () => {
+  let now = 0
+  const scope = new ScriptScope(
+    (code) => {
+      now += 5
+
+      if (code === 'leave') {
+        throw new DocumentLeft()
+      }
+
+      if (code === 'fail') {
+        throw new TypeError('x is not a function')
+      }
+    },
+    {},
+    () => now,
+  )
+
+  assert.deepEqual(scope.run('ok'), { outcome: 'done', tookMs: 5 })
+  assert.deepEqual(scope.run('leave'), { outcome: 'left', tookMs: 5 })
+
+  const failed = scope.run('fail')
+
+  assert.equal(failed.outcome, 'failed')
+  assert.equal(failed.tookMs, 5)
+  assert.ok(failed.outcome === 'failed' && failed.error instanceof TypeError)
+})

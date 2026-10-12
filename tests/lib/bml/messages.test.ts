@@ -133,7 +133,13 @@ test('what the player may say is taken from the parent window in Vela’s origin
     { kind: 'clock', seconds: 12.5 },
     {
       kind: 'programme',
-      programme: { service: 1024, event: 7, startsAt: null },
+      programme: {
+        service: 1024,
+        event: 7,
+        network: 32736,
+        stream: null,
+        startsAt: null,
+      },
     },
     { kind: 'open' },
     { kind: 'close' },
@@ -185,15 +191,102 @@ test('a kind the player may not say, or a shape that does not fit, is dropped', 
     { kind: 'clock', seconds: Number.NaN },
     {
       kind: 'programme',
-      programme: { service: 'x', event: null, startsAt: null },
+      programme: {
+        service: 'x',
+        event: null,
+        network: null,
+        stream: null,
+        startsAt: null,
+      },
     },
     {
       kind: 'programme',
-      programme: { service: 1, event: 1.5, startsAt: null },
+      programme: {
+        service: 1,
+        event: 1.5,
+        network: null,
+        stream: null,
+        startsAt: null,
+      },
     },
   ]
 
   for (const data of dropped) {
     assert.equal(fromPlayer(data), null, JSON.stringify(data))
+  }
+})
+
+test('the runtime’s memory and script messages are taken when they fit, and dropped when they do not', () => {
+  const taken: unknown[] = [
+    {
+      kind: 'memory',
+      name: 'visits',
+      value: '{"structure":"U:8B","data":[1]}',
+    },
+    { kind: 'memory', name: 'visits', value: null },
+    { kind: 'script', state: 'running' },
+    { kind: 'script', state: 'done' },
+    { kind: 'script', state: 'overran' },
+  ]
+  const dropped: unknown[] = [
+    { kind: 'memory', name: '', value: 'x' },
+    { kind: 'memory', name: 'x'.repeat(257), value: 'x' },
+    { kind: 'memory', name: 'visits', value: 'x'.repeat(64 * 1024 + 1) },
+    { kind: 'memory', name: 'visits', value: 1 },
+    { kind: 'script', state: 'slow' },
+    { kind: 'script' },
+  ]
+
+  for (const data of taken) {
+    assert.deepEqual(fromRuntime(data), data)
+  }
+
+  for (const data of dropped) {
+    assert.equal(fromRuntime(data), null, JSON.stringify(data).slice(0, 40))
+  }
+})
+
+test('the player’s memory and event messages are taken when they fit, and dropped when they do not', () => {
+  const fromPlayer = (data: unknown) =>
+    playerMessageFrom(
+      { origin: 'https://vela.example', source: ELSEWHERE, data },
+      { origin: 'https://vela.example', window: ELSEWHERE },
+    )
+  const event = {
+    group: 0,
+    id: 7,
+    type: 1,
+    immediate: true,
+    at: 90000,
+    privateData: new Uint8Array([1, 2]),
+  }
+
+  assert.deepEqual(fromPlayer({ kind: 'memory', entries: [['a', 'b']] }), {
+    kind: 'memory',
+    entries: [['a', 'b']],
+  })
+  assert.deepEqual(fromPlayer({ kind: 'memory', entries: [] }), {
+    kind: 'memory',
+    entries: [],
+  })
+  assert.deepEqual(fromPlayer({ kind: 'event', event }), {
+    kind: 'event',
+    event,
+  })
+
+  const dropped: unknown[] = [
+    { kind: 'memory', entries: [['a']] },
+    { kind: 'memory', entries: [['', 'b']] },
+    { kind: 'memory', entries: [[1, 'b']] },
+    { kind: 'memory', entries: Array.from({ length: 1025 }, () => ['a', 'b']) },
+    { kind: 'memory' },
+    { kind: 'event', event: { ...event, group: 70000 } },
+    { kind: 'event', event: { ...event, at: -1 } },
+    { kind: 'event', event: { ...event, privateData: [1, 2] } },
+    { kind: 'event' },
+  ]
+
+  for (const data of dropped) {
+    assert.equal(fromPlayer(data), null, JSON.stringify(data).slice(0, 40))
   }
 })
