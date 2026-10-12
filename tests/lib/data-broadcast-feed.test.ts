@@ -63,6 +63,7 @@ function eventPayload({
   timeKind = 1,
   fires = at(10),
   data = [0xaa, 0xbb],
+  tag,
 }: {
   group?: number
   id?: number
@@ -70,8 +71,9 @@ function eventPayload({
   timeKind?: number
   fires?: number
   data?: number[]
+  tag?: number
 } = {}): Uint8Array {
-  const payload = new Uint8Array(17 + data.length)
+  const payload = new Uint8Array(17 + data.length + (tag === undefined ? 0 : 1))
   const view = new DataView(payload.buffer)
 
   payload[0] = 0x03
@@ -83,6 +85,9 @@ function eventPayload({
   view.setUint32(11, fires % 2 ** 32)
   view.setUint16(15, data.length)
   payload.set(data, 17)
+  if (tag !== undefined) {
+    payload[17 + data.length] = tag
+  }
 
   return payload
 }
@@ -178,6 +183,36 @@ test('an event message is read with its group, id, type, time and private data',
 
   assert.ok(onTheProgrammeClock.said === 'event')
   assert.equal(onTheProgrammeClock.event.immediate, false)
+})
+
+test('an event message closed by one more byte is read with that byte as the component tag of its stream, and one without it names none', () => {
+  const tagged = readDataBroadcast(eventPayload({ data: [0x01], tag: 0x5e }))
+  const untagged = readDataBroadcast(eventPayload({ data: [0x01] }))
+
+  assert.ok(tagged.said === 'event')
+  assert.equal(tagged.event.componentTag, 0x5e)
+  assert.deepEqual([...tagged.event.privateData], [0x01])
+  assert.ok(untagged.said === 'event')
+  assert.equal('componentTag' in untagged.event, false)
+
+  const tooLong = new Uint8Array(eventPayload({ data: [0x01] }).length + 2)
+
+  tooLong.set(eventPayload({ data: [0x01] }))
+  assert.deepEqual(readDataBroadcast(tooLong), { said: 'unknown' })
+})
+
+test('the same event message on two streams is held as two', () => {
+  const { feed } = quietFeed()
+
+  feed.offer(eventPayload({ id: 1, tag: 0x40 }), at(1))
+  feed.offer(eventPayload({ id: 1, tag: 0x5e }), at(1))
+  feed.offer(eventPayload({ id: 1, tag: 0x5e }), at(1))
+  feed.advance(1)
+
+  assert.deepEqual(
+    feed.events.map((event) => event.componentTag),
+    [0x40, 0x5e],
+  )
 })
 
 test('an event message with a length that does not match, or an unknown time kind, is not read', () => {

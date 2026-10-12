@@ -66,21 +66,34 @@ function wordOf(item: EventItem, name: string): number | null {
     : null
 }
 
-/** Whether an `EventMessageFired` item listens for an event message: its `es_ref`, when given, must name a stream the broadcast carries, its group must match, and its id and version match unless left out or 255. */
+function comesOn(
+  stream: number | null,
+  event: BroadcastEvent,
+  streams: readonly number[],
+): boolean {
+  if (stream === null) {
+    return false
+  }
+
+  return event.componentTag === undefined
+    ? streams.includes(stream)
+    : event.componentTag === stream
+}
+
+/** Whether an `EventMessageFired` item listens for an event message: its `es_ref`, when given, must name the stream the message came on, or for a message that does not say, a stream the broadcast carries; its group must match, and its id and version match unless left out or 255. */
 export function listensFor(
   item: EventItem,
   event: BroadcastEvent,
   streams: readonly number[] = [],
 ): boolean {
   const reference = item.attributes.get('es_ref')
-  const stream = reference === undefined ? null : streamTagOf(reference)
   const group = wordOf(item, 'message_group_id')
   const id = wordOf(item, 'message_id')
   const version = wordOf(item, 'message_version')
 
   return (
     (reference === undefined ||
-      (stream !== null && streams.includes(stream))) &&
+      comesOn(streamTagOf(reference), event, streams)) &&
     (group === null || group === event.group) &&
     (id === null || id === ANY || id === event.id) &&
     (version === null || version === ANY || version === event.type)

@@ -1,6 +1,9 @@
 import type { BmlCatalog, CatalogCarousel } from '@/lib/bml/catalog'
 import type { BroadcastEvent } from '@/lib/bml/event-message'
-import { MOST_PRIVATE_DATA_BYTES } from '@/lib/bml/event-message'
+import {
+  isComponentTag,
+  MOST_PRIVATE_DATA_BYTES,
+} from '@/lib/bml/event-message'
 import { PTS_HERTZ } from '@/lib/live-wire'
 import { READS_AHEAD_WITHIN_SEC } from '@/lib/recording-captions'
 
@@ -24,7 +27,7 @@ export interface BroadcastCarousel {
   versions: BroadcastVersion[]
 }
 
-/** An event message at the second of the source it fires at. */
+/** An event message at the second of the source it fires at, with the component tag of the stream it came on when the record kept it. */
 export interface TimedEvent {
   group: number
   id: number
@@ -32,6 +35,7 @@ export interface TimedEvent {
   immediate: boolean
   atSec: number
   privateData: Uint8Array
+  componentTag?: number
 }
 
 /** The catalog of a recording's data broadcast over the whole of the source played. */
@@ -137,7 +141,8 @@ function eventOf(value: unknown): TimedEvent | null {
     !isCount(event.id, 0xffff) ||
     !isCount(event.type, 0xff) ||
     typeof event.immediate !== 'boolean' ||
-    !isSeconds(event.atSec)
+    !isSeconds(event.atSec) ||
+    (event.componentTag != null && !isComponentTag(event.componentTag))
   ) {
     return null
   }
@@ -152,6 +157,9 @@ function eventOf(value: unknown): TimedEvent | null {
         immediate: event.immediate,
         atSec: event.atSec,
         privateData,
+        ...(event.componentTag == null
+          ? {}
+          : { componentTag: event.componentTag }),
       }
     : null
 }
@@ -326,6 +334,9 @@ export function broadcastEventOf(event: TimedEvent): BroadcastEvent {
     immediate: event.immediate,
     at: Math.round(event.atSec * PTS_HERTZ),
     privateData: event.privateData,
+    ...(event.componentTag === undefined
+      ? {}
+      : { componentTag: event.componentTag }),
   }
 }
 
