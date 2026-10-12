@@ -75,6 +75,17 @@ export const IGNORED_FUNCTIONS = [
   'unlockScreen',
 ] as const
 
+/** What a document asks of the line, the provider and the applications beyond the broadcast before it offers them: answered as a receiver without a line answers, with a warning and nothing told to the player, as the viewer has asked for nothing. */
+export const UNCONNECTED_QUERIES = [
+  'confirmIPNetwork',
+  'isIPConnected',
+  'getConnectionType',
+  'getISPParams',
+  'getDelayedTransmissionData',
+  'getReceivedAIT',
+  'X_DPA_getComBrowserUA',
+] as const
+
 /** Communication, the stored services and the applications beyond the broadcast: these fail, and the player is told the operation is not supported. */
 export const REFUSED_FUNCTIONS = [
   'connect',
@@ -83,11 +94,7 @@ export const REFUSED_FUNCTIONS = [
   'receiveTextData',
   'transmitTextDataOverIP',
   'sendTextDataOverIP',
-  'confirmIPNetwork',
-  'isIPConnected',
-  'getConnectionType',
   'setISPParams',
-  'getISPParams',
   'connectPPP',
   'connectPPPWithISPParams',
   'disconnectPPP',
@@ -95,16 +102,13 @@ export const REFUSED_FUNCTIONS = [
   'saveHttpServerFile',
   'sendHttpServerFileAs',
   'setDelayedTransmissionData',
-  'getDelayedTransmissionData',
   'startResidentApp',
   'startExtraBrowser',
   'launchDocumentRestricted',
   'startAITControlledApp',
   'startReceivingAIT',
-  'getReceivedAIT',
   'X_DPA_startResidentApp',
   'X_DPA_launchDocWithLink',
-  'X_DPA_getComBrowserUA',
   'X_DPA_writeCproBM',
   'epgTune',
   'epgTuneToComponent',
@@ -369,6 +373,13 @@ export function browserOf(host: BrowserHost): object {
 
   IGNORED_FUNCTIONS.forEach((name) => {
     known[name] = () => DONE
+  })
+  UNCONNECTED_QUERIES.forEach((name) => {
+    known[name] = () => {
+      host.warn(`not connected: ${name}`)
+
+      return FAILED
+    }
   })
   REFUSED_FUNCTIONS.forEach((name) => {
     known[name] = () => {

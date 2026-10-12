@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   IGNORED_FUNCTIONS,
   REFUSED_FUNCTIONS,
+  UNCONNECTED_QUERIES,
   SUPPORTED_FUNCTIONS,
   browserOf,
   registersOf,
@@ -107,6 +108,34 @@ test('the PPP connection is refused like the rest of the communication', () => {
   assert.ok(Number.isNaN(browser.connectPPP('isp', 'user', 'pass')))
   assert.ok(Number.isNaN(browser.disconnectPPP()))
   assert.deepEqual(unsupported, ['connectPPP', 'disconnectPPP'])
+})
+
+test('a page that asks after the line as it loads is answered as a receiver without one, and the player is told nothing, as the viewer has asked for nothing', () => {
+  const { browser, unsupported, warnings } = host()
+
+  assert.equal(browser.isIPConnected() !== 1, true)
+  assert.ok(Number.isNaN(browser.getConnectionType()))
+  assert.ok(!browser.getISPParams())
+
+  for (const name of UNCONNECTED_QUERIES) {
+    assert.ok(Number.isNaN(browser[name]()), name)
+  }
+
+  assert.deepEqual(unsupported, [])
+  assert.deepEqual(warnings.slice(0, 3), [
+    'not connected: isIPConnected',
+    'not connected: getConnectionType',
+    'not connected: getISPParams',
+  ])
+  assert.equal(
+    UNCONNECTED_QUERIES.some((name) =>
+      (REFUSED_FUNCTIONS as readonly string[]).includes(name),
+    ),
+    false,
+  )
+  assert.ok(
+    (REFUSED_FUNCTIONS as readonly string[]).includes('transmitTextDataOverIP'),
+  )
 })
 
 test('the version, the support of a group and the tuning are answered', () => {
