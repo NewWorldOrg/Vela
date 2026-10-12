@@ -63,7 +63,7 @@ function readEvent(payload: Uint8Array): BroadcastEvent | null {
     type: payload[5],
     immediate: timeKind === TIME_KIND.immediate,
     at: view.getUint32(7) * 2 ** 32 + view.getUint32(11),
-    privateData: payload.subarray(EVENT_HEAD),
+    privateData: payload.slice(EVENT_HEAD),
   }
 }
 
@@ -100,6 +100,7 @@ export type DataBroadcastAvailability = 'none' | 'absent' | 'ready'
 export type DataBroadcastChange =
   | { kind: 'catalog'; catalog: BmlCatalog }
   | { kind: 'module'; module: BmlModule }
+  | { kind: 'event'; event: BroadcastEvent }
   | { kind: 'none' }
   | { kind: 'reset' }
 
@@ -127,7 +128,14 @@ export type Warn = (warning: string) => void
 const warnOnTheConsole: Warn = (warning) =>
   console.warn(`data broadcast: ${warning}`)
 
-/** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. A module whose version the catalog moved on is held until the new version comes. What comes twice, from whichever wire, is taken once: a catalog the same as the one held, a module of the version held, an event already heard. */
+/** When a frame takes effect: at its own time, or for an event message that fires at a moment of the programme, at that moment when it is later. */
+function dueAt(said: DataBroadcastSaid, pts: number): number {
+  return said.said === 'event' && !said.event.immediate
+    ? Math.max(pts, said.event.at)
+    : pts
+}
+
+/** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. An event message is passed on when it fires, once. A module whose version the catalog moved on is held until the new version comes. What comes twice, from whichever wire, is taken once: a catalog the same as the one held, a module of the version held, an event already heard. */
 export class DataBroadcastFeed {
   private readonly waiting: Waiting[] = []
 
@@ -174,13 +182,14 @@ export class DataBroadcastFeed {
       return
     }
 
+    const due = dueAt(said, pts)
     let at = this.waiting.length
 
-    while (at > 0 && this.waiting[at - 1].pts > pts) {
+    while (at > 0 && this.waiting[at - 1].pts > due) {
       at -= 1
     }
 
-    this.waiting.splice(at, 0, { pts, bytes: payload.length, said })
+    this.waiting.splice(at, 0, { pts: due, bytes: payload.length, said })
     this.waitingBytes += payload.length
     this.trim()
   }
@@ -365,6 +374,8 @@ export class DataBroadcastFeed {
 
       this.seen.delete(eventKey(gone))
     }
+
+    this.tell({ kind: 'event', event })
   }
 
   private settle(): void {

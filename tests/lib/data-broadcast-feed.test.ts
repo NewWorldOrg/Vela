@@ -374,7 +374,8 @@ test('event messages are held once each, up to a bound, and change nothing that 
   feed.advance(1)
 
   assert.equal(feed.events.length, 1)
-  assert.deepEqual(heard, [])
+  assert.equal(heard.length, 1)
+  assert.equal(feed.availability, 'absent')
 
   for (let id = 2; id <= MOST_HELD_EVENTS + 5; id += 1) {
     feed.offer(eventPayload({ id }), at(2))
@@ -471,14 +472,15 @@ test('an older catalog that waits is let go before a newer one', () => {
 
   const heard: string[] = []
 
-  feed.subscribe((change) =>
-    heard.push(
-      change.kind === 'catalog' ? change.catalog.startup : change.kind,
-    ),
-  )
+  feed.subscribe((change) => {
+    if (change.kind === 'catalog') {
+      heard.push(change.catalog.startup)
+    }
+  })
   feed.advance(102 + MOST_WAITING_FRAMES)
 
   assert.deepEqual(heard, ['/40/0000/startup.bml'])
+  assert.equal(feed.events.length, MOST_HELD_EVENTS)
 })
 
 test('a reset lets go of what was waiting, bytes and all', () => {
@@ -619,5 +621,119 @@ test('a wire opened again after a reset brings the broadcast back from its repla
   replay()
   feed.advance(31)
 
+  assert.equal(feed.availability, 'ready')
+})
+
+test('an immediate event message is passed on at the time of its frame, with its private data copied out of the frame', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+  const frame = new Uint8Array(4 + 19)
+
+  frame.set(eventPayload({ fires: at(3), data: [0x41, 0x42] }), 4)
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(frame.subarray(4), at(3))
+  feed.advance(2.99)
+
+  assert.equal(heard.length, 0)
+
+  feed.advance(3)
+
+  assert.equal(heard.length, 1)
+  assert.equal(heard[0].kind, 'event')
+
+  if (heard[0].kind === 'event') {
+    assert.equal(heard[0].event.immediate, true)
+    assert.equal(heard[0].event.privateData.byteOffset, 0)
+    assert.equal(heard[0].event.privateData.buffer.byteLength, 2)
+    assert.deepEqual([...heard[0].event.privateData], [0x41, 0x42])
+  }
+})
+
+test('an event message that fires at a moment of the programme is passed on when the playhead reaches that moment, once', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(eventPayload({ timeKind: 2, fires: at(12) }), at(2))
+  feed.offer(catalogPayload(CATALOG), at(4))
+  feed.advance(2)
+
+  assert.equal(heard.length, 0)
+
+  feed.advance(4)
+
+  assert.deepEqual(
+    heard.map((change) => change.kind),
+    ['catalog'],
+  )
+
+  feed.advance(11.9)
+
+  assert.equal(heard.length, 1)
+
+  feed.advance(12)
+
+  assert.deepEqual(
+    heard.map((change) => change.kind),
+    ['catalog', 'event'],
+  )
+
+  feed.offer(eventPayload({ timeKind: 2, fires: at(12) }), at(13))
+  feed.advance(13)
+
+  assert.equal(heard.length, 2)
+  assert.equal(feed.events.length, 1)
+})
+
+test('an event message whose moment has already passed when it comes is passed on at the time of its frame', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(eventPayload({ timeKind: 2, fires: at(5) }), at(8))
+  feed.advance(7)
+
+  assert.equal(heard.length, 0)
+
+  feed.advance(8)
+
+  assert.equal(heard.length, 1)
+})
+
+test('a catalog whose versions moved on passes on only the modules that changed, not those sent again at the version held', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+  const moved: BmlCatalog = {
+    ...CATALOG,
+    carousels: [
+      {
+        ...CATALOG.carousels[0],
+        modules: [
+          { id: 0, version: 1, size: 40, resources: [] },
+          { id: 1, version: 2, size: 30, resources: [] },
+        ],
+      },
+    ],
+  }
+
+  feed.offer(catalogPayload(CATALOG), at(1))
+  feed.offer(modulePayload(moduleOf(0)), at(1))
+  feed.offer(modulePayload(moduleOf(1)), at(1))
+  feed.advance(1)
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(catalogPayload(moved), at(2))
+  feed.offer(modulePayload(moduleOf(0)), at(3))
+  feed.offer(modulePayload(moduleOf(1, 2, '<bml>2</bml>')), at(3))
+  feed.offer(modulePayload(moduleOf(0)), at(4))
+  feed.advance(4)
+
+  assert.deepEqual(
+    heard.map((change) =>
+      change.kind === 'module'
+        ? `${change.kind} ${change.module.id} v${change.module.version}`
+        : change.kind,
+    ),
+    ['catalog', 'module 1 v2'],
+  )
   assert.equal(feed.availability, 'ready')
 })

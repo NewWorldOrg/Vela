@@ -741,6 +741,9 @@ export class BmlRuntime {
   }
 
   private fired(event: BroadcastEvent): void {
+    const streams =
+      this.catalog?.carousels.map((carousel) => carousel.tag) ?? []
+
     this.occur(
       'EventMessageFired',
       {
@@ -749,7 +752,7 @@ export class BmlRuntime {
         messageVersion: event.type,
         privateData: privateDataOf(event.privateData),
       },
-      (item) => listensFor(item, event),
+      (item) => listensFor(item, event, streams),
     )
   }
 

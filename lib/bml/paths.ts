@@ -103,3 +103,14 @@ export function moduleAddressOf(
     ? { tag: base.tag, module: parseInt(inCarousel[1], 16) }
     : null
 }
+
+const STREAM = /^\/([0-9a-f]{2})(?:\/.*)?$/i
+
+/** The component tag an `es_ref` such as `/40` or `arib-dc://-1.-1.-1/40` names, with or without a path after it, or null. */
+export function streamTagOf(reference: string): number | null {
+  const plain = withoutFragment(reference)
+  const service = IN_THIS_SERVICE.exec(plain)
+  const stream = STREAM.exec(service ? service[1] : plain)
+
+  return stream ? parseInt(stream[1], 16) : null
+}
