@@ -36,7 +36,7 @@ export type AppHeard =
 /** The sandbox of the application's frame: scripts and forms run, in an opaque origin of their own, and nothing reaches the page around it. */
 export const HYBRIDCAST_SANDBOX = 'allow-scripts allow-forms'
 
-/** How long a document has from its load to say it opened on the relay before the frame is taken to have left it. */
+/** How long a document has from the frame's load to say it loaded on the relay before the frame is taken to have left it. */
 export const OPENED_WITHIN_MS = 2000
 
 export const HYBRIDCAST_FRAME_TITLE = 'Hybridcast'
@@ -86,7 +86,7 @@ interface FrameProps {
   onSender: (send: SendToApp | null) => void
 }
 
-/** The application's frame, at 1920x1080 scaled to the box. It is handed the state its documents read at once in its name, and talks to each document that opens on the relay over the port that document hands over: the receiver's identifier, the event messages and NPT of the broadcast, the programme and the keys go to it; what it says comes back. A document that never says it opened within a moment of its load is not on the relay, and the frame is given up. */
+/** The application's frame, at 1920x1080 scaled to the box. It is handed the state its documents read at once in its name, and talks to each document that opens on the relay over the port that document hands over: the receiver's identifier, the event messages and NPT of the broadcast, the programme and the keys go to it; what it says comes back. Every load of the frame has to be a document that says over its port that it loaded; one that does not within a moment is not on the relay, and the frame is given up. */
 function HybridcastFrame({
   address,
   application,
@@ -116,7 +116,7 @@ function HybridcastFrame({
   const [hole, setHole] = useState<Rect | null>(null)
   const port = useRef<MessagePort | null>(null)
   const loads = useRef(0)
-  const greeted = useRef(0)
+  const loadedOnTheRelay = useRef(0)
   const waits = useRef<ReturnType<typeof setTimeout>[]>([])
   const latest = useRef({ programme, receiverId, service, onHeard, onSender })
   const programmeTold = JSON.stringify(programme)
@@ -130,6 +130,12 @@ function HybridcastFrame({
 
     const take = (message: AppMessage) => {
       const { service: held, onHeard: heard } = latest.current
+
+      if (message.kind === 'loaded') {
+        loadedOnTheRelay.current += 1
+
+        return
+      }
 
       if (message.kind === 'memory') {
         const storage = storageOf()
@@ -164,7 +170,6 @@ function HybridcastFrame({
         return
       }
 
-      greeted.current += 1
       port.current?.close()
       port.current = hello.port
       hello.port.onmessage = (said) => {
@@ -227,8 +232,10 @@ function HybridcastFrame({
 
     waits.current.push(
       setTimeout(() => {
-        if (greeted.current < nth) {
-          latest.current.onHeard({ kind: 'lost', unopened: nth === 1 })
+        const said = loadedOnTheRelay.current
+
+        if (said < nth) {
+          latest.current.onHeard({ kind: 'lost', unopened: said === 0 })
         }
       }, OPENED_WITHIN_MS),
     )

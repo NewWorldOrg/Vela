@@ -55,6 +55,8 @@
     <object type="video/x-iptvf-broadcast"></object>
     <div class="panel"><p>Hybridcast の見本</p></div>
     <p id="keys"></p>
+    <a id="next" href="/hc/next.html" hidden>次のページ</a>
+    <a id="away" href="https://elsewhere.test/" hidden>外のページ</a>
     <script>
       // A self-made application that calls the receiver the way the applications call it, and reports what it was answered to the page around it.
       var asked = decodeURIComponent(location.search)
@@ -173,36 +175,38 @@
       keySet.setValue(groups)
       say('keyset', keySet.value)
 
+      // Where a request went, read from the timing the browser keeps of it, whether or not its answer could be read.
+      var wentTo = function (name, asked) {
+        var sent = performance
+          .getEntriesByType('resource')
+          .some(function (entry) {
+            return (
+              entry.name.indexOf(
+                '/hybridcast-app/app.html?uri=' + encodeURIComponent(asked),
+              ) >= 0
+            )
+          })
+        say(name, sent ? 'relayed' : 'elsewhere')
+      }
+      var settled = function (name, asked) {
+        return function () {
+          wentTo(name, asked)
+        }
+      }
+      var api =
+        'http://example.test/api/live/32736-1024/data-broadcast/receiver-id'
       fetch(
         location.origin + '/api/live/32736-1024/data-broadcast/receiver-id',
-      ).then(
-        function (answer) {
-          say(
-            'api',
-            answer.url.indexOf('/hybridcast-app/app.html?uri=') >= 0
-              ? 'relayed'
-              : answer.url,
-          )
-        },
-        function (error) {
-          say('api', error.name)
-        },
-      )
+      ).then(settled('api', api), settled('api', api))
+      var list = 'http://example.test/hc/list.json'
       fetch('/hc/list.json').then(
-        function (answer) {
-          say(
-            'fetch',
-            answer.url.indexOf(
-              '/hybridcast-app/app.html?uri=http%3A%2F%2Fexample.test%2Fhc%2Flist.json',
-            ) >= 0
-              ? 'relayed'
-              : answer.url,
-          )
-        },
-        function (error) {
-          say('fetch', error.name)
-        },
+        settled('fetch', list),
+        settled('fetch', list),
       )
+      var inside = new XMLHttpRequest()
+      inside.onloadend = settled('xhr', 'http://example.test/hc/data.json')
+      inside.open('GET', 'data.json')
+      inside.send()
       fetch('https://elsewhere.test/track').then(
         function () {
           say('outside', 'reached')
@@ -250,20 +254,27 @@
         )
       }, 50)
 
+      window.addEventListener('load', function () {
+        say('loaded', 'yes')
+      })
+
       var pressed = []
       document.addEventListener('keydown', function (event) {
         pressed.push(event.which)
         document.getElementById('keys').textContent = pressed.join(' ')
         say('keys', pressed.join(','))
         if (event.which === VK_ENTER) {
-          location.href = '/hc/next.html'
+          document.getElementById('next').click()
         }
         if (event.which === VK_BLUE) {
           say('escape', 'tried')
-          location.href = 'https://elsewhere.test/'
+          document.getElementById('away').click()
           setTimeout(function () {
             say('escape', 'stayed')
           }, 300)
+        }
+        if (event.which === VK_0) {
+          location.href = '/hybridcast-app/outside.html'
         }
         if (event.which === VK_YELLOW) {
           owner.destroyApplication()

@@ -217,50 +217,59 @@ function pointAddressesWrittenLater(frame: Frame): void {
   })
 }
 
-/** Keeps the frame on the relay. A document that goes elsewhere on its own goes through the relay instead when the address is inside the boundary, and stays where it is when it is not (IPTVFJ STD-0010 7.6.1). The player closes the frame on any document that opens elsewhere all the same. */
-function keepOnTheRelay(frame: Frame): void {
-  const navigation = (frame.window as { navigation?: EventTarget }).navigation
+/** Whether an address a link or a form goes to lies outside the boundary, read as the application meant it. Addresses that name no server are not the boundary's to judge. */
+function outsideTheBoundary(frame: Frame, written: string | null): boolean {
+  let url: URL
 
-  navigation?.addEventListener('navigate', (event) => {
-    const going = event as Event & {
-      cancelable: boolean
-      destination: { url: string; sameDocument: boolean }
-      downloadRequest: string | null
-      formData: FormData | null
-    }
+  try {
+    url = new URL(written ?? '', frame.window.location.href)
+  } catch {
+    return false
+  }
 
-    if (
-      going.destination.sameDocument ||
-      !going.cancelable ||
-      going.downloadRequest !== null
-    ) {
-      return
-    }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return false
+  }
 
-    const destination = new URL(going.destination.url)
+  return !frame.inside(intendedTarget(url, frame.relay, frame.documentAt).href)
+}
 
-    if (relayedTarget(destination, frame.relay)) {
-      return
-    }
-
-    going.preventDefault()
-
-    const target = intendedTarget(destination, frame.relay, frame.documentAt)
-
-    if (going.formData !== null || !frame.inside(target.href)) {
+/** Keeps links and forms to the boundary: one that goes outside it is not followed, and the application stays where it is (IPTVFJ STD-0010 7.6.1). Inside it they go through the relay, as their addresses were pointed there. A document that leaves by its script, which cannot be held back from inside, is closed by the player. */
+function keepToTheBoundary(frame: Frame): void {
+  const stay = (event: Event, written: string | null) => {
+    if (outsideTheBoundary(frame, written)) {
+      event.preventDefault()
       frame.window.console.warn(
         'Hybridcast: the application stays where it is; that address is outside its boundary',
       )
-
-      return
     }
+  }
 
-    queueMicrotask(() =>
-      frame.window.location.assign(
-        `${frame.relay.origin}${relayedAddress(frame.relay.app, target)}`,
-      ),
-    )
-  })
+  frame.window.document.addEventListener(
+    'click',
+    (event) => {
+      const link =
+        event.target instanceof frame.window.Element
+          ? event.target.closest('a[href], area[href]')
+          : null
+
+      if (link) {
+        stay(event, link.getAttribute('href'))
+      }
+    },
+    true,
+  )
+  frame.window.document.addEventListener(
+    'submit',
+    (event) => {
+      const form = event.target
+
+      if (form instanceof frame.window.HTMLFormElement) {
+        stay(event, form.getAttribute('action'))
+      }
+    },
+    true,
+  )
 }
 
 function relayNetwork(frame: Frame): void {
@@ -437,8 +446,9 @@ export function startHybridcastReceiver(
   giveTheNavigator(window, receiver)
   relayNetwork(frame)
   pointAddressesWrittenLater(frame)
-  keepOnTheRelay(frame)
+  keepToTheBoundary(frame)
   followThePicture(window, receiver)
+  window.addEventListener('load', () => port.postMessage({ kind: 'loaded' }))
 
   port.onmessage = (event) => {
     const message = receiverMessageOf(event.data)

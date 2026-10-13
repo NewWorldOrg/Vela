@@ -1431,7 +1431,10 @@ const IN_THE_APPLICATION = '480,60,400,225'
 
 /** The application's frame over the box, opened on the relay, with the picture where the application placed it. */
 async function theApplicationRuns(canvasElement: HTMLElement) {
-  const face = onTheScreen(canvasElement, 'hybridcast-face')
+  const face = await waitFor(
+    () => onTheScreen(canvasElement, 'hybridcast-face'),
+    { timeout: 5000 },
+  )
 
   await waitFor(() => expect(face).toHaveAttribute('data-started', 'yes'))
 
@@ -1587,10 +1590,10 @@ export const Hybridcast_枠が中継を離れる: Story = {
   beforeEach: lineSetTo(true, false, true),
   play: async ({ canvasElement }) => {
     await openedOnTheLine(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('loaded', 'yes')
 
-    const frame = await theApplicationRuns(canvasElement)
-
-    frame.contentWindow?.location.replace('/hybridcast-app/outside.html')
+    press(onTheScreen(canvasElement, 'live-player'), '0')
 
     await waitFor(
       () =>

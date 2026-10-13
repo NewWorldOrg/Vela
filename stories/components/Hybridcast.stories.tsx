@@ -72,6 +72,7 @@ const KEYS: [BmlKey, string][] = [
   ['red', '赤'],
   ['enter', '決定'],
   ['blue', '青'],
+  ['0', '0'],
   ['d', 'd'],
 ]
 
@@ -163,7 +164,7 @@ function Harness({
           <button
             key={key}
             type="button"
-            className="rounded-full border border-line px-4 py-2 text-ui"
+            className="h-11 min-w-11 cursor-pointer rounded-full border border-line px-4 text-ui"
             onClick={() => send.current?.({ kind: 'key', key })}
           >
             {name}
@@ -249,8 +250,10 @@ export const 届かないもの: Story = {
     await expect(app).toHaveAttribute('data-cookie', 'SecurityError')
     await expect(app).toHaveAttribute('data-storage', 'SecurityError')
     await expect(app).toHaveAttribute('data-parent', 'SecurityError')
+    await reported(app, 'xhr')
     await expect(app).toHaveAttribute('data-api', 'relayed')
     await expect(app).toHaveAttribute('data-fetch', 'relayed')
+    await expect(app).toHaveAttribute('data-xhr', 'relayed')
     await expect(app).toHaveAttribute('data-outside', 'TypeError')
     await expect(app).toHaveAttribute('data-xhr-outside', 'error 4 0')
     await expect(app).toHaveAttribute('data-socket', 'relayed')
@@ -317,12 +320,30 @@ export const 中継の外へ出た枠は閉じる: Story = {
   play: async ({ canvasElement }) => {
     const app = group(canvasElement, '中継の外へ出た枠')
 
-    await reported(app, 'keyset')
-    frameIn(app).contentWindow?.location.replace('/hybridcast-app/outside.html')
+    await reported(app, 'loaded', 'yes')
+    await waitFor(() =>
+      expect(app.getAttribute('data-heard')).toContain('keySet'),
+    )
+    await userEvent.click(within(app).getByRole('button', { name: '0' }))
 
     await waitFor(
       () =>
         expect(app.getAttribute('data-heard')?.split(',')).toContain('lost'),
+      { timeout: OPENED_WITHIN_MS + 3000 },
+    )
+  },
+}
+
+export const 外から中継の外へ移された枠は閉じる: Story = {
+  render: () => <Harness label="外から移された枠" />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '外から移された枠')
+
+    await reported(app, 'keyset')
+    frameIn(app).contentWindow?.location.replace('/hybridcast-app/outside.html')
+
+    await waitFor(
+      () => expect(app.getAttribute('data-heard')).toMatch(/lost/),
       { timeout: OPENED_WITHIN_MS + 3000 },
     )
   },

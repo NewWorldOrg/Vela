@@ -52,6 +52,7 @@ export interface AppState {
 
 /** What the application's frame says of itself to the player, over the port its document handed over. */
 export type AppMessage =
+  | { kind: 'loaded' }
   | { kind: 'videoRect'; rect: Rect | null; over: boolean }
   | { kind: 'keySet'; mask: number }
   | { kind: 'greg'; greg: string[] }
@@ -189,6 +190,8 @@ export function appMessageOf(data: unknown): AppMessage | null {
   const message = recordOf(data)
 
   switch (message?.kind) {
+    case 'loaded':
+      return { kind: 'loaded' }
     case 'videoRect':
       return typeof message.over === 'boolean' &&
         (message.rect === null || appRectOf(message.rect))
