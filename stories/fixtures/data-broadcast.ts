@@ -591,3 +591,106 @@ const measuring = setInterval(() => {
   }
 }, 50)
 `
+
+const MENU = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="menu.css" type="text/css"/>
+<script><![CDATA[
+function place(foc) {
+  var cursor = document.getElementById("cursor").normalStyle;
+  cursor.top = 28 * (foc / 2) + 90 + "px";
+  cursor.left = 184 * (foc % 2) + 548 + "px";
+  cursor.visibility = "visible";
+}
+place(1);
+]]></script>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9">
+<div style="left: 552px; top: 94px; width: 368px; height: 56px">
+<div class="item" style="left: 0px; top: 0px"><p>番組表</p></div>
+<div id="item1" class="item" style="left: 184px; top: 0px"><p>見本の項目</p></div>
+<div class="item" style="left: 0px; top: 28px"><p>お知らせ</p></div>
+<div class="item" style="left: 184px; top: 28px"><p>設定</p></div>
+</div>
+<div id="cursor" style="visibility: hidden">
+<div class="edge" style="left: 0px; top: 0px; width: 192px; height: 4px"/>
+<div class="edge" style="left: 0px; top: 32px; width: 192px; height: 4px"/>
+<div class="edge" style="left: 0px; top: 0px; width: 4px; height: 36px"/>
+<div class="edge" style="left: 188px; top: 0px; width: 4px; height: 36px"/>
+</div>
+</body>
+</bml>`
+
+const MENU_CSS = `#cursor { width: 192px; height: 36px; }
+.edge { background-color-index: 4; }
+.item { width: 184px; height: 28px; }
+.item p { left: 25px; width: 144px; height: 28px; line-height: 28px; font-size: 16px; color-index: 7; }`
+
+export const MENU_CATALOG: BmlCatalog = {
+  ...ROWS_CATALOG,
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'menu.css', type: 'text/css' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** A two-column menu whose cursor a script places over the second item, working out its row by halving the item's number, as a receiver's integers do. */
+export function menuModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', MENU),
+        resource('menu.css', 'css', MENU_CSS),
+      ],
+    },
+  ]
+}
+
+/** Measures, once the bundled face is loaded and the cursor is shown, how far the cursor reaches past the item it is on above and below, and where the item's text sits in it, in the document's pixels. */
+export const CURSOR_PROBE = `
+const faceLoaded = () => Array.from(document.fonts).some((face) => face.family.replace(/"/g, '') === 'Denpa Font' && face.status === 'loaded')
+const byId = (id) => document.querySelector('#bml-plane [id="' + id + '"]')
+function measure() {
+  const cursor = byId('cursor')
+  const item = byId('item1')
+  if (!cursor || !item || !faceLoaded() || getComputedStyle(cursor).visibility !== 'visible') {
+    return null
+  }
+  const row = item.getBoundingClientRect()
+  const frame = cursor.getBoundingClientRect()
+  const range = document.createRange()
+  range.selectNodeContents(item.firstElementChild)
+  const text = range.getBoundingClientRect()
+  const scale = row.height / item.offsetHeight
+  const fixed = (value) => (value / scale).toFixed(2)
+  return {
+    'frame-above': fixed(row.top - frame.top),
+    'frame-below': fixed(frame.bottom - row.bottom),
+    'text-above': fixed(text.top - row.top),
+    'text-below': fixed(row.bottom - text.bottom),
+  }
+}
+const measuring = setInterval(() => {
+  if (measure()) {
+    clearInterval(measuring)
+    requestAnimationFrame(() => parent.postMessage({ probe: measure() }, '*'))
+  }
+}, 50)
+`
