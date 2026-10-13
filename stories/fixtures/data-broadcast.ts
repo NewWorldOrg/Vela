@@ -453,3 +453,90 @@ window.addEventListener('message', async () => {
   parent.postMessage({ probe: report }, '*')
 })
 `
+
+const ROWS = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="rows.css" type="text/css"/>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9">
+<p style="left: 40px; top: 40px; width: 880px">番組表　今日の番組　あしたの番組</p>
+<p style="left: 40px; top: 56px; width: 880px">ニュース　天気予報　スポーツ　「見本」</p>
+<p style="left: 40px; top: 72px; width: 880px">漢字とかなとＡＢＣｇｙ（全角）の行</p>
+<p style="left: 40px; top: 88px; width: 880px">お知らせ　番組の内容は変わることがあります</p>
+</body>
+</bml>`
+
+const ROWS_CSS = 'p { height: 16px; font-size: 16px; }'
+
+export const ROWS_CATALOG: BmlCatalog = {
+  service: 1027,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'rows.css', type: 'text/css' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** A list of rows each as tall as its 16px text, set by the style sheet, with nothing said about the line height. */
+export function rowModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', ROWS),
+        resource('rows.css', 'css', ROWS_CSS),
+      ],
+    },
+  ]
+}
+
+/** Measures, once the bundled face is loaded and the rows are drawn, how far the text of any row reaches above or below its box, in the document's pixels, and how far its lines overflow it. */
+export const GLYPH_PROBE = `
+const faceLoaded = () => Array.from(document.fonts).some((face) => face.family.replace(/"/g, '') === 'Denpa Font' && face.status === 'loaded')
+function measure() {
+  const rows = Array.from(document.querySelectorAll('#bml-plane [data-bml-tag="p"]'))
+  if (rows.length === 0 || !faceLoaded()) {
+    return null
+  }
+  const report = { rows: rows.length, above: -Infinity, below: -Infinity, overflow: -Infinity }
+  for (const row of rows) {
+    const box = row.getBoundingClientRect()
+    const range = document.createRange()
+    range.selectNodeContents(row)
+    const text = range.getBoundingClientRect()
+    const scale = box.height / row.offsetHeight
+    report.above = Math.max(report.above, (box.top - text.top) / scale)
+    report.below = Math.max(report.below, (text.bottom - box.bottom) / scale)
+    report.overflow = Math.max(report.overflow, row.scrollHeight - row.clientHeight)
+  }
+  report.above = report.above.toFixed(2)
+  report.below = report.below.toFixed(2)
+  report.font = getComputedStyle(rows[0]).fontSize
+  return report
+}
+const measuring = setInterval(() => {
+  const report = measure()
+  if (report) {
+    clearInterval(measuring)
+    requestAnimationFrame(() => parent.postMessage({ probe: measure() }, '*'))
+  }
+}, 50)
+`

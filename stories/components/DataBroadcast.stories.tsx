@@ -4,7 +4,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import type { Rect } from '@/lib/caption-placement'
 import { keyFromKeyboard } from '@/lib/bml/keys'
-import type { RuntimeMessage } from '@/lib/bml/messages'
+import type { PlayerMessage, RuntimeMessage } from '@/lib/bml/messages'
 import {
   RUNTIME_POLICY,
   RUNTIME_SANDBOX,
@@ -17,6 +17,7 @@ import {
   type SendToRuntime,
 } from '@/components/data-broadcast/bml-frame'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
+import { RUNTIME_SCRIPT } from '@/components/data-broadcast/runtime-script.generated'
 import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
@@ -31,9 +32,12 @@ import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlModule } from '@/lib/bml/resources'
 import {
   DATA_BROADCAST_CATALOG,
+  GLYPH_PROBE,
+  ROWS_CATALOG,
   SANDBOX_PROBE,
   SCRIPTED_CATALOG,
   dataBroadcastModules,
+  rowModules,
   scriptedModules,
 } from '@/stories/fixtures/data-broadcast'
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
@@ -344,6 +348,105 @@ export const 放送の文書から届かないもの: Story = {
       'connect-src',
     )
     await expect(report.getAttribute('data-violations')).toContain('img-src')
+  },
+}
+
+/** The runtime in a frame of its own with a probe beside it, drawing rows each as tall as its text, and saying how far the text reaches past them. */
+function Rows() {
+  const frame = useRef<HTMLIFrameElement>(null)
+  const [report, setReport] = useState<Record<string, string>>({})
+  const source = useMemo(
+    () =>
+      runtimeDocument(
+        window.location.origin,
+        `${RUNTIME_SCRIPT}\n${GLYPH_PROBE}`,
+      ),
+    [],
+  )
+
+  useEffect(() => {
+    const listen = (event: MessageEvent) => {
+      const probe = (event.data as { probe?: Record<string, unknown> } | null)
+        ?.probe
+
+      if (event.source !== frame.current?.contentWindow || !probe) {
+        return
+      }
+
+      setReport(
+        Object.fromEntries(
+          Object.entries(probe).map(([name, value]) => [name, String(value)]),
+        ),
+      )
+    }
+
+    window.addEventListener('message', listen)
+
+    return () => window.removeEventListener('message', listen)
+  }, [])
+
+  const open = async () => {
+    const runtime = frame.current?.contentWindow
+
+    if (!runtime) {
+      return
+    }
+
+    const send = (message: PlayerMessage, transfer: Transferable[] = []) =>
+      runtime.postMessage(message, '*', transfer)
+    const fonts = await fontsForTheRuntime()
+
+    send(
+      { kind: 'font', fonts },
+      fonts.map((font) => font.bytes),
+    )
+    send({ kind: 'catalog', catalog: ROWS_CATALOG })
+    rowModules().forEach((module) => send({ kind: 'module', module }))
+    send({ kind: 'open' })
+  }
+
+  return (
+    <div
+      className="p-6"
+      role="group"
+      aria-label="文字の大きさと同じ高さの行"
+      {...Object.fromEntries(
+        Object.entries(report).map(([name, value]) => [`data-${name}`, value]),
+      )}
+    >
+      <div className={PLAYER_BOARD}>
+        <div className={cn(PLAYER_FACE, 'relative')}>
+          <iframe
+            ref={frame}
+            title="データ放送"
+            srcDoc={source}
+            sandbox={RUNTIME_SANDBOX}
+            onLoad={() => void open()}
+            className="absolute inset-0 size-full border-0 [color-scheme:normal]"
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const HALF_A_PIXEL = 0.5
+
+export const 文字の大きさと同じ高さの行: Story = {
+  render: () => <Rows />,
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getByRole('group', {
+      name: '文字の大きさと同じ高さの行',
+    })
+    const measured = (name: string) => Number(rows.getAttribute(`data-${name}`))
+
+    await waitFor(() => expect(rows).toHaveAttribute('data-rows', '4'), {
+      timeout: 5000,
+    })
+    await expect(rows).toHaveAttribute('data-font', '16px')
+    await expect(rows).toHaveAttribute('data-overflow', '0')
+    await expect(measured('above')).toBeLessThanOrEqual(HALF_A_PIXEL)
+    await expect(measured('below')).toBeLessThanOrEqual(HALF_A_PIXEL)
   },
 }
 
