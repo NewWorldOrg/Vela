@@ -69,3 +69,86 @@ test('older forms a document may be written in still parse', () => {
 
   assert.equal(valueOf(code), 2)
 })
+
+test('dividing in place works out a place that changes something only once', () => {
+  assert.deepEqual(
+    valueOf('var a = [8, 9, 10]; var i = 1; a[i++] /= 2; return [a, i]'),
+    [[8, 4, 10], 2],
+  )
+  assert.deepEqual(
+    valueOf('var a = [5, 6, 7]; var b = 4; a[b /= 2] /= 3; return [a, b]'),
+    [[5, 6, 2], 2],
+  )
+  assert.deepEqual(
+    valueOf(
+      'var o = { x: 9 }, calls = 0; function f() { calls++; return o } f().x /= 2; return [o.x, calls]',
+    ),
+    [4, 1],
+  )
+  assert.deepEqual(
+    valueOf(
+      'var o = { x: 9 }, calls = 0; function f() { calls++; return o } (f())["x"] /= 2; return [o.x, calls]',
+    ),
+    [4, 1],
+  )
+  assert.deepEqual(
+    valueOf(
+      'var o = { n: 30 }, keys = 0; function k() { keys++; return "n" } var y = o[k()] /= 4; return [o.n, y, keys]',
+    ),
+    [7, 7, 1],
+  )
+})
+
+test('dividing in place sees through the brackets around a place', () => {
+  assert.deepEqual(
+    valueOf(
+      'var o = { x: 9 }, calls = 0; function f() { calls++; return o } ((f().x)) /= 2; return [o.x, calls]',
+    ),
+    [4, 1],
+  )
+  assert.equal(valueOf('var x = 9; (x) /= 2; return x'), 4)
+})
+
+test('a place is read before its divisor is worked out, as the language does', () => {
+  assert.deepEqual(
+    valueOf(
+      'var o = { x: 9 }, calls = 0; function f() { calls++; return o } f().x /= (o.x = 100, 2); return o.x',
+    ),
+    4,
+  )
+})
+
+test('a division that follows a word stays apart from it', () => {
+  assert.equal(valueOf('var a = 3, b = 4; return(a+b)/2'), 3)
+  assert.equal(valueOf('var x = 7; return-x/2'), -3)
+  assert.equal(
+    valueOf('switch (1) { case(3)/2: return "hit" } return "miss"'),
+    'hit',
+  )
+  assert.equal(valueOf('var o = { 1: true }, b = 2; return 3/(b)in o'), true)
+  assert.equal(
+    valueOf(
+      'var a = [8]; var calls = 0; function f() { calls++; return a } return f()[0]/=3',
+    ),
+    2,
+  )
+})
+
+test('a rewrite that cannot be made gives the code back as it was', (t) => {
+  const held = Object.getOwnPropertyDescriptor(Array.prototype, 'flatMap')
+
+  t.after(() => {
+    if (held) {
+      Object.defineProperty(Array.prototype, 'flatMap', held)
+    }
+  })
+  Object.defineProperty(Array.prototype, 'flatMap', {
+    configurable: true,
+    writable: true,
+    value: () => {
+      throw new Error('a document wrote this')
+    },
+  })
+
+  assert.equal(withIntegerDivision('var a = 1 / 2'), 'var a = 1 / 2')
+})
