@@ -7,6 +7,7 @@ import {
   SHADOWED_GLOBALS,
   ScriptScope,
   givenOf,
+  globalBindingsOf,
   scopeOf,
   withoutTableNew,
 } from '@/lib/bml/scripts'
@@ -153,4 +154,30 @@ test("a run puts the document's writes on the built-ins in place only while its 
   scope.run('read')
   assert.equal(target.trim, undefined)
   assert.deepEqual(seen, ['write:theirs', 'read:theirs'])
+})
+
+test('the bindings of a global object are the names declared on it since, taken as they stand and put back as they were, one declared after they were taken left with nothing', () => {
+  const global: Record<string, unknown> = { builtIn: 1, aside: 'x' }
+  const bindings = globalBindingsOf(global, ['aside'])
+
+  global.ready = true
+  global.list = [1]
+  Object.defineProperty(global, 'fixed', { value: 1, writable: false })
+
+  const taken = bindings.take()
+
+  assert.deepEqual([...taken.keys()], ['ready', 'list', 'fixed'])
+
+  global.ready = false
+  global.builtIn = 2
+  global.aside = 'y'
+  global.later = 'set'
+  bindings.put(taken)
+
+  assert.equal(global.ready, true)
+  assert.deepEqual(global.list, [1])
+  assert.equal(global.builtIn, 2)
+  assert.equal(global.aside, 'y')
+  assert.equal(global.later, undefined)
+  assert.equal(global.fixed, 1)
 })

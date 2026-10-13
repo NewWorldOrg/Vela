@@ -1,7 +1,13 @@
 import vm from 'node:vm'
 import { DOMParser } from '@xmldom/xmldom'
 
-import { givenOf, SHADOWED_GLOBALS, type Evaluate } from '@/lib/bml/scripts'
+import {
+  givenOf,
+  globalBindingsOf,
+  SHADOWED_GLOBALS,
+  type Evaluate,
+  type GlobalBindings,
+} from '@/lib/bml/scripts'
 import type { RuntimeWindow } from '@/components/data-broadcast/bml-runtime'
 
 /** Enough of a DOM for the runtime to draw a page into and for a document's scripts to read and write: elements with attributes, inline style, children and a parent, and text nodes. */
@@ -258,21 +264,37 @@ export class FakeTimers {
 
 /** Runs a document's code in a context of its own, as the frame's global scope would: what the scope was given is there by name, what it hides is undefined, and declarations stay for the next run. */
 export function vmEvaluator(): Evaluate {
-  const contexts = new WeakMap<object, vm.Context>()
+  const contexts = new WeakMap<
+    object,
+    { context: vm.Context; bindings: GlobalBindings }
+  >()
+  const contextOf = (scope: object) => {
+    const held = contexts.get(scope)
 
-  return (code, scope) => {
-    const context =
-      contexts.get(scope) ??
-      vm.createContext({
-        ...Object.fromEntries(
-          SHADOWED_GLOBALS.map((name) => [name, undefined]),
-        ),
-        ...givenOf(scope),
-      })
+    if (held) {
+      return held
+    }
 
-    contexts.set(scope, context)
-    vm.runInContext(code, context)
+    const context = vm.createContext({
+      ...Object.fromEntries(SHADOWED_GLOBALS.map((name) => [name, undefined])),
+      ...givenOf(scope),
+    })
+    const made = {
+      context,
+      bindings: globalBindingsOf(vm.runInContext('this', context) as object),
+    }
+
+    contexts.set(scope, made)
+
+    return made
   }
+  const evaluate: Evaluate = (code, scope) => {
+    vm.runInContext(code, contextOf(scope).context)
+  }
+
+  evaluate.bindings = (scope) => contextOf(scope).bindings
+
+  return evaluate
 }
 
 export interface FakeFrame {

@@ -51,11 +51,13 @@ import {
   HYBRIDCAST_AIT,
   HYBRIDCAST_APPLICATION,
   HYBRIDCAST_CATALOG,
+  KEYED_HYBRIDCAST_CATALOG,
   LINE_CATALOG,
   OVER_THE_LINE_PAGES,
   SCRIPTED_CATALOG,
   dataBroadcastModules,
   hybridcastModules,
+  keyedHybridcastModules,
   lineModules,
   scriptedModules,
 } from '@/stories/fixtures/data-broadcast'
@@ -1489,6 +1491,32 @@ export const Hybridcast: Story = {
 
     await backAtTheDocuments(canvasElement)
     await expect(asked.started).toEqual([STARTING])
+  },
+}
+
+const KEYED_HYBRIDCAST = [
+  catalogPayload(KEYED_HYBRIDCAST_CATALOG),
+  ...keyedHybridcastModules().map(modulePayload),
+]
+
+export const Hybridcast_メニューの決定で始まる: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: {
+    openSocket: carrying(...KEYED_HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AT_THE_START)
+
+    press(onTheScreen(canvasElement, 'live-player'), 'Enter')
+
+    await runningOnTheBand(canvasElement)
+    await expect(asked.transmitted.length).toBe(1)
+    await expect(asked.aits).toEqual([HYBRIDCAST_AIT])
+    await expect(asked.started).toEqual([STARTING])
+    await theApplicationRuns(canvasElement)
   },
 }
 

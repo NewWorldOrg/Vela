@@ -457,6 +457,53 @@ function start() {
 </body>
 </bml>`
 
+const STARTS_ON_A_KEY = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+var ready = true;
+function taken() { if (!ready) { return true; } ready = false; return false; }
+function pressed() {
+  if (taken()) { return; }
+  if (document.currentEvent.keyCode == 18) {
+    var r = browser.transmitTextDataOverIP('http://example.test/check', '', 'EUC-JP');
+    if (r[0] == 1 && r[1] == 200) {
+      browser.Greg[44] = 'back';
+      browser.startAITControlledApp('10', '1', '${HYBRIDCAST_AIT}');
+    }
+  }
+  browser.setInterval('ready = true;', 100, 1);
+}
+]]></script>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 560px; top: 60px; width: 360px; height: 203px"/>
+<p id="menu" class="menu" style="left: 40px; top: 60px; nav-index: 0" onkeydown="pressed();">Hybridcast</p>
+</body>
+</bml>`
+
+/** A self-made data broadcast whose menu starts a Hybridcast application on 決定, as a broadcaster's menu does: its key handler turns a second press away until a timer lets it in again, checks the line first, and only then asks for the application. */
+export const KEYED_HYBRIDCAST_CATALOG: BmlCatalog = {
+  ...LINE_CATALOG,
+  service: 1028,
+}
+
+export function keyedHybridcastModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', STARTS_ON_A_KEY),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+  ]
+}
+
 /** A self-made data broadcast whose entry document starts a Hybridcast application as it opens, unless the shared registers say it came back from one. The script runs again from its start once the AIT is in, so it tells its own mark in the shared registers from one left by the documents before it by a mark in its own. */
 export const HYBRIDCAST_CATALOG: BmlCatalog = {
   ...LINE_CATALOG,
