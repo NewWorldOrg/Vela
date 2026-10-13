@@ -47,6 +47,7 @@ const THE_SUITE = [
   'tests/lib/bml/catalog.test.ts',
   'tests/lib/bml/document.test.ts',
   'tests/lib/bml/events.test.ts',
+  'tests/lib/bml/integers.test.ts',
   'tests/lib/bml/keys.test.ts',
   'tests/lib/bml/memory.test.ts',
   'tests/lib/bml/messages.test.ts',

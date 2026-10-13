@@ -36,12 +36,15 @@ import {
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlModule } from '@/lib/bml/resources'
 import {
+  CURSOR_PROBE,
   DATA_BROADCAST_CATALOG,
   GLYPH_PROBE,
+  MENU_CATALOG,
   ROWS_CATALOG,
   SANDBOX_PROBE,
   SCRIPTED_CATALOG,
   dataBroadcastModules,
+  menuModules,
   rowModules,
   scriptedModules,
 } from '@/stories/fixtures/data-broadcast'
@@ -356,17 +359,24 @@ export const 放送の文書から届かないもの: Story = {
   },
 }
 
-/** The runtime in a frame of its own with a probe beside it, drawing rows each as tall as its text, and saying how far the text reaches past them. */
-function Rows() {
+/** The runtime in a frame of its own with a probe beside it, drawing a document and saying what the probe measured of it. */
+function Measured({
+  label,
+  catalog,
+  modules,
+  probe,
+}: {
+  label: string
+  catalog: BmlCatalog
+  modules: () => BmlModule[]
+  probe: string
+}) {
   const frame = useRef<HTMLIFrameElement>(null)
   const [report, setReport] = useState<Record<string, string>>({})
   const source = useMemo(
     () =>
-      runtimeDocument(
-        window.location.origin,
-        `${RUNTIME_SCRIPT}\n${GLYPH_PROBE}`,
-      ),
-    [],
+      runtimeDocument(window.location.origin, `${RUNTIME_SCRIPT}\n${probe}`),
+    [probe],
   )
 
   useEffect(() => {
@@ -405,8 +415,8 @@ function Rows() {
       { kind: 'font', fonts },
       fonts.map((font) => font.bytes),
     )
-    send({ kind: 'catalog', catalog: ROWS_CATALOG })
-    rowModules().forEach((module) => send({ kind: 'module', module }))
+    send({ kind: 'catalog', catalog })
+    modules().forEach((module) => send({ kind: 'module', module }))
     send({ kind: 'open' })
   }
 
@@ -414,7 +424,7 @@ function Rows() {
     <div
       className="p-6"
       role="group"
-      aria-label="文字の大きさと同じ高さの行"
+      aria-label={label}
       {...Object.fromEntries(
         Object.entries(report).map(([name, value]) => [`data-${name}`, value]),
       )}
@@ -438,7 +448,14 @@ function Rows() {
 const HALF_A_PIXEL = 0.5
 
 export const 文字の大きさと同じ高さの行: Story = {
-  render: () => <Rows />,
+  render: () => (
+    <Measured
+      label="文字の大きさと同じ高さの行"
+      catalog={ROWS_CATALOG}
+      modules={rowModules}
+      probe={GLYPH_PROBE}
+    />
+  ),
   play: async ({ canvasElement }) => {
     const rows = within(canvasElement).getByRole('group', {
       name: '文字の大きさと同じ高さの行',
@@ -452,6 +469,34 @@ export const 文字の大きさと同じ高さの行: Story = {
     await expect(rows).toHaveAttribute('data-overflow', '0')
     await expect(measured('above')).toBeLessThanOrEqual(HALF_A_PIXEL)
     await expect(measured('below')).toBeLessThanOrEqual(HALF_A_PIXEL)
+  },
+}
+
+const CURSOR_MARGIN = 4
+
+export const カーソルの枠と行: Story = {
+  render: () => (
+    <Measured
+      label="カーソルの枠と行"
+      catalog={MENU_CATALOG}
+      modules={menuModules}
+      probe={CURSOR_PROBE}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const menu = within(canvasElement).getByRole('group', {
+      name: 'カーソルの枠と行',
+    })
+    const measured = (name: string) => Number(menu.getAttribute(`data-${name}`))
+
+    await waitFor(() => expect(menu).toHaveAttribute('data-frame-above'), {
+      timeout: 5000,
+    })
+    await expect(measured('frame-above')).toBe(CURSOR_MARGIN)
+    await expect(measured('frame-below')).toBe(CURSOR_MARGIN)
+    await expect(
+      Math.abs(measured('text-above') - measured('text-below')),
+    ).toBeLessThanOrEqual(HALF_A_PIXEL)
   },
 }
 

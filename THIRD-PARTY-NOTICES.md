@@ -64,6 +64,7 @@ file has one written there from the license its `package.json` states.
 | `@radix-ui/react-use-size` | MIT |
 | `@radix-ui/react-visually-hidden` | MIT |
 | `@swc/helpers` | Apache-2.0 |
+| `acorn` | MIT |
 | `aria-hidden` | MIT |
 | `class-variance-authority` | Apache-2.0 |
 | `client-only` | MIT |
