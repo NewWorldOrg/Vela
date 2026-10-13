@@ -12,6 +12,7 @@ import {
   type TransmitAnswer,
 } from '@/lib/bml/line'
 import { readModule, type BmlModule } from '@/lib/bml/resources'
+import type { OwnedApplication } from '@/lib/hybridcast/messages'
 
 /** What the relay came to: the answer, the setting refusing the line (403), or the relay not reached or answering in a shape it does not have. */
 export type Relayed<Answer> =
@@ -33,7 +34,50 @@ export interface LineRelay {
   fetch(uri: string): Promise<Relayed<BmlModule>>
   receiverId(): Promise<ReceiverId | null>
   ait(uri: string): Promise<Relayed<AitApplication[]>>
-  startApplication(start: AppStart): Promise<Relayed<HybridcastTicket>>
+  startApplication(start: AppStart): Promise<Relayed<StartedApplication>>
+}
+
+/** A Hybridcast application started for the player: the address its frame opens, and the application as its AIT names it, with the boundary its permissions come from. */
+export interface StartedApplication {
+  address: string
+  application: OwnedApplication
+}
+
+/** What starting an application came to, from Carina's ticket and the AIT read for it: started only when both were answered and the AIT names the application with a boundary, as one read without it would permit everything. */
+export function startedApplicationOf(
+  start: AppStart,
+  ticket: Relayed<HybridcastTicket>,
+  read: Relayed<AitApplication[]>,
+): Relayed<StartedApplication> {
+  if (ticket.said !== 'answered') {
+    return ticket
+  }
+
+  const named =
+    read.said === 'answered'
+      ? read.answer.find(
+          (one) => one.orgId === start.orgId && one.appId === start.appId,
+        )
+      : undefined
+
+  if (!named?.boundary) {
+    return { said: 'unreached' }
+  }
+
+  return {
+    said: 'answered',
+    answer: {
+      address: ticket.answer.address,
+      application: {
+        ait: start.ait,
+        orgId: named.orgId,
+        appId: named.appId,
+        controlCode: named.controlCode,
+        entryUrl: named.entryUrl,
+        boundary: named.boundary,
+      },
+    },
+  }
 }
 
 /** The route a document's text is sent to the broadcaster's server through, for the channel watched live. */

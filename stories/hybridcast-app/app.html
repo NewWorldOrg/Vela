@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <script
+      src="/data-broadcast/hybridcast-receiver.js"
+      data-hybridcast-relay="/hybridcast-app/app.html"
+      data-hybridcast-socket="/hybridcast-app/socket"
+      data-hybridcast-document="http://example.test/hc/index.html"
+    ></script>
+    <title>Hybridcast の見本</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: transparent;
+      }
+      body {
+        font: 40px sans-serif;
+        color: #fff;
+      }
+      .panel {
+        position: absolute;
+        left: 80px;
+        top: 120px;
+        width: 800px;
+        height: 450px;
+        background: #23466e;
+      }
+      .panel p {
+        margin: 40px;
+      }
+      object {
+        position: absolute;
+        left: 960px;
+        top: 120px;
+        width: 800px;
+        height: 450px;
+      }
+      #keys {
+        position: absolute;
+        left: 80px;
+        top: 640px;
+        width: 1680px;
+        height: 120px;
+        margin: 0;
+        background: #2f2f3a;
+      }
+    </style>
+  </head>
+  <body>
+    <object type="video/x-iptvf-broadcast"></object>
+    <div class="panel"><p>Hybridcast の見本</p></div>
+    <p id="keys"></p>
+    <script>
+      // A self-made application that calls the receiver the way the applications call it, and reports what it was answered to the page around it.
+      var asked = decodeURIComponent(location.search)
+      var page = asked.indexOf('next.html') >= 0 ? 'next' : 'index'
+      var report = { page: page }
+      var say = function (name, value) {
+        report[name] = String(value)
+        parent.postMessage({ probe: report }, '*')
+      }
+      var errorName = function (run) {
+        try {
+          run()
+          return 'none'
+        } catch (error) {
+          return error.name
+        }
+      }
+      var device = navigator.receiverDevice
+      var manager = navigator.applicationManager
+      var pseudo = navigator.bmlCompat.browserPseudo
+      var owner = manager.getOwnerApplication()
+
+      say('origin', self.origin)
+      say(
+        'agent',
+        navigator.userAgent.indexOf('Hybridcast/') >= 0 ? 'hybridcast' : 'none',
+      )
+      say(
+        'agent-maker',
+        navigator.userAgent
+          .substr(navigator.userAgent.indexOf('Hybridcast/'))
+          .split(';').length,
+      )
+      say('name', window.name)
+      say(
+        'cookie',
+        errorName(function () {
+          return document.cookie
+        }),
+      )
+      say(
+        'storage',
+        errorName(function () {
+          return window.localStorage
+        }),
+      )
+      say(
+        'parent',
+        errorName(function () {
+          return parent.document.title
+        }),
+      )
+      say('vk', [VK_ENTER, VK_UP, VK_RED, VK_DBUTTON, VK_0].join(','))
+      var system = device.getSystemInformation(null)
+      say(
+        'system',
+        [
+          system.makerid,
+          system.modelname,
+          system.browsername,
+          system.browserversion,
+        ].join('|'),
+      )
+      var event = null
+      device.getCurrentEventInformation(function (info) {
+        event = info
+      })
+      say(
+        'event',
+        event
+          ? [
+              event.service_id,
+              event.event_id,
+              event.name,
+              event.start_time instanceof Date,
+            ].join('|')
+          : 'later',
+      )
+      device.getDeviceIdentifier(0x0005, function (id) {
+        say('device', id)
+      })
+      say('onair', device.streamEvent.sourceIs('onair'))
+      say('greg44', pseudo.Greg[44])
+      say('greg61', pseudo.Greg[61])
+      pseudo.Greg[61] = 'app:1'
+      say(
+        'memory',
+        pseudo.writePersistentArray('nvram://~/local/sample', 'S:3B', [
+          'abc',
+        ]) === 1
+          ? pseudo.readPersistentArray('nvram://~/local/sample', 'S:3B')[0]
+          : 'failed',
+      )
+      say('tune', device.tuneTo({}, null))
+      say('companion', device.getCompanionDeviceList())
+      say(
+        'ait',
+        JSON.stringify(
+          manager.getOwnerAIT && [
+            manager.getOwnerAIT().orgId,
+            manager.getOwnerAIT().appId,
+          ],
+        ),
+      )
+      var keySet = owner.keySet
+      var groups =
+        keySet.RED |
+        keySet.GREEN |
+        keySet.YELLOW |
+        keySet.BLUE |
+        keySet.NAVIGATION |
+        keySet.NUMERIC
+      if (asked.indexOf('dbutton') >= 0) {
+        groups = groups | keySet.DBUTTON
+      }
+      keySet.setValue(groups)
+      say('keyset', keySet.value)
+
+      fetch(
+        location.origin + '/api/live/32736-1024/data-broadcast/receiver-id',
+      ).then(
+        function (answer) {
+          say(
+            'api',
+            answer.url.indexOf('/hybridcast-app/app.html?uri=') >= 0
+              ? 'relayed'
+              : answer.url,
+          )
+        },
+        function (error) {
+          say('api', error.name)
+        },
+      )
+      fetch('/hc/list.json').then(
+        function (answer) {
+          say(
+            'fetch',
+            answer.url.indexOf(
+              '/hybridcast-app/app.html?uri=http%3A%2F%2Fexample.test%2Fhc%2Flist.json',
+            ) >= 0
+              ? 'relayed'
+              : answer.url,
+          )
+        },
+        function (error) {
+          say('fetch', error.name)
+        },
+      )
+      fetch('https://elsewhere.test/track').then(
+        function () {
+          say('outside', 'reached')
+        },
+        function (error) {
+          say('outside', error.name)
+        },
+      )
+      var request = new XMLHttpRequest()
+      request.onerror = function () {
+        say('xhr-outside', 'error ' + request.readyState + ' ' + request.status)
+      }
+      request.open('GET', 'https://elsewhere.test/beacon')
+      request.send()
+      say(
+        'socket-outside',
+        errorName(function () {
+          return new WebSocket('wss://elsewhere.test/live')
+        }),
+      )
+      var socket = new WebSocket('/live')
+      say(
+        'socket',
+        socket.url.indexOf(
+          '/hybridcast-app/socket?uri=ws%3A%2F%2Fexample.test%2Flive',
+        ) >= 0
+          ? 'relayed'
+          : socket.url,
+      )
+      socket.onerror = function () {}
+      var image = document.createElement('img')
+      image.src = '/hc/mark.png'
+      image.alt = ''
+      document.body.appendChild(image)
+      setTimeout(function () {
+        say(
+          'image',
+          image
+            .getAttribute('src')
+            .indexOf(
+              '/hybridcast-app/app.html?uri=http%3A%2F%2Fexample.test%2Fhc%2Fmark.png',
+            ) >= 0
+            ? 'relayed'
+            : image.getAttribute('src'),
+        )
+      }, 50)
+
+      var pressed = []
+      document.addEventListener('keydown', function (event) {
+        pressed.push(event.which)
+        document.getElementById('keys').textContent = pressed.join(' ')
+        say('keys', pressed.join(','))
+        if (event.which === VK_ENTER) {
+          location.href = '/hc/next.html'
+        }
+        if (event.which === VK_BLUE) {
+          say('escape', 'tried')
+          location.href = 'https://elsewhere.test/'
+          setTimeout(function () {
+            say('escape', 'stayed')
+          }, 300)
+        }
+        if (event.which === VK_YELLOW) {
+          owner.destroyApplication()
+        }
+        if (event.which === VK_GREEN) {
+          manager.launchDataBroadcastingBrowser({ component_tag: 0x40 })
+        }
+      })
+    </script>
+  </body>
+</html>

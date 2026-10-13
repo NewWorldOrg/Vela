@@ -75,13 +75,19 @@ function receiver(bitmap = EVERYTHING, over: Partial<AppState> = {}) {
     string,
     (...args: unknown[]) => unknown
   >
-  const pseudo = api.bmlCompat.browserPseudo as Record<string, unknown> & {
+  const pseudo = api.bmlCompat.browserPseudo as unknown as {
     Greg: string[]
+    readPersistentArray: (...args: unknown[]) => unknown
+    writePersistentArray: (...args: unknown[]) => unknown
   }
+  const capabilities = api.capabilities as Record<
+    string,
+    (...args: unknown[]) => unknown
+  >
 
   return {
     made,
-    api,
+    capabilities,
     device,
     stream,
     manager,
@@ -121,7 +127,7 @@ test('the receiver offers the functions of the table and answers for the nine it
 })
 
 test('the twenty-five it offers are where the applications look for them', () => {
-  const { api, device, stream, manager, owner, pseudo } = receiver()
+  const { capabilities, device, stream, manager, owner, pseudo } = receiver()
   const offered = [
     device.getCurrentEventInformation,
     device.isCommonEvent,
@@ -144,7 +150,7 @@ test('the twenty-five it offers are where the applications look for them', () =>
     manager.launchDataBroadcastingBrowser,
     manager.getOwnerAIT,
     manager.getApplicationBoundaryAndPermissionDescriptor,
-    api.capabilities.hasCapability,
+    capabilities.hasCapability,
     pseudo.readPersistentArray,
     pseudo.writePersistentArray,
   ]
@@ -216,7 +222,7 @@ test('the source is on air', () => {
 })
 
 test('a bitmap of 0x0000 forbids everything but the owner application, closing it and the capabilities', () => {
-  const { api, device, stream, manager, owner, pseudo, said, warned } =
+  const { capabilities, device, stream, manager, owner, pseudo, said, warned } =
     receiver(0x0000)
   let called = false
 
@@ -235,7 +241,7 @@ test('a bitmap of 0x0000 forbids everything but the owner application, closing i
   assert.equal(pseudo.Greg[44], '')
   assert.equal(pseudo.readPersistentArray('a', 'S:1B'), null)
   assert.ok(Number.isNaN(pseudo.writePersistentArray('a', 'S:1B', ['x'])))
-  assert.equal(api.capabilities.hasCapability('x'), false)
+  assert.equal(capabilities.hasCapability('x'), false)
   assert.ok(manager.getOwnerApplication())
   assert.equal(owner.destroyApplication(), true)
   assert.deepEqual(said, [{ kind: 'destroy' }])

@@ -318,7 +318,7 @@ export class BmlRuntime {
         this.took(message.id, message.module)
         return
       case 'open':
-        this.open()
+        this.open(message.startup)
         return
       case 'close':
         this.close()
@@ -415,8 +415,11 @@ export class BmlRuntime {
       ?.resources.find((resource) => resource.path === address.name)
   }
 
-  private open(): void {
-    const startup = this.catalog ? addressOf(this.catalog.startup) : null
+  /** Opens at the catalog's start document, or at the one the player names: the start document of the component a Hybridcast application went back to. */
+  private open(named?: string): void {
+    const startup = this.catalog
+      ? addressOf(named ?? this.catalog.startup)
+      : null
 
     if (!startup) {
       this.fail('missing')

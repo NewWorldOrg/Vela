@@ -165,6 +165,23 @@ test('opening draws the start document and tells the player where the video goes
   assert.equal(focused(), 'next')
 })
 
+test('opening at the start document of another component draws that one', () => {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', STARTUP] }),
+  })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', NEXT] }, 0x60),
+  })
+  opening.send({ kind: 'open', startup: '/60/0000/startup.bml' })
+
+  assert.deepEqual(opening.heard()[0], { kind: 'videoRect', rect: NEXT_RECT })
+})
+
 test('opening with no catalog, or no start document, says it is missing', () => {
   const bare = frame()
 

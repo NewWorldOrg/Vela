@@ -10,6 +10,8 @@ import {
 import { MOST_RUN_MS } from '@/lib/bml/scripts'
 import { GRID } from '@/lib/bml/style'
 import type { DataBroadcastAvailability } from '@/lib/data-broadcast-feed'
+import { KEY_SET_UNTIL_TOLD, keysOfKeySet } from '@/lib/hybridcast/keys'
+import { APP_SIZE, type OwnedApplication } from '@/lib/hybridcast/messages'
 
 export const SAID_RECEIVING = 'ページを受信しています。'
 
@@ -39,11 +41,15 @@ export const SCRIPT_GIVEN_UP_AFTER_MS = MOST_RUN_MS
 /** The keys a document takes until it says otherwise: `basic` and `data-button`. */
 export const KEYS_UNTIL_TOLD = keysOf(['basic', 'data-button'])
 
-/** The Hybridcast application the documents asked to start: what they asked for, which start it is, so that an answer for an earlier one is not taken, and the address its frame opens once Carina started it, null until then. */
+/** The keys an application takes until it says otherwise. */
+export const APP_KEYS_UNTIL_TOLD = keysOfKeySet(KEY_SET_UNTIL_TOLD)
+
+/** The Hybridcast application the documents asked to start: what they asked for, which start it is, so that an answer for an earlier one is not taken, and the address its frame opens and the application as its AIT names it, once Carina started it, null until then. */
 export interface HybridcastApp {
   start: AppStart
   nth: number
   address: string | null
+  application: OwnedApplication | null
 }
 
 /** What the player shows of a data broadcast. `waits`, `notices`, `lineNotices` and `scripting` name the latest wait, notice, word about the line and script run, so a timer started for one of them cannot end a later one. `lineOffSaid` is whether the setting refusing the line has been said while open, as it is said once. */
@@ -69,6 +75,7 @@ export interface DataBroadcastView {
   appNotices: number
   failedStarts: readonly AppStart[]
   returns: number
+  startup: string | null
 }
 
 export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
@@ -93,6 +100,7 @@ export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
   appNotices: 0,
   failedStarts: [],
   returns: 0,
+  startup: null,
 }
 
 function closed(
@@ -120,10 +128,20 @@ export type DataBroadcastStep =
   | { on: 'overran'; scripting: number }
   | { on: 'numbers'; shown: boolean }
   | { on: 'quiet' }
-  | { on: 'appStarted'; nth: number; address: string }
+  | {
+      on: 'appStarted'
+      nth: number
+      address: string
+      application: OwnedApplication
+    }
   | { on: 'appUnopened'; nth: number }
-  | { on: 'appClosed' }
+  | { on: 'appClosed'; startup?: string | null }
   | { on: 'appFaded'; appNotices: number }
+  | { on: 'appRect'; rect: Rect | null }
+  | { on: 'appKeys'; mask: number }
+  | { on: 'appGreg'; greg: readonly string[] }
+  | { on: 'appReplaced'; start: AppStart; nth: number }
+  | { on: 'appLost'; unopened: boolean; nth: number }
 
 /** What decides whether the broadcast opens by itself: the setting, what the catalog asks, whether it can be opened, and whether it was open during this programme already, as one closed by hand stays closed until the programme changes. */
 export interface AutoOpening {
@@ -179,9 +197,15 @@ function heard(
     case 'startApp':
       return {
         ...view,
-        hybridcast: { start: message.start, nth: nth ?? 0, address: null },
+        hybridcast: {
+          start: message.start,
+          nth: nth ?? 0,
+          address: null,
+          application: null,
+        },
         greg: message.greg,
         rect: null,
+        usedKeys: APP_KEYS_UNTIL_TOLD,
         waiting: false,
         slow: false,
         unsupported: false,
@@ -234,18 +258,50 @@ function saidUnopened(
       }
 }
 
-/** Back to the documents from the application, keeping the shared registers for them. `returns` counts the times they came back, as the documents closed themselves for the application and are drawn afresh each time, even when the application never got as far as the screen. */
-function backToTheDocuments(view: DataBroadcastView): DataBroadcastView {
+/** Back to the documents from the application, keeping the shared registers for them, at the start document of the component the application named, or the one they began at. `returns` counts the times they came back, as the documents closed themselves for the application and are drawn afresh each time, even when the application never got as far as the screen. The picture fills the box again and the documents' keys are the ones taken until they say otherwise. */
+function backToTheDocuments(
+  view: DataBroadcastView,
+  startup: string | null = null,
+): DataBroadcastView {
   return view.hybridcast
-    ? { ...view, hybridcast: null, returns: view.returns + 1 }
+    ? {
+        ...view,
+        hybridcast: null,
+        returns: view.returns + 1,
+        rect: null,
+        usedKeys: KEYS_UNTIL_TOLD,
+        startup,
+      }
     : view
 }
 
-/** The start Carina refused or could not make: back to the documents, said once, and not asked for again while open. */
+/** The start document of a component, as the documents name one. */
+export function startupOf(componentTag: number): string {
+  return `/${componentTag.toString(16).padStart(2, '0')}/0000/startup.bml`
+}
+
+/** A rectangle of the application's 1920x1080 coordinates on the 960x540 grid the picture is laid by. */
+export function gridRectOfApp(rect: Rect | null): Rect | null {
+  if (!rect) {
+    return null
+  }
+
+  const across = GRID.width / APP_SIZE.width
+  const down = GRID.height / APP_SIZE.height
+
+  return {
+    left: rect.left * across,
+    top: rect.top * down,
+    width: rect.width * across,
+    height: rect.height * down,
+  }
+}
+
+/** The start Carina refused or could not make, or whose first document never opened on the relay: back to the documents, said once, and not asked for again while open. `nth` names the notice. */
 function unopenedApp(view: DataBroadcastView, nth: number): DataBroadcastView {
   const app = view.hybridcast
 
-  if (!app || app.nth !== nth) {
+  if (!app) {
     return view
   }
 
@@ -260,30 +316,86 @@ function unopenedApp(view: DataBroadcastView, nth: number): DataBroadcastView {
   )
 }
 
-/** What the application steps change: Carina started it or did not, it was closed, or the word about it faded. */
-function appAfter(
+type AppStep = Extract<
+  DataBroadcastStep,
+  {
+    on:
+      | 'appStarted'
+      | 'appUnopened'
+      | 'appClosed'
+      | 'appFaded'
+      | 'appRect'
+      | 'appKeys'
+      | 'appGreg'
+      | 'appReplaced'
+      | 'appLost'
+  }
+>
+
+/** What the running application changes: where the picture is, the keys it takes, the shared registers, and another application in its place, which opens once Carina started it. */
+function runningAppAfter(
   view: DataBroadcastView,
   step: Extract<
-    DataBroadcastStep,
-    { on: 'appStarted' | 'appUnopened' | 'appClosed' | 'appFaded' }
+    AppStep,
+    { on: 'appRect' | 'appKeys' | 'appGreg' | 'appReplaced' }
   >,
 ): DataBroadcastView {
+  if (!view.hybridcast) {
+    return view
+  }
+
+  switch (step.on) {
+    case 'appRect':
+      return { ...view, rect: gridRectOfApp(step.rect) }
+    case 'appKeys':
+      return { ...view, usedKeys: keysOfKeySet(step.mask) }
+    case 'appGreg':
+      return { ...view, greg: step.greg }
+    case 'appReplaced':
+      return {
+        ...view,
+        hybridcast: {
+          start: step.start,
+          nth: step.nth,
+          address: null,
+          application: null,
+        },
+        rect: null,
+        usedKeys: APP_KEYS_UNTIL_TOLD,
+      }
+  }
+}
+
+/** What the application steps change: Carina started it or did not, it ran, it was closed or lost, or the word about it faded. A frame that lost its first document never opened; one that lost a later one was taken off the relay, and gives way to the documents without a word. */
+function appAfter(view: DataBroadcastView, step: AppStep): DataBroadcastView {
   switch (step.on) {
     case 'appStarted':
       return view.hybridcast?.nth === step.nth
         ? {
             ...view,
-            hybridcast: { ...view.hybridcast, address: step.address },
+            hybridcast: {
+              ...view.hybridcast,
+              address: step.address,
+              application: step.application,
+            },
           }
         : view
     case 'appUnopened':
-      return unopenedApp(view, step.nth)
+      return view.hybridcast?.nth === step.nth
+        ? unopenedApp(view, step.nth)
+        : view
+    case 'appLost':
+      return step.unopened
+        ? unopenedApp(view, step.nth)
+        : backToTheDocuments(view)
     case 'appClosed':
-      return backToTheDocuments(view)
+      return backToTheDocuments(view, step.startup ?? null)
     case 'appFaded':
       return view.unopened && view.appNotices === step.appNotices
         ? { ...view, unopened: false }
         : view
+    default:
+      return runningAppAfter(view, step)
   }
 }
 
@@ -353,6 +465,11 @@ export function dataBroadcastAfter(
     case 'appUnopened':
     case 'appClosed':
     case 'appFaded':
+    case 'appRect':
+    case 'appKeys':
+    case 'appGreg':
+    case 'appReplaced':
+    case 'appLost':
       return view.open ? appAfter(view, step) : view
   }
 }

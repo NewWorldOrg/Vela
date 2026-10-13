@@ -9,6 +9,7 @@ const config = [
       'storybook-static/**',
       'test-results/**',
       'components/data-broadcast/runtime-script.generated.ts',
+      'public/data-broadcast/hybridcast-receiver.js',
     ],
   },
   ...coreWebVitals,

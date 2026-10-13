@@ -1,3 +1,4 @@
+import type { AitApplication, AppStart } from '@/lib/bml/ait'
 import {
   aitRelayed,
   fetchRelayed,
@@ -7,9 +8,12 @@ import {
   liveDataBroadcastTransmitHref,
   liveHybridcastTicketHref,
   receiverIdRelayed,
+  startedApplicationOf,
   ticketRelayed,
   transmitRelayed,
+  type HybridcastTicket,
   type LineRelay,
+  type Relayed,
 } from '@/repository/live-data-broadcast'
 
 /** Longer than the relay's own limit on one transmission, so that the relay says it timed out before the player gives up on it. */
@@ -21,7 +25,7 @@ export const HYBRIDCAST_RECEIVER_SCRIPT =
 
 type Send = (input: string, init: RequestInit) => Promise<Response>
 
-/** The relay of the channel watched live. A relay that cannot be reached, or answers in a shape it does not have, is unreached. */
+/** The relay of the channel watched live. A relay that cannot be reached, or answers in a shape it does not have, is unreached. An application is started with Carina's ticket and the AIT read again beside it, for the boundary its permissions come from. */
 export function liveLineRelay(
   channel: string,
   send: Send = (input, init) => fetch(input, init),
@@ -31,6 +35,50 @@ export function liveLineRelay(
     credentials: 'same-origin',
     signal: AbortSignal.timeout(RELAY_GIVEN_UP_AFTER_MS),
   })
+
+  const ait = async (uri: string): Promise<Relayed<AitApplication[]>> => {
+    try {
+      const answer = await send(liveDataBroadcastAitHref(channel, uri), {
+        ...asking(),
+        headers: { accept: 'application/json' },
+      })
+
+      return aitRelayed(
+        answer.status,
+        answer.ok ? await answer.json() : undefined,
+      )
+    } catch {
+      return { said: 'unreached' }
+    }
+  }
+
+  const ticket = async (
+    start: AppStart,
+  ): Promise<Relayed<HybridcastTicket>> => {
+    try {
+      const answer = await send(liveHybridcastTicketHref(channel), {
+        ...asking(),
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          ait: start.ait,
+          orgId: start.orgId,
+          appId: start.appId,
+          receiverScript: HYBRIDCAST_RECEIVER_SCRIPT,
+        }),
+      })
+
+      return ticketRelayed(
+        answer.status,
+        answer.ok ? await answer.json() : undefined,
+      )
+    } catch {
+      return { said: 'unreached' }
+    }
+  }
 
   return {
     transmit: async (uri, text, charset) => {
@@ -83,45 +131,11 @@ export function liveLineRelay(
         return null
       }
     },
-    ait: async (uri) => {
-      try {
-        const answer = await send(liveDataBroadcastAitHref(channel, uri), {
-          ...asking(),
-          headers: { accept: 'application/json' },
-        })
-
-        return aitRelayed(
-          answer.status,
-          answer.ok ? await answer.json() : undefined,
-        )
-      } catch {
-        return { said: 'unreached' }
-      }
-    },
+    ait,
     startApplication: async (start) => {
-      try {
-        const answer = await send(liveHybridcastTicketHref(channel), {
-          ...asking(),
-          method: 'POST',
-          headers: {
-            accept: 'application/json',
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            ait: start.ait,
-            orgId: start.orgId,
-            appId: start.appId,
-            receiverScript: HYBRIDCAST_RECEIVER_SCRIPT,
-          }),
-        })
+      const [started, read] = await Promise.all([ticket(start), ait(start.ait)])
 
-        return ticketRelayed(
-          answer.status,
-          answer.ok ? await answer.json() : undefined,
-        )
-      } catch {
-        return { said: 'unreached' }
-      }
+      return startedApplicationOf(start, started, read)
     },
   }
 }

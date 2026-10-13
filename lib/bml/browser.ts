@@ -21,7 +21,16 @@ import {
 import { readArray, writeArray, type PersistentMemory } from '@/lib/bml/memory'
 import { lineAddressOf } from '@/lib/bml/paths'
 import type { Programme } from '@/lib/bml/messages'
+import {
+  BROWSER_NAME,
+  BROWSER_VERSION,
+  DONE,
+  FAILED,
+  MAKER_ID,
+} from '@/lib/bml/receiver-identity'
 import { DocumentLeft } from '@/lib/bml/scripts'
+
+export { BROWSER_NAME, BROWSER_VERSION, DONE, FAILED, MAKER_ID }
 
 /** What locking a module came to: held already, awaited from the carousel, absent from the carousel (the document hears of it as `ModuleLocked` with status -2), carried by no component, or named badly. */
 export type LockAnswer = 'held' | 'waiting' | 'absent' | 'noComponent' | 'bad'
@@ -185,13 +194,6 @@ const SUPPORTED_GROUPS = new Set([
 /** The versions of the language a document may ask after and be told yes. */
 const BML_VERSIONS = new Set(['1.0', '2.0', '3.0'])
 
-export const BROWSER_NAME = 'Vela'
-
-export const BROWSER_VERSION = ['1', '0', '0']
-
-/** The maker this receiver names itself as where Hybridcast asks. No maker is named: a broadcaster's list holds the IDs of real makers, and naming one would pass for that maker's receiver. */
-export const MAKER_ID = ''
-
 /** The resident application `getResidentAppVersion` answers for while Hybridcast is allowed: the engine of the applications an AIT controls. */
 const HYBRIDCAST_ENGINE = 'AITControlledApp'
 
@@ -235,12 +237,6 @@ const UNIT_MS: Record<number, number> = {
   4: 86_400_000,
   5: 604_800_000,
 }
-
-/** The 1 a function answers when it did what was asked. */
-export const DONE = 1
-
-/** The NaN a function answers when it could not do what was asked. */
-export const FAILED = Number.NaN
 
 const COMPONENT = /^\/([0-9a-f]{2})(?:\/|$)/i
 

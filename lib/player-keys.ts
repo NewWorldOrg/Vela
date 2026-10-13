@@ -244,9 +244,10 @@ export function playerCommand(
   return command
 }
 
-/** What a data broadcast takes from the keyboard while it is open: the keys its document uses. */
+/** What a data broadcast takes from the keyboard while it is open: the keys its document uses, and d too where a Hybridcast application asked for it, which otherwise opens and closes the broadcast. */
 export interface OpenBroadcast {
   usedKeys: readonly BmlKey[]
+  takesD?: boolean
 }
 
 export type KeyRoute =
@@ -264,7 +265,7 @@ export function routeKey(
 ): KeyRoute | null {
   const key = broadcast ? keyFromKeyboard(press) : null
 
-  if (broadcast && key !== null && key !== 'd') {
+  if (broadcast && key !== null && (key !== 'd' || broadcast.takesD === true)) {
     const on = pressedOn(press.target)
 
     const arrow = ARROWS.has(key)

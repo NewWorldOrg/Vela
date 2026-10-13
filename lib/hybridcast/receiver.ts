@@ -6,7 +6,7 @@ import {
   DONE,
   FAILED,
   MAKER_ID,
-} from '@/lib/bml/browser'
+} from '@/lib/bml/receiver-identity'
 import type { BroadcastEvent } from '@/lib/bml/event-message'
 import { privateDataOf } from '@/lib/bml/events'
 import type { BmlKey } from '@/lib/bml/keys'
