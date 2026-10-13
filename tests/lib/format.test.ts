@@ -7,6 +7,7 @@ import {
   formatCalendarDate,
   formatClock,
   formatDate,
+  formatHours,
   formatLength,
   formatMoment,
   formatMomentSpan,
@@ -249,6 +250,17 @@ test('formatLength drops the hour when there is none', () => {
 test('formatSpan spells an elapsed span in Japanese', () => {
   assert.equal(formatSpan(32), '32 秒')
   assert.equal(formatSpan(392), '6 分 32 秒')
+})
+
+test('formatHours spells a total in hours, and in minutes or seconds while it is short', () => {
+  assert.equal(formatHours(0), '0 時間')
+  assert.equal(formatHours(42), '42 秒')
+  assert.equal(formatHours(2_730), '45 分')
+  assert.equal(formatHours(3_600), '1 時間')
+  assert.equal(formatHours(5_400), '1 時間 30 分')
+  assert.equal(formatHours(35_999), '9 時間 59 分')
+  assert.equal(formatHours(36_000), '10 時間')
+  assert.equal(formatHours(674_100), '187 時間')
 })
 
 inEveryZone(
