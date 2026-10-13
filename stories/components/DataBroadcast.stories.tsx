@@ -26,7 +26,9 @@ import {
   BAND_MOCK_WIDTH,
   DataBroadcastBand,
   DataBroadcastRemote,
-  REMOTE_LEAST_HEIGHT,
+  D_KEY_NAME,
+  REMOTE_GROUP_GAP,
+  REMOTE_UNDER_THE_DISC,
   columnOverTheBand,
 } from '@/components/data-broadcast/data-broadcast-player'
 import {
@@ -943,7 +945,7 @@ export const 帯_iPad_窓_局名: Story = {
   },
 }
 
-/** The column the remote stands in, at the mock's 370px and as tall as the player's box beside it less the column's head. */
+/** The column the remote stands in, at the mock's 370px and as tall as the window gives it: the remote stands at the top at its own height. */
 function InTheColumn({
   height,
   running,
@@ -961,6 +963,7 @@ function InTheColumn({
           station={STATION}
           onKey={(key) => setPressed((before) => [...before, key])}
           onAim={() => undefined}
+          onToggle={() => setPressed((before) => [...before, 'toggle'])}
           application={
             application ? { onClose: () => setApplication(false) } : null
           }
@@ -977,6 +980,7 @@ const REMOTE_KEYS = [
   '右',
   '決定',
   '戻る',
+  D_KEY_NAME,
   '青',
   '赤',
   '緑',
@@ -984,7 +988,7 @@ const REMOTE_KEYS = [
   ...DIGITS,
 ]
 
-/** The remote as the mock draws it in the column: the disc of 184 with Enter of 65 and `戻る` of 64x44 at its lower left, the dots of 52 at a pitch of 70 in the middle, the digits three to a row with 0 alone in the middle of the fourth, no `123`, and the groups sharing out the height at least 24 apart. */
+/** The remote as the mock draws it in the column: the disc of 184 with Enter of 65, a row right under it of `戻る` and `d` at 64x44 spanning the disc, the dots of 52 at a pitch of 70 in the middle, the digits three to a row with 0 alone in the middle of the fourth, no `123`; the groups a fixed 24 apart and the card as tall as they are, never stretched by its column. */
 async function asTheColumnMock(canvasElement: HTMLElement) {
   const remote = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -992,33 +996,38 @@ async function asTheColumnMock(canvasElement: HTMLElement) {
   const keys = within(remote)
   const card = remote.getBoundingClientRect()
   const disc = keys.getByRole('group', { name: '十字' }).getBoundingClientRect()
-  const back = keys
-    .getByRole('button', { name: '戻る' })
-    .getBoundingClientRect()
-  const enter = keys
-    .getByRole('button', { name: '決定' })
-    .getBoundingClientRect()
+  const at = (name: string) =>
+    keys.getByRole('button', { name }).getBoundingClientRect()
+  const back = at('戻る')
+  const d = at(D_KEY_NAME)
+  const enter = at('決定')
   const dots = ['青', '赤', '緑', '黄'].map((name) =>
     keys.getByRole('button', { name }),
   )
-  const digits = DIGITS.map((name) => keys.getByRole('button', { name }))
-  const at = (name: string) =>
-    keys.getByRole('button', { name }).getBoundingClientRect()
+  const dot = dots[0].getBoundingClientRect()
+  const line = (
+    remote.querySelector('[data-slot="station-line"]') as HTMLElement
+  ).parentElement as HTMLElement
+  const groups = [...remote.children].map((group) =>
+    group.getBoundingClientRect(),
+  )
 
   await near(card.width, 370)
   await near(disc.width, 184)
   await near(enter.width, 65)
+  await near(disc.left + disc.width / 2, card.left + card.width / 2)
   await near(back.width, 64)
   await near(back.height, 44)
-  await near(back.left, card.left + 21)
-  await near(back.bottom, disc.bottom)
-  await near(disc.left + disc.width / 2, card.left + card.width / 2)
-  await near(dots[0].getBoundingClientRect().width, 52)
+  await near(d.width, 64)
+  await near(d.height, 44)
+  await near(back.top - disc.bottom, REMOTE_UNDER_THE_DISC)
+  await near(d.top, back.top)
+  await near(back.left, disc.left)
+  await near(d.right, disc.right)
+  await near(dot.width, 52)
   await near(pitchOf(dots), 70)
   await near(
-    (dots[0].getBoundingClientRect().left +
-      dots[3].getBoundingClientRect().right) /
-      2,
+    (dot.left + dots[3].getBoundingClientRect().right) / 2,
     card.left + card.width / 2,
   )
   await near(at('1').height, 48)
@@ -1028,16 +1037,11 @@ async function asTheColumnMock(canvasElement: HTMLElement) {
   await near(at('0').left, at('8').left)
   await near(at('0').top - at('7').bottom, 14)
   await expect(keys.queryByRole('button', { name: '123 数字' })).toBeNull()
-  await expect(
-    disc.top - keys.getByText(STATION).getBoundingClientRect().bottom,
-  ).toBeGreaterThanOrEqual(24)
-  await expect(
-    dots[0].getBoundingClientRect().top - disc.bottom,
-  ).toBeGreaterThanOrEqual(24 - 0.6)
-  await expect(
-    at('1').top - dots[0].getBoundingClientRect().bottom,
-  ).toBeGreaterThanOrEqual(24 - 0.6)
-  await near(card.bottom - digits[9].getBoundingClientRect().bottom, 21)
+  await near(disc.top - line.getBoundingClientRect().bottom, REMOTE_GROUP_GAP)
+  await near(dot.top - back.bottom, REMOTE_GROUP_GAP)
+  await near(at('1').top - dot.bottom, REMOTE_GROUP_GAP)
+  await near(card.top + 21, groups[0].top)
+  await near(card.bottom - 21, groups[groups.length - 1].bottom)
   await fingerSized(remote)
 
   return remote
@@ -1045,7 +1049,7 @@ async function asTheColumnMock(canvasElement: HTMLElement) {
 
 export const リモコン_列: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <InTheColumn height={657} />,
+  render: () => <InTheColumn height={760} />,
   play: async ({ canvasElement }) => {
     const remote = await asTheColumnMock(canvasElement)
     const line = remote.querySelector(
@@ -1054,26 +1058,31 @@ export const リモコン_列: Story = {
 
     await expect(line).toHaveTextContent(`${STATION}データ放送`)
     await expect(named(remote)).toEqual(REMOTE_KEYS)
-    await near(remote.getBoundingClientRect().height, 657)
 
-    for (const name of ['上', '決定', '戻る', '青', '7', '0']) {
+    for (const name of ['上', '決定', '戻る', D_KEY_NAME, '青', '7', '0']) {
       await userEvent.click(within(remote).getByRole('button', { name }))
     }
 
     await expect(canvasElement.querySelector('[data-pressed]')).toHaveAttribute(
       'data-pressed',
-      'up enter back blue 7 0',
+      'up enter back toggle blue 7 0',
     )
   },
 }
 
-export const リモコン_列_低い: Story = {
-  parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <InTheColumn height={400} />,
+export const リモコン_背の高い列: Story = {
+  parameters: { screen: { width: 1920, height: 1800 } },
+  render: () => <InTheColumn height={1600} />,
   play: async ({ canvasElement }) => {
     const remote = await asTheColumnMock(canvasElement)
+    const column = (
+      canvasElement.querySelector('[data-slot="column"]') as HTMLElement
+    ).getBoundingClientRect()
 
-    await near(remote.getBoundingClientRect().height, REMOTE_LEAST_HEIGHT)
+    await near(remote.getBoundingClientRect().top, column.top)
+    await expect(remote.getBoundingClientRect().height).toBeLessThan(
+      column.height / 2,
+    )
   },
 }
 

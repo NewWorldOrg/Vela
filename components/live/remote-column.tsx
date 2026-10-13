@@ -7,7 +7,6 @@ import { FOLD_STEP_MS, foldBand, type FoldMotion } from '@/lib/live-fold'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FoldButton } from '@/components/live/channel-list'
 import { useSettled } from '@/components/live/channel-fold'
-import { REMOTE_LEAST_HEIGHT } from '@/components/data-broadcast/data-broadcast-player'
 
 /** What the column shows while the data broadcast is open: its remote, or the channels. */
 export type ColumnShows = 'remote' | 'channels'
@@ -39,7 +38,6 @@ export function ColumnSwitch({
   onFold,
   motion,
   controls,
-  headRef,
 }: {
   shows: ColumnShows
   onShows: (shows: ColumnShows) => void
@@ -47,11 +45,9 @@ export function ColumnSwitch({
   onFold: (folded: boolean) => void
   motion: FoldMotion
   controls?: string
-  headRef?: Ref<HTMLDivElement>
 }) {
   return (
     <div
-      ref={headRef}
       data-slot="column-switch"
       style={{ marginBottom: UNDER_THE_HEAD }}
       className="flex items-start justify-end gap-1.5"
@@ -76,18 +72,14 @@ export function ColumnSwitch({
   )
 }
 
-/** Where the remote is drawn in the column: as tall as the player's box beside it less the column's head, and never less than the remote needs; a window too short for it scrolls the column. It slides in from the right after the head, and out before it. */
+/** Where the remote is drawn in the column, under the head: the remote stands at its own height at the top, and a window too short for it scrolls the column. It slides in from the right after the head, and out before it. */
 export function RemoteSlot({
   id,
-  boxHeight,
-  headHeight,
   motion,
   onLeft,
   slotRef,
 }: {
   id: string
-  boxHeight: number
-  headHeight: number
   motion: FoldMotion
   onLeft?: () => void
   slotRef: Ref<HTMLDivElement>
@@ -100,19 +92,13 @@ export function RemoteSlot({
     <div
       ref={whole}
       data-fold={motion.phase}
-      className="-mr-1 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1 pb-1 data-[fold=closing]:pointer-events-none"
+      className="-mr-1 min-h-0 overflow-x-hidden overflow-y-auto pr-1 pb-1 data-[fold=closing]:pointer-events-none"
     >
       <div
         id={id}
         ref={slotRef}
         data-slot="remote-slot"
-        style={{
-          height: Math.max(
-            REMOTE_LEAST_HEIGHT,
-            boxHeight - headHeight - UNDER_THE_HEAD,
-          ),
-          transitionDelay: stepOf(1, motion),
-        }}
+        style={{ transitionDelay: stepOf(1, motion) }}
         className={cn('w-full', foldBand(motion))}
       />
     </div>

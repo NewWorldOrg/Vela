@@ -1266,6 +1266,7 @@ export function LivePlayer({
               station={channel?.name ?? ''}
               onKey={broadcast.press}
               onAim={aimAtTheKeypad}
+              onToggle={toggleBroadcast}
               application={onTheBand}
             />,
             remoteSlot,

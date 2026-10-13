@@ -23,7 +23,6 @@ import {
   type ChannelChoice,
 } from '@/lib/live-choice'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
-import { useHeight } from '@/hooks/useHeight'
 import { useWideWindow } from '@/hooks/useWideWindow'
 import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
 import { useLiveViewers } from '@/hooks/useLiveViewers'
@@ -201,11 +200,7 @@ export function LiveView({
   }
 
   const aside = useRef<HTMLElement>(null)
-  const [playerBox, setPlayerBox] = useState<HTMLDivElement | null>(null)
-  const [head, setHead] = useState<HTMLDivElement | null>(null)
   const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
-  const boxHeight = useHeight(remoteOpen ? playerBox : null)
-  const headHeight = useHeight(remoteOpen ? head : null)
   const slotId = useId()
   const openMode = remoteOpen && swap !== 'closed-list-out'
 
@@ -308,23 +303,21 @@ export function LiveView({
       className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col"
     >
       <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
-        <div ref={setPlayerBox}>
-          <LivePlayer
-            channel={watching.channel}
-            profiles={screen.profiles}
-            returnPath={query ? `${pathname}?${query}` : pathname}
-            openSocket={openSocket}
-            askSignedOut={askSignedOut}
-            askBacklog={askBacklog}
-            startupDeadlineMs={startupDeadlineMs}
-            takeCapture={takeCapture}
-            autoOpensDataBroadcast={autoOpensDataBroadcast}
-            lineRelayOf={lineRelayOf}
-            remoteInTheColumn={wide}
-            remoteSlot={remoteSlot}
-            onDataBroadcastOpen={setBroadcastOpen}
-          />
-        </div>
+        <LivePlayer
+          channel={watching.channel}
+          profiles={screen.profiles}
+          returnPath={query ? `${pathname}?${query}` : pathname}
+          openSocket={openSocket}
+          askSignedOut={askSignedOut}
+          askBacklog={askBacklog}
+          startupDeadlineMs={startupDeadlineMs}
+          takeCapture={takeCapture}
+          autoOpensDataBroadcast={autoOpensDataBroadcast}
+          lineRelayOf={lineRelayOf}
+          remoteInTheColumn={wide}
+          remoteSlot={remoteSlot}
+          onDataBroadcastOpen={setBroadcastOpen}
+        />
         <NowNext watching={watching} />
         <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)]">
           <OpenExternally
@@ -355,14 +348,11 @@ export function LiveView({
               onFold={fold}
               motion={motion.phase === 'still' ? COMING : motion}
               controls={slotId}
-              headRef={setHead}
             />
             {(swap === 'remote-out' ||
               (shows === 'remote' && swap !== 'channels-out')) && (
               <RemoteSlot
                 id={slotId}
-                boxHeight={boxHeight}
-                headHeight={headHeight}
                 motion={remoteMotion(swap, motion)}
                 onLeft={
                   swap === 'remote-out'

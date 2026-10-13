@@ -803,9 +803,14 @@ const IN_THE_COLUMN = {
   '--digit-font': '17px',
 } as CSSProperties
 
-/** The remote at its least height in the column: its padding, the station's line, the disc, the dots and the digits' four rows, with the least gap between each. */
-export const REMOTE_LEAST_HEIGHT =
-  2 * 20 + 44 + 184 + 52 + (4 * 48 + 3 * 14) + 3 * 24 + 2
+/** The gap between the remote's groups in the column, as the mock spaces them: the station's line, the cross with its row of `戻る` and `d`, the colours and the digits. */
+export const REMOTE_GROUP_GAP = 24
+
+/** The gap between the disc and the row of `戻る` and `d` under it. */
+export const REMOTE_UNDER_THE_DISC = 12
+
+/** The name of the remote's `d`, which closes the data broadcast as the control bar's toggle does. */
+export const D_KEY_NAME = 'd データ放送'
 
 const DIGIT_GRID: (BmlKey | null)[] = [
   '1',
@@ -822,16 +827,18 @@ const DIGIT_GRID: (BmlKey | null)[] = [
   null,
 ]
 
-/** The remote control as a tall card in the page's column, as the real one is laid out: the station and what is open on it, the disc with `戻る` at its lower left, the four colours in a row, and the digits 1 to 9 and 0 three to a row, always there. While a Hybridcast application runs, `閉じる` stands at the end of the station's line and no other key moves. The groups share out the card's height, at least 24px apart. */
+/** The remote control as a card in the page's column, laid out as the real one is: the station and what is open on it, the disc with a row under it of `戻る` on the left and `d` on the right, the four colours in a row, and the digits 1 to 9 and 0 three to a row, always there. The card is as tall as its keys, the groups a fixed gap apart, and stands at the top of the column. While a Hybridcast application runs, `閉じる` stands at the end of the station's line and no other key moves. */
 export function DataBroadcastRemote({
   station,
   onKey,
   onAim,
+  onToggle,
   application = null,
 }: {
   station: string
   onKey: (key: BmlKey) => void
   onAim: () => void
+  onToggle: () => void
   application?: { onClose: () => void } | null
 }) {
   const pressing: Pressing = { onKey, onAim }
@@ -841,8 +848,8 @@ export function DataBroadcastRemote({
       role="group"
       aria-label={KEYPAD_NAME}
       data-slot="data-broadcast-remote"
-      style={{ ...IN_THE_COLUMN, minHeight: REMOTE_LEAST_HEIGHT }}
-      className="flex h-full flex-col justify-between gap-[24px] rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl"
+      style={{ ...IN_THE_COLUMN, rowGap: REMOTE_GROUP_GAP }}
+      className="flex flex-col rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl"
     >
       <div className="flex h-[44px] shrink-0 items-center gap-[12px]">
         {application ? (
@@ -878,17 +885,38 @@ export function DataBroadcastRemote({
           />
         )}
       </div>
-      <div className="relative flex shrink-0 justify-center">
+      <div
+        data-slot="remote-cross"
+        style={{ rowGap: REMOTE_UNDER_THE_DISC }}
+        className="flex shrink-0 flex-col items-center"
+      >
         <Disc pressing={pressing} />
-        <button
-          type="button"
-          aria-label="戻る"
-          onMouseDown={aiming(pressing)}
-          onClick={() => onKey('back')}
-          className={cn(PILL, 'absolute bottom-0 left-0')}
+        <div
+          data-slot="remote-utility"
+          className="flex w-(--disc) items-center justify-between"
         >
-          戻る
-        </button>
+          <button
+            type="button"
+            aria-label="戻る"
+            onMouseDown={aiming(pressing)}
+            onClick={() => onKey('back')}
+            className={PILL}
+          >
+            戻る
+          </button>
+          <button
+            type="button"
+            aria-label={D_KEY_NAME}
+            onMouseDown={(event) => {
+              event.preventDefault()
+              onAim()
+            }}
+            onClick={onToggle}
+            className={cn(PILL, 'font-code')}
+          >
+            d
+          </button>
+        </div>
       </div>
       <div className="flex shrink-0 justify-center">
         <Colours pressing={pressing} />

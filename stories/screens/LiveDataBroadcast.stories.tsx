@@ -38,6 +38,8 @@ import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
   BAND_UNDER_THE_BOX,
+  D_KEY_NAME,
+  REMOTE_GROUP_GAP,
 } from '@/components/data-broadcast/data-broadcast-player'
 import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
@@ -501,6 +503,7 @@ const REMOTE_KEYS = [
   '右',
   '決定',
   '戻る',
+  D_KEY_NAME,
   '青',
   '赤',
   '緑',
@@ -517,6 +520,35 @@ const REMOTE_KEYS = [
   '0',
 ]
 
+/** The remote stands at its own height under the column's head: its groups a fixed gap apart, the card as tall as they are, never stretched to the window. */
+async function compact(remote: HTMLElement) {
+  const card = remote.getBoundingClientRect()
+  const groups = [...remote.children].map((group) =>
+    group.getBoundingClientRect(),
+  )
+  const head = onTheScreen(
+    remote.ownerDocument.body,
+    'column-switch',
+  ).getBoundingClientRect()
+  const back = within(remote)
+    .getByRole('button', { name: '戻る' })
+    .getBoundingClientRect()
+  const blue = within(remote)
+    .getByRole('button', { name: '青' })
+    .getBoundingClientRect()
+
+  await expect(Math.abs(card.top - head.bottom - 14)).toBeLessThan(1)
+  await near(card.top + 21, groups[0].top)
+  await near(card.bottom - 21, groups[groups.length - 1].bottom)
+  await near(blue.top - back.bottom, REMOTE_GROUP_GAP)
+
+  for (const [above, below] of groups
+    .slice(1)
+    .map((group, nth) => [groups[nth], group])) {
+    await near(below.top - above.bottom, REMOTE_GROUP_GAP)
+  }
+}
+
 /** The remote in the column beside the player: `リモコン` chosen at the column's head, the card under it down to the box's bottom, no band anywhere, the box as wide as when the data broadcast was closed, and the control row under it. */
 async function inTheColumn(canvasElement: HTMLElement, closedWidth?: number) {
   const column = theColumn(canvasElement)
@@ -527,17 +559,7 @@ async function inTheColumn(canvasElement: HTMLElement, closedWidth?: number) {
   )
 
   await columnAtRest(canvasElement)
-  await waitFor(
-    () =>
-      expect(
-        Math.abs(
-          remote.getBoundingClientRect().bottom -
-            onTheScreen(canvasElement, 'live-player').getBoundingClientRect()
-              .bottom,
-        ),
-      ).toBeLessThan(2),
-    { timeout: 3000 },
-  )
+  await compact(remote)
 
   const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
   const card = remote.getBoundingClientRect()
@@ -615,6 +637,32 @@ export const 開いている_PC: Story = {
     await userEvent.click(within(remote).getByRole('button', { name: '決定' }))
     await shrunkTo(canvasElement, ON_THE_WEATHER)
     await expect(document.activeElement).toBe(player)
+
+    await userEvent.click(
+      within(remote).getByRole('button', { name: D_KEY_NAME }),
+    )
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'データ放送' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    await shrunkTo(canvasElement)
+    await remoteGone(canvasElement)
+  },
+}
+
+export const 開いている_PC_背の高い窓: Story = {
+  parameters: { screen: { width: 1600, height: 1400 } },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+
+    await inTheColumn(canvasElement)
+  },
+}
+
+export const 開いている_PC_とても背の高い窓: Story = {
+  parameters: { screen: { width: 1920, height: 1800 } },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+    await inTheColumn(canvasElement)
   },
 }
 
