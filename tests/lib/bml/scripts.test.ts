@@ -80,6 +80,57 @@ test('new is taken off the table constructors, so that a table that cannot be ma
   )
 })
 
+test('a run divides in integers, as a receiver does', () => {
+  const placed: { top?: string } = {}
+  const scope = new ScriptScope(
+    (code, given) =>
+      new Function('scope', `with (scope) { ${code} }`)(given) as void,
+    scopeOf({ placed }),
+    () => 0,
+  )
+
+  scope.run('var foc = 1; placed.top = 28 * (foc / 2) + 90 + "px"')
+  assert.equal(placed.top, '90px')
+})
+
+test('a run divides in integers even after a document has written over the built-ins the rewrite uses', (t) => {
+  const names = ['flatMap', 'filter', 'sort', 'includes'] as const
+  const held = names.map((name) => ({
+    name,
+    descriptor: Object.getOwnPropertyDescriptor(Array.prototype, name),
+  }))
+
+  t.after(() => {
+    held.forEach(({ name, descriptor }) => {
+      if (descriptor) {
+        Object.defineProperty(Array.prototype, name, descriptor)
+      }
+    })
+  })
+
+  const placed: { top?: string } = {}
+  const scope = new ScriptScope(
+    (code, given) =>
+      new Function('scope', `with (scope) { ${code} }`)(given) as void,
+    scopeOf({ placed }),
+    () => 0,
+    new Realm([Array.prototype]),
+  )
+  const broken = names
+    .map(
+      (name) =>
+        `Array.prototype.${name} = function () { throw new Error("theirs") };`,
+    )
+    .join('\n')
+
+  assert.equal(scope.run(broken).outcome, 'done')
+  assert.equal(
+    scope.run('var foc = 1; placed.top = 28 * (foc / 2) + 90 + "px"').outcome,
+    'done',
+  )
+  assert.equal(placed.top, '90px')
+})
+
 test("a run puts the document's writes on the built-ins in place only while its code runs", () => {
   const target: { trim?: string } = {}
   const realm = new Realm([target])

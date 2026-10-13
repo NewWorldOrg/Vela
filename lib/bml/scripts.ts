@@ -1,3 +1,4 @@
+import { withIntegerDivision } from '@/lib/bml/integers'
 import { Realm } from '@/lib/bml/realm'
 
 /** Thrown out of `browser.launchDocument` and `reloadActiveDocument`, so the script that left its document runs no further. */
@@ -128,7 +129,7 @@ export type ScriptOutcome =
   | { outcome: 'awaiting'; tookMs: number }
   | { outcome: 'failed'; error: unknown; tookMs: number }
 
-/** Runs a document's scripts and handlers one at a time, timing each, with the document's writes on the built-ins in place only while its code runs. */
+/** Runs a document's scripts and handlers one at a time, timing each and dividing in integers as a receiver does, with the document's writes on the built-ins in place only while its code runs. */
 export class ScriptScope {
   private readonly evaluate: Evaluate
 
@@ -152,11 +153,12 @@ export class ScriptScope {
 
   run(code: string): ScriptOutcome {
     const started = this.now()
+    const rewritten = withIntegerDivision(withoutTableNew(code))
 
     this.realm.enter()
 
     try {
-      this.evaluate(withoutTableNew(code), this.scope)
+      this.evaluate(rewritten, this.scope)
 
       return { outcome: 'done', tookMs: this.now() - started }
     } catch (error) {
