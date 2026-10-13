@@ -80,6 +80,7 @@ const THE_SUITE = [
   'tests/lib/hybridcast/keys.test.ts',
   'tests/lib/hybridcast/messages.test.ts',
   'tests/lib/hybridcast/receiver.test.ts',
+  'tests/lib/hybridcast/relay-guard.test.ts',
   'tests/lib/hybridcast/relay.test.ts',
   'tests/lib/hybridcast/wrappers.test.ts',
   'tests/lib/in-full.test.ts',

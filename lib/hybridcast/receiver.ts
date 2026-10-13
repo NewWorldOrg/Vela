@@ -232,6 +232,7 @@ export class HybridcastReceiver {
         this.read(message.reading)
         return
       case 'key':
+      case 'checkLoaded':
         return
     }
   }

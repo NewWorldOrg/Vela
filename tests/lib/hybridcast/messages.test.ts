@@ -211,5 +211,8 @@ test('what the player tells the document is taken only in the shapes there are',
     },
   )
   assert.equal(receiverMessageOf({ kind: 'programme', programme: {} }), null)
+  assert.deepEqual(receiverMessageOf({ kind: 'checkLoaded' }), {
+    kind: 'checkLoaded',
+  })
   assert.equal(receiverMessageOf({ kind: 'open' }), null)
 })

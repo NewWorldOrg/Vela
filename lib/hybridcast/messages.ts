@@ -64,6 +64,7 @@ export type AppMessage =
 /** What the player tells the application's document, over the port it handed over. */
 export type ReceiverMessage =
   | { kind: 'welcome'; receiverId: ReceiverId | null; npt: NptReading[] }
+  | { kind: 'checkLoaded' }
   | { kind: 'key'; key: BmlKey }
   | { kind: 'event'; event: BroadcastEvent }
   | { kind: 'programme'; programme: EventInformation | null }
@@ -282,6 +283,8 @@ export function receiverMessageOf(data: unknown): ReceiverMessage | null {
         ? { kind: 'welcome', receiverId, npt }
         : null
     }
+    case 'checkLoaded':
+      return { kind: 'checkLoaded' }
     case 'key':
       return isBmlKey(message.key) ? { kind: 'key', key: message.key } : null
     case 'event': {

@@ -448,10 +448,21 @@ export function startHybridcastReceiver(
   pointAddressesWrittenLater(frame)
   keepToTheBoundary(frame)
   followThePicture(window, receiver)
-  window.addEventListener('load', () => port.postMessage({ kind: 'loaded' }))
+
+  const sayLoaded = () => port.postMessage({ kind: 'loaded' })
 
   port.onmessage = (event) => {
     const message = receiverMessageOf(event.data)
+
+    if (message?.kind === 'checkLoaded') {
+      if (window.document.readyState === 'complete') {
+        sayLoaded()
+      } else {
+        window.addEventListener('load', sayLoaded, { once: true })
+      }
+
+      return
+    }
 
     if (message?.kind === 'key') {
       if (receiver.takes(message.key)) {
