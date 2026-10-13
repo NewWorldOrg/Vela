@@ -5,7 +5,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 import type { BmlKey } from '@/lib/bml/keys'
 import { memoryKey } from '@/lib/bml/memory'
 import { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
-import { EVERYTHING } from '@/lib/hybridcast/boundary'
+import { EVERYTHING, type BoundaryPair } from '@/lib/hybridcast/boundary'
 import type { EventInformation } from '@/lib/hybridcast/event-information'
 import { KEY_SET_UNTIL_TOLD } from '@/lib/hybridcast/keys'
 import type { OwnedApplication } from '@/lib/hybridcast/messages'
@@ -40,16 +40,18 @@ const AT_THE_APP = `/hybridcast-app/app.html?uri=${encodeURIComponent(ENTRY)}`
 
 const SERVICE = 1027
 
-function application(bitmap: number): OwnedApplication {
+function boundaryOf(bitmap: number): BoundaryPair[] {
+  return [{ permissionBitmap: bitmap, managedUrls: ['http://example.test'] }]
+}
+
+function application(boundary: BoundaryPair[]): OwnedApplication {
   return {
     ait: AIT,
     orgId: 16,
     appId: 1,
     controlCode: 1,
     entryUrl: ENTRY,
-    boundary: [
-      { permissionBitmap: bitmap, managedUrls: ['http://example.test'] },
-    ],
+    boundary,
   }
 }
 
@@ -73,6 +75,8 @@ const KEYS: [BmlKey, string][] = [
   ['enter', '決定'],
   ['blue', '青'],
   ['0', '0'],
+  ['1', '1'],
+  ['2', '2'],
   ['d', 'd'],
 ]
 
@@ -91,17 +95,18 @@ function heardAs(message: AppHeard): string {
 function Harness({
   label,
   address = AT_THE_APP,
-  bitmap = EVERYTHING,
+  boundary = boundaryOf(EVERYTHING),
 }: {
   label: string
   address?: string
-  bitmap?: number
+  boundary?: BoundaryPair[]
 }) {
   const [feed] = useState(() => new DataBroadcastFeed())
   const [report, setReport] = useState<Record<string, string>>({})
   const [heard, setHeard] = useState<AppHeard[]>([])
   const send = useRef<SendToApp | null>(null)
   const box = useRef<HTMLDivElement>(null)
+  const [player, setPlayer] = useState<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const listen = (event: MessageEvent) => {
@@ -138,20 +143,26 @@ function Harness({
         Object.entries(report).map(([name, value]) => [`data-${name}`, value]),
       )}
     >
-      <div className={cn(PLAYER_BOARD, 'max-w-[720px]')}>
+      <div
+        ref={setPlayer}
+        tabIndex={-1}
+        data-slot="player"
+        className={cn(PLAYER_BOARD, 'max-w-[720px] outline-none')}
+      >
         <div ref={box} className={cn(PLAYER_FACE, 'relative bg-black')}>
           <HybridcastFace
             app={{
               start: { ait: AIT, orgId: 16, appId: 1 },
               nth: 1,
               address,
-              application: application(bitmap),
+              application: application(boundary),
             }}
             feed={feed}
             service={SERVICE}
             programme={PROGRAMME}
             receiverId={{ caSystemId: 5, cardId: '0123456789AB' }}
             greg={GREG}
+            keysTo={player}
             onHeard={(message) => setHeard((was) => [...was, message])}
             onSender={(sender) => {
               send.current = sender
@@ -254,6 +265,7 @@ export const 届かないもの: Story = {
     await expect(app).toHaveAttribute('data-api', 'relayed')
     await expect(app).toHaveAttribute('data-fetch', 'relayed')
     await expect(app).toHaveAttribute('data-xhr', 'relayed')
+    await expect(app).toHaveAttribute('data-xhr-credentials', 'false')
     await expect(app).toHaveAttribute('data-outside', 'TypeError')
     await expect(app).toHaveAttribute('data-xhr-outside', 'error 4 0')
     await expect(app).toHaveAttribute('data-socket', 'relayed')
@@ -370,7 +382,7 @@ export const 映像の上に描けないアプリ: Story = {
   render: () => (
     <Harness
       label="映像の上に描けないアプリ"
-      bitmap={0x2000 | (1 << 12) | (1 << 5)}
+      boundary={boundaryOf(0x2000 | (1 << 12) | (1 << 5))}
     />
   ),
   play: async ({ canvasElement }) => {
@@ -382,6 +394,66 @@ export const 映像の上に描けないアプリ: Story = {
     await expect(app).toHaveAttribute('data-rect', '960,120,800,450')
     await waitFor(() =>
       expect(getComputedStyle(frameIn(app)).maskImage).toContain('gradient'),
+    )
+  },
+}
+
+function playerIn(on: HTMLElement): HTMLElement {
+  return on.querySelector('[data-slot="player"]') as HTMLElement
+}
+
+export const 枠はフォーカスを持たない: Story = {
+  render: () => <Harness label="枠のフォーカス" />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '枠のフォーカス')
+    const player = playerIn(app)
+
+    await reported(app, 'loaded', 'yes')
+    frameIn(app).focus()
+    await waitFor(() => expect(document.activeElement).toBe(player))
+
+    await userEvent.click(within(app).getByRole('button', { name: '1' }))
+    await reported(app, 'field')
+    await waitFor(() => expect(document.activeElement).toBe(player))
+  },
+}
+
+export const 識別子を拒む組のあるバウンダリ: Story = {
+  render: () => (
+    <Harness
+      label="識別子を拒む組のあるバウンダリ"
+      boundary={[
+        ...boundaryOf(EVERYTHING),
+        {
+          permissionBitmap: 0x2000 | (1 << 5),
+          managedUrls: ['http://other.example.test'],
+        },
+      ]}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '識別子を拒む組のあるバウンダリ')
+
+    await reported(app, 'device', 'null')
+    await expect(app).toHaveAttribute('data-system', '|Vela|Vela|1.0.0')
+  },
+}
+
+export const 挨拶をし直して中継の外へ出た枠も閉じる: Story = {
+  render: () => <Harness label="挨拶をし直した枠" />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '挨拶をし直した枠')
+
+    await reported(app, 'loaded', 'yes')
+    await waitFor(() =>
+      expect(app.getAttribute('data-heard')).toContain('keySet'),
+    )
+    await userEvent.click(within(app).getByRole('button', { name: '2' }))
+
+    await waitFor(
+      () =>
+        expect(app.getAttribute('data-heard')?.split(',')).toContain('lost'),
+      { timeout: OPENED_WITHIN_MS + 3000 },
     )
   },
 }

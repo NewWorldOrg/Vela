@@ -14,6 +14,7 @@ import {
 import { SHARED_REGISTERS } from '@/lib/bml/messages'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
 import type { HybridcastApp } from '@/lib/data-broadcast-view'
+import { receiverIdHandedOver } from '@/lib/hybridcast/boundary'
 import type { EventInformation } from '@/lib/hybridcast/event-information'
 import {
   APP_SIZE,
@@ -24,6 +25,7 @@ import {
   type OwnedApplication,
   type ReceiverMessage,
 } from '@/lib/hybridcast/messages'
+import { RelayGuard } from '@/lib/hybridcast/relay-guard'
 import { useWidth } from '@/hooks/useWidth'
 import { cn } from '@/lib/utils'
 
@@ -37,7 +39,7 @@ export type AppHeard =
 /** The sandbox of the application's frame: scripts and forms run, in an opaque origin of their own, and nothing reaches the page around it. */
 export const HYBRIDCAST_SANDBOX = 'allow-scripts allow-forms'
 
-/** How long a document has from the frame's load to say it loaded on the relay before the frame is taken to have left it. */
+/** How long a document has from the frame's load to answer, over the port of its own hello, that it loaded on the relay before the frame is taken to have left it. */
 export const OPENED_WITHIN_MS = 2000
 
 export const HYBRIDCAST_FRAME_TITLE = 'Hybridcast'
@@ -83,11 +85,12 @@ interface FrameProps {
   programme: EventInformation | null
   receiverId: ReceiverId | null
   greg: readonly string[] | null
+  keysTo: HTMLElement | null
   onHeard: (message: AppHeard) => void
   onSender: (send: SendToApp | null) => void
 }
 
-/** The application's frame, at 1920x1080 scaled to the box. It is handed the state its documents read at once in its name, and talks to each document that opens on the relay over the port that document hands over: the receiver's identifier, the event messages and NPT of the broadcast, the programme and the keys go to it; what it says comes back. Every load of the frame has to be a document that says over its port that it loaded; one that does not within a moment is not on the relay, and the frame is given up. */
+/** The application's frame, at 1920x1080 scaled to the box. It is handed the state its documents read at once in its name, and talks to each document that opens on the relay over the port that document hands over: the receiver's identifier, where the whole boundary permits it, the event messages and NPT of the broadcast, the programme and the keys go to it; what it says comes back. Each load of the frame is paired with one hello, and the port of that hello is asked once the load is over whether its document loaded; a load that does not answer within a moment is not on the relay, and the frame is given up. The frame never keeps the focus: the keys are the player's, which hands them over as the remote's. */
 function HybridcastFrame({
   address,
   application,
@@ -96,6 +99,7 @@ function HybridcastFrame({
   programme,
   receiverId,
   greg,
+  keysTo,
   onHeard,
   onSender,
 }: FrameProps) {
@@ -116,24 +120,57 @@ function HybridcastFrame({
   )
   const [hole, setHole] = useState<Rect | null>(null)
   const port = useRef<MessagePort | null>(null)
-  const loads = useRef(0)
-  const loadedOnTheRelay = useRef(0)
+  const [guard] = useState(() => new RelayGuard<MessagePort>())
   const waits = useRef<ReturnType<typeof setTimeout>[]>([])
-  const latest = useRef({ programme, receiverId, service, onHeard, onSender })
+  const latest = useRef({
+    boundary: application.boundary,
+    programme,
+    receiverId,
+    service,
+    keysTo,
+    onHeard,
+    onSender,
+  })
+  const handsTheId =
+    receiverIdHandedOver(application.boundary, receiverId) !== null
   const programmeTold = JSON.stringify(programme)
 
   useEffect(() => {
-    latest.current = { programme, receiverId, service, onHeard, onSender }
+    latest.current = {
+      boundary: application.boundary,
+      programme,
+      receiverId,
+      service,
+      keysTo,
+      onHeard,
+      onSender,
+    }
   })
+
+  useEffect(() => {
+    const takeTheKeysBack = () => {
+      const timer = setTimeout(() => {
+        if (document.activeElement === frame.current) {
+          latest.current.keysTo?.focus({ preventScroll: true })
+        }
+      }, 0)
+
+      waits.current.push(timer)
+    }
+
+    window.addEventListener('blur', takeTheKeysBack)
+
+    return () => window.removeEventListener('blur', takeTheKeysBack)
+  }, [])
 
   useEffect(() => {
     const send: SendToApp = (message) => port.current?.postMessage(message)
 
-    const take = (message: AppMessage) => {
+    const take = (from: MessagePort, message: AppMessage) => {
       const { service: held, onHeard: heard } = latest.current
 
       if (message.kind === 'loaded') {
-        loadedOnTheRelay.current += 1
+        guard.loaded(from)
 
         return
       }
@@ -175,21 +212,36 @@ function HybridcastFrame({
         return
       }
 
+      const paired = guard.hello(hello.port)
+
+      if (!paired.accepted) {
+        hello.port.close()
+
+        return
+      }
+
       port.current?.close()
       port.current = hello.port
       hello.port.onmessage = (said) => {
         const message = appMessageOf(said.data)
 
         if (message) {
-          take(message)
+          take(hello.port, message)
         }
       }
       send({
         kind: 'welcome',
-        receiverId: latest.current.receiverId,
+        receiverId: receiverIdHandedOver(
+          latest.current.boundary,
+          latest.current.receiverId,
+        ),
         npt: [...feed.nptReadings],
       })
       send({ kind: 'programme', programme: latest.current.programme })
+
+      if (paired.ask) {
+        send({ kind: 'checkLoaded' })
+      }
     }
 
     window.addEventListener('message', listen)
@@ -213,7 +265,7 @@ function HybridcastFrame({
       port.current = null
       latest.current.onSender(null)
     }
-  }, [feed, relay])
+  }, [feed, relay, guard])
 
   useEffect(() => {
     port.current?.postMessage({
@@ -225,22 +277,27 @@ function HybridcastFrame({
   useEffect(() => {
     port.current?.postMessage({
       kind: 'welcome',
-      receiverId: latest.current.receiverId,
+      receiverId: receiverIdHandedOver(
+        latest.current.boundary,
+        latest.current.receiverId,
+      ),
       npt: [],
     } satisfies ReceiverMessage)
-  }, [receiverId?.caSystemId, receiverId?.cardId])
+  }, [handsTheId, receiverId?.caSystemId, receiverId?.cardId])
 
   const loaded = () => {
-    loads.current += 1
+    const { nth, ask } = guard.load()
 
-    const nth = loads.current
-
+    ask?.postMessage({ kind: 'checkLoaded' } satisfies ReceiverMessage)
     waits.current.push(
       setTimeout(() => {
-        const said = loadedOnTheRelay.current
+        const verdict = guard.verdict(nth)
 
-        if (said < nth) {
-          latest.current.onHeard({ kind: 'lost', unopened: said === 0 })
+        if (verdict !== 'kept') {
+          latest.current.onHeard({
+            kind: 'lost',
+            unopened: verdict === 'unopened',
+          })
         }
       }, OPENED_WITHIN_MS),
     )

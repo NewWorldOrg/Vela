@@ -1548,6 +1548,28 @@ export const Hybridcast_d_をアプリが取る: Story = {
   },
 }
 
+export const Hybridcast_フォーカスはプレイヤーに残る: Story = {
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('loaded', 'yes')
+
+    const player = onTheScreen(canvasElement, 'live-player')
+
+    press(player, '1')
+    await waitFor(() => expect(probed.report.field).toBeDefined())
+    await waitFor(() => expect(document.activeElement).toBe(player))
+
+    press(player, 'r')
+    await theApplicationSaid('keys', '49,403')
+  },
+}
+
 export const Hybridcast_アプリが閉じる: Story = {
   args: {
     openSocket: carrying(...HYBRIDCAST),

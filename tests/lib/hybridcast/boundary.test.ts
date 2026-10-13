@@ -7,6 +7,8 @@ import {
   boundaryOf,
   insideBoundary,
   permits,
+  permittedEverywhere,
+  receiverIdHandedOver,
   type Permission,
 } from '@/lib/hybridcast/boundary'
 
@@ -132,4 +134,64 @@ test('a boundary is read in the shape Carina answers it, and refused in any othe
     ),
     null,
   )
+})
+
+test('the receiver identifier is handed over only where no pair of the boundary refuses it', () => {
+  const id = 0x2000 | (1 << 7)
+
+  assert.equal(permittedEverywhere([], 'deviceIdentifier'), true)
+  assert.equal(
+    permittedEverywhere(
+      [
+        { permissionBitmap: EVERYTHING, managedUrls: ['http://a.test'] },
+        { permissionBitmap: id, managedUrls: [] },
+      ],
+      'deviceIdentifier',
+    ),
+    true,
+  )
+  assert.equal(
+    permittedEverywhere(
+      [
+        { permissionBitmap: EVERYTHING, managedUrls: [] },
+        {
+          permissionBitmap: 0x2000 | (1 << 5),
+          managedUrls: ['http://a.test/x/'],
+        },
+      ],
+      'deviceIdentifier',
+    ),
+    false,
+  )
+  assert.equal(
+    permittedEverywhere(
+      [{ permissionBitmap: 0, managedUrls: [] }],
+      'deviceIdentifier',
+    ),
+    false,
+  )
+})
+
+test('the player hands the identifier over only when the whole boundary permits it', () => {
+  const id = { caSystemId: 5, cardId: '0123456789AB' }
+
+  assert.deepEqual(receiverIdHandedOver([], id), id)
+  assert.deepEqual(
+    receiverIdHandedOver(
+      [{ permissionBitmap: EVERYTHING, managedUrls: [] }],
+      id,
+    ),
+    id,
+  )
+  assert.equal(
+    receiverIdHandedOver(
+      [
+        { permissionBitmap: EVERYTHING, managedUrls: ['http://a.test'] },
+        { permissionBitmap: 0x2000 | (1 << 5), managedUrls: ['http://b.test'] },
+      ],
+      id,
+    ),
+    null,
+  )
+  assert.equal(receiverIdHandedOver([], null), null)
 })

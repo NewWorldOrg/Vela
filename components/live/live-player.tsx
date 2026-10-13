@@ -955,6 +955,7 @@ export function LivePlayer({
                   programme={channel ? eventInformationOf(channel) : null}
                   receiverId={line.receiverId}
                   greg={broadcast.view.greg}
+                  keysTo={shell}
                   onHeard={broadcast.hearApp}
                   onSender={broadcast.connectApp}
                 />

@@ -134,6 +134,14 @@ export function bitmapAt(
   return (found as BoundaryPair | null)?.permissionBitmap ?? null
 }
 
+/** Whether every pair of a boundary permits what a bit stands for, so that it is permitted at whatever URL a document of the application is on. With no boundary at all, everything is. */
+export function permittedEverywhere(
+  boundary: readonly BoundaryPair[],
+  permission: Permission,
+): boolean {
+  return boundary.every((pair) => permits(pair.permissionBitmap, permission))
+}
+
 /** Whether a URL is inside the boundary. */
 export function insideBoundary(
   boundary: readonly BoundaryPair[],
@@ -171,4 +179,12 @@ export function boundaryOf(value: unknown): BoundaryPair[] | null {
   const pairs = value.map(pairOf)
 
   return pairs.every((pair) => pair !== null) ? (pairs as BoundaryPair[]) : null
+}
+
+/** The receiver's identifier as the player hands it to the application: only when no pair of its boundary refuses it, as the application's documents may be at any URL in it, and a check in the application's own frame is the application's to undo. */
+export function receiverIdHandedOver<Id>(
+  boundary: readonly BoundaryPair[],
+  id: Id | null,
+): Id | null {
+  return permittedEverywhere(boundary, 'deviceIdentifier') ? id : null
 }
