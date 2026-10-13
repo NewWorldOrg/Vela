@@ -227,12 +227,6 @@ function HybridcastFrame({
 
       const paired = guard.hello(hello.port)
 
-      if (!paired.accepted) {
-        hello.port.close()
-
-        return
-      }
-
       port.current?.close()
       port.current = hello.port
       documents.current = new Map([[hello.port, hello.document]])

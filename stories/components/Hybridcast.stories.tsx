@@ -536,3 +536,20 @@ export const 局の場所でバウンダリの外へ出ると閉じる: Story = 
     await expect(app).toHaveAttribute('data-page', 'index')
   },
 }
+
+export const 読み込みの前に次のページへ移る入口: Story = {
+  render: () => (
+    <Harness
+      label="読み込みの前に移る入口"
+      address={`/hybridcast-app/app.html?uri=${encodeURIComponent(`${ENTRY}?jump`)}`}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '読み込みの前に移る入口')
+
+    await reported(app, 'page', 'next')
+    await reported(app, 'loaded', 'yes')
+    await new Promise((resolve) => setTimeout(resolve, OPENED_WITHIN_MS + 500))
+    await expect(app.getAttribute('data-heard')).not.toContain('lost')
+  },
+}

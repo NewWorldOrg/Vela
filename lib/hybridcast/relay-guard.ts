@@ -9,7 +9,7 @@ interface Paired<Port> {
   load: number
 }
 
-/** Pairs each load of the application's frame with the one document that said hello for it, and asks that document's port, once the load is over, whether it loaded. A load is kept only when the port of its own hello answers. One hello is taken for each load, a port answers only when asked and only once, and a hello said ahead of a load by the document before it covers nothing: that document is gone from the frame by the load, and its port cannot answer. A hello that arrives after its own load is taken for that load and asked at once. */
+/** Pairs each load of the application's frame with the last document that said hello before it, and asks that document's port, once the load is over, whether it loaded. A load is kept only when the port asked answers, and a port answers only when asked and only once. Only a document still in the frame can answer, and the one in the frame after a load is the one that loaded: a document that left before its own load gives that load to the next one, and a hello said ahead of a load by the document before it covers nothing, as that document is gone by the load. A hello that arrives after its own load is taken for that load and asked at once. */
 export class RelayGuard<Port> {
   private loads = 0
 
@@ -25,17 +25,13 @@ export class RelayGuard<Port> {
 
   private kept = false
 
-  /** A document says hello with its port: taken for the load to come, or for the load in progress when that has none yet, unless that load already has its hello. `ask` is whether to ask the port at once, as its load is already over. */
-  hello(port: Port): { accepted: boolean; ask: boolean } {
+  /** A document says hello with its port: taken for the load in progress when that has none yet, and otherwise for the load to come, in place of any hello said before it for that load. `ask` is whether to ask the port at once, as its load is already over. */
+  hello(port: Port): { ask: boolean } {
     const awaiting = this.awaiting
     const forLoad =
       awaiting !== null && this.greeting?.load !== awaiting
         ? awaiting
         : this.loads + 1
-
-    if (this.greeting?.load === forLoad) {
-      return { accepted: false, ask: false }
-    }
 
     this.greeting = { port, load: forLoad }
     this.greeted.add(forLoad)
@@ -47,7 +43,7 @@ export class RelayGuard<Port> {
       this.asked = { port, load: forLoad }
     }
 
-    return { accepted: true, ask }
+    return { ask }
   }
 
   /** The frame loaded: the load's number, and the port to ask whether it loaded, none when no hello was said for it. */

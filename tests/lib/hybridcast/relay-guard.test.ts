@@ -11,7 +11,7 @@ test('a document that says hello and, asked at its load, says it loaded keeps th
   const guard = new RelayGuard<Port>()
   const first = port('first')
 
-  assert.deepEqual(guard.hello(first), { accepted: true, ask: false })
+  assert.deepEqual(guard.hello(first), { ask: false })
 
   const load = guard.load()
 
@@ -37,11 +37,38 @@ test('a load with no hello of its own, or whose document did not answer, loses t
   assert.equal(gone.verdict(2), 'lost')
 })
 
-test('one hello is taken for each load, and another before the load is refused', () => {
+test('a document that leaves before its load gives the load to the next one, whose hello is the one asked', () => {
   const guard = new RelayGuard<Port>()
+  const entry = port('entry')
+  const next = port('next')
 
-  assert.equal(guard.hello(port('a')).accepted, true)
-  assert.equal(guard.hello(port('b')).accepted, false)
+  guard.hello(entry)
+  guard.hello(next)
+
+  assert.deepEqual(guard.load(), { nth: 1, ask: next })
+  guard.loaded(entry)
+  assert.equal(guard.verdict(1), 'unopened')
+
+  const kept = new RelayGuard<Port>()
+
+  kept.hello(entry)
+  kept.hello(next)
+  kept.load()
+  kept.loaded(next)
+  assert.equal(kept.verdict(1), 'kept')
+})
+
+test('a second hello a document says before its own load, then leaving the relay, covers nothing', () => {
+  const guard = new RelayGuard<Port>()
+  const entry = port('entry')
+  const faked = port('faked')
+
+  guard.hello(entry)
+  guard.hello(faked)
+  guard.loaded(faked)
+  guard.load()
+
+  assert.equal(guard.verdict(1), 'unopened')
 })
 
 test('a document that says it loaded many times, unasked, does not cover the loads after it', () => {
@@ -78,7 +105,7 @@ test('a hello said ahead of a load by the document before it covers that load on
   guard.loaded(first)
   assert.equal(guard.verdict(1), 'kept')
 
-  assert.equal(guard.hello(ahead).accepted, true)
+  assert.deepEqual(guard.hello(ahead), { ask: false })
   guard.loaded(ahead)
   assert.deepEqual(guard.load(), { nth: 2, ask: ahead })
   assert.equal(guard.verdict(2), 'lost')
@@ -105,7 +132,7 @@ test('a hello that arrives after its own load is taken for that load and asked a
   assert.equal(guard.verdict(1), 'kept')
 
   assert.deepEqual(guard.load(), { nth: 2, ask: null })
-  assert.deepEqual(guard.hello(second), { accepted: true, ask: true })
+  assert.deepEqual(guard.hello(second), { ask: true })
   guard.loaded(second)
   assert.equal(guard.verdict(2), 'kept')
 })

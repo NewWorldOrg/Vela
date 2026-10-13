@@ -71,6 +71,10 @@
       var asked = decodeURIComponent(location.search)
       var page = asked.indexOf('next.html') >= 0 ? 'next' : 'index'
       var report = { page: page }
+      // An entry page that sends the frame on before it has loaded, as one that reads where to go from the shared registers does.
+      if (asked.indexOf('jump') >= 0) {
+        __hcLocation.href = 'sub/next.html'
+      }
       var say = function (name, value) {
         report[name] = String(value)
         parent.postMessage({ probe: report }, '*')
