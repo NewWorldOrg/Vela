@@ -10,6 +10,7 @@ import {
   SAID_UNOPENED,
   SAID_UNREACHED,
   SAID_UNSUPPORTED,
+  bandPlace,
   dataBroadcastAfter,
   dataBroadcastSays,
   offersDataBroadcast,
@@ -568,4 +569,11 @@ test('what the documents say after they were closed for the application is not t
   ] as RuntimeMessage[]) {
     assert.equal(dataBroadcastAfter(running, runtime(message, 9)), running)
   }
+})
+
+test('the remote stands in the column where the page has one beside the player, under the box in a narrower window, and over the picture in fullscreen, where there is no room beside or below', () => {
+  assert.equal(bandPlace(false, true), 'column')
+  assert.equal(bandPlace(false, false), 'under')
+  assert.equal(bandPlace(true, true), 'over')
+  assert.equal(bandPlace(true, false), 'over')
 })

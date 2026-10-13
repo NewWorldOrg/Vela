@@ -18,6 +18,7 @@ import {
   DATA_BROADCAST_RECEIVER_ID,
   HYBRIDCAST_SPELLING,
   LINE_SPELLING,
+  LIVE_CHANNELS_FOLDED,
   RECEIVER_ID_SPELLING,
   forgettingCookie,
   storingCookie,
@@ -37,6 +38,10 @@ import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
   BAND_UNDER_THE_BOX,
+  DATA_BROADCAST_NAME,
+  REMOTE_GROUP_GAP,
+  REMOTE_GROUP_GAP_SHORT,
+  SHORT_WINDOW,
 } from '@/components/data-broadcast/data-broadcast-player'
 import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
@@ -171,6 +176,9 @@ const meta = {
     askBacklog: async () => undefined,
   },
   decorators: [inTheApp],
+  beforeEach: () => {
+    document.cookie = forgettingCookie(LIVE_CHANNELS_FOLDED)
+  },
 } satisfies Meta<typeof LiveView>
 
 export default meta
@@ -184,6 +192,11 @@ function onTheScreen(canvasElement: HTMLElement, slot: string): HTMLElement {
   }
 
   return found
+}
+
+/** The player, where the control bar's `データ放送` is; the remote in the column has a key of the same name. */
+function inThePlayer(canvasElement: HTMLElement) {
+  return within(onTheScreen(canvasElement, 'live-player'))
 }
 
 function press(on: HTMLElement, key: string) {
@@ -209,7 +222,9 @@ async function shrunkTo(canvasElement: HTMLElement, rect?: string) {
 
 async function opened(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
-  const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+  const toggle = await inThePlayer(canvasElement).findByRole('button', {
+    name: 'データ放送',
+  })
 
   await afterTheArrival(canvasElement)
   canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
@@ -231,11 +246,9 @@ export const 無し: Story = {
     press(player, 'd')
 
     await expect(
-      canvas.queryByRole('button', { name: 'データ放送' }),
+      inThePlayer(canvasElement).queryByRole('button', { name: 'データ放送' }),
     ).toBeNull()
-    await expect(
-      canvas.queryByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeNull()
+    await remoteGone(canvasElement)
   },
 }
 
@@ -248,7 +261,7 @@ export const まだ届いていない: Story = {
     await afterTheArrival(canvasElement)
 
     await expect(
-      canvas.queryByRole('button', { name: 'データ放送' }),
+      inThePlayer(canvasElement).queryByRole('button', { name: 'データ放送' }),
     ).toBeNull()
   },
 }
@@ -260,7 +273,9 @@ export const 自動で開く: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
 
     await afterTheArrival(canvasElement)
     await expect(toggle).toHaveAttribute('aria-pressed', 'true')
@@ -278,7 +293,9 @@ export const 設定が切なら自動で開かない: Story = {
   args: { openSocket: carrying(ASKING_TO_START, ...modules()) },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
 
     await afterTheArrival(canvasElement)
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
@@ -290,7 +307,9 @@ export const 放送が求めていなければ自動で開かない: Story = {
   args: { autoOpensDataBroadcast: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
 
     await afterTheArrival(canvasElement)
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
@@ -301,7 +320,9 @@ export const 放送が求めていなければ自動で開かない: Story = {
 export const 開ける: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
 
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
     await expect(canvasElement.querySelector('iframe')).toBeNull()
@@ -357,7 +378,7 @@ async function near(got: number, want: number) {
 }
 
 /** The band drawn out of the control bar over the picture: standing on the bar's top, the scrim under both from the player's bottom up, the bar's own face gone, and the whole gone with the bar. */
-async function overThePicture(canvasElement: HTMLElement, fit: string) {
+async function overThePicture(canvasElement: HTMLElement) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
   })
@@ -368,7 +389,7 @@ async function overThePicture(canvasElement: HTMLElement, fit: string) {
   const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
   const u = unit(face.width)
 
-  await expect(band).toHaveAttribute('data-fit', fit)
+  await expect(band).toHaveAttribute('data-place', 'over')
   await near(box.height, 136 * u)
   await near(box.bottom, controls.getBoundingClientRect().top)
   await expect(box.bottom).toBeLessThan(face.bottom)
@@ -389,105 +410,441 @@ async function overThePicture(canvasElement: HTMLElement, fit: string) {
   return band
 }
 
-async function goneWithTheBar(canvasElement: HTMLElement) {
+/** The data broadcast open in a window: the control row right under the player's box on its own opaque ground with no scrim, staying when the pointer rests, the title over the picture gone, and the box grown by it with the programme below moved down, so nothing lies over the documents' face. */
+async function rowUnderTheBox(canvasElement: HTMLElement) {
   const player = onTheScreen(canvasElement, 'live-player')
+  const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
   const chrome = onTheScreen(canvasElement, 'player-chrome')
-  const band = within(canvasElement).getByRole('group', {
-    name: 'データ放送のリモコン',
-  })
+  const row = chrome.getBoundingClientRect()
+  const shell = player.getBoundingClientRect()
+
+  await near(row.top, face.bottom)
+  await expect(row.width).toBe(face.width)
+  await expect(shell.bottom).toBeLessThanOrEqual(window.innerHeight)
+  await expect(getComputedStyle(chrome).backgroundImage).toBe('none')
+  await expect(getComputedStyle(chrome).backgroundColor).not.toBe(
+    'rgba(0, 0, 0, 0)',
+  )
+  await expect(
+    canvasElement.querySelector('[data-slot="data-broadcast-scrim"]'),
+  ).toBeNull()
+  await expect(
+    canvasElement.querySelector('[data-slot="live-title"]'),
+  ).toBeNull()
+  await expect(
+    onTheScreen(canvasElement, 'now-next').getBoundingClientRect().top,
+  ).toBeGreaterThanOrEqual(shell.bottom)
 
   leaves(
     canvasElement,
-    within(canvasElement).getByRole('button', { name: 'データ放送' }),
+    inThePlayer(canvasElement).getByRole('button', { name: 'データ放送' }),
   )
   await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'), {
     timeout: 5000,
   })
-  await waitFor(() => expect(getComputedStyle(chrome).opacity).toBe('0'))
-  await expect(band.isConnected).toBe(true)
+  await expect(getComputedStyle(chrome).opacity).toBe('1')
+  await near(chrome.getBoundingClientRect().top, face.bottom)
 
   stirs(player)
   await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
-  await waitFor(() => expect(getComputedStyle(chrome).opacity).toBe('1'))
+}
+
+/** The band in a window with no column beside the player: under the control row on the same ground, the station and `データ放送` at its left. */
+async function underTheBox(canvasElement: HTMLElement) {
+  const band = within(canvasElement).getByRole('group', {
+    name: 'データ放送のリモコン',
+  })
+  const player = onTheScreen(canvasElement, 'live-player')
+  const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
+  const chrome = onTheScreen(canvasElement, 'player-chrome')
+  const box = band.getBoundingClientRect()
+  const shell = player.getBoundingClientRect()
+  const height = BAND_UNDER_THE_BOX * unit(face.width)
+
+  await expect(band).toHaveAttribute('data-place', 'under')
+  await near(box.top, chrome.getBoundingClientRect().bottom)
+  await near(box.height, height)
+  await expect(box.bottom).toBe(shell.bottom - 1)
+  await expect(box.width).toBe(face.width)
+  await expect(chrome.contains(band)).toBe(false)
+  await expect(getComputedStyle(chrome).backgroundColor).toBe(
+    getComputedStyle(band).backgroundColor,
+  )
+  await expect(
+    band.querySelector('[data-slot="station-line"]'),
+  ).toHaveTextContent('みなと総合1データ放送')
+  await rowUnderTheBox(canvasElement)
+  await near(band.getBoundingClientRect().height, height)
+  await expect(getComputedStyle(band).opacity).toBe('1')
+
+  return band
+}
+
+function theColumn(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector('aside[aria-label="チャンネル"]')
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error('the column is not on the screen')
+  }
+
+  return found
+}
+
+/** Waits for the column to come to rest after it swapped or folded. */
+async function columnAtRest(canvasElement: HTMLElement) {
+  const column = theColumn(canvasElement)
+
+  await waitFor(
+    () => expect(column.getAnimations({ subtree: true }).length).toBe(0),
+    { timeout: 6000 },
+  )
+}
+
+/** Waits for the column to have taken the remote away, once a fold or a swap has settled. */
+async function remoteGone(canvasElement: HTMLElement) {
+  await waitFor(
+    () =>
+      expect(
+        within(canvasElement).queryByRole('group', {
+          name: 'データ放送のリモコン',
+        }),
+      ).toBeNull(),
+    { timeout: 6000 },
+  )
+}
+
+const REMOTE_KEYS = [
+  '上',
+  '下',
+  '左',
+  '右',
+  '決定',
+  '戻る',
+  DATA_BROADCAST_NAME,
+  '青',
+  '赤',
+  '緑',
+  '黄',
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '0',
+]
+
+/** The remote stands at its own height under the column's head: its groups a fixed gap apart, the card as tall as they are, never stretched to the window. */
+async function compact(remote: HTMLElement) {
+  const gap =
+    window.innerHeight < SHORT_WINDOW
+      ? REMOTE_GROUP_GAP_SHORT
+      : REMOTE_GROUP_GAP
+  const card = remote.getBoundingClientRect()
+  const groups = [...remote.children].map((group) =>
+    group.getBoundingClientRect(),
+  )
+  const head = onTheScreen(
+    remote.ownerDocument.body,
+    'column-switch',
+  ).getBoundingClientRect()
+  const back = within(remote)
+    .getByRole('button', { name: '戻る' })
+    .getBoundingClientRect()
+  const blue = within(remote)
+    .getByRole('button', { name: '青' })
+    .getBoundingClientRect()
+
+  await expect(Math.abs(card.top - head.bottom - 14)).toBeLessThan(1)
+  await near(card.top + 21, groups[0].top)
+  await near(card.bottom - 21, groups[groups.length - 1].bottom)
+  await near(blue.top - back.bottom, gap)
+
+  for (const [above, below] of groups
+    .slice(1)
+    .map((group, nth) => [groups[nth], group])) {
+    await near(below.top - above.bottom, gap)
+  }
+}
+
+/** The remote in the column beside the player: `リモコン` chosen at the column's head, the card under it down to the box's bottom, no band anywhere, the box as wide as when the data broadcast was closed, and the control row under it. */
+async function inTheColumn(canvasElement: HTMLElement, closedWidth?: number) {
+  const column = theColumn(canvasElement)
+  const remote = await within(column).findByRole(
+    'group',
+    { name: 'データ放送のリモコン' },
+    { timeout: 6000 },
+  )
+
+  await columnAtRest(canvasElement)
+  await compact(remote)
+
+  const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
+  const card = remote.getBoundingClientRect()
+
+  await expect(remote).toHaveAttribute('data-slot', 'data-broadcast-remote')
+  await expect(
+    within(column).getByRole('button', { name: 'リモコン' }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    within(column).getByRole('button', { name: 'チャンネル一覧' }),
+  ).toHaveAttribute('aria-expanded', 'true')
+  await near(card.right, column.getBoundingClientRect().right)
+  if (closedWidth !== undefined) {
+    await near(face.width, closedWidth)
+  }
+
+  await expect(
+    canvasElement.querySelector('[data-slot="data-broadcast-band"]'),
+  ).toBeNull()
+  await expect(
+    within(remote)
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label') ?? button.textContent),
+  ).toEqual(REMOTE_KEYS)
+  await rowUnderTheBox(canvasElement)
+
+  return remote
+}
+
+function faceWidth(canvasElement: HTMLElement): number {
+  return onTheScreen(canvasElement, 'player-face').getBoundingClientRect().width
+}
+
+async function closedFaceWidth(canvasElement: HTMLElement): Promise<number> {
+  await inThePlayer(canvasElement).findByRole('button', { name: 'データ放送' })
+  await afterTheArrival(canvasElement)
+
+  return faceWidth(canvasElement)
+}
+
+/** Fullscreen as a page fills the window where the browser has no fullscreen of its own. */
+async function filled(canvasElement: HTMLElement) {
+  const board = onTheScreen(canvasElement, 'live-player')
+
+  Object.defineProperty(board, 'requestFullscreen', {
+    value: undefined,
+    configurable: true,
+  })
+
+  await opened(canvasElement)
+  await userEvent.click(
+    within(canvasElement).getByRole('button', { name: '全画面' }),
+  )
+  await waitFor(() => expect(board).toHaveAttribute('data-fill', 'true'))
 }
 
 export const 開いている_PC: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
   play: async ({ canvasElement }) => {
+    const closed = await closedFaceWidth(canvasElement)
+
     await opened(canvasElement)
 
-    const band = await overThePicture(canvasElement, 'fine')
+    const remote = await inTheColumn(canvasElement, closed)
     const says = onTheScreen(canvasElement, 'data-broadcast-says')
+    const player = onTheScreen(canvasElement, 'live-player')
 
     await expect(says).toHaveAttribute('role', 'status')
     await expect(says).toHaveTextContent('')
     await expect(
-      within(band)
-        .getAllByRole('button')
-        .map((button) => button.getAttribute('aria-label')),
-    ).toEqual(KEYS)
-    await goneWithTheBar(canvasElement)
+      remote.querySelector('[data-slot="station-line"]'),
+    ).toHaveTextContent('みなと総合1データ放送')
+
+    await userEvent.click(within(remote).getByRole('button', { name: '下' }))
+    await userEvent.click(within(remote).getByRole('button', { name: '決定' }))
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+    await expect(document.activeElement).toBe(player)
+
+    await userEvent.click(
+      within(remote).getByRole('button', { name: DATA_BROADCAST_NAME }),
+    )
+    await expect(
+      inThePlayer(canvasElement).getByRole('button', { name: 'データ放送' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    await shrunkTo(canvasElement)
+    await remoteGone(canvasElement)
+  },
+}
+
+export const 開いている_PC_背の高い窓: Story = {
+  parameters: { screen: { width: 1600, height: 1400 } },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+
+    await inTheColumn(canvasElement)
+  },
+}
+
+export const 開いている_PC_ノートの窓: Story = {
+  parameters: { screen: { width: 1280, height: 800 } },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+
+    const remote = await inTheColumn(canvasElement)
+    const disc = within(remote)
+      .getByRole('group', { name: '十字' })
+      .getBoundingClientRect()
+
+    await expect(remote.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      window.innerHeight,
+    )
+    await near(disc.width, 152)
+
+    for (const button of within(remote).getAllByRole('button')) {
+      const { width, height } = button.getBoundingClientRect()
+
+      await expect(Math.min(width, height)).toBeGreaterThanOrEqual(44)
+    }
+  },
+}
+
+export const 開いている_PC_とても背の高い窓: Story = {
+  parameters: { screen: { width: 1920, height: 1800 } },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+    await inTheColumn(canvasElement)
   },
 }
 
 export const 開いている_PC_広い: Story = {
   parameters: { screen: { width: 2400, height: 1200 } },
   play: async ({ canvasElement }) => {
-    await opened(canvasElement)
+    const closed = await closedFaceWidth(canvasElement)
 
-    const band = await overThePicture(canvasElement, 'fine')
-    const face = onTheScreen(
+    await opened(canvasElement)
+    await inTheColumn(canvasElement)
+    await expect(faceWidth(canvasElement)).toBeLessThanOrEqual(closed)
+  },
+}
+
+export const 畳んだ列から開くとリモコンが出て閉じると畳む: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: { channelsFolded: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const column = theColumn(canvasElement)
+    const folded = await closedFaceWidth(canvasElement)
+
+    await expect(
+      within(column).getByRole('button', { name: 'チャンネル一覧' }),
+    ).toHaveAttribute('aria-expanded', 'false')
+
+    const toggle = await opened(canvasElement)
+
+    await inTheColumn(canvasElement)
+    await expect(faceWidth(canvasElement)).toBeLessThan(folded)
+
+    await userEvent.click(toggle)
+    await columnAtRest(canvasElement)
+    await expect(
+      within(column).getByRole('button', { name: 'チャンネル一覧' }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    await remoteGone(canvasElement)
+    await near(faceWidth(canvasElement), folded)
+  },
+}
+
+export const リモコンを出したまま畳む: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const column = theColumn(canvasElement)
+    const player = onTheScreen(canvasElement, 'live-player')
+    const closed = await closedFaceWidth(canvasElement)
+    const toggle = await opened(canvasElement)
+
+    await inTheColumn(canvasElement, closed)
+    await userEvent.click(
+      within(column).getByRole('button', { name: 'チャンネル一覧' }),
+    )
+    await columnAtRest(canvasElement)
+
+    await expect(
+      within(column).getByRole('button', { name: 'チャンネル一覧' }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await remoteGone(canvasElement)
+    await expect(faceWidth(canvasElement)).toBeGreaterThan(closed)
+    await rowUnderTheBox(canvasElement)
+
+    player.focus()
+    press(player, 'ArrowDown')
+    press(player, 'Enter')
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+
+    await userEvent.click(toggle)
+    await columnAtRest(canvasElement)
+    await expect(
+      within(column).getByRole('button', { name: 'チャンネル一覧' }),
+    ).toHaveAttribute('aria-expanded', 'false')
+  },
+}
+
+export const 切り替えでチャンネルを出す: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const column = theColumn(canvasElement)
+    const closed = await closedFaceWidth(canvasElement)
+    const toggle = await opened(canvasElement)
+
+    await inTheColumn(canvasElement, closed)
+    await userEvent.click(
+      within(column).getByRole('button', { name: 'チャンネル' }),
+    )
+    await columnAtRest(canvasElement)
+
+    await expect(
+      within(column).getByRole('button', { name: 'チャンネル' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      within(column).getByRole('group', { name: '放送の種別' }),
+    ).toBeVisible()
+    await expect(
+      within(column).getByRole('button', { name: /みなと総合2/ }),
+    ).toBeVisible()
+    await remoteGone(canvasElement)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await near(faceWidth(canvasElement), closed)
+
+    await userEvent.click(
+      within(column).getByRole('button', { name: 'リモコン' }),
+    )
+    await inTheColumn(canvasElement, closed)
+
+    await userEvent.click(toggle)
+    await userEvent.click(toggle)
+    await expect(
+      await within(column).findByRole('button', { name: 'リモコン' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 開いている_PC_全画面: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  play: async ({ canvasElement }) => {
+    await filled(canvasElement)
+
+    const band = await overThePicture(canvasElement)
+    const { width } = onTheScreen(
       canvasElement,
-      'player-face',
+      'player-stage',
     ).getBoundingClientRect()
 
-    await expect(unit(face.width)).toBeGreaterThan(1)
-    await userEvent.click(
-      within(band).getByRole('button', { name: '123 数字' }),
-    )
-    await expect(band).toHaveAttribute('data-face', 'numbers')
-    await near(band.getBoundingClientRect().height, 136 * unit(face.width))
+    await expect(band.getBoundingClientRect().width).toBe(window.innerWidth)
+    await near(band.getBoundingClientRect().height, 136 * unit(width))
   },
 }
 
 export const 開いている_縦の_iPad: Story = {
   parameters: { screen: { width: 820, height: 1180 }, coarse: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
     await opened(canvasElement)
-
-    const band = canvas.getByRole('group', { name: 'データ放送のリモコン' })
-    const player = onTheScreen(canvasElement, 'live-player')
-    const face = onTheScreen(
-      canvasElement,
-      'player-face',
-    ).getBoundingClientRect()
-    const chrome = onTheScreen(canvasElement, 'player-chrome')
-    const box = band.getBoundingClientRect()
-    const shell = player.getBoundingClientRect()
-
-    await expect(band).toHaveAttribute('data-fit', 'coarse')
-    await expect(box.height).toBe(BAND_UNDER_THE_BOX)
-    await expect(box.top).toBe(face.bottom)
-    await expect(box.bottom).toBe(shell.bottom - 1)
-    await expect(box.width).toBe(face.width)
-    await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight)
-    await expect(chrome.contains(band)).toBe(false)
-    await expect(getComputedStyle(chrome).backgroundImage).not.toBe('none')
-    await expect(
-      onTheScreen(canvasElement, 'now-next').getBoundingClientRect().top,
-    ).toBeGreaterThanOrEqual(shell.bottom)
-
-    leaves(canvasElement, canvas.getByRole('button', { name: 'データ放送' }))
-    await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'), {
-      timeout: 5000,
-    })
-    await expect(band.getBoundingClientRect().height).toBe(BAND_UNDER_THE_BOX)
-    await expect(getComputedStyle(band).opacity).toBe('1')
-
-    stirs(player)
-    await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
+    await underTheBox(canvasElement)
   },
 }
 
@@ -495,18 +852,10 @@ export const 開いている_横の_iPad_全画面: Story = {
   parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const board = onTheScreen(canvasElement, 'live-player')
 
-    Object.defineProperty(board, 'requestFullscreen', {
-      value: undefined,
-      configurable: true,
-    })
+    await filled(canvasElement)
 
-    await opened(canvasElement)
-    await userEvent.click(canvas.getByRole('button', { name: '全画面' }))
-    await waitFor(() => expect(board).toHaveAttribute('data-fill', 'true'))
-
-    const band = await overThePicture(canvasElement, 'coarse-full')
+    const band = await overThePicture(canvasElement)
     const stage = onTheScreen(canvasElement, 'player-stage')
     const { width, height, right } = stage.getBoundingClientRect()
 
@@ -525,6 +874,9 @@ export const 開いている_横の_iPad_全画面: Story = {
       within(band).getByRole('button', { name: '青' }).getBoundingClientRect()
         .top,
     )
+    await expect(
+      canvas.getByRole('button', { name: '全画面' }),
+    ).toHaveAttribute('aria-pressed', 'true')
   },
 }
 
@@ -573,6 +925,7 @@ export const 鍵の振り分け: Story = {
 }
 
 export const キーパッドで押す: Story = {
+  parameters: { screen: { width: 1024, height: 1180 } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -619,9 +972,7 @@ export const 閉じると映像が戻る: Story = {
     await userEvent.click(toggle)
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
     await shrunkTo(canvasElement)
-    await expect(
-      canvas.queryByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeNull()
+    await remoteGone(canvasElement)
   },
 }
 
@@ -636,16 +987,18 @@ export const 壊れている: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
 
     await afterTheArrival(canvasElement)
     await userEvent.click(toggle)
 
     await expect(await canvas.findByText(SAID_FAILED)).toBeVisible()
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
-    await expect(canvas.getByRole('button', { name: 'データ放送' })).toBe(
-      toggle,
-    )
+    await expect(
+      inThePlayer(canvasElement).getByRole('button', { name: 'データ放送' }),
+    ).toBe(toggle)
     await expect(canvasElement.querySelector('iframe')).toBeNull()
     await shrunkTo(canvasElement)
   },
@@ -675,6 +1028,7 @@ export const 受信中: Story = {
 }
 
 export const キーボードで面を切り替えても鍵が効く: Story = {
+  parameters: { screen: { width: 1024, height: 1180 } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const player = onTheScreen(canvasElement, 'live-player')
@@ -703,7 +1057,9 @@ export const 開いてもページは動かない: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const player = onTheScreen(canvasElement, 'live-player')
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
 
     await afterTheArrival(canvasElement)
     window.scrollTo(0, 120)
@@ -745,7 +1101,9 @@ export const キーで開いても矢印でページは動かない: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const player = onTheScreen(canvasElement, 'live-player')
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
     const pressed = (key: string) =>
       !player.dispatchEvent(
         new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
@@ -773,7 +1131,9 @@ export const スクリプトが長すぎると閉じる: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const player = onTheScreen(canvasElement, 'live-player')
-    const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
 
     await afterTheArrival(canvasElement)
     canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
@@ -886,7 +1246,9 @@ function lineSetTo(
 
 async function openedOnTheLine(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
-  const toggle = await canvas.findByRole('button', { name: 'データ放送' })
+  const toggle = await inThePlayer(canvasElement).findByRole('button', {
+    name: 'データ放送',
+  })
 
   await afterTheArrival(canvasElement)
   canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
@@ -1040,7 +1402,7 @@ export const Hybridcast: Story = {
       canvasElement.querySelector('[data-slot="data-broadcast-says"]'),
     ).toBeNull()
     await expect(
-      within(canvasElement).getByRole('button', { name: 'データ放送' }),
+      inThePlayer(canvasElement).getByRole('button', { name: 'データ放送' }),
     ).toHaveAttribute('aria-pressed', 'true')
 
     await userEvent.click(
@@ -1069,6 +1431,20 @@ export const Hybridcast_起動中_PC: Story = {
     const name = group.querySelector('b') as HTMLElement
 
     await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth)
+
+    const remote = within(theColumn(canvasElement)).getByRole('group', {
+      name: 'データ放送のリモコン',
+    })
+    const close = within(group)
+      .getByRole('button', { name: 'Hybridcast を閉じる' })
+      .getBoundingClientRect()
+    const disc = within(remote)
+      .getByRole('group', { name: '十字' })
+      .getBoundingClientRect()
+
+    await expect(remote.contains(group)).toBe(true)
+    await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
+    await expect(close.bottom).toBeLessThan(disc.top)
     await shrunkTo(canvasElement)
   },
 }

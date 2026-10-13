@@ -25,6 +25,7 @@ import {
 import type { RuntimeMessage } from '@/lib/bml/messages'
 import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
+import type { BandPlace } from '@/lib/data-broadcast-view'
 import { KEY_CAP } from '@/lib/player-keys'
 import { cn } from '@/lib/utils'
 import {
@@ -395,28 +396,29 @@ export function HybridcastFace({ address }: { address: string | null }) {
   )
 }
 
-/** Where the band is pressed: by a mouse (`pointer: fine`), by a finger in the window, or by a finger in fullscreen. */
-export type BandFit = 'fine' | 'coarse' | 'coarse-full'
-
-/** Which band the player draws out: a mouse gets the one over the picture, a finger the one under the box, and a finger in fullscreen the one over the picture again, sized for the finger. */
-export function bandFit(coarse: boolean, full: boolean): BandFit {
-  if (!coarse) {
-    return 'fine'
-  }
-
-  return full ? 'coarse-full' : 'coarse'
-}
-
 /** The width of the mock's player. The band is drawn at the mock's measures there and grows with the player, up to one and a half times the mock. */
 export const BAND_MOCK_WIDTH = 1174
 
 export const BAND_MAX_SCALE = 1.5
 
-/** The band under the box, in the finger's window: the keys' row with 12px above and below, at the mock's measures. */
+/** The band under the box, in a window: the keys' row with 12px above and below, at the mock's measures. */
 export const BAND_UNDER_THE_BOX = 160
 
-/** The player's column while the band is under its box: the window holds the picture, the 210px around it and the band. */
-export const PLAYER_COLUMN_OVER_THE_BAND = 'max-w-[calc((100dvh_-_370px)*16/9)]'
+/** The widest the player's column may be while its control row, `row` pixels high as laid out, is under its box and the remote is in the page's column: the window holds the picture, the 210px around it and the row. */
+export function columnOverTheRow(row: number): string {
+  return `calc((100dvh - ${210 + row}px) * 16 / 9)`
+}
+
+/** The widest the player's column may be while its control row, `row` pixels high as laid out, and the band are under its box: the window holds the picture, the 210px around it, the row and the band. The band is 160px up to the mock's width, grows with the column up to one and a half times the mock, and stays there; each stretch gives its own bound and the column takes the one its width falls in. */
+export function columnOverTheBand(row: number): string {
+  const around = 210 + row
+  const widest = BAND_MOCK_WIDTH * BAND_MAX_SCALE
+  const narrow = `calc((100dvh - ${around + BAND_UNDER_THE_BOX}px) * 16 / 9)`
+  const wide = `calc((100dvh - ${around + BAND_UNDER_THE_BOX * BAND_MAX_SCALE}px) * 16 / 9)`
+  const growing = `calc((100dvh - ${around}px) / (9 / 16 + ${BAND_UNDER_THE_BOX} / ${BAND_MOCK_WIDTH}))`
+
+  return `min(${narrow}, max(${wide}, clamp(${BAND_MOCK_WIDTH}px, ${growing}, ${widest}px)))`
+}
 
 /** One mock pixel, measured against the player's width: the mock's size at its width and below, growing with the player, and no more than one and a half times the mock. */
 const UNIT = `clamp(1px, 100cqw / ${BAND_MOCK_WIDTH}, ${BAND_MAX_SCALE}px)`
@@ -631,6 +633,30 @@ export const HYBRIDCAST_NAME = 'Hybridcast'
 
 export const CLOSE_HYBRIDCAST_NAME = 'Hybridcast を閉じる'
 
+/** The station and what is open on it, `データ放送` or `Hybridcast`: the station bold, what is open in the quieter ink. Where both do not fit on one line, what is open goes under the station, and only a station that does not fit on its own line is cut short. */
+function StationLine({
+  station,
+  what,
+  className,
+}: {
+  station: string
+  what: string
+  className?: string
+}) {
+  return (
+    <p
+      data-slot="station-line"
+      className={cn(
+        'flex min-w-0 flex-wrap items-baseline gap-x-[0.4em] leading-tight whitespace-nowrap text-(--pl-ink)',
+        className,
+      )}
+    >
+      {station && <b className="min-w-0 truncate font-bold">{station}</b>}
+      <span className="shrink-0 font-medium text-(--pl-ink-2)">{what}</span>
+    </p>
+  )
+}
+
 /** The Hybridcast application running, at the band's left: the station and `Hybridcast`, and `閉じる`, which goes back to the documents. It takes what room the keys leave. Where the station and `Hybridcast` do not fit on one line, `Hybridcast` goes under the station, and only a station that does not fit on its own line is cut short, before the keys move. */
 function OnTheBand({
   station,
@@ -648,10 +674,11 @@ function OnTheBand({
       data-slot="hybridcast-on-the-band"
       className="flex min-w-0 grow basis-0 items-center gap-(--row-gap)"
     >
-      <p className="flex min-w-0 flex-wrap items-baseline gap-x-[0.4em] text-[length:var(--key-font)] leading-tight whitespace-nowrap text-(--pl-ink)">
-        {station && <b className="min-w-0 truncate font-bold">{station}</b>}
-        <span className="shrink-0">{HYBRIDCAST_NAME}</span>
-      </p>
+      <StationLine
+        station={station}
+        what={HYBRIDCAST_NAME}
+        className="text-[length:var(--pill-font)]"
+      />
       <button
         type="button"
         aria-label={CLOSE_HYBRIDCAST_NAME}
@@ -668,24 +695,26 @@ function OnTheBand({
   )
 }
 
-/** The remote control's keys drawn out of the control bar as a band, right over the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. While a Hybridcast application runs, its station and `閉じる` stand at the band's left. Over the picture the band stands on the bar with the scrim under both; a finger in the window gets it under the player's box on the box's own black. Everything is measured against the player's width. */
+/** The remote control's keys as a band, right-aligned with the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. While a Hybridcast application runs, its station and `閉じる` stand at the band's left. In a window the band is under the player's box on the box's own black, so nothing covers the documents' face; in fullscreen it stands on the bar with the scrim under both. Everything is measured against the player's width. */
 export function DataBroadcastBand({
-  fit,
+  place,
   numbers,
   onNumbers,
   onKey,
   onAim,
+  station,
   application = null,
 }: {
-  fit: BandFit
+  place: Exclude<BandPlace, 'column'>
   numbers: boolean
   onNumbers: (shown: boolean) => void
   onKey: (key: BmlKey) => void
   onAim: () => void
+  station?: string
   application?: { station: string; onClose: () => void } | null
 }) {
   const pressing: Pressing = { onKey, onAim }
-  const underTheBox = fit === 'coarse'
+  const underTheBox = place === 'under'
 
   return (
     <div className="[container-type:inline-size]">
@@ -693,7 +722,7 @@ export function DataBroadcastBand({
         role="group"
         aria-label={KEYPAD_NAME}
         data-slot="data-broadcast-band"
-        data-fit={fit}
+        data-place={place}
         data-face={numbers ? 'numbers' : 'keys'}
         style={MEASURES}
         className={cn(
@@ -717,6 +746,15 @@ export function DataBroadcastBand({
             onClose={application.onClose}
             onAim={onAim}
           />
+        )}
+        {!application && station !== undefined && (
+          <div className="flex min-w-0 grow basis-0 items-center">
+            <StationLine
+              station={station}
+              what={DATA_BROADCAST_NAME}
+              className="text-[length:var(--pill-font)]"
+            />
+          </div>
         )}
         <button
           type="button"
@@ -743,6 +781,163 @@ export function DataBroadcastBand({
           123
         </button>
         {numbers && <Digits pressing={pressing} />}
+      </div>
+    </div>
+  )
+}
+
+/** The window height below which the remote steps down to its short measures, so the whole of it fits the column down to a window 760px tall. The classes below spell it out, as a class cannot be built from a value. */
+export const SHORT_WINDOW = 900
+
+/** The remote's measures in the column, at the mock's column of 370px: the disc and its wedges, the arrows and Enter at 1.35 times the band's, `戻る` and `d` at 64x44, the colour dots at 52 with 18 between, the digits' pills 48 high, and the gaps. In a window shorter than `SHORT_WINDOW` they step down, every press still 44 or more: the disc to 152, the dots to 44, the digits to 44 high, and the gaps closer. */
+const IN_THE_COLUMN = cn(
+  '[--disc:184px] [--wedge:101.5px] [--reach:61px] [--arrow:30px] [--ok:65px] [--ok-font:15px] [--pill-h:44px] [--pill-w:64px] [--pill-font:13px] [--dot:52px] [--pitch:70px] [--line-font:13px] [--digit-font:17px] [--digit-h:48px] [--digit-row-gap:14px] [--group-gap:24px] [--under-disc:12px]',
+  '[@media(height<900px)]:[--disc:152px] [@media(height<900px)]:[--wedge:84px] [@media(height<900px)]:[--reach:50px] [@media(height<900px)]:[--arrow:25px] [@media(height<900px)]:[--ok:54px] [@media(height<900px)]:[--ok-font:13px] [@media(height<900px)]:[--dot:44px] [@media(height<900px)]:[--pitch:60px] [@media(height<900px)]:[--digit-h:44px] [@media(height<900px)]:[--digit-row-gap:10px] [@media(height<900px)]:[--group-gap:16px] [@media(height<900px)]:[--under-disc:8px]',
+)
+
+/** The gap between the remote's groups in the column, as the mock spaces them: the station's line, the cross with its row of `戻る` and `d`, the colours and the digits; and the closer gap in a short window. */
+export const REMOTE_GROUP_GAP = 24
+
+export const REMOTE_GROUP_GAP_SHORT = 16
+
+/** The gap between the disc and the row of `戻る` and `d` under it, and in a short window. */
+export const REMOTE_UNDER_THE_DISC = 12
+
+export const REMOTE_UNDER_THE_DISC_SHORT = 8
+
+const DIGIT_GRID: (BmlKey | null)[] = [
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  null,
+  '0',
+  null,
+]
+
+/** The remote control as a card in the page's column, laid out as the real one is: the station and what is open on it, the disc with a row under it of `戻る` on the left and `d` on the right, the four colours in a row, and the digits 1 to 9 and 0 three to a row, always there. The card is as tall as its keys, the groups a fixed gap apart, and stands at the top of the column. While a Hybridcast application runs, `閉じる` stands at the end of the station's line and no other key moves. */
+export function DataBroadcastRemote({
+  station,
+  onKey,
+  onAim,
+  onToggle,
+  application = null,
+}: {
+  station: string
+  onKey: (key: BmlKey) => void
+  onAim: () => void
+  onToggle: () => void
+  application?: { onClose: () => void } | null
+}) {
+  const pressing: Pressing = { onKey, onAim }
+
+  return (
+    <div
+      role="group"
+      aria-label={KEYPAD_NAME}
+      data-slot="data-broadcast-remote"
+      className={cn(
+        IN_THE_COLUMN,
+        'flex flex-col gap-y-(--group-gap) rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl',
+      )}
+    >
+      <div className="flex h-[44px] shrink-0 items-center gap-[12px]">
+        {application ? (
+          <div
+            role="group"
+            aria-label={HYBRIDCAST_NAME}
+            data-slot="hybridcast-on-the-band"
+            className="flex min-w-0 flex-1 items-center gap-[12px]"
+          >
+            <StationLine
+              station={station}
+              what={HYBRIDCAST_NAME}
+              className="min-w-0 flex-1 text-[length:var(--line-font)]"
+            />
+            <button
+              type="button"
+              aria-label={CLOSE_HYBRIDCAST_NAME}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                onAim()
+              }}
+              onClick={application.onClose}
+              className={PILL}
+            >
+              閉じる
+            </button>
+          </div>
+        ) : (
+          <StationLine
+            station={station}
+            what={DATA_BROADCAST_NAME}
+            className="text-[length:var(--line-font)]"
+          />
+        )}
+      </div>
+      <div
+        data-slot="remote-cross"
+        className="flex shrink-0 flex-col items-center gap-y-(--under-disc)"
+      >
+        <Disc pressing={pressing} />
+        <div
+          data-slot="remote-utility"
+          className="flex w-(--disc) items-center justify-between"
+        >
+          <button
+            type="button"
+            aria-label="戻る"
+            onMouseDown={aiming(pressing)}
+            onClick={() => onKey('back')}
+            className={PILL}
+          >
+            戻る
+          </button>
+          <button
+            type="button"
+            aria-label={DATA_BROADCAST_NAME}
+            onMouseDown={(event) => {
+              event.preventDefault()
+              onAim()
+            }}
+            onClick={onToggle}
+            className={cn(PILL, '[&_svg]:size-6')}
+          >
+            <DataBroadcastIcon />
+          </button>
+        </div>
+      </div>
+      <div className="flex shrink-0 justify-center">
+        <Colours pressing={pressing} />
+      </div>
+      <div
+        role="group"
+        aria-label="数字"
+        className="mx-auto grid w-full max-w-[330px] shrink-0 grid-cols-3 gap-x-[18px] gap-y-(--digit-row-gap)"
+      >
+        {DIGIT_GRID.map((digit, nth) =>
+          digit === null ? (
+            <i key={`gap-${nth}`} aria-hidden />
+          ) : (
+            <button
+              key={digit}
+              type="button"
+              onMouseDown={aiming(pressing)}
+              onClick={() => onKey(digit)}
+              className={cn(
+                KEY_LOOK,
+                'h-(--digit-h) w-full font-code text-[length:var(--digit-font)] leading-none after:absolute after:-inset-[2px] after:content-[""]',
+              )}
+            >
+              {digit}
+            </button>
+          ),
+        )}
       </div>
     </div>
   )

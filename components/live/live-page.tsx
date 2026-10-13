@@ -1,6 +1,13 @@
 'use client'
 
-import { useCallback, useMemo, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -8,7 +15,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { addressWith } from '@/lib/path'
 import { cn } from '@/lib/utils'
 import { foldedLineupOf, foldsAChannel } from '@/lib/live-lineup'
-import { foldColumn } from '@/lib/live-fold'
+import { foldColumn, foldShown, type FoldMotion } from '@/lib/live-fold'
 import { nextProgrammeChangeAt, screenAsOf } from '@/lib/live-clock'
 import {
   channelBeingWatched,
@@ -16,6 +23,7 @@ import {
   type ChannelChoice,
 } from '@/lib/live-choice'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
+import { useWideWindow } from '@/hooks/useWideWindow'
 import { useLiveSubChannelsFolded } from '@/hooks/useLiveSubChannelsFolded'
 import { useLiveViewers } from '@/hooks/useLiveViewers'
 import { useNow } from '@/hooks/useNow'
@@ -33,7 +41,16 @@ import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
 import { ChannelList } from '@/components/live/channel-list'
-import { useFoldingChannels } from '@/components/live/channel-fold'
+import {
+  atOnce,
+  useFoldingChannels,
+  useSettled,
+} from '@/components/live/channel-fold'
+import {
+  ColumnSwitch,
+  RemoteSlot,
+  type ColumnShows,
+} from '@/components/live/remote-column'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 import { LivePlayer } from '@/components/live/live-player'
 import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
@@ -45,6 +62,27 @@ const HEADING = 'heading mb-4 flex items-center gap-2 text-[calc(20rem/16)]'
 const TICK_MS = 30_000
 
 const COUNT_EVERY_MS = 60_000
+
+/** A swap of what the column shows while it stays open: the list closed for the data broadcast leaving before the remote comes, the channels leaving before the remote comes, the remote leaving before the channels come, the channels coming, and the list coming back when the data broadcast closes. */
+type Swap =
+  | 'still'
+  | 'closed-list-out'
+  | 'channels-out'
+  | 'remote-out'
+  | 'channels-in'
+  | 'closed-list-in'
+
+function playing(
+  phase: 'opening' | 'closing',
+  onSettle: () => void,
+): FoldMotion {
+  return { shown: true, phase, staggered: true, onSettle }
+}
+
+function nothingToSettle() {}
+
+/** The remote and the head over it come in from the right when they first stand. */
+const COMING = playing('opening', nothingToSettle)
 
 export function LiveView({
   screen: given,
@@ -105,8 +143,68 @@ export function LiveView({
   )
 
   const watching = screen.watching
+  const wide = useWideWindow()
+  const [broadcastOpen, setBroadcastOpen] = useState(false)
+  const remoteOpen = broadcastOpen && wide
+  const [touched, setTouched] = useState(false)
+  const [shows, setShows] = useState<ColumnShows>('remote')
+  const [swap, setSwap] = useState<Swap>('still')
   const [away, remember] = useChannelsFolded(channelsFolded)
-  const { motion, fold } = useFoldingChannels(away, remember)
+  const folded = foldShown(away, { open: remoteOpen, touched })
+  const pressFold = useCallback(
+    (next: boolean) => {
+      remember(next)
+
+      if (remoteOpen) {
+        setTouched(true)
+      }
+    },
+    [remember, remoteOpen],
+  )
+  const { motion, fold, play } = useFoldingChannels(folded, pressFold)
+  const [seenOpen, setSeenOpen] = useState(remoteOpen)
+
+  if (seenOpen !== remoteOpen) {
+    setSeenOpen(remoteOpen)
+    setSwap('still')
+
+    if (remoteOpen) {
+      setShows('remote')
+
+      if (away) {
+        play(false)
+      } else if (!atOnce()) {
+        setSwap('closed-list-out')
+      }
+    } else {
+      setTouched(false)
+
+      if (away && !touched) {
+        play(true)
+      } else if (!away && shows === 'remote' && !atOnce()) {
+        setSwap('closed-list-in')
+      }
+    }
+  }
+
+  const switchTo = (next: ColumnShows) => {
+    if (next === shows || swap !== 'still') {
+      return
+    }
+
+    setShows(next)
+
+    if (!atOnce()) {
+      setSwap(next === 'channels' ? 'remote-out' : 'channels-out')
+    }
+  }
+
+  const aside = useRef<HTMLElement>(null)
+  const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
+  const slotId = useId()
+  const openMode = remoteOpen && swap !== 'closed-list-out'
+
+  useSettled(aside, openMode ? motion.phase : 'still', motion.onSettle)
   const [subsFolded, foldSubs] = useLiveSubChannelsFolded(subChannelsFolded)
   const foldable = foldsAChannel(screen.channels, watching?.channel.id)
   const channels =
@@ -216,6 +314,9 @@ export function LiveView({
           takeCapture={takeCapture}
           autoOpensDataBroadcast={autoOpensDataBroadcast}
           lineRelayOf={lineRelayOf}
+          remoteInTheColumn={wide}
+          remoteSlot={remoteSlot}
+          onDataBroadcastOpen={setBroadcastOpen}
         />
         <NowNext watching={watching} />
         <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)]">
@@ -231,27 +332,112 @@ export function LiveView({
         </div>
       </div>
       <aside
+        ref={aside}
         aria-label="チャンネル"
         className={cn(
           'sticky top-[calc(62rem/16)] flex max-h-[calc(100dvh-102rem/16-env(safe-area-inset-bottom))] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
-          foldColumn(away, motion),
+          foldColumn(folded, motion),
         )}
       >
-        <ChannelList
-          kind={screen.kind}
-          kinds={screen.kinds}
-          channels={channels}
-          watchingId={watchingId}
-          folded={away}
-          onFold={fold}
-          motion={motion}
-          onKind={kind}
-          onSelect={(channel) => choose(channel.id)}
-          className={
-            motion.shown ? 'w-full min-[1181px]:w-[calc(344rem/16)]' : 'w-full'
-          }
-        />
+        {openMode && motion.shown ? (
+          <div className="flex min-h-0 w-full flex-col min-[1181px]:w-[calc(344rem/16)]">
+            <ColumnSwitch
+              shows={shows}
+              onShows={switchTo}
+              folded={folded}
+              onFold={fold}
+              motion={motion.phase === 'still' ? COMING : motion}
+              controls={slotId}
+            />
+            {(swap === 'remote-out' ||
+              (shows === 'remote' && swap !== 'channels-out')) && (
+              <RemoteSlot
+                id={slotId}
+                motion={remoteMotion(swap, motion)}
+                onLeft={
+                  swap === 'remote-out'
+                    ? () => setSwap('channels-in')
+                    : undefined
+                }
+                slotRef={setRemoteSlot}
+              />
+            )}
+            {(swap === 'channels-out' ||
+              (shows === 'channels' && swap !== 'remote-out')) && (
+              <ChannelList
+                kind={screen.kind}
+                kinds={screen.kinds}
+                channels={channels}
+                watchingId={watchingId}
+                motion={channelsMotion(swap, motion, () => setSwap('still'))}
+                onKind={kind}
+                onSelect={(channel) => choose(channel.id)}
+                className="min-h-0 w-full flex-1"
+              />
+            )}
+          </div>
+        ) : (
+          <ChannelList
+            kind={screen.kind}
+            kinds={screen.kinds}
+            channels={channels}
+            watchingId={watchingId}
+            folded={folded}
+            onFold={fold}
+            motion={closedMotion(swap, motion, () => setSwap('still'))}
+            onKind={kind}
+            onSelect={(channel) => choose(channel.id)}
+            className={
+              motion.shown || swap !== 'still'
+                ? 'w-full min-[1181px]:w-[calc(344rem/16)]'
+                : 'w-full'
+            }
+          />
+        )}
       </aside>
     </ScreenMain>
   )
+}
+
+/** The remote's motion: leaving for the channels, playing the column's fold, or coming in when it first stands. */
+function remoteMotion(swap: Swap, fold: FoldMotion): FoldMotion {
+  if (swap === 'remote-out') {
+    return playing('closing', nothingToSettle)
+  }
+
+  return fold.phase === 'still' ? COMING : fold
+}
+
+/** The channels' motion while the data broadcast is open: leaving for the remote, coming after it, or playing the column's fold. */
+function channelsMotion(
+  swap: Swap,
+  fold: FoldMotion,
+  onSettle: () => void,
+): FoldMotion {
+  if (swap === 'channels-out') {
+    return playing('closing', onSettle)
+  }
+
+  if (swap === 'channels-in') {
+    return playing('opening', onSettle)
+  }
+
+  return fold
+}
+
+/** The list's motion while the data broadcast is closed or its remote not in the column: leaving for the remote when it opens, coming back when it closes, or playing the column's fold. */
+function closedMotion(
+  swap: Swap,
+  fold: FoldMotion,
+  onSettle: () => void,
+): FoldMotion {
+  if (swap === 'closed-list-out') {
+    return playing('closing', onSettle)
+  }
+
+  if (swap === 'closed-list-in') {
+    return playing('opening', onSettle)
+  }
+
+  return fold
 }

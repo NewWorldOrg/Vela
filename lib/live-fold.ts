@@ -54,3 +54,17 @@ export function foldBandDelay(
 
   return `${(motion.phase === 'closing' ? FOLD_LAST_STEP - step : step) * FOLD_STEP_MS}ms`
 }
+
+/** The data broadcast as the column sees it: open, and whether the fold was pressed while it was. */
+export interface RemoteInTheColumn {
+  open: boolean
+  touched: boolean
+}
+
+/** Whether the column is drawn folded: as remembered, except while the data broadcast is open and its remote is in the column, which unfolds it, until the fold is pressed meanwhile. */
+export function foldShown(
+  remembered: boolean,
+  remote: RemoteInTheColumn,
+): boolean {
+  return remote.open && !remote.touched ? false : remembered
+}

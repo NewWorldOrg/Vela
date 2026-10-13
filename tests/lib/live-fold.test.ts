@@ -7,6 +7,7 @@ import {
   foldBand,
   foldBandDelay,
   foldColumn,
+  foldShown,
   type FoldMotion,
   type FoldPhase,
 } from '@/lib/live-fold'
@@ -114,4 +115,13 @@ test('the column runs the length the bands run, on the one curve', () => {
     assert.match(classes, /ease-fold/)
     assert.match(classes, /still:transition-none/)
   }
+})
+
+test('the column unfolds to show the remote while the data broadcast is open, and goes back to the fold it had unless the fold was pressed meanwhile', () => {
+  assert.equal(foldShown(true, { open: false, touched: false }), true)
+  assert.equal(foldShown(false, { open: false, touched: false }), false)
+  assert.equal(foldShown(true, { open: true, touched: false }), false)
+  assert.equal(foldShown(false, { open: true, touched: false }), false)
+  assert.equal(foldShown(true, { open: true, touched: true }), true)
+  assert.equal(foldShown(false, { open: true, touched: true }), false)
 })
