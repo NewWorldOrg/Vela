@@ -677,7 +677,7 @@ function OnTheBand({
       <StationLine
         station={station}
         what={HYBRIDCAST_NAME}
-        className="text-[length:var(--key-font)]"
+        className="text-[length:var(--pill-font)]"
       />
       <button
         type="button"
@@ -752,7 +752,7 @@ export function DataBroadcastBand({
             <StationLine
               station={station}
               what={DATA_BROADCAST_NAME}
-              className="text-[length:var(--key-font)]"
+              className="text-[length:var(--pill-font)]"
             />
           </div>
         )}

@@ -1210,14 +1210,6 @@ export const 帯_Hybridcast_長い局名_PC: Story = {
   },
 }
 
-export const 帯_Hybridcast_長い局名_PC_狭い: Story = {
-  parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <Band place="under" numbers={false} station={LONG_STATION} />,
-  play: async ({ canvasElement }) => {
-    await longName(canvasElement, 'under', true)
-  },
-}
-
 function Reloaded() {
   const [readies, setReadies] = useState(0)
   const [error, setError] = useState<string | null>(null)

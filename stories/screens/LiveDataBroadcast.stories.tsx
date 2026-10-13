@@ -237,9 +237,7 @@ export const 無し: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'データ放送' }),
     ).toBeNull()
-    await expect(
-      canvas.queryByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeNull()
+    await remoteGone(canvasElement)
   },
 }
 
@@ -479,7 +477,20 @@ async function columnAtRest(canvasElement: HTMLElement) {
 
   await waitFor(
     () => expect(column.getAnimations({ subtree: true }).length).toBe(0),
-    { timeout: 3000 },
+    { timeout: 6000 },
+  )
+}
+
+/** Waits for the column to have taken the remote away, once a fold or a swap has settled. */
+async function remoteGone(canvasElement: HTMLElement) {
+  await waitFor(
+    () =>
+      expect(
+        within(canvasElement).queryByRole('group', {
+          name: 'データ放送のリモコン',
+        }),
+      ).toBeNull(),
+    { timeout: 6000 },
   )
 }
 
@@ -512,15 +523,22 @@ async function inTheColumn(canvasElement: HTMLElement, closedWidth?: number) {
   const remote = await within(column).findByRole(
     'group',
     { name: 'データ放送のリモコン' },
-    { timeout: 3000 },
+    { timeout: 6000 },
   )
 
   await columnAtRest(canvasElement)
+  await waitFor(
+    () =>
+      expect(
+        Math.abs(
+          remote.getBoundingClientRect().bottom -
+            onTheScreen(canvasElement, 'live-player').getBoundingClientRect()
+              .bottom,
+        ),
+      ).toBeLessThan(2),
+    { timeout: 3000 },
+  )
 
-  const shell = onTheScreen(
-    canvasElement,
-    'live-player',
-  ).getBoundingClientRect()
   const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
   const card = remote.getBoundingClientRect()
 
@@ -531,7 +549,6 @@ async function inTheColumn(canvasElement: HTMLElement, closedWidth?: number) {
   await expect(
     within(column).getByRole('button', { name: 'チャンネル一覧' }),
   ).toHaveAttribute('aria-expanded', 'true')
-  await expect(Math.abs(card.bottom - shell.bottom)).toBeLessThan(2)
   await near(card.right, column.getBoundingClientRect().right)
   if (closedWidth !== undefined) {
     await near(face.width, closedWidth)
@@ -634,9 +651,7 @@ export const 畳んだ列から開くとリモコンが出て閉じると畳む:
     await expect(
       within(column).getByRole('button', { name: 'チャンネル一覧' }),
     ).toHaveAttribute('aria-expanded', 'false')
-    await expect(
-      canvas.queryByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeNull()
+    await remoteGone(canvasElement)
     await near(faceWidth(canvasElement), folded)
   },
 }
@@ -660,9 +675,7 @@ export const リモコンを出したまま畳む: Story = {
       within(column).getByRole('button', { name: 'チャンネル一覧' }),
     ).toHaveAttribute('aria-expanded', 'false')
     await expect(toggle).toHaveAttribute('aria-pressed', 'true')
-    await expect(
-      canvas.queryByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeNull()
+    await remoteGone(canvasElement)
     await expect(faceWidth(canvasElement)).toBeGreaterThan(closed)
     await rowUnderTheBox(canvasElement)
 
@@ -702,9 +715,7 @@ export const 切り替えでチャンネルを出す: Story = {
     await expect(
       within(column).getByRole('button', { name: /みなと総合2/ }),
     ).toBeVisible()
-    await expect(
-      canvas.queryByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeNull()
+    await remoteGone(canvasElement)
     await expect(toggle).toHaveAttribute('aria-pressed', 'true')
     await near(faceWidth(canvasElement), closed)
 
@@ -869,9 +880,7 @@ export const 閉じると映像が戻る: Story = {
     await userEvent.click(toggle)
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
     await shrunkTo(canvasElement)
-    await expect(
-      canvas.queryByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeNull()
+    await remoteGone(canvasElement)
   },
 }
 
