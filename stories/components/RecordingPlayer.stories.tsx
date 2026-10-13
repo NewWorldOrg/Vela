@@ -1919,7 +1919,9 @@ function faceOf(canvasElement: HTMLElement) {
   ) as HTMLElement
 
   return {
-    face: (bar.parentElement as HTMLElement).getBoundingClientRect(),
+    face: (
+      canvasElement.querySelector('[data-slot="player-face"]') as HTMLElement
+    ).getBoundingClientRect(),
     picture: (
       canvasElement.querySelector('video') as HTMLVideoElement
     ).getBoundingClientRect(),
@@ -3753,11 +3755,21 @@ export const データ放送を開くと面と帯が出て映像が縮む: Story
 
     await expect(band).toBeVisible()
     await expect(band).toHaveAttribute('data-place', 'under')
+
+    const chrome = canvasElement.querySelector(
+      '[data-slot="player-chrome"]',
+    ) as HTMLElement
+    const row = chrome.getBoundingClientRect()
+    const face = (
+      canvasElement.querySelector('[data-slot="player-face"]') as HTMLElement
+    ).getBoundingClientRect()
+
+    await expect(chrome.contains(band)).toBe(false)
+    await expect(Math.abs(row.top - face.bottom)).toBeLessThan(0.5)
     await expect(
-      canvasElement
-        .querySelector('[data-slot="player-chrome"]')
-        ?.contains(band),
-    ).toBe(false)
+      Math.abs(band.getBoundingClientRect().top - row.bottom),
+    ).toBeLessThan(0.5)
+    await expect(getComputedStyle(chrome).backgroundImage).toBe('none')
     await expect(canvasElement.querySelector('iframe')).not.toBeNull()
 
     await userEvent.click(toggle)

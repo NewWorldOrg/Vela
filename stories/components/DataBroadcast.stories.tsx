@@ -23,7 +23,7 @@ import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
   DataBroadcastBand,
-  PLAYER_COLUMN_OVER_THE_BAND,
+  columnOverTheBand,
 } from '@/components/data-broadcast/data-broadcast-player'
 import {
   PLAYER_BOARD,
@@ -451,7 +451,10 @@ export const 文字の大きさと同じ高さの行: Story = {
   },
 }
 
-/** A player's box with the band drawn out of it, as the live player lays it: in a window it stands under the box, which the column narrows to leave the band its room; in fullscreen it stands over the picture in the bar's place on the box's bottom, with the bar's row under it. */
+/** The bar's row under the box, as `h-16` draws it. */
+const BAR_HEIGHT = 64
+
+/** A player's box with the band drawn out of it, as the live player lays it: in a window the bar's row and the band stand under the box, which the column narrows to leave them their room; in fullscreen the band stands over the picture on the box's bottom, with the bar's row under it. */
 function Band({
   place,
   numbers: shownFirst,
@@ -483,10 +486,11 @@ function Band({
     <div className="p-6" data-pressed={pressed.join(' ')}>
       <div
         data-slot="board"
-        className={cn(
-          PLAYER_BOARD,
-          place === 'under' && PLAYER_COLUMN_OVER_THE_BAND,
-        )}
+        style={{
+          maxWidth:
+            place === 'under' ? columnOverTheBand(BAR_HEIGHT) : undefined,
+        }}
+        className={PLAYER_BOARD}
       >
         <div data-slot="face" className={cn(PLAYER_FACE, 'relative')}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -502,7 +506,12 @@ function Band({
             </div>
           )}
         </div>
-        {place === 'under' && band}
+        {place === 'under' && (
+          <>
+            <div data-slot="bar" className="h-16 bg-(--pl-bg)" />
+            {band}
+          </>
+        )}
       </div>
     </div>
   )
@@ -610,7 +619,12 @@ async function asTheMock(canvasElement: HTMLElement, place: BandPlace) {
   await near(disc.top + disc.height / 2, dot.top + dot.height / 2)
 
   if (place === 'under') {
-    await near(box.top, face.bottom)
+    const bar = (
+      canvasElement.querySelector('[data-slot="bar"]') as HTMLElement
+    ).getBoundingClientRect()
+
+    await near(bar.top, face.bottom)
+    await near(box.top, bar.bottom)
     await near(box.bottom - disc.bottom, 12 * u)
     await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
     await expect(
@@ -712,7 +726,7 @@ export const 帯_PC_数字: Story = {
   play: async ({ canvasElement }) => {
     const { band, u } = await asTheMock(canvasElement, 'under')
 
-    await beside(band, u)
+    await above(band, u)
     await expect(named(band)).toEqual([...KEYS, ...DIGITS])
 
     await userEvent.click(within(band).getByRole('button', { name: '7' }))
@@ -753,7 +767,7 @@ export const 帯_PC_広い_数字: Story = {
   },
 }
 
-/** The band in a window leaves the picture and the documents' face whole: its top is the box's bottom and the board grows by the band, in the window's height. */
+/** The bar's row and the band in a window leave the picture and the documents' face whole: they stand under the box, and the board grows by both and still fits the window's height. */
 async function underTheFace(canvasElement: HTMLElement) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -816,7 +830,7 @@ export const 帯_iPad_窓_数字: Story = {
     ).getBoundingClientRect()
 
     await above(band, u)
-    await near(band.getBoundingClientRect().top, face.bottom)
+    await near(band.getBoundingClientRect().top, face.bottom + 64)
     await near(band.getBoundingClientRect().height, MOCK.band + 24 + 12 + 44)
 
     await userEvent.click(
@@ -990,10 +1004,18 @@ export const 帯_Hybridcast_長い局名_iPad_全画面: Story = {
 }
 
 export const 帯_Hybridcast_長い局名_PC: Story = {
-  parameters: { screen: { width: 1600, height: 1000 } },
+  parameters: { screen: { width: 2400, height: 1200 } },
   render: () => <Band place="under" numbers={false} station={LONG_STATION} />,
   play: async ({ canvasElement }) => {
     await longName(canvasElement, 'under', false)
+  },
+}
+
+export const 帯_Hybridcast_長い局名_PC_狭い: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Band place="under" numbers={false} station={LONG_STATION} />,
+  play: async ({ canvasElement }) => {
+    await longName(canvasElement, 'under', true)
   },
 }
 

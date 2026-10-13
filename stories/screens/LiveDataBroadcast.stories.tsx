@@ -389,7 +389,7 @@ async function overThePicture(canvasElement: HTMLElement) {
   return band
 }
 
-/** The band in a window: under the player's box on the box's own ground, the box grown by it and the programme below moved down, the bar keeping its own scrim, and the band staying when the bar goes, so nothing covers the documents' face. */
+/** The data broadcast open in a window: the control row right under the player's box and the band under it, on one opaque ground with no scrim, both staying when the pointer rests, the title over the picture gone, and the box grown by both with the programme below moved down, so nothing lies over the documents' face. */
 async function underTheBox(canvasElement: HTMLElement) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -397,23 +397,32 @@ async function underTheBox(canvasElement: HTMLElement) {
   const player = onTheScreen(canvasElement, 'live-player')
   const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
   const chrome = onTheScreen(canvasElement, 'player-chrome')
+  const row = chrome.getBoundingClientRect()
   const box = band.getBoundingClientRect()
   const shell = player.getBoundingClientRect()
   const height = BAND_UNDER_THE_BOX * unit(face.width)
 
   await expect(band).toHaveAttribute('data-place', 'under')
+  await near(row.top, face.bottom)
+  await expect(row.width).toBe(face.width)
+  await near(box.top, row.bottom)
   await near(box.height, height)
-  await expect(box.top).toBe(face.bottom)
   await expect(box.bottom).toBe(shell.bottom - 1)
   await expect(box.width).toBe(face.width)
-  await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight)
+  await expect(shell.bottom).toBeLessThanOrEqual(window.innerHeight)
   await expect(chrome.contains(band)).toBe(false)
-  await expect(getComputedStyle(chrome).backgroundImage).not.toBe('none')
+  await expect(getComputedStyle(chrome).backgroundImage).toBe('none')
+  await expect(getComputedStyle(chrome).backgroundColor).toBe(
+    getComputedStyle(band).backgroundColor,
+  )
   await expect(getComputedStyle(band).backgroundColor).not.toBe(
     'rgba(0, 0, 0, 0)',
   )
   await expect(
     canvasElement.querySelector('[data-slot="data-broadcast-scrim"]'),
+  ).toBeNull()
+  await expect(
+    canvasElement.querySelector('[data-slot="live-title"]'),
   ).toBeNull()
   await expect(
     onTheScreen(canvasElement, 'now-next').getBoundingClientRect().top,
@@ -426,6 +435,8 @@ async function underTheBox(canvasElement: HTMLElement) {
   await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'), {
     timeout: 5000,
   })
+  await expect(getComputedStyle(chrome).opacity).toBe('1')
+  await near(chrome.getBoundingClientRect().top, face.bottom)
   await near(band.getBoundingClientRect().height, height)
   await expect(getComputedStyle(band).opacity).toBe('1')
 

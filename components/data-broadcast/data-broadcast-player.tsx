@@ -404,9 +404,16 @@ export const BAND_MAX_SCALE = 1.5
 /** The band under the box, in a window: the keys' row with 12px above and below, at the mock's measures. */
 export const BAND_UNDER_THE_BOX = 160
 
-/** The player's column while the band is under its box: the window holds the picture, the 210px around it and the band, which grows with the column. Below the mock's width the band is 160px; from there to one and a half times the mock it grows with the column; past that it is 240px. */
-export const PLAYER_COLUMN_OVER_THE_BAND =
-  'max-w-[min(calc((100dvh_-_370px)*16/9),max(calc((100dvh_-_450px)*16/9),clamp(1174px,calc((100dvh_-_210px)/(9/16_+_160/1174)),1761px)))]'
+/** The widest the player's column may be while its control row, `row` pixels high as laid out, and the band are under its box: the window holds the picture, the 210px around it, the row and the band. The band is 160px up to the mock's width, grows with the column up to one and a half times the mock, and stays there; each stretch gives its own bound and the column takes the one its width falls in. */
+export function columnOverTheBand(row: number): string {
+  const around = 210 + row
+  const widest = BAND_MOCK_WIDTH * BAND_MAX_SCALE
+  const narrow = `calc((100dvh - ${around + BAND_UNDER_THE_BOX}px) * 16 / 9)`
+  const wide = `calc((100dvh - ${around + BAND_UNDER_THE_BOX * BAND_MAX_SCALE}px) * 16 / 9)`
+  const growing = `calc((100dvh - ${around}px) / (9 / 16 + ${BAND_UNDER_THE_BOX} / ${BAND_MOCK_WIDTH}))`
+
+  return `min(${narrow}, max(${wide}, clamp(${BAND_MOCK_WIDTH}px, ${growing}, ${widest}px)))`
+}
 
 /** One mock pixel, measured against the player's width: the mock's size at its width and below, growing with the player, and no more than one and a half times the mock. */
 const UNIT = `clamp(1px, 100cqw / ${BAND_MOCK_WIDTH}, ${BAND_MAX_SCALE}px)`
