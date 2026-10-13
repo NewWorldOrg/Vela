@@ -9,29 +9,30 @@ function addressOf(input: RequestInfo | URL): string | URL {
   return typeof input === 'object' && 'url' in input ? input.url : input
 }
 
-/** `fetch` as the application is given it: what it asks for inside the boundary is asked of the relay, what names no server is left to the browser, and the rest fails as a fetch that reached nothing does. */
+/** `fetch` as the application is given it: what it asks for inside the boundary is asked of the relay, what names no server is left to the browser, and the rest fails as a fetch that reached nothing does. Nothing is sent with credentials: the relay is on Vela's origin, and the application has no business with what the browser keeps for it. */
 export function relayedFetch(native: typeof fetch, route: Route): typeof fetch {
   return (input, init) => {
     const routed = route(addressOf(input))
+    const without: RequestInit = { ...init, credentials: 'omit' }
 
     if (routed.to === 'refused') {
       return Promise.reject(new TypeError(REFUSED))
     }
 
     if (routed.to === 'browser') {
-      return native(input, init)
+      return native(input, without)
     }
 
     return native(
       typeof input === 'object' && 'url' in input
         ? new Request(routed.url, input)
         : routed.url,
-      init,
+      without,
     )
   }
 }
 
-/** `XMLHttpRequest` as the application is given it: opened on the relay for an address inside the boundary, as asked for one that names no server, and for any other, sent nowhere and ended as a request that reached nothing: state 4, status 0, `error` and `loadend`, and a synchronous one throws. */
+/** `XMLHttpRequest` as the application is given it: opened on the relay for an address inside the boundary, as asked for one that names no server, and for any other, sent nowhere and ended as a request that reached nothing: state 4, status 0, `error` and `loadend`, and a synchronous one throws. It never sends credentials. */
 export function relayedXhr(
   Native: typeof XMLHttpRequest,
   route: Route,
@@ -59,10 +60,20 @@ export function relayedXhr(
       const to = routed.to === 'relay' ? routed.url : String(url)
 
       super.open(method, this.#refused ? 'data:,' : to, async, user, password)
+      super.withCredentials = false
+    }
+
+    get withCredentials(): boolean {
+      return super.withCredentials
+    }
+
+    set withCredentials(_asked: boolean) {
+      super.withCredentials = false
     }
 
     send(body?: Document | XMLHttpRequestBodyInit | null): void {
       if (!this.#refused) {
+        super.withCredentials = false
         super.send(body)
 
         return

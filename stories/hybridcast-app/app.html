@@ -40,6 +40,13 @@
         width: 800px;
         height: 450px;
       }
+      #field {
+        position: absolute;
+        left: 80px;
+        top: 800px;
+        width: 600px;
+        font-size: 32px;
+      }
       #keys {
         position: absolute;
         left: 80px;
@@ -57,6 +64,7 @@
     <p id="keys"></p>
     <a id="next" href="/hc/next.html" hidden>次のページ</a>
     <a id="away" href="https://elsewhere.test/" hidden>外のページ</a>
+    <input id="field" aria-label="入力" />
     <script>
       // A self-made application that calls the receiver the way the applications call it, and reports what it was answered to the page around it.
       var asked = decodeURIComponent(location.search)
@@ -175,38 +183,54 @@
       keySet.setValue(groups)
       say('keyset', keySet.value)
 
-      // Where a request went, read from the timing the browser keeps of it, whether or not its answer could be read.
-      var wentTo = function (name, asked) {
-        var sent = performance
-          .getEntriesByType('resource')
-          .some(function (entry) {
-            return (
-              entry.name.indexOf(
-                '/hybridcast-app/app.html?uri=' + encodeURIComponent(asked),
-              ) >= 0
+      // A request went through the relay when what came back is the answer the relay gave: in the stories the server beside them answers for the relay with this page, and lets the frame read it.
+      var MARK = 'Hybridcast の見本'
+      var relayedFrom = function (asked) {
+        return '/hybridcast-app/app.html?uri=' + encodeURIComponent(asked)
+      }
+      var readBack = function (name, asked) {
+        return function (answer) {
+          return answer.text().then(function (text) {
+            say(
+              name,
+              answer.url.indexOf(relayedFrom(asked)) >= 0 &&
+                text.indexOf(MARK) >= 0
+                ? 'relayed'
+                : 'elsewhere',
             )
           })
-        say(name, sent ? 'relayed' : 'elsewhere')
+        }
       }
-      var settled = function (name, asked) {
-        return function () {
-          wentTo(name, asked)
+      var failed = function (name) {
+        return function (error) {
+          say(name, error.name)
         }
       }
       var api =
         'http://example.test/api/live/32736-1024/data-broadcast/receiver-id'
       fetch(
         location.origin + '/api/live/32736-1024/data-broadcast/receiver-id',
-      ).then(settled('api', api), settled('api', api))
+      ).then(readBack('api', api), failed('api'))
       var list = 'http://example.test/hc/list.json'
-      fetch('/hc/list.json').then(
-        settled('fetch', list),
-        settled('fetch', list),
-      )
+      fetch('/hc/list.json').then(readBack('fetch', list), failed('fetch'))
       var inside = new XMLHttpRequest()
-      inside.onloadend = settled('xhr', 'http://example.test/hc/data.json')
+      inside.onload = function () {
+        say(
+          'xhr',
+          inside.responseURL.indexOf(
+            relayedFrom('http://example.test/hc/data.json'),
+          ) >= 0 && inside.responseText.indexOf(MARK) >= 0
+            ? 'relayed'
+            : 'elsewhere',
+        )
+      }
+      inside.onerror = function () {
+        say('xhr', 'error')
+      }
+      inside.withCredentials = true
       inside.open('GET', 'data.json')
       inside.send()
+      say('xhr-credentials', inside.withCredentials)
       fetch('https://elsewhere.test/track').then(
         function () {
           say('outside', 'reached')
@@ -275,6 +299,32 @@
         }
         if (event.which === VK_0) {
           location.href = '/hybridcast-app/outside.html'
+        }
+        if (event.which === VK_1) {
+          document.getElementById('field').focus()
+          say(
+            'field',
+            document.activeElement === document.getElementById('field'),
+          )
+        }
+        if (event.which === VK_2) {
+          // A document that says hello again for the loads to come and says it loaded, then leaves the relay by its script.
+          var faked = new MessageChannel()
+          parent.postMessage(
+            {
+              kind: 'hello',
+              relay: '/hybridcast-app/app.html',
+              document: 'http://example.test/hc/index.html',
+            },
+            '*',
+            [faked.port2],
+          )
+          for (var said = 0; said < 3; said += 1) {
+            faked.port1.postMessage({ kind: 'loaded' })
+          }
+          setTimeout(function () {
+            location.href = '/hybridcast-app/outside.html'
+          }, 100)
         }
         if (event.which === VK_YELLOW) {
           owner.destroyApplication()

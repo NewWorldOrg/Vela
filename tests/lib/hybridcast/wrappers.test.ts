@@ -73,6 +73,16 @@ class FakeXhr extends EventTarget {
     FakeXhr.sent += 1
   }
 
+  #credentials = false
+
+  get withCredentials(): boolean {
+    return this.#credentials
+  }
+
+  set withCredentials(value: boolean) {
+    this.#credentials = value
+  }
+
   get readyState(): number {
     return 1
   }
@@ -137,6 +147,36 @@ test('a WebSocket is carried by the relay inside the boundary and refused outsid
   assert.throws(() => new Wrapped('wss://elsewhere.test/'), {
     name: 'SecurityError',
   })
+})
+
+test('fetch sends no credentials, whatever the application asks', async () => {
+  const sent: (RequestCredentials | undefined)[] = []
+  const wrapped = relayedFetch(async (input, init) => {
+    sent.push(init?.credentials)
+
+    return new Response('ok')
+  }, route)
+
+  await wrapped('/common/data.json', { credentials: 'include' })
+  await wrapped(
+    new Request('https://vela.example/p/list.json', { credentials: 'include' }),
+  )
+  await wrapped('list.json')
+
+  assert.deepEqual(sent, ['omit', 'omit', 'omit'])
+})
+
+test('XMLHttpRequest sends no credentials, whatever the application sets', () => {
+  const Wrapped = relayedXhr(FakeXhr as unknown as typeof XMLHttpRequest, route)
+  const request = new Wrapped()
+
+  request.withCredentials = true
+  request.open('GET', 'list.json')
+  request.withCredentials = true
+
+  assert.equal(request.withCredentials, false)
+  request.send()
+  assert.equal(request.withCredentials, false)
 })
 
 test('a beacon is sent through the relay inside the boundary and not sent outside it', () => {
