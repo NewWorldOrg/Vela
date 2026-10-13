@@ -78,6 +78,7 @@ const THE_SUITE = [
   'tests/lib/hybridcast/boundary.test.ts',
   'tests/lib/hybridcast/event-information.test.ts',
   'tests/lib/hybridcast/keys.test.ts',
+  'tests/lib/hybridcast/location.test.ts',
   'tests/lib/hybridcast/messages.test.ts',
   'tests/lib/hybridcast/receiver.test.ts',
   'tests/lib/hybridcast/relay-guard.test.ts',

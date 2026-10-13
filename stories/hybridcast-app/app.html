@@ -62,7 +62,7 @@
     <object type="video/x-iptvf-broadcast"></object>
     <div class="panel"><p>Hybridcast の見本</p></div>
     <p id="keys"></p>
-    <a id="next" href="/hc/next.html" hidden>次のページ</a>
+    <a id="next" href="/hc/sub/next.html" hidden>次のページ</a>
     <a id="away" href="https://elsewhere.test/" hidden>外のページ</a>
     <input id="field" aria-label="入力" />
     <script>
@@ -213,13 +213,19 @@
       ).then(readBack('api', api), failed('api'))
       var list = 'http://example.test/hc/list.json'
       fetch('/hc/list.json').then(readBack('fetch', list), failed('fetch'))
+      // The relay rewrites the scripts it hands over so that location reads __hcLocation; the lines below are written as they come out of it.
+      say('hostname', __hcLocation.hostname)
+      say('href', __hcLocation.href)
+      var composed = 'http://www.' + __hcLocation.hostname + '/hc/check.json'
+      fetch(composed).then(readBack('composed', composed), failed('composed'))
+      var nearby = new URL('data.json', __hcLocation.href).href
+      say('xhr-at', nearby)
       var inside = new XMLHttpRequest()
       inside.onload = function () {
         say(
           'xhr',
-          inside.responseURL.indexOf(
-            relayedFrom('http://example.test/hc/data.json'),
-          ) >= 0 && inside.responseText.indexOf(MARK) >= 0
+          inside.responseURL.indexOf(relayedFrom(nearby)) >= 0 &&
+            inside.responseText.indexOf(MARK) >= 0
             ? 'relayed'
             : 'elsewhere',
         )
@@ -306,6 +312,15 @@
             'field',
             document.activeElement === document.getElementById('field'),
           )
+        }
+        if (event.which === VK_3) {
+          __hcLocation.href = 'sub/next.html'
+        }
+        if (event.which === VK_4) {
+          __hcLocation.assign('https://elsewhere.test/')
+        }
+        if (event.which === VK_5) {
+          window.__hcLocation = '/hc/sub/next.html'
         }
         if (event.which === VK_2) {
           // A document that says hello again for the loads to come and says it loaded, then leaves the relay by its script.

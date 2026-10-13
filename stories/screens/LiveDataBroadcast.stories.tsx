@@ -1536,8 +1536,8 @@ export const Hybridcast_キー: Story = {
     const player = onTheScreen(canvasElement, 'live-player')
 
     press(player, 'r')
-    press(player, '5')
-    await theApplicationSaid('keys', '403,53')
+    press(player, '9')
+    await theApplicationSaid('keys', '403,57')
 
     press(player, 'd')
     await backAtTheDocuments(canvasElement)

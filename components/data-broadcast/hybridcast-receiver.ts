@@ -9,6 +9,12 @@ import {
   receiverMessageOf,
   type AppState,
 } from '@/lib/hybridcast/messages'
+import {
+  STATION_LOCATION,
+  navigateTo,
+  stationLocation,
+  type StationNavigation,
+} from '@/lib/hybridcast/location'
 import { HybridcastReceiver } from '@/lib/hybridcast/receiver'
 import {
   intendedTarget,
@@ -82,7 +88,7 @@ const KEY_NAME: Record<BmlKey, string> = {
 interface Frame {
   window: ReceiverWindow
   relay: AppRelay
-  documentAt: URL
+  station: () => URL
   inside: (address: string) => boolean
 }
 
@@ -125,7 +131,7 @@ function pointed(frame: Frame, written: string): string | null {
     return null
   }
 
-  const target = writtenTarget(value, frame.relay, frame.documentAt)
+  const target = writtenTarget(value, frame.relay, frame.station())
 
   return target && (target.protocol === 'http:' || target.protocol === 'https:')
     ? relayedAddress(frame.relay.app, target)
@@ -231,7 +237,7 @@ function outsideTheBoundary(frame: Frame, written: string | null): boolean {
     return false
   }
 
-  return !frame.inside(intendedTarget(url, frame.relay, frame.documentAt).href)
+  return !frame.inside(intendedTarget(url, frame.relay, frame.station()).href)
 }
 
 /** Keeps links and forms to the boundary: one that goes outside it is not followed, and the application stays where it is (IPTVFJ STD-0010 7.6.1). Inside it they go through the relay, as their addresses were pointed there. A document that leaves by its script, which cannot be held back from inside, is closed by the player. */
@@ -273,15 +279,15 @@ function keepToTheBoundary(frame: Frame): void {
 }
 
 function relayNetwork(frame: Frame): void {
-  const { window, relay, documentAt, inside } = frame
+  const { window, relay, station, inside } = frame
   const route: Route = (written) =>
-    routeRequest(written, relay, documentAt, inside)
+    routeRequest(written, relay, station(), inside)
   const beacon = window.navigator.sendBeacon?.bind(window.navigator)
 
   window.fetch = relayedFetch(window.fetch.bind(window), route)
   window.XMLHttpRequest = relayedXhr(window.XMLHttpRequest, route)
   window.WebSocket = relayedWebSocket(window.WebSocket, (written) =>
-    routeSocket(written, relay, documentAt, inside),
+    routeSocket(written, relay, station(), inside),
   )
 
   if (beacon) {
@@ -404,6 +410,32 @@ function keepTheName(
   return (state) => write?.call(window, frameNameOf(state))
 }
 
+/** The station URL's location, as the application's scripts reach it once the relay has rewritten their `location` to `__hcLocation`: it reads as the broadcaster's server, and going anywhere goes through the relay inside the boundary, and back to the documents outside it. Assigning it goes where the address says, as a location does. */
+function giveTheStationLocation(frame: Frame, leave: () => void): void {
+  const { window, relay } = frame
+  const nav: StationNavigation = {
+    station: frame.station,
+    inside: frame.inside,
+    go: (target, how) =>
+      window.location[how](
+        `${relay.origin}${relayedAddress(relay.app, target)}`,
+      ),
+    hash: (hash) => {
+      window.location.hash = hash
+    },
+    reload: () => window.location.reload(),
+    leave,
+  }
+  const location = stationLocation(nav)
+
+  Object.defineProperty(window, STATION_LOCATION, {
+    configurable: false,
+    enumerable: false,
+    get: () => location,
+    set: (address: unknown) => navigateTo(nav, String(address), 'assign'),
+  })
+}
+
 /** Starts the receiver in a document of the application, from the script element Carina put first into it: the relay it is on, where its WebSockets are carried, the broadcaster's URL of the document, and Vela's origin, which the script came from. The state is the one the frame carries in its name. Without any of them, nothing is given and the document never says it opened, so the player closes the frame. */
 export function startHybridcastReceiver(
   window: ReceiverWindow,
@@ -423,10 +455,12 @@ export function startHybridcastReceiver(
   const channel = new window.MessageChannel()
   const port = channel.port1
   const boundary = state.application.boundary
+  const entered = new URL(documentAt)
   const frame: Frame = {
     window,
     relay,
-    documentAt: new URL(documentAt),
+    station: () =>
+      intendedTarget(new URL(window.location.href), relay, entered),
     inside: (address) => insideBoundary(boundary, address),
   }
   let made: HybridcastReceiver | null = null
@@ -443,6 +477,7 @@ export function startHybridcastReceiver(
   })
 
   made = receiver
+  giveTheStationLocation(frame, () => port.postMessage({ kind: 'leave' }))
   giveTheNavigator(window, receiver)
   relayNetwork(frame)
   pointAddressesWrittenLater(frame)

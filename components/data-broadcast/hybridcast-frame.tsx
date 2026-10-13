@@ -175,6 +175,12 @@ function HybridcastFrame({
         return
       }
 
+      if (message.kind === 'leave') {
+        heard({ kind: 'lost', unopened: false })
+
+        return
+      }
+
       if (message.kind === 'memory') {
         const storage = storageOf()
 

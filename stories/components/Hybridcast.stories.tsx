@@ -77,6 +77,9 @@ const KEYS: [BmlKey, string][] = [
   ['0', '0'],
   ['1', '1'],
   ['2', '2'],
+  ['3', '3'],
+  ['4', '4'],
+  ['5', '5'],
   ['d', 'd'],
 ]
 
@@ -455,5 +458,76 @@ export const 挨拶をし直して中継の外へ出た枠も閉じる: Story = 
         expect(app.getAttribute('data-heard')?.split(',')).toContain('lost'),
       { timeout: OPENED_WITHIN_MS + 3000 },
     )
+  },
+}
+
+export const 局の場所を読む: Story = {
+  render: () => <Harness label="局の場所" />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '局の場所')
+
+    await reported(app, 'composed')
+    await reported(app, 'xhr')
+
+    await expect(app).toHaveAttribute('data-hostname', 'example.test')
+    await expect(app).toHaveAttribute('data-href', ENTRY)
+    await expect(app).toHaveAttribute('data-composed', 'relayed')
+    await expect(app).toHaveAttribute(
+      'data-xhr-at',
+      'http://example.test/hc/data.json',
+    )
+    await expect(app).toHaveAttribute('data-xhr', 'relayed')
+  },
+}
+
+async function movedBy(canvasElement: HTMLElement, label: string, key: string) {
+  const app = group(canvasElement, label)
+
+  await reported(app, 'loaded', 'yes')
+  await waitFor(() =>
+    expect(app.getAttribute('data-heard')).toContain('keySet'),
+  )
+  await userEvent.click(within(app).getByRole('button', { name: key }))
+
+  await reported(app, 'page', 'next')
+  await reported(app, 'xhr')
+  await expect(app).toHaveAttribute(
+    'data-href',
+    'http://example.test/hc/sub/next.html',
+  )
+  await expect(app).toHaveAttribute(
+    'data-xhr-at',
+    'http://example.test/hc/sub/data.json',
+  )
+  await expect(app).toHaveAttribute('data-xhr', 'relayed')
+  await new Promise((resolve) => setTimeout(resolve, OPENED_WITHIN_MS + 200))
+  await expect(app.getAttribute('data-heard')).not.toContain('lost')
+}
+
+export const 局の場所の_href_で移る: Story = {
+  render: () => <Harness label="href で移る" />,
+  play: async ({ canvasElement }) => movedBy(canvasElement, 'href で移る', '3'),
+}
+
+export const 局の場所を代入して移る: Story = {
+  render: () => <Harness label="代入で移る" />,
+  play: async ({ canvasElement }) => movedBy(canvasElement, '代入で移る', '5'),
+}
+
+export const 局の場所でバウンダリの外へ出ると閉じる: Story = {
+  render: () => <Harness label="局の場所で外へ" />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '局の場所で外へ')
+
+    await reported(app, 'loaded', 'yes')
+    await waitFor(() =>
+      expect(app.getAttribute('data-heard')).toContain('keySet'),
+    )
+    await userEvent.click(within(app).getByRole('button', { name: '4' }))
+
+    await waitFor(() =>
+      expect(app.getAttribute('data-heard')?.split(',')).toContain('lost'),
+    )
+    await expect(app).toHaveAttribute('data-page', 'index')
   },
 }

@@ -102,6 +102,7 @@ test('what the application says is taken only in the shapes there are', () => {
   assert.equal(appMessageOf({ kind: 'memory', name: '', value: 'x' }), null)
   assert.deepEqual(appMessageOf({ kind: 'destroy' }), { kind: 'destroy' })
   assert.deepEqual(appMessageOf({ kind: 'loaded' }), { kind: 'loaded' })
+  assert.deepEqual(appMessageOf({ kind: 'leave' }), { kind: 'leave' })
   assert.deepEqual(appMessageOf({ kind: 'launchBml', componentTag: 0x60 }), {
     kind: 'launchBml',
     componentTag: 0x60,
