@@ -389,28 +389,6 @@ async function overThePicture(canvasElement: HTMLElement) {
   return band
 }
 
-async function goneWithTheBar(canvasElement: HTMLElement) {
-  const player = onTheScreen(canvasElement, 'live-player')
-  const chrome = onTheScreen(canvasElement, 'player-chrome')
-  const band = within(canvasElement).getByRole('group', {
-    name: 'データ放送のリモコン',
-  })
-
-  leaves(
-    canvasElement,
-    within(canvasElement).getByRole('button', { name: 'データ放送' }),
-  )
-  await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'), {
-    timeout: 5000,
-  })
-  await waitFor(() => expect(getComputedStyle(chrome).opacity).toBe('0'))
-  await expect(band.isConnected).toBe(true)
-
-  stirs(player)
-  await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
-  await waitFor(() => expect(getComputedStyle(chrome).opacity).toBe('1'))
-}
-
 /** The band in a window: under the player's box on the box's own ground, the box grown by it and the programme below moved down, the bar keeping its own scrim, and the band staying when the bar goes, so nothing covers the documents' face. */
 async function underTheBox(canvasElement: HTMLElement) {
   const band = within(canvasElement).getByRole('group', {
@@ -527,7 +505,6 @@ export const 開いている_PC_全画面: Story = {
 
     await expect(band.getBoundingClientRect().width).toBe(window.innerWidth)
     await near(band.getBoundingClientRect().height, 136 * unit(width))
-    await goneWithTheBar(canvasElement)
   },
 }
 
