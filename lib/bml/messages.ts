@@ -153,7 +153,7 @@ export function gridRectOf(value: unknown): Rect | null {
   return inside ? { left, top, width, height } : null
 }
 
-function isMemoryName(value: unknown): value is string {
+export function isMemoryName(value: unknown): value is string {
   return (
     typeof value === 'string' &&
     value.length > 0 &&
@@ -161,11 +161,12 @@ function isMemoryName(value: unknown): value is string {
   )
 }
 
-function isMemoryValue(value: unknown): value is string {
+export function isMemoryValue(value: unknown): value is string {
   return typeof value === 'string' && value.length <= MOST_MEMORY_BYTES
 }
 
-function memoryEntriesOf(value: unknown): MemoryEntries | null {
+/** A broadcaster's memory as it is handed over, or null when the value has another shape. */
+export function memoryEntriesOfValue(value: unknown): MemoryEntries | null {
   if (!Array.isArray(value) || value.length > MOST_MEMORY_ENTRIES) {
     return null
   }
@@ -453,7 +454,7 @@ function playerMessageOf(data: unknown): PlayerMessage | null {
       return programme ? { kind: 'programme', programme } : null
     }
     case 'memory': {
-      const entries = memoryEntriesOf(message.entries)
+      const entries = memoryEntriesOfValue(message.entries)
 
       return entries ? { kind: 'memory', entries } : null
     }

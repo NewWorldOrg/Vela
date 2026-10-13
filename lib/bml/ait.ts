@@ -1,4 +1,5 @@
 import { MOST_URL, lineAddressOf } from '@/lib/bml/paths'
+import { boundaryOf, type BoundaryPair } from '@/lib/hybridcast/boundary'
 
 /** The control codes an AIT gives an application, of those this receiver reads (IPTVFJ STD-0013 4.1.4). */
 export const CONTROL_CODE = {
@@ -21,12 +22,13 @@ const MOST_APP_ID = 0xffff
 
 const HEX_ID = /^[0-9a-f]{1,8}$/i
 
-/** One application an AIT names, as Carina read it: the organisation and application identifiers, the control code and the URL it is entered at. */
+/** One application an AIT names, as Carina read it: the organisation and application identifiers, the control code, the URL it is entered at, and its boundary where Carina answered one, none meaning no boundary at all. */
 export interface AitApplication {
   orgId: number
   appId: number
   controlCode: number
   entryUrl: string
+  boundary?: BoundaryPair[]
 }
 
 /** What a document asks the player to start: the AIT by its URL, and the application in it by both identifiers. */
@@ -79,11 +81,21 @@ function applicationOf(value: unknown): AitApplication | null {
     return null
   }
 
+  const boundary =
+    application.boundary === undefined
+      ? undefined
+      : boundaryOf(application.boundary)
+
+  if (boundary === null) {
+    return null
+  }
+
   return {
     orgId: application.orgId,
     appId: application.appId,
     controlCode: application.controlCode as number,
     entryUrl: application.entryUrl,
+    ...(boundary ? { boundary } : {}),
   }
 }
 
