@@ -786,31 +786,24 @@ export function DataBroadcastBand({
   )
 }
 
-/** The remote's measures in the column, at the mock's column of 370px: the disc and its wedges, the arrows and Enter at 1.35 times the band's, `戻る` and `閉じる` at 64x44, the colour dots at 52 with 18 between, and the digits' pills 48 high. */
-const IN_THE_COLUMN = {
-  '--disc': '184px',
-  '--wedge': '101.5px',
-  '--reach': '61px',
-  '--arrow': '30px',
-  '--ok': '65px',
-  '--ok-font': '15px',
-  '--pill-h': '44px',
-  '--pill-w': '64px',
-  '--pill-font': '13px',
-  '--dot': '52px',
-  '--pitch': '70px',
-  '--line-font': '13px',
-  '--digit-font': '17px',
-} as CSSProperties
+/** The window height below which the remote steps down to its short measures, so the whole of it fits the column down to a window 760px tall. The classes below spell it out, as a class cannot be built from a value. */
+export const SHORT_WINDOW = 900
 
-/** The gap between the remote's groups in the column, as the mock spaces them: the station's line, the cross with its row of `戻る` and `d`, the colours and the digits. */
+/** The remote's measures in the column, at the mock's column of 370px: the disc and its wedges, the arrows and Enter at 1.35 times the band's, `戻る` and `d` at 64x44, the colour dots at 52 with 18 between, the digits' pills 48 high, and the gaps. In a window shorter than `SHORT_WINDOW` they step down, every press still 44 or more: the disc to 152, the dots to 44, the digits to 44 high, and the gaps closer. */
+const IN_THE_COLUMN = cn(
+  '[--disc:184px] [--wedge:101.5px] [--reach:61px] [--arrow:30px] [--ok:65px] [--ok-font:15px] [--pill-h:44px] [--pill-w:64px] [--pill-font:13px] [--dot:52px] [--pitch:70px] [--line-font:13px] [--digit-font:17px] [--digit-h:48px] [--digit-row-gap:14px] [--group-gap:24px] [--under-disc:12px]',
+  '[@media(height<900px)]:[--disc:152px] [@media(height<900px)]:[--wedge:84px] [@media(height<900px)]:[--reach:50px] [@media(height<900px)]:[--arrow:25px] [@media(height<900px)]:[--ok:54px] [@media(height<900px)]:[--ok-font:13px] [@media(height<900px)]:[--dot:44px] [@media(height<900px)]:[--pitch:60px] [@media(height<900px)]:[--digit-h:44px] [@media(height<900px)]:[--digit-row-gap:10px] [@media(height<900px)]:[--group-gap:16px] [@media(height<900px)]:[--under-disc:8px]',
+)
+
+/** The gap between the remote's groups in the column, as the mock spaces them: the station's line, the cross with its row of `戻る` and `d`, the colours and the digits; and the closer gap in a short window. */
 export const REMOTE_GROUP_GAP = 24
 
-/** The gap between the disc and the row of `戻る` and `d` under it. */
+export const REMOTE_GROUP_GAP_SHORT = 16
+
+/** The gap between the disc and the row of `戻る` and `d` under it, and in a short window. */
 export const REMOTE_UNDER_THE_DISC = 12
 
-/** The name of the remote's `d`, which closes the data broadcast as the control bar's toggle does. */
-export const D_KEY_NAME = 'd データ放送'
+export const REMOTE_UNDER_THE_DISC_SHORT = 8
 
 const DIGIT_GRID: (BmlKey | null)[] = [
   '1',
@@ -848,8 +841,10 @@ export function DataBroadcastRemote({
       role="group"
       aria-label={KEYPAD_NAME}
       data-slot="data-broadcast-remote"
-      style={{ ...IN_THE_COLUMN, rowGap: REMOTE_GROUP_GAP }}
-      className="flex flex-col rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl"
+      className={cn(
+        IN_THE_COLUMN,
+        'flex flex-col gap-y-(--group-gap) rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl',
+      )}
     >
       <div className="flex h-[44px] shrink-0 items-center gap-[12px]">
         {application ? (
@@ -887,8 +882,7 @@ export function DataBroadcastRemote({
       </div>
       <div
         data-slot="remote-cross"
-        style={{ rowGap: REMOTE_UNDER_THE_DISC }}
-        className="flex shrink-0 flex-col items-center"
+        className="flex shrink-0 flex-col items-center gap-y-(--under-disc)"
       >
         <Disc pressing={pressing} />
         <div
@@ -906,15 +900,15 @@ export function DataBroadcastRemote({
           </button>
           <button
             type="button"
-            aria-label={D_KEY_NAME}
+            aria-label={DATA_BROADCAST_NAME}
             onMouseDown={(event) => {
               event.preventDefault()
               onAim()
             }}
             onClick={onToggle}
-            className={cn(PILL, 'font-code')}
+            className={cn(PILL, '[&_svg]:size-6')}
           >
-            d
+            <DataBroadcastIcon />
           </button>
         </div>
       </div>
@@ -924,7 +918,7 @@ export function DataBroadcastRemote({
       <div
         role="group"
         aria-label="数字"
-        className="mx-auto grid w-full max-w-[330px] shrink-0 grid-cols-3 gap-x-[18px] gap-y-[14px]"
+        className="mx-auto grid w-full max-w-[330px] shrink-0 grid-cols-3 gap-x-[18px] gap-y-(--digit-row-gap)"
       >
         {DIGIT_GRID.map((digit, nth) =>
           digit === null ? (
@@ -937,7 +931,7 @@ export function DataBroadcastRemote({
               onClick={() => onKey(digit)}
               className={cn(
                 KEY_LOOK,
-                'h-[48px] w-full font-code text-[length:var(--digit-font)] leading-none after:absolute after:-inset-[2px] after:content-[""]',
+                'h-(--digit-h) w-full font-code text-[length:var(--digit-font)] leading-none after:absolute after:-inset-[2px] after:content-[""]',
               )}
             >
               {digit}

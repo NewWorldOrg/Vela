@@ -26,7 +26,7 @@ import {
   BAND_MOCK_WIDTH,
   DataBroadcastBand,
   DataBroadcastRemote,
-  D_KEY_NAME,
+  DATA_BROADCAST_NAME,
   REMOTE_GROUP_GAP,
   REMOTE_UNDER_THE_DISC,
   columnOverTheBand,
@@ -980,7 +980,7 @@ const REMOTE_KEYS = [
   '右',
   '決定',
   '戻る',
-  D_KEY_NAME,
+  DATA_BROADCAST_NAME,
   '青',
   '赤',
   '緑',
@@ -999,7 +999,7 @@ async function asTheColumnMock(canvasElement: HTMLElement) {
   const at = (name: string) =>
     keys.getByRole('button', { name }).getBoundingClientRect()
   const back = at('戻る')
-  const d = at(D_KEY_NAME)
+  const d = at(DATA_BROADCAST_NAME)
   const enter = at('決定')
   const dots = ['青', '赤', '緑', '黄'].map((name) =>
     keys.getByRole('button', { name }),
@@ -1059,7 +1059,15 @@ export const リモコン_列: Story = {
     await expect(line).toHaveTextContent(`${STATION}データ放送`)
     await expect(named(remote)).toEqual(REMOTE_KEYS)
 
-    for (const name of ['上', '決定', '戻る', D_KEY_NAME, '青', '7', '0']) {
+    for (const name of [
+      '上',
+      '決定',
+      '戻る',
+      DATA_BROADCAST_NAME,
+      '青',
+      '7',
+      '0',
+    ]) {
       await userEvent.click(within(remote).getByRole('button', { name }))
     }
 
