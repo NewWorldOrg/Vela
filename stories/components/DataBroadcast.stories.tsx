@@ -54,12 +54,15 @@ import {
   ROWS_CATALOG,
   SANDBOX_PROBE,
   SCRIPTED_CATALOG,
+  SIGNAL_CATALOG,
+  SIGNAL_PROBE,
   clockModules,
   dataBroadcastModules,
   howFarModules,
   menuModules,
   rowModules,
   scriptedModules,
+  signalModules,
 } from '@/stories/fixtures/data-broadcast'
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
@@ -682,6 +685,38 @@ export const カーソルの枠と行: Story = {
     await expect(
       Math.abs(measured('text-above') - measured('text-below')),
     ).toBeLessThanOrEqual(HALF_A_PIXEL)
+  },
+}
+
+const LAMPS = 3
+
+export const MNGの動く画像: Story = {
+  render: () => (
+    <Measured
+      label="MNG の動く画像"
+      catalog={SIGNAL_CATALOG}
+      modules={signalModules}
+      probe={SIGNAL_PROBE}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const signal = within(canvasElement).getByRole('group', {
+      name: 'MNG の動く画像',
+    })
+    const seen = () =>
+      (signal.getAttribute('data-seen') ?? '').split(' ').filter(Boolean)
+
+    await waitFor(() => expect(seen().length).toBeGreaterThanOrEqual(4), {
+      timeout: 8000,
+    })
+
+    const lamps = seen().map(Number)
+
+    await expect(
+      lamps.slice(1).every((lamp, at) => lamp === (lamps[at] + 1) % LAMPS),
+    ).toBe(true)
+    await expect(signal).toHaveAttribute('data-together', 'false')
+    await expect(signal).toHaveAttribute('data-size', '180x60')
   },
 }
 

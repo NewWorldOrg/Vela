@@ -1,5 +1,6 @@
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlModule, BmlResource, ResourceKind } from '@/lib/bml/resources'
+import { SIGNAL_COLOURS, SIGNAL_LAMPS, signalMng } from '@/stories/fixtures/mng'
 
 const PROLOGUE = `<?xml version="1.0" encoding="EUC-JP" ?>
 <!DOCTYPE bml PUBLIC "+//ARIB STD-B24:1999//DTD BML Document//JA" "http://www.arib.or.jp/bml/bml_1_0.dtd">
@@ -893,4 +894,78 @@ const measuring = setInterval(() => {
     requestAnimationFrame(() => parent.postMessage({ probe: measure() }, '*'))
   }
 }, 50)
+`
+
+const SIGNAL = `${PROLOGUE}
+<bml>
+<head>
+<title>動く画像</title>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; background-color-index: 8">
+<div style="left: 40px; top: 40px; width: 420px; height: 184px; background-color-index: 65">
+<p style="left: 24px; top: 20px; width: 372px; height: 40px; font-size: 28px; line-height: 40px; color-index: 7">信号の見本</p>
+<object id="signal" type="image/X-arib-mng" data="signal.mng" style="left: 24px; top: 92px; width: 180px; height: 60px"/>
+</div>
+</body>
+</bml>`
+
+export const SIGNAL_CATALOG: BmlCatalog = {
+  ...ROWS_CATALOG,
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'signal.mng', type: 'image/X-arib-mng' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** A document with a synthetic MNG of three lamps that light in turn. */
+export function signalModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', SIGNAL),
+        resource('signal.mng', 'binary', signalMng()),
+      ],
+    },
+  ]
+}
+
+/** Reads, inside the frame, which lamp of the signal is lit on its canvas, and says each time it changes: the lamps in the order they were seen lit, whether two were ever lit at once, and the canvas's size. */
+export const SIGNAL_PROBE = `
+const LAMPS = ${JSON.stringify(SIGNAL_LAMPS)}
+const LIT = ${JSON.stringify(SIGNAL_COLOURS.lit)}
+const near = (a, b) => b.every((value, at) => Math.abs(value - a[at]) <= 2)
+const seen = []
+let together = false
+const look = setInterval(() => {
+  const canvas = document.querySelector('#bml-plane canvas')
+  if (!canvas) {
+    return
+  }
+  const surface = canvas.getContext('2d')
+  const lit = LAMPS.flatMap((lamp, at) => near(Array.from(surface.getImageData(lamp.x, lamp.y, 1, 1).data), LIT[at]) ? [at] : [])
+  together = together || lit.length > 1
+  if (lit.length === 1 && seen[seen.length - 1] !== lit[0]) {
+    seen.push(lit[0])
+    parent.postMessage({ probe: { seen: seen.join(' '), together: String(together), size: canvas.width + 'x' + canvas.height } }, '*')
+  }
+  if (seen.length >= 5) {
+    clearInterval(look)
+  }
+}, 40)
 `
