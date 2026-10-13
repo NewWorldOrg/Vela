@@ -270,6 +270,8 @@ export function useDataBroadcast(
         step({ on: 'appReplaced', start: message.start, nth })
         void start(message.start, nth)
         return
+      case 'romsound':
+        return
       case 'lost':
         step({ on: 'appLost', end: message.end, nth })
 

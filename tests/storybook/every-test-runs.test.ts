@@ -83,6 +83,7 @@ const THE_SUITE = [
   'tests/lib/hybridcast/receiver.test.ts',
   'tests/lib/hybridcast/relay-guard.test.ts',
   'tests/lib/hybridcast/relay.test.ts',
+  'tests/lib/hybridcast/rewrite.test.ts',
   'tests/lib/hybridcast/wrappers.test.ts',
   'tests/lib/in-full.test.ts',
   'tests/lib/live-caption-drift.test.ts',

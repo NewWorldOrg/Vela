@@ -274,6 +274,10 @@ export const 届かないもの: Story = {
     await expect(app).toHaveAttribute('data-socket', 'relayed')
     await expect(app).toHaveAttribute('data-socket-outside', 'SecurityError')
     await expect(app).toHaveAttribute('data-image', 'relayed')
+    await expect(app).toHaveAttribute('data-new-image', 'relayed')
+    await expect(app).toHaveAttribute('data-markup', 'relayed')
+    await expect(app).toHaveAttribute('data-style', 'relayed')
+    await reported(app, 'fragment', 'clean')
   },
 }
 
@@ -551,5 +555,34 @@ export const 読み込みの前に次のページへ移る入口: Story = {
     await reported(app, 'loaded', 'yes')
     await new Promise((resolve) => setTimeout(resolve, OPENED_WITHIN_MS + 500))
     await expect(app.getAttribute('data-heard')).not.toContain('lost')
+  },
+}
+
+export const 受信機の内蔵の音: Story = {
+  render: () => <Harness label="内蔵の音" />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '内蔵の音')
+
+    await reported(app, 'rom-play')
+    await expect(app).toHaveAttribute('data-rom-source', 'quiet')
+    await expect(app).toHaveAttribute('data-rom-src', 'quiet')
+    await expect(app).toHaveAttribute('data-rom-play', 'played')
+    await waitFor(() =>
+      expect(app.getAttribute('data-heard')).toContain('romsound'),
+    )
+  },
+}
+
+export const 映像の穴: Story = {
+  render: () => <Harness label="映像の穴" />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '映像の穴')
+
+    await waitFor(() =>
+      expect(app).toHaveAttribute('data-rect', '960,120,800,450'),
+    )
+    await waitFor(() =>
+      expect(getComputedStyle(frameIn(app)).maskImage).toContain('gradient'),
+    )
   },
 }

@@ -16,6 +16,8 @@ import {
   type StationNavigation,
 } from '@/lib/hybridcast/location'
 import { HybridcastReceiver } from '@/lib/hybridcast/receiver'
+import { addressPointer } from '@/lib/hybridcast/rewrite'
+import { pointAddressesWrittenLater } from '@/components/data-broadcast/hybridcast-addresses'
 import {
   intendedTarget,
   relayedAddress,
@@ -49,27 +51,6 @@ function isBroadcastVideo(type: unknown): boolean {
     typeof type === 'string' && BROADCAST_VIDEOS.has(type.trim().toLowerCase())
   )
 }
-
-/** The attributes of each element that name an address the browser loads or goes to. */
-const ADDRESSED: Record<string, string[]> = {
-  a: ['href'],
-  area: ['href'],
-  audio: ['src'],
-  embed: ['src'],
-  form: ['action'],
-  frame: ['src'],
-  iframe: ['src'],
-  img: ['src'],
-  input: ['src'],
-  link: ['href'],
-  object: ['data'],
-  script: ['src'],
-  source: ['src'],
-  track: ['src'],
-  video: ['src', 'poster'],
-}
-
-const STYLE_URL = /url\(\s*(["']?)([^"')]*)\1\s*\)/gi
 
 const KEY_NAME: Record<BmlKey, string> = {
   up: 'ArrowUp',
@@ -119,118 +100,6 @@ function descriptorOf(
   }
 
   return undefined
-}
-
-/** The relay address for an address written into the markup at run time, or null to leave it as it is: one the relay already has, one that names no server, a fragment. */
-function pointed(frame: Frame, written: string): string | null {
-  const value = written.trim()
-
-  if (value.length === 0 || value.startsWith('#')) {
-    return null
-  }
-
-  let here: URL
-
-  try {
-    here = new URL(value, frame.window.location.href)
-  } catch {
-    return null
-  }
-
-  if (relayedTarget(here, frame.relay)) {
-    return null
-  }
-
-  const target = writtenTarget(value, frame.relay, frame.station())
-
-  return target && (target.protocol === 'http:' || target.protocol === 'https:')
-    ? relayedAddress(frame.relay.app, target)
-    : null
-}
-
-function pointedStyle(frame: Frame, style: string): string {
-  return style.replace(STYLE_URL, (whole, _quote: string, address: string) => {
-    const relayed = pointed(frame, address)
-
-    return relayed ? `url("${relayed}")` : whole
-  })
-}
-
-/** Points the addresses of one element at the relay: the ones it loads or goes to, and the `url()` of its style. */
-function pointElement(frame: Frame, element: Element): void {
-  ;(ADDRESSED[element.localName] ?? []).forEach((name) => {
-    const written = element.getAttribute(name)
-    const relayed = written === null ? null : pointed(frame, written)
-
-    if (relayed) {
-      element.setAttribute(name, relayed)
-    }
-  })
-
-  const style = element.getAttribute('style')
-  const relayed =
-    style && /url\(/i.test(style) ? pointedStyle(frame, style) : style
-
-  if (style && relayed !== style) {
-    element.setAttribute('style', relayed as string)
-  }
-}
-
-/** Carina points every address of the markup it relays at the relay; what a script writes into the document later is pointed here. A script's own address is pointed as it is set, as a script element is fetched the moment it is placed; the rest as it lands, which loads it again from the relay. */
-function pointAddressesWrittenLater(frame: Frame): void {
-  const { window } = frame
-  const scriptSource = descriptorOf(window.HTMLScriptElement.prototype, 'src')
-  const setAttribute = window.Element.prototype.setAttribute
-
-  if (scriptSource?.set) {
-    const set = scriptSource.set
-
-    Object.defineProperty(window.HTMLScriptElement.prototype, 'src', {
-      ...scriptSource,
-      set(this: HTMLScriptElement, value: unknown) {
-        set.call(this, pointed(frame, String(value)) ?? value)
-      },
-    })
-  }
-
-  window.Element.prototype.setAttribute = function (
-    this: Element,
-    name: string,
-    value: string,
-  ) {
-    const relayed =
-      this.localName === 'script' && name.toLowerCase() === 'src'
-        ? pointed(frame, String(value))
-        : null
-
-    setAttribute.call(this, name, relayed ?? value)
-  }
-
-  const point = (node: Node) => {
-    if (node.nodeType !== 1) {
-      return
-    }
-
-    const element = node as Element
-
-    pointElement(frame, element)
-    element.querySelectorAll('*').forEach((inner) => pointElement(frame, inner))
-  }
-
-  new window.MutationObserver((records) => {
-    records.forEach((record) => {
-      if (record.type === 'attributes') {
-        pointElement(frame, record.target as Element)
-      } else {
-        record.addedNodes.forEach(point)
-      }
-    })
-  }).observe(window.document, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: [...new Set(Object.values(ADDRESSED).flat()), 'style'],
-  })
 }
 
 /** Whether an address a link or a form goes to lies outside the boundary, read as the application meant it. Addresses that name no server are not the boundary's to judge. */
@@ -546,7 +415,11 @@ export function startHybridcastReceiver(
   )
   giveTheNavigator(window, receiver)
   relayNetwork(frame)
-  pointAddressesWrittenLater(frame)
+  pointAddressesWrittenLater(
+    window,
+    addressPointer(relay, frame.station, () => window.location.href),
+    (sound) => port.postMessage({ kind: 'romsound', sound }),
+  )
   quietTheBroadcastVideo(window)
   keepToTheBoundary(frame)
   followThePicture(window, receiver)

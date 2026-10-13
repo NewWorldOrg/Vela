@@ -54,6 +54,7 @@ export interface AppState {
 export type AppMessage =
   | { kind: 'loaded' }
   | { kind: 'leave'; to: string }
+  | { kind: 'romsound'; sound: number }
   | { kind: 'videoRect'; rect: Rect | null; over: boolean }
   | { kind: 'keySet'; mask: number }
   | { kind: 'greg'; greg: string[] }
@@ -194,6 +195,12 @@ export function appMessageOf(data: unknown): AppMessage | null {
   switch (message?.kind) {
     case 'loaded':
       return { kind: 'loaded' }
+    case 'romsound':
+      return Number.isInteger(message.sound) &&
+        (message.sound as number) >= 0 &&
+        (message.sound as number) <= 255
+        ? { kind: 'romsound', sound: message.sound as number }
+        : null
     case 'leave':
       return typeof message.to === 'string' &&
         message.to.length <= MOST_URL &&

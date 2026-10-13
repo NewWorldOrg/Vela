@@ -107,6 +107,11 @@ test('what the application says is taken only in the shapes there are', () => {
     to: 'https://a.test/x',
   })
   assert.equal(appMessageOf({ kind: 'leave' }), null)
+  assert.deepEqual(appMessageOf({ kind: 'romsound', sound: 9 }), {
+    kind: 'romsound',
+    sound: 9,
+  })
+  assert.equal(appMessageOf({ kind: 'romsound', sound: 256 }), null)
   assert.equal(appMessageOf({ kind: 'leave', to: 'javascript:1' }), null)
   assert.deepEqual(appMessageOf({ kind: 'launchBml', componentTag: 0x60 }), {
     kind: 'launchBml',

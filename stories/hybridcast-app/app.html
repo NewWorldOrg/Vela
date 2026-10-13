@@ -66,6 +66,9 @@
     <a id="next" href="/hc/sub/next.html" hidden>次のページ</a>
     <a id="away" href="https://elsewhere.test/" hidden>外のページ</a>
     <input id="field" aria-label="入力" />
+    <audio id="rom9">
+      <source src="romsound://9" type="audio/X-arib-romsound" />
+    </audio>
     <script>
       // A self-made application that calls the receiver the way the applications call it, and reports what it was answered to the page around it.
       var asked = decodeURIComponent(location.search)
@@ -277,6 +280,91 @@
           : socket.url,
       )
       socket.onerror = function () {}
+      // Addresses written at run time are pointed at the relay as they are written, before the element is in the document.
+      var onTheRelay = function (written, asked) {
+        return written.indexOf(relayedFrom(asked)) >= 0
+      }
+      var detached = new Image()
+      detached.src = '/hc/menu0.png'
+      say(
+        'new-image',
+        onTheRelay(
+          detached.getAttribute('src'),
+          'http://example.test/hc/menu0.png',
+        )
+          ? 'relayed'
+          : detached.getAttribute('src'),
+      )
+      var holder = document.createElement('div')
+      holder.innerHTML =
+        '<span style="background:url(/hc/bg.png)"><img src="img/a.png" srcset="img/a2.png 2x"></span>'
+      var held = holder.querySelector('img')
+      say(
+        'markup',
+        onTheRelay(
+          held.getAttribute('src'),
+          'http://example.test/hc/img/a.png',
+        ) &&
+          onTheRelay(
+            held.getAttribute('srcset'),
+            'http://example.test/hc/img/a2.png',
+          ) &&
+          onTheRelay(
+            holder.querySelector('span').getAttribute('style'),
+            'http://example.test/hc/bg.png',
+          )
+          ? 'relayed'
+          : holder.innerHTML,
+      )
+      var painted = document.createElement('div')
+      painted.style.backgroundImage = 'url(/hc/bg.png)'
+      say(
+        'style',
+        onTheRelay(
+          painted.style.backgroundImage,
+          'http://example.test/hc/bg.png',
+        )
+          ? 'relayed'
+          : painted.style.backgroundImage,
+      )
+      // A fragment the application fetches carries the receiver script the relay puts into every page; building markup from it leaves the script out.
+      fetch('/hc/components/item.html').then(function (answer) {
+        return answer.text().then(function (text) {
+          var built = document.createElement('div')
+          built.innerHTML = text
+          say(
+            'fragment',
+            text.indexOf('data-hybridcast-relay') >= 0 &&
+              built.querySelector('script[data-hybridcast-relay]') === null
+              ? 'clean'
+              : 'carries the receiver',
+          )
+        })
+      }, failed('fragment'))
+      var rom = document.getElementById('rom9').querySelector('source')
+      say(
+        'rom-source',
+        rom.getAttribute('src').indexOf('blob:') === 0 &&
+          rom.getAttribute('type') === 'audio/wav'
+          ? 'quiet'
+          : rom.getAttribute('src'),
+      )
+      var sound = document.createElement('audio')
+      sound.src = 'romsound://3'
+      say(
+        'rom-src',
+        sound.getAttribute('src').indexOf('blob:') === 0
+          ? 'quiet'
+          : sound.getAttribute('src'),
+      )
+      sound.play().then(
+        function () {
+          say('rom-play', 'played')
+        },
+        function (error) {
+          say('rom-play', error.name)
+        },
+      )
       var image = document.createElement('img')
       image.src = '/hc/mark.png'
       image.alt = ''
