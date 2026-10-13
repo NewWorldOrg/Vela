@@ -4,6 +4,7 @@ import {
   type BrowserHost,
   type LockAnswer,
 } from '@/lib/bml/browser'
+import { appStartOf, sameStart, type AppStart } from '@/lib/bml/ait'
 import { staysListed, takesThePlace, type BmlCatalog } from '@/lib/bml/catalog'
 import {
   BML_LIMITS,
@@ -31,10 +32,13 @@ import {
   type BmlKey,
   type Navigation,
 } from '@/lib/bml/keys'
-import type { LineState, ReceiverId, TransmitAnswer } from '@/lib/bml/line'
+import type { LineState, ReceiverId } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
 import {
+  MOST_REGISTER,
+  SHARED_REGISTERS,
   playerMessageFrom,
+  sharedRegistersOf,
   type FontBytes,
   type PlayerMessage,
   type Programme,
@@ -71,7 +75,11 @@ import {
 } from '@/lib/bml/style'
 import { tableClassesOf } from '@/lib/bml/tables'
 import { frameEvaluator } from '@/components/data-broadcast/bml-evaluator'
-import { LineRequests } from '@/components/data-broadcast/bml-line'
+import {
+  LineRequests,
+  type Awaited,
+  type LineAnswer,
+} from '@/components/data-broadcast/bml-line'
 import {
   mountPage,
   type MountedPage,
@@ -135,7 +143,8 @@ interface Timer {
   left: number | null
 }
 
-type Leaving = { to: BmlAddress } | { reload: true } | { quit: true }
+type Leaving =
+  { to: BmlAddress } | { reload: true } | { quit: true } | { start: AppStart }
 
 /** Where a run that waits on the line was: the page and the event it ran for. */
 interface Seen {
@@ -208,6 +217,10 @@ export class BmlRuntime {
   private line: LineState = 'none'
 
   private receiverId: ReceiverId | null = null
+
+  private hybridcast = false
+
+  private failedStarts: AppStart[] = []
 
   private readonly requests: LineRequests<Seen>
 
@@ -284,7 +297,22 @@ export class BmlRuntime {
         this.receiverId = message.receiverId
         return
       case 'transmitted':
-        this.answered(message.id, message.answer)
+        this.answered(
+          this.requests.answered(message.id, {
+            to: 'transmit',
+            answer: message.answer,
+          }),
+        )
+        return
+      case 'aitRead':
+        this.answered(this.requests.aitRead(message.id, message.applications))
+        return
+      case 'hybridcast':
+        this.hybridcast = message.allowed
+        this.failedStarts = message.failed
+        return
+      case 'greg':
+        this.registers.Greg.splice(0, message.greg.length, ...message.greg)
         return
       case 'fetched':
         this.took(message.id, message.module)
@@ -798,6 +826,16 @@ export class BmlRuntime {
         this.warn(`the line is off: ${what}`)
         this.say({ kind: 'line', said: 'off' })
       },
+      hybridcast: () => this.hybridcast && this.line === 'on',
+      receiveAit: (uri) => this.requests.receiveAit(uri),
+      receivedAit: (uri) => this.requests.receivedAit(uri),
+      readAit: (uri) => this.requests.readAit(uri),
+      startApplication: (start) => {
+        this.leaving = { start }
+      },
+      unopened: () => this.say({ kind: 'unopened' }),
+      failedBefore: (start) =>
+        this.failedStarts.some((failed) => sameStart(failed, start)),
     }
   }
 
@@ -840,7 +878,7 @@ export class BmlRuntime {
     code: string,
     event: BmlEvent | null,
     then: (() => void) | null = null,
-    answers: TransmitAnswer[] = [],
+    answers: LineAnswer[] = [],
   ): boolean {
     const shown = this.shown
 
@@ -883,8 +921,7 @@ export class BmlRuntime {
   }
 
   /** Runs again the code that waited on the line, now that its answer is in, if its page is still the one shown, and what was to follow it. */
-  private answered(id: number, answer: TransmitAnswer): void {
-    const awaited = this.requests.answered(id, answer)
+  private answered(awaited: Awaited<Seen> | null): void {
     const shown = awaited?.seen.shown
 
     if (!awaited || !shown || shown !== this.shown) {
@@ -935,6 +972,8 @@ export class BmlRuntime {
 
       if ('quit' in leaving) {
         this.quit()
+      } else if ('start' in leaving) {
+        this.startApplication(leaving.start)
       } else if ('reload' in leaving) {
         this.reload()
       } else {
@@ -954,6 +993,23 @@ export class BmlRuntime {
   private quit(): void {
     this.close()
     this.say({ kind: 'exit' })
+  }
+
+  /** Ends the broadcast's documents to start the application a document asked for, handing the player the shared registers so that the application, and the documents when they come back, read what was written. Each register goes as a string no longer than the most one carries, whatever a document left in it. A start the player would not take leaves the documents as they are, and is said not to open. */
+  private startApplication(start: AppStart): void {
+    const greg = Array.from({ length: SHARED_REGISTERS }, (_, at) =>
+      registerText(this.registers.Greg[at]),
+    )
+    const asked = appStartOf(start)
+
+    if (!asked || !sharedRegistersOf(greg)) {
+      this.say({ kind: 'unopened' })
+
+      return
+    }
+
+    this.close()
+    this.say({ kind: 'startApp', start: asked, greg })
   }
 
   /** Whether the module a reference names is in the catalog now; null when the reference names no module. */
@@ -1523,6 +1579,18 @@ export class BmlRuntime {
 }
 
 const MOST_REASON = 200
+
+/** What a shared register holds, as the player is handed it: a string, cut at the most a register carries. Anything a document left that is not a string, a number or a truth value is empty. */
+function registerText(value: unknown): string {
+  const text =
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+      ? String(value)
+      : ''
+
+  return text.slice(0, MOST_REGISTER)
+}
 
 /** An error as the console is told of it: its name and the start of its message. */
 function describe(error: unknown): string {

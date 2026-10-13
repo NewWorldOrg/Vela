@@ -444,3 +444,83 @@ test('the player’s line, answers and fetched modules are taken when they fit, 
     assert.equal(fromPlayer(data), null, JSON.stringify(data))
   }
 })
+
+const AIT = 'http://hc.example.test/p/a.ait'
+
+const START = { ait: AIT, orgId: 16, appId: 1 }
+
+function registers(fill = ''): string[] {
+  return Array.from({ length: 64 }, () => fill)
+}
+
+test('the runtime’s Hybridcast requests are taken when they name an AIT on the line, an application by numbers and the 64 registers', () => {
+  const said: unknown[] = [
+    { kind: 'ait', id: 4, uri: AIT },
+    { kind: 'startApp', start: START, greg: registers('nhk:1') },
+    { kind: 'unopened' },
+  ]
+
+  for (const data of said) {
+    assert.deepEqual(fromRuntime(data), data)
+  }
+
+  const dropped: unknown[] = [
+    { kind: 'ait', id: 0, uri: AIT },
+    { kind: 'ait', id: 4, uri: '/40/0000/a.ait' },
+    { kind: 'ait', id: 4, uri: `${AIT}#top` },
+    { kind: 'startApp', start: { ...START, orgId: 0 }, greg: registers() },
+    { kind: 'startApp', start: { ...START, ait: 'x' }, greg: registers() },
+    { kind: 'startApp', start: START, greg: registers().slice(1) },
+    { kind: 'startApp', start: START, greg: [...registers().slice(1), 3] },
+    {
+      kind: 'startApp',
+      start: START,
+      greg: [...registers().slice(1), 'x'.repeat(1025)],
+    },
+    { kind: 'startApp', start: START },
+  ]
+
+  for (const data of dropped) {
+    assert.equal(fromRuntime(data), null, JSON.stringify(data).slice(0, 80))
+  }
+})
+
+test('the player’s AIT, Hybridcast and registers are taken when they fit, and dropped when they do not', () => {
+  const application = {
+    orgId: 16,
+    appId: 1,
+    controlCode: 1,
+    entryUrl: 'http://hc.example.test/p/index.html',
+  }
+  const said: unknown[] = [
+    { kind: 'aitRead', id: 4, applications: [application] },
+    { kind: 'aitRead', id: 4, applications: null },
+    { kind: 'hybridcast', allowed: true, failed: [] },
+    { kind: 'hybridcast', allowed: false, failed: [START] },
+    { kind: 'greg', greg: registers('JNNHC:a') },
+  ]
+
+  for (const data of said) {
+    assert.deepEqual(fromPlayer(data), data)
+  }
+
+  const dropped: unknown[] = [
+    { kind: 'aitRead', id: 0, applications: null },
+    { kind: 'aitRead', id: 4, applications: [{ ...application, orgId: 0 }] },
+    { kind: 'aitRead', id: 4 },
+    { kind: 'hybridcast', allowed: 'yes', failed: [] },
+    { kind: 'hybridcast', allowed: true, failed: [{ ...START, appId: -1 }] },
+    {
+      kind: 'hybridcast',
+      allowed: true,
+      failed: Array.from({ length: 17 }, () => START),
+    },
+    { kind: 'hybridcast', allowed: true },
+    { kind: 'greg', greg: registers().slice(2) },
+    { kind: 'greg', greg: null },
+  ]
+
+  for (const data of dropped) {
+    assert.equal(fromPlayer(data), null, JSON.stringify(data).slice(0, 80))
+  }
+})

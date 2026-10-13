@@ -28,8 +28,10 @@ import { DataBroadcastFeed } from '@/lib/data-broadcast-feed'
 import {
   AUTO_OPEN_SPELLING,
   DATA_BROADCAST_AUTO_OPEN,
+  DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  HYBRIDCAST_SPELLING,
   LINE_SPELLING,
   RECEIVER_ID_SPELLING,
 } from '@/lib/stored-flag'
@@ -94,10 +96,11 @@ import {
   DataBroadcastBand,
   DataBroadcastFace,
   DataBroadcastToggle,
+  HybridcastFace,
   PLAYER_COLUMN_OVER_THE_BAND,
   bandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
-import { liveLine } from '@/lib/data-broadcast-line'
+import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
 import { liveLineRelay } from '@/components/data-broadcast/line-relay'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 
@@ -255,10 +258,13 @@ export function LivePlayer({
     AUTO_OPEN_SPELLING,
     autoOpensDataBroadcast,
   )
-  const broadcast = useDataBroadcast(broadcastFeed, key, {
-    autoOpens,
-    programme: onAir?.startsAt ?? '',
-  })
+  const relay = useMemo(
+    () =>
+      networkId === undefined || serviceId === undefined
+        ? null
+        : lineRelayOf(liveChannelOf(networkId, serviceId)),
+    [networkId, serviceId, lineRelayOf],
+  )
   const [allowsTheLine] = useStoredFlag(
     DATA_BROADCAST_LINE,
     LINE_SPELLING,
@@ -269,15 +275,26 @@ export function LivePlayer({
     RECEIVER_ID_SPELLING,
     false,
   )
-  const relay = useMemo(
-    () =>
-      networkId === undefined || serviceId === undefined
-        ? null
-        : lineRelayOf(liveChannelOf(networkId, serviceId)),
-    [networkId, serviceId, lineRelayOf],
+  const [allowsHybridcast] = useStoredFlag(
+    DATA_BROADCAST_HYBRIDCAST,
+    HYBRIDCAST_SPELLING,
+    false,
   )
   const receiverId = useReceiverId(relay, allowsTheLine && handsTheReceiverId)
-  const line = liveLine(allowsTheLine, handsTheReceiverId, receiverId, relay)
+  const line = liveLine(
+    { allowsTheLine, handsTheReceiverId, allowsHybridcast },
+    receiverId,
+    relay,
+  )
+  const broadcast = useDataBroadcast(
+    broadcastFeed,
+    key,
+    {
+      autoOpens,
+      programme: onAir?.startsAt ?? '',
+    },
+    applicationStarter(line),
+  )
 
   useEffect(
     () => () => {
@@ -649,6 +666,17 @@ export function LivePlayer({
     shell?.focus({ preventScroll: true })
   }
 
+  const runningApp = broadcast.view.hybridcast
+  const onTheBand = runningApp
+    ? {
+        station: channel?.name ?? '',
+        onClose: () => {
+          aimAtTheKeypad()
+          broadcast.closeApplication()
+        },
+      }
+    : null
+
   const chooseVolume = (next: number) => {
     const element = video.current
 
@@ -856,18 +884,24 @@ export function LivePlayer({
                   className="pointer-events-none absolute inset-0 size-full"
                 />
               </div>
-              {opened && (
+              {opened && !runningApp && (
                 <DataBroadcastFace
+                  key={broadcast.view.returns}
                   feed={broadcastFeed}
                   onAir={{
                     network: networkId ?? null,
                     startsAt: onAir ? Date.parse(onAir.startsAt) / 1000 : null,
                   }}
                   line={line}
+                  greg={broadcast.view.greg}
+                  failedStarts={broadcast.view.failedStarts}
                   onRuntime={broadcast.connect}
                   onMessage={hearBroadcast}
                   says={dataBroadcastSays(broadcast.view)}
                 />
+              )}
+              {opened && runningApp && (
+                <HybridcastFace address={runningApp.address} />
               )}
             </div>
           </div>
@@ -999,6 +1033,7 @@ export function LivePlayer({
                 onNumbers={broadcast.showNumbers}
                 onKey={broadcast.press}
                 onAim={aimAtTheKeypad}
+                application={onTheBand}
               />
             )}
             <div
@@ -1191,6 +1226,7 @@ export function LivePlayer({
             onNumbers={broadcast.showNumbers}
             onKey={broadcast.press}
             onAim={aimAtTheKeypad}
+            application={onTheBand}
           />
         )}
       </section>

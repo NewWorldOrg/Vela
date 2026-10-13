@@ -11,6 +11,11 @@ export const LINE_SPELLING: FlagSpelling = { yes: 'allows', no: 'refuses' }
 
 export const RECEIVER_ID_SPELLING: FlagSpelling = { yes: 'hands', no: 'keeps' }
 
+export const HYBRIDCAST_SPELLING: FlagSpelling = {
+  yes: 'allows',
+  no: 'refuses',
+}
+
 export const GUIDE_SUB_CHANNELS_FOLDED = 'vela-guide-sub-channels-folded'
 
 export const LIVE_CHANNELS_FOLDED = 'vela-live-channels-folded'
@@ -22,6 +27,8 @@ export const DATA_BROADCAST_AUTO_OPEN = 'vela-data-broadcast-auto-open'
 export const DATA_BROADCAST_LINE = 'vela-data-broadcast-network'
 
 export const DATA_BROADCAST_RECEIVER_ID = 'vela-data-broadcast-receiver-id'
+
+export const DATA_BROADCAST_HYBRIDCAST = 'vela-data-broadcast-hybridcast'
 
 const KEPT_S = 31536000
 

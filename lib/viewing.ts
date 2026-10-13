@@ -1,8 +1,10 @@
 import {
   AUTO_OPEN_SPELLING,
   DATA_BROADCAST_AUTO_OPEN,
+  DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  HYBRIDCAST_SPELLING,
   LINE_SPELLING,
   RECEIVER_ID_SPELLING,
   flagOf,
@@ -23,11 +25,17 @@ export const RECEIVER_ID_LABEL = '受信機の識別子を放送局に渡す'
 export const RECEIVER_ID_HINT =
   '入にすると、データ放送が求めたときに B-CAS カードの ID を渡します。'
 
-/** The three viewing settings as the switches start out, read the same way on the server from the request's cookies and in the browser from its own. */
+export const HYBRIDCAST_LABEL = 'Hybridcast を許可する'
+
+export const HYBRIDCAST_HINT =
+  '入にすると、ライブ視聴中のデータ放送から放送局の Hybridcast のアプリを開きます。'
+
+/** The viewing settings as the switches start out, read the same way on the server from the request's cookies and in the browser from its own. */
 export interface ViewingSettings {
   autoOpensDataBroadcast: boolean
   allowsTheLine: boolean
   handsTheReceiverId: boolean
+  allowsHybridcast: boolean
 }
 
 /** The viewing settings from what `said` finds for each cookie. */
@@ -43,6 +51,10 @@ export function viewingSettingsOf(
     handsTheReceiverId: flagOf(
       said(DATA_BROADCAST_RECEIVER_ID),
       RECEIVER_ID_SPELLING,
+    ),
+    allowsHybridcast: flagOf(
+      said(DATA_BROADCAST_HYBRIDCAST),
+      HYBRIDCAST_SPELLING,
     ),
   }
 }

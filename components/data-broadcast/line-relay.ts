@@ -1,15 +1,23 @@
 import {
+  aitRelayed,
   fetchRelayed,
+  liveDataBroadcastAitHref,
   liveDataBroadcastFetchHref,
   liveDataBroadcastReceiverIdHref,
   liveDataBroadcastTransmitHref,
+  liveHybridcastTicketHref,
   receiverIdRelayed,
+  ticketRelayed,
   transmitRelayed,
   type LineRelay,
 } from '@/repository/live-data-broadcast'
 
 /** Longer than the relay's own limit on one transmission, so that the relay says it timed out before the player gives up on it. */
 export const RELAY_GIVEN_UP_AFTER_MS = 20_000
+
+/** The path on this server of the script a Hybridcast application's documents are given, which offers them the receiver's functions. Carina puts it into every document it relays for the application. */
+export const HYBRIDCAST_RECEIVER_SCRIPT =
+  '/data-broadcast/hybridcast-receiver.js'
 
 type Send = (input: string, init: RequestInit) => Promise<Response>
 
@@ -73,6 +81,46 @@ export function liveLineRelay(
         )
       } catch {
         return null
+      }
+    },
+    ait: async (uri) => {
+      try {
+        const answer = await send(liveDataBroadcastAitHref(channel, uri), {
+          ...asking(),
+          headers: { accept: 'application/json' },
+        })
+
+        return aitRelayed(
+          answer.status,
+          answer.ok ? await answer.json() : undefined,
+        )
+      } catch {
+        return { said: 'unreached' }
+      }
+    },
+    startApplication: async (start) => {
+      try {
+        const answer = await send(liveHybridcastTicketHref(channel), {
+          ...asking(),
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            ait: start.ait,
+            orgId: start.orgId,
+            appId: start.appId,
+            receiverScript: HYBRIDCAST_RECEIVER_SCRIPT,
+          }),
+        })
+
+        return ticketRelayed(
+          answer.status,
+          answer.ok ? await answer.json() : undefined,
+        )
+      } catch {
+        return { said: 'unreached' }
       }
     },
   }

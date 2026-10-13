@@ -8,10 +8,15 @@ import {
   type ReactNode,
 } from 'react'
 
+import type { AitApplication, AppStart } from '@/lib/bml/ait'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlKey } from '@/lib/bml/keys'
 import { unreached, type TransmitAnswer } from '@/lib/bml/line'
-import { NO_LINE, type DataBroadcastLine } from '@/lib/data-broadcast-line'
+import {
+  NO_LINE,
+  takenFromTheDocuments,
+  type DataBroadcastLine,
+} from '@/lib/data-broadcast-line'
 import {
   keepMemory,
   memoryEntriesOf,
@@ -137,11 +142,15 @@ function saidOf(relayed: Relayed<TransmitAnswer>): RuntimeMessage | null {
     : null
 }
 
-/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. */
+const NO_STARTS: readonly AppStart[] = []
+
+/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. Coming back from a Hybridcast application, the runtime is handed the shared registers it left with, and the starts that failed so that it does not ask for them again. */
 export function DataBroadcastFace({
   feed,
   onAir = NOTHING_ON_AIR,
   line = NO_LINE,
+  greg = null,
+  failedStarts = NO_STARTS,
   onRuntime,
   onMessage,
   says,
@@ -149,6 +158,8 @@ export function DataBroadcastFace({
   feed: DataBroadcastHeld
   onAir?: OnAir
   line?: DataBroadcastLine
+  greg?: readonly string[] | null
+  failedStarts?: readonly AppStart[]
   onRuntime: (send: SendToRuntime | null) => void
   onMessage: (message: RuntimeMessage) => void
   says: string | null
@@ -161,6 +172,9 @@ export function DataBroadcastFace({
   const tell = useRef(onMessage)
   const lineState = line.state
   const receiverId = line.receiverId
+  const hybridcast = line.hybridcast
+  const failedNow = useRef(failedStarts)
+  const handedGreg = useRef(greg)
 
   const transmit = async (
     send: SendToRuntime,
@@ -217,6 +231,21 @@ export function DataBroadcastFace({
     tell.current({ kind: 'line', said: fetched.said })
   }
 
+  const readAit = async (
+    send: SendToRuntime,
+    message: Extract<RuntimeMessage, { kind: 'ait' }>,
+  ) => {
+    const { hybridcast: allowed, relay } = lineNow.current
+    const read =
+      relay && allowed ? await relay.ait(message.uri) : { said: 'off' as const }
+    const applications: AitApplication[] | null =
+      read.said === 'answered' ? read.answer : null
+
+    if (alive.current) {
+      send({ kind: 'aitRead', id: message.id, applications })
+    }
+  }
+
   const heard = (message: RuntimeMessage) => {
     const storage = storageOf()
     const service = feed.catalog?.service
@@ -242,17 +271,38 @@ export function DataBroadcastFace({
       return
     }
 
+    if (message.kind === 'ait') {
+      if (send) {
+        void readAit(send, message)
+      }
+
+      return
+    }
+
+    if (!takenFromTheDocuments(message, lineNow.current)) {
+      return
+    }
+
     onMessage(message)
   }
 
   useEffect(() => {
     lineNow.current = line
     tell.current = onMessage
+    failedNow.current = failedStarts
   })
 
   useEffect(() => {
     runtime.current?.({ kind: 'line', line: lineState, receiverId })
   }, [lineState, receiverId])
+
+  useEffect(() => {
+    runtime.current?.({
+      kind: 'hybridcast',
+      allowed: hybridcast,
+      failed: [...failedNow.current],
+    })
+  }, [hybridcast])
 
   useEffect(() => {
     alive.current = true
@@ -290,6 +340,16 @@ export function DataBroadcastFace({
     const { state, receiverId: given } = lineNow.current
 
     send({ kind: 'line', line: state, receiverId: given })
+    send({
+      kind: 'hybridcast',
+      allowed: lineNow.current.hybridcast,
+      failed: [...failedNow.current],
+    })
+
+    if (handedGreg.current) {
+      send({ kind: 'greg', greg: [...handedGreg.current] })
+    }
+
     send({ kind: 'open' })
     runtime.current = send
     onRuntime(send)
@@ -321,6 +381,17 @@ export function DataBroadcastFace({
         )}
       </p>
     </>
+  )
+}
+
+/** Where the Hybridcast application the documents started runs. Its frame comes here; until it does, the place stays empty over the picture, and the band says what runs and closes it back to the documents. */
+export function HybridcastFace({ address }: { address: string | null }) {
+  return (
+    <div
+      data-slot="hybridcast-face"
+      data-started={address === null ? 'no' : 'yes'}
+      className="pointer-events-none absolute inset-0 z-[1]"
+    />
   )
 }
 
@@ -556,19 +627,62 @@ function Digits({ pressing }: { pressing: Pressing }) {
   )
 }
 
-/** The remote control's keys drawn out of the control bar as a band, right over the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. Over the picture the band stands on the bar with the scrim under both; a finger in the window gets it under the player's box on the box's own black. Everything is measured against the player's width. */
+export const HYBRIDCAST_NAME = 'Hybridcast'
+
+export const CLOSE_HYBRIDCAST_NAME = 'Hybridcast を閉じる'
+
+/** The Hybridcast application running, at the band's left: the station and `Hybridcast`, and `閉じる`, which goes back to the documents. It takes what room the keys leave. Where the station and `Hybridcast` do not fit on one line, `Hybridcast` goes under the station, and only a station that does not fit on its own line is cut short, before the keys move. */
+function OnTheBand({
+  station,
+  onClose,
+  onAim,
+}: {
+  station: string
+  onClose: () => void
+  onAim: () => void
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={HYBRIDCAST_NAME}
+      data-slot="hybridcast-on-the-band"
+      className="flex min-w-0 grow basis-0 items-center gap-(--row-gap)"
+    >
+      <p className="flex min-w-0 flex-wrap items-baseline gap-x-[0.4em] text-[length:var(--key-font)] leading-tight whitespace-nowrap text-(--pl-ink)">
+        {station && <b className="min-w-0 truncate font-bold">{station}</b>}
+        <span className="shrink-0">{HYBRIDCAST_NAME}</span>
+      </p>
+      <button
+        type="button"
+        aria-label={CLOSE_HYBRIDCAST_NAME}
+        onMouseDown={(event) => {
+          event.preventDefault()
+          onAim()
+        }}
+        onClick={onClose}
+        className={PILL}
+      >
+        閉じる
+      </button>
+    </div>
+  )
+}
+
+/** The remote control's keys drawn out of the control bar as a band, right over the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. While a Hybridcast application runs, its station and `閉じる` stand at the band's left. Over the picture the band stands on the bar with the scrim under both; a finger in the window gets it under the player's box on the box's own black. Everything is measured against the player's width. */
 export function DataBroadcastBand({
   fit,
   numbers,
   onNumbers,
   onKey,
   onAim,
+  application = null,
 }: {
   fit: BandFit
   numbers: boolean
   onNumbers: (shown: boolean) => void
   onKey: (key: BmlKey) => void
   onAim: () => void
+  application?: { station: string; onClose: () => void } | null
 }) {
   const pressing: Pressing = { onKey, onAim }
   const underTheBox = fit === 'coarse'
@@ -595,6 +709,13 @@ export function DataBroadcastBand({
             data-slot="data-broadcast-scrim"
             style={{ backgroundImage: SCRIM }}
             className="pointer-events-none absolute inset-x-0 bottom-0 -z-[1] h-(--scrim)"
+          />
+        )}
+        {application && (
+          <OnTheBand
+            station={application.station}
+            onClose={application.onClose}
+            onAim={onAim}
           />
         )}
         <button

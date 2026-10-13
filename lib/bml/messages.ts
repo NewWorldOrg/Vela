@@ -1,4 +1,11 @@
 import type { Rect } from '@/lib/caption-placement'
+import {
+  aitApplicationsOf,
+  appStartOf,
+  isAitUri,
+  type AitApplication,
+  type AppStart,
+} from '@/lib/bml/ait'
 import { catalogOf, type BmlCatalog } from '@/lib/bml/catalog'
 import { broadcastEventOf, type BroadcastEvent } from '@/lib/bml/event-message'
 import { isBmlKey, type BmlKey } from '@/lib/bml/keys'
@@ -52,6 +59,9 @@ export type PlayerMessage =
   | { kind: 'line'; line: LineState; receiverId: ReceiverId | null }
   | { kind: 'transmitted'; id: number; answer: TransmitAnswer }
   | { kind: 'fetched'; id: number; module: BmlModule | null }
+  | { kind: 'aitRead'; id: number; applications: AitApplication[] | null }
+  | { kind: 'hybridcast'; allowed: boolean; failed: AppStart[] }
+  | { kind: 'greg'; greg: string[] }
   | { kind: 'open' }
   | { kind: 'close' }
 
@@ -76,6 +86,9 @@ export type RuntimeMessage =
   | { kind: 'transmit'; id: number; uri: string; text: string; charset: string }
   | { kind: 'fetch'; id: number; uri: string }
   | { kind: 'line'; said: LineSaid }
+  | { kind: 'ait'; id: number; uri: string }
+  | { kind: 'startApp'; start: AppStart; greg: string[] }
+  | { kind: 'unopened' }
 
 /** What the viewer is told of the line: the setting refuses it, or the broadcaster's server could not be reached. */
 export const LINE_SAYINGS = ['off', 'unreached'] as const
@@ -92,6 +105,15 @@ export interface Delivered {
 }
 
 const MOST_FONT_BYTES = 4 * 1024 * 1024
+
+/** The registers shared by the documents and the applications they start: 64 strings. */
+export const SHARED_REGISTERS = 64
+
+/** The longest string a shared register is handed over with. */
+export const MOST_REGISTER = 1024
+
+/** The most starts the player tells the runtime have failed while the broadcast is open. */
+export const MOST_FAILED_STARTS = 16
 
 const MOST_WHAT = 64
 
@@ -185,10 +207,37 @@ function transmitOf(message: Record<string, unknown>): RuntimeMessage | null {
     : null
 }
 
+/** The 64 shared registers, each a string no longer than the most one is handed over with, or null. */
+export function sharedRegistersOf(value: unknown): string[] | null {
+  return Array.isArray(value) &&
+    value.length === SHARED_REGISTERS &&
+    value.every(
+      (register) =>
+        typeof register === 'string' && register.length <= MOST_REGISTER,
+    )
+    ? [...(value as string[])]
+    : null
+}
+
+function startAppOf(message: Record<string, unknown>): RuntimeMessage | null {
+  const start = appStartOf(message.start)
+  const greg = sharedRegistersOf(message.greg)
+
+  return start && greg ? { kind: 'startApp', start, greg } : null
+}
+
 function runtimeMessageOf(data: unknown): RuntimeMessage | null {
   const message = recordOf(data)
 
   switch (message?.kind) {
+    case 'ait':
+      return isRequestId(message.id) && isAitUri(message.uri)
+        ? { kind: 'ait', id: message.id, uri: message.uri }
+        : null
+    case 'startApp':
+      return startAppOf(message)
+    case 'unopened':
+      return { kind: 'unopened' }
     case 'transmit':
       return transmitOf(message)
     case 'fetch':
@@ -330,10 +379,42 @@ function fetchedOf(message: Record<string, unknown>): PlayerMessage | null {
     : null
 }
 
+function aitReadOf(message: Record<string, unknown>): PlayerMessage | null {
+  const applications =
+    message.applications === null ? null : aitApplicationsOf(message)
+
+  return isRequestId(message.id) &&
+    (message.applications === null || applications !== null)
+    ? { kind: 'aitRead', id: message.id, applications }
+    : null
+}
+
+function hybridcastOf(message: Record<string, unknown>): PlayerMessage | null {
+  const failed = Array.isArray(message.failed)
+    ? message.failed.map(appStartOf)
+    : null
+
+  return typeof message.allowed === 'boolean' &&
+    failed !== null &&
+    failed.length <= MOST_FAILED_STARTS &&
+    failed.every((start) => start !== null)
+    ? { kind: 'hybridcast', allowed: message.allowed, failed }
+    : null
+}
+
 function playerMessageOf(data: unknown): PlayerMessage | null {
   const message = recordOf(data)
 
   switch (message?.kind) {
+    case 'aitRead':
+      return aitReadOf(message)
+    case 'hybridcast':
+      return hybridcastOf(message)
+    case 'greg': {
+      const greg = sharedRegistersOf(message.greg)
+
+      return greg ? { kind: 'greg', greg } : null
+    }
     case 'line':
       return lineOf(message)
     case 'transmitted': {

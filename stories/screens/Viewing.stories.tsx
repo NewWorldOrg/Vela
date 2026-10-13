@@ -6,12 +6,14 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   AUTO_OPEN_LABEL,
+  HYBRIDCAST_LABEL,
   LINE_LABEL,
   RECEIVER_ID_LABEL,
   viewingSettingsOf,
 } from '@/lib/viewing'
 import {
   DATA_BROADCAST_AUTO_OPEN,
+  DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
   cookieIn,
@@ -46,6 +48,7 @@ const SETTINGS = [
   DATA_BROADCAST_AUTO_OPEN,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  DATA_BROADCAST_HYBRIDCAST,
 ]
 
 function forgetTheSettings() {
@@ -125,7 +128,11 @@ export const 通信と識別子: Story = {
 }
 
 export const 通信を許可している: Story = {
-  args: { allowsTheLine: true, handsTheReceiverId: true },
+  args: {
+    allowsTheLine: true,
+    handsTheReceiverId: true,
+    allowsHybridcast: true,
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -133,6 +140,40 @@ export const 通信を許可している: Story = {
     await expect(
       canvas.getByRole('switch', { name: RECEIVER_ID_LABEL }),
     ).toBeChecked()
+    await expect(
+      canvas.getByRole('switch', { name: HYBRIDCAST_LABEL }),
+    ).toBeChecked()
+  },
+}
+
+export const Hybridcast: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const line = canvas.getByRole('switch', { name: LINE_LABEL })
+    const hybridcast = canvas.getByRole('switch', { name: HYBRIDCAST_LABEL })
+
+    await expect(hybridcast).not.toBeChecked()
+    await expect(hybridcast).toBeDisabled()
+
+    await userEvent.click(line)
+
+    await expect(hybridcast).toBeEnabled()
+
+    await userEvent.click(hybridcast)
+
+    await expect(hybridcast).toBeChecked()
+    await expect(cookie(DATA_BROADCAST_HYBRIDCAST)).toBe('allows')
+
+    await userEvent.click(line)
+
+    await expect(hybridcast).not.toBeChecked()
+    await expect(hybridcast).toBeDisabled()
+    await expect(cookie(DATA_BROADCAST_HYBRIDCAST)).toBe('refuses')
+
+    await userEvent.click(line)
+
+    await expect(hybridcast).not.toBeChecked()
   },
 }
 
@@ -180,11 +221,15 @@ async function hydratedWith(
   canvasElement: HTMLElement,
   line: boolean,
   receiverId: boolean,
+  hybridcast: boolean,
 ) {
   const canvas = within(canvasElement)
   const lineSwitch = await canvas.findByRole('switch', { name: LINE_LABEL })
   const receiverIdSwitch = canvas.getByRole('switch', {
     name: RECEIVER_ID_LABEL,
+  })
+  const hybridcastSwitch = canvas.getByRole('switch', {
+    name: HYBRIDCAST_LABEL,
   })
 
   await waitFor(() =>
@@ -198,8 +243,12 @@ async function hydratedWith(
     'aria-checked',
     String(receiverId),
   )
+  await expect(hybridcastSwitch).toHaveAttribute(
+    'aria-checked',
+    String(hybridcast),
+  )
 
-  return { lineSwitch, receiverIdSwitch }
+  return { lineSwitch, receiverIdSwitch, hybridcastSwitch }
 }
 
 export const サーバの絵から組み上がる: Story = {
@@ -208,11 +257,18 @@ export const サーバの絵から組み上がる: Story = {
   beforeEach: storedBeforeTheServerDraws({
     [DATA_BROADCAST_LINE]: 'allows',
     [DATA_BROADCAST_RECEIVER_ID]: 'hands',
+    [DATA_BROADCAST_HYBRIDCAST]: 'allows',
   }),
   play: async ({ canvasElement }) => {
-    const { receiverIdSwitch } = await hydratedWith(canvasElement, true, true)
+    const { receiverIdSwitch, hybridcastSwitch } = await hydratedWith(
+      canvasElement,
+      true,
+      true,
+      true,
+    )
 
     await expect(receiverIdSwitch).toBeEnabled()
+    await expect(hybridcastSwitch).toBeEnabled()
   },
 }
 
@@ -222,10 +278,17 @@ export const サーバの絵から組み上がる_通信が切: Story = {
   beforeEach: storedBeforeTheServerDraws({
     [DATA_BROADCAST_LINE]: 'refuses',
     [DATA_BROADCAST_RECEIVER_ID]: 'hands',
+    [DATA_BROADCAST_HYBRIDCAST]: 'allows',
   }),
   play: async ({ canvasElement }) => {
-    const { receiverIdSwitch } = await hydratedWith(canvasElement, false, false)
+    const { receiverIdSwitch, hybridcastSwitch } = await hydratedWith(
+      canvasElement,
+      false,
+      false,
+      false,
+    )
 
     await expect(receiverIdSwitch).toBeDisabled()
+    await expect(hybridcastSwitch).toBeDisabled()
   },
 }

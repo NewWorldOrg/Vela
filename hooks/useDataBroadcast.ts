@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState, useSyncExternalStore } from 'react'
 
+import type { AppStart } from '@/lib/bml/ait'
 import type { BmlKey } from '@/lib/bml/keys'
 import type { RuntimeMessage } from '@/lib/bml/messages'
 import type {
@@ -13,6 +14,7 @@ import {
   LINE_SAID_LASTS_MS,
   RECEIVING_SAID_AFTER_MS,
   SCRIPT_GIVEN_UP_AFTER_MS,
+  UNOPENED_LASTS_MS,
   UNSUPPORTED_LASTS_MS,
   dataBroadcastAfter,
   offersDataBroadcast,
@@ -20,6 +22,7 @@ import {
   type DataBroadcastStep,
   type DataBroadcastView,
 } from '@/lib/data-broadcast-view'
+import type { StartApplication } from '@/lib/data-broadcast-line'
 import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
 
 interface Kept {
@@ -46,6 +49,7 @@ export interface DataBroadcast {
   hear: (message: RuntimeMessage) => void
   showNumbers: (shown: boolean) => void
   quiet: () => void
+  closeApplication: () => void
 }
 
 const unreachable = () => 'absent' as const
@@ -60,11 +64,12 @@ function openedIn(
   return view.open ? programme : before
 }
 
-/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime. What is shown belongs to one session, so a new channel starts closed. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. */
+/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime. What is shown belongs to one session, so a new channel starts closed. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for is started through `startApplication`; where there is none, it does not open. */
 export function useDataBroadcast(
   feed: DataBroadcastHeld,
   session: string | null,
   { autoOpens, programme }: AutoOpens = BY_HAND_ONLY,
+  startApplication: StartApplication | null = null,
 ): DataBroadcast {
   const subscribe = useCallback(
     (onChange: () => void) => feed.subscribe(onChange),
@@ -120,12 +125,41 @@ export function useDataBroadcast(
       }
     })
 
+  const unopened = (nth: number) =>
+    setTimeout(
+      () => step({ on: 'appFaded', appNotices: nth }),
+      UNOPENED_LASTS_MS,
+    )
+
+  const start = async (app: AppStart, nth: number) => {
+    const started = startApplication
+      ? await startApplication(app)
+      : ({ said: 'unreached' } as const)
+
+    if (started.said === 'answered') {
+      step({ on: 'appStarted', nth, address: started.answer.address })
+
+      return
+    }
+
+    step({ on: 'appUnopened', nth })
+    unopened(nth)
+  }
+
   const hear = (message: RuntimeMessage) => {
     count.current += 1
 
     const nth = count.current
 
     step({ on: 'runtime', message, nth })
+
+    if (message.kind === 'startApp') {
+      void start(message.start, nth)
+    }
+
+    if (message.kind === 'unopened') {
+      unopened(nth)
+    }
 
     if (message.kind === 'waiting' && message.waiting) {
       setTimeout(
@@ -168,5 +202,6 @@ export function useDataBroadcast(
     hear,
     showNumbers: (shown) => step({ on: 'numbers', shown }),
     quiet: () => step({ on: 'quiet' }),
+    closeApplication: () => step({ on: 'appClosed' }),
   }
 }
