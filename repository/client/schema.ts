@@ -329,6 +329,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/segments/settings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getSegmentSettings']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['patchSegmentSettings']
+    trace?: never
+  }
   '/api/tuners/scan/{scanId}/apply': {
     parameters: {
       query?: never
@@ -1799,6 +1815,11 @@ export interface components {
       message: string
       data: null | components['schemas']['ScanStartedResponder']
     }
+    BaseResponderOfSegmentSettingsResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['SegmentSettingsResponder']
+    }
     BaseResponderOfServiceReachSettingsResponder: {
       status: boolean
       message: string
@@ -2621,6 +2642,9 @@ export interface components {
       shortestLength: number | string
       /** Format: int32 */
       longestLength: number | string
+    }
+    PatchSegmentSettingsRequest: {
+      learning?: null | boolean
     }
     PcrReanchorResponder: {
       /** Format: int32 */
@@ -3910,6 +3934,11 @@ export interface components {
       physicalChannel: number | string
       /** Format: int32 */
       transportStreamId: null | number | string
+    }
+    SegmentSettingsResponder: {
+      learning: boolean
+      /** Format: date-time */
+      learningChangedAt: null | string
     }
     SelectedChannelRequest: {
       /** Format: uuid */
@@ -5441,6 +5470,94 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfBroadcastServiceResponder']
+        }
+      }
+    }
+  }
+  getSegmentSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentSettingsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentSettingsResponder']
+        }
+      }
+    }
+  }
+  patchSegmentSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['PatchSegmentSettingsRequest']
+        'application/*+json':
+          null | components['schemas']['PatchSegmentSettingsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentSettingsResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentSettingsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentSettingsResponder']
         }
       }
     }
