@@ -7,6 +7,7 @@ import {
   PersistentMemory,
   blockOfText,
   blockToText,
+  fitsTheBroadcaster,
   keepMemory,
   memoryEntriesOf,
   memoryKey,
@@ -67,6 +68,22 @@ test('a broadcaster’s memory is kept under its own key, and another broadcaste
   storage.refuses = true
   keepMemory(storage, 1024, 'more', 'eQ==')
   assert.deepEqual(memoryEntriesOf(storage, 1024), [['name', 'eA==']])
+})
+
+test('a block is kept for a broadcaster only while all it keeps stays within the limit, and only a block is', () => {
+  const storage = new FakeStorage()
+  const block = blockToText(new Uint8Array(AREA_BYTES))
+  const names = Math.floor(MOST_MEMORY_BYTES / (AREA_BYTES + 4))
+
+  for (let index = 0; index < names; index += 1) {
+    keepMemory(storage, 1024, String(index).padStart(4, '0'), block)
+  }
+
+  assert.equal(fitsTheBroadcaster(storage, 1024, '0000', block), true)
+  assert.equal(fitsTheBroadcaster(storage, 1024, 'more', block), false)
+  assert.equal(fitsTheBroadcaster(storage, 1025, 'more', block), true)
+  assert.equal(fitsTheBroadcaster(storage, 1024, 'more', null), true)
+  assert.equal(fitsTheBroadcaster(storage, 1025, 'more', 'not a block!'), false)
 })
 
 test('a block goes to the player as base64 and comes back as bytes, and text that is not a block is refused', () => {

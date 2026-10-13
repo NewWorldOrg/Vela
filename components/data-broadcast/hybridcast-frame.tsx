@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Rect } from '@/lib/caption-placement'
 import type { ReceiverId } from '@/lib/bml/line'
 import {
+  fitsTheBroadcaster,
   keepMemory,
   memoryEntriesOf,
   type MemoryEntries,
@@ -140,7 +141,11 @@ function HybridcastFrame({
       if (message.kind === 'memory') {
         const storage = storageOf()
 
-        if (storage && held !== null) {
+        if (
+          storage &&
+          held !== null &&
+          fitsTheBroadcaster(storage, held, message.name, message.value)
+        ) {
           keepMemory(storage, held, message.name, message.value)
         }
 
