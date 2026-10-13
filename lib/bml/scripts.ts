@@ -153,11 +153,12 @@ export class ScriptScope {
 
   run(code: string): ScriptOutcome {
     const started = this.now()
+    const rewritten = withIntegerDivision(withoutTableNew(code))
 
     this.realm.enter()
 
     try {
-      this.evaluate(withIntegerDivision(withoutTableNew(code)), this.scope)
+      this.evaluate(rewritten, this.scope)
 
       return { outcome: 'done', tookMs: this.now() - started }
     } catch (error) {
