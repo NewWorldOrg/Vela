@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef } from 'react'
+import { useId, useRef } from 'react'
 
 import { cn } from '@/lib/utils'
 import { foldBand, foldBandDelay, type FoldMotion } from '@/lib/live-fold'
@@ -16,6 +16,33 @@ import {
 import { pressable } from '@/components/vela/tactile'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChannelKinds } from '@/components/live/channel-kinds'
+import { useSettled } from '@/components/live/channel-fold'
+
+/** The column's fold: a chevron pointing where the column goes. */
+export function FoldButton({
+  folded,
+  onFold,
+  controls,
+}: {
+  folded: boolean
+  onFold: (folded: boolean) => void
+  controls?: string
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label="チャンネル一覧"
+      aria-expanded={!folded}
+      aria-controls={controls}
+      onClick={() => onFold(!folded)}
+      className="pointer-events-auto"
+    >
+      {folded ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+    </Button>
+  )
+}
 
 export function ChannelList({
   kind,
@@ -46,33 +73,7 @@ export function ChannelList({
   const settle = motion?.onSettle
   const shown = motion === undefined ? !folded : motion.shown
 
-  useEffect(() => {
-    const whole = listed.current
-
-    if (phase === 'still' || settle === undefined || whole === null) {
-      return
-    }
-
-    const running = whole.getAnimations({ subtree: true })
-
-    if (running.length === 0) {
-      settle()
-
-      return
-    }
-
-    let left = false
-
-    void Promise.allSettled(running.map((one) => one.finished)).then(() => {
-      if (!left) {
-        settle()
-      }
-    })
-
-    return () => {
-      left = true
-    }
-  }, [phase, settle])
+  useSettled(listed, phase, settle)
 
   return (
     <div
@@ -96,18 +97,11 @@ export function ChannelList({
           </div>
         )}
         {onFold && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="チャンネル一覧"
-            aria-expanded={!folded}
-            aria-controls={body}
-            onClick={() => onFold(!folded)}
-            className="pointer-events-auto"
-          >
-            {folded ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-          </Button>
+          <FoldButton
+            folded={folded ?? false}
+            onFold={onFold}
+            controls={body}
+          />
         )}
       </div>
       {shown && (

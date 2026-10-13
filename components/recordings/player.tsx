@@ -1065,7 +1065,7 @@ export function Player({
   }
 
   const faceShown = broadcast.view.open
-  const place = bandPlace(full)
+  const place = bandPlace(full, false)
   const underTheBox = faceShown && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
   const overThePicture = faceShown && !underTheBox

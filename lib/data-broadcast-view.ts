@@ -395,10 +395,14 @@ export function pictureTransform(rect: Rect | null): string | undefined {
   return `translate(${left}%, ${top}%) scale(${rect.width / GRID.width}, ${rect.height / GRID.height})`
 }
 
-/** Where the remote control's band stands: under the player's box, on its own ground, so nothing covers the documents' face; or over the picture on the control bar, in fullscreen, where there is no room below. */
-export type BandPlace = 'under' | 'over'
+/** Where the remote control stands: in the page's column beside the player, as a tall remote; under the player's box as a band, where the window has no column; or over the picture on the control bar, in fullscreen, where there is no room beside or below. */
+export type BandPlace = 'column' | 'under' | 'over'
 
-/** The band's place for a window or fullscreen. A mouse and a finger get the same: the face is text to read, not a picture to keep whole. */
-export function bandPlace(full: boolean): BandPlace {
-  return full ? 'over' : 'under'
+/** The remote's place for a window or fullscreen, and for a page with a column beside the player or without one. A mouse and a finger get the same: the face is text to read, not a picture to keep whole. */
+export function bandPlace(full: boolean, column: boolean): BandPlace {
+  if (full) {
+    return 'over'
+  }
+
+  return column ? 'column' : 'under'
 }

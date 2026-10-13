@@ -12,6 +12,8 @@ import {
 } from '@/lib/bml/runtime-document'
 import { GRID } from '@/lib/bml/style'
 import type { BandPlace } from '@/lib/data-broadcast-view'
+
+type StripPlace = Exclude<BandPlace, 'column'>
 import { cn } from '@/lib/utils'
 import {
   BmlFrame,
@@ -23,6 +25,8 @@ import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
   DataBroadcastBand,
+  DataBroadcastRemote,
+  REMOTE_LEAST_HEIGHT,
   columnOverTheBand,
 } from '@/components/data-broadcast/data-broadcast-player'
 import {
@@ -459,10 +463,12 @@ function Band({
   place,
   numbers: shownFirst,
   station,
+  watching,
 }: {
-  place: BandPlace
+  place: StripPlace
   numbers: boolean
   station?: string
+  watching?: string
 }) {
   const [numbers, setNumbers] = useState(shownFirst)
   const [pressed, setPressed] = useState<string[]>([])
@@ -474,6 +480,7 @@ function Band({
       onNumbers={setNumbers}
       onKey={(key) => setPressed((before) => [...before, key])}
       onAim={() => undefined}
+      station={watching}
       application={
         running && station !== undefined
           ? { station, onClose: () => setRunning(false) }
@@ -571,7 +578,7 @@ async function near(got: number, want: number) {
 }
 
 /** The band as the mock draws it, scaled to this player: each key's size, the pitch of the dots, the row's height, and its right edge 16px in from the player's. */
-async function asTheMock(canvasElement: HTMLElement, place: BandPlace) {
+async function asTheMock(canvasElement: HTMLElement, place: StripPlace) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
   })
@@ -868,6 +875,198 @@ export const 帯_iPad_全画面_数字: Story = {
 
 const STATION = 'みなと総合1'
 
+export const 帯_iPad_窓_局名: Story = {
+  parameters: { screen: { width: 820, height: 1180 } },
+  render: () => <Band place="under" numbers={false} watching={STATION} />,
+  play: async ({ canvasElement }) => {
+    const { band, u } = await asTheMock(canvasElement, 'under')
+    const line = band.querySelector('[data-slot="station-line"]') as HTMLElement
+    const back = within(band)
+      .getByRole('button', { name: '戻る' })
+      .getBoundingClientRect()
+
+    await expect(line).toHaveTextContent(`${STATION}データ放送`)
+    await near(
+      line.getBoundingClientRect().left,
+      band.getBoundingClientRect().left +
+        parseFloat(getComputedStyle(band).paddingLeft),
+    )
+    await expect(line.getBoundingClientRect().right).toBeLessThanOrEqual(
+      back.left - MOCK.gap * u + 0.6,
+    )
+    await expect(named(band)).toEqual(KEYS)
+  },
+}
+
+/** The column the remote stands in, at the mock's 370px and as tall as the player's box beside it less the column's head. */
+function InTheColumn({
+  height,
+  running,
+}: {
+  height: number
+  running?: boolean
+}) {
+  const [pressed, setPressed] = useState<string[]>([])
+  const [application, setApplication] = useState(running ?? false)
+
+  return (
+    <div className="p-6" data-pressed={pressed.join(' ')}>
+      <div data-slot="column" style={{ width: 370, height }}>
+        <DataBroadcastRemote
+          station={STATION}
+          onKey={(key) => setPressed((before) => [...before, key])}
+          onAim={() => undefined}
+          application={
+            application ? { onClose: () => setApplication(false) } : null
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
+const REMOTE_KEYS = [
+  '上',
+  '下',
+  '左',
+  '右',
+  '決定',
+  '戻る',
+  '青',
+  '赤',
+  '緑',
+  '黄',
+  ...DIGITS,
+]
+
+/** The remote as the mock draws it in the column: the disc of 184 with Enter of 65 and `戻る` of 64x44 at its lower left, the dots of 52 at a pitch of 70 in the middle, the digits three to a row with 0 alone in the middle of the fourth, no `123`, and the groups sharing out the height at least 24 apart. */
+async function asTheColumnMock(canvasElement: HTMLElement) {
+  const remote = within(canvasElement).getByRole('group', {
+    name: 'データ放送のリモコン',
+  })
+  const keys = within(remote)
+  const card = remote.getBoundingClientRect()
+  const disc = keys.getByRole('group', { name: '十字' }).getBoundingClientRect()
+  const back = keys
+    .getByRole('button', { name: '戻る' })
+    .getBoundingClientRect()
+  const enter = keys
+    .getByRole('button', { name: '決定' })
+    .getBoundingClientRect()
+  const dots = ['青', '赤', '緑', '黄'].map((name) =>
+    keys.getByRole('button', { name }),
+  )
+  const digits = DIGITS.map((name) => keys.getByRole('button', { name }))
+  const at = (name: string) =>
+    keys.getByRole('button', { name }).getBoundingClientRect()
+
+  await near(card.width, 370)
+  await near(disc.width, 184)
+  await near(enter.width, 65)
+  await near(back.width, 64)
+  await near(back.height, 44)
+  await near(back.left, card.left + 21)
+  await near(back.bottom, disc.bottom)
+  await near(disc.left + disc.width / 2, card.left + card.width / 2)
+  await near(dots[0].getBoundingClientRect().width, 52)
+  await near(pitchOf(dots), 70)
+  await near(
+    (dots[0].getBoundingClientRect().left +
+      dots[3].getBoundingClientRect().right) /
+      2,
+    card.left + card.width / 2,
+  )
+  await near(at('1').height, 48)
+  await expect(at('1').width).toBeGreaterThanOrEqual(96)
+  await near(at('2').left - at('1').right, 18)
+  await near(at('4').top - at('1').bottom, 14)
+  await near(at('0').left, at('8').left)
+  await near(at('0').top - at('7').bottom, 14)
+  await expect(keys.queryByRole('button', { name: '123 数字' })).toBeNull()
+  await expect(
+    disc.top - keys.getByText(STATION).getBoundingClientRect().bottom,
+  ).toBeGreaterThanOrEqual(24)
+  await expect(
+    dots[0].getBoundingClientRect().top - disc.bottom,
+  ).toBeGreaterThanOrEqual(24 - 0.6)
+  await expect(
+    at('1').top - dots[0].getBoundingClientRect().bottom,
+  ).toBeGreaterThanOrEqual(24 - 0.6)
+  await near(card.bottom - digits[9].getBoundingClientRect().bottom, 21)
+  await fingerSized(remote)
+
+  return remote
+}
+
+export const リモコン_列: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <InTheColumn height={657} />,
+  play: async ({ canvasElement }) => {
+    const remote = await asTheColumnMock(canvasElement)
+    const line = remote.querySelector(
+      '[data-slot="station-line"]',
+    ) as HTMLElement
+
+    await expect(line).toHaveTextContent(`${STATION}データ放送`)
+    await expect(named(remote)).toEqual(REMOTE_KEYS)
+    await near(remote.getBoundingClientRect().height, 657)
+
+    for (const name of ['上', '決定', '戻る', '青', '7', '0']) {
+      await userEvent.click(within(remote).getByRole('button', { name }))
+    }
+
+    await expect(canvasElement.querySelector('[data-pressed]')).toHaveAttribute(
+      'data-pressed',
+      'up enter back blue 7 0',
+    )
+  },
+}
+
+export const リモコン_列_低い: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <InTheColumn height={400} />,
+  play: async ({ canvasElement }) => {
+    const remote = await asTheColumnMock(canvasElement)
+
+    await near(remote.getBoundingClientRect().height, REMOTE_LEAST_HEIGHT)
+  },
+}
+
+export const リモコン_列_Hybridcast: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <InTheColumn height={657} running />,
+  play: async ({ canvasElement }) => {
+    const remote = await asTheColumnMock(canvasElement)
+    const group = within(remote).getByRole('group', { name: 'Hybridcast' })
+    const close = within(group).getByRole('button', {
+      name: 'Hybridcast を閉じる',
+    })
+    const disc = within(remote)
+      .getByRole('group', { name: '十字' })
+      .getBoundingClientRect()
+
+    await expect(group).toHaveTextContent(`${STATION}Hybridcast閉じる`)
+    await near(close.getBoundingClientRect().width, 64)
+    await near(close.getBoundingClientRect().height, 44)
+    await near(
+      close.getBoundingClientRect().right,
+      remote.getBoundingClientRect().right - 21,
+    )
+    await expect(close.getBoundingClientRect().bottom).toBeLessThan(disc.top)
+
+    await userEvent.click(close)
+    await expect(
+      within(remote).queryByRole('group', { name: 'Hybridcast' }),
+    ).toBeNull()
+    await near(
+      within(remote)
+        .getByRole('group', { name: '十字' })
+        .getBoundingClientRect().top,
+      disc.top,
+    )
+  },
+}
+
 /** The station's name is cut short only when it has no more room to take: then `閉じる` stands one gap from `戻る`, with nothing free between them. `Hybridcast` is never cut. */
 async function cutOnlyWithoutRoom(band: HTMLElement, u: number) {
   const group = within(band).getByRole('group', { name: 'Hybridcast' })
@@ -893,7 +1092,7 @@ async function cutOnlyWithoutRoom(band: HTMLElement, u: number) {
 /** The band while a Hybridcast application runs: the station and Hybridcast at its left, `閉じる` at a finger's size beside them, the keys where the mock puts them, and `閉じる` taking it away. */
 async function withTheApplication(
   canvasElement: HTMLElement,
-  place: BandPlace,
+  place: StripPlace,
 ) {
   const { band, u } = await asTheMock(canvasElement, place)
   const group = within(band).getByRole('group', { name: 'Hybridcast' })
@@ -928,7 +1127,7 @@ async function withTheApplication(
   await expect(named(band)).toEqual(KEYS)
 }
 
-async function nameWhole(canvasElement: HTMLElement, place: BandPlace) {
+async function nameWhole(canvasElement: HTMLElement, place: StripPlace) {
   const { band, u } = await asTheMock(canvasElement, place)
   const { cut } = await cutOnlyWithoutRoom(band, u)
 
@@ -976,7 +1175,7 @@ const LONG_STATION = 'とても長い名前の放送局のチャンネル第一�
 /** A long station's name: cut short where the keys leave no room for it, as on a finger's window, with `Hybridcast` whole under it and `閉じる` one gap from `戻る`; whole where there is room, as in fullscreen and on a wide player. */
 async function longName(
   canvasElement: HTMLElement,
-  place: BandPlace,
+  place: StripPlace,
   cut: boolean,
 ) {
   const { band, u } = await asTheMock(canvasElement, place)

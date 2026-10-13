@@ -571,7 +571,9 @@ test('what the documents say after they were closed for the application is not t
   }
 })
 
-test('the band stands under the box in a window, whatever points at it, and over the picture in fullscreen, where there is no room below', () => {
-  assert.equal(bandPlace(false), 'under')
-  assert.equal(bandPlace(true), 'over')
+test('the remote stands in the column where the page has one beside the player, under the box in a narrower window, and over the picture in fullscreen, where there is no room beside or below', () => {
+  assert.equal(bandPlace(false, true), 'column')
+  assert.equal(bandPlace(false, false), 'under')
+  assert.equal(bandPlace(true, true), 'over')
+  assert.equal(bandPlace(true, false), 'over')
 })

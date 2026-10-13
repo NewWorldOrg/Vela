@@ -404,6 +404,11 @@ export const BAND_MAX_SCALE = 1.5
 /** The band under the box, in a window: the keys' row with 12px above and below, at the mock's measures. */
 export const BAND_UNDER_THE_BOX = 160
 
+/** The widest the player's column may be while its control row, `row` pixels high as laid out, is under its box and the remote is in the page's column: the window holds the picture, the 210px around it and the row. */
+export function columnOverTheRow(row: number): string {
+  return `calc((100dvh - ${210 + row}px) * 16 / 9)`
+}
+
 /** The widest the player's column may be while its control row, `row` pixels high as laid out, and the band are under its box: the window holds the picture, the 210px around it, the row and the band. The band is 160px up to the mock's width, grows with the column up to one and a half times the mock, and stays there; each stretch gives its own bound and the column takes the one its width falls in. */
 export function columnOverTheBand(row: number): string {
   const around = 210 + row
@@ -628,6 +633,30 @@ export const HYBRIDCAST_NAME = 'Hybridcast'
 
 export const CLOSE_HYBRIDCAST_NAME = 'Hybridcast を閉じる'
 
+/** The station and what is open on it, `データ放送` or `Hybridcast`: the station bold, what is open in the quieter ink. Where both do not fit on one line, what is open goes under the station, and only a station that does not fit on its own line is cut short. */
+function StationLine({
+  station,
+  what,
+  className,
+}: {
+  station: string
+  what: string
+  className?: string
+}) {
+  return (
+    <p
+      data-slot="station-line"
+      className={cn(
+        'flex min-w-0 flex-wrap items-baseline gap-x-[0.4em] leading-tight whitespace-nowrap text-(--pl-ink)',
+        className,
+      )}
+    >
+      {station && <b className="min-w-0 truncate font-bold">{station}</b>}
+      <span className="shrink-0 font-medium text-(--pl-ink-2)">{what}</span>
+    </p>
+  )
+}
+
 /** The Hybridcast application running, at the band's left: the station and `Hybridcast`, and `閉じる`, which goes back to the documents. It takes what room the keys leave. Where the station and `Hybridcast` do not fit on one line, `Hybridcast` goes under the station, and only a station that does not fit on its own line is cut short, before the keys move. */
 function OnTheBand({
   station,
@@ -645,10 +674,11 @@ function OnTheBand({
       data-slot="hybridcast-on-the-band"
       className="flex min-w-0 grow basis-0 items-center gap-(--row-gap)"
     >
-      <p className="flex min-w-0 flex-wrap items-baseline gap-x-[0.4em] text-[length:var(--key-font)] leading-tight whitespace-nowrap text-(--pl-ink)">
-        {station && <b className="min-w-0 truncate font-bold">{station}</b>}
-        <span className="shrink-0">{HYBRIDCAST_NAME}</span>
-      </p>
+      <StationLine
+        station={station}
+        what={HYBRIDCAST_NAME}
+        className="text-[length:var(--key-font)]"
+      />
       <button
         type="button"
         aria-label={CLOSE_HYBRIDCAST_NAME}
@@ -672,13 +702,15 @@ export function DataBroadcastBand({
   onNumbers,
   onKey,
   onAim,
+  station,
   application = null,
 }: {
-  place: BandPlace
+  place: Exclude<BandPlace, 'column'>
   numbers: boolean
   onNumbers: (shown: boolean) => void
   onKey: (key: BmlKey) => void
   onAim: () => void
+  station?: string
   application?: { station: string; onClose: () => void } | null
 }) {
   const pressing: Pressing = { onKey, onAim }
@@ -715,6 +747,15 @@ export function DataBroadcastBand({
             onAim={onAim}
           />
         )}
+        {!application && station !== undefined && (
+          <div className="flex min-w-0 grow basis-0 items-center">
+            <StationLine
+              station={station}
+              what={DATA_BROADCAST_NAME}
+              className="text-[length:var(--key-font)]"
+            />
+          </div>
+        )}
         <button
           type="button"
           aria-label="戻る"
@@ -740,6 +781,141 @@ export function DataBroadcastBand({
           123
         </button>
         {numbers && <Digits pressing={pressing} />}
+      </div>
+    </div>
+  )
+}
+
+/** The remote's measures in the column, at the mock's column of 370px: the disc and its wedges, the arrows and Enter at 1.35 times the band's, `戻る` and `閉じる` at 64x44, the colour dots at 52 with 18 between, and the digits' pills 48 high. */
+const IN_THE_COLUMN = {
+  '--disc': '184px',
+  '--wedge': '101.5px',
+  '--reach': '61px',
+  '--arrow': '30px',
+  '--ok': '65px',
+  '--ok-font': '15px',
+  '--pill-h': '44px',
+  '--pill-w': '64px',
+  '--pill-font': '13px',
+  '--dot': '52px',
+  '--pitch': '70px',
+  '--line-font': '13px',
+  '--digit-font': '17px',
+} as CSSProperties
+
+/** The remote at its least height in the column: its padding, the station's line, the disc, the dots and the digits' four rows, with the least gap between each. */
+export const REMOTE_LEAST_HEIGHT =
+  2 * 20 + 44 + 184 + 52 + (4 * 48 + 3 * 14) + 3 * 24 + 2
+
+const DIGIT_GRID: (BmlKey | null)[] = [
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  null,
+  '0',
+  null,
+]
+
+/** The remote control as a tall card in the page's column, as the real one is laid out: the station and what is open on it, the disc with `戻る` at its lower left, the four colours in a row, and the digits 1 to 9 and 0 three to a row, always there. While a Hybridcast application runs, `閉じる` stands at the end of the station's line and no other key moves. The groups share out the card's height, at least 24px apart. */
+export function DataBroadcastRemote({
+  station,
+  onKey,
+  onAim,
+  application = null,
+}: {
+  station: string
+  onKey: (key: BmlKey) => void
+  onAim: () => void
+  application?: { onClose: () => void } | null
+}) {
+  const pressing: Pressing = { onKey, onAim }
+
+  return (
+    <div
+      role="group"
+      aria-label={KEYPAD_NAME}
+      data-slot="data-broadcast-remote"
+      style={{ ...IN_THE_COLUMN, minHeight: REMOTE_LEAST_HEIGHT }}
+      className="flex h-full flex-col justify-between gap-[24px] rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl"
+    >
+      <div className="flex h-[44px] shrink-0 items-center gap-[12px]">
+        {application ? (
+          <div
+            role="group"
+            aria-label={HYBRIDCAST_NAME}
+            data-slot="hybridcast-on-the-band"
+            className="flex min-w-0 flex-1 items-center gap-[12px]"
+          >
+            <StationLine
+              station={station}
+              what={HYBRIDCAST_NAME}
+              className="min-w-0 flex-1 text-[length:var(--line-font)]"
+            />
+            <button
+              type="button"
+              aria-label={CLOSE_HYBRIDCAST_NAME}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                onAim()
+              }}
+              onClick={application.onClose}
+              className={PILL}
+            >
+              閉じる
+            </button>
+          </div>
+        ) : (
+          <StationLine
+            station={station}
+            what={DATA_BROADCAST_NAME}
+            className="text-[length:var(--line-font)]"
+          />
+        )}
+      </div>
+      <div className="relative flex shrink-0 justify-center">
+        <Disc pressing={pressing} />
+        <button
+          type="button"
+          aria-label="戻る"
+          onMouseDown={aiming(pressing)}
+          onClick={() => onKey('back')}
+          className={cn(PILL, 'absolute bottom-0 left-0')}
+        >
+          戻る
+        </button>
+      </div>
+      <div className="flex shrink-0 justify-center">
+        <Colours pressing={pressing} />
+      </div>
+      <div
+        role="group"
+        aria-label="数字"
+        className="mx-auto grid w-full max-w-[330px] shrink-0 grid-cols-3 gap-x-[18px] gap-y-[14px]"
+      >
+        {DIGIT_GRID.map((digit, nth) =>
+          digit === null ? (
+            <i key={`gap-${nth}`} aria-hidden />
+          ) : (
+            <button
+              key={digit}
+              type="button"
+              onMouseDown={aiming(pressing)}
+              onClick={() => onKey(digit)}
+              className={cn(
+                KEY_LOOK,
+                'h-[48px] w-full font-code text-[length:var(--digit-font)] leading-none after:absolute after:-inset-[2px] after:content-[""]',
+              )}
+            >
+              {digit}
+            </button>
+          ),
+        )}
       </div>
     </div>
   )

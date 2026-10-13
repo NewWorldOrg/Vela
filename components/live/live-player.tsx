@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { createPortal } from 'react-dom'
 
 import { cn } from '@/lib/utils'
 import type { LiveStartup, LiveStartupSegment } from '@/lib/live-wire'
@@ -40,6 +41,7 @@ import {
   bandPlace,
   dataBroadcastSays,
   pictureTransform,
+  type BandPlace,
 } from '@/lib/data-broadcast-view'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
@@ -100,7 +102,9 @@ import {
   DataBroadcastFace,
   DataBroadcastToggle,
   HybridcastFace,
+  DataBroadcastRemote,
   columnOverTheBand,
+  columnOverTheRow,
 } from '@/components/data-broadcast/data-broadcast-player'
 import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
 import { liveLineRelay } from '@/components/data-broadcast/line-relay'
@@ -167,6 +171,19 @@ const LATENCY_TONE = {
   err: 'border-(--pl-err)/50 bg-(--pl-err)/14 text-(--pl-err)',
 } as const
 
+/** The widest the player's column may be: unbounded but by the page while the control row is over the picture; with the control row under the box, the window holds the picture, the row and, where the remote is a band under it, the band. */
+function columnOf(
+  place: BandPlace,
+  underTheBox: boolean,
+  row: number,
+): string | undefined {
+  if (!underTheBox) {
+    return undefined
+  }
+
+  return place === 'column' ? columnOverTheRow(row) : columnOverTheBand(row)
+}
+
 export function LivePlayer({
   channel,
   profiles,
@@ -179,6 +196,9 @@ export function LivePlayer({
   takeCapture = takeItNow,
   autoOpensDataBroadcast = false,
   lineRelayOf = liveLineRelay,
+  remoteInTheColumn = false,
+  remoteSlot = null,
+  onDataBroadcastOpen,
 }: {
   channel?: LiveChannel
   profiles: LiveProfile[]
@@ -196,6 +216,11 @@ export function LivePlayer({
   takeCapture?: TakeCapture
   autoOpensDataBroadcast?: boolean
   lineRelayOf?: (channel: string) => LineRelay
+  /** The page has a column beside the player to hold the remote, and the window is wide enough to show it. */
+  remoteInTheColumn?: boolean
+  /** Where in the column the remote is drawn; none while the column is folded or shows the channels. */
+  remoteSlot?: HTMLElement | null
+  onDataBroadcastOpen?: (open: boolean) => void
 }) {
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -663,6 +688,10 @@ export function LivePlayer({
     broadcast.hear(message)
   }
 
+  useEffect(() => {
+    onDataBroadcastOpen?.(broadcast.view.open)
+  }, [broadcast.view.open, onDataBroadcastOpen])
+
   const aimAtTheKeypad = () => {
     aimed.current = true
     shell?.focus({ preventScroll: true })
@@ -793,10 +822,11 @@ export function LivePlayer({
   const latency = running?.latency
   const losing = running?.losing ?? false
   const opened = broadcast.view.open
-  const place = bandPlace(full)
-  const underTheBox = opened && place === 'under'
+  const place = bandPlace(full, remoteInTheColumn)
+  const underTheBox = opened && place !== 'over'
+  const bandUnderTheBox = opened && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
-  const overThePicture = opened && !underTheBox
+  const overThePicture = opened && place === 'over'
   const barSaid = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' as const }
     : said
@@ -817,7 +847,7 @@ export function LivePlayer({
         }}
         onKeyDown={onKeyDown}
         style={{
-          maxWidth: underTheBox ? columnOverTheBand(rowHeight) : undefined,
+          maxWidth: columnOf(place, underTheBox, rowHeight),
         }}
         className={PLAYER_BOARD}
       >
@@ -1217,16 +1247,29 @@ export function LivePlayer({
             </div>
           </div>
         </div>
-        {underTheBox && (
+        {bandUnderTheBox && (
           <DataBroadcastBand
             place="under"
             numbers={broadcast.view.numbers}
             onNumbers={broadcast.showNumbers}
             onKey={broadcast.press}
             onAim={aimAtTheKeypad}
+            station={channel?.name ?? ''}
             application={onTheBand}
           />
         )}
+        {opened &&
+          place === 'column' &&
+          remoteSlot &&
+          createPortal(
+            <DataBroadcastRemote
+              station={channel?.name ?? ''}
+              onKey={broadcast.press}
+              onAim={aimAtTheKeypad}
+              application={onTheBand}
+            />,
+            remoteSlot,
+          )}
       </section>
     </div>
   )
