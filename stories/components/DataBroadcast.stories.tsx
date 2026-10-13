@@ -11,6 +11,7 @@ import {
   runtimeDocument,
 } from '@/lib/bml/runtime-document'
 import { GRID } from '@/lib/bml/style'
+import type { BandPlace } from '@/lib/data-broadcast-view'
 import { cn } from '@/lib/utils'
 import {
   BmlFrame,
@@ -22,7 +23,7 @@ import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
   DataBroadcastBand,
-  type BandFit,
+  PLAYER_COLUMN_OVER_THE_BAND,
 } from '@/components/data-broadcast/data-broadcast-player'
 import {
   PLAYER_BOARD,
@@ -450,13 +451,13 @@ export const 文字の大きさと同じ高さの行: Story = {
   },
 }
 
-/** A player's box with the band drawn out of it, as the live player lays it: over the picture it stands in the bar's place on the box's bottom, with the bar's row under it; a finger in the window gets it under the box. */
+/** A player's box with the band drawn out of it, as the live player lays it: in a window it stands under the box, which the column narrows to leave the band its room; in fullscreen it stands over the picture in the bar's place on the box's bottom, with the bar's row under it. */
 function Band({
-  fit,
+  place,
   numbers: shownFirst,
   station,
 }: {
-  fit: BandFit
+  place: BandPlace
   numbers: boolean
   station?: string
 }) {
@@ -465,7 +466,7 @@ function Band({
   const [running, setRunning] = useState(station !== undefined)
   const band = (
     <DataBroadcastBand
-      fit={fit}
+      place={place}
       numbers={numbers}
       onNumbers={setNumbers}
       onKey={(key) => setPressed((before) => [...before, key])}
@@ -480,7 +481,13 @@ function Band({
 
   return (
     <div className="p-6" data-pressed={pressed.join(' ')}>
-      <div data-slot="board" className={PLAYER_BOARD}>
+      <div
+        data-slot="board"
+        className={cn(
+          PLAYER_BOARD,
+          place === 'under' && PLAYER_COLUMN_OVER_THE_BAND,
+        )}
+      >
         <div data-slot="face" className={cn(PLAYER_FACE, 'relative')}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -488,14 +495,14 @@ function Band({
             alt=""
             className="absolute inset-0 size-full object-cover"
           />
-          {fit !== 'coarse' && (
+          {place === 'over' && (
             <div className="absolute inset-x-0 bottom-0 z-10">
               {band}
               <div data-slot="bar" className="h-16" />
             </div>
           )}
         </div>
-        {fit === 'coarse' && band}
+        {place === 'under' && band}
       </div>
     </div>
   )
@@ -555,7 +562,7 @@ async function near(got: number, want: number) {
 }
 
 /** The band as the mock draws it, scaled to this player: each key's size, the pitch of the dots, the row's height, and its right edge 16px in from the player's. */
-async function asTheMock(canvasElement: HTMLElement, fit: BandFit) {
+async function asTheMock(canvasElement: HTMLElement, place: BandPlace) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
   })
@@ -579,7 +586,7 @@ async function asTheMock(canvasElement: HTMLElement, fit: BandFit) {
   const buttons = keys.getAllByRole('button')
   const rightmost = buttons[buttons.length - 1].getBoundingClientRect()
 
-  await expect(band).toHaveAttribute('data-fit', fit)
+  await expect(band).toHaveAttribute('data-place', place)
   await near(box.width, face.width)
   await near(
     box.right - rightmost.right,
@@ -602,7 +609,7 @@ async function asTheMock(canvasElement: HTMLElement, fit: BandFit) {
   await near(disc.top + disc.height / 2, back.top + back.height / 2)
   await near(disc.top + disc.height / 2, dot.top + dot.height / 2)
 
-  if (fit === 'coarse') {
+  if (place === 'under') {
     await near(box.top, face.bottom)
     await near(box.bottom - disc.bottom, 12 * u)
     await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
@@ -678,10 +685,12 @@ async function fingerSized(band: HTMLElement) {
 
 export const 帯_PC: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <Band fit="fine" numbers={false} />,
+  render: () => <Band place="under" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const { band } = await asTheMock(canvasElement, 'fine')
+    const { band } = await asTheMock(canvasElement, 'under')
     const tray = canvasElement.querySelector('[data-pressed]')
+
+    await underTheFace(canvasElement)
 
     await expect(named(band)).toEqual(KEYS)
     await fingerSized(band)
@@ -699,9 +708,9 @@ export const 帯_PC: Story = {
 
 export const 帯_PC_数字: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <Band fit="fine" numbers />,
+  render: () => <Band place="under" numbers />,
   play: async ({ canvasElement }) => {
-    const { band, u } = await asTheMock(canvasElement, 'fine')
+    const { band, u } = await asTheMock(canvasElement, 'under')
 
     await beside(band, u)
     await expect(named(band)).toEqual([...KEYS, ...DIGITS])
@@ -718,36 +727,78 @@ export const 帯_PC_数字: Story = {
     )
     await expect(band).toHaveAttribute('data-face', 'keys')
     await expect(named(band)).toEqual(KEYS)
-    await near(band.getBoundingClientRect().height, MOCK.band * u)
+    await near(band.getBoundingClientRect().height, (MOCK.band + 24) * u)
   },
 }
 
 export const 帯_PC_広い: Story = {
   parameters: { screen: { width: 2400, height: 1200 } },
-  render: () => <Band fit="fine" numbers={false} />,
+  render: () => <Band place="under" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const { band, u } = await asTheMock(canvasElement, 'fine')
+    const { band, u } = await asTheMock(canvasElement, 'under')
 
     await expect(u).toBeGreaterThan(1)
     await expect(named(band)).toEqual(KEYS)
+    await underTheFace(canvasElement)
   },
 }
 
 export const 帯_PC_広い_数字: Story = {
   parameters: { screen: { width: 2400, height: 1200 } },
-  render: () => <Band fit="fine" numbers />,
+  render: () => <Band place="under" numbers />,
   play: async ({ canvasElement }) => {
-    const { band, u } = await asTheMock(canvasElement, 'fine')
+    const { band, u } = await asTheMock(canvasElement, 'under')
 
     await beside(band, u)
   },
 }
 
+/** The band in a window leaves the picture and the documents' face whole: its top is the box's bottom and the board grows by the band, in the window's height. */
+async function underTheFace(canvasElement: HTMLElement) {
+  const band = within(canvasElement).getByRole('group', {
+    name: 'データ放送のリモコン',
+  })
+  const face = (
+    canvasElement.querySelector('[data-slot="face"]') as HTMLElement
+  ).getBoundingClientRect()
+  const board = (
+    canvasElement.querySelector('[data-slot="board"]') as HTMLElement
+  ).getBoundingClientRect()
+
+  await expect(band.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    face.bottom - 0.6,
+  )
+  await near(board.bottom - 1, band.getBoundingClientRect().bottom)
+  await expect(board.bottom).toBeLessThanOrEqual(window.innerHeight)
+}
+
+export const 帯_PC_全画面: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Band place="over" numbers={false} />,
+  play: async ({ canvasElement }) => {
+    const { band } = await asTheMock(canvasElement, 'over')
+
+    await expect(named(band)).toEqual(KEYS)
+    await fingerSized(band)
+  },
+}
+
+export const 帯_PC_全画面_数字: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Band place="over" numbers />,
+  play: async ({ canvasElement }) => {
+    const { band, u } = await asTheMock(canvasElement, 'over')
+
+    await beside(band, u)
+    await near(band.getBoundingClientRect().height, MOCK.band * u)
+  },
+}
+
 export const 帯_iPad_窓: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
-  render: () => <Band fit="coarse" numbers={false} />,
+  render: () => <Band place="under" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const { band, u } = await asTheMock(canvasElement, 'coarse')
+    const { band, u } = await asTheMock(canvasElement, 'under')
 
     await expect(u).toBe(1)
     await expect(named(band)).toEqual(KEYS)
@@ -757,9 +808,9 @@ export const 帯_iPad_窓: Story = {
 
 export const 帯_iPad_窓_数字: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
-  render: () => <Band fit="coarse" numbers />,
+  render: () => <Band place="under" numbers />,
   play: async ({ canvasElement }) => {
-    const { band, u } = await asTheMock(canvasElement, 'coarse')
+    const { band, u } = await asTheMock(canvasElement, 'under')
     const face = (
       canvasElement.querySelector('[data-slot="face"]') as HTMLElement
     ).getBoundingClientRect()
@@ -778,9 +829,9 @@ export const 帯_iPad_窓_数字: Story = {
 
 export const 帯_iPad_全画面: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
-  render: () => <Band fit="coarse-full" numbers={false} />,
+  render: () => <Band place="over" numbers={false} />,
   play: async ({ canvasElement }) => {
-    const { band } = await asTheMock(canvasElement, 'coarse-full')
+    const { band } = await asTheMock(canvasElement, 'over')
 
     await expect(named(band)).toEqual(KEYS)
     await fingerSized(band)
@@ -789,9 +840,9 @@ export const 帯_iPad_全画面: Story = {
 
 export const 帯_iPad_全画面_数字: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
-  render: () => <Band fit="coarse-full" numbers />,
+  render: () => <Band place="over" numbers />,
   play: async ({ canvasElement }) => {
-    const { band, u } = await asTheMock(canvasElement, 'coarse-full')
+    const { band, u } = await asTheMock(canvasElement, 'over')
     const bar = (
       canvasElement.querySelector('[data-slot="bar"]') as HTMLElement
     ).getBoundingClientRect()
@@ -826,8 +877,11 @@ async function cutOnlyWithoutRoom(band: HTMLElement, u: number) {
 }
 
 /** The band while a Hybridcast application runs: the station and Hybridcast at its left, `閉じる` at a finger's size beside them, the keys where the mock puts them, and `閉じる` taking it away. */
-async function withTheApplication(canvasElement: HTMLElement, fit: BandFit) {
-  const { band, u } = await asTheMock(canvasElement, fit)
+async function withTheApplication(
+  canvasElement: HTMLElement,
+  place: BandPlace,
+) {
+  const { band, u } = await asTheMock(canvasElement, place)
   const group = within(band).getByRole('group', { name: 'Hybridcast' })
   const close = within(group).getByRole('button', {
     name: 'Hybridcast を閉じる',
@@ -860,8 +914,8 @@ async function withTheApplication(canvasElement: HTMLElement, fit: BandFit) {
   await expect(named(band)).toEqual(KEYS)
 }
 
-async function nameWhole(canvasElement: HTMLElement, fit: BandFit) {
-  const { band, u } = await asTheMock(canvasElement, fit)
+async function nameWhole(canvasElement: HTMLElement, place: BandPlace) {
+  const { band, u } = await asTheMock(canvasElement, place)
   const { cut } = await cutOnlyWithoutRoom(band, u)
 
   await expect(cut).toBe(false)
@@ -869,28 +923,37 @@ async function nameWhole(canvasElement: HTMLElement, fit: BandFit) {
 
 export const 帯_Hybridcast_PC: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <Band fit="fine" numbers={false} station={STATION} />,
+  render: () => <Band place="under" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
-    await nameWhole(canvasElement, 'fine')
-    await withTheApplication(canvasElement, 'fine')
+    await nameWhole(canvasElement, 'under')
+    await withTheApplication(canvasElement, 'under')
   },
 }
 
 export const 帯_Hybridcast_iPad_窓: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
-  render: () => <Band fit="coarse" numbers={false} station={STATION} />,
+  render: () => <Band place="under" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
-    await nameWhole(canvasElement, 'coarse')
-    await withTheApplication(canvasElement, 'coarse')
+    await nameWhole(canvasElement, 'under')
+    await withTheApplication(canvasElement, 'under')
   },
 }
 
 export const 帯_Hybridcast_iPad_全画面: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
-  render: () => <Band fit="coarse-full" numbers={false} station={STATION} />,
+  render: () => <Band place="over" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
-    await nameWhole(canvasElement, 'coarse-full')
-    await withTheApplication(canvasElement, 'coarse-full')
+    await nameWhole(canvasElement, 'over')
+    await withTheApplication(canvasElement, 'over')
+  },
+}
+
+export const 帯_Hybridcast_PC_全画面: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  render: () => <Band place="over" numbers={false} station={STATION} />,
+  play: async ({ canvasElement }) => {
+    await nameWhole(canvasElement, 'over')
+    await withTheApplication(canvasElement, 'over')
   },
 }
 
@@ -899,10 +962,10 @@ const LONG_STATION = 'とても長い名前の放送局のチャンネル第一�
 /** A long station's name: cut short where the keys leave no room for it, as on a finger's window, with `Hybridcast` whole under it and `閉じる` one gap from `戻る`; whole where there is room, as in fullscreen and on a wide player. */
 async function longName(
   canvasElement: HTMLElement,
-  fit: BandFit,
+  place: BandPlace,
   cut: boolean,
 ) {
-  const { band, u } = await asTheMock(canvasElement, fit)
+  const { band, u } = await asTheMock(canvasElement, place)
   const found = await cutOnlyWithoutRoom(band, u)
 
   await expect(found.cut).toBe(cut)
@@ -912,27 +975,25 @@ async function longName(
 
 export const 帯_Hybridcast_長い局名: Story = {
   parameters: { screen: { width: 820, height: 1180 } },
-  render: () => <Band fit="coarse" numbers={false} station={LONG_STATION} />,
+  render: () => <Band place="under" numbers={false} station={LONG_STATION} />,
   play: async ({ canvasElement }) => {
-    await longName(canvasElement, 'coarse', true)
+    await longName(canvasElement, 'under', true)
   },
 }
 
 export const 帯_Hybridcast_長い局名_iPad_全画面: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
-  render: () => (
-    <Band fit="coarse-full" numbers={false} station={LONG_STATION} />
-  ),
+  render: () => <Band place="over" numbers={false} station={LONG_STATION} />,
   play: async ({ canvasElement }) => {
-    await longName(canvasElement, 'coarse-full', false)
+    await longName(canvasElement, 'over', false)
   },
 }
 
 export const 帯_Hybridcast_長い局名_PC: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
-  render: () => <Band fit="fine" numbers={false} station={LONG_STATION} />,
+  render: () => <Band place="under" numbers={false} station={LONG_STATION} />,
   play: async ({ canvasElement }) => {
-    await longName(canvasElement, 'fine', false)
+    await longName(canvasElement, 'under', false)
   },
 }
 

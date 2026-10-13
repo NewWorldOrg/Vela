@@ -10,6 +10,7 @@ import {
   SAID_UNOPENED,
   SAID_UNREACHED,
   SAID_UNSUPPORTED,
+  bandPlace,
   dataBroadcastAfter,
   dataBroadcastSays,
   offersDataBroadcast,
@@ -568,4 +569,9 @@ test('what the documents say after they were closed for the application is not t
   ] as RuntimeMessage[]) {
     assert.equal(dataBroadcastAfter(running, runtime(message, 9)), running)
   }
+})
+
+test('the band stands under the box in a window, whatever points at it, and over the picture in fullscreen, where there is no room below', () => {
+  assert.equal(bandPlace(false), 'under')
+  assert.equal(bandPlace(true), 'over')
 })

@@ -3749,9 +3749,15 @@ export const データ放送を開くと面と帯が出て映像が縮む: Story
         ),
       { timeout: 5000 },
     )
+    const band = canvas.getByRole('group', { name: 'データ放送のリモコン' })
+
+    await expect(band).toBeVisible()
+    await expect(band).toHaveAttribute('data-place', 'under')
     await expect(
-      canvas.getByRole('group', { name: 'データ放送のリモコン' }),
-    ).toBeVisible()
+      canvasElement
+        .querySelector('[data-slot="player-chrome"]')
+        ?.contains(band),
+    ).toBe(false)
     await expect(canvasElement.querySelector('iframe')).not.toBeNull()
 
     await userEvent.click(toggle)

@@ -25,6 +25,7 @@ import {
 import type { RuntimeMessage } from '@/lib/bml/messages'
 import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
+import type { BandPlace } from '@/lib/data-broadcast-view'
 import { KEY_CAP } from '@/lib/player-keys'
 import { cn } from '@/lib/utils'
 import {
@@ -395,28 +396,17 @@ export function HybridcastFace({ address }: { address: string | null }) {
   )
 }
 
-/** Where the band is pressed: by a mouse (`pointer: fine`), by a finger in the window, or by a finger in fullscreen. */
-export type BandFit = 'fine' | 'coarse' | 'coarse-full'
-
-/** Which band the player draws out: a mouse gets the one over the picture, a finger the one under the box, and a finger in fullscreen the one over the picture again, sized for the finger. */
-export function bandFit(coarse: boolean, full: boolean): BandFit {
-  if (!coarse) {
-    return 'fine'
-  }
-
-  return full ? 'coarse-full' : 'coarse'
-}
-
 /** The width of the mock's player. The band is drawn at the mock's measures there and grows with the player, up to one and a half times the mock. */
 export const BAND_MOCK_WIDTH = 1174
 
 export const BAND_MAX_SCALE = 1.5
 
-/** The band under the box, in the finger's window: the keys' row with 12px above and below, at the mock's measures. */
+/** The band under the box, in a window: the keys' row with 12px above and below, at the mock's measures. */
 export const BAND_UNDER_THE_BOX = 160
 
-/** The player's column while the band is under its box: the window holds the picture, the 210px around it and the band. */
-export const PLAYER_COLUMN_OVER_THE_BAND = 'max-w-[calc((100dvh_-_370px)*16/9)]'
+/** The player's column while the band is under its box: the window holds the picture, the 210px around it and the band, which grows with the column. Below the mock's width the band is 160px; from there to one and a half times the mock it grows with the column; past that it is 240px. */
+export const PLAYER_COLUMN_OVER_THE_BAND =
+  'max-w-[min(calc((100dvh_-_370px)*16/9),max(calc((100dvh_-_450px)*16/9),clamp(1174px,calc((100dvh_-_210px)/(9/16_+_160/1174)),1761px)))]'
 
 /** One mock pixel, measured against the player's width: the mock's size at its width and below, growing with the player, and no more than one and a half times the mock. */
 const UNIT = `clamp(1px, 100cqw / ${BAND_MOCK_WIDTH}, ${BAND_MAX_SCALE}px)`
@@ -668,16 +658,16 @@ function OnTheBand({
   )
 }
 
-/** The remote control's keys drawn out of the control bar as a band, right over the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. While a Hybridcast application runs, its station and `閉じる` stand at the band's left. Over the picture the band stands on the bar with the scrim under both; a finger in the window gets it under the player's box on the box's own black. Everything is measured against the player's width. */
+/** The remote control's keys as a band, right-aligned with the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. While a Hybridcast application runs, its station and `閉じる` stand at the band's left. In a window the band is under the player's box on the box's own black, so nothing covers the documents' face; in fullscreen it stands on the bar with the scrim under both. Everything is measured against the player's width. */
 export function DataBroadcastBand({
-  fit,
+  place,
   numbers,
   onNumbers,
   onKey,
   onAim,
   application = null,
 }: {
-  fit: BandFit
+  place: BandPlace
   numbers: boolean
   onNumbers: (shown: boolean) => void
   onKey: (key: BmlKey) => void
@@ -685,7 +675,7 @@ export function DataBroadcastBand({
   application?: { station: string; onClose: () => void } | null
 }) {
   const pressing: Pressing = { onKey, onAim }
-  const underTheBox = fit === 'coarse'
+  const underTheBox = place === 'under'
 
   return (
     <div className="[container-type:inline-size]">
@@ -693,7 +683,7 @@ export function DataBroadcastBand({
         role="group"
         aria-label={KEYPAD_NAME}
         data-slot="data-broadcast-band"
-        data-fit={fit}
+        data-place={place}
         data-face={numbers ? 'numbers' : 'keys'}
         style={MEASURES}
         className={cn(

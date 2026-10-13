@@ -14,6 +14,7 @@ import type { Route } from 'next'
 import type { BrowserDecoding } from '@/lib/browser-decodes'
 import {
   SAID_FAILED,
+  bandPlace,
   dataBroadcastSays,
   pictureTransform,
 } from '@/lib/data-broadcast-view'
@@ -50,7 +51,6 @@ import type {
   PlaybackRead,
   PositionWrite,
 } from '@/repository/videos'
-import { useCoarsePointer } from '@/hooks/useCoarsePointer'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useKeptPosition } from '@/hooks/useKeptPosition'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
@@ -155,7 +155,6 @@ import {
   DataBroadcastFace,
   DataBroadcastToggle,
   PLAYER_COLUMN_OVER_THE_BAND,
-  bandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
 
 const RESTS = 3000
@@ -260,7 +259,6 @@ export function Player({
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
-  const coarse = useCoarsePointer()
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
     unaskedProfile,
@@ -1064,8 +1062,8 @@ export function Player({
   }
 
   const faceShown = broadcast.view.open
-  const fit = bandFit(coarse, full)
-  const underTheBox = faceShown && fit === 'coarse'
+  const place = bandPlace(full)
+  const underTheBox = faceShown && place === 'under'
   const overThePicture = faceShown && !underTheBox
   const barSaid: PlayerSaying | null = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' }
@@ -1315,7 +1313,7 @@ export function Player({
           >
             {overThePicture && (
               <DataBroadcastBand
-                fit={fit}
+                place="over"
                 numbers={broadcast.view.numbers}
                 onNumbers={broadcast.showNumbers}
                 onKey={broadcast.press}
@@ -1555,7 +1553,7 @@ export function Player({
         </div>
         {underTheBox && (
           <DataBroadcastBand
-            fit="coarse"
+            place="under"
             numbers={broadcast.view.numbers}
             onNumbers={broadcast.showNumbers}
             onKey={broadcast.press}

@@ -37,6 +37,7 @@ import {
 } from '@/lib/stored-flag'
 import {
   SAID_FAILED,
+  bandPlace,
   dataBroadcastSays,
   pictureTransform,
 } from '@/lib/data-broadcast-view'
@@ -81,7 +82,6 @@ import {
   type TakeCapture,
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
-import { useCoarsePointer } from '@/hooks/useCoarsePointer'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { useReceiverId } from '@/hooks/useReceiverId'
@@ -98,7 +98,6 @@ import {
   DataBroadcastToggle,
   HybridcastFace,
   PLAYER_COLUMN_OVER_THE_BAND,
-  bandFit,
 } from '@/components/data-broadcast/data-broadcast-player'
 import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
 import { liveLineRelay } from '@/components/data-broadcast/line-relay'
@@ -202,7 +201,6 @@ export function LivePlayer({
   const [broadcastFeed] = useState(() => new DataBroadcastFeed())
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
-  const coarse = useCoarsePointer()
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
@@ -791,8 +789,8 @@ export function LivePlayer({
   const latency = running?.latency
   const losing = running?.losing ?? false
   const opened = broadcast.view.open
-  const fit = bandFit(coarse, full)
-  const underTheBox = opened && fit === 'coarse'
+  const place = bandPlace(full)
+  const underTheBox = opened && place === 'under'
   const overThePicture = opened && !underTheBox
   const barSaid = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' as const }
@@ -1028,7 +1026,7 @@ export function LivePlayer({
           >
             {overThePicture && (
               <DataBroadcastBand
-                fit={fit}
+                place="over"
                 numbers={broadcast.view.numbers}
                 onNumbers={broadcast.showNumbers}
                 onKey={broadcast.press}
@@ -1221,7 +1219,7 @@ export function LivePlayer({
         </div>
         {underTheBox && (
           <DataBroadcastBand
-            fit="coarse"
+            place="under"
             numbers={broadcast.view.numbers}
             onNumbers={broadcast.showNumbers}
             onKey={broadcast.press}
