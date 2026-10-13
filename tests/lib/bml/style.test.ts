@@ -183,6 +183,18 @@ test('position, size, box, text and display properties are written as CSS', () =
   }
 })
 
+test('a line is as tall as its font unless the document says otherwise', () => {
+  const body =
+    BASE_STYLE.split('\n').find((rule) =>
+      rule.startsWith('[data-bml-tag="body"] {'),
+    ) ?? ''
+
+  assert.match(body, /font-size: 24px; line-height: 1;/)
+  assert.equal(css('line-height: normal').css, 'line-height: 1')
+  assert.equal(css('line-height: NORMAL').css, 'line-height: 1')
+  assert.equal(css('line-height: inherit').css, 'line-height: inherit')
+})
+
 test('every font family is the bundled round gothic', () => {
   assert.equal(
     css('font-family: 丸ゴシック').css,

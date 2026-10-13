@@ -63,7 +63,12 @@ import {
   scopeOf,
   type Evaluate,
 } from '@/lib/bml/scripts'
-import { onGrid, planeIn, type UsedKeyGroup } from '@/lib/bml/style'
+import {
+  FONT_METRICS,
+  onGrid,
+  planeIn,
+  type UsedKeyGroup,
+} from '@/lib/bml/style'
 import { tableClassesOf } from '@/lib/bml/tables'
 import { frameEvaluator } from '@/components/data-broadcast/bml-evaluator'
 import { LineRequests } from '@/components/data-broadcast/bml-line'
@@ -360,7 +365,11 @@ export class BmlRuntime {
   }
 
   private load(font: FontBytes): void {
-    const face = new FontFace(font.family, font.bytes)
+    const face = new FontFace(
+      font.family,
+      font.bytes,
+      FONT_METRICS[font.family],
+    )
 
     face
       .load()

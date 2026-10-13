@@ -43,6 +43,18 @@ export const DEFAULT_USED_KEYS: UsedKeyGroup[] = ['basic', 'data-button']
 
 export const FONT_FAMILIES = ['Denpa Font'] as const
 
+/** Each bundled face with its ascent and descent set to its em square, so a line as tall as the font holds the whole glyph, as on a receiver. */
+export const FONT_METRICS: Record<
+  (typeof FONT_FAMILIES)[number],
+  FontFaceDescriptors
+> = {
+  'Denpa Font': {
+    ascentOverride: '86.04%',
+    descentOverride: '13.96%',
+    lineGapOverride: '0%',
+  },
+}
+
 const FONT_STACK = `${FONT_FAMILIES.map((family) => `"${family}"`).join(', ')}, sans-serif`
 
 export const BML_PROPERTIES = new Set([
@@ -351,6 +363,12 @@ function lengths(value: string): string | null {
     : null
 }
 
+function lineHeight(value: string): string | null {
+  const css = length(value, ['normal'])
+
+  return css === 'normal' ? '1' : css
+}
+
 function keyword(value: string, allowed: string[]): string | null {
   const lowered = value.toLowerCase()
 
@@ -546,7 +564,7 @@ const MAPPER_LIST: [string, Mapper][] = [
     as('font-weight', (value) => keyword(value, ['normal', 'bold'])),
   ],
   ['font-style', as('font-style', (value) => keyword(value, ['normal']))],
-  ['line-height', as('line-height', (value) => length(value, ['normal']))],
+  ['line-height', as('line-height', lineHeight)],
   [
     'letter-spacing',
     as('letter-spacing', (value) => length(value, ['normal'])),
@@ -767,7 +785,7 @@ export const BASE_STYLE = [
   'html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }',
   '#bml-plane { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; }',
   '[data-bml-tag] { margin: 0; padding: 0; border: 0 solid; }',
-  `[data-bml-tag="body"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; font-family: ${FONT_STACK}; font-size: 24px; line-height: 1.5; color: rgb(255 255 255); background-color: transparent !important; background-image: none !important; }`,
+  `[data-bml-tag="body"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; font-family: ${FONT_STACK}; font-size: 24px; line-height: 1; color: rgb(255 255 255); background-color: transparent !important; background-image: none !important; }`,
   '[data-bml-tag="body"]::before { content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; border: 0 solid transparent; background-color: var(--bml-background, transparent); background-image: var(--bml-background-image, none); background-origin: border-box; }',
   '[data-bml-tag="body"][data-bml-hole]::before { border-width: var(--bml-hole-top) var(--bml-hole-right) var(--bml-hole-bottom) var(--bml-hole-left); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }',
   '[data-bml-tag="body"][data-bml-attr-invisible] { visibility: hidden; }',

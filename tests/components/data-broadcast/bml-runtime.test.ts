@@ -1590,3 +1590,53 @@ test('with the setting off a document over the line is not fetched', () => {
   assert.deepEqual(heard(), [{ kind: 'line', said: 'off' }])
   assert.ok(element('go'))
 })
+
+test('the bundled face is loaded with its line box as tall as its em square', (t) => {
+  const made: { family: string; descriptors?: FontFaceDescriptors }[] = []
+
+  class RecordingFontFace {
+    constructor(
+      family: string,
+      _source: ArrayBuffer,
+      descriptors?: FontFaceDescriptors,
+    ) {
+      made.push({ family, descriptors })
+    }
+
+    load(): Promise<this> {
+      return Promise.resolve(this)
+    }
+  }
+
+  const held = Object.getOwnPropertyDescriptor(globalThis, 'FontFace')
+
+  t.after(() => {
+    if (held) {
+      Object.defineProperty(globalThis, 'FontFace', held)
+    } else {
+      Reflect.deleteProperty(globalThis, 'FontFace')
+    }
+  })
+  Object.defineProperty(globalThis, 'FontFace', {
+    configurable: true,
+    writable: true,
+    value: RecordingFontFace,
+  })
+  const { send } = frame()
+
+  send({
+    kind: 'font',
+    fonts: [{ family: 'Denpa Font', bytes: new ArrayBuffer(8) }],
+  })
+
+  assert.deepEqual(made, [
+    {
+      family: 'Denpa Font',
+      descriptors: {
+        ascentOverride: '86.04%',
+        descentOverride: '13.96%',
+        lineGapOverride: '0%',
+      },
+    },
+  ])
+})
