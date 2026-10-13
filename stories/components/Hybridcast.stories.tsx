@@ -86,7 +86,7 @@ const KEYS: [BmlKey, string][] = [
 function heardAs(message: AppHeard): string {
   switch (message.kind) {
     case 'lost':
-      return message.unopened ? 'lost:unopened' : 'lost'
+      return message.end.why === 'unopened' ? 'lost:unopened' : 'lost'
     case 'videoRect':
       return `videoRect:${message.over ? 'over' : 'under'}`
     default:
@@ -470,6 +470,11 @@ export const 局の場所を読む: Story = {
     await reported(app, 'xhr')
 
     await expect(app).toHaveAttribute('data-hostname', 'example.test')
+    await expect(app).toHaveAttribute(
+      'data-av-type',
+      'video/x-iptvf-broadcast|video/x-iptvf-broadcast',
+    )
+    await expect(app).toHaveAttribute('data-made-type', 'video/broadcast|false')
     await expect(app).toHaveAttribute('data-href', ENTRY)
     await expect(app).toHaveAttribute('data-composed', 'relayed')
     await expect(app).toHaveAttribute(

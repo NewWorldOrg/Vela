@@ -44,6 +44,68 @@ export const KEYS_UNTIL_TOLD = keysOf(['basic', 'data-button'])
 /** The keys an application takes until it says otherwise. */
 export const APP_KEYS_UNTIL_TOLD = keysOfKeySet(KEY_SET_UNTIL_TOLD)
 
+/** Why a Hybridcast application gave way to the documents: the viewer closed it, it closed itself or went back to the documents, it went outside its boundary, a document loaded in its frame was not on the relay, it never opened, the relay did not start it, the data broadcast closed or ended, Hybridcast stopped being allowed, or the channel changed. */
+export type AppEnd =
+  | { why: 'viewer' }
+  | { why: 'destroyed' }
+  | { why: 'toTheDocuments'; componentTag: number | null }
+  | { why: 'outsideTheBoundary'; to: string }
+  | { why: 'offTheRelay'; after: string | null; hello: boolean }
+  | { why: 'unopened'; hello: boolean }
+  | { why: 'refused' }
+  | { why: 'broadcastEnded' }
+  | { why: 'notAllowed' }
+  | { why: 'channelChanged' }
+
+/** A URL as an ending names it: its origin and path, with no query or fragment, which may carry what identifies the viewer. */
+function siteOf(address: string | null): string {
+  if (address === null) {
+    return 'an address not known'
+  }
+
+  try {
+    const url = new URL(address)
+
+    return `${url.origin}${url.pathname}`
+  } catch {
+    return 'an address not known'
+  }
+}
+
+const NOT_ON_THE_RELAY: Record<'true' | 'false', string> = {
+  false:
+    'did not say hello: it did not load, or the receiver script did not run in it',
+  true: 'said hello but did not answer once it had loaded',
+}
+
+/** The warning the player leaves when an application ends, naming why. */
+export function appEndSaid(end: AppEnd): string {
+  switch (end.why) {
+    case 'viewer':
+      return 'Hybridcast: closed by the viewer'
+    case 'destroyed':
+      return 'Hybridcast: closed, as the application called destroyApplication'
+    case 'toTheDocuments':
+      return end.componentTag === null
+        ? 'Hybridcast: closed, as the application went back to the data broadcast'
+        : `Hybridcast: closed, as the application went back to the data broadcast at component 0x${end.componentTag.toString(16).padStart(2, '0')}`
+    case 'outsideTheBoundary':
+      return `Hybridcast: closed, as the application went to ${siteOf(end.to)}, outside its boundary`
+    case 'offTheRelay':
+      return `Hybridcast: closed, as a document loaded in the frame after ${siteOf(end.after)} ${NOT_ON_THE_RELAY[String(end.hello) as 'true' | 'false']}`
+    case 'unopened':
+      return `Hybridcast: did not open, as its first document ${NOT_ON_THE_RELAY[String(end.hello) as 'true' | 'false']}`
+    case 'refused':
+      return 'Hybridcast: did not open, as the relay did not start the application'
+    case 'broadcastEnded':
+      return 'Hybridcast: closed, as the data broadcast was closed or ended'
+    case 'notAllowed':
+      return 'Hybridcast: closed, as Hybridcast is no longer allowed in the settings'
+    case 'channelChanged':
+      return 'Hybridcast: closed, as the channel changed or the stream was started again'
+  }
+}
+
 /** The Hybridcast application the documents asked to start: what they asked for, which start it is, so that an answer for an earlier one is not taken, and the address its frame opens and the application as its AIT names it, once Carina started it, null until then. */
 export interface HybridcastApp {
   start: AppStart
@@ -76,6 +138,7 @@ export interface DataBroadcastView {
   failedStarts: readonly AppStart[]
   returns: number
   startup: string | null
+  appEnded: AppEnd | null
 }
 
 export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
@@ -101,6 +164,7 @@ export const DATA_BROADCAST_CLOSED: DataBroadcastView = {
   failedStarts: [],
   returns: 0,
   startup: null,
+  appEnded: null,
 }
 
 function closed(
@@ -135,13 +199,13 @@ export type DataBroadcastStep =
       application: OwnedApplication
     }
   | { on: 'appUnopened'; nth: number }
-  | { on: 'appClosed'; startup?: string | null }
+  | { on: 'appClosed'; startup?: string | null; why?: AppEnd }
   | { on: 'appFaded'; appNotices: number }
   | { on: 'appRect'; rect: Rect | null }
   | { on: 'appKeys'; mask: number }
   | { on: 'appGreg'; greg: readonly string[] }
   | { on: 'appReplaced'; start: AppStart; nth: number }
-  | { on: 'appLost'; unopened: boolean; nth: number }
+  | { on: 'appLost'; end: AppEnd; nth: number }
 
 /** What decides whether the broadcast opens by itself: the setting, what the catalog asks, whether it can be opened, and whether it was open during this programme already, as one closed by hand stays closed until the programme changes. */
 export interface AutoOpening {
@@ -261,6 +325,7 @@ function saidUnopened(
 /** Back to the documents from the application, keeping the shared registers for them, at the start document of the component the application named, or the one they began at. `returns` counts the times they came back, as the documents closed themselves for the application and are drawn afresh each time, even when the application never got as far as the screen. The picture fills the box again and the documents' keys are the ones taken until they say otherwise. */
 function backToTheDocuments(
   view: DataBroadcastView,
+  end: AppEnd,
   startup: string | null = null,
 ): DataBroadcastView {
   return view.hybridcast
@@ -271,6 +336,7 @@ function backToTheDocuments(
         rect: null,
         usedKeys: KEYS_UNTIL_TOLD,
         startup,
+        appEnded: end,
       }
     : view
 }
@@ -298,7 +364,11 @@ export function gridRectOfApp(rect: Rect | null): Rect | null {
 }
 
 /** The start Carina refused or could not make, or whose first document never opened on the relay: back to the documents, said once, and not asked for again while open. `nth` names the notice. */
-function unopenedApp(view: DataBroadcastView, nth: number): DataBroadcastView {
+function unopenedApp(
+  view: DataBroadcastView,
+  nth: number,
+  end: AppEnd,
+): DataBroadcastView {
   const app = view.hybridcast
 
   if (!app) {
@@ -307,7 +377,7 @@ function unopenedApp(view: DataBroadcastView, nth: number): DataBroadcastView {
 
   return saidUnopened(
     {
-      ...backToTheDocuments(view),
+      ...backToTheDocuments(view, end),
       failedStarts: [...view.failedStarts, app.start].slice(
         -MOST_FAILED_STARTS,
       ),
@@ -382,14 +452,18 @@ function appAfter(view: DataBroadcastView, step: AppStep): DataBroadcastView {
         : view
     case 'appUnopened':
       return view.hybridcast?.nth === step.nth
-        ? unopenedApp(view, step.nth)
+        ? unopenedApp(view, step.nth, { why: 'refused' })
         : view
     case 'appLost':
-      return step.unopened
-        ? unopenedApp(view, step.nth)
-        : backToTheDocuments(view)
+      return step.end.why === 'unopened'
+        ? unopenedApp(view, step.nth, step.end)
+        : backToTheDocuments(view, step.end)
     case 'appClosed':
-      return backToTheDocuments(view, step.startup ?? null)
+      return backToTheDocuments(
+        view,
+        step.why ?? { why: 'viewer' },
+        step.startup ?? null,
+      )
     case 'appFaded':
       return view.unopened && view.appNotices === step.appNotices
         ? { ...view, unopened: false }
@@ -423,7 +497,7 @@ export function dataBroadcastAfter(
   switch (step.on) {
     case 'toggle':
       if (view.hybridcast) {
-        return backToTheDocuments(view)
+        return backToTheDocuments(view, { why: 'viewer' })
       }
 
       if (view.open) {
@@ -436,7 +510,14 @@ export function dataBroadcastAfter(
         ? closed(view, { open: true })
         : view
     case 'availability':
-      return view.open && step.availability === 'none' ? closed(view) : view
+      if (!view.open || step.availability !== 'none') {
+        return view
+      }
+
+      return closed(
+        view,
+        view.hybridcast ? { appEnded: { why: 'broadcastEnded' } } : {},
+      )
     case 'runtime':
       return view.open && !view.hybridcast
         ? heard(view, step.message, step.nth)

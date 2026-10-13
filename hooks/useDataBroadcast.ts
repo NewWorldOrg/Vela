@@ -1,6 +1,12 @@
 'use client'
 
-import { useCallback, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 
 import type { AppStart } from '@/lib/bml/ait'
 import type { BmlKey } from '@/lib/bml/keys'
@@ -23,7 +29,11 @@ import {
   type DataBroadcastView,
 } from '@/lib/data-broadcast-view'
 import type { StartApplication } from '@/lib/data-broadcast-line'
-import { startupOf } from '@/lib/data-broadcast-view'
+import {
+  appEndSaid,
+  startupOf,
+  type HybridcastApp,
+} from '@/lib/data-broadcast-view'
 import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
 import type {
   AppHeard,
@@ -106,7 +116,10 @@ export function useDataBroadcast(
   })
   const allowed =
     settled.hybridcast && !startApplication
-      ? dataBroadcastAfter(settled, { on: 'appClosed' })
+      ? dataBroadcastAfter(settled, {
+          on: 'appClosed',
+          why: { why: 'notAllowed' },
+        })
       : settled
   const view = opensByItself(allowed, {
     autoOpens,
@@ -121,6 +134,29 @@ export function useDataBroadcast(
   if (!sameSession || view !== kept.view || opened !== kept.openedIn) {
     setKept({ of: session, view, openedIn: opened })
   }
+
+  const ran = useRef<{ app: HybridcastApp | null; session: string | null }>({
+    app: null,
+    session,
+  })
+
+  useEffect(() => {
+    const before = ran.current
+
+    ran.current = { app: view.hybridcast, session }
+
+    if (!before.app || view.hybridcast) {
+      return
+    }
+
+    console.warn(
+      appEndSaid(
+        before.session === session
+          ? (view.appEnded ?? { why: 'broadcastEnded' })
+          : { why: 'channelChanged' },
+      ),
+    )
+  })
 
   const step = (what: DataBroadcastStep) =>
     setKept((was) => {
@@ -218,11 +254,12 @@ export function useDataBroadcast(
         step({ on: 'appGreg', greg: message.greg })
         return
       case 'destroy':
-        step({ on: 'appClosed' })
+        step({ on: 'appClosed', why: { why: 'destroyed' } })
         return
       case 'launchBml':
         step({
           on: 'appClosed',
+          why: { why: 'toTheDocuments', componentTag: message.componentTag },
           startup:
             message.componentTag === null
               ? null
@@ -234,9 +271,9 @@ export function useDataBroadcast(
         void start(message.start, nth)
         return
       case 'lost':
-        step({ on: 'appLost', unopened: message.unopened, nth })
+        step({ on: 'appLost', end: message.end, nth })
 
-        if (message.unopened) {
+        if (message.end.why === 'unopened') {
           unopened(nth)
         }
 

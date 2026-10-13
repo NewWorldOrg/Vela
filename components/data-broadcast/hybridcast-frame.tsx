@@ -13,7 +13,7 @@ import {
 } from '@/lib/bml/memory'
 import { SHARED_REGISTERS } from '@/lib/bml/messages'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
-import type { HybridcastApp } from '@/lib/data-broadcast-view'
+import type { AppEnd, HybridcastApp } from '@/lib/data-broadcast-view'
 import { receiverIdHandedOver } from '@/lib/hybridcast/boundary'
 import type { EventInformation } from '@/lib/hybridcast/event-information'
 import {
@@ -32,9 +32,10 @@ import { cn } from '@/lib/utils'
 /** How the player talks to the application's document that opened last. */
 export type SendToApp = (message: ReceiverMessage) => void
 
-/** What the player hears of the application: what its documents say, and the frame lost, before its first document opened on the relay or after a later one went elsewhere. */
+/** What the player hears of the application: what its documents say, and the frame lost, and why. */
 export type AppHeard =
-  Exclude<AppMessage, { kind: 'memory' }> | { kind: 'lost'; unopened: boolean }
+  | Exclude<AppMessage, { kind: 'memory' | 'loaded' | 'leave' }>
+  | { kind: 'lost'; end: AppEnd }
 
 /** The sandbox of the application's frame: scripts and forms run, in an opaque origin of their own, and nothing reaches the page around it. */
 export const HYBRIDCAST_SANDBOX = 'allow-scripts allow-forms'
@@ -122,6 +123,8 @@ function HybridcastFrame({
   const port = useRef<MessagePort | null>(null)
   const [guard] = useState(() => new RelayGuard<MessagePort>())
   const waits = useRef<ReturnType<typeof setTimeout>[]>([])
+  const documents = useRef(new Map<MessagePort, string>())
+  const onTheRelay = useRef<string | null>(null)
   const latest = useRef({
     boundary: application.boundary,
     programme,
@@ -171,12 +174,16 @@ function HybridcastFrame({
 
       if (message.kind === 'loaded') {
         guard.loaded(from)
+        onTheRelay.current = documents.current.get(from) ?? null
 
         return
       }
 
       if (message.kind === 'leave') {
-        heard({ kind: 'lost', unopened: false })
+        heard({
+          kind: 'lost',
+          end: { why: 'outsideTheBoundary', to: message.to },
+        })
 
         return
       }
@@ -228,6 +235,7 @@ function HybridcastFrame({
 
       port.current?.close()
       port.current = hello.port
+      documents.current = new Map([[hello.port, hello.document]])
       hello.port.onmessage = (said) => {
         const message = appMessageOf(said.data)
 
@@ -297,14 +305,20 @@ function HybridcastFrame({
     ask?.postMessage({ kind: 'checkLoaded' } satisfies ReceiverMessage)
     waits.current.push(
       setTimeout(() => {
+        const hello = guard.hadHello(nth)
         const verdict = guard.verdict(nth)
 
-        if (verdict !== 'kept') {
-          latest.current.onHeard({
-            kind: 'lost',
-            unopened: verdict === 'unopened',
-          })
+        if (verdict === 'kept') {
+          return
         }
+
+        latest.current.onHeard({
+          kind: 'lost',
+          end:
+            verdict === 'unopened'
+              ? { why: 'unopened', hello }
+              : { why: 'offTheRelay', after: onTheRelay.current, hello },
+        })
       }, OPENED_WITHIN_MS),
     )
   }

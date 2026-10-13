@@ -109,3 +109,24 @@ test('a hello that arrives after its own load is taken for that load and asked a
   guard.loaded(second)
   assert.equal(guard.verdict(2), 'kept')
 })
+
+test('the guard says whether a load it gave up had a hello of its own, so the player can say why it closed', () => {
+  const guard = new RelayGuard<Port>()
+  const first = port('first')
+
+  guard.hello(first)
+  guard.load()
+  guard.loaded(first)
+  guard.verdict(1)
+
+  guard.load()
+  assert.equal(guard.hadHello(2), false)
+  assert.equal(guard.verdict(2), 'lost')
+
+  const silent = new RelayGuard<Port>()
+
+  silent.hello(port('quiet'))
+  silent.load()
+  assert.equal(silent.hadHello(1), true)
+  assert.equal(silent.verdict(1), 'unopened')
+})

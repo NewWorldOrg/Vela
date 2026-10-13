@@ -10,6 +10,7 @@ import {
   SAID_LINE_OFF,
   SAID_RECEIVING,
   SAID_UNOPENED,
+  appEndSaid,
   SAID_UNREACHED,
 } from '@/lib/data-broadcast-view'
 import {
@@ -1198,11 +1199,22 @@ const STARTED = startedAt()
 const STARTED_ADDRESS =
   STARTED.said === 'answered' ? STARTED.answer.address : ''
 
-/** What the self-made application last reported of itself. */
-const probed: { report: Record<string, string> } = { report: {} }
+/** What the self-made application last reported of itself, and what the player warned of while the story ran. */
+const probed: { report: Record<string, string>; warned: string[] } = {
+  report: {},
+  warned: [],
+}
 
 function listenToTheApplication(): () => void {
   probed.report = {}
+  probed.warned = []
+
+  const warn = console.warn
+
+  console.warn = (...said: unknown[]) => {
+    probed.warned.push(String(said[0]))
+    warn.apply(console, said)
+  }
 
   const listen = (event: MessageEvent) => {
     const probe = (event.data as { probe?: Record<string, string> } | null)
@@ -1220,7 +1232,10 @@ function listenToTheApplication(): () => void {
 
   window.addEventListener('message', listen)
 
-  return () => window.removeEventListener('message', listen)
+  return () => {
+    window.removeEventListener('message', listen)
+    console.warn = warn
+  }
 }
 
 async function theApplicationSaid(name: string, value: string) {
@@ -1450,7 +1465,8 @@ async function theApplicationRuns(canvasElement: HTMLElement) {
   return frame as HTMLIFrameElement
 }
 
-async function backAtTheDocuments(canvasElement: HTMLElement) {
+/** Back at the documents, with the one warning the player left saying why. */
+async function backAtTheDocuments(canvasElement: HTMLElement, why: string) {
   await shrunkTo(canvasElement, AT_THE_START)
   await waitFor(() =>
     expect(
@@ -1460,6 +1476,11 @@ async function backAtTheDocuments(canvasElement: HTMLElement) {
   await expect(
     canvasElement.querySelector('[data-slot="hybridcast-face"]'),
   ).toBeNull()
+  await waitFor(() =>
+    expect(
+      probed.warned.filter((line) => line.startsWith('Hybridcast: ')),
+    ).toEqual([why]),
+  )
 }
 
 export const Hybridcast: Story = {
@@ -1489,7 +1510,7 @@ export const Hybridcast: Story = {
       within(group).getByRole('button', { name: 'Hybridcast を閉じる' }),
     )
 
-    await backAtTheDocuments(canvasElement)
+    await backAtTheDocuments(canvasElement, appEndSaid({ why: 'viewer' }))
     await expect(asked.started).toEqual([STARTING])
   },
 }
@@ -1540,7 +1561,7 @@ export const Hybridcast_キー: Story = {
     await theApplicationSaid('keys', '403,57')
 
     press(player, 'd')
-    await backAtTheDocuments(canvasElement)
+    await backAtTheDocuments(canvasElement, appEndSaid({ why: 'viewer' }))
   },
 }
 
@@ -1609,7 +1630,7 @@ export const Hybridcast_アプリが閉じる: Story = {
     await theApplicationRuns(canvasElement)
 
     press(onTheScreen(canvasElement, 'live-player'), 'y')
-    await backAtTheDocuments(canvasElement)
+    await backAtTheDocuments(canvasElement, appEndSaid({ why: 'destroyed' }))
     await expect(
       onTheScreen(canvasElement, 'data-broadcast-says'),
     ).toHaveTextContent('')
@@ -1627,7 +1648,10 @@ export const Hybridcast_データ放送へ: Story = {
     await theApplicationRuns(canvasElement)
 
     press(onTheScreen(canvasElement, 'live-player'), 'g')
-    await backAtTheDocuments(canvasElement)
+    await backAtTheDocuments(
+      canvasElement,
+      appEndSaid({ why: 'toTheDocuments', componentTag: 0x40 }),
+    )
     await expect(asked.started).toEqual([STARTING])
   },
 }
@@ -1652,7 +1676,14 @@ export const Hybridcast_枠が中継を離れる: Story = {
         ).toBeNull(),
       { timeout: 6000 },
     )
-    await backAtTheDocuments(canvasElement)
+    await backAtTheDocuments(
+      canvasElement,
+      appEndSaid({
+        why: 'offTheRelay',
+        after: HYBRIDCAST_APPLICATION.entryUrl,
+        hello: false,
+      }),
+    )
     await expect(
       onTheScreen(canvasElement, 'data-broadcast-says'),
     ).toHaveTextContent('')

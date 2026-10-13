@@ -8,7 +8,7 @@ export interface StationNavigation {
   go(target: URL, how: 'assign' | 'replace'): void
   hash(hash: string): void
   reload(): void
-  leave(): void
+  leave(to: URL): void
 }
 
 const WEB = new Set(['http:', 'https:'])
@@ -36,7 +36,7 @@ export function navigateTo(
   }
 
   if (!nav.inside(target.href)) {
-    nav.leave()
+    nav.leave(target)
 
     return
   }

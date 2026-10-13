@@ -18,6 +18,7 @@ import {
   dataBroadcastSays,
   offersDataBroadcast,
   opensByItself,
+  appEndSaid,
   pictureTransform,
   startupOf,
   type DataBroadcastStep,
@@ -598,7 +599,7 @@ test('another application put in place of the running one waits for Carina to st
 test('a frame whose first document never opened on the relay is an application that did not open; one that lost a later document goes back to the documents without a word', () => {
   const unopened = after(OPEN, STARTING, STARTED, {
     on: 'appLost',
-    unopened: true,
+    end: { why: 'unopened', hello: false },
     nth: 12,
   })
 
@@ -609,7 +610,7 @@ test('a frame whose first document never opened on the relay is an application t
 
   const left = after(OPEN, STARTING, STARTED, {
     on: 'appLost',
-    unopened: false,
+    end: { why: 'offTheRelay', after: null, hello: true },
     nth: 12,
   })
 
@@ -626,7 +627,7 @@ test('what an application says once it is gone is not taken', () => {
     { on: 'appRect', rect: { left: 0, top: 0, width: 10, height: 10 } },
     { on: 'appKeys', mask: KEY_SET.DBUTTON },
     { on: 'appGreg', greg: GREG },
-    { on: 'appLost', unopened: true, nth: 3 },
+    { on: 'appLost', end: { why: 'unopened', hello: false }, nth: 3 },
   ] as DataBroadcastStep[]) {
     assert.equal(dataBroadcastAfter(gone, step), gone)
   }
@@ -725,4 +726,67 @@ test('the remote stands in the column where the page has one beside the player, 
   assert.equal(bandPlace(false, false), 'under')
   assert.equal(bandPlace(true, true), 'over')
   assert.equal(bandPlace(true, false), 'over')
+})
+
+test('each way the application ends is kept with the view, to be said once', () => {
+  const ended = (...steps: DataBroadcastStep[]) =>
+    after(OPEN, STARTING, STARTED, ...steps).appEnded
+
+  assert.deepEqual(ended({ on: 'appClosed' }), { why: 'viewer' })
+  assert.deepEqual(ended({ on: 'toggle', availability: 'ready' }), {
+    why: 'viewer',
+  })
+  assert.deepEqual(ended({ on: 'appClosed', why: { why: 'destroyed' } }), {
+    why: 'destroyed',
+  })
+  assert.deepEqual(
+    ended({
+      on: 'appLost',
+      end: { why: 'outsideTheBoundary', to: 'https://a.test/' },
+      nth: 9,
+    }),
+    { why: 'outsideTheBoundary', to: 'https://a.test/' },
+  )
+  assert.deepEqual(ended({ on: 'availability', availability: 'none' }), {
+    why: 'broadcastEnded',
+  })
+  assert.deepEqual(
+    after(OPEN, STARTING, { on: 'appUnopened', nth: 7 }).appEnded,
+    {
+      why: 'refused',
+    },
+  )
+  assert.equal(after(OPEN, STARTING, STARTED).appEnded, null)
+})
+
+test('what is said of an ending names the reason and the station, never a query, a ticket or an identifier', () => {
+  const said = [
+    appEndSaid({ why: 'viewer' }),
+    appEndSaid({ why: 'destroyed' }),
+    appEndSaid({ why: 'toTheDocuments', componentTag: 0x40 }),
+    appEndSaid({ why: 'toTheDocuments', componentTag: null }),
+    appEndSaid({
+      why: 'outsideTheBoundary',
+      to: 'https://elsewhere.test/page?id=12345#a',
+    }),
+    appEndSaid({
+      why: 'offTheRelay',
+      after: 'http://hc.example.jp/home/index.html?uid=abc',
+      hello: false,
+    }),
+    appEndSaid({ why: 'offTheRelay', after: null, hello: true }),
+    appEndSaid({ why: 'unopened', hello: false }),
+    appEndSaid({ why: 'unopened', hello: true }),
+    appEndSaid({ why: 'refused' }),
+    appEndSaid({ why: 'broadcastEnded' }),
+    appEndSaid({ why: 'notAllowed' }),
+    appEndSaid({ why: 'channelChanged' }),
+  ]
+
+  assert.ok(said.every((line) => line.startsWith('Hybridcast: ')))
+  assert.equal(new Set(said).size, said.length)
+  assert.ok(said[2].includes('0x40'))
+  assert.ok(said[4].includes('https://elsewhere.test/page'))
+  assert.ok(said[5].includes('http://hc.example.jp/home/index.html'))
+  assert.ok(said.every((line) => !/[?#]|12345|uid|abc/.test(line)))
 })

@@ -1,6 +1,9 @@
 /** What became of one load of the application's frame: its document is on the relay, or it is not, after the frame was on the relay before or before it ever was. */
 export type LoadVerdict = 'kept' | 'lost' | 'unopened'
 
+/** How many of the last loads the guard remembers a hello for. */
+const MOST_HELD = 16
+
 interface Paired<Port> {
   port: Port
   load: number
@@ -18,6 +21,8 @@ export class RelayGuard<Port> {
 
   private readonly answered = new Set<number>()
 
+  private readonly greeted = new Set<number>()
+
   private kept = false
 
   /** A document says hello with its port: taken for the load to come, or for the load in progress when that has none yet, unless that load already has its hello. `ask` is whether to ask the port at once, as its load is already over. */
@@ -33,6 +38,8 @@ export class RelayGuard<Port> {
     }
 
     this.greeting = { port, load: forLoad }
+    this.greeted.add(forLoad)
+    this.greeted.delete(forLoad - MOST_HELD)
 
     const ask = forLoad === awaiting
 
@@ -65,6 +72,11 @@ export class RelayGuard<Port> {
       this.asked = null
       this.awaiting = null
     }
+  }
+
+  /** Whether a load had a hello of its own. */
+  hadHello(nth: number): boolean {
+    return this.greeted.has(nth)
   }
 
   /** What became of a load, once the moment its document had to answer in is over. */

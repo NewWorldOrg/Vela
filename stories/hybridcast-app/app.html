@@ -59,7 +59,8 @@
     </style>
   </head>
   <body>
-    <object type="video/x-iptvf-broadcast"></object>
+    <!-- The relay writes the type of the broadcast's picture object as data-hybridcast-type, so that it tries to load no plugin. -->
+    <object id="av" data-hybridcast-type="video/x-iptvf-broadcast"></object>
     <div class="panel"><p>Hybridcast の見本</p></div>
     <p id="keys"></p>
     <a id="next" href="/hc/sub/next.html" hidden>次のページ</a>
@@ -214,6 +215,11 @@
       var list = 'http://example.test/hc/list.json'
       fetch('/hc/list.json').then(readBack('fetch', list), failed('fetch'))
       // The relay rewrites the scripts it hands over so that location reads __hcLocation; the lines below are written as they come out of it.
+      var av = document.getElementById('av')
+      say('av-type', av.type + '|' + av.getAttribute('type'))
+      var made = document.createElement('object')
+      made.type = 'video/broadcast'
+      say('made-type', made.type + '|' + made.hasAttribute('type'))
       say('hostname', __hcLocation.hostname)
       say('href', __hcLocation.href)
       var composed = 'http://www.' + __hcLocation.hostname + '/hc/check.json'

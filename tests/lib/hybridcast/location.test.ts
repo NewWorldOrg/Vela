@@ -20,7 +20,7 @@ function navigation(at = 'http://hc.example.test/p/index.html?a=1#top') {
       station = new URL(`${station.href.split('#')[0]}${hash}`)
     },
     reload: () => done.push('reload'),
-    leave: () => done.push('leave'),
+    leave: (to) => done.push(`leave ${to.href}`),
   }
 
   return { nav, done, location: stationLocation(nav) }
@@ -68,10 +68,10 @@ test('setting href, assign and replace go to the address resolved against the st
 test('an address outside the boundary leaves for the documents, and one with no server is not followed', () => {
   const { location, done } = navigation()
 
-  location.href = 'https://elsewhere.test/'
+  location.href = 'https://elsewhere.test/page?id=1'
   location.assign('javascript:void 0')
 
-  assert.deepEqual(done, ['leave'])
+  assert.deepEqual(done, ['leave https://elsewhere.test/page?id=1'])
 })
 
 test('setting the hash, or an address that differs only in it, stays in the document', () => {
@@ -113,6 +113,6 @@ test('assigning the location itself goes where the address says, as setting href
 
   assert.deepEqual(done, [
     'assign http://hc.example.test/p/other.html',
-    'leave',
+    'leave https://elsewhere.test/',
   ])
 })

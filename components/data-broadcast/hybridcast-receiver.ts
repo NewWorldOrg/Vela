@@ -38,7 +38,17 @@ export type ReceiverWindow = Window & typeof globalThis
 /** What the application's documents carry in the user agent: that the receiver runs Hybridcast, and no maker. */
 export const HYBRIDCAST_AGENT = 'Hybridcast/1.0'
 
-const BROADCAST_VIDEO = 'video/x-iptvf-broadcast'
+/** The types of the object an application places the broadcast's picture with. */
+const BROADCAST_VIDEOS = new Set(['video/x-iptvf-broadcast', 'video/broadcast'])
+
+/** Where the type of a broadcast's picture object is kept instead of `type`: an object with that type tries to load a plugin the frame's policy refuses, so the relay writes it here in the markup, and the receiver does so for one a script makes. */
+export const QUIET_TYPE = 'data-hybridcast-type'
+
+function isBroadcastVideo(type: unknown): boolean {
+  return (
+    typeof type === 'string' && BROADCAST_VIDEOS.has(type.trim().toLowerCase())
+  )
+}
 
 /** The attributes of each element that name an address the browser loads or goes to. */
 const ADDRESSED: Record<string, string[]> = {
@@ -240,6 +250,60 @@ function outsideTheBoundary(frame: Frame, written: string | null): boolean {
   return !frame.inside(intendedTarget(url, frame.relay, frame.station()).href)
 }
 
+/** Keeps the broadcast's picture object from trying to load a plugin, while the application sees it as written. Its type is kept in `QUIET_TYPE`, where the relay put it in the markup, and where the receiver puts one a script sets; `type` and `getAttribute('type')` read it back. The picture is drawn by the player under the frame, so the object draws nothing. */
+function quietTheBroadcastVideo(window: ReceiverWindow): void {
+  const proto = window.HTMLObjectElement.prototype
+  const type = descriptorOf(proto, 'type')
+  const element = window.Element.prototype
+  const getAttribute = element.getAttribute
+  const setAttribute = element.setAttribute
+  const quiet = (object: Element, value: unknown) => {
+    setAttribute.call(object, QUIET_TYPE, String(value))
+    object.removeAttribute('type')
+  }
+
+  if (type?.get && type.set) {
+    const read = type.get
+    const write = type.set
+
+    Object.defineProperty(proto, 'type', {
+      ...type,
+      get(this: HTMLObjectElement) {
+        return getAttribute.call(this, QUIET_TYPE) ?? read.call(this)
+      },
+      set(this: HTMLObjectElement, value: unknown) {
+        if (isBroadcastVideo(value)) {
+          quiet(this, value)
+        } else {
+          write.call(this, value)
+        }
+      },
+    })
+  }
+
+  element.getAttribute = function (this: Element, name: string) {
+    const kept =
+      this.localName === 'object' && name.toLowerCase() === 'type'
+        ? getAttribute.call(this, QUIET_TYPE)
+        : null
+
+    return kept ?? getAttribute.call(this, name)
+  }
+  element.setAttribute = function (this: Element, name: string, value: string) {
+    if (
+      this.localName === 'object' &&
+      name.toLowerCase() === 'type' &&
+      isBroadcastVideo(value)
+    ) {
+      quiet(this, value)
+
+      return
+    }
+
+    setAttribute.call(this, name, value)
+  }
+}
+
 /** Keeps links and forms to the boundary: one that goes outside it is not followed, and the application stays where it is (IPTVFJ STD-0010 7.6.1). Inside it they go through the relay, as their addresses were pointed there. A document that leaves by its script, which cannot be held back from inside, is closed by the player. */
 function keepToTheBoundary(frame: Frame): void {
   const stay = (event: Event, written: string | null) => {
@@ -338,7 +402,7 @@ function followThePicture(
 
     const object = [...window.document.querySelectorAll('object')].find(
       (found) =>
-        (found.getAttribute('type') ?? '').toLowerCase() === BROADCAST_VIDEO &&
+        isBroadcastVideo(found.getAttribute('type')) &&
         clipped(found.getBoundingClientRect()) !== null,
     )
     const rect = object ? clipped(object.getBoundingClientRect()) : null
@@ -411,7 +475,7 @@ function keepTheName(
 }
 
 /** The station URL's location, as the application's scripts reach it once the relay has rewritten their `location` to `__hcLocation`: it reads as the broadcaster's server, and going anywhere goes through the relay inside the boundary, and back to the documents outside it. Assigning it goes where the address says, as a location does. */
-function giveTheStationLocation(frame: Frame, leave: () => void): void {
+function giveTheStationLocation(frame: Frame, leave: (to: URL) => void): void {
   const { window, relay } = frame
   const nav: StationNavigation = {
     station: frame.station,
@@ -477,10 +541,13 @@ export function startHybridcastReceiver(
   })
 
   made = receiver
-  giveTheStationLocation(frame, () => port.postMessage({ kind: 'leave' }))
+  giveTheStationLocation(frame, (to) =>
+    port.postMessage({ kind: 'leave', to: to.href }),
+  )
   giveTheNavigator(window, receiver)
   relayNetwork(frame)
   pointAddressesWrittenLater(frame)
+  quietTheBroadcastVideo(window)
   keepToTheBoundary(frame)
   followThePicture(window, receiver)
 
