@@ -16,6 +16,10 @@ import {
   type StationNavigation,
 } from '@/lib/hybridcast/location'
 import { HybridcastReceiver } from '@/lib/hybridcast/receiver'
+import {
+  followThePicture,
+  isBroadcastVideo,
+} from '@/components/data-broadcast/hybridcast-picture'
 import { addressPointer } from '@/lib/hybridcast/rewrite'
 import { pointAddressesWrittenLater } from '@/components/data-broadcast/hybridcast-addresses'
 import {
@@ -40,17 +44,8 @@ export type ReceiverWindow = Window & typeof globalThis
 /** What the application's documents carry in the user agent: that the receiver runs Hybridcast, and no maker. */
 export const HYBRIDCAST_AGENT = 'Hybridcast/1.0'
 
-/** The types of the object an application places the broadcast's picture with. */
-const BROADCAST_VIDEOS = new Set(['video/x-iptvf-broadcast', 'video/broadcast'])
-
 /** Where the type of a broadcast's picture object is kept instead of `type`: an object with that type tries to load a plugin the frame's policy refuses, so the relay writes it here in the markup, and the receiver does so for one a script makes. */
 export const QUIET_TYPE = 'data-hybridcast-type'
-
-function isBroadcastVideo(type: unknown): boolean {
-  return (
-    typeof type === 'string' && BROADCAST_VIDEOS.has(type.trim().toLowerCase())
-  )
-}
 
 const KEY_NAME: Record<BmlKey, string> = {
   up: 'ArrowUp',
@@ -245,61 +240,6 @@ function press(window: ReceiverWindow, key: BmlKey): void {
     Object.defineProperty(event, 'which', { get: () => code })
     target.dispatchEvent(event)
   })
-}
-
-function clipped(box: DOMRect): Rect | null {
-  const left = Math.max(0, box.left)
-  const top = Math.max(0, box.top)
-  const right = Math.min(APP_SIZE.width, box.right)
-  const bottom = Math.min(APP_SIZE.height, box.bottom)
-
-  return right > left && bottom > top
-    ? { left, top, width: right - left, height: bottom - top }
-    : null
-}
-
-/** Follows the broadcast's picture as the document places it, the first `object` of its type that is laid out, and tells the player whenever it moves, once per frame at most. */
-function followThePicture(
-  window: ReceiverWindow,
-  receiver: HybridcastReceiver,
-): void {
-  let told: string | null = null
-  let asked = false
-
-  const measure = () => {
-    asked = false
-
-    const object = [...window.document.querySelectorAll('object')].find(
-      (found) =>
-        isBroadcastVideo(found.getAttribute('type')) &&
-        clipped(found.getBoundingClientRect()) !== null,
-    )
-    const rect = object ? clipped(object.getBoundingClientRect()) : null
-    const said = JSON.stringify(rect)
-
-    if (said !== told) {
-      told = said
-      receiver.videoAt(rect)
-    }
-  }
-
-  const ask = () => {
-    if (!asked) {
-      asked = true
-      window.requestAnimationFrame(measure)
-    }
-  }
-
-  new window.MutationObserver(ask).observe(window.document, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-  })
-  window.addEventListener('resize', ask)
-  window.addEventListener('load', ask)
-  window.document.addEventListener('transitionend', ask, true)
-  window.document.addEventListener('animationend', ask, true)
-  ask()
 }
 
 function giveTheNavigator(

@@ -573,16 +573,64 @@ export const 受信機の内蔵の音: Story = {
   },
 }
 
-export const 映像の穴: Story = {
-  render: () => <Harness label="映像の穴" />,
-  play: async ({ canvasElement }) => {
-    const app = group(canvasElement, '映像の穴')
+const AT_THE_HOME = `/hybridcast-app/home.html?uri=${encodeURIComponent('http://example.test/hc/home.html')}`
 
-    await waitFor(() =>
-      expect(app).toHaveAttribute('data-rect', '960,120,800,450'),
-    )
+const AT_THE_GUIDE = `/hybridcast-app/guide.html?uri=${encodeURIComponent('http://example.test/hc/guide.html')}`
+
+export const ホームの映像の箱: Story = {
+  render: () => <Harness label="ホームの映像の箱" address={AT_THE_HOME} />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, 'ホームの映像の箱')
+
+    await reported(app, 'under')
+    await expect(app).toHaveAttribute('data-rect', '365,140,1200,675')
+    await expect(app).toHaveAttribute('data-under', 'backscreen,body,vstream')
+    await expect(app).toHaveAttribute('data-box', 'rgba(0, 0, 0, 0)')
+    await expect(app).toHaveAttribute('data-box-behind', 'rgb(0, 0, 0)')
+    await expect(app).toHaveAttribute('data-menu', 'rgb(255, 255, 255)')
+    await expect(getComputedStyle(frameIn(app)).maskImage).toBe('none')
+  },
+}
+
+export const ホームの映像の箱_映像の上に描けない: Story = {
+  render: () => (
+    <Harness
+      label="映像の上に描けないホーム"
+      address={AT_THE_HOME}
+      boundary={boundaryOf(0x2000 | (1 << 12) | (1 << 5))}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '映像の上に描けないホーム')
+
+    await reported(app, 'under')
+    await expect(app).toHaveAttribute('data-under', '')
+    await expect(app).toHaveAttribute('data-rect', '365,140,1200,675')
     await waitFor(() =>
       expect(getComputedStyle(frameIn(app)).maskImage).toContain('gradient'),
     )
+  },
+}
+
+export const 番組表が映像の上に描く: Story = {
+  render: () => <Harness label="番組表" address={AT_THE_GUIDE} />,
+  play: async ({ canvasElement }) => {
+    const app = group(canvasElement, '番組表')
+
+    await reported(app, 'hidden-under')
+    await expect(app).toHaveAttribute('data-hidden-under', '')
+    await expect(app).not.toHaveAttribute('data-rect')
+
+    await userEvent.click(within(app).getByRole('button', { name: '赤' }))
+
+    await reported(app, 'shown-under')
+    await expect(app).toHaveAttribute('data-rect', '0,0,1920,1080')
+    await expect(app).toHaveAttribute('data-shown-under', 'body')
+    await expect(app).toHaveAttribute(
+      'data-shown-panel',
+      'rgba(255, 255, 255, 0.92)',
+    )
+    await expect(app).toHaveAttribute('data-shown-row', 'rgb(58, 120, 200)')
+    await expect(getComputedStyle(frameIn(app)).maskImage).toBe('none')
   },
 }

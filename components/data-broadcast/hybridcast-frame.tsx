@@ -63,7 +63,7 @@ function relayOf(address: string): string {
   return address.split(/[?#]/)[0]
 }
 
-/** The hole the broadcast's picture shows through: the whole frame with the picture object's rectangle taken out. A receiver puts the picture over the layers of the application under the object, such as a black box behind it; here the picture is under the whole frame, so those layers are cut away where it is. Drawing the application puts over the picture is cut away with them, as when its permission bitmap does not let it draw there (IPTVFJ STD-0013 5.1.1). */
+/** The hole the broadcast's picture shows through where the application may not draw over it (IPTVFJ STD-0013 5.1.1): the whole frame with the picture object's rectangle taken out, everything the application draws there hidden. Where it may draw there, the receiver in the frame draws the backgrounds under the object around it instead, and the frame is left whole. */
 export function pictureHole(rect: Rect | null): CSSProperties {
   if (!rect) {
     return {}
@@ -203,7 +203,7 @@ function HybridcastFrame({
       }
 
       if (message.kind === 'videoRect') {
-        setHole(message.rect)
+        setHole(message.over ? null : message.rect)
       }
 
       heard(message)
