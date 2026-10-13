@@ -2374,6 +2374,41 @@ test('a script that gives the canvas another MNG plays that one in place of the 
   assert.deepEqual(warnings, ['data broadcast: unsupported MNG chunk: tEXt'])
 })
 
+test('a page holds no more decoded MNG pixels than it may, each canvas counted at the size of its frame', async () => {
+  const wide = mng(mhdr(1920, 1080, 100), picture(1, 1), MEND)
+  const objects = Array.from(
+    { length: 9 },
+    (_, at) => `<object id="w${at}" type="image/X-arib-mng" data="wide.mng"/>`,
+  ).join('')
+  const opening = frame({ decode: async () => new FakeBitmap('wide') })
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: {
+      tag: 0x40,
+      id: 0,
+      version: 1,
+      resources: [
+        { path: 'startup.bml', kind: 'bml', body: text(bml(objects)) },
+        { path: 'wide.mng', kind: 'binary', body: wide },
+      ],
+    },
+  })
+  opening.send({ kind: 'open' })
+  await decoded()
+
+  const widths = Array.from(
+    { length: 9 },
+    (_, at) => (opening.element(`w${at}`) as FakeCanvas).width,
+  )
+
+  assert.deepEqual(widths, [...new Array<number>(8).fill(1920), 300])
+  assert.deepEqual(opening.warnings, [
+    'data broadcast: too many MNG pixels on the page',
+  ])
+})
+
 test('a script that gives the canvas what is not an MNG, a malformed one or nothing at all is a warning, and the MNG plays on', async () => {
   const { element, bitmaps, send, warnings } = withMng(
     bml(

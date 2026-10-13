@@ -143,7 +143,7 @@ test('without a FRAM, each image is a frame of one tick, layered over the one be
   assert.deepEqual(played(animation), ['clear 0@0,0 20', '1@0,0 20'])
 })
 
-test('a TERM that repeats for ever starts each round on a cleared frame and waits its delay between rounds', () => {
+test('a TERM that repeats for ever starts each round on a cleared frame, and the last frame of a round stays for the longer of its own delay and the TERM’s', () => {
   const animation = animationOf(
     mng(
       mhdr(40, 30, 100),
@@ -157,12 +157,36 @@ test('a TERM that repeats for ever starts each round on a cleared frame and wait
 
   assert.deepEqual(played(animation, 6), [
     'clear 0@0,0 100',
-    '1@0,0 300',
+    '1@0,0 200',
     'clear 0@0,0 100',
-    '1@0,0 300',
+    '1@0,0 200',
     'clear 0@0,0 100',
-    '1@0,0 300',
+    '1@0,0 200',
   ])
+
+  const shorter = animationOf(
+    mng(
+      mhdr(40, 30, 100),
+      term(3, 0, 5, FOREVER),
+      fram({ mode: 1, delay: 10, lasting: true }),
+      picture(40, 30),
+      MEND,
+    ),
+  )
+
+  assert.deepEqual(played(shorter, 2), ['clear 0@0,0 100', 'clear 0@0,0 100'])
+
+  const none = animationOf(
+    mng(
+      mhdr(40, 30, 100),
+      term(3, 0, 0, FOREVER),
+      fram({ mode: 1, delay: 0, lasting: true }),
+      picture(40, 30),
+      MEND,
+    ),
+  )
+
+  assert.deepEqual(played(none, 2), ['clear 0@0,0 10', 'clear 0@0,0 10'])
 })
 
 test('a TERM that repeats a number of times then does what it says after the last round', () => {

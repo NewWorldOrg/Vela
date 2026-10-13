@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  MOST_MS_AT_ONCE,
   MOST_UPDATES_AT_ONCE,
   MngPlayer,
   type MngHost,
@@ -58,7 +59,10 @@ const ENDLESS = animationOf(
   ),
 )
 
-function stage(animation: MngAnimation, options: { fails?: number[] } = {}) {
+function stage(
+  animation: MngAnimation,
+  options: { fails?: number[]; msPerLook?: number } = {},
+) {
   const document = new FakeDocument()
   const root = document.createElement('div')
   const canvas = document.createElement('canvas') as FakeCanvas
@@ -84,6 +88,11 @@ function stage(animation: MngAnimation, options: { fails?: number[] } = {}) {
     setTimeout: (run, ms) => timers.setTimeout(run, ms),
     clearTimeout: (id) => timers.clearTimeout(id),
     warn: (message) => warnings.push(message),
+    now: () => {
+      timers.now += options.msPerLook ?? 0
+
+      return timers.now
+    },
   }
   const player = new MngPlayer(canvas, animation, host)
 
@@ -237,6 +246,36 @@ test('frames of no delay are drawn together, a bounded number at once, before th
     MOST_UPDATES_AT_ONCE,
   )
   assert.equal(timers.waiting, 1)
+
+  player.stop()
+})
+
+test('frames that take long to work out are drawn only for as long as the time given at once, and the rest waits for the next turn', async () => {
+  const { timers, player, drawn } = stage(
+    animationOf(
+      mng(
+        mhdr(40, 30, 100),
+        fram({ mode: 1, delay: 0, lasting: true }),
+        loop(0, FOREVER),
+        picture(40, 30),
+        endl(0),
+        MEND,
+      ),
+    ),
+    { msPerLook: 3 },
+  )
+
+  player.play()
+  await decoded()
+
+  const first = drawn.filter((line) => line.startsWith('#')).length
+
+  assert.ok(first > 0 && first <= MOST_MS_AT_ONCE / 3 + 1, String(first))
+  assert.equal(timers.waiting, 1)
+
+  timers.tick(10)
+
+  assert.ok(drawn.filter((line) => line.startsWith('#')).length > first)
 
   player.stop()
 })

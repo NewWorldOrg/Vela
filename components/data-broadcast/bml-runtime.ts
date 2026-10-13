@@ -91,6 +91,7 @@ import {
 } from '@/components/data-broadcast/bml-line'
 import {
   MngPlayer,
+  pixelsHeld,
   type MngBitmap,
   type MngCanvas,
 } from '@/components/data-broadcast/bml-mng'
@@ -115,7 +116,7 @@ const DATA_BUTTON_EVERY_MS = 500
 
 const MOST_DATA_BUTTON_PRESSES = 20
 
-/** How many pixels of MNG pictures a page may hold decoded at once. */
+/** How many pixels of MNG a page may hold at once, each canvas and its pictures decoded. */
 const MOST_ANIMATED_PIXELS = 2 * MNG_LIMITS.pixels
 
 const LOCKED = 0
@@ -1416,7 +1417,7 @@ export class BmlRuntime {
       .filter((player) => player.playing)
       .reduce((sum, player) => sum + player.pixels, 0)
 
-    if (held + mng.pixels > MOST_ANIMATED_PIXELS) {
+    if (held + pixelsHeld(mng) > MOST_ANIMATED_PIXELS) {
       this.warn('too many MNG pixels on the page')
 
       return
@@ -1430,6 +1431,7 @@ export class BmlRuntime {
         setTimeout: (run, ms) => this.window.setTimeout(run, ms),
         clearTimeout: (id) => this.window.clearTimeout(id),
         warn: (message) => this.warn(message),
+        now: () => this.now(),
       },
     )
 

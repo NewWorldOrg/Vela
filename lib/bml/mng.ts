@@ -771,7 +771,7 @@ function roundAgain(loops: Looping[], made: number): number | null {
   return loop.start + 1
 }
 
-/** The updates an MNG makes on its frame, in order, round after round as its TERM says, then what the TERM leaves on it at the end. With no ticks in a second, only the first. */
+/** The updates an MNG makes on its frame, in order, round after round as its TERM says, then what the TERM leaves on it at the end. Both an interframe delay and the TERM's delay before a round begins again are the least time to wait, so the last frame of a round stays for the longer of the two, and at least a tick. With no ticks in a second, only the first. */
 export function* updatesOf(animation: MngAnimation): Generator<MngUpdate> {
   if (animation.ticksPerSecond === 0) {
     const first = passOf(animation, 0).next()
@@ -807,7 +807,10 @@ export function* updatesOf(animation: MngAnimation): Generator<MngUpdate> {
     }
 
     if (term && held && (rounds === FOREVER || round + 1 < rounds)) {
-      held = { ...held, delayMs: held.delayMs + term.delay * tickMs }
+      held = {
+        ...held,
+        delayMs: Math.max(held.delayMs, term.delay * tickMs, tickMs),
+      }
     }
   }
 

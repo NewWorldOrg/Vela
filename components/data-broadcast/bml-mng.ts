@@ -3,6 +3,9 @@ import { updatesOf, type MngAnimation, type MngUpdate } from '@/lib/bml/mng'
 /** How many frames of no delay are drawn at once before the page is let through. */
 export const MOST_UPDATES_AT_ONCE = 64
 
+/** How long frames are worked out and drawn at once before the page is let through. */
+export const MOST_MS_AT_ONCE = 8
+
 const LEAST_DELAY_MS = 10
 
 const MOST_DELAY_MS = 0x7fffffff
@@ -36,6 +39,12 @@ export interface MngHost<B extends MngBitmap> {
   setTimeout(run: () => void, ms: number): number
   clearTimeout(id: number): void
   warn(message: string): void
+  now(): number
+}
+
+/** How many pixels an MNG holds once it plays: its canvas, at the size of its frame, and its pictures decoded. */
+export function pixelsHeld(mng: MngAnimation): number {
+  return mng.width * mng.height + mng.pixels
 }
 
 /** Plays an MNG on a canvas: decodes every picture first, then draws the frames in order for as long as each says, and lets go of the pictures once it ends, is stopped, or finds its canvas gone from the document. */
@@ -67,9 +76,9 @@ export class MngPlayer<B extends MngBitmap> {
     return !this.stopped
   }
 
-  /** How many pixels its pictures hold once decoded. */
+  /** How many pixels it holds: its canvas and its pictures decoded. */
   get pixels(): number {
-    return this.mng.pixels
+    return pixelsHeld(this.mng)
   }
 
   play(): void {
@@ -143,7 +152,13 @@ export class MngPlayer<B extends MngBitmap> {
       return
     }
 
-    for (let drawn = 0; drawn < MOST_UPDATES_AT_ONCE; drawn += 1) {
+    const began = this.host.now()
+
+    for (
+      let drawn = 0;
+      drawn < MOST_UPDATES_AT_ONCE && this.host.now() - began < MOST_MS_AT_ONCE;
+      drawn += 1
+    ) {
       const update = this.updates.next()
 
       if (update.done) {
