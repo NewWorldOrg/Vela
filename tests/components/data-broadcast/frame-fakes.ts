@@ -50,6 +50,17 @@ export class FakeNode {
     return 0
   }
 
+  /** Whether the node hangs from the root of its document. */
+  get isConnected(): boolean {
+    let node: FakeNode = this
+
+    while (node.parentNode) {
+      node = node.parentNode
+    }
+
+    return node === this.ownerDocument.root
+  }
+
   private siblings(): FakeNode[] {
     return this.parentNode?.childNodes ?? []
   }
@@ -182,11 +193,75 @@ export class FakeElement extends FakeNode {
   }
 }
 
+/** A picture decoded for a canvas, named for the test, that knows whether it was let go. */
+export class FakeBitmap {
+  readonly name: string
+
+  readonly width = 1
+
+  readonly height = 1
+
+  closed = false
+
+  constructor(name: string) {
+    this.name = name
+  }
+
+  close(): void {
+    this.closed = true
+  }
+}
+
+/** A canvas's 2D context that writes down what is cleared and drawn on it, each picture with the place it went and the box it was clipped to. */
+export class FakeSurface {
+  readonly drawn: string[] = []
+
+  private box = ''
+
+  clearRect(x: number, y: number, width: number, height: number): void {
+    this.drawn.push(`clear ${x},${y},${width},${height}`)
+  }
+
+  save(): void {}
+
+  restore(): void {
+    this.box = ''
+  }
+
+  beginPath(): void {}
+
+  rect(x: number, y: number, width: number, height: number): void {
+    this.box = `${x},${y},${width},${height}`
+  }
+
+  clip(): void {}
+
+  drawImage(image: FakeBitmap, x: number, y: number): void {
+    this.drawn.push(`${image.name} at ${x},${y} in ${this.box}`)
+  }
+}
+
+export class FakeCanvas extends FakeElement {
+  width = 300
+
+  height = 150
+
+  readonly surface = new FakeSurface()
+
+  getContext(kind: string): FakeSurface | null {
+    return kind === '2d' ? this.surface : null
+  }
+}
+
 export class FakeDocument {
   readonly fonts = { add: () => undefined }
 
+  root: FakeElement | null = null
+
   createElement(tagName: string): FakeElement {
-    return new FakeElement(this, tagName)
+    return tagName === 'canvas'
+      ? new FakeCanvas(this, tagName)
+      : new FakeElement(this, tagName)
   }
 
   createTextNode(data: string): FakeText {
@@ -255,6 +330,11 @@ export class FakeTimers {
         interval.run()
       }
     })
+  }
+
+  /** How many timeouts are still to run. */
+  get waiting(): number {
+    return this.timeouts.length
   }
 
   get pending(): number {
@@ -334,6 +414,8 @@ export function fakeFrame(playerOrigin: string): FakeFrame {
     document,
   } as unknown as RuntimeWindow
   const plane = document.createElement('div')
+
+  document.root = plane
 
   return { window, plane, timers, said, warnings, parent }
 }

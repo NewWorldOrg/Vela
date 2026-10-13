@@ -46,6 +46,13 @@ import {
   type RuntimeError,
   type RuntimeMessage,
 } from '@/lib/bml/messages'
+import {
+  MNG_LIMITS,
+  isMng,
+  paintedWith,
+  readMng,
+  type MngAnimation,
+} from '@/lib/bml/mng'
 import { nptMilliseconds, type NptReading } from '@/lib/bml/npt'
 import { withPalette, type Palette } from '@/lib/bml/palette'
 import {
@@ -83,6 +90,11 @@ import {
   type LineAnswer,
 } from '@/components/data-broadcast/bml-line'
 import {
+  MngPlayer,
+  type MngBitmap,
+  type MngCanvas,
+} from '@/components/data-broadcast/bml-mng'
+import {
   mountPage,
   type MountedPage,
 } from '@/components/data-broadcast/bml-page'
@@ -103,6 +115,9 @@ const DATA_BUTTON_EVERY_MS = 500
 
 const MOST_DATA_BUTTON_PRESSES = 20
 
+/** How many pixels of MNG pictures a page may hold decoded at once. */
+const MOST_ANIMATED_PIXELS = 2 * MNG_LIMITS.pixels
+
 const LOCKED = 0
 
 const NOT_FOUND = -2
@@ -116,11 +131,14 @@ export type RuntimeWindow = Window & typeof globalThis
 
 export type Mount = (page: BmlPage, plane: HTMLElement) => MountedPage
 
+export type Decode = (png: Uint8Array) => Promise<MngBitmap>
+
 export interface RuntimeOptions {
   mount?: Mount
   evaluate?: Evaluate
   now?: () => number
   realm?: Realm
+  decode?: Decode
 }
 
 interface Shown {
@@ -131,6 +149,7 @@ interface Shown {
   navigation: Navigation
   focused: HTMLElement | null
   urls: string[]
+  players: Map<HTMLElement, MngPlayer<MngBitmap>>
   usedKeys: UsedKeyGroup[]
   nptTold: Set<EventItem>
 }
@@ -203,6 +222,8 @@ export class BmlRuntime {
 
   private readonly realm: Realm
 
+  private readonly decode: Decode
+
   private catalog: BmlCatalog | null = null
 
   private shown: Shown | null = null
@@ -249,6 +270,12 @@ export class BmlRuntime {
     this.evaluate = options.evaluate ?? frameEvaluator(window)
     this.now = options.now ?? (() => Date.now())
     this.realm = options.realm ?? new Realm([])
+    this.decode =
+      options.decode ??
+      ((png) =>
+        window.createImageBitmap(
+          new Blob([png.slice()], { type: 'image/png' }),
+        ))
     this.memory = new PersistentMemory((name, value) =>
       this.say({ kind: 'memory', name, value }),
     )
@@ -653,12 +680,18 @@ export class BmlRuntime {
       navigation: navigationOf(page.body),
       focused: null,
       urls,
+      players: new Map(),
       usedKeys: page.usedKeys,
       nptTold: new Set(),
     }
 
     this.shown = shown
     this.fit()
+    mounted.nodes.forEach((node, element) => {
+      if (node.mng) {
+        this.animate(shown, element, node.mng)
+      }
+    })
     this.start(shown)
   }
 
@@ -785,6 +818,7 @@ export class BmlRuntime {
           ? this.urlOf(resource, shown.page.palette, shown.urls)
           : null
       },
+      animate: (element, reference) => this.animateFrom(element, reference),
       resolve: (reference) => {
         const base = this.shown?.page.address
         const address = base ? resolveReference(reference, base) : null
@@ -1342,6 +1376,67 @@ export class BmlRuntime {
     }
   }
 
+  /** Plays the MNG a script gave a canvas, read as the document's own are; what is not one, or is malformed, is a warning and the canvas plays on what it played. */
+  private animateFrom(element: HTMLElement, reference: string): void {
+    const shown = this.shown
+    const resource = this.resourceOf(reference)
+
+    if (!shown || !resource) {
+      this.warn(`missing image: ${reference}`)
+
+      return
+    }
+
+    if (!isMng(resource.body)) {
+      this.warn(`unsupported image: ${reference}`)
+
+      return
+    }
+
+    const reading = readMng(resource.body)
+
+    if (reading.read === 'malformed') {
+      this.warn(`malformed MNG: ${reference} (${reading.why})`)
+
+      return
+    }
+
+    reading.ignored.forEach((type) =>
+      this.warn(`unsupported MNG chunk: ${type}`),
+    )
+    this.animate(shown, element, paintedWith(reading.mng, shown.page.palette))
+  }
+
+  /** Plays an MNG on a canvas of the page, stopping what played there, unless the page would then hold more decoded pixels than it may. */
+  private animate(shown: Shown, element: HTMLElement, mng: MngAnimation): void {
+    shown.players.get(element)?.stop()
+    shown.players.delete(element)
+
+    const held = [...shown.players.values()]
+      .filter((player) => player.playing)
+      .reduce((sum, player) => sum + player.pixels, 0)
+
+    if (held + mng.pixels > MOST_ANIMATED_PIXELS) {
+      this.warn('too many MNG pixels on the page')
+
+      return
+    }
+
+    const player = new MngPlayer(
+      element as unknown as MngCanvas<MngBitmap>,
+      mng,
+      {
+        decode: this.decode,
+        setTimeout: (run, ms) => this.window.setTimeout(run, ms),
+        clearTimeout: (id) => this.window.clearTimeout(id),
+        warn: (message) => this.warn(message),
+      },
+    )
+
+    shown.players.set(element, player)
+    player.play()
+  }
+
   private discard(urls: string[]): void {
     urls.forEach((url) => URL.revokeObjectURL(url))
   }
@@ -1373,6 +1468,7 @@ export class BmlRuntime {
     this.stopTimers()
     this.stopNudging()
     this.locked.clear()
+    this.shown?.players.forEach((player) => player.stop())
     this.shown?.urls.forEach((url) => URL.revokeObjectURL(url))
     this.shown = null
     this.plane.replaceChildren()

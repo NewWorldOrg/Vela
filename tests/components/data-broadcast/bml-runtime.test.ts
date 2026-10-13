@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
-import { BmlRuntime } from '@/components/data-broadcast/bml-runtime'
+import {
+  BmlRuntime,
+  type RuntimeOptions,
+} from '@/components/data-broadcast/bml-runtime'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { ReceiverId } from '@/lib/bml/line'
 import {
@@ -13,15 +16,29 @@ import {
   type RuntimeMessage,
 } from '@/lib/bml/messages'
 import type { BmlModule, ResourceKind } from '@/lib/bml/resources'
+import { FOREVER } from '@/lib/bml/mng'
 import {
+  FakeBitmap,
   fakeFrame,
   vmEvaluator,
+  type FakeCanvas,
   type FakeElement,
 } from '@/tests/components/data-broadcast/frame-fakes'
+import {
+  MEND,
+  chunk,
+  fram,
+  mhdr,
+  mng,
+  picture,
+  term,
+} from '@/tests/lib/bml/mng-files'
 
 const VELA = 'https://vela.example'
 
-function frame(options: { drawFails?: boolean } = {}) {
+function frame(
+  options: { drawFails?: boolean; decode?: RuntimeOptions['decode'] } = {},
+) {
   const made = fakeFrame(VELA)
   const runtime = new BmlRuntime(
     made.window,
@@ -35,6 +52,7 @@ function frame(options: { drawFails?: boolean } = {}) {
             throw new Error('cannot draw')
           }
         : undefined,
+      decode: options.decode,
     },
   )
   const send = (
@@ -2233,4 +2251,150 @@ test('a start the player would not take leaves the documents as they are and is 
 
   assert.deepEqual(runtime.heard(), [{ kind: 'unopened' }])
   assert.notEqual(runtime.plane.childNodes.length, 0)
+})
+
+const LAMP = mng(
+  mhdr(40, 30, 100),
+  term(3, 0, 0, FOREVER),
+  fram({ mode: 1, delay: 10, lasting: true }),
+  picture(40, 30),
+  picture(40, 30),
+  MEND,
+)
+
+const BROKEN = mng(mhdr(40, 30, 100), picture(40, 30), MEND)
+
+BROKEN[BROKEN.length - 14] ^= 0xff
+
+const STILL = mng(
+  mhdr(20, 20, 100),
+  chunk('tEXt', Buffer.from('a\0b')),
+  picture(20, 20),
+  MEND,
+)
+
+/** A frame whose pictures decode into named fakes, with the document and its MNGs handed to it and opened. */
+function withMng(startup: string) {
+  const bitmaps: FakeBitmap[] = []
+  const opening = frame({
+    decode: async () => {
+      bitmaps.push(new FakeBitmap(`#${bitmaps.length}`))
+
+      return bitmaps[bitmaps.length - 1]
+    },
+  })
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: {
+      tag: 0x40,
+      id: 0,
+      version: 1,
+      resources: [
+        { path: 'startup.bml', kind: 'bml', body: text(startup) },
+        { path: 'lamp.mng', kind: 'binary', body: LAMP },
+        { path: 'still.mng', kind: 'binary', body: STILL },
+        { path: 'broken.mng', kind: 'binary', body: BROKEN },
+      ],
+    },
+  })
+  opening.send({
+    kind: 'module',
+    module: module(1, { 'next.bml': ['bml', NEXT] }),
+  })
+  opening.send({ kind: 'open' })
+
+  return { ...opening, bitmaps }
+}
+
+const decoded = () => new Promise((resolve) => setImmediate(resolve))
+
+test('an MNG in the document plays on a canvas in its place, and leaving the document stops it and lets its pictures go', async () => {
+  const { element, timers, bitmaps, send, warnings } = withMng(
+    bml(
+      '<object id="lamp" type="image/X-arib-mng" data="lamp.mng" style="left: 10px; top: 10px; width: 40px; height: 30px"/>' +
+        '<a id="next" href="~/0001/next.bml" style="nav-index: 0">next</a>',
+    ),
+  )
+
+  await decoded()
+
+  const canvas = element('lamp') as FakeCanvas
+
+  assert.equal(canvas.tagName, 'CANVAS')
+  assert.equal(canvas.getAttribute('data-bml-tag'), 'object')
+  assert.equal(canvas.width, 40)
+  assert.deepEqual(canvas.surface.drawn, [
+    'clear 0,0,40,30',
+    '#0 at 0,0 in 0,0,40,30',
+  ])
+
+  timers.tick(100)
+
+  assert.equal(canvas.surface.drawn.at(-1), '#1 at 0,0 in 0,0,40,30')
+  assert.equal(
+    bitmaps.some((bitmap) => bitmap.closed),
+    false,
+  )
+
+  send({ kind: 'key', key: 'enter' })
+  timers.tick(100)
+
+  assert.equal(element('lamp'), null)
+  assert.equal(canvas.surface.drawn.length, 3)
+  assert.equal(
+    bitmaps.every((bitmap) => bitmap.closed),
+    true,
+  )
+  assert.deepEqual(warnings, [])
+})
+
+test('a script that gives the canvas another MNG plays that one in place of the first, which lets its pictures go', async () => {
+  const { element, bitmaps, send, warnings } = withMng(
+    bml(
+      '<object id="lamp" type="image/X-arib-mng" data="lamp.mng"/>' +
+        '<p id="swap" onclick="swap()" style="nav-index: 0">swap</p>',
+      '<script>function swap() { document.getElementById("lamp").data = "still.mng" }</script>',
+    ),
+  )
+
+  await decoded()
+  send({ kind: 'key', key: 'enter' })
+  await decoded()
+
+  const canvas = element('lamp') as FakeCanvas
+
+  assert.equal(canvas.width, 20)
+  assert.equal(canvas.surface.drawn.at(-1), '#2 at 0,0 in 0,0,20,20')
+  assert.deepEqual(
+    bitmaps.map((bitmap) => bitmap.closed),
+    [true, true, false],
+  )
+  assert.deepEqual(warnings, ['data broadcast: unsupported MNG chunk: tEXt'])
+})
+
+test('a script that gives the canvas what is not an MNG, a malformed one or nothing at all is a warning, and the MNG plays on', async () => {
+  const { element, bitmaps, send, warnings } = withMng(
+    bml(
+      '<object id="lamp" type="image/X-arib-mng" data="lamp.mng"/>' +
+        '<p id="swap" onclick="swap()" style="nav-index: 0">swap</p>',
+      '<script>function swap() { var lamp = document.getElementById("lamp"); lamp.data = "startup.bml"; lamp.data = "broken.mng"; lamp.data = "none.mng" }</script>',
+    ),
+  )
+
+  await decoded()
+  send({ kind: 'key', key: 'enter' })
+  await decoded()
+
+  assert.equal((element('lamp') as FakeCanvas).width, 40)
+  assert.equal(
+    bitmaps.some((bitmap) => bitmap.closed),
+    false,
+  )
+  assert.deepEqual(warnings, [
+    'data broadcast: unsupported image: startup.bml',
+    'data broadcast: malformed MNG: broken.mng (a CRC that does not match in IEND)',
+    'data broadcast: missing image: none.mng',
+  ])
 })

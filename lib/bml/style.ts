@@ -791,7 +791,7 @@ export const BASE_STYLE = [
   '[data-bml-tag="body"][data-bml-attr-invisible] { visibility: hidden; }',
   '[data-bml-tag="div"], [data-bml-tag="p"], [data-bml-tag="object"], [data-bml-tag="img"], [data-bml-tag="input"] { position: absolute; overflow: hidden; }',
   '[data-bml-video] { background: transparent !important; }',
-  'img[data-bml-tag] { display: block; }',
+  'img[data-bml-tag], canvas[data-bml-tag] { display: block; }',
   'input[data-bml-tag] { background: transparent; color: inherit; font: inherit; outline: none; }',
 ].join('\n')
 

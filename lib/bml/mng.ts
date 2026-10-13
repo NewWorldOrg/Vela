@@ -87,7 +87,7 @@ export interface MngAnimation {
 }
 
 export type MngReading =
-  | { read: 'mng'; animation: MngAnimation; ignored: string[] }
+  | { read: 'mng'; mng: MngAnimation; ignored: string[] }
   | { read: 'malformed'; why: string }
 
 /** An image drawn at its place, inside the boundaries it is clipped to. */
@@ -535,7 +535,7 @@ export function readMng(bytes: Uint8Array): MngReading {
       if (reading.take(chunk)) {
         return {
           read: 'mng',
-          animation: reading.animation(),
+          mng: reading.animation(),
           ignored: [...reading.ignored],
         }
       }

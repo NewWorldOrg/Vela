@@ -13,6 +13,15 @@ import {
 } from '@/lib/bml/document'
 import { pathOf, type BmlAddress } from '@/lib/bml/paths'
 import type { BmlResource, ResourceKind } from '@/lib/bml/resources'
+import {
+  MEND,
+  chunk,
+  fram,
+  indexedPicture,
+  mhdr,
+  mng,
+  picture,
+} from '@/tests/lib/bml/mng-files'
 
 const parser = new DOMParser({
   onError: (level: string, message: string) => {
@@ -346,16 +355,105 @@ test('an image that is not there or is not a picture stays an img without a sour
     assert.equal(attribute(byId(page, id), 'src'), undefined, id)
   }
 
-  for (const id of ['mng', 'other']) {
-    assert.equal(byId(page, id).tag, 'div', id)
-  }
+  assert.equal(byId(page, 'mng').tag, 'img')
+  assert.equal(attribute(byId(page, 'mng'), 'src'), undefined)
+  assert.equal(byId(page, 'other').tag, 'div')
 
   assert.deepEqual(page.warnings, [
     'missing image: none.jpg',
     'unsupported image: s.css',
-    'unsupported object: image/x-arib-mng',
+    'unsupported image: m.mng',
     'unsupported object: application/x-arib-x',
   ])
+})
+
+test('an MNG, named by an object of its type or by an img, is drawn on a canvas that carries the animation read from it in the document’s palette', () => {
+  const lamp = mng(
+    mhdr(40, 30),
+    fram({ mode: 1, delay: 10 }),
+    picture(40, 30),
+    picture(20, 10),
+    MEND,
+  )
+  const dot = mng(mhdr(1, 1), indexedPicture(), MEND)
+  const page = read(
+    bml(
+      '<object id="o" type="image/X-arib-mng" data="lamp.mng" style="left: 4px; width: 40px; height: 30px"/><img id="i" src="~/0001/dot.mng"/>',
+    ),
+    resourcesOf({
+      '/40/0000/lamp.mng': ['binary', lamp],
+      '/40/0001/dot.mng': ['binary', dot],
+    }),
+  )
+  const object = byId(page, 'o')
+  const img = byId(page, 'i')
+
+  assert.equal(object.tag, 'canvas')
+  assert.equal(object.bmlTag, 'object')
+  assert.equal(object.style, 'left: 4px; width: 40px; height: 30px')
+  assert.equal(attribute(object, 'data-bml-ref'), 'lamp.mng')
+  assert.equal(attribute(object, 'src'), undefined)
+  assert.equal(object.mng?.width, 40)
+  assert.equal(object.mng?.images.length, 2)
+  assert.equal(img.tag, 'canvas')
+  assert.equal(img.bmlTag, 'img')
+  assert.equal(attribute(img, 'data-bml-ref'), '~/0001/dot.mng')
+  assert.notEqual(Buffer.from(img.mng?.images[0].png ?? []).indexOf('PLTE'), -1)
+  assert.deepEqual(page.warnings, [])
+})
+
+test('a malformed MNG is not drawn and says why, and each chunk type an MNG holds that is not drawn is named once for the document', () => {
+  const broken = mng(mhdr(40, 30), picture(40, 30), MEND)
+  const noted = mng(
+    mhdr(40, 30),
+    chunk('tEXt', Buffer.from('a\0b')),
+    picture(40, 30),
+    MEND,
+  )
+
+  broken[broken.length - 14] ^= 0xff
+
+  const page = read(
+    bml(
+      '<object id="broken" type="image/X-arib-mng" data="broken.mng"/><object id="a" type="image/X-arib-mng" data="noted.mng"/><img id="b" src="noted.mng"/>',
+    ),
+    resourcesOf({
+      '/40/0000/broken.mng': ['binary', broken],
+      '/40/0000/noted.mng': ['binary', noted],
+    }),
+  )
+
+  assert.equal(byId(page, 'broken').tag, 'img')
+  assert.equal(byId(page, 'broken').mng, undefined)
+  assert.equal(attribute(byId(page, 'broken'), 'src'), undefined)
+  assert.equal(byId(page, 'a').tag, 'canvas')
+  assert.equal(byId(page, 'b').tag, 'canvas')
+  assert.deepEqual(page.warnings, [
+    'malformed MNG: broken.mng (a CRC that does not match in IEND)',
+    'unsupported MNG chunk: tEXt',
+  ])
+})
+
+test('an MNG counts against the document’s images and their bytes', () => {
+  const lamp = mng(mhdr(40, 30), picture(40, 30), MEND)
+  const many = Array.from(
+    { length: BML_LIMITS.images + 1 },
+    (_, at) => `<img src="lamp.mng" id="m${at}"/>`,
+  ).join('')
+  const root = parseBml(bml(many), parser)
+
+  assert.ok(root)
+  assert.deepEqual(
+    convertBml(root, {
+      address: ADDRESS,
+      lookup: (address) =>
+        pathOf(address) === '/40/0000/lamp.mng'
+          ? { path: 'lamp.mng', kind: 'binary', body: lamp }
+          : undefined,
+      image: () => null,
+    }),
+    { read: 'malformed', why: 'too many images' },
+  )
 })
 
 test('a background image in the style sheet or inline is drawn from the document’s resources and counted with its images', () => {
