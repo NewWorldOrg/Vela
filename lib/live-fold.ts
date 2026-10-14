@@ -30,16 +30,17 @@ export function foldColumn(
   return 'w-11 transition-[width] duration-300 ease-fold still:transition-none'
 }
 
+/** A band slides out by its own width and the 6px its clip keeps for rings and shadows, so no edge of it is left standing at the column's side. */
 export function foldBand(motion: FoldMotion | undefined): string {
   if (motion === undefined || motion.phase === 'still') {
     return 'translate-x-0'
   }
 
   if (motion.phase === 'opening') {
-    return 'translate-x-0 starting:translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold still:transition-none'
+    return 'translate-x-0 starting:translate-x-[calc(min(100%,344rem/16)+6rem/16)] transition-[translate] duration-300 ease-fold still:transition-none'
   }
 
-  return 'translate-x-[min(100%,calc(344rem/16))] transition-[translate] duration-300 ease-fold still:transition-none'
+  return 'translate-x-[calc(min(100%,344rem/16)+6rem/16)] transition-[translate] duration-300 ease-fold still:transition-none'
 }
 
 export function foldBandDelay(

@@ -44,12 +44,12 @@ test('a remembered fold is drawn, not played', () => {
 test('a band arrives from the fold side and leaves the same way', () => {
   assert.match(
     foldBand(OPENING),
-    /starting:translate-x-\[min\(100%,calc\(344rem\/16\)\)\]/,
+    /starting:translate-x-\[calc\(min\(100%,344rem\/16\)\+6rem\/16\)\]/,
   )
   assert.match(foldBand(OPENING), /(^|\s)translate-x-0(\s|$)/)
   assert.match(
     foldBand(CLOSING),
-    /(^|\s)translate-x-\[min\(100%,calc\(344rem\/16\)\)\](\s|$)/,
+    /(^|\s)translate-x-\[calc\(min\(100%,344rem\/16\)\+6rem\/16\)\](\s|$)/,
   )
   assert.doesNotMatch(foldBand(CLOSING), /starting:/)
 })
