@@ -20,6 +20,7 @@ import {
 } from '@/lib/live-wire'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { askedForLessMotion } from '@/stories/asked-for-less-motion'
+import { slidOutWhole } from '@/stories/slid-out-whole'
 import {
   AN_IPAD,
   browsingAs,
@@ -2186,6 +2187,7 @@ export const 一覧を畳む: Story = {
     const wide = asideWidth(canvasElement)
 
     await userEvent.click(fold)
+    await slidOutWhole(fold.closest('aside')!)
 
     await expect(fold).toHaveAttribute('aria-expanded', 'false')
     await expect(cookieIn(document.cookie, LIVE_CHANNELS_FOLDED)).toBe('folded')

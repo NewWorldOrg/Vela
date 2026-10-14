@@ -46,6 +46,7 @@ import {
 import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { slidOutWhole } from '@/stories/slid-out-whole'
 import {
   DATA_BROADCAST_CATALOG,
   HYBRIDCAST_AIT,
@@ -500,41 +501,6 @@ async function columnAtRest(canvasElement: HTMLElement) {
   )
 }
 
-/** Runs the slide of the remote and of the head over it to its end while the column has yet to narrow, finds no edge of either left inside its clip, then lets the fold settle. */
-async function slidOutWhole(canvasElement: HTMLElement) {
-  const column = theColumn(canvasElement)
-  const running = column.getAnimations({ subtree: true })
-  const slides = running.filter(
-    (one) =>
-      one instanceof CSSTransition && one.transitionProperty === 'translate',
-  )
-  const bands = [
-    column.querySelector('[data-slot="column-switch"] > div > div'),
-    column.querySelector('[data-slot="remote-slot"]'),
-  ]
-
-  await expect(slides.length).toBeGreaterThan(0)
-  for (const one of running) {
-    one.pause()
-  }
-  for (const one of slides) {
-    one.currentTime = one.effect?.getComputedTiming().endTime ?? 0
-  }
-
-  for (const band of bands) {
-    const clip = band!.parentElement!
-    const margin = /([\d.]+)px/.exec(getComputedStyle(clip).overflowClipMargin)
-
-    await expect(band!.getBoundingClientRect().left).toBeGreaterThanOrEqual(
-      clip.getBoundingClientRect().right + Number(margin?.[1] ?? 0) - 0.5,
-    )
-  }
-
-  for (const one of running) {
-    one.finish()
-  }
-}
-
 /** Waits for the column to have taken the remote away, once a fold or a swap has settled. */
 async function remoteGone(canvasElement: HTMLElement) {
   await waitFor(
@@ -796,7 +762,7 @@ export const リモコンを出したまま畳む: Story = {
     await userEvent.click(
       within(column).getByRole('button', { name: 'チャンネル一覧' }),
     )
-    await slidOutWhole(canvasElement)
+    await slidOutWhole(column)
     await columnAtRest(canvasElement)
 
     await expect(
