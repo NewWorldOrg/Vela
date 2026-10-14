@@ -113,3 +113,102 @@ test('the receiver script the relay puts into every page it hands over is taken 
     `<script src="${relayed('https://hc.example.jp/data/app.js')}"></script>`,
   )
 })
+
+test('an attribute written right after a quoted value or after a slash is pointed, as the browser reads it', () => {
+  assert.equal(
+    pointedMarkup('<img alt="x"src="https://t.example/p.png">', point),
+    `<img alt="x"src="${relayed('https://t.example/p.png')}">`,
+  )
+  assert.equal(
+    pointedMarkup('<img/src=https://t.example/p.png>', point),
+    `<img/src="${relayed('https://t.example/p.png')}">`,
+  )
+  assert.equal(
+    pointedMarkup("<img alt='x'/src='a.png'/><a\nhref=b.html>", point),
+    `<img alt='x'/src="${relayed('https://hc.example.jp/home/a.png')}"/><a\nhref="${relayed('https://hc.example.jp/home/b.html')}">`,
+  )
+})
+
+test('a quote inside a value written without quotes, or inside a name, opens nothing, as the browser reads it', () => {
+  assert.equal(
+    pointedMarkup("<img title=it's src=https://t.example/p.png>", point),
+    `<img title=it's src="${relayed('https://t.example/p.png')}">`,
+  )
+  assert.equal(
+    pointedMarkup('<img a"b src=https://t.example/p.png>', point),
+    `<img a"b src="${relayed('https://t.example/p.png')}">`,
+  )
+})
+
+test('text the browser never reads as markup is left alone, and the markup after it is pointed', () => {
+  assert.equal(
+    pointedMarkup(
+      "<!-- <b title=' --><img src=https://t.example/p.png><textarea><img title='</textarea><img src=https://t.example/q.png>'",
+      point,
+    ),
+    `<!-- <b title=' --><img src="${relayed('https://t.example/p.png')}"><textarea><img title='</textarea><img src="${relayed('https://t.example/q.png')}">'`,
+  )
+  assert.equal(
+    pointedMarkup(
+      "<script>if (a<b) { s = '</script ><img src=https://t.example/p.png>' }</script>",
+      point,
+    ),
+    `<script>if (a<b) { s = '</script ><img src="${relayed('https://t.example/p.png')}">' }</script>`,
+  )
+  assert.equal(
+    pointedMarkup('<title><img src=a.png></title>', point),
+    '<title><img src=a.png></title>',
+  )
+})
+
+test('the imports and the url() of a style element written in markup are pointed', () => {
+  assert.equal(
+    pointedMarkup(
+      `<style>@import "a.css"; @import url('/b.css') screen; .m { background: url(m.png) }</style><p>`,
+      point,
+    ),
+    `<style>@import "${relayed('https://hc.example.jp/home/a.css')}"; @import url("${relayed('https://hc.example.jp/b.css')}") screen; .m { background: url("${relayed('https://hc.example.jp/home/m.png')}") }</style><p>`,
+  )
+})
+
+test('an import written as a string is pointed, as one written with url() is', () => {
+  assert.equal(
+    pointedStyle(`@import 'a.css';@import "data:text/css,x";`, point),
+    `@import "${relayed('https://hc.example.jp/home/a.css')}";@import "data:text/css,x";`,
+  )
+})
+
+test('the xlink:href of SVG is pointed, and one that is only a fragment is left as it is', () => {
+  assert.equal(
+    pointedMarkup(
+      '<svg><use xlink:href="#icon"/><use XLINK:HREF="sprite.svg#a"/><image xlink:href=https://t.example/i.png /></svg>',
+      point,
+    ),
+    `<svg><use xlink:href="#icon"/><use XLINK:HREF="${relayed('https://hc.example.jp/home/sprite.svg')}#a"/><image xlink:href="${relayed('https://t.example/i.png')}" /></svg>`,
+  )
+})
+
+test('markup written into a style element is its style, and into one whose text is never markup it is left as it is', () => {
+  assert.equal(
+    pointedMarkup('@import "a.css"', point, 'style'),
+    `@import "${relayed('https://hc.example.jp/home/a.css')}"`,
+  )
+  assert.equal(
+    pointedMarkup('<img src=a.png>', point, 'textarea'),
+    '<img src=a.png>',
+  )
+  assert.equal(
+    pointedMarkup('<img src=a.png>', point, 'div'),
+    `<img src="${relayed('https://hc.example.jp/home/a.png')}">`,
+  )
+})
+
+test('an address written with numeric character references is read as the browser reads it', () => {
+  assert.equal(
+    pointedMarkup(
+      '<img src="https&#58;//t.example&#x2F;p.png"><img src=&#x2f;q.png>',
+      point,
+    ),
+    `<img src="${relayed('https://t.example/p.png')}"><img src="${relayed('https://hc.example.jp/q.png')}">`,
+  )
+})

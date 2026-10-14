@@ -333,6 +333,98 @@
           ? 'relayed'
           : painted.style.backgroundImage,
       )
+      // Markup as a minifier writes it, with no space before an attribute, an Audio made with its address, and the address in an SVG's xlink:href are pointed as they are written.
+      var joined = document.createElement('div')
+      joined.innerHTML = '<img alt="x"src="/hc/m1.png"><img/src=/hc/m2.png>'
+      var joinedImages = joined.querySelectorAll('img')
+      say(
+        'joined',
+        onTheRelay(
+          joinedImages[0].getAttribute('src'),
+          'http://example.test/hc/m1.png',
+        ) &&
+          onTheRelay(
+            joinedImages[1].getAttribute('src'),
+            'http://example.test/hc/m2.png',
+          )
+          ? 'relayed'
+          : joined.innerHTML,
+      )
+      var tune = new Audio('/hc/tune.mp3')
+      say(
+        'audio',
+        tune instanceof Audio &&
+          onTheRelay(
+            tune.getAttribute('src'),
+            'http://example.test/hc/tune.mp3',
+          )
+          ? 'relayed'
+          : tune.getAttribute('src'),
+      )
+      var XLINK = 'http://www.w3.org/1999/xlink'
+      var icon = document.createElementNS('http://www.w3.org/2000/svg', 'use')
+      icon.setAttributeNS(XLINK, 'xlink:href', '/hc/sprite.svg#a')
+      var drawn = document.createElement('div')
+      drawn.innerHTML = '<svg><image xlink:href="/hc/i.png" /></svg>'
+      say(
+        'xlink',
+        onTheRelay(
+          icon.getAttributeNS(XLINK, 'href'),
+          'http://example.test/hc/sprite.svg',
+        ) &&
+          onTheRelay(
+            drawn.querySelector('image').getAttributeNS(XLINK, 'href'),
+            'http://example.test/hc/i.png',
+          )
+          ? 'relayed'
+          : icon.getAttributeNS(XLINK, 'href'),
+      )
+      // The imports and the url() of a style element's text are pointed, set as its text, written as markup, added to it later or inserted as a rule.
+      var sheetText = document.createElement('style')
+      sheetText.textContent =
+        '@import "/hc/a.css"; .x { background: url(/hc/b.png) }'
+      var sheetMarkup = document.createElement('style')
+      sheetMarkup.innerHTML = '@import url(/hc/a.css);'
+      var sheetHolder = document.createElement('div')
+      sheetHolder.innerHTML = '<style>@import "/hc/a.css";</style>'
+      say(
+        'style-text',
+        onTheRelay(sheetText.textContent, 'http://example.test/hc/a.css') &&
+          onTheRelay(sheetText.textContent, 'http://example.test/hc/b.png') &&
+          onTheRelay(sheetMarkup.textContent, 'http://example.test/hc/a.css') &&
+          onTheRelay(sheetHolder.textContent, 'http://example.test/hc/a.css')
+          ? 'relayed'
+          : [
+              sheetText.textContent,
+              sheetMarkup.textContent,
+              sheetHolder.textContent,
+            ].join(' | '),
+      )
+      var ruled = document.createElement('style')
+      document.head.appendChild(ruled)
+      ruled.sheet.insertRule('.rule { background: url(/hc/rule.png) }', 0)
+      say(
+        'style-rule',
+        onTheRelay(
+          ruled.sheet.cssRules[0].cssText,
+          'http://example.test/hc/rule.png',
+        )
+          ? 'relayed'
+          : ruled.sheet.cssRules[0].cssText,
+      )
+      var later = document.createElement('style')
+      document.head.appendChild(later)
+      later.appendChild(
+        document.createTextNode('.later { background: url(/hc/later.png) }'),
+      )
+      setTimeout(function () {
+        say(
+          'style-later',
+          onTheRelay(later.textContent, 'http://example.test/hc/later.png')
+            ? 'relayed'
+            : later.textContent,
+        )
+      }, 50)
       // A fragment the application fetches carries the receiver script the relay puts into every page; building markup from it leaves the script out.
       fetch('/hc/components/item.html').then(function (answer) {
         return answer.text().then(function (text) {
@@ -369,6 +461,21 @@
         },
         function (error) {
           say('rom-play', error.name)
+        },
+      )
+      var chime = new Audio('romsound://5')
+      say(
+        'rom-audio',
+        chime.getAttribute('src').indexOf('blob:') === 0
+          ? 'quiet'
+          : chime.getAttribute('src'),
+      )
+      chime.play().then(
+        function () {
+          say('rom-audio-play', 'played')
+        },
+        function (error) {
+          say('rom-audio-play', error.name)
         },
       )
       var image = document.createElement('img')

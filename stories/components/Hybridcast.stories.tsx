@@ -278,6 +278,12 @@ export const 届かないもの: Story = {
     await expect(app).toHaveAttribute('data-new-image', 'relayed')
     await expect(app).toHaveAttribute('data-markup', 'relayed')
     await expect(app).toHaveAttribute('data-style', 'relayed')
+    await expect(app).toHaveAttribute('data-joined', 'relayed')
+    await expect(app).toHaveAttribute('data-audio', 'relayed')
+    await expect(app).toHaveAttribute('data-xlink', 'relayed')
+    await expect(app).toHaveAttribute('data-style-text', 'relayed')
+    await expect(app).toHaveAttribute('data-style-rule', 'relayed')
+    await reported(app, 'style-later', 'relayed')
     await reported(app, 'fragment', 'clean')
   },
 }
@@ -574,6 +580,9 @@ export const 受信機の内蔵の音: Story = {
     await expect(app).toHaveAttribute('data-rom-source', 'quiet')
     await expect(app).toHaveAttribute('data-rom-src', 'quiet')
     await expect(app).toHaveAttribute('data-rom-play', 'played')
+    await reported(app, 'rom-audio-play')
+    await expect(app).toHaveAttribute('data-rom-audio', 'quiet')
+    await expect(app).toHaveAttribute('data-rom-audio-play', 'played')
     await waitFor(() =>
       expect(app.getAttribute('data-heard')).toContain('romsound'),
     )
