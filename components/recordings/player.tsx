@@ -1077,26 +1077,30 @@ export function Player({
   const bandUnderTheBox = faceShown && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
   const overThePicture = faceShown && place === 'over'
+  const beside = faceShown && place === 'column'
+  const widest = widestColumn(place, underTheBox, rowHeight)
   const barSaid: PlayerSaying | null = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' }
     : said
 
   if (phase === 'broken') {
     return (
-      <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
-        <PlaybackFaultNotice
-          detail={d}
-          plan={plan}
-          fault={fault}
-          onRetry={() => play(position)}
-          onTakeTicket={onTakeTicket}
-        />
-      </div>
+      <PlaybackFaultNotice
+        detail={d}
+        plan={plan}
+        fault={fault}
+        onRetry={() => play(position)}
+        onTakeTicket={onTakeTicket}
+      />
     )
   }
 
   return (
-    <div className="mx-[calc(30rem/16)] flex items-start max-[1060px]:mx-5 max-[700px]:mx-3.5">
+    <div
+      data-slot="player-row"
+      data-remote={beside ? 'beside' : undefined}
+      className="flex items-start justify-center"
+    >
       <section
         ref={setShell}
         data-full={full ? 'true' : undefined}
@@ -1110,10 +1114,8 @@ export function Player({
         }}
         onKeyDown={onKeyDown}
         data-up={chromeUp ? 'true' : undefined}
-        style={{
-          maxWidth: widestColumn(place, underTheBox, rowHeight),
-        }}
-        className={cn(PLAYER_BOARD, 'min-w-0 flex-1')}
+        style={{ maxWidth: widest, width: beside ? widest : undefined }}
+        className={cn(PLAYER_BOARD, 'min-w-0', beside && 'mx-0')}
       >
         <div
           data-slot="player-face"
@@ -1568,8 +1570,7 @@ export function Player({
             onAim={aimAtTheKeypad}
           />
         )}
-        {faceShown &&
-          place === 'column' &&
+        {beside &&
           remoteSlot &&
           createPortal(
             <DataBroadcastRemote

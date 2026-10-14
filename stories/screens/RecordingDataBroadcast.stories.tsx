@@ -243,13 +243,39 @@ function infoWidth(canvasElement: HTMLElement): number {
   return (meta.parentElement as HTMLElement).getBoundingClientRect().width
 }
 
-/** The right end of the page's content, where the column stands: the edge the programme's information is laid out to. */
-function pageRight(canvasElement: HTMLElement): number {
-  const meta = onTheScreen(canvasElement, 'watch-meta')
+/** Where the page lays its content out: inside the main area's gutters. */
+function thePage(canvasElement: HTMLElement): { left: number; right: number } {
+  const main = onTheScreen(canvasElement, 'screen-main')
+  const { left, right } = main.getBoundingClientRect()
+  const style = getComputedStyle(main)
 
-  return (
-    meta.parentElement?.parentElement as HTMLElement
-  ).getBoundingClientRect().right
+  return {
+    left: left + parseFloat(style.paddingLeft),
+    right: right - parseFloat(style.paddingRight),
+  }
+}
+
+async function within1(got: number, want: number) {
+  await expect(Math.abs(got - want)).toBeLessThanOrEqual(1)
+}
+
+/** One column for the page while the remote stands beside the box: the link back, the box and the programme's information start at the same left edge, the information runs to the right edge of the column beside the box, and the whole is centred in the page. */
+async function oneColumn(canvasElement: HTMLElement) {
+  const link = within(canvasElement)
+    .getByRole('link', { name: 'ライブラリへ' })
+    .getBoundingClientRect()
+  const box = onTheScreen(canvasElement, 'player').getBoundingClientRect()
+  const info = (
+    onTheScreen(canvasElement, 'watch-meta').parentElement as HTMLElement
+  ).getBoundingClientRect()
+  const side = columnOn(canvasElement).getBoundingClientRect()
+  const page = thePage(canvasElement)
+
+  await within1(link.left, box.left)
+  await within1(info.left, box.left)
+  await within1(info.right, side.right)
+  await near(side.left - box.right, rem(GAP))
+  await within1(box.left - page.left, page.right - side.right)
 }
 
 async function closedFaceWidth(canvasElement: HTMLElement): Promise<number> {
@@ -328,7 +354,7 @@ async function inTheColumn(canvasElement: HTMLElement, closedWidth: number) {
   ).toHaveLength(1)
   await near(side.width, rem(COLUMN))
   await near(card.right, side.right)
-  await near(side.right, pageRight(canvasElement))
+  await oneColumn(canvasElement)
   await near(side.left - shell.right, rem(GAP))
   await near(side.top, shell.top)
   await expect(face.width).toBeLessThan(closedWidth)
@@ -360,7 +386,10 @@ export const 開くと右の列にリモコンが出る: Story = {
     const remote = await inTheColumn(canvasElement, closed)
     const player = onTheScreen(canvasElement, 'player')
 
-    await near(infoWidth(canvasElement), info)
+    await within1(
+      player.getBoundingClientRect().left,
+      thePage(canvasElement).left,
+    )
     await expect(infoWidth(canvasElement)).toBeGreaterThan(
       faceWidth(canvasElement),
     )
@@ -437,7 +466,7 @@ export const 畳むと細い列になりもう一度押すとリモコンが戻�
     await expect(toggle).toHaveAttribute('aria-pressed', 'true')
     await remoteGone(canvasElement)
     await near(column.getBoundingClientRect().width, rem(RAIL))
-    await near(column.getBoundingClientRect().right, pageRight(canvasElement))
+    await oneColumn(canvasElement)
     await expect(faceWidth(canvasElement)).toBeGreaterThan(open)
     await expect(
       canvasElement.querySelector('[data-slot="data-broadcast-band"]'),
@@ -619,6 +648,7 @@ export const 背の低い窓で畳んでも番組の情報は動かない: Story
     await columnAtRest(canvasElement)
     await remoteGone(canvasElement)
     await near(meta.getBoundingClientRect().top, top)
+    await oneColumn(canvasElement)
 
     await userEvent.click(fold)
     await inTheColumn(canvasElement, closed)

@@ -316,7 +316,7 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="bg-bg py-6">
-        <ScreenMain>
+        <ScreenMain className="px-[calc(30rem/16)] max-[1060px]:px-5 max-[700px]:px-3.5">
           <Story />
         </ScreenMain>
       </div>
