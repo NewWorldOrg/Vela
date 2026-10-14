@@ -46,6 +46,7 @@ import {
 import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { slidOutWhole } from '@/stories/slid-out-whole'
 import {
   DATA_BROADCAST_CATALOG,
   HYBRIDCAST_AIT,
@@ -761,6 +762,7 @@ export const リモコンを出したまま畳む: Story = {
     await userEvent.click(
       within(column).getByRole('button', { name: 'チャンネル一覧' }),
     )
+    await slidOutWhole(column)
     await columnAtRest(canvasElement)
 
     await expect(
