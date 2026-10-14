@@ -10,6 +10,7 @@ const THE_SUITE = [
   'tests/app/a-fold-comes-with-the-page.test.ts',
   'tests/app/the-app-goes-on-the-home-screen.test.ts',
   'tests/app/the-curtain-comes-with-the-page.test.ts',
+  'tests/app/the-frames-stay-on-vela.test.ts',
   'tests/app/the-system-theme-needs-no-script.test.ts',
   'tests/components/a-face-keeps-its-words-while-it-closes.test.ts',
   'tests/components/data-broadcast/bml-runtime.test.ts',
