@@ -287,6 +287,7 @@ function keepTheName(
 function giveTheStationLocation(frame: Frame, leave: (to: URL) => void): void {
   const { window, relay } = frame
   const nav: StationNavigation = {
+    relay,
     station: frame.station,
     inside: frame.inside,
     go: (target, how) =>

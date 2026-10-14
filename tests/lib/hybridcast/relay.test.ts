@@ -7,6 +7,7 @@ import {
   relayedTarget,
   routeRequest,
   routeSocket,
+  writtenTarget,
   type AppRelay,
 } from '@/lib/hybridcast/relay'
 
@@ -171,5 +172,30 @@ test('a WebSocket inside the boundary is carried by the relay on the same scheme
     {
       to: 'refused',
     },
+  )
+})
+
+test("a relay address written without Vela's origin, as the relay writes it into the markup, is the broadcaster URL it names", () => {
+  assert.deepEqual(
+    routeRequest(
+      relayed('http://hc.example.test/img.png'),
+      RELAY,
+      DOCUMENT,
+      inside,
+    ),
+    { to: 'relay', url: relayedHere('http://hc.example.test/img.png') },
+  )
+  assert.equal(
+    writtenTarget(
+      `${relayed('http://hc.example.test/p/a.html')}#x`,
+      RELAY,
+      DOCUMENT,
+    )?.href,
+    'http://hc.example.test/p/a.html#x',
+  )
+  assert.equal(
+    writtenTarget('/api/live/x?uri=http%3A%2F%2Fa.test%2F', RELAY, DOCUMENT)
+      ?.href,
+    'http://hc.example.test/api/live/x?uri=http%3A%2F%2Fa.test%2F',
   )
 })

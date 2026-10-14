@@ -81,7 +81,7 @@ export function intendedTarget(
   return new URL(`${path}${url.search}${url.hash}`, documentAt)
 }
 
-/** The broadcaster's URL an address the application wrote stands for: what it wrote resolved against the document's own URL on the broadcaster's server, unless it is whole, and then as the browser would have resolved it against the frame. */
+/** The broadcaster's URL an address the application wrote stands for: what it wrote resolved against the document's own URL on the broadcaster's server, unless it is whole, and then as the browser would have resolved it against the frame. A relay address without Vela's origin, as the relay writes it into the markup and a link's attribute reads, is the URL it names. */
 export function writtenTarget(
   written: string | URL,
   relay: AppRelay,
@@ -94,7 +94,10 @@ export function writtenTarget(
     return intendedTarget(whole, relay, documentAt)
   }
 
-  return urlOf(text, documentAt.href)
+  const onTheRelay = urlOf(text, relay.origin)
+  const relayed = onTheRelay ? relayedTarget(onTheRelay, relay) : null
+
+  return relayed ?? urlOf(text, documentAt.href)
 }
 
 /** Where a request the application makes goes: through the relay when it is for an `http:` or `https:` address inside the boundary, to the browser when it names no server, and nowhere otherwise. */

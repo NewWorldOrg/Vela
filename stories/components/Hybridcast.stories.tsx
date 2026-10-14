@@ -80,6 +80,7 @@ const KEYS: [BmlKey, string][] = [
   ['3', '3'],
   ['4', '4'],
   ['5', '5'],
+  ['6', '6'],
   ['d', 'd'],
 ]
 
@@ -521,6 +522,12 @@ export const 局の場所の_href_で移る: Story = {
 export const 局の場所を代入して移る: Story = {
   render: () => <Harness label="代入で移る" />,
   play: async ({ canvasElement }) => movedBy(canvasElement, '代入で移る', '5'),
+}
+
+export const 中継が書いたリンクの先へ局の場所で移る: Story = {
+  render: () => <Harness label="リンクの先へ移る" />,
+  play: async ({ canvasElement }) =>
+    movedBy(canvasElement, 'リンクの先へ移る', '6'),
 }
 
 export const 局の場所でバウンダリの外へ出ると閉じる: Story = {

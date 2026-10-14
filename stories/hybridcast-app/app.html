@@ -65,6 +65,12 @@
     <p id="keys"></p>
     <a id="next" href="/hc/sub/next.html" hidden>次のページ</a>
     <a id="away" href="https://elsewhere.test/" hidden>外のページ</a>
+    <a
+      id="relayed-next"
+      href="/hybridcast-app/app.html?uri=http%3A%2F%2Fexample.test%2Fhc%2Fsub%2Fnext.html"
+      hidden
+      >中継の次のページ</a
+    >
     <input id="field" aria-label="入力" />
     <audio id="rom9">
       <source src="romsound://9" type="audio/X-arib-romsound" />
@@ -419,6 +425,10 @@
         }
         if (event.which === VK_5) {
           window.__hcLocation = '/hc/sub/next.html'
+        }
+        if (event.which === VK_6) {
+          // A link the relay wrote, read whole from the link, as an application reads where a link goes and goes there itself.
+          __hcLocation.href = document.getElementById('relayed-next').href
         }
         if (event.which === VK_2) {
           // A document that says hello again for the loads to come and says it loaded, then leaves the relay by its script.

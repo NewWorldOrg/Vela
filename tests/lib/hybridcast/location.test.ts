@@ -6,11 +6,23 @@ import {
   stationLocation,
   type StationNavigation,
 } from '@/lib/hybridcast/location'
+import type { AppRelay } from '@/lib/hybridcast/relay'
+
+const RELAY: AppRelay = {
+  origin: 'https://vela.example',
+  app: '/api/live/32736-1024/data-broadcast/app/a-ticket',
+  socket: '/api/live/32736-1024/data-broadcast/ws/a-ticket',
+}
+
+function relayed(target: string): string {
+  return `${RELAY.app}?uri=${encodeURIComponent(target)}`
+}
 
 function navigation(at = 'http://hc.example.test/p/index.html?a=1#top') {
   const done: string[] = []
   let station = new URL(at)
   const nav: StationNavigation = {
+    relay: RELAY,
     station: () => station,
     inside: (address) =>
       /^https?:\/\/([a-z0-9-]+\.)*example\.(test|jp)\//.test(address),
@@ -114,5 +126,39 @@ test('assigning the location itself goes where the address says, as setting href
   assert.deepEqual(done, [
     'assign http://hc.example.test/p/other.html',
     'leave https://elsewhere.test/',
+  ])
+})
+
+test('an address the relay wrote, as a link of the document reads it, goes to the broadcaster URL it names, inside the boundary or out of it', () => {
+  const { location, done } = navigation()
+
+  location.href = `${RELAY.origin}${relayed('http://hc.example.test/p/next.html')}`
+  location.assign(relayed('https://hc.example.jp/home/?a=1'))
+  location.replace(`${RELAY.origin}${relayed('https://elsewhere.test/page')}`)
+
+  assert.deepEqual(done, [
+    'assign http://hc.example.test/p/next.html',
+    'assign https://hc.example.jp/home/?a=1',
+    'leave https://elsewhere.test/page',
+  ])
+})
+
+test('an address the relay wrote that differs from the station only in its fragment stays in the document', () => {
+  const { location, done } = navigation()
+
+  location.href = `${RELAY.origin}${relayed('http://hc.example.test/p/index.html?a=1')}#part`
+
+  assert.deepEqual(done, ['hash #part'])
+})
+
+test("an address on Vela's origin other than the relay is the same path on the broadcaster, taken beside the document when it lies beside the relay", () => {
+  const { location, done } = navigation()
+
+  location.href = `${RELAY.origin}/common/top.html`
+  location.href = `${RELAY.origin}/api/live/32736-1024/data-broadcast/app/next.html`
+
+  assert.deepEqual(done, [
+    'assign http://hc.example.test/common/top.html',
+    'assign http://hc.example.test/p/next.html',
   ])
 })

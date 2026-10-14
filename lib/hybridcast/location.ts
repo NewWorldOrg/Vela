@@ -1,8 +1,11 @@
+import { writtenTarget, type AppRelay } from '@/lib/hybridcast/relay'
+
 /** The name the relay gives `location` in the application's scripts, and `window.location`, `document.location` and the like as a property of the window. */
 export const STATION_LOCATION = '__hcLocation'
 
-/** What the application's location stands on: the station URL the frame is on now, whether an address is inside the boundary, and how the frame goes to an address through the relay, moves within its document, reloads, or leaves for the documents. */
+/** What the application's location stands on: the relay the frame is on, the station URL the frame is on now, whether an address is inside the boundary, and how the frame goes to an address through the relay, moves within its document, reloads, or leaves for the documents. */
 export interface StationNavigation {
+  relay: AppRelay
   station(): URL
   inside(address: string): boolean
   go(target: URL, how: 'assign' | 'replace'): void
@@ -17,21 +20,15 @@ function withoutHash(url: URL): string {
   return url.href.split('#')[0]
 }
 
-/** Goes where an address the application wrote says, resolved against the station: within the document when only the fragment changes, through the relay inside the boundary, and back to the documents outside it. An address that names no server is not followed. */
+/** Goes where an address the application wrote says, taken as the application meant it on the broadcaster's server as its requests are: resolved against the station, and a relay address or one on Vela's origin, as a link of the document reads it, as the broadcaster's URL it stands for. Within the document when only the fragment changes, through the relay inside the boundary, and back to the documents outside it. An address that names no server is not followed. */
 export function navigateTo(
   nav: StationNavigation,
   written: string | URL,
   how: 'assign' | 'replace',
 ): void {
-  let target: URL
+  const target = writtenTarget(written, nav.relay, nav.station())
 
-  try {
-    target = new URL(String(written), nav.station())
-  } catch {
-    return
-  }
-
-  if (!WEB.has(target.protocol)) {
+  if (!target || !WEB.has(target.protocol)) {
     return
   }
 
