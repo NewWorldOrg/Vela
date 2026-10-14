@@ -895,6 +895,22 @@ test('an NPT reference sent again is passed on once, one that moves is passed on
   ])
 })
 
+test('live, the feed keeps no time on air and tells none as the playhead moves, so the runtime reads the wall clock', () => {
+  const { feed } = quietFeed()
+  const heard: DataBroadcastChange[] = []
+
+  feed.subscribe((change) => heard.push(change))
+  feed.offer(catalogPayload(CATALOG), at(1))
+  feed.advance(5)
+  feed.advance(9)
+
+  assert.equal(feed.clock, null)
+  assert.deepEqual(
+    heard.filter((change) => change.kind === 'clock'),
+    [],
+  )
+})
+
 test('none and a reset forget the NPT references', () => {
   const { feed } = quietFeed()
 

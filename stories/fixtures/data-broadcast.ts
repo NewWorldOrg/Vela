@@ -339,6 +339,128 @@ export function scriptedModules(): BmlModule[] {
   ]
 }
 
+const READS_ITSELF = `${PROLOGUE}
+<bml>
+<head>
+<title>入口</title>
+<script><![CDATA[
+var me = browser.getActiveDocument();
+var component = me.substring(0, 4);
+var network = browser.getProgramID(3).substring(2);
+function init() { browser.launchDocument(component + "0000/face.bml", "cut"); }
+]]></script>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; visibility: hidden" onload="init()">
+<p id="nothing">入口</p>
+</body>
+</bml>`
+
+const KNOWS_HOW_FAR = `${PROLOGUE}
+<bml>
+<head>
+<title>入口</title>
+<script><![CDATA[
+function init() {
+  var into = browser.getProgramRelativeTime();
+  if (into >= 0 && into < 60) { browser.launchDocument("/40/0000/face.bml", "cut"); }
+}
+]]></script>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; visibility: hidden" onload="init()">
+<p id="nothing">入口</p>
+</body>
+</bml>`
+
+const NEAR_THE_START = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 80px; top: 120px; width: 400px; height: 225px"/>
+<p id="ask" class="panel" style="left: 520px; top: 120px; width: 400px; height: 96px; nav-index: 0" onclick="if (browser.getProgramRelativeTime() >= 100) { browser.launchDocument('face.bml', 'cut'); }">はじめの方</p>
+</body>
+</bml>`
+
+const FURTHER_ON = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 480px; top: 300px; width: 320px; height: 180px"/>
+<p id="ask" class="panel" style="left: 40px; top: 300px; width: 400px; height: 96px; nav-index: 0" onclick="if (100 > browser.getProgramRelativeTime()) { browser.launchDocument('startup.bml', 'cut'); }">先の方</p>
+</body>
+</bml>`
+
+const READ_FACE = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 80px; top: 120px; width: 400px; height: 225px"/>
+<p class="panel" style="left: 520px; top: 120px; width: 400px; height: 96px">番組と文書を読めた</p>
+</body>
+</bml>`
+
+export const PROGRAMME_READING_CATALOG: BmlCatalog = {
+  service: 1024,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'face.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+function readingModules(startup: string, face = READ_FACE): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', startup),
+        resource('face.bml', 'bml', face),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+  ]
+}
+
+/** The module of a self-made data broadcast whose entry document, at the top of its first script, reads its own path and the network of the programme, and moves on to its face only when it has both. */
+export function programmeReadingModules(): BmlModule[] {
+  return readingModules(READS_ITSELF)
+}
+
+/** The module of a self-made data broadcast whose entry document moves on to its face only when it is told it is within the first minute of the programme. */
+export function relativeTimeModules(): BmlModule[] {
+  return readingModules(KNOWS_HOW_FAR)
+}
+
+/** The module of a self-made data broadcast whose two pages, on the enter key, ask how far into the programme they are: the one for the start moves on to the one further on from the 100th second, and that one back before it. */
+export function howFarModules(): BmlModule[] {
+  return readingModules(NEAR_THE_START, FURTHER_ON)
+}
+
 const CHECKING = `${PROLOGUE}
 <bml>
 <head>

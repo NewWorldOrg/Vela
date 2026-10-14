@@ -247,6 +247,7 @@ export function Player({
           readDataBroadcast(d.id, opened.source, signal, opened.decodes),
         (placed, signal) => readDataBroadcastModule(d.id, placed, signal),
         d.service?.serviceId ?? 0,
+        Date.parse(d.startedAt) / 1000,
       ),
   )
   const [autoOpens] = useStoredFlag(
