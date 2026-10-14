@@ -7,6 +7,7 @@ import {
   foldBand,
   foldBandDelay,
   foldColumn,
+  foldColumnBeside,
   foldShown,
   type FoldMotion,
   type FoldPhase,
@@ -124,4 +125,44 @@ test('the column unfolds to show the remote while the data broadcast is open, an
   assert.equal(foldShown(false, { open: true, touched: false }), false)
   assert.equal(foldShown(true, { open: true, touched: true }), true)
   assert.equal(foldShown(false, { open: true, touched: true }), false)
+})
+
+test("a column that stands only while the data broadcast is open keeps the fold's widths after the gap from the player", () => {
+  assert.match(
+    foldColumnBeside(false, STILL),
+    /(^|\s)w-\[calc\(344rem\/16\)\](\s|$)/,
+  )
+  assert.match(foldColumnBeside(true, STILL), /(^|\s)w-11(\s|$)/)
+
+  for (const classes of [
+    foldColumnBeside(false, STILL),
+    foldColumnBeside(false, OPENING),
+    foldColumnBeside(true, CLOSING),
+  ]) {
+    assert.match(classes, /(^|\s)ml-\[calc\(26rem\/16\)\](\s|$)/)
+  }
+})
+
+test("the column beside the player grows from nothing, its gap with it, on the fold's opening", () => {
+  const arriving = foldColumnBeside(false, OPENING)
+
+  assert.match(arriving, /(^|\s)starting:w-0(\s|$)/)
+  assert.match(arriving, /(^|\s)starting:ml-0(\s|$)/)
+  assert.match(arriving, /transition-\[width,margin-left\]/)
+  assert.match(arriving, /duration-300/)
+  assert.match(arriving, /ease-fold/)
+  assert.match(arriving, /still:transition-none/)
+  assert.doesNotMatch(arriving, /delay-/)
+})
+
+test('the column beside the player folds as the live column does', () => {
+  assert.equal(
+    foldColumnBeside(true, CLOSING).replace(/\s*ml-\S+/g, ''),
+    foldColumn(true, CLOSING),
+  )
+  assert.equal(
+    foldColumnBeside(true, STILL).replace(/\s*ml-\S+/g, ''),
+    foldColumn(true, STILL),
+  )
+  assert.doesNotMatch(foldColumnBeside(false, STILL), /transition|starting:/)
 })
