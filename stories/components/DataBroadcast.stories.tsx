@@ -12,6 +12,12 @@ import {
 } from '@/lib/bml/runtime-document'
 import { GRID } from '@/lib/bml/style'
 import type { BandPlace } from '@/lib/data-broadcast-view'
+import type {
+  DataBroadcastAvailability,
+  DataBroadcastChange,
+  DataBroadcastHeld,
+  NptReading,
+} from '@/lib/data-broadcast-feed'
 
 type StripPlace = Exclude<BandPlace, 'column'>
 import { cn } from '@/lib/utils'
@@ -25,6 +31,7 @@ import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
   DataBroadcastBand,
+  DataBroadcastFace,
   DataBroadcastRemote,
   DATA_BROADCAST_NAME,
   REMOTE_GROUP_GAP,
@@ -42,10 +49,12 @@ import {
   DATA_BROADCAST_CATALOG,
   GLYPH_PROBE,
   MENU_CATALOG,
+  PROGRAMME_READING_CATALOG,
   ROWS_CATALOG,
   SANDBOX_PROBE,
   SCRIPTED_CATALOG,
   dataBroadcastModules,
+  howFarModules,
   menuModules,
   rowModules,
   scriptedModules,
@@ -280,6 +289,124 @@ export const スクリプトで切り替わるページ: Story = {
     await press(board, '{Enter}')
     await rectIs('560,60,360,203')
     await expect(board).not.toHaveAttribute('data-error')
+  },
+}
+
+/** When the recording of the stories began. */
+const RECORDING_BEGAN = Date.parse('2026-08-08T12:29:45.250+09:00') / 1000
+
+/** A recording's data broadcast with everything in, held at a position and moved by hand as a seek moves it: each move tells the time on air there. */
+class HeldRecording implements DataBroadcastHeld {
+  readonly availability: DataBroadcastAvailability = 'ready'
+
+  readonly catalog = PROGRAMME_READING_CATALOG
+
+  readonly forTheCatalog = howFarModules()
+
+  readonly nptReadings: NptReading[] = []
+
+  clock = RECORDING_BEGAN + 5
+
+  private readonly listeners = new Set<(change: DataBroadcastChange) => void>()
+
+  subscribe(listener: (change: DataBroadcastChange) => void): () => void {
+    this.listeners.add(listener)
+
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  seek(second: number): void {
+    const clock = RECORDING_BEGAN + second
+
+    this.clock = clock
+    this.listeners.forEach((listener) =>
+      listener({ kind: 'clock', seconds: clock }),
+    )
+  }
+}
+
+const STORY_BUTTON =
+  'h-11 min-w-11 cursor-pointer rounded-full border border-line px-4 text-ui'
+
+function RecordedFace() {
+  const [feed] = useState(() => new HeldRecording())
+  const runtime = useRef<SendToRuntime | null>(null)
+  const [rect, setRect] = useState<string | null>(null)
+
+  return (
+    <div className="p-6">
+      <div
+        role="group"
+        aria-label="録画のデータ放送"
+        data-video-rect={rect ?? undefined}
+        className={cn(PLAYER_FACE, 'relative')}
+      >
+        <DataBroadcastFace
+          feed={feed}
+          onAir={{ network: null, startsAt: RECORDING_BEGAN }}
+          onRuntime={(send) => {
+            runtime.current = send
+          }}
+          onMessage={(message) => {
+            if (message.kind === 'videoRect') {
+              setRect(said(message.rect))
+            }
+          }}
+          says={null}
+        />
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          className={STORY_BUTTON}
+          onClick={() => feed.seek(120)}
+        >
+          2 分へ
+        </button>
+        <button
+          type="button"
+          className={STORY_BUTTON}
+          onClick={() => feed.seek(5)}
+        >
+          5 秒へ
+        </button>
+        <button
+          type="button"
+          className={STORY_BUTTON}
+          onClick={() => runtime.current?.({ kind: 'key', key: 'enter' })}
+        >
+          決定
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export const 録画の位置を動かすと文書が聞く経過時間もついてくる: Story = {
+  render: () => <RecordedFace />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const face = canvas.getByRole('group', { name: '録画のデータ放送' })
+    const decide = canvas.getByRole('button', { name: '決定' })
+    const rectIs = (value: string) =>
+      waitFor(() => expect(face).toHaveAttribute('data-video-rect', value), {
+        timeout: 5000,
+      })
+
+    await rectIs('80,120,400,225')
+    await userEvent.click(decide)
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await rectIs('80,120,400,225')
+
+    await userEvent.click(canvas.getByRole('button', { name: '2 分へ' }))
+    await userEvent.click(decide)
+    await rectIs('480,300,320,180')
+
+    await userEvent.click(canvas.getByRole('button', { name: '5 秒へ' }))
+    await userEvent.click(decide)
+    await rectIs('80,120,400,225')
   },
 }
 

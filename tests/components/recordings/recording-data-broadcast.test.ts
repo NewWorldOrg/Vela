@@ -283,6 +283,27 @@ test('the time on air is when the recording began and the position played, told 
   assert.deepEqual(told(), [9, 9.25, 9.5, 3, 120, 120.25])
 })
 
+test('the time on air is told before the catalog, the modules and the event messages it brings, on a seek and as playback passes an event', async () => {
+  const { broadcast, changes } = harness()
+  const kinds = () => changes.map((change) => change.kind)
+
+  broadcast.start()
+  broadcast.advance(9)
+  await settledTwice()
+  changes.length = 0
+
+  broadcast.advance(100.5)
+
+  assert.deepEqual(kinds(), ['clock', 'catalog', 'module', 'module'])
+
+  broadcast.advance(119)
+  changes.length = 0
+  broadcast.advance(119.5)
+  broadcast.advance(120.25)
+
+  assert.deepEqual(kinds(), ['clock', 'clock', 'event'])
+})
+
 test('the time on air of a recording whose start is not a time is not kept, and none is told', async () => {
   const { broadcast, changes } = harness(undefined, undefined, Number.NaN)
 

@@ -371,6 +371,28 @@ function init() {
 </body>
 </bml>`
 
+const NEAR_THE_START = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 80px; top: 120px; width: 400px; height: 225px"/>
+<p id="ask" class="panel" style="left: 520px; top: 120px; width: 400px; height: 96px; nav-index: 0" onclick="if (browser.getProgramRelativeTime() >= 100) { browser.launchDocument('face.bml', 'cut'); }">はじめの方</p>
+</body>
+</bml>`
+
+const FURTHER_ON = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 480px; top: 300px; width: 320px; height: 180px"/>
+<p id="ask" class="panel" style="left: 40px; top: 300px; width: 400px; height: 96px; nav-index: 0" onclick="if (100 > browser.getProgramRelativeTime()) { browser.launchDocument('startup.bml', 'cut'); }">先の方</p>
+</body>
+</bml>`
+
 const READ_FACE = `${PROLOGUE}
 <bml>
 <head>
@@ -408,7 +430,7 @@ export const PROGRAMME_READING_CATALOG: BmlCatalog = {
   ],
 }
 
-function readingModules(startup: string): BmlModule[] {
+function readingModules(startup: string, face = READ_FACE): BmlModule[] {
   return [
     {
       tag: 0x40,
@@ -416,7 +438,7 @@ function readingModules(startup: string): BmlModule[] {
       version: 1,
       resources: [
         resource('startup.bml', 'bml', startup),
-        resource('face.bml', 'bml', READ_FACE),
+        resource('face.bml', 'bml', face),
         resource('sample.css', 'css', SAMPLE_CSS),
         resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
       ],
@@ -432,6 +454,11 @@ export function programmeReadingModules(): BmlModule[] {
 /** The module of a self-made data broadcast whose entry document moves on to its face only when it is told it is within the first minute of the programme. */
 export function relativeTimeModules(): BmlModule[] {
   return readingModules(KNOWS_HOW_FAR)
+}
+
+/** The module of a self-made data broadcast whose two pages, on the enter key, ask how far into the programme they are: the one for the start moves on to the one further on from the 100th second, and that one back before it. */
+export function howFarModules(): BmlModule[] {
+  return readingModules(NEAR_THE_START, FURTHER_ON)
 }
 
 const CHECKING = `${PROLOGUE}
