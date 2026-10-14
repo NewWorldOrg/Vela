@@ -393,6 +393,32 @@ const FURTHER_ON = `${PROLOGUE}
 </body>
 </bml>`
 
+const SEES_THE_TIME = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+var shown = "";
+function two(n) { return n < 10 ? "0" + n : String(n); }
+function show() {
+  var now = new Date();
+  var text = now.getFullYear() + "/" + two(now.getMonth() + 1) + "/" + two(now.getDate()) + " " + two(now.getHours()) + ":" + two(now.getMinutes()) + ":" + two(now.getSeconds());
+  if (text != shown) {
+    shown = text;
+    document.getElementById("now").firstChild.data = text;
+    browser.writePersistentArray("seen", "S:19B", [text]);
+  }
+}
+browser.setInterval("show()", 250, 0);
+]]></script>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; clut: url(sample.clt); background-color-index: 128" onload="show()">
+<object type="video/X-arib-mpeg2" style="left: 480px; top: 120px; width: 440px; height: 248px"/>
+<p class="panel" style="left: 40px; top: 120px; width: 400px; height: 56px">文書が見ている日時</p>
+<p id="now" class="panel" style="left: 40px; top: 184px; width: 400px; height: 56px">-</p>
+</body>
+</bml>`
+
 const READ_FACE = `${PROLOGUE}
 <bml>
 <head>
@@ -454,6 +480,11 @@ export function programmeReadingModules(): BmlModule[] {
 /** The module of a self-made data broadcast whose entry document moves on to its face only when it is told it is within the first minute of the programme. */
 export function relativeTimeModules(): BmlModule[] {
   return readingModules(KNOWS_HOW_FAR)
+}
+
+/** The module of a self-made data broadcast whose entry document prints the date and time it sees, four times a second, and keeps what it printed under `seen` as `S:19B`. */
+export function clockModules(): BmlModule[] {
+  return readingModules(SEES_THE_TIME)
 }
 
 /** The module of a self-made data broadcast whose two pages, on the enter key, ask how far into the programme they are: the one for the start moves on to the one further on from the 100th second, and that one back before it. */

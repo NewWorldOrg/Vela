@@ -6,6 +6,7 @@ import {
 } from '@/lib/bml/browser'
 import { appStartOf, sameStart, type AppStart } from '@/lib/bml/ait'
 import { staysListed, takesThePlace, type BmlCatalog } from '@/lib/bml/catalog'
+import { dateOnAir } from '@/lib/bml/clock'
 import {
   BML_LIMITS,
   convertBml,
@@ -195,6 +196,10 @@ export class BmlRuntime {
   private readonly evaluate: Evaluate
 
   private readonly now: () => number
+
+  private readonly wallClock = Date.now.bind(Date)
+
+  private readonly date = dateOnAir(Date, () => this.timeOnAir())
 
   private readonly realm: Realm
 
@@ -744,6 +749,7 @@ export class BmlRuntime {
     return {
       document: document.scripted,
       browser: browserOf(this.host()),
+      Date: this.date,
       BinaryTable: tables.BinaryTable,
       CSVTable: tables.CSVTable,
     }
@@ -844,6 +850,13 @@ export class BmlRuntime {
     }
   }
 
+  /** The time the documents see, in milliseconds: live, the wall clock as the runtime found it, not as a document may have rewritten it; in a recording, the time on air the player told last. The player tells it at each tick while playback moves and not while it stands, so it is held between ticks rather than run on: it stops with a pause, never runs ahead of the picture, and goes back only with a seek. */
+  private timeOnAir(): number {
+    return this.clock === null
+      ? this.wallClock()
+      : Math.round(this.clock * 1000)
+  }
+
   private relativeTime(): number | null {
     const startsAt = this.programme?.startsAt
 
@@ -851,9 +864,7 @@ export class BmlRuntime {
       return null
     }
 
-    const at = this.clock ?? Date.now() / 1000
-
-    return Math.max(0, Math.floor(at - startsAt))
+    return Math.max(0, Math.floor(this.timeOnAir() / 1000 - startsAt))
   }
 
   private leave(reference: unknown): boolean {

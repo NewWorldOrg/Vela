@@ -514,6 +514,164 @@ test('how far into the programme a document is, is answered from the time on air
   assert.equal(asked(), '3')
 })
 
+const READS_THE_TIME = bml(
+  '<p id="ask" style="nav-index: 0" onclick="ask()">ask</p>',
+  '<script>' +
+    'var ticked = []; browser.setInterval("tick()", 1000, 0);' +
+    'function ask() { browser.Ureg[0] = [new Date().getTime(), Date.now(), browser.getProgramRelativeTime()].join(",") }' +
+    'function tick() { ticked.push(new Date().getTime()); browser.Ureg[1] = ticked.join(",") }' +
+    '</script>',
+)
+
+function readsTheTime() {
+  const opening = opened(READS_THE_TIME)
+  const registers = (
+    opening.runtime as unknown as { registers: { Ureg: string[] } }
+  ).registers.Ureg
+  const asked = () => {
+    opening.send({ kind: 'key', key: 'enter' })
+
+    return registers[0]
+  }
+
+  return { ...opening, asked, ticked: () => registers[1] }
+}
+
+test('in a recording, a document’s dates without arguments and Date.now() read when the recording began and the position played, as its elapsed time does: they stand while paused, its timers going on, and move with a seek back or forward', (t) => {
+  const began = Date.parse('2026-01-01T00:00:00Z') / 1000
+
+  t.mock.timers.enable({
+    apis: ['Date'],
+    now: Date.parse('2026-03-01T09:00:00Z'),
+  })
+
+  const { send, timers, asked, ticked } = readsTheTime()
+  const at = (seconds: number) => {
+    const ms = (began + seconds) * 1000
+
+    return [ms, ms, Math.floor(seconds)].join(',')
+  }
+
+  send({
+    kind: 'programme',
+    programme: programmeOnAir(CATALOG.service, {
+      network: null,
+      startsAt: began,
+    }),
+  })
+  send({ kind: 'clock', seconds: began + 12.75 })
+
+  assert.equal(asked(), at(12.75))
+
+  t.mock.timers.tick(3000)
+  timers.tick(1000)
+  timers.tick(1000)
+  timers.tick(1000)
+
+  assert.equal(asked(), at(12.75))
+  assert.equal(
+    ticked(),
+    Array(3)
+      .fill((began + 12.75) * 1000)
+      .join(','),
+  )
+
+  send({ kind: 'clock', seconds: began + 3.25 })
+
+  assert.equal(asked(), at(3.25))
+
+  send({ kind: 'clock', seconds: began + 3600.5 })
+
+  assert.equal(asked(), at(3600.5))
+})
+
+test('live, a document’s dates without arguments and Date.now() read the wall clock', (t) => {
+  const wall = Date.parse('2026-03-01T09:00:00.500Z')
+
+  t.mock.timers.enable({ apis: ['Date'], now: wall })
+
+  const { send, asked } = readsTheTime()
+
+  send({
+    kind: 'programme',
+    programme: programmeOnAir(CATALOG.service, {
+      network: null,
+      startsAt: Math.floor(wall / 1000) - 30,
+    }),
+  })
+
+  assert.equal(asked(), [wall, wall, 30].join(','))
+
+  t.mock.timers.tick(1500)
+
+  assert.equal(asked(), [wall + 1500, wall + 1500, 32].join(','))
+})
+
+const WRITES_ITS_NOW = bml(
+  '<p id="ask" style="nav-index: 0" onclick="ask()">ask</p>',
+  '<script>' +
+    'Date.now = function () { return new Date().getTime() };' +
+    'function ask() { browser.Ureg[0] = [new Date().getTime(), Date.now()].join(",") }' +
+    '</script>',
+)
+
+test('live, a document that writes a Date.now of its own reading the date still reads the wall clock', (t) => {
+  const wall = Date.parse('2026-03-01T09:00:00.500Z')
+
+  t.mock.timers.enable({ apis: ['Date'], now: wall })
+
+  const { runtime, send } = opened(WRITES_ITS_NOW)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  send({ kind: 'key', key: 'enter' })
+
+  assert.equal(registers[0], [wall, wall].join(','))
+})
+
+const MAKES_DATES = bml(
+  '<p id="ask" style="nav-index: 0" onclick="ask()">ask</p>',
+  '<script>' +
+    'function ask() { var start = browser.epgGetEventStartTime(); browser.Ureg[0] = [' +
+    'new Date(2001, 0, 2, 3, 4, 5).getTime(), new Date(0).getTime(), new Date("2001-01-02T03:04:05Z").getTime(), Date.parse("2001-01-02T03:04:05Z"), Date.UTC(2001, 0, 2),' +
+    'start.getTime(), start instanceof Date, new Date() instanceof Date, browser.addDate(new Date(), 1, 1) instanceof Date, Date() === new Date().toString()' +
+    '].join(",") }' +
+    '</script>',
+)
+
+test('in a recording, a document’s dates made from given arguments, parsed or in UTC are made as before, and the dates the runtime hands it are dates to it', () => {
+  const began = Date.parse('2026-01-01T00:00:00Z') / 1000
+  const { runtime, send } = opened(MAKES_DATES)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  send({
+    kind: 'programme',
+    programme: programmeOnAir(CATALOG.service, {
+      network: null,
+      startsAt: began,
+    }),
+  })
+  send({ kind: 'clock', seconds: began + 12.75 })
+  send({ kind: 'key', key: 'enter' })
+
+  assert.equal(
+    registers[0],
+    [
+      new Date(2001, 0, 2, 3, 4, 5).getTime(),
+      0,
+      Date.UTC(2001, 0, 2, 3, 4, 5),
+      Date.UTC(2001, 0, 2, 3, 4, 5),
+      Date.UTC(2001, 0, 2),
+      began * 1000,
+      true,
+      true,
+      true,
+      true,
+    ].join(','),
+  )
+})
+
 test('a key goes to the focused element’s handler with its code, and the handler reaches the page only through wrappers', () => {
   const { send, element } = opened(ENTRY, [
     module(0, { 'startup.bml': ['bml', FACE] }, 0x60),
