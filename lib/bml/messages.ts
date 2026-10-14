@@ -46,6 +46,28 @@ export interface Programme {
   startsAt: number | null
 }
 
+/** What the player knows of the programme the broadcast belongs to: its network and when it began, in seconds. */
+export interface OnAir {
+  network: number | null
+  startsAt: number | null
+}
+
+/** The programme the runtime is handed for a service, its start in whole seconds as a receiver has it from the broadcast: a recording begins part way into a second, and the runtime drops a programme whose start has a fraction, ids and all. A start that is not a time is left out. */
+export function programmeOnAir(service: number, onAir: OnAir): Programme {
+  const { startsAt } = onAir
+
+  return {
+    service,
+    event: null,
+    network: onAir.network,
+    stream: null,
+    startsAt:
+      startsAt !== null && Number.isFinite(startsAt)
+        ? Math.floor(startsAt)
+        : null,
+  }
+}
+
 export type PlayerMessage =
   | { kind: 'catalog'; catalog: BmlCatalog }
   | { kind: 'module'; module: BmlModule }

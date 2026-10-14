@@ -7,6 +7,7 @@ import type { ReceiverId } from '@/lib/bml/line'
 import {
   MOST_REGISTER,
   RUNTIME_ORIGIN,
+  programmeOnAir,
   runtimeMessageFrom,
   type PlayerMessage,
   type RuntimeMessage,
@@ -430,6 +431,50 @@ test('an entry document that cannot be seen moves to the face it launches when t
   )
   assert.equal(element('hidden'), null)
   assert.ok(element('menu'))
+})
+
+const READS_ITSELF = bml(
+  '<p id="hidden">nothing to see</p>',
+  '<script>' +
+    'var me = browser.getActiveDocument();' +
+    'var component = me.substring(0, 4);' +
+    'var network = browser.getProgramID(3).substring(2);' +
+    'function init() { browser.launchDocument(component + "0001/face.bml", "cut") }' +
+    '</script>',
+).replace('<body>', '<body invisible="invisible" onload="init()">')
+
+test('a recording begun part way into a second hands its programme to the first document, which reads at the top of its first script where it is and the network, and moves on to its face', () => {
+  const { send, heard, element, warnings } = frame()
+
+  send({ kind: 'catalog', catalog: CATALOG })
+  send({ kind: 'memory', entries: [] })
+  send({
+    kind: 'programme',
+    programme: programmeOnAir(CATALOG.service, {
+      network: 0x7fe0,
+      startsAt: Date.parse('2026-01-01T00:00:00.250Z') / 1000,
+    }),
+  })
+  send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', READS_ITSELF] }),
+  })
+  send({ kind: 'module', module: module(1, { 'face.bml': ['bml', FACE] }) })
+  send({ kind: 'line', line: 'none', receiverId: null })
+  send({ kind: 'open' })
+
+  assert.deepEqual(warnings, [])
+  assert.equal(element('hidden'), null)
+  assert.ok(element('menu'))
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'videoRect'),
+    [
+      {
+        kind: 'videoRect',
+        rect: { left: 560, top: 60, width: 360, height: 203 },
+      },
+    ],
+  )
 })
 
 test('a key goes to the focused element’s handler with its code, and the handler reaches the page only through wrappers', () => {

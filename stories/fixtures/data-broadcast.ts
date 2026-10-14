@@ -339,6 +339,76 @@ export function scriptedModules(): BmlModule[] {
   ]
 }
 
+const READS_ITSELF = `${PROLOGUE}
+<bml>
+<head>
+<title>入口</title>
+<script><![CDATA[
+var me = browser.getActiveDocument();
+var component = me.substring(0, 4);
+var network = browser.getProgramID(3).substring(2);
+function init() { browser.launchDocument(component + "0000/face.bml", "cut"); }
+]]></script>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; visibility: hidden" onload="init()">
+<p id="nothing">入口</p>
+</body>
+</bml>`
+
+const READ_FACE = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 80px; top: 120px; width: 400px; height: 225px"/>
+<p class="panel" style="left: 520px; top: 120px; width: 400px; height: 96px">番組と文書を読めた</p>
+</body>
+</bml>`
+
+export const PROGRAMME_READING_CATALOG: BmlCatalog = {
+  service: 1024,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'face.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** The module of a self-made data broadcast whose entry document, at the top of its first script, reads its own path and the network of the programme, and moves on to its face only when it has both. */
+export function programmeReadingModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', READS_ITSELF),
+        resource('face.bml', 'bml', READ_FACE),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+  ]
+}
+
 const CHECKING = `${PROLOGUE}
 <bml>
 <head>

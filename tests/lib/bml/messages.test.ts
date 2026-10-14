@@ -6,6 +6,7 @@ import {
   RUNTIME_ORIGIN,
   gridRectOf,
   playerMessageFrom,
+  programmeOnAir,
   runtimeMessageFrom,
 } from '@/lib/bml/messages'
 
@@ -147,6 +148,26 @@ test('what the player may say is taken from the parent window in Vela’s origin
   ]
 
   for (const data of said) {
+    assert.deepEqual(fromPlayer(data), data)
+  }
+})
+
+test('the programme of a recording begun part way into a second is handed in whole seconds and taken, and one whose start is not a time keeps its ids', () => {
+  const begun = programmeOnAir(1024, {
+    network: 32736,
+    startsAt: Date.parse('2026-01-01T00:00:00.750Z') / 1000,
+  })
+  const unknown = programmeOnAir(1024, {
+    network: 32736,
+    startsAt: Date.parse('not a time') / 1000,
+  })
+
+  assert.equal(begun.startsAt, Date.parse('2026-01-01T00:00:00Z') / 1000)
+  assert.equal(unknown.startsAt, null)
+
+  for (const programme of [begun, unknown]) {
+    const data = { kind: 'programme', programme }
+
     assert.deepEqual(fromPlayer(data), data)
   }
 })

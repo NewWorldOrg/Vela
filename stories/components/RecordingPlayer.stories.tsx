@@ -37,7 +37,8 @@ import type {
   FeedRecording,
   RecordingFeedEvents,
 } from '@/components/recordings/recording-feed'
-import { modulePayload } from '@/lib/bml/resources'
+import type { BmlCatalog } from '@/lib/bml/catalog'
+import { modulePayload, type BmlModule } from '@/lib/bml/resources'
 import type { DataBroadcastTimeline } from '@/lib/recording-data-broadcast'
 import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
 import type {
@@ -46,7 +47,9 @@ import type {
 } from '@/components/recordings/read-data-broadcast'
 import {
   DATA_BROADCAST_CATALOG,
+  PROGRAMME_READING_CATALOG,
   dataBroadcastModules,
+  programmeReadingModules,
 } from '@/stories/fixtures/data-broadcast'
 
 function detail(id: string) {
@@ -3640,25 +3643,29 @@ export const 要素の全画面を断られたらページの中で窓いっぱ�
   },
 }
 
-/** The catalog of a recording that carried the self-made broadcast throughout: both modules in effect from the first second to the last. */
-const BROADCAST_THROUGHOUT: DataBroadcastTimeline = {
-  entryTag: DATA_BROADCAST_CATALOG.entryTag,
-  autoStart: DATA_BROADCAST_CATALOG.autoStart,
-  startup: DATA_BROADCAST_CATALOG.startup,
-  incomplete: false,
-  carousels: DATA_BROADCAST_CATALOG.carousels.map((carousel) => ({
-    tag: carousel.tag,
-    downloadId: carousel.downloadId,
-    versions: carousel.modules.map((module) => ({
-      id: module.id,
-      version: module.version,
-      fromSec: 0,
-      toSec: 600,
-      size: 0,
+/** The catalog of a recording that carried a self-made broadcast throughout: every module in effect from the first second to the last. */
+function throughout(catalog: BmlCatalog): DataBroadcastTimeline {
+  return {
+    entryTag: catalog.entryTag,
+    autoStart: catalog.autoStart,
+    startup: catalog.startup,
+    incomplete: false,
+    carousels: catalog.carousels.map((carousel) => ({
+      tag: carousel.tag,
+      downloadId: carousel.downloadId,
+      versions: carousel.modules.map((module) => ({
+        id: module.id,
+        version: module.version,
+        fromSec: 0,
+        toSec: 600,
+        size: 0,
+      })),
     })),
-  })),
-  events: [],
+    events: [],
+  }
 }
+
+const BROADCAST_THROUGHOUT = throughout(DATA_BROADCAST_CATALOG)
 
 const broadcastAsked: string[] = []
 
@@ -3672,16 +3679,20 @@ function readingTheBroadcast(
   }
 }
 
-const readingTheModules: ReadDataBroadcastModule = async (id, placed) => {
-  const found = dataBroadcastModules().find(
-    (one) =>
-      one.tag === placed.tag &&
-      one.id === placed.id &&
-      one.version === placed.version,
-  )
+function readingModulesOf(modules: () => BmlModule[]): ReadDataBroadcastModule {
+  return async (id, placed) => {
+    const found = modules().find(
+      (one) =>
+        one.tag === placed.tag &&
+        one.id === placed.id &&
+        one.version === placed.version,
+    )
 
-  return found ? modulePayload(found) : null
+    return found ? modulePayload(found) : null
+  }
 }
+
+const readingTheModules = readingModulesOf(dataBroadcastModules)
 
 const BROADCAST_PLAYING = {
   detail: { ...detail('1266'), service: { networkId: 32736, serviceId: 1024 } },
@@ -3781,6 +3792,41 @@ export const データ放送を開くと面と帯が出て映像が縮む: Story
     await expect(canvasElement.querySelector('iframe')).toBeNull()
   },
 }
+
+export const 秒の途中から始まった録画でも入口の文書が番組と自分の場所を読んで面へ進む: Story =
+  {
+    args: {
+      ...BROADCAST_PLAYING,
+      detail: {
+        ...BROADCAST_PLAYING.detail,
+        startedAt: '2026-08-08T12:29:45.250+09:00',
+      },
+      readDataBroadcast: readingTheBroadcast({
+        state: 'read',
+        timeline: throughout(PROGRAMME_READING_CATALOG),
+      }),
+      readDataBroadcastModule: readingModulesOf(programmeReadingModules),
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const toggle = await canvas.findByRole(
+        'button',
+        { name: 'データ放送' },
+        { timeout: 10000 },
+      )
+
+      await userEvent.click(toggle)
+
+      await waitFor(
+        () =>
+          expect(pictureOf(canvasElement)).toHaveAttribute(
+            'data-rect',
+            '80,120,400,225',
+          ),
+        { timeout: 5000 },
+      )
+    },
+  }
 
 export const データ放送を自動で開く: Story = {
   args: {

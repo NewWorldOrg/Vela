@@ -22,7 +22,11 @@ import {
   memoryEntriesOf,
   type MemoryStorage,
 } from '@/lib/bml/memory'
-import type { RuntimeMessage } from '@/lib/bml/messages'
+import {
+  programmeOnAir,
+  type OnAir,
+  type RuntimeMessage,
+} from '@/lib/bml/messages'
 import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
 import type { BandPlace } from '@/lib/data-broadcast-view'
@@ -99,12 +103,6 @@ function storageOf(): MemoryStorage | null {
   }
 }
 
-/** What the player knows of the programme the broadcast belongs to: its network and when it began. */
-export interface OnAir {
-  network: number | null
-  startsAt: number | null
-}
-
 const NOTHING_ON_AIR: OnAir = { network: null, startsAt: null }
 
 /** Hands the runtime the catalog, and with it what the player keeps for that broadcaster and the programme on air. */
@@ -120,16 +118,7 @@ function catalogued(
     kind: 'memory',
     entries: storage ? memoryEntriesOf(storage, catalog.service) : [],
   })
-  send({
-    kind: 'programme',
-    programme: {
-      service: catalog.service,
-      event: null,
-      network: onAir.network,
-      stream: null,
-      startsAt: onAir.startsAt,
-    },
-  })
+  send({ kind: 'programme', programme: programmeOnAir(catalog.service, onAir) })
 }
 
 /** What the viewer is told of a transmission through the relay: the setting refusing the line, the broadcaster's server not reached, or nothing. */
