@@ -146,15 +146,18 @@ export type DataBroadcastChange =
   | { kind: 'module'; module: BmlModule }
   | { kind: 'event'; event: BroadcastEvent }
   | { kind: 'npt'; reading: NptReading }
+  | { kind: 'clock'; seconds: number }
   | { kind: 'none' }
   | { kind: 'reset' }
 
-/** What a player holds of a data broadcast, from the live side channel or a recording's routes alike: whether it can be opened, the catalog, the modules and each stream's NPT to hand a runtime that opens, and the changes as they come. */
+/** What a player holds of a data broadcast, from the live side channel or a recording's routes alike: whether it can be opened, the catalog, the modules, each stream's NPT and the time on air to hand a runtime that opens, and the changes as they come. */
 export interface DataBroadcastHeld {
   readonly availability: DataBroadcastAvailability
   readonly catalog: BmlCatalog | null
   readonly forTheCatalog: BmlModule[]
   readonly nptReadings: NptReading[]
+  /** The time on air of the picture shown, in seconds, where the player keeps one, or null where the runtime reads the wall clock. */
+  readonly clock: number | null
   subscribe(listener: (change: DataBroadcastChange) => void): () => void
 }
 
@@ -358,6 +361,11 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     return [...this.references.values()]
       .sort((one, other) => one.tag - other.tag)
       .map((reference) => nptReadingAt(reference, this.playhead))
+  }
+
+  /** Live, what is on air is now, and the runtime reads the wall clock. */
+  get clock(): number | null {
+    return null
   }
 
   get heldBytes(): number {

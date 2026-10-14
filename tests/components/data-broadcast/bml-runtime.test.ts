@@ -477,6 +477,43 @@ test('a recording begun part way into a second hands its programme to the first 
   )
 })
 
+const ASKS_HOW_FAR = bml(
+  '<p id="ask" style="nav-index: 0" onclick="browser.Ureg[0] = String(browser.getProgramRelativeTime())">ask</p>',
+)
+
+test('how far into the programme a document is, is answered from the time on air the player hands, back after a seek, and from the wall clock where it hands none', (t) => {
+  const began = Date.parse('2026-01-01T00:00:00Z') / 1000
+
+  t.mock.timers.enable({ apis: ['Date'], now: (began + 42.5) * 1000 })
+
+  const { runtime, send } = opened(ASKS_HOW_FAR)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+  const asked = () => {
+    send({ kind: 'key', key: 'enter' })
+
+    return registers[0]
+  }
+
+  send({
+    kind: 'programme',
+    programme: programmeOnAir(CATALOG.service, {
+      network: null,
+      startsAt: began,
+    }),
+  })
+
+  assert.equal(asked(), '42')
+
+  send({ kind: 'clock', seconds: began + 12.75 })
+
+  assert.equal(asked(), '12')
+
+  send({ kind: 'clock', seconds: began + 3.25 })
+
+  assert.equal(asked(), '3')
+})
+
 test('a key goes to the focused element’s handler with its code, and the handler reaches the page only through wrappers', () => {
   const { send, element } = opened(ENTRY, [
     module(0, { 'startup.bml': ['bml', FACE] }, 0x60),

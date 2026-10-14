@@ -50,6 +50,7 @@ import {
   PROGRAMME_READING_CATALOG,
   dataBroadcastModules,
   programmeReadingModules,
+  relativeTimeModules,
 } from '@/stories/fixtures/data-broadcast'
 
 function detail(id: string) {
@@ -3827,6 +3828,36 @@ export const 秒の途中から始まった録画でも入口の文書が番組�
       )
     },
   }
+
+export const 録画のデータ放送は番組の経過時間を再生した位置で答える: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: throughout(PROGRAMME_READING_CATALOG),
+    }),
+    readDataBroadcastModule: readingModulesOf(relativeTimeModules),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await userEvent.click(toggle)
+
+    await waitFor(
+      () =>
+        expect(pictureOf(canvasElement)).toHaveAttribute(
+          'data-rect',
+          '80,120,400,225',
+        ),
+      { timeout: 5000 },
+    )
+  },
+}
 
 export const データ放送を自動で開く: Story = {
   args: {

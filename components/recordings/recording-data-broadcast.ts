@@ -47,13 +47,15 @@ type Read =
 const warnOnTheConsole: Warn = (warning) =>
   console.warn(`data broadcast: ${warning}`)
 
-/** A recording's data broadcast as the player holds it: the catalog of the whole recording is read once, and at each second of playback the version of each module in effect then is chosen, read from the module route and handed on, with the versions of the next two minutes read before they are needed. An event message is handed on once, when playback passes its second; a seek back lets the ones after it be heard again, and a seek forward passes over the ones between. */
+/** A recording's data broadcast as the player holds it: the catalog of the whole recording is read once, and at each second of playback the version of each module in effect then is chosen, read from the module route and handed on, with the versions of the next two minutes read before they are needed. An event message is handed on once, when playback passes its second; a seek back lets the ones after it be heard again, and a seek forward passes over the ones between. The time on air is when the recording began and the position played, told each time playback moves it, so that a document asking how far into the programme it is hears where playback is: it stands while paused and goes back with a seek. */
 export class RecordingDataBroadcast implements DataBroadcastHeld {
   private readonly readTimeline: ReadTimeline
 
   private readonly readVersion: ReadVersion
 
   private readonly service: number
+
+  private readonly began: number | null
 
   private readonly warn: Warn
 
@@ -87,17 +89,21 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
 
   private said: DataBroadcastAvailability = 'absent'
 
+  private clockSaid: number | null = null
+
   private closed = false
 
   constructor(
     readTimeline: ReadTimeline,
     readVersion: ReadVersion,
     service: number,
+    began: number,
     warn: Warn = warnOnTheConsole,
   ) {
     this.readTimeline = readTimeline
     this.readVersion = readVersion
     this.service = service
+    this.began = Number.isFinite(began) ? began : null
     this.warn = warn
   }
 
@@ -166,6 +172,13 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
     return []
   }
 
+  /** The time on air at the position played: when the recording began, in seconds, and the seconds played since. */
+  get clock(): number | null {
+    return this.began === null || this.seen === null
+      ? null
+      : this.began + this.seen
+  }
+
   get incomplete(): boolean {
     return this.timeline?.incomplete ?? false
   }
@@ -194,6 +207,7 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
     const seeked = isASeek(this.at, second)
 
     this.at = second
+    this.tellTheClock()
     this.choose(timeline, second)
 
     if (seeked) {
@@ -207,6 +221,17 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
 
     versionsAhead(timeline, second).forEach((placed) => this.ask(placed, false))
     this.forget(second)
+  }
+
+  private tellTheClock(): void {
+    const clock = this.clock
+
+    if (clock === null || clock === this.clockSaid) {
+      return
+    }
+
+    this.clockSaid = clock
+    this.tell({ kind: 'clock', seconds: clock })
   }
 
   private choose(timeline: DataBroadcastTimeline, second: number): void {

@@ -355,6 +355,22 @@ function init() { browser.launchDocument(component + "0000/face.bml", "cut"); }
 </body>
 </bml>`
 
+const KNOWS_HOW_FAR = `${PROLOGUE}
+<bml>
+<head>
+<title>入口</title>
+<script><![CDATA[
+function init() {
+  var into = browser.getProgramRelativeTime();
+  if (into >= 0 && into < 60) { browser.launchDocument("/40/0000/face.bml", "cut"); }
+}
+]]></script>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; visibility: hidden" onload="init()">
+<p id="nothing">入口</p>
+</body>
+</bml>`
+
 const READ_FACE = `${PROLOGUE}
 <bml>
 <head>
@@ -392,21 +408,30 @@ export const PROGRAMME_READING_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The module of a self-made data broadcast whose entry document, at the top of its first script, reads its own path and the network of the programme, and moves on to its face only when it has both. */
-export function programmeReadingModules(): BmlModule[] {
+function readingModules(startup: string): BmlModule[] {
   return [
     {
       tag: 0x40,
       id: 0x0000,
       version: 1,
       resources: [
-        resource('startup.bml', 'bml', READS_ITSELF),
+        resource('startup.bml', 'bml', startup),
         resource('face.bml', 'bml', READ_FACE),
         resource('sample.css', 'css', SAMPLE_CSS),
         resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
       ],
     },
   ]
+}
+
+/** The module of a self-made data broadcast whose entry document, at the top of its first script, reads its own path and the network of the programme, and moves on to its face only when it has both. */
+export function programmeReadingModules(): BmlModule[] {
+  return readingModules(READS_ITSELF)
+}
+
+/** The module of a self-made data broadcast whose entry document moves on to its face only when it is told it is within the first minute of the programme. */
+export function relativeTimeModules(): BmlModule[] {
+  return readingModules(KNOWS_HOW_FAR)
 }
 
 const CHECKING = `${PROLOGUE}

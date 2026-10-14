@@ -47,6 +47,9 @@ function event(atSec: number): TimedEvent {
   }
 }
 
+/** When the recording began, part way into a second. */
+const BEGAN = Date.parse('2026-01-01T00:00:00.250Z') / 1000
+
 /** The start document changes version at 100; a second module is first seen at 50 and withdrawn at 400; a third is first seen at 300. */
 const TIMELINE: DataBroadcastTimeline = {
   entryTag: 0x40,
@@ -98,6 +101,7 @@ function harness(
   }),
   reading: (placed: PlacedVersion) => Uint8Array | null = (placed) =>
     modulePayload(moduleOf(placed)),
+  began: number = BEGAN,
 ): Harness {
   const changes: DataBroadcastChange[] = []
   const askedVersions: string[] = []
@@ -114,24 +118,27 @@ function harness(
         return reading(placed)
       },
       1024,
+      began,
       () => {},
     ),
     changes,
     askedVersions,
     catalogAsked: 0,
     told: () =>
-      changes.map((change) => {
-        switch (change.kind) {
-          case 'module':
-            return `module ${change.module.id}v${change.module.version}`
-          case 'event':
-            return `event ${change.event.id}`
-          case 'catalog':
-            return `catalog ${change.catalog.carousels[0].modules.map((module) => `${module.id}v${module.version}`).join(',')}`
-          default:
-            return change.kind
-        }
-      }),
+      changes
+        .filter((change) => change.kind !== 'clock')
+        .map((change) => {
+          switch (change.kind) {
+            case 'module':
+              return `module ${change.module.id}v${change.module.version}`
+            case 'event':
+              return `event ${change.event.id}`
+            case 'catalog':
+              return `catalog ${change.catalog.carousels[0].modules.map((module) => `${module.id}v${module.version}`).join(',')}`
+            default:
+              return change.kind
+          }
+        }),
   }
 
   made.broadcast.subscribe((change) => changes.push(change))
@@ -245,6 +252,50 @@ test('an event message is handed once as playback passes its second, again after
   broadcast.advance(250.5)
 
   assert.deepEqual(told(), [10, 10])
+})
+
+test('the time on air is when the recording began and the position played, told each time it moves, back after a seek, and not while paused', async () => {
+  const { broadcast, changes } = harness()
+  const told = () =>
+    changes.flatMap((change) =>
+      change.kind === 'clock' ? [change.seconds - BEGAN] : [],
+    )
+
+  assert.equal(broadcast.clock, null)
+
+  broadcast.start()
+  broadcast.advance(9)
+  await settledTwice()
+
+  assert.equal(broadcast.clock, BEGAN + 9)
+
+  broadcast.advance(9.25)
+  broadcast.advance(9.25)
+  broadcast.advance(9.5)
+  broadcast.advance(3)
+
+  assert.deepEqual(told(), [9, 9.25, 9.5, 3])
+  assert.equal(broadcast.clock, BEGAN + 3)
+
+  broadcast.advance(120)
+  broadcast.advance(120.25)
+
+  assert.deepEqual(told(), [9, 9.25, 9.5, 3, 120, 120.25])
+})
+
+test('the time on air of a recording whose start is not a time is not kept, and none is told', async () => {
+  const { broadcast, changes } = harness(undefined, undefined, Number.NaN)
+
+  broadcast.start()
+  broadcast.advance(9)
+  await settledTwice()
+  broadcast.advance(10)
+
+  assert.equal(broadcast.clock, null)
+  assert.deepEqual(
+    changes.filter((change) => change.kind === 'clock'),
+    [],
+  )
 })
 
 test('a seek back to before a module was first seen takes it out of the catalog, and forward past its last second too', async () => {
