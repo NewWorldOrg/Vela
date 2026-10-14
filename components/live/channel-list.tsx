@@ -18,22 +18,24 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 import { useSettled } from '@/components/live/channel-fold'
 
-/** The column's fold: a chevron pointing where the column goes. */
+/** The column's fold: a chevron pointing where the column goes, named for what the column holds. */
 export function FoldButton({
   folded,
   onFold,
   controls,
+  label = 'チャンネル一覧',
 }: {
   folded: boolean
   onFold: (folded: boolean) => void
   controls?: string
+  label?: string
 }) {
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon"
-      aria-label="チャンネル一覧"
+      aria-label={label}
       aria-expanded={!folded}
       aria-controls={controls}
       onClick={() => onFold(!folded)}

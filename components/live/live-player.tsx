@@ -41,7 +41,6 @@ import {
   bandPlace,
   dataBroadcastSays,
   pictureTransform,
-  type BandPlace,
 } from '@/lib/data-broadcast-view'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
@@ -102,8 +101,7 @@ import {
   DataBroadcastFace,
   DataBroadcastToggle,
   DataBroadcastRemote,
-  columnOverTheBand,
-  columnOverTheRow,
+  widestColumn,
 } from '@/components/data-broadcast/data-broadcast-player'
 import { HybridcastFace } from '@/components/data-broadcast/hybridcast-frame'
 import { eventInformationOf } from '@/lib/hybridcast/event-information'
@@ -171,19 +169,6 @@ const LATENCY_TONE = {
   warn: 'border-(--pl-warn)/50 bg-(--pl-warn)/14 text-(--pl-warn)',
   err: 'border-(--pl-err)/50 bg-(--pl-err)/14 text-(--pl-err)',
 } as const
-
-/** The widest the player's column may be: unbounded but by the page while the control row is over the picture; with the control row under the box, the window holds the picture, the row and, where the remote is a band under it, the band. */
-function columnOf(
-  place: BandPlace,
-  underTheBox: boolean,
-  row: number,
-): string | undefined {
-  if (!underTheBox) {
-    return undefined
-  }
-
-  return place === 'column' ? columnOverTheRow(row) : columnOverTheBand(row)
-}
 
 export function LivePlayer({
   channel,
@@ -857,7 +842,7 @@ export function LivePlayer({
         }}
         onKeyDown={onKeyDown}
         style={{
-          maxWidth: columnOf(place, underTheBox, rowHeight),
+          maxWidth: widestColumn(place, underTheBox, rowHeight),
         }}
         className={PLAYER_BOARD}
       >

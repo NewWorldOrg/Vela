@@ -47,7 +47,9 @@ import {
   useSettled,
 } from '@/components/live/channel-fold'
 import {
+  COLUMN_BODY,
   ColumnSwitch,
+  PLAYER_SIDE_COLUMN,
   RemoteSlot,
   type ColumnShows,
 } from '@/components/live/remote-column'
@@ -335,12 +337,13 @@ export function LiveView({
         ref={aside}
         aria-label="チャンネル"
         className={cn(
-          'sticky top-[calc(62rem/16)] flex max-h-[calc(100dvh-102rem/16-env(safe-area-inset-bottom))] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px] max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          PLAYER_SIDE_COLUMN,
+          'max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
           foldColumn(folded, motion),
         )}
       >
         {openMode && motion.shown ? (
-          <div className="flex min-h-0 w-full flex-col min-[1181px]:w-[calc(344rem/16)]">
+          <div className={COLUMN_BODY}>
             <ColumnSwitch
               shows={shows}
               onShows={switchTo}
