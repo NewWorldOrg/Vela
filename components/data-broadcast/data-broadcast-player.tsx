@@ -406,6 +406,19 @@ export function columnOverTheBand(row: number): string {
   return `min(${narrow}, max(${wide}, clamp(${BAND_MOCK_WIDTH}px, ${growing}, ${widest}px)))`
 }
 
+/** The widest the player's column may be: unbounded but by the page while the control row is over the picture; with the control row under the box, the window holds the picture, the row and, where the remote is a band under it, the band. */
+export function widestColumn(
+  place: BandPlace,
+  underTheBox: boolean,
+  row: number,
+): string | undefined {
+  if (!underTheBox) {
+    return undefined
+  }
+
+  return place === 'column' ? columnOverTheRow(row) : columnOverTheBand(row)
+}
+
 /** One mock pixel, measured against the player's width: the mock's size at its width and below, growing with the player, and no more than one and a half times the mock. */
 const UNIT = `clamp(1px, 100cqw / ${BAND_MOCK_WIDTH}, ${BAND_MAX_SCALE}px)`
 

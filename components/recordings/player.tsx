@@ -8,6 +8,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
 
@@ -126,6 +127,7 @@ import {
 import { capturedAt, capturedName } from '@/lib/capture-name'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
+import { useWideWindow } from '@/hooks/useWideWindow'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
 import { AirPlayButton } from '@/components/recordings/external-player'
@@ -155,9 +157,11 @@ import {
 import {
   DataBroadcastBand,
   DataBroadcastFace,
+  DataBroadcastRemote,
   DataBroadcastToggle,
-  columnOverTheBand,
+  widestColumn,
 } from '@/components/data-broadcast/data-broadcast-player'
+import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
 
 const RESTS = 3000
 
@@ -262,6 +266,8 @@ export function Player({
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
+  const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
+  const wide = useWideWindow()
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
@@ -1066,30 +1072,35 @@ export function Player({
   }
 
   const faceShown = broadcast.view.open
-  const place = bandPlace(full, false)
-  const underTheBox = faceShown && place === 'under'
+  const place = bandPlace(full, wide)
+  const underTheBox = faceShown && place !== 'over'
+  const bandUnderTheBox = faceShown && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
-  const overThePicture = faceShown && !underTheBox
+  const overThePicture = faceShown && place === 'over'
+  const beside = faceShown && place === 'column'
+  const widest = widestColumn(place, underTheBox, rowHeight)
   const barSaid: PlayerSaying | null = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' }
     : said
 
   if (phase === 'broken') {
     return (
-      <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
-        <PlaybackFaultNotice
-          detail={d}
-          plan={plan}
-          fault={fault}
-          onRetry={() => play(position)}
-          onTakeTicket={onTakeTicket}
-        />
-      </div>
+      <PlaybackFaultNotice
+        detail={d}
+        plan={plan}
+        fault={fault}
+        onRetry={() => play(position)}
+        onTakeTicket={onTakeTicket}
+      />
     )
   }
 
   return (
-    <div className="mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5">
+    <div
+      data-slot="player-row"
+      data-remote={beside ? 'beside' : undefined}
+      className="flex items-start justify-center"
+    >
       <section
         ref={setShell}
         data-full={full ? 'true' : undefined}
@@ -1103,10 +1114,8 @@ export function Player({
         }}
         onKeyDown={onKeyDown}
         data-up={chromeUp ? 'true' : undefined}
-        style={{
-          maxWidth: underTheBox ? columnOverTheBand(rowHeight) : undefined,
-        }}
-        className={PLAYER_BOARD}
+        style={{ maxWidth: widest, width: beside ? widest : undefined }}
+        className={cn(PLAYER_BOARD, 'min-w-0', beside && 'mx-0')}
       >
         <div
           data-slot="player-face"
@@ -1552,7 +1561,7 @@ export function Player({
             </div>
           </div>
         </div>
-        {underTheBox && (
+        {bandUnderTheBox && (
           <DataBroadcastBand
             place="under"
             numbers={broadcast.view.numbers}
@@ -1561,7 +1570,19 @@ export function Player({
             onAim={aimAtTheKeypad}
           />
         )}
+        {beside &&
+          remoteSlot &&
+          createPortal(
+            <DataBroadcastRemote
+              station={d.channel}
+              onKey={broadcast.press}
+              onAim={aimAtTheKeypad}
+              onToggle={toggleBroadcast}
+            />,
+            remoteSlot,
+          )}
       </section>
+      {faceShown && wide && <RecordingRemoteColumn slotRef={setRemoteSlot} />}
     </div>
   )
 }

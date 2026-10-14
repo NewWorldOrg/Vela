@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type Ref } from 'react'
+import { useRef, type ReactNode, type Ref } from 'react'
 
 import { cn } from '@/lib/utils'
 import { FOLD_STEP_MS, foldBand, type FoldMotion } from '@/lib/live-fold'
@@ -30,7 +30,46 @@ const SHOWS = [
 /** The gap under the column's head, as the mock lays the remote under it. */
 const UNDER_THE_HEAD = 14
 
-/** The head of the column while the data broadcast is open: `リモコン` and `チャンネル` to switch between, and the fold. It slides in from the right when it first stands, and out with the fold. */
+/** The column beside the player: pinned under the top bar, no taller than the window lets it stand, its bands clipped at its sides with room kept for rings and shadows. */
+export const PLAYER_SIDE_COLUMN =
+  'sticky top-[calc(62rem/16)] flex max-h-[calc(100dvh-102rem/16-env(safe-area-inset-bottom))] shrink-0 flex-col items-end overflow-clip [overflow-clip-margin:14px]'
+
+/** What the column holds while the data broadcast is open, at the column's open width however narrow the column is drawn, so a fold slides it rather than lays it out again. */
+export const COLUMN_BODY =
+  'flex min-h-0 w-full flex-col min-[1181px]:w-[calc(344rem/16)]'
+
+/** The head of the column while the data broadcast is open: what stands at its left, and the fold at its right end, with the remote 14 below. */
+export function ColumnHead({
+  folded,
+  onFold,
+  controls,
+  foldLabel,
+  children,
+}: {
+  folded: boolean
+  onFold: (folded: boolean) => void
+  controls?: string
+  foldLabel?: string
+  children?: ReactNode
+}) {
+  return (
+    <div
+      data-slot="column-head"
+      style={{ marginBottom: UNDER_THE_HEAD }}
+      className="flex items-start justify-end gap-1.5"
+    >
+      {children}
+      <FoldButton
+        folded={folded}
+        onFold={onFold}
+        controls={controls}
+        label={foldLabel}
+      />
+    </div>
+  )
+}
+
+/** The live column's head: `リモコン` and `チャンネル` to switch between, and the fold. The switch slides in from the right when it first stands, and out with the fold. */
 export function ColumnSwitch({
   shows,
   onShows,
@@ -47,11 +86,7 @@ export function ColumnSwitch({
   controls?: string
 }) {
   return (
-    <div
-      data-slot="column-switch"
-      style={{ marginBottom: UNDER_THE_HEAD }}
-      className="flex items-start justify-end gap-1.5"
-    >
+    <ColumnHead folded={folded} onFold={onFold} controls={controls}>
       <div className="min-w-0 flex-1 overflow-clip [overflow-clip-margin:6px]">
         <div
           style={{ transitionDelay: stepOf(0, motion) }}
@@ -67,8 +102,7 @@ export function ColumnSwitch({
           />
         </div>
       </div>
-      <FoldButton folded={folded} onFold={onFold} controls={controls} />
-    </div>
+    </ColumnHead>
   )
 }
 
