@@ -47,7 +47,7 @@ type Read =
 const warnOnTheConsole: Warn = (warning) =>
   console.warn(`data broadcast: ${warning}`)
 
-/** A recording's data broadcast as the player holds it: the catalog of the whole recording is read once, and at each second of playback the version of each module in effect then is chosen, read from the module route and handed on, with the versions of the next two minutes read before they are needed. An event message is handed on once, when playback passes its second; a seek back lets the ones after it be heard again, and a seek forward passes over the ones between. The time on air is when the recording began and the position played, told each time playback moves it, so that a document asking how far into the programme it is hears where playback is: it stands while paused and goes back with a seek. */
+/** A recording's data broadcast as the player holds it: the catalog of the whole recording is read once, and at each second of playback the version of each module in effect then is chosen, read from the module route and handed on, with the versions of the next two minutes read before they are needed. An event message is handed on once, when playback passes its second; a seek back lets the ones after it be heard again, and a seek forward passes over the ones between. The time on air is when the recording began and the position played, told each time playback moves it, so that the date a document reads and how far into the programme it is follow where playback is: they stand while paused and go back with a seek. */
 export class RecordingDataBroadcast implements DataBroadcastHeld {
   private readonly readTimeline: ReadTimeline
 

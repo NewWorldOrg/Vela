@@ -43,6 +43,7 @@ import {
   PLAYER_FACE,
 } from '@/components/recordings/player-palette'
 import type { BmlCatalog } from '@/lib/bml/catalog'
+import { PersistentMemory, readArray } from '@/lib/bml/memory'
 import type { BmlModule } from '@/lib/bml/resources'
 import {
   CURSOR_PROBE,
@@ -53,6 +54,7 @@ import {
   ROWS_CATALOG,
   SANDBOX_PROBE,
   SCRIPTED_CATALOG,
+  clockModules,
   dataBroadcastModules,
   howFarModules,
   menuModules,
@@ -301,13 +303,17 @@ class HeldRecording implements DataBroadcastHeld {
 
   readonly catalog = PROGRAMME_READING_CATALOG
 
-  readonly forTheCatalog = howFarModules()
+  readonly forTheCatalog: BmlModule[]
 
   readonly nptReadings: NptReading[] = []
 
   clock = RECORDING_BEGAN + 5
 
   private readonly listeners = new Set<(change: DataBroadcastChange) => void>()
+
+  constructor(modules: BmlModule[]) {
+    this.forTheCatalog = modules
+  }
 
   subscribe(listener: (change: DataBroadcastChange) => void): () => void {
     this.listeners.add(listener)
@@ -330,10 +336,22 @@ class HeldRecording implements DataBroadcastHeld {
 const STORY_BUTTON =
   'h-11 min-w-11 cursor-pointer rounded-full border border-line px-4 text-ui'
 
-function RecordedFace() {
-  const [feed] = useState(() => new HeldRecording())
+/** What a document kept under `seen` as `S:19B`, read back from the block the runtime told the player. */
+function seenOf(value: string | null): string | null {
+  const memory = new PersistentMemory()
+
+  memory.take(value === null ? [] : [['seen', value]])
+
+  const [text] = readArray(memory, 'seen', 'S:19B') ?? []
+
+  return typeof text === 'string' ? text : null
+}
+
+function RecordedFace({ modules }: { modules: () => BmlModule[] }) {
+  const [feed] = useState(() => new HeldRecording(modules()))
   const runtime = useRef<SendToRuntime | null>(null)
   const [rect, setRect] = useState<string | null>(null)
+  const [seen, setSeen] = useState<string | null>(null)
 
   return (
     <div className="p-6">
@@ -341,6 +359,7 @@ function RecordedFace() {
         role="group"
         aria-label="録画のデータ放送"
         data-video-rect={rect ?? undefined}
+        data-seen={seen ?? undefined}
         className={cn(PLAYER_FACE, 'relative')}
       >
         <DataBroadcastFace
@@ -352,6 +371,8 @@ function RecordedFace() {
           onMessage={(message) => {
             if (message.kind === 'videoRect') {
               setRect(said(message.rect))
+            } else if (message.kind === 'memory' && message.name === 'seen') {
+              setSeen(seenOf(message.value))
             }
           }}
           says={null}
@@ -385,7 +406,7 @@ function RecordedFace() {
 }
 
 export const 録画の位置を動かすと文書が聞く経過時間もついてくる: Story = {
-  render: () => <RecordedFace />,
+  render: () => <RecordedFace modules={howFarModules} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const face = canvas.getByRole('group', { name: '録画のデータ放送' })
@@ -407,6 +428,41 @@ export const 録画の位置を動かすと文書が聞く経過時間もつい�
     await userEvent.click(canvas.getByRole('button', { name: '5 秒へ' }))
     await userEvent.click(decide)
     await rectIs('80,120,400,225')
+  },
+}
+
+/** A time printed as the self-made document prints it, in this browser's own time zone as the document's is. */
+function printed(seconds: number): string {
+  const at = new Date(seconds * 1000)
+  const two = (value: number) => String(value).padStart(2, '0')
+
+  return `${at.getFullYear()}/${two(at.getMonth() + 1)}/${two(at.getDate())} ${two(at.getHours())}:${two(at.getMinutes())}:${two(at.getSeconds())}`
+}
+
+export const 録画のデータ放送の文書は録った日時を見る: Story = {
+  render: () => <RecordedFace modules={clockModules} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const face = canvas.getByRole('group', { name: '録画のデータ放送' })
+    const seenIs = (seconds: number) =>
+      waitFor(
+        () =>
+          expect(face).toHaveAttribute(
+            'data-seen',
+            printed(RECORDING_BEGAN + seconds),
+          ),
+        { timeout: 5000 },
+      )
+
+    await seenIs(5)
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+    await seenIs(5)
+
+    await userEvent.click(canvas.getByRole('button', { name: '2 分へ' }))
+    await seenIs(120)
+
+    await userEvent.click(canvas.getByRole('button', { name: '5 秒へ' }))
+    await seenIs(5)
   },
 }
 
