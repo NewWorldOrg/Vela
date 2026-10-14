@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <script
+      src="/data-broadcast/hybridcast-receiver.js"
+      data-hybridcast-relay="/hybridcast-app/app.html"
+      data-hybridcast-socket="/hybridcast-app/socket"
+      data-hybridcast-document="http://example.test/hc/index.html"
+    ></script>
+    <title>Hybridcast の見本</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: transparent;
+      }
+      body {
+        font: 40px sans-serif;
+        color: #fff;
+      }
+      .panel {
+        position: absolute;
+        left: 80px;
+        top: 120px;
+        width: 800px;
+        height: 450px;
+        background: #23466e;
+      }
+      .panel p {
+        margin: 40px;
+      }
+      object {
+        position: absolute;
+        left: 960px;
+        top: 120px;
+        width: 800px;
+        height: 450px;
+      }
+      #field {
+        position: absolute;
+        left: 80px;
+        top: 800px;
+        width: 600px;
+        font-size: 32px;
+      }
+      #keys {
+        position: absolute;
+        left: 80px;
+        top: 640px;
+        width: 1680px;
+        height: 120px;
+        margin: 0;
+        background: #2f2f3a;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- The relay writes the type of the broadcast's picture object as data-hybridcast-type, so that it tries to load no plugin. -->
+    <object id="av" data-hybridcast-type="video/x-iptvf-broadcast"></object>
+    <div class="panel"><p>Hybridcast の見本</p></div>
+    <p id="keys"></p>
+    <a id="next" href="/hc/sub/next.html" hidden>次のページ</a>
+    <a id="away" href="https://elsewhere.test/" hidden>外のページ</a>
+    <a
+      id="relayed-next"
+      href="/hybridcast-app/app.html?uri=http%3A%2F%2Fexample.test%2Fhc%2Fsub%2Fnext.html"
+      hidden
+      >中継の次のページ</a
+    >
+    <input id="field" aria-label="入力" />
+    <audio id="rom9">
+      <source src="romsound://9" type="audio/X-arib-romsound" />
+    </audio>
+    <script>
+      // A self-made application that calls the receiver the way the applications call it, and reports what it was answered to the page around it.
+      var asked = decodeURIComponent(location.search)
+      var page = asked.indexOf('next.html') >= 0 ? 'next' : 'index'
+      var report = { page: page }
+      // An entry page that sends the frame on before it has loaded, as one that reads where to go from the shared registers does.
+      if (asked.indexOf('jump') >= 0) {
+        __hcLocation.href = 'sub/next.html'
+      }
+      var say = function (name, value) {
+        report[name] = String(value)
+        parent.postMessage({ probe: report }, '*')
+      }
+      var errorName = function (run) {
+        try {
+          run()
+          return 'none'
+        } catch (error) {
+          return error.name
+        }
+      }
+      var device = navigator.receiverDevice
+      var manager = navigator.applicationManager
+      var pseudo = navigator.bmlCompat.browserPseudo
+      var owner = manager.getOwnerApplication()
+
+      say('origin', self.origin)
+      say(
+        'agent',
+        navigator.userAgent.indexOf('Hybridcast/') >= 0 ? 'hybridcast' : 'none',
+      )
+      say(
+        'agent-maker',
+        navigator.userAgent
+          .substr(navigator.userAgent.indexOf('Hybridcast/'))
+          .split(';').length,
+      )
+      say('name', window.name)
+      say(
+        'cookie',
+        errorName(function () {
+          return document.cookie
+        }),
+      )
+      say(
+        'storage',
+        errorName(function () {
+          return window.localStorage
+        }),
+      )
+      say(
+        'parent',
+        errorName(function () {
+          return parent.document.title
+        }),
+      )
+      say('vk', [VK_ENTER, VK_UP, VK_RED, VK_DBUTTON, VK_0].join(','))
+      var system = device.getSystemInformation(null)
+      say(
+        'system',
+        [
+          system.makerid,
+          system.modelname,
+          system.browsername,
+          system.browserversion,
+        ].join('|'),
+      )
+      var event = null
+      device.getCurrentEventInformation(function (info) {
+        event = info
+      })
+      say(
+        'event',
+        event
+          ? [
+              event.service_id,
+              event.event_id,
+              event.name,
+              event.start_time instanceof Date,
+            ].join('|')
+          : 'later',
+      )
+      device.getDeviceIdentifier(0x0005, function (id) {
+        say('device', id)
+      })
+      say('onair', device.streamEvent.sourceIs('onair'))
+      say('greg44', pseudo.Greg[44])
+      say('greg61', pseudo.Greg[61])
+      pseudo.Greg[61] = 'app:1'
+      say(
+        'memory',
+        pseudo.writePersistentArray('nvram://~/local/sample', 'S:3B', [
+          'abc',
+        ]) === 1
+          ? pseudo.readPersistentArray('nvram://~/local/sample', 'S:3B')[0]
+          : 'failed',
+      )
+      say('tune', device.tuneTo({}, null))
+      say('companion', device.getCompanionDeviceList())
+      say(
+        'ait',
+        JSON.stringify(
+          manager.getOwnerAIT && [
+            manager.getOwnerAIT().orgId,
+            manager.getOwnerAIT().appId,
+          ],
+        ),
+      )
+      var keySet = owner.keySet
+      var groups =
+        keySet.RED |
+        keySet.GREEN |
+        keySet.YELLOW |
+        keySet.BLUE |
+        keySet.NAVIGATION |
+        keySet.NUMERIC
+      if (asked.indexOf('dbutton') >= 0) {
+        groups = groups | keySet.DBUTTON
+      }
+      keySet.setValue(groups)
+      say('keyset', keySet.value)
+
+      // A request went through the relay when what came back is the answer the relay gave: in the stories the server beside them answers for the relay with this page, and lets the frame read it.
+      var MARK = 'Hybridcast の見本'
+      var relayedFrom = function (asked) {
+        return '/hybridcast-app/app.html?uri=' + encodeURIComponent(asked)
+      }
+      var readBack = function (name, asked) {
+        return function (answer) {
+          return answer.text().then(function (text) {
+            say(
+              name,
+              answer.url.indexOf(relayedFrom(asked)) >= 0 &&
+                text.indexOf(MARK) >= 0
+                ? 'relayed'
+                : 'elsewhere',
+            )
+          })
+        }
+      }
+      var failed = function (name) {
+        return function (error) {
+          say(name, error.name)
+        }
+      }
+      var api =
+        'http://example.test/api/live/32736-1024/data-broadcast/receiver-id'
+      fetch(
+        location.origin + '/api/live/32736-1024/data-broadcast/receiver-id',
+      ).then(readBack('api', api), failed('api'))
+      var list = 'http://example.test/hc/list.json'
+      fetch('/hc/list.json').then(readBack('fetch', list), failed('fetch'))
+      // The relay rewrites the scripts it hands over so that location reads __hcLocation; the lines below are written as they come out of it.
+      var av = document.getElementById('av')
+      say('av-type', av.type + '|' + av.getAttribute('type'))
+      var made = document.createElement('object')
+      made.type = 'video/broadcast'
+      say('made-type', made.type + '|' + made.hasAttribute('type'))
+      say('hostname', __hcLocation.hostname)
+      say('href', __hcLocation.href)
+      var composed = 'http://www.' + __hcLocation.hostname + '/hc/check.json'
+      fetch(composed).then(readBack('composed', composed), failed('composed'))
+      var nearby = new URL('data.json', __hcLocation.href).href
+      say('xhr-at', nearby)
+      var inside = new XMLHttpRequest()
+      inside.onload = function () {
+        say(
+          'xhr',
+          inside.responseURL.indexOf(relayedFrom(nearby)) >= 0 &&
+            inside.responseText.indexOf(MARK) >= 0
+            ? 'relayed'
+            : 'elsewhere',
+        )
+      }
+      inside.onerror = function () {
+        say('xhr', 'error')
+      }
+      inside.withCredentials = true
+      inside.open('GET', 'data.json')
+      inside.send()
+      say('xhr-credentials', inside.withCredentials)
+      fetch('https://elsewhere.test/track').then(
+        function () {
+          say('outside', 'reached')
+        },
+        function (error) {
+          say('outside', error.name)
+        },
+      )
+      var request = new XMLHttpRequest()
+      request.onerror = function () {
+        say('xhr-outside', 'error ' + request.readyState + ' ' + request.status)
+      }
+      request.open('GET', 'https://elsewhere.test/beacon')
+      request.send()
+      say(
+        'socket-outside',
+        errorName(function () {
+          return new WebSocket('wss://elsewhere.test/live')
+        }),
+      )
+      var socket = new WebSocket('/live')
+      say(
+        'socket',
+        socket.url.indexOf(
+          '/hybridcast-app/socket?uri=ws%3A%2F%2Fexample.test%2Flive',
+        ) >= 0
+          ? 'relayed'
+          : socket.url,
+      )
+      socket.onerror = function () {}
+      // Addresses written at run time are pointed at the relay as they are written, before the element is in the document.
+      var onTheRelay = function (written, asked) {
+        return written.indexOf(relayedFrom(asked)) >= 0
+      }
+      var detached = new Image()
+      detached.src = '/hc/menu0.png'
+      say(
+        'new-image',
+        onTheRelay(
+          detached.getAttribute('src'),
+          'http://example.test/hc/menu0.png',
+        )
+          ? 'relayed'
+          : detached.getAttribute('src'),
+      )
+      var holder = document.createElement('div')
+      holder.innerHTML =
+        '<span style="background:url(/hc/bg.png)"><img src="img/a.png" srcset="img/a2.png 2x"></span>'
+      var held = holder.querySelector('img')
+      say(
+        'markup',
+        onTheRelay(
+          held.getAttribute('src'),
+          'http://example.test/hc/img/a.png',
+        ) &&
+          onTheRelay(
+            held.getAttribute('srcset'),
+            'http://example.test/hc/img/a2.png',
+          ) &&
+          onTheRelay(
+            holder.querySelector('span').getAttribute('style'),
+            'http://example.test/hc/bg.png',
+          )
+          ? 'relayed'
+          : holder.innerHTML,
+      )
+      var painted = document.createElement('div')
+      painted.style.backgroundImage = 'url(/hc/bg.png)'
+      say(
+        'style',
+        onTheRelay(
+          painted.style.backgroundImage,
+          'http://example.test/hc/bg.png',
+        )
+          ? 'relayed'
+          : painted.style.backgroundImage,
+      )
+      // Markup as a minifier writes it, with no space before an attribute, an Audio made with its address, and the address in an SVG's xlink:href are pointed as they are written.
+      var joined = document.createElement('div')
+      joined.innerHTML = '<img alt="x"src="/hc/m1.png"><img/src=/hc/m2.png>'
+      var joinedImages = joined.querySelectorAll('img')
+      say(
+        'joined',
+        onTheRelay(
+          joinedImages[0].getAttribute('src'),
+          'http://example.test/hc/m1.png',
+        ) &&
+          onTheRelay(
+            joinedImages[1].getAttribute('src'),
+            'http://example.test/hc/m2.png',
+          )
+          ? 'relayed'
+          : joined.innerHTML,
+      )
+      var tune = new Audio('/hc/tune.mp3')
+      say(
+        'audio',
+        tune instanceof Audio &&
+          onTheRelay(
+            tune.getAttribute('src'),
+            'http://example.test/hc/tune.mp3',
+          )
+          ? 'relayed'
+          : tune.getAttribute('src'),
+      )
+      var XLINK = 'http://www.w3.org/1999/xlink'
+      var icon = document.createElementNS('http://www.w3.org/2000/svg', 'use')
+      icon.setAttributeNS(XLINK, 'xlink:href', '/hc/sprite.svg#a')
+      var drawn = document.createElement('div')
+      drawn.innerHTML = '<svg><image xlink:href="/hc/i.png" /></svg>'
+      say(
+        'xlink',
+        onTheRelay(
+          icon.getAttributeNS(XLINK, 'href'),
+          'http://example.test/hc/sprite.svg',
+        ) &&
+          onTheRelay(
+            drawn.querySelector('image').getAttributeNS(XLINK, 'href'),
+            'http://example.test/hc/i.png',
+          )
+          ? 'relayed'
+          : icon.getAttributeNS(XLINK, 'href'),
+      )
+      // The imports and the url() of a style element's text are pointed, set as its text, written as markup, added to it later or inserted as a rule.
+      var sheetText = document.createElement('style')
+      sheetText.textContent =
+        '@import "/hc/a.css"; .x { background: url(/hc/b.png) }'
+      var sheetMarkup = document.createElement('style')
+      sheetMarkup.innerHTML = '@import url(/hc/a.css);'
+      var sheetHolder = document.createElement('div')
+      sheetHolder.innerHTML = '<style>@import "/hc/a.css";</style>'
+      say(
+        'style-text',
+        onTheRelay(sheetText.textContent, 'http://example.test/hc/a.css') &&
+          onTheRelay(sheetText.textContent, 'http://example.test/hc/b.png') &&
+          onTheRelay(sheetMarkup.textContent, 'http://example.test/hc/a.css') &&
+          onTheRelay(sheetHolder.textContent, 'http://example.test/hc/a.css')
+          ? 'relayed'
+          : [
+              sheetText.textContent,
+              sheetMarkup.textContent,
+              sheetHolder.textContent,
+            ].join(' | '),
+      )
+      var ruled = document.createElement('style')
+      document.head.appendChild(ruled)
+      ruled.sheet.insertRule('.rule { background: url(/hc/rule.png) }', 0)
+      say(
+        'style-rule',
+        onTheRelay(
+          ruled.sheet.cssRules[0].cssText,
+          'http://example.test/hc/rule.png',
+        )
+          ? 'relayed'
+          : ruled.sheet.cssRules[0].cssText,
+      )
+      var later = document.createElement('style')
+      document.head.appendChild(later)
+      later.appendChild(
+        document.createTextNode('.later { background: url(/hc/later.png) }'),
+      )
+      setTimeout(function () {
+        say(
+          'style-later',
+          onTheRelay(later.textContent, 'http://example.test/hc/later.png')
+            ? 'relayed'
+            : later.textContent,
+        )
+      }, 50)
+      // A fragment the application fetches carries the receiver script the relay puts into every page; building markup from it leaves the script out.
+      fetch('/hc/components/item.html').then(function (answer) {
+        return answer.text().then(function (text) {
+          var built = document.createElement('div')
+          built.innerHTML = text
+          say(
+            'fragment',
+            text.indexOf('data-hybridcast-relay') >= 0 &&
+              built.querySelector('script[data-hybridcast-relay]') === null
+              ? 'clean'
+              : 'carries the receiver',
+          )
+        })
+      }, failed('fragment'))
+      var rom = document.getElementById('rom9').querySelector('source')
+      say(
+        'rom-source',
+        rom.getAttribute('src').indexOf('blob:') === 0 &&
+          rom.getAttribute('type') === 'audio/wav'
+          ? 'quiet'
+          : rom.getAttribute('src'),
+      )
+      var sound = document.createElement('audio')
+      sound.src = 'romsound://3'
+      say(
+        'rom-src',
+        sound.getAttribute('src').indexOf('blob:') === 0
+          ? 'quiet'
+          : sound.getAttribute('src'),
+      )
+      sound.play().then(
+        function () {
+          say('rom-play', 'played')
+        },
+        function (error) {
+          say('rom-play', error.name)
+        },
+      )
+      var chime = new Audio('romsound://5')
+      say(
+        'rom-audio',
+        chime.getAttribute('src').indexOf('blob:') === 0
+          ? 'quiet'
+          : chime.getAttribute('src'),
+      )
+      chime.play().then(
+        function () {
+          say('rom-audio-play', 'played')
+        },
+        function (error) {
+          say('rom-audio-play', error.name)
+        },
+      )
+      var image = document.createElement('img')
+      image.src = '/hc/mark.png'
+      image.alt = ''
+      document.body.appendChild(image)
+      setTimeout(function () {
+        say(
+          'image',
+          image
+            .getAttribute('src')
+            .indexOf(
+              '/hybridcast-app/app.html?uri=http%3A%2F%2Fexample.test%2Fhc%2Fmark.png',
+            ) >= 0
+            ? 'relayed'
+            : image.getAttribute('src'),
+        )
+      }, 50)
+
+      window.addEventListener('load', function () {
+        say('loaded', 'yes')
+      })
+
+      var pressed = []
+      document.addEventListener('keydown', function (event) {
+        pressed.push(event.which)
+        document.getElementById('keys').textContent = pressed.join(' ')
+        say('keys', pressed.join(','))
+        if (event.which === VK_ENTER) {
+          document.getElementById('next').click()
+        }
+        if (event.which === VK_BLUE) {
+          say('escape', 'tried')
+          document.getElementById('away').click()
+          setTimeout(function () {
+            say('escape', 'stayed')
+          }, 300)
+        }
+        if (event.which === VK_0) {
+          location.href = '/hybridcast-app/outside.html'
+        }
+        if (event.which === VK_1) {
+          document.getElementById('field').focus()
+          say(
+            'field',
+            document.activeElement === document.getElementById('field'),
+          )
+        }
+        if (event.which === VK_3) {
+          __hcLocation.href = 'sub/next.html'
+        }
+        if (event.which === VK_4) {
+          __hcLocation.assign('https://elsewhere.test/')
+        }
+        if (event.which === VK_5) {
+          window.__hcLocation = '/hc/sub/next.html'
+        }
+        if (event.which === VK_6) {
+          // A link the relay wrote, read whole from the link, as an application reads where a link goes and goes there itself.
+          __hcLocation.href = document.getElementById('relayed-next').href
+        }
+        if (event.which === VK_2) {
+          // A document that says hello again for the loads to come and says it loaded, then leaves the relay by its script.
+          var faked = new MessageChannel()
+          parent.postMessage(
+            {
+              kind: 'hello',
+              relay: '/hybridcast-app/app.html',
+              document: 'http://example.test/hc/index.html',
+            },
+            '*',
+            [faked.port2],
+          )
+          for (var said = 0; said < 3; said += 1) {
+            faked.port1.postMessage({ kind: 'loaded' })
+          }
+          setTimeout(function () {
+            location.href = '/hybridcast-app/outside.html'
+          }, 100)
+        }
+        if (event.which === VK_YELLOW) {
+          owner.destroyApplication()
+        }
+        if (event.which === VK_GREEN) {
+          manager.launchDataBroadcastingBrowser({ component_tag: 0x40 })
+        }
+      })
+    </script>
+  </body>
+</html>

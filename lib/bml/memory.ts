@@ -96,6 +96,34 @@ export function blockOfText(text: string): Uint8Array | null {
   }
 }
 
+/** Whether keeping a block under a name leaves all one broadcaster keeps within the limit. Forgetting always does; what is not a block never fits. */
+export function fitsTheBroadcaster(
+  storage: MemoryStorage,
+  service: number,
+  name: string,
+  value: string | null,
+): boolean {
+  if (value === null) {
+    return true
+  }
+
+  const block = blockOfText(value)
+
+  if (!block) {
+    return false
+  }
+
+  const others = memoryEntriesOf(storage, service).reduce(
+    (total, [held, text]) =>
+      held === name
+        ? total
+        : total + bytesOfName(held) + (blockOfText(text)?.length ?? 0),
+    0,
+  )
+
+  return others + bytesOfName(name) + block.length <= MOST_MEMORY_BYTES
+}
+
 export type OnWrite = (name: string, value: string | null) => void
 
 /** The runtime's copy of one broadcaster's memory: what the player handed it, and what the document writes, within the limit. A name never written reads as a block of zeros. */

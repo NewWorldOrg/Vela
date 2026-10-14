@@ -1,6 +1,12 @@
 'use client'
 
-import { useCallback, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 
 import type { AppStart } from '@/lib/bml/ait'
 import type { BmlKey } from '@/lib/bml/keys'
@@ -23,7 +29,16 @@ import {
   type DataBroadcastView,
 } from '@/lib/data-broadcast-view'
 import type { StartApplication } from '@/lib/data-broadcast-line'
+import {
+  appEndSaid,
+  startupOf,
+  type HybridcastApp,
+} from '@/lib/data-broadcast-view'
 import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
+import type {
+  AppHeard,
+  SendToApp,
+} from '@/components/data-broadcast/hybridcast-frame'
 
 interface Kept {
   of: string | null
@@ -50,6 +65,8 @@ export interface DataBroadcast {
   showNumbers: (shown: boolean) => void
   quiet: () => void
   closeApplication: () => void
+  connectApp: (send: SendToApp | null) => void
+  hearApp: (message: AppHeard) => void
 }
 
 const unreachable = () => 'absent' as const
@@ -64,7 +81,7 @@ function openedIn(
   return view.open ? programme : before
 }
 
-/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime. What is shown belongs to one session, so a new channel starts closed. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for is started through `startApplication`; where there is none, it does not open. */
+/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. */
 export function useDataBroadcast(
   feed: DataBroadcastHeld,
   session: string | null,
@@ -87,6 +104,7 @@ export function useDataBroadcast(
     openedIn: null,
   })
   const runtime = useRef<SendToRuntime | null>(null)
+  const app = useRef<SendToApp | null>(null)
   const count = useRef(0)
 
   const sameSession = kept.of === session
@@ -96,19 +114,49 @@ export function useDataBroadcast(
     on: 'availability',
     availability,
   })
-  const view = opensByItself(settled, {
+  const allowed =
+    settled.hybridcast && !startApplication
+      ? dataBroadcastAfter(settled, {
+          on: 'appClosed',
+          why: { why: 'notAllowed' },
+        })
+      : settled
+  const view = opensByItself(allowed, {
     autoOpens,
     autoStart: catalog?.autoStart ?? false,
     availability,
     openedThisProgramme: before === programme,
   })
-    ? dataBroadcastAfter(settled, { on: 'autoStart', availability })
-    : settled
+    ? dataBroadcastAfter(allowed, { on: 'autoStart', availability })
+    : allowed
   const opened = openedIn(view, programme, before)
 
   if (!sameSession || view !== kept.view || opened !== kept.openedIn) {
     setKept({ of: session, view, openedIn: opened })
   }
+
+  const ran = useRef<{ app: HybridcastApp | null; session: string | null }>({
+    app: null,
+    session,
+  })
+
+  useEffect(() => {
+    const before = ran.current
+
+    ran.current = { app: view.hybridcast, session }
+
+    if (!before.app || view.hybridcast) {
+      return
+    }
+
+    console.warn(
+      appEndSaid(
+        before.session === session
+          ? (view.appEnded ?? { why: 'broadcastEnded' })
+          : { why: 'channelChanged' },
+      ),
+    )
+  })
 
   const step = (what: DataBroadcastStep) =>
     setKept((was) => {
@@ -131,13 +179,13 @@ export function useDataBroadcast(
       UNOPENED_LASTS_MS,
     )
 
-  const start = async (app: AppStart, nth: number) => {
+  const start = async (asked: AppStart, nth: number) => {
     const started = startApplication
-      ? await startApplication(app)
+      ? await startApplication(asked)
       : ({ said: 'unreached' } as const)
 
     if (started.said === 'answered') {
-      step({ on: 'appStarted', nth, address: started.answer.address })
+      step({ on: 'appStarted', nth, ...started.answer })
 
       return
     }
@@ -190,6 +238,51 @@ export function useDataBroadcast(
     }
   }
 
+  const hearApp = (message: AppHeard) => {
+    count.current += 1
+
+    const nth = count.current
+
+    switch (message.kind) {
+      case 'videoRect':
+        step({ on: 'appRect', rect: message.rect })
+        return
+      case 'keySet':
+        step({ on: 'appKeys', mask: message.mask })
+        return
+      case 'greg':
+        step({ on: 'appGreg', greg: message.greg })
+        return
+      case 'destroy':
+        step({ on: 'appClosed', why: { why: 'destroyed' } })
+        return
+      case 'launchBml':
+        step({
+          on: 'appClosed',
+          why: { why: 'toTheDocuments', componentTag: message.componentTag },
+          startup:
+            message.componentTag === null
+              ? null
+              : startupOf(message.componentTag),
+        })
+        return
+      case 'replace':
+        step({ on: 'appReplaced', start: message.start, nth })
+        void start(message.start, nth)
+        return
+      case 'romsound':
+        return
+      case 'lost':
+        step({ on: 'appLost', end: message.end, nth })
+
+        if (message.end.why === 'unopened') {
+          unopened(nth)
+        }
+
+        return
+    }
+  }
+
   return {
     availability,
     view,
@@ -198,10 +291,24 @@ export function useDataBroadcast(
       runtime.current = send
     },
     toggle: () => step({ on: 'toggle', availability }),
-    press: (key) => runtime.current?.({ kind: 'key', key }),
+    press: (key) => {
+      if (!view.hybridcast) {
+        runtime.current?.({ kind: 'key', key })
+
+        return
+      }
+
+      if (view.usedKeys.includes(key)) {
+        app.current?.({ kind: 'key', key })
+      }
+    },
     hear,
     showNumbers: (shown) => step({ on: 'numbers', shown }),
     quiet: () => step({ on: 'quiet' }),
     closeApplication: () => step({ on: 'appClosed' }),
+    connectApp: (send) => {
+      app.current = send
+    },
+    hearApp,
   }
 }

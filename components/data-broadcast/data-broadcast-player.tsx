@@ -145,13 +145,14 @@ function saidOf(relayed: Relayed<TransmitAnswer>): RuntimeMessage | null {
 
 const NO_STARTS: readonly AppStart[] = []
 
-/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. Coming back from a Hybridcast application, the runtime is handed the shared registers it left with, and the starts that failed so that it does not ask for them again. */
+/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog and the modules when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. Coming back from a Hybridcast application, the runtime is handed the shared registers as the application left them, the starts that failed so that it does not ask for them again, and the start document of the component the application named, if it named one. */
 export function DataBroadcastFace({
   feed,
   onAir = NOTHING_ON_AIR,
   line = NO_LINE,
   greg = null,
   failedStarts = NO_STARTS,
+  startup = null,
   onRuntime,
   onMessage,
   says,
@@ -161,6 +162,7 @@ export function DataBroadcastFace({
   line?: DataBroadcastLine
   greg?: readonly string[] | null
   failedStarts?: readonly AppStart[]
+  startup?: string | null
   onRuntime: (send: SendToRuntime | null) => void
   onMessage: (message: RuntimeMessage) => void
   says: string | null
@@ -351,7 +353,7 @@ export function DataBroadcastFace({
       send({ kind: 'greg', greg: [...handedGreg.current] })
     }
 
-    send({ kind: 'open' })
+    send(startup ? { kind: 'open', startup } : { kind: 'open' })
     runtime.current = send
     onRuntime(send)
     letGo.current = feed.subscribe((change) => {
@@ -382,17 +384,6 @@ export function DataBroadcastFace({
         )}
       </p>
     </>
-  )
-}
-
-/** Where the Hybridcast application the documents started runs. Its frame comes here; until it does, the place stays empty over the picture, and the band says what runs and closes it back to the documents. */
-export function HybridcastFace({ address }: { address: string | null }) {
-  return (
-    <div
-      data-slot="hybridcast-face"
-      data-started={address === null ? 'no' : 'yes'}
-      className="pointer-events-none absolute inset-0 z-[1]"
-    />
   )
 }
 

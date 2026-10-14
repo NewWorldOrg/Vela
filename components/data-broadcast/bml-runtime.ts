@@ -65,6 +65,7 @@ import {
   MOST_RUN_MS,
   ScriptScope,
   scopeOf,
+  type Bindings,
   type Evaluate,
 } from '@/lib/bml/scripts'
 import {
@@ -150,6 +151,7 @@ type Leaving =
 interface Seen {
   shown: Shown
   event: BmlEvent | null
+  bindings: Bindings | null
 }
 
 function moduleKey(tag: number, id: number): string {
@@ -318,7 +320,7 @@ export class BmlRuntime {
         this.took(message.id, message.module)
         return
       case 'open':
-        this.open()
+        this.open(message.startup)
         return
       case 'close':
         this.close()
@@ -415,8 +417,11 @@ export class BmlRuntime {
       ?.resources.find((resource) => resource.path === address.name)
   }
 
-  private open(): void {
-    const startup = this.catalog ? addressOf(this.catalog.startup) : null
+  /** Opens at the catalog's start document, or at the one the player names: the start document of the component a Hybridcast application went back to. */
+  private open(named?: string): void {
+    const startup = this.catalog
+      ? addressOf(named ?? this.catalog.startup)
+      : null
 
     if (!startup) {
       this.fail('missing')
@@ -889,6 +894,7 @@ export class BmlRuntime {
     this.say({ kind: 'script', state: 'running' })
     this.depth += 1
 
+    const bindings = this.mayWait() ? shown.scope.bindings() : null
     const call = this.requests.begin(answers)
     const outcome =
       event === null
@@ -896,7 +902,7 @@ export class BmlRuntime {
         : shown.document.during(event, () => shown.scope.run(code))
 
     this.requests
-      .end(call, { shown, event }, code, then)
+      .end(call, { shown, event, bindings }, code, then)
       .forEach((timer) => this.stopTimer(timer))
     this.depth -= 1
     this.say({
@@ -920,13 +926,20 @@ export class BmlRuntime {
     )
   }
 
-  /** Runs again the code that waited on the line, now that its answer is in, if its page is still the one shown, and what was to follow it. */
+  /** Whether a run may stop to wait on the line: while the line is used, or Hybridcast is allowed and its AIT is read through the player. */
+  private mayWait(): boolean {
+    return this.line === 'on' || this.hybridcast
+  }
+
+  /** Runs again the code that waited on the line, now that its answer is in, if its page is still the one shown, and what was to follow it. The document's globals are put back as they were when the run began first, so that what it set before it stopped, a guard against a second press say, does not turn its run again away. */
   private answered(awaited: Awaited<Seen> | null): void {
     const shown = awaited?.seen.shown
 
     if (!awaited || !shown || shown !== this.shown) {
       return
     }
+
+    shown.scope.putBack(awaited.seen.bindings)
 
     if (
       this.execute(

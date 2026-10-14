@@ -120,8 +120,60 @@ export function withoutTableNew(code: string): string {
   return code.replace(TABLE_CONSTRUCTION, '$1(')
 }
 
-/** Runs one piece of a document's code with its scope, and throws what it threw. */
-export type Evaluate = (code: string, scope: object) => void
+/** A document's own global bindings, the names its declarations put on the global object, as they stood at one moment. */
+export type Bindings = Map<string, unknown>
+
+/** Takes and puts back a document's global bindings. */
+export interface GlobalBindings {
+  take(): Bindings
+  put(taken: Bindings): void
+}
+
+function dataValue(global: object, name: string): { value: unknown } | null {
+  const described = Object.getOwnPropertyDescriptor(global, name)
+
+  return described && 'value' in described ? { value: described.value } : null
+}
+
+/** The bindings of a global object that were not on it when this was called, nor named `aside`: what the documents declared on it since. Putting bindings back gives each the value it had when they were taken, and one declared since then nothing. */
+export function globalBindingsOf(
+  global: object,
+  aside: readonly string[] = [],
+): GlobalBindings {
+  const before = new Set([...Object.getOwnPropertyNames(global), ...aside])
+  const declared = () =>
+    Object.getOwnPropertyNames(global).filter((name) => !before.has(name))
+
+  return {
+    take: () => {
+      const taken: Bindings = new Map()
+
+      declared().forEach((name) => {
+        const data = dataValue(global, name)
+
+        if (data) {
+          taken.set(name, data.value)
+        }
+      })
+
+      return taken
+    },
+    put: (taken) => {
+      declared().forEach((name) => {
+        const described = Object.getOwnPropertyDescriptor(global, name)
+
+        if (described && 'value' in described && described.writable) {
+          ;(global as Record<string, unknown>)[name] = taken.get(name)
+        }
+      })
+    },
+  }
+}
+
+/** Runs one piece of a document's code with its scope, and throws what it threw. `bindings`, where the evaluator has it, reaches the global object the code declares on. */
+export type Evaluate = ((code: string, scope: object) => void) & {
+  bindings?: (scope: object) => GlobalBindings
+}
 
 export type ScriptOutcome =
   | { outcome: 'done'; tookMs: number }
@@ -149,6 +201,18 @@ export class ScriptScope {
     this.scope = scope
     this.now = now
     this.realm = realm
+  }
+
+  /** The document's global bindings as they stand, or null where the evaluator cannot reach them. */
+  bindings(): Bindings | null {
+    return this.evaluate.bindings?.(this.scope).take() ?? null
+  }
+
+  /** Puts the document's global bindings back as they were taken. */
+  putBack(taken: Bindings | null): void {
+    if (taken) {
+      this.evaluate.bindings?.(this.scope).put(taken)
+    }
   }
 
   run(code: string): ScriptOutcome {

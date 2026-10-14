@@ -175,6 +175,7 @@ test('an AIT is read through the relay of the channel and its applications hande
         appId: 1,
         controlCode: 1,
         entryUrl: 'http://hc.example.test/p/index.html',
+        boundary: APPLICATION.boundary,
       },
     ],
   })
@@ -205,7 +206,7 @@ test('an AIT refused by the setting, not read, or answered in another shape is n
   }
 })
 
-test('an application is started by posting the AIT, both identifiers and the receiver script, and the address its frame opens is handed back', async () => {
+test('an application is started by posting the AIT, both identifiers and the receiver script, and the address its frame opens is handed back with the application the AIT names', async () => {
   const ticket = {
     inTheClear: 'secret',
     lapsesAt: '2026-10-13T00:00:00Z',
@@ -213,15 +214,30 @@ test('an application is started by posting the AIT, both identifiers and the rec
     address:
       '/api/live/32736-1024/data-broadcast/app/secret?uri=http%3A%2F%2Fhc.example.test%2Fp%2Findex.html',
   }
-  const { relay, asked } = relayAnswering(() =>
-    json(200, { status: true, message: '', data: ticket }),
-  )
+  const asked: Asked[] = []
+  const answering = liveLineRelay('32736-1024', async (input, init) => {
+    asked.push({ input, init })
+
+    return input.includes('/app/ticket')
+      ? json(200, { status: true, message: '', data: ticket })
+      : json(200, { data: { applications: [APPLICATION] } })
+  })
 
   assert.deepEqual(
-    await relay.startApplication({ ait: AIT, orgId: 16, appId: 1 }),
+    await answering.startApplication({ ait: AIT, orgId: 16, appId: 1 }),
     {
       said: 'answered',
-      answer: { address: ticket.address, entryUrl: ticket.entryUrl },
+      answer: {
+        address: ticket.address,
+        application: {
+          ait: AIT,
+          orgId: 16,
+          appId: 1,
+          controlCode: 1,
+          entryUrl: 'http://hc.example.test/p/index.html',
+          boundary: APPLICATION.boundary,
+        },
+      },
     },
   )
   assert.equal(asked[0].input, '/api/live/32736-1024/data-broadcast/app/ticket')
@@ -233,7 +249,39 @@ test('an application is started by posting the AIT, both identifiers and the rec
     appId: 1,
     receiverScript: HYBRIDCAST_RECEIVER_SCRIPT,
   })
+  assert.equal(
+    asked[1].input,
+    '/api/live/32736-1024/data-broadcast/ait?uri=http%3A%2F%2Fhc.example.test%2Fp%2Fa.ait',
+  )
   assert.match(HYBRIDCAST_RECEIVER_SCRIPT, /^\/[A-Za-z0-9._~/-]+$/)
+})
+
+test('a start whose AIT is not read again, does not name the application or names it without a boundary is not handed back, as it would be permitted everything', async () => {
+  const ticket = {
+    entryUrl: 'http://hc.example.test/p/index.html',
+    address: '/api/live/32736-1024/data-broadcast/app/secret?uri=x',
+  }
+  const start = { ait: AIT, orgId: 16, appId: 1 }
+
+  for (const applications of [
+    null,
+    [{ ...APPLICATION, appId: 2 }],
+    [{ ...APPLICATION, boundary: undefined }],
+  ]) {
+    const relay = liveLineRelay('32736-1024', async (input) => {
+      if (input.includes('/app/ticket')) {
+        return json(200, { data: ticket })
+      }
+
+      return applications
+        ? json(200, { data: { applications } })
+        : json(502, { data: null })
+    })
+
+    assert.deepEqual(await relay.startApplication(start), {
+      said: 'unreached',
+    })
+  }
 })
 
 test('a start refused, not found, or answered with an address off this server is not handed back', async () => {

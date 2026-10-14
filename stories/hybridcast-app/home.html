@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <script
+      src="/data-broadcast/hybridcast-receiver.js"
+      data-hybridcast-relay="/hybridcast-app/home.html"
+      data-hybridcast-socket="/hybridcast-app/socket"
+      data-hybridcast-document="http://example.test/hc/home.html"
+    ></script>
+    <title>Hybridcast のホームの見本</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      body {
+        position: absolute;
+        background: #222;
+        font: 40px sans-serif;
+        color: #333;
+      }
+      #backscreen {
+        position: absolute;
+        width: 1920px;
+        height: 1080px;
+        background-color: #e7e7e7;
+      }
+      #vstream {
+        position: absolute;
+        left: 365px;
+        top: 140px;
+        width: 1200px;
+        height: 675px;
+        background: #000;
+      }
+      #vstream object {
+        width: 1200px;
+        height: 675px;
+      }
+      header {
+        position: absolute;
+        left: 80px;
+        top: 40px;
+      }
+      #menu {
+        position: absolute;
+        left: 365px;
+        top: 860px;
+        width: 600px;
+        height: 160px;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="backscreen"></div>
+    <div id="vstream">
+      <!-- The relay writes the type of the broadcast's picture object as data-hybridcast-type. -->
+      <object id="av" data-hybridcast-type="video/x-iptvf-broadcast"></object>
+    </div>
+    <header>Hybridcast のホームの見本</header>
+    <div id="menu">番組表</div>
+    <script>
+      // A self-made page laid out as a home page is: a light screen, a black box with the broadcast's picture object in it, and a menu under it.
+      var report = {}
+      var say = function (name, value) {
+        report[name] = String(value)
+        parent.postMessage({ probe: report }, '*')
+      }
+      var under = function () {
+        return [].slice
+          .call(document.querySelectorAll('[data-hybridcast-under]'))
+          .map(function (element) {
+            return element.id || element.localName
+          })
+          .sort()
+          .join(',')
+      }
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          var box = document.getElementById('vstream')
+          say('under', under())
+          say('box', getComputedStyle(box).backgroundColor)
+          say('box-behind', getComputedStyle(box, '::before').backgroundColor)
+          say(
+            'menu',
+            getComputedStyle(document.getElementById('menu')).backgroundColor,
+          )
+        }, 300)
+      })
+    </script>
+  </body>
+</html>

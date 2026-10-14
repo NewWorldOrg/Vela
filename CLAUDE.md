@@ -47,7 +47,9 @@ scripts/                    codegen-verify (the client matches the document),
                             (the lint rules kept here, loaded as the `vela` plugin),
                             third-party-notices (the licenses the image carries),
                             bml-runtime (the data broadcast runtime, bundled into
-                            the one script its sandboxed frame is given)
+                            the one script its sandboxed frame is given, and the
+                            receiver a Hybridcast application's documents are
+                            served under public/)
 lib/                        Pure functions, no React: display formatting, path
                             matching, cn, and the small per-domain derivations
 hooks/                      React hooks shared across screens

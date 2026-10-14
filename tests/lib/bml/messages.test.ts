@@ -142,12 +142,21 @@ test('what the player may say is taken from the parent window in Vela’s origin
       },
     },
     { kind: 'open' },
+    { kind: 'open', startup: '/60/0000/startup.bml' },
     { kind: 'close' },
   ]
 
   for (const data of said) {
     assert.deepEqual(fromPlayer(data), data)
   }
+})
+
+test('opening at a start document takes only a path of a module', () => {
+  assert.equal(
+    fromPlayer({ kind: 'open', startup: 'http://elsewhere.test/a.bml' }),
+    null,
+  )
+  assert.equal(fromPlayer({ kind: 'open', startup: 7 }), null)
 })
 
 test('a message from another origin or window, or before the player’s origin is known, is not the player’s', () => {

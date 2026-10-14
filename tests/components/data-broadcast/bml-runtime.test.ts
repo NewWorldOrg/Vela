@@ -165,6 +165,23 @@ test('opening draws the start document and tells the player where the video goes
   assert.equal(focused(), 'next')
 })
 
+test('opening at the start document of another component draws that one', () => {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', STARTUP] }),
+  })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', NEXT] }, 0x60),
+  })
+  opening.send({ kind: 'open', startup: '/60/0000/startup.bml' })
+
+  assert.deepEqual(opening.heard()[0], { kind: 'videoRect', rect: NEXT_RECT })
+})
+
 test('opening with no catalog, or no start document, says it is missing', () => {
   const bare = frame()
 
@@ -1459,6 +1476,43 @@ test('a handler that transmits twice is answered both in the order it asked, and
   assert.equal(timers.pending, 1)
 })
 
+const GUARDED = bml(
+  '<p id="box" style="nav-index: 0" onkeydown="pressed();">box</p>',
+  '<script>' +
+    'var ready = true;' +
+    'var pressedTimes = 0;' +
+    'function taken() { if (!ready) { return true; } ready = false; return false; }' +
+    'function pressed() {' +
+    '  if (taken()) { return; }' +
+    '  pressedTimes = pressedTimes + 1;' +
+    '  var r = browser.transmitTextDataOverIP("http://example.test/check", "", "EUC-JP");' +
+    '  browser.Ureg[0] = r[0] == 1 && r[1] == 200 ? "checked" : "refused";' +
+    '  browser.Ureg[1] = String(pressedTimes);' +
+    '  browser.setInterval("ready = true;", 100, 1);' +
+    '}' +
+    '</script>',
+)
+
+test('a handler run again after its answer finds the document’s globals as they were when it began, so a guard it set before waiting does not turn the run away', () => {
+  const { heard, send, registers, forget, timers } = overTheLine(GUARDED, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+
+  assert.equal(heard()[0]?.kind, 'transmit')
+  assert.equal(registers[0], '')
+
+  send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+
+  assert.equal(registers[0], 'checked')
+  assert.equal(registers[1], '1')
+
+  timers.tick(100)
+  forget()
+  send({ kind: 'key', key: 'enter' })
+  assert.equal(heard()[0]?.kind, 'transmit')
+})
+
 const SETTING_OFF = bml(
   '<p id="p">p</p>',
   '<script>' +
@@ -1695,6 +1749,48 @@ function withHybridcast(
 
   return { ...opening, Ureg: registers.Ureg, Greg: registers.Greg }
 }
+
+const CHECKED_THEN_STARTED = bml(
+  '<p id="box" style="nav-index: 0" onkeydown="pressed();">box</p>',
+  '<script>' +
+    'var ready = true;' +
+    'function taken() { if (!ready) { return true; } ready = false; return false; }' +
+    'function pressed() {' +
+    '  if (taken()) { return; }' +
+    '  var r = browser.transmitTextDataOverIP("http://example.test/check", "", "EUC-JP");' +
+    '  if (r[0] != 1 || r[1] != 200) { return; }' +
+    '  browser.Greg[44] = "back";' +
+    '  browser.startAITControlledApp("10", "1", "' +
+    AIT +
+    '");' +
+    '}' +
+    '</script>',
+)
+
+test('a key that checks the line and then starts an application gets there, through both waits, with a guard against a second press set before the first', () => {
+  const { heard, send, forget } = withHybridcast(CHECKED_THEN_STARTED)
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+  assert.deepEqual(
+    heard().map((message) => message.kind),
+    ['transmit'],
+  )
+
+  forget()
+  send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+  assert.deepEqual(heard(), [{ kind: 'ait', id: 2, uri: AIT }])
+
+  forget()
+  send({ kind: 'aitRead', id: 2, applications: [STARTS_BY_ITSELF] })
+
+  const started = heard().find((message) => message.kind === 'startApp')
+
+  assert.deepEqual(
+    started?.kind === 'startApp' ? [started.start, started.greg[44]] : null,
+    [{ ait: AIT, orgId: 16, appId: 1 }, 'back'],
+  )
+})
 
 const RECEIVING = bml(
   '<p id="p" style="nav-index: 0" onclick="' +

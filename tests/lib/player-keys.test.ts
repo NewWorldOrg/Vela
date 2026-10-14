@@ -359,6 +359,21 @@ test('while a broadcast is open, the keys of the remote control go to its docume
   }
 })
 
+test('d goes to a Hybridcast application that asked for it, and otherwise opens and closes the broadcast', () => {
+  assert.deepEqual(routed('d', { ...EVERY_KEY, takesD: true }), {
+    to: 'dataBroadcast',
+    key: 'd',
+  })
+  assert.deepEqual(routed('D', { ...EVERY_KEY, takesD: true }), {
+    to: 'dataBroadcast',
+    key: 'd',
+  })
+  assert.deepEqual(routed('d', { ...EVERY_KEY, takesD: false }), {
+    to: 'player',
+    command: 'dataBroadcast',
+  })
+})
+
 test('while a broadcast is open, the player keeps its own keys', () => {
   assert.deepEqual(routed(' ', EVERY_KEY), { to: 'player', command: 'toggle' })
   assert.deepEqual(routed('k', EVERY_KEY), { to: 'player', command: 'toggle' })

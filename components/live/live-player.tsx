@@ -101,11 +101,12 @@ import {
   DataBroadcastBand,
   DataBroadcastFace,
   DataBroadcastToggle,
-  HybridcastFace,
   DataBroadcastRemote,
   columnOverTheBand,
   columnOverTheRow,
 } from '@/components/data-broadcast/data-broadcast-player'
+import { HybridcastFace } from '@/components/data-broadcast/hybridcast-frame'
+import { eventInformationOf } from '@/lib/hybridcast/event-information'
 import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
 import { liveLineRelay } from '@/components/data-broadcast/line-relay'
 import type { LineRelay } from '@/repository/live-data-broadcast'
@@ -698,6 +699,13 @@ export function LivePlayer({
   }
 
   const runningApp = broadcast.view.hybridcast
+  const appTakesD = runningApp !== null && broadcast.view.usedKeys.includes('d')
+  const dataButton = appTakesD
+    ? () => {
+        aimAtTheKeypad()
+        broadcast.press('d')
+      }
+    : toggleBroadcast
   const onTheBand = runningApp
     ? {
         station: channel?.name ?? '',
@@ -761,7 +769,9 @@ export function LivePlayer({
         dataBroadcast: broadcast.offered,
         aimed: aimed.current,
       },
-      broadcast.view.open ? { usedKeys: broadcast.view.usedKeys } : null,
+      broadcast.view.open
+        ? { usedKeys: broadcast.view.usedKeys, takesD: appTakesD }
+        : null,
     )
 
     if (!route) {
@@ -931,13 +941,24 @@ export function LivePlayer({
                   line={line}
                   greg={broadcast.view.greg}
                   failedStarts={broadcast.view.failedStarts}
+                  startup={broadcast.view.startup}
                   onRuntime={broadcast.connect}
                   onMessage={hearBroadcast}
                   says={dataBroadcastSays(broadcast.view)}
                 />
               )}
               {opened && runningApp && (
-                <HybridcastFace address={runningApp.address} />
+                <HybridcastFace
+                  app={runningApp}
+                  feed={broadcastFeed}
+                  service={broadcastFeed.catalog?.service ?? serviceId ?? null}
+                  programme={channel ? eventInformationOf(channel) : null}
+                  receiverId={line.receiverId}
+                  greg={broadcast.view.greg}
+                  keysTo={shell}
+                  onHeard={broadcast.hearApp}
+                  onSender={broadcast.connectApp}
+                />
               )}
             </div>
           </div>
@@ -1266,7 +1287,7 @@ export function LivePlayer({
               station={channel?.name ?? ''}
               onKey={broadcast.press}
               onAim={aimAtTheKeypad}
-              onToggle={toggleBroadcast}
+              onToggle={dataButton}
               application={onTheBand}
             />,
             remoteSlot,

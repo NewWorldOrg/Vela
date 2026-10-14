@@ -26,7 +26,7 @@ import {
   type MemoryEntries,
 } from '@/lib/bml/memory'
 import { nptReadingOf, type NptReading } from '@/lib/bml/npt'
-import { MOST_URL, lineAddressOf } from '@/lib/bml/paths'
+import { MOST_URL, addressOf, lineAddressOf } from '@/lib/bml/paths'
 import { moduleOf, type BmlModule } from '@/lib/bml/resources'
 import { FONT_FAMILIES, GRID } from '@/lib/bml/style'
 
@@ -62,7 +62,7 @@ export type PlayerMessage =
   | { kind: 'aitRead'; id: number; applications: AitApplication[] | null }
   | { kind: 'hybridcast'; allowed: boolean; failed: AppStart[] }
   | { kind: 'greg'; greg: string[] }
-  | { kind: 'open' }
+  | { kind: 'open'; startup?: string }
   | { kind: 'close' }
 
 export const RUNTIME_ERRORS = ['malformed', 'missing', 'undecoded'] as const
@@ -153,7 +153,7 @@ export function gridRectOf(value: unknown): Rect | null {
   return inside ? { left, top, width, height } : null
 }
 
-function isMemoryName(value: unknown): value is string {
+export function isMemoryName(value: unknown): value is string {
   return (
     typeof value === 'string' &&
     value.length > 0 &&
@@ -161,11 +161,12 @@ function isMemoryName(value: unknown): value is string {
   )
 }
 
-function isMemoryValue(value: unknown): value is string {
+export function isMemoryValue(value: unknown): value is string {
   return typeof value === 'string' && value.length <= MOST_MEMORY_BYTES
 }
 
-function memoryEntriesOf(value: unknown): MemoryEntries | null {
+/** A broadcaster's memory as it is handed over, or null when the value has another shape. */
+export function memoryEntriesOfValue(value: unknown): MemoryEntries | null {
   if (!Array.isArray(value) || value.length > MOST_MEMORY_ENTRIES) {
     return null
   }
@@ -379,6 +380,17 @@ function fetchedOf(message: Record<string, unknown>): PlayerMessage | null {
     : null
 }
 
+/** Opening, at the start document of a component when one is named. */
+function openOf(message: Record<string, unknown>): PlayerMessage | null {
+  if (message.startup === undefined) {
+    return { kind: 'open' }
+  }
+
+  return typeof message.startup === 'string' && addressOf(message.startup)
+    ? { kind: 'open', startup: message.startup }
+    : null
+}
+
 function aitReadOf(message: Record<string, unknown>): PlayerMessage | null {
   const applications =
     message.applications === null ? null : aitApplicationsOf(message)
@@ -453,7 +465,7 @@ function playerMessageOf(data: unknown): PlayerMessage | null {
       return programme ? { kind: 'programme', programme } : null
     }
     case 'memory': {
-      const entries = memoryEntriesOf(message.entries)
+      const entries = memoryEntriesOfValue(message.entries)
 
       return entries ? { kind: 'memory', entries } : null
     }
@@ -468,7 +480,7 @@ function playerMessageOf(data: unknown): PlayerMessage | null {
       return reading ? { kind: 'npt', reading } : null
     }
     case 'open':
-      return { kind: 'open' }
+      return openOf(message)
     case 'close':
       return { kind: 'close' }
     default:

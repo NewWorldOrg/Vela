@@ -10,6 +10,7 @@ import {
   SAID_LINE_OFF,
   SAID_RECEIVING,
   SAID_UNOPENED,
+  appEndSaid,
   SAID_UNREACHED,
 } from '@/lib/data-broadcast-view'
 import {
@@ -29,9 +30,9 @@ import {
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
 import type {
-  HybridcastTicket,
   LineRelay,
   Relayed,
+  StartedApplication,
 } from '@/repository/live-data-broadcast'
 import type { TicketWrite } from '@/repository/tickets'
 import {
@@ -52,11 +53,13 @@ import {
   HYBRIDCAST_AIT,
   HYBRIDCAST_APPLICATION,
   HYBRIDCAST_CATALOG,
+  KEYED_HYBRIDCAST_CATALOG,
   LINE_CATALOG,
   OVER_THE_LINE_PAGES,
   SCRIPTED_CATALOG,
   dataBroadcastModules,
   hybridcastModules,
+  keyedHybridcastModules,
   lineModules,
   scriptedModules,
 } from '@/stories/fixtures/data-broadcast'
@@ -1174,20 +1177,80 @@ const asked: AskedOverTheLine = {
   started: [],
 }
 
-const STARTED: Relayed<HybridcastTicket> = {
-  said: 'answered',
-  answer: {
-    address:
-      '/api/live/32736-1024/data-broadcast/app/a-ticket?uri=http%3A%2F%2Fexample.test%2Fhc%2Findex.html',
-    entryUrl: HYBRIDCAST_APPLICATION.entryUrl,
-  },
+/** The self-made application, served beside the stories in place of the relay, at the address Carina's frame would open; `asked` goes after the entry URL in `uri`, where the application reads what the story asks of it. */
+function startedAt(asked = ''): Relayed<StartedApplication> {
+  return {
+    said: 'answered',
+    answer: {
+      address: `/hybridcast-app/app.html?uri=${encodeURIComponent(
+        `${HYBRIDCAST_APPLICATION.entryUrl}${asked}`,
+      )}`,
+      application: {
+        ...HYBRIDCAST_APPLICATION,
+        ait: HYBRIDCAST_AIT,
+        boundary: [
+          { permissionBitmap: 0x1fff, managedUrls: ['http://example.test'] },
+        ],
+      },
+    },
+  }
+}
+
+const STARTED = startedAt()
+
+const STARTED_ADDRESS =
+  STARTED.said === 'answered' ? STARTED.answer.address : ''
+
+/** What the self-made application last reported of itself, and what the player warned of while the story ran. */
+const probed: { report: Record<string, string>; warned: string[] } = {
+  report: {},
+  warned: [],
+}
+
+function listenToTheApplication(): () => void {
+  probed.report = {}
+  probed.warned = []
+
+  const warn = console.warn
+
+  console.warn = (...said: unknown[]) => {
+    probed.warned.push(String(said[0]))
+    warn.apply(console, said)
+  }
+
+  const listen = (event: MessageEvent) => {
+    const probe = (event.data as { probe?: Record<string, string> } | null)
+      ?.probe
+    const frame = document.querySelector('iframe[title="Hybridcast"]')
+
+    if (
+      probe &&
+      frame instanceof HTMLIFrameElement &&
+      event.source === frame.contentWindow
+    ) {
+      probed.report = { ...probe }
+    }
+  }
+
+  window.addEventListener('message', listen)
+
+  return () => {
+    window.removeEventListener('message', listen)
+    console.warn = warn
+  }
+}
+
+async function theApplicationSaid(name: string, value: string) {
+  await waitFor(() => expect(probed.report[name]).toBe(value), {
+    timeout: 5000,
+  })
 }
 
 /** A relay that answers every transmission with `answer` and every fetch from the self-made pages, names `receiverId` as the receiver's identifier, reads the self-made AIT, starts its application as `started` says, and notes what it was asked. */
 function relayAnswering(
   answer: TransmitAnswer,
   receiverId: ReceiverId | null = null,
-  started: Relayed<HybridcastTicket> = STARTED,
+  started: Relayed<StartedApplication> = STARTED,
 ) {
   return (channel: string): LineRelay => ({
     transmit: async (uri, text, charset) => {
@@ -1238,7 +1301,10 @@ function lineSetTo(
       ? storingCookie(DATA_BROADCAST_HYBRIDCAST, HYBRIDCAST_SPELLING.yes)
       : forgettingCookie(DATA_BROADCAST_HYBRIDCAST)
 
+    const stopListening = listenToTheApplication()
+
     return () => {
+      stopListening()
       document.cookie = forgettingCookie(DATA_BROADCAST_LINE)
       document.cookie = forgettingCookie(DATA_BROADCAST_RECEIVER_ID)
       document.cookie = forgettingCookie(DATA_BROADCAST_HYBRIDCAST)
@@ -1379,6 +1445,46 @@ async function runningOnTheBand(canvasElement: HTMLElement) {
   return group
 }
 
+/** Where the self-made application places the broadcast's picture, on the grid the box is laid by. */
+const IN_THE_APPLICATION = '480,60,400,225'
+
+/** The application's frame over the box, opened on the relay, with the picture where the application placed it. */
+async function theApplicationRuns(canvasElement: HTMLElement) {
+  const face = await waitFor(
+    () => onTheScreen(canvasElement, 'hybridcast-face'),
+    { timeout: 5000 },
+  )
+
+  await waitFor(() => expect(face).toHaveAttribute('data-started', 'yes'))
+
+  const frame = face.querySelector('iframe')
+
+  await expect(frame).toHaveAttribute('sandbox', 'allow-scripts allow-forms')
+  await expect(frame).toHaveAttribute('src', STARTED_ADDRESS)
+  await theApplicationSaid('agent', 'hybridcast')
+  await shrunkTo(canvasElement, IN_THE_APPLICATION)
+
+  return frame as HTMLIFrameElement
+}
+
+/** Back at the documents, with the one warning the player left saying why. */
+async function backAtTheDocuments(canvasElement: HTMLElement, why: string) {
+  await shrunkTo(canvasElement, AT_THE_START)
+  await waitFor(() =>
+    expect(
+      within(canvasElement).queryByRole('group', { name: 'Hybridcast' }),
+    ).toBeNull(),
+  )
+  await expect(
+    canvasElement.querySelector('[data-slot="hybridcast-face"]'),
+  ).toBeNull()
+  await waitFor(() =>
+    expect(
+      probed.warned.filter((line) => line.startsWith('Hybridcast: ')),
+    ).toEqual([why]),
+  )
+}
+
 export const Hybridcast: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
   args: {
@@ -1393,13 +1499,8 @@ export const Hybridcast: Story = {
 
     await expect(asked.aits).toEqual([HYBRIDCAST_AIT])
     await expect(asked.started).toEqual([STARTING])
-    await waitFor(() =>
-      expect(onTheScreen(canvasElement, 'hybridcast-face')).toHaveAttribute(
-        'data-started',
-        'yes',
-      ),
-    )
-    await shrunkTo(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('greg44', 'back')
     await expect(
       canvasElement.querySelector('[data-slot="data-broadcast-says"]'),
     ).toBeNull()
@@ -1411,11 +1512,183 @@ export const Hybridcast: Story = {
       within(group).getByRole('button', { name: 'Hybridcast を閉じる' }),
     )
 
-    await shrunkTo(canvasElement, AT_THE_START)
-    await expect(
-      within(canvasElement).queryByRole('group', { name: 'Hybridcast' }),
-    ).toBeNull()
+    await backAtTheDocuments(canvasElement, appEndSaid({ why: 'viewer' }))
     await expect(asked.started).toEqual([STARTING])
+  },
+}
+
+const KEYED_HYBRIDCAST = [
+  catalogPayload(KEYED_HYBRIDCAST_CATALOG),
+  ...keyedHybridcastModules().map(modulePayload),
+]
+
+export const Hybridcast_メニューの決定で始まる: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: {
+    openSocket: carrying(...KEYED_HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AT_THE_START)
+
+    press(onTheScreen(canvasElement, 'live-player'), 'Enter')
+
+    await runningOnTheBand(canvasElement)
+    await expect(asked.transmitted.length).toBe(1)
+    await expect(asked.aits).toEqual([HYBRIDCAST_AIT])
+    await expect(asked.started).toEqual([STARTING])
+    await theApplicationRuns(canvasElement)
+  },
+}
+
+export const Hybridcast_キー: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await runningOnTheBand(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('keyset', '287')
+
+    const player = onTheScreen(canvasElement, 'live-player')
+
+    press(player, 'r')
+    press(player, '9')
+    await theApplicationSaid('keys', '403,57')
+
+    press(player, 'd')
+    await backAtTheDocuments(canvasElement, appEndSaid({ why: 'viewer' }))
+  },
+}
+
+export const Hybridcast_d_をアプリが取る: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering(
+      { result: 1, status: 200, body: '1' },
+      null,
+      startedAt('?dbutton'),
+    ),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await runningOnTheBand(canvasElement)
+    await theApplicationSaid('keyset', String(287 | 0x800))
+    await shrunkTo(canvasElement, IN_THE_APPLICATION)
+
+    press(onTheScreen(canvasElement, 'live-player'), 'd')
+    await theApplicationSaid('keys', '496')
+    await expect(
+      within(canvasElement).getByRole('group', { name: 'Hybridcast' }),
+    ).toBeVisible()
+
+    await userEvent.click(
+      within(theColumn(canvasElement)).getByRole('button', {
+        name: 'データ放送',
+      }),
+    )
+    await theApplicationSaid('keys', '496,496')
+  },
+}
+
+export const Hybridcast_フォーカスはプレイヤーに残る: Story = {
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('loaded', 'yes')
+
+    const player = onTheScreen(canvasElement, 'live-player')
+
+    press(player, '1')
+    await waitFor(() => expect(probed.report.field).toBeDefined())
+    await waitFor(() => expect(document.activeElement).toBe(player))
+
+    press(player, 'r')
+    await theApplicationSaid('keys', '49,403')
+  },
+}
+
+export const Hybridcast_アプリが閉じる: Story = {
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await theApplicationRuns(canvasElement)
+
+    press(onTheScreen(canvasElement, 'live-player'), 'y')
+    await backAtTheDocuments(canvasElement, appEndSaid({ why: 'destroyed' }))
+    await expect(
+      onTheScreen(canvasElement, 'data-broadcast-says'),
+    ).toHaveTextContent('')
+  },
+}
+
+export const Hybridcast_データ放送へ: Story = {
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await theApplicationRuns(canvasElement)
+
+    press(onTheScreen(canvasElement, 'live-player'), 'g')
+    await backAtTheDocuments(
+      canvasElement,
+      appEndSaid({ why: 'toTheDocuments', componentTag: 0x40 }),
+    )
+    await expect(asked.started).toEqual([STARTING])
+  },
+}
+
+export const Hybridcast_枠が中継を離れる: Story = {
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('loaded', 'yes')
+
+    press(onTheScreen(canvasElement, 'live-player'), '0')
+
+    await waitFor(
+      () =>
+        expect(
+          canvasElement.querySelector('[data-slot="hybridcast-face"]'),
+        ).toBeNull(),
+      { timeout: 6000 },
+    )
+    await backAtTheDocuments(
+      canvasElement,
+      appEndSaid({
+        why: 'offTheRelay',
+        after: HYBRIDCAST_APPLICATION.entryUrl,
+        hello: false,
+      }),
+    )
+    await expect(
+      onTheScreen(canvasElement, 'data-broadcast-says'),
+    ).toHaveTextContent('')
   },
 }
 
@@ -1447,7 +1720,7 @@ export const Hybridcast_起動中_PC: Story = {
     await expect(remote.contains(group)).toBe(true)
     await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
     await expect(close.bottom).toBeLessThan(disc.top)
-    await shrunkTo(canvasElement)
+    await shrunkTo(canvasElement, IN_THE_APPLICATION)
   },
 }
 

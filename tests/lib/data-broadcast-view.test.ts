@@ -2,7 +2,10 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import type { RuntimeMessage } from '@/lib/bml/messages'
+import { KEY_SET } from '@/lib/hybridcast/keys'
+import type { OwnedApplication } from '@/lib/hybridcast/messages'
 import {
+  APP_KEYS_UNTIL_TOLD,
   DATA_BROADCAST_CLOSED,
   KEYS_UNTIL_TOLD,
   SAID_LINE_OFF,
@@ -15,7 +18,9 @@ import {
   dataBroadcastSays,
   offersDataBroadcast,
   opensByItself,
+  appEndSaid,
   pictureTransform,
+  startupOf,
   type DataBroadcastStep,
   type DataBroadcastView,
 } from '@/lib/data-broadcast-view'
@@ -451,6 +456,23 @@ function runtime(message: RuntimeMessage, nth: number): DataBroadcastStep {
 
 const STARTING = runtime({ kind: 'startApp', start: START, greg: GREG }, 7)
 
+const APPLICATION: OwnedApplication = {
+  ...START,
+  controlCode: 1,
+  entryUrl: 'http://hc.example.test/p/index.html',
+  boundary: [],
+}
+
+const ADDRESS =
+  '/api/live/a/app/t?uri=http%3A%2F%2Fhc.example.test%2Fp%2Findex.html'
+
+const STARTED: DataBroadcastStep = {
+  on: 'appStarted',
+  nth: 7,
+  address: ADDRESS,
+  application: APPLICATION,
+}
+
 test('a start the documents ask for closes them for the application, keeps the shared registers, and lays the picture back over the whole box', () => {
   const view = after(
     OPEN,
@@ -462,25 +484,153 @@ test('a start the documents ask for closes them for the application, keeps the s
   )
 
   assert.equal(view.open, true)
-  assert.deepEqual(view.hybridcast, { start: START, nth: 7, address: null })
+  assert.deepEqual(view.hybridcast, {
+    start: START,
+    nth: 7,
+    address: null,
+    application: null,
+  })
   assert.deepEqual(view.greg, GREG)
   assert.equal(view.rect, null)
+  assert.deepEqual(view.usedKeys, APP_KEYS_UNTIL_TOLD)
+  assert.equal(view.usedKeys.includes('d'), false)
   assert.equal(dataBroadcastSays(view), null)
 })
 
-test('the application started is kept with the address its frame opens, and only for the start it answers', () => {
-  const started = after(OPEN, STARTING, {
-    on: 'appStarted',
-    nth: 7,
-    address: '/api/live/a/app/t/p/index.html',
-  })
+test('the application started is kept with the address its frame opens and the application its AIT names, and only for the start it answers', () => {
+  const started = after(OPEN, STARTING, STARTED)
 
-  assert.equal(started.hybridcast?.address, '/api/live/a/app/t/p/index.html')
+  assert.equal(started.hybridcast?.address, ADDRESS)
+  assert.deepEqual(started.hybridcast?.application, APPLICATION)
   assert.deepEqual(
-    after(OPEN, STARTING, { on: 'appStarted', nth: 6, address: '/x' })
+    after(OPEN, STARTING, { ...STARTED, nth: 6 } as DataBroadcastStep)
       .hybridcast?.address,
     null,
   )
+})
+
+test('the picture moves to where the application places it, on the grid the box is laid by, and back over the whole box when the application goes', () => {
+  const placed = after(OPEN, STARTING, STARTED, {
+    on: 'appRect',
+    rect: { left: 960, top: 120, width: 800, height: 450 },
+  })
+
+  assert.deepEqual(placed.rect, { left: 480, top: 60, width: 400, height: 225 })
+  assert.equal(
+    pictureTransform(placed.rect),
+    'translate(50%, 11.11111111111111%) scale(0.4166666666666667, 0.4166666666666667)',
+  )
+  assert.equal(
+    after(OPEN, STARTING, STARTED, { on: 'appRect', rect: null }).rect,
+    null,
+  )
+  assert.equal(dataBroadcastAfter(placed, { on: 'appClosed' }).rect, null)
+})
+
+test('the application takes the keys of the groups its key set names, d with DBUTTON, and the documents take theirs again when it goes', () => {
+  const asked = after(OPEN, STARTING, STARTED, {
+    on: 'appKeys',
+    mask: KEY_SET.RED | KEY_SET.DBUTTON,
+  })
+
+  assert.deepEqual(asked.usedKeys, ['d', 'red'])
+  assert.deepEqual(
+    dataBroadcastAfter(asked, { on: 'appClosed' }).usedKeys,
+    KEYS_UNTIL_TOLD,
+  )
+})
+
+test('what the application writes into the shared registers is what the documents are handed when it goes', () => {
+  const written: string[] = [...GREG]
+
+  written[61] = 'nhk:1'
+
+  const view = after(
+    OPEN,
+    STARTING,
+    STARTED,
+    { on: 'appGreg', greg: written },
+    { on: 'appClosed' },
+  )
+
+  assert.equal(view.hybridcast, null)
+  assert.deepEqual(view.greg, written)
+})
+
+test('the application going to the documents opens them at the start document of the component it names, or where they begin', () => {
+  const named = after(OPEN, STARTING, STARTED, {
+    on: 'appClosed',
+    startup: startupOf(0x60),
+  })
+
+  assert.equal(named.startup, '/60/0000/startup.bml')
+  assert.equal(named.returns, 1)
+  assert.equal(
+    after(OPEN, STARTING, STARTED, { on: 'appClosed' }).startup,
+    null,
+  )
+  assert.equal(startupOf(0x40), '/40/0000/startup.bml')
+})
+
+test('another application put in place of the running one waits for Carina to start it, with the keys any application starts with', () => {
+  const other = { ait: 'http://hc.example.test/b.ait', orgId: 18, appId: 2 }
+  const replaced = after(
+    OPEN,
+    STARTING,
+    STARTED,
+    { on: 'appKeys', mask: KEY_SET.DBUTTON },
+    { on: 'appReplaced', start: other, nth: 9 },
+  )
+
+  assert.deepEqual(replaced.hybridcast, {
+    start: other,
+    nth: 9,
+    address: null,
+    application: null,
+  })
+  assert.deepEqual(replaced.usedKeys, APP_KEYS_UNTIL_TOLD)
+  assert.equal(
+    dataBroadcastAfter(replaced, { ...STARTED, nth: 9 } as DataBroadcastStep)
+      .hybridcast?.address,
+    ADDRESS,
+  )
+})
+
+test('a frame whose first document never opened on the relay is an application that did not open; one that lost a later document goes back to the documents without a word', () => {
+  const unopened = after(OPEN, STARTING, STARTED, {
+    on: 'appLost',
+    end: { why: 'unopened', hello: false },
+    nth: 12,
+  })
+
+  assert.equal(unopened.hybridcast, null)
+  assert.equal(dataBroadcastSays(unopened), SAID_UNOPENED)
+  assert.equal(unopened.appNotices, 12)
+  assert.deepEqual(unopened.failedStarts, [START])
+
+  const left = after(OPEN, STARTING, STARTED, {
+    on: 'appLost',
+    end: { why: 'offTheRelay', after: null, hello: true },
+    nth: 12,
+  })
+
+  assert.equal(left.hybridcast, null)
+  assert.equal(left.returns, 1)
+  assert.equal(dataBroadcastSays(left), null)
+  assert.deepEqual(left.failedStarts, [])
+})
+
+test('what an application says once it is gone is not taken', () => {
+  const gone = after(OPEN, STARTING, STARTED, { on: 'appClosed' })
+
+  for (const step of [
+    { on: 'appRect', rect: { left: 0, top: 0, width: 10, height: 10 } },
+    { on: 'appKeys', mask: KEY_SET.DBUTTON },
+    { on: 'appGreg', greg: GREG },
+    { on: 'appLost', end: { why: 'unopened', hello: false }, nth: 3 },
+  ] as DataBroadcastStep[]) {
+    assert.equal(dataBroadcastAfter(gone, step), gone)
+  }
 })
 
 test('an application that did not open goes back to the documents, is said once, and is not asked for again while open', () => {
@@ -576,4 +726,67 @@ test('the remote stands in the column where the page has one beside the player, 
   assert.equal(bandPlace(false, false), 'under')
   assert.equal(bandPlace(true, true), 'over')
   assert.equal(bandPlace(true, false), 'over')
+})
+
+test('each way the application ends is kept with the view, to be said once', () => {
+  const ended = (...steps: DataBroadcastStep[]) =>
+    after(OPEN, STARTING, STARTED, ...steps).appEnded
+
+  assert.deepEqual(ended({ on: 'appClosed' }), { why: 'viewer' })
+  assert.deepEqual(ended({ on: 'toggle', availability: 'ready' }), {
+    why: 'viewer',
+  })
+  assert.deepEqual(ended({ on: 'appClosed', why: { why: 'destroyed' } }), {
+    why: 'destroyed',
+  })
+  assert.deepEqual(
+    ended({
+      on: 'appLost',
+      end: { why: 'outsideTheBoundary', to: 'https://a.test/' },
+      nth: 9,
+    }),
+    { why: 'outsideTheBoundary', to: 'https://a.test/' },
+  )
+  assert.deepEqual(ended({ on: 'availability', availability: 'none' }), {
+    why: 'broadcastEnded',
+  })
+  assert.deepEqual(
+    after(OPEN, STARTING, { on: 'appUnopened', nth: 7 }).appEnded,
+    {
+      why: 'refused',
+    },
+  )
+  assert.equal(after(OPEN, STARTING, STARTED).appEnded, null)
+})
+
+test('what is said of an ending names the reason and the station, never a query, a ticket or an identifier', () => {
+  const said = [
+    appEndSaid({ why: 'viewer' }),
+    appEndSaid({ why: 'destroyed' }),
+    appEndSaid({ why: 'toTheDocuments', componentTag: 0x40 }),
+    appEndSaid({ why: 'toTheDocuments', componentTag: null }),
+    appEndSaid({
+      why: 'outsideTheBoundary',
+      to: 'https://elsewhere.test/page?id=12345#a',
+    }),
+    appEndSaid({
+      why: 'offTheRelay',
+      after: 'http://hc.example.jp/home/index.html?uid=abc',
+      hello: false,
+    }),
+    appEndSaid({ why: 'offTheRelay', after: null, hello: true }),
+    appEndSaid({ why: 'unopened', hello: false }),
+    appEndSaid({ why: 'unopened', hello: true }),
+    appEndSaid({ why: 'refused' }),
+    appEndSaid({ why: 'broadcastEnded' }),
+    appEndSaid({ why: 'notAllowed' }),
+    appEndSaid({ why: 'channelChanged' }),
+  ]
+
+  assert.ok(said.every((line) => line.startsWith('Hybridcast: ')))
+  assert.equal(new Set(said).size, said.length)
+  assert.ok(said[2].includes('0x40'))
+  assert.ok(said[4].includes('https://elsewhere.test/page'))
+  assert.ok(said[5].includes('http://hc.example.jp/home/index.html'))
+  assert.ok(said.every((line) => !/[?#]|12345|uid|abc/.test(line)))
 })

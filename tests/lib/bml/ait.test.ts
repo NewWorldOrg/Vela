@@ -94,7 +94,28 @@ test('the applications Carina answered are taken only in the shape it answers th
     ],
   }
 
-  assert.deepEqual(aitApplicationsOf(answered), [application()])
+  assert.deepEqual(aitApplicationsOf(answered), [
+    application({
+      boundary: [{ permissionBitmap: 0x1fff, managedUrls: [] }],
+    }),
+  ])
+  assert.deepEqual(
+    aitApplicationsOf({
+      applications: [{ ...answered.applications[0], boundary: undefined }],
+    }),
+    [application()],
+  )
+  assert.equal(
+    aitApplicationsOf({
+      applications: [
+        {
+          ...answered.applications[0],
+          boundary: [{ permissionBitmap: '1fff', managedUrls: [] }],
+        },
+      ],
+    }),
+    null,
+  )
   assert.deepEqual(aitApplicationsOf({ applications: [] }), [])
   assert.equal(aitApplicationsOf(null), null)
   assert.equal(aitApplicationsOf({}), null)
