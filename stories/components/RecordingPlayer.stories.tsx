@@ -37,14 +37,8 @@ import type {
   FeedRecording,
   RecordingFeedEvents,
 } from '@/components/recordings/recording-feed'
-import type { BmlCatalog } from '@/lib/bml/catalog'
-import { modulePayload, type BmlModule } from '@/lib/bml/resources'
-import type { DataBroadcastTimeline } from '@/lib/recording-data-broadcast'
 import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
-import type {
-  ReadDataBroadcast,
-  ReadDataBroadcastModule,
-} from '@/components/recordings/read-data-broadcast'
+import type { ReadDataBroadcast } from '@/components/recordings/read-data-broadcast'
 import {
   DATA_BROADCAST_CATALOG,
   PROGRAMME_READING_CATALOG,
@@ -52,6 +46,10 @@ import {
   programmeReadingModules,
   relativeTimeModules,
 } from '@/stories/fixtures/data-broadcast'
+import {
+  readingModulesOf,
+  throughout,
+} from '@/stories/fixtures/recording-data-broadcast'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -3644,28 +3642,6 @@ export const 要素の全画面を断られたらページの中で窓いっぱ�
   },
 }
 
-/** The catalog of a recording that carried a self-made broadcast throughout: every module in effect from the first second to the last. */
-function throughout(catalog: BmlCatalog): DataBroadcastTimeline {
-  return {
-    entryTag: catalog.entryTag,
-    autoStart: catalog.autoStart,
-    startup: catalog.startup,
-    incomplete: false,
-    carousels: catalog.carousels.map((carousel) => ({
-      tag: carousel.tag,
-      downloadId: carousel.downloadId,
-      versions: carousel.modules.map((module) => ({
-        id: module.id,
-        version: module.version,
-        fromSec: 0,
-        toSec: 600,
-        size: 0,
-      })),
-    })),
-    events: [],
-  }
-}
-
 const BROADCAST_THROUGHOUT = throughout(DATA_BROADCAST_CATALOG)
 
 const broadcastAsked: string[] = []
@@ -3677,19 +3653,6 @@ function readingTheBroadcast(
     broadcastAsked.push(`${id}/${source ?? '—'}`)
 
     return answer
-  }
-}
-
-function readingModulesOf(modules: () => BmlModule[]): ReadDataBroadcastModule {
-  return async (id, placed) => {
-    const found = modules().find(
-      (one) =>
-        one.tag === placed.tag &&
-        one.id === placed.id &&
-        one.version === placed.version,
-    )
-
-    return found ? modulePayload(found) : null
   }
 }
 
@@ -3743,6 +3706,7 @@ export const データ放送のある録画は操作子を置く: Story = {
 }
 
 export const データ放送を開くと面と帯が出て映像が縮む: Story = {
+  parameters: { screen: { width: 1180, height: 820 } },
   args: BROADCAST_PLAYING,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)

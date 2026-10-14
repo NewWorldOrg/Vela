@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import type { Route } from 'next'
 
 import type { BrowserDecoding } from '@/lib/browser-decodes'
@@ -42,6 +42,7 @@ import {
   PLAYER_COLUMN,
 } from '@/components/recordings/player-palette'
 import { PlayerSeat } from '@/components/recordings/player-seat'
+import type { Player } from '@/components/recordings/player'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import type { QueueEncode } from '@/components/recordings/encode-button'
@@ -130,6 +131,16 @@ const OUTCOME_LABEL = {
   failed: '失敗',
 } as const
 
+/** What the stories hand the player in place of the API: the picture and how it is fed, its frames, and the data broadcast. */
+type PlayerStandIns = Pick<
+  ComponentProps<typeof Player>,
+  | 'pictureHref'
+  | 'frameHref'
+  | 'feedRecording'
+  | 'readDataBroadcast'
+  | 'readDataBroadcastModule'
+>
+
 function Dot() {
   return <span className="text-ink-3">・</span>
 }
@@ -152,7 +163,8 @@ export function RecordingDetailView({
   startAt,
   startsHeld = false,
   autoOpensDataBroadcast = false,
-}: {
+  ...standIns
+}: PlayerStandIns & {
   detail: RecordingDetail
   playback: PlaybackRead
   unaskedProfile?: PlaybackProfile
@@ -274,6 +286,7 @@ export function RecordingDetailView({
           playsAtOnce={opens.playing}
           holdsAtOnce={opens.held}
           autoOpensDataBroadcast={autoOpensDataBroadcast}
+          {...standIns}
         />
       )}
 
