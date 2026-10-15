@@ -1,6 +1,6 @@
 import { globalBindingsOf, hidingOn, type Evaluate } from '@/lib/bml/scripts'
 
-/** Where the frame keeps the scope the code being run resolves its names through. A document that names it gets nothing, as the scope hides it. */
+/** Where the frame keeps the scope the code being run resolves its names through. The scope does not hide this name, so a document that names it gets the scope itself, which reaches nothing more than the names do: what the runtime gives, and what the document wrote by a hidden name. */
 export const SCOPE_NAME = '__bmlScope'
 
 interface Caught {
