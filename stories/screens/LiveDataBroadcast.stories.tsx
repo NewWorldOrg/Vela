@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test'
 
 import { catalogPayload } from '@/lib/bml/catalog'
 import { modulePayload, type BmlModule } from '@/lib/bml/resources'
@@ -17,13 +17,16 @@ import {
   DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  DATA_BROADCAST_SOUNDS,
   HYBRIDCAST_SPELLING,
   LINE_SPELLING,
   LIVE_CHANNELS_FOLDED,
   RECEIVER_ID_SPELLING,
+  SOUNDS_SPELLING,
   forgettingCookie,
   storingCookie,
 } from '@/lib/stored-flag'
+import { romSoundGain } from '@/lib/data-broadcast-sound'
 import { frameOf, progressPayload, type LiveStartup } from '@/lib/live-wire'
 import {
   LIVE_NOW_FIXTURE,
@@ -55,13 +58,16 @@ import {
   LINE_CATALOG,
   OVER_THE_LINE_PAGES,
   SCRIPTED_CATALOG,
+  SOUNDING_CATALOG,
   dataBroadcastModules,
   hybridcastModules,
   keyedHybridcastModules,
   lineModules,
   scriptedModules,
+  soundingModules,
 } from '@/stories/fixtures/data-broadcast'
 import { inTheApp } from '@/stories/frames'
+import { hearingTheSounds, type HeardSound } from '@/stories/heard-sounds'
 
 class BroadcastSocket implements LiveSocket {
   binaryType: BinaryType = 'blob'
@@ -1733,5 +1739,106 @@ export const Hybridcast_設定が切: Story = {
     await expect(
       onTheScreen(canvasElement, 'data-broadcast-says'),
     ).toHaveTextContent('')
+  },
+}
+
+const SOUNDING = [
+  catalogPayload(SOUNDING_CATALOG),
+  ...soundingModules().map(modulePayload),
+]
+
+/** Where the picture goes once the document was told its sound played. */
+const AFTER_THE_SOUND = '40,60,360,203'
+
+/** What the player played while the story ran, heard in place of the speakers. */
+const sounds: { heard: () => HeardSound[] } = { heard: () => [] }
+
+/** Hears the sounds in place of the speakers, with the sounds setting as the cookie says, or as it starts out without one. */
+function hearingWith(setting?: 'yes' | 'no') {
+  return () => {
+    const hearing = hearingTheSounds()
+
+    sounds.heard = hearing.heard
+    document.cookie = setting
+      ? storingCookie(DATA_BROADCAST_SOUNDS, SOUNDS_SPELLING[setting])
+      : forgettingCookie(DATA_BROADCAST_SOUNDS)
+
+    return () => {
+      hearing.stop()
+      document.cookie = forgettingCookie(DATA_BROADCAST_SOUNDS)
+    }
+  }
+}
+
+export const 効果音: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(),
+  play: async ({ canvasElement }) => {
+    const volume = await inThePlayer(canvasElement).findByRole('slider', {
+      name: '音量',
+    })
+
+    fireEvent.change(volume, { target: { value: '40' } })
+    await expect(volume).toHaveAttribute('aria-valuetext', '40%')
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([
+      { sound: 7, gain: romSoundGain(true, 0.4) },
+    ])
+  },
+}
+
+export const 効果音_消音: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(),
+  play: async ({ canvasElement }) => {
+    const mute = await inThePlayer(canvasElement).findByRole('button', {
+      name: '消音',
+    })
+
+    await userEvent.click(mute)
+    await expect(mute).toHaveAttribute('aria-pressed', 'true')
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([])
+  },
+}
+
+export const 効果音_設定が切: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith('no'),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([])
+  },
+}
+
+export const Hybridcast_効果音: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: () => {
+    const lineGoes = lineSetTo(true, false, true)()
+    const hearingGoes = hearingWith()()
+
+    return () => {
+      hearingGoes()
+      lineGoes()
+    }
+  },
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await runningOnTheBand(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('rom-audio-play', 'played')
+    await waitFor(() =>
+      expect(sounds.heard()).toEqual([
+        { sound: 3, gain: romSoundGain(true, 1) },
+        { sound: 5, gain: romSoundGain(true, 1) },
+      ]),
+    )
   },
 }
