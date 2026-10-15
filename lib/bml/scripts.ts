@@ -150,39 +150,66 @@ function layOver(global: object, held: Held, scope: () => object): void {
   })
 }
 
-function putBackOn(global: object, { name, described }: Held): void {
-  if (described) {
-    Object.defineProperty(global, name, described)
-  } else {
-    Reflect.deleteProperty(global, name)
-  }
+/** Lays each name the scope hides that the global object may redefine over it, adding each to `laid` once it is laid. */
+function layAllOver(global: object, laid: Held[], scope: () => object): void {
+  SHADOWED_GLOBALS.forEach((name) => {
+    const held = {
+      name,
+      described: Object.getOwnPropertyDescriptor(global, name),
+    }
+
+    if (held.described?.configurable !== false) {
+      layOver(global, held, scope)
+      laid.push(held)
+    }
+  })
 }
 
-/** Keeps in the scope what a document's code writes on the global object by a name the scope hides. The code is wrapped in a block, and a function it declares there is also written on the global object, past the scope: a name held there behind a getter alone drops it, and any other takes it in place of the frame's own. So while the code runs each such name on the global object reads as it did and hands what is written to it to the scope, and afterwards holds what it held. A name the global object holds unconfigurable cannot be laid over: a window's `window` and `top` drop what is written to them, and its `location` navigates the frame to it. */
+/** Puts back on the global object each name laid over it as it was, each on its own, and gives what kept any from being put back. */
+function putAllBack(global: object, laid: Held[]): unknown[] {
+  return laid.flatMap(({ name, described }) => {
+    try {
+      if (described) {
+        Object.defineProperty(global, name, described)
+      } else {
+        Reflect.deleteProperty(global, name)
+      }
+
+      return []
+    } catch (error) {
+      return [error]
+    }
+  })
+}
+
+/** Keeps in the scope what a document's code writes on the global object by a name the scope hides. The code is wrapped in a block, and a function it declares there is also written on the global object, past the scope: a name held there behind a getter alone drops it, and any other takes it in place of the frame's own. So while the code runs each such name on the global object reads as it did and hands what is written to it to the scope, and afterwards holds what it held. A name the global object holds unconfigurable cannot be laid over: a window's `window` and `top` drop what is written to them, and its `location` navigates the frame to it. A name the global object will not have laid over fails the run before it starts, with the names laid before it put back; one it will not have put back fails a run that went well, once every other is put back. */
 export function hidingOn(global: object): Hiding {
   const running: object[] = []
   const current = () => running[running.length - 1]
-  let held: Held[] = []
+  let laid: Held[] = []
 
   return (scope, run) => {
-    running.push(scope)
-
-    if (running.length === 1) {
-      held = SHADOWED_GLOBALS.map((name) => ({
-        name,
-        described: Object.getOwnPropertyDescriptor(global, name),
-      })).filter(({ described }) => described?.configurable !== false)
-      held.forEach((each) => layOver(global, each, current))
-    }
+    let unrestored: unknown[] = []
 
     try {
+      running.push(scope)
+
+      if (running.length === 1) {
+        laid = []
+        layAllOver(global, laid, current)
+      }
+
       run()
     } finally {
       running.pop()
 
       if (running.length === 0) {
-        held.forEach((each) => putBackOn(global, each))
+        unrestored = putAllBack(global, laid)
       }
+    }
+
+    if (unrestored.length > 0) {
+      throw unrestored[0]
     }
   }
 }

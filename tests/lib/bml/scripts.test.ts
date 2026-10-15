@@ -285,6 +285,94 @@ test("a run puts the document's writes on the built-ins in place only while its 
   assert.deepEqual(seen, ['write:theirs', 'read:theirs'])
 })
 
+/** A global object holding history behind a getter and open as a value, whose defineProperty throws for open while it is told to refuse. */
+function refusingOpen() {
+  const target: Record<string, unknown> = {}
+  const refusing = { now: false }
+
+  Object.defineProperty(target, 'history', {
+    get: () => THE_FRAMES_OWN,
+    enumerable: true,
+    configurable: true,
+  })
+  Object.defineProperty(target, 'open', {
+    value: THE_FRAMES_OWN,
+    writable: true,
+    configurable: true,
+  })
+
+  const global = new Proxy(target, {
+    defineProperty(held, name, described) {
+      if (name === 'open' && refusing.now) {
+        throw new TypeError('open cannot be redefined')
+      }
+
+      return Reflect.defineProperty(held, name, described)
+    },
+  })
+
+  return { target, global, refusing }
+}
+
+function describedOf(target: object, but: string[] = []) {
+  return Reflect.ownKeys(target)
+    .filter((name) => !but.includes(String(name)))
+    .map((name) => [name, Object.getOwnPropertyDescriptor(target, name)])
+}
+
+test('a name the global object will not have laid over fails the run before it starts, every name laid before it is put back, and the next run is hidden as before', () => {
+  const { target, global, refusing } = refusingOpen()
+  const before = describedOf(target)
+  const scope = scopeOf({})
+  const hiding = hidingOn(global)
+  let ran = false
+
+  refusing.now = true
+  assert.throws(
+    () =>
+      hiding(scope, () => {
+        ran = true
+      }),
+    /open cannot be redefined/,
+  )
+  assert.equal(ran, false)
+  assert.deepEqual(describedOf(target), before)
+
+  refusing.now = false
+  hiding(scope, () => {
+    global.history = 'kept'
+  })
+
+  assert.equal(run('history', scope), 'kept')
+  assert.deepEqual(describedOf(target), before)
+})
+
+test('a name the global object will not have put back leaves every other put back, and fails a run that went well, while a run that failed fails with its own error', () => {
+  const { target, global, refusing } = refusingOpen()
+  const before = describedOf(target, ['open'])
+  const hiding = hidingOn(global)
+
+  assert.throws(
+    () =>
+      hiding(scopeOf({}), () => {
+        refusing.now = true
+      }),
+    /open cannot be redefined/,
+  )
+  assert.deepEqual(describedOf(target, ['open']), before)
+
+  refusing.now = false
+  assert.throws(
+    () =>
+      hiding(scopeOf({}), () => {
+        refusing.now = true
+        throw new Error('the script failed')
+      }),
+    /the script failed/,
+  )
+  assert.deepEqual(describedOf(target, ['open']), before)
+})
+
 test('the document’s globals taken before a run and put back after it give the names its scope hides as they were as well: one first written since reads nothing and one rewritten has its value back', () => {
   const placed: { seen?: unknown } = {}
   const scope = new ScriptScope(
