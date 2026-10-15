@@ -73,7 +73,7 @@ import {
   MOST_RUN_MS,
   ScriptScope,
   scopeOf,
-  type Bindings,
+  type DocumentGlobals,
   type Evaluate,
 } from '@/lib/bml/scripts'
 import {
@@ -172,7 +172,7 @@ type Leaving =
 interface Seen {
   shown: Shown
   event: BmlEvent | null
-  bindings: Bindings | null
+  bindings: DocumentGlobals | null
 }
 
 function moduleKey(tag: number, id: number): string {
