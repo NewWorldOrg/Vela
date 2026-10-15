@@ -49,6 +49,7 @@ import {
   CURSOR_PROBE,
   DATA_BROADCAST_CATALOG,
   GLYPH_PROBE,
+  HISTORY_CATALOG,
   MENU_CATALOG,
   PROGRAMME_READING_CATALOG,
   ROWS_CATALOG,
@@ -58,6 +59,7 @@ import {
   SIGNAL_PROBE,
   clockModules,
   dataBroadcastModules,
+  historyModules,
   howFarModules,
   menuModules,
   rowModules,
@@ -292,6 +294,55 @@ export const スクリプトで切り替わるページ: Story = {
     await rectIs('40,300,320,180')
 
     await press(board, '{Enter}')
+    await rectIs('560,60,360,203')
+    await expect(board).not.toHaveAttribute('data-error')
+  },
+}
+
+/** The page the document that keeps its own history last wrote it shows, read back from what the board heard of the persistent memory. */
+function pageWritten(board: HTMLElement): number | null {
+  const heard = board.getAttribute('data-memory') ?? ''
+  const memory = new PersistentMemory()
+
+  if (!heard.startsWith('page=')) {
+    return null
+  }
+
+  memory.take([['page', heard.slice('page='.length)]])
+
+  const [page] = readArray(memory, 'page', 'U:1B') ?? []
+
+  return typeof page === 'number' ? page : null
+}
+
+export const 自分で持つ履歴で戻る文書: Story = {
+  render: () => <Board catalog={HISTORY_CATALOG} broadcast={historyModules} />,
+  play: async ({ canvasElement }) => {
+    const board = within(canvasElement).getByRole('group', {
+      name: 'データ放送',
+    })
+    const rectIs = (value: string) =>
+      waitFor(() => expect(board).toHaveAttribute('data-video-rect', value), {
+        timeout: 5000,
+      })
+    const pageIs = (page: number) =>
+      waitFor(() => expect(pageWritten(board)).toBe(page))
+
+    await rectIs('560,60,360,203')
+    await press(board, '{Enter}')
+    await rectIs('40,300,320,180')
+
+    await press(board, '{Enter}')
+    await pageIs(1)
+    await press(board, '{Enter}')
+    await pageIs(2)
+
+    await press(board, '{Backspace}')
+    await pageIs(1)
+    await press(board, '{Backspace}')
+    await pageIs(0)
+
+    await press(board, '{Backspace}')
     await rectIs('560,60,360,203')
     await expect(board).not.toHaveAttribute('data-error')
   },

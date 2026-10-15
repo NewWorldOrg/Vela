@@ -2,12 +2,14 @@ import vm from 'node:vm'
 import { DOMParser } from '@xmldom/xmldom'
 
 import {
-  givenOf,
   globalBindingsOf,
+  hidingOn,
   SHADOWED_GLOBALS,
   type Evaluate,
   type GlobalBindings,
+  type Hiding,
 } from '@/lib/bml/scripts'
+import { SCOPE_NAME } from '@/components/data-broadcast/bml-evaluator'
 import type { RuntimeWindow } from '@/components/data-broadcast/bml-runtime'
 
 /** Enough of a DOM for the runtime to draw a page into and for a document's scripts to read and write: elements with attributes, inline style, children and a parent, and text nodes. */
@@ -342,11 +344,45 @@ export class FakeTimers {
   }
 }
 
-/** Runs a document's code in a context of its own, as the frame's global scope would: what the scope was given is there by name, what it hides is undefined, and declarations stay for the next run. */
+/** The names a browser's window holds unconfigurable. */
+const UNCONFIGURABLE = new Set(['window', 'top', 'location'])
+
+/** The names a browser's window holds behind a getter alone, so that what is written to them is dropped. */
+const READ_ONLY = new Set([
+  'history',
+  'navigator',
+  'performance',
+  'localStorage',
+  'sessionStorage',
+  'indexedDB',
+  'caches',
+  'customElements',
+])
+
+/** Puts on a context's global object, by each name the scope hides that it lacks, a stand-in for the frame's own, held as a browser's window holds it. */
+function standInsOn(global: object): void {
+  SHADOWED_GLOBALS.filter((name) => !(name in global)).forEach((name) => {
+    const framesOwn = Object.freeze({ framesOwn: name })
+
+    Object.defineProperty(
+      global,
+      name,
+      UNCONFIGURABLE.has(name) || READ_ONLY.has(name)
+        ? {
+            get: () => framesOwn,
+            enumerable: true,
+            configurable: !UNCONFIGURABLE.has(name),
+          }
+        : { value: framesOwn, writable: true, configurable: true },
+    )
+  })
+}
+
+/** Runs a document's code in a context of its own as the frame runs it, `with` its scope over a global object that holds the frame's own by the names the scope hides, and with what its code writes there by those names kept in the scope. Declarations stay for the next run. */
 export function vmEvaluator(): Evaluate {
   const contexts = new WeakMap<
     object,
-    { context: vm.Context; bindings: GlobalBindings }
+    { context: vm.Context; bindings: GlobalBindings; hiding: Hiding }
   >()
   const contextOf = (scope: object) => {
     const held = contexts.get(scope)
@@ -355,13 +391,15 @@ export function vmEvaluator(): Evaluate {
       return held
     }
 
-    const context = vm.createContext({
-      ...Object.fromEntries(SHADOWED_GLOBALS.map((name) => [name, undefined])),
-      ...givenOf(scope),
-    })
+    const context = vm.createContext({ [SCOPE_NAME]: scope })
+    const global = vm.runInContext('this', context) as object
+
+    standInsOn(global)
+
     const made = {
       context,
-      bindings: globalBindingsOf(vm.runInContext('this', context) as object),
+      bindings: globalBindingsOf(global),
+      hiding: hidingOn(global),
     }
 
     contexts.set(scope, made)
@@ -369,7 +407,11 @@ export function vmEvaluator(): Evaluate {
     return made
   }
   const evaluate: Evaluate = (code, scope) => {
-    vm.runInContext(code, contextOf(scope).context)
+    const { context, hiding } = contextOf(scope)
+
+    hiding(scope, () =>
+      vm.runInContext(`with (${SCOPE_NAME}) {\n${code}\n}`, context),
+    )
   }
 
   evaluate.bindings = (scope) => contextOf(scope).bindings

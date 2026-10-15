@@ -762,6 +762,56 @@ test('a document may name its own onload function, as the frame’s own has alre
   assert.equal(element('p')?.text, 'loaded')
 })
 
+const KEEPS_ITS_HISTORY = bml(
+  '<p id="page0">0</p>' +
+    '<p id="page1" style="visibility: hidden">1</p>' +
+    '<p id="page2" style="visibility: hidden">2</p>' +
+    '<p id="list" style="nav-index: 0" onclick="open()" onkeydown="if (document.currentEvent.keyCode == 19) { okd(); }">list</p>',
+  '<script>var history = new Array(); var shown = 0;</script>' +
+    '<script>' +
+    'function show(page) {' +
+    '  document.getElementById("page" + shown).normalStyle.visibility = "hidden";' +
+    '  shown = page;' +
+    '  document.getElementById("page" + page).normalStyle.visibility = "visible";' +
+    '}' +
+    'function open() { if (shown < 2) { history.push(shown); show(shown + 1); } }' +
+    'function okd() { if (history.length > 0) { show(history.pop()); } else { browser.launchDocument("~/0001/next.bml"); } }' +
+    '</script>',
+)
+
+const AFTER_THE_HISTORY = bml(
+  '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 320px; height: 180px"/>',
+  '<script>browser.Ureg[0] = typeof history + "," + typeof open</script>',
+)
+
+test('a document keeps its own history by a name the frame’s window holds, pushing on enter from one handler and reading its length to go back from another, calls its own function by such a name, and the next document starts without either', () => {
+  const { send, element, heard, forget, runtime } = opened(KEEPS_ITS_HISTORY, [
+    module(1, { 'next.bml': ['bml', AFTER_THE_HISTORY] }),
+  ])
+  const shown = () =>
+    ['page0', 'page1', 'page2'].filter(
+      (id) => element(id)?.style.getPropertyValue('visibility') !== 'hidden',
+    )
+
+  send({ kind: 'key', key: 'enter' })
+  send({ kind: 'key', key: 'enter' })
+  assert.deepEqual(shown(), ['page2'])
+
+  send({ kind: 'key', key: 'back' })
+  assert.deepEqual(shown(), ['page1'])
+
+  send({ kind: 'key', key: 'back' })
+  assert.deepEqual(shown(), ['page0'])
+
+  forget()
+  send({ kind: 'key', key: 'back' })
+  assert.deepEqual(heard()[0], { kind: 'videoRect', rect: NEXT_RECT })
+  assert.equal(
+    (runtime as unknown as { registers: { Ureg: string[] } }).registers.Ureg[0],
+    'undefined,undefined',
+  )
+})
+
 const QUITTING = bml(
   '<p id="q" onclick="browser.quitDocument()" style="nav-index: 0">q</p>',
 )
@@ -1793,6 +1843,44 @@ test('a handler run again after its answer finds the document’s globals as the
 
   timers.tick(100)
   forget()
+  send({ kind: 'key', key: 'enter' })
+  assert.equal(heard()[0]?.kind, 'transmit')
+})
+
+const GUARDED_BY_A_HIDDEN_NAME = bml(
+  '<p id="box" style="nav-index: 0" onkeydown="pressed();">box</p>',
+  '<script>' +
+    'var stop = false;' +
+    'function pressed() {' +
+    '  if (stop) { return; }' +
+    '  stop = true;' +
+    '  var r = browser.transmitTextDataOverIP("http://example.test/check", "", "EUC-JP");' +
+    '  browser.Ureg[0] = r[0] == 1 && r[1] == 200 ? "checked" : "refused";' +
+    '  browser.setInterval("stop = false;", 100, 1);' +
+    '}' +
+    '</script>',
+)
+
+test('a handler run again after its answer finds what the document wrote by a name the frame’s window holds as it was when it began, and the guard it holds there turns a second press away until it is lifted', () => {
+  const { heard, send, registers, forget, timers } = overTheLine(
+    GUARDED_BY_A_HIDDEN_NAME,
+    'on',
+  )
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+
+  assert.equal(heard()[0]?.kind, 'transmit')
+
+  send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+
+  assert.equal(registers[0], 'checked')
+
+  forget()
+  send({ kind: 'key', key: 'enter' })
+  assert.deepEqual(heard(), [])
+
+  timers.tick(100)
   send({ kind: 'key', key: 'enter' })
   assert.equal(heard()[0]?.kind, 'transmit')
 })

@@ -340,6 +340,102 @@ export function scriptedModules(): BmlModule[] {
   ]
 }
 
+const HISTORY_TOP = `${PROLOGUE}
+<bml>
+<head>
+<title>見本</title>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; clut: url(sample.clt); background-color-index: 128; used-key-list: basic data-button">
+<object type="video/X-arib-mpeg2" style="left: 560px; top: 60px; width: 360px; height: 203px"/>
+<p id="title" style="left: 40px; top: 20px; width: 500px; height: 48px; font-size: 32px; line-height: 48px; color-index: 129">見本テレビ データ放送</p>
+<p style="left: 40px; top: 96px; width: 440px; height: 60px"><a id="traffic" href="traffic.bml" style="nav-index: 0">交通情報</a></p>
+</body>
+</bml>`
+
+const TRAFFIC = `${PROLOGUE}
+<bml>
+<head>
+<title>交通情報</title>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+var history = new Array();
+var shown = 0;
+]]></script>
+<script><![CDATA[
+function show(page) {
+  document.getElementById("page" + shown).normalStyle.visibility = "hidden";
+  shown = page;
+  document.getElementById("page" + page).normalStyle.visibility = "visible";
+  browser.writePersistentArray("page", "U:1B", [page]);
+}
+function open() {
+  if (shown < 2) {
+    history.push(shown);
+    show(shown + 1);
+  }
+}
+function okd() {
+  if (history.length > 0) {
+    show(history.pop());
+  } else {
+    browser.launchDocument("startup.bml", "cut");
+  }
+}
+]]></script>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128; used-key-list: basic data-button">
+<object type="video/X-arib-mpeg2" style="left: 40px; top: 300px; width: 320px; height: 180px"/>
+<p id="page0" class="panel" style="left: 40px; top: 60px; width: 880px; height: 200px">交通情報<br/>地方を選ぶ</p>
+<p id="page1" class="panel" style="left: 40px; top: 60px; width: 880px; height: 200px; visibility: hidden">交通情報<br/>道路を選ぶ</p>
+<p id="page2" class="panel" style="left: 40px; top: 60px; width: 880px; height: 200px; visibility: hidden">交通情報<br/>道路の様子</p>
+<p id="next" class="menu" style="left: 440px; top: 300px; nav-index: 0" onclick="open()" onkeydown="if (document.currentEvent.keyCode == 19) { okd(); }">つぎへ</p>
+</body>
+</bml>`
+
+export const HISTORY_CATALOG: BmlCatalog = {
+  service: 1026,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'traffic.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** The modules of a self-made data broadcast whose second document keeps the pages it went through in a global of its own named `history`, as a broadcaster's traffic pages do: its own `open` pushes the page it leaves there and moves on, the back key reads how many are kept and returns to the last, and with none kept it goes back to the start. Each page it shows it writes to the persistent memory as `page`. */
+export function historyModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', HISTORY_TOP),
+        resource('traffic.bml', 'bml', TRAFFIC),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+  ]
+}
+
 const READS_ITSELF = `${PROLOGUE}
 <bml>
 <head>

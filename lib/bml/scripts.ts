@@ -17,7 +17,7 @@ export class LineAwaited extends Error {
   }
 }
 
-/** What a script may not reach by name: the frame's own window and what it opens onto, each resolved to nothing inside a document's scope. */
+/** What a script may not reach by name: the frame's own window and what it opens onto. Inside a document's scope each is the document's own, what it wrote by that name or else nothing. */
 export const SHADOWED_GLOBALS = [
   'window',
   'self',
@@ -76,28 +76,41 @@ export type ScriptGlobals = Record<string, unknown>
 /** How long one run of a script may take before the frame is remade around it. */
 export const MOST_RUN_MS = 2000
 
-const GIVEN = new WeakMap<object, ScriptGlobals>()
+/** Names and what they held at one moment: a document's own global bindings, the names its declarations put on the global object, or what it wrote by the names its scope hides. */
+export type Bindings = Map<string, unknown>
 
-/** What a scope was given, for an evaluator that builds a global scope of its own rather than running `with` the scope. */
-export function givenOf(scope: object): ScriptGlobals {
-  return GIVEN.get(scope) ?? {}
-}
+const KEPT = new WeakMap<object, Bindings>()
 
-/** The object a document's code is run `with`: a name the runtime gives resolves to what it gave, a name the frame must not be reached by resolves to nothing, and every other name goes on to the frame's own globals, where the document's declarations live. */
+/** The object a document's code is run `with`. A name the runtime gives resolves to what it gave, and stays so whatever the code writes to it. A name the frame must not be reached by is the document's own: it resolves to what the document wrote to it, or to nothing, and never to the frame's. Every other name goes on to the frame's own globals, where the document's declarations live. */
 export function scopeOf(globals: ScriptGlobals): object {
   const given = new Map(Object.entries(globals))
   const hidden = new Set<string>(SHADOWED_GLOBALS)
+  const kept: Bindings = new Map()
+  const owned = (name: string | symbol): name is string =>
+    typeof name === 'string' && hidden.has(name) && !given.has(name)
   const scope = new Proxy(Object.create(null) as Record<string, unknown>, {
     has(_, name) {
       return typeof name === 'string' && (given.has(name) || hidden.has(name))
     },
     get(_, name) {
-      return typeof name === 'string' ? given.get(name) : undefined
+      if (typeof name !== 'string') {
+        return undefined
+      }
+
+      return given.has(name) ? given.get(name) : kept.get(name)
     },
-    set() {
+    set(_, name, value) {
+      if (owned(name)) {
+        kept.set(name, value)
+      }
+
       return true
     },
-    deleteProperty() {
+    deleteProperty(_, name) {
+      if (owned(name)) {
+        kept.delete(name)
+      }
+
       return true
     },
     defineProperty() {
@@ -108,9 +121,70 @@ export function scopeOf(globals: ScriptGlobals): object {
     },
   })
 
-  GIVEN.set(scope, { ...globals })
+  KEPT.set(scope, kept)
 
   return scope
+}
+
+/** Runs a document's code with its scope, the names the scope hides laid over the global object while it runs. */
+export type Hiding = (scope: object, run: () => void) => void
+
+interface Held {
+  name: string
+  described: PropertyDescriptor | undefined
+}
+
+function layOver(global: object, held: Held, scope: () => object): void {
+  const { name, described } = held
+
+  Object.defineProperty(global, name, {
+    configurable: true,
+    enumerable: described?.enumerable ?? false,
+    get: () =>
+      described && 'value' in described
+        ? described.value
+        : described?.get?.call(global),
+    set: (value: unknown) => {
+      Reflect.set(scope(), name, value)
+    },
+  })
+}
+
+function putBackOn(global: object, { name, described }: Held): void {
+  if (described) {
+    Object.defineProperty(global, name, described)
+  } else {
+    Reflect.deleteProperty(global, name)
+  }
+}
+
+/** Keeps in the scope what a document's code writes on the global object by a name the scope hides. The code is wrapped in a block, and a function it declares there is also written on the global object, past the scope: a name held there behind a getter alone drops it, and any other takes it in place of the frame's own. So while the code runs each such name on the global object reads as it did and hands what is written to it to the scope, and afterwards holds what it held. A name the global object holds unconfigurable cannot be laid over: a window's `window` and `top` drop what is written to them, and its `location` navigates the frame to it. */
+export function hidingOn(global: object): Hiding {
+  const running: object[] = []
+  const current = () => running[running.length - 1]
+  let held: Held[] = []
+
+  return (scope, run) => {
+    running.push(scope)
+
+    if (running.length === 1) {
+      held = SHADOWED_GLOBALS.map((name) => ({
+        name,
+        described: Object.getOwnPropertyDescriptor(global, name),
+      })).filter(({ described }) => described?.configurable !== false)
+      held.forEach((each) => layOver(global, each, current))
+    }
+
+    try {
+      run()
+    } finally {
+      running.pop()
+
+      if (running.length === 0) {
+        held.forEach((each) => putBackOn(global, each))
+      }
+    }
+  }
 }
 
 const TABLE_CONSTRUCTION = /\bnew\s+(BinaryTable|CSVTable)\s*\(/g
@@ -119,9 +193,6 @@ const TABLE_CONSTRUCTION = /\bnew\s+(BinaryTable|CSVTable)\s*\(/g
 export function withoutTableNew(code: string): string {
   return code.replace(TABLE_CONSTRUCTION, '$1(')
 }
-
-/** A document's own global bindings, the names its declarations put on the global object, as they stood at one moment. */
-export type Bindings = Map<string, unknown>
 
 /** Takes and puts back a document's global bindings. */
 export interface GlobalBindings {
@@ -170,6 +241,12 @@ export function globalBindingsOf(
   }
 }
 
+/** A document's globals as they stood at one moment: the bindings its declarations put on the global object, where the evaluator reaches them, and what it wrote by the names its scope hides. */
+export interface DocumentGlobals {
+  declared: Bindings | null
+  kept: Bindings
+}
+
 /** Runs one piece of a document's code with its scope, and throws what it threw. `bindings`, where the evaluator has it, reaches the global object the code declares on. */
 export type Evaluate = ((code: string, scope: object) => void) & {
   bindings?: (scope: object) => GlobalBindings
@@ -203,16 +280,28 @@ export class ScriptScope {
     this.realm = realm
   }
 
-  /** The document's global bindings as they stand, or null where the evaluator cannot reach them. */
-  bindings(): Bindings | null {
-    return this.evaluate.bindings?.(this.scope).take() ?? null
+  /** The document's globals as they stand. */
+  bindings(): DocumentGlobals {
+    return {
+      declared: this.evaluate.bindings?.(this.scope).take() ?? null,
+      kept: new Map(KEPT.get(this.scope)),
+    }
   }
 
-  /** Puts the document's global bindings back as they were taken. */
-  putBack(taken: Bindings | null): void {
-    if (taken) {
-      this.evaluate.bindings?.(this.scope).put(taken)
+  /** Puts the document's globals back as they were taken: what it wrote by a hidden name since reads nothing again. */
+  putBack(taken: DocumentGlobals | null): void {
+    if (!taken) {
+      return
     }
+
+    if (taken.declared) {
+      this.evaluate.bindings?.(this.scope).put(taken.declared)
+    }
+
+    const kept = KEPT.get(this.scope)
+
+    kept?.clear()
+    taken.kept.forEach((value, name) => kept?.set(name, value))
   }
 
   run(code: string): ScriptOutcome {
