@@ -23,6 +23,8 @@ export interface DocumentHooks {
   seenChanged(): void
   usedKeys(groups: UsedKeyGroup[]): void
   image(reference: string): string | null
+  /** Plays the MNG a reference names on a canvas, in place of what it played. */
+  animate(element: HTMLElement, reference: string): void
   resolve(reference: string): string | null
   warn(message: string): void
 }
@@ -281,11 +283,23 @@ class Inner {
   }
 
   picture(element: HTMLElement, reference: string): void {
-    const url = this.hooks.image(reference)
-
     this.references.set(element, reference)
 
-    if (!url || element.getAttribute('data-bml-tag') === null) {
+    if (element.getAttribute('data-bml-tag') === null) {
+      this.hooks.warn(`missing image: ${reference}`)
+
+      return
+    }
+
+    if (element.tagName.toLowerCase() === 'canvas') {
+      this.hooks.animate(element, reference)
+
+      return
+    }
+
+    const url = this.hooks.image(reference)
+
+    if (!url) {
       this.hooks.warn(`missing image: ${reference}`)
 
       return

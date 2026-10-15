@@ -1,3 +1,5 @@
+import { crc32 } from '@/lib/bml/crc32'
+
 export const PALETTE_SIZE = 256
 
 /** The first index a document's lookup table may define; below it are the common fixed colours. */
@@ -154,32 +156,6 @@ export function colourOf(palette: Palette, index: number): string | null {
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 
 const INDEXED = 3
-
-let crcTable: Uint32Array | null = null
-
-function crc32(bytes: Uint8Array): number {
-  if (!crcTable) {
-    crcTable = new Uint32Array(256)
-
-    for (let n = 0; n < 256; n += 1) {
-      let c = n
-
-      for (let k = 0; k < 8; k += 1) {
-        c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
-      }
-
-      crcTable[n] = c >>> 0
-    }
-  }
-
-  let crc = 0xffffffff
-
-  for (const byte of bytes) {
-    crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8)
-  }
-
-  return (crc ^ 0xffffffff) >>> 0
-}
 
 function chunk(type: string, data: Uint8Array): Uint8Array {
   const bytes = new Uint8Array(12 + data.length)

@@ -1,4 +1,5 @@
 import type { Rect, Size } from '@/lib/caption-placement'
+import { isMng, paintedWith, readMng, type MngAnimation } from '@/lib/bml/mng'
 import { paletteOf, readClut, type Palette } from '@/lib/bml/palette'
 import { pathOf, resolveReference, type BmlAddress } from '@/lib/bml/paths'
 import type { BmlResource } from '@/lib/bml/resources'
@@ -43,7 +44,8 @@ export interface XmlParser {
   }
 }
 
-export type HtmlTag = 'div' | 'p' | 'span' | 'br' | 'a' | 'img' | 'input'
+export type HtmlTag =
+  'div' | 'p' | 'span' | 'br' | 'a' | 'img' | 'input' | 'canvas'
 
 export interface NavLinks {
   index?: number
@@ -62,6 +64,8 @@ export interface PageElement {
   nav: NavLinks
   declarations: Record<string, string>
   children: PageNode[]
+  /** The MNG a canvas plays. */
+  mng?: MngAnimation
 }
 
 export interface PageText {
@@ -132,7 +136,11 @@ class TooLarge extends Error {}
 
 const DEFAULT_RESOLUTION: Size = { width: 960, height: 540 }
 
-const IMAGE_TYPES = new Set(['image/jpeg', 'image/x-arib-png'])
+const IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/x-arib-png',
+  'image/x-arib-mng',
+])
 
 const QUIET_IN_HEAD = new Set(['title', 'meta'])
 
@@ -582,14 +590,47 @@ class Conversion {
       : null
   }
 
-  /** An image element is an `img` even when its picture is not there yet, so that a script may give it one later. */
+  /** An image element is an `img` even when its picture is not there yet, so that a script may give it one later. One whose picture is an MNG is a canvas the runtime plays it on, or an `img` without a picture when the MNG is malformed. */
   private image(node: XmlElementLike, reference: string | null): PageElement {
-    const url = reference ? this.urlOf(reference) : null
+    const resource = reference ? this.resource(reference) : undefined
     const extra: [string, string][] = reference
       ? [['data-bml-ref', reference]]
       : []
 
+    if (reference && resource && isMng(resource.body)) {
+      const animation = this.animationOf(reference, resource)
+
+      return animation
+        ? { ...this.shaped(node, 'canvas', [], extra), mng: animation }
+        : this.shaped(node, 'img', [], extra)
+    }
+
+    const url = reference ? this.urlOf(reference) : null
+
     return this.shaped(node, 'img', [], url ? [...extra, ['src', url]] : extra)
+  }
+
+  /** The MNG a reference names, read and counted against the document's images, in the document's palette; a malformed one is a warning and no animation. */
+  private animationOf(
+    reference: string,
+    resource: BmlResource,
+  ): MngAnimation | null {
+    this.counted('images', 1, BML_LIMITS.images)
+    this.counted('imageBytes', resource.body.length, BML_LIMITS.imageBytes)
+
+    const reading = readMng(resource.body)
+
+    if (reading.read === 'malformed') {
+      this.warnings.add(`malformed MNG: ${reference} (${reading.why})`)
+
+      return null
+    }
+
+    reading.ignored.forEach((type) =>
+      this.warnings.add(`unsupported MNG chunk: ${type}`),
+    )
+
+    return paintedWith(reading.mng, this.palette)
   }
 
   /** The URL an image is drawn from, counted against the document's images; a reference to no image, or to one of a kind not drawn, is a warning and no URL. */
