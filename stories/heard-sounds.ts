@@ -38,6 +38,26 @@ const NO_PARAM = {
   exponentialRampToValueAtTime: () => {},
 }
 
+/** The events WebKit lets audio start in, as the viewer presses something. */
+const PRESSES = new Set([
+  'click',
+  'keydown',
+  'keyup',
+  'mousedown',
+  'mouseup',
+  'pointerup',
+  'touchend',
+  'input',
+  'change',
+])
+
+/** Whether the page is handling a press right now, read from the event being dispatched. */
+function inAPress(): boolean {
+  const event = (window as { event?: Event }).event
+
+  return event !== undefined && PRESSES.has(event.type)
+}
+
 function soundOf(tones: number[]): number | null {
   const found = ROM_SOUNDS.findIndex(
     (sound) =>
@@ -48,8 +68,8 @@ function soundOf(tones: number[]): number | null {
   return found === -1 ? null : found
 }
 
-/** Stands in for the browser's audio context while a story runs, so the sounds the player plays are heard by the story instead of the speakers. `heard` tells them in the order they were played; `stop` puts the browser's own back. */
-export function hearingTheSounds(): {
+/** Stands in for the browser's audio context while a story runs, so the sounds the player plays are heard by the story instead of the speakers. `heard` tells them in the order they were played; `stop` puts the browser's own back. With `asWebKit`, a context made or resumed outside a press stays suspended, as WebKit keeps it. */
+export function hearingTheSounds({ asWebKit = false } = {}): {
   heard: () => HeardSound[]
   stop: () => void
 } {
@@ -57,7 +77,7 @@ export function hearingTheSounds(): {
   const speakers = wired()
 
   class StandIn {
-    state = 'running'
+    state = asWebKit && !inAPress() ? 'suspended' : 'running'
     currentTime = 0
     destination = speakers
 
@@ -77,6 +97,7 @@ export function hearingTheSounds(): {
         },
         start: () => {},
         stop: () => {},
+        onended: null,
       })
 
       oscillators.push(oscillator)
@@ -85,9 +106,13 @@ export function hearingTheSounds(): {
     }
 
     resume() {
-      this.state = 'running'
+      const allowed = !asWebKit || inAPress()
 
-      return Promise.resolve()
+      return Promise.resolve().then(() => {
+        if (allowed) {
+          this.state = 'running'
+        }
+      })
     }
 
     close() {

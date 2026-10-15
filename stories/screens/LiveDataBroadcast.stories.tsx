@@ -1753,10 +1753,10 @@ const AFTER_THE_SOUND = '40,60,360,203'
 /** What the player played while the story ran, heard in place of the speakers. */
 const sounds: { heard: () => HeardSound[] } = { heard: () => [] }
 
-/** Hears the sounds in place of the speakers, with the sounds setting as the cookie says, or as it starts out without one. */
-function hearingWith(setting?: 'yes' | 'no') {
+/** Hears the sounds in place of the speakers, with the sounds setting as the cookie says, or as it starts out without one, and the browser's audio kept suspended outside a press, as WebKit keeps it, when asked. */
+function hearingWith(setting?: 'yes' | 'no', asWebKit = false) {
   return () => {
-    const hearing = hearingTheSounds()
+    const hearing = hearingTheSounds({ asWebKit })
 
     sounds.heard = hearing.heard
     document.cookie = setting
@@ -1810,6 +1810,49 @@ export const 効果音_設定が切: Story = {
   play: async ({ canvasElement }) => {
     await openedOnTheLine(canvasElement)
     await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([])
+  },
+}
+
+export const 効果音_押して鳴らせるようになる: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([
+      { sound: 7, gain: romSoundGain(true, 1) },
+    ])
+  },
+}
+
+export const 効果音_押す前の音は後から鳴らさない: Story = {
+  args: {
+    openSocket: carrying(
+      catalogPayload({ ...SOUNDING_CATALOG, autoStart: true }),
+      ...soundingModules().map(modulePayload),
+    ),
+    autoOpensDataBroadcast: true,
+  },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
+
+    await afterTheArrival(canvasElement)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([])
+
+    const mute = inThePlayer(canvasElement).getByRole('button', {
+      name: '消音',
+    })
+
+    await userEvent.click(mute)
+    await userEvent.click(mute)
+    await expect(mute).toHaveAttribute('aria-pressed', 'false')
+    await new Promise((resolve) => setTimeout(resolve, 300))
     await expect(sounds.heard()).toEqual([])
   },
 }

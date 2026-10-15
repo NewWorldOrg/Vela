@@ -262,13 +262,13 @@ export function Player({
   )
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
-  const playRomSound = useRomSound(muted ? 0 : volume)
+  const romSounds = useRomSound(muted ? 0 : volume)
   const broadcast = useDataBroadcast(
     broadcastFeed,
     d.id,
     { autoOpens, programme: d.startedAt },
     null,
-    playRomSound,
+    romSounds,
   )
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
@@ -664,6 +664,8 @@ export function Player({
   const toggle = () => {
     const element = video.current
 
+    romSounds.unlock()
+
     if (
       phase === 'idle' ||
       phase === 'broken' ||
@@ -950,6 +952,8 @@ export function Player({
   const chooseVolume = (next: number) => {
     const element = video.current
 
+    romSounds.unlock()
+
     setVolume(next)
     setMuted(next === 0)
 
@@ -979,6 +983,8 @@ export function Player({
 
   const mute = (quiet: boolean) => {
     const element = video.current
+
+    romSounds.unlock()
     const level = !quiet && volume === 0 ? 1 : volume
 
     setMuted(quiet)

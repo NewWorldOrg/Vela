@@ -300,7 +300,7 @@ export function LivePlayer({
     receiverId,
     relay,
   )
-  const playRomSound = useRomSound(muted ? 0 : volume)
+  const romSounds = useRomSound(muted ? 0 : volume)
   const broadcast = useDataBroadcast(
     broadcastFeed,
     key,
@@ -309,7 +309,7 @@ export function LivePlayer({
       programme: onAir?.startsAt ?? '',
     },
     applicationStarter(line),
-    playRomSound,
+    romSounds,
   )
 
   useEffect(
@@ -645,6 +645,8 @@ export function LivePlayer({
   const toggle = () => {
     const element = video.current
 
+    romSounds.unlock()
+
     if (!element || !hasPicture) {
       return
     }
@@ -707,6 +709,8 @@ export function LivePlayer({
   const chooseVolume = (next: number) => {
     const element = video.current
 
+    romSounds.unlock()
+
     setVolume(next)
     setMuted(next === 0)
 
@@ -736,6 +740,8 @@ export function LivePlayer({
 
   const mute = (quiet: boolean) => {
     const element = video.current
+
+    romSounds.unlock()
     const level = !quiet && volume === 0 ? 1 : volume
 
     setMuted(quiet)
