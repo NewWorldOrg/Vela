@@ -9,6 +9,7 @@ import {
   HYBRIDCAST_LABEL,
   LINE_LABEL,
   RECEIVER_ID_LABEL,
+  SOUNDS_LABEL,
   viewingSettingsOf,
 } from '@/lib/viewing'
 import {
@@ -16,6 +17,7 @@ import {
   DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  DATA_BROADCAST_SOUNDS,
   cookieIn,
   forgettingCookie,
   storingCookie,
@@ -49,6 +51,7 @@ const SETTINGS = [
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
   DATA_BROADCAST_HYBRIDCAST,
+  DATA_BROADCAST_SOUNDS,
 ]
 
 function forgetTheSettings() {
@@ -177,6 +180,45 @@ export const Hybridcast: Story = {
   },
 }
 
+export const 効果音: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const sounds = canvas.getByRole('switch', { name: SOUNDS_LABEL })
+
+    await expect(sounds).toBeChecked()
+    await expect(sounds).toBeEnabled()
+    await expect(cookie(DATA_BROADCAST_SOUNDS)).toBeUndefined()
+
+    await userEvent.click(sounds)
+
+    await expect(sounds).not.toBeChecked()
+    await expect(cookie(DATA_BROADCAST_SOUNDS)).toBe('silent')
+
+    await userEvent.click(canvas.getByRole('switch', { name: LINE_LABEL }))
+    await userEvent.click(canvas.getByRole('switch', { name: LINE_LABEL }))
+
+    await expect(sounds).not.toBeChecked()
+    await expect(sounds).toBeEnabled()
+
+    await userEvent.click(sounds)
+
+    await expect(sounds).toBeChecked()
+    await expect(cookie(DATA_BROADCAST_SOUNDS)).toBe('plays')
+  },
+}
+
+export const 効果音が切: Story = {
+  args: { playsSounds: false },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('switch', { name: SOUNDS_LABEL }),
+    ).not.toBeChecked()
+  },
+}
+
 /** What hydrating the page's server HTML said was wrong with it, for the play to read. */
 const heardWhileHydrating: string[] = []
 
@@ -222,6 +264,7 @@ async function hydratedWith(
   line: boolean,
   receiverId: boolean,
   hybridcast: boolean,
+  sounds: boolean,
 ) {
   const canvas = within(canvasElement)
   const lineSwitch = await canvas.findByRole('switch', { name: LINE_LABEL })
@@ -231,6 +274,7 @@ async function hydratedWith(
   const hybridcastSwitch = canvas.getByRole('switch', {
     name: HYBRIDCAST_LABEL,
   })
+  const soundsSwitch = canvas.getByRole('switch', { name: SOUNDS_LABEL })
 
   await waitFor(() =>
     expect(
@@ -247,6 +291,7 @@ async function hydratedWith(
     'aria-checked',
     String(hybridcast),
   )
+  await expect(soundsSwitch).toHaveAttribute('aria-checked', String(sounds))
 
   return { lineSwitch, receiverIdSwitch, hybridcastSwitch }
 }
@@ -265,6 +310,7 @@ export const サーバの絵から組み上がる: Story = {
       true,
       true,
       true,
+      true,
     )
 
     await expect(receiverIdSwitch).toBeEnabled()
@@ -279,10 +325,12 @@ export const サーバの絵から組み上がる_通信が切: Story = {
     [DATA_BROADCAST_LINE]: 'refuses',
     [DATA_BROADCAST_RECEIVER_ID]: 'hands',
     [DATA_BROADCAST_HYBRIDCAST]: 'allows',
+    [DATA_BROADCAST_SOUNDS]: 'silent',
   }),
   play: async ({ canvasElement }) => {
     const { receiverIdSwitch, hybridcastSwitch } = await hydratedWith(
       canvasElement,
+      false,
       false,
       false,
       false,

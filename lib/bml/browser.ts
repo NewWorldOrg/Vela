@@ -21,6 +21,7 @@ import {
 import { readArray, writeArray, type PersistentMemory } from '@/lib/bml/memory'
 import { lineAddressOf } from '@/lib/bml/paths'
 import type { Programme } from '@/lib/bml/messages'
+import { romSoundOf } from '@/lib/bml/rom-sound'
 import {
   BROWSER_NAME,
   BROWSER_VERSION,
@@ -71,6 +72,7 @@ export interface BrowserHost {
   startApplication(start: AppStart): void
   unopened(): void
   failedBefore(start: AppStart): boolean
+  playRomSound(sound: number): void
 }
 
 /** The functions a broadcast's document may call and get an answer from. */
@@ -109,11 +111,11 @@ export const SUPPORTED_FUNCTIONS = [
   'startReceivingAIT',
   'getReceivedAIT',
   'startAITControlledApp',
+  'playRomSound',
 ] as const
 
 /** Called, these do nothing and say they succeeded. */
 export const IGNORED_FUNCTIONS = [
-  'playRomSound',
   'setCurrentDateMode',
   'loadDRCS',
   'unloadDRCS',
@@ -545,6 +547,21 @@ function lockAnswerOf(host: BrowserHost, reference: unknown): number {
   return answer === 'noComponent' ? NO_COMPONENT : DONE
 }
 
+/** A built-in sound is handed to the player, which plays it or not by its own settings; the document is told it played either way. */
+function playRomSound(host: BrowserHost, reference: unknown): number {
+  const sound = romSoundOf(reference)
+
+  if (sound === null) {
+    host.warn(`not a built-in sound: ${String(reference).slice(0, 64)}`)
+
+    return FAILED
+  }
+
+  host.playRomSound(sound)
+
+  return DONE
+}
+
 function supported(host: BrowserHost): Record<string, Answer> {
   return {
     launchDocument: (reference: unknown) => {
@@ -647,6 +664,7 @@ function supported(host: BrowserHost): Record<string, Answer> {
     getReceivedAIT: (uri: unknown) => receivedAit(host, uri),
     startAITControlledApp: (orgId: unknown, appId: unknown, uri: unknown) =>
       startApplication(host, orgId, appId, uri),
+    playRomSound: (reference: unknown) => playRomSound(host, reference),
   }
 }
 

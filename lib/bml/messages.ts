@@ -28,6 +28,7 @@ import {
 import { nptReadingOf, type NptReading } from '@/lib/bml/npt'
 import { MOST_URL, addressOf, lineAddressOf } from '@/lib/bml/paths'
 import { moduleOf, type BmlModule } from '@/lib/bml/resources'
+import { isRomSound } from '@/lib/bml/rom-sound'
 import { FONT_FAMILIES, GRID } from '@/lib/bml/style'
 
 export type FontFamily = (typeof FONT_FAMILIES)[number]
@@ -111,6 +112,7 @@ export type RuntimeMessage =
   | { kind: 'ait'; id: number; uri: string }
   | { kind: 'startApp'; start: AppStart; greg: string[] }
   | { kind: 'unopened' }
+  | { kind: 'romsound'; sound: number }
 
 /** What the viewer is told of the line: the setting refuses it, or the broadcaster's server could not be reached. */
 export const LINE_SAYINGS = ['off', 'unreached'] as const
@@ -261,6 +263,10 @@ function runtimeMessageOf(data: unknown): RuntimeMessage | null {
       return startAppOf(message)
     case 'unopened':
       return { kind: 'unopened' }
+    case 'romsound':
+      return isRomSound(message.sound)
+        ? { kind: 'romsound', sound: message.sound }
+        : null
     case 'transmit':
       return transmitOf(message)
     case 'fetch':

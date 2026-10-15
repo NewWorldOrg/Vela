@@ -882,6 +882,7 @@ export class BmlRuntime {
       unopened: () => this.say({ kind: 'unopened' }),
       failedBefore: (start) =>
         this.failedStarts.some((failed) => sameStart(failed, start)),
+      playRomSound: (sound) => this.say({ kind: 'romsound', sound }),
     }
   }
 

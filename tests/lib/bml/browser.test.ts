@@ -30,6 +30,7 @@ function host(over: Partial<BrowserHost> = {}) {
   const warnings: string[] = []
   const lineOff: string[] = []
   const sent: string[][] = []
+  const sounds: number[] = []
   const made: BrowserHost = {
     launch: (reference) => {
       calls.push(`launch ${String(reference)}`)
@@ -93,6 +94,7 @@ function host(over: Partial<BrowserHost> = {}) {
       calls.push(`start ${start.ait} ${start.orgId} ${start.appId}`),
     unopened: () => calls.push('unopened'),
     failedBefore: () => false,
+    playRomSound: (sound) => sounds.push(sound),
     ...over,
   }
 
@@ -103,6 +105,7 @@ function host(over: Partial<BrowserHost> = {}) {
     warnings,
     lineOff,
     sent,
+    sounds,
   }
 }
 
@@ -275,6 +278,30 @@ test('random answers within the count asked, from one', () => {
 
   assert.deepEqual([...drawn].sort(), [1, 2, 3])
   assert.equal(browser.random(0), 1)
+})
+
+test('a built-in sound is handed to the player to play, and the document is told it played', () => {
+  const { browser, sounds, unsupported, warnings } = host()
+
+  assert.equal(browser.playRomSound('romsound://0'), 1)
+  assert.equal(browser.playRomSound('romsound://15'), 1)
+  assert.deepEqual(sounds, [0, 15])
+  assert.deepEqual(unsupported, [])
+  assert.deepEqual(warnings, [])
+})
+
+test('a sound that is no built-in one fails with a warning and plays nothing', () => {
+  const { browser, sounds, warnings } = host()
+
+  assert.ok(Number.isNaN(browser.playRomSound('romsound://16')))
+  assert.ok(Number.isNaN(browser.playRomSound('chime.aac')))
+  assert.ok(Number.isNaN(browser.playRomSound()))
+  assert.deepEqual(sounds, [])
+  assert.deepEqual(warnings, [
+    'not a built-in sound: romsound://16',
+    'not a built-in sound: chime.aac',
+    'not a built-in sound: undefined',
+  ])
 })
 
 test('a function that is ignored succeeds, one that communicates fails and is told, and one unknown fails with a warning', () => {

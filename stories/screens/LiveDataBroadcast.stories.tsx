@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test'
 
 import { catalogPayload } from '@/lib/bml/catalog'
 import { modulePayload, type BmlModule } from '@/lib/bml/resources'
@@ -17,13 +17,16 @@ import {
   DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  DATA_BROADCAST_SOUNDS,
   HYBRIDCAST_SPELLING,
   LINE_SPELLING,
   LIVE_CHANNELS_FOLDED,
   RECEIVER_ID_SPELLING,
+  SOUNDS_SPELLING,
   forgettingCookie,
   storingCookie,
 } from '@/lib/stored-flag'
+import { romSoundGain } from '@/lib/data-broadcast-sound'
 import { frameOf, progressPayload, type LiveStartup } from '@/lib/live-wire'
 import {
   LIVE_NOW_FIXTURE,
@@ -55,13 +58,16 @@ import {
   LINE_CATALOG,
   OVER_THE_LINE_PAGES,
   SCRIPTED_CATALOG,
+  SOUNDING_CATALOG,
   dataBroadcastModules,
   hybridcastModules,
   keyedHybridcastModules,
   lineModules,
   scriptedModules,
+  soundingModules,
 } from '@/stories/fixtures/data-broadcast'
 import { inTheApp } from '@/stories/frames'
+import { hearingTheSounds, type HeardSound } from '@/stories/heard-sounds'
 
 class BroadcastSocket implements LiveSocket {
   binaryType: BinaryType = 'blob'
@@ -1733,5 +1739,243 @@ export const Hybridcast_設定が切: Story = {
     await expect(
       onTheScreen(canvasElement, 'data-broadcast-says'),
     ).toHaveTextContent('')
+  },
+}
+
+const SOUNDING = [
+  catalogPayload(SOUNDING_CATALOG),
+  ...soundingModules().map(modulePayload),
+]
+
+/** Where the picture goes once the document was told its sound played. */
+const AFTER_THE_SOUND = '40,60,360,203'
+
+/** What the player played while the story ran, heard in place of the speakers, and how many audio contexts it made. */
+const sounds: { heard: () => HeardSound[]; made: () => number } = {
+  heard: () => [],
+  made: () => 0,
+}
+
+/** Hears the sounds in place of the speakers, with the sounds setting as the cookie says, or as it starts out without one, and the browser's audio kept suspended outside a press, as WebKit keeps it, when asked. */
+function hearingWith(setting?: 'yes' | 'no', asWebKit = false) {
+  return () => {
+    const hearing = hearingTheSounds({ asWebKit })
+
+    sounds.heard = hearing.heard
+    sounds.made = hearing.made
+    document.cookie = setting
+      ? storingCookie(DATA_BROADCAST_SOUNDS, SOUNDS_SPELLING[setting])
+      : forgettingCookie(DATA_BROADCAST_SOUNDS)
+
+    return () => {
+      hearing.stop()
+      document.cookie = forgettingCookie(DATA_BROADCAST_SOUNDS)
+    }
+  }
+}
+
+export const 効果音: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(),
+  play: async ({ canvasElement }) => {
+    const volume = await inThePlayer(canvasElement).findByRole('slider', {
+      name: '音量',
+    })
+
+    fireEvent.change(volume, { target: { value: '40' } })
+    await expect(volume).toHaveAttribute('aria-valuetext', '40%')
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([
+      { sound: 7, gain: romSoundGain(true, 0.4) },
+    ])
+  },
+}
+
+export const 効果音_消音: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(),
+  play: async ({ canvasElement }) => {
+    const mute = await inThePlayer(canvasElement).findByRole('button', {
+      name: '消音',
+    })
+
+    await userEvent.click(mute)
+    await expect(mute).toHaveAttribute('aria-pressed', 'true')
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([])
+  },
+}
+
+export const 効果音_設定が切: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith('no'),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+
+    const mute = inThePlayer(canvasElement).getByRole('button', {
+      name: '消音',
+    })
+
+    await userEvent.click(mute)
+    await userEvent.click(mute)
+    await expect(sounds.heard()).toEqual([])
+    await expect(sounds.made()).toBe(0)
+  },
+}
+
+export const 効果音_閉じたままなら音を用意しない: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(),
+  play: async ({ canvasElement }) => {
+    const player = inThePlayer(canvasElement)
+
+    await player.findByRole('button', { name: 'データ放送' })
+    await afterTheArrival(canvasElement)
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+
+    await userEvent.click(
+      player.getByRole('button', { name: /^(再生|一時停止)$/ }),
+    )
+    await userEvent.click(player.getByRole('button', { name: '消音' }))
+    fireEvent.change(player.getByRole('slider', { name: '音量' }), {
+      target: { value: '40' },
+    })
+    await expect(
+      player.getByRole('button', { name: 'データ放送' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    await expect(sounds.made()).toBe(0)
+  },
+}
+
+export const 効果音_押して鳴らせるようになる: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([
+      { sound: 7, gain: romSoundGain(true, 1) },
+    ])
+  },
+}
+
+export const 効果音_押す前の音は後から鳴らさない: Story = {
+  args: {
+    openSocket: carrying(
+      catalogPayload({ ...SOUNDING_CATALOG, autoStart: true }),
+      ...soundingModules().map(modulePayload),
+    ),
+    autoOpensDataBroadcast: true,
+  },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
+
+    await afterTheArrival(canvasElement)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await shrunkTo(canvasElement, AFTER_THE_SOUND)
+    await expect(sounds.heard()).toEqual([])
+
+    const mute = inThePlayer(canvasElement).getByRole('button', {
+      name: '消音',
+    })
+
+    await userEvent.click(mute)
+    await userEvent.click(mute)
+    await expect(mute).toHaveAttribute('aria-pressed', 'false')
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await expect(sounds.heard()).toEqual([])
+  },
+}
+
+/** The sounding broadcast opened by itself, with no press to unlock the audio, its first sound dropped while WebKit holds the audio suspended. */
+async function openedWithoutAPress(canvasElement: HTMLElement) {
+  const toggle = await inThePlayer(canvasElement).findByRole('button', {
+    name: 'データ放送',
+  })
+
+  await afterTheArrival(canvasElement)
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await shrunkTo(canvasElement, AFTER_THE_SOUND)
+  await expect(sounds.made()).toBe(1)
+  await expect(sounds.heard()).toEqual([])
+}
+
+export const 効果音_キーボードのキーで鳴らせるようになる: Story = {
+  args: {
+    openSocket: carrying(
+      catalogPayload({ ...SOUNDING_CATALOG, autoStart: true }),
+      ...soundingModules().map(modulePayload),
+    ),
+    autoOpensDataBroadcast: true,
+  },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    await openedWithoutAPress(canvasElement)
+    press(onTheScreen(canvasElement, 'live-player'), 'Enter')
+    await waitFor(() =>
+      expect(sounds.heard()).toEqual([
+        { sound: 9, gain: romSoundGain(true, 1) },
+      ]),
+    )
+  },
+}
+
+export const 効果音_開いたまま音量を変えると鳴らせるようになる: Story = {
+  args: {
+    openSocket: carrying(
+      catalogPayload({ ...SOUNDING_CATALOG, autoStart: true }),
+      ...soundingModules({ later: true }).map(modulePayload),
+    ),
+    autoOpensDataBroadcast: true,
+  },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    await openedWithoutAPress(canvasElement)
+    fireEvent.change(
+      inThePlayer(canvasElement).getByRole('slider', { name: '音量' }),
+      { target: { value: '40' } },
+    )
+    await waitFor(
+      () =>
+        expect(sounds.heard()).toEqual([
+          { sound: 10, gain: romSoundGain(true, 0.4) },
+        ]),
+      { timeout: 5000 },
+    )
+  },
+}
+
+export const Hybridcast_効果音: Story = {
+  parameters: { screen: { width: 1600, height: 1000 } },
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: () => {
+    const lineGoes = lineSetTo(true, false, true)()
+    const hearingGoes = hearingWith()()
+
+    return () => {
+      hearingGoes()
+      lineGoes()
+    }
+  },
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+    await runningOnTheBand(canvasElement)
+    await theApplicationRuns(canvasElement)
+    await theApplicationSaid('rom-audio-play', 'played')
+    await waitFor(() =>
+      expect(sounds.heard()).toEqual([
+        { sound: 3, gain: romSoundGain(true, 1) },
+        { sound: 5, gain: romSoundGain(true, 1) },
+      ]),
+    )
   },
 }

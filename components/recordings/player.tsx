@@ -53,6 +53,7 @@ import type {
   PositionWrite,
 } from '@/repository/videos'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
+import { useRomSound } from '@/hooks/useRomSound'
 import { useKeptPosition } from '@/hooks/useKeptPosition'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 import {
@@ -259,10 +260,16 @@ export function Player({
     AUTO_OPEN_SPELLING,
     autoOpensDataBroadcast,
   )
-  const broadcast = useDataBroadcast(broadcastFeed, d.id, {
-    autoOpens,
-    programme: d.startedAt,
-  })
+  const [muted, setMuted] = useState(false)
+  const [volume, setVolume] = useState(1)
+  const romSounds = useRomSound(muted ? 0 : volume)
+  const broadcast = useDataBroadcast(
+    broadcastFeed,
+    d.id,
+    { autoOpens, programme: d.startedAt },
+    null,
+    romSounds,
+  )
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
@@ -281,8 +288,6 @@ export function Player({
   )
   const [phase, setPhase] = useState<Phase>(opensPlaying ? 'waiting' : 'idle')
   const [fault, setFault] = useState<PlaybackFault>({ kind: 'transcode' })
-  const [muted, setMuted] = useState(false)
-  const [volume, setVolume] = useState(1)
   const opening = whereItStarts(opened, startAt ?? 0)
   const landing = useRef<number | null>(opensPlaying ? opening.land : null)
   const [from, setFrom] = useState(opensPlaying ? opening.from : 0)
@@ -659,6 +664,8 @@ export function Player({
   const toggle = () => {
     const element = video.current
 
+    broadcast.unlockSounds()
+
     if (
       phase === 'idle' ||
       phase === 'broken' ||
@@ -945,6 +952,8 @@ export function Player({
   const chooseVolume = (next: number) => {
     const element = video.current
 
+    broadcast.unlockSounds()
+
     setVolume(next)
     setMuted(next === 0)
 
@@ -974,6 +983,8 @@ export function Player({
 
   const mute = (quiet: boolean) => {
     const element = video.current
+
+    broadcast.unlockSounds()
     const level = !quiet && volume === 0 ? 1 : volume
 
     setMuted(quiet)

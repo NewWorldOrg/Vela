@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test'
 
 import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
 import type {
@@ -19,7 +19,9 @@ import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { DRAWN_PICTURE, drawnFrame } from '@/stories/fixtures/frames'
 import {
   DATA_BROADCAST_CATALOG,
+  SOUNDING_CATALOG,
   dataBroadcastModules,
+  soundingModules,
 } from '@/stories/fixtures/data-broadcast'
 import {
   readingModulesOf,
@@ -29,6 +31,9 @@ import { afterTheArrival } from '@/stories/after-the-arrival'
 import { slidOutWhole } from '@/stories/slid-out-whole'
 import { REMOTE_KEYS, compact } from '@/stories/remote-in-the-column'
 import { inTheApp } from '@/stories/frames'
+import { hearingTheSounds, type HeardSound } from '@/stories/heard-sounds'
+import { romSoundGain } from '@/lib/data-broadcast-sound'
+import { DATA_BROADCAST_SOUNDS, forgettingCookie } from '@/lib/stored-flag'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -653,5 +658,46 @@ export const 背の低い窓で畳んでも番組の情報は動かない: Story
     await userEvent.click(fold)
     await inTheColumn(canvasElement, closed)
     await near(meta.getBoundingClientRect().top, top)
+  },
+}
+
+/** What the player played while the story ran, heard in place of the speakers. */
+const sounds: { heard: () => HeardSound[] } = { heard: () => [] }
+
+export const 効果音: Story = {
+  args: {
+    readDataBroadcast: async () => ({
+      state: 'read',
+      timeline: throughout(SOUNDING_CATALOG),
+    }),
+    readDataBroadcastModule: readingModulesOf(soundingModules),
+  },
+  beforeEach: () => {
+    const hearing = hearingTheSounds()
+
+    sounds.heard = hearing.heard
+    document.cookie = forgettingCookie(DATA_BROADCAST_SOUNDS)
+
+    return hearing.stop
+  },
+  play: async ({ canvasElement }) => {
+    const toggle = await inThePlayer(canvasElement).findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+    const volume = inThePlayer(canvasElement).getByRole('slider', {
+      name: '音量',
+    })
+
+    fireEvent.change(volume, { target: { value: '40' } })
+    await expect(volume).toHaveAttribute('aria-valuetext', '40%')
+    await afterTheArrival(canvasElement)
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await shrunkTo(canvasElement, ON_THE_WEATHER)
+    await expect(sounds.heard()).toEqual([
+      { sound: 7, gain: romSoundGain(true, 0.4) },
+    ])
   },
 }

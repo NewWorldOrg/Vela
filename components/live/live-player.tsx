@@ -86,6 +86,7 @@ import {
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
+import { useRomSound } from '@/hooks/useRomSound'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { useReceiverId } from '@/hooks/useReceiverId'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -299,6 +300,7 @@ export function LivePlayer({
     receiverId,
     relay,
   )
+  const romSounds = useRomSound(muted ? 0 : volume)
   const broadcast = useDataBroadcast(
     broadcastFeed,
     key,
@@ -307,6 +309,7 @@ export function LivePlayer({
       programme: onAir?.startsAt ?? '',
     },
     applicationStarter(line),
+    romSounds,
   )
 
   useEffect(
@@ -642,6 +645,8 @@ export function LivePlayer({
   const toggle = () => {
     const element = video.current
 
+    broadcast.unlockSounds()
+
     if (!element || !hasPicture) {
       return
     }
@@ -704,6 +709,8 @@ export function LivePlayer({
   const chooseVolume = (next: number) => {
     const element = video.current
 
+    broadcast.unlockSounds()
+
     setVolume(next)
     setMuted(next === 0)
 
@@ -733,6 +740,8 @@ export function LivePlayer({
 
   const mute = (quiet: boolean) => {
     const element = video.current
+
+    broadcast.unlockSounds()
     const level = !quiet && volume === 0 ? 1 : volume
 
     setMuted(quiet)

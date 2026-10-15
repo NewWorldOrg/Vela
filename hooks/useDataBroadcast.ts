@@ -39,6 +39,7 @@ import type {
   AppHeard,
   SendToApp,
 } from '@/components/data-broadcast/hybridcast-frame'
+import type { RomSounds } from '@/components/data-broadcast/rom-sound'
 
 interface Kept {
   of: string | null
@@ -61,6 +62,7 @@ export interface DataBroadcast {
   connect: (send: SendToRuntime | null) => void
   toggle: () => void
   press: (key: BmlKey) => void
+  unlockSounds: () => void
   hear: (message: RuntimeMessage) => void
   showNumbers: (shown: boolean) => void
   quiet: () => void
@@ -70,6 +72,8 @@ export interface DataBroadcast {
 }
 
 const unreachable = () => 'absent' as const
+
+const SILENT: RomSounds = { play: () => {}, unlock: () => {} }
 
 const noCatalog = () => null
 
@@ -81,12 +85,13 @@ function openedIn(
   return view.open ? programme : before
 }
 
-/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. */
+/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. The receiver's built-in sounds the documents or the application ask for are played through `sounds`, which the toggle and the keys unlock, as they are pressed, and `unlockSounds` unlocks from the player's own controls while it is open. */
 export function useDataBroadcast(
   feed: DataBroadcastHeld,
   session: string | null,
   { autoOpens, programme }: AutoOpens = BY_HAND_ONLY,
   startApplication: StartApplication | null = null,
+  sounds: RomSounds = SILENT,
 ): DataBroadcast {
   const subscribe = useCallback(
     (onChange: () => void) => feed.subscribe(onChange),
@@ -201,6 +206,10 @@ export function useDataBroadcast(
 
     step({ on: 'runtime', message, nth })
 
+    if (message.kind === 'romsound') {
+      sounds.play(message.sound)
+    }
+
     if (message.kind === 'startApp') {
       void start(message.start, nth)
     }
@@ -271,6 +280,7 @@ export function useDataBroadcast(
         void start(message.start, nth)
         return
       case 'romsound':
+        sounds.play(message.sound)
         return
       case 'lost':
         step({ on: 'appLost', end: message.end, nth })
@@ -290,8 +300,13 @@ export function useDataBroadcast(
     connect: (send) => {
       runtime.current = send
     },
-    toggle: () => step({ on: 'toggle', availability }),
+    toggle: () => {
+      sounds.unlock()
+      step({ on: 'toggle', availability })
+    },
     press: (key) => {
+      sounds.unlock()
+
       if (!view.hybridcast) {
         runtime.current?.({ kind: 'key', key })
 
@@ -300,6 +315,11 @@ export function useDataBroadcast(
 
       if (view.usedKeys.includes(key)) {
         app.current?.({ kind: 'key', key })
+      }
+    },
+    unlockSounds: () => {
+      if (view.open) {
+        sounds.unlock()
       }
     },
     hear,
