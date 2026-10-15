@@ -4,9 +4,11 @@ import {
   DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  DATA_BROADCAST_SOUNDS,
   HYBRIDCAST_SPELLING,
   LINE_SPELLING,
   RECEIVER_ID_SPELLING,
+  SOUNDS_SPELLING,
   flagOf,
 } from '@/lib/stored-flag'
 
@@ -30,12 +32,18 @@ export const HYBRIDCAST_LABEL = 'Hybridcast を許可する'
 export const HYBRIDCAST_HINT =
   '入にすると、ライブ視聴中のデータ放送から放送局の Hybridcast のアプリを開きます。'
 
+export const SOUNDS_LABEL = 'データ放送の効果音'
+
+export const SOUNDS_HINT =
+  '入にすると、データ放送が鳴らす受信機の効果音を出します。'
+
 /** The viewing settings as the switches start out, read the same way on the server from the request's cookies and in the browser from its own. */
 export interface ViewingSettings {
   autoOpensDataBroadcast: boolean
   allowsTheLine: boolean
   handsTheReceiverId: boolean
   allowsHybridcast: boolean
+  playsSounds: boolean
 }
 
 /** The viewing settings from what `said` finds for each cookie. */
@@ -56,5 +64,6 @@ export function viewingSettingsOf(
       said(DATA_BROADCAST_HYBRIDCAST),
       HYBRIDCAST_SPELLING,
     ),
+    playsSounds: flagOf(said(DATA_BROADCAST_SOUNDS), SOUNDS_SPELLING, true),
   }
 }

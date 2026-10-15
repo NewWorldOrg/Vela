@@ -11,6 +11,8 @@ import {
   LINE_LABEL,
   RECEIVER_ID_HINT,
   RECEIVER_ID_LABEL,
+  SOUNDS_HINT,
+  SOUNDS_LABEL,
 } from '@/lib/viewing'
 import {
   AUTO_OPEN_SPELLING,
@@ -18,9 +20,11 @@ import {
   DATA_BROADCAST_HYBRIDCAST,
   DATA_BROADCAST_LINE,
   DATA_BROADCAST_RECEIVER_ID,
+  DATA_BROADCAST_SOUNDS,
   HYBRIDCAST_SPELLING,
   LINE_SPELLING,
   RECEIVER_ID_SPELLING,
+  SOUNDS_SPELLING,
 } from '@/lib/stored-flag'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { cn } from '@/lib/utils'
@@ -37,6 +41,8 @@ const LINE_ID = 'viewing-data-broadcast-line'
 const RECEIVER_ID_ID = 'viewing-data-broadcast-receiver-id'
 
 const HYBRIDCAST_ID = 'viewing-data-broadcast-hybridcast'
+
+const SOUNDS_ID = 'viewing-data-broadcast-sounds'
 
 /** One row of the page: the name on the left, the switch on the right and one sentence under the name; a row after the first is set off by a dashed rule. */
 function Row({
@@ -70,17 +76,19 @@ function Row({
   )
 }
 
-/** The viewing settings. The card's ID can be handed over, and Hybridcast allowed, only while the line is allowed, so turning the line off turns both off too. */
+/** The viewing settings. The card's ID can be handed over, and Hybridcast allowed, only while the line is allowed, so turning the line off turns both off too. The sounds stand apart from the line and start on. */
 export function ViewingView({
   autoOpensDataBroadcast = false,
   allowsTheLine = false,
   handsTheReceiverId = false,
   allowsHybridcast = false,
+  playsSounds = true,
 }: {
   autoOpensDataBroadcast?: boolean
   allowsTheLine?: boolean
   handsTheReceiverId?: boolean
   allowsHybridcast?: boolean
+  playsSounds?: boolean
 }) {
   const [autoOpens, setAutoOpens] = useStoredFlag(
     DATA_BROADCAST_AUTO_OPEN,
@@ -101,6 +109,11 @@ export function ViewingView({
     DATA_BROADCAST_HYBRIDCAST,
     HYBRIDCAST_SPELLING,
     allowsHybridcast,
+  )
+  const [sounds, setSounds] = useStoredFlag(
+    DATA_BROADCAST_SOUNDS,
+    SOUNDS_SPELLING,
+    playsSounds,
   )
 
   return (
@@ -159,6 +172,9 @@ export function ViewingView({
             disabled={!allows}
             onCheckedChange={setHybridcast}
           />
+        </Row>
+        <Row id={SOUNDS_ID} label={SOUNDS_LABEL} hint={SOUNDS_HINT}>
+          <Switch id={SOUNDS_ID} checked={sounds} onCheckedChange={setSounds} />
         </Row>
       </Surface>
     </>

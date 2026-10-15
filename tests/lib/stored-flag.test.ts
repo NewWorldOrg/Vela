@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import {
   AUTO_OPEN_SPELLING,
   FOLD_SPELLING,
+  SOUNDS_SPELLING,
   cookieIn,
   flagOf,
   forgettingCookie,
@@ -21,6 +22,14 @@ test('the data broadcast opens by itself only when the cookie says so, and not u
   assert.equal(flagOf('opens', AUTO_OPEN_SPELLING), true)
   assert.equal(flagOf('waits', AUTO_OPEN_SPELLING), false)
   assert.equal(flagOf(undefined, AUTO_OPEN_SPELLING), false)
+})
+
+test('a flag that starts on stays on until the cookie says the word for no, and a word for neither reads as off', () => {
+  assert.equal(flagOf(undefined, SOUNDS_SPELLING, true), true)
+  assert.equal(flagOf('plays', SOUNDS_SPELLING, true), true)
+  assert.equal(flagOf('silent', SOUNDS_SPELLING, true), false)
+  assert.equal(flagOf('Plays', SOUNDS_SPELLING, true), false)
+  assert.equal(flagOf(undefined, SOUNDS_SPELLING, false), false)
 })
 
 test('the browser reads back the cookie the server reads', () => {
