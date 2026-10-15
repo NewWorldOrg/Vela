@@ -86,6 +86,7 @@ import {
 } from '@/components/recordings/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
+import { useRomSound } from '@/hooks/useRomSound'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { useReceiverId } from '@/hooks/useReceiverId'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -299,6 +300,7 @@ export function LivePlayer({
     receiverId,
     relay,
   )
+  const playRomSound = useRomSound(muted ? 0 : volume)
   const broadcast = useDataBroadcast(
     broadcastFeed,
     key,
@@ -307,6 +309,7 @@ export function LivePlayer({
       programme: onAir?.startsAt ?? '',
     },
     applicationStarter(line),
+    playRomSound,
   )
 
   useEffect(

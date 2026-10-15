@@ -71,6 +71,8 @@ export interface DataBroadcast {
 
 const unreachable = () => 'absent' as const
 
+const silent = () => {}
+
 const noCatalog = () => null
 
 function openedIn(
@@ -81,12 +83,13 @@ function openedIn(
   return view.open ? programme : before
 }
 
-/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. */
+/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. The receiver's built-in sounds the documents or the application ask for go to `playRomSound`. */
 export function useDataBroadcast(
   feed: DataBroadcastHeld,
   session: string | null,
   { autoOpens, programme }: AutoOpens = BY_HAND_ONLY,
   startApplication: StartApplication | null = null,
+  playRomSound: (sound: number) => void = silent,
 ): DataBroadcast {
   const subscribe = useCallback(
     (onChange: () => void) => feed.subscribe(onChange),
@@ -201,6 +204,10 @@ export function useDataBroadcast(
 
     step({ on: 'runtime', message, nth })
 
+    if (message.kind === 'romsound') {
+      playRomSound(message.sound)
+    }
+
     if (message.kind === 'startApp') {
       void start(message.start, nth)
     }
@@ -271,6 +278,7 @@ export function useDataBroadcast(
         void start(message.start, nth)
         return
       case 'romsound':
+        playRomSound(message.sound)
         return
       case 'lost':
         step({ on: 'appLost', end: message.end, nth })
