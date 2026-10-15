@@ -11,6 +11,7 @@ import {
   hidingOn,
   scopeOf,
   withoutTableNew,
+  type Evaluate,
 } from '@/lib/bml/scripts'
 
 function run(code: string, scope: object): unknown {
@@ -373,7 +374,7 @@ test('a name the global object will not have put back leaves every other put bac
   assert.deepEqual(describedOf(target, ['open']), before)
 })
 
-test('the document’s globals taken before a run and put back after it give the names its scope hides as they were as well: one first written since reads nothing and one rewritten has its value back', () => {
+test('what a run changed of the document’s state is put back as it was, the names its scope hides as well: one first written since reads nothing and one rewritten has its value back', () => {
   const placed: { seen?: unknown } = {}
   const scope = new ScriptScope(
     (code, given) =>
@@ -384,37 +385,110 @@ test('the document’s globals taken before a run and put back after it give the
 
   scope.run('var stop = false; var history = ["top"];')
 
-  const taken = scope.bindings()
+  const taken = scope.state()
 
   scope.run('stop = true; history = []; open = 1;')
-  scope.putBack(taken)
+  scope.putBack(scope.changedSince(taken))
   scope.run('placed.seen = [stop, history.length, typeof open].join(",")')
 
   assert.equal(placed.seen, 'false,1,undefined')
 })
 
-test('the bindings of a global object are the names declared on it since, taken as they stand and put back as they were, one declared after they were taken left with nothing', () => {
+test('a push a paused run made onto the array a document holds by a hidden name is taken off before it runs again, with what it changed of its objects and what it first wrote by a hidden name, and the frame’s own by those names is not touched', () => {
+  const { context, global, history, open } = windowLike()
+  const described = ['history', 'open'].map((name) =>
+    Object.getOwnPropertyDescriptor(global, name),
+  )
+  const placed: { seen?: unknown } = {}
+  const given = scopeOf({ placed })
+  const hiding = hidingOn(global)
+  const bindings = globalBindingsOf(global, ['scope'])
+  const evaluate: Evaluate = (code, scope) =>
+    hiding(scope, () => vm.runInContext(`with (scope) {\n${code}\n}`, context))
+
+  evaluate.bindings = () => bindings
+  context.scope = given
+
+  const scope = new ScriptScope(evaluate, given, () => 0)
+
+  scope.run('var history = ["top"]; var trail = { at: "top" };')
+
+  const taken = scope.state()
+
+  scope.run('history.push("news"); trail.at = "news"; open = function () {};')
+  scope.putBack(scope.changedSince(taken))
+  scope.run(
+    'placed.seen = [history.length, history[0], trail.at, typeof open].join(",")',
+  )
+
+  assert.equal(placed.seen, '1,top,top,undefined')
+  assert.equal(global.history, history)
+  assert.equal(global.open, open)
+  assert.deepEqual(
+    ['history', 'open'].map((name) =>
+      Object.getOwnPropertyDescriptor(global, name),
+    ),
+    described,
+  )
+})
+
+test('a document’s state is the names declared on its global object since and the objects they lead to, but for what its scope was given; what a run changed of it is put back where it still stands, and a name declared since is left with nothing', () => {
   const global: Record<string, unknown> = { builtIn: 1, aside: 'x' }
   const bindings = globalBindingsOf(global, ['aside'])
+  const evaluate: Evaluate = () => undefined
+  const given = { held: 1 }
+  const entry: Record<string, unknown> = {
+    begun: false,
+    timer: 3,
+    steps: [1],
+    inner: { on: false },
+  }
+
+  evaluate.bindings = () => bindings
+
+  const scope = new ScriptScope(evaluate, scopeOf({ given }), () => 0)
 
   global.ready = true
-  global.list = [1]
+  global.entry = entry
+  global.runtime = given
+  global.stop = 'the frame’s own'
   Object.defineProperty(global, 'fixed', { value: 1, writable: false })
 
-  const taken = bindings.take()
+  const taken = scope.state()
 
-  assert.deepEqual([...taken.keys()], ['ready', 'list', 'fixed'])
+  assert.deepEqual(
+    [...(taken.declared?.keys() ?? [])],
+    ['ready', 'entry', 'runtime', 'fixed'],
+  )
+  assert.equal(taken.objects.has(given), false)
 
   global.ready = false
+  entry.begun = true
+  entry.timer = Number.NaN
+  ;(entry.steps as number[]).push(2)
+  ;(entry.inner as { on: unknown }).on = true
+  entry.added = 'x'
   global.builtIn = 2
   global.aside = 'y'
   global.later = 'set'
-  bindings.put(taken)
+  global.stop = 'changed'
+  given.held = 2
+
+  const changes = scope.changedSince(taken)
+
+  ;(entry.inner as { on: unknown }).on = 'since'
+  scope.putBack(changes)
 
   assert.equal(global.ready, true)
-  assert.deepEqual(global.list, [1])
+  assert.equal(entry.begun, false)
+  assert.equal(entry.timer, 3)
+  assert.deepEqual(entry.steps, [1])
+  assert.deepEqual(entry.inner, { on: 'since' })
+  assert.equal('added' in entry, false)
   assert.equal(global.builtIn, 2)
   assert.equal(global.aside, 'y')
   assert.equal(global.later, undefined)
+  assert.equal(global.stop, 'changed')
   assert.equal(global.fixed, 1)
+  assert.equal(given.held, 2)
 })

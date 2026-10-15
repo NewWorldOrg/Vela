@@ -325,6 +325,8 @@ test('a page that fails to draw is an error, and every image made for it is let 
   }
 })
 
+const JPEG = '\xff\xd8'
+
 test('what does not come from the player’s window in Vela’s origin is not heard', () => {
   const { heard, send } = frame()
 
@@ -1883,6 +1885,48 @@ test('a handler run again after its answer finds what the document wrote by a na
   timers.tick(100)
   send({ kind: 'key', key: 'enter' })
   assert.equal(heard()[0]?.kind, 'transmit')
+})
+
+const BEGINS_ONCE = bml(
+  '<p id="hidden">nothing to see</p>',
+  '<script>' +
+    'var entry = { begun: false };' +
+    'function enter() {' +
+    '  if (entry.begun) { return; }' +
+    '  entry.begun = true;' +
+    '  var r = browser.transmitTextDataOverIP("http://example.test/id", "", "EUC-JP");' +
+    '  browser.launchDocument("~/0001/top.bml", "cut");' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body onload="enter()">')
+
+const TOP_WITH_PICTURES = module(1, {
+  'top.bml': [
+    'bml',
+    bml(
+      '<object id="weather" type="image/jpeg" data="weather.jpg"/>' +
+        '<object id="news" type="image/jpeg" data="news.jpg"/>',
+    ),
+  ],
+  'weather.jpg': ['jpeg', JPEG],
+  'news.jpg': ['jpeg', JPEG],
+})
+
+test('a document that marks on an object of its own that it has begun, then waits on the line before it moves on, moves on once the answer is in, as it does with the setting off', () => {
+  for (const line of ['on', 'off'] as const) {
+    const { send, element } = overTheLine(BEGINS_ONCE, line)
+
+    send({ kind: 'module', module: TOP_WITH_PICTURES })
+
+    if (line === 'on') {
+      assert.ok(element('hidden'))
+      send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+    }
+
+    assert.equal(element('hidden'), null, line)
+    assert.match(element('weather')?.getAttribute('src') ?? '', /^blob:/, line)
+    assert.match(element('news')?.getAttribute('src') ?? '', /^blob:/, line)
+  }
 })
 
 const SETTING_OFF = bml(

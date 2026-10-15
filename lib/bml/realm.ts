@@ -1,8 +1,9 @@
-type Own = Map<PropertyKey, PropertyDescriptor | undefined>
+/** The own properties of an object, by key. */
+export type Own = Map<PropertyKey, PropertyDescriptor | undefined>
 
 type Snapshot = Map<object, Own>
 
-function ownOf(target: object): Own {
+export function ownOf(target: object): Own {
   const own: Own = new Map()
 
   Reflect.ownKeys(target).forEach((key) => {
@@ -12,7 +13,8 @@ function ownOf(target: object): Own {
   return own
 }
 
-function sameDescriptor(
+/** Whether two readings of a property are the same, a value that is not a number counted as the same as itself. */
+export function sameDescriptor(
   one: PropertyDescriptor | undefined,
   other: PropertyDescriptor | undefined,
 ): boolean {
@@ -21,7 +23,7 @@ function sameDescriptor(
   }
 
   return (
-    one.value === other.value &&
+    Object.is(one.value, other.value) &&
     one.get === other.get &&
     one.set === other.set &&
     one.writable === other.writable &&

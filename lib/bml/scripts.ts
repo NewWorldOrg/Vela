@@ -1,5 +1,5 @@
 import { withIntegerDivision } from '@/lib/bml/integers'
-import { Realm } from '@/lib/bml/realm'
+import { ownOf, Realm, sameDescriptor, type Own } from '@/lib/bml/realm'
 
 /** Thrown out of `browser.launchDocument` and `reloadActiveDocument`, so the script that left its document runs no further. */
 export class DocumentLeft extends Error {
@@ -81,6 +81,8 @@ export type Bindings = Map<string, unknown>
 
 const KEPT = new WeakMap<object, Bindings>()
 
+const GIVEN = new WeakMap<object, ReadonlySet<object>>()
+
 /** The object a document's code is run `with`. A name the runtime gives resolves to what it gave, and stays so whatever the code writes to it. A name the frame must not be reached by is the document's own: it resolves to what the document wrote to it, or to nothing, and never to the frame's. Every other name goes on to the frame's own globals, where the document's declarations live. */
 export function scopeOf(globals: ScriptGlobals): object {
   const given = new Map(Object.entries(globals))
@@ -122,6 +124,7 @@ export function scopeOf(globals: ScriptGlobals): object {
   })
 
   KEPT.set(scope, kept)
+  GIVEN.set(scope, new Set([...given.values()].filter(isObject)))
 
   return scope
 }
@@ -221,57 +224,188 @@ export function withoutTableNew(code: string): string {
   return code.replace(TABLE_CONSTRUCTION, '$1(')
 }
 
-/** Takes and puts back a document's global bindings. */
+/** The most objects a document's state is taken of; what lies past them is not put back. */
+const MOST_STATE_OBJECTS = 10_000
+
+/** One property found not as it was: by what key, what it was then, and what it is now. */
+export interface PropertyChange {
+  key: PropertyKey
+  before: PropertyDescriptor | undefined
+  after: PropertyDescriptor | undefined
+}
+
+/** The bindings documents declared on a global object, and the means to put one back. */
 export interface GlobalBindings {
-  take(): Bindings
-  put(taken: Bindings): void
+  readonly global: object
+  take(): Own
+  putBack(change: PropertyChange): void
 }
 
-function dataValue(global: object, name: string): { value: unknown } | null {
-  const described = Object.getOwnPropertyDescriptor(global, name)
-
-  return described && 'value' in described ? { value: described.value } : null
+function isObject(value: unknown): value is object {
+  return (
+    (typeof value === 'object' && value !== null) || typeof value === 'function'
+  )
 }
 
-/** The bindings of a global object that were not on it when this was called, nor named `aside`: what the documents declared on it since. Putting bindings back gives each the value it had when they were taken, and one declared since then nothing. */
+/** An object's own properties, or null for one that throws when they are asked after. */
+function readOwn(target: object): Own | null {
+  try {
+    return ownOf(target)
+  } catch {
+    return null
+  }
+}
+
+/** One own property of an object, or null when it throws when asked after. */
+function readProperty(
+  target: object,
+  key: PropertyKey,
+): PropertyDescriptor | undefined | null {
+  try {
+    return Object.getOwnPropertyDescriptor(target, key)
+  } catch {
+    return null
+  }
+}
+
+function writableData(described: PropertyDescriptor | undefined): boolean {
+  return described !== undefined && 'value' in described && !!described.writable
+}
+
+/** Whether a property is a writable value now as it was before, alike in the rest, so that putting it back is setting its value. */
+function sameKindOfData(
+  now: PropertyDescriptor | undefined,
+  was: PropertyDescriptor,
+): boolean {
+  return (
+    writableData(now) &&
+    writableData(was) &&
+    now?.enumerable === was.enumerable &&
+    now?.configurable === was.configurable
+  )
+}
+
+/** Puts one property back as it was before a change, unless it has changed again since. One that was not there is taken off, or, where it cannot be, as a global binding cannot, left with nothing. */
+function putPropertyBack(
+  on: object,
+  { key, before, after }: PropertyChange,
+  takesOff: boolean,
+): void {
+  const now = readProperty(on, key)
+
+  if (now === null || !sameDescriptor(now, after)) {
+    return
+  }
+
+  if (!before) {
+    if (takesOff) {
+      Reflect.deleteProperty(on, key)
+    } else if (writableData(now)) {
+      Reflect.set(on, key, undefined)
+    }
+
+    return
+  }
+
+  if (sameKindOfData(now, before)) {
+    Reflect.set(on, key, before.value)
+  } else {
+    Reflect.defineProperty(on, key, before)
+  }
+}
+
+function changesOf(before: Own, after: Own): PropertyChange[] {
+  return [...new Set([...before.keys(), ...after.keys()])]
+    .filter((key) => !sameDescriptor(before.get(key), after.get(key)))
+    .map((key) => ({ key, before: before.get(key), after: after.get(key) }))
+}
+
+/** The own properties of each object the values lead to through data properties, each once, as many as a state takes. What is `aside` is not gone into. */
+function objectsFrom(
+  values: Iterable<unknown>,
+  aside: ReadonlySet<object>,
+): Map<object, Own> {
+  const objects = new Map<object, Own>()
+  const found = new Set<object>()
+  const waiting: object[] = []
+  const reach = (value: unknown) => {
+    if (
+      isObject(value) &&
+      !aside.has(value) &&
+      !found.has(value) &&
+      found.size < MOST_STATE_OBJECTS
+    ) {
+      found.add(value)
+      waiting.push(value)
+    }
+  }
+
+  for (const value of values) {
+    reach(value)
+  }
+
+  for (let next = waiting.pop(); next !== undefined; next = waiting.pop()) {
+    const own = readOwn(next)
+
+    if (own) {
+      objects.set(next, own)
+      own.forEach((described) => reach(described?.value))
+    }
+  }
+
+  return objects
+}
+
+function valuesOf(own: Own | null): unknown[] {
+  return own ? [...own.values()].map((described) => described?.value) : []
+}
+
+function keptProperty(value: unknown): PropertyDescriptor {
+  return { value, writable: true, enumerable: true, configurable: true }
+}
+
+/** What a document wrote by the names its scope hides, read as the properties of an object would be. */
+function keptOwn(kept: Bindings | undefined): Own {
+  return new Map(
+    [...(kept ?? [])].map(([name, value]) => [name, keptProperty(value)]),
+  )
+}
+
+/** The bindings of a global object that were not on it when this was called, nor named `aside`, nor by a name the scope hides: what the documents declared on it since. A name the scope hides is the frame's own on the global object, and the document's in its scope, so it is neither taken nor put back here. A binding declared since a change is left with nothing when it is put back, as it cannot be taken off. */
 export function globalBindingsOf(
   global: object,
   aside: readonly string[] = [],
 ): GlobalBindings {
-  const before = new Set([...Object.getOwnPropertyNames(global), ...aside])
-  const declared = () =>
-    Object.getOwnPropertyNames(global).filter((name) => !before.has(name))
+  const before = new Set([
+    ...Object.getOwnPropertyNames(global),
+    ...aside,
+    ...SHADOWED_GLOBALS,
+  ])
 
   return {
-    take: () => {
-      const taken: Bindings = new Map()
-
-      declared().forEach((name) => {
-        const data = dataValue(global, name)
-
-        if (data) {
-          taken.set(name, data.value)
-        }
-      })
-
-      return taken
-    },
-    put: (taken) => {
-      declared().forEach((name) => {
-        const described = Object.getOwnPropertyDescriptor(global, name)
-
-        if (described && 'value' in described && described.writable) {
-          ;(global as Record<string, unknown>)[name] = taken.get(name)
-        }
-      })
-    },
+    global,
+    take: () =>
+      new Map(
+        Object.getOwnPropertyNames(global)
+          .filter((name) => !before.has(name))
+          .map((name) => [name, Object.getOwnPropertyDescriptor(global, name)]),
+      ),
+    putBack: (change) => putPropertyBack(global, change, false),
   }
 }
 
-/** A document's globals as they stood at one moment: the bindings its declarations put on the global object, where the evaluator reaches them, and what it wrote by the names its scope hides. */
-export interface DocumentGlobals {
-  declared: Bindings | null
-  kept: Bindings
+/** A document's state at one moment: the bindings its declarations put on the global object, where the evaluator reaches them, what it wrote by the names its scope hides, and the own properties of each object those lead to through data properties, functions among them, but for what the runtime gave it. */
+export interface DocumentState {
+  declared: Own | null
+  kept: Own
+  objects: Map<object, Own>
+}
+
+/** What changed of a document's state since it was taken: its declared bindings, what it wrote by hidden names, and the properties of its objects. */
+export interface StateChanges {
+  declared: PropertyChange[]
+  kept: PropertyChange[]
+  objects: [object, PropertyChange][]
 }
 
 /** Runs one piece of a document's code with its scope, and throws what it threw. `bindings`, where the evaluator has it, reaches the global object the code declares on. */
@@ -307,28 +441,74 @@ export class ScriptScope {
     this.realm = realm
   }
 
-  /** The document's globals as they stand. */
-  bindings(): DocumentGlobals {
+  /** The document's state as it stands. */
+  state(): DocumentState {
+    const bindings = this.evaluate.bindings?.(this.scope)
+    const declared = bindings?.take() ?? null
+    const kept = keptOwn(KEPT.get(this.scope))
+    const aside = new Set<object>([
+      this.scope,
+      ...(GIVEN.get(this.scope) ?? []),
+    ])
+
+    if (bindings) {
+      aside.add(bindings.global)
+    }
+
     return {
-      declared: this.evaluate.bindings?.(this.scope).take() ?? null,
-      kept: new Map(KEPT.get(this.scope)),
+      declared,
+      kept,
+      objects: objectsFrom([...valuesOf(declared), ...valuesOf(kept)], aside),
     }
   }
 
-  /** Puts the document's globals back as they were taken: what it wrote by a hidden name since reads nothing again. */
-  putBack(taken: DocumentGlobals | null): void {
+  /** What changed of the document's state since it was taken. */
+  changedSince(taken: DocumentState | null): StateChanges | null {
     if (!taken) {
+      return null
+    }
+
+    const declared = this.evaluate.bindings?.(this.scope).take()
+
+    return {
+      declared:
+        taken.declared && declared ? changesOf(taken.declared, declared) : [],
+      kept: changesOf(taken.kept, keptOwn(KEPT.get(this.scope))),
+      objects: [...taken.objects].flatMap(([object, own]) =>
+        changesOf(own, readOwn(object) ?? own).map(
+          (change): [object, PropertyChange] => [object, change],
+        ),
+      ),
+    }
+  }
+
+  /** Puts what changed of the document's state back as it was, each change that still stands: a binding declared since is left with nothing, and what it first wrote by a hidden name since, or put on an object, is taken off. */
+  putBack(changes: StateChanges | null): void {
+    if (!changes) {
       return
     }
 
-    if (taken.declared) {
-      this.evaluate.bindings?.(this.scope).put(taken.declared)
-    }
-
+    const bindings = this.evaluate.bindings?.(this.scope)
     const kept = KEPT.get(this.scope)
 
-    kept?.clear()
-    taken.kept.forEach((value, name) => kept?.set(name, value))
+    changes.declared.forEach((change) => bindings?.putBack(change))
+    changes.kept.forEach(({ key, before, after }) => {
+      const name = String(key)
+      const now = kept?.has(name) ? keptProperty(kept.get(name)) : undefined
+
+      if (!kept || !sameDescriptor(now, after)) {
+        return
+      }
+
+      if (before) {
+        kept.set(name, before.value)
+      } else {
+        kept.delete(name)
+      }
+    })
+    changes.objects.forEach(([object, change]) =>
+      putPropertyBack(object, change, true),
+    )
   }
 
   run(code: string): ScriptOutcome {
