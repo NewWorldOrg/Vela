@@ -5,6 +5,7 @@ import vm from 'node:vm'
 import { Realm } from '@/lib/bml/realm'
 import {
   DocumentLeft,
+  MOST_STATE_OBJECTS,
   SHADOWED_GLOBALS,
   ScriptScope,
   globalBindingsOf,
@@ -13,6 +14,7 @@ import {
   withoutTableNew,
   type Evaluate,
 } from '@/lib/bml/scripts'
+import { MOST_ROWS, Table } from '@/lib/bml/tables'
 
 function run(code: string, scope: object): unknown {
   return new Function('scope', `with (scope) { return (${code}) }`)(scope)
@@ -491,4 +493,107 @@ test('a document’s state is the names declared on its global object since and 
   assert.equal(global.stop, 'changed')
   assert.equal(global.fixed, 1)
   assert.equal(given.held, 2)
+})
+
+/** A scope over a plain global object whose bindings it takes, running no code: a test changes the global and its objects by hand between taking the state and putting it back. */
+function scopeOverHand(warn?: (warning: string) => void) {
+  const global: Record<string, unknown> = {}
+  const bindings = globalBindingsOf(global)
+  const evaluate: Evaluate = () => undefined
+
+  evaluate.bindings = () => bindings
+
+  return {
+    global,
+    scope: new ScriptScope(evaluate, scopeOf({}), () => 0, new Realm([]), warn),
+  }
+}
+
+test('a property a paused run took off, an array it shortened by pop or by its length, and objects that lead back to one another are put back as they were', () => {
+  const { global, scope } = scopeOverHand()
+  const entry: Record<string, unknown> = {
+    begun: false,
+    steps: [1, 2],
+    trail: ['a', 'b', 'c'],
+  }
+  const ring: Record<string, unknown> = { name: 'ring' }
+  const next = { back: ring }
+
+  ring.self = ring
+  ring.next = next
+  global.entry = entry
+  global.ring = ring
+
+  const taken = scope.state()
+
+  delete entry.begun
+  ;(entry.steps as number[]).pop()
+  ;(entry.trail as string[]).length = 0
+  ring.self = null
+  next.back = null as unknown as Record<string, unknown>
+  scope.putBack(scope.changedSince(taken))
+
+  assert.deepEqual(Object.getOwnPropertyDescriptor(entry, 'begun'), {
+    value: false,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  })
+  assert.deepEqual(entry.steps, [1, 2])
+  assert.deepEqual(entry.trail, ['a', 'b', 'c'])
+  assert.equal(ring.self, ring)
+  assert.equal(next.back, ring)
+})
+
+test('a document that holds more objects than a state takes is warned of once, and its state is still taken', () => {
+  const warned: string[] = []
+  const { global, scope } = scopeOverHand((warning) => warned.push(warning))
+  const first = { at: 0 }
+
+  global.many = [
+    first,
+    ...Array.from({ length: MOST_STATE_OBJECTS }, () => ({})),
+  ]
+
+  const taken = scope.state()
+
+  scope.state()
+  first.at = 1
+  scope.putBack(scope.changedSince(taken))
+
+  assert.equal(warned.length, 1)
+  assert.match(warned[0], new RegExp(String(MOST_STATE_OBJECTS)))
+  assert.equal(taken.objects.size, MOST_STATE_OBJECTS)
+})
+
+test('a table a document holds is held whole: its rows are never gone into, and the table held in its place is put back by identity', () => {
+  let read = 0
+  const rows = new Proxy(
+    Array.from({ length: MOST_ROWS }, (_, at) => [at]),
+    {
+      ownKeys(target) {
+        read += 1
+
+        return Reflect.ownKeys(target)
+      },
+      getOwnPropertyDescriptor(target, key) {
+        read += 1
+
+        return Reflect.getOwnPropertyDescriptor(target, key)
+      },
+    },
+  )
+  const table = new Table(rows, [])
+  const { global, scope } = scopeOverHand()
+
+  global.table = table
+
+  const taken = scope.state()
+
+  global.table = new Table([], [])
+  scope.putBack(scope.changedSince(taken))
+
+  assert.equal(read, 0)
+  assert.equal(taken.objects.has(table), false)
+  assert.equal(global.table, table)
 })

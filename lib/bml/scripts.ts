@@ -225,7 +225,16 @@ export function withoutTableNew(code: string): string {
 }
 
 /** The most objects a document's state is taken of; what lies past them is not put back. */
-const MOST_STATE_OBJECTS = 10_000
+export const MOST_STATE_OBJECTS = 10_000
+
+const HELD_WHOLE = new WeakSet<object>()
+
+/** Marks what the runtime makes for a document to read, a table say, as held whole in the document's state: where the document holds it, it is compared by identity, and what it holds is never gone into. */
+export function heldWhole<T extends object>(value: T): T {
+  HELD_WHOLE.add(value)
+
+  return value
+}
 
 /** One property found not as it was: by what key, what it was then, and what it is now. */
 export interface PropertyChange {
@@ -320,24 +329,33 @@ function changesOf(before: Own, after: Own): PropertyChange[] {
     .map((key) => ({ key, before: before.get(key), after: after.get(key) }))
 }
 
-/** The own properties of each object the values lead to through data properties, each once, as many as a state takes. What is `aside` is not gone into. */
+/** The own properties of each object the values lead to through data properties, each once, as many as a state takes, and whether there were more. What is `aside` or held whole is not gone into. */
 function objectsFrom(
   values: Iterable<unknown>,
   aside: ReadonlySet<object>,
-): Map<object, Own> {
+): { objects: Map<object, Own>; cut: boolean } {
   const objects = new Map<object, Own>()
   const found = new Set<object>()
   const waiting: object[] = []
+  let cut = false
   const reach = (value: unknown) => {
     if (
-      isObject(value) &&
-      !aside.has(value) &&
-      !found.has(value) &&
-      found.size < MOST_STATE_OBJECTS
+      !isObject(value) ||
+      aside.has(value) ||
+      HELD_WHOLE.has(value) ||
+      found.has(value)
     ) {
-      found.add(value)
-      waiting.push(value)
+      return
     }
+
+    if (found.size >= MOST_STATE_OBJECTS) {
+      cut = true
+
+      return
+    }
+
+    found.add(value)
+    waiting.push(value)
   }
 
   for (const value of values) {
@@ -353,7 +371,7 @@ function objectsFrom(
     }
   }
 
-  return objects
+  return { objects, cut }
 }
 
 function valuesOf(own: Own | null): unknown[] {
@@ -429,19 +447,25 @@ export class ScriptScope {
 
   private readonly realm: Realm
 
+  private readonly warn: (warning: string) => void
+
+  private cutWarned = false
+
   constructor(
     evaluate: Evaluate,
     scope: object,
     now: () => number,
     realm: Realm = new Realm([]),
+    warn: (warning: string) => void = () => {},
   ) {
     this.evaluate = evaluate
     this.scope = scope
     this.now = now
     this.realm = realm
+    this.warn = warn
   }
 
-  /** The document's state as it stands. */
+  /** The document's state as it stands. A document that holds more objects than a state takes is warned of once: what lies past them is not put back. */
   state(): DocumentState {
     const bindings = this.evaluate.bindings?.(this.scope)
     const declared = bindings?.take() ?? null
@@ -455,11 +479,19 @@ export class ScriptScope {
       aside.add(bindings.global)
     }
 
-    return {
-      declared,
-      kept,
-      objects: objectsFrom([...valuesOf(declared), ...valuesOf(kept)], aside),
+    const { objects, cut } = objectsFrom(
+      [...valuesOf(declared), ...valuesOf(kept)],
+      aside,
+    )
+
+    if (cut && !this.cutWarned) {
+      this.cutWarned = true
+      this.warn(
+        `more than ${MOST_STATE_OBJECTS} objects held: what a run changes past them is not put back when it runs again after the line`,
+      )
     }
+
+    return { declared, kept, objects }
   }
 
   /** What changed of the document's state since it was taken. */

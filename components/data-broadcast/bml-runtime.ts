@@ -677,6 +677,7 @@ export class BmlRuntime {
         scopeOf(this.globalsOf(document)),
         this.now,
         this.realm,
+        (warning) => this.warn(warning),
       ),
       navigation: navigationOf(page.body),
       focused: null,
