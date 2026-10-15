@@ -664,7 +664,7 @@ export function Player({
   const toggle = () => {
     const element = video.current
 
-    romSounds.unlock()
+    broadcast.unlockSounds()
 
     if (
       phase === 'idle' ||
@@ -952,7 +952,7 @@ export function Player({
   const chooseVolume = (next: number) => {
     const element = video.current
 
-    romSounds.unlock()
+    broadcast.unlockSounds()
 
     setVolume(next)
     setMuted(next === 0)
@@ -984,7 +984,7 @@ export function Player({
   const mute = (quiet: boolean) => {
     const element = video.current
 
-    romSounds.unlock()
+    broadcast.unlockSounds()
     const level = !quiet && volume === 0 ? 1 : volume
 
     setMuted(quiet)

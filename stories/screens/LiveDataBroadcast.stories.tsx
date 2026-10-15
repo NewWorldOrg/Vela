@@ -1750,8 +1750,11 @@ const SOUNDING = [
 /** Where the picture goes once the document was told its sound played. */
 const AFTER_THE_SOUND = '40,60,360,203'
 
-/** What the player played while the story ran, heard in place of the speakers. */
-const sounds: { heard: () => HeardSound[] } = { heard: () => [] }
+/** What the player played while the story ran, heard in place of the speakers, and how many audio contexts it made. */
+const sounds: { heard: () => HeardSound[]; made: () => number } = {
+  heard: () => [],
+  made: () => 0,
+}
 
 /** Hears the sounds in place of the speakers, with the sounds setting as the cookie says, or as it starts out without one, and the browser's audio kept suspended outside a press, as WebKit keeps it, when asked. */
 function hearingWith(setting?: 'yes' | 'no', asWebKit = false) {
@@ -1759,6 +1762,7 @@ function hearingWith(setting?: 'yes' | 'no', asWebKit = false) {
     const hearing = hearingTheSounds({ asWebKit })
 
     sounds.heard = hearing.heard
+    sounds.made = hearing.made
     document.cookie = setting
       ? storingCookie(DATA_BROADCAST_SOUNDS, SOUNDS_SPELLING[setting])
       : forgettingCookie(DATA_BROADCAST_SOUNDS)
@@ -1810,7 +1814,39 @@ export const 効果音_設定が切: Story = {
   play: async ({ canvasElement }) => {
     await openedOnTheLine(canvasElement)
     await shrunkTo(canvasElement, AFTER_THE_SOUND)
+
+    const mute = inThePlayer(canvasElement).getByRole('button', {
+      name: '消音',
+    })
+
+    await userEvent.click(mute)
+    await userEvent.click(mute)
     await expect(sounds.heard()).toEqual([])
+    await expect(sounds.made()).toBe(0)
+  },
+}
+
+export const 効果音_閉じたままなら音を用意しない: Story = {
+  args: { openSocket: carrying(...SOUNDING) },
+  beforeEach: hearingWith(),
+  play: async ({ canvasElement }) => {
+    const player = inThePlayer(canvasElement)
+
+    await player.findByRole('button', { name: 'データ放送' })
+    await afterTheArrival(canvasElement)
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+
+    await userEvent.click(
+      player.getByRole('button', { name: /^(再生|一時停止)$/ }),
+    )
+    await userEvent.click(player.getByRole('button', { name: '消音' }))
+    fireEvent.change(player.getByRole('slider', { name: '音量' }), {
+      target: { value: '40' },
+    })
+    await expect(
+      player.getByRole('button', { name: 'データ放送' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+    await expect(sounds.made()).toBe(0)
   },
 }
 
@@ -1854,6 +1890,64 @@ export const 効果音_押す前の音は後から鳴らさない: Story = {
     await expect(mute).toHaveAttribute('aria-pressed', 'false')
     await new Promise((resolve) => setTimeout(resolve, 300))
     await expect(sounds.heard()).toEqual([])
+  },
+}
+
+/** The sounding broadcast opened by itself, with no press to unlock the audio, its first sound dropped while WebKit holds the audio suspended. */
+async function openedWithoutAPress(canvasElement: HTMLElement) {
+  const toggle = await inThePlayer(canvasElement).findByRole('button', {
+    name: 'データ放送',
+  })
+
+  await afterTheArrival(canvasElement)
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+  await shrunkTo(canvasElement, AFTER_THE_SOUND)
+  await expect(sounds.made()).toBe(1)
+  await expect(sounds.heard()).toEqual([])
+}
+
+export const 効果音_キーボードのキーで鳴らせるようになる: Story = {
+  args: {
+    openSocket: carrying(
+      catalogPayload({ ...SOUNDING_CATALOG, autoStart: true }),
+      ...soundingModules().map(modulePayload),
+    ),
+    autoOpensDataBroadcast: true,
+  },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    await openedWithoutAPress(canvasElement)
+    press(onTheScreen(canvasElement, 'live-player'), 'Enter')
+    await waitFor(() =>
+      expect(sounds.heard()).toEqual([
+        { sound: 9, gain: romSoundGain(true, 1) },
+      ]),
+    )
+  },
+}
+
+export const 効果音_開いたまま音量を変えると鳴らせるようになる: Story = {
+  args: {
+    openSocket: carrying(
+      catalogPayload({ ...SOUNDING_CATALOG, autoStart: true }),
+      ...soundingModules({ later: true }).map(modulePayload),
+    ),
+    autoOpensDataBroadcast: true,
+  },
+  beforeEach: hearingWith(undefined, true),
+  play: async ({ canvasElement }) => {
+    await openedWithoutAPress(canvasElement)
+    fireEvent.change(
+      inThePlayer(canvasElement).getByRole('slider', { name: '音量' }),
+      { target: { value: '40' } },
+    )
+    await waitFor(
+      () =>
+        expect(sounds.heard()).toEqual([
+          { sound: 10, gain: romSoundGain(true, 0.4) },
+        ]),
+      { timeout: 5000 },
+    )
   },
 }
 

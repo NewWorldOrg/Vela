@@ -62,6 +62,7 @@ export interface DataBroadcast {
   connect: (send: SendToRuntime | null) => void
   toggle: () => void
   press: (key: BmlKey) => void
+  unlockSounds: () => void
   hear: (message: RuntimeMessage) => void
   showNumbers: (shown: boolean) => void
   quiet: () => void
@@ -84,7 +85,7 @@ function openedIn(
   return view.open ? programme : before
 }
 
-/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. The receiver's built-in sounds the documents or the application ask for are played through `sounds`, which the toggle and the keys unlock, as they are pressed. */
+/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. The receiver's built-in sounds the documents or the application ask for are played through `sounds`, which the toggle and the keys unlock, as they are pressed, and `unlockSounds` unlocks from the player's own controls while it is open. */
 export function useDataBroadcast(
   feed: DataBroadcastHeld,
   session: string | null,
@@ -314,6 +315,11 @@ export function useDataBroadcast(
 
       if (view.usedKeys.includes(key)) {
         app.current?.({ kind: 'key', key })
+      }
+    },
+    unlockSounds: () => {
+      if (view.open) {
+        sounds.unlock()
       }
     },
     hear,

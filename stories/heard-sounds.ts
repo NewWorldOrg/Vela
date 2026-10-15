@@ -68,17 +68,23 @@ function soundOf(tones: number[]): number | null {
   return found === -1 ? null : found
 }
 
-/** Stands in for the browser's audio context while a story runs, so the sounds the player plays are heard by the story instead of the speakers. `heard` tells them in the order they were played; `stop` puts the browser's own back. With `asWebKit`, a context made or resumed outside a press stays suspended, as WebKit keeps it. */
+/** Stands in for the browser's audio context while a story runs, so the sounds the player plays are heard by the story instead of the speakers. `heard` tells them in the order they were played, `made` how many contexts the player made; `stop` puts the browser's own back. With `asWebKit`, a context made or resumed outside a press stays suspended, as WebKit keeps it. */
 export function hearingTheSounds({ asWebKit = false } = {}): {
   heard: () => HeardSound[]
+  made: () => number
   stop: () => void
 } {
   const oscillators: Wired[] = []
+  let contexts = 0
   const speakers = wired()
 
   class StandIn {
     state = asWebKit && !inAPress() ? 'suspended' : 'running'
     currentTime = 0
+
+    constructor() {
+      contexts += 1
+    }
     destination = speakers
 
     createGain() {
@@ -149,6 +155,7 @@ export function hearingTheSounds({ asWebKit = false } = {}): {
 
   return {
     heard,
+    made: () => contexts,
     stop: () => {
       window.AudioContext = own
     },

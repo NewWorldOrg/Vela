@@ -645,7 +645,7 @@ export function LivePlayer({
   const toggle = () => {
     const element = video.current
 
-    romSounds.unlock()
+    broadcast.unlockSounds()
 
     if (!element || !hasPicture) {
       return
@@ -709,7 +709,7 @@ export function LivePlayer({
   const chooseVolume = (next: number) => {
     const element = video.current
 
-    romSounds.unlock()
+    broadcast.unlockSounds()
 
     setVolume(next)
     setMuted(next === 0)
@@ -741,7 +741,7 @@ export function LivePlayer({
   const mute = (quiet: boolean) => {
     const element = video.current
 
-    romSounds.unlock()
+    broadcast.unlockSounds()
     const level = !quiet && volume === 0 ? 1 : volume
 
     setMuted(quiet)

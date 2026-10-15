@@ -695,18 +695,29 @@ function sound() {
 </body>
 </bml>`
 
-const SOUND_PLAYED = `${PROLOGUE}
+/** The document a sounding broadcast moves to once its sound played: 決定 plays sound 9, and with `later`, sound 10 plays by itself a moment after it opens. */
+function soundPlayed(later: boolean): string {
+  return `${PROLOGUE}
 <bml>
 <head>
 <link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+function again() {
+  if (document.currentEvent.keyCode == 18) { browser.playRomSound("romsound://9"); }
+}
+function ring() { browser.playRomSound("romsound://10"); }
+${later ? 'browser.setInterval("ring()", 1500, 1);' : ''}
+]]></script>
 </head>
 <body style="clut: url(sample.clt); background-color-index: 128">
 <object type="video/X-arib-mpeg2" style="left: 40px; top: 60px; width: 360px; height: 203px"/>
 <p class="panel" style="left: 440px; top: 60px; width: 440px; height: 203px">鳴らした</p>
+<p id="again" class="menu" style="left: 440px; top: 300px; nav-index: 0" onkeydown="again();">もう一度</p>
 </body>
 </bml>`
+}
 
-/** A self-made data broadcast whose start document plays the receiver's built-in sound 7 as it opens, and moves to a second document with the picture at the left once it is told the sound played. */
+/** A self-made data broadcast whose start document plays the receiver's built-in sound 7 as it opens, and moves to a second document with the picture at the left once it is told the sound played, where 決定 plays sound 9. */
 export const SOUNDING_CATALOG: BmlCatalog = {
   service: 1029,
   entryTag: 0x40,
@@ -733,7 +744,8 @@ export const SOUNDING_CATALOG: BmlCatalog = {
   ],
 }
 
-export function soundingModules(): BmlModule[] {
+/** The modules of the sounding broadcast; with `later`, its second document plays sound 10 by itself a moment after it opens. */
+export function soundingModules({ later = false } = {}): BmlModule[] {
   return [
     {
       tag: 0x40,
@@ -741,7 +753,7 @@ export function soundingModules(): BmlModule[] {
       version: 1,
       resources: [
         resource('startup.bml', 'bml', PLAYS_A_SOUND),
-        resource('played.bml', 'bml', SOUND_PLAYED),
+        resource('played.bml', 'bml', soundPlayed(later)),
         resource('sample.css', 'css', SAMPLE_CSS),
         resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
       ],
