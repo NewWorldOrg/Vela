@@ -1468,12 +1468,16 @@ export class BmlRuntime {
     return url
   }
 
+  /** Takes the page shown down. Its elements are let go of their pictures before the pictures' URLs are: a page left in the same turn as it was drawn, or a picture a handler set just before it left, has not begun to load, and a load that begins on a URL let go is refused. */
   private unmount(): void {
     this.requests.drop()
     this.stopTimers()
     this.stopNudging()
     this.locked.clear()
     this.shown?.players.forEach((player) => player.stop())
+    this.shown?.mounted.nodes.forEach((_, element) =>
+      element.removeAttribute('src'),
+    )
     this.shown?.urls.forEach((url) => URL.revokeObjectURL(url))
     this.shown = null
     this.plane.replaceChildren()
