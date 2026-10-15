@@ -372,6 +372,15 @@ test('what the runtime asks to keep changes nothing of the view', () => {
   assert.deepEqual(kept, after(OPEN))
 })
 
+test('a built-in sound the documents play changes nothing of the view', () => {
+  const played = after(OPEN, {
+    on: 'runtime',
+    message: { kind: 'romsound', sound: 7 },
+  })
+
+  assert.deepEqual(played, after(OPEN))
+})
+
 test('the setting refusing the line is said once while open, and again only after it is opened again', () => {
   const off: DataBroadcastStep = {
     on: 'runtime',

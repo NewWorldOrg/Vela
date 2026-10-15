@@ -928,7 +928,7 @@ const CONNECTING = bml(
   '<p id="p">p</p>',
   '<script>' +
     'var a = browser.connect("host", 80);' +
-    'var b = browser.playRomSound("romsound://1");' +
+    'var b = browser.lockScreen();' +
     'var c = browser.noSuchFunction(1, 2);' +
     'browser.Ureg[0] = [a, b, c].join(",");' +
     '</script>',
@@ -944,6 +944,32 @@ test('a function that communicates fails and is told to the player, one that is 
   assert.ok(
     warnings.some((line) =>
       line.includes('unsupported browser function: noSuchFunction'),
+    ),
+  )
+})
+
+const SOUNDING = bml(
+  '<p id="p">p</p>',
+  '<script>' +
+    'var a = browser.playRomSound("romsound://7");' +
+    'var b = browser.playRomSound("romsound://16");' +
+    'browser.Ureg[0] = [a, b].join(",");' +
+    '</script>',
+)
+
+test('a built-in sound the document plays is handed to the player, and the document is told it played', () => {
+  const { runtime, heard, warnings } = opened(SOUNDING)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'romsound'),
+    [{ kind: 'romsound', sound: 7 }],
+  )
+  assert.equal(registers[0], '1,NaN')
+  assert.ok(
+    warnings.some((line) =>
+      line.includes('not a built-in sound: romsound://16'),
     ),
   )
 })

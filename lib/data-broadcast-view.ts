@@ -281,6 +281,7 @@ function heard(
     case 'script':
       return scripted(view, message.state, nth)
     case 'memory':
+    case 'romsound':
       return view
     case 'exit':
       return closed(view)

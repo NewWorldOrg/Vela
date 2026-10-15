@@ -32,6 +32,8 @@ test('what the runtime may say is taken from its own frame in its opaque origin'
     { kind: 'unsupported', what: 'script' },
     { kind: 'exit' },
     { kind: 'error', reason: 'malformed' },
+    { kind: 'romsound', sound: 0 },
+    { kind: 'romsound', sound: 15 },
   ]
 
   for (const data of said) {
@@ -64,6 +66,11 @@ test('a kind the runtime may not say, or a shape that does not fit, is dropped',
     { kind: 'unsupported', what: 'x'.repeat(65) },
     { kind: 'error', reason: 'anything' },
     { kind: 'videoRect' },
+    { kind: 'romsound', sound: 16 },
+    { kind: 'romsound', sound: -1 },
+    { kind: 'romsound', sound: 2.5 },
+    { kind: 'romsound', sound: '3' },
+    { kind: 'romsound' },
   ]
 
   for (const data of dropped) {
