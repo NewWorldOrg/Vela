@@ -73,8 +73,8 @@ import {
   MOST_RUN_MS,
   ScriptScope,
   scopeOf,
-  type DocumentGlobals,
   type Evaluate,
+  type StateChanges,
 } from '@/lib/bml/scripts'
 import {
   FONT_METRICS,
@@ -168,11 +168,11 @@ interface Timer {
 type Leaving =
   { to: BmlAddress } | { reload: true } | { quit: true } | { start: AppStart }
 
-/** Where a run that waits on the line was: the page and the event it ran for. */
+/** Where a run that waits on the line was: the page, the event it ran for and what it changed of the document's state before it stopped. */
 interface Seen {
   shown: Shown
   event: BmlEvent | null
-  bindings: DocumentGlobals | null
+  changes: StateChanges | null
 }
 
 function moduleKey(tag: number, id: number): string {
@@ -677,6 +677,7 @@ export class BmlRuntime {
         scopeOf(this.globalsOf(document)),
         this.now,
         this.realm,
+        (warning) => this.warn(warning),
       ),
       navigation: navigationOf(page.body),
       focused: null,
@@ -941,15 +942,17 @@ export class BmlRuntime {
     this.say({ kind: 'script', state: 'running' })
     this.depth += 1
 
-    const bindings = this.mayWait() ? shown.scope.bindings() : null
+    const before = this.mayWait() ? shown.scope.state() : null
     const call = this.requests.begin(answers)
     const outcome =
       event === null
         ? shown.scope.run(code)
         : shown.document.during(event, () => shown.scope.run(code))
+    const changes =
+      call.asked === null ? null : shown.scope.changedSince(before)
 
     this.requests
-      .end(call, { shown, event, bindings }, code, then)
+      .end(call, { shown, event, changes }, code, then)
       .forEach((timer) => this.stopTimer(timer))
     this.depth -= 1
     this.say({
@@ -978,7 +981,7 @@ export class BmlRuntime {
     return this.line === 'on' || this.hybridcast
   }
 
-  /** Runs again the code that waited on the line, now that its answer is in, if its page is still the one shown, and what was to follow it. The document's globals are put back as they were when the run began first, so that what it set before it stopped, a guard against a second press say, does not turn its run again away. */
+  /** Runs again the code that waited on the line, now that its answer is in, if its page is still the one shown, and what was to follow it. What the run changed of the document's state before it stopped, its globals, what it wrote by the names its scope hides and the objects they hold, is put back as it was where nothing has changed it since, so that the run again begins where the first began: a guard against a second press it set, a flag that it has started on an object, or a toggle it turned, does not turn the run again aside. */
   private answered(awaited: Awaited<Seen> | null): void {
     const shown = awaited?.seen.shown
 
@@ -986,7 +989,7 @@ export class BmlRuntime {
       return
     }
 
-    shown.scope.putBack(awaited.seen.bindings)
+    shown.scope.putBack(awaited.seen.changes)
 
     if (
       this.execute(
@@ -1466,12 +1469,16 @@ export class BmlRuntime {
     return url
   }
 
+  /** Takes the page shown down. Its elements are let go of their pictures before the pictures' URLs are: a page left in the same turn as it was drawn, or a picture a handler set just before it left, has not begun to load, and a load that begins on a URL let go is refused. */
   private unmount(): void {
     this.requests.drop()
     this.stopTimers()
     this.stopNudging()
     this.locked.clear()
     this.shown?.players.forEach((player) => player.stop())
+    this.shown?.mounted.nodes.forEach((_, element) =>
+      element.removeAttribute('src'),
+    )
     this.shown?.urls.forEach((url) => URL.revokeObjectURL(url))
     this.shown = null
     this.plane.replaceChildren()

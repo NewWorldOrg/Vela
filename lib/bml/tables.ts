@@ -11,6 +11,7 @@ import {
   type Field,
   type TableStructure,
 } from '@/lib/bml/structure'
+import { heldWhole } from '@/lib/bml/scripts'
 import { isZipCode, zipIncludes } from '@/lib/bml/zipcode'
 
 export type { Cell } from '@/lib/bml/fields'
@@ -262,7 +263,7 @@ function plain(cell: Cell | undefined): number | string | boolean | undefined {
   return isZipCode(cell) ? undefined : cell
 }
 
-/** A table a document reads: rows of cells, each cell by its row and column. */
+/** A table a document reads: rows of cells, each cell by its row and column. A document's state holds it whole, as it holds up to tens of thousands of rows the document only reads. */
 export class Table {
   readonly nrow: number
 
@@ -277,6 +278,7 @@ export class Table {
     this.columns = columns
     this.nrow = rows.length
     this.ncolumn = columns.length
+    heldWhole(this)
   }
 
   close(): void {}

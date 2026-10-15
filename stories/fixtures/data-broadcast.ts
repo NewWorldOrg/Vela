@@ -594,7 +594,10 @@ const CHECKING = `${PROLOGUE}
 <head>
 <link rel="stylesheet" href="sample.css" type="text/css"/>
 <script><![CDATA[
+var checking = { begun: false };
 function check() {
+  if (checking.begun) { return; }
+  checking.begun = true;
   var answer = browser.transmitTextDataOverIP('http://example.test/check.txt', browser.getIRDID(5) || '', 'EUC-JP');
   if (answer[0] == 1 && answer[1] == 200) { browser.launchDocument('http://example.test/bml/top.bml', 'cut'); }
 }
@@ -645,7 +648,7 @@ export const LINE_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The module of a self-made data broadcast that checks the line as it loads, sending the card's ID when it is given one, and moves to a page over the line when the check is answered. */
+/** The module of a self-made data broadcast that checks the line as it loads, once, as it marks on an object of its own before it sends, sending the card's ID when it is given one, and moves to a page over the line when the check is answered. */
 export function lineModules(): BmlModule[] {
   return [
     {

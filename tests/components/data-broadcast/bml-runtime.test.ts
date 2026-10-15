@@ -325,6 +325,70 @@ test('a page that fails to draw is an error, and every image made for it is let 
   }
 })
 
+const JPEG = '\xff\xd8'
+
+const LEAVES_AS_IT_IS_DRAWN = bml(
+  '<object id="a" type="image/jpeg" data="a.jpg"/>',
+  '<script>browser.launchDocument("~/0001/swap.bml", "cut")</script>',
+)
+
+const SWAPS_AND_LEAVES = bml(
+  '<object id="b" type="image/jpeg" data="a.jpg"/>' +
+    '<p id="go" style="nav-index: 0" onclick="' +
+    'document.getElementById(&quot;b&quot;).data = &quot;b.jpg&quot;;' +
+    'browser.launchDocument(&quot;~/0001/next.bml&quot;, &quot;cut&quot;)' +
+    '">go</p>',
+)
+
+test('a page left in the same turn as it was drawn, or just after a handler gave one of its elements a picture, lets go of no picture an element still holds', () => {
+  const made: string[] = []
+  const held: string[] = []
+  let opened: ReturnType<typeof frame> | null = null
+
+  mock.method(URL, 'createObjectURL', () => {
+    made.push(`blob:test/${made.length}`)
+
+    return made[made.length - 1]
+  })
+  mock.method(URL, 'revokeObjectURL', (url: string) => {
+    if (opened?.plane.find('src', url)) {
+      held.push(url)
+    }
+  })
+
+  try {
+    opened = frame()
+    opened.send({ kind: 'catalog', catalog: CATALOG })
+    opened.send({
+      kind: 'module',
+      module: module(0, {
+        'startup.bml': ['bml', LEAVES_AS_IT_IS_DRAWN],
+        'a.jpg': ['jpeg', JPEG],
+      }),
+    })
+    opened.send({
+      kind: 'module',
+      module: module(1, {
+        'swap.bml': ['bml', SWAPS_AND_LEAVES],
+        'next.bml': ['bml', NEXT],
+        'a.jpg': ['jpeg', JPEG],
+        'b.jpg': ['jpeg', JPEG],
+      }),
+    })
+    opened.send({ kind: 'open' })
+
+    assert.equal(opened.focused(), 'go')
+
+    opened.send({ kind: 'key', key: 'enter' })
+
+    assert.equal(opened.element('go'), null)
+    assert.equal(made.length, 3)
+    assert.deepEqual(held, [])
+  } finally {
+    mock.restoreAll()
+  }
+})
+
 test('what does not come from the player’s window in Vela’s origin is not heard', () => {
   const { heard, send } = frame()
 
@@ -1883,6 +1947,48 @@ test('a handler run again after its answer finds what the document wrote by a na
   timers.tick(100)
   send({ kind: 'key', key: 'enter' })
   assert.equal(heard()[0]?.kind, 'transmit')
+})
+
+const BEGINS_ONCE = bml(
+  '<p id="hidden">nothing to see</p>',
+  '<script>' +
+    'var entry = { begun: false };' +
+    'function enter() {' +
+    '  if (entry.begun) { return; }' +
+    '  entry.begun = true;' +
+    '  var r = browser.transmitTextDataOverIP("http://example.test/id", "", "EUC-JP");' +
+    '  browser.launchDocument("~/0001/top.bml", "cut");' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body onload="enter()">')
+
+const TOP_WITH_PICTURES = module(1, {
+  'top.bml': [
+    'bml',
+    bml(
+      '<object id="weather" type="image/jpeg" data="weather.jpg"/>' +
+        '<object id="news" type="image/jpeg" data="news.jpg"/>',
+    ),
+  ],
+  'weather.jpg': ['jpeg', JPEG],
+  'news.jpg': ['jpeg', JPEG],
+})
+
+test('a document that marks on an object of its own that it has begun, then waits on the line before it moves on, moves on once the answer is in, as it does with the setting off', () => {
+  for (const line of ['on', 'off'] as const) {
+    const { send, element } = overTheLine(BEGINS_ONCE, line)
+
+    send({ kind: 'module', module: TOP_WITH_PICTURES })
+
+    if (line === 'on') {
+      assert.ok(element('hidden'))
+      send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+    }
+
+    assert.equal(element('hidden'), null, line)
+    assert.match(element('weather')?.getAttribute('src') ?? '', /^blob:/, line)
+    assert.match(element('news')?.getAttribute('src') ?? '', /^blob:/, line)
+  }
 })
 
 const SETTING_OFF = bml(
