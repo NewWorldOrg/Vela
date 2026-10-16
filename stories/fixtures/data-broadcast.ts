@@ -589,6 +589,137 @@ export function howFarModules(): BmlModule[] {
   return readingModules(NEAR_THE_START, FURTHER_ON)
 }
 
+const LOCKS_ITS_FACE = `${PROLOGUE}
+<bml>
+<head>
+<title>入口</title>
+<script><![CDATA[
+function held() {
+  if (document.currentEvent.status == 0) {
+    browser.Ureg[17] = "hidden";
+    browser.launchDocument("/40/0003/face.bml", "cut");
+  }
+}
+browser.lockModuleOnMemoryEx("/40/0003");
+browser.Ureg[16] = "1";
+]]></script>
+<bevent><beitem id="held" type="ModuleLocked" module_ref="/40/0003" subscribe="subscribe" onoccur="held()"/></bevent>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; visibility: hidden">
+<p id="nothing">入口</p>
+</body>
+</bml>`
+
+const FACE_COMMON = `var ready = false;
+function locked() {
+  if (document.currentEvent.status == 0) { whenLocked(); }
+}
+function whenLocked() {}
+function pressed() {
+  if (!ready) { return; }
+  var hidden = browser.Ureg[17] == "hidden";
+  browser.Ureg[17] = hidden ? "shown" : "hidden";
+  document.getElementById("body").invisible = !hidden;
+}
+`
+
+const CHECKS_ITS_LOCK = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="/40/0000/sample.css" type="text/css"/>
+<script src="common.ecm"/>
+<script><![CDATA[
+function stillLocked() {
+  if (!browser.Ureg[16]) { return false; }
+  var found = browser.getLockedModuleInfo();
+  if (found == null) { return false; }
+  for (var i = 0; i < found.length; i++) {
+    if (found[i][0] == "/40/0003" && found[i][1] == 2) { return true; }
+  }
+  return false;
+}
+function whenLocked() {
+  ready = browser.writePersistentArray("nvram://local/7", "U:1B,S:3B", [1, "top"]) == 4;
+}
+function arrive() {
+  if (!stillLocked()) {
+    browser.unlockAllModulesOnMemory();
+    browser.launchDocument("/40/0000/startup.bml", "cut");
+    return;
+  }
+  browser.lockModuleOnMemory("/40/0003");
+}
+]]></script>
+<bevent>
+<beitem id="locked" type="ModuleLocked" module_ref="/40/0003" subscribe="subscribe" onoccur="locked()"/>
+<beitem id="pressed" type="DataButtonPressed" subscribe="subscribe" onoccur="pressed()"/>
+</bevent>
+</head>
+<body id="body" style="clut: url(/40/0000/sample.clt); background-color-index: 128" invisible="invisible" onload="arrive()">
+<object type="video/X-arib-mpeg2" style="left: 520px; top: 120px; width: 400px; height: 225px"/>
+<p class="panel" style="left: 40px; top: 120px; width: 440px; height: 96px">番組のページ<br/>入口がロックしたモジュールにある</p>
+</body>
+</bml>`
+
+export const LOCKING_CATALOG: BmlCatalog = {
+  service: 1024,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+        {
+          id: 0x0003,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'face.bml', type: 'text/X-arib-bml' },
+            { path: 'common.ecm', type: 'text/X-arib-ecmascript' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** The modules of a self-made data broadcast whose entry document cannot be seen, locks the module of the programme's page and moves there once the lock is held, leaving word that the page starts hidden. The page goes back to the entry document unless it finds that module still listed as locked; it is ready once its own lock of the module is heard of, through a function its common script declares and its own script declares again to write to the persistent memory, and ready only when the write answers the bytes it wrote. It shows itself on the data button once ready, and hides itself on the next press. */
+export function lockingModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', LOCKS_ITS_FACE),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+    {
+      tag: 0x40,
+      id: 0x0003,
+      version: 1,
+      resources: [
+        resource('face.bml', 'bml', CHECKS_ITS_LOCK),
+        resource('common.ecm', 'script', FACE_COMMON),
+      ],
+    },
+  ]
+}
+
 const CHECKING = `${PROLOGUE}
 <bml>
 <head>
@@ -940,6 +1071,85 @@ export function rowModules(): BmlModule[] {
     },
   ]
 }
+
+const OVER_A_STILL = `${PROLOGUE}
+<bml>
+<head>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9">
+<object id="ground" type="image/jpeg" data="hills.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>
+<object id="video" type="video/X-arib-mpeg2" style="left: 24px; top: 14px; width: 720px; height: 405px"/>
+<object id="sun" type="image/X-arib-png" data="sun.png" style="left: 40px; top: 30px; width: 64px; height: 64px"/>
+</body>
+</bml>`
+
+export const STILL_CATALOG: BmlCatalog = {
+  service: 1028,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'hills.jpg', type: 'image/jpeg' },
+            { path: 'sun.png', type: 'image/X-arib-png' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** A page whose ground is a JPEG over the whole of it, with the video in a rectangle of it and a PNG over the video's corner. */
+export function stillModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', OVER_A_STILL),
+        resource('hills.jpg', 'jpeg', bytesOf(HILLS_JPEG)),
+        resource('sun.png', 'png', bytesOf(SUN_PNG)),
+      ],
+    },
+  ]
+}
+
+/** Measures, once the page is drawn, the rectangle the JPEG ground has cut out of it, on the page, against the video's, how the cut is put together with the rest of the ground, and what is cut out of the PNG. */
+export const STILL_PROBE = `
+function measure() {
+  const ground = document.querySelector('#bml-plane [id="ground"]')
+  const video = document.querySelector('#bml-plane [id="video"]')
+  const sun = document.querySelector('#bml-plane [id="sun"]')
+  if (!ground || !video || !sun) {
+    return null
+  }
+  const masked = getComputedStyle(ground)
+  const [x, y] = masked.maskPosition.split(',')[0].trim().split(' ').map(parseFloat)
+  const [width, height] = masked.maskSize.split(',')[0].trim().split(' ').map(parseFloat)
+  return {
+    cut: [ground.offsetLeft + x, ground.offsetTop + y, width, height].join(','),
+    video: [video.offsetLeft, video.offsetTop, video.offsetWidth, video.offsetHeight].join(','),
+    composite: masked.maskComposite,
+    sun: getComputedStyle(sun).maskImage,
+  }
+}
+const measuring = setInterval(() => {
+  if (measure()) {
+    clearInterval(measuring)
+    requestAnimationFrame(() => parent.postMessage({ probe: measure() }, '*'))
+  }
+}, 50)
+`
 
 /** Measures, once the bundled face is loaded and the rows are drawn, how far the text of any row reaches above or below its box, in the document's pixels, and how far its lines overflow it. */
 export const GLYPH_PROBE = `

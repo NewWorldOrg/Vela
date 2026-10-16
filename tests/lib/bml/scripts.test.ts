@@ -130,23 +130,39 @@ function windowLike() {
   return { context, global, history, open, top }
 }
 
-test('a function a document declares by a hidden name is its own and its next scripts call it, as the write its declaration makes on the global object past the scope is kept in the scope while its code runs, and the global object holds what it held after', () => {
+/** A document's runs as the frame makes them, over a window-like global: each through the scope's run, wrapped in `with` over the scope, with the names it hides laid over the global object while it runs. */
+function runsOver(
+  context: vm.Context,
+  global: Record<string, unknown>,
+  placed: object,
+): ScriptScope {
+  const scope = scopeOf({ placed })
+  const hiding = hidingOn(global)
+
+  context.scope = scope
+
+  return new ScriptScope(
+    (code) =>
+      hiding(scope, () => {
+        vm.runInContext(`with (scope) {\n${code}\n}`, context)
+      }),
+    scope,
+    () => 0,
+  )
+}
+
+test('a function a document declares by a hidden name is its own and its next scripts call it, as its declaration is kept in the scope, and the global object holds what it held after', () => {
   const { context, global, history, open } = windowLike()
   const described = ['history', 'open'].map((name) =>
     Object.getOwnPropertyDescriptor(global, name),
   )
   const placed: { seen?: unknown } = {}
-  const scope = scopeOf({ placed })
-  const hiding = hidingOn(global)
-  const evaluate = (code: string) =>
-    hiding(scope, () => vm.runInContext(`with (scope) {\n${code}\n}`, context))
+  const runs = runsOver(context, global, placed)
 
-  context.scope = scope
-
-  evaluate(
+  runs.run(
     'function history() { return "back" }\nfunction open() { return "opened" }',
   )
-  evaluate('placed.seen = [history(), open()].join(",")')
+  runs.run('placed.seen = [history(), open()].join(",")')
 
   assert.equal(placed.seen, 'back,opened')
   assert.equal(global.history, history)
@@ -159,20 +175,15 @@ test('a function a document declares by a hidden name is its own and its next sc
   )
 })
 
-test('a function declared by a name the global object holds unconfigurable, as a window holds window and top, cannot be kept in the scope: its write goes to the global object, which drops it, and the next script finds nothing by that name', () => {
+test('a function declared by a name the global object holds unconfigurable, as a window holds window and top, is kept in the scope like any hidden name: its next scripts call it, and the global object holds its own as before', () => {
   const { context, global, top } = windowLike()
   const placed: { seen?: unknown } = {}
-  const scope = scopeOf({ placed })
-  const hiding = hidingOn(global)
-  const evaluate = (code: string) =>
-    hiding(scope, () => vm.runInContext(`with (scope) {\n${code}\n}`, context))
+  const runs = runsOver(context, global, placed)
 
-  context.scope = scope
+  runs.run('function top() { return "mine" }')
+  runs.run('placed.seen = top()')
 
-  evaluate('function top() { return "mine" }')
-  evaluate('placed.seen = typeof top')
-
-  assert.equal(placed.seen, 'undefined')
+  assert.equal(placed.seen, 'mine')
   assert.equal(global.top, top)
 })
 
@@ -211,6 +222,53 @@ test('new is taken off the table constructors, so that a table that cannot be ma
     ),
     'var a = BinaryTable("t.btb", "0,U:1B"); var b = CSVTable("t.csv", "U:1B"); var c = new Date();',
   )
+})
+
+/** A scope whose runs share one global object, as a document's scripts and handlers share the frame's, each wrapped in `with` over the scope as the frame runs it. */
+function sharingAGlobal(placed: object) {
+  const context = vm.createContext({})
+  const given = scopeOf({ placed })
+
+  context.scope = given
+
+  return new ScriptScope(
+    (code) => {
+      vm.runInContext(`with (scope) {\n${code}\n}`, context)
+    },
+    given,
+    () => 0,
+  )
+}
+
+test('a function a later script declares by the same name takes the place of an earlier one for the functions the earlier script declared, as declarations in one global scope do', () => {
+  const placed: { said?: string } = {}
+  const scripts = sharingAGlobal(placed)
+
+  scripts.run(
+    'function locked() { ready() }\nfunction ready() { placed.said = "the first" }',
+  )
+  scripts.run('function ready() { placed.said = "the second" }')
+  scripts.run('locked()')
+
+  assert.equal(placed.said, 'the second')
+})
+
+test('a script calls the functions it declares before their place in it, the code either side of a declaration stays apart, and a function declared inside another stays that one’s own', () => {
+  const placed: { said?: string; inner?: string; ran?: string } = {}
+  const scripts = sharingAGlobal(placed)
+
+  scripts.run(
+    'var one = 1\nfunction between() {}\n(function () { placed.ran = "apart" })()',
+  )
+  assert.equal(placed.ran, 'apart')
+
+  scripts.run(
+    'placed.said = early();\nfunction early() { return "hoisted" }\nfunction outer() { function inner() { return "inner" } return inner() }',
+  )
+  scripts.run('placed.inner = outer() + "," + typeof inner')
+
+  assert.equal(placed.said, 'hoisted')
+  assert.equal(placed.inner, 'inner,undefined')
 })
 
 test('a run divides in integers, as a receiver does', () => {

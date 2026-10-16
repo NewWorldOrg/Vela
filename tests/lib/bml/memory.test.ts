@@ -135,12 +135,12 @@ test('what the player hands is taken whole, within the limit, and a name never w
   assert.deepEqual(memory.read('c')[0], 3)
 })
 
-test('an array is written as its structure says and read back by any structure over the same bytes, zeros where nothing was written', () => {
+test('an array is written as its structure says, answering how many bytes it wrote, and read back by any structure over the same bytes, zeros where nothing was written', () => {
   const memory = new PersistentMemory()
 
   assert.deepEqual(readArray(memory, 'visits', 'U:1B'), [0])
   assert.deepEqual(readArray(memory, 'zip', 'S:7B'), [''])
-  assert.equal(writeArray(memory, 'visits', 'U:2B', [258]), true)
+  assert.equal(writeArray(memory, 'visits', 'U:2B', [258]), 2)
   assert.deepEqual(readArray(memory, 'visits', 'U:2B'), [258])
   assert.deepEqual(readArray(memory, 'visits', 'U:1B'), [1])
   assert.deepEqual(readArray(memory, 'visits', 'U:4b,U:4b,U:1B'), [0, 1, 2])
@@ -153,17 +153,17 @@ test('an array is written as its structure says and read back by any structure o
       'abcdef',
       4095,
     ]),
-    true,
+    15,
   )
   assert.deepEqual(
     readArray(memory, 'mixed', 'U:1B,I:1B,B:1b,P:7b,S:1V,S:3B,U:12b'),
     [7, -2, true, '東京', 'abc', 4095],
   )
-  assert.equal(writeArray(memory, 'visits', 'U:1B', ['3']), false)
-  assert.equal(writeArray(memory, 'visits', 'U:1B', [1, 2]), false)
-  assert.equal(writeArray(memory, 'visits', 'nonsense', [1]), false)
-  assert.equal(writeArray(memory, 'wide', 'S:1V', ['x'.repeat(70)]), false)
-  assert.equal(writeArray(memory, 7, 'U:1B', [1]), false)
+  assert.equal(writeArray(memory, 'visits', 'U:1B', ['3']), null)
+  assert.equal(writeArray(memory, 'visits', 'U:1B', [1, 2]), null)
+  assert.equal(writeArray(memory, 'visits', 'nonsense', [1]), null)
+  assert.equal(writeArray(memory, 'wide', 'S:1V', ['x'.repeat(70)]), null)
+  assert.equal(writeArray(memory, 7, 'U:1B', [1]), null)
   assert.equal(readArray(memory, 'visits', 7), null)
   assert.equal(readArray(memory, 'visits', 'U:8B'), null)
 })

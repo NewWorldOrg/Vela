@@ -295,6 +295,51 @@ test('a video object placed by a class of a style sheet linked from another modu
   assert.deepEqual(page.warnings, [])
 })
 
+test('a JPEG object lies on the still picture plane behind the video: the video’s rectangle is cut out of it where it stands, while a PNG over the video and text stay in front', () => {
+  const page = read(
+    bml(
+      '<div style="left: 10px; top: 20px; width: 950px; height: 520px">' +
+        '<object id="ground" type="image/jpeg" data="ground.jpg" style="left: 0px; top: 0px; width: 940px; height: 510px"/>' +
+        '<object id="later" type="image/jpeg" style="left: 600px; top: 300px; width: 100px; height: 100px"/>' +
+        '</div>' +
+        '<object id="v" type="video/X-arib-mpeg2" style="left: 110px; top: 60px; width: 480px; height: 270px"/>' +
+        '<object id="mark" type="image/X-arib-png" data="mark.png" style="left: 120px; top: 70px; width: 64px; height: 64px"/>' +
+        '<p id="text" style="left: 120px; top: 300px; width: 200px; height: 24px">text</p>',
+    ),
+    resourcesOf({
+      '/40/0000/ground.jpg': ['jpeg', 'x'],
+      '/40/0000/mark.png': ['png', 'x'],
+    }),
+  )
+  const cut = { left: 100, top: 40, width: 480, height: 270 }
+
+  assert.equal(attribute(byId(page, 'ground'), 'data-bml-still'), '')
+  assert.deepEqual(byId(page, 'ground').cut, cut)
+  assert.equal(attribute(byId(page, 'later'), 'data-bml-still'), '')
+  assert.deepEqual(byId(page, 'later').cut, {
+    left: -500,
+    top: -260,
+    width: 480,
+    height: 270,
+  })
+  ;['mark', 'text', 'v'].forEach((id) => {
+    assert.equal(attribute(byId(page, id), 'data-bml-still'), undefined, id)
+    assert.equal(byId(page, id).cut, undefined, id)
+  })
+})
+
+test('a JPEG object on a page with no video has nothing cut out of it', () => {
+  const page = read(
+    bml(
+      '<object id="ground" type="image/jpeg" data="ground.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>',
+    ),
+    resourcesOf({ '/40/0000/ground.jpg': ['jpeg', 'x'] }),
+  )
+
+  assert.equal(attribute(byId(page, 'ground'), 'data-bml-still'), undefined)
+  assert.equal(byId(page, 'ground').cut, undefined)
+})
+
 test('a video object reaching past the plane is cut to it, and one without a size gives no rectangle', () => {
   const past = read(
     bml(

@@ -201,6 +201,7 @@ export class BmlRuntime {
 
   private readonly modules = new Map<string, BmlModule>()
 
+  /** The modules the documents locked. A lock outlasts the document that made it, as on a receiver: it goes when a document unlocks it, when the catalog no longer lists its module, or when the broadcast is closed. */
   private readonly locked = new Set<string>()
 
   private readonly timers = new Map<number, Timer>()
@@ -367,8 +368,12 @@ export class BmlRuntime {
     this.modules.forEach((module, key) => {
       if (!staysListed(catalog, module.tag, module.id)) {
         this.modules.delete(key)
-        this.locked.delete(key)
         gone.push(module)
+      }
+    })
+    this.locked.forEach((key) => {
+      if (!staysListed(catalog, ...moduleOfKey(key))) {
+        this.locked.delete(key)
       }
     })
     this.catalog = catalog
@@ -469,11 +474,13 @@ export class BmlRuntime {
 
   private close(): void {
     this.waitFor(null)
+    this.stopNudging()
     this.unmount()
+    this.locked.clear()
     this.requests.clear()
   }
 
-  /** Presses the data button on a document that cannot be seen, so that an entry document moves on to its face, and again every moment while it still cannot be seen, for some seconds: an entry document that takes a while to get ready, locking modules first, takes the press once it is. */
+  /** Presses the data button on a document that cannot be seen, so that an entry document moves on to its face, and again every moment while the document shown still cannot be seen, for some seconds: an entry document that takes a while to get ready, locking modules first, takes the press once it is, and so does a page it moves on to by itself that cannot be seen either and shows itself on the press, as the viewer's press reaches the document the broadcast has come to. Once a document can be seen, nothing is pressed. */
   private nudge(): void {
     const shown = this.shown
 
@@ -490,7 +497,7 @@ export class BmlRuntime {
     this.presses += 1
     this.dataButtonPressed()
 
-    if (this.shown === shown && shown.document.cannotBeSeen()) {
+    if (this.shown?.document.cannotBeSeen()) {
       this.pressing = this.window.setTimeout(
         () => this.nudge(),
         DATA_BUTTON_EVERY_MS,
@@ -1473,8 +1480,6 @@ export class BmlRuntime {
   private unmount(): void {
     this.requests.drop()
     this.stopTimers()
-    this.stopNudging()
-    this.locked.clear()
     this.shown?.players.forEach((player) => player.stop())
     this.shown?.mounted.nodes.forEach((_, element) =>
       element.removeAttribute('src'),
@@ -1695,7 +1700,9 @@ export class BmlRuntime {
 
   private fail(reason: RuntimeError): void {
     this.waitFor(null)
+    this.stopNudging()
     this.unmount()
+    this.locked.clear()
     this.say({ kind: 'error', reason })
   }
 

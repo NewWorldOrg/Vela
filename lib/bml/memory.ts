@@ -211,13 +211,13 @@ export function readArray(
   return readCells(new BitReader(memory.read(name)), fields, UTF8)
 }
 
-/** Writes values under a name as a structure says; false when the values do not fit the structure, the area or the limit. */
+/** Writes values under a name as a structure says: how many bytes were written, or null when the values do not fit the structure, the area or the limit. */
 export function writeArray(
   memory: PersistentMemory,
   name: unknown,
   structure: unknown,
   data: unknown,
-): boolean {
+): number | null {
   const fields = fieldsOf(structure)
   const columns = fields?.filter((field) => field.type !== 'P')
 
@@ -229,10 +229,10 @@ export function writeArray(
     data.length !== columns.length ||
     !columns.every((field, index) => fitsField(field, data[index]))
   ) {
-    return false
+    return null
   }
 
   const block = writeCells(fields, data, UTF8)
 
-  return block !== null && memory.write(name, block)
+  return block !== null && memory.write(name, block) ? block.length : null
 }

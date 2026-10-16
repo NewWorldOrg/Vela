@@ -19,8 +19,10 @@ import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { DRAWN_PICTURE, drawnFrame } from '@/stories/fixtures/frames'
 import {
   DATA_BROADCAST_CATALOG,
+  LOCKING_CATALOG,
   SOUNDING_CATALOG,
   dataBroadcastModules,
+  lockingModules,
   soundingModules,
 } from '@/stories/fixtures/data-broadcast'
 import {
@@ -658,6 +660,35 @@ export const 背の低い窓で畳んでも番組の情報は動かない: Story
     await userEvent.click(fold)
     await inTheColumn(canvasElement, closed)
     await near(meta.getBoundingClientRect().top, top)
+  },
+}
+
+const ON_THE_LOCKED_PAGE = '520,120,400,225'
+
+export const 入口が移った番組のページがデータボタンで出る: Story = {
+  args: {
+    readDataBroadcast: async () => ({
+      state: 'read',
+      timeline: throughout(LOCKING_CATALOG),
+    }),
+    readDataBroadcastModule: readingModulesOf(lockingModules),
+  },
+  play: async ({ canvasElement }) => {
+    const toggle = await inThePlayer(canvasElement).findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await shrunkTo(canvasElement, ON_THE_LOCKED_PAGE)
+
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+
+    await shrunkTo(canvasElement, ON_THE_LOCKED_PAGE)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
   },
 }
 

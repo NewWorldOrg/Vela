@@ -632,7 +632,7 @@ function supported(host: BrowserHost): Record<string, Answer> {
     readPersistentArray: (name: unknown, structure: unknown) =>
       readArray(host.memory, name, structure),
     writePersistentArray: (name: unknown, structure: unknown, data: unknown) =>
-      writeArray(host.memory, name, structure, data) ? DONE : FAILED,
+      writeArray(host.memory, name, structure, data) ?? FAILED,
     lockModuleOnMemory: (reference: unknown) => lockAnswerOf(host, reference),
     lockModuleOnMemoryEx: (reference: unknown) => lockAnswerOf(host, reference),
     unlockModuleOnMemory: (reference: unknown) => {

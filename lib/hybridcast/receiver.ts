@@ -703,7 +703,7 @@ export class HybridcastReceiver {
         data: unknown,
       ) =>
         this.may('persistentMemory', 'writePersistentArray') &&
-        writeArray(this.memory, name, structure, data)
+        writeArray(this.memory, name, structure, data) !== null
           ? DONE
           : FAILED,
     }

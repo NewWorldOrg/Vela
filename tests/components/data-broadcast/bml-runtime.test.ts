@@ -184,6 +184,47 @@ test('opening draws the start document and tells the player where the video goes
   assert.equal(focused(), 'next')
 })
 
+const OVER_A_STILL = bml(
+  '<object id="ground" type="image/jpeg" data="ground.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>' +
+    '<object type="video/X-arib-mpeg2" style="left: 24px; top: 14px; width: 720px; height: 405px"/>' +
+    '<object id="mark" type="image/X-arib-png" data="mark.png" style="left: 40px; top: 30px; width: 64px; height: 64px"/>',
+)
+
+test('a JPEG drawn over the whole page has the video’s rectangle cut out of it, and a PNG over the video has nothing cut', () => {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, {
+      'startup.bml': ['bml', OVER_A_STILL],
+      'ground.jpg': ['jpeg', 'jpeg'],
+      'mark.png': ['png', 'png'],
+    }),
+  })
+  opening.send({ kind: 'open' })
+
+  const ground = opening.element('ground')
+  const mark = opening.element('mark')
+
+  assert.equal(ground?.getAttribute('data-bml-still'), '')
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(ground?.style.properties ?? {}).filter(([name]) =>
+        name.startsWith('--bml-cut-'),
+      ),
+    ),
+    {
+      '--bml-cut-left': '24px',
+      '--bml-cut-top': '14px',
+      '--bml-cut-width': '720px',
+      '--bml-cut-height': '405px',
+    },
+  )
+  assert.equal(mark?.getAttribute('data-bml-still'), null)
+  assert.deepEqual(mark?.style.properties, {})
+})
+
 test('opening at the start document of another component draws that one', () => {
   const opening = frame()
 
@@ -1425,6 +1466,153 @@ test('locking a module no component carries answers -3, one the carousel does no
   )
 })
 
+const LOCKING_CATALOG: BmlCatalog = {
+  ...CATALOG,
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [0, 3, 4].map((id) => ({
+        id,
+        version: 1,
+        size: 0,
+        resources: [],
+      })),
+    },
+  ],
+}
+
+const LOCKS_AND_MOVES_ON = bml(
+  '<p id="entry">entry</p>',
+  '<bevent>' +
+    '<beitem id="held" type="ModuleLocked" module_ref="/40/0003" subscribe="subscribe" onoccur="if (document.currentEvent.status == 0) { browser.launchDocument(\'/40/0003/face.bml\', \'cut\') }"/>' +
+    '</bevent>' +
+    '<script>' +
+    'var found = browser.getLockedModuleInfo();' +
+    'var names = [];' +
+    'for (var i = 0; i < found.length; i++) { names.push(found[i].join(":")) }' +
+    'browser.Ureg[1] += "entry[" + names.join(",") + "] ";' +
+    'browser.lockModuleOnMemoryEx("/40/0003");' +
+    'browser.lockModuleOnMemoryEx("/40/0004");' +
+    'browser.Ureg[16] = "ready";' +
+    '</script>',
+).replace('<body>', '<body invisible="invisible">')
+
+const CHECKS_THE_LOCK = bml(
+  '<p id="face" style="nav-index: 0; nav-down: 1" onclick="browser.launchDocument(\'/40/0000/startup.bml\', \'cut\')">entry</p>' +
+    '<p id="leave" style="nav-index: 1; nav-up: 0" onclick="browser.unlockAllModulesOnMemory(); browser.launchDocument(\'/40/0000/startup.bml\', \'cut\')">unlock</p>',
+  '<script>' +
+    'function stillLocked() {' +
+    'if (browser.Ureg[16] != "ready") { return false }' +
+    'var found = browser.getLockedModuleInfo();' +
+    'if (found == null) { return false }' +
+    'for (var i = 0; i < found.length; i++) { if (found[i][0] == "/40/0003" && found[i][1] == 2) { return true } }' +
+    'return false' +
+    '}' +
+    'function arrive() {' +
+    'browser.Ureg[2] += "face ";' +
+    'if (!stillLocked()) { browser.Ureg[2] += "back "; browser.unlockAllModulesOnMemory(); browser.launchDocument("/40/0000/startup.bml", "cut") }' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body onload="arrive()">')
+
+/** A start document that locks the module of its face and moves there once the lock is held, and a face that goes back to the start unless it finds the lock still listed. */
+function lockedThenFaced() {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: LOCKING_CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', LOCKS_AND_MOVES_ON] }),
+  })
+  opening.send({
+    kind: 'module',
+    module: module(3, { 'face.bml': ['bml', CHECKS_THE_LOCK] }),
+  })
+  opening.send({ kind: 'open' })
+
+  const registers = (
+    opening.runtime as unknown as { registers: { Ureg: string[] } }
+  ).registers.Ureg
+
+  return { ...opening, registers }
+}
+
+test('a module the start document locked is still listed as locked on the page it moves to, so a page that checks for the lock stays', () => {
+  const { registers, timers, element } = lockedThenFaced()
+
+  assert.equal(registers[1], 'entry[] ')
+  assert.ok(element('entry'))
+
+  timers.tick(0)
+  timers.tick(0)
+  timers.tick(0)
+
+  assert.ok(element('face'))
+  assert.equal(element('entry'), null)
+  assert.equal(registers[2], 'face ')
+  assert.equal(registers[16], 'ready')
+  assert.equal(registers[1], 'entry[] ')
+})
+
+test('the locks go on to a document launched without unlocking, held and awaited alike, and unlocking them all before launching leaves none', () => {
+  const { registers, timers, send, element } = lockedThenFaced()
+
+  timers.tick(0)
+  send({ kind: 'key', key: 'enter' })
+
+  assert.ok(element('entry'))
+  assert.equal(registers[1], 'entry[] entry[/40/0003:2:1,/40/0004:2:2] ')
+
+  timers.tick(0)
+  assert.equal(registers[2], 'face face ')
+
+  send({ kind: 'key', key: 'down' })
+  send({ kind: 'key', key: 'enter' })
+
+  assert.equal(
+    registers[1],
+    'entry[] entry[/40/0003:2:1,/40/0004:2:2] entry[] ',
+  )
+})
+
+test('closing the data broadcast lets go of every lock, and opening it again begins with none', () => {
+  const { runtime, registers, timers, send } = lockedThenFaced()
+
+  timers.tick(0)
+  send({ kind: 'close' })
+
+  assert.equal((runtime as unknown as { locked: Set<string> }).locked.size, 0)
+
+  send({ kind: 'open' })
+  assert.equal(registers[1], 'entry[] entry[] ')
+})
+
+test('a catalog that no longer lists a locked module lets go of its lock, whether the module was held or still awaited', () => {
+  const { registers, timers, send, element } = lockedThenFaced()
+
+  timers.tick(0)
+  send({
+    kind: 'catalog',
+    catalog: {
+      ...LOCKING_CATALOG,
+      carousels: [
+        {
+          ...LOCKING_CATALOG.carousels[0],
+          modules: [{ id: 0, version: 1, size: 0, resources: [] }],
+        },
+      ],
+    },
+  })
+
+  assert.ok(element('entry'))
+  assert.equal(registers[1], 'entry[] entry[] ')
+
+  timers.tick(0)
+  assert.ok(element('entry'))
+  assert.equal(registers[2], 'face ')
+})
+
 const GETTING_READY = bml(
   '<p id="p">p</p>' +
     '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>',
@@ -1460,6 +1648,69 @@ test('an entry document that listens for the data button only once it is ready h
   }
 
   assert.equal(registers[0], 'pressed ')
+})
+
+const MOVES_ON_BY_ITSELF = bml(
+  '<p id="entry">entry</p>',
+  '<bevent>' +
+    '<beitem id="d" type="DataButtonPressed" subscribe="subscribe" onoccur="browser.Ureg[6] += \'entry \'"/>' +
+    '</bevent>' +
+    '<script>' +
+    'function moveOn() { browser.Ureg[5] = "hidden"; browser.launchDocument("~/0001/page.bml", "cut") }' +
+    'browser.setInterval("moveOn()", 1000, 1);' +
+    '</script>',
+).replace('<body>', '<body invisible="invisible">')
+
+const SHOWS_ON_THE_DATA_BUTTON = bml(
+  '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>' +
+    '<p id="page">page</p>',
+  '<bevent>' +
+    '<beitem id="held" type="ModuleLocked" module_ref="~/0001" subscribe="subscribe" onoccur="ready = true"/>' +
+    '<beitem id="d" type="DataButtonPressed" subscribe="subscribe" onoccur="toggle()"/>' +
+    '</bevent>' +
+    '<script>' +
+    'var ready = false;' +
+    'browser.lockModuleOnMemory("~/0001");' +
+    'function toggle() {' +
+    'browser.Ureg[6] += ready ? "page " : "early ";' +
+    'if (!ready) { return }' +
+    'var shown = browser.Ureg[5] == "hidden";' +
+    'browser.Ureg[5] = shown ? "shown" : "hidden";' +
+    'document.getElementById("body").invisible = !shown' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body id="body" invisible="invisible">')
+
+test('an entry document that cannot be seen and moves on by itself to a page that cannot be seen either has the data button pressed on that page until it shows itself, and no more after', () => {
+  const { runtime, timers, heard, element } = opened(MOVES_ON_BY_ITSELF, [
+    module(1, { 'page.bml': ['bml', SHOWS_ON_THE_DATA_BUTTON] }),
+  ])
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  timers.tick(1000)
+  assert.equal(registers[5], 'hidden')
+  assert.ok(element('page'))
+
+  timers.tick(0)
+  timers.tick(500)
+
+  assert.equal(registers[5], 'shown')
+  assert.equal(element('body')?.getAttribute('data-bml-attr-invisible'), null)
+  assert.deepEqual(heard().at(-1), {
+    kind: 'videoRect',
+    rect: { left: 0, top: 0, width: 480, height: 270 },
+  })
+
+  for (let round = 0; round < 10; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[5], 'shown')
+  assert.equal(
+    registers[6].split(' ').filter((word) => word === 'page').length,
+    1,
+  )
 })
 
 const LOADED = bml(
