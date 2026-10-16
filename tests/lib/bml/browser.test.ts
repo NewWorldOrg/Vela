@@ -259,11 +259,12 @@ test('timers, sleep and the module locks go to the host', () => {
   ])
 })
 
-test('the persistent memory is read and written through the host’s copy', () => {
+test('the persistent memory is read and written through the host’s copy, a write answering how many bytes it wrote', () => {
   const { browser } = host()
 
   assert.deepEqual(browser.readPersistentArray('visits', 'U:1B'), [0])
   assert.equal(browser.writePersistentArray('visits', 'U:1B', [3]), 1)
+  assert.equal(browser.writePersistentArray('pair', 'U:1B,S:3B', [1, 'ab']), 4)
   assert.deepEqual(browser.readPersistentArray('visits', 'U:1B'), [3])
   assert.deepEqual(browser.readPersistentArray('visits', 'U:2B'), [768])
   assert.equal(browser.readPersistentArray('visits', 'U:8B'), null)
