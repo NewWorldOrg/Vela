@@ -665,7 +665,7 @@ export const 背の低い窓で畳んでも番組の情報は動かない: Story
 
 const ON_THE_LOCKED_PAGE = '520,120,400,225'
 
-export const ロックしたモジュールのページに留まる: Story = {
+export const 入口が移った番組のページがデータボタンで出る: Story = {
   args: {
     readDataBroadcast: async () => ({
       state: 'read',

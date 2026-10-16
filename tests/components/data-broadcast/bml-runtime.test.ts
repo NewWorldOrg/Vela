@@ -1609,6 +1609,69 @@ test('an entry document that listens for the data button only once it is ready h
   assert.equal(registers[0], 'pressed ')
 })
 
+const MOVES_ON_BY_ITSELF = bml(
+  '<p id="entry">entry</p>',
+  '<bevent>' +
+    '<beitem id="d" type="DataButtonPressed" subscribe="subscribe" onoccur="browser.Ureg[6] += \'entry \'"/>' +
+    '</bevent>' +
+    '<script>' +
+    'function moveOn() { browser.Ureg[5] = "hidden"; browser.launchDocument("~/0001/page.bml", "cut") }' +
+    'browser.setInterval("moveOn()", 1000, 1);' +
+    '</script>',
+).replace('<body>', '<body invisible="invisible">')
+
+const SHOWS_ON_THE_DATA_BUTTON = bml(
+  '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>' +
+    '<p id="page">page</p>',
+  '<bevent>' +
+    '<beitem id="held" type="ModuleLocked" module_ref="~/0001" subscribe="subscribe" onoccur="ready = true"/>' +
+    '<beitem id="d" type="DataButtonPressed" subscribe="subscribe" onoccur="toggle()"/>' +
+    '</bevent>' +
+    '<script>' +
+    'var ready = false;' +
+    'browser.lockModuleOnMemory("~/0001");' +
+    'function toggle() {' +
+    'browser.Ureg[6] += ready ? "page " : "early ";' +
+    'if (!ready) { return }' +
+    'var shown = browser.Ureg[5] == "hidden";' +
+    'browser.Ureg[5] = shown ? "shown" : "hidden";' +
+    'document.getElementById("body").invisible = !shown' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body id="body" invisible="invisible">')
+
+test('an entry document that cannot be seen and moves on by itself to a page that cannot be seen either has the data button pressed on that page until it shows itself, and no more after', () => {
+  const { runtime, timers, heard, element } = opened(MOVES_ON_BY_ITSELF, [
+    module(1, { 'page.bml': ['bml', SHOWS_ON_THE_DATA_BUTTON] }),
+  ])
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  timers.tick(1000)
+  assert.equal(registers[5], 'hidden')
+  assert.ok(element('page'))
+
+  timers.tick(0)
+  timers.tick(500)
+
+  assert.equal(registers[5], 'shown')
+  assert.equal(element('body')?.getAttribute('data-bml-attr-invisible'), null)
+  assert.deepEqual(heard().at(-1), {
+    kind: 'videoRect',
+    rect: { left: 0, top: 0, width: 480, height: 270 },
+  })
+
+  for (let round = 0; round < 10; round += 1) {
+    timers.tick(500)
+  }
+
+  assert.equal(registers[5], 'shown')
+  assert.equal(
+    registers[6].split(' ').filter((word) => word === 'page').length,
+    1,
+  )
+})
+
 const LOADED = bml(
   '<p id="p" style="nav-index: 0">p</p>',
   '<script>browser.Ureg[0] = "script"</script>',

@@ -595,7 +595,10 @@ const LOCKS_ITS_FACE = `${PROLOGUE}
 <title>入口</title>
 <script><![CDATA[
 function held() {
-  if (document.currentEvent.status == 0) { browser.launchDocument("/40/0003/face.bml", "cut"); }
+  if (document.currentEvent.status == 0) {
+    browser.Ureg[17] = "hidden";
+    browser.launchDocument("/40/0003/face.bml", "cut");
+  }
 }
 browser.lockModuleOnMemoryEx("/40/0003");
 browser.Ureg[16] = "1";
@@ -607,10 +610,24 @@ browser.Ureg[16] = "1";
 </body>
 </bml>`
 
+const FACE_COMMON = `var ready = false;
+function locked() {
+  if (document.currentEvent.status == 0) { whenLocked(); }
+}
+function whenLocked() {}
+function pressed() {
+  if (!ready) { return; }
+  var hidden = browser.Ureg[17] == "hidden";
+  browser.Ureg[17] = hidden ? "shown" : "hidden";
+  document.getElementById("body").invisible = !hidden;
+}
+`
+
 const CHECKS_ITS_LOCK = `${PROLOGUE}
 <bml>
 <head>
 <link rel="stylesheet" href="/40/0000/sample.css" type="text/css"/>
+<script src="common.ecm"/>
 <script><![CDATA[
 function stillLocked() {
   if (!browser.Ureg[16]) { return false; }
@@ -621,15 +638,24 @@ function stillLocked() {
   }
   return false;
 }
+function whenLocked() {
+  ready = browser.writePersistentArray("nvram://local/7", "U:1B,S:3B", [1, "top"]) == 4;
+}
 function arrive() {
   if (!stillLocked()) {
     browser.unlockAllModulesOnMemory();
     browser.launchDocument("/40/0000/startup.bml", "cut");
+    return;
   }
+  browser.lockModuleOnMemory("/40/0003");
 }
 ]]></script>
+<bevent>
+<beitem id="locked" type="ModuleLocked" module_ref="/40/0003" subscribe="subscribe" onoccur="locked()"/>
+<beitem id="pressed" type="DataButtonPressed" subscribe="subscribe" onoccur="pressed()"/>
+</bevent>
 </head>
-<body style="clut: url(/40/0000/sample.clt); background-color-index: 128" onload="arrive()">
+<body id="body" style="clut: url(/40/0000/sample.clt); background-color-index: 128" invisible="invisible" onload="arrive()">
 <object type="video/X-arib-mpeg2" style="left: 520px; top: 120px; width: 400px; height: 225px"/>
 <p class="panel" style="left: 40px; top: 120px; width: 440px; height: 96px">番組のページ<br/>入口がロックしたモジュールにある</p>
 </body>
@@ -659,14 +685,17 @@ export const LOCKING_CATALOG: BmlCatalog = {
           id: 0x0003,
           version: 1,
           size: 0,
-          resources: [{ path: 'face.bml', type: 'text/X-arib-bml' }],
+          resources: [
+            { path: 'face.bml', type: 'text/X-arib-bml' },
+            { path: 'common.ecm', type: 'text/X-arib-ecmascript' },
+          ],
         },
       ],
     },
   ],
 }
 
-/** The modules of a self-made data broadcast whose entry document cannot be seen, locks the module of the programme's page and moves there once the lock is held, and whose page goes back to the entry document unless it finds that module still listed as locked. */
+/** The modules of a self-made data broadcast whose entry document cannot be seen, locks the module of the programme's page and moves there once the lock is held, leaving word that the page starts hidden. The page goes back to the entry document unless it finds that module still listed as locked; it is ready once its own lock of the module is heard of, through a function its common script declares and its own script declares again to write to the persistent memory, and ready only when the write answers the bytes it wrote. It shows itself on the data button once ready, and hides itself on the next press. */
 export function lockingModules(): BmlModule[] {
   return [
     {
@@ -683,7 +712,10 @@ export function lockingModules(): BmlModule[] {
       tag: 0x40,
       id: 0x0003,
       version: 1,
-      resources: [resource('face.bml', 'bml', CHECKS_ITS_LOCK)],
+      resources: [
+        resource('face.bml', 'bml', CHECKS_ITS_LOCK),
+        resource('common.ecm', 'script', FACE_COMMON),
+      ],
     },
   ]
 }

@@ -1116,7 +1116,7 @@ const LOCKING = [
 
 const ON_THE_LOCKED_PAGE = '520,120,400,225'
 
-export const ロックしたモジュールのページに留まる: Story = {
+export const 入口が移った番組のページがデータボタンで出る: Story = {
   args: { openSocket: carrying(...LOCKING) },
   play: async ({ canvasElement }) => {
     const toggle = await inThePlayer(canvasElement).findByRole('button', {
