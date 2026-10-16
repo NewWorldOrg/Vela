@@ -24,6 +24,7 @@ const THE_SUITE = [
   'tests/components/live/live-feed.test.ts',
   'tests/components/live/live-session.test.ts',
   'tests/components/live/live-start.test.ts',
+  'tests/components/live/live-wire-ahead.test.ts',
   'tests/components/nothing-internal-and-one-way-to-wait.test.ts',
   'tests/components/one-shape-for-each-part.test.ts',
   'tests/components/one-way-to-know-fullscreen.test.ts',

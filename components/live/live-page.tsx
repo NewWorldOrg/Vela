@@ -31,6 +31,9 @@ import { useNow } from '@/hooks/useNow'
 import { useReadAgain } from '@/hooks/useReadAgain'
 import { liveHandover } from '@/lib/external-player'
 import type { LiveScreen, TakeLiveTicket } from '@/repository/live'
+import { liveWireHref } from '@/repository/live-paths'
+import { MAIN_SOUND } from '@/repository/sounds'
+import { unaskedIn } from '@/lib/live-profiles'
 import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { LiveIcon } from '@/components/vela/icons'
@@ -56,7 +59,12 @@ import {
 } from '@/components/live/remote-column'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 import { LivePlayer } from '@/components/live/live-player'
-import type { AskBacklog, OpenSocket } from '@/components/live/live-session'
+import {
+  openTheWireAhead,
+  type AskBacklog,
+  type OpenSocket,
+} from '@/components/live/live-session'
+import { wireProfileInUse } from '@/components/live/live-wire-ahead'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 
@@ -230,6 +238,16 @@ export function LiveView({
   const nothingIsOn =
     channels.length > 0 && channels.every((one) => one.now === undefined)
   const choose = (id: string) => {
+    const chosen = screen.channels.find((channel) => channel.id === id)
+    const profile = wireProfileInUse() ?? unaskedIn(screen.profiles)
+
+    if (chosen && profile && id !== watching?.channel.id) {
+      openTheWireAhead(
+        liveWireHref(chosen.networkId, chosen.serviceId, profile, MAIN_SOUND),
+        openSocket,
+      )
+    }
+
     setChoice({ asked, chosen: id })
     patch({ ch: id })
   }

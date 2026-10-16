@@ -120,6 +120,7 @@ import {
   type OpenSocket,
 } from '@/components/live/live-session'
 import { LiveFaultNotice, type LiveFault } from '@/components/live/live-notice'
+import { holdWireProfile } from '@/components/live/live-wire-ahead'
 import { LiveSettings } from '@/components/live/live-settings'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
@@ -218,6 +219,8 @@ export function LivePlayer({
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
+
+  useEffect(() => holdWireProfile(profile), [profile])
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
