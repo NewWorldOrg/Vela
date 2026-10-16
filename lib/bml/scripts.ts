@@ -1,3 +1,4 @@
+import { withGlobalFunctions } from '@/lib/bml/declarations'
 import { withIntegerDivision } from '@/lib/bml/integers'
 import { ownOf, Realm, sameDescriptor, type Own } from '@/lib/bml/realm'
 
@@ -545,7 +546,9 @@ export class ScriptScope {
 
   run(code: string): ScriptOutcome {
     const started = this.now()
-    const rewritten = withIntegerDivision(withoutTableNew(code))
+    const rewritten = withGlobalFunctions(
+      withIntegerDivision(withoutTableNew(code)),
+    )
 
     this.realm.enter()
 

@@ -213,6 +213,53 @@ test('new is taken off the table constructors, so that a table that cannot be ma
   )
 })
 
+/** A scope whose runs share one global object, as a document's scripts and handlers share the frame's, each wrapped in `with` over the scope as the frame runs it. */
+function sharingAGlobal(placed: object) {
+  const context = vm.createContext({})
+  const given = scopeOf({ placed })
+
+  context.scope = given
+
+  return new ScriptScope(
+    (code) => {
+      vm.runInContext(`with (scope) {\n${code}\n}`, context)
+    },
+    given,
+    () => 0,
+  )
+}
+
+test('a function a later script declares by the same name takes the place of an earlier one for the functions the earlier script declared, as declarations in one global scope do', () => {
+  const placed: { said?: string } = {}
+  const scripts = sharingAGlobal(placed)
+
+  scripts.run(
+    'function locked() { ready() }\nfunction ready() { placed.said = "the first" }',
+  )
+  scripts.run('function ready() { placed.said = "the second" }')
+  scripts.run('locked()')
+
+  assert.equal(placed.said, 'the second')
+})
+
+test('a script calls the functions it declares before their place in it, the code either side of a declaration stays apart, and a function declared inside another stays that one’s own', () => {
+  const placed: { said?: string; inner?: string; ran?: string } = {}
+  const scripts = sharingAGlobal(placed)
+
+  scripts.run(
+    'var one = 1\nfunction between() {}\n(function () { placed.ran = "apart" })()',
+  )
+  assert.equal(placed.ran, 'apart')
+
+  scripts.run(
+    'placed.said = early();\nfunction early() { return "hoisted" }\nfunction outer() { function inner() { return "inner" } return inner() }',
+  )
+  scripts.run('placed.inner = outer() + "," + typeof inner')
+
+  assert.equal(placed.said, 'hoisted')
+  assert.equal(placed.inner, 'inner,undefined')
+})
+
 test('a run divides in integers, as a receiver does', () => {
   const placed: { top?: string } = {}
   const scope = new ScriptScope(
