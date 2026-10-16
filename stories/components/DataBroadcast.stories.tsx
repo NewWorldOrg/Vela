@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import type { Rect } from '@/lib/caption-placement'
+import type { BroadcastEvent } from '@/lib/bml/event-message'
 import { keyFromKeyboard } from '@/lib/bml/keys'
 import type { PlayerMessage, RuntimeMessage } from '@/lib/bml/messages'
 import {
@@ -59,6 +60,7 @@ import {
   SIGNAL_PROBE,
   STILL_CATALOG,
   STILL_PROBE,
+  WORD_CATALOG,
   clockModules,
   dataBroadcastModules,
   historyModules,
@@ -68,6 +70,7 @@ import {
   scriptedModules,
   signalModules,
   stillModules,
+  wordModules,
 } from '@/stories/fixtures/data-broadcast'
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
@@ -80,6 +83,9 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const DELIVERED_LATE_MS = 400
+
+const STORY_BUTTON =
+  'h-11 min-w-11 cursor-pointer rounded-full border border-line px-4 text-ui'
 
 function placed(rect: Rect | null): CSSProperties {
   if (!rect) {
@@ -104,10 +110,12 @@ function Board({
   withheld = [],
   catalog = DATA_BROADCAST_CATALOG,
   broadcast = dataBroadcastModules,
+  events = [],
 }: {
   withheld?: number[]
   catalog?: BmlCatalog
   broadcast?: () => BmlModule[]
+  events?: { label: string; event: BroadcastEvent }[]
 }) {
   const runtime = useRef<SendToRuntime | null>(null)
   const modules = useMemo(() => broadcast(), [broadcast])
@@ -199,6 +207,20 @@ function Board({
           <BmlFrame onReady={ready} onMessage={hear} />
         </div>
       </div>
+      {events.length > 0 && (
+        <div className="mt-3 flex gap-2">
+          {events.map(({ label, event }) => (
+            <button
+              key={label}
+              type="button"
+              className={STORY_BUTTON}
+              onClick={() => runtime.current?.({ kind: 'event', event })}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -351,6 +373,74 @@ export const 自分で持つ履歴で戻る文書: Story = {
   },
 }
 
+/** The message id and version a document kept under `told` as `U:1B,U:1B`, read back from what the board heard of the persistent memory. */
+function toldOf(board: HTMLElement): string | null {
+  const heard = board.getAttribute('data-memory') ?? ''
+  const memory = new PersistentMemory()
+
+  if (!heard.startsWith('told=')) {
+    return null
+  }
+
+  memory.take([['told', heard.slice('told='.length)]])
+
+  return readArray(memory, 'told', 'U:1B,U:1B')?.join(',') ?? null
+}
+
+/** An event message of group 1 on the stream tagged 0x48, with its 16-bit id. */
+function word(id: number): BroadcastEvent {
+  return {
+    group: 1,
+    id,
+    type: 1,
+    immediate: true,
+    at: 0,
+    privateData: new Uint8Array(0),
+    componentTag: 0x48,
+  }
+}
+
+export const イベントメッセージで移るページ: Story = {
+  render: () => (
+    <Board
+      catalog={WORD_CATALOG}
+      broadcast={wordModules}
+      events={[
+        { label: '番号 59 の版 5', event: word(0x3b05) },
+        { label: '番号 0 の版 58', event: word(0x003a) },
+        { label: '番号 58 の版 5', event: word(0x3a05) },
+      ]}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const board = canvas.getByRole('group', { name: 'データ放送' })
+    const rectIs = (value: string) =>
+      waitFor(() => expect(board).toHaveAttribute('data-video-rect', value), {
+        timeout: 5000,
+      })
+
+    await rectIs('560,60,360,203')
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '番号 59 の版 5' }),
+    )
+    await userEvent.click(
+      canvas.getByRole('button', { name: '番号 0 の版 58' }),
+    )
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await expect(board).toHaveAttribute('data-video-rect', '560,60,360,203')
+    await expect(board).not.toHaveAttribute('data-memory')
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '番号 58 の版 5' }),
+    )
+    await rectIs('40,300,320,180')
+    await expect(toldOf(board)).toBe('58,5')
+    await expect(board).not.toHaveAttribute('data-error')
+  },
+}
+
 /** When the recording of the stories began. */
 const RECORDING_BEGAN = Date.parse('2026-08-08T12:29:45.250+09:00') / 1000
 
@@ -389,9 +479,6 @@ class HeldRecording implements DataBroadcastHeld {
     )
   }
 }
-
-const STORY_BUTTON =
-  'h-11 min-w-11 cursor-pointer rounded-full border border-line px-4 text-ui'
 
 /** What a document kept under `seen` as `S:19B`, read back from the block the runtime told the player. */
 function seenOf(value: string | null): string | null {

@@ -15,7 +15,11 @@ import {
   type XmlParser,
 } from '@/lib/bml/document'
 import { BmlDocument, type BmlEvent, type DocumentHooks } from '@/lib/bml/dom'
-import type { BroadcastEvent } from '@/lib/bml/event-message'
+import {
+  messageIdOf,
+  messageVersionOf,
+  type BroadcastEvent,
+} from '@/lib/bml/event-message'
 import {
   listening,
   listensFor,
@@ -1242,8 +1246,8 @@ export class BmlRuntime {
       'EventMessageFired',
       {
         messageGroupId: event.group,
-        messageId: event.id,
-        messageVersion: event.type,
+        messageId: messageIdOf(event),
+        messageVersion: messageVersionOf(event),
         privateData: privateDataOf(event.privateData),
       },
       (item) => listensFor(item, event, streams),

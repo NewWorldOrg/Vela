@@ -436,6 +436,80 @@ export function historyModules(): BmlModule[] {
   ]
 }
 
+const WAITS_FOR_WORD = `${PROLOGUE}
+<bml>
+<head>
+<title>知らせ</title>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+function told() {
+  var event = document.currentEvent;
+  browser.writePersistentArray("told", "U:1B,U:1B", [event.messageId, event.messageVersion]);
+  browser.launchDocument("word.bml", "cut");
+}
+]]></script>
+<bevent><beitem id="word" type="EventMessageFired" es_ref="/48" message_group_id="1" message_id="58" subscribe="subscribe" onoccur="told()"/></bevent>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 560px; top: 60px; width: 360px; height: 203px"/>
+<p class="panel" style="left: 40px; top: 60px; width: 440px; height: 96px">知らせを待っている</p>
+</body>
+</bml>`
+
+const WORD_CAME = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+</head>
+<body style="clut: url(sample.clt); background-color-index: 128">
+<object type="video/X-arib-mpeg2" style="left: 40px; top: 300px; width: 320px; height: 180px"/>
+<p class="panel" style="left: 40px; top: 60px; width: 880px; height: 200px">知らせが届いた</p>
+</body>
+</bml>`
+
+export const WORD_CATALOG: BmlCatalog = {
+  service: 1030,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'word.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** The modules of a self-made data broadcast whose start page waits for event messages of id 58 in group 1 on the stream tagged 0x48: the handler writes the message id and version it was told to the persistent memory as `told` and moves to a page whose video sits elsewhere. */
+export function wordModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', WAITS_FOR_WORD),
+        resource('word.bml', 'bml', WORD_CAME),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+  ]
+}
+
 const READS_ITSELF = `${PROLOGUE}
 <bml>
 <head>
