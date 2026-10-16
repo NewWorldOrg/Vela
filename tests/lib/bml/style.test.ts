@@ -14,6 +14,7 @@ import {
   planeIn,
   selectorOf,
   specificityOf,
+  stillCut,
   styleSheetOf,
   videoHole,
   type StyledElement,
@@ -431,6 +432,25 @@ test('the body’s colour and picture are both drawn on the ground, and the grou
   assert.match(
     ruleOf('[data-bml-tag="body"][data-bml-hole]::before'),
     /border-width: var\(--bml-hole-top\) var\(--bml-hole-right\) var\(--bml-hole-bottom\) var\(--bml-hole-left\); .*mask: linear-gradient\(#000 0 0\) content-box exclude, linear-gradient\(#000 0 0\);/,
+  )
+})
+
+test('a still picture is cut where the video lies, by a rectangle given in its own place', () => {
+  assert.deepEqual(stillCut({ left: -490, top: 40, width: 480, height: 270 }), {
+    '--bml-cut-left': '-490px',
+    '--bml-cut-top': '40px',
+    '--bml-cut-width': '480px',
+    '--bml-cut-height': '270px',
+  })
+
+  const rule =
+    BASE_STYLE.split('\n').find((each) =>
+      each.startsWith('[data-bml-still] {'),
+    ) ?? ''
+
+  assert.match(
+    rule,
+    /mask: linear-gradient\(#000 0 0\) var\(--bml-cut-left\) var\(--bml-cut-top\) \/ var\(--bml-cut-width\) var\(--bml-cut-height\) no-repeat exclude, linear-gradient\(#000 0 0\);/,
   )
 })
 

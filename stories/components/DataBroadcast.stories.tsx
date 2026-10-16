@@ -57,6 +57,8 @@ import {
   SCRIPTED_CATALOG,
   SIGNAL_CATALOG,
   SIGNAL_PROBE,
+  STILL_CATALOG,
+  STILL_PROBE,
   clockModules,
   dataBroadcastModules,
   historyModules,
@@ -65,6 +67,7 @@ import {
   rowModules,
   scriptedModules,
   signalModules,
+  stillModules,
 } from '@/stories/fixtures/data-broadcast'
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
@@ -708,6 +711,30 @@ export const 文字の大きさと同じ高さの行: Story = {
     await expect(rows).toHaveAttribute('data-overflow', '0')
     await expect(measured('above')).toBeLessThanOrEqual(HALF_A_PIXEL)
     await expect(measured('below')).toBeLessThanOrEqual(HALF_A_PIXEL)
+  },
+}
+
+export const JPEGの背景は映像の矩形が抜ける: Story = {
+  render: () => (
+    <Measured
+      label="JPEG の背景と映像"
+      catalog={STILL_CATALOG}
+      modules={stillModules}
+      probe={STILL_PROBE}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement).getByRole('group', {
+      name: 'JPEG の背景と映像',
+    })
+
+    await waitFor(() => expect(page).toHaveAttribute('data-video'), {
+      timeout: 5000,
+    })
+    await expect(page).toHaveAttribute('data-video', '24,14,720,405')
+    await expect(page).toHaveAttribute('data-cut', '24,14,720,405')
+    await expect(page.getAttribute('data-composite')).toMatch(/^exclude\b/)
+    await expect(page).toHaveAttribute('data-sun', 'none')
   },
 }
 

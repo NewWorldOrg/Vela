@@ -1,5 +1,5 @@
 import type { BmlPage, PageElement, PageNode } from '@/lib/bml/document'
-import { videoHole } from '@/lib/bml/style'
+import { stillCut, videoHole } from '@/lib/bml/style'
 
 /** A drawn page: its body, its elements by `nav-index` and by id, the page element each was drawn from, and the style element the runtime writes a script's focus and active styles into. */
 export interface MountedPage {
@@ -23,6 +23,7 @@ const HTML_ATTRIBUTES = new Set(['id', 'class', 'value', 'maxlength'])
 const RUNTIME_ATTRIBUTES = new Set([
   'data-bml-href',
   'data-bml-ref',
+  'data-bml-still',
   'data-bml-video',
 ])
 
@@ -77,6 +78,12 @@ function build(node: PageNode, building: Building): Node {
 
   if (node.style.length > 0) {
     element.setAttribute('style', node.style)
+  }
+
+  if (node.cut) {
+    Object.entries(stillCut(node.cut)).forEach(([name, value]) =>
+      element.style.setProperty(name, value),
+    )
   }
 
   if (node.tag === 'input') {

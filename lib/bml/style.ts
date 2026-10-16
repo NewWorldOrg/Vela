@@ -791,6 +791,7 @@ export const BASE_STYLE = [
   '[data-bml-tag="body"][data-bml-attr-invisible] { visibility: hidden; }',
   '[data-bml-tag="div"], [data-bml-tag="p"], [data-bml-tag="object"], [data-bml-tag="img"], [data-bml-tag="input"] { position: absolute; overflow: hidden; }',
   '[data-bml-video] { background: transparent !important; }',
+  '[data-bml-still] { -webkit-mask: linear-gradient(#000 0 0) var(--bml-cut-left) var(--bml-cut-top) / var(--bml-cut-width) var(--bml-cut-height) no-repeat, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) var(--bml-cut-left) var(--bml-cut-top) / var(--bml-cut-width) var(--bml-cut-height) no-repeat exclude, linear-gradient(#000 0 0); }',
   'img[data-bml-tag], canvas[data-bml-tag] { display: block; }',
   'input[data-bml-tag] { background: transparent; color: inherit; font: inherit; outline: none; }',
 ].join('\n')
@@ -805,5 +806,15 @@ export function videoHole(
     '--bml-hole-right': `${resolution.width - rect.left - rect.width}px`,
     '--bml-hole-bottom': `${resolution.height - rect.top - rect.height}px`,
     '--bml-hole-left': `${rect.left}px`,
+  }
+}
+
+/** Where the video's rectangle lies inside a still picture, in the picture's own place, to be cut out of it: a JPEG lies on the still picture plane, behind the video. */
+export function stillCut(rect: Rect): Record<string, string> {
+  return {
+    '--bml-cut-left': `${rect.left}px`,
+    '--bml-cut-top': `${rect.top}px`,
+    '--bml-cut-width': `${rect.width}px`,
+    '--bml-cut-height': `${rect.height}px`,
   }
 }

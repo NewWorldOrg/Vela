@@ -130,23 +130,39 @@ function windowLike() {
   return { context, global, history, open, top }
 }
 
-test('a function a document declares by a hidden name is its own and its next scripts call it, as the write its declaration makes on the global object past the scope is kept in the scope while its code runs, and the global object holds what it held after', () => {
+/** A document's runs as the frame makes them, over a window-like global: each through the scope's run, wrapped in `with` over the scope, with the names it hides laid over the global object while it runs. */
+function runsOver(
+  context: vm.Context,
+  global: Record<string, unknown>,
+  placed: object,
+): ScriptScope {
+  const scope = scopeOf({ placed })
+  const hiding = hidingOn(global)
+
+  context.scope = scope
+
+  return new ScriptScope(
+    (code) =>
+      hiding(scope, () => {
+        vm.runInContext(`with (scope) {\n${code}\n}`, context)
+      }),
+    scope,
+    () => 0,
+  )
+}
+
+test('a function a document declares by a hidden name is its own and its next scripts call it, as its declaration is kept in the scope, and the global object holds what it held after', () => {
   const { context, global, history, open } = windowLike()
   const described = ['history', 'open'].map((name) =>
     Object.getOwnPropertyDescriptor(global, name),
   )
   const placed: { seen?: unknown } = {}
-  const scope = scopeOf({ placed })
-  const hiding = hidingOn(global)
-  const evaluate = (code: string) =>
-    hiding(scope, () => vm.runInContext(`with (scope) {\n${code}\n}`, context))
+  const runs = runsOver(context, global, placed)
 
-  context.scope = scope
-
-  evaluate(
+  runs.run(
     'function history() { return "back" }\nfunction open() { return "opened" }',
   )
-  evaluate('placed.seen = [history(), open()].join(",")')
+  runs.run('placed.seen = [history(), open()].join(",")')
 
   assert.equal(placed.seen, 'back,opened')
   assert.equal(global.history, history)
@@ -159,20 +175,15 @@ test('a function a document declares by a hidden name is its own and its next sc
   )
 })
 
-test('a function declared by a name the global object holds unconfigurable, as a window holds window and top, cannot be kept in the scope: its write goes to the global object, which drops it, and the next script finds nothing by that name', () => {
+test('a function declared by a name the global object holds unconfigurable, as a window holds window and top, is kept in the scope like any hidden name: its next scripts call it, and the global object holds its own as before', () => {
   const { context, global, top } = windowLike()
   const placed: { seen?: unknown } = {}
-  const scope = scopeOf({ placed })
-  const hiding = hidingOn(global)
-  const evaluate = (code: string) =>
-    hiding(scope, () => vm.runInContext(`with (scope) {\n${code}\n}`, context))
+  const runs = runsOver(context, global, placed)
 
-  context.scope = scope
+  runs.run('function top() { return "mine" }')
+  runs.run('placed.seen = top()')
 
-  evaluate('function top() { return "mine" }')
-  evaluate('placed.seen = typeof top')
-
-  assert.equal(placed.seen, 'undefined')
+  assert.equal(placed.seen, 'mine')
   assert.equal(global.top, top)
 })
 

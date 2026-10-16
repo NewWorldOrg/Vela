@@ -1072,6 +1072,85 @@ export function rowModules(): BmlModule[] {
   ]
 }
 
+const OVER_A_STILL = `${PROLOGUE}
+<bml>
+<head>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9">
+<object id="ground" type="image/jpeg" data="hills.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>
+<object id="video" type="video/X-arib-mpeg2" style="left: 24px; top: 14px; width: 720px; height: 405px"/>
+<object id="sun" type="image/X-arib-png" data="sun.png" style="left: 40px; top: 30px; width: 64px; height: 64px"/>
+</body>
+</bml>`
+
+export const STILL_CATALOG: BmlCatalog = {
+  service: 1028,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'hills.jpg', type: 'image/jpeg' },
+            { path: 'sun.png', type: 'image/X-arib-png' },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+/** A page whose ground is a JPEG over the whole of it, with the video in a rectangle of it and a PNG over the video's corner. */
+export function stillModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', OVER_A_STILL),
+        resource('hills.jpg', 'jpeg', bytesOf(HILLS_JPEG)),
+        resource('sun.png', 'png', bytesOf(SUN_PNG)),
+      ],
+    },
+  ]
+}
+
+/** Measures, once the page is drawn, the rectangle the JPEG ground has cut out of it, on the page, against the video's, how the cut is put together with the rest of the ground, and what is cut out of the PNG. */
+export const STILL_PROBE = `
+function measure() {
+  const ground = document.querySelector('#bml-plane [id="ground"]')
+  const video = document.querySelector('#bml-plane [id="video"]')
+  const sun = document.querySelector('#bml-plane [id="sun"]')
+  if (!ground || !video || !sun) {
+    return null
+  }
+  const masked = getComputedStyle(ground)
+  const [x, y] = masked.maskPosition.split(',')[0].trim().split(' ').map(parseFloat)
+  const [width, height] = masked.maskSize.split(',')[0].trim().split(' ').map(parseFloat)
+  return {
+    cut: [ground.offsetLeft + x, ground.offsetTop + y, width, height].join(','),
+    video: [video.offsetLeft, video.offsetTop, video.offsetWidth, video.offsetHeight].join(','),
+    composite: masked.maskComposite,
+    sun: getComputedStyle(sun).maskImage,
+  }
+}
+const measuring = setInterval(() => {
+  if (measure()) {
+    clearInterval(measuring)
+    requestAnimationFrame(() => parent.postMessage({ probe: measure() }, '*'))
+  }
+}, 50)
+`
+
 /** Measures, once the bundled face is loaded and the rows are drawn, how far the text of any row reaches above or below its box, in the document's pixels, and how far its lines overflow it. */
 export const GLYPH_PROBE = `
 const faceLoaded = () => Array.from(document.fonts).some((face) => face.family.replace(/"/g, '') === 'Denpa Font' && face.status === 'loaded')

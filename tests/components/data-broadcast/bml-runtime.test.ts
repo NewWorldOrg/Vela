@@ -184,6 +184,47 @@ test('opening draws the start document and tells the player where the video goes
   assert.equal(focused(), 'next')
 })
 
+const OVER_A_STILL = bml(
+  '<object id="ground" type="image/jpeg" data="ground.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>' +
+    '<object type="video/X-arib-mpeg2" style="left: 24px; top: 14px; width: 720px; height: 405px"/>' +
+    '<object id="mark" type="image/X-arib-png" data="mark.png" style="left: 40px; top: 30px; width: 64px; height: 64px"/>',
+)
+
+test('a JPEG drawn over the whole page has the video’s rectangle cut out of it, and a PNG over the video has nothing cut', () => {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, {
+      'startup.bml': ['bml', OVER_A_STILL],
+      'ground.jpg': ['jpeg', 'jpeg'],
+      'mark.png': ['png', 'png'],
+    }),
+  })
+  opening.send({ kind: 'open' })
+
+  const ground = opening.element('ground')
+  const mark = opening.element('mark')
+
+  assert.equal(ground?.getAttribute('data-bml-still'), '')
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(ground?.style.properties ?? {}).filter(([name]) =>
+        name.startsWith('--bml-cut-'),
+      ),
+    ),
+    {
+      '--bml-cut-left': '24px',
+      '--bml-cut-top': '14px',
+      '--bml-cut-width': '720px',
+      '--bml-cut-height': '405px',
+    },
+  )
+  assert.equal(mark?.getAttribute('data-bml-still'), null)
+  assert.deepEqual(mark?.style.properties, {})
+})
+
 test('opening at the start document of another component draws that one', () => {
   const opening = frame()
 

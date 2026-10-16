@@ -66,6 +66,8 @@ export interface PageElement {
   children: PageNode[]
   /** The MNG a canvas plays. */
   mng?: MngAnimation
+  /** The video's rectangle in the element's own place, cut out of a JPEG: it lies on the still picture plane, behind the video, while PNG, MNG and text lie in front of it. */
+  cut?: Rect
 }
 
 export interface PageText {
@@ -215,6 +217,13 @@ class Conversion {
   private resolution: Size = DEFAULT_RESOLUTION
 
   videoRect: Rect | null = null
+
+  /** The JPEG objects drawn, each with where it stands on the page. */
+  private readonly stills: {
+    element: PageElement
+    left: number
+    top: number
+  }[] = []
 
   constructor(context: DocumentContext) {
     this.context = context
@@ -550,7 +559,13 @@ class Conversion {
     }
 
     if (IMAGE_TYPES.has(type)) {
-      return this.image(node, node.getAttribute('data'))
+      const image = this.image(node, node.getAttribute('data'))
+
+      if (type === 'image/jpeg') {
+        this.stills.push({ element: image, ...this.placeOf(node, offset) })
+      }
+
+      return image
     }
 
     if (!type.startsWith('video/')) {
@@ -562,6 +577,19 @@ class Conversion {
     this.videoRect = this.videoRect ?? this.rectOf(node, offset)
 
     return this.shaped(node, 'div', [], [['data-bml-video', '']])
+  }
+
+  /** Where an element stands on the page: where its parent stands, and its own left and top from there. */
+  private placeOf(
+    node: XmlElementLike,
+    offset: { left: number; top: number },
+  ): { left: number; top: number } {
+    const values = this.cascaded.get(node) ?? new Map<string, string>()
+
+    return {
+      left: offset.left + (pixelsOf(values.get('left')) ?? 0),
+      top: offset.top + (pixelsOf(values.get('top')) ?? 0),
+    }
   }
 
   private rectOf(
@@ -578,8 +606,7 @@ class Conversion {
       return null
     }
 
-    const placedLeft = offset.left + (pixelsOf(values.get('left')) ?? 0)
-    const placedTop = offset.top + (pixelsOf(values.get('top')) ?? 0)
+    const { left: placedLeft, top: placedTop } = this.placeOf(node, offset)
     const left = Math.max(0, placedLeft)
     const top = Math.max(0, placedTop)
     const right = Math.min(this.resolution.width, placedLeft + width)
@@ -588,6 +615,25 @@ class Conversion {
     return right > left && bottom > top
       ? { left, top, width: right - left, height: bottom - top }
       : null
+  }
+
+  /** Cuts the video's rectangle out of each JPEG object, in the object's own place, once the page's video is known: a JPEG may come before the video object. */
+  cutStills(): void {
+    const video = this.videoRect
+
+    if (!video) {
+      return
+    }
+
+    this.stills.forEach(({ element, left, top }) => {
+      element.attributes.push(['data-bml-still', ''])
+      element.cut = {
+        left: video.left - left,
+        top: video.top - top,
+        width: video.width,
+        height: video.height,
+      }
+    })
   }
 
   /** An image element is an `img` even when its picture is not there yet, so that a script may give it one later. One whose picture is an MNG is a canvas the runtime plays it on, or an `img` without a picture when the MNG is malformed. */
@@ -705,6 +751,8 @@ function pageOf(
   const features = conversion.cascade(body)
   const styleSheet = conversion.styleSheet()
   const converted = conversion.convert(body, { left: 0, top: 0 }) as PageElement
+
+  conversion.cutStills()
   const resolution = features.resolution ?? DEFAULT_RESOLUTION
 
   return {
