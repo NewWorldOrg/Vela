@@ -51,7 +51,6 @@ import {
   latencyTone,
   losingGround,
   reachOf,
-  targetOf,
 } from '@/lib/live-latency'
 import {
   CaptionsGlyph,
@@ -112,6 +111,7 @@ import type { LineRelay } from '@/repository/live-data-broadcast'
 
 import { CaptionLayer } from '@/components/live/live-captions'
 import { LiveFeed } from '@/components/live/live-feed'
+import { LiveStart } from '@/components/live/live-start'
 import {
   askLiveBacklog,
   askWhetherSignedOut,
@@ -366,7 +366,6 @@ export function LivePlayer({
     }
 
     let pictured = false
-    let everPlayed = false
     let edge = -1
     let edgeMovedAt = performance.now()
     let quickenedSince: number | null = null
@@ -386,10 +385,22 @@ export function LivePlayer({
       )
     }
 
-    const feed = new LiveFeed(element, (why) => {
-      session.leave()
-      fail({ kind: why })
-    })
+    const feed = new LiveFeed(
+      element,
+      (why) => {
+        session.leave()
+        fail({ kind: why })
+      },
+      () => {
+        if (!settled && !gone) {
+          starter.check()
+        }
+      },
+    )
+
+    const starter = new LiveStart(element, feed, () =>
+      change((was) => ({ ...was, phase: 'paused' })),
+    )
 
     const layer = overlay.current
       ? new CaptionLayer(overlay.current, element)
@@ -504,14 +515,8 @@ export function LivePlayer({
         edgeMovedAt = now
       }
 
-      if (!everPlayed) {
-        if (end - start >= targetOf(0)) {
-          everPlayed = true
-          element.currentTime = Math.max(start, end - targetOf(0))
-          void element
-            .play()
-            .catch(() => change((was) => ({ ...was, phase: 'paused' })))
-        }
+      if (!starter.started) {
+        starter.check()
 
         return
       }
