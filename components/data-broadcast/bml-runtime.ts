@@ -201,6 +201,7 @@ export class BmlRuntime {
 
   private readonly modules = new Map<string, BmlModule>()
 
+  /** The modules the documents locked. A lock outlasts the document that made it, as on a receiver: it goes when a document unlocks it, when the catalog no longer lists its module, or when the broadcast is closed. */
   private readonly locked = new Set<string>()
 
   private readonly timers = new Map<number, Timer>()
@@ -367,8 +368,12 @@ export class BmlRuntime {
     this.modules.forEach((module, key) => {
       if (!staysListed(catalog, module.tag, module.id)) {
         this.modules.delete(key)
-        this.locked.delete(key)
         gone.push(module)
+      }
+    })
+    this.locked.forEach((key) => {
+      if (!staysListed(catalog, ...moduleOfKey(key))) {
+        this.locked.delete(key)
       }
     })
     this.catalog = catalog
@@ -470,6 +475,7 @@ export class BmlRuntime {
   private close(): void {
     this.waitFor(null)
     this.unmount()
+    this.locked.clear()
     this.requests.clear()
   }
 
@@ -1474,7 +1480,6 @@ export class BmlRuntime {
     this.requests.drop()
     this.stopTimers()
     this.stopNudging()
-    this.locked.clear()
     this.shown?.players.forEach((player) => player.stop())
     this.shown?.mounted.nodes.forEach((_, element) =>
       element.removeAttribute('src'),
@@ -1696,6 +1701,7 @@ export class BmlRuntime {
   private fail(reason: RuntimeError): void {
     this.waitFor(null)
     this.unmount()
+    this.locked.clear()
     this.say({ kind: 'error', reason })
   }
 

@@ -56,6 +56,7 @@ import {
   HYBRIDCAST_CATALOG,
   KEYED_HYBRIDCAST_CATALOG,
   LINE_CATALOG,
+  LOCKING_CATALOG,
   OVER_THE_LINE_PAGES,
   SCRIPTED_CATALOG,
   SOUNDING_CATALOG,
@@ -63,6 +64,7 @@ import {
   hybridcastModules,
   keyedHybridcastModules,
   lineModules,
+  lockingModules,
   scriptedModules,
   soundingModules,
 } from '@/stories/fixtures/data-broadcast'
@@ -1104,6 +1106,33 @@ export const スクリプトが長すぎると閉じる: Story = {
 
     await userEvent.click(toggle)
     await shrunkTo(canvasElement, AT_THE_START)
+  },
+}
+
+const LOCKING = [
+  catalogPayload(LOCKING_CATALOG),
+  ...lockingModules().map(modulePayload),
+]
+
+const ON_THE_LOCKED_PAGE = '520,120,400,225'
+
+export const ロックしたモジュールのページに留まる: Story = {
+  args: { openSocket: carrying(...LOCKING) },
+  play: async ({ canvasElement }) => {
+    const toggle = await inThePlayer(canvasElement).findByRole('button', {
+      name: 'データ放送',
+    })
+
+    await afterTheArrival(canvasElement)
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await shrunkTo(canvasElement, ON_THE_LOCKED_PAGE)
+
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+
+    await shrunkTo(canvasElement, ON_THE_LOCKED_PAGE)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
   },
 }
 

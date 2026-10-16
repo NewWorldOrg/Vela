@@ -1425,6 +1425,153 @@ test('locking a module no component carries answers -3, one the carousel does no
   )
 })
 
+const LOCKING_CATALOG: BmlCatalog = {
+  ...CATALOG,
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [0, 3, 4].map((id) => ({
+        id,
+        version: 1,
+        size: 0,
+        resources: [],
+      })),
+    },
+  ],
+}
+
+const LOCKS_AND_MOVES_ON = bml(
+  '<p id="entry">entry</p>',
+  '<bevent>' +
+    '<beitem id="held" type="ModuleLocked" module_ref="/40/0003" subscribe="subscribe" onoccur="if (document.currentEvent.status == 0) { browser.launchDocument(\'/40/0003/face.bml\', \'cut\') }"/>' +
+    '</bevent>' +
+    '<script>' +
+    'var found = browser.getLockedModuleInfo();' +
+    'var names = [];' +
+    'for (var i = 0; i < found.length; i++) { names.push(found[i].join(":")) }' +
+    'browser.Ureg[1] += "entry[" + names.join(",") + "] ";' +
+    'browser.lockModuleOnMemoryEx("/40/0003");' +
+    'browser.lockModuleOnMemoryEx("/40/0004");' +
+    'browser.Ureg[16] = "ready";' +
+    '</script>',
+).replace('<body>', '<body invisible="invisible">')
+
+const CHECKS_THE_LOCK = bml(
+  '<p id="face" style="nav-index: 0; nav-down: 1" onclick="browser.launchDocument(\'/40/0000/startup.bml\', \'cut\')">entry</p>' +
+    '<p id="leave" style="nav-index: 1; nav-up: 0" onclick="browser.unlockAllModulesOnMemory(); browser.launchDocument(\'/40/0000/startup.bml\', \'cut\')">unlock</p>',
+  '<script>' +
+    'function stillLocked() {' +
+    'if (browser.Ureg[16] != "ready") { return false }' +
+    'var found = browser.getLockedModuleInfo();' +
+    'if (found == null) { return false }' +
+    'for (var i = 0; i < found.length; i++) { if (found[i][0] == "/40/0003" && found[i][1] == 2) { return true } }' +
+    'return false' +
+    '}' +
+    'function arrive() {' +
+    'browser.Ureg[2] += "face ";' +
+    'if (!stillLocked()) { browser.Ureg[2] += "back "; browser.unlockAllModulesOnMemory(); browser.launchDocument("/40/0000/startup.bml", "cut") }' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body onload="arrive()">')
+
+/** A start document that locks the module of its face and moves there once the lock is held, and a face that goes back to the start unless it finds the lock still listed. */
+function lockedThenFaced() {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: LOCKING_CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, { 'startup.bml': ['bml', LOCKS_AND_MOVES_ON] }),
+  })
+  opening.send({
+    kind: 'module',
+    module: module(3, { 'face.bml': ['bml', CHECKS_THE_LOCK] }),
+  })
+  opening.send({ kind: 'open' })
+
+  const registers = (
+    opening.runtime as unknown as { registers: { Ureg: string[] } }
+  ).registers.Ureg
+
+  return { ...opening, registers }
+}
+
+test('a module the start document locked is still listed as locked on the page it moves to, so a page that checks for the lock stays', () => {
+  const { registers, timers, element } = lockedThenFaced()
+
+  assert.equal(registers[1], 'entry[] ')
+  assert.ok(element('entry'))
+
+  timers.tick(0)
+  timers.tick(0)
+  timers.tick(0)
+
+  assert.ok(element('face'))
+  assert.equal(element('entry'), null)
+  assert.equal(registers[2], 'face ')
+  assert.equal(registers[16], 'ready')
+  assert.equal(registers[1], 'entry[] ')
+})
+
+test('the locks go on to a document launched without unlocking, held and awaited alike, and unlocking them all before launching leaves none', () => {
+  const { registers, timers, send, element } = lockedThenFaced()
+
+  timers.tick(0)
+  send({ kind: 'key', key: 'enter' })
+
+  assert.ok(element('entry'))
+  assert.equal(registers[1], 'entry[] entry[/40/0003:2:1,/40/0004:2:2] ')
+
+  timers.tick(0)
+  assert.equal(registers[2], 'face face ')
+
+  send({ kind: 'key', key: 'down' })
+  send({ kind: 'key', key: 'enter' })
+
+  assert.equal(
+    registers[1],
+    'entry[] entry[/40/0003:2:1,/40/0004:2:2] entry[] ',
+  )
+})
+
+test('closing the data broadcast lets go of every lock, and opening it again begins with none', () => {
+  const { runtime, registers, timers, send } = lockedThenFaced()
+
+  timers.tick(0)
+  send({ kind: 'close' })
+
+  assert.equal((runtime as unknown as { locked: Set<string> }).locked.size, 0)
+
+  send({ kind: 'open' })
+  assert.equal(registers[1], 'entry[] entry[] ')
+})
+
+test('a catalog that no longer lists a locked module lets go of its lock, whether the module was held or still awaited', () => {
+  const { registers, timers, send, element } = lockedThenFaced()
+
+  timers.tick(0)
+  send({
+    kind: 'catalog',
+    catalog: {
+      ...LOCKING_CATALOG,
+      carousels: [
+        {
+          ...LOCKING_CATALOG.carousels[0],
+          modules: [{ id: 0, version: 1, size: 0, resources: [] }],
+        },
+      ],
+    },
+  })
+
+  assert.ok(element('entry'))
+  assert.equal(registers[1], 'entry[] entry[] ')
+
+  timers.tick(0)
+  assert.ok(element('entry'))
+  assert.equal(registers[2], 'face ')
+})
+
 const GETTING_READY = bml(
   '<p id="p">p</p>' +
     '<object type="video/X-arib-mpeg2" style="left: 0px; top: 0px; width: 480px; height: 270px"/>',

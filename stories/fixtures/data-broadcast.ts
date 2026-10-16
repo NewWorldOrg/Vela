@@ -589,6 +589,105 @@ export function howFarModules(): BmlModule[] {
   return readingModules(NEAR_THE_START, FURTHER_ON)
 }
 
+const LOCKS_ITS_FACE = `${PROLOGUE}
+<bml>
+<head>
+<title>入口</title>
+<script><![CDATA[
+function held() {
+  if (document.currentEvent.status == 0) { browser.launchDocument("/40/0003/face.bml", "cut"); }
+}
+browser.lockModuleOnMemoryEx("/40/0003");
+browser.Ureg[16] = "1";
+]]></script>
+<bevent><beitem id="held" type="ModuleLocked" module_ref="/40/0003" subscribe="subscribe" onoccur="held()"/></bevent>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; visibility: hidden">
+<p id="nothing">入口</p>
+</body>
+</bml>`
+
+const CHECKS_ITS_LOCK = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="/40/0000/sample.css" type="text/css"/>
+<script><![CDATA[
+function stillLocked() {
+  if (!browser.Ureg[16]) { return false; }
+  var found = browser.getLockedModuleInfo();
+  if (found == null) { return false; }
+  for (var i = 0; i < found.length; i++) {
+    if (found[i][0] == "/40/0003" && found[i][1] == 2) { return true; }
+  }
+  return false;
+}
+function arrive() {
+  if (!stillLocked()) {
+    browser.unlockAllModulesOnMemory();
+    browser.launchDocument("/40/0000/startup.bml", "cut");
+  }
+}
+]]></script>
+</head>
+<body style="clut: url(/40/0000/sample.clt); background-color-index: 128" onload="arrive()">
+<object type="video/X-arib-mpeg2" style="left: 520px; top: 120px; width: 400px; height: 225px"/>
+<p class="panel" style="left: 40px; top: 120px; width: 440px; height: 96px">番組のページ<br/>入口がロックしたモジュールにある</p>
+</body>
+</bml>`
+
+export const LOCKING_CATALOG: BmlCatalog = {
+  service: 1024,
+  entryTag: 0x40,
+  autoStart: false,
+  startup: '/40/0000/startup.bml',
+  carousels: [
+    {
+      tag: 0x40,
+      downloadId: 1,
+      modules: [
+        {
+          id: 0x0000,
+          version: 1,
+          size: 0,
+          resources: [
+            { path: 'startup.bml', type: 'text/X-arib-bml' },
+            { path: 'sample.css', type: 'text/css' },
+            { path: 'sample.clt', type: 'application/octet-stream' },
+          ],
+        },
+        {
+          id: 0x0003,
+          version: 1,
+          size: 0,
+          resources: [{ path: 'face.bml', type: 'text/X-arib-bml' }],
+        },
+      ],
+    },
+  ],
+}
+
+/** The modules of a self-made data broadcast whose entry document cannot be seen, locks the module of the programme's page and moves there once the lock is held, and whose page goes back to the entry document unless it finds that module still listed as locked. */
+export function lockingModules(): BmlModule[] {
+  return [
+    {
+      tag: 0x40,
+      id: 0x0000,
+      version: 1,
+      resources: [
+        resource('startup.bml', 'bml', LOCKS_ITS_FACE),
+        resource('sample.css', 'css', SAMPLE_CSS),
+        resource('sample.clt', 'binary', Uint8Array.from(SAMPLE_CLUT)),
+      ],
+    },
+    {
+      tag: 0x40,
+      id: 0x0003,
+      version: 1,
+      resources: [resource('face.bml', 'bml', CHECKS_ITS_LOCK)],
+    },
+  ]
+}
+
 const CHECKING = `${PROLOGUE}
 <bml>
 <head>
