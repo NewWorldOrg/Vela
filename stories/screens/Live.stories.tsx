@@ -490,6 +490,43 @@ function Wandering(args: ComponentProps<typeof LiveView>) {
   )
 }
 
+function Choosing({
+  from,
+  answers = ANSWERS,
+  ...args
+}: ComponentProps<typeof LiveView> & {
+  from: string | null
+  answers?: Record<string, LiveScreen>
+}) {
+  const [asked, setAsked] = useState(from)
+  const [going, setGoing] = useState<string | null>(null)
+
+  getRouter().push.mockImplementation((href: string) => {
+    setGoing(new URLSearchParams(href.slice(href.indexOf('?') + 1)).get('ch'))
+  })
+
+  return (
+    <SearchParamsContext.Provider
+      value={new URLSearchParams(asked === null ? undefined : { ch: asked })}
+    >
+      <div style={{ display: 'flex', gap: '12px', padding: '16px' }}>
+        <button
+          type="button"
+          style={harnessButton(going === null)}
+          disabled={going === null}
+          onClick={() => {
+            setAsked(going)
+            setGoing(null)
+          }}
+        >
+          答えが届く
+        </button>
+      </div>
+      <LiveView {...args} screen={asked === null ? UNCHOSEN : answers[asked]} />
+    </SearchParamsContext.Provider>
+  )
+}
+
 const meta = {
   title: 'Screens/ライブ',
   component: LiveView,
@@ -522,7 +559,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const 選局前: Story = {
-  args: { screen: UNCHOSEN, openSocket: nothingToWatch },
+  args: { screen: UNCHOSEN },
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
@@ -552,6 +589,7 @@ export const 選局前: Story = {
     await expect(
       canvasElement.querySelector('[data-slot="screen-main"]'),
     ).toHaveAttribute('data-width', 'default')
+    await expect(opened).toHaveLength(0)
 
     await userEvent.click(canvas.getByRole('button', { name: /みなと教育1/ }))
 
@@ -856,6 +894,154 @@ export const 切れた線の後始末は選び直したチャンネルに触れ�
     await expect(canvas.queryByText('接続が切れました')).toBeNull()
     await expect(transcoder()).toHaveAttribute('data-startup', 'done')
     await expect(opened).toHaveLength(2)
+  },
+}
+
+const CENTRAL_WIRE =
+  '/api/live/ws?network=32738&service=1040&profile=1080p60&sound=main'
+
+async function theAnswerArrives(canvasElement: HTMLElement) {
+  const answer = within(canvasElement).getByRole('button', {
+    name: '答えが届く',
+  })
+
+  await expect(answer).toBeEnabled()
+  await userEvent.click(answer)
+  await new Promise((settled) => setTimeout(settled, 300))
+}
+
+export const 選んだチャンネルは答えを待たずに開く: Story = {
+  render: (args) => <Choosing {...args} from={null} />,
+  play: async ({ canvasElement }) => {
+    const grid = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-grid"]',
+    )!
+
+    await expect(opened).toHaveLength(0)
+
+    await userEvent.click(
+      within(grid).getByRole('button', { name: /中央テレビ1/ }),
+    )
+
+    await waitFor(() => expect(opened).toHaveLength(1))
+    await expect(opened[0].href).toBe(CENTRAL_WIRE)
+    await expect(
+      canvasElement.querySelector('[data-slot="live-title"]'),
+    ).toHaveTextContent('中央テレビ1')
+    await expect(
+      within(
+        canvasElement.querySelector<HTMLElement>('[data-slot="now-next"]')!,
+      ).getByText('news zero'),
+    ).toBeVisible()
+
+    await theAnswerArrives(canvasElement)
+
+    await expect(opened).toHaveLength(1)
+    await expect(opened[0].readyState).toBe(1)
+  },
+}
+
+export const 観ている間に選び直すと押した瞬間に前の線を閉じる: Story = {
+  render: (args) => <Choosing {...args} from={CHOSEN.watching!.channel.id} />,
+  play: async ({ canvasElement }) => {
+    const list = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-list"]',
+    )!
+
+    await waitFor(() => expect(opened[0]?.readyState).toBe(1))
+
+    await userEvent.click(
+      within(list).getByRole('button', { name: /中央テレビ1/ }),
+    )
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await expect(opened[0].readyState).toBe(3)
+    await expect(opened[1].href).toBe(CENTRAL_WIRE)
+
+    await theAnswerArrives(canvasElement)
+
+    await expect(opened).toHaveLength(2)
+    await expect(opened[1].readyState).toBe(1)
+  },
+}
+
+export const 答えを待つ間の断りは答えが届いても残る: Story = {
+  args: { openSocket: refusing('noTunerFree') },
+  render: (args) => <Choosing {...args} from={null} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const grid = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-grid"]',
+    )!
+
+    await userEvent.click(
+      within(grid).getByRole('button', { name: /中央テレビ1/ }),
+    )
+    await expect(
+      await canvas.findByText('空いているチューナーがありません'),
+    ).toBeVisible()
+
+    await theAnswerArrives(canvasElement)
+
+    await expect(
+      canvas.getByText('空いているチューナーがありません'),
+    ).toBeVisible()
+    await expect(opened).toHaveLength(1)
+  },
+}
+
+export const 答えを待つ間にセッションが切れたらサインインの後は選んだチャンネルへ戻る: Story =
+  {
+    args: { openSocket: dropping, askSignedOut: signedOut },
+    render: (args) => <Choosing {...args} from={null} />,
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await userEvent.click(canvas.getByRole('button', { name: /中央テレビ1/ }))
+
+      await expect(
+        await canvas.findByText('セッションが切れました'),
+      ).toBeVisible()
+      await expect(
+        canvas.getByRole('link', { name: 'サインインへ' }),
+      ).toHaveAttribute('href', '/login?next=%2Flive%3Fch%3D32738-1040')
+    },
+  }
+
+export const 答えで二か国語に分かれたら一度だけ張り直す: Story = {
+  render: (args) => (
+    <Choosing
+      {...args}
+      from={null}
+      answers={{
+        [CENTRAL.id]: {
+          ...CHOSEN,
+          watching: {
+            ...CHOSEN.watching!,
+            channel: {
+              ...CENTRAL,
+              now: { ...CENTRAL.now!, sounds: 1, audio: 'dualMono' },
+            },
+          },
+        },
+      }}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const grid = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-grid"]',
+    )!
+
+    await userEvent.click(
+      within(grid).getByRole('button', { name: /中央テレビ1/ }),
+    )
+    await waitFor(() => expect(opened).toHaveLength(1))
+
+    await theAnswerArrives(canvasElement)
+
+    await expect(opened).toHaveLength(2)
+    await expect(opened[0].readyState).toBe(3)
+    await expect(opened[1].href).toBe(CENTRAL_WIRE)
   },
 }
 
