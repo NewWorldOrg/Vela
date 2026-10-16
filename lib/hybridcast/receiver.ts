@@ -7,7 +7,11 @@ import {
   FAILED,
   MAKER_ID,
 } from '@/lib/bml/receiver-identity'
-import type { BroadcastEvent } from '@/lib/bml/event-message'
+import {
+  messageIdOf,
+  messageVersionOf,
+  type BroadcastEvent,
+} from '@/lib/bml/event-message'
 import { privateDataOf } from '@/lib/bml/events'
 import type { BmlKey } from '@/lib/bml/keys'
 import type { ReceiverId } from '@/lib/bml/line'
@@ -116,7 +120,7 @@ function matches(filtered: Filtered, event: BroadcastEvent): boolean {
       event.componentTag === undefined ||
       filtered.tag === event.componentTag) &&
     (filtered.group === null || filtered.group === event.group) &&
-    (filtered.id === null || filtered.id === event.id)
+    (filtered.id === null || filtered.id === messageIdOf(event))
   )
 }
 
@@ -291,7 +295,8 @@ export class HybridcastReceiver {
     const told = {
       es_ref: { component_tag: event.componentTag ?? null },
       message_group_id: event.group,
-      message_id: event.id,
+      message_id: messageIdOf(event),
+      message_version: messageVersionOf(event),
       private_data_byte: privateDataOf(event.privateData),
     }
 

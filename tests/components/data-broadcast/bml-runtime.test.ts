@@ -1181,14 +1181,14 @@ const LISTENING = bml(
   '<p id="p">p</p>',
   '<bevent>' +
     '<beitem id="u" type="ModuleUpdated" module_ref="/40/0001" subscribe="subscribe" onoccur="browser.Ureg[0] += \'updated:\' + document.currentEvent.status + \':\' + document.currentEvent.moduleRef + \' \'"/>' +
-    '<beitem id="m" type="EventMessageFired" message_group_id="0" message_id="7" subscribe="subscribe" onoccur="browser.Ureg[1] = document.currentEvent.messageId + \':\' + document.currentEvent.privateData"/>' +
+    '<beitem id="m" type="EventMessageFired" message_group_id="0" message_id="7" subscribe="subscribe" onoccur="browser.Ureg[1] += document.currentEvent.messageId + \':\' + document.currentEvent.messageVersion + \':\' + document.currentEvent.privateData + \' \'"/>' +
     '<beitem id="q" type="EventMessageFired" message_group_id="0" message_id="8" onoccur="browser.Ureg[2] = \'quiet\'"/>' +
     '<beitem id="l" type="ModuleLocked" module_ref="~/0001" subscribe="subscribe" onoccur="browser.Ureg[3] = \'locked:\' + document.currentEvent.moduleRef"/>' +
     '</bevent>' +
     '<script>browser.lockModuleOnMemoryEx("~/0001")</script>',
 )
 
-test('a module that comes in a new version, an event message and a locked module each reach the items that listen for them', () => {
+test('a module that comes in a new version, an event message and a locked module each reach the items that listen for them, the message told by the two halves of its id', () => {
   const { runtime, send, timers } = opened(LISTENING, [
     module(1, { 'next.bml': ['bml', NEXT] }),
   ])
@@ -1226,7 +1226,7 @@ test('a module that comes in a new version, an event message and a locked module
     kind: 'event',
     event: {
       group: 0,
-      id: 7,
+      id: 0x0703,
       type: 1,
       immediate: true,
       at: 0,
@@ -1237,14 +1237,36 @@ test('a module that comes in a new version, an event message and a locked module
     kind: 'event',
     event: {
       group: 0,
-      id: 8,
+      id: 0x0007,
+      type: 1,
+      immediate: true,
+      at: 0,
+      privateData: text('low'),
+    },
+  })
+  send({
+    kind: 'event',
+    event: {
+      group: 0,
+      id: 0x0803,
       type: 1,
       immediate: true,
       at: 0,
       privateData: text('no'),
     },
   })
-  assert.equal(registers[1], '7:hello')
+  send({
+    kind: 'event',
+    event: {
+      group: 0,
+      id: 0x0704,
+      type: 1,
+      immediate: true,
+      at: 0,
+      privateData: text('again'),
+    },
+  })
+  assert.equal(registers[1], '7:3:hello 7:4:again ')
   assert.equal(registers[2], '')
 })
 
@@ -1265,7 +1287,7 @@ test('an event message that names its stream reaches only the item whose es_ref 
     .registers.Ureg
   const event = (componentTag: number) => ({
     group: 0,
-    id: 7,
+    id: 0x0701,
     type: 1,
     immediate: true,
     at: 0,
@@ -1292,7 +1314,7 @@ test('an event message reaches the item whose es_ref names a stream the broadcas
     kind: 'event',
     event: {
       group: 0,
-      id: 7,
+      id: 0x0701,
       type: 1,
       immediate: false,
       at: 90_000,
@@ -1899,7 +1921,7 @@ test('a script may set what a beitem listens for: a module named afterwards reac
     kind: 'event',
     event: {
       group: 0,
-      id: 7,
+      id: 0x0701,
       type: 1,
       immediate: true,
       at: 0,
@@ -1912,7 +1934,7 @@ test('a script may set what a beitem listens for: a module named afterwards reac
     kind: 'event',
     event: {
       group: 0,
-      id: 8,
+      id: 0x0801,
       type: 1,
       immediate: true,
       at: 0,

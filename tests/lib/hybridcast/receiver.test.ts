@@ -381,44 +381,48 @@ test('the AIT the application came from is told as it was read', () => {
   ])
 })
 
-test('event messages reach the listeners whose filter they match, with the private data as text', () => {
+test('event messages reach the listeners whose filter they match by the upper byte of the id, told with the id split into the message id and its version and the private data as text', () => {
   const { made, stream } = receiver()
   const heard: Record<string, unknown>[] = []
   const listener = (event: Record<string, unknown>) => heard.push(event)
 
   stream.addGeneralEventMessageListener(
-    { es_ref: { component_tag: 96 }, message_group_id: 1, message_id: 145 },
+    { es_ref: { component_tag: 0x61 }, message_group_id: 1, message_id: 49 },
     listener,
   )
 
-  const event = (id: number, componentTag = 96) => ({
+  const event = (id: number, componentTag = 0x61) => ({
     group: 1,
     id,
-    type: 0,
+    type: 1,
     immediate: true,
     at: 0,
-    privateData: new TextEncoder().encode('KINKYU'),
+    privateData: new TextEncoder().encode('NOTICE'),
     componentTag,
   })
 
-  made.take({ kind: 'event', event: event(145) })
-  made.take({ kind: 'event', event: event(146) })
-  made.take({ kind: 'event', event: event(145, 97) })
+  made.take({ kind: 'event', event: event(0x3107) })
+  made.take({ kind: 'event', event: event(0x3108) })
+  made.take({ kind: 'event', event: event(0x3207) })
+  made.take({ kind: 'event', event: event(49) })
+  made.take({ kind: 'event', event: event(0x3107, 0x62) })
 
-  assert.equal(heard.length, 1)
+  assert.equal(heard.length, 2)
   assert.deepEqual(heard[0], {
-    es_ref: { component_tag: 96 },
+    es_ref: { component_tag: 0x61 },
     message_group_id: 1,
-    message_id: 145,
-    private_data_byte: 'KINKYU',
+    message_id: 49,
+    message_version: 7,
+    private_data_byte: 'NOTICE',
   })
+  assert.equal(heard[1].message_version, 8)
 
   stream.removeGeneralEventMessageListener(
-    { es_ref: { component_tag: 96 } },
+    { es_ref: { component_tag: 0x61 } },
     listener,
   )
-  made.take({ kind: 'event', event: event(145) })
-  assert.equal(heard.length, 1)
+  made.take({ kind: 'event', event: event(0x3109) })
+  assert.equal(heard.length, 2)
 })
 
 test('a change of programme is told to the event ID listeners, and the guide answering the same one again is not', () => {

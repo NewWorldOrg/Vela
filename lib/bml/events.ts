@@ -1,5 +1,9 @@
 import type { PageEvent } from '@/lib/bml/document'
-import type { BroadcastEvent } from '@/lib/bml/event-message'
+import {
+  messageIdOf,
+  messageVersionOf,
+  type BroadcastEvent,
+} from '@/lib/bml/event-message'
 import { moduleAddressOf, streamTagOf, type BmlAddress } from '@/lib/bml/paths'
 
 /** The kinds of `beitem` a document may listen for. */
@@ -80,7 +84,7 @@ function comesOn(
     : event.componentTag === stream
 }
 
-/** Whether an `EventMessageFired` item listens for an event message: its `es_ref`, when given, must name the stream the message came on, or for a message that does not say, a stream the broadcast carries; its group must match, and its id and version match unless left out or 255. */
+/** Whether an `EventMessageFired` item listens for an event message: its `es_ref`, when given, must name the stream the message came on, or for a message that does not say, a stream the broadcast carries; its group must match, and its `message_id` and `message_version` match the upper and lower byte of the message's id unless left out or 255. */
 export function listensFor(
   item: EventItem,
   event: BroadcastEvent,
@@ -95,8 +99,8 @@ export function listensFor(
     (reference === undefined ||
       comesOn(streamTagOf(reference), event, streams)) &&
     (group === null || group === event.group) &&
-    (id === null || id === ANY || id === event.id) &&
-    (version === null || version === ANY || version === event.type)
+    (id === null || id === ANY || id === messageIdOf(event)) &&
+    (version === null || version === ANY || version === messageVersionOf(event))
   )
 }
 

@@ -1,4 +1,4 @@
-/** An event message as the side channel carries it: when it fires is on the same 90 kHz clock as the frames, and the component tag of the stream it came on when the sender names it. */
+/** An event message as the side channel carries it: its id is the 16-bit one of the descriptor, whose upper byte is the message id a document listens for and whose lower byte is that message's version, and its type is the descriptor's message type, which no document reads. When it fires is on the same 90 kHz clock as the frames, and the component tag of the stream it came on is there when the sender names it. */
 export interface BroadcastEvent {
   group: number
   id: number
@@ -10,6 +10,16 @@ export interface BroadcastEvent {
 }
 
 export const MOST_PRIVATE_DATA_BYTES = 0xffff
+
+/** The message id a document listens for: the upper byte of the event message's id. */
+export function messageIdOf(event: BroadcastEvent): number {
+  return event.id >> 8
+}
+
+/** The version of the message: the lower byte of the event message's id, which goes up with each new message of the same message id. */
+export function messageVersionOf(event: BroadcastEvent): number {
+  return event.id & 0xff
+}
 
 export function isComponentTag(value: unknown): value is number {
   return (

@@ -13,8 +13,8 @@ const BASE = { tag: 0x40, module: 0, name: 'startup.bml' }
 
 const EVENT = {
   group: 0,
-  id: 7,
-  type: 2,
+  id: 0x0702,
+  type: 1,
   immediate: true,
   at: 0,
   privateData: new Uint8Array(0),
@@ -81,7 +81,7 @@ test('an item listens when it is of the type, subscribed and has a handler', () 
   )
 })
 
-test('an event message is listened for by group, and by id and version unless left out or 255', () => {
+test('an event message is listened for by group, by the upper byte of its id as the message id and by the lower byte as the version, each unless left out or 255', () => {
   const item = (attributes: [string, string][]) =>
     eventItemsOf([{ id: 'm', type: 'EventMessageFired', attributes }])[0]
 
@@ -138,6 +138,60 @@ test('an event message is listened for by group, and by id and version unless le
     false,
   )
   assert.equal(listensFor(item([]), EVENT), true)
+  assert.equal(
+    listensFor(
+      item([
+        ['message_group_id', '0'],
+        ['message_version', '255'],
+      ]),
+      EVENT,
+    ),
+    true,
+  )
+  assert.equal(
+    listensFor(
+      item([
+        ['message_group_id', '0'],
+        ['message_id', '1794'],
+      ]),
+      EVENT,
+    ),
+    false,
+  )
+  assert.equal(
+    listensFor(
+      item([
+        ['message_group_id', '0'],
+        ['message_version', '1'],
+      ]),
+      EVENT,
+    ),
+    false,
+  )
+})
+
+test('each new message of an id is heard by the item that names the id, and the one that also names a version hears only that version', () => {
+  const item = (attributes: [string, string][]) =>
+    eventItemsOf([{ id: 'm', type: 'EventMessageFired', attributes }])[0]
+  const message = (id: number) => ({ ...EVENT, group: 1, id })
+  const byId = item([
+    ['message_group_id', '1'],
+    ['message_id', '43'],
+  ])
+  const byVersion = item([
+    ['message_group_id', '1'],
+    ['message_id', '43'],
+    ['message_version', '17'],
+  ])
+
+  assert.equal(listensFor(byId, message(0x2b10)), true)
+  assert.equal(listensFor(byId, message(0x2b11)), true)
+  assert.equal(listensFor(byId, message(0x2bff)), true)
+  assert.equal(listensFor(byId, message(0x2a10)), false)
+  assert.equal(listensFor(byId, message(43)), false)
+  assert.equal(listensFor(byVersion, message(0x2b10)), false)
+  assert.equal(listensFor(byVersion, message(0x2b11)), true)
+  assert.equal(listensFor(byVersion, message(0x2c11)), false)
 })
 
 test('an item with an es_ref listens only when it names a stream the broadcast carries', () => {
