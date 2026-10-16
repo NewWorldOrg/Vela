@@ -1,7 +1,58 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { channelBeingWatched, choiceStillStands } from '@/lib/live-choice'
+import {
+  channelBeingWatched,
+  choiceStillStands,
+  watchingChosen,
+} from '@/lib/live-choice'
+import type { LiveChannel, LiveScreen } from '@/repository/live'
+
+const AT = new Date('2026-08-08T12:15:00Z')
+
+function channel(id: string, from: string, to: string): LiveChannel {
+  const [networkId, serviceId] = id.split('-').map(Number)
+
+  return {
+    id,
+    networkId,
+    serviceId,
+    name: `channel ${id}`,
+    kind: 'terrestrial',
+    viewers: 0,
+    now: {
+      id: `${id}-now`,
+      title: 'on air',
+      startsAt: from,
+      endsAt: to,
+      startLabel: '',
+      endLabel: '',
+      hasSubtitles: false,
+      sounds: 1,
+      audio: 'stereo',
+      genreLabel: '',
+    },
+  }
+}
+
+const A = channel('1-1', '2026-08-08T12:00:00Z', '2026-08-08T13:00:00Z')
+
+const B = channel('1-2', '2026-08-08T12:10:00Z', '2026-08-08T12:40:00Z')
+
+function answered(watching?: LiveChannel): LiveScreen {
+  return {
+    kind: 'terrestrial',
+    kinds: ['terrestrial'],
+    channels: [A, B],
+    watching: watching && {
+      channel: watching,
+      progressPct: 0,
+      nowLabel: '21:00',
+    },
+    profiles: [],
+    tuners: 1,
+  }
+}
 
 test('with nothing chosen in this browser, the url says which channel is being watched', () => {
   assert.equal(channelBeingWatched(undefined, 'a-1', 'a-1'), 'a-1')
@@ -61,4 +112,34 @@ test('while a channel is being watched, some channel always carries the mark', (
 
 test('watching nothing marks nothing', () => {
   assert.equal(channelBeingWatched(undefined, undefined, undefined), undefined)
+})
+
+test('the channel the page answered for is watched as the page answered it', () => {
+  const screen = answered(A)
+
+  assert.equal(watchingChosen(screen, A.id, AT), screen.watching)
+})
+
+test('a channel chosen before the page has answered is watched at once, from the channels the page already holds', () => {
+  const watching = watchingChosen(answered(), B.id, AT)
+
+  assert.equal(watching?.channel, B)
+  assert.equal(watching?.progressPct, 17)
+  assert.equal(watching?.nowLabel, '21:15')
+  assert.equal(watching?.restMin, 25)
+})
+
+test('a channel chosen while another is watched takes its place before the page answers', () => {
+  assert.equal(watchingChosen(answered(A), B.id, AT)?.channel, B)
+})
+
+test('a chosen channel the page does not hold leaves what the page answered', () => {
+  const screen = answered(A)
+
+  assert.equal(watchingChosen(screen, '9-9', AT), screen.watching)
+  assert.equal(watchingChosen(answered(), '9-9', AT), undefined)
+})
+
+test('with nothing chosen and nothing answered, nothing is watched', () => {
+  assert.equal(watchingChosen(answered(), undefined, AT), undefined)
 })

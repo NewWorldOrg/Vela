@@ -20,6 +20,7 @@ import { nextProgrammeChangeAt, screenAsOf } from '@/lib/live-clock'
 import {
   channelBeingWatched,
   choiceStillStands,
+  watchingChosen,
   type ChannelChoice,
 } from '@/lib/live-choice'
 import { useChannelsFolded } from '@/hooks/useChannelsFolded'
@@ -144,7 +145,19 @@ export function LiveView({
     [router, pathname, searchParams],
   )
 
-  const watching = screen.watching
+  const asked = searchParams.get('ch') ?? undefined
+  const answered = screen.watching?.channel.id
+  const [choice, setChoice] = useState<ChannelChoice>()
+  const standing = choiceStillStands(choice, asked)
+
+  if (standing !== choice) {
+    setChoice(standing)
+  }
+
+  const watchingId = channelBeingWatched(standing, asked, answered)
+  const watching = clock
+    ? watchingChosen(screen, standing?.chosen, clock)
+    : screen.watching
   const wide = useWideWindow()
   const [broadcastOpen, setBroadcastOpen] = useState(false)
   const remoteOpen = broadcastOpen && wide
@@ -216,16 +229,6 @@ export function LiveView({
 
   const nothingIsOn =
     channels.length > 0 && channels.every((one) => one.now === undefined)
-  const asked = searchParams.get('ch') ?? undefined
-  const answered = watching?.channel.id
-  const [choice, setChoice] = useState<ChannelChoice>()
-  const standing = choiceStillStands(choice, asked)
-
-  if (standing !== choice) {
-    setChoice(standing)
-  }
-
-  const watchingId = channelBeingWatched(standing, asked, answered)
   const choose = (id: string) => {
     setChoice({ asked, chosen: id })
     patch({ ch: id })
@@ -308,7 +311,9 @@ export function LiveView({
         <LivePlayer
           channel={watching.channel}
           profiles={screen.profiles}
-          returnPath={query ? `${pathname}?${query}` : pathname}
+          returnPath={addressWith(pathname, query, {
+            ch: watching.channel.id,
+          })}
           openSocket={openSocket}
           askSignedOut={askSignedOut}
           askBacklog={askBacklog}
