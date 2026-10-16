@@ -6,8 +6,12 @@ export type { FeedFault } from '@/components/recordings/media-feed'
 export class LiveFeed {
   private readonly feed: MediaFeed
 
-  constructor(video: HTMLVideoElement, onFault: (fault: FeedFault) => void) {
-    this.feed = new MediaFeed(video, onFault, 'plainFirst')
+  constructor(
+    video: HTMLVideoElement,
+    onFault: (fault: FeedFault) => void,
+    onAppended: () => void,
+  ) {
+    this.feed = new MediaFeed(video, onFault, 'plainFirst', onAppended)
   }
 
   static supported(): boolean {
