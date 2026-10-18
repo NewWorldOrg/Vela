@@ -357,16 +357,37 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the settings page for detecting CM, OP and ED shows the learning data alone; the catalog, the model version and its history, the precision, the evidence and the threshold of the skip button have no part of it drawn for them yet, and whether learning is on is read from the settings',
+      "the repeated sounds are said as CM and the programme's fixed parts; OP and ED join that row with the stage that finds them, and a station's own fixed parts and the sounds not yet told apart are not among what the row names",
     fields: [
-      'SegmentStatusResponder.catalog',
-      'SegmentStatusResponder.evidence',
-      'SegmentStatusResponder.learning',
-      'SegmentStatusResponder.metrics',
-      'SegmentStatusResponder.skipThreshold',
-      'SegmentStatusResponder.stations',
-      'SegmentStatusResponder.version',
-      'SegmentStatusResponder.versions',
+      'CatalogResponder.ending',
+      'CatalogResponder.opening',
+      'CatalogResponder.stationFixture',
+      'CatalogResponder.unknown',
+    ],
+  },
+  {
+    because:
+      "the precision panel says how often a skip was followed by a return, not how many skips that was taken over, and how much of each kind's seconds was found is no row of it until the OP and ED row arrives with the stage that finds them",
+    fields: ['SegmentMetricsResponder.kinds', 'SegmentMetricsResponder.skips'],
+  },
+  {
+    because:
+      'a version put back says that it was put back and when; the shares and the count that moved it are how the backend decided, which the history does not report',
+    fields: [
+      'SegmentRolledBackResponder.previousShare',
+      'SegmentRolledBackResponder.returnedAfterSkipShare',
+      'SegmentRolledBackResponder.skips',
+    ],
+  },
+  {
+    because:
+      'the history names each version by when it was made and where it stands; when the version in use came into use, and whether it was chosen by hand, are said of it alone, above the history, and the one in use is the active one by what it is',
+    fields: [
+      'SegmentVersionHistoryResponder.adoptedAt',
+      'SegmentVersionHistoryResponder.byHand',
+      'SegmentVersionHistoryResponder.retiredAt',
+      'SegmentVersionResponder.state',
+      'SegmentVersionResponder.trainedAt',
     ],
   },
 ]

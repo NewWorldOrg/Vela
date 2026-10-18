@@ -76,8 +76,13 @@ mock.module('@/repository/client/carina', {
   namedExports: { carinaClient: client, revalidatingCarinaClient: client },
 })
 
-const { getSegmentSettings, settleLearning } =
-  await import('@/repository/segments')
+const {
+  chooseSegmentVersion,
+  getSegmentSettings,
+  leaveSegmentVersionToLearning,
+  settleLearning,
+  settleSkipThreshold,
+} = await import('@/repository/segments')
 
 beforeEach(() => {
   sent.length = 0
@@ -151,4 +156,77 @@ test('a change the API refuses, or never hears, is not saved', async () => {
   store.throwing = true
 
   assert.deepEqual(await settleLearning(true), { state: 'notSaved' })
+})
+
+test('the threshold of the skip button is sent alone, as the value given', async () => {
+  assert.deepEqual(await settleSkipThreshold(0.65), { state: 'ok' })
+  assert.deepEqual(sent, [
+    {
+      method: 'PATCH',
+      path: '/api/segments/settings',
+      body: { skipThreshold: 0.65 },
+    },
+  ])
+})
+
+test('a threshold the API refuses says whether it was the range or the session', async () => {
+  store.status = 400
+
+  assert.deepEqual(await settleSkipThreshold(0.97), { state: 'outOfRange' })
+
+  store.status = 401
+
+  assert.deepEqual(await settleSkipThreshold(0.7), {
+    state: 'unauthenticated',
+  })
+
+  store.status = 500
+
+  assert.deepEqual(await settleSkipThreshold(0.7), { state: 'notSaved' })
+
+  store.status = 200
+  store.throwing = true
+
+  assert.deepEqual(await settleSkipThreshold(0.7), { state: 'notSaved' })
+})
+
+test('choosing a version names its number, and leaving it to learning says only that', async () => {
+  assert.deepEqual(await chooseSegmentVersion(2), { state: 'ok' })
+  assert.deepEqual(await leaveSegmentVersionToLearning(), { state: 'ok' })
+  assert.deepEqual(sent, [
+    { method: 'PATCH', path: '/api/segments/version', body: { number: 2 } },
+    {
+      method: 'PATCH',
+      path: '/api/segments/version',
+      body: { byHand: false },
+    },
+  ])
+})
+
+test('a version change refused while learning is off says so, apart from the rest', async () => {
+  store.status = 409
+
+  assert.deepEqual(await chooseSegmentVersion(2), { state: 'learningOff' })
+  assert.deepEqual(await leaveSegmentVersionToLearning(), {
+    state: 'learningOff',
+  })
+
+  store.status = 401
+
+  assert.deepEqual(await chooseSegmentVersion(2), {
+    state: 'unauthenticated',
+  })
+
+  for (const status of [400, 404, 500]) {
+    store.status = status
+
+    assert.deepEqual(await chooseSegmentVersion(9), { state: 'notSaved' })
+  }
+
+  store.status = 200
+  store.throwing = true
+
+  assert.deepEqual(await leaveSegmentVersionToLearning(), {
+    state: 'notSaved',
+  })
 })
